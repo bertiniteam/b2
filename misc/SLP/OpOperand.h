@@ -12,6 +12,7 @@
 #include <iostream>
 #include <vector>
 #include "Operand.h"
+#include "Symbol.h"
 
 
 class OpOperand : public Operand
@@ -21,14 +22,21 @@ protected:
     int numOperands;
     
 public:
-    virtual double evaluate() = 0;
-    virtual double evaluate(double* vars) = 0;
+    virtual Symbol* evaluate(Symbol* vars[]) = 0;
     virtual std::stringstream print() = 0;
+    virtual Operand* diff(int varIndex) = 0;
     
     int getNumOperands() {return numOperands;};
     virtual std::vector<Operand*> getOperands() {return operands;};
     
     virtual void addOperand(Operand* op) {if(op != 0) {operands.push_back(op); numOperands++;}};
+    
+    
+    void clear() {operands.clear(); numOperands = 0;};
+    
+    virtual void combineAdds() = 0;
+    virtual void combineMults() = 0;
+    virtual void cleanMults() = 0;
 };
 
 
