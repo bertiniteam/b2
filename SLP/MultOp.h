@@ -11,17 +11,25 @@
 
 #include <iostream>
 #include <vector>
-#include "OpOperand.h"
+#include "Operand.h"
+#include "AdditionOp.h"
 
 
-class MultOp : public OpOperand
+class MultOp : public Operand
 {
 public:
-    MultOp() {operands = std::vector<Operand*>();};
-    MultOp(int nOperands, std::vector<Operand*> inOperands);
-    virtual double evaluate() {return 1;};
-    virtual double evaluate(double* vars);
+    MultOp() {operands = std::vector<Operand*>(); numOperands = 0; type = TYPE_MULT;};
+    MultOp(std::vector<Operand*> inOperands);
+    
+    virtual Symbol* evaluate(Symbol* vars[]);
     virtual std::stringstream print();
+    virtual AdditionOp* diff(int varIndex);
+    
+    virtual void combineAdds();
+    virtual void combineMults();
+    virtual void cleanMults();
+    virtual void cleanAdds();
+    
 };
 
 #endif /* defined(__Bertini2__MultOp__) */
