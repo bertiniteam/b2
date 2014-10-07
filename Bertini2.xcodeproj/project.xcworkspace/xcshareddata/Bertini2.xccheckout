@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>DD7FF7C1-11C3-4BC5-BC46-D236A3F3F0FD</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Bertini2</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>B031F45ED8A1898D2CC2A30174AC855EAA6F2116</key>
+		<string>https://github.com/jbcolli2/b2.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Bertini2.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>B031F45ED8A1898D2CC2A30174AC855EAA6F2116</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/jbcolli2/b2.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>B031F45ED8A1898D2CC2A30174AC855EAA6F2116</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>B031F45ED8A1898D2CC2A30174AC855EAA6F2116</string>
+			<key>IDESourceControlWCCName</key>
+			<string>b2_MainRepo</string>
+		</dict>
+	</array>
+</dict>
+</plist>

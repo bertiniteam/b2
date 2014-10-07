@@ -1,33 +1,28 @@
 //
-//  DoubleSymb.cpp
+//  IntSymb.cpp
 //  Bertini2
 //
-//  Created by James Collins on 12/9/13.
+//  Created by James Collins on 12/24/13.
 //  Copyright (c) 2013 James Collins. All rights reserved.
 //
 
-#include "DoubleSymb.h"
+#include "IntSymb.h"
 
 
-
-
-
-
-
-Symbol* DoubleSymb::add(Symbol* operand)
+Symbol* IntSymb::add(Symbol* operand)
 {
-    
     if(typeid(*operand) == typeid(DoubleSymb))
     {
-        DoubleSymb* retop, *tempop;
+        DoubleSymb* tempop;
+        DoubleSymb* retop;
         tempop = (DoubleSymb*)operand;
-        retop = new DoubleSymb(tempop->getValue() + this->value);
+        retop = new DoubleSymb(tempop->getValue() + (double)this->value);
         return retop;
     }
     else if(typeid(*operand) == typeid(IntSymb))
     {
         IntSymb* tempop = (IntSymb*)operand;
-        DoubleSymb* retop = new DoubleSymb((double)tempop->getValue() + this->value);
+        IntSymb* retop = new IntSymb(tempop->getValue() + this->value);
         return retop;
     }
 //    else if(typeid(*operand) == typeid(AMP))
@@ -46,20 +41,21 @@ Symbol* DoubleSymb::add(Symbol* operand)
 
 
 
-Symbol* DoubleSymb::sub(Symbol* operand)
+
+Symbol* IntSymb::sub(Symbol* operand)
 {
-    
     if(typeid(*operand) == typeid(DoubleSymb))
     {
-        DoubleSymb* retop, *tempop;
+        DoubleSymb* tempop;
+        DoubleSymb* retop;
         tempop = (DoubleSymb*)operand;
-        retop = new DoubleSymb(this->value - tempop->getValue());
+        retop = new DoubleSymb((double)this->value - tempop->getValue());
         return retop;
     }
     else if(typeid(*operand) == typeid(IntSymb))
     {
         IntSymb* tempop = (IntSymb*)operand;
-        DoubleSymb* retop = new DoubleSymb(this->value - (double)tempop->getValue());
+        IntSymb* retop = new IntSymb(this->value - tempop->getValue());
         return retop;
     }
 //    else if(typeid(*operand) == typeid(AMP))
@@ -80,19 +76,23 @@ Symbol* DoubleSymb::sub(Symbol* operand)
 
 
 
-Symbol* DoubleSymb::mult(Symbol* operand)
+
+
+
+Symbol* IntSymb::mult(Symbol* operand)
 {
     if(typeid(*operand) == typeid(DoubleSymb))
     {
-        DoubleSymb* retop, *tempop;
+        DoubleSymb* tempop;
+        DoubleSymb* retop;
         tempop = (DoubleSymb*)operand;
-        retop = new DoubleSymb(tempop->getValue() * this->value);
+        retop = new DoubleSymb(tempop->getValue() * (double)this->value);
         return retop;
     }
     else if(typeid(*operand) == typeid(IntSymb))
     {
         IntSymb* tempop = (IntSymb*)operand;
-        DoubleSymb* retop = new DoubleSymb((double)tempop->getValue() * this->value);
+        IntSymb* retop = new IntSymb(tempop->getValue() * this->value);
         return retop;
     }
 //    else if(typeid(*operand) == typeid(AMP))
@@ -106,25 +106,24 @@ Symbol* DoubleSymb::mult(Symbol* operand)
         Symbol* retop = 0;
         return retop;
     }
-   
-}
-
-
-
-
-
-Symbol* DoubleSymb::exp(int exp)
-{
-    this->value = (double)pow(this->value,exp);
-    
-    return this;
     
 }
 
 
-DoubleSymb* DoubleSymb::neg()
+
+IntSymb* IntSymb::exp(int exp)
 {
-    DoubleSymb* retop = new DoubleSymb(-(this->value));
+    IntSymb* retop = new IntSymb((int)pow(this->value,exp));
+    
+    return retop;
+    
+}
+
+
+
+IntSymb* IntSymb::neg()
+{
+    IntSymb* retop = new IntSymb(-(this->value));
     
     return retop;
     
@@ -133,8 +132,7 @@ DoubleSymb* DoubleSymb::neg()
 
 
 
-
-std::stringstream DoubleSymb::print()
+std::stringstream IntSymb::print()
 {
     std::stringstream ret;
     
@@ -143,15 +141,3 @@ std::stringstream DoubleSymb::print()
     
     return ret;
 }
-
-
-
-
-
-
-
-
-
-
-
-
