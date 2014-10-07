@@ -7,14 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		621F92FC18FDAEE000096F89 /* amp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 621F92FA18FD830700096F89 /* amp.cpp */; };
 		621F93F6190AF69200096F89 /* AdditionOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAAE183BD2F300ED0AD6 /* AdditionOp.cpp */; };
 		621F93F7190AF69200096F89 /* MultOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB9183C45B000ED0AD6 /* MultOp.cpp */; };
 		621F93F8190AF69200096F89 /* ExpOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DABC183D38E300ED0AD6 /* ExpOp.cpp */; };
 		621F93F9190AF69200096F89 /* LeafOperand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB6183BDB4B00ED0AD6 /* LeafOperand.cpp */; };
 		621F93FA190AF69200096F89 /* DoubleSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB1F1856D52800ED0AD6 /* DoubleSymb.cpp */; };
 		621F93FB190AF69200096F89 /* IntSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62B5AD12186A00C000CE37BE /* IntSymb.cpp */; };
-		621F93FC190AF69200096F89 /* amp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 621F92FA18FD830700096F89 /* amp.cpp */; };
 		621F93FD190AF69200096F89 /* Factor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB221857855300ED0AD6 /* Factor.cpp */; };
 		621F940B190AFE8B00096F89 /* AdditionOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAAE183BD2F300ED0AD6 /* AdditionOp.cpp */; };
 		621F940C190AFE8B00096F89 /* MultOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB9183C45B000ED0AD6 /* MultOp.cpp */; };
@@ -22,7 +20,6 @@
 		621F940E190AFE8B00096F89 /* LeafOperand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB6183BDB4B00ED0AD6 /* LeafOperand.cpp */; };
 		621F940F190AFE8B00096F89 /* DoubleSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB1F1856D52800ED0AD6 /* DoubleSymb.cpp */; };
 		621F9410190AFE8B00096F89 /* IntSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62B5AD12186A00C000CE37BE /* IntSymb.cpp */; };
-		621F9411190AFE8B00096F89 /* amp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 621F92FA18FD830700096F89 /* amp.cpp */; };
 		621F9412190AFE8B00096F89 /* Factor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB221857855300ED0AD6 /* Factor.cpp */; };
 		621F9426190B164400096F89 /* AdditionOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAAE183BD2F300ED0AD6 /* AdditionOp.cpp */; };
 		621F9427190B164400096F89 /* MultOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB9183C45B000ED0AD6 /* MultOp.cpp */; };
@@ -30,7 +27,6 @@
 		621F9429190B164400096F89 /* LeafOperand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB6183BDB4B00ED0AD6 /* LeafOperand.cpp */; };
 		621F942A190B164400096F89 /* DoubleSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB1F1856D52800ED0AD6 /* DoubleSymb.cpp */; };
 		621F942B190B164400096F89 /* IntSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62B5AD12186A00C000CE37BE /* IntSymb.cpp */; };
-		621F942C190B164400096F89 /* amp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 621F92FA18FD830700096F89 /* amp.cpp */; };
 		621F942D190B164400096F89 /* Factor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB221857855300ED0AD6 /* Factor.cpp */; };
 		621F943B1910584100096F89 /* AdditionOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAAE183BD2F300ED0AD6 /* AdditionOp.cpp */; };
 		621F943C1910584100096F89 /* MultOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB9183C45B000ED0AD6 /* MultOp.cpp */; };
@@ -38,7 +34,6 @@
 		621F943E1910584100096F89 /* LeafOperand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB6183BDB4B00ED0AD6 /* LeafOperand.cpp */; };
 		621F943F1910584100096F89 /* DoubleSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB1F1856D52800ED0AD6 /* DoubleSymb.cpp */; };
 		621F94401910584100096F89 /* IntSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62B5AD12186A00C000CE37BE /* IntSymb.cpp */; };
-		621F94411910584100096F89 /* amp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 621F92FA18FD830700096F89 /* amp.cpp */; };
 		621F94421910584100096F89 /* Factor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB221857855300ED0AD6 /* Factor.cpp */; };
 		621F94561912B3CA00096F89 /* AdditionOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAAE183BD2F300ED0AD6 /* AdditionOp.cpp */; };
 		621F94571912B3CA00096F89 /* MultOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB9183C45B000ED0AD6 /* MultOp.cpp */; };
@@ -46,7 +41,6 @@
 		621F94591912B3CA00096F89 /* LeafOperand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB6183BDB4B00ED0AD6 /* LeafOperand.cpp */; };
 		621F945A1912B3CA00096F89 /* DoubleSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB1F1856D52800ED0AD6 /* DoubleSymb.cpp */; };
 		621F945B1912B3CA00096F89 /* IntSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62B5AD12186A00C000CE37BE /* IntSymb.cpp */; };
-		621F945C1912B3CA00096F89 /* amp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 621F92FA18FD830700096F89 /* amp.cpp */; };
 		621F945D1912B3CA00096F89 /* Factor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB221857855300ED0AD6 /* Factor.cpp */; };
 		621F946F1912D98900096F89 /* AdditionOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAAE183BD2F300ED0AD6 /* AdditionOp.cpp */; };
 		621F94701912D98900096F89 /* MultOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB9183C45B000ED0AD6 /* MultOp.cpp */; };
@@ -54,7 +48,6 @@
 		621F94721912D98900096F89 /* LeafOperand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB6183BDB4B00ED0AD6 /* LeafOperand.cpp */; };
 		621F94731912D98900096F89 /* DoubleSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB1F1856D52800ED0AD6 /* DoubleSymb.cpp */; };
 		621F94741912D98900096F89 /* IntSymb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62B5AD12186A00C000CE37BE /* IntSymb.cpp */; };
-		621F94751912D98900096F89 /* amp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 621F92FA18FD830700096F89 /* amp.cpp */; };
 		621F94761912D98900096F89 /* Factor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DB221857855300ED0AD6 /* Factor.cpp */; };
 		62A3B72018F754BE00B3E0DF /* AdditionOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAAE183BD2F300ED0AD6 /* AdditionOp.cpp */; };
 		62A3B72118F754BE00B3E0DF /* MultOp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 62C5DAB9183C45B000ED0AD6 /* MultOp.cpp */; };
@@ -156,8 +149,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		621F92F918FD830000096F89 /* amp.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = amp.hpp; sourceTree = "<group>"; };
-		621F92FA18FD830700096F89 /* amp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = amp.cpp; sourceTree = "<group>"; };
 		621F93EA190AF58F00096F89 /* Test_Appen2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test_Appen2; sourceTree = BUILT_PRODUCTS_DIR; };
 		621F9402190AFE7B00096F89 /* Test_Appen3 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test_Appen3; sourceTree = BUILT_PRODUCTS_DIR; };
 		621F941A190B0F5800096F89 /* Test_Appen13 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test_Appen13; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -366,7 +357,6 @@
 				62C5DB1B1856D2B800ED0AD6 /* Symbol.h */,
 				62C5DB201856D52800ED0AD6 /* DoubleSymb.h */,
 				62B5AD13186A00C000CE37BE /* IntSymb.h */,
-				621F92F918FD830000096F89 /* amp.hpp */,
 			);
 			name = Symbol;
 			sourceTree = "<group>";
@@ -376,7 +366,6 @@
 			children = (
 				62C5DB1F1856D52800ED0AD6 /* DoubleSymb.cpp */,
 				62B5AD12186A00C000CE37BE /* IntSymb.cpp */,
-				621F92FA18FD830700096F89 /* amp.cpp */,
 			);
 			name = Symbol;
 			sourceTree = "<group>";
@@ -564,7 +553,6 @@
 				621F93F9190AF69200096F89 /* LeafOperand.cpp in Sources */,
 				621F93FA190AF69200096F89 /* DoubleSymb.cpp in Sources */,
 				621F93FB190AF69200096F89 /* IntSymb.cpp in Sources */,
-				621F93FC190AF69200096F89 /* amp.cpp in Sources */,
 				621F93FD190AF69200096F89 /* Factor.cpp in Sources */,
 				62F1E6C4193933AE00A737E6 /* Test_Appen2.cpp in Sources */,
 			);
@@ -580,7 +568,6 @@
 				621F940E190AFE8B00096F89 /* LeafOperand.cpp in Sources */,
 				621F940F190AFE8B00096F89 /* DoubleSymb.cpp in Sources */,
 				621F9410190AFE8B00096F89 /* IntSymb.cpp in Sources */,
-				621F9411190AFE8B00096F89 /* amp.cpp in Sources */,
 				621F9412190AFE8B00096F89 /* Factor.cpp in Sources */,
 				62F1E6C6193933B600A737E6 /* Test_Appen3.cpp in Sources */,
 			);
@@ -597,7 +584,6 @@
 				621F9429190B164400096F89 /* LeafOperand.cpp in Sources */,
 				621F942A190B164400096F89 /* DoubleSymb.cpp in Sources */,
 				621F942B190B164400096F89 /* IntSymb.cpp in Sources */,
-				621F942C190B164400096F89 /* amp.cpp in Sources */,
 				621F942D190B164400096F89 /* Factor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -613,7 +599,6 @@
 				621F943F1910584100096F89 /* DoubleSymb.cpp in Sources */,
 				62F1E6CA193933CC00A737E6 /* Test_Res5_3.cpp in Sources */,
 				621F94401910584100096F89 /* IntSymb.cpp in Sources */,
-				621F94411910584100096F89 /* amp.cpp in Sources */,
 				621F94421910584100096F89 /* Factor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -629,7 +614,6 @@
 				621F94591912B3CA00096F89 /* LeafOperand.cpp in Sources */,
 				621F945A1912B3CA00096F89 /* DoubleSymb.cpp in Sources */,
 				621F945B1912B3CA00096F89 /* IntSymb.cpp in Sources */,
-				621F945C1912B3CA00096F89 /* amp.cpp in Sources */,
 				621F945D1912B3CA00096F89 /* Factor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -645,7 +629,6 @@
 				621F94721912D98900096F89 /* LeafOperand.cpp in Sources */,
 				621F94731912D98900096F89 /* DoubleSymb.cpp in Sources */,
 				621F94741912D98900096F89 /* IntSymb.cpp in Sources */,
-				621F94751912D98900096F89 /* amp.cpp in Sources */,
 				621F94761912D98900096F89 /* Factor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -654,7 +637,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				621F92FC18FDAEE000096F89 /* amp.cpp in Sources */,
 				62A3B72018F754BE00B3E0DF /* AdditionOp.cpp in Sources */,
 				62A3B72118F754BE00B3E0DF /* MultOp.cpp in Sources */,
 				62A3B72218F754BE00B3E0DF /* ExpOp.cpp in Sources */,
@@ -896,14 +878,12 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0,
 					/usr/local/include,
+					"/Users/jcollins/Documents/\"West Texas\"/Research/Bertini/Code/boost_1_56_0",
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"-lmpfr",
-					"-lgmp",
-				);
+				OTHER_LDFLAGS = "";
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -939,13 +919,11 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0,
 					/usr/local/include,
+					"/Users/jcollins/Documents/\"West Texas\"/Research/Bertini/Code/boost_1_56_0",
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
-				OTHER_LDFLAGS = (
-					"-lmpfr",
-					"-lgmp",
-				);
+				OTHER_LDFLAGS = "";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -963,6 +941,8 @@
 					/Users/jbcolli2/Documents/West,
 					Texas/Research/Bertini/Code/Boost/boost_1_55_0,
 					/usr/local/include,
+					/Users/jcollins/Documents/West,
+					Texas/Research/Bertini/Code/Boost/boost_1_55_0,
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -978,6 +958,8 @@
 					/Users/jbcolli2/Documents/West,
 					Texas/Research/Bertini/Code/Boost/boost_1_55_0,
 					/usr/local/include,
+					/Users/jcollins/Documents/West,
+					Texas/Research/Bertini/Code/Boost/boost_1_55_0,
 				);
 				LIBRARY_SEARCH_PATHS = /usr/local/lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
