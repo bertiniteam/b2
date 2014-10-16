@@ -66,14 +66,15 @@ int main()
 
 
     std::cout << "**************p(x,y)*****************" << std::endl;
-    std::cout << "Evaluate = " << p->evaluate(varVal)->print().str() << std::endl;
+    std::cout << "p = " << p->evaluate(varVal)->print().str() << std::endl;
     std::cout << p->print().str() << std::endl;
     std::cout << "!!!!!!!Differentiate!!!!!!!!!!!" << std::endl;
     p = p->diff(2);
-    std::cout << "Evaluate = " << p->evaluate(varVal)->print().str() << std::endl;
+    std::cout << "p' = " << p->evaluate(varVal)->print().str() << std::endl;
     std::cout << p->print().str() << std::endl;
     Operand::clean(p);
-    std::cout << "Evaluate = " << p->evaluate(varVal)->print().str() << std::endl;
+    std::cout << "Clean!!!!" << std::endl;
+    std::cout << "p' = " << p->evaluate(varVal)->print().str() << std::endl;
     std::cout << p->print().str() << std::endl;
     
     
