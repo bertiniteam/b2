@@ -11,20 +11,27 @@
 
 #include <iostream>
 #include <vector>
-#include "OpOperand.h"
 #include "Operand.h"
+#include "MultOp.h"
 
 
-class ExpOp : public OpOperand
+class ExpOp : public Operand
 {
 private:
     Operand* base;
     int exp;
 public:
+    ExpOp() {type = TYPE_EXP;};
     ExpOp(Operand* inBase, int inExp);
-    virtual double evaluate() {return 1;};
-    virtual double evaluate(double* vars);
+    
+    virtual Symbol* evaluate(Symbol* vars[]);
     virtual std::stringstream print();
+    virtual Operand* diff(int varIndex);
+    
+    virtual void combineAdds() {base->combineAdds();};
+    virtual void combineMults() {base->combineMults();};
+    virtual void cleanMults();
+    virtual void cleanAdds() {base->cleanAdds();};
     
     Operand* getBase() {return base;};
     int getExp() {return exp;};
