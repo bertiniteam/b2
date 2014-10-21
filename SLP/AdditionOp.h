@@ -11,17 +11,32 @@
 
 #include <iostream>
 #include <vector>
-#include "OpOperand.h"
+#include "Operand.h"
 
 
-class AdditionOp : public OpOperand
+class AdditionOp : public Operand
 {
+private:
+    std::vector<int> coeffs;
+    
 public:
-    AdditionOp() {operands = std::vector<Operand*>();};
-    AdditionOp(int nOperands, std::vector<Operand*> inOperands);
-    virtual double evaluate() {return 1;};
-    virtual double evaluate(double* vars);
+    AdditionOp() {operands = std::vector<Operand*>(); numOperands = 0; type = TYPE_ADD;};
+    AdditionOp(std::vector<Operand*> inOperands);
+    AdditionOp(std::vector<Operand*> inOperands, std::vector<int> inCoeffs);
+    virtual Symbol* evaluate(Symbol* vars[]);
     virtual std::stringstream print();
+    virtual AdditionOp* diff(int varIndex);
+    
+    virtual void combineAdds();
+    virtual void combineMults();
+    virtual void cleanMults();
+    virtual void cleanAdds();
+    
+    virtual void addOperand(Operand* op) {if(op != 0) {operands.push_back(op); numOperands++; coeffs.push_back(1);}};
+    virtual void addOperand(Operand* op, int coeff) {if(op != 0) {operands.push_back(op);
+                                                numOperands++; coeffs.push_back(coeff);}};
+    
+    std::vector<int> getCoeffs() {return coeffs;};
     
     
 };

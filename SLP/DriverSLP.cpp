@@ -8,34 +8,69 @@
 #include "ExpOp.h"
 #include "LeafOperand.h"
 #include "Factor.h"
-#include "TreeIndex.h"
+#include "DoubleSymb.h"
+#include "IntSymb.h"
 
-
+using namespace boost::numeric::ublas;
 
 int main()
 {
-
-    double x=0,y=0,z=0, c1=1, c2=2, c3=3;
-//    std::cout << "Enter x: ";
-//    std::cin >> x;
-//    std::cout << "Enter y: ";
-//    std::cin >> y;
-//    std::cout  << "Enter z: ";
-//    std::cin >> z;
-//    std::cout << "Enter c1: ";
-//    std::cin >> c1;
-//    std::cout << "Enter c2: ";
-//    std::cin >> c2;
-//    std::cout  << "Enter c3: ";
-//    std::cin >> c3;
-
-    
-    
-    double var[] = {x,y,z};
-    std::vector<Operand*> testOperands;
-    
     std::vector<Operand*> store;
     std::vector<Operand*> terms;
+    
+    
+    // Set values for x,y and z
+    Symbol *x0,*x1,*x2, *x3, *x4, *x5, *x6, *x7;
+    
+    x0 = new DoubleSymb(1.3);
+    x1 = new DoubleSymb(-5.2);
+    x2 = new DoubleSymb(1);
+    x3 = new DoubleSymb(3.1);
+    x4 = new DoubleSymb(2.9);
+    x5 = new DoubleSymb(1.3);
+    x6 = new DoubleSymb(2);
+    x7 = new DoubleSymb(4);
+    
+    Symbol* var[] = {x0,x1,x2,x3,x4,x5,x6};
+    
+    // Define coefficients
+    Symbol *c1, *c2, *c3;
+    
+    c1 = new DoubleSymb(4.0);
+    c2 = new DoubleSymb(6.0);
+    c3 = new DoubleSymb(2.45);
+    
+    
+    //Create leaves and suboperands for
+    // f = c1((x_0)^2) + c2(x_1) + c3(x_0)(x_2)
+//    LeafOperand* c1Coeff = new LeafOperand(c1);
+//    LeafOperand* c2Coeff = new LeafOperand(c2);
+//    LeafOperand* c3Coeff = new LeafOperand(c3);
+//    
+//    LeafOperand* x0Var = new LeafOperand(0);
+//    LeafOperand* x1Var = new LeafOperand(1);
+//    LeafOperand* x2Var = new LeafOperand(2);
+//    ExpOp* x0e2 = new ExpOp(x0Var,2);
+//    
+//    store.push_back(c1Coeff);
+//    store.push_back(x0e2);
+//    terms.push_back(new MultOp(store));
+//    store.erase(store.begin(),store.end());
+//    
+//    store.push_back(c2Coeff);
+//    store.push_back(x1Var);
+//    terms.push_back(new MultOp(store));
+//    store.erase(store.begin(),store.end());
+//
+//    store.push_back(c3Coeff);
+//    store.push_back(x0Var);
+//    store.push_back(x2Var);
+//    terms.push_back(new MultOp(store));
+//    store.erase(store.begin(),store.end());
+//
+//    
+//    AdditionOp* tree = new AdditionOp(terms);
+ 
     
     LeafOperand* c1Coeff = new LeafOperand(c1);
     LeafOperand* c2Coeff = new LeafOperand(c2);
@@ -45,127 +80,171 @@ int main()
     LeafOperand* x1Var = new LeafOperand(1);
     LeafOperand* x2Var = new LeafOperand(2);
     
-    store.push_back(x0Var);
-    store.push_back(x1Var);
-    AdditionOp* x0p1 = new AdditionOp(2,store);
-    store.erase(store.begin(),store.end());
-    ExpOp* x0p1e2 = new ExpOp(x0p1,2);
-    ExpOp* x0p1e3 = new ExpOp(x0p1,3);
-    ExpOp* x0e2 = new ExpOp(x0Var,2);
-    
-    store.push_back(x0e2);
-    store.push_back(x2Var);
-    AdditionOp* x0e2p3 = new AdditionOp(2,store);
-//    ExpOp* x0e2p3e3 = new ExpOp(x0e2p3,3);
-    store.erase(store.begin(),store.end());
-    
-    
-    
-    store.push_back(c1Coeff);
-    store.push_back(x0p1e2);
-    terms.push_back(new MultOp(store.size(),store));
-    store.erase(store.begin(),store.end());
-    
-    store.push_back(c2Coeff);
-    store.push_back(x1Var);
-    store.push_back(x2Var);
-    terms.push_back(new MultOp(store.size(),store));
-    store.erase(store.begin(),store.end());
-    
-    store.push_back(c3Coeff);
-    store.push_back(x1Var);
-    store.push_back(x0p1e3);
-    terms.push_back(new MultOp(store.size(),store));
-    store.erase(store.begin(),store.end());
-    
-    AdditionOp tree(3, terms);
-    std::cout << tree.print().str() << std::endl;
+    LeafOperand* zVar = new LeafOperand(0);
+    LeafOperand* uVar = new LeafOperand(1);
+    LeafOperand* vVar = new LeafOperand(2);
+    LeafOperand* aVar = new LeafOperand(3);
+    LeafOperand* bVar = new LeafOperand(4);
+    LeafOperand* qVar = new LeafOperand(5);
+    LeafOperand* wVar = new LeafOperand(6);
 
-    std::cout << "result =  " << tree.evaluate(var) << "\n\n";
+    ExpOp* x0e2 = new ExpOp(x0Var,2);
+    ExpOp* x0e3 = new ExpOp(x0Var,3);
+    ExpOp* x0e4 = new ExpOp(x0Var,4);
+    ExpOp* x0e5 = new ExpOp(x0Var,5);
+    ExpOp* x0e6 = new ExpOp(x0Var,6);
+    ExpOp* x0e7 = new ExpOp(x0Var,7);
+    ExpOp* x1e2 = new ExpOp(x1Var,2);
+    ExpOp* x1e3 = new ExpOp(x1Var,3);
+    ExpOp* x1e4 = new ExpOp(x1Var,4);
+    ExpOp* x1e5 = new ExpOp(x1Var,5);
+    ExpOp* x1e6 = new ExpOp(x1Var,6);
+    ExpOp* x1e7 = new ExpOp(x1Var,7);
+    ExpOp* x2e2 = new ExpOp(x2Var,2);
+    ExpOp* x2e3 = new ExpOp(x2Var,3);
+    ExpOp* x2e4 = new ExpOp(x2Var,4);
     
+    ExpOp* ue2 = new ExpOp(uVar,2);
+    ExpOp* ue3 = new ExpOp(uVar,3);
+    ExpOp* ue4 = new ExpOp(uVar,4);
+    ExpOp* ve2 = new ExpOp(vVar,2);
+    ExpOp* ve3 = new ExpOp(vVar,3);
+    ExpOp* ve4 = new ExpOp(vVar,4);
     
-    
-    
-    Operand* factorSymb = x0p1;
-    std::cout << "Factoring out " << factorSymb->print().str() << std::endl;
-    std::vector<TreeIndex> index;
-    index = Factor::findSymbols(tree, factorSymb);
-    
-    std::vector<Operand*> treeOperands = tree.getOperands();
-    AdditionOp factoredTree;
-    
-    
-    for (int ii = 0; ii < index.size(); ii++)
-    {
-        Operand* term = treeOperands[index[ii].index];
-        store.push_back(Factor::reduceTerm(term, factorSymb));
-    }
-    
-    //Add the terms that were not factored to the factored tree
-    for(int ii = 0; ii < treeOperands.size(); ii++)
-    {
-        bool notFactor = true;
-        for(int jj=0; jj < index.size(); jj++)
-        {
-            if(ii == index[jj].index)
-            {
-                notFactor = false;
-            }
-        }
-        
-        if(notFactor)
-        {
-            factoredTree.addOperand(treeOperands[ii]);
-        }
-    }
-    
-    AdditionOp factoredTerms(store.size(), store);
-    store.erase(store.begin(),store.end());
-    store.push_back(factorSymb);
-    store.push_back(&factoredTerms);
-    MultOp* multTerms = new MultOp(2,store);
-    store.erase(store.begin(),store.end());
-    
-    factoredTree.addOperand(multTerms);
-    
-    std::cout << factoredTree.print().str() << std::endl;
+    AdditionOp* x0px1 = new AdditionOp();
+    x0px1->addOperand(x0Var);
+    x0px1->addOperand(x1Var);
     
     
     
     
     
+    AdditionOp* ex1 = new AdditionOp();
+    
+    MultOp* temp = new MultOp();
+    temp->addOperand(zVar);
+    ex1->addOperand(temp);
+    
+
     
     
- 
+    
+    AdditionOp* ex2 = new AdditionOp();
+    temp = new MultOp();
+    temp->addOperand(x0e2);
+//    temp->addOperand(x1Var);
+    ex2->addOperand(temp);
+    
+    temp = new MultOp();
+    temp->addOperand(x0Var);
+//    temp->addOperand(x1Var);
+    ex2->addOperand(temp,2);
+  
+//    temp = new MultOp();
+//    temp->addOperand(x0e2);
+//    temp->addOperand(x1Var);
+//    ex2->addOperand(temp);
+
+    ex2->addOperand(x1Var,-1);
+
     
     
-    
-//    ExpOp* x5Var = new ExpOp(x0Var,5);
-//    store.push_back(c1Coeff);
-//    store.push_back(x5Var);
-//    terms[0] = new MultOp(2,store);
-//    testOperands.push_back(terms[0]);
-//
-//    store.erase(store.begin(),store.end());
-//    LeafOperand* yVar = new LeafOperand(1);
-//    store.push_back(c2Coeff);
-//    store.push_back(yVar);
-//    terms[1] = new MultOp(2,store);
-//    testOperands.push_back(terms[1]);
+    ////////// Sum terms doesn't work for this example////////////
+    AdditionOp* ex3 = new AdditionOp();
+//    temp = new MultOp();
+//    temp->addOperand(x0e7);
+////    temp->addOperand(x1e7);
+//    ex3->addOperand(temp);
 //    
-//    store.erase(store.begin(),store.end());
-//    LeafOperand* zVar = new LeafOperand(2);
-//    ExpOp* z2Var = new ExpOp(zVar,2);
-//    store.push_back(c3Coeff);
-//    store.push_back(z2Var);
-//    terms[2] = new MultOp(2,store);
-//    testOperands.push_back(terms[2]);
-//
-//    AdditionOp add(3, testOperands);
-//    std::cout << "result =  " << add.evaluate(var) << "\n";
-//    
-//    std::cout << add.print().str() << std::endl;
+//    temp = new MultOp();
+//    temp->addOperand(x0e6);
+////    temp->addOperand(x1e7);
+//    ex3->addOperand(temp);
     
+    temp = new MultOp();
+    temp->addOperand(x0e5);
+//    temp->addOperand(x1e2);
+    ex3->addOperand(temp);
+    
+    temp = new MultOp();
+    temp->addOperand(x0e4);
+//    temp->addOperand(x1e7);
+    ex3->addOperand(temp);
+    
+    temp = new MultOp();
+    temp->addOperand(x0e3);
+    temp->addOperand(x1e5);
+    ex3->addOperand(temp);
+
+    temp = new MultOp();
+    temp->addOperand(x0e2);
+    temp->addOperand(x1e6);
+    ex3->addOperand(temp);
+
+    temp = new MultOp();
+    temp->addOperand(x0Var);
+    temp->addOperand(x1e7);
+    ex3->addOperand(temp);
+
+
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    //Example 1
+    std::cout << "Evaluate = " << ex1->evaluate(var)->print().str() << std::endl;
+    std::cout << ex1->print().str() << std::endl;
+    std::cout << "+'s = " << Factor::countAdds(ex1) << std::endl;
+    std::cout << "*'s = " << Factor::countMults(ex1) << std::endl;
+
+    ex1 = Factor::factorAdd(ex1);
+    std::cout << "Evaluate = " << ex1->evaluate(var)->print().str() << std::endl;
+    std::cout << ex1->print().str() << std::endl;
+    std::cout << "+'s = " << Factor::countAdds(ex1) << std::endl;
+    std::cout << "*'s = " << Factor::countMults(ex1) << std::endl;
+
+    
+    
+    //Example 2
+    std::cout << "Evaluate = " << ex2->evaluate(var)->print().str() << std::endl;
+    std::cout << ex2->print().str() << std::endl;
+    std::cout << "+'s = " << Factor::countAdds(ex2) << std::endl;
+    std::cout << "*'s = " << Factor::countMults(ex2) << std::endl;
+    
+    ex2 = Factor::factorAdd(ex2);
+    std::cout << "Evaluate = " << ex2->evaluate(var)->print().str() << std::endl;
+    std::cout << ex2->print().str() << std::endl;
+    std::cout << "+'s = " << Factor::countAdds(ex2) << std::endl;
+    std::cout << "*'s = " << Factor::countMults(ex2) << std::endl;
+    
+    
+    //Example 3
+//    std::cout << "Evaluate = " << ex3->evaluate(var)->print().str() << std::endl;
+//    std::cout << ex3->print().str() << std::endl;
+//    std::cout << "+'s = " << Factor::countAdds(ex3) << std::endl;
+//    std::cout << "*'s = " << Factor::countMults(ex3) << std::endl;
+//    
+//    ex3 = Factor::factorAdd(ex3);
+//    std::cout << "Evaluate = " << ex3->evaluate(var)->print().str() << std::endl;
+//    std::cout << ex3->print().str() << std::endl;
+//    std::cout << "+'s = " << Factor::countAdds(ex3) << std::endl;
+//    std::cout << "*'s = " << Factor::countMults(ex3) << std::endl;
+    
+    
+    
+    
+    
+    
+    
+    
+  
     
     return 1;
 }
