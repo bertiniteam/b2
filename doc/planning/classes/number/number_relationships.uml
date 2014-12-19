@@ -1,0 +1,35 @@
+scale 1000 width
+
+@startuml
+
+namespace bertini{
+
+
+Number o-- double
+Number o-- mpfr_
+Number o-- unsigned_int
+
+Complex o-- Number
+
+Rational o-- long_long
+Rational o-- mpfr_z
+
+
+Vector o-- Complex
+
+class Number{
+double[] d
+multiprec[] mp
+int[] curr_prec
+
+set_prec()
+get_prec()
+}
+
+}
+
+@enduml
+
+
+
+
