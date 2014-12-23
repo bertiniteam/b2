@@ -1,0 +1,63 @@
+
+
+@startuml
+
+namespace bertini{
+namespace number{
+namespace scalar{
+class Rational{
+the Rational class, using multiple precision numbers
+==
+private data members
+..
+boost::multiprecision::type numer_
+boost::multiprecision::type denom_
+
+==
+getters
+
+numer()
+denom()
+
+AsFloat()  converts to floating point number at default precision
+AsFloat(unsigned int num_bits)  converts to floating point number at num_bits precision
+--
+
+==
+setters
+numer(type new_numer)
+denom(type new_denom)
+
+--
+
+
+==
+operators
+--
+Rational operator + ()
+Rational operator - ()
+Rational operator / ()
+Rational operator * ()
+Rational operator % ()
+
+
+==
+friend operators
+--
+ostream& operator << (ostream&, Rational)
+istream& operator >> (istream&, Rational&)
+
+==
+mpi methods
+--
+
+==
+serialization
+--
+
+
+}
+}
+}
+}
+@enduml
