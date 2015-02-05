@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  3 FEB 2015 15:08
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  5 FEB 2015 15:13
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -235,8 +235,7 @@ Now handling font encoding U ...
    defining Unicode char U+2026 (decimal 8230)
    defining Unicode char U+2122 (decimal 8482)
    defining Unicode char U+2423 (decimal 9251)
-))
-No file polynomial_class.aux.
+)) (/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/classes/polynomial/.texpadtmp/polynomial_class.aux)
 \openout1 = `polynomial_class.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 4.
@@ -252,36 +251,11 @@ LaTeX Font Info:    ... okay on input line 4.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 4.
 LaTeX Font Info:    ... okay on input line 4.
 
-./polynomial_class.tex:4: LaTeX Error: There's no line here to end.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.4 ...f8]{inputenc}     \begin{document}     \\\\
-                                                  @startuml\\\\namespace ber...
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
-
-
-./polynomial_class.tex:4: LaTeX Error: There's no line here to end.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.4 ...8]{inputenc}     \begin{document}     \\\\@
-                                                  startuml\\\\namespace bert...
-Your command was ignored.
-Type  I <command> <return>  to replace it with another command,
-or  <return>  to continue without it.
-
 ./polynomial_class.tex:4: Missing $ inserted.
 <inserted text> 
                 $
-l.4 ...e\\		..\\		String() virtual\\		return name_
-                                                  \\	}\\	\\	\\	class Plus {\...
+l.4 ...	class BinaryOperator {\\		-Node* leftnode_
+                                                  \\		-Node* rightnode_\\		-...
 I've inserted a begin-math/end-math symbol since I think
 you left one out. Proceed, with fingers crossed.
 
@@ -292,23 +266,52 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 ./polynomial_class.tex:4: Missing { inserted.
 <to be read again> 
                    \let 
+l.4 ...lass BinaryOperator {\\		-Node* leftnode_\\
+                                                  		-Node* rightnode_\\		--\...
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+./polynomial_class.tex:4: Missing { inserted.
+<to be read again> 
+                   \let 
+l.4 ...\\		-Node* leftnode_\\		-Node* rightnode_\\
+                                                  		--\\		virtual Evaluate()...
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+./polynomial_class.tex:4: Missing { inserted.
+<to be read again> 
+                   \let 
+l.4 ...	\\	class UnaryOperator {\\		-Node* node_\\
+                                                  		--\\		virtual Evaluate()...
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+./polynomial_class.tex:4: Missing { inserted.
+<to be read again> 
+                   \let 
+l.4 ...yOperator {\\		-std::vector<Node*> nodes_\\
+                                                  		--\\		virtual Evaluate()...
+A left brace was mandatory here, so I've put one in.
+You might want to delete and/or insert some corrections
+so that I will find a matching right brace soon.
+(If you're confused by all this, try typing `I}' now.)
+
+./polynomial_class.tex:4: Missing { inserted.
+<to be read again> 
+                   \let 
 l.4 ...\		..\\		String() virtual\\		return name_\\
                                                   	}\\	\\	\\	class Plus {\\	...
 A left brace was mandatory here, so I've put one in.
 You might want to delete and/or insert some corrections
 so that I will find a matching right brace soon.
 (If you're confused by all this, try typing `I}' now.)
-
-./polynomial_class.tex:4: Extra }, or forgotten $.
-<recently read> }
-                 
-l.4 ...lass Symbol {\\		empty virtual class\\	}\\}
-                                                  \\\\@enduml     \end{docum...
-I've deleted a group-closing symbol because it seems to be
-spurious, as in `$x}$'. But perhaps the } is legitimate and
-you forgot something else, as in `\hbox{$x}'. In such cases
-the way to recover is to insert both the forgotten and the
-deleted material, e.g., by typing `I$}'.
 
 ./polynomial_class.tex:4: Missing $ inserted.
 <inserted text> 
@@ -318,40 +321,38 @@ l.4 ... class\\	}\\}\\\\@enduml     \end{document}
 I've inserted a begin-math/end-math symbol since I think
 you left one out. Proceed, with fingers crossed.
 
+./polynomial_class.tex:4: Missing } inserted.
+<inserted text> 
+                }
+l.4 ... class\\	}\\}\\\\@enduml     \end{document}
+                                                  
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
 
-Underfull \hbox (badness 10000) in paragraph at lines 4--4
+./polynomial_class.tex:4: Missing } inserted.
+<inserted text> 
+                }
+l.4 ... class\\	}\\}\\\\@enduml     \end{document}
+                                                  
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 4--4
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 4--4
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 4--4
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 4--4
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 4--4
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 4--4
-
- []
+./polynomial_class.tex:4: Missing } inserted.
+<inserted text> 
+                }
+l.4 ... class\\	}\\}\\\\@enduml     \end{document}
+                                                  
+I've inserted something that you may have forgotten.
+(See the <inserted text> above.)
+With luck, this will get me unwedged. But if you
+really didn't forget anything, try typing `2' now; then
+my insertion and my current dilemma will both disappear.
 
 
 Underfull \hbox (badness 10000) in paragraph at lines 4--4
@@ -386,29 +387,49 @@ Underfull \hbox (badness 10000) in paragraph at lines 4--4
 
 Underfull \hbox (badness 10000) in paragraph at lines 4--4
 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 4--4
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 4--4
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 4--4
+
+ []
+
+
+Overfull \hbox (1466.14749pt too wide) in paragraph at lines 4--4
+\OT1/cmr/m/n/10 -Node* leftnode$[]$ 
  []
 
 [1
 
-{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2] (/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/classes/polynomial/.texpadtmp/polynomial_class.aux) )
+{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/classes/polynomial/.texpadtmp/polynomial_class.aux) )
 (\end occurred inside a group at level 2)
 
 ### simple group (level 2) entered at line 4 ({)
 ### simple group (level 1) entered at line 4 ({)
 ### bottom level 
 Here is how much of TeX's memory you used:
- 409 strings out of 493117
- 4684 string characters out of 6135433
+ 411 strings out of 493117
+ 4934 string characters out of 6135433
  58173 words of memory out of 5000000
  3943 multiletter control sequences out of 15000+600000
  3640 words of font info for 14 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 23i,4n,17p,1595b,131s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb>
-Output written on /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/classes/polynomial/.texpadtmp/polynomial_class.pdf (2 pages, 33117 bytes).
+ 23i,7n,17p,1933b,131s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr5.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
+Output written on /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/classes/polynomial/.texpadtmp/polynomial_class.pdf (1 page, 74609 bytes).
 PDF statistics:
- 19 PDF objects out of 1000 (max. 8388607)
- 12 compressed objects within 1 object stream
+ 36 PDF objects out of 1000 (max. 8388607)
+ 25 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
