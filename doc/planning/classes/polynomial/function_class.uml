@@ -1,109 +1,113 @@
 @startuml
+title Function Class and Nodes
 
-namespace bertini{
+
+
+
+
+	Function o-- Node
 	
 	Node <|-- BinaryOperator
 	Node <|-- UnaryOperator
-	Node <|-- MAryOperator
+	Node <|-- M_aryOperator
 	Node <|-- Symbol
+	
 	BinaryOperator <|-- Plus
 	BinaryOperator <|-- Minus
-	UnaryOperator <|-- Negate
 	BinaryOperator <|-- Times
 	BinaryOperator <|-- Divide
+	UnaryOperator <|-- Negate
 	UnaryOperator <|-- Exp
 	UnaryOperator <|-- Log
 	UnaryOperator <|-- Sine
 	UnaryOperator <|-- Cosine
-	MAryOperator <|-- UserDefined
+	M_aryOperator <|-- UserDefined
 	
 	Symbol <|-- Variable
-	Symbol <|-- PathPariable
+	Symbol <|-- PathVariable
 	Symbol <|-- Coefficient
 	
+	 
+	 
+	 
 	
-	Function o-- Node 
-	
-	class Node {
+	interface Node {
 		disallow empty instantiation?  
-		this might be acheieved by pure virtualism
-		--
-            	virtual SetPrecision(int prec)
-            	..
-            	virtual Evaluate()
-            	..
-            	virtual String()
-            	
-            	--
-            	
+		this might be achieved by pure virtualism
+		--public--
+            	+{abstract} virtual SetPrecision(int prec)
+            	+{abstract} virtual Evaluate() //Returns Symbol?
+            	+{abstract} virtual String()
+        --private--      	
             	-Node()  private so that empty construction prohibited.  
             	this may help protect against errors in parsing
 	}
 	
-	class BinaryOperator {
+	
+	
+	
+	
+	interface BinaryOperator {
+		--private--
 		-Node* leftnode_
 		-Node* rightnode_
-		--
-		virtual Evaluate()
 	}
 	
-	class UnaryOperator {
+	interface UnaryOperator {
+		--private--
 		-Node* node_
-		--
-		virtual Evaluate()
 	}
 	
-	class MAryOperator {
+	interface M_aryOperator {
+		--private--
 		-std::vector<Node*> nodes_
-		--
-		virtual Evaluate()
+	}
+	interface Symbol {
+	why do we need this?
 	}
 
 	
 	
-	class Variable {
-		..
-		Evaluate() virtual
-		return current value
-		..
-		String() virtual
-		return name_
-	}
+	
+	
 	
 	
 	class Plus {
-		+Plus(Node, Node)
-		..
-		String()
+		
 	}
 	
 	class Minus {
-		+Minus(Node,Node)
-		..
+		
 	}
 	
 	class Negate {
-		+Negate(Node)
-		..
+		
 	}
 	
 	class Times {
-		+Times(Node,Node)
-		..
+		
 	}
 	
 	
 	class Divide {
-		+Divide(Node, Node)
+		
 	}
+
+
+
+
+
+	
+	
+	class Variable {
+	}
+	
+	
 	
 	class Function {
 		*Node  top of the tree
 	}
 	
-	class Symbol {
-		empty virtual class
-	}
-}
+
 
 @enduml
