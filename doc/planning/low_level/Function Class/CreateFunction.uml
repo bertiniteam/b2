@@ -1,0 +1,87 @@
+@startuml
+title Make Function Flow Diagram
+
+partition Parser {
+(*) --> Parse expression
+--> "Make node for op @
+Make @ node head node for function"
+--> "Binary or Unary?" as BoU
+}
+
+partition Binary {
+===BRep1=== --> Parse eL
+}
+
+partition Parser {
+BoU --> "eL @ eR" 
+--> ===BRep1===
+}
+
+partition Binary {
+"Parse eL" --> "Is eL a leaf?"
+-->[yes] "Create leaf node for eL
+and attach to @ node" as endL
+
+"Is eL a leaf?" -->[no] "Is eL Binary" 
+-->[yes] eL = fL % fR
+-->[yes] "Create op node form %
+and attach to @ node"
+--> "Redefine @:=% 
+eL:=fL, eR:=fR"
+--> ===BRep1===
+}
+
+partition Unary {
+===URep1=== --> Parse e
+}
+
+partition Binary {
+"Is eL Binary" -->[no] "@ e"
+--> ===URep1===
+
+endL --> Parse eR
+--> "Is eR a leaf?"
+-->[yes] "Create leaf node for eR
+and attach to @ node" as endR
+--> (*)
+
+"Is eR a leaf?" -->[no] Is eR binary?
+-->[yes] eR = gL & gR
+--> "Create op node for &
+and attach to @ node"
+--> "Redefine @:=&
+eL:=gL, eR:=gR"
+--> ===BRep1===
+
+"Is eR binary?" -->[no] ===URep1===
+}
+
+
+
+
+partition Parser {
+BoU -->[Unary] "@e"
+--> ===URep1===
+}
+
+
+partition Unary {
+
+===URep1=== --> Parse e
+--> Is e a leaf?
+-->[yes] "Create leaf node for e
+and attach to @ node"
+--> (*)
+
+"Is e a leaf?" -->[no] Is e Unary?
+-->[yes]e = %f
+--> "Create op node for %
+and attach to @ node"
+--> Redefine @:= %, e:= f
+--> ===URep1===
+
+"Is e Unary?" -->[no] ===BRep1===
+}
+
+
+@enduml
