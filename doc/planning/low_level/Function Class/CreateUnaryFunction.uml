@@ -3,20 +3,21 @@ title Make Function Flow Diagram
 
 partition Unary {
 
-:Parse Expression;
-if(Leaf) then(yes)
-    :Add as head node
-    to Function;
-    end
-else
-    :Add op as head node
-    to Function;
-    repeat
-        :Make Node for e;
-        :Attach e to @ op;
-    repeat while(e not a leaf)
-endif
-end
+(*) --> Parse @e
+--> "Make node for op @
+Add @ as head node to Function"
+--> ===Rep1===
+--> Parse e
+--> Is e a leaf?
+-->[yes] "Create leaf node for e
+and attach to @ node"
+--> (*)
+
+"Is e a leaf?" -->[no] e = %f
+--> "Create op node for %
+and attach to @ node"
+--> Redefine @:= %, e:= f
+--> ===Rep1===
 }
 
 @enduml
