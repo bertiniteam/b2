@@ -19,26 +19,4 @@ endif
 end
 }
 
-partition Binary {
-:Parse Expression;
-if(Leaf) then(yes)
-    :Add as head node
-    to Function;
-    end
-else
-    :Add op as head node
-    to Function;
-    repeat
-        -Make
-        :Make Node for e;
-        :Attach e to @ op;
-        -Make
-    repeat while(e not a leaf)
-endif
-end
-
-}
-
-
-
 @enduml
