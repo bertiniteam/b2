@@ -9,6 +9,13 @@
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/split_member.hpp>
+
+#include <boost/serialization/unique_ptr.hpp>
+
+
 #include <random>
 #include <cmath>
 #include <exception>
@@ -28,8 +35,6 @@
 namespace bertini {
 	
 
-	
-	
 	
 	using boost::multiprecision::mpfr_float;
 	
@@ -137,11 +142,36 @@ namespace bertini {
 		
 		
 		
+		
 	private:
 		
 		std::unique_ptr<mpfr_float> number_as_multiple_precision_;
 		std::unique_ptr<double> number_as_double_;
 		unsigned int current_precision_;
+		
+		
+		
+		
+//		friend class boost::serialization::access;
+//		
+//		template<class Archive>
+//		void save(Archive & ar, const unsigned int version) const
+//		{
+//			// note, version is always the latest when saving
+//			ar & current_precision_;
+//			ar & number_as_multiple_precision_;
+//			ar & number_as_double_;
+//		}
+//		template<class Archive>
+//		void load(Archive & ar, const unsigned int version)
+//		{
+//			ar & current_precision_;
+//			ar & number_as_multiple_precision_;
+//			ar & number_as_double_;
+//		}
+//		
+//		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		
 		
 	public:
 		
@@ -2303,8 +2333,9 @@ namespace bertini {
 	
 	
 	
-	
 } //re: bertini namespaces
+
+BOOST_CLASS_VERSION(bertini::Float, 0)
 
 
  namespace Eigen {

@@ -818,6 +818,46 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 
+//#include <fstream>
+//
+//
+//BOOST_AUTO_TEST_SUITE(Float_serialization)
+//
+//BOOST_AUTO_TEST_CASE(Float_serialize_double)
+//{
+//	// create and open a character archive for output
+//	std::ofstream ofs("float_archive_test");
+//	
+//	boost::multiprecision::mpfr_float::default_precision(16);
+//	
+//	bertini::Float a;
+//	a.MakeRandom();
+//	
+//	{
+//		boost::archive::text_oarchive oa(ofs);
+//		
+//		// write class instance to archive
+//		oa << a;
+//		// archive and stream closed when destructors are called
+//	}
+//	
+//	
+//	bertini::Float b;
+//	{
+//		// create and open an archive for input
+//		std::ifstream ifs("float_archive_test");
+//		boost::archive::text_iarchive ia(ifs);
+//		// read class state from archive
+//		ia >> b;
+//		// archive and stream closed when destructors are called
+//	}
+//	
+//	BOOST_CHECK_EQUAL(a,b);
+//	
+//}
+//
+//BOOST_AUTO_TEST_SUITE_END()
+
 
 
 
