@@ -302,8 +302,8 @@ BOOST_AUTO_TEST_CASE(Float_absolute_value_multiple_precision)
 	boost::multiprecision::mpfr_float::default_precision(30);
 	
 	bertini::Float a("-0.1");
-	BOOST_CHECK_EQUAL( abs(a) , bertini::Float(0.1));
-	
+	BOOST_CHECK_EQUAL( abs(a) , bertini::Float("0.1"));
+	BOOST_CHECK( (abs(a)-bertini::Float(0.1)) < 1e-17);	
 }
 
 

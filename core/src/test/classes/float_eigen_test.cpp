@@ -161,13 +161,12 @@ BOOST_AUTO_TEST_CASE(static_epsilon_function)
 {
 	
 	boost::multiprecision::mpfr_float::default_precision(50);
-	BOOST_CHECK_EQUAL(Eigen::NumTraits<bertini::Float>::epsilon(),bertini::Float(1e-49));
-	
+	BOOST_CHECK_EQUAL(Eigen::NumTraits<bertini::Float>::epsilon(),bertini::Float("1e-49"));
+	BOOST_CHECK( (Eigen::NumTraits<bertini::Float>::epsilon()-bertini::Float(1e-49)) < 1e-50);
 	
 	boost::multiprecision::mpfr_float::default_precision(100);
-	BOOST_CHECK_EQUAL(Eigen::NumTraits<bertini::Float>::epsilon(),bertini::Float(1e-99));
-	
-	
+	BOOST_CHECK_EQUAL(Eigen::NumTraits<bertini::Float>::epsilon(),bertini::Float("1e-99"));
+	BOOST_CHECK( (Eigen::NumTraits<bertini::Float>::epsilon()-bertini::Float(1e-99)) < 1e-100);
 }
 
 

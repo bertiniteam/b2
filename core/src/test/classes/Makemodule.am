@@ -3,7 +3,7 @@
 bin_PROGRAMS += b2_class_test
 
 b2_class_test_SOURCES = src/test/classes/class_test.cpp src/test/classes/float_test.cpp include/float.hpp \
-	src/test/classes/float_eigen_test.cpp src/test/classes/float_complex_test.cpp
+	src/test/classes/float_eigen_test.cpp
 
 
 
