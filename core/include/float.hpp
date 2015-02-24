@@ -38,6 +38,100 @@ namespace bertini {
 	 
 	 
 	 Members of this class have pointers to a double and a multiple-precision number, which is populated as needed.  Operations are required to stay within the precision of two numbers, and (e.g.) addition of two bertini::Floats will result in a throw of a runtime_error.
+	 
+	 
+	 
+	 @startuml{Float.ChangePrecision,scale=1/2}
+	 
+	 
+	 namespace bertini{
+	 
+	 class Float {
+	 
+	 The Bertini class for floating point Adaptive Multiple Precision numbers.
+	 ..
+	 Will hold multiple precision and double type numbers, and have methods
+	 for switching between the two, as well as changing the precision of the MP Float.
+	 ==
+	 data members
+	 --
+	 -std::unique_ptr<double> number_as_double_;
+	 -std::unique_ptr<boost::multiprecision::mpfr_float> number_as_multiple_precision_;
+	 -unsigned int current_precision_;
+	 
+	 
+	 ==
+	 setters
+	 --
+	 +void ChangePrecision(unsigned int num_bits)
+	 sets the precision in terms of the number of bits desired.
+	 switches between number types internally based on the desired precision.
+	 if going from high to low, then allocate the double type, copy the value, and clear the mpfr type.
+	 if going from low to high, then allocate the mpfr type to desired precision, copy the value, and clear the double.
+	 ..
+	 
+	 
+	 ==
+	 getters
+	 --
+	 +unsigned int Precision() const; ///< get the current working precision in digits.  16 is double precision
+	 
+	 ==
+	 operators
+	 --
+	 +Float operator = (const Float& right); // the assignment operator
+	 
+	 ==
+	 friend operators
+	 ..
+	 +friend ostream & operator << (ostream & out, Float & n);
+	 ..
+	 +friend Float operator +(const Float & left, const Float & right);
+	 ..
+	 +friend Float operator -(const Float & left, const Float & right);
+	 ..
+	 +friend Float operator *(const Float & left, const Float & right);
+	 ..
+	 +friend Float operator /(const Float & left, const Float & right);
+	 ..
+	 +friend Float operator %(const Float & left, const Float & right);
+	 
+	 
+	 ==
+	 mpi methods
+	 --
+	 optionally compiled via a #ifdef construct
+	 
+	 int Send(unsigned int target)
+	 ..
+	 int Receive(unsigned int source)
+	 ..
+	 int Send(unsigned int target, communicator comm)
+	 ..
+	 int Receive(unsigned int source, communicator comm)
+	 ..
+	 int BcastSend()
+	 ..
+	 int BcastSend(communicator)
+	 ..
+	 int BcastReceive(source)
+	 ..
+	 int BcastReceive(source, communicator)
+	 
+	 
+	 ==
+	 serialization
+	 --
+	 see << >> operators
+	 use Boost.Serialization for archiving
+	 }
+	 }
+	 @enduml
+	 
+	 
+	 
+	 
+	 
 	 */
 	class Float{
 		
@@ -57,7 +151,7 @@ namespace bertini {
 		/**
 		 \brief Default constructor.
 		 
-		 The default constructor creates an empty AMP number, of precision 0.
+		 The default constructor creates an empty AMP number, of precision equal to the current default precision, boost::multiprecision::mpfr_float::default_precision().
 		 */
 		Float() : current_precision_(mpfr_float::default_precision())
 		{
@@ -263,36 +357,68 @@ namespace bertini {
 		/**
 		 \brief Change the precision of a bertini::Float to that which you desire.
 		 
-		 \param new_precision The new precision, in bits, of the number.  if 0, will become empty number.  Otherwise, sets the field accordingly.
+		 \param new_precision The new precision, in bits, of the number.  if 0, will throw, because this is unacceptable.  Otherwise, sets the fields accordingly.
+		 
+		 
+		 
+		 
+		 @startuml
+				 start
+				
+				 if (new_precision==0) then (yes)
+					:throw]
+					 stop
+				 endif
+		 
+	
+				 if (this->Precision() <= 16) then (yes, currently double)
+					if (new_precision <= 16) then (yes, new is double)
+						stop
+					else (new_precision>16)
+						 :number_as_multiple_precision_.reset(new mp)]
+						 :number_as_multiple_precision_.precision(new_precision)]
+						 :number_as_multiple_precision_ = *number_as_double]
+						 :number_as_double_.reset(nullptr)]
+					endif
+				 else (no, mp already)
+					if (new_precision <= 16) then (yes, turn into a double)
+						 :number_as_double_.reset(new double(*number_as_multiple_precision_))]
+						 :number_as_multiple_precision_.reset(nullptr)]
+					else
+						:number_as_multiple_precision_.precision(new_precision)]
+					endif
+				 endif
+
+				 :current_precision_ = new_precision]
+				 stop
+		 
+		 @enduml
+		 
+		 
+		 
 		 */
 		void ChangePrecision(unsigned int new_precision)
 		{
 			
+			if (new_precision==0) {
+				throw std::runtime_error("trying to set a bertini::Float with 0 precision.");
+			}
+			
+			
 			if (this->Precision()==0) {
-				if (new_precision==0) {
-					return;
+				if (new_precision<17) {
+					number_as_double_.reset(new double(0));
+					number_as_multiple_precision_.release();
 				}
 				else{
-					if (new_precision<17) {
-						number_as_double_.reset(new double);
-					}
-					else{
-						number_as_multiple_precision_.reset(new mpfr_float);
-						number_as_multiple_precision_->precision(new_precision);
-					}
+					number_as_multiple_precision_.reset(new mpfr_float(0));
+					number_as_multiple_precision_->precision(new_precision);
+					number_as_double_.release();
 				}
 			}
 			else
 			{// if pre-existing precision is not 0; already set to something.
-				if (new_precision==0) {
-					if (this->Precision()<17) {
-						number_as_double_.release();
-					}
-					else{
-						number_as_multiple_precision_.release();
-					}
-				}
-				else{
+				
 					if (this->Precision()<17) {
 						if (new_precision<17) {
 							return;
@@ -314,7 +440,6 @@ namespace bertini {
 							number_as_multiple_precision_->precision(new_precision);
 						}
 					}
-				} // re: if (else) new_precision==0
 			}//re: if Precision==0
 			 //done manually changing the fields to correct precision, now change the tracked number representing the precision.
 			current_precision_ = new_precision;
@@ -924,10 +1049,10 @@ namespace bertini {
 		Float & operator+=(const Float & rhs)
 		{
 			if (this->Precision()==0) {
-				throw std::runtime_error("trying to add two bertini::Numbers and the left has 0 precision");
+				throw std::runtime_error("trying to add two bertini::Floats and the left has 0 precision");
 			}
 			if (rhs.Precision()==0) {
-				throw std::runtime_error("trying to add two bertini::Numbers and the right has 0 precision");
+				throw std::runtime_error("trying to add two bertini::Floats and the right has 0 precision");
 			}
 			
 			if (this->Precision()!=rhs.Precision()) {
@@ -948,49 +1073,69 @@ namespace bertini {
 		
 		
 		
-		
-		Float & operator+=(const double & rhs)
-		{
-			if (this->Precision()==0) {
-				throw std::runtime_error("trying to add two bertini::Numbers and the left has 0 precision");
-			}
-
-			if (this->Precision()<17){
-				// both double, so add the double.
-				*(this->number_as_double_) += rhs;
-			}
-			else{
-				throw std::runtime_error("trying to add high-precision bertini::Float with a double");
-			}
-
-			
-			return *this;
-		}
-		
-		
-		
-		
-		Float & operator+=(const mpfr_float & rhs)
-		{
-			if (this->Precision()==0) {
-				throw std::runtime_error("trying to add two bertini::Numbers and the left has 0 precision");
-			}
-			
-			if (this->Precision()!=rhs.precision()){
-				throw std::runtime_error("trying to add bertini::Float to a multiprecision number of differing precision");
-			}
-			
-			if (this->Precision()<17){
-				// both double, so add the double.
-				throw std::runtime_error("trying to add double bertini::Float with a mpfr_float");
-			}
-			else{
-				*(this->number_as_multiple_precision_) += rhs;
-			}
-			
-			return *this;
-		}
-		
+//		
+//		Float & operator+=(const double & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to add two bertini::Floats and the left has 0 precision");
+//			}
+//
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				*(this->number_as_double_) += rhs;
+//			}
+//			else{
+//				throw std::runtime_error("trying to add high-precision bertini::Float with a double");
+//			}
+//
+//			
+//			return *this;
+//		}
+//		
+//		
+//		
+//		friend double & operator+=(const double & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to add two bertini::Floats and the left has 0 precision");
+//			}
+//			
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				*(this->number_as_double_) += rhs;
+//			}
+//			else{
+//				throw std::runtime_error("trying to add high-precision bertini::Float with a double");
+//			}
+//			
+//			
+//			return *this;
+//		}
+//		
+//		
+//		
+//		
+//		Float & operator+=(const mpfr_float & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to add two bertini::Floats and the left has 0 precision");
+//			}
+//			
+//			if (this->Precision()!=rhs.precision()){
+//				throw std::runtime_error("trying to add bertini::Float to a multiprecision number of differing precision");
+//			}
+//			
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				throw std::runtime_error("trying to add double bertini::Float with a mpfr_float");
+//			}
+//			else{
+//				*(this->number_as_multiple_precision_) += rhs;
+//			}
+//			
+//			return *this;
+//		}
+//		
 		
 	
 
@@ -1013,10 +1158,10 @@ namespace bertini {
 		Float & operator-=(const Float & rhs)
 		{
 			if (this->Precision()==0) {
-				throw std::runtime_error("trying to subtract bertini::Numbers and the left has 0 precision");
+				throw std::runtime_error("trying to subtract bertini::Floats and the left has 0 precision");
 			}
 			if (rhs.Precision()==0) {
-				throw std::runtime_error("trying to subtract bertini::Numbers and the right has 0 precision");
+				throw std::runtime_error("trying to subtract bertini::Floats and the right has 0 precision");
 			}
 			
 			if (this->Precision()!=rhs.Precision()) {
@@ -1038,47 +1183,47 @@ namespace bertini {
 		
 		
 		
-		Float & operator-=(const double & rhs)
-		{
-			if (this->Precision()==0) {
-				throw std::runtime_error("trying to subtract bertini::Numbers and the left has 0 precision");
-			}
-			
-			if (this->Precision()<17){
-				// both double, so add the double.
-				*(this->number_as_double_) -= rhs;
-			}
-			else{
-				throw std::runtime_error("trying to subtract high-precision bertini::Float with a double");
-			}
-			
-			
-			return *this;
-		}
-		
-		
-		
-		
-		Float & operator-=(const mpfr_float & rhs)
-		{
-			if (this->Precision()==0) {
-				throw std::runtime_error("trying to subtract two bertini::Numbers and the left has 0 precision");
-			}
-			
-			if (this->Precision()!=rhs.precision()){
-				throw std::runtime_error("trying to subtract bertini::Float to a multiprecision number of differing precision");
-			}
-			
-			if (this->Precision()<17){
-				// both double, so add the double.
-				throw std::runtime_error("trying to subtract double bertini::Float with a mpfr_float");
-			}
-			else{
-				*(this->number_as_multiple_precision_) -= rhs;
-			}
-			
-			return *this;
-		}
+//		Float & operator-=(const double & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to subtract bertini::Floats and the left has 0 precision");
+//			}
+//			
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				*(this->number_as_double_) -= rhs;
+//			}
+//			else{
+//				throw std::runtime_error("trying to subtract high-precision bertini::Float with a double");
+//			}
+//			
+//			
+//			return *this;
+//		}
+//		
+//		
+//		
+//		
+//		Float & operator-=(const mpfr_float & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to subtract two bertini::Floats and the left has 0 precision");
+//			}
+//			
+//			if (this->Precision()!=rhs.precision()){
+//				throw std::runtime_error("trying to subtract bertini::Float to a multiprecision number of differing precision");
+//			}
+//			
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				throw std::runtime_error("trying to subtract double bertini::Float with a mpfr_float");
+//			}
+//			else{
+//				*(this->number_as_multiple_precision_) -= rhs;
+//			}
+//			
+//			return *this;
+//		}
 		
 		
 		
@@ -1096,7 +1241,7 @@ namespace bertini {
 		Float operator-() const
 		{
 			if (this->Precision()==0) {
-				throw std::runtime_error("trying to negate a bertini::Numbers and it has 0 precision");
+				throw std::runtime_error("trying to negate a bertini::Floats and it has 0 precision");
 			}
 			
 			if (this->Precision()<17)
@@ -1130,10 +1275,10 @@ namespace bertini {
 		Float & operator*=(const Float & rhs)
 		{
 			if (this->Precision()==0) {
-				throw std::runtime_error("trying to multiply  bertini::Numbers and the left has 0 precision");
+				throw std::runtime_error("trying to multiply  bertini::Floats and the left has 0 precision");
 			}
 			if (rhs.Precision()==0) {
-				throw std::runtime_error("trying to multiply bertini::Numbers and the right has 0 precision");
+				throw std::runtime_error("trying to multiply bertini::Floats and the right has 0 precision");
 			}
 			
 			if (this->Precision()!=rhs.Precision()) {
@@ -1155,47 +1300,47 @@ namespace bertini {
 		
 		
 		
-		Float & operator*=(const double & rhs)
-		{
-			if (this->Precision()==0) {
-				throw std::runtime_error("trying to multiply bertini::Numbers and the left has 0 precision");
-			}
-			
-			if (this->Precision()<17){
-				// both double, so add the double.
-				*(this->number_as_double_) *= rhs;
-			}
-			else{
-				throw std::runtime_error("trying to multiply high-precision bertini::Float with a double");
-			}
-			
-			
-			return *this;
-		}
-		
-		
-		
-		
-		Float & operator*=(const mpfr_float & rhs)
-		{
-			if (this->Precision()==0) {
-				throw std::runtime_error("trying to multiply two bertini::Numbers and the left has 0 precision");
-			}
-			
-			if (this->Precision()!=rhs.precision()){
-				throw std::runtime_error("trying to multiply bertini::Float to a multiprecision number of differing precision");
-			}
-			
-			if (this->Precision()<17){
-				// both double, so add the double.
-				throw std::runtime_error("trying to multiply double bertini::Float with a mpfr_float");
-			}
-			else{
-				*(this->number_as_multiple_precision_) *= rhs;
-			}
-			
-			return *this;
-		}
+//		Float & operator*=(const double & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to multiply bertini::Floats and the left has 0 precision");
+//			}
+//			
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				*(this->number_as_double_) *= rhs;
+//			}
+//			else{
+//				throw std::runtime_error("trying to multiply high-precision bertini::Float with a double");
+//			}
+//			
+//			
+//			return *this;
+//		}
+//		
+//		
+//		
+//		
+//		Float & operator*=(const mpfr_float & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to multiply two bertini::Floats and the left has 0 precision");
+//			}
+//			
+//			if (this->Precision()!=rhs.precision()){
+//				throw std::runtime_error("trying to multiply bertini::Float to a multiprecision number of differing precision");
+//			}
+//			
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				throw std::runtime_error("trying to multiply double bertini::Float with a mpfr_float");
+//			}
+//			else{
+//				*(this->number_as_multiple_precision_) *= rhs;
+//			}
+//			
+//			return *this;
+//		}
 
 		
 		
@@ -1215,10 +1360,10 @@ namespace bertini {
 		Float & operator/=(const Float & rhs)
 		{
 			if (this->Precision()==0) {
-				throw std::runtime_error("trying to divide  bertini::Numbers and the left has 0 precision");
+				throw std::runtime_error("trying to divide  bertini::Floats and the left has 0 precision");
 			}
 			if (rhs.Precision()==0) {
-				throw std::runtime_error("trying to divide bertini::Numbers and the right has 0 precision");
+				throw std::runtime_error("trying to divide bertini::Floats and the right has 0 precision");
 			}
 			
 			if (this->Precision()!=rhs.Precision()) {
@@ -1240,47 +1385,47 @@ namespace bertini {
 		
 		
 		
-		Float & operator/=(const double & rhs)
-		{
-			if (this->Precision()==0) {
-				throw std::runtime_error("trying to divide bertini::Numbers and the left has 0 precision");
-			}
-			
-			if (this->Precision()<17){
-				// both double, so add the double.
-				*(this->number_as_double_) /= rhs;
-			}
-			else{
-				throw std::runtime_error("trying to divide high-precision bertini::Float with a double");
-			}
-			
-			
-			return *this;
-		}
-		
-		
-		
-		
-		Float & operator/=(const mpfr_float & rhs)
-		{
-			if (this->Precision()==0) {
-				throw std::runtime_error("trying to divide two bertini::Numbers and the left has 0 precision");
-			}
-			
-			if (this->Precision()!=rhs.precision()){
-				throw std::runtime_error("trying to divide bertini::Float to a multiprecision number of differing precision");
-			}
-			
-			if (this->Precision()<17){
-				// both double, so add the double.
-				throw std::runtime_error("trying to divide double bertini::Float with a mpfr_float");
-			}
-			else{
-				*(this->number_as_multiple_precision_) /= rhs;
-			}
-			
-			return *this;
-		}
+//		Float & operator/=(const double & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to divide bertini::Floats and the left has 0 precision");
+//			}
+//			
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				*(this->number_as_double_) /= rhs;
+//			}
+//			else{
+//				throw std::runtime_error("trying to divide high-precision bertini::Float with a double");
+//			}
+//			
+//			
+//			return *this;
+//		}
+//		
+//		
+//		
+//		
+//		Float & operator/=(const mpfr_float & rhs)
+//		{
+//			if (this->Precision()==0) {
+//				throw std::runtime_error("trying to divide two bertini::Floats and the left has 0 precision");
+//			}
+//			
+//			if (this->Precision()!=rhs.precision()){
+//				throw std::runtime_error("trying to divide bertini::Float to a multiprecision number of differing precision");
+//			}
+//			
+//			if (this->Precision()<17){
+//				// both double, so add the double.
+//				throw std::runtime_error("trying to divide double bertini::Float with a mpfr_float");
+//			}
+//			else{
+//				*(this->number_as_multiple_precision_) /= rhs;
+//			}
+//			
+//			return *this;
+//		}
 
 		
 		
@@ -1302,22 +1447,22 @@ namespace bertini {
 		}
 		
 		
-		inline friend Float operator+(Float lhs, double rhs)
-		{
-			lhs+=rhs;
-			return lhs;
-		}
-		
-		
-		inline friend Float operator+(double lhs, const Float & rhs)
-		{
-			return lhs+=rhs;
-		}
-		
-		inline friend Float operator+(mpfr_float lhs, const Float & rhs)
-		{
-			return lhs+=rhs;
-		}
+//		inline friend Float operator+(Float lhs, double rhs)
+//		{
+//			lhs+=rhs;
+//			return lhs;
+//		}
+//		
+//		
+//		inline friend Float operator+(double lhs, const Float & rhs)
+//		{
+//			return lhs+=rhs;
+//		}
+//		
+//		inline friend Float operator+(mpfr_float lhs, const Float & rhs)
+//		{
+//			return lhs+=rhs;
+//		}
 		
 		
 		
@@ -1333,22 +1478,22 @@ namespace bertini {
 		}
 		
 		
-		inline friend Float operator-(Float lhs, double rhs)
-		{
-			return lhs-=rhs;
-		}
-		
-		
-		
-		inline friend Float operator-(double lhs, const Float & rhs)
-		{
-			return lhs-=rhs;
-		}
-		
-		inline friend Float operator-(mpfr_float lhs, const Float & rhs)
-		{
-			return lhs-=rhs;
-		}
+//		inline friend Float operator-(Float lhs, double rhs)
+//		{
+//			return lhs-=rhs;
+//		}
+//		
+//		
+//		
+//		inline friend Float operator-(double lhs, const Float & rhs)
+//		{
+//			return lhs-=rhs;
+//		}
+//		
+//		inline friend Float operator-(mpfr_float lhs, const Float & rhs)
+//		{
+//			return lhs-=rhs;
+//		}
 		
 		
 		
@@ -1368,23 +1513,23 @@ namespace bertini {
 		}
 		
 		
-		inline friend Float operator*(Float lhs, double rhs)
-		{
-			lhs*=rhs;
-			return lhs;
-		}
-		
-		
-		
-		inline friend Float operator*(double lhs, const Float & rhs)
-		{
-			return lhs*=rhs;
-		}
-		
-		inline friend Float operator*(mpfr_float lhs, const Float & rhs)
-		{
-			return lhs*=rhs;
-		}
+//		inline friend Float operator*(Float lhs, double rhs)
+//		{
+//			lhs*=rhs;
+//			return lhs;
+//		}
+//		
+//		
+//		
+//		inline friend Float operator*(double lhs, const Float & rhs)
+//		{
+//			return lhs*=rhs;
+//		}
+//		
+//		inline friend Float operator*(mpfr_float lhs, const Float & rhs)
+//		{
+//			return lhs*=rhs;
+//		}
 		
 		
 		
@@ -1400,22 +1545,22 @@ namespace bertini {
 		}
 		
 		
-		inline friend Float operator/(Float lhs, double rhs)
-		{
-			return lhs/=rhs;
-		}
-		
-		
-		
-		inline friend Float operator/(double lhs, const Float & rhs)
-		{
-			return lhs/=rhs;
-		}
-		
-		inline friend Float operator/(mpfr_float lhs, const Float & rhs)
-		{
-			return lhs/=rhs;
-		}
+//		inline friend Float operator/(Float lhs, double rhs)
+//		{
+//			return lhs/=rhs;
+//		}
+//		
+//		
+//		
+//		inline friend Float operator/(double lhs, const Float & rhs)
+//		{
+//			return lhs/=rhs;
+//		}
+//		
+//		inline friend Float operator/(mpfr_float lhs, const Float & rhs)
+//		{
+//			return lhs/=rhs;
+//		}
 		
 		
 		
@@ -1941,25 +2086,71 @@ namespace bertini {
 		 
 		 
 		
-		/**
-		 \brief Convert the number to a double.
-		 
-		 returns nan if precision is 0.
-		 */
-		operator double() const
+//		/**
+//		 \brief Convert the number to a double.
+//		 
+//		 returns nan if precision is 0.
+//		 */
+//		operator double() const
+//		{
+//			if (Precision()==0){
+//				return nan("");
+//			}
+//			else if (Precision()<=16){
+//				return *number_as_double_;
+//			}
+//			else{
+//				return double(*number_as_multiple_precision_);
+//			}
+//		}
+//		
+		
+		
+		
+		friend Float copysign(const Float & lhs, const Float & rhs)
 		{
-			if (Precision()==0){
-				return nan("");
+			if (lhs.Precision()!=rhs.Precision()) {
+				throw std::runtime_error("trying to mix precisions of bertini::Floats during copysign");
 			}
-			else if (Precision()<=16){
-				return *number_as_double_;
+			
+			if (lhs.Precision()<17) {
+				return Float(copysign(*lhs.number_as_double_,*rhs.number_as_double_));
 			}
-			else{
-				return double(*number_as_multiple_precision_);
+			else
+			{
+				return Float( abs(*lhs.number_as_multiple_precision_)* rhs.number_as_multiple_precision_->sign());
 			}
+			
 		}
 		
 		
+		/**
+		 \brief query whether the number is nan
+		 */
+		friend bool isnan(const Float & x)
+		{
+			if (x.Precision()<=16){
+				return isnan(*x.number_as_double_);
+			}
+			else{
+				return boost::math::isnan(*x.number_as_multiple_precision_);
+			}
+		}
+			
+		/**
+		 \brief query whether the number is infinity
+		 */
+		friend bool isinf(const Float & x)
+		{
+			if (x.Precision()<=16){
+				return isinf(*x.number_as_double_);
+			}
+			else{
+				return boost::math::isinf(*x.number_as_multiple_precision_);
+			}
+		}
+			
+			
 		/**
 		 \brief Convert Float to mpfr_float.
 		 
@@ -2004,6 +2195,35 @@ namespace bertini {
 		{
 			return Float(exp(T(1)));
 		}
+		
+		
+		
+		/**
+		 \brief get the number \f$\pi\f$, to default precision.
+		 */
+		static Float pi()
+		{
+			if (boost::multiprecision::mpfr_float::default_precision()<17) {
+				return Float(acos(-1.0));
+			}
+			else{
+				return Float(acos(boost::multiprecision::mpfr_float("-1.0")));
+			}		}
+		
+		/**
+		 \brief get the number \f$e\f$, to default precision.
+		 */
+		static Float e()
+		{
+			if (boost::multiprecision::mpfr_float::default_precision()<17) {
+				return Float(exp(1.0));
+			}
+			else{
+				return Float(exp(boost::multiprecision::mpfr_float("1.0")));
+			}
+			
+		}
+		
 		
 		
 		
@@ -2108,7 +2328,7 @@ namespace bertini {
 		 //TODO verify this returned number
 		 static Real epsilon()
 		 {
-			 return Real( std::pow(bertini::Float(10.0), 1-int(boost::multiprecision::mpfr_float::default_precision()) ));
+			 return Real( pow( bertini::Float(10.0), 1-int(boost::multiprecision::mpfr_float::default_precision()) ));
 		 }
 		 
 	 };

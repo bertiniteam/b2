@@ -22,6 +22,7 @@ AM_INIT_AUTOMAKE([1.13 subdir-objects])
 #the language for b2 is C++
 AC_LANG([C++])
 
+
 #another directive to use the m4 folder
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -30,6 +31,8 @@ AC_CONFIG_FILES([Makefile])
 
 #find the CC compiler
 AC_PROG_CXX
+
+AX_CXX_COMPILE_STDCXX_11
 
 
 #enable the creation of shared libraries

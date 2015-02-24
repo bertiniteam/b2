@@ -285,9 +285,11 @@ BOOST_AUTO_TEST_CASE(Float_round_tripping_multiple_precision)
  */
 BOOST_AUTO_TEST_CASE(Float_absolute_value_double)
 {
+	boost::multiprecision::mpfr_float::default_precision(16);
+	
 	bertini::Float a(-0.1);
 	
-	BOOST_CHECK_EQUAL( double(abs(a)) , 0.1);
+	BOOST_CHECK_EQUAL( abs(a) , bertini::Float(0.1));
 	
 }
 
@@ -297,8 +299,10 @@ BOOST_AUTO_TEST_CASE(Float_absolute_value_double)
  */
 BOOST_AUTO_TEST_CASE(Float_absolute_value_multiple_precision)
 {
-	bertini::Float a("-0.10000000000000000000000000000");
-	BOOST_CHECK_EQUAL( double(abs(a)) , 0.1);
+	boost::multiprecision::mpfr_float::default_precision(30);
+	
+	bertini::Float a("-0.1");
+	BOOST_CHECK_EQUAL( abs(a) , bertini::Float(0.1));
 	
 }
 
@@ -810,6 +814,8 @@ BOOST_AUTO_TEST_CASE(make_e_to_high_precision)
 
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
 
 
 
