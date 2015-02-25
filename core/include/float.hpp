@@ -29,6 +29,37 @@
 
 
 
+namespace boost { namespace serialization {
+	
+	
+	/**
+	 Save a mpfr_float type to a boost archive.
+	 */
+	template <typename Archive>
+	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
+	{
+		std::string tmp = r.str(0, std::ios::fixed);
+		ar & tmp;
+	}
+	
+	/**
+	 Load a mpfr_float type from a boost archive.
+	 */
+	template <typename Archive>
+	void load(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0>& r, unsigned /*version*/)
+	{
+		std::string tmp;
+		ar & tmp;
+		r = tmp.c_str();
+	}
+	
+} } // re: namespaces
+
+BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpfr_float_backend<0>)
+
+
+
+
 
 
 
@@ -152,25 +183,53 @@ namespace bertini {
 		
 		
 		
-//		friend class boost::serialization::access;
-//		
+		friend class boost::serialization::access;
+		
+
 //		template<class Archive>
-//		void save(Archive & ar, const unsigned int version) const
-//		{
-//			// note, version is always the latest when saving
-//			ar & current_precision_;
-//			ar & number_as_multiple_precision_;
-//			ar & number_as_double_;
-//		}
-//		template<class Archive>
-//		void load(Archive & ar, const unsigned int version)
+//		void serialize(Archive & ar, const unsigned int version)
 //		{
 //			ar & current_precision_;
 //			ar & number_as_multiple_precision_;
 //			ar & number_as_double_;
 //		}
-//		
-//		BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+		
+		
+		template<class Archive>
+		void save(Archive & ar, const unsigned int version) const
+		{
+			// note, version is always the latest when saving
+			
+			ar & current_precision_;
+			
+			if (current_precision_<17) {
+				ar & *number_as_double_;
+			}
+			else{
+				ar & *number_as_multiple_precision_;
+			}
+		}
+		
+		template<class Archive>
+		void load(Archive & ar, const unsigned int version)
+		{
+			ar & current_precision_;
+			if (current_precision_<17) {
+				double temp;
+				ar & temp;
+				number_as_double_.reset(new double(temp));
+				number_as_multiple_precision_.reset(nullptr);
+			}
+			else{
+				number_as_multiple_precision_.reset(new boost::multiprecision::mpfr_float);
+				number_as_multiple_precision_->precision(current_precision_);
+				ar & *number_as_multiple_precision_;
+				number_as_double_.reset(nullptr);
+			}
+		}
+		
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 		
 		
 	public:
