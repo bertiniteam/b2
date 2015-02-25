@@ -1,0 +1,18 @@
+developer notes:
+
+as a developer, to compile this project, you need to
+
+1) Regenerate the configure script, and some other m4 macros, etc, so that the build system is complete.  This requires the autotools, modern versions.  The command for this is
+
+autoreconf -vfi
+
+The -vfi flags are for (v)erbose, (f)orce, and (i)nstall.  If this step fails, you almost certainly have outdated autotools software, most namely automake, autoconf, and libtool.  Update your tools as necessary.
+
+As a user, or maintainer, you engage in the standard build process.
+
+2) ./configure (with your options)
+
+3) make
+
+Then, if you want to, you can run the test programs.  So far, there is one: b2_class_test.  It is built using the Boost.UnitTest library, and can produce a variety of output files, and be run in a variety of modes.  These options are not documented here.
+
