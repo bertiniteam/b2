@@ -13,8 +13,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <boost/serialization/unique_ptr.hpp>
-
 
 #include <random>
 #include <cmath>
@@ -25,6 +23,37 @@
 
 
 #include <eigen3/Eigen/Core>
+
+
+
+
+namespace boost { namespace serialization {
+	
+	
+	/**
+	 Save a mpfr_float type to a boost archive.
+	 */
+	template <typename Archive>
+	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
+	{
+		std::string tmp = r.str(0, std::ios::fixed);
+		ar & tmp;
+	}
+	
+	/**
+	 Load a mpfr_float type from a boost archive.
+	 */
+	template <typename Archive>
+	void load(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0>& r, unsigned /*version*/)
+	{
+		std::string tmp;
+		ar & tmp;
+		r = tmp.c_str();
+	}
+	
+} } // re: namespaces
+
+BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpfr_float_backend<0>)
 
 
 
@@ -152,25 +181,53 @@ namespace bertini {
 		
 		
 		
-//		friend class boost::serialization::access;
-//		
+		friend class boost::serialization::access;
+		
+
 //		template<class Archive>
-//		void save(Archive & ar, const unsigned int version) const
-//		{
-//			// note, version is always the latest when saving
-//			ar & current_precision_;
-//			ar & number_as_multiple_precision_;
-//			ar & number_as_double_;
-//		}
-//		template<class Archive>
-//		void load(Archive & ar, const unsigned int version)
+//		void serialize(Archive & ar, const unsigned int version)
 //		{
 //			ar & current_precision_;
 //			ar & number_as_multiple_precision_;
 //			ar & number_as_double_;
 //		}
-//		
-//		BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+		
+		
+		template<class Archive>
+		void save(Archive & ar, const unsigned int version) const
+		{
+			// note, version is always the latest when saving
+			
+			ar & current_precision_;
+			
+			if (current_precision_<17) {
+				ar & *number_as_double_;
+			}
+			else{
+				ar & *number_as_multiple_precision_;
+			}
+		}
+		
+		template<class Archive>
+		void load(Archive & ar, const unsigned int version)
+		{
+			ar & current_precision_;
+			if (current_precision_<17) {
+				double temp;
+				ar & temp;
+				number_as_double_.reset(new double(temp));
+				number_as_multiple_precision_.reset(nullptr);
+			}
+			else{
+				number_as_multiple_precision_.reset(new boost::multiprecision::mpfr_float);
+				number_as_multiple_precision_->precision(current_precision_);
+				ar & *number_as_multiple_precision_;
+				number_as_double_.reset(nullptr);
+			}
+		}
+		
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
 		
 		
 	public:
@@ -2160,7 +2217,7 @@ namespace bertini {
 		friend bool isnan(const Float & x)
 		{
 			if (x.Precision()<=16){
-				return isnan(*x.number_as_double_);
+				return std::isnan(*x.number_as_double_);
 			}
 			else{
 				return boost::math::isnan(*x.number_as_multiple_precision_);
@@ -2173,7 +2230,7 @@ namespace bertini {
 		friend bool isinf(const Float & x)
 		{
 			if (x.Precision()<=16){
-				return isinf(*x.number_as_double_);
+				return std::isinf(*x.number_as_double_);
 			}
 			else{
 				return boost::math::isinf(*x.number_as_multiple_precision_);
