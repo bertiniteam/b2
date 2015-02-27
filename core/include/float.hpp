@@ -2219,7 +2219,7 @@ namespace bertini {
 		friend bool isnan(const Float & x)
 		{
 			if (x.Precision()<=16){
-				return isnan(*x.number_as_double_);
+				return std::isnan(*x.number_as_double_);
 			}
 			else{
 				return boost::math::isnan(*x.number_as_multiple_precision_);
@@ -2232,7 +2232,7 @@ namespace bertini {
 		friend bool isinf(const Float & x)
 		{
 			if (x.Precision()<=16){
-				return isinf(*x.number_as_double_);
+				return std::isinf(*x.number_as_double_);
 			}
 			else{
 				return boost::math::isinf(*x.number_as_multiple_precision_);

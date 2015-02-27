@@ -6,6 +6,12 @@ autoreconf -vfi
 
 The -vfi flags are for (v)erbose, (f)orce, and (i)nstall.  If this step fails, you almost certainly have outdated autotools software, most namely automake, autoconf, and libtool.  Update your tools as necessary.
 
+On Linux machines, you may have to run the command
+
+libttoolize
+
+in order to get autoreconf to work.
+
 --------------
 
 As a user, or maintainer, engage in the standard build process for any software built using the autotools.
