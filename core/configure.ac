@@ -94,7 +94,7 @@ AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to fine Eigen 3  (
 AC_LANG_POP([C++])
 
 
-AX_BOOST_BASE([1.54],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.54, but it was not found in your system])])
+AX_BOOST_BASE([1.55],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.55, but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
