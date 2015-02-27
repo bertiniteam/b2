@@ -13,8 +13,6 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <boost/serialization/unique_ptr.hpp>
-
 
 #include <random>
 #include <cmath>

@@ -29,9 +29,8 @@ AC_CONFIG_MACRO_DIR([m4])
 #the only produced file will be a single Makefile.
 AC_CONFIG_FILES([Makefile])
 
-#find the CC compiler
-AC_PROG_CXX
 
+#find the flags for C++11
 AX_CXX_COMPILE_STDCXX_11
 
 
@@ -90,6 +89,9 @@ AC_SEARCH_LIBS([cos], [m], [], [
   AC_MSG_ERROR([unable to find the cos() function])
   ])
 
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to fine Eigen 3  (eigen3/Eigen/Dense)]),[])
+AC_LANG_POP([C++])
 
 
 AX_BOOST_BASE([1.54],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.54, but it was not found in your system])])
@@ -101,9 +103,7 @@ AX_BOOST_TIMER
 AX_BOOST_UNIT_TEST_FRAMEWORK
 AX_BOOST_SERIALIZATION
 
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([eigen3/Eigen/Dense])
-AC_LANG_POP([C++])
+
 
 
 
