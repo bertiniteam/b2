@@ -599,10 +599,7 @@ namespace bertini {
 			}
 			else
 			{ // the two precisions are the same
-				if (Precision()==0) {
-					return true;
-				}
-				else if (Precision()<17) {
+				if (Precision()<17) {
 					if ( *(this->number_as_double_) == *(other.number_as_double_) ) { // dereference the pointers to compare the values
 						return true;
 					}
@@ -626,14 +623,14 @@ namespace bertini {
 		/**
 		 \brief Test for equality with a double.
 		 */
-		bool operator==(double other) const
+		bool operator==(double rhs) const
 		{
 			if (this->Precision()!= 16) {
 				throw std::runtime_error("trying to compare non-double bertini::Float with double");
 			}
 			else
 			{ // the two precisions are the same
-				return (*number_as_double_==other);
+				return (*number_as_double_==rhs);
 			}
 		}
 		
@@ -642,7 +639,12 @@ namespace bertini {
 		 */
 		friend bool operator==(double lhs, const Float & rhs)
 		{
-			return rhs==lhs;
+			if (rhs.Precision()!=16) {
+				throw std::runtime_error("trying to compare non-double bertini::Float with double");
+			}
+			else{
+				return lhs== *rhs.number_as_double_;
+			}
 		}
 		
 		
@@ -656,7 +658,12 @@ namespace bertini {
 			}
 			else
 			{ // the two precisions are the same
-				return (*number_as_multiple_precision_==other);
+				if (this->Precision()<17) {
+					return (*number_as_double_==other);
+				}
+				else{
+					return (*number_as_multiple_precision_==other);
+				}
 			}
 		}
 		
@@ -2264,24 +2271,6 @@ namespace bertini {
 		 **   constants
 		 **
 		 ******************/
-
-		/**
-		 get the number \f$\pi\f$, to default precision if the templated type is mpfr_float, and at double if you feed it a double
-		 */
-		template<typename T>
-		static Float pi()
-		{
-			return Float(acos(T(-1)));
-		}
-		
-		/**
-		 get the number \f$e\f$, to default precision if the templated type is mpfr_float, and at double if you feed it a double
-		 */
-		template<typename T>
-		static Float e()
-		{
-			return Float(exp(T(1)));
-		}
 		
 		
 		
