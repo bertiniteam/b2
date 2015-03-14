@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  6 FEB 2015 11:20
+This is pdfTeX, Version 3.14159265-2.6-1.40.15 (TeX Live 2014) (preloaded format=pdflatex 2014.5.25)  9 FEB 2015 12:10
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**function_class.tex
-(./function_class.tex
+**CreateUnaryFunction.tex
+(./CreateUnaryFunction.tex
 LaTeX2e <2014/05/01>
 Babel <3.9k> and hyphenation patterns for 78 languages loaded.
 (/usr/local/texlive/2014/texmf-dist/tex/latex/base/article.cls
@@ -235,8 +235,8 @@ Now handling font encoding U ...
    defining Unicode char U+2026 (decimal 8230)
    defining Unicode char U+2122 (decimal 8482)
    defining Unicode char U+2423 (decimal 9251)
-)) (/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/classes/polynomial/.texpadtmp/function_class.aux)
-\openout1 = `function_class.aux'.
+)) (/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/low_level/Function Class/.texpadtmp/CreateUnaryFunction.aux)
+\openout1 = `CreateUnaryFunction.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 4.
 LaTeX Font Info:    ... okay on input line 4.
@@ -251,111 +251,6 @@ LaTeX Font Info:    ... okay on input line 4.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 4.
 LaTeX Font Info:    ... okay on input line 4.
 
-./function_class.tex:4: Missing $ inserted.
-<inserted text> 
-                $
-l.4 ...or\\	Node <|-- UnaryOperator\\	Node <|-- M_
-                                                  aryOperator\\	Node <|-- Sy...
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 4.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 4.
-./function_class.tex:4: Missing { inserted.
-<to be read again> 
-                   \let 
-l.4 ...ator {\\		--private--\\		-Node* leftnode_\\
-                                                  		-Node* rightnode_\\	}\\	...
-A left brace was mandatory here, so I've put one in.
-You might want to delete and/or insert some corrections
-so that I will find a matching right brace soon.
-(If you're confused by all this, try typing `I}' now.)
-
-./function_class.tex:4: Missing { inserted.
-<to be read again> 
-                   \let 
-l.4 ...\\		-Node* leftnode_\\		-Node* rightnode_\\
-                                                  	}\\	\\	class UnaryOperato...
-A left brace was mandatory here, so I've put one in.
-You might want to delete and/or insert some corrections
-so that I will find a matching right brace soon.
-(If you're confused by all this, try typing `I}' now.)
-
-./function_class.tex:4: Missing { inserted.
-<to be read again> 
-                   \let 
-l.4 ...Operator {\\		--private--\\		-Node* node_\\
-                                                  	}\\	\\	class M_aryOperato...
-A left brace was mandatory here, so I've put one in.
-You might want to delete and/or insert some corrections
-so that I will find a matching right brace soon.
-(If you're confused by all this, try typing `I}' now.)
-
-./function_class.tex:4: Missing { inserted.
-<to be read again> 
-                   \let 
-l.4 ...--private--\\		-std::vector<Node*> nodes_\\
-                                                  	}\\	class Symbol {\\	}\\\...
-A left brace was mandatory here, so I've put one in.
-You might want to delete and/or insert some corrections
-so that I will find a matching right brace soon.
-(If you're confused by all this, try typing `I}' now.)
-
-./function_class.tex:4: Missing $ inserted.
-<inserted text> 
-                $
-l.4 ...tree\\	}\\	\\\\\\@enduml     \end{document}
-                                                  
-I've inserted a begin-math/end-math symbol since I think
-you left one out. Proceed, with fingers crossed.
-
-./function_class.tex:4: Missing } inserted.
-<inserted text> 
-                }
-l.4 ...tree\\	}\\	\\\\\\@enduml     \end{document}
-                                                  
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-./function_class.tex:4: Missing } inserted.
-<inserted text> 
-                }
-l.4 ...tree\\	}\\	\\\\\\@enduml     \end{document}
-                                                  
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-./function_class.tex:4: Missing } inserted.
-<inserted text> 
-                }
-l.4 ...tree\\	}\\	\\\\\\@enduml     \end{document}
-                                                  
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-./function_class.tex:4: Missing } inserted.
-<inserted text> 
-                }
-l.4 ...tree\\	}\\	\\\\\\@enduml     \end{document}
-                                                  
-I've inserted something that you may have forgotten.
-(See the <inserted text> above.)
-With luck, this will get me unwedged. But if you
-really didn't forget anything, try typing `2' now; then
-my insertion and my current dilemma will both disappear.
-
-
 Underfull \hbox (badness 10000) in paragraph at lines 4--4
 
  []
@@ -373,39 +268,24 @@ Underfull \hbox (badness 10000) in paragraph at lines 4--4
 
 Underfull \hbox (badness 10000) in paragraph at lines 4--4
 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 4--4
-
- []
-
-
-Overfull \hbox (987.3528pt too wide) in paragraph at lines 4--4
-\OML/cmm/m/it/10 classNode[][] 
- []
-
-
-Overfull \hbox (820.40042pt too wide) in paragraph at lines 4--4
-\OML/cmm/m/it/10 classBinaryOperator[]$ 
  []
 
 [1
 
-{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/classes/polynomial/.texpadtmp/function_class.aux) ) 
+{/usr/local/texlive/2014/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/low_level/Function Class/.texpadtmp/CreateUnaryFunction.aux) ) 
 Here is how much of TeX's memory you used:
- 411 strings out of 493117
- 4916 string characters out of 6135433
- 60173 words of memory out of 5000000
- 3943 multiletter control sequences out of 15000+600000
+ 409 strings out of 493117
+ 4977 string characters out of 6135433
+ 55173 words of memory out of 5000000
+ 3941 multiletter control sequences out of 15000+600000
  3640 words of font info for 14 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 23i,7n,17p,1729b,107s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi5.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
-Output written on /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/classes/polynomial/.texpadtmp/function_class.pdf (1 page, 75557 bytes).
+ 23i,4n,17p,558b,107s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2014/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb>
+Output written on "/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_Main/doc/planning/low_level/Function Class/.texpadtmp/CreateUnaryFunction.pdf" (1 page, 17855 bytes).
 PDF statistics:
- 36 PDF objects out of 1000 (max. 8388607)
- 25 compressed objects within 1 object stream
+ 12 PDF objects out of 1000 (max. 8388607)
+ 7 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
