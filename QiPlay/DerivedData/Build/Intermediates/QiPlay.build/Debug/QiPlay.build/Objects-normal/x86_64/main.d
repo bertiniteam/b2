@@ -1,5 +1,6 @@
 dependencies: \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/QiPlay/QiPlay/main.cpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/config/warning_disable.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/include/qi.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/action.hpp \
@@ -1683,4 +1684,65 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/iostreams/detail/adapter/mode_adapter.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/iostreams/detail/adapter/output_iterator_adapter.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/iostreams/detail/is_dereferenceable.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iostreams/device/array.hpp
+  /usr/local/Cellar/boost/1.57.0/include/boost/iostreams/device/array.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/include/phoenix_operator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/arithmetic.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/detail/define_operator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/detail/undef_operator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/bitwise.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/comparison.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/if_else.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/self.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/logical.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/io.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/member.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/detail/mem_fun_ptr_gen.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/detail/preprocessed/mem_fun_ptr_gen.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/detail/preprocessed/mem_fun_ptr_gen_10.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/preprocessed/member.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/operator/preprocessed/member_10.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/bind/bind_member_function.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/bind/detail/member_function_ptr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/bind/detail/preprocessed/member_function_ptr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/bind/detail/preprocessed/member_function_ptr_10.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/bind/preprocessed/bind_member_function.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/bind/preprocessed/bind_member_function_10.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/lambda.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/core.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/transform_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/tuple/tuple.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/tuple/detail/tuple_basic.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/lambda_config.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/lambda_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/arity_code.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/actions.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/lambda_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/object_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_compound.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_object.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/function_adaptors.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/return_type_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/select_functions.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/lambda_functor_base.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/lambda_functors.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/ret.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/operator_actions.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/operator_lambda_func_base.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/operator_return_type_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/is_instance_of.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repeat_2nd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/indirect_reference.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/pointee.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/container_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/operators.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lambda/detail/member_ptr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind/bind.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind/arg.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind/storage.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind/bind_template.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind/bind_cc.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind/bind_mf_cc.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind/bind_mf2_cc.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/bind/placeholders.hpp
