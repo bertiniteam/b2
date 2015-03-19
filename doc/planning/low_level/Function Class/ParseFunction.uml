@@ -28,7 +28,7 @@ partition multExpr {
 Returns Node* factor:" as SubRet
 --> _val.add(factor)
 --> More multExpr?:
--->[no] "Return:"
+-left->[no] MultRet
 
 "More multExpr?:" -->[yes] "Read next multExpr
 Returns Node* factor2:"
@@ -45,10 +45,12 @@ partition subExpr {
 "Is monomial?" -->[yes] "Read monomial
 Returns Node* mon" as MonRet
 --> "_val = mon"
+-left-> SubRet
 
 "Is monomial?" -->[no] "Read parenExpr
 Returns Node* paren" as ParenRet
 --> "_val = paren"
+-left->SubRet
 
 }
 
@@ -65,9 +67,10 @@ Returns Node expr;"
 -->[yes] "Read int_
 Returns int exp;"
 --> "_val.setExp = exp;"
+-left-> ParenRet
 
 
-"Is there an exponent?;" -->[no] "Return;"
+"Is there an exponent?;" -left->[no] ParenRet
 }
 
 
@@ -84,7 +87,7 @@ Returns Node* base2"
 --> "_val.add(base2)"
 --> "Is there another base factor?"
 
-"Is there another base factor?" -->[no] "Return["
+"Is there another base factor?" -left->[no] MonRet
 }
 
 
@@ -97,6 +100,7 @@ partition base {
 --> "Read double_
 Returns Node* num"
 --> _val.setVal = num"
+-left->BRet
 
 
 "Is base a number?" -->[no] "Read eps_]]"
@@ -109,9 +113,10 @@ Returns Node* variable"
 -->[yes] "Read int_
 Returns int exp]"
 --> "_val.setExp = exp]"
+-left-> BRet
 
 
-"Is there an exponent?]" -->[no] "Return]"
+"Is there an exponent?]" -left->[no] BRet
 
 
 @enduml
