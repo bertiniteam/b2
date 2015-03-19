@@ -1,0 +1,117 @@
+@startuml
+title Parse a line of a function
+partition sumExpr {
+(*) --> Read eps_
+--> "_val = new AdditionOp*()"
+--> "_val.add(empty node)"
+--> "Read multExpr
+Returns Node* term" as MultRet
+--> _val.add(term)
+--> More multExpr?
+-->[no] Return _val
+-->(*)
+
+"More multExpr?" -->[yes] "Read next multExpr
+Returns Node* term2"
+--> _val.add(term2)
+--> "More multExpr?"
+}
+
+
+
+
+
+partition multExpr {
+"Read eps_:"  --> "_val = new MultiplicationOp():"
+--> "_val.add(empty node):"
+--> "Read subExpr
+Returns Node* factor:" as SubRet
+--> _val.add(factor)
+--> More multExpr?:
+-->[no] "Return:"
+
+"More multExpr?:" -->[yes] "Read next multExpr
+Returns Node* factor2:"
+--> _val.add(factor2):
+--> "More multExpr?:"
+}
+
+
+
+
+
+
+partition subExpr {
+"Is monomial?" -->[yes] "Read monomial
+Returns Node* mon" as MonRet
+--> "_val = mon"
+
+"Is monomial?" -->[no] "Read parenExpr
+Returns Node* paren" as ParenRet
+--> "_val = paren"
+
+}
+
+
+
+
+partition parenExpr {
+"Read eps_;" --> "_val = new ExponentOp;"
+--> "_val.setExp = empty exponent;"
+--> "Read '(' sumExpr ')'
+Returns Node expr;"
+--> "_val.base = expr;"
+--> "Is there an exponent?;"
+-->[yes] "Read int_
+Returns int exp;"
+--> "_val.setExp = exp;"
+
+
+"Is there an exponent?;" -->[no] "Return;"
+}
+
+
+
+partition monomial {
+"Read eps_[" --> "_val = new MultiplicationOp["
+--> "_val.add(empty node)["
+--> "Read base
+Returns Node* base[" as BRet
+--> "_val.add(base)["
+--> "Is there another base factor?"
+-->[yes] "Read base
+Returns Node* base2"
+--> "_val.add(base2)"
+--> "Is there another base factor?"
+
+"Is there another base factor?" -->[no] "Return["
+}
+
+
+
+
+
+partition base {
+"Is base a number?" -->[yes] "Read eps_]"
+--> "_val = new Coefficient()"
+--> "Read double_
+Returns Node* num"
+--> _val.setVal = num"
+
+
+"Is base a number?" -->[no] "Read eps_]]"
+--> "_val = new ExponentialOp]"
+--> "_val.exp = empty exponent]"
+--> "Read var
+Returns Node* variable"
+--> "_val.base = variable"
+--> "Is there an exponent?]"
+-->[yes] "Read int_
+Returns int exp]"
+--> "_val.setExp = exp]"
+
+
+"Is there an exponent?]" -->[no] "Return]"
+
+
+@enduml
