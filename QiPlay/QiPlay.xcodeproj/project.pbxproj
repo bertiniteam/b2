@@ -8,30 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		87BAFE561AB4F1E50097B6B3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87BAFE551AB4F1E50097B6B3 /* main.cpp */; };
-		87BAFE691AB539FE0097B6B3 /* polynomial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87BAFE5C1AB539BE0097B6B3 /* polynomial.cpp */; };
-		87BAFE851AB6293A0097B6B3 /* RomanExample.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87BAFE841AB6293A0097B6B3 /* RomanExample.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		87BAFE501AB4F1E50097B6B3 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-		87BAFE601AB539E50097B6B3 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-		};
-		87BAFE7B1AB629190097B6B3 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -45,31 +25,11 @@
 /* Begin PBXFileReference section */
 		87BAFE521AB4F1E50097B6B3 /* QiPlay */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = QiPlay; sourceTree = BUILT_PRODUCTS_DIR; };
 		87BAFE551AB4F1E50097B6B3 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		87BAFE5C1AB539BE0097B6B3 /* polynomial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = polynomial.cpp; path = ../../../polynomial.cpp; sourceTree = "<group>"; };
-		87BAFE621AB539E50097B6B3 /* Poly Example */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Poly Example"; sourceTree = BUILT_PRODUCTS_DIR; };
 		87BAFE781AB6232D0097B6B3 /* RomanNumeral.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RomanNumeral.h; sourceTree = "<group>"; };
-		87BAFE7D1AB629190097B6B3 /* RomanExample */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = RomanExample; sourceTree = BUILT_PRODUCTS_DIR; };
-		87BAFE841AB6293A0097B6B3 /* RomanExample.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RomanExample.cpp; path = QiPlay/RomanExample.cpp; sourceTree = SOURCE_ROOT; };
-		87BAFE861AB769A90097B6B3 /* pParse_bison.y */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.yacc; name = pParse_bison.y; path = ../../Code/Parsing/pParse_bison.y; sourceTree = "<group>"; };
-		87BAFE871AB769A90097B6B3 /* pParse_flex.l */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.lex; name = pParse_flex.l; path = ../../Code/Parsing/pParse_flex.l; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		87BAFE4F1AB4F1E50097B6B3 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		87BAFE5F1AB539E50097B6B3 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		87BAFE7A1AB629190097B6B3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -82,12 +42,7 @@
 		87BAFE491AB4F1E50097B6B3 = {
 			isa = PBXGroup;
 			children = (
-				87BAFE861AB769A90097B6B3 /* pParse_bison.y */,
-				87BAFE871AB769A90097B6B3 /* pParse_flex.l */,
 				87BAFE541AB4F1E50097B6B3 /* QiPlay */,
-				87BAFE631AB539E50097B6B3 /* Poly Example */,
-				87BAFE711AB6048D0097B6B3 /* ComplexExample */,
-				87BAFE7E1AB629190097B6B3 /* RomanExample */,
 				87BAFE531AB4F1E50097B6B3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -96,8 +51,6 @@
 			isa = PBXGroup;
 			children = (
 				87BAFE521AB4F1E50097B6B3 /* QiPlay */,
-				87BAFE621AB539E50097B6B3 /* Poly Example */,
-				87BAFE7D1AB629190097B6B3 /* RomanExample */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -109,29 +62,6 @@
 				87BAFE781AB6232D0097B6B3 /* RomanNumeral.h */,
 			);
 			path = QiPlay;
-			sourceTree = "<group>";
-		};
-		87BAFE631AB539E50097B6B3 /* Poly Example */ = {
-			isa = PBXGroup;
-			children = (
-				87BAFE5C1AB539BE0097B6B3 /* polynomial.cpp */,
-			);
-			path = "Poly Example";
-			sourceTree = "<group>";
-		};
-		87BAFE711AB6048D0097B6B3 /* ComplexExample */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = ComplexExample;
-			sourceTree = "<group>";
-		};
-		87BAFE7E1AB629190097B6B3 /* RomanExample */ = {
-			isa = PBXGroup;
-			children = (
-				87BAFE841AB6293A0097B6B3 /* RomanExample.cpp */,
-			);
-			path = RomanExample;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -154,40 +84,6 @@
 			productReference = 87BAFE521AB4F1E50097B6B3 /* QiPlay */;
 			productType = "com.apple.product-type.tool";
 		};
-		87BAFE611AB539E50097B6B3 /* Poly Example */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 87BAFE661AB539E50097B6B3 /* Build configuration list for PBXNativeTarget "Poly Example" */;
-			buildPhases = (
-				87BAFE5E1AB539E50097B6B3 /* Sources */,
-				87BAFE5F1AB539E50097B6B3 /* Frameworks */,
-				87BAFE601AB539E50097B6B3 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "Poly Example";
-			productName = "Poly Example";
-			productReference = 87BAFE621AB539E50097B6B3 /* Poly Example */;
-			productType = "com.apple.product-type.tool";
-		};
-		87BAFE7C1AB629190097B6B3 /* RomanExample */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 87BAFE811AB629190097B6B3 /* Build configuration list for PBXNativeTarget "RomanExample" */;
-			buildPhases = (
-				87BAFE791AB629190097B6B3 /* Sources */,
-				87BAFE7A1AB629190097B6B3 /* Frameworks */,
-				87BAFE7B1AB629190097B6B3 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = RomanExample;
-			productName = RomanExample;
-			productReference = 87BAFE7D1AB629190097B6B3 /* RomanExample */;
-			productType = "com.apple.product-type.tool";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -198,12 +94,6 @@
 				ORGANIZATIONNAME = "West Texas A&M University";
 				TargetAttributes = {
 					87BAFE511AB4F1E50097B6B3 = {
-						CreatedOnToolsVersion = 6.1.1;
-					};
-					87BAFE611AB539E50097B6B3 = {
-						CreatedOnToolsVersion = 6.1.1;
-					};
-					87BAFE7C1AB629190097B6B3 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
 				};
@@ -221,8 +111,6 @@
 			projectRoot = "";
 			targets = (
 				87BAFE511AB4F1E50097B6B3 /* QiPlay */,
-				87BAFE611AB539E50097B6B3 /* Poly Example */,
-				87BAFE7C1AB629190097B6B3 /* RomanExample */,
 			);
 		};
 /* End PBXProject section */
@@ -233,22 +121,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				87BAFE561AB4F1E50097B6B3 /* main.cpp in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		87BAFE5E1AB539E50097B6B3 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				87BAFE691AB539FE0097B6B3 /* polynomial.cpp in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		87BAFE791AB629190097B6B3 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				87BAFE851AB6293A0097B6B3 /* RomanExample.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -353,42 +225,6 @@
 			};
 			name = Release;
 		};
-		87BAFE671AB539E50097B6B3 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		87BAFE681AB539E50097B6B3 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		87BAFE821AB629190097B6B3 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		87BAFE831AB629190097B6B3 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -408,22 +244,7 @@
 				87BAFE5B1AB4F1E50097B6B3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-		};
-		87BAFE661AB539E50097B6B3 /* Build configuration list for PBXNativeTarget "Poly Example" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				87BAFE671AB539E50097B6B3 /* Debug */,
-				87BAFE681AB539E50097B6B3 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-		};
-		87BAFE811AB629190097B6B3 /* Build configuration list for PBXNativeTarget "RomanExample" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				87BAFE821AB629190097B6B3 /* Debug */,
-				87BAFE831AB629190097B6B3 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
