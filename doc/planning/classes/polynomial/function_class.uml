@@ -9,19 +9,19 @@ title Function Class and Nodes
 	
 	Node <|-- BinaryOperator
 	Node <|-- UnaryOperator
-	Node <|-- M_aryOperator
+	Node <|-- N_aryOperator
 	Node <|-- Symbol
 	
-	BinaryOperator <|-- Plus
-	BinaryOperator <|-- Minus
-	BinaryOperator <|-- Times
+	N_aryOperator <|-- Plus
+	N_aryOperator <|-- Minus
+	N_aryOperator <|-- Times
 	BinaryOperator <|-- Divide
 	UnaryOperator <|-- Negate
 	UnaryOperator <|-- Exp
 	UnaryOperator <|-- Log
 	UnaryOperator <|-- Sine
 	UnaryOperator <|-- Cosine
-	M_aryOperator <|-- UserDefined
+	N_aryOperator <|-- UserDefined
 	
 	Symbol <|-- Variable
 	Symbol <|-- PathVariable
@@ -38,6 +38,7 @@ title Function Class and Nodes
             	+{abstract} virtual SetPrecision(int prec)
             	+{abstract} virtual Evaluate() //Returns Symbol?
             	+{abstract} virtual String()
+            	+{abstract} virtual addLeaf(Node* leaf)
         --private--      	
             	-Node()  private so that empty construction prohibited.  
             	this may help protect against errors in parsing
@@ -48,17 +49,23 @@ title Function Class and Nodes
 	
 	
 	interface BinaryOperator {
+		--public--
+		virtual addLeaf(Node* leaf)
 		--private--
 		-Node* leftnode_
 		-Node* rightnode_
 	}
 	
 	interface UnaryOperator {
+		--public--
+		virtual addLeaf(Node* leaf)
 		--private--
 		-Node* node_
 	}
 	
-	interface M_aryOperator {
+	interface N_aryOperator {
+		--public--
+		virtual addLeaf(Node* leaf)
 		--private--
 		-std::vector<Node*> nodes_
 	}
