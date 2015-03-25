@@ -1,14 +1,15 @@
-#this is src/test/classes/Makemodule.am
+#this is src/bertini/Makemodule.am
 
 bin_PROGRAMS += b2_class_test
 
-b2_class_test_SOURCES = src/test/classes/class_test.cpp src/test/classes/float_test.cpp include/float.hpp \
-	src/test/classes/float_eigen_test.cpp
+b2_class_test_SOURCES = src/test/classes/class_test.cpp \
+	src/test/classes/eigen_test.cpp \
+	include/complex.hpp src/test/classes/complex_test.cpp
 
 
 
 b2_class_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
 
-b2_class_test_CXXFLAGS = -D_HAVE_MPI $(BOOST_CPPFLAGS)
+b2_class_test_CXXFLAGS = $(BOOST_CPPFLAGS)
 
 

@@ -1,0 +1,13 @@
+#this is src/test/classes/Makemodule.am
+
+bin_PROGRAMS += bertini2
+
+bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp
+
+
+
+bertini2_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
+
+bertini2_CXXFLAGS = $(BOOST_CPPFLAGS)
+
+
