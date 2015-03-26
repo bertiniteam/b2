@@ -30,20 +30,14 @@ namespace client
     
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
+    
+    
+    
     struct var_ : qi::symbols<char,int>
     {
         
     }var;
     
-    void addPlus()
-    {
-        std::cout << "Create a plus operator\n";
-    }
-    
-    void addVar(int varint)
-    {
-        std::cout << "Create a variable object " << varint << std::endl;
-    }
     
     
     int varcount = 0;
@@ -81,37 +75,49 @@ namespace client
         Node() {op_ = "not set";};
         Node(std::string op) {op_ = op; isVar_ = false;};
         Node(std::string op, bool isVar) {op_ = op; isVar_ = isVar;};
+        Node(double num) {op_ = "const = " + std::to_string(num); isVar_ = true;};
+        Node(int varint) {op_ = "var #" + std::to_string(varint); isVar_ = true;};
         
         std::string op_;
         std::vector<Node*> leaves;
         bool isVar_ = false;
         
         void setop(std::string input) {op_ = input;};
+        void setop(int input) {op_ = "exp^" + std::to_string(input);};
         void print()
         {
             if(!isVar_)
             {
                 for(int ii = 1; ii < leaves.size(); ++ii)
                 {
+                    for(int jj = 0; jj < tabcount; ++jj)
+                    {
+                        std::cout << "\t";
+                    }
                     std::cout << op_ << "leaf " << ii << ": \n";
-//                    tabcount++;
-//                    for(int jj = 0; jj < tabcount; ++jj)
-//                    {
-//                        std::cout << "\t";
-//                    }
+                    tabcount++;
                     leaves[ii]->print();
-//                    tabcount--;
+                    tabcount--;
                 }
             }
             else
             {
+                for(int jj = 0; jj < tabcount; ++jj)
+                {
+                    std::cout << "\t";
+                }
                 std::cout << op_ << "\n";
-                tabcount--;
+//                tabcount--;
             }
         };
         void addLeaf(Node* leaf)
         {
             leaves.push_back(leaf);
+        }
+        
+        void debug(std::string s)
+        {
+            std::cout << s;
         }
         
     };
@@ -136,24 +142,26 @@ namespace client
 //            *( ('-' >> var) |
 //              ('+' >> var) );
             
-            sumexpr = eps[_val = phx::new_<Node>("add")] >>
+            sumexpr = eps[_val = phx::new_<Node>("sum")] >>
                 eps[phx::bind(&Node::addLeaf,_val,new Node("null"))] >>
                 multexpr[phx::bind(&Node::addLeaf,_val,_1)] >>
                 *( ('-' >> multexpr[phx::bind(&Node::addLeaf,_val,_1)]) |
                   ('+' >> multexpr[phx::bind(&Node::addLeaf,_val,_1)]) );
             
-            multexpr = eps[_val = phx::new_<Node>("mult"),phx::bind(&Node::print,_val)] >>
+            multexpr = eps[_val = phx::new_<Node>("mult")] >>
                 eps[phx::bind(&Node::addLeaf,_val,new Node("null"))] >>
-                subexpr[phx::bind(&Node::addLeaf,_val,_1)] >> eps[phx::bind(&Node::print,_val)] >>
-                *( '*' >> multexpr )[phx::bind(&Node::addLeaf,_val,_1)];
+                subexpr[phx::bind(&Node::addLeaf,_val,_1)] >>
+            *( '*' >> subexpr )[phx::bind(&Node::addLeaf,_val,_1)];
             
-            subexpr = monomial[_val = phx::new_<Node>("varmon",true)] | parenexpr[_val = phx::new_<Node>("varpar",true)];
+            subexpr = base[_val = _1] | parenexpr[_val = _1];
             
-            parenexpr = '(' >> sumexpr >> ')' >> -('^' >> qi::int_);
+            parenexpr = eps[_val = phx::new_<Node>("exp^1")] >>
+            '(' >> sumexpr[phx::bind(&Node::addLeaf,_val,_1)] >> ')' >>
+            -( '^' >> qi::int_ );
             
-            monomial = base >> *('*' >> base);
             
-            base = qi::double_ | (var >> -('^' >> qi::int_));
+            base = ( qi::double_[_val = phx::new_<Node>(_1)] ) |
+            ( eps[_val = phx::new_<Node>("exp^1")] >> var[phx::bind(&Node::addLeaf,_val,new Node(2))] >> -('^' >> qi::int_) );
             
         }
         
@@ -161,8 +169,7 @@ namespace client
         qi::rule<Iterator,Node*(),ascii::space_type> multexpr;
         qi::rule<Iterator,Node*(),ascii::space_type> subexpr;
         qi::rule<Iterator,Node*(),ascii::space_type> parenexpr;
-        qi::rule<Iterator,Node*(),ascii::space_type> monomial;
-        qi::rule<Iterator,ascii::space_type> base;
+        qi::rule<Iterator,Node*(),ascii::space_type> base;
     };
     
     
@@ -195,6 +202,7 @@ int main()
     
     polys poly_parser;
     client::Node* test;
+    client::tabcount = 0;
     while (std::getline(std::cin, str))
     {
         if (str.empty() || str[0] == 'q' || str[0] == 'Q')
@@ -204,6 +212,7 @@ int main()
         std::string::const_iterator end = str.end();
         //[tutorial_roman_grammar_parse
         
+        client::tabcount = 0;
         test = new client::Node();
         bool r = phrase_parse(iter, end, poly_parser,client::ascii::space,test);
         if(test != 0)
