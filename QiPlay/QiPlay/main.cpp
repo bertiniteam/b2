@@ -82,8 +82,15 @@ namespace client
         std::vector<Node*> leaves;
         bool isVar_ = false;
         
-        void setop(std::string input) {op_ = input;};
-        void setop(int input) {op_ = "exp^" + std::to_string(input);};
+        
+        void addLeaf(Node* leaf);
+//        void setop(std::string input) {op_ = input;}
+        
+        void setop(int input)
+        {
+            op_ = "exp^" + std::to_string(input);
+        }
+        
         void print()
         {
             if(!isVar_)
@@ -94,7 +101,7 @@ namespace client
                     {
                         std::cout << "\t";
                     }
-                    std::cout << op_ << "leaf " << ii << ": \n";
+                    std::cout << op_ << " leaf " << ii << ": \n";
                     tabcount++;
                     leaves[ii]->print();
                     tabcount--;
@@ -110,10 +117,6 @@ namespace client
 //                tabcount--;
             }
         };
-        void addLeaf(Node* leaf)
-        {
-            leaves.push_back(leaf);
-        }
         
         void debug(std::string s)
         {
@@ -121,6 +124,10 @@ namespace client
         }
         
     };
+    void Node::addLeaf(Node* leaf)
+    {
+        leaves.push_back(leaf);
+    }
     
     
     
@@ -156,12 +163,14 @@ namespace client
             subexpr = base[_val = _1] | parenexpr[_val = _1];
             
             parenexpr = eps[_val = phx::new_<Node>("exp^1")] >>
-            '(' >> sumexpr[phx::bind(&Node::addLeaf,_val,_1)] >> ')' >>
-            -( '^' >> qi::int_ );
+            '(' >> sumexpr[phx::bind(&Node::addLeaf,_val,new Node("null")), phx::bind(&Node::addLeaf,_val,_1)] >> ')' >>
+            -( '^' >> qi::int_[phx::bind(&Node::setop,_val,_1)] );
             
             
             base = ( qi::double_[_val = phx::new_<Node>(_1)] ) |
-            ( eps[_val = phx::new_<Node>("exp^1")] >> var[phx::bind(&Node::addLeaf,_val,new Node(2))] >> -('^' >> qi::int_) );
+            ( eps[_val = phx::new_<Node>("exp^1")] >>
+                var[phx::bind(&Node::addLeaf,_val,new Node("null")), phx::bind(&Node::addLeaf,_val,phx::new_<Node>(_1))] >>
+                -('^' >> qi::int_[phx::bind(&Node::setop,_val,_1)]) );
             
         }
         
@@ -183,7 +192,7 @@ int main()
     std::cout << "/////////////////////////////////////////////////////////\n\n";
     std::cout << "\t\tPolynomial Parser\n\n";
     std::cout << "/////////////////////////////////////////////////////////\n\n";
-    std::cout << "Enter your symbols ...or [q or Q] to quit\n\n";
+    std::cout << "Enter your symbols separated by commas ...or [q or Q] to quit\n\n";
     
     typedef std::string::const_iterator iterator_type;
     typedef client::variables<iterator_type> variables;
