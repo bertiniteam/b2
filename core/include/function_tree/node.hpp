@@ -31,8 +31,8 @@
 
 #include <boost/type_index.hpp>
 
-using dbl = double;
-using mpfr = long double;
+using dbl = std::complex<double>;
+using mpfr = bertini::complex;
 
 
 
@@ -154,7 +154,7 @@ protected:
 
 	
 	
-	
+	int Node::tabcount = 0;
 	
 	
 } // re: namespace bertini

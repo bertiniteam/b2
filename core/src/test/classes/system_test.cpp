@@ -16,10 +16,14 @@
 
 //  system_test.cpp
 //
+//  Created by Collins, James B. on 4/30/15.
+//  Copyright (c) 2015 West Texas A&M University. All rights reserved.
+//
+// also modified by
 //  Daniel Brake
 //  University of Notre Dame
 //  ACMS
-//  Summer 2015
+//  Spring, Summer 2015
 
 
 

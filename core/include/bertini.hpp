@@ -34,6 +34,7 @@
 #include <boost/multiprecision/random.hpp>
 
 
+#include <complex>
 #include "mpfr_complex.hpp"
 
 #include "function_tree.hpp"

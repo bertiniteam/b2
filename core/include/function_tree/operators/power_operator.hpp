@@ -111,7 +111,7 @@ namespace bertini {
 		
 		virtual mpfr FreshEval(mpfr) override
 		{
-			return std::pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
+			return pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
 		}
 		
 	private:

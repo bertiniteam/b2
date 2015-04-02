@@ -62,12 +62,12 @@ namespace bertini {
 		// Specific implementation of FreshEval for negate.
 		dbl FreshEval(dbl) override
 		{
-			return (-1)*child_->Eval<dbl>();
+			return (-1.0)*child_->Eval<dbl>();
 		}
 		
 		mpfr FreshEval(mpfr) override
 		{
-			return (-1)*child_->Eval<mpfr>();
+			return -child_->Eval<mpfr>();
 		}
 	};
 	
