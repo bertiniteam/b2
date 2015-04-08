@@ -61,12 +61,13 @@ LT_INIT
 
 
 #this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs
-#LX_FIND_MPI
+LX_FIND_MPI
 
-#AS_IF([test "$have_CXX_mpi" = "yes"],
-#	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
-#	AC_MSG_ERROR([it appears you do not have mpi installed])
-#	)
+# print a notice about the presence of MPI on the machine.
+AS_IF([test "$have_CXX_mpi" = "yes"],
+	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
+	AC_MSG_NOTICE([it appears you do not have mpi installed])
+	)
 
 
 

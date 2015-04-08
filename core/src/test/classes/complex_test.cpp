@@ -6,7 +6,10 @@
 
 BOOST_AUTO_TEST_SUITE(complex_multiprecision_class)
 
-
+BOOST_AUTO_TEST_CASE(blabla)
+{
+	bertini::mpfr_complex z;
+}
 
 
 

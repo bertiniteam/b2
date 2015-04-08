@@ -1,4 +1,4 @@
-#this is src/test/classes/Makemodule.am
+#this is src/bertini/Makemodule.am
 
 bin_PROGRAMS += bertini2
 

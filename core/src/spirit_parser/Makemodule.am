@@ -1,7 +1,6 @@
 # this is src/spirit_parser/Makemodule.am
 
 
-
 bin_PROGRAMS += spirit_parser
 
 spirit_parser_SOURCES = src/spirit_parser/polynomial_parser.cpp
