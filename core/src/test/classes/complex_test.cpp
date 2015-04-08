@@ -6,11 +6,16 @@
 
 BOOST_AUTO_TEST_SUITE(complex_multiprecision_class)
 
-BOOST_AUTO_TEST_CASE(blabla)
+BOOST_AUTO_TEST_CASE(complex_create_default_constructor)
 {
-	bertini::mpfr_complex z;
+	bertini::complex z;
 }
 
+
+BOOST_AUTO_TEST_CASE(complex_create_two_input_constructor)
+{
+	bertini::complex z("0.1","1.2");
+}
 
 
 
