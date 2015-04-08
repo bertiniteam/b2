@@ -52,25 +52,48 @@ namespace bertini {
 		}
 		
 		
+		complex& operator*=(const complex & rhs)
+		{
+			mpfr_float a, b;
+			a = real_*rhs.real_ - imag_*rhs.imag_;
+			b = real_*rhs.imag_ + imag_*rhs.real_;
+			real_ = a;
+			imag_ = b;
+			return *this;
+		}
 		
 		
-		mpfr_float abs()
+		/**
+		 compute the absolute value of the number
+		 */
+		mpfr_float abs() const
 		{
 			return sqrt(abs2());
 		}
 		
-		mpfr_float abs2()
+		
+		/**
+		 compute the square of the absolute value of the number
+		 */
+		mpfr_float abs2() const
 		{
 			return pow(real(),2)+pow(imag(),2);
 		}
 		
 		
+		/**
+		 change the precision of this high-precision complex number
+		 */
 		void precision(unsigned int prec)
 		{
 			real_.precision(prec);
 			imag_.precision(prec);
 		}
 		
+		
+		/**
+		 get the precision of the high-precision complex number.
+		 */
 		unsigned int precision() const
 		{
 			return real_.precision();
@@ -79,8 +102,24 @@ namespace bertini {
 	};
 	
 	
+	inline mpfr_float abs2(const complex & z)
+	{
+		return z.abs2();
+	}
+	
+	inline mpfr_float abs(const complex & z)
+	{
+		return sqrt(abs(z));
+	}
+	
+	
 	inline complex operator+(complex lhs, const complex & rhs){
 		lhs += rhs;
+		return lhs;
+	}
+	
+	inline complex operator*(complex lhs, const complex & rhs){
+		lhs *= rhs;
 		return lhs;
 	}
 	
