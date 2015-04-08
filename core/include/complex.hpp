@@ -52,15 +52,40 @@ namespace bertini {
 		}
 		
 		
-		complex& operator*=(const complex & rhs)
+		
+		complex& operator-=(const complex & rhs)
 		{
-			mpfr_float a, b;
-			a = real_*rhs.real_ - imag_*rhs.imag_;
-			b = real_*rhs.imag_ + imag_*rhs.real_;
-			real_ = a;
-			imag_ = b;
+			real_-=rhs.real_;
+			imag_-=rhs.imag_;
 			return *this;
 		}
+		
+		
+		/**
+		 complex multiplication.  uses a single temporary variable
+		 */
+		complex& operator*=(const complex & rhs)
+		{
+			mpfr_float a = real_*rhs.real_ - imag_*rhs.imag_;
+			imag_ = real_*rhs.imag_ + imag_*rhs.real_;
+			real_ = a;
+			return *this;
+		}
+		
+		
+		/**
+		 complex division.  implemented using two temporary variables
+		 */
+		complex& operator/=(const complex & rhs)
+		{
+			mpfr_float d = rhs.abs2();
+			mpfr_float a = real_*rhs.real_ + imag_*rhs.imag_;
+			imag_ = imag_*rhs.real_ - real_*rhs.imag_/d;
+			real_ = a/d;
+			
+			return *this;
+		}
+		
 		
 		
 		/**
@@ -109,7 +134,7 @@ namespace bertini {
 	
 	inline mpfr_float abs(const complex & z)
 	{
-		return sqrt(abs(z));
+		return boost::multiprecision::sqrt(abs2(z));
 	}
 	
 	
@@ -118,10 +143,21 @@ namespace bertini {
 		return lhs;
 	}
 	
+	inline complex operator-(complex lhs, const complex & rhs){
+		lhs -= rhs;
+		return lhs;
+	}
+	
 	inline complex operator*(complex lhs, const complex & rhs){
 		lhs *= rhs;
 		return lhs;
 	}
+	
+	inline complex operator/(complex lhs, const complex & rhs){
+		lhs /= rhs;
+		return lhs;
+	}
+	
 	
 }
 
