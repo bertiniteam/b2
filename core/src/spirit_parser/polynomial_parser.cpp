@@ -193,84 +193,95 @@ namespace client
 }
 
 
+void test_parser();
+
 
 int main()
+{
+
+	test_parser();
+	return 0;
+}
+
+void test_parser(){
+
+	
+std::cout << "/////////////////////////////////////////////////////////\n\n";
+std::cout << "\t\tPolynomial Parser\n\n";
+std::cout << "/////////////////////////////////////////////////////////\n\n";
+std::cout << "Enter your symbols separated by commas ...or [q or Q] to quit\n\n";
+
+typedef std::string::const_iterator iterator_type;
+typedef client::variables<iterator_type> variables;
+typedef client::polynomial<iterator_type> polys;
+
+variables var_parser; // Our grammar
+
+std::string str;
+std::getline(std::cin, str);
+iterator_type it = str.begin();
+iterator_type end = str.end();
+phrase_parse(it,end,var_parser,client::ascii::space);
+
+std::cout << "/////////////////////////////////////////////////////////\n\n";
+std::cout << "Enter your polynomial ...or [q or Q] to quit\n\n";
+
+polys poly_parser;
+
+client::tabcount = 0;
+while (std::getline(std::cin, str))
 {
 	
 	
 	
-	std::cout << "/////////////////////////////////////////////////////////\n\n";
-	std::cout << "\t\tPolynomial Parser\n\n";
-	std::cout << "/////////////////////////////////////////////////////////\n\n";
-	std::cout << "Enter your symbols separated by commas ...or [q or Q] to quit\n\n";
 	
-	typedef std::string::const_iterator iterator_type;
-	typedef client::variables<iterator_type> variables;
-	typedef client::polynomial<iterator_type> polys;
+	if (str.empty() || str[0] == 'q' || str[0] == 'Q')
+		break;
 	
-	variables var_parser; // Our grammar
-	
-	std::string str;
-	std::getline(std::cin, str);
-	iterator_type it = str.begin();
-	iterator_type end = str.end();
-	phrase_parse(it,end,var_parser,client::ascii::space);
-	
-	std::cout << "/////////////////////////////////////////////////////////\n\n";
-	std::cout << "Enter your polynomial ...or [q or Q] to quit\n\n";
-	
-	polys poly_parser;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	//[tutorial_roman_grammar_parse
 	
 	client::tabcount = 0;
-	while (std::getline(std::cin, str))
+	
+	
+	client::Node* test;
+	
+	bool parsing_succeeded = phrase_parse(iter, end, poly_parser,client::ascii::space,test); // parse the string into the node class.
+	
+	if(test != 0) // is this a test on nullity?
 	{
-		
-		
-		
-		
-		if (str.empty() || str[0] == 'q' || str[0] == 'Q')
-			break;
-		
-		std::string::const_iterator iter = str.begin();
-		std::string::const_iterator end = str.end();
-		//[tutorial_roman_grammar_parse
-		
-		client::tabcount = 0;
-		
-		
-		client::Node* test;
-		
-		bool parsing_succeeded = phrase_parse(iter, end, poly_parser,client::ascii::space,test); // parse the string into the node class.
-		
-		if(test != 0) // is this a test on nullity?
-		{
-			test->print();
-		}
-		else{
-			std::cout << "didn't work\n";
-		}
-		
-		
-		if (parsing_succeeded && iter == end)
-		{
-			std::cout << "-------------------------\n";
-			std::cout << "Parsing succeeded\n";
-			//            std::cout << "result = " << result << std::endl;
-			std::cout << "-------------------------\n";
-		}
-		else
-		{
-			std::string rest(iter, end);
-			std::cout << "-------------------------\n";
-			std::cout << "Parsing failed\n";
-			std::cout << "stopped at: \": " << rest << "\"\n";
-			std::cout << "-------------------------\n";
-		}
-		//]
-		
-		std::cout << test << std::endl;
+		test->print();
+	}
+	else{
+		std::cout << "didn't work\n";
 	}
 	
-	std::cout << "Bye... :-) \n\n";
-	return 0;
+	
+	if (parsing_succeeded && iter == end)
+	{
+		std::cout << "-------------------------\n";
+		std::cout << "Parsing succeeded\n";
+		//            std::cout << "result = " << result << std::endl;
+		std::cout << "-------------------------\n";
+	}
+	else
+	{
+		std::string rest(iter, end);
+		std::cout << "-------------------------\n";
+		std::cout << "Parsing failed\n";
+		std::cout << "stopped at: \": " << rest << "\"\n";
+		std::cout << "-------------------------\n";
+	}
+	//]
+	
+	std::cout << test << std::endl;
 }
+
+std::cout << "Bye... :-) \n\n";
+
+
+}
+
+
+
