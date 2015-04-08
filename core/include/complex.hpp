@@ -4,7 +4,7 @@
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
 
-
+#include <assert.h>
 
 namespace bertini {
 	using boost::multiprecision::mpfr_float;
@@ -24,7 +24,7 @@ namespace bertini {
 		/**
 		 two-parameter constructor for building a complex from two high precision numbers
 		 */
-		complex(mpfr_float re, mpfr_float im) : real_(re), imag_(im)
+		complex(const mpfr_float & re, const mpfr_float & im) : real_(re), imag_(im)
 		{}
 		
 		
@@ -32,16 +32,32 @@ namespace bertini {
 		/**
 		 two-parameter constructor for building a complex from two strings.
 		 */
-		complex(std::string re, std::string im) : real_(re), imag_(im)
+		complex(std::string re, const std::string & im) : real_(re), imag_(im)
+		{}
+		
+		
+		/**
+		 mixed two-parameter constructor for building a complex from two strings.
+		 */
+		complex(const mpfr_float & re, const std::string & im) : real_(re), imag_(im)
+		{}
+		
+		
+		/**
+		 mixed two-parameter constructor for building a complex from two strings.
+		 */
+		complex(const std::string & re, const mpfr_float & im) : real_(re), imag_(im)
 		{}
 		
 		
 		inline mpfr_float real() const {return real_;}
 		inline mpfr_float imag() const {return imag_;}
 		
-		void real(mpfr_float new_real){real_ = new_real;}
-		void imag(mpfr_float new_imag){imag_ = new_imag;}
+		void real(const mpfr_float & new_real){real_ = new_real;}
+		void imag(const mpfr_float & new_imag){imag_ = new_imag;}
 		
+		void real(const std::string & new_real){real_ = mpfr_float(new_real);}
+		void imag(const std::string & new_imag){imag_ = mpfr_float(new_imag);}
 		
 		
 		complex& operator+=(const complex & rhs)
@@ -88,6 +104,71 @@ namespace bertini {
 		
 		
 		
+		
+		
+		
+		
+		
+		
+		friend std::ostream& operator<<(std::ostream& out, const complex & z)
+		{
+			out << "(" << z.real() << "," << z.imag() << ")";
+			return out;
+		}
+		
+		friend std::istream& operator>>(std::istream& in, complex & z)
+		{
+			std::string gotten;
+			in >> gotten;
+			
+			if (gotten[0]=='(') {
+				if (*(gotten.end()-1)!=')') {
+					in.setstate(std::ios::failbit);
+					z.real("NaN");
+					z.imag("NaN");
+					return in;
+				}
+				else{
+					// try to find a comma in the string.
+					size_t comma_pos = gotten.find(",");
+					
+					// if the second character, have no numbers in the real part.
+					// if the second to last character, have no numbers in the imag part.
+					
+					if (comma_pos!=std::string::npos){
+						if (comma_pos==1 || comma_pos==gotten.size()-2) {
+							in.setstate(std::ios::failbit);
+							z.real("NaN");
+							z.imag("NaN");
+							return in;
+						}
+						else{
+							z.real(gotten.substr(1, comma_pos-1));
+							z.imag(gotten.substr(comma_pos+1, gotten.size()-2 - (comma_pos)));
+							return in;
+						}
+					}
+					// did not find a comma
+					else{
+						z.real(gotten.substr(1,gotten.size()-2));
+						z.imag("0.0");
+						return in;
+					}
+					
+				}
+			}
+			else{
+				z.real(gotten);
+				z.imag("0.0");
+				return in;
+			}
+		}
+		
+		
+		
+		
+		
+		
 		/**
 		 compute the absolute value of the number
 		 */
@@ -106,8 +187,35 @@ namespace bertini {
 		}
 		
 		
+		
+		
+		mpfr_float arg() const
+		{
+			return boost::multiprecision::atan2(imag(),real());
+		}
+		
+		
+		
+		mpfr_float norm() const
+		{
+			return abs2();
+		}
+		
+		
+		complex conj() const
+		{
+			return complex(real(), -imag());
+		}
+		
+		
+		
+		
+		
+		
 		/**
-		 change the precision of this high-precision complex number
+		 change the precision of this high-precision complex number. 
+		 
+		 \param prec the number of digits to change precision to.
 		 */
 		void precision(unsigned int prec)
 		{
@@ -118,9 +226,13 @@ namespace bertini {
 		
 		/**
 		 get the precision of the high-precision complex number.
+		 
+		 \return the number of digits in the number
 		 */
 		unsigned int precision() const
 		{
+			assert(real_.precision()==imag_.precision());
+			
 			return real_.precision();
 		}
 		
@@ -137,25 +249,133 @@ namespace bertini {
 		return boost::multiprecision::sqrt(abs2(z));
 	}
 	
+	inline mpfr_float arg(const complex & z)
+	{
+		return boost::multiprecision::atan2(z.imag(),z.real());
+	}
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/**
+	 complex-complex multiplication
+	 */
 	inline complex operator+(complex lhs, const complex & rhs){
 		lhs += rhs;
 		return lhs;
 	}
 	
+	/**
+	 complex-real multiplication
+	 */
+	inline complex operator+(complex lhs, const mpfr_float & rhs)
+	{
+		lhs.real(lhs.real()+rhs);
+		return lhs;
+	}
+	
+	/**
+	 real-complex multiplication
+	 */
+	inline complex operator+(const mpfr_float & lhs, complex rhs)
+	{
+		return rhs+lhs;
+	}
+	
+	
+	
+	
+	
+	/**
+	 complex-complex subtraction
+	 */
 	inline complex operator-(complex lhs, const complex & rhs){
 		lhs -= rhs;
 		return lhs;
 	}
 	
+	/**
+	 complex-real subtraction
+	 */
+	inline complex operator-(complex lhs, const mpfr_float & rhs)
+	{
+		lhs.real(lhs.real()-rhs);
+		return lhs;
+	}
+	
+	/**
+	 real-complex subtraction
+	 */
+	inline complex operator-(const mpfr_float & lhs, complex rhs)
+	{
+		return rhs-lhs;
+	}
+	
+	
+	
+	
+	/**
+	   complex-complex multiplication
+	   */
 	inline complex operator*(complex lhs, const complex & rhs){
 		lhs *= rhs;
 		return lhs;
 	}
 	
+	/**
+	 complex-real multiplication
+	 */
+	inline complex operator*(complex lhs, const mpfr_float & rhs)
+	{
+		lhs.real(lhs.real()*rhs);
+		lhs.imag(lhs.imag()*rhs);
+		return lhs;
+	}
+	
+	/**
+	 real-complex multiplication
+	 */
+	inline complex operator*(const mpfr_float & lhs, complex rhs)
+	{
+		return rhs*lhs;
+	}
+	
+	
+	
+	
+	
+	/**
+	 complex-complex division
+	 */
 	inline complex operator/(complex lhs, const complex & rhs){
 		lhs /= rhs;
 		return lhs;
+	}
+	
+	/**
+	 complex-real division
+	 */
+	inline complex operator/(complex lhs, const mpfr_float & rhs)
+	{
+		lhs.real(lhs.real()/rhs);
+		lhs.imag(lhs.imag()/rhs);
+		return lhs;
+	}
+	
+	/**
+	 real-complex division
+	 */
+	inline complex operator/(const mpfr_float & lhs, const complex & rhs)
+	{
+		mpfr_float d = rhs.abs2();
+		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
 	}
 	
 	
