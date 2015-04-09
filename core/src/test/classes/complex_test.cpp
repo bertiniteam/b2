@@ -112,6 +112,19 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 
 
 
+BOOST_AUTO_TEST_CASE(complex_eleventh_power)
+{
+
+	bertini::complex z("2.0","0.5"), w;
+	
+	w = pow(z,11);
+	std::cout << "z^11 = " << w << std::endl;
+	
+}
+
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

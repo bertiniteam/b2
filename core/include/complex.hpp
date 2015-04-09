@@ -60,6 +60,28 @@ namespace bertini {
 		void imag(const std::string & new_imag){imag_ = mpfr_float(new_imag);}
 		
 		
+		
+		inline static complex minus_one()
+		{
+			return complex("1.0","0.0");
+		}
+		
+		inline static complex zero(){
+			return complex("0.0","0.0");
+		}
+		
+		inline static complex one(){
+			return complex("1.0","0.0");
+		}
+		
+		inline static complex two(){
+			return complex("2.0","0.0");
+		}
+		
+		
+		
+		
+		
 		complex& operator+=(const complex & rhs)
 		{
 			real_+=rhs.real_;
@@ -79,6 +101,8 @@ namespace bertini {
 		
 		/**
 		 complex multiplication.  uses a single temporary variable
+		 
+		 1 temporary, 4 multiplications
 		 */
 		complex& operator*=(const complex & rhs)
 		{
@@ -261,9 +285,6 @@ namespace bertini {
 	
 	
 	
-	
-	
-	
 	/**
 	 complex-complex multiplication
 	 */
@@ -377,6 +398,87 @@ namespace bertini {
 		mpfr_float d = rhs.abs2();
 		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
 	}
+	
+	
+	
+	
+	
+	
+	/**
+	 compute the inverse of a complex number
+	 */
+	inline complex inverse(const complex & z)
+	{
+		mpfr_float d =z.abs2();
+		
+		return complex(z.real()/d, -z.imag()/d);
+	}
+	
+	
+	/**
+	 compute the square of a complex number
+	 
+	 4 multiplications
+	 1 creation of a mpfr_float
+	 */
+	inline complex square(const complex & z)
+	{
+		return complex(z.real()*z.real() - z.imag()*z.imag(), mpfr_float("2.0")*z.real()*z.imag());
+	}
+	
+	/**
+	 compute the cube of a complex number
+	 
+	 10 multiplications
+	 2 creations of an mpfr_float.
+	 */
+	inline complex cube(const complex & z)
+	{
+		//		return complex(x^3 - 3*x*y^2, 3*x^2*y - y^3); // this deliberately left in for the equation.
+		return complex(pow(z.real(),3) - mpfr_float("3.0")*z.real()*pow(z.imag(),2),
+					   mpfr_float("3.0")*pow(z.real(),2)*z.imag() - pow(z.imag(),3));
+		
+	}
+	
+	
+	
+	
+	inline complex pow(const complex & z, int power)
+	{
+		if (power < 0) {
+			return pow(z, -power);
+		}
+		else if (power==0)
+			return complex("1.0","0.0");
+		else if(power==1)
+			return z;
+		else if(power==2)
+			return z*z;
+		else if(power==3)
+			return z*z*z;
+		else
+		{
+			unsigned int p = power;
+			complex result("1.0","0.0"), z_to_the_current_power_of_two = z;
+			// have copy of p in memory, can freely modify it.
+			do {
+				if ( (p & 1) == 1 ) { // get the lowest bit of the number
+					result *= z_to_the_current_power_of_two;
+				}
+				z_to_the_current_power_of_two *= z_to_the_current_power_of_two; // square z_to_the_current_power_of_two
+			} while (p  >>= 1);
+			
+			return result;
+		}
+	}
+	
+//	if(power==4)
+//		return square(square(z));
+//		else if(power==5)
+//			return square(z)*cube(z);
+//			else if(power==6)
+//				return square(cube(z));
+//				else
 	
 	
 }
