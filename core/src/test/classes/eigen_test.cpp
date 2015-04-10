@@ -8,7 +8,7 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/LU>
 
-
+#include "complex.hpp"
 
 #include <boost/timer/timer.hpp>
 

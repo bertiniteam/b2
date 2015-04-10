@@ -600,6 +600,10 @@ namespace bertini {
 }
 
 
+
+
 #endif
+
+
 
 
