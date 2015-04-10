@@ -11,7 +11,7 @@ namespace bertini {
 	
 	class complex {
 		
-		
+		// the real and imaginary parts of the complex number
 		mpfr_float real_, imag_;
 		
 	public:
@@ -50,20 +50,92 @@ namespace bertini {
 		{}
 		
 		
+		
+		/**
+		 the move constructor
+		 */
+		complex(complex&& other) : complex() // initialize via default constructor, C++11 only
+		{
+			swap(*this, other);
+		}
+		
+		
+		
+		/**
+		 the copy constructor
+		 */
+		complex(const complex & other) : real_(other.real_), imag_(other.imag_)
+		{}
+		
+		/**
+		 enable swapping
+		 */
+		friend void swap(complex& first, complex& second) // nothrow
+		{
+			using std::swap;
+			
+			swap(first.real_,second.real_);
+			swap(first.imag_,second.imag_);
+		}
+		
+		/**
+		 assignment operator
+		 */
+		complex& operator=(complex other)
+		{
+			swap(*this, other);
+			return *this;
+		}
+		
+		/**
+		 get the value of the real part of the complex number
+		 */
 		inline mpfr_float real() const {return real_;}
+		
+		/**
+		 get the value of the imaginary part of the complex number
+		 */
 		inline mpfr_float imag() const {return imag_;}
 		
+		/**
+		 Set the value of the real part of the complex number
+		 */
 		void real(const mpfr_float & new_real){real_ = new_real;}
+		
+		/**
+		 Set the value of the imaginary part of the complex number
+		 */
 		void imag(const mpfr_float & new_imag){imag_ = new_imag;}
 		
+		/**
+		 Set the value of the real part of the complex number, from a double-quoted string.
+		 */
 		void real(const std::string & new_real){real_ = mpfr_float(new_real);}
+		
+		/**
+		 Set the value of the imaginary part of the complex number, from a double-quoted string.
+		 */
 		void imag(const std::string & new_imag){imag_ = mpfr_float(new_imag);}
 		
 		
 		
+		
+		
+		
+		
+		inline static complex i()
+		{
+			return complex("0.0","1.0");
+		}
+		
+		inline static complex half()
+		{
+			return complex("0.5","0.0");
+		}
+		
 		inline static complex minus_one()
 		{
-			return complex("1.0","0.0");
+			return complex("-1.0","0.0");
 		}
 		
 		inline static complex zero(){
@@ -82,6 +154,17 @@ namespace bertini {
 		
 		
 		
+		
+		
+		
+		
+		
+		
+		
+		
+		/**
+		 complex addition
+		 */
 		complex& operator+=(const complex & rhs)
 		{
 			real_+=rhs.real_;
@@ -90,7 +173,9 @@ namespace bertini {
 		}
 		
 		
-		
+		/**
+		 complex subtraction
+		 */
 		complex& operator-=(const complex & rhs)
 		{
 			real_-=rhs.real_;
@@ -106,7 +191,7 @@ namespace bertini {
 		 */
 		complex& operator*=(const complex & rhs)
 		{
-			mpfr_float a = real_*rhs.real_ - imag_*rhs.imag_;
+			mpfr_float a = real_*rhs.real_ - imag_*rhs.imag_; // cache the real part of the result
 			imag_ = real_*rhs.imag_ + imag_*rhs.real_;
 			real_ = a;
 			return *this;
@@ -119,7 +204,7 @@ namespace bertini {
 		complex& operator/=(const complex & rhs)
 		{
 			mpfr_float d = rhs.abs2();
-			mpfr_float a = real_*rhs.real_ + imag_*rhs.imag_;
+			mpfr_float a = real_*rhs.real_ + imag_*rhs.imag_; // cache the numerator of the real part of the result
 			imag_ = imag_*rhs.real_ - real_*rhs.imag_/d;
 			real_ = a/d;
 			
@@ -133,13 +218,26 @@ namespace bertini {
 		
 		
 		
-		
+		/**
+		 write a complex number to an output stream.
+		 
+		 format complies with the std::complex class -- (re,im).
+		 */
 		friend std::ostream& operator<<(std::ostream& out, const complex & z)
 		{
 			out << "(" << z.real() << "," << z.imag() << ")";
 			return out;
 		}
 		
+		
+		/**
+		 read a complex number from an input stream.
+		 
+		 format complies with the std::complex class -- (re,im) or (re) or re.
+		 
+		 if the read fails because of misplaced parentheses, the stream will be in fail state, and the number will be set to NaN.
+		 function does NOT tolerate white space in the number.
+		 */
 		friend std::istream& operator>>(std::istream& in, complex & z)
 		{
 			std::string gotten;
@@ -212,20 +310,26 @@ namespace bertini {
 		
 		
 		
-		
+		/**
+		 get the argument of the complex number, with branch cut according to whatever branch boost chose for their atan2 function.
+		 */
 		mpfr_float arg() const
 		{
 			return boost::multiprecision::atan2(imag(),real());
 		}
 		
 		
-		
+		/**
+		 get the inner product of the number with itself.
+		 */
 		mpfr_float norm() const
 		{
 			return abs2();
 		}
 		
-		
+		/**
+		 get the complex conjugate of the complex number.
+		 */
 		complex conj() const
 		{
 			return complex(real(), -imag());
@@ -263,16 +367,26 @@ namespace bertini {
 	};
 	
 	
+	/**
+	 compute the square of the absolute value of a complex number
+	 */
 	inline mpfr_float abs2(const complex & z)
 	{
 		return z.abs2();
 	}
 	
+	/**
+	 compute the absolute value of a complex number.
+	 */
 	inline mpfr_float abs(const complex & z)
 	{
 		return boost::multiprecision::sqrt(abs2(z));
 	}
 	
+	
+	/**
+	 compute the argument of a complex number, with branch cut determined by the  atan2  function.
+	 */
 	inline mpfr_float arg(const complex & z)
 	{
 		return boost::multiprecision::atan2(z.imag(),z.real());
@@ -442,7 +556,9 @@ namespace bertini {
 	
 	
 	
-	
+	/**
+	 compute +- integral powers of a complex number.
+	 */
 	inline complex pow(const complex & z, int power)
 	{
 		if (power < 0) {
