@@ -4,15 +4,87 @@
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
 
+
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/split_member.hpp>
+
+#include <eigen3/Eigen/Core>
+
 #include <assert.h>
+
+// the following code block extends serialization to the mpfr_float class from boost::multiprecision
+namespace boost { namespace serialization {
+	
+	
+	/**
+	 Save a mpfr_float type to a boost archive.
+	 */
+	template <typename Archive>
+	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
+	{
+		std::string tmp = r.str(0, std::ios::fixed);
+		ar & tmp;
+	}
+	
+	/**
+	 Load a mpfr_float type from a boost archive.
+	 */
+	template <typename Archive>
+	void load(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0>& r, unsigned /*version*/)
+	{
+		std::string tmp;
+		ar & tmp;
+		r = tmp.c_str();
+	}
+	
+} } // re: namespaces
+
+BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpfr_float_backend<0>)
+
+
+
+
 
 namespace bertini {
 	using boost::multiprecision::mpfr_float;
 	
 	class complex {
 		
+	private:
 		// the real and imaginary parts of the complex number
 		mpfr_float real_, imag_;
+		
+		
+		// let the boost serialization library have access to the private members of this class.
+		friend class boost::serialization::access;
+		
+		/**
+		 \brief save method for archiving a bertini::complex
+		 */
+		template<class Archive>
+		void save(Archive & ar, const unsigned int version) const
+		{
+			// note, version is always the latest when saving
+			ar & real_;
+			ar & imag_;
+		}
+		
+		
+		/**
+		 \brief save method for archiving a bertini::complex
+		 */
+		template<class Archive>
+		void load(Archive & ar, const unsigned int version)
+		{
+			ar & real_;
+			ar & imag_;
+		}
+		
+		BOOST_SERIALIZATION_SPLIT_MEMBER()
+		// this has to be here so that the Boost.Serialization library
+		// knows that there are different methods for the serialize() method.
+		
 		
 	public:
 		
@@ -21,10 +93,50 @@ namespace bertini {
 		 */
 		complex():real_(), imag_(){}
 		
+		
+		
+		////////
+		//
+		//  construct real-valued complex numbers
+		//
+		//////////////
+		
+		/**
+		 single-parameter for constructing a real-valued complex from a single real double number
+		 */
+		complex(double re) : real_(re), imag_("0.0"){}
+		
+		/**
+		 single-parameter for constructing a real-valued complex from a single high-precision number
+		 */
+		complex(const mpfr_float & re) : real_(re), imag_("0.0"){}
+		
+		
+		/**
+		 single-parameter for constructing a real-valued complex from a convertible single string
+		 */
+		complex(const std::string & re) : real_(re), imag_("0.0"){}
+		
+		
+		
+		
+		////////
+		//
+		//  construct complex numbers from two parameters
+		//
+		//////////////
+		
 		/**
 		 two-parameter constructor for building a complex from two high precision numbers
 		 */
 		complex(const mpfr_float & re, const mpfr_float & im) : real_(re), imag_(im)
+		{}
+		
+		
+		/**
+		 two-parameter constructor for building a complex from two low precision numbers
+		 */
+		complex(double re, double im) : real_(re), imag_(im)
 		{}
 		
 		
@@ -49,6 +161,16 @@ namespace bertini {
 		complex(const std::string & re, const mpfr_float & im) : real_(re), imag_(im)
 		{}
 		
+		
+		
+		
+		
+		
+		////////
+		//
+		//  other constructors
+		//
+		//////////////
 		
 		
 		/**
@@ -87,6 +209,18 @@ namespace bertini {
 			return *this;
 		}
 		
+		
+		
+		
+		
+		
+		
+		////////
+		//
+		//  getters and setters
+		//
+		//////////////
+		
 		/**
 		 get the value of the real part of the complex number
 		 */
@@ -122,6 +256,27 @@ namespace bertini {
 		
 		
 		
+		////////
+		//
+		//  some static functions which construct special numbers
+		//
+		//////////////
+		
+		
+		
+		
+		
+		inline static complex zero(){
+			return complex("0.0","0.0");
+		}
+		
+		inline static complex one(){
+			return complex("1.0","0.0");
+		}
+		
+		inline static complex two(){
+			return complex("2.0","0.0");
+		}
 		
 		inline static complex i()
 		{
@@ -138,17 +293,6 @@ namespace bertini {
 			return complex("-1.0","0.0");
 		}
 		
-		inline static complex zero(){
-			return complex("0.0","0.0");
-		}
-		
-		inline static complex one(){
-			return complex("1.0","0.0");
-		}
-		
-		inline static complex two(){
-			return complex("2.0","0.0");
-		}
 		
 		
 		
@@ -158,7 +302,11 @@ namespace bertini {
 		
 		
 		
-		
+		////////
+		//
+		//  the fundamental arithmetic operators
+		//
+		//////////////
 		
 		
 		
@@ -218,73 +366,7 @@ namespace bertini {
 		
 		
 		
-		/**
-		 write a complex number to an output stream.
-		 
-		 format complies with the std::complex class -- (re,im).
-		 */
-		friend std::ostream& operator<<(std::ostream& out, const complex & z)
-		{
-			out << "(" << z.real() << "," << z.imag() << ")";
-			return out;
-		}
 		
-		
-		/**
-		 read a complex number from an input stream.
-		 
-		 format complies with the std::complex class -- (re,im) or (re) or re.
-		 
-		 if the read fails because of misplaced parentheses, the stream will be in fail state, and the number will be set to NaN.
-		 function does NOT tolerate white space in the number.
-		 */
-		friend std::istream& operator>>(std::istream& in, complex & z)
-		{
-			std::string gotten;
-			in >> gotten;
-			
-			if (gotten[0]=='(') {
-				if (*(gotten.end()-1)!=')') {
-					in.setstate(std::ios::failbit);
-					z.real("NaN");
-					z.imag("NaN");
-					return in;
-				}
-				else{
-					// try to find a comma in the string.
-					size_t comma_pos = gotten.find(",");
-					
-					// if the second character, have no numbers in the real part.
-					// if the second to last character, have no numbers in the imag part.
-					
-					if (comma_pos!=std::string::npos){
-						if (comma_pos==1 || comma_pos==gotten.size()-2) {
-							in.setstate(std::ios::failbit);
-							z.real("NaN");
-							z.imag("NaN");
-							return in;
-						}
-						else{
-							z.real(gotten.substr(1, comma_pos-1));
-							z.imag(gotten.substr(comma_pos+1, gotten.size()-2 - (comma_pos)));
-							return in;
-						}
-					}
-					// did not find a comma
-					else{
-						z.real(gotten.substr(1,gotten.size()-2));
-						z.imag("0.0");
-						return in;
-					}
-					
-				}
-			}
-			else{
-				z.real(gotten);
-				z.imag("0.0");
-				return in;
-			}
-		}
 		
 		
 		
@@ -364,7 +446,93 @@ namespace bertini {
 			return real_.precision();
 		}
 		
-	};
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		/**
+		 write a complex number to an output stream.
+		 
+		 format complies with the std::complex class -- (re,im).
+		 */
+		friend std::ostream& operator<<(std::ostream& out, const complex & z)
+		{
+			out << "(" << z.real() << "," << z.imag() << ")";
+			return out;
+		}
+		
+		
+		/**
+		 read a complex number from an input stream.
+		 
+		 format complies with the std::complex class -- (re,im) or (re) or re.
+		 
+		 if the read fails because of misplaced parentheses, the stream will be in fail state, and the number will be set to NaN.
+		 function does NOT tolerate white space in the number.
+		 */
+		friend std::istream& operator>>(std::istream& in, complex & z)
+		{
+			std::string gotten;
+			in >> gotten;
+			
+			if (gotten[0]=='(') {
+				if (*(gotten.end()-1)!=')') {
+					in.setstate(std::ios::failbit);
+					z.real("NaN");
+					z.imag("NaN");
+					return in;
+				}
+				else{
+					// try to find a comma in the string.
+					size_t comma_pos = gotten.find(",");
+					
+					// if the second character, have no numbers in the real part.
+					// if the second to last character, have no numbers in the imag part.
+					
+					if (comma_pos!=std::string::npos){
+						if (comma_pos==1 || comma_pos==gotten.size()-2) {
+							in.setstate(std::ios::failbit);
+							z.real("NaN");
+							z.imag("NaN");
+							return in;
+						}
+						else{
+							z.real(gotten.substr(1, comma_pos-1));
+							z.imag(gotten.substr(comma_pos+1, gotten.size()-2 - (comma_pos)));
+							return in;
+						}
+					}
+					// did not find a comma
+					else{
+						z.real(gotten.substr(1,gotten.size()-2));
+						z.imag("0.0");
+						return in;
+					}
+					
+				}
+			}
+			else{
+				z.real(gotten);
+				z.imag("0.0");
+				return in;
+			}
+		}
+		
+		
+		
+	}; // end declaration of the bertini::complex number class
+	
+	
+	
+	
+	
 	
 	
 	/**
@@ -597,7 +765,58 @@ namespace bertini {
 //				else
 	
 	
+	
+	
+	
+	
+	
+	
+	complex polar(const mpfr_float & rho, const mpfr_float & theta)
+	{
+		return complex(rho * cos(theta), rho * sin(theta) );
+	}
+	
 }
+
+
+
+
+
+
+// reopen the Eigen namespace to inject this struct.
+namespace Eigen {
+	
+	/**
+	 \brief this templated struct permits us to use the Float type in Eigen matrices.
+	 */
+	template<> struct NumTraits<bertini::complex> : NumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	{
+		typedef boost::multiprecision::mpfr_float Real;
+		typedef boost::multiprecision::mpfr_float NonInteger;
+		typedef boost::multiprecision::mpfr_float Nested;
+		enum {
+			IsComplex = 1,
+			IsInteger = 0,
+			IsSigned = 1,
+			RequireInitialization = 0,
+			ReadCost = 1,
+			AddCost = 3,
+			MulCost = 3
+		};
+		
+		
+		
+//		//TODO verify this returned number
+//		static Real epsilon()
+//		{
+//			return pow( boost::multiprecision::mpfr_float("10.0"), 1-int(boost::multiprecision::mpfr_float::default_precision()) );
+//		}
+		
+	};
+}
+
+
+
 
 
 

@@ -12,124 +12,92 @@
 
 #include <boost/timer/timer.hpp>
 
-BOOST_AUTO_TEST_SUITE(eigen_compatibility)
 
 
 
 
 
-
-
-
-
-
-
-BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_pure_doubles)
+template <typename numbertype>
+Eigen::Matrix<numbertype, Eigen::Dynamic, Eigen::Dynamic> kahan_matrix(unsigned int mat_size, numbertype c)
 {
+	numbertype s, scale(1.0);
+	s = sqrt( (numbertype(1.0)-c) * (numbertype(1.0)+c) );
 	
 	
-	double c(0.285), s, scale(1);
-	s = sqrt( (1-c) * (1+c) );
-	
-	int mat_size = 100;
+	Eigen::Matrix<numbertype, Eigen::Dynamic, Eigen::Dynamic> A(mat_size,mat_size);
 	
 	
-	Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(mat_size,mat_size), B(mat_size,mat_size), C;
-	
-	
-	for (int ii=0; ii<mat_size; ii++)
-	{
-		for (int jj=ii; jj<mat_size; jj++)
-		{
-			A(ii,jj) = -c * 1;
+	for (unsigned int ii=0; ii<mat_size; ii++) {
+		for (unsigned int jj=ii; jj<mat_size; jj++) {
+			A(ii,jj) = -c * numbertype(1.0);
 		}
 	}
 	
 	
-	for (int ii=0; ii<mat_size; ii++)
-	{
-		A(ii,ii) += (1+c);
+	for (unsigned int ii=0; ii<mat_size; ii++) {
+		A(ii,ii) += numbertype(1)+c;
 	}
 	
 	
-	for (int jj=0; jj<mat_size; jj++){
-		for (int kk=0;kk<mat_size;kk++){
+	for (unsigned int jj=0; jj<mat_size; jj++){
+		for (unsigned int kk=0;kk<mat_size;kk++){
 			A(jj,kk) *= scale;
 		}
 		scale *= s;
 	}
 	
 	
-	for (int jj=0;jj<mat_size;jj++){
-		for (int kk=0;kk<mat_size;kk++){
-			A(kk,jj)/=jj+1;
+	for (unsigned int jj=0;jj<mat_size;jj++){
+		for (unsigned int kk=0;kk<mat_size;kk++){
+			A(kk,jj)/= numbertype(jj) + numbertype(1);
 		}
 	}
 	
+	return A;
+}
+
+
+
+
+
+
+BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
+
+
+
+BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_double) {
 	
+	srand(2);  rand();
 	
-	for (int ii=0; ii<mat_size; ii++){
-		B(ii,ii) = -1/(ii+1);
-	}
+	Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A = kahan_matrix(100, 0.285), B(100,100), C;
+	
+	for (int ii=0; ii<100; ii++)
+		B(ii,ii) = -1/(ii+1) + double(rand()) /  RAND_MAX;
+	
 	
 	boost::timer::auto_cpu_timer t;
 	C = A.lu().solve(B);
 	
 	std::cout << "pure double time to solve:" << std::endl;
 	//add statement on the value of C to actually test
+
 }
 
 
 
-BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_pure_mpfr_float_16)
+BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_mpfr_float_16)
 {
 	
 	
 	boost::multiprecision::mpfr_float::default_precision(16);
 	
-	boost::multiprecision::mpfr_float c(0.285), s, scale(1);
-	s = sqrt(( boost::multiprecision::mpfr_float(1)-c) * (boost::multiprecision::mpfr_float(1)+c));
+	srand(2);  rand();
 	
-	int mat_size = 100;
+	Eigen::Matrix<boost::multiprecision::mpfr_float, Eigen::Dynamic, Eigen::Dynamic> A =
+		kahan_matrix(100, boost::multiprecision::mpfr_float(0.285)), B(100,100), C;
 	
-	
-	Eigen::Matrix<boost::multiprecision::mpfr_float, Eigen::Dynamic, Eigen::Dynamic> A(mat_size,mat_size), B(mat_size,mat_size), C;
-	
-	
-	for (int ii=0; ii<mat_size; ii++)
-	{
-		for (int jj=ii; jj<mat_size; jj++)
-		{
-			A(ii,jj) = -c * boost::multiprecision::mpfr_float(1);
-		}
-	}
-	
-	
-	for (int ii=0; ii<mat_size; ii++)
-	{
-		A(ii,ii) += (boost::multiprecision::mpfr_float(1)+c);
-	}
-	
-	
-	for (int jj=0; jj<mat_size; jj++){
-		for (int kk=0;kk<mat_size;kk++){
-			A(jj,kk) *= scale;
-		}
-		scale *= s;
-	}
-	
-	
-	for (int jj=0;jj<mat_size;jj++){
-		for (int kk=0;kk<mat_size;kk++){
-			A(kk,jj)/=boost::multiprecision::mpfr_float(jj+1);
-		}
-	}
-	
-	
-	
-	for (int ii=0; ii<mat_size; ii++){
-		B(ii,ii) = -boost::multiprecision::mpfr_float(1)/boost::multiprecision::mpfr_float(ii+1);
-	}
+	for (int ii=0; ii<100; ii++)
+		B(ii,ii) = -1/(ii+1) + boost::multiprecision::mpfr_float(rand()) /  boost::multiprecision::mpfr_float(RAND_MAX);
 	
 	boost::timer::auto_cpu_timer t;
 	C = A.lu().solve(B);
@@ -140,77 +108,54 @@ BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_pure_mpfr_float_16)
 
 
 
-BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_pure_mpfr_float_100)
+BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_mpfr_float_100)
 {
 	
 	
 	boost::multiprecision::mpfr_float::default_precision(100);
 	
-	boost::multiprecision::mpfr_float c(0.285), s, scale(1);
-	s = sqrt(( boost::multiprecision::mpfr_float(1)-c) * (boost::multiprecision::mpfr_float(1)+c));
+	srand(2);  rand();
 	
-	int mat_size = 100;
+	Eigen::Matrix<boost::multiprecision::mpfr_float, Eigen::Dynamic, Eigen::Dynamic> A =
+	kahan_matrix(100, boost::multiprecision::mpfr_float(0.285)), B(100,100), C;
 	
-	
-	Eigen::Matrix<boost::multiprecision::mpfr_float, Eigen::Dynamic, Eigen::Dynamic> A(mat_size,mat_size), B(mat_size,mat_size), C;
-	
-	
-	for (int ii=0; ii<mat_size; ii++)
-	{
-		for (int jj=ii; jj<mat_size; jj++)
-		{
-			A(ii,jj) = -c * boost::multiprecision::mpfr_float(1);
-		}
-	}
-	
-	
-	for (int ii=0; ii<mat_size; ii++)
-	{
-		A(ii,ii) += (boost::multiprecision::mpfr_float(1)+c);
-	}
-	
-	
-	for (int jj=0; jj<mat_size; jj++){
-		for (int kk=0;kk<mat_size;kk++){
-			A(jj,kk) *= scale;
-		}
-		scale *= s;
-	}
-	
-	
-	for (int jj=0;jj<mat_size;jj++){
-		for (int kk=0;kk<mat_size;kk++){
-			A(kk,jj)/=boost::multiprecision::mpfr_float(jj+1);
-		}
-	}
-	
-	
-	
-	for (int ii=0; ii<mat_size; ii++){
-		B(ii,ii) = -boost::multiprecision::mpfr_float(1)/boost::multiprecision::mpfr_float(ii+1);
-	}
+	for (int ii=0; ii<100; ii++)
+		B(ii,ii) = -1/(ii+1) + boost::multiprecision::mpfr_float(rand()) /  boost::multiprecision::mpfr_float(RAND_MAX);
 	
 	boost::timer::auto_cpu_timer t;
 	C = A.lu().solve(B);
 	
 	std::cout << "mpfr_float pure 100 time to solve:" << std::endl;
+	
 }
 
 
+	
+	
+	
+//BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_bertinicomplex_100)
+//{
+//	
+//	
+//	boost::multiprecision::mpfr_float::default_precision(100);
+//	
+//	srand(2);  rand();
+//	
+//	Eigen::Matrix<bertini::complex, Eigen::Dynamic, Eigen::Dynamic> A =
+//	kahan_matrix(100, bertini::complex("0.285","0.0")), B(100,100), C;
+//	
+//	for (int ii=0; ii<100; ii++)
+//		B(ii,ii) = bertini::complex(-1/(ii+1) + double(rand()) /  double(RAND_MAX), 0.0);
+//	
+//	boost::timer::auto_cpu_timer t;
+//	C = A.lu().solve(B);
+//	
+//	std::cout << "bertini::complex precision 100 time to solve:" << std::endl;
+//}
 
-	
-	
 	
 BOOST_AUTO_TEST_SUITE_END()
 
-
-	
-
-
-	
-	
-	
-	
 	
 	
 	
