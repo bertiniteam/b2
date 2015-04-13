@@ -771,7 +771,7 @@ namespace bertini {
 	
 	
 	
-	complex polar(const mpfr_float & rho, const mpfr_float & theta)
+	inline complex polar(const mpfr_float & rho, const mpfr_float & theta)
 	{
 		return complex(rho * cos(theta), rho * sin(theta) );
 	}
