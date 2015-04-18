@@ -1,0 +1,4 @@
+src/bertini/bertini2-bertini.o: src/bertini/bertini.cpp \
+  include/bertini.hpp
+
+include/bertini.hpp:
