@@ -1,6 +1,8 @@
 #ifndef COMPLEX_CLASS_HPP
 #define COMPLEX_CLASS_HPP
 
+
+
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
 
@@ -72,7 +74,7 @@ namespace bertini {
 		
 		
 		/**
-		 \brief save method for archiving a bertini::complex
+		 \brief load method for archiving a bertini::complex
 		 */
 		template<class Archive>
 		void load(Archive & ar, const unsigned int version)
@@ -144,7 +146,7 @@ namespace bertini {
 		/**
 		 two-parameter constructor for building a complex from two strings.
 		 */
-		complex(std::string re, const std::string & im) : real_(re), imag_(im)
+		complex(const std::string & re, const std::string & im) : real_(re), imag_(im)
 		{}
 		
 		
@@ -173,13 +175,13 @@ namespace bertini {
 		//////////////
 		
 		
-		/**
-		 the move constructor
-		 */
-		complex(complex&& other) : complex() // initialize via default constructor, C++11 only
-		{
-			swap(*this, other);
-		}
+//		/**
+//		 the move constructor
+//		 */
+//		complex(complex&& other) : complex() // initialize via default constructor, C++11 only
+//		{
+//			swap(*this, other);
+//		}
 		
 		
 		
@@ -363,6 +365,13 @@ namespace bertini {
 		
 		
 		
+		/**
+		 complex negation
+		 */
+		complex operator-() const
+		{
+			return complex(-real(), -imag());
+		}
 		
 		
 		
@@ -372,6 +381,15 @@ namespace bertini {
 		
 		
 		
+		
+		
+		/**
+		 compute the square of the absolute value of the number
+		 */
+		mpfr_float abs2() const
+		{
+			return pow(real(),2)+pow(imag(),2);
+		}
 		
 		/**
 		 compute the absolute value of the number
@@ -382,13 +400,6 @@ namespace bertini {
 		}
 		
 		
-		/**
-		 compute the square of the absolute value of the number
-		 */
-		mpfr_float abs2() const
-		{
-			return pow(real(),2)+pow(imag(),2);
-		}
 		
 		
 		
@@ -475,7 +486,7 @@ namespace bertini {
 		 format complies with the std::complex class -- (re,im) or (re) or re.
 		 
 		 if the read fails because of misplaced parentheses, the stream will be in fail state, and the number will be set to NaN.
-		 function does NOT tolerate white space in the number.
+		 function may not tolerate white space in the number.
 		 */
 		friend std::istream& operator>>(std::istream& in, complex & z)
 		{
@@ -535,30 +546,6 @@ namespace bertini {
 	
 	
 	
-	/**
-	 compute the square of the absolute value of a complex number
-	 */
-	inline mpfr_float abs2(const complex & z)
-	{
-		return z.abs2();
-	}
-	
-	/**
-	 compute the absolute value of a complex number.
-	 */
-	inline mpfr_float abs(const complex & z)
-	{
-		return boost::multiprecision::sqrt(abs2(z));
-	}
-	
-	
-	/**
-	 compute the argument of a complex number, with branch cut determined by the  atan2  function.
-	 */
-	inline mpfr_float arg(const complex & z)
-	{
-		return boost::multiprecision::atan2(z.imag(),z.real());
-	}
 	
 	
 	
@@ -618,7 +605,8 @@ namespace bertini {
 	 */
 	inline complex operator-(const mpfr_float & lhs, complex rhs)
 	{
-		return rhs-lhs;
+		rhs.real(lhs - rhs.real());
+		return rhs;
 	}
 	
 	
@@ -647,7 +635,7 @@ namespace bertini {
 	 */
 	inline complex operator*(const mpfr_float & lhs, complex rhs)
 	{
-		return rhs*lhs;
+		return rhs*lhs; // it commutes!
 	}
 	
 	
@@ -682,6 +670,47 @@ namespace bertini {
 	}
 	
 	
+	inline mpfr_float real(const complex & z)
+	{
+		return z.real();
+	}
+	
+	inline mpfr_float imag(const complex & z)
+	{
+		return z.imag();
+	}
+	
+	inline complex conj(const complex & z)
+	{
+		return z.conj();
+	}
+	
+	
+	
+	/**
+	 compute the square of the absolute value of a complex number
+	 */
+	inline mpfr_float abs2(const complex & z)
+	{
+		return z.abs2();
+	}
+	
+	/**
+	 compute the absolute value of a complex number.
+	 */
+	inline mpfr_float abs(const complex & z)
+	{
+		return boost::multiprecision::sqrt(abs2(z));
+	}
+	
+	
+	/**
+	 compute the argument of a complex number, with branch cut determined by the  atan2  function.
+	 */
+	inline mpfr_float arg(const complex & z)
+	{
+		return boost::multiprecision::atan2(z.imag(),z.real());
+	}
 	
 	
 	
@@ -691,7 +720,7 @@ namespace bertini {
 	 */
 	inline complex inverse(const complex & z)
 	{
-		mpfr_float d =z.abs2();
+		mpfr_float d = z.abs2();
 		
 		return complex(z.real()/d, -z.imag()/d);
 	}
@@ -708,11 +737,15 @@ namespace bertini {
 		return complex(z.real()*z.real() - z.imag()*z.imag(), mpfr_float("2.0")*z.real()*z.imag());
 	}
 	
+	
+	
 	/**
 	 compute the cube of a complex number
 	 
 	 10 multiplications
 	 2 creations of an mpfr_float.
+	 
+	 this could use fewer multiplications if it used more temporaries
 	 */
 	inline complex cube(const complex & z)
 	{
@@ -725,12 +758,12 @@ namespace bertini {
 	
 	
 	/**
-	 compute +- integral powers of a complex number.
+	 compute +,- integral powers of a complex number.
 	 */
 	inline complex pow(const complex & z, int power)
 	{
 		if (power < 0) {
-			return pow(z, -power);
+			return pow(inverse(z), -power);
 		}
 		else if (power==0)
 			return complex("1.0","0.0");
@@ -742,7 +775,7 @@ namespace bertini {
 			return z*z*z;
 		else
 		{
-			unsigned int p = power;
+			unsigned int p(power);
 			complex result("1.0","0.0"), z_to_the_current_power_of_two = z;
 			// have copy of p in memory, can freely modify it.
 			do {
@@ -756,27 +789,26 @@ namespace bertini {
 		}
 	}
 	
-//	if(power==4)
-//		return square(square(z));
-//		else if(power==5)
-//			return square(z)*cube(z);
-//			else if(power==6)
-//				return square(cube(z));
-//				else
 	
 	
-	
-	
-	
-	
-	
-	
+	/**
+	 construct a complex number from magnitude and angle.
+	 */
 	inline complex polar(const mpfr_float & rho, const mpfr_float & theta)
 	{
-		return complex(rho * cos(theta), rho * sin(theta) );
+		return complex(rho*cos(theta), rho*sin(theta));
 	}
 	
-}
+	
+	/**
+	 compute the square root of a complex number, using branch cut along the -x axis.
+	 */
+	inline complex sqrt(const complex & z)
+	{
+		return polar(sqrt(abs(z)), arg(z)/2);
+	}
+	
+} // re: namespace
 
 
 
@@ -786,6 +818,49 @@ namespace bertini {
 // reopen the Eigen namespace to inject this struct.
 namespace Eigen {
 	
+	using boost::multiprecision::mpfr_float;
+	using namespace boost::multiprecision;
+	template<> struct NumTraits<boost::multiprecision::mpfr_float> : GenericNumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	{
+		
+		typedef boost::multiprecision::mpfr_float Real;
+		typedef boost::multiprecision::mpfr_float NonInteger;
+		typedef boost::multiprecision::mpfr_float Nested;
+		enum {
+			IsComplex = 0,
+			IsInteger = 0,
+			IsSigned = 1,
+			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
+			ReadCost = 20,
+			AddCost = 30,
+			MulCost = 40
+		};
+		
+
+		inline static Real highest() {
+			
+			return (boost::multiprecision::mpfr_float(1) - epsilon()) * pow(boost::multiprecision::mpfr_float(2),mpfr_get_emax()-1);//);//boost::multiprecision::mpfr_float::default_precision());
+			}
+		
+		inline static Real lowest() {
+				return -highest();
+			}
+		
+		inline static Real dummy_precision()
+		{
+			return pow( boost::multiprecision::mpfr_float(10),-int(boost::multiprecision::mpfr_float::default_precision()-3));
+		}
+		
+		inline static Real epsilon()
+		{
+			return pow(boost::multiprecision::mpfr_float(10),-int(boost::multiprecision::mpfr_float::default_precision()));
+		}
+		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
+	};
+	
+	
+	
+	
 	/**
 	 \brief this templated struct permits us to use the Float type in Eigen matrices.
 	 */
@@ -793,26 +868,25 @@ namespace Eigen {
 	{
 		typedef boost::multiprecision::mpfr_float Real;
 		typedef boost::multiprecision::mpfr_float NonInteger;
-		typedef boost::multiprecision::mpfr_float Nested;
+		typedef bertini::complex Nested;
 		enum {
 			IsComplex = 1,
 			IsInteger = 0,
 			IsSigned = 1,
-			RequireInitialization = 0,
-			ReadCost = 1,
-			AddCost = 3,
-			MulCost = 3
+			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
+			ReadCost = 2 * NumTraits<Real>::ReadCost,
+			AddCost = 2 * NumTraits<Real>::AddCost,
+			MulCost = 4 * NumTraits<Real>::MulCost + 2 * NumTraits<Real>::AddCost
 		};
 		
-		
-		
-//		//TODO verify this returned number
-//		static Real epsilon()
-//		{
-//			return pow( boost::multiprecision::mpfr_float("10.0"), 1-int(boost::multiprecision::mpfr_float::default_precision()) );
-//		}
-		
 	};
+	
+	
+	
+	
+	
+	
+	
 }
 
 
