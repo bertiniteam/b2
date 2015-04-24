@@ -1,8 +1,10 @@
-#this is src/test/classes/Makemodule.am
+#this is src/bertini/Makemodule.am
 
 bin_PROGRAMS += bertini2
 
-bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp
+bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp \
+	include/complex.hpp \
+	include/mpfr.hpp src/bertini/mpfr.cpp
 
 
 

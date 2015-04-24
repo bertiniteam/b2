@@ -1,0 +1,12 @@
+# this is src/spirit_parser/Makemodule.am
+
+
+bin_PROGRAMS += spirit_parser
+
+spirit_parser_SOURCES = src/spirit_parser/polynomial_parser.cpp
+
+
+
+spirit_parser_LDADD =  $(MPI_CXXLDFLAGS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
+
+spirit_parser_CXXFLAGS = $(BOOST_CPPFLAGS)

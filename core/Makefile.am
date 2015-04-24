@@ -1,3 +1,10 @@
+#this is the main Makefile.am for Bertini 2.
+#
+# this project uses non-recursive make.
+#
+# if you need to add an executable to the core,
+# add a Makemodule.am file in the source folder for the main file
+# and include it below.
 
 
 AM_YFLAGS = -d -p `basename $* | sed 's,y$$,,'`
@@ -27,8 +34,7 @@ SUFFIXES = .cpp .hpp .y .l
 
 include src/test/classes/Makemodule.am
 include src/bertini/Makemodule.am
-
-
+include src/spirit_parser/Makemodule.am
 
 
 

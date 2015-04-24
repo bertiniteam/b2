@@ -1,10 +1,11 @@
-#this is src/bertini/Makemodule.am
+#this is src/test/classes/Makemodule.am
 
 bin_PROGRAMS += b2_class_test
 
 b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	src/test/classes/eigen_test.cpp \
-	include/complex.hpp src/test/classes/complex_test.cpp
+	include/complex.hpp src/test/classes/complex_test.cpp \
+	include/mpfr.hpp src/bertini/mpfr.cpp
 
 
 
