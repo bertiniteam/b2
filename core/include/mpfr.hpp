@@ -105,6 +105,22 @@ namespace Eigen {
 
 namespace bertini {
 
+	
+	
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	
+	
+	/**
+	 \brief create a random number, at the current default precision
+	 
+	 \note this function calls the templated function RandomMpfr.
+	 
+	 \param number_to_make_random The number whose contents you are overwriting with a random number.
+	 */
+	mpfr_float RandomMpfr();
+	
+
+	
 	/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
 	 
@@ -112,31 +128,36 @@ namespace bertini {
 	 \return number_to_make_random The number which you desire to populate with a random number.
 	 
 	 */
-	
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	
 	template <unsigned int length_in_digits>
-	mpfr_float RandomMpfr();
+	mpfr_float RandomMpfrUniformUnitInterval();
 	
-
+	
+	
+	
+	
+	
+	
+	
 	/**
-	 \brief create a random number, at the current default precision
+	 a templated function for producing random numbers in a specified interval, of a given number of digits.
 	 
-	 \note this function calls the templated function RandomLongNumberSpecificDigitsUniformUnitInterval.
+	 \tparam length_in_digits The length of the desired random number
+	 \return number_to_make_random The number which you desire to populate with a random number.
 	 
-	 \param number_to_make_random The number whose contents you are overwriting with a random number.
 	 */
-	boost::multiprecision::mpfr_float RandomMpfrUniformUnitInterval();
-	
-	
-	
-	
-	mpfr_float RandomMpfr(const mpfr_float & a, const mpfr_float & b);
-	
 	template <unsigned int length_in_digits>
 	mpfr_float RandomMpfrUniformInInterval(const mpfr_float & a, const mpfr_float & b);
 	
 	
+	
+	/**
+	 \brief create a random number in a given interval, at the current default precision
+	 
+	 \note this function calls the templated function RandomMpfrUniformInInterval.
+	 
+	 \param number_to_make_random The number whose contents you are overwriting with a random number.
+	 */
+	mpfr_float RandomMpfr(const mpfr_float & a, const mpfr_float & b);
 	
 	
 	
