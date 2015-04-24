@@ -2,6 +2,7 @@
 #include "complex.hpp"
 #include <boost/test/unit_test.hpp>
 
+#include <fstream>
 #define private public
 
 BOOST_AUTO_TEST_SUITE(complex_multiprecision_class)
@@ -168,15 +169,104 @@ BOOST_AUTO_TEST_CASE(complex_argument)
 
 
 
-
-
-
 BOOST_AUTO_TEST_CASE(complex_serialization)
 {
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	
+	bertini::complex z("1.23456", acos(mpfr_float("-1")));
+	std::cout << z << std::endl;
+	
+	{
+		std::ofstream fout("serialization_test_complex");
+		
+		boost::archive::text_oarchive oa(fout);
+		
+		// write class instance to archive
+		oa << z;
+	}
+	
+	//	bertini::complex w;
+	bertini::complex w;
+	{
+		std::ifstream fin("serialization_test_complex");
+		
+		boost::archive::text_iarchive ia(fin);
+		// read class state from archive
+		ia >> w;
+	}
+	
+	BOOST_CHECK_EQUAL(real(z),real(w));
+	BOOST_CHECK_EQUAL(imag(z),imag(w));
 	
 }
 
 
+
+
+
+BOOST_AUTO_TEST_CASE(mpfr_float_serialization)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	
+	mpfr_float q = acos( mpfr_float("-1.0") );
+	
+	
+	{
+		std::ofstream fout("serialization_test_mpfr");
+	
+		boost::archive::text_oarchive oa(fout);
+
+		// write class instance to archive
+		oa << q;
+	}
+
+	mpfr_float w;
+	{
+		std::ifstream fin("serialization_test_mpfr");
+	
+		boost::archive::text_iarchive ia(fin);
+		// read class state from archive
+		ia >> w;
+	}
+	
+	BOOST_CHECK_EQUAL(q,w);
+	
+}
+
+
+//// create and open a character archive for output
+//std::ofstream ofs("float_archive_test");
+//
+//boost::multiprecision::mpfr_float::default_precision(16);
+//
+//bertini::Float a;
+//a.MakeRandom();
+//
+//{
+//	boost::archive::text_oarchive oa(ofs);
+//	
+//	// write class instance to archive
+//	oa << a;
+//	// archive and stream closed when destructors are called
+//	}
+//	
+//	boost::multiprecision::mpfr_float::default_precision(100);
+//	bertini::Float b;
+//	{
+//		// create and open an archive for input
+//		std::ifstream ifs("float_archive_test");
+//		boost::archive::text_iarchive ia(ifs);
+//		// read class state from archive
+//		ia >> b;
+//		// archive and stream closed when destructors are called
+//	}
+//	
+//	BOOST_CHECK_EQUAL(a,b);
+//	BOOST_CHECK_EQUAL(b.Precision(),16);
 
 
 

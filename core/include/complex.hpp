@@ -13,10 +13,13 @@
 
 #include <eigen3/Eigen/Core>
 
+#include <string>
 #include <assert.h>
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
 namespace boost { namespace serialization {
+	
+	using mpfr_float = boost::multiprecision::mpfr_float;
 	
 	
 	/**
@@ -25,7 +28,7 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
 	{
-		std::string tmp = r.str(0, std::ios::fixed);
+		std::string tmp = r.str(0,true);
 		ar & tmp;
 	}
 	
@@ -67,7 +70,10 @@ namespace bertini {
 		template<class Archive>
 		void save(Archive & ar, const unsigned int version) const
 		{
+			assert(real_.precision()==imag_.precision());
 			// note, version is always the latest when saving
+			unsigned int temp_precision = real_.precision();
+			ar & temp_precision;
 			ar & real_;
 			ar & imag_;
 		}
@@ -79,6 +85,11 @@ namespace bertini {
 		template<class Archive>
 		void load(Archive & ar, const unsigned int version)
 		{
+			unsigned int temp_precision;
+			ar & temp_precision;
+			
+			this->precision(temp_precision);
+			
 			ar & real_;
 			ar & imag_;
 		}
