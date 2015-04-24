@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
-		std::cout << C << std::endl;
+//		std::cout << C << std::endl;
 		std::cout << "pure double time to solve:" << std::endl;
 		//add statement on the value of C to actually test
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
-		std::cout << C << std::endl;
+//		std::cout << C << std::endl;
 		std::cout << "mpfr_float pure 16 time to solve:" << std::endl;
 	}
 
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
-		std::cout << C << std::endl;
+//		std::cout << C << std::endl;
 		std::cout << "mpfr_float pure 100 time to solve:" << std::endl;
 		
 	}
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
-		std::cout << C << std::endl;
+//		std::cout << C << std::endl;
 		std::cout << "std::complex time to solve:" << std::endl;
 	}
 	
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		C = A.lu().solve(B);
 		
 		
-		std::cout << C << std::endl;
+//		std::cout << C << std::endl;
 		std::cout << "bertini::complex precision 100 time to solve:" << std::endl;
 	}
 
@@ -193,14 +193,14 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		
 		
-		BOOST_AUTO_TEST_CASE(mpfr_float_num_traits){
-			
-			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::highest() << std::endl;
-			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::lowest() << std::endl;
-			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::dummy_precision() << std::endl;
-			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::epsilon() << std::endl;
-			
-		}
+//		BOOST_AUTO_TEST_CASE(mpfr_float_num_traits){
+//			
+//			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::highest() << std::endl;
+//			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::lowest() << std::endl;
+//			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::dummy_precision() << std::endl;
+//			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::epsilon() << std::endl;
+//			
+//		}
 	
 BOOST_AUTO_TEST_SUITE_END()
 

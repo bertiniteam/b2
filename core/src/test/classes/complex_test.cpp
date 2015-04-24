@@ -1,9 +1,7 @@
 
 #include "complex.hpp"
 #include <boost/test/unit_test.hpp>
-
 #include <fstream>
-#define private public
 
 BOOST_AUTO_TEST_SUITE(complex_multiprecision_class)
 
@@ -370,7 +368,6 @@ BOOST_AUTO_TEST_CASE(complex_abs_of_i_is_one)
 {
 	bertini::complex i("0.0","1.0");
 	boost::multiprecision::mpfr_float one = abs(i);
-	std::cout << one << std::endl;
 	BOOST_CHECK_EQUAL(one,boost::multiprecision::mpfr_float("1.0"));
 }
 
@@ -436,7 +433,6 @@ BOOST_AUTO_TEST_CASE(complex_serialization)
 	
 	
 	bertini::complex z("1.23456", acos(mpfr_float("-1")));
-	std::cout << z << std::endl;
 	
 	{
 		std::ofstream fout("serialization_test_complex");
@@ -464,16 +460,6 @@ BOOST_AUTO_TEST_CASE(complex_serialization)
 
 
 
-
-
-
-BOOST_AUTO_TEST_CASE(complex_write_to_screen)
-{
-	bertini::complex i("0.0","1.0");
-	
-	std::cout << i.real() << " " << i.imag() << std::endl;
-	std::cout << i << std::endl;
-}
 
 
 
