@@ -60,6 +60,23 @@ BOOST_AUTO_TEST_CASE(complex_division)
 
 
 
+BOOST_AUTO_TEST_CASE(complex_inverse)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	bertini::complex z("1.5", "2.25");
+	bertini::complex w = inverse(z);
+	
+	BOOST_CHECK( abs(real(w) - mpfr_float("0.205128205128205128205128205128205128205128205128205128205128")) < 1e-49);
+	// this value computed with matlab's vpa.
+	BOOST_CHECK( abs(imag(w) - mpfr_float("-0.307692307692307692307692307692307692307692307692307692307692")) < 1e-49);
+	// this value computed with matlab's vpa.
+	
+}
+
+
+
 
 
 BOOST_AUTO_TEST_CASE(complex_sqrt)
