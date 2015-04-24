@@ -3,8 +3,8 @@
 
 
 
-#we're building b2, version 0.0.0, and the corresponding email is dan brake's
-AC_INIT([b2], [0.0.0], [danielthebrake@gmail.com],[b2], [http://github.com/danbates/b2])
+#we're building b2, version 2.0.0, and the corresponding email is dan brake's
+AC_INIT([b2], [2015.04.24.dev], [danielthebrake@gmail.com],[b2], [http://github.com/danbates/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -30,8 +30,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([Makefile])
 
 
-#find the flags for C++11
-AX_CXX_COMPILE_STDCXX_11
+#find the flags for C++14
+AX_CXX_COMPILE_STDCXX_14
 
 
 #enable the creation of shared libraries
@@ -61,12 +61,13 @@ LT_INIT
 
 
 #this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs
-#LX_FIND_MPI
+LX_FIND_MPI
 
-#AS_IF([test "$have_CXX_mpi" = "yes"],
-#	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
-#	AC_MSG_ERROR([it appears you do not have mpi installed])
-#	)
+# print a notice about the presence of MPI on the machine.
+AS_IF([test "$have_CXX_mpi" = "yes"],
+	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
+	AC_MSG_NOTICE([it appears you do not have mpi installed])
+	)
 
 
 
