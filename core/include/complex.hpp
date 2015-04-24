@@ -366,7 +366,7 @@ namespace bertini {
 		{
 			mpfr_float d = rhs.abs2();
 			mpfr_float a = real_*rhs.real_ + imag_*rhs.imag_; // cache the numerator of the real part of the result
-			imag_ = imag_*rhs.real_ - real_*rhs.imag_/d;
+			imag_ = (imag_*rhs.real_ - real_*rhs.imag_)/d;
 			real_ = a/d;
 			
 			return *this;
@@ -621,6 +621,7 @@ namespace bertini {
 	inline complex operator-(const mpfr_float & lhs, complex rhs)
 	{
 		rhs.real(lhs - rhs.real());
+		rhs.imag(-rhs.imag());
 		return rhs;
 	}
 	
@@ -888,7 +889,7 @@ namespace bertini {
 	 */
 	inline complex tanh(const complex & z)
 	{
-		return sinh(z) / cosh(z);
+		return (sinh(z) / cosh(z));
 	}
 	
 	
@@ -898,7 +899,7 @@ namespace bertini {
 	 */
 	inline complex log(const complex & z)
 	{
-		return complex(log(abs(z)), arg(z));
+		return complex( log(abs(z)), arg(z));
 	}
 	
 	
@@ -906,7 +907,7 @@ namespace bertini {
 	/**
 	 Compute c^z, for c,z complex numbers
 	 */
-	inline complex pow(const complex & c, const complex & z)
+	inline complex pow(const complex & z, const complex & c)
 	{
 		return exp(c * log(z));
 	}
@@ -918,7 +919,7 @@ namespace bertini {
 	 */
 	inline complex asin(const complex & z)
 	{
-		return -complex::i() * log( complex::i()*z + sqrt( mpfr_float("1.0") - pow(z,2) ) );
+		return (-complex::i()) * log( complex::i()*z + sqrt( mpfr_float("1.0") - pow(z,2)) );
 	}
 	
 	
