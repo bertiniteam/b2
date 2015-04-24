@@ -808,6 +808,96 @@ namespace bertini {
 		return polar(sqrt(abs(z)), arg(z)/2);
 	}
 	
+	
+	/**
+	 compute e^z for complex z.
+	 */
+	inline complex exp(const complex & z)
+	{
+		mpfr_float exp_of_x = exp(real(z));
+		return complex(exp_of_x * cos(imag(z)), exp_of_x * sin(imag(z)));
+	}
+	
+	
+	inline complex sin(const complex & z)
+	{
+		return (exp(complex::i()*z) - exp(-complex::i()*z)) / complex::i() / mpfr_float("2.0");
+	}
+	
+	inline complex cos(const complex & z)
+	{
+		return (exp(complex::i()*z) + exp(-complex::i()*z))  / mpfr_float("2.0");
+	}
+	
+	inline complex tan(const complex & z)
+	{
+		return sin(z) / cos(z);
+	}
+	
+	
+	
+	inline complex sinh(const complex & z)
+	{
+		return (exp(z) - exp(-z)) / mpfr_float("2.0");
+	}
+	
+	inline complex cosh(const complex & z)
+	{
+		return (exp(z) + exp(-z))  / mpfr_float("2.0");
+	}
+	
+	inline complex tanh(const complex & z)
+	{
+		return sinh(z) / cosh(z);
+	}
+	
+	
+	
+	/**
+	 complex logarithm base e.
+	 */
+	inline complex log(const complex & z)
+	{
+		return complex(log(abs(z)), arg(z));
+	}
+	
+	
+	
+	/**
+	 compute c^z, for c,z complex numbers
+	 */
+	inline complex pow(const complex & c, const complex & z)
+	{
+		return exp(c * log(z));
+	}
+	
+	
+	
+	/**
+	inverse sine of complex number
+	 */
+	inline complex asin(const complex & z)
+	{
+		return -complex::i() * log( complex::i()*z + sqrt( mpfr_float("1.0") - pow(z,2) ) );
+	}
+	
+	
+	/**
+	 inverse cosine of complex number
+	 */
+	inline complex acos(const complex & z)
+	{
+		return -complex::i() * log( z + complex::i()*sqrt( mpfr_float("1.0") - pow(z,2) ) );
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 } // re: namespace
 
 
@@ -868,7 +958,7 @@ namespace Eigen {
 	{
 		typedef boost::multiprecision::mpfr_float Real;
 		typedef boost::multiprecision::mpfr_float NonInteger;
-		typedef bertini::complex Nested;
+		typedef bertini::complex Nested;// Nested;
 		enum {
 			IsComplex = 1,
 			IsInteger = 0,

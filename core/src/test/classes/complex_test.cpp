@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(complex_multiplication)
 	bertini::complex r = z*v;
 	
 	BOOST_CHECK(abs(r.real()-boost::multiprecision::mpfr_float("-1.54")) < 1e-50);
-	BOOST_CHECK(abs(r.imag()-boost::multiprecision::mpfr_float("0.37")< 1e-50));
+	BOOST_CHECK(abs(r.imag()-boost::multiprecision::mpfr_float("0.37"))< 1e-50);
 	
 }
 
