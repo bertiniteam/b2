@@ -114,13 +114,68 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 
 BOOST_AUTO_TEST_CASE(complex_eleventh_power)
 {
-
+	using mpfr_float = boost::multiprecision::mpfr_float;
 	bertini::complex z("2.0","0.5"), w;
 	
 	w = pow(z,11);
-	std::cout << "z^11 = " << w << std::endl;
+	BOOST_CHECK_EQUAL(real(w), mpfr_float("-1319867") / mpfr_float("512") );
+	BOOST_CHECK_EQUAL(imag(w),  mpfr_float("2529647") / mpfr_float("2048"));
+	
 	
 }
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_conjugation)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	bertini::complex z("2.0", sqrt(mpfr_float("2.0")));
+	bertini::complex w = conj(z);
+	
+	BOOST_CHECK_EQUAL(real(w),mpfr_float("2.0"));
+	BOOST_CHECK_EQUAL(imag(w),-sqrt(mpfr_float("2.0")));
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_absolute_value)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	BOOST_CHECK_EQUAL(abs(bertini::complex("1.0","1.0")), sqrt(mpfr_float("2.0")));
+	
+}
+
+
+
+BOOST_AUTO_TEST_CASE(complex_argument)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	bertini::complex z("1.0","1.0");
+	
+	BOOST_CHECK_EQUAL(arg(z), acos(mpfr_float("-1.0"))/mpfr_float("4.0"));
+}
+
+
+
+
+
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_serialization)
+{
+	
+}
+
 
 
 

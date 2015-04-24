@@ -54,15 +54,15 @@ namespace bertini {
 	class complex {
 		
 	private:
-		// the real and imaginary parts of the complex number
+		// The real and imaginary parts of the complex number
 		mpfr_float real_, imag_;
 		
 		
-		// let the boost serialization library have access to the private members of this class.
+		// Let the boost serialization library have access to the private members of this class.
 		friend class boost::serialization::access;
 		
 		/**
-		 \brief save method for archiving a bertini::complex
+		 \brief Save method for archiving a bertini::complex
 		 */
 		template<class Archive>
 		void save(Archive & ar, const unsigned int version) const
@@ -74,7 +74,7 @@ namespace bertini {
 		
 		
 		/**
-		 \brief load method for archiving a bertini::complex
+		 \brief Load method for archiving a bertini::complex
 		 */
 		template<class Archive>
 		void load(Archive & ar, const unsigned int version)
@@ -91,7 +91,7 @@ namespace bertini {
 	public:
 		
 		/**
-		 default constructor
+		 Default constructor
 		 */
 		complex():real_(), imag_(){}
 		
@@ -99,23 +99,23 @@ namespace bertini {
 		
 		////////
 		//
-		//  construct real-valued complex numbers
+		//  Construct real-valued complex numbers
 		//
 		//////////////
 		
 		/**
-		 single-parameter for constructing a real-valued complex from a single real double number
+		 Single-parameter for constructing a real-valued complex from a single real double number
 		 */
 		complex(double re) : real_(re), imag_("0.0"){}
 		
 		/**
-		 single-parameter for constructing a real-valued complex from a single high-precision number
+		 Single-parameter for constructing a real-valued complex from a single high-precision number
 		 */
 		complex(const mpfr_float & re) : real_(re), imag_("0.0"){}
 		
 		
 		/**
-		 single-parameter for constructing a real-valued complex from a convertible single string
+		 Single-parameter for constructing a real-valued complex from a convertible single string
 		 */
 		complex(const std::string & re) : real_(re), imag_("0.0"){}
 		
@@ -129,14 +129,14 @@ namespace bertini {
 		//////////////
 		
 		/**
-		 two-parameter constructor for building a complex from two high precision numbers
+		 Two-parameter constructor for building a complex from two high precision numbers
 		 */
 		complex(const mpfr_float & re, const mpfr_float & im) : real_(re), imag_(im)
 		{}
 		
 		
 		/**
-		 two-parameter constructor for building a complex from two low precision numbers
+		 Two-parameter constructor for building a complex from two low precision numbers
 		 */
 		complex(double re, double im) : real_(re), imag_(im)
 		{}
@@ -144,21 +144,21 @@ namespace bertini {
 		
 		
 		/**
-		 two-parameter constructor for building a complex from two strings.
+		 Two-parameter constructor for building a complex from two strings.
 		 */
 		complex(const std::string & re, const std::string & im) : real_(re), imag_(im)
 		{}
 		
 		
 		/**
-		 mixed two-parameter constructor for building a complex from two strings.
+		 Mixed two-parameter constructor for building a complex from two strings.
 		 */
 		complex(const mpfr_float & re, const std::string & im) : real_(re), imag_(im)
 		{}
 		
 		
 		/**
-		 mixed two-parameter constructor for building a complex from two strings.
+		 Mixed two-parameter constructor for building a complex from two strings.
 		 */
 		complex(const std::string & re, const mpfr_float & im) : real_(re), imag_(im)
 		{}
@@ -175,26 +175,26 @@ namespace bertini {
 		//////////////
 		
 		
-//		/**
-//		 the move constructor
-//		 */
-//		complex(complex&& other) : complex() // initialize via default constructor, C++11 only
-//		{
-//			swap(*this, other);
-//		}
+		/**
+		 The move constructor
+		 */
+		complex(complex&& other) : complex()// initialize via default constructor, C++11 only
+		{
+			swap(*this, other);
+		}
 		
 		
 		
 		/**
-		 the copy constructor
+		 The copy constructor
 		 */
 		complex(const complex & other) : real_(other.real_), imag_(other.imag_)
 		{}
 		
 		/**
-		 enable swapping
+		 Enable swapping
 		 */
-		friend void swap(complex& first, complex& second) // nothrow
+		friend void swap(complex& first, complex& second) noexcept
 		{
 			using std::swap;
 			
@@ -203,7 +203,7 @@ namespace bertini {
 		}
 		
 		/**
-		 assignment operator
+		 Assignment operator
 		 */
 		complex& operator=(complex other)
 		{
@@ -224,12 +224,12 @@ namespace bertini {
 		//////////////
 		
 		/**
-		 get the value of the real part of the complex number
+		 Get the value of the real part of the complex number
 		 */
 		inline mpfr_float real() const {return real_;}
 		
 		/**
-		 get the value of the imaginary part of the complex number
+		 Get the value of the imaginary part of the complex number
 		 */
 		inline mpfr_float imag() const {return imag_;}
 		
@@ -260,7 +260,7 @@ namespace bertini {
 		
 		////////
 		//
-		//  some static functions which construct special numbers
+		//  Some static functions which construct special numbers
 		//
 		//////////////
 		
@@ -306,14 +306,14 @@ namespace bertini {
 		
 		////////
 		//
-		//  the fundamental arithmetic operators
+		//  The fundamental arithmetic operators
 		//
 		//////////////
 		
 		
 		
 		/**
-		 complex addition
+		 Complex addition
 		 */
 		complex& operator+=(const complex & rhs)
 		{
@@ -324,7 +324,7 @@ namespace bertini {
 		
 		
 		/**
-		 complex subtraction
+		 Complex subtraction
 		 */
 		complex& operator-=(const complex & rhs)
 		{
@@ -335,7 +335,7 @@ namespace bertini {
 		
 		
 		/**
-		 complex multiplication.  uses a single temporary variable
+		 Complex multiplication.  uses a single temporary variable
 		 
 		 1 temporary, 4 multiplications
 		 */
@@ -349,7 +349,7 @@ namespace bertini {
 		
 		
 		/**
-		 complex division.  implemented using two temporary variables
+		 Complex division.  implemented using two temporary variables
 		 */
 		complex& operator/=(const complex & rhs)
 		{
@@ -366,7 +366,7 @@ namespace bertini {
 		
 		
 		/**
-		 complex negation
+		 Complex negation
 		 */
 		complex operator-() const
 		{
@@ -384,7 +384,7 @@ namespace bertini {
 		
 		
 		/**
-		 compute the square of the absolute value of the number
+		 Compute the square of the absolute value of the number
 		 */
 		mpfr_float abs2() const
 		{
@@ -392,7 +392,7 @@ namespace bertini {
 		}
 		
 		/**
-		 compute the absolute value of the number
+		 Compute the absolute value of the number
 		 */
 		mpfr_float abs() const
 		{
@@ -404,7 +404,7 @@ namespace bertini {
 		
 		
 		/**
-		 get the argument of the complex number, with branch cut according to whatever branch boost chose for their atan2 function.
+		 Compute the argument of the complex number, with branch cut according to whatever branch boost chose for their atan2 function.
 		 */
 		mpfr_float arg() const
 		{
@@ -413,7 +413,7 @@ namespace bertini {
 		
 		
 		/**
-		 get the inner product of the number with itself.
+		 Compute the inner product of the number with itself.  this is also the magnitude squared.
 		 */
 		mpfr_float norm() const
 		{
@@ -421,7 +421,7 @@ namespace bertini {
 		}
 		
 		/**
-		 get the complex conjugate of the complex number.
+		 Compute the complex conjugate of the complex number.
 		 */
 		complex conj() const
 		{
@@ -434,7 +434,7 @@ namespace bertini {
 		
 		
 		/**
-		 change the precision of this high-precision complex number. 
+		 Change the precision of this high-precision complex number.
 		 
 		 \param prec the number of digits to change precision to.
 		 */
@@ -446,7 +446,7 @@ namespace bertini {
 		
 		
 		/**
-		 get the precision of the high-precision complex number.
+		 Get the precision of the high-precision complex number.
 		 
 		 \return the number of digits in the number
 		 */
@@ -469,9 +469,9 @@ namespace bertini {
 		
 		
 		/**
-		 write a complex number to an output stream.
+		 Write a complex number to an output stream.
 		 
-		 format complies with the std::complex class -- (re,im).
+		 Format complies with the std::complex class -- (re,im).
 		 */
 		friend std::ostream& operator<<(std::ostream& out, const complex & z)
 		{
@@ -481,12 +481,12 @@ namespace bertini {
 		
 		
 		/**
-		 read a complex number from an input stream.
+		 Read a complex number from an input stream.
 		 
-		 format complies with the std::complex class -- (re,im) or (re) or re.
+		 Format complies with the std::complex class -- (re,im) or (re) or re.
 		 
-		 if the read fails because of misplaced parentheses, the stream will be in fail state, and the number will be set to NaN.
-		 function may not tolerate white space in the number.
+		 If the read fails because of misplaced parentheses, the stream will be in fail state, and the number will be set to NaN.
+		 Function may not tolerate white space in the number.
 		 */
 		friend std::istream& operator>>(std::istream& in, complex & z)
 		{
@@ -538,6 +538,10 @@ namespace bertini {
 		
 		
 		
+		
+		///////
+		//TODO: write MPI methods, for sending, receiving, broadcasting, etc.  this will require becoming familiar with Boost.MPI
+		
 	}; // end declaration of the bertini::complex number class
 	
 	
@@ -555,7 +559,7 @@ namespace bertini {
 	
 	
 	/**
-	 complex-complex multiplication
+	 Complex-complex multiplication
 	 */
 	inline complex operator+(complex lhs, const complex & rhs){
 		lhs += rhs;
@@ -563,7 +567,7 @@ namespace bertini {
 	}
 	
 	/**
-	 complex-real multiplication
+	 Complex-real multiplication
 	 */
 	inline complex operator+(complex lhs, const mpfr_float & rhs)
 	{
@@ -572,7 +576,7 @@ namespace bertini {
 	}
 	
 	/**
-	 real-complex multiplication
+	 Real-complex multiplication
 	 */
 	inline complex operator+(const mpfr_float & lhs, complex rhs)
 	{
@@ -584,7 +588,7 @@ namespace bertini {
 	
 	
 	/**
-	 complex-complex subtraction
+	 Complex-complex subtraction
 	 */
 	inline complex operator-(complex lhs, const complex & rhs){
 		lhs -= rhs;
@@ -592,7 +596,7 @@ namespace bertini {
 	}
 	
 	/**
-	 complex-real subtraction
+	 Complex-real subtraction
 	 */
 	inline complex operator-(complex lhs, const mpfr_float & rhs)
 	{
@@ -601,7 +605,7 @@ namespace bertini {
 	}
 	
 	/**
-	 real-complex subtraction
+	 Real-complex subtraction
 	 */
 	inline complex operator-(const mpfr_float & lhs, complex rhs)
 	{
@@ -613,7 +617,7 @@ namespace bertini {
 	
 	
 	/**
-	   complex-complex multiplication
+	   Complex-complex multiplication
 	   */
 	inline complex operator*(complex lhs, const complex & rhs){
 		lhs *= rhs;
@@ -621,7 +625,7 @@ namespace bertini {
 	}
 	
 	/**
-	 complex-real multiplication
+	 Complex-real multiplication
 	 */
 	inline complex operator*(complex lhs, const mpfr_float & rhs)
 	{
@@ -631,7 +635,7 @@ namespace bertini {
 	}
 	
 	/**
-	 real-complex multiplication
+	 Real-complex multiplication
 	 */
 	inline complex operator*(const mpfr_float & lhs, complex rhs)
 	{
@@ -643,7 +647,7 @@ namespace bertini {
 	
 	
 	/**
-	 complex-complex division
+	 Complex-complex division
 	 */
 	inline complex operator/(complex lhs, const complex & rhs){
 		lhs /= rhs;
@@ -651,7 +655,7 @@ namespace bertini {
 	}
 	
 	/**
-	 complex-real division
+	 Complex-real division
 	 */
 	inline complex operator/(complex lhs, const mpfr_float & rhs)
 	{
@@ -661,7 +665,7 @@ namespace bertini {
 	}
 	
 	/**
-	 real-complex division
+	 Real-complex division
 	 */
 	inline complex operator/(const mpfr_float & lhs, const complex & rhs)
 	{
@@ -669,17 +673,26 @@ namespace bertini {
 		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
 	}
 	
-	
+	/**
+	 Get the real part of a complex number
+	 */
 	inline mpfr_float real(const complex & z)
 	{
 		return z.real();
 	}
 	
+	/**
+	 Get the imaginary part of a complex number
+	 */
 	inline mpfr_float imag(const complex & z)
 	{
 		return z.imag();
 	}
 	
+	
+	/**
+	 Conjugate a complex number
+	 */
 	inline complex conj(const complex & z)
 	{
 		return z.conj();
@@ -688,7 +701,7 @@ namespace bertini {
 	
 	
 	/**
-	 compute the square of the absolute value of a complex number
+	 Compute the square of the absolute value of a complex number
 	 */
 	inline mpfr_float abs2(const complex & z)
 	{
@@ -696,7 +709,7 @@ namespace bertini {
 	}
 	
 	/**
-	 compute the absolute value of a complex number.
+	 Compute the absolute value of a complex number.
 	 */
 	inline mpfr_float abs(const complex & z)
 	{
@@ -705,7 +718,7 @@ namespace bertini {
 	
 	
 	/**
-	 compute the argument of a complex number, with branch cut determined by the  atan2  function.
+	 Compute the argument of a complex number, with branch cut determined by the  atan2  function.
 	 */
 	inline mpfr_float arg(const complex & z)
 	{
@@ -716,7 +729,7 @@ namespace bertini {
 	
 	
 	/**
-	 compute the inverse of a complex number
+	 Compute the inverse of a complex number
 	 */
 	inline complex inverse(const complex & z)
 	{
@@ -727,7 +740,7 @@ namespace bertini {
 	
 	
 	/**
-	 compute the square of a complex number
+	 Compute the square of a complex number
 	 
 	 4 multiplications
 	 1 creation of a mpfr_float
@@ -740,12 +753,12 @@ namespace bertini {
 	
 	
 	/**
-	 compute the cube of a complex number
+	 Compute the cube of a complex number
 	 
 	 10 multiplications
 	 2 creations of an mpfr_float.
 	 
-	 this could use fewer multiplications if it used more temporaries
+	 This could use fewer multiplications if it used more temporaries
 	 */
 	inline complex cube(const complex & z)
 	{
@@ -758,7 +771,7 @@ namespace bertini {
 	
 	
 	/**
-	 compute +,- integral powers of a complex number.
+	 Compute +,- integral powers of a complex number.
 	 */
 	inline complex pow(const complex & z, int power)
 	{
@@ -792,7 +805,7 @@ namespace bertini {
 	
 	
 	/**
-	 construct a complex number from magnitude and angle.
+	 Construct a complex number from magnitude and angle.
 	 */
 	inline complex polar(const mpfr_float & rho, const mpfr_float & theta)
 	{
@@ -801,7 +814,7 @@ namespace bertini {
 	
 	
 	/**
-	 compute the square root of a complex number, using branch cut along the -x axis.
+	 Compute the square root of a complex number, using branch cut along the -x axis.
 	 */
 	inline complex sqrt(const complex & z)
 	{
@@ -810,7 +823,7 @@ namespace bertini {
 	
 	
 	/**
-	 compute e^z for complex z.
+	 Compute e^z for complex z.
 	 */
 	inline complex exp(const complex & z)
 	{
@@ -818,34 +831,50 @@ namespace bertini {
 		return complex(exp_of_x * cos(imag(z)), exp_of_x * sin(imag(z)));
 	}
 	
-	
+	/**
+	Compute sine of a complex number
+	 */
 	inline complex sin(const complex & z)
 	{
 		return (exp(complex::i()*z) - exp(-complex::i()*z)) / complex::i() / mpfr_float("2.0");
 	}
 	
+	/**
+	 Compute cosine of a complex number
+	 */
 	inline complex cos(const complex & z)
 	{
 		return (exp(complex::i()*z) + exp(-complex::i()*z))  / mpfr_float("2.0");
 	}
 	
+	/**
+	 Compute tangent of a complex number
+	 */
 	inline complex tan(const complex & z)
 	{
 		return sin(z) / cos(z);
 	}
 	
 	
-	
+	/**
+	 Compute hyperbolic sine of a complex number
+	 */
 	inline complex sinh(const complex & z)
 	{
 		return (exp(z) - exp(-z)) / mpfr_float("2.0");
 	}
 	
+	/**
+	 Compute hyperbolic cosine of a complex number
+	 */
 	inline complex cosh(const complex & z)
 	{
 		return (exp(z) + exp(-z))  / mpfr_float("2.0");
 	}
 	
+	/**
+	 Compute hyperbolic tangent of a complex number
+	 */
 	inline complex tanh(const complex & z)
 	{
 		return sinh(z) / cosh(z);
@@ -854,7 +883,7 @@ namespace bertini {
 	
 	
 	/**
-	 complex logarithm base e.
+	 Complex logarithm base e.
 	 */
 	inline complex log(const complex & z)
 	{
@@ -864,7 +893,7 @@ namespace bertini {
 	
 	
 	/**
-	 compute c^z, for c,z complex numbers
+	 Compute c^z, for c,z complex numbers
 	 */
 	inline complex pow(const complex & c, const complex & z)
 	{
@@ -874,7 +903,7 @@ namespace bertini {
 	
 	
 	/**
-	inverse sine of complex number
+	Inverse sine of complex number
 	 */
 	inline complex asin(const complex & z)
 	{
@@ -883,7 +912,7 @@ namespace bertini {
 	
 	
 	/**
-	 inverse cosine of complex number
+	 Inverse cosine of complex number
 	 */
 	inline complex acos(const complex & z)
 	{
@@ -894,7 +923,7 @@ namespace bertini {
 	
 	
 	/**
-	 inverse tangent of complex number
+	 Inverse tangent of complex number
 	 */
 	inline complex atan(const complex & z)
 	{
@@ -905,37 +934,28 @@ namespace bertini {
 	
 	
 	/**
-	 inverse hyperbolic sine of complex number
+	 Inverse hyperbolic sine of complex number
 	 */
 	inline complex asinh(const complex & z)
 	{
-		return log(
-				   z + sqrt(
-							square(z)+mpfr_float("1.0")
-							)
-				   );
+		return log( z + sqrt( square(z)+mpfr_float("1.0") )  );
 	}
 	
 	/**
-	 inverse hyperbolic cosine of complex number
+	 Inverse hyperbolic cosine of complex number
 	 */
 	inline complex acosh(const complex & z)
 	{
-		return log(
-				   z + sqrt(
-							square(z)-mpfr_float("1.0")
-							)
-				   );
+		return log(  z + sqrt( square(z)-mpfr_float("1.0") ) );
 	}
 	
 	/**
-	 inverse hyperbolic tangent of complex number
+	 Inverse hyperbolic tangent of complex number
 	 */
 	inline complex atanh(const complex & z)
 	{
 		return mpfr_float("0.5") * log( (mpfr_float("1.0")+z)/(mpfr_float("1.0")-z) );
 	}
-	
 	
 	
 	
@@ -993,7 +1013,7 @@ namespace Eigen {
 	
 	
 	/**
-	 \brief this templated struct permits us to use the Float type in Eigen matrices.
+	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
 	 */
 	template<> struct NumTraits<bertini::complex> : NumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
