@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(complex_multiplication)
 	bertini::complex v("0.2000","1.3000");
 	bertini::complex r = z*v;
 	
-	BOOST_CHECK(abs(r.real()-boost::multiprecision::mpfr_float("-1.54")) < 1e-50);
-	BOOST_CHECK(abs(r.imag()-boost::multiprecision::mpfr_float("0.37"))< 1e-50);
+	BOOST_CHECK(abs(r.real()-boost::multiprecision::mpfr_float("-1.54")) < 1e-49);
+	BOOST_CHECK(abs(r.imag()-boost::multiprecision::mpfr_float("0.37"))< 1e-49);
 	
 }
 
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(complex_division)
 	bertini::complex v("-3.1","5.1");
 	bertini::complex r = z/v;
 	
-	BOOST_CHECK(abs(r.real()-boost::multiprecision::mpfr_float("0.191605839416058394160583941605839416058394160583941605839416")) < 1e-50);
-	BOOST_CHECK(abs(r.imag()-boost::multiprecision::mpfr_float("-0.410583941605839416058394160583941605839416058394160583941606"))< 1e-50);
+	BOOST_CHECK(abs(r.real()-boost::multiprecision::mpfr_float("0.191605839416058394160583941605839416058394160583941605839416")) < 1e-49);
+	BOOST_CHECK(abs(r.imag()-boost::multiprecision::mpfr_float("-0.410583941605839416058394160583941605839416058394160583941606"))< 1e-49);
 	
 }
 
@@ -203,9 +203,9 @@ BOOST_AUTO_TEST_CASE(complex_sinh)
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = sinh(z);
 	
-	BOOST_CHECK(abs(real(w)- mpfr_float("-1.33755718909601135383265663229426431626814744207128061926332")) < 1e-50);
+	BOOST_CHECK(abs(real(w)- mpfr_float("-1.33755718909601135383265663229426431626814744207128061926332")) < 1e-49);
 	// this value computed with matlab's vpa.
-	BOOST_CHECK(abs(imag(w)- mpfr_float("1.83034686972219823005238120890074929109631502976918245359956")) < 1e-50);
+	BOOST_CHECK(abs(imag(w)- mpfr_float("1.83034686972219823005238120890074929109631502976918245359956")) < 1e-49);
 	// this value computed with matlab's vpa.
 	
 }
@@ -219,9 +219,9 @@ BOOST_AUTO_TEST_CASE(complex_cosh)
 	bertini::complex w = cosh(z);
 	
 	
-	BOOST_CHECK(abs(real(w)- mpfr_float("-1.47772167013515546574129058780587714414840064875386904640065")) < 1e-50);
+	BOOST_CHECK(abs(real(w)- mpfr_float("-1.47772167013515546574129058780587714414840064875386904640065")) < 1e-49);
 	// this value computed with matlab's vpa.
-	BOOST_CHECK(abs(imag(w)- mpfr_float("1.65673527269339558987730878420158930664270667966911313867276")) < 1e-50);
+	BOOST_CHECK(abs(imag(w)- mpfr_float("1.65673527269339558987730878420158930664270667966911313867276")) < 1e-49);
 	// this value computed with matlab's vpa.
 	
 }
@@ -235,9 +235,9 @@ BOOST_AUTO_TEST_CASE(complex_tanh)
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = tanh(z);
 	
-	BOOST_CHECK(abs(real(w)- mpfr_float("1.01633467755934300564918114729269683730547835877531900704421")) < 1e-50);
+	BOOST_CHECK(abs(real(w)- mpfr_float("1.01633467755934300564918114729269683730547835877531900704421")) < 1e-49);
 	// this value computed with matlab's vpa.
-	BOOST_CHECK(abs(imag(w)- mpfr_float("-0.0991725055603753242720729815306256466293467541150851175179255")) < 1e-50);
+	BOOST_CHECK(abs(imag(w)- mpfr_float("-0.0991725055603753242720729815306256466293467541150851175179255")) < 1e-49);
 	// this value computed with matlab's vpa.
 	
 }
