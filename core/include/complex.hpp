@@ -893,7 +893,48 @@ namespace bertini {
 	
 	
 	
+	/**
+	 inverse tangent of complex number
+	 */
+	inline complex atan(const complex & z)
+	{
+		return complex::i()/mpfr_float("2.0") * log( (complex::i() + z) / (complex::i() - z) );
+	}
 	
+	
+	
+	
+	/**
+	 inverse hyperbolic sine of complex number
+	 */
+	inline complex asinh(const complex & z)
+	{
+		return log(
+				   z + sqrt(
+							square(z)+mpfr_float("1.0")
+							)
+				   );
+	}
+	
+	/**
+	 inverse hyperbolic cosine of complex number
+	 */
+	inline complex acosh(const complex & z)
+	{
+		return log(
+				   z + sqrt(
+							square(z)-mpfr_float("1.0")
+							)
+				   );
+	}
+	
+	/**
+	 inverse hyperbolic tangent of complex number
+	 */
+	inline complex atanh(const complex & z)
+	{
+		return mpfr_float("0.5") * log( (mpfr_float("1.0")+z)/(mpfr_float("1.0")-z) );
+	}
 	
 	
 	
