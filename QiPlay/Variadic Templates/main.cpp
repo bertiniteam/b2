@@ -11,15 +11,15 @@
 template<typename... TArgs>
 class VariableStore
 {
-    std::tuple<TArgs...> vals;
     
     
+public:
     
     
     template<typename T>
-    void add(T newVal)
+    void set(T newVal)
     {
-        get<T>().push_back(newVal);
+        get<T>() = newVal;
     }
     
     template<typename T>
@@ -27,6 +27,9 @@ class VariableStore
     {
         return std::get<T>(vals);
     }
+    
+private:
+    std::tuple<TArgs...> vals;
     
 };
 
@@ -38,9 +41,9 @@ int main(int argc, const char * argv[]) {
     // insert code here...
     
     VariableStore<int, float, double> x;
-    x.add<int>(4);
-    x.add<float>(4.3f);
-    x.add<double>(4.9);
+    x.set<int>(4);
+    x.set<float>(4.3f);
+    x.set<double>(4.9);
     
     std::cout << x.get<int>() << std::endl
     << x.get<float>() << std::endl
