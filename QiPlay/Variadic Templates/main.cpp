@@ -9,9 +9,12 @@
 #include <iostream>
 
 template<typename... TArgs>
-struct VariableStore
+class VariableStore
 {
     std::tuple<TArgs...> vals;
+    
+    
+    
     
     template<typename T>
     void add(T newVal)
