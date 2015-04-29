@@ -9,28 +9,40 @@
 #include <iostream>
 
 template<typename... TArgs>
-class VariableStore
+class Node
 {
-    
     
 public:
     
+    /* One eval function for each variable type */
+    float eval(float){return 2.0;};
+//    virtual double eval(double) = 0;
+//    virtual int eval(int) = 0;
     
-    template<typename T>
-    void set(T newVal)
+    
+    
+    
+protected:
+    std::tuple< std::pair<TArgs,bool>... > current_value;
+    
+};
+
+
+
+template<typename... TArgs>
+class Sum : public Node<TArgs...>
+{
+public:
+    Sum()
     {
-        get<T>() = newVal;
+        this->current_value = std::pair<float,bool> {7.4,true};
     }
     
-    template<typename T>
-    T& get()
+    
+    float eval(float)
     {
-        return std::get<T>(vals);
+        return std::get< std::pair<float,bool> >(this->current_value).first;
     }
-    
-private:
-    std::tuple<TArgs...> vals;
-    
 };
 
 
@@ -40,14 +52,9 @@ private:
 int main(int argc, const char * argv[]) {
     // insert code here...
     
-    VariableStore<int, float, double> x;
-    x.set<int>(4);
-    x.set<float>(4.3f);
-    x.set<double>(4.9);
+    Node<float>* x = new Sum<float>();
     
-    std::cout << x.get<int>() << std::endl
-    << x.get<float>() << std::endl
-    << x.get<double>() << std::endl;
+    std::cout << x->eval(8.7f) << std::endl;
     
     
     return 0;
