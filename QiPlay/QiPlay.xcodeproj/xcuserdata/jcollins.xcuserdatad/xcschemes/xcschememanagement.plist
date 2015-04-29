@@ -21,6 +21,11 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>QiTest.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>4</integer>
+		</dict>
 		<key>Variadic Templates.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -50,6 +55,11 @@
 			<true/>
 		</dict>
 		<key>87C4BCCD1AD98DC100767B61</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>87EC866A1AEFC97E002FAC3D</key>
 		<dict>
 			<key>primary</key>
 			<true/>
