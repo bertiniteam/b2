@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		87BAFE561AB4F1E50097B6B3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87BAFE551AB4F1E50097B6B3 /* main.cpp */; };
 		87C4BCD11AD98DC100767B61 /* MPFR_ParserTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87C4BCD01AD98DC100767B61 /* MPFR_ParserTest.cpp */; };
+		87EC866E1AEFC97E002FAC3D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87EC866D1AEFC97E002FAC3D /* main.cpp */; };
 		87F579921AE9AABE00DBC839 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87F579911AE9AABE00DBC839 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,15 @@
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 		87C4BCCC1AD98DC100767B61 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		87EC86691AEFC97E002FAC3D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -48,6 +58,8 @@
 		87BAFE781AB6232D0097B6B3 /* RomanNumeral.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RomanNumeral.h; sourceTree = "<group>"; };
 		87C4BCCE1AD98DC100767B61 /* MPFR */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MPFR; sourceTree = BUILT_PRODUCTS_DIR; };
 		87C4BCD01AD98DC100767B61 /* MPFR_ParserTest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MPFR_ParserTest.cpp; sourceTree = "<group>"; };
+		87EC866B1AEFC97E002FAC3D /* QiTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = QiTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		87EC866D1AEFC97E002FAC3D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		87F5798F1AE9AABE00DBC839 /* Variadic Templates */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Variadic Templates"; sourceTree = BUILT_PRODUCTS_DIR; };
 		87F579911AE9AABE00DBC839 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -61,6 +73,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		87C4BCCB1AD98DC100767B61 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87EC86681AEFC97E002FAC3D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -83,6 +102,7 @@
 				87BAFE541AB4F1E50097B6B3 /* QiPlay */,
 				87C4BCCF1AD98DC100767B61 /* MPFR */,
 				87F579901AE9AABE00DBC839 /* Variadic Templates */,
+				87EC866C1AEFC97E002FAC3D /* QiTest */,
 				87BAFE531AB4F1E50097B6B3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,6 +113,7 @@
 				87BAFE521AB4F1E50097B6B3 /* QiPlay */,
 				87C4BCCE1AD98DC100767B61 /* MPFR */,
 				87F5798F1AE9AABE00DBC839 /* Variadic Templates */,
+				87EC866B1AEFC97E002FAC3D /* QiTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -112,6 +133,14 @@
 				87C4BCD01AD98DC100767B61 /* MPFR_ParserTest.cpp */,
 			);
 			path = MPFR;
+			sourceTree = "<group>";
+		};
+		87EC866C1AEFC97E002FAC3D /* QiTest */ = {
+			isa = PBXGroup;
+			children = (
+				87EC866D1AEFC97E002FAC3D /* main.cpp */,
+			);
+			path = QiTest;
 			sourceTree = "<group>";
 		};
 		87F579901AE9AABE00DBC839 /* Variadic Templates */ = {
@@ -159,6 +188,23 @@
 			productReference = 87C4BCCE1AD98DC100767B61 /* MPFR */;
 			productType = "com.apple.product-type.tool";
 		};
+		87EC866A1AEFC97E002FAC3D /* QiTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87EC86711AEFC97E002FAC3D /* Build configuration list for PBXNativeTarget "QiTest" */;
+			buildPhases = (
+				87EC86671AEFC97E002FAC3D /* Sources */,
+				87EC86681AEFC97E002FAC3D /* Frameworks */,
+				87EC86691AEFC97E002FAC3D /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = QiTest;
+			productName = QiTest;
+			productReference = 87EC866B1AEFC97E002FAC3D /* QiTest */;
+			productType = "com.apple.product-type.tool";
+		};
 		87F5798E1AE9AABE00DBC839 /* Variadic Templates */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 87F579951AE9AABE00DBC839 /* Build configuration list for PBXNativeTarget "Variadic Templates" */;
@@ -191,6 +237,9 @@
 					87C4BCCD1AD98DC100767B61 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
+					87EC866A1AEFC97E002FAC3D = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
 					87F5798E1AE9AABE00DBC839 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
@@ -211,6 +260,7 @@
 				87BAFE511AB4F1E50097B6B3 /* QiPlay */,
 				87C4BCCD1AD98DC100767B61 /* MPFR */,
 				87F5798E1AE9AABE00DBC839 /* Variadic Templates */,
+				87EC866A1AEFC97E002FAC3D /* QiTest */,
 			);
 		};
 /* End PBXProject section */
@@ -229,6 +279,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				87C4BCD11AD98DC100767B61 /* MPFR_ParserTest.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87EC86671AEFC97E002FAC3D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87EC866E1AEFC97E002FAC3D /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -359,6 +417,26 @@
 			};
 			name = Release;
 		};
+		87EC866F1AEFC97E002FAC3D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		87EC86701AEFC97E002FAC3D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		87F579931AE9AABE00DBC839 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -408,6 +486,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		87EC86711AEFC97E002FAC3D /* Build configuration list for PBXNativeTarget "QiTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87EC866F1AEFC97E002FAC3D /* Debug */,
+				87EC86701AEFC97E002FAC3D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		87F579951AE9AABE00DBC839 /* Build configuration list for PBXNativeTarget "Variadic Templates" */ = {
 			isa = XCConfigurationList;
