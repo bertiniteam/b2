@@ -8,10 +8,40 @@
 
 /* Begin PBXBuildFile section */
 		87BAFE561AB4F1E50097B6B3 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87BAFE551AB4F1E50097B6B3 /* main.cpp */; };
+		87C4BCD11AD98DC100767B61 /* MPFR_ParserTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87C4BCD01AD98DC100767B61 /* MPFR_ParserTest.cpp */; };
+		87EC866E1AEFC97E002FAC3D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87EC866D1AEFC97E002FAC3D /* main.cpp */; };
+		87F579921AE9AABE00DBC839 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87F579911AE9AABE00DBC839 /* main.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		87BAFE501AB4F1E50097B6B3 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		87C4BCCC1AD98DC100767B61 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		87EC86691AEFC97E002FAC3D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		87F5798D1AE9AABE00DBC839 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -26,10 +56,37 @@
 		87BAFE521AB4F1E50097B6B3 /* QiPlay */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = QiPlay; sourceTree = BUILT_PRODUCTS_DIR; };
 		87BAFE551AB4F1E50097B6B3 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		87BAFE781AB6232D0097B6B3 /* RomanNumeral.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RomanNumeral.h; sourceTree = "<group>"; };
+		87C4BCCE1AD98DC100767B61 /* MPFR */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MPFR; sourceTree = BUILT_PRODUCTS_DIR; };
+		87C4BCD01AD98DC100767B61 /* MPFR_ParserTest.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MPFR_ParserTest.cpp; sourceTree = "<group>"; };
+		87EC866B1AEFC97E002FAC3D /* QiTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = QiTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		87EC866D1AEFC97E002FAC3D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		87F5798F1AE9AABE00DBC839 /* Variadic Templates */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "Variadic Templates"; sourceTree = BUILT_PRODUCTS_DIR; };
+		87F579911AE9AABE00DBC839 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		87BAFE4F1AB4F1E50097B6B3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87C4BCCB1AD98DC100767B61 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87EC86681AEFC97E002FAC3D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87F5798C1AE9AABE00DBC839 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -43,6 +100,9 @@
 			isa = PBXGroup;
 			children = (
 				87BAFE541AB4F1E50097B6B3 /* QiPlay */,
+				87C4BCCF1AD98DC100767B61 /* MPFR */,
+				87F579901AE9AABE00DBC839 /* Variadic Templates */,
+				87EC866C1AEFC97E002FAC3D /* QiTest */,
 				87BAFE531AB4F1E50097B6B3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -51,6 +111,9 @@
 			isa = PBXGroup;
 			children = (
 				87BAFE521AB4F1E50097B6B3 /* QiPlay */,
+				87C4BCCE1AD98DC100767B61 /* MPFR */,
+				87F5798F1AE9AABE00DBC839 /* Variadic Templates */,
+				87EC866B1AEFC97E002FAC3D /* QiTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -62,6 +125,30 @@
 				87BAFE781AB6232D0097B6B3 /* RomanNumeral.h */,
 			);
 			path = QiPlay;
+			sourceTree = "<group>";
+		};
+		87C4BCCF1AD98DC100767B61 /* MPFR */ = {
+			isa = PBXGroup;
+			children = (
+				87C4BCD01AD98DC100767B61 /* MPFR_ParserTest.cpp */,
+			);
+			path = MPFR;
+			sourceTree = "<group>";
+		};
+		87EC866C1AEFC97E002FAC3D /* QiTest */ = {
+			isa = PBXGroup;
+			children = (
+				87EC866D1AEFC97E002FAC3D /* main.cpp */,
+			);
+			path = QiTest;
+			sourceTree = "<group>";
+		};
+		87F579901AE9AABE00DBC839 /* Variadic Templates */ = {
+			isa = PBXGroup;
+			children = (
+				87F579911AE9AABE00DBC839 /* main.cpp */,
+			);
+			path = "Variadic Templates";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -84,6 +171,57 @@
 			productReference = 87BAFE521AB4F1E50097B6B3 /* QiPlay */;
 			productType = "com.apple.product-type.tool";
 		};
+		87C4BCCD1AD98DC100767B61 /* MPFR */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87C4BCD41AD98DC100767B61 /* Build configuration list for PBXNativeTarget "MPFR" */;
+			buildPhases = (
+				87C4BCCA1AD98DC100767B61 /* Sources */,
+				87C4BCCB1AD98DC100767B61 /* Frameworks */,
+				87C4BCCC1AD98DC100767B61 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MPFR;
+			productName = MPFR;
+			productReference = 87C4BCCE1AD98DC100767B61 /* MPFR */;
+			productType = "com.apple.product-type.tool";
+		};
+		87EC866A1AEFC97E002FAC3D /* QiTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87EC86711AEFC97E002FAC3D /* Build configuration list for PBXNativeTarget "QiTest" */;
+			buildPhases = (
+				87EC86671AEFC97E002FAC3D /* Sources */,
+				87EC86681AEFC97E002FAC3D /* Frameworks */,
+				87EC86691AEFC97E002FAC3D /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = QiTest;
+			productName = QiTest;
+			productReference = 87EC866B1AEFC97E002FAC3D /* QiTest */;
+			productType = "com.apple.product-type.tool";
+		};
+		87F5798E1AE9AABE00DBC839 /* Variadic Templates */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87F579951AE9AABE00DBC839 /* Build configuration list for PBXNativeTarget "Variadic Templates" */;
+			buildPhases = (
+				87F5798B1AE9AABE00DBC839 /* Sources */,
+				87F5798C1AE9AABE00DBC839 /* Frameworks */,
+				87F5798D1AE9AABE00DBC839 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Variadic Templates";
+			productName = "Variadic Templates";
+			productReference = 87F5798F1AE9AABE00DBC839 /* Variadic Templates */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -94,6 +232,15 @@
 				ORGANIZATIONNAME = "West Texas A&M University";
 				TargetAttributes = {
 					87BAFE511AB4F1E50097B6B3 = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+					87C4BCCD1AD98DC100767B61 = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+					87EC866A1AEFC97E002FAC3D = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+					87F5798E1AE9AABE00DBC839 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
 				};
@@ -111,6 +258,9 @@
 			projectRoot = "";
 			targets = (
 				87BAFE511AB4F1E50097B6B3 /* QiPlay */,
+				87C4BCCD1AD98DC100767B61 /* MPFR */,
+				87F5798E1AE9AABE00DBC839 /* Variadic Templates */,
+				87EC866A1AEFC97E002FAC3D /* QiTest */,
 			);
 		};
 /* End PBXProject section */
@@ -124,6 +274,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		87C4BCCA1AD98DC100767B61 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87C4BCD11AD98DC100767B61 /* MPFR_ParserTest.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87EC86671AEFC97E002FAC3D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87EC866E1AEFC97E002FAC3D /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87F5798B1AE9AABE00DBC839 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87F579921AE9AABE00DBC839 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -131,7 +305,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -176,7 +350,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -225,6 +399,64 @@
 			};
 			name = Release;
 		};
+		87C4BCD21AD98DC100767B61 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		87C4BCD31AD98DC100767B61 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		87EC866F1AEFC97E002FAC3D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		87EC86701AEFC97E002FAC3D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		87F579931AE9AABE00DBC839 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		87F579941AE9AABE00DBC839 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -242,6 +474,32 @@
 			buildConfigurations = (
 				87BAFE5A1AB4F1E50097B6B3 /* Debug */,
 				87BAFE5B1AB4F1E50097B6B3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87C4BCD41AD98DC100767B61 /* Build configuration list for PBXNativeTarget "MPFR" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87C4BCD21AD98DC100767B61 /* Debug */,
+				87C4BCD31AD98DC100767B61 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87EC86711AEFC97E002FAC3D /* Build configuration list for PBXNativeTarget "QiTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87EC866F1AEFC97E002FAC3D /* Debug */,
+				87EC86701AEFC97E002FAC3D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		87F579951AE9AABE00DBC839 /* Build configuration list for PBXNativeTarget "Variadic Templates" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87F579931AE9AABE00DBC839 /* Debug */,
+				87F579941AE9AABE00DBC839 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
