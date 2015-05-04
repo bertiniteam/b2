@@ -11,6 +11,7 @@
 #include "Node.h"
 #include "SumOperator.h"
 #include "MultOperator.h"
+#include "NegateOperator.h"
 #include "Constant.h"
 
 
@@ -32,13 +33,15 @@ int main()
 
     std::unique_ptr<Node> num3 = std::make_unique<Constant>();
     std::unique_ptr<Node> num4 = std::make_unique<Constant>();
+    std::unique_ptr<Node> negop = std::make_unique<NegateOperator>();
     num3->set<dbl>(3.3);
     num3->set<mpfr>(-3.3);
     num4->set<dbl>(4.3);
     num4->set<mpfr>(-4.3);
 
     std::unique_ptr<Node> mult= std::make_unique<MultOperator>();
-    mult->add_Child(std::move(num3));
+    negop->add_Child(std::move(num3));
+    mult->add_Child(std::move(negop));
     mult->add_Child(std::move(num4));
     
 //

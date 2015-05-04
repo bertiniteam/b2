@@ -18,12 +18,12 @@ class NegateOperator : public UnaryOperator
 protected:
     dbl fresh_eval(dbl) override
     {
-        return (-1)*children.eval<dbl>();
+        return (-1)*children->eval<dbl>();
     }
     
     mpfr fresh_eval(mpfr) override
     {
-        return (-1)*children.eval<mpfr>();
+        return (-1)*children->eval<mpfr>();
     }
     
     
@@ -34,7 +34,7 @@ public:
     // These do nothing for a constant
     std::string get_string() override
     {
-        return "-" + children[1].get_string();
+        return "-" + children->get_string();
     }
 };
 

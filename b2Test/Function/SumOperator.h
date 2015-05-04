@@ -72,7 +72,7 @@ public:
     
     virtual void add_Child(std::unique_ptr<Node> child) override
     {
-        children.push_back(std::move(child));
+        NaryOperator::add_Child(std::move(child));
         children_sign.push_back(true);
     }
 
