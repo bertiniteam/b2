@@ -26,9 +26,6 @@ public:
         children = std::move(child);
     }
     
-    // Delete SumOperator and ExpOperator add_child methods
-    virtual void add_child(std::unique_ptr<Node>, bool) = delete;
-    virtual void add_child(std::unique_ptr<Node>, int) = delete;
 
 };
 

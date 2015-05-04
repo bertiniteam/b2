@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		87EC86821AF32ECE002FAC3D /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87EC86811AF32ECE002FAC3D /* main.cpp */; };
-		87EC86941AF330B6002FAC3D /* FunctionTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87EC86931AF330B6002FAC3D /* FunctionTest.cpp */; };
+		87EC86A71AF7E25C002FAC3D /* ParseTest.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 87EC86A61AF7E25C002FAC3D /* ParseTest.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -48,6 +48,8 @@
 		87EC86A31AF43370002FAC3D /* UnaryOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnaryOperator.h; sourceTree = "<group>"; };
 		87EC86A41AF433CE002FAC3D /* NegateOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NegateOperator.h; sourceTree = "<group>"; };
 		87EC86A51AF530BE002FAC3D /* Operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Operator.h; sourceTree = "<group>"; };
+		87EC86A61AF7E25C002FAC3D /* ParseTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParseTest.cpp; sourceTree = "<group>"; };
+		87EC86A91AF7E2F2002FAC3D /* Grammar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Grammar.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +99,8 @@
 		87EC868D1AF32EE2002FAC3D /* Function */ = {
 			isa = PBXGroup;
 			children = (
+				87EC86A61AF7E25C002FAC3D /* ParseTest.cpp */,
+				87EC86A81AF7E2BB002FAC3D /* Grammar */,
 				87EC86931AF330B6002FAC3D /* FunctionTest.cpp */,
 				87EC86961AF330F1002FAC3D /* Node.h */,
 				87EC86A51AF530BE002FAC3D /* Operator.h */,
@@ -143,6 +147,14 @@
 				87EC86A41AF433CE002FAC3D /* NegateOperator.h */,
 			);
 			name = UnaryOperators;
+			sourceTree = "<group>";
+		};
+		87EC86A81AF7E2BB002FAC3D /* Grammar */ = {
+			isa = PBXGroup;
+			children = (
+				87EC86A91AF7E2F2002FAC3D /* Grammar.h */,
+			);
+			name = Grammar;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -230,7 +242,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				87EC86941AF330B6002FAC3D /* FunctionTest.cpp in Sources */,
+				87EC86A71AF7E25C002FAC3D /* ParseTest.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,6 +282,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/Cellar/boost/1.57.0/include,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -305,6 +322,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/Cellar/boost/1.57.0/include,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -362,6 +384,7 @@
 				87EC86871AF32ECE002FAC3D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		87EC86901AF32EE2002FAC3D /* Build configuration list for PBXNativeTarget "Function" */ = {
 			isa = XCConfigurationList;
@@ -370,6 +393,7 @@
 				87EC86921AF32EE2002FAC3D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

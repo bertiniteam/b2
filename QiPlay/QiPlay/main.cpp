@@ -5,7 +5,6 @@
 //  Created by Collins, James B. on 3/14/15.
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
 //
-#define BOOST_SPIRIT_USE_PHOENIX_V3 1
 
 
 #include <string>

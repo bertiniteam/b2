@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "QiPlay/main.cpp"
-            timestampString = "449159058.330312"
+            timestampString = "452468844.465128"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "227"
-            endingLineNumber = "227"
+            startingLineNumber = "226"
+            endingLineNumber = "226"
             landmarkName = "main()"
             landmarkType = "7">
          </BreakpointContent>
@@ -33,36 +33,6 @@
             endingLineNumber = "103"
             landmarkName = "eval()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "double Sum&lt;float, double&gt;::eval&lt;double&gt;()"
-                  moduleName = "Variadic Templates"
-                  urlString = "file:///Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/QiPlay/Variadic%20Templates/VariadicTempFix.cpp"
-                  timestampString = "452023091.969605"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "103"
-                  endingLineNumber = "103"
-                  offsetFromSymbolStart = "394">
-               </Location>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "float Sum&lt;float, double&gt;::eval&lt;float&gt;()"
-                  moduleName = "Variadic Templates"
-                  urlString = "file:///Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/QiPlay/Variadic%20Templates/VariadicTempFix.cpp"
-                  timestampString = "452023091.96975"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "103"
-                  endingLineNumber = "103"
-                  offsetFromSymbolStart = "394">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

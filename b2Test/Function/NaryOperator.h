@@ -27,6 +27,12 @@ public:
     {
         children.push_back(std::move(child));
     }
+    
+    virtual void add_Child(Node* child) override
+    {
+        children.push_back( std::move( std::unique_ptr<Node>(child) ) );
+    }
+
 };
 
 
