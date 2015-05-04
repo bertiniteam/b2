@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>17443C7C-4FC8-4B11-8C5F-47CD852E01CB</string>
+	<key>IDESourceControlProjectName</key>
+	<string>b2Test</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>B031F45ED8A1898D2CC2A30174AC855EAA6F2116</key>
+		<string>https://github.com/jbcolli2/b2_JebFork.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>b2Test/b2Test.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>B031F45ED8A1898D2CC2A30174AC855EAA6F2116</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/jbcolli2/b2_JebFork.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>B031F45ED8A1898D2CC2A30174AC855EAA6F2116</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>B031F45ED8A1898D2CC2A30174AC855EAA6F2116</string>
+			<key>IDESourceControlWCCName</key>
+			<string>b2_JebFork</string>
+		</dict>
+	</array>
+</dict>
+</plist>
