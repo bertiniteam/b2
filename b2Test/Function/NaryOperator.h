@@ -17,7 +17,6 @@
 class NaryOperator : public Node
 {
 protected:
-    std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value;
     std::vector< std::unique_ptr<Node> > children;
     
     //Deleted functions

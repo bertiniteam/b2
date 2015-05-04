@@ -21,16 +21,24 @@ class SumOperator : public NaryOperator
 private:
     std::vector<bool> children_sign;
     
+
+    
 protected:
-    std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value;
     
     
     dbl fresh_eval(dbl) override
     {
         dbl retval{};
-        for(auto& vv : children)
+        for(int ii = 0; ii < children.size(); ++ii)
         {
-            retval += vv->eval<dbl>();
+            if(children_sign[ii])
+            {
+                retval += children[ii]->eval<dbl>();
+            }
+            else
+            {
+                retval -= children[ii]->eval<dbl>();
+            }
         }
         
         return retval;
@@ -39,18 +47,21 @@ protected:
     mpfr fresh_eval(mpfr) override
     {
         mpfr retval{};
-        for(auto& vv : children)
+        for(int ii = 0; ii < children.size(); ++ii)
         {
-            retval += vv->eval<mpfr>();
+            if(children_sign[ii])
+            {
+                retval += children[ii]->eval<mpfr>();
+            }
+            else
+            {
+                retval -= children[ii]->eval<mpfr>();
+            }
         }
         
         return retval;
     }
     
-    void add_Child(std::unique_ptr<Node> child, bool sign)
-    {
-        children.push_back(std::move(child));
-    }
     
     
     
@@ -58,6 +69,18 @@ protected:
 public:
     // These do nothing for a constant
     std::string get_string() override {return "";}
+    
+    virtual void add_Child(std::unique_ptr<Node> child) override
+    {
+        children.push_back(std::move(child));
+        children_sign.push_back(true);
+    }
+
+    void add_Child(std::unique_ptr<Node> child, bool sign)
+    {
+        children.push_back(std::move(child));
+        children_sign.push_back(sign);
+    }
 };
 
 

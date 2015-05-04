@@ -16,6 +16,8 @@ class Symbol : public Node
 {
    //I forgot why we needed this class
 public:
+    virtual void add_Child(std::unique_ptr<Node> child) {};
+
 
 
     
