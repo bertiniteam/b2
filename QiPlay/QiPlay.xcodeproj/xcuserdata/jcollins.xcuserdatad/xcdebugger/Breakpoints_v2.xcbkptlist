@@ -19,5 +19,51 @@
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Variadic Templates/VariadicTempFix.cpp"
+            timestampString = "452023091.696205"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "103"
+            endingLineNumber = "103"
+            landmarkName = "eval()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "double Sum&lt;float, double&gt;::eval&lt;double&gt;()"
+                  moduleName = "Variadic Templates"
+                  urlString = "file:///Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/QiPlay/Variadic%20Templates/VariadicTempFix.cpp"
+                  timestampString = "452023091.969605"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "103"
+                  endingLineNumber = "103"
+                  offsetFromSymbolStart = "394">
+               </Location>
+               <Location
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "float Sum&lt;float, double&gt;::eval&lt;float&gt;()"
+                  moduleName = "Variadic Templates"
+                  urlString = "file:///Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/QiPlay/Variadic%20Templates/VariadicTempFix.cpp"
+                  timestampString = "452023091.96975"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "103"
+                  endingLineNumber = "103"
+                  offsetFromSymbolStart = "394">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
    </Breakpoints>
 </Bucket>
