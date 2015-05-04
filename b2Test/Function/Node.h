@@ -50,7 +50,7 @@ public:
     
     ///////// OVERRIDEN METHODS /////////////////
     virtual std::string get_string() = 0;
-    virtual void add_Child(std::unique_ptr<Node> child) {};
+    virtual void add_Child(std::unique_ptr<Node> child) = 0;
 
     ///////// OVERRIDEN METHODS /////////////////
     

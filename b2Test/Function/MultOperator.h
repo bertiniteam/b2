@@ -15,16 +15,13 @@
 
 class MultOperator : public NaryOperator
     {
-    private:
-        std::vector<bool> children_sign;
         
     protected:
-        std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value;
         
         
         dbl fresh_eval(dbl) override
         {
-            dbl retval{};
+            dbl retval{1};
             for(auto& vv : children)
             {
                 retval *= vv->eval<dbl>();
@@ -35,7 +32,7 @@ class MultOperator : public NaryOperator
         
         mpfr fresh_eval(mpfr) override
         {
-            mpfr retval{};
+            mpfr retval{1};
             for(auto& vv : children)
             {
                 retval *= vv->eval<mpfr>();
@@ -44,10 +41,6 @@ class MultOperator : public NaryOperator
             return retval;
         }
         
-        void add_Child(std::unique_ptr<Node> child, bool sign)
-        {
-            children.push_back(std::move(child));
-        }
         
         
         
