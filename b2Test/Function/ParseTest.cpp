@@ -30,6 +30,9 @@ int main()
     
     std::string str;
     std::getline(std::cin, str);
+    if (str.empty() || str[0] == 'q' || str[0] == 'Q')
+        return 0;
+    
     iterator_type it = str.begin();
     iterator_type end = str.end();
     phrase_parse(it,end,var_parser,parser::ascii::space);
@@ -49,15 +52,7 @@ int main()
         //[tutorial_roman_grammar_parse
         
         bool r = phrase_parse(iter, end, poly_parser,parser::ascii::space, test);
-//        std::cout << "test = " << test << std::endl;
-//        if(test != 0)
-//        {
-//            test->get_string();
-//        }
-//        else{
-//            std::cout << "didn't work\n";
-//        }
-        
+       
         
         if (r && iter == end)
         {
