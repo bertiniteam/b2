@@ -20,7 +20,7 @@ protected:
     std::vector< std::unique_ptr<Node> > children;
     
 public:
-    virtual void add_Child(std::unique_ptr<Node> child) override
+    virtual void add_Child(std::shared_ptr<Node> child) override
     {
         if(children.size() == 2)
         {
@@ -30,9 +30,6 @@ public:
         children.push_back(std::move(child));
     }
     
-    // Delete SumOperator and ExpOperator add_child methods
-    virtual void add_child(std::unique_ptr<Node>, bool) = delete;
-    virtual void add_child(std::unique_ptr<Node>, int) = delete;
 };
 
 

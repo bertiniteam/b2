@@ -18,7 +18,7 @@ protected:
     
 public:
     // Delete add_child methods
-    virtual void add_Child(std::unique_ptr<Node>) = 0;
+    virtual void add_Child(std::shared_ptr<Node>) = 0;
     
 
 };
