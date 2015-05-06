@@ -28,9 +28,9 @@ public:
         children.push_back(std::move(child));
     }
     
-    virtual void add_Child(Node* child) override
+    virtual void add_ChildQi(Node* child) override
     {
-        children.push_back( std::move( std::unique_ptr<Node>(child) ) );
+        children.push_back( std::shared_ptr<Node>(child) );
     }
 
 };

@@ -18,12 +18,17 @@
 class UnaryOperator : public Operator
 {
 protected:
-    std::unique_ptr<Node> children;
+    std::shared_ptr<Node> children;
     
 public:
     virtual void add_Child(std::shared_ptr<Node> child) override
     {
         children = std::move(child);
+    }
+    
+    virtual void add_ChildQi(Node* child) override
+    {
+        children = std::shared_ptr<Node>(child);
     }
     
 

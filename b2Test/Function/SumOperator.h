@@ -76,11 +76,25 @@ public:
         children_sign.push_back(true);
     }
 
-    void add_Child(std::unique_ptr<Node> child, bool sign)
+    void add_Child(std::shared_ptr<Node> child, bool sign)
     {
-        children.push_back(std::move(child));
+        NaryOperator::add_Child(std::move(child));
         children_sign.push_back(sign);
     }
+    
+    
+    void add_ChildQi(Node* child)
+    {
+        NaryOperator::add_ChildQi(std::move(child));
+        children_sign.push_back(true);
+    }
+    
+    void add_ChildQi(Node* child, bool sign)
+    {
+        NaryOperator::add_ChildQi(std::move(child));
+        children_sign.push_back(sign);
+    }
+
 };
 
 
