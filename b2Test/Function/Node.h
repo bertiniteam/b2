@@ -52,7 +52,6 @@ public:
     virtual std::string get_string() = 0;
     virtual void add_Child(std::unique_ptr<Node> child) = 0;
     virtual void add_Child(Node* child) = 0; // We need this b/c unique_ptrs don't work well with Qi
-    virtual void add_Childtest(Node* child);
 
     ///////// OVERRIDEN METHODS /////////////////
     
