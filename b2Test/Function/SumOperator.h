@@ -70,7 +70,7 @@ public:
     // These do nothing for a constant
     std::string get_string() override {return "";}
     
-    virtual void add_Child(std::unique_ptr<Node> child) override
+    virtual void add_Child(std::shared_ptr<Node> child) override
     {
         NaryOperator::add_Child(std::move(child));
         children_sign.push_back(true);

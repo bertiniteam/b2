@@ -17,13 +17,13 @@
 class NaryOperator : public Node
 {
 protected:
-    std::vector< std::unique_ptr<Node> > children;
+    std::vector< std::shared_ptr<Node> > children;
     
     //Deleted functions
     
     
 public:
-    virtual void add_Child(std::unique_ptr<Node> child) override
+    virtual void add_Child(std::shared_ptr<Node> child) override
     {
         children.push_back(std::move(child));
     }

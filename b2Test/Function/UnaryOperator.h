@@ -21,7 +21,7 @@ protected:
     std::unique_ptr<Node> children;
     
 public:
-    virtual void add_Child(std::unique_ptr<Node> child) override
+    virtual void add_Child(std::shared_ptr<Node> child) override
     {
         children = std::move(child);
     }
