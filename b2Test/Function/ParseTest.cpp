@@ -53,6 +53,7 @@ int main()
         
         bool r = phrase_parse(iter, end, poly_parser,parser::ascii::space, test);
        
+        std::cout << " test.eval = " << test->eval<dbl>() << std::endl;
         
         if (r && iter == end)
         {
