@@ -1821,4 +1821,5 @@ dependencies: \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Operator.h \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/ExpOperator.h \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Constant.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Symbol.h
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Symbol.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Variable.h
