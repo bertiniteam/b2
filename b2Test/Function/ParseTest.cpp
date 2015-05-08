@@ -14,9 +14,16 @@
 #include "SumOperator.h"
 
 
+int Node::tabcount = 0;
+
 
 int main()
 {
+   
+    
+    
+    
+    
     std::cout << "/////////////////////////////////////////////////////////\n\n";
     std::cout << "\t\tPolynomial Parser\n\n";
     std::cout << "/////////////////////////////////////////////////////////\n\n";
@@ -54,6 +61,7 @@ int main()
         bool r = phrase_parse(iter, end, poly_parser,parser::ascii::space, test);
        
         std::cout << " test.eval = " << test->eval<dbl>() << std::endl;
+        test->printTree();
         
         if (r && iter == end)
         {

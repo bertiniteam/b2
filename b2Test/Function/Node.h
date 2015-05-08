@@ -23,6 +23,8 @@
 #include <string>
 #include <tuple>
 
+#include <boost/type_index.hpp>
+
 using dbl = double;
 using mpfr = long double;
 
@@ -47,14 +49,13 @@ public:
     
     ////////////TESTING////////////////    
     static int tabcount;
-    void printTree()
+    virtual void printTree()
     {
         for(int ii = 0; ii < tabcount; ++ii)
         {
             std::cout << "\t";
         }
-        std::cout << typeid(this).name() << std::endl;
-        tabcount++;
+        std::cout << boost::typeindex::type_id_runtime(*this).pretty_name() << std::endl;
     }
 
     ////////////TESTING////////////////
