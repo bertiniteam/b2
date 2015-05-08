@@ -31,6 +31,12 @@ public:
         children = std::shared_ptr<Node>(child);
     }
     
+    std::shared_ptr<Node> get_first_child()
+    {
+        return children;
+    }
+
+    
     ////////////// TESTING /////////////////
     virtual void printTree()
     {
@@ -38,7 +44,7 @@ public:
         {
             std::cout << "\t";
         }
-        std::cout << boost::typeindex::type_id_runtime(*this).pretty_name() << std::endl;
+        std::cout << boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->eval<dbl>()<< std::endl;
         tabcount++;
         children->printTree();
         tabcount--;

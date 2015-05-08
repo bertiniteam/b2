@@ -45,6 +45,11 @@ public:
     {
         exponent = exp;
     }
+    
+    int getExponent()
+    {
+        return exponent;
+    }
 };
 
 
