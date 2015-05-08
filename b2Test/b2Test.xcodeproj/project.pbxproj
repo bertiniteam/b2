@@ -33,6 +33,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		873D91BB1AFC757F00F32E03 /* ExpOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExpOperator.h; sourceTree = "<group>"; };
 		87EC867E1AF32ECE002FAC3D /* b2Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = b2Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		87EC86811AF32ECE002FAC3D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		87EC868C1AF32EE2002FAC3D /* Function */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Function; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -145,6 +146,7 @@
 			children = (
 				87EC86A31AF43370002FAC3D /* UnaryOperator.h */,
 				87EC86A41AF433CE002FAC3D /* NegateOperator.h */,
+				873D91BB1AFC757F00F32E03 /* ExpOperator.h */,
 			);
 			name = UnaryOperators;
 			sourceTree = "<group>";

@@ -16,6 +16,9 @@
 #ifndef __b2Test__Node__
 #define __b2Test__Node__
 
+
+
+
 #include <iostream>
 #include <string>
 #include <tuple>
@@ -43,7 +46,16 @@ public:
     
     
     ////////////TESTING////////////////    
-    
+    static int tabcount;
+    void printTree()
+    {
+        for(int ii = 0; ii < tabcount; ++ii)
+        {
+            std::cout << "\t";
+        }
+        std::cout << typeid(this).name() << std::endl;
+        tabcount++;
+    }
 
     ////////////TESTING////////////////
     
@@ -73,7 +85,7 @@ public:
         auto& val_pair = std::get< std::pair<T,bool> >(current_value);
         if(!val_pair.second)
         {
-            std::cout << "Fresh eval\n";
+//            std::cout << "Fresh eval\n";
             T input{};
             val_pair.first = fresh_eval(input);
             val_pair.second = true;
