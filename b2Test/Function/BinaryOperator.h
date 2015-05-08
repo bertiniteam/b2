@@ -31,15 +31,6 @@ public:
     }
     
     
-    virtual void add_ChildQi(Node* child) override
-    {
-        if(children.size() == 2)
-        {
-            std::cout << "Already have two children on a binary node, can't add more\n But I don't know how to handle errors yet(JBC)\n";
-            return;
-        }
-        children.push_back(std::shared_ptr<Node>(child));
-    }
     
     
     

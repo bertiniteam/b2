@@ -67,15 +67,17 @@ protected:
     
     
 public:
-    // These do nothing for a constant
+    // STILL TO BE IMPLEMENTED!!!!!
     std::string get_string() override {return "";}
     
+    //Special Behaviour: by default all terms added are positive
     virtual void add_Child(std::shared_ptr<Node> child) override
     {
         NaryOperator::add_Child(std::move(child));
         children_sign.push_back(true);
     }
 
+    //Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
     void add_Child(std::shared_ptr<Node> child, bool sign)
     {
         NaryOperator::add_Child(std::move(child));
@@ -83,17 +85,6 @@ public:
     }
     
     
-    void add_ChildQi(Node* child)
-    {
-        NaryOperator::add_ChildQi(std::move(child));
-        children_sign.push_back(true);
-    }
-    
-    void add_ChildQi(Node* child, bool sign)
-    {
-        NaryOperator::add_ChildQi(std::move(child));
-        children_sign.push_back(sign);
-    }
 
     
 
