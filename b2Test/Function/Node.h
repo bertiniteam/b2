@@ -55,7 +55,7 @@ public:
         {
             std::cout << "\t";
         }
-        std::cout << boost::typeindex::type_id_runtime(*this).pretty_name() << std::endl;
+        std::cout << boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->eval<dbl>()<< std::endl;
     }
 
     ////////////TESTING////////////////
