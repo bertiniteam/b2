@@ -22,6 +22,8 @@
 
 #include "Node.h"
 #include "SumOperator.h"
+#include "MultOperator.h"
+#include "ExpOperator.h"
 #include "Constant.h"
 
 
@@ -99,15 +101,36 @@ namespace parser
                                           ,_val, _1)] ) );
             
             multexpr = eps[_val = phx::new_<MultOperator>()] >>
-                        subexpr[phx::bind(&Node::addLeaf,_val,_1)] >>
-                        *( '*' >> subexpr )[phx::bind(&Node::addLeaf,_val,_1)];
+            subexpr[ phx::bind( [](Node* input, Node* multinput)
+                               {
+                                   input->add_Child(std::shared_ptr<Node>(multinput));
+                               }
+                               ,_val, _1)] >>
+            *( '*' >> subexpr )[ phx::bind( [](Node* input, Node* multinput)
+                                           {
+                                               input->add_Child(std::shared_ptr<Node>(multinput));
+                                           }
+                                           ,_val, _1)];
             
+            subexpr = base[_val = _1] | parenexpr[_val = _1];
             
-            //            sumexpr = eps[_val = phx::new_<Node>("add")] >>
-            //            eps[phx::bind(&Node::addLeaf,_val,new Node("null",true))] >>
-            //            var[phx::bind(&Node::print,_val)] >>
-            //            *( ('-' >> var) |
-            //              ('+' >> var) );
+            parenexpr = eps[_val = phx::new_<ExpOperator>()] >>
+            '(' >> sumexpr[ phx::bind( [](Node* input, Node* addinput)
+                                      {
+                                          input->add_Child(std::shared_ptr<Node>(addinput));
+                                      }
+                                      ,_val, _1)] >> ')' >>
+            -( '^' >> qi::int_[ phx::bind( [](Node* input, int expinput)
+                                          {
+                                              dynamic_cast<ExpOperator*>(input)->setExponent(expinput);
+                                          }
+                                          ,_val, _1)] );
+            
+            base = ( qi::double_[_val = phx::new_<Constant>(_1)] );/* |
+                        ( eps[_val = phx::new_<Node>("exp^1")] >>
+                         var[phx::bind(&Node::addLeaf,_val,new Node("null")), phx::bind(&Node::addLeaf,_val,phx::new_<Node>(_1))] >>
+                         -('^' >> qi::int_[phx::bind(&Node::setop,_val,_1)]) ); */
+            
             
 //            sumexpr = eps[_val = phx::new_<Node>("sum")] >>
 //            eps[phx::bind(&Node::addLeaf,_val,new Node("null"))] >>
