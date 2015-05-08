@@ -26,6 +26,7 @@
 #include "NegateOperator.h"
 #include "ExpOperator.h"
 #include "Constant.h"
+#include "Variable.h"
 
 
 
@@ -84,6 +85,8 @@ namespace parser
             using qi::_val;
             using qi::eps;
             
+            
+            /////////// SUM TERMS ////////////////
             sumexpr = (qi::eps)[_val = phx::new_<SumOperator>()] >> //Still need possible negate operator!!!!!
             ( multexpr[ phx::bind( [](Node* input, Node* addinput)
                            {
@@ -92,14 +95,14 @@ namespace parser
                            ,_val, _1)] |
              ( '-'>> multexpr)[ phx::bind( [](Node* input, Node* addinput)
                                           {
-                                              dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(addinput), false);
+                                              std::shared_ptr<NegateOperator> tempNeg = std::make_shared<NegateOperator>();
+                                              tempNeg->add_Child(std::shared_ptr<Node>(addinput));
+                                              dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(tempNeg));
                                           }
                                           ,_val, _1)]) >>
             *( ('-' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
                                            {
-                                               std::shared_ptr<NegateOperator> tempNeg = std::make_shared<NegateOperator>();
-                                               tempNeg->add_Child(std::shared_ptr<Node>(addinput));
-                                               dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(tempNeg));
+                                               dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(addinput), false);
                                            }
                                            ,_val, _1)] ) |
               ('+' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
@@ -118,8 +121,10 @@ namespace parser
                                    input = temp;
                                }
                            },_val)];
-;
+
             
+            
+            /////////// MULT FACTORS ////////////////
             multexpr = eps[_val = phx::new_<MultOperator>()] >>
             subexpr[ phx::bind( [](Node* input, Node* multinput)
                                {
@@ -143,9 +148,12 @@ namespace parser
                                  }
                              },_val)];
 
+            
+            /////////// BASE OR PARENS ////////////////
             subexpr = base[_val = _1] | parenexpr[_val = _1];
             
             
+            /////////// PARENS WITH EXP ////////////////
             parenexpr = eps[_val = phx::new_<ExpOperator>()] >>
             '(' >> sumexpr[ phx::bind( [](Node* input, Node* addinput)
                                       {
@@ -169,10 +177,34 @@ namespace parser
                                }
                            },_val)];
             
-            base = ( qi::double_[_val = phx::new_<Constant>(_1)] );/* |
-                        ( eps[_val = phx::new_<Node>("exp^1")] >>
-                         var[phx::bind(&Node::addLeaf,_val,new Node("null")), phx::bind(&Node::addLeaf,_val,phx::new_<Node>(_1))] >>
-                         -('^' >> qi::int_[phx::bind(&Node::setop,_val,_1)]) ); */
+            
+            /////////// NUMBER OR VARIABLE WITH EXP ////////////////
+            base = ( qi::double_[_val = phx::new_<Constant>(_1)] ) |
+                        (
+                         eps[_val = phx::new_<ExpOperator>()] >>
+                         var[ phx::bind( [](Node* input, int varnum)
+                                        {
+                                            input->add_Child(std::make_shared<Variable>(varnum));
+                                        }
+                                        ,_val, _1)] >>
+                         -('^' >> qi::int_[ phx::bind( [](Node* input, int expinput)
+                                                      {
+                                                          dynamic_cast<ExpOperator*>(input)->setExponent(expinput);
+                                                      }
+                                                      ,_val, _1)]) >>
+                         //Erase ExpOp if exp = 1(i.e. no real exponentiation happening)
+                         eps[ phx::bind( [](Node* &input)
+                                        {
+                                            int exp = dynamic_cast<ExpOperator*>(input)->getExponent();
+                                            if(exp == 1)
+                                            {
+                                                Node* temp = dynamic_cast<UnaryOperator*>(input)->get_first_child().get();
+                                                delete input;  //This is dangerous!!!!!!
+                                                input = temp;
+                                            }
+                                        },_val)] );
+
+            
             
             
 //            sumexpr = eps[_val = phx::new_<Node>("sum")] >>
