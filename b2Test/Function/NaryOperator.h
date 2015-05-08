@@ -22,15 +22,12 @@ protected:
     
     
 public:
+    // Add a child onto the container for this operator
     virtual void add_Child(std::shared_ptr<Node> child) override
     {
         children.push_back(std::move(child));
     }
     
-    virtual void add_ChildQi(Node* child) override
-    {
-        children.push_back( std::shared_ptr<Node>(child) );
-    }
     
     int num_Children()
     {

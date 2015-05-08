@@ -23,6 +23,7 @@
 #include "Node.h"
 #include "SumOperator.h"
 #include "MultOperator.h"
+#include "NegateOperator.h"
 #include "ExpOperator.h"
 #include "Constant.h"
 
@@ -84,14 +85,21 @@ namespace parser
             using qi::eps;
             
             sumexpr = (qi::eps)[_val = phx::new_<SumOperator>()] >> //Still need possible negate operator!!!!!
-            multexpr[ phx::bind( [](Node* input, Node* addinput)
+            ( multexpr[ phx::bind( [](Node* input, Node* addinput)
                            {
                                dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(addinput), true);
                            }
-                           ,_val, _1)] >>
+                           ,_val, _1)] |
+             ( '-'>> multexpr)[ phx::bind( [](Node* input, Node* addinput)
+                                          {
+                                              dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(addinput), false);
+                                          }
+                                          ,_val, _1)]) >>
             *( ('-' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
                                            {
-                                               dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(addinput), false);
+                                               std::shared_ptr<NegateOperator> tempNeg = std::make_shared<NegateOperator>();
+                                               tempNeg->add_Child(std::shared_ptr<Node>(addinput));
+                                               dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(tempNeg));
                                            }
                                            ,_val, _1)] ) |
               ('+' >> multexpr[ phx::bind( [](Node* input, Node* addinput)

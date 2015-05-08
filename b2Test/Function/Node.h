@@ -64,7 +64,6 @@ public:
     ///////// OVERRIDEN METHODS /////////////////
     virtual std::string get_string() = 0;
     virtual void add_Child(std::shared_ptr<Node> child) = 0;
-    virtual void add_ChildQi(Node* child) {}; // We need this b/c unique_ptrs don't work well with Qi
 
     ///////// OVERRIDEN METHODS /////////////////
     
