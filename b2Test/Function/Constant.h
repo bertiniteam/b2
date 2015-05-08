@@ -32,6 +32,13 @@ protected:
 
     
 public:
+    Constant(){};
+    Constant(double val)
+    {
+        std::get< std::pair<dbl,bool> >(current_value).first = val;
+        std::get< std::pair<mpfr,bool> >(current_value).first = val;
+    }
+    
     
     // These do nothing for a constant
     std::string get_string() override {return "";}
