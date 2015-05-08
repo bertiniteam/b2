@@ -81,24 +81,26 @@ namespace parser
             using qi::_val;
             using qi::eps;
             
-            sumexpr = (qi::eps)[_val = phx::new_<SumOperator>()] >>
+            sumexpr = (qi::eps)[_val = phx::new_<SumOperator>()] >> //Still need possible negate operator!!!!!
             multexpr[ phx::bind( [](Node* input, Node* addinput)
                            {
-                               input->add_Child(std::make_shared<Node>(addinput) );
+                               dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(addinput), true);
                            }
                            ,_val, _1)] >>
             *( ('-' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
                                            {
-                                               input->add_ChildQi(addinput);
+                                               dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(addinput), false);
                                            }
-                                           ,_val, _1)]) |
+                                           ,_val, _1)] ) |
               ('+' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
                                           {
-                                              input->add_ChildQi(addinput);
+                                              dynamic_cast<SumOperator*>(input)->add_Child(std::shared_ptr<Node>(addinput), true);
                                           }
-                                          ,_val, _1)]) );
+                                          ,_val, _1)] ) );
             
-            multexpr = qi::double_[_val = phx::new_<Constant>(2)];
+            multexpr = eps[_val = phx::new_<MultOperator>()] >>
+                        subexpr[phx::bind(&Node::addLeaf,_val,_1)] >>
+                        *( '*' >> subexpr )[phx::bind(&Node::addLeaf,_val,_1)];
             
             
             //            sumexpr = eps[_val = phx::new_<Node>("add")] >>
