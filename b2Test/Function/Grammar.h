@@ -81,8 +81,25 @@ namespace parser
             using qi::_val;
             using qi::eps;
             
-            sumexpr = (qi::eps)[qi::_val = phx::new_<SumOperator>()] >>
-            eps[ phx::bind(&Node::add_ChildQi, _val, new Constant() ) ];
+            sumexpr = (qi::eps)[_val = phx::new_<SumOperator>()] >>
+            multexpr[ phx::bind( [](Node* input, Node* addinput)
+                           {
+                               input->add_Child(std::make_shared<Node>(addinput) );
+                           }
+                           ,_val, _1)] >>
+            *( ('-' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
+                                           {
+                                               input->add_ChildQi(addinput);
+                                           }
+                                           ,_val, _1)]) |
+              ('+' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
+                                          {
+                                              input->add_ChildQi(addinput);
+                                          }
+                                          ,_val, _1)]) );
+            
+            multexpr = qi::double_[_val = phx::new_<Constant>(2)];
+            
             
             //            sumexpr = eps[_val = phx::new_<Node>("add")] >>
             //            eps[phx::bind(&Node::addLeaf,_val,new Node("null",true))] >>
