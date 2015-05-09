@@ -1,10 +1,10 @@
+// BoilerPlate licence
+//  Created by Collins, James B. on 4/30/15.
 //
-//  Grammar.h
-//  b2Test
 //
-//  Created by Collins, James B. on 5/4/15.
-//  Copyright (c) 2015 West Texas A&M University. All rights reserved.
-//
+// grammar.h:  Defines the grammar for the parser.
+
+
 
 #ifndef b2Test_Grammar_h
 #define b2Test_Grammar_h
@@ -235,17 +235,17 @@ namespace parser
              // 2.a Before parsing, create _val = ExpOperator
              eps[_val = phx::new_<ExpOperator>()] >>
              // 2.b Add variable as base to _val
-             var[ phx::bind( [](Node* input, int varnum)
+             var[ phx::bind( [](Node* input, int varnum, std::vector<std::shared_ptr<Variable> > input_vector)
                             {
-                                input->AddChild(std::make_shared<Variable>(varnum));
+                                input->AddChild(input_vector[varnum] );
                             }
-                            ,_val, _1)] >>
+                            ,_val, _1, variable_nodes)] >>
              // 2.c Possibly parse exponent with '^' notation and set exp in _val
-             -('^' >> qi::int_[ phx::bind( [](Node* input, int expinput)
-                                          {
-                                              dynamic_cast<ExpOperator*>(input)->set_exponent(expinput);
-                                          }
-                                          ,_val, _1)]) >>
+             -( '^' >> qi::int_[ phx::bind( [](Node* input, int expinput)
+                              {
+                                  dynamic_cast<ExpOperator*>(input)->set_exponent(expinput);
+                              }
+                              ,_val, _1)] ) >>
              // 2.d Erase ExpOp if exp = 1(i.e. no real exponentiation happening)
              eps[ phx::bind( [](Node* &input)
                             {

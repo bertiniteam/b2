@@ -7,8 +7,19 @@
 //
 
 #include <iostream>
+#include <vector>
 
-#include "Node.h"
+#include "variable.h"
+
+
+// Obviously a bad idea :-)
+std::vector<std::shared_ptr<Variable> > variable_nodes;
+
+
+
+#include "grammar.h"
+
+#include "node.h"
 #include "sum_operator.h"
 #include "mult_operator.h"
 #include "negate_operator.h"
@@ -16,43 +27,119 @@
 
 
 
+
+
+////////// TESTING /////////////
+int Node::tabcount = 0;
+////////// TESTING /////////////
+
+
 int main()
 {
-    std::cout << "Hello World!\n";
+    std::cout.precision(10);
     
-    std::unique_ptr<Node> num1 = std::make_unique<Constant>();
-    std::unique_ptr<Node> num2 = std::make_unique<Constant>();
-    num1->set<dbl>(3.3);
-    num1->set<mpfr>(-3.3);
-    num2->set<dbl>(4.3);
-    num2->set<mpfr>(-4.3);
+    // 1. Read in the variables //
+    std::cout << "/////////////////////////////////////////////////////////\n\n";
+    std::cout << "\t\tPolynomial Parser\n\n";
+    std::cout << "/////////////////////////////////////////////////////////\n\n";
+    std::cout << "Enter your symbols separated by commas ...or [q or Q] to quit\n\n";
     
-    std::unique_ptr<Node> add = std::make_unique<SumOperator>();
-    dynamic_cast<SumOperator*>(add.get())->AddChild(std::move(num1), true);
-    dynamic_cast<SumOperator*>(add.get())->AddChild(std::move(num2), false);
-
-    std::unique_ptr<Node> num3 = std::make_unique<Constant>();
-    std::unique_ptr<Node> num4 = std::make_unique<Constant>();
-    std::unique_ptr<Node> negop = std::make_unique<NegateOperator>();
-    num3->set<dbl>(3.3);
-    num3->set<mpfr>(-3.3);
-    num4->set<dbl>(4.3);
-    num4->set<mpfr>(-4.3);
-
-    std::unique_ptr<Node> mult= std::make_unique<MultOperator>();
-    negop->AddChild(std::move(num3));
-    mult->AddChild(std::move(negop));
-    mult->AddChild(std::move(num4));
+    typedef std::string::const_iterator iterator_type;
+    typedef parser::variables<iterator_type> variables;
+    typedef parser::polynomial<iterator_type> polys;
     
-//
-    auto value = mult->Eval<dbl>();
-    for (int ii = 0; ii < 10; ++ii)
+    variables var_parser;
+    
+    std::string str;
+    std::getline(std::cin, str);
+    if (str.empty() || str[0] == 'q' || str[0] == 'Q')
+        return 0;
+    
+    iterator_type it = str.begin();
+    iterator_type end = str.end();
+    phrase_parse(it,end,var_parser,parser::ascii::space);
+    
+    for (int ii = 0; ii < parser::varcount; ++ii)
     {
-        value = mult->Eval<dbl>();
+        double variable_input;
+        std::cout << "Variable " << ii << " = ";
+        std::getline(std::cin,str);
+        variable_input = std::stod(str);
+        Variable new_variable(variable_input);
+        variable_nodes.push_back(std::make_shared<Variable>(variable_input) );
     }
-//
-    std::cout << value << std::endl;
     
+    
+    
+    // 2. Main loop //
+    std::cout << "/////////////////////////////////////////////////////////\n\n";
+    std::cout << "Enter your polynomial ...or\n";
+    std::cout << "Enter e to evaluate a polynomial...or\n";
+    std::cout << "Enter s to set the variables again...or\n";
+    std::cout << "Enter [q or Q] to quit\n\n";
+    
+    polys poly_parser;
+    Node* test_function{nullptr};
+    while (std::getline(std::cin, str))
+    {
+        if (str[0] == 'q' || str[0] == 'Q')
+        {
+            break;
+        }
+        else if(str[0] == 'e')
+        {
+            if(test_function != nullptr)
+            {
+                std::cout << "test_function  =  " << test_function->Eval<dbl>() << std::endl;
+                std::cout << "test_function tree is:\n";
+                test_function->PrintTree();
+            }
+            else
+            {
+                std::cout << "No function defined!\n";
+            }
+            continue;
+        }
+        else if(str[0] == 's')
+        {
+            for (int ii = 0; ii < parser::varcount; ++ii)
+            {
+                double variable_input;
+                std::cout << "Variable " << ii << " = ";
+                std::getline(std::cin,str);
+                variable_input = std::stod(str);
+                variable_nodes[ii]->set_current_value<dbl>(variable_input);
+            }
+            test_function->Reset<dbl>();
+            continue;
+        }
+        
+        
+        std::string::const_iterator iter = str.begin();
+        std::string::const_iterator end = str.end();
+
+        bool r = phrase_parse(iter, end, poly_parser,parser::ascii::space, test_function);
+        if (r && iter == end)
+        {
+            std::cout << "-------------------------\n";
+            std::cout << "Parsing succeeded\n";
+            //            std::cout << "result = " << result << std::endl;
+            std::cout << "-------------------------\n";
+        }
+        else
+        {
+            std::string rest(iter, end);
+            std::cout << "-------------------------\n";
+            std::cout << "Parsing failed\n";
+            std::cout << "stopped at: \": " << rest << "\"\n";
+            std::cout << "-------------------------\n";
+        }
+        
+        
+        std::cout << "test_function  =  " << test_function->Eval<dbl>() << std::endl;
+        std::cout << "test_function tree is:\n";
+        test_function->PrintTree();
+    }
     
     return 0;
 }
