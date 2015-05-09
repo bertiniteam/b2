@@ -111,7 +111,7 @@ namespace parser
                                               tempNeg->AddChild(std::shared_ptr<Node>(addinput));
                                               dynamic_cast<SumOperator*>(input)->AddChild(std::shared_ptr<Node>(tempNeg));
                                           }
-                                          ,_val, _1)]) >>
+                                          ,_val, _1)] ) >>
             // 3. Add other terms to _val
             // 3.a If '-' in front, add as negative term
             *( ('-' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
@@ -136,7 +136,7 @@ namespace parser
                                    input = temp;
                                }
                            },_val)];
-
+            /////////// TERMS(sumexpr) ////////////////
             
             
             
@@ -169,15 +169,25 @@ namespace parser
                                      input = temp;
                                  }
                              },_val)];
-
+            /////////// FACTORS(multexpr) ////////////////
+            
+            
+            
+            
+            
             
             /////////// BASE OR PARENS(subexpr) ////////////////
             // Either a symbol(see base for def) or something in parenthesis.
             // NOTE: Can be anything in parenthesis
             subexpr = base[_val = _1] | parenexpr[_val = _1];
+            /////////// BASE OR PARENS(subexpr) ////////////////
             
             
-            /////////// PARENS WITH EXP ////////////////
+            
+            
+            
+            
+            /////////// PARENS WITH EXP(parenexpr) ////////////////
             // Anything in parenthesis possibly raised to power with '^'.  Uses recurence with sumexpr to parse
             // expression within parenthesis.
             
@@ -207,6 +217,9 @@ namespace parser
                                    input = temp;
                                }
                            },_val)];
+            /////////// PARENS WITH EXP(parenexpr) ////////////////
+            
+            
             
             
             
@@ -245,6 +258,7 @@ namespace parser
                                 }
                             },_val)]
              );
+            /////////// NUMBER OR VARIABLE WITH EXP(base) ////////////////
         }
     };
 }

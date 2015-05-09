@@ -95,7 +95,7 @@ public:
         {
             std::cout << "\t";
         }
-        std::cout << boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->Eval<dbl>()<< std::endl;
+        std::cout << tabcount+1 << "." << boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->Eval<dbl>()<< std::endl;
     }
     
     ////////////TESTING////////////////
