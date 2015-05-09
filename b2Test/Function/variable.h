@@ -30,6 +30,18 @@ public:
     
     // These do nothing for a constant
     std::string PrintNode() override {return "";}
+    
+    
+    
+    
+    
+    // This sets the value for the variable
+    template <typename T>
+    void set_current_value(T val)
+    {
+        std::get< std::pair<T,bool> >(current_value_).first = val;
+        std::get< std::pair<T,bool> >(current_value_).second = false;
+    }
 
 
 

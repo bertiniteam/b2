@@ -22,7 +22,7 @@ class UnaryOperator : public Node
 public:
     virtual void AddChild(std::shared_ptr<Node> child) override
     {
-        children_ = std::move(child);
+        children_ = child;
     }
     
     
