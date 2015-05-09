@@ -9,10 +9,10 @@
 #include <iostream>
 
 #include "Node.h"
-#include "SumOperator.h"
-#include "MultOperator.h"
-#include "NegateOperator.h"
-#include "Constant.h"
+#include "sum_operator.h"
+#include "mult_operator.h"
+#include "negate_operator.h"
+#include "constant.h"
 
 
 
@@ -28,8 +28,8 @@ int main()
     num2->set<mpfr>(-4.3);
     
     std::unique_ptr<Node> add = std::make_unique<SumOperator>();
-    dynamic_cast<SumOperator*>(add.get())->add_Child(std::move(num1), true);
-    dynamic_cast<SumOperator*>(add.get())->add_Child(std::move(num2), false);
+    dynamic_cast<SumOperator*>(add.get())->AddChild(std::move(num1), true);
+    dynamic_cast<SumOperator*>(add.get())->AddChild(std::move(num2), false);
 
     std::unique_ptr<Node> num3 = std::make_unique<Constant>();
     std::unique_ptr<Node> num4 = std::make_unique<Constant>();
@@ -40,15 +40,15 @@ int main()
     num4->set<mpfr>(-4.3);
 
     std::unique_ptr<Node> mult= std::make_unique<MultOperator>();
-    negop->add_Child(std::move(num3));
-    mult->add_Child(std::move(negop));
-    mult->add_Child(std::move(num4));
+    negop->AddChild(std::move(num3));
+    mult->AddChild(std::move(negop));
+    mult->AddChild(std::move(num4));
     
 //
-    auto value = mult->eval<dbl>();
+    auto value = mult->Eval<dbl>();
     for (int ii = 0; ii < 10; ++ii)
     {
-        value = mult->eval<dbl>();
+        value = mult->Eval<dbl>();
     }
 //
     std::cout << value << std::endl;

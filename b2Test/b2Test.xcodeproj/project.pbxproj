@@ -33,23 +33,23 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		873D91BB1AFC757F00F32E03 /* ExpOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExpOperator.h; sourceTree = "<group>"; };
-		873D91BC1AFD0CF500F32E03 /* Variable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Variable.h; sourceTree = "<group>"; };
+		873D91BB1AFC757F00F32E03 /* exp_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = exp_operator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		873D91BC1AFD0CF500F32E03 /* variable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = variable.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		87EC867E1AF32ECE002FAC3D /* b2Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = b2Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		87EC86811AF32ECE002FAC3D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		87EC868C1AF32EE2002FAC3D /* Function */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Function; sourceTree = BUILT_PRODUCTS_DIR; };
 		87EC86931AF330B6002FAC3D /* FunctionTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FunctionTest.cpp; sourceTree = "<group>"; };
-		87EC86961AF330F1002FAC3D /* Node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Node.h; sourceTree = "<group>"; };
-		87EC86981AF33FD8002FAC3D /* NaryOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NaryOperator.h; sourceTree = "<group>"; };
-		87EC86991AF340E4002FAC3D /* Symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Symbol.h; sourceTree = "<group>"; };
-		87EC869A1AF3413B002FAC3D /* Constant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Constant.h; sourceTree = "<group>"; };
-		87EC869D1AF34613002FAC3D /* SumOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SumOperator.h; sourceTree = "<group>"; };
-		87EC869E1AF346BA002FAC3D /* MultOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MultOperator.h; sourceTree = "<group>"; };
-		87EC86A01AF429D7002FAC3D /* BinaryOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BinaryOperator.h; sourceTree = "<group>"; };
-		87EC86A11AF42AAA002FAC3D /* DivideOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DivideOperator.h; sourceTree = "<group>"; };
-		87EC86A31AF43370002FAC3D /* UnaryOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnaryOperator.h; sourceTree = "<group>"; };
-		87EC86A41AF433CE002FAC3D /* NegateOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NegateOperator.h; sourceTree = "<group>"; };
-		87EC86A51AF530BE002FAC3D /* Operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Operator.h; sourceTree = "<group>"; };
+		87EC86961AF330F1002FAC3D /* node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = node.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		87EC86981AF33FD8002FAC3D /* nary_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = nary_operator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		87EC86991AF340E4002FAC3D /* symbol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = symbol.h; sourceTree = "<group>"; };
+		87EC869A1AF3413B002FAC3D /* constant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = constant.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		87EC869D1AF34613002FAC3D /* sum_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = sum_operator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		87EC869E1AF346BA002FAC3D /* mult_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = mult_operator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		87EC86A01AF429D7002FAC3D /* binary_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = binary_operator.h; sourceTree = "<group>"; };
+		87EC86A11AF42AAA002FAC3D /* divide_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = divide_operator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		87EC86A31AF43370002FAC3D /* unary_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = unary_operator.h; sourceTree = "<group>"; };
+		87EC86A41AF433CE002FAC3D /* negate_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = negate_operator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		87EC86A51AF530BE002FAC3D /* operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = operator.h; sourceTree = "<group>"; };
 		87EC86A61AF7E25C002FAC3D /* ParseTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParseTest.cpp; sourceTree = "<group>"; };
 		87EC86A91AF7E2F2002FAC3D /* Grammar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Grammar.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -104,9 +104,9 @@
 				87EC86A61AF7E25C002FAC3D /* ParseTest.cpp */,
 				87EC86A81AF7E2BB002FAC3D /* Grammar */,
 				87EC86931AF330B6002FAC3D /* FunctionTest.cpp */,
-				87EC86961AF330F1002FAC3D /* Node.h */,
-				87EC86A51AF530BE002FAC3D /* Operator.h */,
-				87EC86991AF340E4002FAC3D /* Symbol.h */,
+				87EC86961AF330F1002FAC3D /* node.h */,
+				87EC86A51AF530BE002FAC3D /* operator.h */,
+				87EC86991AF340E4002FAC3D /* symbol.h */,
 				87EC869C1AF34602002FAC3D /* Nary Operators */,
 				87EC869F1AF429C4002FAC3D /* BinaryOperators */,
 				87EC86A21AF4335F002FAC3D /* UnaryOperators */,
@@ -118,8 +118,8 @@
 		87EC869B1AF341F6002FAC3D /* Symbols */ = {
 			isa = PBXGroup;
 			children = (
-				87EC869A1AF3413B002FAC3D /* Constant.h */,
-				873D91BC1AFD0CF500F32E03 /* Variable.h */,
+				87EC869A1AF3413B002FAC3D /* constant.h */,
+				873D91BC1AFD0CF500F32E03 /* variable.h */,
 			);
 			name = Symbols;
 			sourceTree = "<group>";
@@ -127,9 +127,9 @@
 		87EC869C1AF34602002FAC3D /* Nary Operators */ = {
 			isa = PBXGroup;
 			children = (
-				87EC86981AF33FD8002FAC3D /* NaryOperator.h */,
-				87EC869D1AF34613002FAC3D /* SumOperator.h */,
-				87EC869E1AF346BA002FAC3D /* MultOperator.h */,
+				87EC86981AF33FD8002FAC3D /* nary_operator.h */,
+				87EC869D1AF34613002FAC3D /* sum_operator.h */,
+				87EC869E1AF346BA002FAC3D /* mult_operator.h */,
 			);
 			name = "Nary Operators";
 			sourceTree = "<group>";
@@ -137,8 +137,8 @@
 		87EC869F1AF429C4002FAC3D /* BinaryOperators */ = {
 			isa = PBXGroup;
 			children = (
-				87EC86A01AF429D7002FAC3D /* BinaryOperator.h */,
-				87EC86A11AF42AAA002FAC3D /* DivideOperator.h */,
+				87EC86A01AF429D7002FAC3D /* binary_operator.h */,
+				87EC86A11AF42AAA002FAC3D /* divide_operator.h */,
 			);
 			name = BinaryOperators;
 			sourceTree = "<group>";
@@ -146,9 +146,9 @@
 		87EC86A21AF4335F002FAC3D /* UnaryOperators */ = {
 			isa = PBXGroup;
 			children = (
-				87EC86A31AF43370002FAC3D /* UnaryOperator.h */,
-				87EC86A41AF433CE002FAC3D /* NegateOperator.h */,
-				873D91BB1AFC757F00F32E03 /* ExpOperator.h */,
+				87EC86A31AF43370002FAC3D /* unary_operator.h */,
+				87EC86A41AF433CE002FAC3D /* negate_operator.h */,
+				873D91BB1AFC757F00F32E03 /* exp_operator.h */,
 			);
 			name = UnaryOperators;
 			sourceTree = "<group>";
