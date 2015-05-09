@@ -1813,13 +1813,12 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/bind/bind_mf2_cc.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/bind/placeholders.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Node.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/SumOperator.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/NaryOperator.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/MultOperator.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/NegateOperator.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/UnaryOperator.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Operator.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/ExpOperator.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Constant.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Symbol.h \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/Variable.h
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/sum_operator.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/nary_operator.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/mult_operator.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/negate_operator.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/unary_operator.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/exp_operator.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/constant.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/symbol.h \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Function/variable.h

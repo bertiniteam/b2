@@ -11,7 +11,7 @@
 
 #include "Grammar.h"
 #include "Node.h"
-#include "SumOperator.h"
+#include "sum_operator.h"
 
 
 int Node::tabcount = 0;
@@ -60,8 +60,8 @@ int main()
         
         bool r = phrase_parse(iter, end, poly_parser,parser::ascii::space, test);
        
-        std::cout << " test.eval = " << test->eval<dbl>() << std::endl;
-        test->printTree();
+        std::cout << " test.Eval = " << test->Eval<dbl>() << std::endl;
+        test->PrintTree();
         
         if (r && iter == end)
         {
