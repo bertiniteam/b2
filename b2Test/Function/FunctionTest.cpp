@@ -12,11 +12,10 @@
 #include "variable.h"
 
 
-// Obviously a bad idea :-)
-std::vector<std::shared_ptr<Variable> > variable_nodes;
 
 
 
+//#include "old_grammar.h"
 #include "grammar.h"
 
 #include "node.h"
@@ -36,6 +35,11 @@ int Node::tabcount = 0;
 
 int main()
 {
+    
+    
+    std::vector<std::shared_ptr<Variable> > variable_nodes;
+    
+    
     std::cout.precision(10);
     
     // 1. Read in the variables //
@@ -45,10 +49,10 @@ int main()
     std::cout << "Enter your symbols separated by commas ...or [q or Q] to quit\n\n";
     
     typedef std::string::const_iterator iterator_type;
-    typedef parser::variables<iterator_type> variables;
-    typedef parser::polynomial<iterator_type> polys;
+//    typedef parser::variables<iterator_type> variables;
+//    typedef parser::polynomial<iterator_type> polys;
     
-    variables var_parser;
+    VariableParser<iterator_type> var_parser;
     
     std::string str;
     std::getline(std::cin, str);
@@ -57,9 +61,9 @@ int main()
     
     iterator_type it = str.begin();
     iterator_type end = str.end();
-    phrase_parse(it,end,var_parser,parser::ascii::space);
+    qi::phrase_parse(it,end,var_parser.start(),boost::spirit::ascii::space);
     
-    for (int ii = 0; ii < parser::varcount; ++ii)
+    for (int ii = 0; ii < var_parser.var_count(); ++ii)
     {
         double variable_input;
         std::cout << "Variable " << ii << " = ";
@@ -78,10 +82,12 @@ int main()
     std::cout << "Enter s to set the variables again...or\n";
     std::cout << "Enter [q or Q] to quit\n\n";
     
-    polys poly_parser;
+    FunctionParser<iterator_type> func_parser(&variable_nodes, var_parser.variable());
     Node* test_function{nullptr};
-    while (std::getline(std::cin, str))
+    while (true)
     {
+        std::cout << ">> ";
+        std::getline(std::cin, str);
         if (str[0] == 'q' || str[0] == 'Q')
         {
             break;
@@ -102,15 +108,16 @@ int main()
         }
         else if(str[0] == 's')
         {
-            for (int ii = 0; ii < parser::varcount; ++ii)
+            for (int ii = 0; ii < var_parser.var_count(); ++ii)
             {
                 double variable_input;
                 std::cout << "Variable " << ii << " = ";
                 std::getline(std::cin,str);
                 variable_input = std::stod(str);
-                variable_nodes[ii]->set_current_value<dbl>(variable_input);
+                variable_nodes[ii]->set_current_value(variable_input);
             }
             test_function->Reset<dbl>();
+//            func_parser.set_variable_nodes(&variable_nodes);
             continue;
         }
         
@@ -118,7 +125,7 @@ int main()
         std::string::const_iterator iter = str.begin();
         std::string::const_iterator end = str.end();
 
-        bool r = phrase_parse(iter, end, poly_parser,parser::ascii::space, test_function);
+        bool r = phrase_parse(iter, end, func_parser,boost::spirit::ascii::space, test_function);
         if (r && iter == end)
         {
             std::cout << "-------------------------\n";
