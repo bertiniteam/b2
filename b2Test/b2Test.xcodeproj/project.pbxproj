@@ -35,6 +35,8 @@
 /* Begin PBXFileReference section */
 		873D91BB1AFC757F00F32E03 /* exp_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = exp_operator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		873D91BC1AFD0CF500F32E03 /* variable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = variable.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		8744E8F41AFEBB0600BEB0A0 /* input_parser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = input_parser.h; sourceTree = "<group>"; };
+		8744E8F51AFFF49100BEB0A0 /* grammar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = grammar.h; sourceTree = "<group>"; };
 		87EC867E1AF32ECE002FAC3D /* b2Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = b2Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		87EC86811AF32ECE002FAC3D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		87EC868C1AF32EE2002FAC3D /* Function */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Function; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -50,8 +52,7 @@
 		87EC86A31AF43370002FAC3D /* unary_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = unary_operator.h; sourceTree = "<group>"; };
 		87EC86A41AF433CE002FAC3D /* negate_operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = negate_operator.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		87EC86A51AF530BE002FAC3D /* operator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = operator.h; sourceTree = "<group>"; };
-		87EC86A61AF7E25C002FAC3D /* ParseTest.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ParseTest.cpp; sourceTree = "<group>"; };
-		87EC86A91AF7E2F2002FAC3D /* grammar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = grammar.h; sourceTree = "<group>"; };
+		87EC86A91AF7E2F2002FAC3D /* old_grammar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = old_grammar.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,7 +103,6 @@
 			isa = PBXGroup;
 			children = (
 				87EC86931AF330B6002FAC3D /* FunctionTest.cpp */,
-				87EC86A61AF7E25C002FAC3D /* ParseTest.cpp */,
 				87EC86A81AF7E2BB002FAC3D /* Grammar */,
 				87EC86961AF330F1002FAC3D /* node.h */,
 				87EC86A51AF530BE002FAC3D /* operator.h */,
@@ -156,7 +156,9 @@
 		87EC86A81AF7E2BB002FAC3D /* Grammar */ = {
 			isa = PBXGroup;
 			children = (
-				87EC86A91AF7E2F2002FAC3D /* grammar.h */,
+				8744E8F41AFEBB0600BEB0A0 /* input_parser.h */,
+				8744E8F51AFFF49100BEB0A0 /* grammar.h */,
+				87EC86A91AF7E2F2002FAC3D /* old_grammar.h */,
 			);
 			name = Grammar;
 			sourceTree = "<group>";

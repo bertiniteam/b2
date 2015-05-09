@@ -59,7 +59,7 @@ public:
         auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
         if(!val_pair.second)
         {
-            //            std::cout << "Fresh Eval\n";
+            std::cout << "Fresh Eval\n";
             T input{};
             val_pair.first = FreshEval(input);
             val_pair.second = true;
