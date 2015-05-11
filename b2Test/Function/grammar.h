@@ -72,7 +72,7 @@ private:
     
     
     // Start rule used to parse variable list.
-    qi::rule<Iterator,ascii::space_type> start_ = (*qi::alnum)[boost::phoenix::bind( [this](std::vector<char> const& c)
+    qi::rule<Iterator,ascii::space_type> start_ = (*(qi::alnum | qi::char_('_')))[boost::phoenix::bind( [this](std::vector<char> const& c)
                                                                                         {
                                                                                             AddVarToRule(c);
                                                                                         }, qi::_1 ) ] % ",";
