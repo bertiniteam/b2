@@ -154,7 +154,7 @@ public:
           // 3.b If '+' in front, add as positive term
           ('+' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
                                       {
-                                          dynamic_cast<SumOperator*>(input)->AddChild(std::shared_ptr<Node>(addinput), true);
+                                          input->AddChild(std::shared_ptr<Node>(addinput));
                                       }
                                       ,_val, _1)] ) ) >>
         // 4. After done parsing, erase SumOp if there is only one term(i.e. no real summation happening)
@@ -184,12 +184,19 @@ public:
                                input->AddChild(std::shared_ptr<Node>(multinput));
                            }
                            ,_val, _1)] >>
-        // 3. Parse each factor and add to _val
-        *( '*' >> subexpr )[ phx::bind( [](Node* input, Node* multinput)
+        // 3. Add other factors to _val
+        // 3.a If '/' in front, divide factor
+        *( ('/' >> subexpr[ phx::bind( [](Node* input, Node* addinput)
                                        {
-                                           input->AddChild(std::shared_ptr<Node>(multinput));
+                                           dynamic_cast<MultOperator*>(input)->AddChild(std::shared_ptr<Node>(addinput), false);
                                        }
-                                       ,_val, _1)] >>
+                                       ,_val, _1)] ) |
+          // 3.b If '*' in front, add as positive term
+          ('*' >> subexpr[ phx::bind( [](Node* input, Node* addinput)
+                                      {
+                                          input->AddChild(std::shared_ptr<Node>(addinput));
+                                      }
+                                      ,_val, _1)] ) ) >>
         // 4. Erase MultOp if there is only one factor(i.e. no real multiplication happening)
         eps[ phx::bind( [](Node* &input)
                        {
