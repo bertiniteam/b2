@@ -63,7 +63,7 @@ namespace parser
     struct variables : qi::grammar<Iterator,ascii::space_type>
     {
         
-        variables() : variables::base_type(start)
+        variables() : variables::base__type(start)
         {
             namespace phx = boost::phoenix;
             using qi::_1;
@@ -78,14 +78,14 @@ namespace parser
     struct polynomial : qi::grammar<Iterator,Node*(),ascii::space_type>
     {
         
-        qi::rule<Iterator,Node*(),ascii::space_type> sumexpr;
-        qi::rule<Iterator,Node*(),ascii::space_type> multexpr;
-        qi::rule<Iterator,Node*(),ascii::space_type> subexpr;
-        qi::rule<Iterator,Node*(),ascii::space_type> parenexpr;
-        qi::rule<Iterator,Node*(),ascii::space_type> base;
+        qi::rule<Iterator,Node*(),ascii::space_type> sumexpr_;
+        qi::rule<Iterator,Node*(),ascii::space_type> multexpr_;
+        qi::rule<Iterator,Node*(),ascii::space_type> subexpr_;
+        qi::rule<Iterator,Node*(),ascii::space_type> parenexpr_;
+        qi::rule<Iterator,Node*(),ascii::space_type> base_;
 
         
-        polynomial() : polynomial::base_type(sumexpr)
+        polynomial() : polynomial::base__type(sumexpr_)
         {
             namespace phx = boost::phoenix;
             using qi::_1;
@@ -93,19 +93,19 @@ namespace parser
             using qi::eps;
             
             
-            /////////// TERMS(sumexpr) ////////////////
+            /////////// TERMS(sumexpr_) ////////////////
             // Parses a list of terms(see FACTORS for def) separated by '+' or '-'
             
             // 1. Before start parsing, create a SumOperator
-            sumexpr = (qi::eps)[_val = phx::new_<SumOperator>()] >>
+            sumexpr_ = (qi::eps)[_val = phx::new_<SumOperator>()] >>
             // 2.a Add first term to _val
-            ( multexpr[ phx::bind( [](Node* input, Node* addinput)
+            ( multexpr_[ phx::bind( [](Node* input, Node* addinput)
                            {
                                dynamic_cast<SumOperator*>(input)->AddChild(std::shared_ptr<Node>(addinput), true);
                            }
                            ,_val, _1)] |
              // 2.b Create Negate and add first term to it, add Negate to _val
-             ( '-'>> multexpr)[ phx::bind( [](Node* input, Node* addinput)
+             ( '-'>> multexpr_)[ phx::bind( [](Node* input, Node* addinput)
                                           {
                                               std::shared_ptr<NegateOperator> tempNeg = std::make_shared<NegateOperator>();
                                               tempNeg->AddChild(std::shared_ptr<Node>(addinput));
@@ -114,13 +114,13 @@ namespace parser
                                           ,_val, _1)] ) >>
             // 3. Add other terms to _val
             // 3.a If '-' in front, add as negative term
-            *( ('-' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
+            *( ('-' >> multexpr_[ phx::bind( [](Node* input, Node* addinput)
                                            {
                                                dynamic_cast<SumOperator*>(input)->AddChild(std::shared_ptr<Node>(addinput), false);
                                            }
                                            ,_val, _1)] ) |
             // 3.b If '+' in front, add as positive term
-              ('+' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
+              ('+' >> multexpr_[ phx::bind( [](Node* input, Node* addinput)
                                           {
                                               dynamic_cast<SumOperator*>(input)->AddChild(std::shared_ptr<Node>(addinput), true);
                                           }
@@ -136,24 +136,24 @@ namespace parser
                                    input = temp;
                                }
                            },_val)];
-            /////////// TERMS(sumexpr) ////////////////
+            /////////// TERMS(sumexpr_) ////////////////
             
             
             
             
-            /////////// FACTORS(multexpr) ////////////////
+            /////////// FACTORS(multexpr_) ////////////////
             // Parses a list of factors(see BASE OR PARENS for def) separated by '*'
             
             // 1. Before parsing, create a _val = MultOperator
-            multexpr = eps[_val = phx::new_<MultOperator>()] >>
+            multexpr_ = eps[_val = phx::new_<MultOperator>()] >>
             // 2. Add first factor to _val
-            subexpr[ phx::bind( [](Node* input, Node* multinput)
+            subexpr_[ phx::bind( [](Node* input, Node* multinput)
                                {
                                    input->AddChild(std::shared_ptr<Node>(multinput));
                                }
                                ,_val, _1)] >>
             // 3. Parse each factor and add to _val
-            *( '*' >> subexpr )[ phx::bind( [](Node* input, Node* multinput)
+            *( '*' >> subexpr_ )[ phx::bind( [](Node* input, Node* multinput)
                                            {
                                                input->AddChild(std::shared_ptr<Node>(multinput));
                                            }
@@ -169,32 +169,32 @@ namespace parser
                                      input = temp;
                                  }
                              },_val)];
-            /////////// FACTORS(multexpr) ////////////////
+            /////////// FACTORS(multexpr_) ////////////////
             
             
             
             
             
             
-            /////////// BASE OR PARENS(subexpr) ////////////////
-            // Either a symbol(see base for def) or something in parenthesis.
+            /////////// BASE OR PARENS(subexpr_) ////////////////
+            // Either a symbol(see base_ for def) or something in parenthesis.
             // NOTE: Can be anything in parenthesis
-            subexpr = base[_val = _1] | parenexpr[_val = _1];
-            /////////// BASE OR PARENS(subexpr) ////////////////
+            subexpr_ = base_[_val = _1] | parenexpr_[_val = _1];
+            /////////// BASE OR PARENS(subexpr_) ////////////////
             
             
             
             
             
             
-            /////////// PARENS WITH EXP(parenexpr) ////////////////
-            // Anything in parenthesis possibly raised to power with '^'.  Uses recurence with sumexpr to parse
+            /////////// PARENS WITH EXP(parenexpr_) ////////////////
+            // Anything in parenthesis possibly raised to power with '^'.  Uses recurence with sumexpr_ to parse
             // expression within parenthesis.
             
             // 1. Before parsing, create _val = ExpOperator
-            parenexpr = eps[_val = phx::new_<ExpOperator>()] >>
+            parenexpr_ = eps[_val = phx::new_<ExpOperator>()] >>
             // 2. Parse something inside parens and add to _val
-            '(' >> sumexpr[ phx::bind( [](Node* input, Node* addinput)
+            '(' >> sumexpr_[ phx::bind( [](Node* input, Node* addinput)
                                       {
                                           input->AddChild(std::shared_ptr<Node>(addinput));
                                       }
@@ -217,7 +217,7 @@ namespace parser
                                    input = temp;
                                }
                            },_val)];
-            /////////// PARENS WITH EXP(parenexpr) ////////////////
+            /////////// PARENS WITH EXP(parenexpr_) ////////////////
             
             
             
@@ -225,16 +225,16 @@ namespace parser
             
             
             
-            /////////// NUMBER OR VARIABLE WITH EXP(base) ////////////////
+            /////////// NUMBER OR VARIABLE WITH EXP(base_) ////////////////
             // These are the symbols or leaves in the function tree.
             
             // 1. Any double number.  TODO(JBC): Change with MPFR parser!!!
-            base =  qi::double_[_val = phx::new_<Constant>(_1)]  |
+            base_ =  qi::double_[_val = phx::new_<Constant>(_1)]  |
             // 2. A variable possibly raise to a power with '^'.
             (
              // 2.a Before parsing, create _val = ExpOperator
              eps[_val = phx::new_<ExpOperator>()] >>
-             // 2.b Add variable as base to _val
+             // 2.b Add variable as base_ to _val
              var[ phx::bind( [](Node* input, int varnum, std::vector<std::shared_ptr<Variable> > input_vector)
                             {
                                 input->AddChild(input_vector[varnum] );
@@ -258,7 +258,7 @@ namespace parser
                                 }
                             },_val)]
              );
-            /////////// NUMBER OR VARIABLE WITH EXP(base) ////////////////
+            /////////// NUMBER OR VARIABLE WITH EXP(base_) ////////////////
         }
     };
 }

@@ -9,20 +9,16 @@
 #include <iostream>
 #include <vector>
 
-#include "variable.h"
 
-
-
-
-
-//#include "old_grammar.h"
 #include "grammar.h"
 
 #include "node.h"
+#include "function.h"
 #include "sum_operator.h"
 #include "mult_operator.h"
 #include "negate_operator.h"
 #include "constant.h"
+#include "variable.h"
 
 
 
@@ -83,7 +79,8 @@ int main()
     std::cout << "Enter [q or Q] to quit\n\n";
     
     FunctionParser<iterator_type> func_parser(&variable_nodes, var_parser.variable());
-    Node* test_function{nullptr};
+    Node* parse_ret{nullptr};
+//    Function test_function(nullptr);
     while (true)
     {
         std::cout << ">> ";
@@ -94,11 +91,11 @@ int main()
         }
         else if(str[0] == 'e')
         {
-            if(test_function != nullptr)
+            if(parse_ret != nullptr)
             {
-                std::cout << "test_function  =  " << test_function->Eval<dbl>() << std::endl;
+                std::cout << "test_function  =  " << parse_ret->Eval<dbl>() << std::endl;
                 std::cout << "test_function tree is:\n";
-                test_function->PrintTree();
+                parse_ret->PrintTree();
             }
             else
             {
@@ -116,8 +113,7 @@ int main()
                 variable_input = std::stod(str);
                 variable_nodes[ii]->set_current_value(variable_input);
             }
-            test_function->Reset<dbl>();
-//            func_parser.set_variable_nodes(&variable_nodes);
+            parse_ret->Reset<dbl>();
             continue;
         }
         
@@ -125,7 +121,9 @@ int main()
         std::string::const_iterator iter = str.begin();
         std::string::const_iterator end = str.end();
 
-        bool r = phrase_parse(iter, end, func_parser,boost::spirit::ascii::space, test_function);
+//        test_function.entry_node().reset();
+        bool r = phrase_parse(iter, end, func_parser,boost::spirit::ascii::space, parse_ret);
+//        test_function.AddChild(std::move(parse_ret) );
         if (r && iter == end)
         {
             std::cout << "-------------------------\n";
@@ -143,9 +141,9 @@ int main()
         }
         
         
-        std::cout << "test_function  =  " << test_function->Eval<dbl>() << std::endl;
+        std::cout << "test_function  =  " << parse_ret->Eval<dbl>() << std::endl;
         std::cout << "test_function tree is:\n";
-        test_function->PrintTree();
+        parse_ret->PrintTree();
     }
     
     return 0;

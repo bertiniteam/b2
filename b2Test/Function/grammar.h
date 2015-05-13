@@ -1,9 +1,27 @@
-// BoilerPlate licence
+//This file is part of Bertini 2.0.
+//
+//Foobar is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//Foobar is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//
 //  Created by Collins, James B. on 4/30/15.
 //
 //
 // grammar.h:  This file contains all the grammars used to parse an input file.
 //          Variable, Function
+//
+//      TODO:(JBC) Make these Parser classes/structs consistent.  Either they all inherit
+// from qi::grammar, or they all contain a struct the inherits from grammar.  Right now
+// VariableParser does the second, and Function Parser does the first.
 
 #ifndef b2Test_grammar_h
 #define b2Test_grammar_h
@@ -115,7 +133,7 @@ struct FunctionParser : qi::grammar<Iterator,Node*(),boost::spirit::ascii::space
 
 public:
     FunctionParser(const std::vector<std::shared_ptr<Variable> >* input_variables, qi::symbols<char,int> variable_) :
-        FunctionParser::base_type(sumexpr)
+        FunctionParser::base_type(sumexpr_)
     {
         namespace phx = boost::phoenix;
         using qi::_1;
@@ -125,19 +143,40 @@ public:
         
         
         
-        /////////// TERMS(sumexpr) ////////////////
+        //      TODO:(JBC) Currently the function parser is a factory for creating raw pointers using phoenix(phx::new_).
+        // We need to check is we can use shared_ptr with Qi.  If not, check if we can use C++ new as we know more of how
+        // that works.
+        //      If tried having Qi return shared_ptr<Node> and it wouldn't compile.  I may have missed something though.
+        // I've also tried using C++ new and Qi tried to create two copies of everything.  That was before I used lambdas
+        // to do actions though.  With lambda, the C++ new might work better
+        //
+        //      TODO:(JBC) If SumOperator has only one term, I delete the SumOperator node and just keep the term.  I do
+        // this with a raw delete, and I'm pretty sure that's not good.  Need to look into this and see if there is a
+        // better way.
+        //
+        //      TODO:(JBC) When everything is up and running, need to check if compile times are prohibitively long due to
+        // the many lambdas and actions done within the parser itself.  Some options that can be taken out are deleting
+        // a SumOperator or MultOperator when only a single term or factor is present.  This could be done in post-processing if
+        // compile times are getting too long.
+        //
+        //      TODO:(JBC) Generalize the parser to be able to read anything Matlab can read.  For example, we need to allow
+        // the parser to read 4 +-9 as -5.  Right now multiple operators together cannot be parsed.  Determine all other
+        // possibilities allowed by Matlab and add them to the parser.
+        
+        
+        /////////// TERMS(sumexpr_) ////////////////
         // Parses a list of terms(see FACTORS for def) separated by '+' or '-'
         
         // 1. Before start parsing, create a SumOperator
-        sumexpr = (qi::eps)[_val = phx::new_<SumOperator>()] >>
+        sumexpr_ = (qi::eps)[_val = phx::new_<SumOperator>()] >>
         // 2.a Add first term to _val
-        ( multexpr[ phx::bind( [](Node* input, Node* addinput)
+        ( multexpr_[ phx::bind( [](Node* input, Node* addinput)
                               {
                                   dynamic_cast<SumOperator*>(input)->AddChild(std::shared_ptr<Node>(addinput), true);
                               }
                               ,_val, _1)] |
          // 2.b Create Negate and add first term to it, add Negate to _val
-         ( '-'>> multexpr)[ phx::bind( [](Node* input, Node* addinput)
+         ( '-'>> multexpr_)[ phx::bind( [](Node* input, Node* addinput)
                                       {
                                           std::shared_ptr<NegateOperator> tempNeg = std::make_shared<NegateOperator>();
                                           tempNeg->AddChild(std::shared_ptr<Node>(addinput));
@@ -146,13 +185,13 @@ public:
                                       ,_val, _1)] ) >>
         // 3. Add other terms to _val
         // 3.a If '-' in front, add as negative term
-        *( ('-' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
+        *( ('-' >> multexpr_[ phx::bind( [](Node* input, Node* addinput)
                                        {
                                            dynamic_cast<SumOperator*>(input)->AddChild(std::shared_ptr<Node>(addinput), false);
                                        }
                                        ,_val, _1)] ) |
           // 3.b If '+' in front, add as positive term
-          ('+' >> multexpr[ phx::bind( [](Node* input, Node* addinput)
+          ('+' >> multexpr_[ phx::bind( [](Node* input, Node* addinput)
                                       {
                                           input->AddChild(std::shared_ptr<Node>(addinput));
                                       }
@@ -168,31 +207,31 @@ public:
                                input = temp;
                            }
                        },_val)];
-        /////////// TERMS(sumexpr) ////////////////
+        /////////// TERMS(sumexpr_) ////////////////
         
         
         
         
-        /////////// FACTORS(multexpr) ////////////////
+        /////////// FACTORS(multexpr_) ////////////////
         // Parses a list of factors(see BASE OR PARENS for def) separated by '*'
         
         // 1. Before parsing, create a _val = MultOperator
-        multexpr = eps[_val = phx::new_<MultOperator>()] >>
+        multexpr_ = eps[_val = phx::new_<MultOperator>()] >>
         // 2. Add first factor to _val
-        subexpr[ phx::bind( [](Node* input, Node* multinput)
+        subexpr_[ phx::bind( [](Node* input, Node* multinput)
                            {
                                input->AddChild(std::shared_ptr<Node>(multinput));
                            }
                            ,_val, _1)] >>
         // 3. Add other factors to _val
         // 3.a If '/' in front, divide factor
-        *( ('/' >> subexpr[ phx::bind( [](Node* input, Node* addinput)
+        *( ('/' >> subexpr_[ phx::bind( [](Node* input, Node* addinput)
                                        {
                                            dynamic_cast<MultOperator*>(input)->AddChild(std::shared_ptr<Node>(addinput), false);
                                        }
                                        ,_val, _1)] ) |
           // 3.b If '*' in front, add as positive term
-          ('*' >> subexpr[ phx::bind( [](Node* input, Node* addinput)
+          ('*' >> subexpr_[ phx::bind( [](Node* input, Node* addinput)
                                       {
                                           input->AddChild(std::shared_ptr<Node>(addinput));
                                       }
@@ -208,32 +247,32 @@ public:
                                input = temp;
                            }
                        },_val)];
-        /////////// FACTORS(multexpr) ////////////////
+        /////////// FACTORS(multexpr_) ////////////////
         
         
         
         
         
         
-        /////////// BASE OR PARENS(subexpr) ////////////////
-        // Either a symbol(see base for def) or something in parenthesis.
+        /////////// BASE OR PARENS(subexpr_) ////////////////
+        // Either a symbol(see base_ for def) or something in parenthesis.
         // NOTE: Can be anything in parenthesis
-        subexpr = base[_val = _1] | parenexpr[_val = _1];
-        /////////// BASE OR PARENS(subexpr) ////////////////
+        subexpr_ = base_[_val = _1] | parenexpr_[_val = _1];
+        /////////// BASE OR PARENS(subexpr_) ////////////////
         
         
         
         
         
         
-        /////////// PARENS WITH EXP(parenexpr) ////////////////
-        // Anything in parenthesis possibly raised to power with '^'.  Uses recurence with sumexpr to parse
+        /////////// PARENS WITH EXP(parenexpr_) ////////////////
+        // Anything in parenthesis possibly raised to power with '^'.  Uses recurence with sumexpr_ to parse
         // expression within parenthesis.
         
         // 1. Before parsing, create _val = ExpOperator
-        parenexpr = eps[_val = phx::new_<ExpOperator>()] >>
+        parenexpr_ = eps[_val = phx::new_<ExpOperator>()] >>
         // 2. Parse something inside parens and add to _val
-        '(' >> sumexpr[ phx::bind( [](Node* input, Node* addinput)
+        '(' >> sumexpr_[ phx::bind( [](Node* input, Node* addinput)
                                   {
                                       input->AddChild(std::shared_ptr<Node>(addinput));
                                   }
@@ -256,7 +295,7 @@ public:
                                input = temp;
                            }
                        },_val)];
-        /////////// PARENS WITH EXP(parenexpr) ////////////////
+        /////////// PARENS WITH EXP(parenexpr_) ////////////////
         
         
         
@@ -264,16 +303,16 @@ public:
         
         
         
-        /////////// NUMBER OR VARIABLE WITH EXP(base) ////////////////
+        /////////// NUMBER OR VARIABLE WITH EXP(base_) ////////////////
         // These are the symbols or leaves in the function tree.
         
         // 1. Any double number.  TODO(JBC): Change with MPFR parser!!!
-        base =  qi::double_[_val = phx::new_<Constant>(_1)]  |
+        base_ =  mpfr_constant_[_val = phx::new_<Constant>(_1)]  |
         // 2. A variable possibly raise to a power with '^'.
         (
          // 2.a Before parsing, create _val = ExpOperator
          eps[_val = phx::new_<ExpOperator>()] >>
-         // 2.b Add variable as base to _val
+         // 2.b Add variable as base_ to _val
          variable_[ phx::bind( [](Node* input, int varnum, std::vector<std::shared_ptr<Variable> > input_vector)
                         {
                             input->AddChild(input_vector[varnum] );
@@ -297,8 +336,24 @@ public:
                             }
                         },_val)]
          );
-        /////////// NUMBER OR VARIABLE WITH EXP(base) ////////////////
+        /////////// NUMBER OR VARIABLE WITH EXP(base_) ////////////////
 
+        
+        
+        
+        
+        
+        /////////// MPFR Constant(mpfr_constant_) ////////////////
+        mpfr_constant_ = eps[_val = std::string()] >>
+        (
+         // 1. Read possible numbers before decimal, with possible negative
+         -(qi::lit('-')[_val += "-"]) >> *(qi::char_(L'0',L'9')[_val += _1]) >>
+         // 2. Read possible numbers after the decimal
+         -(qi::lit('.')[_val += "."]  >>  *(qi::char_(L'0',L'9')[_val += _1])) >>
+         // 3. Possible scientific notation, with possible negative in exponent.
+         -(qi::lit('e')[_val += "e"] >> -(qi::lit('-')[_val += "-"]) >> *(qi::char_(L'0',L'9')[_val += _1]) )
+         );
+        /////////// MPFR Constant(mpfr_constant_) ////////////////
     }
     
     
@@ -309,11 +364,12 @@ public:
 private:
     
     
-    qi::rule<Iterator,Node*(),ascii::space_type> sumexpr;
-    qi::rule<Iterator,Node*(),ascii::space_type> multexpr;
-    qi::rule<Iterator,Node*(),ascii::space_type> subexpr;
-    qi::rule<Iterator,Node*(),ascii::space_type> parenexpr;
-    qi::rule<Iterator,Node*(),ascii::space_type> base;
+    qi::rule<Iterator,Node*(),ascii::space_type> sumexpr_;
+    qi::rule<Iterator,Node*(),ascii::space_type> multexpr_;
+    qi::rule<Iterator,Node*(),ascii::space_type> subexpr_;
+    qi::rule<Iterator,Node*(),ascii::space_type> parenexpr_;
+    qi::rule<Iterator,Node*(),ascii::space_type> base_;
+    qi::rule<Iterator,std::string()> mpfr_constant_;
 
 };
 
