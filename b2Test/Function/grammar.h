@@ -307,7 +307,7 @@ public:
         // These are the symbols or leaves in the function tree.
         
         // 1. Any double number.  TODO(JBC): Change with MPFR parser!!!
-        base_ =  mpfr_constant_[_val = phx::new_<Constant>(_1)]  |
+        base_ =
         // 2. A variable possibly raise to a power with '^'.
         (
          // 2.a Before parsing, create _val = ExpOperator
@@ -335,7 +335,8 @@ public:
                                 input = temp;
                             }
                         },_val)]
-         );
+         ) |
+        mpfr_constant_[_val = phx::new_<Constant>(_1)]  ;
         /////////// NUMBER OR VARIABLE WITH EXP(base_) ////////////////
 
         
