@@ -15,17 +15,28 @@ ExpOp::ExpOp(Operand* inBase, int inExp)
 {
     base = inBase;
     exp = inExp;
-    isExp = true;
+    type = TYPE_EXP;
 }
 
 
 
 
-double ExpOp::evaluate(double* vars)
+//double ExpOp::evaluate(double* vars)
+//{
+//    double retval = pow(base->evaluate(vars),exp);
+//    
+//    return retval;
+//}
+
+
+Symbol* ExpOp::evaluate(Symbol* vars[])
 {
-    double retval = pow(base->evaluate(vars),exp);
+    Symbol* retval = base->evaluate(vars)->clone();
+    
+    retval = retval->exp(exp);
     
     return retval;
+  
 }
 
 
@@ -34,7 +45,82 @@ std::stringstream ExpOp::print()
     std::stringstream ret;
     std::stringstream term = base->print();
     
-    ret << "(" << term.str() << ")" << "^" << exp;
+    if(base->getType() == TYPE_LEAF)
+    {
+        ret  << term.str()  << "^" << exp;
+    }
+    else
+    {
+        ret  << "(" << term.str()  << ")" << "^" << exp;
+    }
+    
         
     return ret;
 }
+
+
+
+
+
+Operand* ExpOp::diff(int varIndex)
+{
+    if(exp == 0)
+    {
+        return new LeafOperand(new IntSymb(0));
+    }
+    else if(exp == 1)
+    {
+        return base->diff(varIndex);
+    }
+    else
+    {
+        MultOp* retMult = new MultOp();
+        retMult->addOperand(new LeafOperand(new IntSymb(exp)));
+        retMult->addOperand(base->diff(varIndex));
+        retMult->addOperand(new ExpOp(base,exp-1));
+        return retMult;
+    }
+    
+    
+    
+}
+
+
+
+
+
+
+
+/***************  cleanMults()  ********************
+ Input: None
+ 
+ Output: None
+ 
+ Desc: Modifies the Addition node.  Recursively calls each branch to clean
+ mults for nodes lower down the tree.
+ ****************************************************/
+
+void ExpOp::cleanMults()
+{
+    for(int ii = 0; ii < numOperands; ii++)
+    {
+        operands[ii]->cleanMults();
+        if(operands[ii]->getType() == TYPE_MULT)
+        {
+            if(operands[ii]->getNumOperands() == 1)
+            {
+                if(operands[ii]->getOperands()[0]->getType() == TYPE_LEAF)
+                {
+                    LeafOperand* leaf = (LeafOperand*)operands[ii]->getOperands()[0];
+                    if(leaf->getIsZero())
+                    {
+                        delete operands[ii];
+                        operands[ii] = new LeafOperand(0,1);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
