@@ -1,0 +1,33 @@
+As a user, skip to step 2.  as a developer, to compile this project, you need to
+
+1) Regenerate the configure script, and some other m4 macros, etc, so that the build system is complete.  This requires the autotools, modern versions.  The command for this is
+
+autoreconf -vfi
+
+The -vfi flags are for (v)erbose, (f)orce, and (i)nstall.  If this step fails, you almost certainly have outdated autotools software, most namely automake, autoconf, and libtool.  Update your tools as necessary.
+
+On Linux machines, you may have to run the command
+
+libttoolize
+
+in order to get autoreconf to work.
+
+--------------
+
+As a user, or maintainer, engage in the standard build process for any software built using the autotools.
+
+2) ./configure (with your options)
+
+3) make
+
+Then, if you want to, you can run the test programs.  So far, there is one: b2_class_test.  It is built using the Boost.UnitTest library, and can produce a variety of output files, and be run in a variety of modes.  These options are not documented here.
+
+-------------
+
+notes:
+
+If you add files to the project, or wish to add a compiled program, etc, you modify the b2/core/Makefile.am, and a b2/core/path/to/Makemodule.am file, or possibly create a Makemodule.am file at the correct location.  If you need help with this, please contact Daniel Brake danielthebrake@gmail.com
+
+Please do not commit autotools-built files to the repository, including the configure script, any file in the created b2/core/config/ folder, or the others.  There is a chance you may have to add a m4 macro or something, and this is ok.  Do what you need, but commit only the source files, not generated files.
+
+Please maintain this file by editing it as necessary.
