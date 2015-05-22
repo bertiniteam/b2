@@ -1,0 +1,488 @@
+TSLP
+v6
+r1
+cCheck dependencies
+cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+
+N/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/SDKSettings.plist
+c0000000053D1B024000000000000044C
+t1406251044
+s1100
+
+N/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/CoreServices/SystemVersion.plist
+c0000000053D1B02400000000000001DE
+t1406251044
+s478
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o
+t1408735723
+s347956
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o
+t2
+s0
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o
+t2
+s0
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o
+t1408735723
+s243600
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o
+t2
+s0
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o
+t2
+s0
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o
+t1408735723
+s209040
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o
+t1408735723
+s288236
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o
+t2
+s0
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp
+c000000005388F9C5000000000000260A
+t1401485765
+s9738
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.h
+c000000005388F9C500000000000004E8
+t1401485765
+s1256
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp
+c000000005388F9C50000000000000AAD
+t1401485765
+s2733
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h
+c000000005388F9C500000000000003BD
+t1401485765
+s957
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp
+c000000005388F9C50000000000001AA4
+t1401485765
+s6820
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp
+c000000005388F9C500000000000008F3
+t1401485765
+s2291
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.h
+c000000005388F9C500000000000003CA
+t1401485765
+s970
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp
+c000000005388F9C50000000000003D35
+t1401485765
+s15669
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp
+c000000005388F9C50000000000000AAB
+t1401485765
+s2731
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.h
+c000000005388F9C5000000000000037E
+t1401485765
+s894
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp
+c000000005388F9C50000000000000737
+t1401485765
+s1847
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h
+c000000005388F9C50000000000000662
+t1401485765
+s1634
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp
+c000000005388F9C500000000000021E3
+t1401485765
+s8675
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.h
+c000000005388F9C50000000000000303
+t1401485765
+s771
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h
+c000000005388F9C500000000000008A8
+t1401485765
+s2216
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h
+c0000000053F799EA0000000000000303
+t1408735722
+s771
+
+N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp
+c000000005388F9C50000000000004D80
+t1401485765
+s19840
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp
+r0
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp
+r0
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp
+r0
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp
+r0
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp
+r0
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp
+r0
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp
+r0
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp
+r0
+
+CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp
+r0
+
+CCheck dependencies
+r0
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection18"Check dependencies18"Check dependenciesb1164b8ad3a7b941^da595c8ad3a7b941^---0#1#1#--18"Check dependencies36"6D7FF71E-8F76-42DE-88C0-B0BB1FFF9C3B-
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430429066.313131
+e430429067.028224
+r1
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.h
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp:27:19: warning: implicit conversion loses integer precision: 'size_type' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+o    numOperands = inOperands.size();
+o                ~ ^~~~~~~~~~~~~~~~~
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp:51:19: warning: implicit conversion loses integer precision: 'size_type' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+o    numOperands = inOperands.size();
+o                ~ ^~~~~~~~~~~~~~~~~
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp:340:25: warning: delete called on 'Operand' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]
+o                        delete operands[ii];
+o                        ^
+o3 warnings generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection97"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp196"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o SLP/AdditionOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler1844508ad3a7b941^cb4a078bd3a7b941^-879"/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp:27:19: warning: implicit conversion loses integer precision: 'size_type' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]    numOperands = inOperands.size();                ~ ^~~~~~~~~~~~~~~~~/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp:51:19: warning: implicit conversion loses integer precision: 'size_type' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]    numOperands = inOperands.size();                ~ ^~~~~~~~~~~~~~~~~/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp:340:25: warning: delete called on 'Operand' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]                        delete operands[ii];                        ^3 warnings generated.-0#0#1#-19%DVTDocumentLocation2@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp0000000000000000^3640"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o SLP/AdditionOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jbcolli2/Documents/West -ITexas/Research/Bertini/Code/Boost/boost_1_55_0 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o36"6D8D27C2-889D-4CBB-8DC2-940A2E88F87D-
+bF924962F-EC19-4849-B6E9-055A60CF94E3
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430429066.313800
+e430429066.826356
+r0
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.h
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:33:40: error: use of undeclared identifier 'AMP'
+o    else if(typeid(*operand) == typeid(AMP))
+o                                       ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:35:9: error: unknown type name 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:35:25: error: use of undeclared identifier 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o                        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:35:29: error: expected expression
+o        AMP tempop = *((AMP*)operand);
+o                            ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:36:9: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value + tempop);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:36:26: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value + tempop);
+o                         ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:65:40: error: use of undeclared identifier 'AMP'
+o    else if(typeid(*operand) == typeid(AMP))
+o                                       ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:67:9: error: unknown type name 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:67:25: error: use of undeclared identifier 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o                        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:67:29: error: expected expression
+o        AMP tempop = *((AMP*)operand);
+o                            ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:68:9: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value - tempop);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:68:26: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value - tempop);
+o                         ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:98:40: error: use of undeclared identifier 'AMP'
+o    else if(typeid(*operand) == typeid(AMP))
+o                                       ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:100:9: error: unknown type name 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:100:25: error: use of undeclared identifier 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o                        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:100:29: error: expected expression
+o        AMP tempop = *((AMP*)operand);
+o                            ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:101:9: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value * tempop);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:101:26: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value * tempop);
+o                         ^
+o18 errors generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection97"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp196"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o SLP/DoubleSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler4d66508ad3a7b941^cc9bd38ad3a7b941^-3608"/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:33:40: error: use of undeclared identifier 'AMP'    else if(typeid(*operand) == typeid(AMP))                                       ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:35:9: error: unknown type name 'AMP'        AMP tempop = *((AMP*)operand);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:35:25: error: use of undeclared identifier 'AMP'        AMP tempop = *((AMP*)operand);                        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:35:29: error: expected expression        AMP tempop = *((AMP*)operand);                            ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:36:9: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value + tempop);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:36:26: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value + tempop);                         ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:65:40: error: use of undeclared identifier 'AMP'    else if(typeid(*operand) == typeid(AMP))                                       ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:67:9: error: unknown type name 'AMP'        AMP tempop = *((AMP*)operand);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:67:25: error: use of undeclared identifier 'AMP'        AMP tempop = *((AMP*)operand);                        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:67:29: error: expected expression        AMP tempop = *((AMP*)operand);                            ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:68:9: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value - tempop);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:68:26: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value - tempop);                         ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:98:40: error: use of undeclared identifier 'AMP'    else if(typeid(*operand) == typeid(AMP))                                       ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:100:9: error: unknown type name 'AMP'        AMP tempop = *((AMP*)operand);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:100:25: error: use of undeclared identifier 'AMP'        AMP tempop = *((AMP*)operand);                        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:100:29: error: expected expression        AMP tempop = *((AMP*)operand);                            ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:101:9: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value * tempop);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:101:26: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value * tempop);                         ^18 errors generated.18(36%IDEClangDiagnosticActivityLogMessage2@34"Use of undeclared identifier 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic23%DVTTextDocumentLocation3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^32#39#32#39#696#0#14"Semantic Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^34#8#34#8#716#0#11"Parse Issue--2@34"Use of undeclared identifier 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^34#24#34#24#732#0#14"Semantic Issue--2@19"Expected expression-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^34#28#34#28#736#0#11"Parse Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^35#8#35#8#755#0#11"Parse Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^35#25#35#25#772#0#11"Parse Issue--2@34"Use of undeclared identifier 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^64#39#64#39#1426#0#14"Semantic Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^66#8#66#8#1446#0#11"Parse Issue--2@34"Use of undeclared identifier 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^66#24#66#24#1462#0#14"Semantic Issue--2@19"Expected expression-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^66#28#66#28#1466#0#11"Parse Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^67#8#67#8#1485#0#11"Parse Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^67#25#67#25#1502#0#11"Parse Issue--2@34"Use of undeclared identifier 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^97#39#97#39#2154#0#14"Semantic Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^99#8#99#8#2174#0#11"Parse Issue--2@34"Use of undeclared identifier 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^99#24#99#24#2190#0#14"Semantic Issue--2@19"Expected expression-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^99#28#99#28#2194#0#11"Parse Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^100#8#100#8#2213#0#11"Parse Issue--2@23"Unknown type name 'AMP'-430429066#18446744073709551615#0#-2#27"com.apple.dt.IDE.diagnostic3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^100#25#100#25#2230#0#11"Parse Issue--0#0#1#-19%DVTDocumentLocation4@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^3640"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o SLP/DoubleSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jbcolli2/Documents/West -ITexas/Research/Bertini/Code/Boost/boost_1_55_0 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o36"B49F393C-E518-42BE-ABC1-24CEFC6499FC-
+bF924962F-EC19-4849-B6E9-055A60CF94E3
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430429066.314587
+e430429067.028259
+r0
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp:10:
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.h:15:10: fatal error: 'boost/numeric/ublas/matrix.hpp' file not found
+o#include <boost/numeric/ublas/matrix.hpp>
+o         ^
+o1 error generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection96"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp194"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o SLP/DriverSLP.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler919c508ad3a7b941^f358078bd3a7b941^-339"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp:10:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.h:15:10: fatal error: 'boost/numeric/ublas/matrix.hpp' file not found#include <boost/numeric/ublas/matrix.hpp>         ^1 error generated.-0#0#1#-19%DVTDocumentLocation2@97"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp0000000000000000^3634"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o SLP/DriverSLP.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jbcolli2/Documents/West -ITexas/Research/Bertini/Code/Boost/boost_1_55_0 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o36"D54AA397-9F44-4988-8105-CE78E1D62B5E-
+bF924962F-EC19-4849-B6E9-055A60CF94E3
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430429066.315241
+e430429067.028195
+r1
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp:117:25: warning: delete called on 'Operand' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]
+o                        delete operands[ii];
+o                        ^
+o1 warning generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection92"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp186"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o SLP/ExpOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler8eea508ad3a7b941^404f078bd3a7b941^-297"/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp:117:25: warning: delete called on 'Operand' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]                        delete operands[ii];                        ^1 warning generated.-0#0#1#-19%DVTDocumentLocation2@93"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp0000000000000000^3610"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o SLP/ExpOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jbcolli2/Documents/West -ITexas/Research/Bertini/Code/Boost/boost_1_55_0 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o36"C29DA690-36E0-4E35-AF96-3C9B156CDD15-
+bF924962F-EC19-4849-B6E9-055A60CF94E3
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430429066.313276
+e430429066.927550
+r0
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp:9:
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.h:15:10: fatal error: 'boost/numeric/ublas/matrix.hpp' file not found
+o#include <boost/numeric/ublas/matrix.hpp>
+o         ^
+o1 error generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection93"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp188"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o SLP/Factor.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler344d508ad3a7b941^a088ed8ad3a7b941^-335"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp:9:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.h:15:10: fatal error: 'boost/numeric/ublas/matrix.hpp' file not found#include <boost/numeric/ublas/matrix.hpp>         ^1 error generated.-0#0#1#-19%DVTDocumentLocation2@94"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp0000000000000000^3616"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o SLP/Factor.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jbcolli2/Documents/West -ITexas/Research/Bertini/Code/Boost/boost_1_55_0 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o36"8E03EEA5-549A-420A-9009-51B4DDB4F5BB-
+bF924962F-EC19-4849-B6E9-055A60CF94E3
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430429066.315718
+e430429066.927700
+r0
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:28:40: error: use of undeclared identifier 'AMP'
+o    else if(typeid(*operand) == typeid(AMP))
+o                                       ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:30:9: error: unknown type name 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:30:25: error: use of undeclared identifier 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o                        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:30:29: error: expected expression
+o        AMP tempop = *((AMP*)operand);
+o                            ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:31:9: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value + tempop);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:31:26: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value + tempop);
+o                         ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:61:40: error: use of undeclared identifier 'AMP'
+o    else if(typeid(*operand) == typeid(AMP))
+o                                       ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:63:9: error: unknown type name 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:63:25: error: use of undeclared identifier 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o                        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:63:29: error: expected expression
+o        AMP tempop = *((AMP*)operand);
+o                            ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:64:9: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value - tempop);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:64:26: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value - tempop);
+o                         ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:98:40: error: use of undeclared identifier 'AMP'
+o    else if(typeid(*operand) == typeid(AMP))
+o                                       ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:100:9: error: unknown type name 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:100:25: error: use of undeclared identifier 'AMP'
+o        AMP tempop = *((AMP*)operand);
+o                        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:100:29: error: expected expression
+o        AMP tempop = *((AMP*)operand);
+o                            ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:101:9: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value * tempop);
+o        ^
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:101:26: error: unknown type name 'AMP'
+o        AMP* retop = new AMP(this->value * tempop);
+o                         ^
+o18 errors generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection94"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp190"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o SLP/IntSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler11e4508ad3a7b941^508bed8ad3a7b941^-3554"/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:28:40: error: use of undeclared identifier 'AMP'    else if(typeid(*operand) == typeid(AMP))                                       ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:30:9: error: unknown type name 'AMP'        AMP tempop = *((AMP*)operand);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:30:25: error: use of undeclared identifier 'AMP'        AMP tempop = *((AMP*)operand);                        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:30:29: error: expected expression        AMP tempop = *((AMP*)operand);                            ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:31:9: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value + tempop);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:31:26: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value + tempop);                         ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:61:40: error: use of undeclared identifier 'AMP'    else if(typeid(*operand) == typeid(AMP))                                       ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:63:9: error: unknown type name 'AMP'        AMP tempop = *((AMP*)operand);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:63:25: error: use of undeclared identifier 'AMP'        AMP tempop = *((AMP*)operand);                        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:63:29: error: expected expression        AMP tempop = *((AMP*)operand);                            ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:64:9: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value - tempop);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:64:26: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value - tempop);                         ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:98:40: error: use of undeclared identifier 'AMP'    else if(typeid(*operand) == typeid(AMP))                                       ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:100:9: error: unknown type name 'AMP'        AMP tempop = *((AMP*)operand);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:100:25: error: use of undeclared identifier 'AMP'        AMP tempop = *((AMP*)operand);                        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:100:29: error: expected expression        AMP tempop = *((AMP*)operand);                            ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:101:9: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value * tempop);        ^/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp:101:26: error: unknown type name 'AMP'        AMP* retop = new AMP(this->value * tempop);                         ^18 errors generated.-0#0#1#-19%DVTDocumentLocation2@95"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp0000000000000000^3622"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o SLP/IntSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jbcolli2/Documents/West -ITexas/Research/Bertini/Code/Boost/boost_1_55_0 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o36"36519C20-F21D-4CD9-BCEF-4C51ED5135DB-
+bF924962F-EC19-4849-B6E9-055A60CF94E3
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430429066.314150
+e430429066.927508
+r1
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.h
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection98"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp198"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o SLP/LeafOperand.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compilerbf82508ad3a7b941^5872ed8ad3a7b941^---0#0#1#-19%DVTDocumentLocation2@99"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp0000000000000000^3646"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o SLP/LeafOperand.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jbcolli2/Documents/West -ITexas/Research/Bertini/Code/Boost/boost_1_55_0 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o36"AA284940-A641-4D8C-AE95-B0F00E65917D-
+bF924962F-EC19-4849-B6E9-055A60CF94E3
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430429066.312972
+e430429067.028235
+r1
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.h
+d/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp:22:19: warning: implicit conversion loses integer precision: 'size_type' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+o    numOperands = inOperands.size();
+o                ~ ^~~~~~~~~~~~~~~~~
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp:399:25: warning: delete called on 'Operand' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]
+o                        delete operands[ii];
+o                        ^
+o2 warnings generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection93"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp188"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o SLP/MultOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compilera130508ad3a7b941^1954078bd3a7b941^-583"/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp:22:19: warning: implicit conversion loses integer precision: 'size_type' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]    numOperands = inOperands.size();                ~ ^~~~~~~~~~~~~~~~~/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp:399:25: warning: delete called on 'Operand' that is abstract but has non-virtual destructor [-Wdelete-non-virtual-dtor]                        delete operands[ii];                        ^2 warnings generated.-0#0#1#-19%DVTDocumentLocation2@94"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp0000000000000000^3616"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o SLP/MultOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jbcolli2/Documents/West -ITexas/Research/Bertini/Code/Boost/boost_1_55_0 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o36"517B2DC4-8EFC-43F9-AA4B-CF0216BE2193-
+bF924962F-EC19-4849-B6E9-055A60CF94E3
+
+CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+s430428385.717231
+e430428386.481051
+r0
+xCompileC
+xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o
+x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.llvm.clang.1_0.compiler
+oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp:3:
+o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found
+o#include <gmp.h>
+o         ^
+o1 error generated.
+lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection90"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp182"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o SLP/amp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler37aab7e1d0a7b941^2d5f7be2d0a7b941^-280"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp:3:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found#include <gmp.h>         ^1 error generated.1(36%IDEClangDiagnosticActivityLogMessage2@22"'gmp.h' file not found-430428386#18446744073709551615#0#1(2@107"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp:3:-430428386#18446744073709551615#0#-0#27"com.apple.dt.IDE.diagnostic23%DVTTextDocumentLocation3@91"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp0000000000000000^2#9#2#9#46#0#21"Apple LLVM 5.0 Notice--2#27"com.apple.dt.IDE.diagnostic3@91"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp0000000000000000^8#9#8#9#227#0#29"Lexical or Preprocessor Issue--0#0#1#-19%DVTDocumentLocation4@91"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp0000000000000000^3516"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o SLP/amp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o36"CE459194-99FB-44F2-8D93-E9FB44F0FB18-
+b837F38F1-7187-4431-A033-8C9DC5CB6952
+
+CLd /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/SLP normal x86_64
+r0
+
