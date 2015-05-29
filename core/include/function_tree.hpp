@@ -29,6 +29,8 @@
 #include "function_tree/operators/sum_operator.h"
 
 #include "function_tree/operators/binary_operator.h"
+#include "function_tree/operators/power_operator.h"
+
 
 #include "function_tree/operators/unary_operator.h"
 #include "function_tree/operators/negate_operator.h"

@@ -30,6 +30,7 @@
 
 namespace bertini {
 
+	using std::pow;
 // Node -> UnaryOperator -> ExpOperator
 //
 // Description: This class represents the exponentiation operator.  The base is stored in
