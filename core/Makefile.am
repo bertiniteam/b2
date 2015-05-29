@@ -34,7 +34,8 @@ SUFFIXES = .cpp .hpp .y .l
 
 include src/test/classes/Makemodule.am
 include src/bertini/Makemodule.am
-include src/spirit_parser/Makemodule.am
+
+
 
 
 
