@@ -31,11 +31,14 @@
 namespace bertini {
 
 	using std::pow;
-// Node -> UnaryOperator -> ExpOperator
-//
-// Description: This class represents the exponentiation operator.  The base is stored in
-// children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
-// defined as the exponention operation.
+	
+	/**
+	 Node -> UnaryOperator -> ExpOperator
+
+	 Description: This class represents the exponentiation operator.  The base is stored in
+	 children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
+	 defined as the exponention operation.
+	 */
 class ExpOperator : public virtual UnaryOperator
 {
 public:
@@ -44,7 +47,12 @@ public:
     {
         return child_->PrintNode() + "^" + std::to_string(exponent());
     }
-    
+	
+	
+	
+	/**
+	 Virtual polymorphic method for printing to an arbitrary stream.
+	 */
 	virtual void print(std::ostream & target) const override
 	{
 		target << "(";
@@ -52,12 +60,18 @@ public:
 		target << "^" << exponent() << ")";
 	}
 		
-		
+	/**
+	 Get the integet exponent of an ExpOperator
+	 */
     void set_exponent(int exp)
     {
         exponent_ = exp;
     }
-    
+	
+	
+	/**
+	 Get the exponent of an ExpOperator
+	 */
     int exponent() const
     {
         return exponent_;
@@ -65,6 +79,10 @@ public:
 
 	virtual ~ExpOperator() = default;
 
+	
+	/**
+	 Constructor, passing in the Node you want as the base, and the integer you want for the power.
+	 */
 	ExpOperator(const std::shared_ptr<Node> & N, int p = 1) : exponent_(p), UnaryOperator(N)
 	{}
 	
@@ -90,8 +108,8 @@ protected:
     
     
 private:
-    // Exponent for the exponenetial operator
-    int exponent_ = 1;
+	
+	int exponent_ = 1; ///< Exponent for the exponenetial operator
 };
 
 
@@ -104,9 +122,12 @@ namespace {
 	using Node = bertini::Node;
 	using ExpOperator = bertini::ExpOperator;
 
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, int p)
+	/**
+	 Overloading of the power function to create an ExpOperator with base N and power p.
+	 */
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & base, int power)
 	{
-		return std::make_shared<ExpOperator>(N,p);
+		return std::make_shared<ExpOperator>(base,power);
 	}
 
 }

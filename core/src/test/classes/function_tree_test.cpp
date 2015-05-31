@@ -74,10 +74,10 @@ int ManualConstruction(){
 	y->set_current_value(4.0);
 	
 	
-	std::cout << "N = " << *N << std::endl;
+	std::cout << "N = " << *N << "\n";
 	N->Reset();
 	
-	std::cout << N->Eval<dbl>();
+	std::cout << N->Eval<dbl>() << std::endl;
 	
 	return 0;
 }
