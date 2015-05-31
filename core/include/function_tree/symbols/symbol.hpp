@@ -16,13 +16,13 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// symbol.h:  Declares the class Symbol.
+// symbol.hpp:  Declares the class Symbol.
 
 #ifndef b2Test_Symbol_h
 #define b2Test_Symbol_h
 
 
-#include "function_tree/node.h"
+#include "function_tree/node.hpp"
 
 
 

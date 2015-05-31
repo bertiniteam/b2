@@ -16,15 +16,15 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// exp_operator.h:  Declares the class  ExpOperator.
+// exp_operator.hpp:  Declares the class  ExpOperator.
 
 
 
 #ifndef b2Test_ExpOperator_h
 #define b2Test_ExpOperator_h
 
-#include "function_tree/Node.h"
-#include "function_tree/operators/unary_operator.h"
+#include "function_tree/Node.hpp"
+#include "function_tree/operators/unary_operator.hpp"
 
 
 

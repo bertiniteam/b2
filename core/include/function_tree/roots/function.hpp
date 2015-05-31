@@ -16,14 +16,14 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// function.h:  Declares the class Function.
+// function.hpp:  Declares the class Function.
 
 
 #ifndef b2Test_Function_h
 #define b2Test_Function_h
 
 
-#include "function_tree/node.h"
+#include "function_tree/node.hpp"
 
 
 

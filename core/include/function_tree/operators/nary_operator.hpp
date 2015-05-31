@@ -16,15 +16,15 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// nary_operator.h:  Declares the class NaryOperator.
+// nary_operator.hpp:  Declares the class NaryOperator.
 
 #ifndef b2Test_NaryOperator_h
 #define b2Test_NaryOperator_h
 
 #include <vector>
 
-#include "function_tree/node.h"
-#include "function_tree/operators/operator.h"
+#include "function_tree/node.hpp"
+#include "function_tree/operators/operator.hpp"
 
 
 namespace bertini {

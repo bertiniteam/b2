@@ -16,12 +16,12 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// operator.h:  Declares the class Operator.
+// operator.hpp:  Declares the class Operator.
 
 #ifndef b2Test_Operator_h
 #define b2Test_Operator_h
 
-#include "function_tree/node.h"
+#include "function_tree/node.hpp"
 
 
 namespace bertini {

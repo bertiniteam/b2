@@ -2,7 +2,8 @@
 #ifndef PowerOperator_h
 #define PowerOperator_h
 
-#include "function_tree/operators/binary_operator.h"
+#include <cmath>
+#include "function_tree/operators/binary_operator.hpp"
 
 namespace bertini {
 	class PowerOperator : public virtual BinaryOperator
@@ -82,13 +83,13 @@ namespace bertini {
 		
 		virtual dbl FreshEval(dbl) override
 		{
-			return pow( base_->Eval<dbl>(), exponent_->Eval<dbl>());
+			return std::pow( base_->Eval<dbl>(), exponent_->Eval<dbl>());
 		}
 		
 		
 		virtual mpfr FreshEval(mpfr) override
 		{
-			return pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
+			return std::pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
 		}
 		
 	private:

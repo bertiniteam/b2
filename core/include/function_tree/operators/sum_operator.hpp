@@ -16,7 +16,7 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// sum_operator.h:  Declares the class SumOperator.
+// sum_operator.hpp:  Declares the class SumOperator.
 
 #ifndef b2Test_SumOperator_h
 #define b2Test_SumOperator_h
@@ -24,8 +24,8 @@
 #include <vector>
 #include <string>   
 
-#include "function_tree/node.h"
-#include "function_tree/operators/nary_operator.h"
+#include "function_tree/node.hpp"
+#include "function_tree/operators/nary_operator.hpp"
 
 namespace bertini {
 

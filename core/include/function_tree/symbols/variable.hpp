@@ -16,14 +16,14 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// variable.h:  Declares the class Variable.
+// variable.hpp:  Declares the class Variable.
 
 
 
 #ifndef b2Test_Variable_h
 #define b2Test_Variable_h
 
-#include "function_tree/symbols/symbol.h"
+#include "function_tree/symbols/symbol.hpp"
 
 
 

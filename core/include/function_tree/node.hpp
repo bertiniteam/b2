@@ -16,7 +16,7 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// node.h:  Declares the class Node.
+// node.hpp:  Declares the class Node.
 
 
 #ifndef __b2Test__Node__

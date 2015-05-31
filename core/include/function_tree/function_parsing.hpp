@@ -16,7 +16,7 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// grammar.h:  This file contains all the grammars used to parse an input file.
+// grammar.hpp:  This file contains all the grammars used to parse an input file.
 //          Variable, Function
 //
 //      TODO:(JBC) Make these Parser classes/structs consistent.  Either they all inherit
@@ -41,16 +41,16 @@
 #include <cmath>
 
 
-#include "function_tree/Node.h"
-#include "function_tree/roots/function.h"
-#include "function_tree/operators/sum_operator.h"
-#include "function_tree/operators/mult_operator.h"
-#include "function_tree/operators/negate_operator.h"
-#include "function_tree/operators/exp_operator.h"
-#include "function_tree/symbols/number.h"
-#include "function_tree/symbols/variable.h"
+#include "function_tree/Node.hpp"
+#include "function_tree/roots/function.hpp"
+#include "function_tree/operators/sum_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
+#include "function_tree/operators/negate_operator.hpp"
+#include "function_tree/operators/exp_operator.hpp"
+#include "function_tree/symbols/number.hpp"
+#include "function_tree/symbols/variable.hpp"
 
-#include "function_tree/operators/binary_operator.h"
+#include "function_tree/operators/binary_operator.hpp"
 
 
 

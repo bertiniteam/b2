@@ -12,6 +12,7 @@
 
 #include "complex.hpp"
 
+#include "function_tree.hpp"
 
 #endif
 

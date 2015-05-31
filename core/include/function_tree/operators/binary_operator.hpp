@@ -16,7 +16,7 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// binary_operator.h:  Declares the class BinaryOperator.
+// binary_operator.hpp:  Declares the class BinaryOperator.
 
 
 
@@ -26,7 +26,7 @@
 #include <cmath>
 #include <vector>
 
-#include "function_tree/node.h"
+#include "function_tree/node.hpp"
 
 namespace bertini {
 	

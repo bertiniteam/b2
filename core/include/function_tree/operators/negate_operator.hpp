@@ -16,15 +16,15 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// negate_operator.h:  Declares the class  NegateOperator.
+// negate_operator.hpp:  Declares the class  NegateOperator.
 
 
 
 #ifndef b2Test_NegateOperator_h
 #define b2Test_NegateOperator_h
 
-#include "function_tree/Node.h"
-#include "function_tree/operators/unary_operator.h"
+#include "function_tree/Node.hpp"
+#include "function_tree/operators/unary_operator.hpp"
 
 
 namespace bertini {

@@ -20,29 +20,29 @@
 #ifndef BERTINI2_FUNCTION_TREE_H_
 #define BERTINI2_FUNCTION_TREE_H_
 
-#include "function_tree/node.h"
+#include "function_tree/node.hpp"
 
-#include "function_tree/operators/operator.h"
+#include "function_tree/operators/operator.hpp"
 
-#include "function_tree/operators/nary_operator.h"
-#include "function_tree/operators/mult_operator.h"
-#include "function_tree/operators/sum_operator.h"
+#include "function_tree/operators/nary_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
+#include "function_tree/operators/sum_operator.hpp"
 
-#include "function_tree/operators/binary_operator.h"
-#include "function_tree/operators/power_operator.h"
+#include "function_tree/operators/binary_operator.hpp"
+#include "function_tree/operators/power_operator.hpp"
 
 
-#include "function_tree/operators/unary_operator.h"
-#include "function_tree/operators/negate_operator.h"
-#include "function_tree/operators/exp_operator.h"
+#include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/negate_operator.hpp"
+#include "function_tree/operators/exp_operator.hpp"
 
-#include "function_tree/symbols/symbol.h"
-#include "function_tree/symbols/variable.h"
-#include "function_tree/symbols/number.h"
+#include "function_tree/symbols/symbol.hpp"
+#include "function_tree/symbols/variable.hpp"
+#include "function_tree/symbols/number.hpp"
 
-#include "function_tree/roots/function.h"
+#include "function_tree/roots/function.hpp"
 
-#include "function_tree/function_parsing.h"
+#include "function_tree/function_parsing.hpp"
 
 #endif
 

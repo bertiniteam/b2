@@ -16,15 +16,15 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// mult_operator.h:  Declares the class MultOperator.
+// mult_operator.hpp:  Declares the class MultOperator.
 
 
 
 #ifndef b2Test_MultOperator_h
 #define b2Test_MultOperator_h
 
-#include "function_tree/node.h"
-#include "function_tree/operators/nary_operator.h"
+#include "function_tree/node.hpp"
+#include "function_tree/operators/nary_operator.hpp"
 
 
 namespace bertini {
@@ -61,7 +61,7 @@ public:
 	
 	virtual ~MultOperator() = default;
 	
-    // See node.h for description
+    // See node.hpp for description
     // TODO:(JBC) Implement this for multiplication
     virtual std::string PrintNode() override {return "";}
 

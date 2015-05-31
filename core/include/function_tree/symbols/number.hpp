@@ -16,7 +16,7 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// constant.h:  Declares the class Number.
+// constant.hpp:  Declares the class Number.
 
 
 
@@ -24,7 +24,7 @@
 #define b2Test_Number_h
 
 
-#include "function_tree/symbols/symbol.h"
+#include "function_tree/symbols/symbol.hpp"
 
 
 
