@@ -14,7 +14,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 
 ACLOCAL_AMFLAGS = -I m4
 
-#set up the empty variables.  these are added onto by the below included files
+#set up the empty variables.  these are added onto by the below included files, and are deliberately blank here.
 bin_PROGRAMS =
 BUILT_SOURCES =
 CLEANFILES =
@@ -32,8 +32,13 @@ SUFFIXES = .cpp .hpp .y .l
 
 #now include the Makemodule files from the subdirectories.  they will add on to the variables which are set above
 
-include src/test/classes/Makemodule.am
+
+
 include src/bertini/Makemodule.am
+
+include src/test/classes/Makemodule.am
+
+include src/test/interactive_testing/Makemodule.am
 
 
 

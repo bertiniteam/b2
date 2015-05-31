@@ -4,7 +4,7 @@
 
 
 #we're building b2, version 2.0.0, and the corresponding email is dan brake's
-AC_INIT([b2], [2015.04.24.dev], [danielthebrake@gmail.com],[b2], [http://github.com/danbates/b2])
+AC_INIT([b2], [2015.05.31.dev], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
