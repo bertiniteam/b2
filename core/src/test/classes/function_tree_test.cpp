@@ -41,5 +41,19 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 }
 
 
+BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
+	
+	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	
+	std::shared_ptr<Node> N = pow(x, 1.0/2);
+	
+	x->set_current_value(3.0);
+	
+	BOOST_CHECK_EQUAL(N->Eval<dbl>() , 1.73205080756887729352744634151);  // root 3 to 30 digits
+	
+}
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include "function_tree/operators/binary_operator.hpp"
+#include "function_tree/symbols/number.hpp"
 
 namespace bertini {
 	class PowerOperator : public virtual BinaryOperator
@@ -97,12 +98,25 @@ namespace bertini {
 		std::shared_ptr<Node> base_;
 		std::shared_ptr<Node> exponent_;
 	};
+	// end of the class PowerOperator
+	
+	
+	
+	
+	// begin the overload of operators
 	
 	
 	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, const std::shared_ptr<bertini::Node> & p)
 	{
 		return std::make_shared<bertini::PowerOperator>(N,p);
 	}
+	
+	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, double p)
+	{
+		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Number>(p));
+	}
+	
+	
 } // re: namespace bertini
 
 

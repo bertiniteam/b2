@@ -27,6 +27,9 @@
 #include "function_tree/symbols/symbol.hpp"
 
 
+namespace bertini {
+
+
 
 // Node -> Symbol -> Number
 // Description: This class represents constant leaves to a function tree.  FreshEval simply returns
@@ -86,5 +89,8 @@ protected:
         return std::get< std::pair<mpfr,bool> >(current_value_).first;
     }
 };
+	
+	
+} // re: namespace bertini
 
 #endif
