@@ -4,7 +4,7 @@
 
 
 #we're building b2, version 2.0.0, and the corresponding email is dan brake's
-AC_INIT([b2], [2015.05.31.dev], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
+AC_INIT([b2], [2015.06.01.dev], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -40,12 +40,6 @@ AC_ENABLE_SHARED
 #enable the creation of static libraries
 AC_ENABLE_STATIC
 
-
-#find flex / lex
-AC_PROG_LEX
-
-#find bison / yacc
-AC_PROG_YACC
 
 #find the linker
 AC_PROG_LN_S
@@ -92,7 +86,7 @@ AC_SEARCH_LIBS([cos], [m], [], [
 
 # look for a header file in Eigen, and croak if fail to find.
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to fine Eigen 3  (eigen3/Eigen/Dense)]),[])
+AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to find Eigen 3  (eigen3/Eigen/Dense)]),[])
 AC_LANG_POP([C++])
 
 
