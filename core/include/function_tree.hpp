@@ -13,8 +13,10 @@
 //You should have received a copy of the GNU General Public License
 //along with function_tree.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Created by Brake, Daniel A. on 5/29/15.
-//
+//  Daniel Brake
+//  University of Notre Dame
+//  ACMS
+//  Spring, Summer 2015
 //
 
 #ifndef BERTINI2_FUNCTION_TREE_H_
