@@ -27,129 +27,132 @@
 
 
 
-/**
- Node -> Function
- This class defines a function.  It stores the entry node for a particular functions tree.
- */
-class Function : public Node
-{
-public:
+namespace bertini {
 	
 	
 	/**
-	 The default constructor
+	 Node -> Function
+	 This class defines a function.  It stores the entry node for a particular functions tree.
 	 */
-	Function()
-	{};
-	
-	
-	/**
-     Constructor defines entry node at construct time.
-	 */
-	Function(const std::shared_ptr<Node> & entry) : entry_node_(entry)
-    {
-    }
-	
-
-    
-    /**
-	 Get the pointer to the entry node for this function.
-	 */
-    std::shared_ptr<Node> entry_node() const
+	class Function : public Node
 	{
-		return entry_node_;
-	}
-
-	
-	/**
-	 Virtual overridden function for piping the tree to an output stream.
-	 */
-	void print(std::ostream & target) const override
-	{
-		EnsureNotEmpty();
-		entry_node_->print(target);
-	}
-	
-	
-	virtual ~Function() = default;
-	
-			
-			
-	/**
-	 This returns a string that holds a print out of the function.
-	 */
-	virtual std::string PrintNode() override
-	{
-		EnsureNotEmpty();
-		return entry_node_->PrintNode();
-	}
-	
-	
-	/**
-	 The function which flips the fresh eval bit back to fresh.
-	 */
-	void Reset() override
-	{
-		EnsureNotEmpty();
+	public:
 		
-		Node::ResetStoredValues();
-		entry_node_->Reset();
-	}
-	
-	
-	/**
-	 Add a child onto the container for this operator
-	 */
-	void SetRoot(std::shared_ptr<Node> entry)
-	{
-		entry_node_ = entry;
-	}
-	
-	
-	/**
-	 throws a runtime error if the root node is nullptr
-	 */
-	void EnsureNotEmpty() const
-	{
-		if (entry_node_==nullptr)
+		
+		/**
+		 The default constructor
+		 */
+		Function()
+		{};
+		
+		
+		/**
+		 Constructor defines entry node at construct time.
+		 */
+		Function(const std::shared_ptr<Node> & entry) : entry_node_(entry)
 		{
-			throw std::runtime_error("Function node type has empty root node");
 		}
-	}
+		
+		
+		
+		/**
+		 Get the pointer to the entry node for this function.
+		 */
+		std::shared_ptr<Node> entry_node() const
+		{
+			return entry_node_;
+		}
+		
+		
+		/**
+		 Virtual overridden function for piping the tree to an output stream.
+		 */
+		void print(std::ostream & target) const override
+		{
+			EnsureNotEmpty();
+			entry_node_->print(target);
+		}
+		
+		
+		virtual ~Function() = default;
+		
+		
+		
+		/**
+		 This returns a string that holds a print out of the function.
+		 */
+		virtual std::string PrintNode() override
+		{
+			EnsureNotEmpty();
+			return entry_node_->PrintNode();
+		}
+		
+		
+		/**
+		 The function which flips the fresh eval bit back to fresh.
+		 */
+		void Reset() override
+		{
+			EnsureNotEmpty();
 			
+			Node::ResetStoredValues();
+			entry_node_->Reset();
+		}
+		
+		
+		/**
+		 Add a child onto the container for this operator
+		 */
+		void SetRoot(std::shared_ptr<Node> entry)
+		{
+			entry_node_ = entry;
+		}
+		
+		
+		/**
+		 throws a runtime error if the root node is nullptr
+		 */
+		void EnsureNotEmpty() const
+		{
+			if (entry_node_==nullptr)
+			{
+				throw std::runtime_error("Function node type has empty root node");
+			}
+		}
+		
+		
+		////////////// TESTING /////////////////
+		virtual void PrintTree() override
+		{
+			entry_node_->PrintTree();
+		}
+		////////////// TESTING /////////////////
+		
+	private:
+		
+		/**
+		 Calls FreshEval on the entry node to the tree.
+		 */
+		virtual dbl FreshEval(dbl d)
+		{
+			return entry_node_->Eval<dbl>();
+		}
+		
+		/**
+		 Calls FreshEval on the entry node to the tree.
+		 */
+		virtual mpfr FreshEval(mpfr m)
+		{
+			return entry_node_->Eval<mpfr>();
+		}
+		
+		
+		
+		std::shared_ptr<Node> entry_node_; ///< The top node for the function.
+	};
 	
-    ////////////// TESTING /////////////////
-    virtual void PrintTree() override
-    {
-        entry_node_->PrintTree();
-    }
-    ////////////// TESTING /////////////////
-
-private:
 	
-	/**
-     Calls FreshEval on the entry node to the tree.
-	 */
-    virtual dbl FreshEval(dbl d)
-    {
-        return entry_node_->Eval<dbl>();
-    }
-	
-	/**
-	 Calls FreshEval on the entry node to the tree.
-	 */
-    virtual mpfr FreshEval(mpfr m)
-    {
-        return entry_node_->Eval<mpfr>();
-    }
-    
-    
-	
-	std::shared_ptr<Node> entry_node_; ///< The top node for the function.
-};
-
-
-
+} // re: namespace bertini
 
 
 

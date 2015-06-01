@@ -3,7 +3,7 @@
 bin_PROGRAMS += bertini2
 
 bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp \
-	include/complex.hpp \
+	include/mpfr_complex.hpp \
 	include/mpfr.hpp src/bertini/mpfr.cpp
 
 

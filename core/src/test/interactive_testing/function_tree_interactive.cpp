@@ -15,6 +15,9 @@
 
 namespace qi = boost::spirit::qi;
 
+using Node = bertini::Node;
+using Variable = bertini::Variable;
+using Function = bertini::Function;
 
 
 int InteractiveTest();
