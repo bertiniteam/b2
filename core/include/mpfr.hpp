@@ -162,7 +162,7 @@ namespace bertini {
 	
 	
 	
-}
+} // re: namespace bertini
 
 
 #endif

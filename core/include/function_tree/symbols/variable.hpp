@@ -27,56 +27,59 @@
 
 
 
-
-// Node -> Symbol -> Variable
-// Description: This class represents variable leaves in the function tree.  FreshEval returns
-// the current value of the variable.
-class Variable : public virtual NamedSymbol
-{
-public:
-    Variable(){};
+namespace  bertini {
 	
-	Variable(std::string new_name) : NamedSymbol(new_name)
-	{ }
+	// Node -> Symbol -> Variable
+	// Description: This class represents variable leaves in the function tree.  FreshEval returns
+	// the current value of the variable.
+	class Variable : public virtual NamedSymbol
+	{
+	public:
+		Variable(){};
+		
+		Variable(std::string new_name) : NamedSymbol(new_name)
+		{ }
+		
+		
+		
+		
+		virtual ~Variable() = default;
+		
+		std::string PrintNode() override {return name();}
+		
+		explicit operator std::string(){return name();}
+		
+		
+		
+		// This sets the value for the variable
+		template <typename T>
+		void set_current_value(T val)
+		{
+			std::get< std::pair<T,bool> >(current_value_).first = val;
+			std::get< std::pair<T,bool> >(current_value_).second = false;
+		}
+		
+		
+		
+		
+		
+		
+		
+	protected:
+		// Return current value of the variable.
+		dbl FreshEval(dbl) override
+		{
+			return std::get< std::pair<dbl,bool> >(current_value_).first;
+		}
+		
+		mpfr FreshEval(mpfr) override
+		{
+			return std::get< std::pair<mpfr,bool> >(current_value_).first;
+		}
+		
+	};
 	
-
 	
-	
-	virtual ~Variable() = default;
-	
-    std::string PrintNode() override {return name();}
-    
-	explicit operator std::string(){return name();}
-	
-    
-    
-    // This sets the value for the variable
-    template <typename T>
-    void set_current_value(T val)
-    {
-        std::get< std::pair<T,bool> >(current_value_).first = val;
-        std::get< std::pair<T,bool> >(current_value_).second = false;
-    }
-
-
-	
-
-
-
-
-protected:
-    // Return current value of the variable.
-    dbl FreshEval(dbl) override
-    {
-        return std::get< std::pair<dbl,bool> >(current_value_).first;
-    }
-    
-    mpfr FreshEval(mpfr) override
-    {
-        return std::get< std::pair<mpfr,bool> >(current_value_).first;
-    }
-	
-};
-
+} // re: namespace bertini
 
 #endif

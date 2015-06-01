@@ -28,67 +28,67 @@
 
 
 namespace bertini {
-
-
-
-// Node -> Symbol -> Number
-// Description: This class represents constant leaves to a function tree.  FreshEval simply returns
-// the value of the constant.
-class Number : public virtual Node
-{
-public:
-    Number(){};
-	
-	
-    Number(double val)
-    {
-        std::get< std::pair<dbl,bool> >(current_value_).first = val;
-        std::get< std::pair<mpfr,bool> >(current_value_).first = val;
-    }
-	
-	
-    // Ctor that reads in a string and converts it to a number of the appropriate type
-    Number(std::string sval)
-    {
-        std::get< std::pair<dbl,bool> >(current_value_).first = stod(sval);
-        std::get< std::pair<mpfr,bool> >(current_value_).first = stod(sval);
-    }
-    
 	
 	
 	
-	
-	
-	
-    // These do nothing for a constant
-    std::string PrintNode() override {return "";}
-
-	virtual void print(std::ostream & target) const override
+	// Node -> Symbol -> Number
+	// Description: This class represents constant leaves to a function tree.  FreshEval simply returns
+	// the value of the constant.
+	class Number : public virtual Node
 	{
-		target << std::get< std::pair<mpfr,bool> >(current_value_).first;
-	}
-	
-	virtual void Reset() override
-	{
-		// nothing to reset here
-	}
-	
-	
-	virtual ~Number() = default;
-
-	
-protected:
-    // Return value of constant
-    dbl FreshEval(dbl) override
-    {
-        return std::get< std::pair<dbl,bool> >(current_value_).first;
-    }
-    
-    mpfr FreshEval(mpfr) override
-    {
-        return std::get< std::pair<mpfr,bool> >(current_value_).first;
-    }
-};
+	public:
+		Number(){};
+		
+		
+		Number(double val)
+		{
+			std::get< std::pair<dbl,bool> >(current_value_).first = val;
+			std::get< std::pair<mpfr,bool> >(current_value_).first = val;
+		}
+		
+		
+		// Ctor that reads in a string and converts it to a number of the appropriate type
+		Number(std::string sval)
+		{
+			std::get< std::pair<dbl,bool> >(current_value_).first = stod(sval);
+			std::get< std::pair<mpfr,bool> >(current_value_).first = stod(sval);
+		}
+		
+		
+		
+		
+		
+		
+		
+		// These do nothing for a constant
+		std::string PrintNode() override {return "";}
+		
+		virtual void print(std::ostream & target) const override
+		{
+			target << std::get< std::pair<mpfr,bool> >(current_value_).first;
+		}
+		
+		virtual void Reset() override
+		{
+			// nothing to reset here
+		}
+		
+		
+		virtual ~Number() = default;
+		
+		
+	protected:
+		// Return value of constant
+		dbl FreshEval(dbl) override
+		{
+			return std::get< std::pair<dbl,bool> >(current_value_).first;
+		}
+		
+		mpfr FreshEval(mpfr) override
+		{
+			return std::get< std::pair<mpfr,bool> >(current_value_).first;
+		}
+	};
 	
 	
 } // re: namespace bertini

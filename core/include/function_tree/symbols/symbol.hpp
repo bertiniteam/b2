@@ -26,61 +26,64 @@
 
 
 
-
-
-// Node -> Symbol
-// Description: This class could work as an interface for all non-operators.
-// NOTE: Currently this does nothing!!!!
-//
-// TODO:(JBC) This defined the FreshEval for all symbols.
-class Symbol : public virtual Node
-{
-
-public:
-
-	virtual ~Symbol() = default;
+namespace  bertini {
 	
-	
-};
-
-
-
-
-
-
-
-
-
-class NamedSymbol : public virtual Symbol
-{
-	std::string name_;
-public:
-	
-	std::string name() const
+	// Node -> Symbol
+	// Description: This class could work as an interface for all non-operators.
+	// NOTE: Currently this does nothing!!!!
+	//
+	// TODO:(JBC) This defined the FreshEval for all symbols.
+	class Symbol : public virtual Node
 	{
-		return name_;
+		
+	public:
+		
+		virtual ~Symbol() = default;
+		
+		
 	};
 	
-	void name(const std::string & new_name){name_ = new_name;};
-	
-	NamedSymbol(){};
-	NamedSymbol(const std::string & new_name) : name_(new_name){};
 	
 	
-	virtual void print(std::ostream& target) const override
+	
+	
+	
+	
+	
+	
+	class NamedSymbol : public virtual Symbol
 	{
-		target << name();
-	}
+		std::string name_;
+	public:
+		
+		std::string name() const
+		{
+			return name_;
+		};
+		
+		void name(const std::string & new_name){name_ = new_name;};
+		
+		NamedSymbol(){};
+		NamedSymbol(const std::string & new_name) : name_(new_name){};
+		
+		
+		virtual void print(std::ostream& target) const override
+		{
+			target << name();
+		}
+		
+		virtual ~NamedSymbol() = default;
+		
+		
+		virtual void Reset() override
+		{
+			Node::ResetStoredValues();
+		}
+		
+		
+	};
 	
-	virtual ~NamedSymbol() = default;
 	
-	
-	virtual void Reset() override
-	{
-		Node::ResetStoredValues();
-	}
-	
-	
-};
+} // re: namespace bertini
 
 #endif

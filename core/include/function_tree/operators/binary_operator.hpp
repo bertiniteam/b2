@@ -48,7 +48,7 @@ namespace bertini {
 
 	};
 
-}
+} // re: namespace bertini
 
 
 

@@ -28,62 +28,62 @@
 
 
 namespace bertini {
-
-// Node -> UnaryOperator -> NegateOperator
-// Description: This class represents the negation operator.  FreshEval method
-// is defined for negation and multiplies the value by -1.
-class NegateOperator : public  virtual UnaryOperator
-{
-public:
 	
-	NegateOperator(){}
-	
-	NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-	{};
-	
-    // These do nothing for a constant
-    std::string PrintNode() override
-    {
-        return "-" + child_->PrintNode();
-    }
-
-
-
-	virtual void print(std::ostream & target) const override
+	// Node -> UnaryOperator -> NegateOperator
+	// Description: This class represents the negation operator.  FreshEval method
+	// is defined for negation and multiplies the value by -1.
+	class NegateOperator : public  virtual UnaryOperator
 	{
-		target << "-(";
-		child_->print(target);
-		target << ")";
-	}
-
-	virtual ~NegateOperator() = default;
-
-protected:
-    // Specific implementation of FreshEval for negate.
-    dbl FreshEval(dbl) override
-    {
-        return (-1)*child_->Eval<dbl>();
-    }
-    
-    mpfr FreshEval(mpfr) override
-    {
-        return (-1)*child_->Eval<mpfr>();
-    }
-};
-
+	public:
+		
+		NegateOperator(){}
+		
+		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+		
+		// These do nothing for a constant
+		std::string PrintNode() override
+		{
+			return "-" + child_->PrintNode();
+		}
+		
+		
+		
+		virtual void print(std::ostream & target) const override
+		{
+			target << "-(";
+			child_->print(target);
+			target << ")";
+		}
+		
+		virtual ~NegateOperator() = default;
+		
+	protected:
+		// Specific implementation of FreshEval for negate.
+		dbl FreshEval(dbl) override
+		{
+			return (-1)*child_->Eval<dbl>();
+		}
+		
+		mpfr FreshEval(mpfr) override
+		{
+			return (-1)*child_->Eval<mpfr>();
+		}
+	};
+	
 } // re: namespace bertini
 
 
 namespace  {
-
+	
 	using Node = bertini::Node;
 	using NegateOperator = bertini::NegateOperator;
 	
-inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
-{
-	return std::make_shared<NegateOperator>(rhs);
-}
-
+	inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
+	{
+		return std::make_shared<NegateOperator>(rhs);
+	}
+	
 }
 
 #endif

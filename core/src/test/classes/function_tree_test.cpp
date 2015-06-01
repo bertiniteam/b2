@@ -21,9 +21,13 @@
 #include <boost/test/unit_test.hpp>
 
 
+using Variable = bertini::Variable;
+using Node = bertini::Node;
 
 
 BOOST_AUTO_TEST_SUITE(function_tree_class)
+
+
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 	

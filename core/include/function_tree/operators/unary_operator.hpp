@@ -30,73 +30,69 @@
 
 
 namespace bertini {
-
-// Description: This class is an interface for all unary operators, such as negation.
-// The sole child is stored in a shared_ptr.
-class UnaryOperator : public virtual Node, public virtual Operator
-{
-public:
 	
-	UnaryOperator(){}
-	
-	UnaryOperator(const std::shared_ptr<Node> & N) : child_(N)
-	{}
-	
-	
-	
-	virtual ~UnaryOperator() = default;
-	
-	
-	virtual void Reset() override
+	// Description: This class is an interface for all unary operators, such as negation.
+	// The sole child is stored in a shared_ptr.
+	class UnaryOperator : public virtual Node, public virtual Operator
 	{
-		Node::ResetStoredValues();
-		child_->Reset();
-	}
+	public:
+		
+		UnaryOperator(){}
+		
+		UnaryOperator(const std::shared_ptr<Node> & N) : child_(N)
+		{}
+		
+		
+		
+		virtual ~UnaryOperator() = default;
+		
+		
+		virtual void Reset() override
+		{
+			Node::ResetStoredValues();
+			child_->Reset();
+		}
+		
+		
+		
+		virtual void SetChild(std::shared_ptr<Node> new_child)
+		{
+			child_ = new_child;
+		}
+		
+		
+		
+		//Return the only child for the unary operator
+		std::shared_ptr<Node> first_child()
+		{
+			return child_;
+		}
+		
+		
+		////////////// TESTING /////////////////
+		virtual void PrintTree()
+		{
+			for(int ii = 0; ii < tabcount; ++ii)
+			{
+				std::cout << "\t";
+			}
+			std::cout << tabcount+1 << "." <<  boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->Eval<dbl>()<< std::endl;
+			tabcount++;
+			child_->PrintTree();
+			tabcount--;
+		}
+		////////////// TESTING /////////////////
+		
+		
+		
+		
+		
+		
+	protected:
+		//Stores the single child of the unary operator
+		std::shared_ptr<Node> child_;
+	};
 	
-	
-	
-	virtual void SetChild(std::shared_ptr<Node> new_child)
-	{
-		child_ = new_child;
-	}
-	
-//    virtual void AddChild(std::shared_ptr<Node> child) override
-//    {
-//        child_ = child;
-//    }
-	
-    
-    //Return the only child for the unary operator
-    std::shared_ptr<Node> first_child()
-    {
-        return child_;
-    }
-    
-    
-    ////////////// TESTING /////////////////
-    virtual void PrintTree()
-    {
-        for(int ii = 0; ii < tabcount; ++ii)
-        {
-            std::cout << "\t";
-        }
-        std::cout << tabcount+1 << "." <<  boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->Eval<dbl>()<< std::endl;
-        tabcount++;
-        child_->PrintTree();
-        tabcount--;
-    }
-    ////////////// TESTING /////////////////
-
-
-
-
-
-
-protected:
-    //Stores the single child of the unary operator
-    std::shared_ptr<Node> child_;
-};
-
 } // re: namespace bertini
 
 

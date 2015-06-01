@@ -25,22 +25,21 @@
 
 
 namespace bertini {
-
-// Description: This class is could work as an interface for all operators in a function tree.
-// NOTE: Currently this class is not in use!!!!!
-class Operator : public virtual Node
-{
-    
-public:
-
-	// This method adds a child to an operator.
-	//
-	// Every interface for operator types(nary, binary and unary) implement this method.
-//	virtual void AddChild(std::shared_ptr<Node> child) = 0;
-//	
-	virtual ~Operator() = default;
-};
-
+	
+	// Description: This class is could work as an interface for all operators in a function tree.
+	class Operator : public virtual Node
+	{
+		
+	public:
+		
+		// This method adds a child to an operator.
+		//
+		// Every interface for operator types(nary, binary and unary) implement this method.
+		//	virtual void AddChild(std::shared_ptr<Node> child) = 0;
+		//
+		virtual ~Operator() = default;
+	};
+	
 } // re: namespace bertini
 
 

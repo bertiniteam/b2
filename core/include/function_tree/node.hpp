@@ -170,7 +170,7 @@ namespace  {
 		N.print(out);
 		return out;
 	}
-}
+} // re: namespace {}
 
 
 
