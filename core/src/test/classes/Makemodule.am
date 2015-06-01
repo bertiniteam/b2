@@ -2,38 +2,17 @@
 
 EXTRA_PROGRAMS += b2_class_test
 
+function_tree_test_source_files = src/test/classes/function_tree_test.cpp
 
-
-
-
-test_function_tree_header_files = \
-	include/function_tree.hpp \
-	include/function_tree/node.h \
-	include/function_tree/operators/operator.h \
-	include/function_tree/operators/nary_operator.h \
-	include/function_tree/operators/mult_operator.h \
-	include/function_tree/operators/sum_operator.h \
-	include/function_tree/operators/binary_operator.h \
-	include/function_tree/operators/power_operator.h \
-	include/function_tree/operators/unary_operator.h \
-	include/function_tree/operators/negate_operator.h \
-	include/function_tree/operators/exp_operator.h \
-	include/function_tree/symbols/symbol.h \
-	include/function_tree/symbols/variable.h \
-	include/function_tree/symbols/number.h \
-	include/function_tree/roots/function.h \
-	include/function_parsing.h
-
-test_function_tree_source_files = src/test/classes/function_tree_test.cpp
-
-
+#$(function_tree_test_source_files) is defined in the bertini/Makemodule.am file.
 
 
 b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	src/test/classes/eigen_test.cpp \
 	include/mpfr_complex.hpp src/test/classes/complex_test.cpp \
 	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
-	$(test_function_tree_header_files) $(test_function_tree_source_files)
+	$(function_tree_header_files) \
+	$(function_tree_test_source_files)
 
 b2_class_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
 

@@ -2,9 +2,36 @@
 
 bin_PROGRAMS += bertini2
 
+
+
+
+
+function_tree_header_files = \
+	include/function_tree.hpp \
+	include/function_tree/node.h \
+	include/function_tree/operators/operator.h \
+	include/function_tree/operators/nary_operator.h \
+	include/function_tree/operators/mult_operator.h \
+	include/function_tree/operators/sum_operator.h \
+	include/function_tree/operators/binary_operator.h \
+	include/function_tree/operators/power_operator.h \
+	include/function_tree/operators/unary_operator.h \
+	include/function_tree/operators/negate_operator.h \
+	include/function_tree/operators/exp_operator.h \
+	include/function_tree/symbols/symbol.h \
+	include/function_tree/symbols/variable.h \
+	include/function_tree/symbols/number.h \
+	include/function_tree/roots/function.h \
+	include/function_parsing.h
+
+
+
+
+
 bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp \
 	include/mpfr_complex.hpp \
-	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp
+	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
+	$(function_tree_header_files)
 
 
 
