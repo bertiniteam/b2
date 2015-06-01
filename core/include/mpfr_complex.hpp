@@ -612,8 +612,8 @@ namespace bertini {
 	
 	
 	/**
-	   Complex-complex multiplication
-	   */
+	 Complex-complex multiplication
+	 */
 	inline complex operator*(complex lhs, const complex & rhs){
 		lhs *= rhs;
 		return lhs;
@@ -827,7 +827,7 @@ namespace bertini {
 	}
 	
 	/**
-	Compute sine of a complex number
+	 Compute sine of a complex number
 	 */
 	inline complex sin(const complex & z)
 	{
@@ -898,7 +898,7 @@ namespace bertini {
 	
 	
 	/**
-	Inverse sine of complex number
+	 Inverse sine of complex number
 	 */
 	inline complex asin(const complex & z)
 	{
