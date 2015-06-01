@@ -19,7 +19,7 @@ namespace qi = boost::spirit::qi;
 
 int InteractiveTest();
 
-int Node::tabcount = 0;
+
 
 
 // set the values of the variables, by asking the user for their values.

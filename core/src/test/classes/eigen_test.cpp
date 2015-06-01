@@ -75,10 +75,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) /  RAND_MAX : B(ii,jj) = 0;
 		
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 //		std::cout << C << std::endl;
-		std::cout << "pure double time to solve:" << std::endl;
+//		std::cout << "pure double time to solve:" << std::endl;
 		//add statement on the value of C to actually test
 
 	}
@@ -102,10 +102,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1.0) + boost::multiprecision::mpfr_float(rand()) /  boost::multiprecision::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
 		
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 //		std::cout << C << std::endl;
-		std::cout << "mpfr_float pure 16 time to solve:" << std::endl;
+//		std::cout << "mpfr_float pure 16 time to solve:" << std::endl;
 	}
 
 
@@ -132,10 +132,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 	
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 //		std::cout << C << std::endl;
-		std::cout << "mpfr_float pure 100 time to solve:" << std::endl;
+//		std::cout << "mpfr_float pure 100 time to solve:" << std::endl;
 		
 	}
 
@@ -159,10 +159,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 //		std::cout << C << std::endl;
-		std::cout << "std::complex time to solve:" << std::endl;
+//		std::cout << "std::complex time to solve:" << std::endl;
 	}
 	
 	
@@ -181,12 +181,12 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 			for (int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = bertini::complex( bertini::complex(-1)/bertini::complex(ii+1) + bertini::complex(rand()) / bertini::complex(RAND_MAX)) : B(ii,jj) = bertini::complex(0);
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 		
 		
 //		std::cout << C << std::endl;
-		std::cout << "bertini::complex precision 100 time to solve:" << std::endl;
+//		std::cout << "bertini::complex precision 100 time to solve:" << std::endl;
 	}
 
 		

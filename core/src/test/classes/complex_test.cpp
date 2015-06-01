@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(complex_make_random_50)
 	using mpfr_float = boost::multiprecision::mpfr_float;
 	mpfr_float::default_precision(50);  std::cout.precision(50);
 	bertini::complex z = bertini::rand();
-	std::cout << z << std::endl;
+
 }
 
 
@@ -434,7 +434,8 @@ BOOST_AUTO_TEST_CASE(complex_make_random_100)
 	using mpfr_float = boost::multiprecision::mpfr_float;
 	mpfr_float::default_precision(100);  std::cout.precision(100);
 	bertini::complex z = bertini::rand();
-	std::cout << z << std::endl;
+
+
 }
 
 
