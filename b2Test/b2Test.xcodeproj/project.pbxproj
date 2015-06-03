@@ -12,6 +12,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		87BE1D141B1B7D7F00762D34 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		87EC867C1AF32ECE002FAC3D /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -37,6 +46,23 @@
 		873D91BC1AFD0CF500F32E03 /* variable.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = variable.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		8744E8F51AFFF49100BEB0A0 /* grammar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = grammar.h; sourceTree = "<group>"; };
 		8744E8F71B01545300BEB0A0 /* function.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = function.h; sourceTree = "<group>"; };
+		87BE1D161B1B7D7F00762D34 /* Brake_Function_and_Parser */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Brake_Function_and_Parser; sourceTree = BUILT_PRODUCTS_DIR; };
+		87BE1D591B1E64B800762D34 /* function_parsing.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = function_parsing.hpp; sourceTree = "<group>"; };
+		87BE1D5A1B1E64B800762D34 /* node.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = node.hpp; sourceTree = "<group>"; };
+		87BE1D5C1B1E64B800762D34 /* binary_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = binary_operator.hpp; sourceTree = "<group>"; };
+		87BE1D5D1B1E64B800762D34 /* exp_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = exp_operator.hpp; sourceTree = "<group>"; };
+		87BE1D5E1B1E64B800762D34 /* mult_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mult_operator.hpp; sourceTree = "<group>"; };
+		87BE1D5F1B1E64B800762D34 /* nary_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = nary_operator.hpp; sourceTree = "<group>"; };
+		87BE1D601B1E64B800762D34 /* negate_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = negate_operator.hpp; sourceTree = "<group>"; };
+		87BE1D611B1E64B800762D34 /* operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = operator.hpp; sourceTree = "<group>"; };
+		87BE1D621B1E64B800762D34 /* power_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = power_operator.hpp; sourceTree = "<group>"; };
+		87BE1D631B1E64B800762D34 /* sum_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = sum_operator.hpp; sourceTree = "<group>"; };
+		87BE1D641B1E64B800762D34 /* unary_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = unary_operator.hpp; sourceTree = "<group>"; };
+		87BE1D661B1E64B800762D34 /* function.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = function.hpp; sourceTree = "<group>"; };
+		87BE1D681B1E64B800762D34 /* number.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = number.hpp; sourceTree = "<group>"; };
+		87BE1D691B1E64B800762D34 /* symbol.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = symbol.hpp; sourceTree = "<group>"; };
+		87BE1D6A1B1E64B800762D34 /* variable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = variable.hpp; sourceTree = "<group>"; };
+		87BE1D6B1B1E64B800762D34 /* function_tree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = function_tree.hpp; sourceTree = "<group>"; };
 		87EC867E1AF32ECE002FAC3D /* b2Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = b2Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		87EC86811AF32ECE002FAC3D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		87EC868C1AF32EE2002FAC3D /* Function */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Function; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -55,6 +81,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		87BE1D131B1B7D7F00762D34 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		87EC867B1AF32ECE002FAC3D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -87,11 +120,67 @@
 			name = Nodes;
 			sourceTree = "<group>";
 		};
+		87BE1D171B1B7D7F00762D34 /* Brake_Function_and_Parser */ = {
+			isa = PBXGroup;
+			children = (
+				87BE1D581B1E64B800762D34 /* function_tree */,
+				87BE1D6B1B1E64B800762D34 /* function_tree.hpp */,
+			);
+			path = Brake_Function_and_Parser;
+			sourceTree = "<group>";
+		};
+		87BE1D581B1E64B800762D34 /* function_tree */ = {
+			isa = PBXGroup;
+			children = (
+				87BE1D591B1E64B800762D34 /* function_parsing.hpp */,
+				87BE1D5A1B1E64B800762D34 /* node.hpp */,
+				87BE1D5B1B1E64B800762D34 /* operators */,
+				87BE1D651B1E64B800762D34 /* roots */,
+				87BE1D671B1E64B800762D34 /* symbols */,
+			);
+			path = function_tree;
+			sourceTree = "<group>";
+		};
+		87BE1D5B1B1E64B800762D34 /* operators */ = {
+			isa = PBXGroup;
+			children = (
+				87BE1D5C1B1E64B800762D34 /* binary_operator.hpp */,
+				87BE1D5D1B1E64B800762D34 /* exp_operator.hpp */,
+				87BE1D5E1B1E64B800762D34 /* mult_operator.hpp */,
+				87BE1D5F1B1E64B800762D34 /* nary_operator.hpp */,
+				87BE1D601B1E64B800762D34 /* negate_operator.hpp */,
+				87BE1D611B1E64B800762D34 /* operator.hpp */,
+				87BE1D621B1E64B800762D34 /* power_operator.hpp */,
+				87BE1D631B1E64B800762D34 /* sum_operator.hpp */,
+				87BE1D641B1E64B800762D34 /* unary_operator.hpp */,
+			);
+			path = operators;
+			sourceTree = "<group>";
+		};
+		87BE1D651B1E64B800762D34 /* roots */ = {
+			isa = PBXGroup;
+			children = (
+				87BE1D661B1E64B800762D34 /* function.hpp */,
+			);
+			path = roots;
+			sourceTree = "<group>";
+		};
+		87BE1D671B1E64B800762D34 /* symbols */ = {
+			isa = PBXGroup;
+			children = (
+				87BE1D681B1E64B800762D34 /* number.hpp */,
+				87BE1D691B1E64B800762D34 /* symbol.hpp */,
+				87BE1D6A1B1E64B800762D34 /* variable.hpp */,
+			);
+			path = symbols;
+			sourceTree = "<group>";
+		};
 		87EC86751AF32ECE002FAC3D = {
 			isa = PBXGroup;
 			children = (
 				87EC86801AF32ECE002FAC3D /* b2Test */,
 				87EC868D1AF32EE2002FAC3D /* FunctionTest */,
+				87BE1D171B1B7D7F00762D34 /* Brake_Function_and_Parser */,
 				87EC867F1AF32ECE002FAC3D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -101,6 +190,7 @@
 			children = (
 				87EC867E1AF32ECE002FAC3D /* b2Test */,
 				87EC868C1AF32EE2002FAC3D /* Function */,
+				87BE1D161B1B7D7F00762D34 /* Brake_Function_and_Parser */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -173,6 +263,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		87BE1D151B1B7D7F00762D34 /* Brake_Function_and_Parser */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87BE1D1A1B1B7D7F00762D34 /* Build configuration list for PBXNativeTarget "Brake_Function_and_Parser" */;
+			buildPhases = (
+				87BE1D121B1B7D7F00762D34 /* Sources */,
+				87BE1D131B1B7D7F00762D34 /* Frameworks */,
+				87BE1D141B1B7D7F00762D34 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Brake_Function_and_Parser;
+			productName = Brake_Function_and_Parser;
+			productReference = 87BE1D161B1B7D7F00762D34 /* Brake_Function_and_Parser */;
+			productType = "com.apple.product-type.tool";
+		};
 		87EC867D1AF32ECE002FAC3D /* b2Test */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 87EC86851AF32ECE002FAC3D /* Build configuration list for PBXNativeTarget "b2Test" */;
@@ -216,6 +323,9 @@
 				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = "West Texas A&M University";
 				TargetAttributes = {
+					87BE1D151B1B7D7F00762D34 = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
 					87EC867D1AF32ECE002FAC3D = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
@@ -238,11 +348,19 @@
 			targets = (
 				87EC867D1AF32ECE002FAC3D /* b2Test */,
 				87EC868B1AF32EE2002FAC3D /* Function */,
+				87BE1D151B1B7D7F00762D34 /* Brake_Function_and_Parser */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		87BE1D121B1B7D7F00762D34 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		87EC867A1AF32ECE002FAC3D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -262,6 +380,38 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		87BE1D1B1B1B7D7F00762D34 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/Cellar/boost/1.57.0/include,
+					/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Brake_Function_and_Parser,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		87BE1D1C1B1B7D7F00762D34 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/Cellar/boost/1.57.0/include,
+					/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/b2Test/Brake_Function_and_Parser,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		87EC86831AF32ECE002FAC3D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -381,6 +531,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		87BE1D1A1B1B7D7F00762D34 /* Build configuration list for PBXNativeTarget "Brake_Function_and_Parser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87BE1D1B1B1B7D7F00762D34 /* Debug */,
+				87BE1D1C1B1B7D7F00762D34 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		87EC86791AF32ECE002FAC3D /* Build configuration list for PBXProject "b2Test" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -1,11 +1,19 @@
-#this is src/bertini/Makemodule.am
+#this is src/test/classes/Makemodule.am
 
-bin_PROGRAMS += b2_class_test
+EXTRA_PROGRAMS += b2_class_test
+
+function_tree_test_source_files = src/test/classes/function_tree_test.cpp
+
+#$(function_tree_test_source_files) is defined in the bertini/Makemodule.am file.
+
 
 b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	src/test/classes/eigen_test.cpp \
-	include/complex.hpp src/test/classes/complex_test.cpp
-
+	include/mpfr_complex.hpp src/test/classes/complex_test.cpp \
+	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
+	$(function_tree_header_files) \
+	$(function_tree_test_source_files) \
+	system.hpp
 
 
 b2_class_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)

@@ -14,11 +14,24 @@
 
 
 
+#this is the main Makefile.am for Bertini 2.
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# this project uses non-recursive make.
+#
+# if you need to add an executable to the core,
+# add a Makemodule.am file in the source folder for the main file
+# and include it below.
+#
+# see the b2 github wiki for detailed instructions.
+# https://github.com/bertiniteam/b2
+# # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 #this is src/bertini/Makemodule.am
 
 #this is src/test/classes/Makemodule.am
 
-#this is src/test/classes/Makemodule.am
+#this is src/test/interactive_testing/Makemodule.am
 
 
 
@@ -96,8 +109,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = x86_64-apple-darwin13.4.0
 host_triplet = x86_64-apple-darwin13.4.0
-bin_PROGRAMS = b2_class_test$(EXEEXT) bertini2$(EXEEXT) \
-	qi_Parser$(EXEEXT)
+bin_PROGRAMS = bertini2$(EXEEXT)
+EXTRA_PROGRAMS = b2_class_test$(EXEEXT) test_tree_interactive$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_boost_base.m4 \
@@ -111,7 +124,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_boost_base.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/m4/m4-ax_cxx_compile_stdcxx_11.m4 \
+	$(top_srcdir)/m4/lx_find_mpi.m4 \
+	$(top_srcdir)/m4/m4-ax_cxx_compile_stdcxx_14.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -127,16 +141,22 @@ LIBRARIES = $(noinst_LIBRARIES)
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(includedir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
+am__objects_1 =
+am__objects_2 =  \
+	src/test/classes/b2_class_test-function_tree_test.$(OBJEXT)
 am_b2_class_test_OBJECTS =  \
 	src/test/classes/b2_class_test-class_test.$(OBJEXT) \
 	src/test/classes/b2_class_test-eigen_test.$(OBJEXT) \
-	src/test/classes/b2_class_test-complex_test.$(OBJEXT)
+	src/test/classes/b2_class_test-complex_test.$(OBJEXT) \
+	src/bertini/b2_class_test-mpfr_extensions.$(OBJEXT) \
+	$(am__objects_1) $(am__objects_2)
 b2_class_test_OBJECTS = $(am_b2_class_test_OBJECTS)
 am__DEPENDENCIES_1 =
 b2_class_test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
@@ -145,24 +165,21 @@ b2_class_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(b2_class_test_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-am_bertini2_OBJECTS = src/bertini/bertini2-bertini.$(OBJEXT)
+am_bertini2_OBJECTS = src/bertini/bertini2-bertini.$(OBJEXT) \
+	src/bertini/bertini2-mpfr_extensions.$(OBJEXT) \
+	$(am__objects_1)
 bertini2_OBJECTS = $(am_bertini2_OBJECTS)
 bertini2_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 bertini2_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(bertini2_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_qi_Parser_OBJECTS = src/qi_Parser/qi_Parser-main.$(OBJEXT)
-qi_Parser_OBJECTS = $(am_qi_Parser_OBJECTS)
-qi_Parser_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
-qi_Parser_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(qi_Parser_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am__objects_3 = src/test/interactive_testing/function_tree_interactive.$(OBJEXT)
+am_test_tree_interactive_OBJECTS = $(am__objects_3) $(am__objects_1)
+test_tree_interactive_OBJECTS = $(am_test_tree_interactive_OBJECTS)
+test_tree_interactive_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -216,9 +233,9 @@ am__v_CCLD_ = $(am__v_CCLD_$(AM_DEFAULT_VERBOSITY))
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(b2_class_test_SOURCES) $(bertini2_SOURCES) \
-	$(qi_Parser_SOURCES)
+	$(test_tree_interactive_SOURCES)
 DIST_SOURCES = $(b2_class_test_SOURCES) $(bertini2_SOURCES) \
-	$(qi_Parser_SOURCES)
+	$(test_tree_interactive_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -276,8 +293,8 @@ CSCOPE = cscope
 AM_RECURSIVE_TARGETS = cscope
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(srcdir)/src/bertini/Makemodule.am \
-	$(srcdir)/src/qi_Parser/Makemodule.am \
 	$(srcdir)/src/test/classes/Makemodule.am \
+	$(srcdir)/src/test/interactive_testing/Makemodule.am \
 	$(top_srcdir)/config/compile $(top_srcdir)/config/config.guess \
 	$(top_srcdir)/config/config.sub $(top_srcdir)/config/depcomp \
 	$(top_srcdir)/config/install-sh $(top_srcdir)/config/ltmain.sh \
@@ -327,7 +344,7 @@ CPPFLAGS =
 CXX = /usr/bin/g++
 CXXCPP = /usr/bin/g++ -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g -O2 -std=gnu++11
+CXXFLAGS = -g -O2 -std=gnu++1y
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -341,7 +358,7 @@ EGREP = /usr/bin/grep -E
 EXEEXT = 
 FGREP = /usr/bin/grep -F
 GREP = /usr/bin/grep
-HAVE_CXX11 = 
+HAVE_CXX14 = 
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -349,9 +366,6 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
 LDFLAGS = 
-LEX = flex
-LEXLIB = 
-LEX_OUTPUT_ROOT = lex.yy
 LIBOBJS = 
 LIBS = -lgmp -lmpfr 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
@@ -362,6 +376,9 @@ LT_SYS_LIBRARY_PATH =
 MAKEINFO = ${SHELL} /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/config/missing makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = config/install-sh -c -d
+MPICXX = /Applications/FEniCS.app/Contents/Resources/bin/mpicxx
+MPI_CXXFLAGS = -I/Applications/FEniCS.app/Contents/Resources/include
+MPI_CXXLDFLAGS = -L/Applications/FEniCS.app/Contents/Resources/lib  -lmpi_cxx  -lmpi  -lm
 NM = /usr/bin/nm
 NMEDIT = nmedit
 OBJDUMP = false
@@ -371,19 +388,17 @@ OTOOL64 = :
 PACKAGE = b2
 PACKAGE_BUGREPORT = danielthebrake@gmail.com
 PACKAGE_NAME = b2
-PACKAGE_STRING = b2 0.0.0
+PACKAGE_STRING = b2 2015.06.01.dev
 PACKAGE_TARNAME = b2
-PACKAGE_URL = http://github.com/danbates/b2
-PACKAGE_VERSION = 0.0.0
+PACKAGE_URL = http://github.com/bertiniteam/b2
+PACKAGE_VERSION = 2015.06.01.dev
 PATH_SEPARATOR = :
 RANLIB = ranlib
 SED = /usr/bin/sed
 SET_MAKE = 
 SHELL = /bin/sh
 STRIP = strip
-VERSION = 0.0.0
-YACC = bison -y
-YFLAGS = 
+VERSION = 2015.06.01.dev
 abs_builddir = /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core
 abs_srcdir = /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core
 abs_top_builddir = /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core
@@ -445,27 +460,66 @@ BUILT_SOURCES =
 CLEANFILES = 
 noinst_LIBRARIES = 
 include_HEADERS = 
-SUFFIXES = .cpp .hpp .y .l
+
+#see https://www.gnu.org/software/automake/manual/html_node/Suffixes.html
+SUFFIXES = .cpp .hpp
+function_tree_header_files = \
+	include/function_tree.hpp \
+	include/function_tree/node.h \
+	include/function_tree/operators/operator.h \
+	include/function_tree/operators/nary_operator.h \
+	include/function_tree/operators/mult_operator.h \
+	include/function_tree/operators/sum_operator.h \
+	include/function_tree/operators/binary_operator.h \
+	include/function_tree/operators/power_operator.h \
+	include/function_tree/operators/unary_operator.h \
+	include/function_tree/operators/negate_operator.h \
+	include/function_tree/operators/exp_operator.h \
+	include/function_tree/symbols/symbol.h \
+	include/function_tree/symbols/variable.h \
+	include/function_tree/symbols/number.h \
+	include/function_tree/roots/function.h \
+	include/function_parsing.h
+
+bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp \
+	include/mpfr_complex.hpp \
+	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
+	$(function_tree_header_files) \
+	system.hpp
+
+bertini2_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
+bertini2_CXXFLAGS = $(BOOST_CPPFLAGS)
+function_tree_test_source_files = src/test/classes/function_tree_test.cpp
+
+#$(function_tree_test_source_files) is defined in the bertini/Makemodule.am file.
 b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	src/test/classes/eigen_test.cpp \
-	include/complex.hpp src/test/classes/complex_test.cpp
+	include/mpfr_complex.hpp src/test/classes/complex_test.cpp \
+	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
+	$(function_tree_header_files) \
+	$(function_tree_test_source_files) \
+	system.hpp
 
 b2_class_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
 b2_class_test_CXXFLAGS = $(BOOST_CPPFLAGS)
-bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp
-bertini2_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
-bertini2_CXXFLAGS = $(BOOST_CPPFLAGS)
-qi_Parser_SOURCES = src/qi_Parser/main.cpp
-qi_Parser_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
-qi_Parser_CXXFLAGS = $(BOOST_CPPFLAGS)
+
+# the variable $(function_tree_header_files) is defined in the bertini/Makemodule.am
+test_tree_interactive_source_files = \
+	src/test/interactive_testing/function_tree_interactive.cpp
+
+test_tree_interactive_SOURCES = \
+	$(test_tree_interactive_source_files) \
+	$(function_tree_header_files) \
+	system.hpp
+
 all: $(BUILT_SOURCES) config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .cpp .hpp .y .l .lo .o .obj
+.SUFFIXES: .cpp .hpp .lo .o .obj
 am--refresh: Makefile
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/src/test/classes/Makemodule.am $(srcdir)/src/bertini/Makemodule.am $(srcdir)/src/qi_Parser/Makemodule.am $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/src/bertini/Makemodule.am $(srcdir)/src/test/classes/Makemodule.am $(srcdir)/src/test/interactive_testing/Makemodule.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -487,7 +541,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
 	esac;
-$(srcdir)/src/test/classes/Makemodule.am $(srcdir)/src/bertini/Makemodule.am $(srcdir)/src/qi_Parser/Makemodule.am $(am__empty):
+$(srcdir)/src/bertini/Makemodule.am $(srcdir)/src/test/classes/Makemodule.am $(srcdir)/src/test/interactive_testing/Makemodule.am $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
@@ -579,49 +633,62 @@ src/test/classes/b2_class_test-eigen_test.$(OBJEXT):  \
 src/test/classes/b2_class_test-complex_test.$(OBJEXT):  \
 	src/test/classes/$(am__dirstamp) \
 	src/test/classes/$(DEPDIR)/$(am__dirstamp)
-
-b2_class_test$(EXEEXT): $(b2_class_test_OBJECTS) $(b2_class_test_DEPENDENCIES) $(EXTRA_b2_class_test_DEPENDENCIES) 
-	@rm -f b2_class_test$(EXEEXT)
-	$(AM_V_CXXLD)$(b2_class_test_LINK) $(b2_class_test_OBJECTS) $(b2_class_test_LDADD) $(LIBS)
 src/bertini/$(am__dirstamp):
 	@$(MKDIR_P) src/bertini
 	@: > src/bertini/$(am__dirstamp)
 src/bertini/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) src/bertini/$(DEPDIR)
 	@: > src/bertini/$(DEPDIR)/$(am__dirstamp)
+src/bertini/b2_class_test-mpfr_extensions.$(OBJEXT):  \
+	src/bertini/$(am__dirstamp) \
+	src/bertini/$(DEPDIR)/$(am__dirstamp)
+src/test/classes/b2_class_test-function_tree_test.$(OBJEXT):  \
+	src/test/classes/$(am__dirstamp) \
+	src/test/classes/$(DEPDIR)/$(am__dirstamp)
+
+b2_class_test$(EXEEXT): $(b2_class_test_OBJECTS) $(b2_class_test_DEPENDENCIES) $(EXTRA_b2_class_test_DEPENDENCIES) 
+	@rm -f b2_class_test$(EXEEXT)
+	$(AM_V_CXXLD)$(b2_class_test_LINK) $(b2_class_test_OBJECTS) $(b2_class_test_LDADD) $(LIBS)
 src/bertini/bertini2-bertini.$(OBJEXT): src/bertini/$(am__dirstamp) \
+	src/bertini/$(DEPDIR)/$(am__dirstamp)
+src/bertini/bertini2-mpfr_extensions.$(OBJEXT):  \
+	src/bertini/$(am__dirstamp) \
 	src/bertini/$(DEPDIR)/$(am__dirstamp)
 
 bertini2$(EXEEXT): $(bertini2_OBJECTS) $(bertini2_DEPENDENCIES) $(EXTRA_bertini2_DEPENDENCIES) 
 	@rm -f bertini2$(EXEEXT)
 	$(AM_V_CXXLD)$(bertini2_LINK) $(bertini2_OBJECTS) $(bertini2_LDADD) $(LIBS)
-src/qi_Parser/$(am__dirstamp):
-	@$(MKDIR_P) src/qi_Parser
-	@: > src/qi_Parser/$(am__dirstamp)
-src/qi_Parser/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) src/qi_Parser/$(DEPDIR)
-	@: > src/qi_Parser/$(DEPDIR)/$(am__dirstamp)
-src/qi_Parser/qi_Parser-main.$(OBJEXT): src/qi_Parser/$(am__dirstamp) \
-	src/qi_Parser/$(DEPDIR)/$(am__dirstamp)
+src/test/interactive_testing/$(am__dirstamp):
+	@$(MKDIR_P) src/test/interactive_testing
+	@: > src/test/interactive_testing/$(am__dirstamp)
+src/test/interactive_testing/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) src/test/interactive_testing/$(DEPDIR)
+	@: > src/test/interactive_testing/$(DEPDIR)/$(am__dirstamp)
+src/test/interactive_testing/function_tree_interactive.$(OBJEXT):  \
+	src/test/interactive_testing/$(am__dirstamp) \
+	src/test/interactive_testing/$(DEPDIR)/$(am__dirstamp)
 
-qi_Parser$(EXEEXT): $(qi_Parser_OBJECTS) $(qi_Parser_DEPENDENCIES) $(EXTRA_qi_Parser_DEPENDENCIES) 
-	@rm -f qi_Parser$(EXEEXT)
-	$(AM_V_CXXLD)$(qi_Parser_LINK) $(qi_Parser_OBJECTS) $(qi_Parser_LDADD) $(LIBS)
+test_tree_interactive$(EXEEXT): $(test_tree_interactive_OBJECTS) $(test_tree_interactive_DEPENDENCIES) $(EXTRA_test_tree_interactive_DEPENDENCIES) 
+	@rm -f test_tree_interactive$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(test_tree_interactive_OBJECTS) $(test_tree_interactive_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f src/bertini/*.$(OBJEXT)
-	-rm -f src/qi_Parser/*.$(OBJEXT)
 	-rm -f src/test/classes/*.$(OBJEXT)
+	-rm -f src/test/interactive_testing/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
+include src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Po
 include src/bertini/$(DEPDIR)/bertini2-bertini.Po
-include src/qi_Parser/$(DEPDIR)/qi_Parser-main.Po
+include src/bertini/$(DEPDIR)/bertini2-mpfr_extensions.Po
 include src/test/classes/$(DEPDIR)/b2_class_test-class_test.Po
 include src/test/classes/$(DEPDIR)/b2_class_test-complex_test.Po
 include src/test/classes/$(DEPDIR)/b2_class_test-eigen_test.Po
+include src/test/classes/$(DEPDIR)/b2_class_test-function_tree_test.Po
+include src/test/interactive_testing/$(DEPDIR)/function_tree_interactive.Po
 
 .cpp.o:
 	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -689,6 +756,34 @@ src/test/classes/b2_class_test-complex_test.obj: src/test/classes/complex_test.c
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
 #	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-complex_test.obj `if test -f 'src/test/classes/complex_test.cpp'; then $(CYGPATH_W) 'src/test/classes/complex_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/complex_test.cpp'; fi`
 
+src/bertini/b2_class_test-mpfr_extensions.o: src/bertini/mpfr_extensions.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/bertini/b2_class_test-mpfr_extensions.o -MD -MP -MF src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Tpo -c -o src/bertini/b2_class_test-mpfr_extensions.o `test -f 'src/bertini/mpfr_extensions.cpp' || echo '$(srcdir)/'`src/bertini/mpfr_extensions.cpp
+	$(AM_V_at)$(am__mv) src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Tpo src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Po
+#	$(AM_V_CXX)source='src/bertini/mpfr_extensions.cpp' object='src/bertini/b2_class_test-mpfr_extensions.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/bertini/b2_class_test-mpfr_extensions.o `test -f 'src/bertini/mpfr_extensions.cpp' || echo '$(srcdir)/'`src/bertini/mpfr_extensions.cpp
+
+src/bertini/b2_class_test-mpfr_extensions.obj: src/bertini/mpfr_extensions.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/bertini/b2_class_test-mpfr_extensions.obj -MD -MP -MF src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Tpo -c -o src/bertini/b2_class_test-mpfr_extensions.obj `if test -f 'src/bertini/mpfr_extensions.cpp'; then $(CYGPATH_W) 'src/bertini/mpfr_extensions.cpp'; else $(CYGPATH_W) '$(srcdir)/src/bertini/mpfr_extensions.cpp'; fi`
+	$(AM_V_at)$(am__mv) src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Tpo src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Po
+#	$(AM_V_CXX)source='src/bertini/mpfr_extensions.cpp' object='src/bertini/b2_class_test-mpfr_extensions.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/bertini/b2_class_test-mpfr_extensions.obj `if test -f 'src/bertini/mpfr_extensions.cpp'; then $(CYGPATH_W) 'src/bertini/mpfr_extensions.cpp'; else $(CYGPATH_W) '$(srcdir)/src/bertini/mpfr_extensions.cpp'; fi`
+
+src/test/classes/b2_class_test-function_tree_test.o: src/test/classes/function_tree_test.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/test/classes/b2_class_test-function_tree_test.o -MD -MP -MF src/test/classes/$(DEPDIR)/b2_class_test-function_tree_test.Tpo -c -o src/test/classes/b2_class_test-function_tree_test.o `test -f 'src/test/classes/function_tree_test.cpp' || echo '$(srcdir)/'`src/test/classes/function_tree_test.cpp
+	$(AM_V_at)$(am__mv) src/test/classes/$(DEPDIR)/b2_class_test-function_tree_test.Tpo src/test/classes/$(DEPDIR)/b2_class_test-function_tree_test.Po
+#	$(AM_V_CXX)source='src/test/classes/function_tree_test.cpp' object='src/test/classes/b2_class_test-function_tree_test.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-function_tree_test.o `test -f 'src/test/classes/function_tree_test.cpp' || echo '$(srcdir)/'`src/test/classes/function_tree_test.cpp
+
+src/test/classes/b2_class_test-function_tree_test.obj: src/test/classes/function_tree_test.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/test/classes/b2_class_test-function_tree_test.obj -MD -MP -MF src/test/classes/$(DEPDIR)/b2_class_test-function_tree_test.Tpo -c -o src/test/classes/b2_class_test-function_tree_test.obj `if test -f 'src/test/classes/function_tree_test.cpp'; then $(CYGPATH_W) 'src/test/classes/function_tree_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/function_tree_test.cpp'; fi`
+	$(AM_V_at)$(am__mv) src/test/classes/$(DEPDIR)/b2_class_test-function_tree_test.Tpo src/test/classes/$(DEPDIR)/b2_class_test-function_tree_test.Po
+#	$(AM_V_CXX)source='src/test/classes/function_tree_test.cpp' object='src/test/classes/b2_class_test-function_tree_test.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
+#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-function_tree_test.obj `if test -f 'src/test/classes/function_tree_test.cpp'; then $(CYGPATH_W) 'src/test/classes/function_tree_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/function_tree_test.cpp'; fi`
+
 src/bertini/bertini2-bertini.o: src/bertini/bertini.cpp
 	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bertini2_CXXFLAGS) $(CXXFLAGS) -MT src/bertini/bertini2-bertini.o -MD -MP -MF src/bertini/$(DEPDIR)/bertini2-bertini.Tpo -c -o src/bertini/bertini2-bertini.o `test -f 'src/bertini/bertini.cpp' || echo '$(srcdir)/'`src/bertini/bertini.cpp
 	$(AM_V_at)$(am__mv) src/bertini/$(DEPDIR)/bertini2-bertini.Tpo src/bertini/$(DEPDIR)/bertini2-bertini.Po
@@ -703,19 +798,19 @@ src/bertini/bertini2-bertini.obj: src/bertini/bertini.cpp
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
 #	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bertini2_CXXFLAGS) $(CXXFLAGS) -c -o src/bertini/bertini2-bertini.obj `if test -f 'src/bertini/bertini.cpp'; then $(CYGPATH_W) 'src/bertini/bertini.cpp'; else $(CYGPATH_W) '$(srcdir)/src/bertini/bertini.cpp'; fi`
 
-src/qi_Parser/qi_Parser-main.o: src/qi_Parser/main.cpp
-	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qi_Parser_CXXFLAGS) $(CXXFLAGS) -MT src/qi_Parser/qi_Parser-main.o -MD -MP -MF src/qi_Parser/$(DEPDIR)/qi_Parser-main.Tpo -c -o src/qi_Parser/qi_Parser-main.o `test -f 'src/qi_Parser/main.cpp' || echo '$(srcdir)/'`src/qi_Parser/main.cpp
-	$(AM_V_at)$(am__mv) src/qi_Parser/$(DEPDIR)/qi_Parser-main.Tpo src/qi_Parser/$(DEPDIR)/qi_Parser-main.Po
-#	$(AM_V_CXX)source='src/qi_Parser/main.cpp' object='src/qi_Parser/qi_Parser-main.o' libtool=no \
+src/bertini/bertini2-mpfr_extensions.o: src/bertini/mpfr_extensions.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bertini2_CXXFLAGS) $(CXXFLAGS) -MT src/bertini/bertini2-mpfr_extensions.o -MD -MP -MF src/bertini/$(DEPDIR)/bertini2-mpfr_extensions.Tpo -c -o src/bertini/bertini2-mpfr_extensions.o `test -f 'src/bertini/mpfr_extensions.cpp' || echo '$(srcdir)/'`src/bertini/mpfr_extensions.cpp
+	$(AM_V_at)$(am__mv) src/bertini/$(DEPDIR)/bertini2-mpfr_extensions.Tpo src/bertini/$(DEPDIR)/bertini2-mpfr_extensions.Po
+#	$(AM_V_CXX)source='src/bertini/mpfr_extensions.cpp' object='src/bertini/bertini2-mpfr_extensions.o' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
-#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qi_Parser_CXXFLAGS) $(CXXFLAGS) -c -o src/qi_Parser/qi_Parser-main.o `test -f 'src/qi_Parser/main.cpp' || echo '$(srcdir)/'`src/qi_Parser/main.cpp
+#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bertini2_CXXFLAGS) $(CXXFLAGS) -c -o src/bertini/bertini2-mpfr_extensions.o `test -f 'src/bertini/mpfr_extensions.cpp' || echo '$(srcdir)/'`src/bertini/mpfr_extensions.cpp
 
-src/qi_Parser/qi_Parser-main.obj: src/qi_Parser/main.cpp
-	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qi_Parser_CXXFLAGS) $(CXXFLAGS) -MT src/qi_Parser/qi_Parser-main.obj -MD -MP -MF src/qi_Parser/$(DEPDIR)/qi_Parser-main.Tpo -c -o src/qi_Parser/qi_Parser-main.obj `if test -f 'src/qi_Parser/main.cpp'; then $(CYGPATH_W) 'src/qi_Parser/main.cpp'; else $(CYGPATH_W) '$(srcdir)/src/qi_Parser/main.cpp'; fi`
-	$(AM_V_at)$(am__mv) src/qi_Parser/$(DEPDIR)/qi_Parser-main.Tpo src/qi_Parser/$(DEPDIR)/qi_Parser-main.Po
-#	$(AM_V_CXX)source='src/qi_Parser/main.cpp' object='src/qi_Parser/qi_Parser-main.obj' libtool=no \
+src/bertini/bertini2-mpfr_extensions.obj: src/bertini/mpfr_extensions.cpp
+	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bertini2_CXXFLAGS) $(CXXFLAGS) -MT src/bertini/bertini2-mpfr_extensions.obj -MD -MP -MF src/bertini/$(DEPDIR)/bertini2-mpfr_extensions.Tpo -c -o src/bertini/bertini2-mpfr_extensions.obj `if test -f 'src/bertini/mpfr_extensions.cpp'; then $(CYGPATH_W) 'src/bertini/mpfr_extensions.cpp'; else $(CYGPATH_W) '$(srcdir)/src/bertini/mpfr_extensions.cpp'; fi`
+	$(AM_V_at)$(am__mv) src/bertini/$(DEPDIR)/bertini2-mpfr_extensions.Tpo src/bertini/$(DEPDIR)/bertini2-mpfr_extensions.Po
+#	$(AM_V_CXX)source='src/bertini/mpfr_extensions.cpp' object='src/bertini/bertini2-mpfr_extensions.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) \
-#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(qi_Parser_CXXFLAGS) $(CXXFLAGS) -c -o src/qi_Parser/qi_Parser-main.obj `if test -f 'src/qi_Parser/main.cpp'; then $(CYGPATH_W) 'src/qi_Parser/main.cpp'; else $(CYGPATH_W) '$(srcdir)/src/qi_Parser/main.cpp'; fi`
+#	$(AM_V_CXX_no)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bertini2_CXXFLAGS) $(CXXFLAGS) -c -o src/bertini/bertini2-mpfr_extensions.obj `if test -f 'src/bertini/mpfr_extensions.cpp'; then $(CYGPATH_W) 'src/bertini/mpfr_extensions.cpp'; else $(CYGPATH_W) '$(srcdir)/src/bertini/mpfr_extensions.cpp'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1007,10 +1102,10 @@ distclean-generic:
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
 	-rm -f src/bertini/$(DEPDIR)/$(am__dirstamp)
 	-rm -f src/bertini/$(am__dirstamp)
-	-rm -f src/qi_Parser/$(DEPDIR)/$(am__dirstamp)
-	-rm -f src/qi_Parser/$(am__dirstamp)
 	-rm -f src/test/classes/$(DEPDIR)/$(am__dirstamp)
 	-rm -f src/test/classes/$(am__dirstamp)
+	-rm -f src/test/interactive_testing/$(DEPDIR)/$(am__dirstamp)
+	-rm -f src/test/interactive_testing/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -1023,7 +1118,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-libtool \
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf src/bertini/$(DEPDIR) src/qi_Parser/$(DEPDIR) src/test/classes/$(DEPDIR)
+	-rm -rf src/bertini/$(DEPDIR) src/test/classes/$(DEPDIR) src/test/interactive_testing/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -1071,7 +1166,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf src/bertini/$(DEPDIR) src/qi_Parser/$(DEPDIR) src/test/classes/$(DEPDIR)
+	-rm -rf src/bertini/$(DEPDIR) src/test/classes/$(DEPDIR) src/test/interactive_testing/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1113,9 +1208,19 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS
 
 .PRECIOUS: Makefile
 
-#see https://www.gnu.org/software/automake/manual/html_node/Suffixes.html
 
-#now include the Makemodule files from the subdirectories.  they will add on to the variables which are set above
+#test_tree_interactive_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  \
+#	$(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) \
+#	$(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
+
+#test_tree_interactive_CXXFLAGS = $(BOOST_CPPFLAGS)
+
+############################
+###  now include the Makemodule files from the subdirectories.  they will add on to the variables which are set above
+##################################
+
+# include this one first, as it defines some useful groups of files which are used later
+# in other files.
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -1,5 +1,6 @@
 src/test/classes/b2_class_test-complex_test.o: \
-  src/test/classes/complex_test.cpp include/complex.hpp \
+  src/test/classes/complex_test.cpp include/mpfr_complex.hpp config.h \
+  include/mpfr_extensions.hpp \
   /usr/local/include/boost/multiprecision/mpfr.hpp \
   /usr/local/include/boost/multiprecision/number.hpp \
   /usr/local/include/boost/cstdint.hpp \
@@ -973,6 +974,187 @@ src/test/classes/b2_class_test-complex_test.o: \
   /usr/local/include/boost/random/uniform_on_sphere.hpp \
   /usr/local/include/boost/random/uniform_smallint.hpp \
   /usr/local/include/boost/random/weibull_distribution.hpp \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/random \
+  /usr/local/include/boost/archive/text_oarchive.hpp \
+  /usr/local/include/boost/archive/detail/auto_link_archive.hpp \
+  /usr/local/include/boost/archive/detail/decl.hpp \
+  /usr/local/include/boost/config/auto_link.hpp \
+  /usr/local/include/boost/archive/basic_text_oprimitive.hpp \
+  /usr/local/include/boost/io/ios_state.hpp \
+  /usr/local/include/boost/io_fwd.hpp \
+  /usr/local/include/boost/scoped_ptr.hpp \
+  /usr/local/include/boost/smart_ptr/scoped_ptr.hpp \
+  /usr/local/include/boost/serialization/throw_exception.hpp \
+  /usr/local/include/boost/archive/archive_exception.hpp \
+  /usr/local/include/boost/archive/detail/abi_prefix.hpp \
+  /usr/local/include/boost/config/abi_prefix.hpp \
+  /usr/local/include/boost/archive/detail/abi_suffix.hpp \
+  /usr/local/include/boost/config/abi_suffix.hpp \
+  /usr/local/include/boost/archive/basic_streambuf_locale_saver.hpp \
+  /usr/local/include/boost/archive/basic_text_oarchive.hpp \
+  /usr/local/include/boost/serialization/pfto.hpp \
+  /usr/local/include/boost/archive/detail/common_oarchive.hpp \
+  /usr/local/include/boost/archive/detail/basic_oarchive.hpp \
+  /usr/local/include/boost/archive/basic_archive.hpp \
+  /usr/local/include/boost/serialization/level.hpp \
+  /usr/local/include/boost/serialization/level_enum.hpp \
+  /usr/local/include/boost/serialization/is_bitwise_serializable.hpp \
+  /usr/local/include/boost/serialization/tracking_enum.hpp \
+  /usr/local/include/boost/archive/detail/helper_collection.hpp \
+  /usr/local/include/boost/archive/detail/interface_oarchive.hpp \
+  /usr/local/include/boost/archive/detail/oserializer.hpp \
+  /usr/local/include/boost/serialization/extended_type_info_typeid.hpp \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdarg \
+  /usr/local/include/boost/serialization/static_warning.hpp \
+  /usr/local/include/boost/mpl/print.hpp \
+  /usr/local/include/boost/type_traits/is_polymorphic.hpp \
+  /usr/local/include/boost/serialization/config.hpp \
+  /usr/local/include/boost/serialization/singleton.hpp \
+  /usr/local/include/boost/serialization/force_include.hpp \
+  /usr/local/include/boost/serialization/extended_type_info.hpp \
+  /usr/local/include/boost/serialization/factory.hpp \
+  /usr/local/include/boost/preprocessor/comparison/greater.hpp \
+  /usr/local/include/boost/preprocessor/comparison/less.hpp \
+  /usr/local/include/boost/preprocessor/comparison/not_equal.hpp \
+  /usr/local/include/boost/serialization/access.hpp \
+  /usr/local/include/boost/serialization/smart_cast.hpp \
+  /usr/local/include/boost/serialization/assume_abstract.hpp \
+  /usr/local/include/boost/type_traits/remove_extent.hpp \
+  /usr/local/include/boost/serialization/serialization.hpp \
+  /usr/local/include/boost/serialization/strong_typedef.hpp \
+  /usr/local/include/boost/operators.hpp \
+  /usr/local/include/boost/serialization/version.hpp \
+  /usr/local/include/boost/serialization/tracking.hpp \
+  /usr/local/include/boost/serialization/type_info_implementation.hpp \
+  /usr/local/include/boost/serialization/traits.hpp \
+  /usr/local/include/boost/serialization/nvp.hpp \
+  /usr/local/include/boost/serialization/split_member.hpp \
+  /usr/local/include/boost/serialization/base_object.hpp \
+  /usr/local/include/boost/serialization/void_cast_fwd.hpp \
+  /usr/local/include/boost/serialization/wrapper.hpp \
+  /usr/local/include/boost/serialization/void_cast.hpp \
+  /usr/local/include/boost/type_traits/is_virtual_base_of.hpp \
+  /usr/local/include/boost/serialization/array.hpp \
+  /usr/local/include/boost/serialization/collection_size_type.hpp \
+  /usr/local/include/boost/serialization/split_free.hpp \
+  /usr/local/include/boost/archive/detail/basic_oserializer.hpp \
+  /usr/local/include/boost/archive/detail/basic_serializer.hpp \
+  /usr/local/include/boost/archive/detail/basic_pointer_oserializer.hpp \
+  /usr/local/include/boost/archive/detail/archive_serializer_map.hpp \
+  /usr/local/include/boost/archive/detail/check.hpp \
+  /usr/local/include/boost/serialization/string.hpp \
+  /usr/local/include/boost/archive/detail/register_archive.hpp \
+  /usr/local/include/boost/serialization/item_version_type.hpp \
+  /usr/local/include/boost/archive/text_iarchive.hpp \
+  /usr/local/include/boost/archive/basic_text_iprimitive.hpp \
+  /usr/local/include/boost/archive/basic_text_iarchive.hpp \
+  /usr/local/include/boost/archive/detail/common_iarchive.hpp \
+  /usr/local/include/boost/archive/detail/basic_iarchive.hpp \
+  /usr/local/include/boost/archive/detail/basic_pointer_iserializer.hpp \
+  /usr/local/include/boost/archive/detail/interface_iarchive.hpp \
+  /usr/local/include/boost/archive/detail/iserializer.hpp \
+  /usr/local/include/boost/detail/no_exceptions_support.hpp \
+  /usr/local/include/boost/core/no_exceptions_support.hpp \
+  /usr/local/include/boost/type_traits/has_new_operator.hpp \
+  /usr/local/include/boost/archive/detail/basic_iserializer.hpp \
+  /usr/local/include/eigen3/Eigen/Core \
+  /usr/local/include/eigen3/Eigen/src/Core/util/DisableStupidWarnings.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/Macros.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/MKL_support.h \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/6.0/include/pmmintrin.h \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/6.0/include/tmmintrin.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/Constants.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/ForwardDeclarations.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/Meta.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/StaticAssert.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/XprHelper.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/Memory.h \
+  /usr/local/include/eigen3/Eigen/src/Core/NumTraits.h \
+  /usr/local/include/eigen3/Eigen/src/Core/MathFunctions.h \
+  /usr/local/include/eigen3/Eigen/src/Core/GenericPacketMath.h \
+  /usr/local/include/eigen3/Eigen/src/Core/arch/SSE/PacketMath.h \
+  /usr/local/include/eigen3/Eigen/src/Core/arch/SSE/MathFunctions.h \
+  /usr/local/include/eigen3/Eigen/src/Core/arch/SSE/Complex.h \
+  /usr/local/include/eigen3/Eigen/src/Core/arch/Default/Settings.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Functors.h \
+  /usr/local/include/eigen3/Eigen/src/Core/DenseCoeffsBase.h \
+  /usr/local/include/eigen3/Eigen/src/Core/DenseBase.h \
+  /usr/local/include/eigen3/Eigen/src/Core/../plugins/BlockMethods.h \
+  /usr/local/include/eigen3/Eigen/src/Core/MatrixBase.h \
+  /usr/local/include/eigen3/Eigen/src/Core/../plugins/CommonCwiseUnaryOps.h \
+  /usr/local/include/eigen3/Eigen/src/Core/../plugins/CommonCwiseBinaryOps.h \
+  /usr/local/include/eigen3/Eigen/src/Core/../plugins/MatrixCwiseUnaryOps.h \
+  /usr/local/include/eigen3/Eigen/src/Core/../plugins/MatrixCwiseBinaryOps.h \
+  /usr/local/include/eigen3/Eigen/src/Core/EigenBase.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Assign.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/BlasUtil.h \
+  /usr/local/include/eigen3/Eigen/src/Core/DenseStorage.h \
+  /usr/local/include/eigen3/Eigen/src/Core/NestByValue.h \
+  /usr/local/include/eigen3/Eigen/src/Core/ForceAlignedAccess.h \
+  /usr/local/include/eigen3/Eigen/src/Core/ReturnByValue.h \
+  /usr/local/include/eigen3/Eigen/src/Core/NoAlias.h \
+  /usr/local/include/eigen3/Eigen/src/Core/PlainObjectBase.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Matrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Array.h \
+  /usr/local/include/eigen3/Eigen/src/Core/CwiseBinaryOp.h \
+  /usr/local/include/eigen3/Eigen/src/Core/CwiseUnaryOp.h \
+  /usr/local/include/eigen3/Eigen/src/Core/CwiseNullaryOp.h \
+  /usr/local/include/eigen3/Eigen/src/Core/CwiseUnaryView.h \
+  /usr/local/include/eigen3/Eigen/src/Core/SelfCwiseBinaryOp.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Dot.h \
+  /usr/local/include/eigen3/Eigen/src/Core/StableNorm.h \
+  /usr/local/include/eigen3/Eigen/src/Core/MapBase.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Stride.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Map.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Block.h \
+  /usr/local/include/eigen3/Eigen/src/Core/VectorBlock.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Ref.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Transpose.h \
+  /usr/local/include/eigen3/Eigen/src/Core/DiagonalMatrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Diagonal.h \
+  /usr/local/include/eigen3/Eigen/src/Core/DiagonalProduct.h \
+  /usr/local/include/eigen3/Eigen/src/Core/PermutationMatrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Transpositions.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Redux.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Visitor.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Fuzzy.h \
+  /usr/local/include/eigen3/Eigen/src/Core/IO.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Swap.h \
+  /usr/local/include/eigen3/Eigen/src/Core/CommaInitializer.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Flagged.h \
+  /usr/local/include/eigen3/Eigen/src/Core/ProductBase.h \
+  /usr/local/include/eigen3/Eigen/src/Core/GeneralProduct.h \
+  /usr/local/include/eigen3/Eigen/src/Core/TriangularMatrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/SelfAdjointView.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/Parallelizer.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/CoeffBasedProduct.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/GeneralMatrixVector.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/SolveTriangular.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/SelfadjointProduct.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/SelfadjointRank2Update.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/TriangularMatrixVector.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/TriangularSolverMatrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/products/TriangularSolverVector.h \
+  /usr/local/include/eigen3/Eigen/src/Core/BandMatrix.h \
+  /usr/local/include/eigen3/Eigen/src/Core/CoreIterators.h \
+  /usr/local/include/eigen3/Eigen/src/Core/BooleanRedux.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Select.h \
+  /usr/local/include/eigen3/Eigen/src/Core/VectorwiseOp.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Random.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Replicate.h \
+  /usr/local/include/eigen3/Eigen/src/Core/Reverse.h \
+  /usr/local/include/eigen3/Eigen/src/Core/ArrayBase.h \
+  /usr/local/include/eigen3/Eigen/src/Core/../plugins/ArrayCwiseUnaryOps.h \
+  /usr/local/include/eigen3/Eigen/src/Core/../plugins/ArrayCwiseBinaryOps.h \
+  /usr/local/include/eigen3/Eigen/src/Core/ArrayWrapper.h \
+  /usr/local/include/eigen3/Eigen/src/Core/GlobalFunctions.h \
+  /usr/local/include/eigen3/Eigen/src/Core/util/ReenableStupidWarnings.h \
   /usr/local/include/boost/test/unit_test.hpp \
   /usr/local/include/boost/test/test_tools.hpp \
   /usr/local/include/boost/test/predicate_result.hpp \
@@ -1011,9 +1193,13 @@ src/test/classes/b2_class_test-complex_test.o: \
   /usr/local/include/boost/type_traits/remove_volatile.hpp \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/list \
   /usr/local/include/boost/test/framework.hpp \
-  /usr/local/include/boost/config/auto_link.hpp
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/fstream
 
-include/complex.hpp:
+include/mpfr_complex.hpp:
+
+config.h:
+
+include/mpfr_extensions.hpp:
 
 /usr/local/include/boost/multiprecision/mpfr.hpp:
 
@@ -3091,6 +3277,368 @@ include/complex.hpp:
 
 /usr/local/include/boost/random/weibull_distribution.hpp:
 
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/random:
+
+/usr/local/include/boost/archive/text_oarchive.hpp:
+
+/usr/local/include/boost/archive/detail/auto_link_archive.hpp:
+
+/usr/local/include/boost/archive/detail/decl.hpp:
+
+/usr/local/include/boost/config/auto_link.hpp:
+
+/usr/local/include/boost/archive/basic_text_oprimitive.hpp:
+
+/usr/local/include/boost/io/ios_state.hpp:
+
+/usr/local/include/boost/io_fwd.hpp:
+
+/usr/local/include/boost/scoped_ptr.hpp:
+
+/usr/local/include/boost/smart_ptr/scoped_ptr.hpp:
+
+/usr/local/include/boost/serialization/throw_exception.hpp:
+
+/usr/local/include/boost/archive/archive_exception.hpp:
+
+/usr/local/include/boost/archive/detail/abi_prefix.hpp:
+
+/usr/local/include/boost/config/abi_prefix.hpp:
+
+/usr/local/include/boost/archive/detail/abi_suffix.hpp:
+
+/usr/local/include/boost/config/abi_suffix.hpp:
+
+/usr/local/include/boost/archive/basic_streambuf_locale_saver.hpp:
+
+/usr/local/include/boost/archive/basic_text_oarchive.hpp:
+
+/usr/local/include/boost/serialization/pfto.hpp:
+
+/usr/local/include/boost/archive/detail/common_oarchive.hpp:
+
+/usr/local/include/boost/archive/detail/basic_oarchive.hpp:
+
+/usr/local/include/boost/archive/basic_archive.hpp:
+
+/usr/local/include/boost/serialization/level.hpp:
+
+/usr/local/include/boost/serialization/level_enum.hpp:
+
+/usr/local/include/boost/serialization/is_bitwise_serializable.hpp:
+
+/usr/local/include/boost/serialization/tracking_enum.hpp:
+
+/usr/local/include/boost/archive/detail/helper_collection.hpp:
+
+/usr/local/include/boost/archive/detail/interface_oarchive.hpp:
+
+/usr/local/include/boost/archive/detail/oserializer.hpp:
+
+/usr/local/include/boost/serialization/extended_type_info_typeid.hpp:
+
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/cstdarg:
+
+/usr/local/include/boost/serialization/static_warning.hpp:
+
+/usr/local/include/boost/mpl/print.hpp:
+
+/usr/local/include/boost/type_traits/is_polymorphic.hpp:
+
+/usr/local/include/boost/serialization/config.hpp:
+
+/usr/local/include/boost/serialization/singleton.hpp:
+
+/usr/local/include/boost/serialization/force_include.hpp:
+
+/usr/local/include/boost/serialization/extended_type_info.hpp:
+
+/usr/local/include/boost/serialization/factory.hpp:
+
+/usr/local/include/boost/preprocessor/comparison/greater.hpp:
+
+/usr/local/include/boost/preprocessor/comparison/less.hpp:
+
+/usr/local/include/boost/preprocessor/comparison/not_equal.hpp:
+
+/usr/local/include/boost/serialization/access.hpp:
+
+/usr/local/include/boost/serialization/smart_cast.hpp:
+
+/usr/local/include/boost/serialization/assume_abstract.hpp:
+
+/usr/local/include/boost/type_traits/remove_extent.hpp:
+
+/usr/local/include/boost/serialization/serialization.hpp:
+
+/usr/local/include/boost/serialization/strong_typedef.hpp:
+
+/usr/local/include/boost/operators.hpp:
+
+/usr/local/include/boost/serialization/version.hpp:
+
+/usr/local/include/boost/serialization/tracking.hpp:
+
+/usr/local/include/boost/serialization/type_info_implementation.hpp:
+
+/usr/local/include/boost/serialization/traits.hpp:
+
+/usr/local/include/boost/serialization/nvp.hpp:
+
+/usr/local/include/boost/serialization/split_member.hpp:
+
+/usr/local/include/boost/serialization/base_object.hpp:
+
+/usr/local/include/boost/serialization/void_cast_fwd.hpp:
+
+/usr/local/include/boost/serialization/wrapper.hpp:
+
+/usr/local/include/boost/serialization/void_cast.hpp:
+
+/usr/local/include/boost/type_traits/is_virtual_base_of.hpp:
+
+/usr/local/include/boost/serialization/array.hpp:
+
+/usr/local/include/boost/serialization/collection_size_type.hpp:
+
+/usr/local/include/boost/serialization/split_free.hpp:
+
+/usr/local/include/boost/archive/detail/basic_oserializer.hpp:
+
+/usr/local/include/boost/archive/detail/basic_serializer.hpp:
+
+/usr/local/include/boost/archive/detail/basic_pointer_oserializer.hpp:
+
+/usr/local/include/boost/archive/detail/archive_serializer_map.hpp:
+
+/usr/local/include/boost/archive/detail/check.hpp:
+
+/usr/local/include/boost/serialization/string.hpp:
+
+/usr/local/include/boost/archive/detail/register_archive.hpp:
+
+/usr/local/include/boost/serialization/item_version_type.hpp:
+
+/usr/local/include/boost/archive/text_iarchive.hpp:
+
+/usr/local/include/boost/archive/basic_text_iprimitive.hpp:
+
+/usr/local/include/boost/archive/basic_text_iarchive.hpp:
+
+/usr/local/include/boost/archive/detail/common_iarchive.hpp:
+
+/usr/local/include/boost/archive/detail/basic_iarchive.hpp:
+
+/usr/local/include/boost/archive/detail/basic_pointer_iserializer.hpp:
+
+/usr/local/include/boost/archive/detail/interface_iarchive.hpp:
+
+/usr/local/include/boost/archive/detail/iserializer.hpp:
+
+/usr/local/include/boost/detail/no_exceptions_support.hpp:
+
+/usr/local/include/boost/core/no_exceptions_support.hpp:
+
+/usr/local/include/boost/type_traits/has_new_operator.hpp:
+
+/usr/local/include/boost/archive/detail/basic_iserializer.hpp:
+
+/usr/local/include/eigen3/Eigen/Core:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/DisableStupidWarnings.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/Macros.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/MKL_support.h:
+
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/6.0/include/pmmintrin.h:
+
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/6.0/include/tmmintrin.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/Constants.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/ForwardDeclarations.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/Meta.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/StaticAssert.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/XprHelper.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/Memory.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/NumTraits.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/MathFunctions.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/GenericPacketMath.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/arch/SSE/PacketMath.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/arch/SSE/MathFunctions.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/arch/SSE/Complex.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/arch/Default/Settings.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Functors.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/DenseCoeffsBase.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/DenseBase.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/../plugins/BlockMethods.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/MatrixBase.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/../plugins/CommonCwiseUnaryOps.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/../plugins/CommonCwiseBinaryOps.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/../plugins/MatrixCwiseUnaryOps.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/../plugins/MatrixCwiseBinaryOps.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/EigenBase.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Assign.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/BlasUtil.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/DenseStorage.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/NestByValue.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/ForceAlignedAccess.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/ReturnByValue.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/NoAlias.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/PlainObjectBase.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Matrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Array.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/CwiseBinaryOp.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/CwiseUnaryOp.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/CwiseNullaryOp.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/CwiseUnaryView.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/SelfCwiseBinaryOp.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Dot.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/StableNorm.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/MapBase.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Stride.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Map.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Block.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/VectorBlock.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Ref.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Transpose.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/DiagonalMatrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Diagonal.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/DiagonalProduct.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/PermutationMatrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Transpositions.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Redux.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Visitor.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Fuzzy.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/IO.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Swap.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/CommaInitializer.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Flagged.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/ProductBase.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/GeneralProduct.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/TriangularMatrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/SelfAdjointView.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/GeneralBlockPanelKernel.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/Parallelizer.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/CoeffBasedProduct.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/GeneralMatrixVector.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/GeneralMatrixMatrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/SolveTriangular.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/SelfadjointMatrixVector.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/SelfadjointMatrixMatrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/SelfadjointProduct.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/SelfadjointRank2Update.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/TriangularMatrixVector.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/TriangularMatrixMatrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/TriangularSolverMatrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/products/TriangularSolverVector.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/BandMatrix.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/CoreIterators.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/BooleanRedux.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Select.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/VectorwiseOp.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Random.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Replicate.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/Reverse.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/ArrayBase.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/../plugins/ArrayCwiseUnaryOps.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/../plugins/ArrayCwiseBinaryOps.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/ArrayWrapper.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/GlobalFunctions.h:
+
+/usr/local/include/eigen3/Eigen/src/Core/util/ReenableStupidWarnings.h:
+
 /usr/local/include/boost/test/unit_test.hpp:
 
 /usr/local/include/boost/test/test_tools.hpp:
@@ -3169,4 +3717,4 @@ include/complex.hpp:
 
 /usr/local/include/boost/test/framework.hpp:
 
-/usr/local/include/boost/config/auto_link.hpp:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../include/c++/v1/fstream:
