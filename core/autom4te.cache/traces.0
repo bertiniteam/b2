@@ -3651,59 +3651,59 @@ m4trace:configure.ac:57: -1- _LT_COMPILER_OPTION([if $compiler PIC flag $_LT_TAG
      _LT_TAGVAR(lt_prog_compiler_can_build_shared, CXX)=no])
 m4trace:configure.ac:57: -1- _LT_LINKER_OPTION([if $compiler static flag $lt_tmp_static_flag works], [lt_cv_prog_compiler_static_works_CXX], [$lt_tmp_static_flag], [], [_LT_TAGVAR(lt_prog_compiler_static, CXX)=])
 m4trace:configure.ac:57: -1- m4_pattern_allow([^LT_SYS_LIBRARY_PATH$])
-m4trace:configure.ac:94: -1- m4_pattern_allow([^HAVE_EIGEN3_EIGEN_DENSE$])
-m4trace:configure.ac:98: -1- AX_BOOST_BASE([1.55], [], [AC_MSG_ERROR([bertini2 needs Boost at least 1.55, but it was not found in your system])])
+m4trace:configure.ac:93: -1- m4_pattern_allow([^HAVE_EIGEN3_EIGEN_DENSE$])
+m4trace:configure.ac:97: -1- AX_BOOST_BASE([1.55], [], [AC_MSG_ERROR([bertini2 needs Boost at least 1.55, but it was not found in your system])])
+m4trace:configure.ac:97: -1- m4_pattern_allow([^BOOST_CPPFLAGS$])
+m4trace:configure.ac:97: -1- m4_pattern_allow([^BOOST_LDFLAGS$])
+m4trace:configure.ac:97: -1- m4_pattern_allow([^HAVE_BOOST$])
+m4trace:configure.ac:98: -1- AX_BOOST_SYSTEM
 m4trace:configure.ac:98: -1- m4_pattern_allow([^BOOST_CPPFLAGS$])
-m4trace:configure.ac:98: -1- m4_pattern_allow([^BOOST_LDFLAGS$])
-m4trace:configure.ac:98: -1- m4_pattern_allow([^HAVE_BOOST$])
-m4trace:configure.ac:99: -1- AX_BOOST_SYSTEM
-m4trace:configure.ac:99: -1- m4_pattern_allow([^BOOST_CPPFLAGS$])
-m4trace:configure.ac:99: -1- m4_pattern_allow([^HAVE_BOOST_SYSTEM$])
-m4trace:configure.ac:99: -1- m4_pattern_allow([^BOOST_SYSTEM_LIB$])
-m4trace:configure.ac:99: -1- m4_pattern_allow([^BOOST_SYSTEM_LIB$])
-m4trace:configure.ac:99: -1- m4_pattern_allow([^BOOST_SYSTEM_LIB$])
-m4trace:configure.ac:100: -1- AX_BOOST_FILESYSTEM
-m4trace:configure.ac:100: -1- m4_pattern_allow([^HAVE_BOOST_FILESYSTEM$])
-m4trace:configure.ac:100: -1- m4_pattern_allow([^BOOST_FILESYSTEM_LIB$])
-m4trace:configure.ac:100: -1- m4_pattern_allow([^BOOST_FILESYSTEM_LIB$])
-m4trace:configure.ac:100: -1- m4_pattern_allow([^BOOST_FILESYSTEM_LIB$])
-m4trace:configure.ac:101: -1- AX_BOOST_CHRONO
-m4trace:configure.ac:101: -1- m4_pattern_allow([^BOOST_CPPFLAGS$])
-m4trace:configure.ac:101: -1- m4_pattern_allow([^HAVE_BOOST_CHRONO$])
-m4trace:configure.ac:101: -1- m4_pattern_allow([^BOOST_CHRONO_LIB$])
-m4trace:configure.ac:101: -1- m4_pattern_allow([^BOOST_CHRONO_LIB$])
-m4trace:configure.ac:101: -1- m4_pattern_allow([^BOOST_CHRONO_LIB$])
-m4trace:configure.ac:102: -1- AX_BOOST_REGEX
-m4trace:configure.ac:102: -1- m4_pattern_allow([^HAVE_BOOST_REGEX$])
-m4trace:configure.ac:102: -1- m4_pattern_allow([^BOOST_REGEX_LIB$])
-m4trace:configure.ac:102: -1- m4_pattern_allow([^BOOST_REGEX_LIB$])
-m4trace:configure.ac:102: -1- m4_pattern_allow([^BOOST_REGEX_LIB$])
-m4trace:configure.ac:103: -1- AX_BOOST_TIMER
-m4trace:configure.ac:103: -1- m4_pattern_allow([^HAVE_BOOST_TIMER$])
-m4trace:configure.ac:103: -1- m4_pattern_allow([^BOOST_TIMER_LIB$])
-m4trace:configure.ac:103: -1- m4_pattern_allow([^BOOST_TIMER_LIB$])
-m4trace:configure.ac:103: -1- m4_pattern_allow([^BOOST_TIMER_LIB$])
-m4trace:configure.ac:104: -1- AX_BOOST_UNIT_TEST_FRAMEWORK
-m4trace:configure.ac:104: -1- m4_pattern_allow([^HAVE_BOOST_UNIT_TEST_FRAMEWORK$])
-m4trace:configure.ac:104: -1- m4_pattern_allow([^BOOST_UNIT_TEST_FRAMEWORK_LIB$])
-m4trace:configure.ac:104: -1- m4_pattern_allow([^BOOST_UNIT_TEST_FRAMEWORK_LIB$])
-m4trace:configure.ac:104: -1- m4_pattern_allow([^BOOST_UNIT_TEST_FRAMEWORK_LIB$])
-m4trace:configure.ac:105: -1- AX_BOOST_SERIALIZATION
-m4trace:configure.ac:105: -1- m4_pattern_allow([^HAVE_BOOST_SERIALIZATION$])
-m4trace:configure.ac:105: -1- m4_pattern_allow([^BOOST_SERIALIZATION_LIB$])
-m4trace:configure.ac:105: -1- m4_pattern_allow([^BOOST_SERIALIZATION_LIB$])
-m4trace:configure.ac:105: -1- m4_pattern_allow([^BOOST_SERIALIZATION_LIB$])
-m4trace:configure.ac:112: -1- AM_CONFIG_HEADER([config.h])
-m4trace:configure.ac:112: -1- _m4_warn([obsolete], ['AM_CONFIG_HEADER': this macro is obsolete.
+m4trace:configure.ac:98: -1- m4_pattern_allow([^HAVE_BOOST_SYSTEM$])
+m4trace:configure.ac:98: -1- m4_pattern_allow([^BOOST_SYSTEM_LIB$])
+m4trace:configure.ac:98: -1- m4_pattern_allow([^BOOST_SYSTEM_LIB$])
+m4trace:configure.ac:98: -1- m4_pattern_allow([^BOOST_SYSTEM_LIB$])
+m4trace:configure.ac:99: -1- AX_BOOST_FILESYSTEM
+m4trace:configure.ac:99: -1- m4_pattern_allow([^HAVE_BOOST_FILESYSTEM$])
+m4trace:configure.ac:99: -1- m4_pattern_allow([^BOOST_FILESYSTEM_LIB$])
+m4trace:configure.ac:99: -1- m4_pattern_allow([^BOOST_FILESYSTEM_LIB$])
+m4trace:configure.ac:99: -1- m4_pattern_allow([^BOOST_FILESYSTEM_LIB$])
+m4trace:configure.ac:100: -1- AX_BOOST_CHRONO
+m4trace:configure.ac:100: -1- m4_pattern_allow([^BOOST_CPPFLAGS$])
+m4trace:configure.ac:100: -1- m4_pattern_allow([^HAVE_BOOST_CHRONO$])
+m4trace:configure.ac:100: -1- m4_pattern_allow([^BOOST_CHRONO_LIB$])
+m4trace:configure.ac:100: -1- m4_pattern_allow([^BOOST_CHRONO_LIB$])
+m4trace:configure.ac:100: -1- m4_pattern_allow([^BOOST_CHRONO_LIB$])
+m4trace:configure.ac:101: -1- AX_BOOST_REGEX
+m4trace:configure.ac:101: -1- m4_pattern_allow([^HAVE_BOOST_REGEX$])
+m4trace:configure.ac:101: -1- m4_pattern_allow([^BOOST_REGEX_LIB$])
+m4trace:configure.ac:101: -1- m4_pattern_allow([^BOOST_REGEX_LIB$])
+m4trace:configure.ac:101: -1- m4_pattern_allow([^BOOST_REGEX_LIB$])
+m4trace:configure.ac:102: -1- AX_BOOST_TIMER
+m4trace:configure.ac:102: -1- m4_pattern_allow([^HAVE_BOOST_TIMER$])
+m4trace:configure.ac:102: -1- m4_pattern_allow([^BOOST_TIMER_LIB$])
+m4trace:configure.ac:102: -1- m4_pattern_allow([^BOOST_TIMER_LIB$])
+m4trace:configure.ac:102: -1- m4_pattern_allow([^BOOST_TIMER_LIB$])
+m4trace:configure.ac:103: -1- AX_BOOST_UNIT_TEST_FRAMEWORK
+m4trace:configure.ac:103: -1- m4_pattern_allow([^HAVE_BOOST_UNIT_TEST_FRAMEWORK$])
+m4trace:configure.ac:103: -1- m4_pattern_allow([^BOOST_UNIT_TEST_FRAMEWORK_LIB$])
+m4trace:configure.ac:103: -1- m4_pattern_allow([^BOOST_UNIT_TEST_FRAMEWORK_LIB$])
+m4trace:configure.ac:103: -1- m4_pattern_allow([^BOOST_UNIT_TEST_FRAMEWORK_LIB$])
+m4trace:configure.ac:104: -1- AX_BOOST_SERIALIZATION
+m4trace:configure.ac:104: -1- m4_pattern_allow([^HAVE_BOOST_SERIALIZATION$])
+m4trace:configure.ac:104: -1- m4_pattern_allow([^BOOST_SERIALIZATION_LIB$])
+m4trace:configure.ac:104: -1- m4_pattern_allow([^BOOST_SERIALIZATION_LIB$])
+m4trace:configure.ac:104: -1- m4_pattern_allow([^BOOST_SERIALIZATION_LIB$])
+m4trace:configure.ac:111: -1- AM_CONFIG_HEADER([config.h])
+m4trace:configure.ac:111: -1- _m4_warn([obsolete], ['AM_CONFIG_HEADER': this macro is obsolete.
 You should use the 'AC_CONFIG_HEADERS' macro instead.], [/usr/local/Cellar/automake/1.15/share/aclocal-1.15/obsolete.m4:15: AM_CONFIG_HEADER is expanded from...
-configure.ac:112: the top level])
-m4trace:configure.ac:116: -1- m4_pattern_allow([^LIB@&t@OBJS$])
-m4trace:configure.ac:116: -1- m4_pattern_allow([^LTLIBOBJS$])
-m4trace:configure.ac:116: -1- AM_CONDITIONAL([am__EXEEXT], [test -n "$EXEEXT"])
-m4trace:configure.ac:116: -1- m4_pattern_allow([^am__EXEEXT_TRUE$])
-m4trace:configure.ac:116: -1- m4_pattern_allow([^am__EXEEXT_FALSE$])
-m4trace:configure.ac:116: -1- _AM_SUBST_NOTMAKE([am__EXEEXT_TRUE])
-m4trace:configure.ac:116: -1- _AM_SUBST_NOTMAKE([am__EXEEXT_FALSE])
-m4trace:configure.ac:116: -1- _AC_AM_CONFIG_HEADER_HOOK(["$ac_file"])
-m4trace:configure.ac:116: -1- _AM_OUTPUT_DEPENDENCY_COMMANDS
-m4trace:configure.ac:116: -1- _LT_PROG_LTMAIN
+configure.ac:111: the top level])
+m4trace:configure.ac:115: -1- m4_pattern_allow([^LIB@&t@OBJS$])
+m4trace:configure.ac:115: -1- m4_pattern_allow([^LTLIBOBJS$])
+m4trace:configure.ac:115: -1- AM_CONDITIONAL([am__EXEEXT], [test -n "$EXEEXT"])
+m4trace:configure.ac:115: -1- m4_pattern_allow([^am__EXEEXT_TRUE$])
+m4trace:configure.ac:115: -1- m4_pattern_allow([^am__EXEEXT_FALSE$])
+m4trace:configure.ac:115: -1- _AM_SUBST_NOTMAKE([am__EXEEXT_TRUE])
+m4trace:configure.ac:115: -1- _AM_SUBST_NOTMAKE([am__EXEEXT_FALSE])
+m4trace:configure.ac:115: -1- _AC_AM_CONFIG_HEADER_HOOK(["$ac_file"])
+m4trace:configure.ac:115: -1- _AM_OUTPUT_DEPENDENCY_COMMANDS
+m4trace:configure.ac:115: -1- _LT_PROG_LTMAIN

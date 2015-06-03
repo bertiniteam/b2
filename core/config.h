@@ -25,8 +25,8 @@
 /* define if the Boost::Unit_Test_Framework library is available */
 #define HAVE_BOOST_UNIT_TEST_FRAMEWORK /**/
 
-/* define if the compiler supports basic C++11 syntax */
-/* #undef HAVE_CXX11 */
+/* define if the compiler supports basic C++14 syntax */
+/* #undef HAVE_CXX14 */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #define HAVE_DLFCN_H 1
@@ -39,6 +39,9 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
+
+/* Define to 1 if you have MPI libs and headers. */
+#define HAVE_MPI 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -74,23 +77,19 @@
 #define PACKAGE_NAME "b2"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "b2 0.0.0"
+#define PACKAGE_STRING "b2 2015.06.01.dev"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "b2"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "http://github.com/danbates/b2"
+#define PACKAGE_URL "http://github.com/bertiniteam/b2"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.0.0"
+#define PACKAGE_VERSION "2015.06.01.dev"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "0.0.0"
-
-/* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
-   `char[]'. */
-/* #undef YYTEXT_POINTER */
+#define VERSION "2015.06.01.dev"
