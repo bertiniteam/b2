@@ -29,7 +29,7 @@
 #include <iostream>
 #include <vector>
 
-
+#include "bertini.hpp"
 #include "function_tree.hpp"
 
 
@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 	std::shared_ptr<Node> N = x;
 
 	N *= N;
-	
-	x->set_current_value(3.5);
+    
+	x->set_current_value<dbl>(3.5);
 	
 
 	BOOST_CHECK_EQUAL(N->Eval<dbl>() , 12.25 );
@@ -70,10 +70,23 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 	
 	std::shared_ptr<Node> N = pow(x, 1.0/2);
 	
-	x->set_current_value(3.0);
+    x->set_current_value<dbl>(std::complex<double>(3.0,0.0));
 	
-	BOOST_CHECK_EQUAL(N->Eval<dbl>() , 1.73205080756887729352744634151);  // root 3 to 30 digits
-	
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - 1.73205080756887729352744634151) < 1e-15);  // root 3 to 30 digits
+	BOOST_CHECK(abs(N->Eval<dbl>().imag() - 0.0) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y){
+    
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    
+    std::shared_ptr<Node> N = pow(x, 1.0/2);
+    
+    x->set_current_value<dbl>(std::complex<double>(3.0,0.0));
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - 1.73205080756887729352744634151) < 1e-15);  // root 3 to 30 digits
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - 0.0) < 1e-15);
 }
 
 

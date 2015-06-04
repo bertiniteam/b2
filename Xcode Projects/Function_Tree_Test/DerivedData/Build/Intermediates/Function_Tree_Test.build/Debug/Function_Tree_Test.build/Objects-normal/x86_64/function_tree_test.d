@@ -1,8 +1,160 @@
 dependencies: \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/src/test/classes/function_tree_test.cpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/node.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_index.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/bertini.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/config.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/Dense \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/Core \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/DisableStupidWarnings.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/Macros.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/MKL_support.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/Constants.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/ForwardDeclarations.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/Meta.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/StaticAssert.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/XprHelper.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/Memory.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/NumTraits.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/MathFunctions.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/GenericPacketMath.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/arch/SSE/PacketMath.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/arch/SSE/MathFunctions.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/arch/SSE/Complex.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/arch/Default/Settings.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Functors.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/DenseCoeffsBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/DenseBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/../plugins/BlockMethods.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/MatrixBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/../plugins/CommonCwiseUnaryOps.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/../plugins/CommonCwiseBinaryOps.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/../plugins/MatrixCwiseUnaryOps.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/../plugins/MatrixCwiseBinaryOps.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/EigenBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Assign.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/BlasUtil.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/DenseStorage.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/NestByValue.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/ForceAlignedAccess.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/ReturnByValue.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/NoAlias.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/PlainObjectBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Matrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Array.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/CwiseBinaryOp.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/CwiseUnaryOp.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/CwiseNullaryOp.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/CwiseUnaryView.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/SelfCwiseBinaryOp.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Dot.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/StableNorm.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/MapBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Stride.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Map.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Block.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/VectorBlock.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Ref.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Transpose.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/DiagonalMatrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Diagonal.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/DiagonalProduct.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/PermutationMatrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Transpositions.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Redux.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Visitor.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Fuzzy.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/IO.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Swap.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/CommaInitializer.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Flagged.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/ProductBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/GeneralProduct.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/TriangularMatrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/SelfAdjointView.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/Parallelizer.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/CoeffBasedProduct.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/GeneralMatrixVector.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/SolveTriangular.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/SelfadjointProduct.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/SelfadjointRank2Update.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/TriangularMatrixVector.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/TriangularSolverMatrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/products/TriangularSolverVector.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/BandMatrix.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/CoreIterators.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/BooleanRedux.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Select.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/VectorwiseOp.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Random.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Replicate.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/Reverse.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/ArrayBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/../plugins/ArrayCwiseUnaryOps.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/../plugins/ArrayCwiseBinaryOps.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/ArrayWrapper.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/GlobalFunctions.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Core/util/ReenableStupidWarnings.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/LU \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/misc/Solve.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/misc/Kernel.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/misc/Image.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/LU/FullPivLU.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/LU/PartialPivLU.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/LU/Determinant.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/LU/Inverse.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/LU/arch/Inverse_SSE.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/Cholesky \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Cholesky/LLT.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Cholesky/LDLT.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/QR \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/Jacobi \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Jacobi/Jacobi.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/Householder \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Householder/Householder.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Householder/HouseholderSequence.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Householder/BlockHouseholder.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/QR/HouseholderQR.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/QR/FullPivHouseholderQR.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/QR/ColPivHouseholderQR.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/SVD \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/SVD/JacobiSVD.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/SVD/UpperBidiagonalization.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/Geometry \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/OrthoMethods.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/EulerAngles.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/Homogeneous.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/RotationBase.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/Rotation2D.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/Quaternion.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/AngleAxis.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/Transform.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/Translation.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/Scaling.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/Hyperplane.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/ParametrizedLine.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/AlignedBox.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/Umeyama.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Geometry/arch/Geometry_SSE.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/Eigenvalues \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/Tridiagonalization.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/RealSchur.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/./HessenbergDecomposition.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/EigenSolver.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/SelfAdjointEigenSolver.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/ComplexSchur.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/ComplexEigenSolver.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/RealQZ.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
+  /usr/local/Cellar/eigen/3.2.4/include/eigen3/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/mpfr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/number.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/cstdint.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/config.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/config/user.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/config/select_compiler_config.hpp \
@@ -13,37 +165,48 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/config/platform/macos.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/config/posix_features.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/config/suffix.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_index/stl_type_index.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_index/type_index_facade.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/functional/hash_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/functional/hash/hash_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/detail/workaround.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/static_assert.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/throw_exception.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/demangle.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_const.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/cv_traits_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_reference.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/config.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_lvalue_reference.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/bool_trait_def.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/template_arity_spec.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/int.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/int_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/max.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/min_max.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/less.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/comparison_op.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/bool.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/bool_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/adl_barrier.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/adl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/msvc.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/intel.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/gcc.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/workaround.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/workaround.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/integral_c_tag.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/static_constant.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/value_wknd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/static_cast.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/integral.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/eti.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/numeric_op.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/numeric_cast.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/apply_wrap.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/arity.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/dtp.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_apply.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/has_xxx.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/na_spec.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/lambda_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/void_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/na.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/na_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/ctps.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/lambda.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/ttp.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/int.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/int_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/nttp_decl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/nttp.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/integral_wrapper.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/integral_c_tag.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/static_constant.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/static_cast.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/cat.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/config/config.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/lambda_arity_param.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/template_arity_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessor/params.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/preprocessor.hpp \
@@ -61,41 +224,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/tuple/eat.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/inc.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/arithmetic/inc.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/lambda.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/ttp.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/ctps.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/overload_resolution.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/integral_constant.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/bool.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/bool_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/integral_c.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/integral_c_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/lambda_support.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/bool_trait_undef.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_rvalue_reference.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/ice.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/yes_no_type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/ice_or.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/ice_and.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/ice_not.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/ice_eq.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_volatile.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_cv.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/type_trait_def.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/type_trait_undef.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_reference.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/if.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/value_wknd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/integral.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/eti.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/na_spec.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/lambda_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/void_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/na.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/na_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/lambda_arity_param.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/arity.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/dtp.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessor/enum.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessor/def_params_tail.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/limits/arity.hpp \
@@ -126,38 +254,380 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/tuple/detail/is_single_return.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/variadic/elem.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/arithmetic/sub.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/or.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/overload_resolution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/type_wrapper.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/yes_no.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/arrays.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/has_xxx.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/msvc_typename.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/array/elem.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/array/data.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/array/size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_params.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_trailing_params.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/has_apply.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/msvc_never_true.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/use_preprocessed.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/nested_type_wknd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/include_preprocessed.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/compiler.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/stringize.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/apply_wrap.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/if.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/lambda_support.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/tag.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/eval_if.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/void.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_tag.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/numeric_cast_utils.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/forwarding.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/msvc_eti_base.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/is_msvc_eti_arg.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/less.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/plus.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/arithmetic_op.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/integral_c.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/integral_c_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/largest_int.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/plus.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/or.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/nested_type_wknd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/or.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/nary_operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/mult_operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/sum_operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/number.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/symbol.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/binary_operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/power_operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/unary_operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/negate_operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/exp_operator.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/variable.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/roots/function.hpp \
-  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/function_parsing.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/include/qi.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/action.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/action/action.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/meta_compiler.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/meta_compiler.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/include/phoenix_limits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/core/limits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/dec.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/version.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/version.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/find_if.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/find_if_pred.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/iter_apply.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/apply.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/apply_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/apply_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/placeholders.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/arg.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/arg_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/na_assert.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/assert.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/not.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/gpu.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/pp_counter.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/arity_spec.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/arg_typedef.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/arg.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/placeholders.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/lambda.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/bind.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/bind_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/bind.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/bind_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/next.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/next_prior.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/common_name_wknd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/protect.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/bind.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/full_lambda.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/quote.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/bcc.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/quote.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/template_arity.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/template_arity.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/full_lambda.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/apply.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/deref.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/msvc_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iter_fold_if.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/begin_end.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/begin_end_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/begin_end_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/sequence_tag_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_begin.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/traits_lambda_spec.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/sequence_tag.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/logical.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/and.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/and.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/always.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessor/default_params.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/pair.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/iter_fold_if_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/identity.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/iter_fold_if_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_same.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/config.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/bool_trait_def.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/template_arity_spec.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/integral_constant.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/bool_trait_undef.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/assert.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_pointer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/type_trait_def.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/type_trait_undef.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_signed.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_integral.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_cv.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/cv_traits_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_enum.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/intrinsics.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_reference.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_lvalue_reference.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_rvalue_reference.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/ice.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/yes_no_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/ice_or.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/ice_and.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/ice_not.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/ice_eq.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_volatile.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_unsigned.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_floating_point.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/make_unsigned.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_const.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_const.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_volatile.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/static_assert.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/throw_exception.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/generic_interconvert.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/default_ops.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/policies/error_handling.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/config/no_tr1/complex.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/config/no_tr1/cmath.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/config.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/user.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/policies/policy.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/limits/list.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/list20.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/list10.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/list0.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/long.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/long_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/push_front.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/push_front_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/item.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/tag.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/pop_front.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/pop_front_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/push_back.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/push_back_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/front.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/front_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/clear.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/clear_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/O1_size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/O1_size_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/size_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/empty.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/empty_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/begin_end.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iterator_tags.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/lambda_spec.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/include_preprocessed.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/preprocessed/plain/list10.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/preprocessed/plain/list20.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/list.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/contains.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/contains_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/contains_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/find.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/same_as.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/remove_if.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/fold.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/O1_size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/O1_size_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/fold_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/fold_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/reverse_fold.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/reverse_fold_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/reverse_fold_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/inserter_algorithm.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/back_inserter.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/push_back.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/push_back_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/inserter.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/front_inserter.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/push_front.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/push_front_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/clear.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/clear_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/limits/vector.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/vector20.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/vector10.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/vector0.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/at.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/at_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/tag.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/typeof.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/front.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/push_front.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/item.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/pop_front.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/push_back.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/pop_back.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/pop_back_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/back.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/back_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/clear.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/vector0.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/minus.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/minus.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/advance_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/distance_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/prior.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/O1_size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/empty.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/begin_end.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/include_preprocessed.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/preprocessed/typeof_based/vector10.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/preprocessed/typeof_based/vector20.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/vector.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/at.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/at_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/advance.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/negate.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/advance_forward.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/advance_forward.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/advance_backward.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/advance_backward.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/size_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/distance.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iter_fold.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/iter_fold_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/iter_fold_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iterator_range.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/comparison.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/equal_to.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/equal_to.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/not_equal_to.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/not_equal_to.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/greater.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/greater.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/less_equal.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/less_equal.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/greater_equal.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/greater_equal.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/precision.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/limits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/detail/compat_workarounds.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/detail/config_macros.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/detail/workarounds_gcc-2_95.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/detail/workarounds_stlport.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/format_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/internals_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/internals.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/optional.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/optional/optional.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/explicit_operator_bool.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/optional/bad_optional_access.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/alignment_of.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/size_t_trait_def.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/size_t.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/size_t_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/size_t_trait_undef.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_nothrow_constructor.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_constructor.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_pod.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_void.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_scalar.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_arithmetic.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_float.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_pointer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_member_pointer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_member_function_pointer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/is_mem_fun_pointer_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/type_with_alignment.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/list/for_each_i.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/for.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/detail/for.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/tuple/to_list.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/tuple/size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/list/transform.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/list/append.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_const.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_reference.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/decay.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_array.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_function.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/false_result.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/is_function_ptr_helper.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_bounds.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_pointer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_base_of.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_base_and_derived.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_class.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_nothrow_move_assignable.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_move_assign.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_nothrow_assign.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_assign.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/enable_if.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/enable_if.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/declval.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_rvalue_reference.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_nothrow_move_constructible.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_move_constructor.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_nothrow_copy.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_copy.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_copy_constructible.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_reference.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/noncopyable.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/noncopyable.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/reference_content.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/move/utility.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/move/detail/config_begin.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/move/utility_core.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/move/core.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/move/detail/config_end.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/move/detail/meta_utils.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/move/traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_destructor.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/none.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/none_t.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/addressof.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/addressof.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/compare_pointees.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/in_place_factory.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/detail/in_place_factory_prefix.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/punctuation/paren.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/iterate.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/slot/slot.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/slot/detail/def.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_binary_params.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/detail/iter/forward1.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/detail/bounds/lower1.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/slot/detail/shared.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/detail/bounds/upper1.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/detail/in_place_factory_suffix.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/swap.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/swap.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/optional/optional_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/alt_sstream.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/base_from_member.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/repeat_from_to.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/shared_ptr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/shared_ptr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/config/no_tr1/memory.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/checked_delete.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/checked_delete.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/shared_count.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/bad_weak_ptr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_counted_base.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_has_sync.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_counted_base_gcc_x86.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/sp_typeinfo.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/typeinfo.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/demangle.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_counted_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_convertible.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_nullptr_t.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/spinlock_pool.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/spinlock.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/spinlock_sync.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/yield_k.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/predef.h \
   /usr/local/Cellar/boost/1.57.0/include/boost/predef/language.h \
   /usr/local/Cellar/boost/1.57.0/include/boost/predef/language/stdc.h \
@@ -270,72 +740,372 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/predef/platform/windows_store.h \
   /usr/local/Cellar/boost/1.57.0/include/boost/predef/platform/windows_phone.h \
   /usr/local/Cellar/boost/1.57.0/include/boost/predef/platform/windows_runtime.h \
-  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/support/preprocessor/round.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/comparison/less.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/operator_bool.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/alt_sstream_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/format_class.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/exceptions.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/format_implementation.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/group.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/feed_args.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/detail/msvc_disambiguater.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/parsing.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/free_funcs.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/format/detail/unset_macros.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/number_base.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_convertible.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/iterator_range_core.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_facade.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/interoperable.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/detail/config_def.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/detail/config_undef.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_categories.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/detail/facade_iterator_category.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/indirect_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/detail/enable_if.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_abstract.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/functions.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/begin.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/config.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/range_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/mutable_iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/extract_optional_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/msvc_has_iterator_workaround.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/const_iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/end.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/implementation_help.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/common.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/sfinae.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/size_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/difference_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/concepts.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/concept_check.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/concept/assert.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/general.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/backward_compatibility.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/has_constraints.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/conversion_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/concept/usage.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/concept_def.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/for_each_i.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/seq.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/elem.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/enum.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/concept_undef.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_concepts.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/value_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/misc_concept.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/has_member_size.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/binary.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/control/deduce_d.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/cat.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/fold_left.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/transform.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/arithmetic/mod.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/arithmetic/detail/div_base.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/comparison/less_equal.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/logical/not.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/utility/identity_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/function_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/next_prior.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/integral_promotion.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/make_signed.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_plus.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/has_binary_operator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_fundamental.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_plus_assign.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_minus.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_minus_assign.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/distance.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/empty.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/rbegin.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/reverse_iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/reverse_iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_adaptor.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/rend.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/has_range_iterator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/algorithm/equal.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/safe_bool.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/bad_lexical_cast.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/try_lexical_convert.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/is_character.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/converter_numeric.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/cast.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/converter.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/conversion_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/conversion_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/meta.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/int_float_mixture.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/int_float_mixture_enum.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/sign_mixture.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/sign_mixture_enum.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/udt_builtin_mixture.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/udt_builtin_mixture_enum.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/is_subranged.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/multiplies.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/times.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/times.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/converter_policies.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/converter.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/bounds.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/bounds.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/numeric_cast_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/numeric_cast_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/preprocessed/numeric_cast_traits_common.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/preprocessed/numeric_cast_traits_long_long.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/converter_lexical.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_left_shift.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_right_shift.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/lcast_precision.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/integer_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/widest_char.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/array.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/swap.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/functional/hash_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/functional/hash/hash_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/container/container_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/container/detail/std_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/converter_lexical_streams.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/lcast_char_constants.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/lcast_unsigned_converters.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/inf_nan.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/sign.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/math_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/detail/round_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/promotion.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/detail/fp_traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/endian.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/predef/detail/endian_compat.h \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/fpclassify.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/real_cast.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/lexical_cast/detail/lcast_float_converters.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/integer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/integer_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/basic_pointerbuf.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/front.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/front_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/functions/constants.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/functions/pow.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/functions/trig.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/no_et_ops.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/et_ops.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/number_compare.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/traits/is_restricted_conversion.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/traits/explicit_conversion.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/ublas_interop.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/gmp.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/integer_ops.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/big_lanczos.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/bindings/detail/big_lanczos.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/lanczos.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/big_constant.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/cstdfloat/cstdfloat_types.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/rational.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/detail/polynomial_horner3_17.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/detail/rational_horner3_17.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/detail/lanczos_sse2.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/detail/digits.hpp \
+  /usr/local/Cellar/gmp/6.0.0a/include/gmp.h \
+  /usr/local/Cellar/mpfr/3.1.2-p11/include/mpfr.h \
+  /usr/local/Cellar/boost/1.57.0/include/boost/multiprecision/random.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/additive_combine.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/config.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/operators.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/seed.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/linear_congruential.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/integer/static_log2.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/const_mod.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/large_arithmetic.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/integer_log2.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/pending/integer_log2.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/integer/integer_log2.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/disable_warnings.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/enable_warnings.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/seed_impl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/integer/integer_mask.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/signed_unsigned_tools.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/generator_bits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/discard_block.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/independent_bits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/inversive_congruential.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/lagged_fibonacci.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/uniform_01.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/ptr_helper.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/generator_seed_seq.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/linear_feedback_shift.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/mersenne_twister.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/ranlux.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/subtract_with_carry.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/shuffle_order.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/shuffle_output.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/taus88.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/xor_combine.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/generate_canonical.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/seed_seq.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/random_number_generator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/uniform_int_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/uniform_int_float.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/variate_generator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/bernoulli_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/binomial_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/cauchy_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/chi_squared_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/gamma_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/exponential_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/discrete_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/detail/vector_io.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/extreme_value_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/fisher_f_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/geometric_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/lognormal_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/normal_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/negative_binomial_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/poisson_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/piecewise_constant_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/uniform_real.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/uniform_real_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/piecewise_linear_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/student_t_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/triangle_distribution.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/uniform_int.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/uniform_on_sphere.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/uniform_smallint.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/random/weibull_distribution.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/mpfr_complex.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/mpfr_extensions.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/text_oarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/auto_link_archive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/decl.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/config/auto_link.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/basic_text_oprimitive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/io/ios_state.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/io_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/scoped_ptr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/scoped_ptr.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/throw_exception.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/archive_exception.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/abi_prefix.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/config/abi_prefix.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/abi_suffix.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/config/abi_suffix.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/basic_streambuf_locale_saver.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/basic_text_oarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/pfto.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/common_oarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/basic_oarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/basic_archive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/level.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/level_enum.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/is_bitwise_serializable.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/tracking_enum.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/helper_collection.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/interface_oarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/oserializer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/extended_type_info_typeid.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/static_warning.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/print.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_polymorphic.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/config.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/singleton.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/force_include.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/extended_type_info.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/factory.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/comparison/greater.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/comparison/less.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/comparison/not_equal.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/access.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/smart_cast.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/assume_abstract.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_extent.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/serialization.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/strong_typedef.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/operators.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/version.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/tracking.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/type_info_implementation.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/traits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/nvp.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/split_member.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/base_object.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/void_cast_fwd.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/wrapper.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/void_cast.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_virtual_base_of.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/array.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/collection_size_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/split_free.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/basic_oserializer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/basic_serializer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/basic_pointer_oserializer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/archive_serializer_map.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/check.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/string.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/register_archive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/serialization/item_version_type.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/text_iarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/basic_text_iprimitive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/basic_text_iarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/common_iarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/basic_iarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/basic_pointer_iserializer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/interface_iarchive.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/iserializer.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/detail/no_exceptions_support.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/core/no_exceptions_support.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_new_operator.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/archive/detail/basic_iserializer.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/node.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_index.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_index/stl_type_index.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/type_index/type_index_facade.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/nary_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/mult_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/sum_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/number.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/symbol.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/binary_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/power_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/unary_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/negate_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/exp_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/variable.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/roots/function.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/function_parsing.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/include/qi.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/action.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/action/action.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/meta_compiler.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/meta_compiler.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/spirit/include/phoenix_limits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/core/limits.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/dec.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/version.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/version.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/support/preprocessor/round.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/proto_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_params.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_params_with_a_default.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/facilities/intercept.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_binary_params.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_trailing_binary_params.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/repeat_from_to.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/ref.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/core/ref.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/addressof.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/addressof.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/long.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/long_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_const.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/utility/result_of.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/iterate.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/array/elem.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/array/data.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/array/size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/slot/slot.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/slot/detail/def.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_trailing_params.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_shifted_params.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/has_xxx.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/type_wrapper.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/yes_no.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/arrays.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/has_xxx.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/msvc_typename.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/eval_if.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/identity.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_class.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/intrinsics.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_same.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_pointer.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_member_pointer.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_member_function_pointer.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/is_mem_fun_pointer_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/declval.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_rvalue_reference.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_void.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/enable_if.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/enable_if.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/detail/iter/forward1.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/detail/bounds/lower1.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/slot/detail/shared.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/detail/bounds/upper1.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/utility/detail/result_of_iterate.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/proto.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/core.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/args.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/void.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/is_noncopyable.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/noncopyable.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/noncopyable.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_base_of.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_base_and_derived.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_abstract.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_function.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/false_result.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/is_function_ptr_helper.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/args.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/preprocessed/args.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/tags.hpp \
@@ -344,17 +1114,9 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/selection/max.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_trailing.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/template_arity.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/template_arity_helper.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/preprocessed/template_arity_helper.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_pod.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_scalar.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_arithmetic.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_integral.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_float.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_enum.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_const.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/domain.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/generate.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/generate_by_value.hpp \
@@ -362,15 +1124,10 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/as_expr.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/deduce_domain.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/iteration/local.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/assert.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/not.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/gpu.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/pp_counter.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/deduce_domain_n.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/preprocessed/deduce_domain_n.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/transform/pass_through.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/transform/impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_reference.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/any.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/static_const.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/ignore_unused.hpp \
@@ -386,7 +1143,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/preprocessed/expr_variadic.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/repeat.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/fusion.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/sequence_tag_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/include/is_view.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/support/config.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/support/is_view.hpp \
@@ -395,18 +1151,7 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/support/tag_of_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/support/detail/is_mpl_sequence.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/support/sequence_base.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/begin_end_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/is_sequence.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/and.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/and.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/begin_end.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/begin_end_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_begin.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/traits_lambda_spec.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/sequence_tag.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_tag.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/is_msvc_eti_arg.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_convertible.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/config/no_tr1/utility.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/include/tag_of_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/include/category_of.hpp \
@@ -427,10 +1172,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/detail/templated_streams.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_empty.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_stateless.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_constructor.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_copy.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_copy_constructible.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_destructor.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/support/is_segmented.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/sequence/intrinsic/detail/segmented_end.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/sequence/intrinsic/detail/segmented_end_impl.hpp \
@@ -442,9 +1183,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/iterator/next.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/iterator/prior.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/iterator/detail/distance.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/next.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/next_prior.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/common_name_wknd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/iterator/equal_to.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/support/is_iterator.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/iterator/deref.hpp \
@@ -479,83 +1217,12 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/joint_view/joint_view_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/sequence/intrinsic/size.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/sequence/intrinsic/detail/segmented_size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/fold.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/O1_size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/O1_size_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/O1_size_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/forwarding.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/fold_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/apply.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/apply_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/apply_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/apply_wrap.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_apply.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/has_apply.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/msvc_never_true.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/apply_wrap.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/placeholders.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/arg.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/arg_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/na_assert.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/arity_spec.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/arg_typedef.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/arg.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/placeholders.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/lambda.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/bind.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/bind_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/bind.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/bind_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/protect.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/bind.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/full_lambda.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/quote.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/has_type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/bcc.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/quote.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/template_arity.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/template_arity.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/full_lambda.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/apply.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/deref.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/msvc_type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/fold_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/plus.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/arithmetic_op.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/largest_int.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/numeric_op.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/numeric_cast.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/tag.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/numeric_cast_utils.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/msvc_eti_base.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/plus.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/size_t.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/size_t_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/begin.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/begin_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/mpl_iterator.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/support/detail/mpl_iterator_category.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/prior.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/advance.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/advance_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/less.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/comparison_op.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/less.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/negate.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/advance_forward.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/advance_forward.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/advance_backward.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/advance_backward.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/distance.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/distance_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iter_fold.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/iter_fold_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/iter_fold_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iterator_range.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/begin.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/iterator/mpl/fusion_iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iterator_tags.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/end.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/end_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/end.hpp \
@@ -576,14 +1243,10 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/single_view.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/single_view_iterator.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/detail/deref_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/equal_to.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/equal_to.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/detail/next_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/detail/prior_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/detail/advance_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/detail/distance_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/minus.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/minus.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/detail/equal_to_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/detail/value_of_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/single_view/detail/at_impl.hpp \
@@ -648,13 +1311,7 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/is_sequence_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/size_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/size_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/size_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/value_at_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/at.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/at_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/at_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/at_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/has_key_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/has_key.hpp \
@@ -664,17 +1321,12 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/is_view_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/adapted/mpl/detail/empty_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/empty.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/empty_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/empty_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/at.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/back.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/back.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/back_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/back_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/clear.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/clear.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/clear_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/clear_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/detail/clear.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/container/vector/vector_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/container/vector/limits.hpp \
@@ -693,32 +1345,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/container/vector/detail/distance_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/container/vector/detail/advance_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/container/vector/detail/end_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/vector10.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/vector0.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/at.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/tag.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/typeof.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/front_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/push_front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/push_front_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/item.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/pop_front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/pop_front_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/push_back.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/push_back_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/pop_back.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/pop_back_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/back.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/clear.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/vector0.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/O1_size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/empty.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/begin_end.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/include_preprocessed.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/preprocessed/typeof_based/vector10.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/enum_shifted.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/container/vector/detail/preprocessed/vector10.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/container/vector/detail/preprocessed/vector_fwd.hpp \
@@ -735,11 +1361,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/erase.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/erase_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/erase_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/push_front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/push_front_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/reverse_fold.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/reverse_fold_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/reverse_fold_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/algorithm/transformation/erase.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/sequence/convert.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/erase_key.hpp \
@@ -748,8 +1369,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/erase_key_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/algorithm/transformation/erase_key.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/front_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/has_key.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/mpl/insert.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/insert.hpp \
@@ -761,16 +1380,8 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/insert_range_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/insert_range_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/copy.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/inserter_algorithm.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/back_inserter.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/push_back.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/push_back_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/inserter.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/front_inserter.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessor/default_params.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/joint_view.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/joint_iter.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/lambda_spec.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/iter_push_front.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/same_traits.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/algorithm/transformation/insert_range.hpp \
@@ -810,23 +1421,12 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/preprocessed/poly_function_traits.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/deprecated.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/control/expr_if.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/comparison/greater.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/tuple/to_list.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/tuple/size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/enum.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/seq.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/elem.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/to_tuple.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/for_each_i.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/for.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/repetition/detail/for.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/pop_back.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/first_n.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/detail/split.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/push_back.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/push_front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/list/for_each_i.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/unpack_expr_.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/preprocessed/unpack_expr_.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/make_expr_.hpp \
@@ -836,7 +1436,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/make_expr.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/preprocessed/make_expr.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/matches.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/logical.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/transform/when.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/limits/map.hpp \
@@ -844,7 +1443,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/map10.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/map0.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/aux_/contains_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/contains_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/aux_/at_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/aux_/tag.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/order_impl.hpp \
@@ -854,7 +1452,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/config/operators.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/aux_/insert_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/aux_/item.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/pair.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/aux_/map0.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/aux_/erase_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/map/aux_/erase_key_impl.hpp \
@@ -920,8 +1517,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/algorithm/iteration/detail/for_each.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/algorithm/iteration/detail/segmented_for_each.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/algorithm/iteration/for_each_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/detail/sp_typeinfo.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/typeinfo.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/context.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/context/null.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/context/detail/null_eval.hpp \
@@ -930,7 +1525,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_member_object_pointer.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/detail/decltype.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/get_pointer.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/config/no_tr1/memory.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/typeof/typeof.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/typeof/message.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/typeof/native.hpp \
@@ -945,7 +1539,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/context/detail/preprocessed/callable_eval.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/transform.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/transform/arg.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_array.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/transform/default.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/transform/detail/default_function_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/transform/detail/preprocessed/default_function_impl.hpp \
@@ -999,89 +1592,11 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/reverse_view/detail/value_at_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/functional/range.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/functional/range/begin.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/begin.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/config.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/range_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/mutable_iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/extract_optional_type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/detail/iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/msvc_has_iterator_workaround.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/const_iterator.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/functional/range/empty.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/empty.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/end.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/implementation_help.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/common.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/sfinae.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/functional/range/end.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/functional/range/rbegin.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/rbegin.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/reverse_iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/reverse_iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/next_prior.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_unsigned.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/integral_promotion.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/make_signed.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_signed.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_volatile.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_plus.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/has_binary_operator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_fundamental.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_pointer.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_plus_assign.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_minus.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_minus_assign.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_adaptor.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_categories.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/detail/config_def.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/detail/config_undef.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_facade.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/interoperable.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/detail/facade_iterator_category.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/detail/indirect_traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/detail/enable_if.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_pointer.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/always.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/functional/range/rend.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/rend.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/proto/functional/range/size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/size_type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/difference_type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/concepts.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/concept_check.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/concept/assert.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/general.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/backward_compatibility.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/has_constraints.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/conversion_traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/concept/usage.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/concept_def.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/concept/detail/concept_undef.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/iterator/iterator_concepts.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/limits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/value_type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/misc_concept.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/make_unsigned.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/has_member_size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/cstdint.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/assert.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/base_from_member.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/binary.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/control/deduce_d.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/cat.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/fold_left.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/seq/transform.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/arithmetic/mod.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/arithmetic/detail/div_base.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/identity_type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/function_traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/checked_delete.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/checked_delete.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/make_component.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/include/phoenix_core.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/phoenix/core.hpp \
@@ -1168,55 +1683,17 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/variant_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/enum_shifted_params.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/substitute_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/limits/list.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/backup_holder.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/enable_recursive_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/forced_return.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/generic_result_type.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/initializer.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/detail/reference_content.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_nothrow_copy.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/recursive_wrapper_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/move.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/move/move.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/move/detail/config_begin.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/move/utility.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/move/utility_core.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/move/core.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/move/detail/config_end.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/move/detail/meta_utils.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/move/traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_nothrow_move_constructible.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_move_constructor.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_nothrow_move_assignable.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_move_assign.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_nothrow_assign.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_trivial_assign.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/move/iterator.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/move/algorithm.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/detail/no_exceptions_support.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/no_exceptions_support.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/make_variant_list.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/list20.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/list10.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/list0.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/push_front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/item.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/tag.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/pop_front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/push_back.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/front.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/clear.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/O1_size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/size.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/empty.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/begin_end.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/include_preprocessed.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/preprocessed/plain/list10.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/list/aux_/preprocessed/plain/list20.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/list.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/over_sequence.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/visitation_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/cast_storage.hpp \
@@ -1227,28 +1704,13 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/apply_visitor_binary.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/apply_visitor_delayed.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/aligned_storage.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/alignment_of.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/size_t_trait_def.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/detail/size_t_trait_undef.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/type_with_alignment.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/list/transform.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/list/append.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/math/common_factor_ct.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/math_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/has_nothrow_constructor.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/find_if.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/find_if_pred.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/iter_apply.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iter_fold_if.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/iter_fold_if_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/iter_fold_if_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/max_element.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/same_as.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/sizeof.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/transform.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/pair_view.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/iterator_category.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/min_max.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/variant_io.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/recursive_variant.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/detail/enable_recursive.hpp \
@@ -1268,34 +1730,11 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/string_traits.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/container.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/attributes_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/optional.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/optional/optional.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/explicit_operator_bool.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/optional/bad_optional_access.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/decay.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_bounds.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/none.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/none_t.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/compare_pointees.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/in_place_factory.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/detail/in_place_factory_prefix.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/preprocessor/punctuation/paren.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/detail/in_place_factory_suffix.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/utility/swap.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/core/swap.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/optional/optional_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/get.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/visitor_ptr.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/variant/bad_visit.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/range/iterator_range.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/iterator_range_core.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/functions.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/distance.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/has_range_iterator.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/algorithm/equal.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/range/detail/safe_bool.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/range/iterator_range_io.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/parser.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/detail/attributes.hpp \
@@ -1303,14 +1742,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/has_semantic_action.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/detail/hold_any.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/detail/as_variant.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/limits/vector.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/vector20.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/vector/aux_/preprocessed/typeof_based/vector20.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/vector.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/contains.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/contains_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/find.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/include/filter_if.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/algorithm/transformation/filter_if.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/view/filter_view/filter_view.hpp \
@@ -1344,7 +1775,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/cv_traits.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/add_cv.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/remove_volatile.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/swap.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/utree/utree_traits_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/action_dispatch.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/handles_container.hpp \
@@ -1418,7 +1848,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/char_set/range.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/char_set/range_run_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/char_set/range_functions.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/integer_traits.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/char/char_class.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/detail/enable_lit.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/fusion/include/vector.hpp \
@@ -1428,10 +1857,7 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/binary/binary.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/detail/endian.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/detail/endian/endian.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/detail/endian.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/predef/detail/endian_compat.h \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/detail/endian/cover_operators.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_floating_point.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/directive.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/directive/as.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/directive/encoding.hpp \
@@ -1453,8 +1879,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/function/detail/prologue.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/config/no_tr1/functional.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/function/function_base.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/integer.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/integer_fwd.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/composite_traits.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/type_traits/is_union.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/function_equal.hpp \
@@ -1470,7 +1894,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/function_types/is_function.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/function_types/components.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/remove.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/remove_if.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/function_types/config/config.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/function_types/config/compiler.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/function_types/config/cc_names.hpp \
@@ -1544,28 +1967,7 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/numeric/real_policies.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/numeric/detail/real_impl.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/detail/pow10.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/config/no_tr1/cmath.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/detail/sign.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/fpclassify.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/real_cast.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/math_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/detail/round_fwd.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/promotion.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/config.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/tools/user.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/policies/policy.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/comparison.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/not_equal_to.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/not_equal_to.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/greater.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/greater.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/less_equal.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/less_equal.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/greater_equal.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/greater_equal.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/config/no_tr1/complex.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/detail/fp_traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/sign.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/operator.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/operator/sequence.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/operator/alternative.hpp \
@@ -1576,7 +1978,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/support/algorithm/any_ns.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/operator/permutation.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/detail/permute_function.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/array.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/operator/difference.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/operator/list.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/operator/optional.hpp \
@@ -1598,21 +1999,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/range/reference.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/range/pointer.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/range/sub_range.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/shared_ptr.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/shared_ptr.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/shared_count.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/bad_weak_ptr.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_counted_base.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_has_sync.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_counted_base_gcc_x86.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_counted_impl.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_convertible.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/sp_nullptr_t.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/spinlock_pool.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/spinlock.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/spinlock_sync.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/yield_k.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/smart_ptr/detail/operator_bool.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/what.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/stream.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/home/qi/stream/stream.hpp \
@@ -1827,6 +2213,7 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/bind/bind_mf_cc.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/bind/bind_mf2_cc.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/bind/placeholders.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/system.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/unit_test.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/test_tools.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/predicate_result.hpp \
@@ -1846,19 +2233,6 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/utils/trivial_singleton.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/utils/lazy_ostream.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/floating_point_comparison.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/conversion_traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/conversion_traits.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/meta.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/int_float_mixture.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/int_float_mixture_enum.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/sign_mixture.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/sign_mixture_enum.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/udt_builtin_mixture.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/udt_builtin_mixture_enum.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/numeric/conversion/detail/is_subranged.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/multiplies.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/times.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/preprocessed/gcc/times.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/detail/workaround.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/utils/basic_cstring/io.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/unit_test_suite.hpp \
@@ -1866,5 +2240,4 @@ dependencies: \
   /usr/local/Cellar/boost/1.57.0/include/boost/test/utils/callback.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/for_each.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/mpl/aux_/unwrap.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/test/framework.hpp \
-  /usr/local/Cellar/boost/1.57.0/include/boost/config/auto_link.hpp
+  /usr/local/Cellar/boost/1.57.0/include/boost/test/framework.hpp

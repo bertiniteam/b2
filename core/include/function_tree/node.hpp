@@ -31,8 +31,8 @@
 
 #include <boost/type_index.hpp>
 
-using dbl = double;
-using mpfr = long double;
+using dbl = std::complex<double>;
+using mpfr = bertini::complex;
 
 
 
