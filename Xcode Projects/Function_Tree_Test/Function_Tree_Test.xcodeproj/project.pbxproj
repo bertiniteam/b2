@@ -42,11 +42,13 @@
 		87BE1D911B1F685600762D34 /* variable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = variable.hpp; sourceTree = "<group>"; };
 		87BE1D921B1F685600762D34 /* bertini.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = bertini.hpp; path = ../../../core/include/bertini.hpp; sourceTree = "<group>"; };
 		87BE1D931B1F685600762D34 /* function_tree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = function_tree.hpp; path = ../../../core/include/function_tree.hpp; sourceTree = "<group>"; };
-		87BE1D941B1F685600762D34 /* mpfr_complex.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = mpfr_complex.hpp; path = ../../../core/include/mpfr_complex.hpp; sourceTree = "<group>"; };
+		87BE1D941B1F685600762D34 /* mpfr_complex.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = mpfr_complex.hpp; path = ../../core/include/mpfr_complex.hpp; sourceTree = "<group>"; };
 		87BE1D951B1F685600762D34 /* mpfr_extensions.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = mpfr_extensions.hpp; path = ../../../core/include/mpfr_extensions.hpp; sourceTree = "<group>"; };
 		87BE1D961B1F685600762D34 /* system.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = system.hpp; path = ../../../core/include/system.hpp; sourceTree = "<group>"; };
 		87BE1D971B1F689F00762D34 /* function_tree_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = function_tree_test.cpp; path = ../../../core/src/test/classes/function_tree_test.cpp; sourceTree = "<group>"; };
 		87BE1D991B1F8DA500762D34 /* class_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = class_test.cpp; path = ../../../core/src/test/classes/class_test.cpp; sourceTree = "<group>"; };
+		87BE1D9C1B1FA00700762D34 /* complex_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = complex_test.cpp; path = ../../core/src/test/classes/complex_test.cpp; sourceTree = "<group>"; };
+		87BE1DAA1B20E0FC00762D34 /* sin_operator.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sin_operator.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +65,7 @@
 		87BE1D6C1B1F66D900762D34 = {
 			isa = PBXGroup;
 			children = (
+				87BE1D9B1B1F9FD900762D34 /* Complex_Class */,
 				87BE1D771B1F66D900762D34 /* Function_Tree_Test */,
 				87BE1D761B1F66D900762D34 /* Products */,
 			);
@@ -84,7 +87,6 @@
 				87BE1D991B1F8DA500762D34 /* class_test.cpp */,
 				87BE1D921B1F685600762D34 /* bertini.hpp */,
 				87BE1D931B1F685600762D34 /* function_tree.hpp */,
-				87BE1D941B1F685600762D34 /* mpfr_complex.hpp */,
 				87BE1D951B1F685600762D34 /* mpfr_extensions.hpp */,
 				87BE1D961B1F685600762D34 /* system.hpp */,
 			);
@@ -116,6 +118,7 @@
 				87BE1D891B1F685600762D34 /* power_operator.hpp */,
 				87BE1D8A1B1F685600762D34 /* sum_operator.hpp */,
 				87BE1D8B1B1F685600762D34 /* unary_operator.hpp */,
+				87BE1DAA1B20E0FC00762D34 /* sin_operator.hpp */,
 			);
 			path = operators;
 			sourceTree = "<group>";
@@ -136,6 +139,15 @@
 				87BE1D911B1F685600762D34 /* variable.hpp */,
 			);
 			path = symbols;
+			sourceTree = "<group>";
+		};
+		87BE1D9B1B1F9FD900762D34 /* Complex_Class */ = {
+			isa = PBXGroup;
+			children = (
+				87BE1D9C1B1FA00700762D34 /* complex_test.cpp */,
+				87BE1D941B1F685600762D34 /* mpfr_complex.hpp */,
+			);
+			name = Complex_Class;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -235,12 +247,31 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core,
+					/usr/local/Cellar/eigen/3.2.4/include,
+					/usr/local/Cellar/gmp/6.0.0a/include,
+					"/usr/local/Cellar/mpfr/3.1.2-p11/include",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
 					"-lboost_unit_test_framework-mt",
+					"-lboost_serialization-mt",
+					"-lmpi_cxx",
+					"-lmpi",
+					"-lm",
+					"-lboost_filesystem",
+					"-lboost_system",
+					"-lboost_chrono-mt",
+					"-lboost_regex-mt",
+					"-lboost_timer-mt",
+					"-lgmp",
+					"-lmpfr",
 				);
 				SDKROOT = macosx;
 			};
@@ -274,11 +305,30 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core,
+					/usr/local/Cellar/eigen/3.2.4/include,
+					/usr/local/Cellar/gmp/6.0.0a/include,
+					"/usr/local/Cellar/mpfr/3.1.2-p11/include",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
 					"-lboost_unit_test_framework-mt",
+					"-lboost_serialization-mt",
+					"-lmpi_cxx",
+					"-lmpi",
+					"-lm",
+					"-lboost_filesystem",
+					"-lboost_system",
+					"-lboost_chrono-mt",
+					"-lboost_regex-mt",
+					"-lboost_timer-mt",
+					"-lgmp",
+					"-lmpfr",
 				);
 				SDKROOT = macosx;
 			};
@@ -297,6 +347,8 @@
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
 					"-lboost_unit_test_framework-mt",
+					"-lgmp",
+					"-lmpfr",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -315,6 +367,8 @@
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
 					"-lboost_unit_test_framework-mt",
+					"-lgmp",
+					"-lmpfr",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
