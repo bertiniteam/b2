@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with negate_operator.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Created by Collins, James B. on 4/30/15.
+//  Created by Collins, James B. on 6/4/15.
 //
 //
 // sin_operator.hpp:  Declares the class  SinOperator.
@@ -40,6 +40,11 @@ namespace bertini {
         SinOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
         {};
         
+        // These do nothing for a constant
+        std::string PrintNode() override
+        {
+            return "-" + child_->PrintNode();
+        }
         
         
         virtual void print(std::ostream & target) const override
@@ -80,7 +85,7 @@ namespace bertini {
 
 
 
-}
+
 
 
 #endif

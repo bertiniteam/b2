@@ -28,7 +28,7 @@
 		87BE1D801B1F685600762D34 /* function_parsing.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = function_parsing.hpp; sourceTree = "<group>"; };
 		87BE1D811B1F685600762D34 /* node.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = node.hpp; sourceTree = "<group>"; };
 		87BE1D831B1F685600762D34 /* binary_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = binary_operator.hpp; sourceTree = "<group>"; };
-		87BE1D841B1F685600762D34 /* exp_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = exp_operator.hpp; sourceTree = "<group>"; };
+		87BE1D841B1F685600762D34 /* expon_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = expon_operator.hpp; sourceTree = "<group>"; };
 		87BE1D851B1F685600762D34 /* mult_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mult_operator.hpp; sourceTree = "<group>"; };
 		87BE1D861B1F685600762D34 /* nary_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = nary_operator.hpp; sourceTree = "<group>"; };
 		87BE1D871B1F685600762D34 /* negate_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = negate_operator.hpp; sourceTree = "<group>"; };
@@ -49,6 +49,11 @@
 		87BE1D991B1F8DA500762D34 /* class_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = class_test.cpp; path = ../../../core/src/test/classes/class_test.cpp; sourceTree = "<group>"; };
 		87BE1D9C1B1FA00700762D34 /* complex_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = complex_test.cpp; path = ../../core/src/test/classes/complex_test.cpp; sourceTree = "<group>"; };
 		87BE1DAA1B20E0FC00762D34 /* sin_operator.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sin_operator.hpp; sourceTree = "<group>"; };
+		87BE1DB01B22135F00762D34 /* cos_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = cos_operator.hpp; sourceTree = "<group>"; };
+		87BE1DB11B22135F00762D34 /* exp_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = exp_operator.hpp; sourceTree = "<group>"; };
+		87BE1DB21B22135F00762D34 /* sqrt_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = sqrt_operator.hpp; sourceTree = "<group>"; };
+		87BE1DB31B22135F00762D34 /* tan_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tan_operator.hpp; sourceTree = "<group>"; };
+		87BE1DB41B22136500762D34 /* special_numbers.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = special_numbers.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,8 +114,12 @@
 		87BE1D821B1F685600762D34 /* operators */ = {
 			isa = PBXGroup;
 			children = (
+				87BE1DB01B22135F00762D34 /* cos_operator.hpp */,
+				87BE1DB11B22135F00762D34 /* exp_operator.hpp */,
+				87BE1DB21B22135F00762D34 /* sqrt_operator.hpp */,
+				87BE1DB31B22135F00762D34 /* tan_operator.hpp */,
 				87BE1D831B1F685600762D34 /* binary_operator.hpp */,
-				87BE1D841B1F685600762D34 /* exp_operator.hpp */,
+				87BE1D841B1F685600762D34 /* expon_operator.hpp */,
 				87BE1D851B1F685600762D34 /* mult_operator.hpp */,
 				87BE1D861B1F685600762D34 /* nary_operator.hpp */,
 				87BE1D871B1F685600762D34 /* negate_operator.hpp */,
@@ -134,6 +143,7 @@
 		87BE1D8E1B1F685600762D34 /* symbols */ = {
 			isa = PBXGroup;
 			children = (
+				87BE1DB41B22136500762D34 /* special_numbers.hpp */,
 				87BE1D8F1B1F685600762D34 /* number.hpp */,
 				87BE1D901B1F685600762D34 /* symbol.hpp */,
 				87BE1D911B1F685600762D34 /* variable.hpp */,

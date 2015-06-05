@@ -1077,7 +1077,12 @@ dependencies: \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/power_operator.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/unary_operator.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/negate_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/expon_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/sin_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/cos_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/tan_operator.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/exp_operator.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/sqrt_operator.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/variable.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/roots/function.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/function_parsing.hpp \
