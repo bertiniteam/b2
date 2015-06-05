@@ -1084,6 +1084,10 @@ dependencies: \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/exp_operator.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/operators/sqrt_operator.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/variable.hpp \
+  /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/symbols/special_number.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/constants/constants.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/constants/calculate_constants.hpp \
+  /usr/local/Cellar/boost/1.57.0/include/boost/math/special_functions/trunc.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/roots/function.hpp \
   /Users/jcollins/Documents/West_Texas/Research/Bertini/b2_JebFork/core/include/function_tree/function_parsing.hpp \
   /usr/local/Cellar/boost/1.57.0/include/boost/spirit/include/qi.hpp \
