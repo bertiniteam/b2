@@ -42,18 +42,31 @@ namespace bertini {
 		
 		Number(double val)
 		{
-			std::get< std::pair<dbl,bool> >(current_value_).first = val;
-			std::get< std::pair<mpfr,bool> >(current_value_).first = val;
+            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(val,0.0);
+            std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(val,0.0);
 		}
+        
+        Number(double rval, double ival)
+        {
+            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(rval,ival);
+            std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(rval,ival);
+        }
+
 		
 		
-		// Ctor that reads in a string and converts it to a number of the appropriate type
+		// Ctor that reads in a string for the real component and converts it to a number of the appropriate type
 		Number(std::string sval)
 		{
-			std::get< std::pair<dbl,bool> >(current_value_).first = stod(sval);
-			std::get< std::pair<mpfr,bool> >(current_value_).first = stod(sval);
+            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(stod(sval), 0.0);
+			std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(sval, "0.0");
 		}
 		
+        // Ctor that reads in two strings for a complex number and converts it to a number of the appropriate type
+        Number(std::string srval, std::string sival)
+        {
+            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(stod(srval), stod(sival));
+            std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(srval, sival);
+        }
 		
 		
 		

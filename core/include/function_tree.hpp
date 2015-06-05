@@ -36,7 +36,12 @@
 
 #include "function_tree/operators/unary_operator.hpp"
 #include "function_tree/operators/negate_operator.hpp"
+#include "function_tree/operators/expon_operator.hpp"
+#include "function_tree/operators/sin_operator.hpp"
+#include "function_tree/operators/cos_operator.hpp"
+#include "function_tree/operators/tan_operator.hpp"
 #include "function_tree/operators/exp_operator.hpp"
+#include "function_tree/operators/sqrt_operator.hpp"
 
 #include "function_tree/symbols/symbol.hpp"
 #include "function_tree/symbols/variable.hpp"

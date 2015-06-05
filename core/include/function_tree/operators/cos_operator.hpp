@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with negate_operator.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Created by Collins, James B. on 6/4/15.
+//  Created by Collins, James B. on 6/5/15.
 //
 //
-// sin_operator.hpp:  Declares the class  SinOperator.
+// cos_operator.hpp:  Declares the class  CosOperator.
 
 
-#ifndef Function_Tree_Test_sin_operator_hpp
-#define Function_Tree_Test_sin_operator_hpp
+#ifndef Function_Tree_Test_cos_operator_hpp
+#define Function_Tree_Test_cos_operator_hpp
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
@@ -28,64 +28,59 @@
 
 namespace bertini {
     
-    // Node -> UnaryOperator -> SinOperator
-    // Description: This class represents the sine function.  FreshEval method
-    // is defined for sine and takes the sine of the child node.
-    class SinOperator : public  virtual UnaryOperator
+    // Node -> UnaryOperator -> CosOperator
+    // Description: This class represents the cosine function.  FreshEval method
+    // is defined for cosine and takes the cosine of the child node.
+    class CosOperator : public  virtual UnaryOperator
     {
     public:
         
-        SinOperator(){}
+        CosOperator(){}
         
-        SinOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+        CosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
         {};
         
-        // These do nothing for a constant
-        std::string PrintNode() override
-        {
-            return "-" + child_->PrintNode();
-        }
         
         
         virtual void print(std::ostream & target) const override
         {
-            target << "sin(";
-            child_->print(target);
-            target << ")";
+        target << "cos(";
+        child_->print(target);
+        target << ")";
         }
         
-        virtual ~SinOperator() = default;
+        virtual ~CosOperator() = default;
         
     protected:
         // Specific implementation of FreshEval for negate.
         dbl FreshEval(dbl) override
         {
-            return sin(child_->Eval<dbl>());
+            return cos(child_->Eval<dbl>());
         }
         
         mpfr FreshEval(mpfr) override
         {
-            return sin(child_->Eval<mpfr>());
+            return cos(child_->Eval<mpfr>());
         }
-    };
-    
-
-    // begin the overload of operators
-    
-    
-    inline std::shared_ptr<bertini::Node> sin(const std::shared_ptr<bertini::Node> & N)
-    {
-        return std::make_shared<bertini::SinOperator>(N);
-    }
-
-    
-    
-    
-} // re: namespace bertini
-
-
-
-
-
-
+        };
+        
+        
+        // begin the overload of operators
+        
+        
+        inline std::shared_ptr<bertini::Node> cos(const std::shared_ptr<bertini::Node> & N)
+        {
+            return std::make_shared<bertini::CosOperator>(N);
+        }
+        
+        
+        
+        
+        } // re: namespace bertini
+        
+        
+        
+        }
+        
+        
 #endif

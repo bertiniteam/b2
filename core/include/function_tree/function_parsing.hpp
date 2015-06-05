@@ -46,7 +46,7 @@
 #include "function_tree/operators/sum_operator.hpp"
 #include "function_tree/operators/mult_operator.hpp"
 #include "function_tree/operators/negate_operator.hpp"
-#include "function_tree/operators/exp_operator.hpp"
+#include "function_tree/operators/expon_operator.hpp"
 #include "function_tree/symbols/number.hpp"
 #include "function_tree/symbols/variable.hpp"
 

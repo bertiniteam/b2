@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with negate_operator.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Created by Collins, James B. on 6/4/15.
+//  Created by Collins, James B. on 6/5/15.
 //
 //
-// sin_operator.hpp:  Declares the class  SinOperator.
+// tan_operator.hpp:  Declares the class  TanOperator.
 
 
-#ifndef Function_Tree_Test_sin_operator_hpp
-#define Function_Tree_Test_sin_operator_hpp
+#ifndef Function_Tree_Test_tan_operator_hpp
+#define Function_Tree_Test_tan_operator_hpp
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
@@ -28,64 +28,59 @@
 
 namespace bertini {
     
-    // Node -> UnaryOperator -> SinOperator
-    // Description: This class represents the sine function.  FreshEval method
-    // is defined for sine and takes the sine of the child node.
-    class SinOperator : public  virtual UnaryOperator
+    // Node -> UnaryOperator -> TanOperator
+    // Description: This class represents the tangent function.  FreshEval method
+    // is defined for tangent and takes the tangent of the child node.
+    class TanOperator : public  virtual UnaryOperator
     {
     public:
         
-        SinOperator(){}
+        TanOperator(){}
         
-        SinOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+        TanOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
         {};
         
-        // These do nothing for a constant
-        std::string PrintNode() override
-        {
-            return "-" + child_->PrintNode();
-        }
         
         
         virtual void print(std::ostream & target) const override
         {
-            target << "sin(";
-            child_->print(target);
-            target << ")";
+        target << "tan(";
+        child_->print(target);
+        target << ")";
         }
         
-        virtual ~SinOperator() = default;
+        virtual ~TanOperator() = default;
         
     protected:
         // Specific implementation of FreshEval for negate.
         dbl FreshEval(dbl) override
         {
-            return sin(child_->Eval<dbl>());
+            return tan(child_->Eval<dbl>());
         }
         
         mpfr FreshEval(mpfr) override
         {
-            return sin(child_->Eval<mpfr>());
+            return tan(child_->Eval<mpfr>());
         }
-    };
-    
-
-    // begin the overload of operators
-    
-    
-    inline std::shared_ptr<bertini::Node> sin(const std::shared_ptr<bertini::Node> & N)
-    {
-        return std::make_shared<bertini::SinOperator>(N);
-    }
-
-    
-    
-    
-} // re: namespace bertini
-
-
-
-
-
-
+        };
+        
+        
+        // begin the overload of operators
+        
+        
+        inline std::shared_ptr<bertini::Node> tan(const std::shared_ptr<bertini::Node> & N)
+        {
+            return std::make_shared<bertini::TanOperator>(N);
+        }
+        
+        
+        
+        
+        } // re: namespace bertini
+        
+        
+        
+        }
+        
+        
 #endif
