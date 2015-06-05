@@ -40,6 +40,11 @@ namespace bertini {
         SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
         {};
         
+        // These do nothing for a constant
+        std::string PrintNode() override
+        {
+            return "-" + child_->PrintNode();
+        }
         
         
         virtual void print(std::ostream & target) const override
@@ -78,9 +83,6 @@ namespace bertini {
         
         } // re: namespace bertini
         
-        
-        
-        }
         
         
 #endif

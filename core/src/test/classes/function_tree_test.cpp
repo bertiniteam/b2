@@ -42,6 +42,8 @@
 
 using Variable = bertini::Variable;
 using Node = bertini::Node;
+using Number = bertini::Number;
+using SpecialNumber = bertini::SpecialNumber;
 
 
 BOOST_AUTO_TEST_SUITE(function_tree_class)
@@ -782,6 +784,61 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_over_lnum1_pow_num2l){
 }
 
 
+BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    std::shared_ptr<Number> p = std::make_shared<Number>("0.8", "-1.7");
+    
+    x->set_current_value<dbl>(std::complex<double>(3.1,4.1));
+    x->set_current_value<mpfr>(bertini::complex("3.1","4.1"));
+    
+    std::shared_ptr<Node> N = pow(x,a+p);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (-17.6771208310838572980146896376)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (-19.6442055257236571623463844735)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("-17.6771208310838572980146896376")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("-19.6442055257236571623463844735")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_times_num2l){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    std::shared_ptr<Number> p = std::make_shared<Number>("0.8", "-1.7");
+    
+    x->set_current_value<dbl>(std::complex<double>(3.1,4.1));
+    x->set_current_value<mpfr>(bertini::complex("3.1","4.1"));
+    
+    std::shared_ptr<Node> N = pow(x,a*p);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (-1.62105273352745656474239861093e9)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (4.14768162646020626776658517369e8)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("-1.62105273352745656474239861093e9")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("4.14768162646020626776658517369e8")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_over_num2l){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    std::shared_ptr<Number> p = std::make_shared<Number>("0.8", "-1.7");
+    
+    x->set_current_value<dbl>(std::complex<double>(3.1,4.1));
+    x->set_current_value<mpfr>(bertini::complex("3.1","4.1"));
+    
+    std::shared_ptr<Node> N = pow(x,p/a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (0.826375839204307946268538312202)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (-.492703814991619855438985889918)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("0.826375839204307946268538312202")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("-.492703814991619855438985889918")) < 1e-15);
+}
 
 
 
@@ -804,6 +861,253 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
     BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("-34.5530035635025892859584920916")) < 1e-15);
     BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("-130.722093418701896942083255318")) < 1e-15);
 }
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_cos_num){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    
+    std::shared_ptr<Node> N = cos(a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (-130.725668506659397808059392585)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (34.5520586073333342036904629466)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("-130.725668506659397808059392585")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("34.5520586073333342036904629466")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_tan_num){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    
+    std::shared_ptr<Node> N = tan(a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (0.0000135128843909889415655993926290)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (.99997622356787633517025810473)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("0.0000135128843909889415655993926290")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float(".99997622356787633517025810473")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    
+    std::shared_ptr<Node> N = exp(a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (23.2391335770284822580683280117)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (-18.9153366937901762703127649685)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("23.2391335770284822580683280117")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("-18.9153366937901762703127649685")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_sqrt_num){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    
+    std::shared_ptr<Node> N = sqrt(a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (2.23062051251032836827999895934)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (1.25525609770749171873634093469)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("2.23062051251032836827999895934")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("1.25525609770749171873634093469")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+
+    x->set_current_value<dbl>(std::complex<double>(3.1,4.1));
+    x->set_current_value<mpfr>(bertini::complex("3.1","4.1"));
+    
+    std::shared_ptr<Node> N = sin(x+a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (1755.12173962101868146101974324)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (7967.78660561184712463768766067)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("1755.12173962101868146101974324")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("7967.78660561184712463768766067")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_cos_of_lx_times_numl){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    
+    x->set_current_value<dbl>(std::complex<double>(3.1,4.1));
+    x->set_current_value<mpfr>(bertini::complex("3.1","4.1"));
+    
+    std::shared_ptr<Node> N = cos(x*a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (1.93962753413280778559704274145e13)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (-2.85949491103745824960005720573e12)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("1.93962753413280778559704274145e13")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("-2.85949491103745824960005720573e12")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_tan_of_lx_over_numl){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    
+    x->set_current_value<dbl>(std::complex<double>(3.1,4.1));
+    x->set_current_value<mpfr>(bertini::complex("3.1","4.1"));
+    
+    std::shared_ptr<Node> N = tan(x/a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (0.977969574012272711554396897991)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (-.156523363461826436337828502092)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("0.977969574012272711554396897991")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("-.156523363461826436337828502092")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_exp_of_negative_num){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    
+    std::shared_ptr<Node> N = exp(-a);
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (0.0258831694355400252444345365190)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (0.0210674319226603822378721511629)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("0.0258831694355400252444345365190")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0.0210674319226603822378721511629")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Number> a = std::make_shared<Number>("3.4", "5.6");
+    
+    x->set_current_value<dbl>(std::complex<double>(3.1,4.1));
+    x->set_current_value<mpfr>(bertini::complex("3.1","4.1"));
+    
+    std::shared_ptr<Node> N = sqrt(pow(x,a));
+    
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (1.20809650847704483896157332805)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (-.157486681406906498071024954461)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("1.20809650847704483896157332805")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("-.157486681406906498071024954461")) < 1e-15);
+    
+    N = pow(x,a);
+    N = pow(N,1/2.0);
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (1.20809650847704483896157332805)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (-.157486681406906498071024954461)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("1.20809650847704483896157332805")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("-.157486681406906498071024954461")) < 1e-15);
+}
+
+
+
+
+
+
+
+
+
+
+
+/////////// Special Numbers ///////////////////
+BOOST_AUTO_TEST_CASE(manual_construction_pi){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<SpecialNumber> N = std::make_shared<SpecialNumber>("pi");
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (3.14159265358979323846264338328)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("3.14159265358979323846264338328")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0")) < 1e-15);
+
+    N = std::make_shared<SpecialNumber>("Pi");
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (3.14159265358979323846264338328)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("3.14159265358979323846264338328")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0")) < 1e-15);
+
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_e){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<SpecialNumber> N = std::make_shared<SpecialNumber>("e");
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (2.71828182845904523536028747135)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("2.71828182845904523536028747135")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0")) < 1e-15);
+ 
+    N = std::make_shared<SpecialNumber>("E");
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (2.71828182845904523536028747135)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("2.71828182845904523536028747135")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_i){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    
+    std::shared_ptr<SpecialNumber> N = std::make_shared<SpecialNumber>("i");
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (0.0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (1.0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("0.0")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("1.0")) < 1e-15);
+    
+    N = std::make_shared<SpecialNumber>("I");
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (0.0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (1.0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("0.0")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("1.0")) < 1e-15);
+    
+    N = std::make_shared<SpecialNumber>("1i");
+    BOOST_CHECK(abs(N->Eval<dbl>().real() - (0.0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<dbl>().imag() - (1.0)) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("0.0")) < 1e-15);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("1.0")) < 1e-15);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_pi_50_digits){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    boost::multiprecision::mpfr_float::default_precision(50);
+    
+    std::shared_ptr<SpecialNumber> N = std::make_shared<SpecialNumber>("pi");
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("3.14159265358979323846264338327950288419716939937510582097494")) < 1e-49);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0")) < 1e-49);
+    
+    N = std::make_shared<SpecialNumber>("Pi");
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("3.14159265358979323846264338327950288419716939937510582097494")) < 1e-49);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0")) < 1e-49);
+    
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_e_50_digits){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    boost::multiprecision::mpfr_float::default_precision(50);
+    
+    std::shared_ptr<SpecialNumber> N = std::make_shared<SpecialNumber>("e");
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("2.71828182845904523536028747135266249775724709369995957496697")) < 1e-49);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0")) < 1e-49);
+    
+    N = std::make_shared<SpecialNumber>("E");
+    BOOST_CHECK(abs(N->Eval<mpfr>().real() - mpfr_float("2.71828182845904523536028747135266249775724709369995957496697")) < 1e-49);
+    BOOST_CHECK(abs(N->Eval<mpfr>().imag() - mpfr_float("0")) < 1e-49);
+}
+
 
 
 

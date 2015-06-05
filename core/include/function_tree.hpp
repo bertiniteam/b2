@@ -46,6 +46,7 @@
 #include "function_tree/symbols/symbol.hpp"
 #include "function_tree/symbols/variable.hpp"
 #include "function_tree/symbols/number.hpp"
+#include "function_tree/symbols/special_number.hpp"
 
 #include "function_tree/roots/function.hpp"
 
