@@ -25,6 +25,8 @@
 #ifndef BERTINI_SYSTEM_H
 #define BERTINI_SYSTEM_H
 
+#include "mpfr_complex.hpp"
+
 #include <vector>
 #include "function_tree.hpp"
 #include <boost/multiprecision/mpfr.hpp>

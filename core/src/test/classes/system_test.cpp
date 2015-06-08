@@ -16,21 +16,30 @@
 
 //  system_test.cpp
 //
-//  Created by Collins, James B. on 4/30/15.
-//  Copyright (c) 2015 West Texas A&M University. All rights reserved.
-//
-// also modified by
 //  Daniel Brake
 //  University of Notre Dame
 //  ACMS
-//  Spring, Summer 2015
+//  Summer 2015
 
+
+
+#include <boost/test/unit_test.hpp>
+
+
+
+#include "system.hpp"
+#include "system_parsing.hpp"
+
+using System = bertini::System;
 
 
 BOOST_AUTO_TEST_SUITE(system_class)
 
 
-
+BOOST_AUTO_TEST_CASE(system_make_a_system_at_all)
+{
+	System S;
+}
 
 
 

@@ -29,7 +29,6 @@
 
 namespace bertini {
 	
-	
 	// Description: This class is an interface for all n-ary operators, such as summation and multiplication.
 	// Children of the operator are stored in a vector and methods to add and access children are available
 	// in this interface.

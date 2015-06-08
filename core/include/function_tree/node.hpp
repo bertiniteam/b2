@@ -154,7 +154,7 @@ protected:
 
 	
 	
-	int Node::tabcount = 0;
+	
 	
 	
 } // re: namespace bertini

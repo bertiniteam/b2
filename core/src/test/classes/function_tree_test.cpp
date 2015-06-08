@@ -40,6 +40,8 @@
 #include <boost/test/unit_test.hpp>
 
 
+int Node::tabcount = 0;
+
 using Variable = bertini::Variable;
 using Node = bertini::Node;
 

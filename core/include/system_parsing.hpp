@@ -47,7 +47,7 @@ namespace bertini {
 			
 			
 			root_rule_.name("root_rule_");
-//			root_rule_ = declaration_;
+			root_rule_ = eps [_val = System()];
 			
 			
 			
