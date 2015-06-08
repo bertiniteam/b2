@@ -20,3 +20,52 @@
 //  Spring, Summer 2015
 //
 // system.hpp:  provides the bertini::system class.
+
+
+
+
+#include <vector>
+#include "function_tree.hpp"
+#include <boost/multiprecision/mpfr.hpp>
+#include <boost/multiprecision/number.hpp>
+
+
+
+namespace bertini {
+	
+	
+	/**
+	 The fundamental polynomial system class for Bertini2.
+	 */
+	class System{
+		
+		using Point = std::vector<bertini::complex>; // NOT CORRECT.  should be using Eigen3 vectors, probably
+		
+		
+		using Fn = std::shared_ptr<Function>;
+		using Var = std::shared_ptr<Variable>;
+	public:
+		
+		
+	private:
+		
+		
+		std::vector< Fn > functions_;
+		std::vector< Fn > subfunctions_;
+		std::vector< Fn > explicit_parameters_;
+		
+		
+		std::vector< Var > variables_;
+		std::vector< Var > implicit_paramters_;
+		
+		
+		Var path_variable_;
+		
+		std::vector< Fn > constants_;
+		
+		unsigned precision_;
+		
+		Point solutions_;
+	};
+	
+}
