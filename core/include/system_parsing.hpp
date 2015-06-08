@@ -33,9 +33,14 @@ namespace bertini {
 	struct SystemParser : qi::grammar<Iterator, System, boost::spirit::ascii::space_type>
 	{
 		
+		// a few local using statements to reduce typing etc.
+		using Fn = std::shared_ptr<Function>;
+		using Var = std::shared_ptr<Variable>;
+		
 		
 		SystemParser() : SystemParser::base_type(root_rule_,"SystemParser")
 		{
+			
 			namespace phx = boost::phoenix;
 			using qi::_1;
 			using qi::_2;
@@ -46,19 +51,110 @@ namespace bertini {
 			using qi::lit;
 			
 			
+			
+			
+			
+			
+			
+			
+			
+			///  declare variables to hold the function trees for defined symbols.
+			std::vector<Fn> functions;
+			std::vector<Fn> explicit_parameters;
+			std::vector<Fn> subfunctions;
+			std::vector<Fn> constants;
+			std::vector<Var> variables;
+			
+			
+			
+			
+			
+			
+			
+			
+			unsigned variable_counter = 0;
+			unsigned path_variable_counter = 0;
+			unsigned function_counter = 0;
+			unsigned expl_para_counter = 0;
+			unsigned impl_para_counter = 0;
+			unsigned constant_counter = 0;
+			unsigned subfunction_counter = 0;
+			
+			
+			
+			qi::symbols<char,int> encountered_path_variable;
+			
+			
+			
+			qi::symbols<char,int> encountered_implicit_parameters;
+			qi::symbols<char,int> encountered_explicit_parameters;
+		
+			
+			qi::symbols<char,int> encountered_variables;
+			
+			
+			qi::symbols<char,int> encountered_functions;
+			
+			qi::symbols<char,int> encountered_constant_functions;
+			qi::symbols<char,int> encountered_subfunctions;
+			
+			
+			
+			
+			VariableParser<Iterator> variable_parser;
+			BrakeParser<Iterator> function_parser(&variables, encountered_variables);
+			
+			
+			
+			
+			
+			
+			
+			
 			root_rule_.name("root_rule_");
-			root_rule_ = eps [_val = System()];
+			root_rule_ = eps [_val = System()] >>
+			*(declaration_ | definition_) ;
 			
 			
 			
-			independent_symbol_.name("independent_symbol_");
+			///////////////////
+			//
+			//  Declarations of things.
+			//
+			/////////////////////////
+			
+			declaration_ =
+			(implicit_parameters_ | path_variable_ | variable_group_ | functions_ | constants_ )// | hom_variable_group | variable)
+			>>
+			lit(";");
 			
 			
 			
-			implicit_parameter_.name("implicit_parameter_");
+			
+			
+			
+			implicit_parameters_.name("implicit_parameter_");
+			qi::lit("implicit_parameter ") >> variable_parser.valid_variable_name_ [encountered_implicit_parameters.add(_1,impl_para_counter++)] % ',' ;
+			
+			explicit_parameters_.name("explicit_parameter_");
+			qi::lit("explicit_parameter ") >> variable_parser.valid_variable_name_ [encountered_explicit_parameters.add(_1,expl_para_counter++)] % ',' ;
+			
+			
+			constants_.name("constant_");
+			qi::lit("constant ") >> variable_parser.valid_variable_name_ [encountered_constant_functions.add(_1, constant_counter++)] % ',' ;
+			
+			
+			variable_group_.name("variable_group_");
+			qi::lit("variable ") >> variable_parser.valid_variable_name_ [encountered_variables.add(_1,variable_counter++)] % ',' ;
+			
+			
+			functions_.name("function_");
+			qi::lit("function ") >> variable_parser.valid_variable_name_ [encountered_functions.add(_1,function_counter++)] % ',' ;
 			
 			
 			path_variable_.name("path_variable_");
+			path_variable_ =
+			qi::lit("path_variable ") >> variable_parser.valid_variable_name_ [_val = make_shared_<Variable>()(_1)] ;
 			
 			
 			
@@ -66,49 +162,156 @@ namespace bertini {
 			
 			
 			
-			dependent_symbol_.name("dependent_symbol_");
 			
 			
 			
-			function_.name("function");
 			
 			
-			subfunction_.name("subfunction");
+			
+			///////////////////
+			//
+			//  Definitions of things
+			//
+			////////////////////
 			
 			
-			explicit_parameter_.name("explicit_parameter");
+			
+			
+			definition_ %=
+			(subfunction_definition_ | function_definition_ | constant_definition_ | explicit_parameter_definition_)
+			>>
+			lit(";") ;
+			
+			
+			unencountered_symbol_.name("unencountered_symbol");
+			unencountered_symbol_ = (
+									 variable_parser.valid_variable_name_ -
+									 (encountered_functions | encountered_explicit_parameters | encountered_implicit_parameters | encountered_constant_functions)
+									 );
+			
+			
+			
+			
+			subfunction_definition_.name("subfunction_definition");
+			subfunction_definition_ = // this actually makes a subfunction.
+			unencountered_symbol_
+			>> lit("=") >> function_parser [phx::bind( []
+											(const qi::symbols<char, int> & found_symbol, Fn F, const qi::symbols<char, int> & sym, std::vector<Fn> & fns )
+											{
+											fns.push_back(F);
+											auto bla = sym.find(found_symbol.name()); // get a pointer to the object associated with the name of the function
+											fns[*bla] = F;
+											},
+											_1,_2, encountered_subfunctions, subfunctions)];
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			function_definition_.name("function_definition");
+			function_definition_ =
+			encountered_functions >> lit("=") >> function_parser [phx::bind(
+																			[]
+																			(const qi::symbols<char, int> & found_symbol, Fn F, const qi::symbols<char, int> & sym, std::vector<Fn> & fns )
+																			{
+																				fns.push_back(F);
+																				auto bla = sym.find(found_symbol.name()); // get a pointer to the object associated with the name of the function
+																				fns[*bla] = F;
+																			},
+																			_1,_2, encountered_functions, functions)];
+			
+			
+			
+			
+			constant_definition_.name("constant_definition");
+			constant_definition_ =
+			encountered_constant_functions >> lit("=") >> function_parser [phx::bind(
+																					 []
+																					 (const qi::symbols<char, int> & found_symbol, Fn F, const qi::symbols<char, int> & sym, std::vector<Fn> & fns )
+																					 {
+																						 fns.push_back(F);
+																						 auto bla = sym.find(found_symbol.name()); // get a pointer to the object associated with the name of the function
+																						 fns[*bla] = F;
+																					 },
+																					 _1,_2, encountered_constant_functions, constants)];
+			
+			
+			
+			
+			
+			
+			
+			explicit_parameter_definition_.name("explicit_parameter_definition");
+			explicit_parameter_definition_ =
+			encountered_explicit_parameters >> lit("=") >> function_parser [phx::bind(
+																					  []
+																					  (const qi::symbols<char, int> & found_symbol, Fn F, const qi::symbols<char, int> & sym, std::vector<Fn> & fns )
+																					  {
+																						  fns.push_back(F);
+																						  auto bla = sym.find(found_symbol.name()); // get a pointer to the object associated with the name of the function
+																						  fns[*bla] = F;
+																					  },
+																					  _1,_2, encountered_explicit_parameters, explicit_parameters)];
 			
 			
 			
 			
 			
 			debug(root_rule_);
-			debug(independent_symbol_);
-			debug(dependent_symbol_);
 		}
 		
-	
+		
 		// rule declarations.  these are member variables for the parser.
 		qi::rule<Iterator, System, ascii::space_type > root_rule_;
 		
 		
-	
+		
+		qi::rule<Iterator, ascii::space_type > definition_;
+		
+		
+		
 		
 		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > independent_symbol_;
-		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > implicit_parameter_;
-		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > path_variable_;
 		
-		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > dependent_symbol_;
-		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > function_;
-		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > subfunction_;
-		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > explicit_parameter_;
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > explicit_parameters_;
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > implicit_parameters_;
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > path_variable_;
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > variable_group_;
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > constants_;
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > functions_;
+		
+		
+		qi::rule<Iterator, ascii::space_type > declaration_;
+			 
+			 
+		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > function_definition_;
+		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > constant_definition_;
+		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > explicit_parameter_definition_;
+		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > subfunction_definition_;
+		
+		
+		
+		qi::rule<Iterator, std::string, ascii::space_type > unencountered_symbol_;
+		
+		
+		
+		
 		
 		
 		
 	}; // struct SystemParser
 	
 	
-	
+	inline void AddAndIncrement(qi::symbols<char,int> & sym, std::string const& c, int & v)
+	{
+		sym.add(c,var_count_);
+		var_count_++;
+	}
 	
 }
 

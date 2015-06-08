@@ -77,7 +77,7 @@ namespace bertini {
 				//				iter->precision(new_precision);
 			}
 			
-			for (auto iter : constants_) {
+			for (auto iter : constant_subfunctions_) {
 				//				iter->precision(new_precision);
 				//				iter->eval<>()
 			}
@@ -100,18 +100,42 @@ namespace bertini {
 		
 		
 		
+		
+		
+		/**
+		 Get the number of variables in this system
+		 */
+		auto NumVariables() const
+		{
+			return variables_.size();
+		}
+		
+		
+		
+		
 		/**
 		 Evaluate the system.
 		 */
 		template<typename T>
-		Vec<T> Eval()
+		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value)
 		{
+			
+			assert(variable_values.size()==NumVariables());
+			
+			for (auto iter : functions_) {
+				iter->Reset();
+			}
+			
+			SetVariables(variable_values);
+			SetPathVariable(path_variable_value);
+			
+			
 			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
 			
-			{
-				auto function_counter = 0;
-				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, function_counter++) {
-					value(function_counter) = (*iter)->Eval<T>();
+			{ // for scoping of the counter.
+				auto counter = 0;
+				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+					value(counter) = (*iter)->Eval<T>();
 				}
 			}
 			
@@ -123,11 +147,11 @@ namespace bertini {
 		 Set the values of the variables to be equal to the input values
 		 */
 		template<typename T>
-		void SetVariables(Vec<T> new_values)
+		void SetVariables(const Vec<T> & new_values)
 		{
 			assert(new_values.size()== variables_.size());
 			
-			{
+			{ // for scoping of the counter.
 				auto counter = 0;
 				for (auto iter=variables_.begin(); iter!=variables_.end(); iter++, counter++) {
 					(*iter)->set_current_value(new_values(counter));
@@ -181,7 +205,7 @@ namespace bertini {
 		
 		Var path_variable_;
 		
-		std::vector< Fn > constants_;
+		std::vector< Fn > constant_subfunctions_;
 		
 		unsigned precision_;
 		

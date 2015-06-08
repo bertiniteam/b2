@@ -180,6 +180,12 @@ namespace bertini {
 			return produced_variables_;
 		}
 		
+		
+		
+		// the rule which determines valid variable names
+		qi::rule<Iterator, std::string()> valid_variable_name_;
+		
+		
 	private:
 		
 		
@@ -199,8 +205,7 @@ namespace bertini {
 		// Start rule used to parse variable list.
 		qi::rule<Iterator,ascii::space_type> start_;
 		
-		// the rule which determines valid variable names
-		qi::rule<Iterator, std::string()> valid_variable_name_;
+		
 		
 		
 		

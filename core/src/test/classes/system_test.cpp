@@ -41,7 +41,23 @@ BOOST_AUTO_TEST_CASE(system_make_a_system_at_all)
 	System S;
 }
 
-
+BOOST_AUTO_TEST_CASE(system_create_parser)
+{
+	System sys;
+	std::string str = "variable_group x, y, z;\nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
+	
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	
+	
+	bertini::SystemParser<std::string::const_iterator> S;
+	
+	
+	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
+	
+	BOOST_CHECK(s && iter==end);
+	
+}
 
 
 
