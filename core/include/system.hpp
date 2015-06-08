@@ -22,29 +22,111 @@
 // system.hpp:  provides the bertini::system class.
 
 
-
+#ifndef BERTINI_SYSTEM_H
+#define BERTINI_SYSTEM_H
 
 #include <vector>
 #include "function_tree.hpp"
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/number.hpp>
 
+#include <assert.h>
+
+#include <eigen3/Eigen/Dense>
 
 
 namespace bertini {
 	
+	template<typename T>
+	using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 	
 	/**
 	 The fundamental polynomial system class for Bertini2.
 	 */
 	class System{
 		
-		using Point = std::vector<bertini::complex>; // NOT CORRECT.  should be using Eigen3 vectors, probably
 		
-		
+		// a few local using statements to reduce typing etc.
 		using Fn = std::shared_ptr<Function>;
 		using Var = std::shared_ptr<Variable>;
+		
+		
 	public:
+		
+		void precision(unsigned new_precision)
+		{
+			for (auto iter : functions_) {
+//				iter->precision(new_precision);
+			}
+			
+			for (auto iter : subfunctions_) {
+				//				iter->precision(new_precision);
+			}
+			
+			for (auto iter : explicit_parameters_) {
+				//				iter->precision(new_precision);
+			}
+			
+			for (auto iter : variables_) {
+				//				iter->precision(new_precision);
+			}
+			
+			for (auto iter :implicit_parameters_) {
+				//				iter->precision(new_precision);
+			}
+			
+			for (auto iter : constants_) {
+				//				iter->precision(new_precision);
+				//				iter->eval<>()
+			}
+			
+//			path_variable_->precision(new_precision);
+			
+			precision_ = new_precision;
+		}
+		
+		
+		
+		
+		/**
+		 Get the number of functions in this system
+		 */
+		auto NumFunctions() const
+		{
+			return functions_.size();
+		}
+		
+		
+		
+		/**
+		 Evaluate the system.
+		 */
+		template<typename T>
+		Vec<T> Eval()
+		{
+			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
+			
+			auto function_counter = 0;
+			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++) {
+				value(function_counter) = (*iter)->Eval<T>();
+			}
+			
+			return value;
+		}
+		
+		
+		/**
+		 Set the values of the variables to be equal to the input values
+		 */
+		template<typename T>
+		void SetVariables(Vec<T> new_values)
+		{
+			assert(new_values.size()== variables_.size());
+			
+			
+		}
+		
+						 
 		
 		
 	private:
@@ -56,7 +138,7 @@ namespace bertini {
 		
 		
 		std::vector< Var > variables_;
-		std::vector< Var > implicit_paramters_;
+		std::vector< Var > implicit_parameters_;
 		
 		
 		Var path_variable_;
@@ -65,7 +147,22 @@ namespace bertini {
 		
 		unsigned precision_;
 		
-		Point solutions_;
+		
+		// i disagree with the inclusion of this, but the real necessity of it remains to be seen.  --dab
+		Vec<bertini::complex> solutions_;
 	};
 	
 }
+
+
+
+
+
+
+
+
+
+#endif // for the ifndef include guards
+
+
+
