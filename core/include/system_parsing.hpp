@@ -46,16 +46,63 @@ namespace bertini {
 			using qi::lit;
 			
 			
+			root_rule_.name("root_rule_");
+//			root_rule_ = declaration_;
+			
+			
+			
+			independent_symbol_.name("independent_symbol_");
+			
+			
+			
+			implicit_parameter_.name("implicit_parameter_");
+			
+			
+			path_variable_.name("path_variable_");
 			
 			
 			
 			
 			
+			
+			
+			dependent_symbol_.name("dependent_symbol_");
+			
+			
+			
+			function_.name("function");
+			
+			
+			subfunction_.name("subfunction");
+			
+			
+			explicit_parameter_.name("explicit_parameter");
+			
+			
+			
+			
+			
+			debug(root_rule_);
+			debug(independent_symbol_);
+			debug(dependent_symbol_);
 		}
 		
 	
 		// rule declarations.  these are member variables for the parser.
 		qi::rule<Iterator, System, ascii::space_type > root_rule_;
+		
+		
+	
+		
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > independent_symbol_;
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > implicit_parameter_;
+		qi::rule<Iterator, std::shared_ptr<Variable>, ascii::space_type > path_variable_;
+		
+		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > dependent_symbol_;
+		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > function_;
+		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > subfunction_;
+		qi::rule<Iterator, std::shared_ptr<Function>, ascii::space_type > explicit_parameter_;
+		
 		
 		
 	}; // struct SystemParser
