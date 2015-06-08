@@ -106,9 +106,11 @@ namespace bertini {
 		{
 			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
 			
-			auto function_counter = 0;
-			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++) {
-				value(function_counter) = (*iter)->Eval<T>();
+			{
+				auto function_counter = 0;
+				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, function_counter++) {
+					value(function_counter) = (*iter)->Eval<T>();
+				}
 			}
 			
 			return value;
@@ -123,10 +125,44 @@ namespace bertini {
 		{
 			assert(new_values.size()== variables_.size());
 			
+			{
+				auto counter = 0;
+				for (auto iter=variables_.begin(); iter!=variables_.end(); iter++, counter++) {
+					(*iter)->set_current_value(new_values(counter));
+				}
+			}
 			
 		}
 		
-						 
+		
+		
+		/**
+		 Set the current value of the path variable.
+		 */
+		template<typename T>
+		void SetPathVariable(T new_value)
+		{
+			path_variable_->set_current_value(new_value);
+		}
+		
+		
+		
+		
+		/**
+		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
+		 */
+		template<typename T>
+		void SetImplicitParameters(Vec<T> new_values)
+		{
+			assert(new_values.size()== implicit_parameters_.size());
+			
+			{
+				auto counter = 0;
+				for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++) {
+					(*iter)->set_current_value(new_values(counter));
+				}
+			}
+		}
 		
 		
 	private:
