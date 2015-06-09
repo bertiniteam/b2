@@ -157,7 +157,7 @@ namespace bertini {
 			% ","; // variables are separated by commas
 			
 			valid_variable_name_.name("valid_variable_name_");
-			valid_variable_name_ %= +qi::alpha >> *(qi::alnum | qi::char_('_'));
+            valid_variable_name_ %= +qi::alpha >> ( *(qi::alnum | qi::char_('_')) | ( qi::char_('[') >> ));
 		}
 		
 		
