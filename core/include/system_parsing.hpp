@@ -108,25 +108,18 @@ namespace bertini {
 			declarative_symbols.add("random_real",9);
 			
 			
-			root_rule_ = eps[_val = System()] >>
+			root_rule_ =
 			variable_group_ [phx::bind(&System::add_variable_group, _val, _1)];
 			
 			
 			
-			
-//			[phx::bind( []
-//									   (System & S, std::vector<Var> & V)
-//									   {
-//										   std::cout << "asdf " << V.size() << std::endl;
-//										   S.add_variable_group(V);
-//									   },
-//									   _val, _1)];
-//
+
 			
 			
-			variables_ = "variable" >> genericvargp_ >> ';';
-			hom_variable_group_ = "hom_variable_group" >> genericvargp_ >> ';';
-			variable_group_ = "variable_group" >> genericvargp_ >> ';';
+			
+			variables_			= "variable" > genericvargp_ > ';';
+			hom_variable_group_ = "hom_variable_group" > genericvargp_ > ';';
+			variable_group_		= "variable_group" > genericvargp_ > ';';
 			
 			genericvargp_ = new_variable_ % ',';
 			new_variable_ = unencountered_symbol_ [_val = make_shared_<Variable>() (_1)];
@@ -134,13 +127,13 @@ namespace bertini {
 			
 			
 			
-			functions_ = "function" >> genericfuncgp_ >> ';';
-			constants_ = "constant" >> genericfuncgp_ >> ';';
-			parameters_ = "parameter" >> genericfuncgp_ >> ';';
-			implicit_parameters_ = "implicit_parameter" >> genericfuncgp_ >> ';';
+			functions_ = "function" > genericfuncgp_ > ';';
+			constants_ = "constant" > genericfuncgp_ > ';';
+			parameters_ = "parameter" > genericfuncgp_ > ';';
+			implicit_parameters_ = "implicit_parameter" > genericfuncgp_ > ';';
 			
 			genericfuncgp_ = new_function_ % ',';
-			new_function_ %= unencountered_symbol_ [_val = make_shared_<Function>() (_1)];
+			new_function_ = unencountered_symbol_ [_val = make_shared_<Function>() (_1)];
 			
 			
 			
@@ -156,8 +149,7 @@ namespace bertini {
 			
 			
 			
-			root_rule_.name("root_rule_");  debug(root_rule_);
-			
+			root_rule_.name("root_rule_");
 			functions_.name("functions_"); constants_.name("constants_"); parameters_.name("parameters_"); implicit_parameters_.name("implicit_parameters_");
 			genericfuncgp_.name("genericfuncgp_");
 			new_function_.name("new_function_");
@@ -169,8 +161,9 @@ namespace bertini {
 			unencountered_symbol_.name("unencountered_symbol");
 			valid_variable_name_.name("valid_variable_name_");
 			
-			debug(variable_group_); debug(unencountered_symbol_); debug(new_variable_); debug(genericvargp_);
-			BOOST_SPIRIT_DEBUG_NODES((variable_group_) (valid_variable_name_) (unencountered_symbol_) (new_variable_) (genericvargp_))
+//			debug(root_rule_);
+//			debug(variable_group_); debug(unencountered_symbol_); debug(new_variable_); debug(genericvargp_);
+//			BOOST_SPIRIT_DEBUG_NODES((variable_group_) (valid_variable_name_) (unencountered_symbol_) (new_variable_) (genericvargp_))
 			
 			
 		}
@@ -188,14 +181,14 @@ namespace bertini {
 		
 		qi::rule<Iterator, std::vector<Var>(), Skipper > variable_group_, hom_variable_group_, variables_;
 		qi::rule<Iterator, std::vector<Var>(), Skipper > genericvargp_;
-		qi::rule<Iterator, Var>  new_variable_;
+		qi::rule<Iterator, Var()>  new_variable_;
 		
 		
 		
 		
 		qi::rule<Iterator, std::vector<Fn>(), Skipper > functions_, constants_, parameters_, implicit_parameters_;
 		qi::rule<Iterator, std::vector<Fn>(), Skipper > genericfuncgp_;
-		qi::rule<Iterator, Fn>  new_function_;
+		qi::rule<Iterator, Fn()>  new_function_;
 		
 		
 		qi::rule<Iterator, std::string()> unencountered_symbol_;
@@ -206,9 +199,7 @@ namespace bertini {
 		
 		
 		// symbol declarations
-		
 		qi::symbols<char,int> encountered_symbols;
-		
 		qi::symbols<char,int> declarative_symbols;
 		
 	};

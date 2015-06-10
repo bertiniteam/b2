@@ -48,10 +48,13 @@ int main(int argc, char** argv)
 	
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 	
-	std::cout << "the unparsed string:\n" << std::string(iter,end);
+	if (!s || iter!=end){
+		std::cout << "parsing failed.\n";
+		std::cout << "the unparsed string:\n" << std::string(iter,end);
+	}
+	
 	
 	std::cout << sys << std::endl;
-	
 	return 0;
 }
 

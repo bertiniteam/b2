@@ -200,12 +200,25 @@ namespace bertini {
 		
 		void add_variable_group(std::vector<Var> const& v)
 		{
-			std::cout << "\nadding variable group with " << v.size() << " variables to system" << std::endl;
 			variable_groups_.push_back(v);
 			variables_.insert( variables_.end(), v.begin(), v.end() );
 		}
 		
 		
+		
+		void add_hom_variable_group(std::vector<Var> const& v)
+		{
+			hom_variable_groups_.push_back(v);
+			variables_.insert( variables_.end(), v.begin(), v.end() );
+		}
+		
+		
+		void add_ungrouped_variables(std::vector<Var> const& v)
+		{
+			ungrouped_variables_.insert( variables_.end(), v.begin(), v.end() );
+			variables_.insert( variables_.end(), v.begin(), v.end() );
+		}
+
 		
 		
 		void add_implicit_parameter(Var const& v)
@@ -301,7 +314,7 @@ namespace bertini {
 			out << "system:\n\n";
 			out << s.NumVariables() << " variables:\n";
 			for (auto iter=s.variables_.begin(); iter!= s.variables_.end(); iter++) {
-				out << *iter << "\n";
+				out << (*iter)->name() << "\n";
 			}
 			out << "\n";
 			
@@ -311,8 +324,10 @@ namespace bertini {
 		
 	private:
 		
-		std::vector<std::vector<Var> > variable_groups_;
 		
+		std::vector<Var> ungrouped_variables_;
+		std::vector<std::vector<Var> > variable_groups_;
+		std::vector<std::vector<Var> > hom_variable_groups_;
 		
 		
 		std::vector< Fn > functions_;
