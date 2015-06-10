@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
 	
 	bertini::System sys;
-	std::string str = "variable_group x, y, z; ";
+	std::string str = "variable_group x, y, z; function f1, f2; pathvariable t ; parameter p, q;";
 	
 	
 	std::string::const_iterator iter = str.begin();
@@ -50,7 +50,10 @@ int main(int argc, char** argv)
 	
 	if (!s || iter!=end){
 		std::cout << "parsing failed.\n";
-		std::cout << "the unparsed string:\n" << std::string(iter,end);
+		std::cout << "the unparsed string:\n" << std::string(iter,end) << "\n";
+	}
+	else{
+		std::cout << "parsing of the entire string was successful\n";
 	}
 	
 	

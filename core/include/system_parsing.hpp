@@ -91,9 +91,13 @@ namespace bertini {
 		{
 			namespace phx = boost::phoenix;
 			using qi::_1;
+			using qi::_2;
+			using qi::_3;
+			using qi::_4;
 			using qi::_val;
 			using qi::eps;
 			using qi::lit;
+			using boost::spirit::lexeme;
 			
 			
 			declarative_symbols.add("variable_group",0);
@@ -108,65 +112,114 @@ namespace bertini {
 			declarative_symbols.add("random_real",9);
 			
 			
+			root_rule_.name("root_rule_");
 			root_rule_ =
-			variable_group_ [phx::bind(&System::AddVariableGroup, _val, _1)]
-			|
-			hom_variable_group_ [phx::bind(&System::AddHomVariableGroup, _val, _1)]
-			|
-			variables_ [phx::bind(&System::AddUngroupedVariables, _val, _1)];
+			*(
+				variable_group_ [phx::bind(&System::AddVariableGroup, _val, _1)]
+				|
+				hom_variable_group_ [phx::bind(&System::AddHomVariableGroup, _val, _1)]
+				|
+				variables_ [phx::bind(&System::AddUngroupedVariables, _val, _1)]
+			)
+			>>
+			*(
+				functions_ [phx::bind(&System::AddFunctions, _val, _1)]
+			  )
+			>>
+			*(
+				constants_ [phx::bind(&System::AddConstants, _val, _1)]
+				  |
+				parameters_ [phx::bind(&System::AddParameters, _val, _1)]
+				  |
+				implicit_parameters_ [phx::bind(&System::AddImplicitParameters, _val, _1)]
+				  |
+				path_variable_ [phx::bind(&System::AddPathVariable, _val, _1)]
+			)
+			;
 			
 			
 
 			
 			
+			variables_.name("variables_"); hom_variable_group_.name("hom_variable_group_"); variable_group_.name("variable_group_"); implicit_parameters_.name("implicit_parameters_");
+			
 			
 			variables_			= "variable" > genericvargp_ > ';';
 			hom_variable_group_ = "hom_variable_group" > genericvargp_ > ';';
 			variable_group_		= "variable_group" > genericvargp_ > ';';
+			implicit_parameters_ = "implicit_parameter" > genericvargp_ > ';';
 			
+			
+			
+			path_variable_.name("path_variable_");
+			path_variable_ = "pathvariable" > new_variable_ > ';';
+			
+			
+			
+			genericvargp_.name("genericvargp_");
 			genericvargp_ = new_variable_ % ',';
+			
+			new_variable_.name("new_variable_");
 			new_variable_ = unencountered_symbol_ [_val = make_shared_<Variable>() (_1)];
 			
 			
 			
+			functions_.name("functions_"); constants_.name("constants_"); parameters_.name("parameters_");
 			
 			functions_ = "function" > genericfuncgp_ > ';';
 			constants_ = "constant" > genericfuncgp_ > ';';
 			parameters_ = "parameter" > genericfuncgp_ > ';';
-			implicit_parameters_ = "implicit_parameter" > genericfuncgp_ > ';';
 			
+			
+			genericfuncgp_.name("genericfuncgp_");
 			genericfuncgp_ = new_function_ % ',';
+			
+			
+			new_function_.name("new_function_");
 			new_function_ = unencountered_symbol_ [_val = make_shared_<Function>() (_1)];
 			
 			
 			
-			// this rule gets a string.
 			
-			unencountered_symbol_ = valid_variable_name_ - ( declarative_symbols | encountered_symbols );
+			// this rule gets a string.
+			unencountered_symbol_.name("unencountered_symbol_");
+			unencountered_symbol_ = valid_variable_name_ - lexeme[( declarative_symbols | encountered_symbols )];
+			// i am unsure about the use of lexeme in the above rule (unencountered_symbol).
+			
+			
 			
 			
 			// get a string which fits the naming rules.
-			
+			valid_variable_name_.name("valid_variable_name_");
 			valid_variable_name_ = +qi::alpha >> *(qi::alnum | qi::char_("[]_") );
 			
 			
 			
 			
-			root_rule_.name("root_rule_");
-			functions_.name("functions_"); constants_.name("constants_"); parameters_.name("parameters_"); implicit_parameters_.name("implicit_parameters_");
-			genericfuncgp_.name("genericfuncgp_");
-			new_function_.name("new_function_");
 			
-			variables_.name("variables_"); hom_variable_group_.name("hom_variable_group_"); variable_group_.name("variable_group_");
-			genericvargp_.name("genericvargp_");
-			new_variable_.name("new_variable_");
 			
-			unencountered_symbol_.name("unencountered_symbol");
-			valid_variable_name_.name("valid_variable_name_");
+			
+			
 			
 //			debug(root_rule_);
-//			debug(variable_group_); debug(unencountered_symbol_); debug(new_variable_); debug(genericvargp_);
-//			BOOST_SPIRIT_DEBUG_NODES((variable_group_) (valid_variable_name_) (unencountered_symbol_) (new_variable_) (genericvargp_))
+//			debug(variable_group_);
+//			debug(unencountered_symbol_);
+//			debug(new_variable_);
+//			debug(genericvargp_); (variable_group_) (valid_variable_name_)
+//			BOOST_SPIRIT_DEBUG_NODES( (unencountered_symbol_) (new_variable_) (genericvargp_))
+			
+			using phx::val;
+			using phx::construct;
+			using namespace qi::labels;
+			qi::on_error<qi::fail>
+			( root_rule_ ,
+			 std::cout<<
+			 val("Error! Expecting ")<<
+			 _4<<
+			 val(" here: ")<<
+			 construct<std::string>(_3,_2)<<
+			 std::endl
+			 );
 			
 			
 		}
@@ -182,14 +235,16 @@ namespace bertini {
 		qi::rule<Iterator, System(), Skipper > root_rule_;
 		
 		
-		qi::rule<Iterator, std::vector<Var>(), Skipper > variable_group_, hom_variable_group_, variables_;
+		qi::rule<Iterator, std::vector<Var>(), Skipper > variable_group_, hom_variable_group_, variables_, implicit_parameters_;
 		qi::rule<Iterator, std::vector<Var>(), Skipper > genericvargp_;
-		qi::rule<Iterator, Var()>  new_variable_;
+		
+		qi::rule<Iterator, Var(), Skipper> path_variable_;
+		qi::rule<Iterator, Var()> new_variable_;
 		
 		
 		
 		
-		qi::rule<Iterator, std::vector<Fn>(), Skipper > functions_, constants_, parameters_, implicit_parameters_;
+		qi::rule<Iterator, std::vector<Fn>(), Skipper > functions_, constants_, parameters_;
 		qi::rule<Iterator, std::vector<Fn>(), Skipper > genericfuncgp_;
 		qi::rule<Iterator, Fn()>  new_function_;
 		
@@ -297,7 +352,7 @@ namespace bertini {
  						[](System & s, std::vector<Var> v )
  						{
  							std::cout << s.NumVariables() << std::endl;
- 							s.add_variable_group(v);
+ 							s.AddVariableGroup(v);
  							std::cout << s.NumVariables() << std::endl;
  						}
  						,_val, _1) ]
@@ -531,18 +586,7 @@ namespace bertini {
 			
 			
 			
-			using phx::val;
-			using phx::construct;
-			using namespace qi::labels;
-			qi::on_error<qi::fail>
-			( root_rule_ ,
-			 std::cout<<
-			 val("Error! Expecting ")<<
-			 _4<<
-			 val(" here: ")<<
-			 construct<std::string>(_3,_2)<<
-			 std::endl
-			 );
+			
 
 			
 			
