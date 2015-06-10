@@ -51,7 +51,7 @@ namespace bertini {
 		// a few local using statements to reduce typing etc.
 		using Fn = std::shared_ptr<Function>;
 		using Var = std::shared_ptr<Variable>;
-		
+		using Nd = std::shared_ptr<Node>;
 		
 	public:
 		
@@ -191,7 +191,126 @@ namespace bertini {
 		}
 		
 		
+		
+		
+		
+		
+		
+		
+		
+		void add_variable_group(std::vector<Var> const& v)
+		{
+			variable_groups_.push_back(v);
+			variables_.insert( variables_.end(), v.begin(), v.end() );
+		}
+		
+		
+		
+		
+		void add_implicit_parameter(Var const& v)
+		{
+			implicit_parameters_.push_back(v);
+		}
+		
+		
+		
+		void add_implicit_parameters(std::vector<Var> const& v)
+		{
+			implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		void add_parameter(Fn const& F)
+		{
+			explicit_parameters_.push_back(F);
+		}
+		
+		void add_parameters(std::vector<Fn> const& v)
+		{
+			explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
+		}
+		
+		
+		
+		
+		
+		void add_subfunction(Fn const& F)
+		{
+			subfunctions_.push_back(F);
+		}
+		
+		void add_subfunctions(std::vector<Fn> const& v)
+		{
+			subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
+		}
+		
+		
+		
+		
+		
+		void add_function(Fn const& F)
+		{
+			functions_.push_back(F);
+		}
+		
+		void add_functions(std::vector<Fn> const& v)
+		{
+			functions_.insert( functions_.end(), v.begin(), v.end() );
+		}
+		
+		
+		
+		
+		
+		
+		void add_constant(Fn const& F)
+		{
+			constant_subfunctions_.push_back(F);
+		}
+		
+		void add_constants(std::vector<Fn> const& v)
+		{
+			constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
+		}
+		
+		
+		
+		
+		
+		/**
+		 Add a variable as the Path Variable to a System.
+		 */
+		void add_path_variable(Var const& v)
+		{
+			path_variable_ = v;
+		}
+		
+		
+		/**
+		 Overloaded operator for printing to an arbirtary out stream.
+		 */
+		friend std::ostream& operator <<(std::ostream& out, const System & s)
+		{
+			out << s.NumVariables() << "variables:\n";
+			for (auto iter=s.variables_.begin(); iter!= s.variables_.end(); iter++) {
+				out << *iter << "\n";
+			}
+			out << "\n";
+			
+			return out;
+		}
+		
+		
 	private:
+		
+		std::vector<std::vector<Var> > variable_groups_;
+		
 		
 		
 		std::vector< Fn > functions_;
