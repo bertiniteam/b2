@@ -23,7 +23,7 @@
 #define b2Test_Function_h
 
 
-#include "function_tree/node.hpp"
+#include "function_tree/symbols/symbol.hpp"
 
 
 
@@ -34,7 +34,7 @@ namespace bertini {
 	 Node -> Function
 	 This class defines a function.  It stores the entry node for a particular functions tree.
 	 */
-	class Function : public Node
+	class Function : public NamedSymbol
 	{
 	public:
 		
@@ -42,8 +42,13 @@ namespace bertini {
 		/**
 		 The default constructor
 		 */
-		Function()
-		{};
+		Function() {};
+		
+		
+
+		
+		Function(std::string new_name) : NamedSymbol(new_name)
+		{ }
 		
 		
 		/**
