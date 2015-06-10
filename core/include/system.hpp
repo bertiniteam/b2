@@ -198,7 +198,7 @@ namespace bertini {
 		
 		
 		
-		void add_variable_group(std::vector<Var> const& v)
+		void AddVariableGroup(std::vector<Var> const& v)
 		{
 			variable_groups_.push_back(v);
 			variables_.insert( variables_.end(), v.begin(), v.end() );
@@ -206,14 +206,15 @@ namespace bertini {
 		
 		
 		
-		void add_hom_variable_group(std::vector<Var> const& v)
+		void AddHomVariableGroup(std::vector<Var> const& v)
 		{
 			hom_variable_groups_.push_back(v);
 			variables_.insert( variables_.end(), v.begin(), v.end() );
 		}
 		
 		
-		void add_ungrouped_variables(std::vector<Var> const& v)
+		
+		void AddUngroupedVariables(std::vector<Var> const& v)
 		{
 			ungrouped_variables_.insert( variables_.end(), v.begin(), v.end() );
 			variables_.insert( variables_.end(), v.begin(), v.end() );
@@ -221,14 +222,14 @@ namespace bertini {
 
 		
 		
-		void add_implicit_parameter(Var const& v)
+		void AddImplicitParameter(Var const& v)
 		{
 			implicit_parameters_.push_back(v);
 		}
 		
 		
 		
-		void add_implicit_parameters(std::vector<Var> const& v)
+		void AddImplicitParameters(std::vector<Var> const& v)
 		{
 			implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
 		}
@@ -240,12 +241,12 @@ namespace bertini {
 		
 		
 		
-		void add_parameter(Fn const& F)
+		void AddParameter(Fn const& F)
 		{
 			explicit_parameters_.push_back(F);
 		}
 		
-		void add_parameters(std::vector<Fn> const& v)
+		void AddParameters(std::vector<Fn> const& v)
 		{
 			explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
 		}
@@ -254,12 +255,12 @@ namespace bertini {
 		
 		
 		
-		void add_subfunction(Fn const& F)
+		void AddSubfunction(Fn const& F)
 		{
 			subfunctions_.push_back(F);
 		}
 		
-		void add_subfunctions(std::vector<Fn> const& v)
+		void AddSubfunctions(std::vector<Fn> const& v)
 		{
 			subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
 		}
@@ -268,12 +269,12 @@ namespace bertini {
 		
 		
 		
-		void add_function(Fn const& F)
+		void AddFunction(Fn const& F)
 		{
 			functions_.push_back(F);
 		}
 		
-		void add_functions(std::vector<Fn> const& v)
+		void AddFunctions(std::vector<Fn> const& v)
 		{
 			functions_.insert( functions_.end(), v.begin(), v.end() );
 		}
@@ -283,12 +284,12 @@ namespace bertini {
 		
 		
 		
-		void add_constant(Fn const& F)
+		void AddConstant(Fn const& F)
 		{
 			constant_subfunctions_.push_back(F);
 		}
 		
-		void add_constants(std::vector<Fn> const& v)
+		void AddConstants(std::vector<Fn> const& v)
 		{
 			constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
 		}
@@ -300,7 +301,7 @@ namespace bertini {
 		/**
 		 Add a variable as the Path Variable to a System.
 		 */
-		void add_path_variable(Var const& v)
+		void AddPathVariable(Var const& v)
 		{
 			path_variable_ = v;
 		}

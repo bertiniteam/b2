@@ -109,8 +109,11 @@ namespace bertini {
 			
 			
 			root_rule_ =
-			variable_group_ [phx::bind(&System::add_variable_group, _val, _1)];
-			
+			variable_group_ [phx::bind(&System::AddVariableGroup, _val, _1)]
+			|
+			hom_variable_group_ [phx::bind(&System::AddHomVariableGroup, _val, _1)]
+			|
+			variables_ [phx::bind(&System::AddUngroupedVariables, _val, _1)];
 			
 			
 
