@@ -200,6 +200,7 @@ namespace bertini {
 		
 		void add_variable_group(std::vector<Var> const& v)
 		{
+			std::cout << "\nadding variable group with " << v.size() << " variables to system" << std::endl;
 			variable_groups_.push_back(v);
 			variables_.insert( variables_.end(), v.begin(), v.end() );
 		}
@@ -297,7 +298,8 @@ namespace bertini {
 		 */
 		friend std::ostream& operator <<(std::ostream& out, const System & s)
 		{
-			out << s.NumVariables() << "variables:\n";
+			out << "system:\n\n";
+			out << s.NumVariables() << " variables:\n";
 			for (auto iter=s.variables_.begin(); iter!= s.variables_.end(); iter++) {
 				out << *iter << "\n";
 			}

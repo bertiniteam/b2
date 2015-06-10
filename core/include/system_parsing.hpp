@@ -83,11 +83,11 @@ namespace bertini {
 	
 	
 	template<typename Iterator, typename Skipper = ascii::space_type>
-	struct SystemParser : qi::grammar<Iterator, std::vector<Var>(), Skipper>
+	struct SystemParser : qi::grammar<Iterator, System(), Skipper>
 	{
 		
 		
-		SystemParser() : SystemParser::base_type(variable_group_)
+		SystemParser() : SystemParser::base_type(root_rule_)
 		{
 			namespace phx = boost::phoenix;
 			using qi::_1;
@@ -108,6 +108,20 @@ namespace bertini {
 			declarative_symbols.add("random_real",9);
 			
 			
+			root_rule_ = eps[_val = System()] >>
+			variable_group_ [phx::bind(&System::add_variable_group, _val, _1)];
+			
+			
+			
+			
+//			[phx::bind( []
+//									   (System & S, std::vector<Var> & V)
+//									   {
+//										   std::cout << "asdf " << V.size() << std::endl;
+//										   S.add_variable_group(V);
+//									   },
+//									   _val, _1)];
+//
 			
 			
 			variables_ = "variable" >> genericvargp_ >> ';';
@@ -126,7 +140,7 @@ namespace bertini {
 			implicit_parameters_ = "implicit_parameter" >> genericfuncgp_ >> ';';
 			
 			genericfuncgp_ = new_function_ % ',';
-			new_function_ = unencountered_symbol_ [_val = make_shared_<Function>() (_1)];
+			new_function_ %= unencountered_symbol_ [_val = make_shared_<Function>() (_1)];
 			
 			
 			
@@ -142,7 +156,7 @@ namespace bertini {
 			
 			
 			
-			
+			root_rule_.name("root_rule_");  debug(root_rule_);
 			
 			functions_.name("functions_"); constants_.name("constants_"); parameters_.name("parameters_"); implicit_parameters_.name("implicit_parameters_");
 			genericfuncgp_.name("genericfuncgp_");
@@ -168,7 +182,8 @@ namespace bertini {
 		
 		// rule declarations.  these are member variables for the parser.
 		
-		
+		// rule declarations.  these are member variables for the parser.
+		qi::rule<Iterator, System(), Skipper > root_rule_;
 		
 		
 		qi::rule<Iterator, std::vector<Var>(), Skipper > variable_group_, hom_variable_group_, variables_;
