@@ -87,7 +87,8 @@ namespace bertini {
 	{
 		
 		
-		SystemParser() : SystemParser::base_type(root_rule_)
+		SystemParser() :	function_parser_(&encountered_symbols_), /*initialize here with address of encountered_symbols*/
+							SystemParser::base_type(root_rule_)
 		{
 			namespace phx = boost::phoenix;
 			using qi::_1;
@@ -100,16 +101,19 @@ namespace bertini {
 			using boost::spirit::lexeme;
 			
 			
-			declarative_symbols.add("variable_group",0);
-			declarative_symbols.add("hom_variable_group",1);
-			declarative_symbols.add("variable",2);
-			declarative_symbols.add("function",3);
-			declarative_symbols.add("constant",4);
-			declarative_symbols.add("parameter",5);
-			declarative_symbols.add("implicit_parameter",6);
-			declarative_symbols.add("pathvariable",7);
-			declarative_symbols.add("random",8);
-			declarative_symbols.add("random_real",9);
+			declarative_symbols_.add("variable_group",0);
+			declarative_symbols_.add("hom_variable_group",1);
+			declarative_symbols_.add("variable",2);
+			declarative_symbols_.add("function",3);
+			declarative_symbols_.add("constant",4);
+			declarative_symbols_.add("parameter",5);
+			declarative_symbols_.add("implicit_parameter",6);
+			declarative_symbols_.add("pathvariable",7);
+			declarative_symbols_.add("random",8);
+			declarative_symbols_.add("random_real",9);
+			
+		
+			
 			
 			
 			root_rule_.name("root_rule_");
@@ -160,7 +164,10 @@ namespace bertini {
 			genericvargp_ = new_variable_ % ',';
 			
 			new_variable_.name("new_variable_");
-			new_variable_ = unencountered_symbol_ [_val = make_shared_<Variable>() (_1)];
+			new_variable_ = unencountered_symbol_ [boost::phoenix::bind( [this](Var & V, std::string str)
+																		{
+																			MakeAndAddVariable(V,str);
+																		}, _val, _1 )];
 			
 			
 			
@@ -186,7 +193,7 @@ namespace bertini {
 			
 			// this rule gets a string.
 			unencountered_symbol_.name("unencountered_symbol_");
-			unencountered_symbol_ = valid_variable_name_ - lexeme[( declarative_symbols | encountered_symbols )];
+			unencountered_symbol_ = valid_variable_name_ - lexeme[( declarative_symbols_ | encountered_symbols_ )];
 			// i am unsure about the use of lexeme in the above rule (unencountered_symbol).
 			
 			
@@ -258,14 +265,31 @@ namespace bertini {
 		
 		
 		// symbol declarations
-		qi::symbols<char,Nd> encountered_symbols;
-		qi::symbols<char,int> declarative_symbols;
+		qi::symbols<char,Nd> encountered_symbols_;
+		qi::symbols<char,int> declarative_symbols_;
 		
 		
+		
+		FunctionParser<Iterator> function_parser_;
+		
+		/**
+		 To accompany the rule for making new functions when you encounter a new symbol.
+		 Simultaneously makes a new function, and adds it to the set of symbols.
+		 */
 		void MakeAndAddFunction(Fn & F, std::string str)
 		{
 			F = std::make_shared<Function>(str);
-			encountered_symbols.add(str, F);
+			encountered_symbols_.add(str, F);
+		}
+		
+		/**
+		 To accompany the rule for making new variables when you encounter a new symbol.
+		 Simultaneously makes a new variable, and adds it to the set of symbols.
+		 */
+		void MakeAndAddVariable(Var & V, std::string str)
+		{
+			V = std::make_shared<Variable>(str);
+			encountered_symbols_.add(str, V);
 		}
 		
 	};

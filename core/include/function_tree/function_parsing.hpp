@@ -231,6 +231,235 @@ namespace bertini {
 	
 	
 	
+	
+	
+	template<typename Iterator>
+	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<Node>(), boost::spirit::ascii::space_type>
+	{
+		
+		//,"BRAKEPARSER"
+		// sumexpr is going to be the first rule called, the start rule.
+		FunctionParser(qi::symbols<char,std::shared_ptr<Node> > * encountered_symbols) : FunctionParser::base_type(root_rule_,"FunctionParser")
+		{
+			namespace phx = boost::phoenix;
+			using qi::_1;
+			using qi::_2;
+			using qi::_3;
+			using qi::_4;
+			using qi::_val;
+			using qi::eps;
+			using qi::lit;
+			
+			using std::pow;
+			
+			
+			root_rule_.name("root_rule_");
+			root_rule_ = expression_ [ _val = make_shared_<Function>()(_1)];
+			
+			
+			///////////////////
+			expression_.name("expression_");
+			expression_ =
+			term_ [_val = _1]
+			>> *(   (lit('+') > term_ [_val += _1])
+				 |  (lit('-') > term_ [_val -= _1])
+				 )
+			;
+			
+			term_.name("term_");
+			term_ =
+			factor_ [_val = _1]
+			>> *(   (lit('*') > factor_ [_val *= _1])
+				 |  (lit('/') > factor_ [_val /= _1])
+				 )
+			;
+			
+			factor_.name("factor_");
+			factor_ =
+			exp_elem_ [_val = _1]
+			>> *(lit('^') // any number of ^somethings
+				 > exp_elem_ [ phx::bind( []
+										 (std::shared_ptr<Node> & B, std::shared_ptr<Node> P)
+										 {
+											 B = pow(B,P);
+										 },
+										 _val,_1)] )
+			;
+			
+			exp_elem_.name("exp_elem_");
+			exp_elem_ =
+			symbol_ [_val = _1]
+			|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
+			|   (lit('-') > expression_  [_val = -_1])
+			|   (lit('+') > expression_  [_val = _1])
+			;
+			
+			
+			
+			
+			
+			
+			
+			
+			symbol_.name("symbol_");
+			symbol_ %=
+			(*encountered_symbols) // the star here is the dereferencing of the encountered_symbols parameter to the constructor.
+			|
+			number_
+			;
+			
+			
+//			variable_.name("variable_");
+//			variable_ = ;
+			
+			
+//			[ phx::bind( [](std::shared_ptr<Node> & input, int varnum, const std::vector<std::shared_ptr<Variable> > * input_vector)
+//											  {
+//												  input = (*input_vector)[varnum];
+//											  }
+//											  ,_val, _1, input_variables)];
+			
+			
+			
+			
+			number_.name("number_");
+			number_ =
+			long_number_string_ [ _val = make_shared_<Number>()(_1) ];
+			
+			
+			
+			long_number_string_.name("long_number_string_");
+			long_number_string_ = eps[_val = std::string()] >>
+			(
+			 // 1. Read possible numbers before decimal, with possible negative
+			 number_with_digits_after_point_ [_val += _1]
+			 |
+			 number_with_digits_before_point_ [_val += _1]
+			 |
+			 number_with_no_point_ [_val += _1]
+			 >   // reminder -- the - before the exponent_notation here means optional
+			 - exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
+			 );
+			
+			
+			
+			number_with_digits_after_point_.name("number_with_digits_after_point_");
+			number_with_digits_after_point_ = eps[_val = std::string()]
+			>>
+			*(qi::char_(L'0',L'9')[_val += _1])
+			>>
+			qi::lit('.')[_val += "."] // find a decimal point
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1]) // find at least one digit after the point
+			;
+			
+			
+			
+			
+			
+			number_with_digits_before_point_.name("number_with_digits_before_point_");
+			number_with_digits_before_point_ = eps[_val = std::string()]
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1])
+			>>
+			qi::lit('.')[_val += "."] // find a decimal point
+			>>
+			-(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
+			;
+			
+			
+			number_with_no_point_.name("number_with_no_point_");
+			number_with_no_point_ = eps[_val = std::string()]
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1])
+			;
+			
+			
+			
+			
+			exponent_notation_.name("exponent_notation_");
+			exponent_notation_ = eps[_val = std::string()]
+			>> ( // start what the rule actually does
+				(
+				 qi::lit('e')[_val += "e"] // get an opening 'e'
+				 |
+				 qi::lit('E')[_val += "e"] // get an opening 'e'
+				 )
+				>>
+				-(qi::lit('-')[_val += "-"]) // then an optional minus sign
+				>>
+				+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
+			 ); // finish the rule off
+			
+			
+			
+			
+			using qi::on_error;
+			using boost::phoenix::val;
+			using boost::phoenix::construct;
+			
+			
+			on_error<qi::fail>
+			(
+			 root_rule_
+			 , std::cout
+			 << val("Error! Expecting ")
+			 << _4
+			 << val(" here: \"")
+			 << construct<std::string>(_3, _2)
+			 << val("\"")
+			 << std::endl
+			 );
+			
+			
+			
+			
+			
+			//		debug(root_rule_);
+			//		debug(expression_);
+			//		debug(term_);
+			//		debug(factor_);
+			//		debug(exp_elem_);
+			//		debug(number_);
+			//		debug(number_with_no_point_);
+			//		debug(number_with_digits_after_point_);
+			//		debug(number_with_digits_before_point_);
+			//		debug(exponent_notation_);
+		}
+		
+		
+		
+		
+		
+		
+		qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type > root_rule_;
+		// the rule for kicking the entire thing off
+		
+		qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type> expression_, term_, factor_, exp_elem_;
+		// rules for how to turn +-*/^ into operator nodes.
+		
+		
+		
+		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > symbol_;
+		// any of the variables and numbers will be symbols.
+		
+		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > variable_;  // finds a previously encountered number, and associates the correct variable node with it.
+		
+		// the number_ rule wants to fund strings from the various other number_ rules, and produces a Number node
+		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
+		
+		// these rules all produce strings which are fed into numbers.
+		qi::rule<Iterator, std::string()> long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+	};
+
+	
+	
+	
+	
+	
+	
+	
+	
 	template<typename Iterator>
 	struct BrakeParser : qi::grammar<Iterator, std::shared_ptr<Node>(), boost::spirit::ascii::space_type>
 	{
