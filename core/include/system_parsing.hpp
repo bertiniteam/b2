@@ -138,6 +138,10 @@ namespace bertini {
 				implicit_parameters_ [phx::bind(&System::AddImplicitParameters, _val, _1)]
 				  |
 				path_variable_ [phx::bind(&System::AddPathVariable, _val, _1)]
+			  )
+			>>
+			*(
+				definition_
 			)
 			;
 			
@@ -207,7 +211,10 @@ namespace bertini {
 			
 			
 			
-			
+			definition_ = (encountered_functions_ > '=' > function_parser_ > ';') [phx::bind( [](const Fn & F, const Nd & N)
+																					 {
+																						 F->SetRoot(N);
+																					 },_1, _2)] ;
 			
 			
 			
@@ -263,11 +270,12 @@ namespace bertini {
 		// the rule which determines valid variable names
 		qi::rule<Iterator, std::string()> valid_variable_name_;
 		
+		qi::rule<Iterator, Skipper, qi::unused_type> definition_;
 		
 		// symbol declarations
 		qi::symbols<char,Nd> encountered_symbols_;
 		qi::symbols<char,int> declarative_symbols_;
-		
+		qi::symbols<char,Fn>  encountered_functions_;
 		
 		
 		FunctionParser<Iterator> function_parser_;
@@ -280,6 +288,7 @@ namespace bertini {
 		{
 			F = std::make_shared<Function>(str);
 			encountered_symbols_.add(str, F);
+			encountered_functions_.add(str,F);
 		}
 		
 		/**
@@ -292,6 +301,11 @@ namespace bertini {
 			encountered_symbols_.add(str, V);
 		}
 		
+		
+		void SetRootNode(Fn & F, const Nd & N)
+		{
+			F->SetRoot(N);
+		}
 	};
 	
 	

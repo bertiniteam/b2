@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
 	
 	bertini::System sys;
-	std::string str = "variable_group x, y, z; function f1, f2; pathvariable t ; parameter p, q;";
+	std::string str = "variable_group x, y, z; function f1, f2; pathvariable t ; parameter p, q; f1 = x*y*z;";
 	
 	
 	std::string::const_iterator iter = str.begin();
