@@ -34,32 +34,6 @@ int main(int argc, char** argv)
 {
 	std::cout << "Bertini, version 2.\n\nDeveloped by B-Team.\n\nThis program is currently under development,\nand doesn't do anything useful yet." << std::endl;
 
-	
-	bertini::System sys;
-	std::string str = "variable_group x, y, z;\n function f1, f2;\n pathvariable t;\n parameter p, q;\n p = t;\n q = 1-t;\n f1 = x*y*z;\n\nf2 = p*q*x - 2^(-5);\n";
-	
-	
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	
-	
-	bertini::SystemParser<std::string::const_iterator> S;
-	
-	
-	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
-	
-	if (!s || iter!=end){
-		std::cout << "parsing failed.\n";
-		std::cout << "the unparsed string:\n" << std::string(iter,end) << "\n";
-	}
-	else{
-		std::cout << "parsing of the entire string was successful\n";
-	}
-	
-	
-	std::cout << str << " got parsed into the following system in memory:\n\n";
-	
-	std::cout << sys << std::endl;
 	return 0;
 }
 

@@ -145,6 +145,11 @@ namespace bertini {
 			
 			assert(variable_values.size()==NumVariables());
 			
+			// this function call traverses the entire tree, resetting everything.
+			//
+			// it has the unfortunate side effect of resetting constant functions, too.
+			//
+			// we need to work to correct this.
 			for (auto iter : functions_) {
 				iter->Reset();
 			}
@@ -164,6 +169,9 @@ namespace bertini {
 			
 			return value;
 		}
+		
+		
+		
 		
 		
 		/**

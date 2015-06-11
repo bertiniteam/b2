@@ -59,13 +59,45 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 	
 	
 	BOOST_CHECK(s && iter==end);
-	
-	
-	
 }
 
 
-
+BOOST_AUTO_TEST_CASE(system_parse_1)
+{
+	bertini::System sys;
+	std::string str = "variable_group x, y, z;\n function f1, f2;\n pathvariable t;\n parameter p, q;\n p = t;\n q = 1-t;\n f1 = x*y*z;\n\nf2 = p*q*x - 2^(-5);\n";
+	
+	
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	
+	
+	bertini::SystemParser<std::string::const_iterator> S;
+	
+	
+	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	
+	
+	
+	BOOST_CHECK(s && iter==end);
+	
+	
+//	std::cout << str << " got parsed into the following system in memory:\n\n";
+//	
+//	std::cout << sys << std::endl;
+//	
+//	
+//	bertini::Vec<double> var_values(3);
+//	var_values << 1, 2, 3;
+//	
+//	double t = 2.0/3.0;
+//	bertini::Vec<double> sys_values(2);
+//	
+//	sys_values = sys.Eval(var_values,t);
+//	
+//	std::cout << "system evaluated at\n" << var_values << " is " << sys_values << "\n";
+	
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
