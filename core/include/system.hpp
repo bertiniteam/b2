@@ -376,6 +376,7 @@ namespace bertini {
 			out << s.NumFunctions() << " functions:\n";
 			for (auto iter : s.functions_) {
 				out << (iter)->name() << "\n";
+				out << *iter << "\n";
 			}
 			out << "\n";
 			
@@ -384,6 +385,7 @@ namespace bertini {
 				out << s.NumParameters() << " explicit parameters:\n";
 				for (auto iter : s.explicit_parameters_) {
 					out << (iter)->name() << "\n";
+					out << *iter << "\n";
 				}
 				out << "\n";
 			}
@@ -393,6 +395,7 @@ namespace bertini {
 				out << s.NumConstants() << " constants:\n";
 				for (auto iter : s.constant_subfunctions_) {
 					out << (iter)->name() << "\n";
+					out << *iter << "\n";
 				}
 				out << "\n";
 			}

@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
 	
 	bertini::System sys;
-	std::string str = "variable_group x, y, z; function f1, f2; pathvariable t ; parameter p, q; f1 = x*y*z;";
+	std::string str = "variable_group x, y, z;\n function f1, f2;\n pathvariable t;\n parameter p, q;\n p = t;\n q = 1-t;\n f1 = x*y*z;\n\nf2 = p*q*x - 2^(-5);\n";
 	
 	
 	std::string::const_iterator iter = str.begin();
@@ -56,6 +56,8 @@ int main(int argc, char** argv)
 		std::cout << "parsing of the entire string was successful\n";
 	}
 	
+	
+	std::cout << str << " got parsed into the following system in memory:\n\n";
 	
 	std::cout << sys << std::endl;
 	return 0;

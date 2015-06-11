@@ -68,7 +68,7 @@ namespace bertini {
 		
 		virtual void print(std::ostream & target) const override
 		{
-			target << "(" << *base_ << "^" << *exponent_ << ")";
+			target << "(" << *base_ << ")^(" << *exponent_ << ")";
 		}
 		
 		virtual ~PowerOperator() = default;
