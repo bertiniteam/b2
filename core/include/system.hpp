@@ -110,7 +110,30 @@ namespace bertini {
 			return variables_.size();
 		}
 		
+		/**
+		 Get the number of constants in this system
+		 */
+		auto NumConstants() const
+		{
+			return constant_subfunctions_.size();
+		}
 		
+		/**
+		 Get the number of explicit parameters in this system
+		 */
+		auto NumParameters() const
+		{
+			return explicit_parameters_.size();
+		}
+		
+		
+		/**
+		 Get the number of implicit parameters in this system
+		 */
+		auto NumImplicitParameters() const
+		{
+			return implicit_parameters_.size();
+		}
 		
 		
 		/**
@@ -197,7 +220,9 @@ namespace bertini {
 		
 		
 		
-		
+		/**
+		 Add a variable group to the system.  The system will be homogenized with respect to this variable group, though this is not done at the time of this call.
+		 */
 		void AddVariableGroup(std::vector<Var> const& v)
 		{
 			variable_groups_.push_back(v);
@@ -205,7 +230,9 @@ namespace bertini {
 		}
 		
 		
-		
+		/**
+		 Add a homogeneous (projective) variable group to the system.  The system must be homogeneous with respect to this group, though this is not verified at the time of this call.
+		 */
 		void AddHomVariableGroup(std::vector<Var> const& v)
 		{
 			hom_variable_groups_.push_back(v);
@@ -213,7 +240,9 @@ namespace bertini {
 		}
 		
 		
-		
+		/**
+		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
+		 */
 		void AddUngroupedVariables(std::vector<Var> const& v)
 		{
 			ungrouped_variables_.insert( variables_.end(), v.begin(), v.end() );
@@ -221,14 +250,18 @@ namespace bertini {
 		}
 
 		
-		
+		/**
+		 Add an implicit parameter to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
+		 */
 		void AddImplicitParameter(Var const& v)
 		{
 			implicit_parameters_.push_back(v);
 		}
 		
 		
-		
+		/**
+		 Add some implicit parameters to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
+		 */
 		void AddImplicitParameters(std::vector<Var> const& v)
 		{
 			implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
@@ -240,12 +273,17 @@ namespace bertini {
 		
 		
 		
-		
+		/**
+		 Add an explicit parameter to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
+		 */
 		void AddParameter(Fn const& F)
 		{
 			explicit_parameters_.push_back(F);
 		}
 		
+		/**
+		 Add some explicit parameters to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
+		 */
 		void AddParameters(std::vector<Fn> const& v)
 		{
 			explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
@@ -254,12 +292,17 @@ namespace bertini {
 		
 		
 		
-		
+		/**
+		 Add a subfunction to the system.
+		 */
 		void AddSubfunction(Fn const& F)
 		{
 			subfunctions_.push_back(F);
 		}
 		
+		/**
+		 Add some subfunctions to the system.
+		 */
 		void AddSubfunctions(std::vector<Fn> const& v)
 		{
 			subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
@@ -267,13 +310,17 @@ namespace bertini {
 		
 		
 		
-		
-		
+		/**
+		 Add a function to the system.
+		 */
 		void AddFunction(Fn const& F)
 		{
 			functions_.push_back(F);
 		}
 		
+		/**
+		 Add some functions to the system.
+		 */
 		void AddFunctions(std::vector<Fn> const& v)
 		{
 			functions_.insert( functions_.end(), v.begin(), v.end() );
@@ -283,12 +330,17 @@ namespace bertini {
 		
 		
 		
-		
+		/**
+		 Add a constant function to the system.  Constants must not depend on anything which can vary -- they're constant!
+		 */
 		void AddConstant(Fn const& F)
 		{
 			constant_subfunctions_.push_back(F);
 		}
 		
+		/**
+		 Add some constant functions to the system.  Constants must not depend on anything which can vary -- they're constant!
+		 */
 		void AddConstants(std::vector<Fn> const& v)
 		{
 			constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
@@ -299,12 +351,14 @@ namespace bertini {
 		
 		
 		/**
-		 Add a variable as the Path Variable to a System.
+		 Add a variable as the Path Variable to a System.  Will overwrite any previously declared path variable.
 		 */
 		void AddPathVariable(Var const& v)
 		{
 			path_variable_ = v;
 		}
+		
+		
 		
 		
 		/**
@@ -314,10 +368,38 @@ namespace bertini {
 		{
 			out << "system:\n\n";
 			out << s.NumVariables() << " variables:\n";
-			for (auto iter=s.variables_.begin(); iter!= s.variables_.end(); iter++) {
-				out << (*iter)->name() << "\n";
+			for (auto iter : s.variables_) {
+				out << (iter)->name() << "\n";
 			}
 			out << "\n";
+			
+			out << s.NumFunctions() << " functions:\n";
+			for (auto iter : s.functions_) {
+				out << (iter)->name() << "\n";
+			}
+			out << "\n";
+			
+			
+			if (s.NumParameters()) {
+				out << s.NumParameters() << " explicit parameters:\n";
+				for (auto iter : s.explicit_parameters_) {
+					out << (iter)->name() << "\n";
+				}
+				out << "\n";
+			}
+			
+			
+			if (s.NumConstants()) {
+				out << s.NumConstants() << " constants:\n";
+				for (auto iter : s.constant_subfunctions_) {
+					out << (iter)->name() << "\n";
+				}
+				out << "\n";
+			}
+			
+			if (s.path_variable_) {
+				out << "path variable defined.  named " << s.path_variable_->name() << "\n";
+			}
 			
 			return out;
 		}

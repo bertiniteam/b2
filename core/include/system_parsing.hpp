@@ -176,9 +176,12 @@ namespace bertini {
 			
 			
 			new_function_.name("new_function_");
-			new_function_ = unencountered_symbol_ [_val = make_shared_<Function>() (_1)];
+			new_function_ = unencountered_symbol_ [boost::phoenix::bind( [this](Fn & F, std::string str)
+																		{
+																			MakeAndAddFunction(F,str);
+																		}, _val, _1 )];//[_val = make_shared_<Function>() (_1)]
 			
-			
+
 			
 			
 			// this rule gets a string.
@@ -230,8 +233,6 @@ namespace bertini {
 	private:
 		
 		// rule declarations.  these are member variables for the parser.
-		
-		// rule declarations.  these are member variables for the parser.
 		qi::rule<Iterator, System(), Skipper > root_rule_;
 		
 		
@@ -257,8 +258,15 @@ namespace bertini {
 		
 		
 		// symbol declarations
-		qi::symbols<char,int> encountered_symbols;
+		qi::symbols<char,Nd> encountered_symbols;
 		qi::symbols<char,int> declarative_symbols;
+		
+		
+		void MakeAndAddFunction(Fn & F, std::string str)
+		{
+			F = std::make_shared<Function>(str);
+			encountered_symbols.add(str, F);
+		}
 		
 	};
 	
