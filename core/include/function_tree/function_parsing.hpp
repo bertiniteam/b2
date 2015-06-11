@@ -157,7 +157,8 @@ namespace bertini {
 			% ","; // variables are separated by commas
 			
 			valid_variable_name_.name("valid_variable_name_");
-            valid_variable_name_ %= +qi::alpha >> ( *(qi::alnum | qi::char_('_')) | ( qi::char_('[') >> ));
+            valid_variable_name_ = +qi::alpha >> *(qi::alnum | qi::char_('_')) >> -('[' >> +qi::digit >> ']')  ;
+            
 		}
 		
 		
@@ -201,7 +202,7 @@ namespace bertini {
 		
 		// the rule which determines valid variable names
 		qi::rule<Iterator, std::string()> valid_variable_name_;
-		
+        
 		
 		
 		
@@ -227,12 +228,12 @@ namespace bertini {
 	
 	
 	template<typename Iterator>
-	struct BrakeParser : qi::grammar<Iterator, std::shared_ptr<Node>(), boost::spirit::ascii::space_type>
+	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<Node>(), boost::spirit::ascii::space_type>
 	{
 		
 		//,"BRAKEPARSER"
 		// sumexpr is going to be the first rule called, the start rule.
-		BrakeParser(const std::vector<std::shared_ptr<Variable> > * input_variables, qi::symbols<char,int> encountered_variables) : BrakeParser::base_type(root_rule_,"FunctionParser")
+		FunctionParser(const std::vector<std::shared_ptr<Variable> > * input_variables, qi::symbols<char,int> encountered_variables) : FunctionParser::base_type(root_rule_,"FunctionParser")
 		{
 			namespace phx = boost::phoenix;
 			using qi::_1;
@@ -281,10 +282,40 @@ namespace bertini {
 			
 			exp_elem_.name("exp_elem_");
 			exp_elem_ =
-			symbol_ [_val = _1]
-			|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
+            ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
 			|   (lit('-') > expression_  [_val = -_1])
 			|   (lit('+') > expression_  [_val = _1])
+            |   (lit("sin(") > expression_ [ phx::bind( []
+                                                       (std::shared_ptr<Node> & B, std::shared_ptr<Node> P)
+                                                       {
+                                                           B = sin(P);
+                                                       },
+                                                       _val,_1)] > lit(')') )
+            |   (lit("cos(") > expression_ [ phx::bind( []
+                                                       (std::shared_ptr<Node> & B, std::shared_ptr<Node> P)
+                                                       {
+                                                           B = cos(P);
+                                                       },
+                                                       _val,_1)] > lit(')') )
+            |   (lit("tan(") > expression_ [ phx::bind( []
+                                                       (std::shared_ptr<Node> & B, std::shared_ptr<Node> P)
+                                                       {
+                                                           B = tan(P);
+                                                       },
+                                                       _val,_1)] > lit(')') )
+            |   (lit("exp(") > expression_ [ phx::bind( []
+                                                       (std::shared_ptr<Node> & B, std::shared_ptr<Node> P)
+                                                       {
+                                                           B = exp(P);
+                                                       },
+                                                       _val,_1)] > lit(')') )
+            |   (lit("sqrt(") > expression_ [ phx::bind( []
+                                                       (std::shared_ptr<Node> & B, std::shared_ptr<Node> P)
+                                                       {
+                                                           B = sqrt(P);
+                                                       },
+                                                       _val,_1)] > lit(')') )
+            |   symbol_ [_val = _1]
 			;
 			
 			
@@ -298,7 +329,9 @@ namespace bertini {
 			symbol_ %=
 			variable_
 			|
-			number_
+			constant_
+            |
+            number_
 			// the following commented out lines are place holders for incorporation later.
 			//		|
 			//		constant_
@@ -320,6 +353,23 @@ namespace bertini {
 			
 			
 			
+            constant_.name("constant_");
+            constant_ =
+            qi::lit("pi") [_val = make_shared_<SpecialNumber>()("pi")]
+            |
+            qi::lit("Pi") [_val = make_shared_<SpecialNumber>()("pi")]
+            |
+            qi::lit('e') [_val = make_shared_<SpecialNumber>()("e")]
+            |
+            qi::lit('E') [_val = make_shared_<SpecialNumber>()("e")]
+            |
+            qi::lit('i') [_val = make_shared_<SpecialNumber>()("i")]
+            |
+            qi::lit('I') [_val = make_shared_<SpecialNumber>()("i")]
+            |
+            qi::lit("1i") [_val = make_shared_<SpecialNumber>()("i")];
+            
+            
 			number_.name("number_");
 			number_ =
 			long_number_string_ [ _val = make_shared_<Number>()(_1) ];
@@ -441,11 +491,14 @@ namespace bertini {
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > symbol_;
 		// any of the variables and numbers will be symbols.
 		
-		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > variable_;  // finds a previously encountered number, and associates the correct variable node with it.
+		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > variable_;  // finds a previously encountered variable, and associates the correct variable node with it.
 		
 		// the number_ rule wants to fund strings from the various other number_ rules, and produces a Number node
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
-		
+
+        // the constant_ rule wants to find strings representing a special constant, and produces a SpecialNumber node
+        qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > constant_;
+
 		// these rules all produce strings which are fed into numbers.
 		qi::rule<Iterator, std::string()> long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
 	};
