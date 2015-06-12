@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(parse_pi){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (3.14159265358979323846264338328)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (3.14159265358979323846264338328)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (0)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("3.14159265358979323846264338328")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("0")) < 1e-15);
     
@@ -241,8 +241,8 @@ BOOST_AUTO_TEST_CASE(parse_pi){
     N.SetRoot(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (3.14159265358979323846264338328)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (3.14159265358979323846264338328)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (0)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("3.14159265358979323846264338328")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("0")) < 1e-15);
 
@@ -277,8 +277,8 @@ BOOST_AUTO_TEST_CASE(parse_e){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (2.71828182845904523536028747135)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (2.71828182845904523536028747135)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (0)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("2.71828182845904523536028747135")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("0")) < 1e-15);
     
@@ -290,8 +290,8 @@ BOOST_AUTO_TEST_CASE(parse_e){
     N.SetRoot(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (2.71828182845904523536028747135)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (2.71828182845904523536028747135)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (0)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("2.71828182845904523536028747135")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("0")) < 1e-15);
 }
@@ -325,8 +325,8 @@ BOOST_AUTO_TEST_CASE(parse_i){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (0)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (1.0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (1.0)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("0.0")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("1.0")) < 1e-15);
     
@@ -338,8 +338,8 @@ BOOST_AUTO_TEST_CASE(parse_i){
     N.SetRoot(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (0)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (1.0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (1.0)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("0.0")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("1.0")) < 1e-15);
     
@@ -351,8 +351,8 @@ BOOST_AUTO_TEST_CASE(parse_i){
     N.SetRoot(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (0)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (1.0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (0)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (1.0)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("0.0")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("1.0")) < 1e-15);
 }
@@ -386,8 +386,8 @@ BOOST_AUTO_TEST_CASE(parse_number){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (3.4)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (5.6)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (3.4)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (5.6)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("3.4")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("5.6")) < 1e-15);
 }
@@ -430,8 +430,8 @@ BOOST_AUTO_TEST_CASE(parse_func_x_plus_num_plus_y_plus_z){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (12.9)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (12.1)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (12.9)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (12.1)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("12.9")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("12.1")) < 1e-15);
 }
@@ -473,8 +473,8 @@ BOOST_AUTO_TEST_CASE(parse_func_x_times_y_times_num_times_z){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (2149.6134)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (2777.7882)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (2149.6134)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (2777.7882)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("2149.6134")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("2777.7882")) < 1e-15);
 }
@@ -514,8 +514,8 @@ BOOST_AUTO_TEST_CASE(parse_func_linear_poly){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (64.63)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (121.08)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (64.63)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (121.08)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("64.63")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("121.08")) < 1e-15);
 }
@@ -555,8 +555,8 @@ BOOST_AUTO_TEST_CASE(parse_func_degree_2_poly){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (-2.23)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (191.68)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (-2.23)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (191.68)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("-2.23")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("191.68")) < 1e-15);
 }
@@ -596,8 +596,8 @@ BOOST_AUTO_TEST_CASE(parse_func_prod_of_linears){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (34.239)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (485.397)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (34.239)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (485.397)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("34.239")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("485.397")) < 1e-15);
 }
@@ -637,8 +637,8 @@ BOOST_AUTO_TEST_CASE(parse_func_prod_of_linears_with_powers){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (-1.904753713e8)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (9.840123228e8)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (-1.904753713e8)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (9.840123228e8)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("-1.904753713631640354e8")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("9.840123227418186978e8")) < 1e-15);
 }
@@ -678,8 +678,8 @@ BOOST_AUTO_TEST_CASE(parse_func_degree2_poly_squared){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (-45747.7152)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (-6893.7086)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (-45747.7152)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (-6893.7086)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("-45747.7152")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("-6893.7086")) < 1e-15);
 }
@@ -719,8 +719,8 @@ BOOST_AUTO_TEST_CASE(parse_func_degree2_poly_over_degree2_poly){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (0.380706454830044499787591749666)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (-.203586886888085377444986761112)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (0.380706454830044499787591749666)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (-.203586886888085377444986761112)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("0.380706454830044499787591749666")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("-.203586886888085377444986761112")) < 1e-15);
 }
@@ -760,8 +760,8 @@ BOOST_AUTO_TEST_CASE(parse_func_negate_degree2_poly){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (16.07)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (-214.49)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (16.07)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (-214.49)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("16.07")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("-214.49")) < 1e-15);
 }
@@ -801,8 +801,8 @@ BOOST_AUTO_TEST_CASE(parse_func_sine_of_degree2_poly){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (-2.00309747340660133449118482520)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (2.44611810732349423982109591283)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (-2.00309747340660133449118482520)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (2.44611810732349423982109591283)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("-2.00309747340660133449118482520")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("2.44611810732349423982109591283")) < 1e-15);
 }
@@ -842,8 +842,8 @@ BOOST_AUTO_TEST_CASE(parse_func_cosine_of_degree2_poly){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (-2.57013763905097552259551835195)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (-1.90643992212148106701042535573)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (-2.57013763905097552259551835195)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (-1.90643992212148106701042535573)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("-2.57013763905097552259551835195")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("-1.90643992212148106701042535573")) < 1e-15);
 }
@@ -883,8 +883,8 @@ BOOST_AUTO_TEST_CASE(parse_func_tangent_of_degree2_poly){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (0.0473489535082370108790555686969)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (-.986867786387826653453823677439)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (0.0473489535082370108790555686969)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (-.986867786387826653453823677439)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("0.0473489535082370108790555686969")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("-.986867786387826653453823677439")) < 1e-15);
 }
@@ -926,8 +926,8 @@ BOOST_AUTO_TEST_CASE(parse_func_exp_of_degree2_poly){
     std::cout << std::string(iter,end) << std::endl;
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (-3.54539405822929293604828762125e6)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (-1.23665457403576246601391981124e7)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (-3.54539405822929293604828762125e6)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (-1.23665457403576246601391981124e7)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("-3.54539405822929293604828762125e6")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("-1.23665457403576246601391981124e7")) < 1e-15);
 }
@@ -967,8 +967,8 @@ BOOST_AUTO_TEST_CASE(parse_func_sqrt_of_degree2_poly){
     bertini::Function N(node);
     
     BOOST_CHECK(ret && iter == end);
-    BOOST_CHECK(abs(N.Eval<dbl>().real() - (4.05241928222456925923496781407)) < 1e-15);
-    BOOST_CHECK(abs(N.Eval<dbl>().imag() - (-.228258710557764074535887077743)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().real() - (4.05241928222456925923496781407)) < 1e-15);
+    BOOST_CHECK(fabs(N.Eval<dbl>().imag() - (-.228258710557764074535887077743)) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().real() - mpfr_float("4.05241928222456925923496781407")) < 1e-15);
     BOOST_CHECK(abs(N.Eval<mpfr>().imag() - mpfr_float("-.228258710557764074535887077743")) < 1e-15);
 }

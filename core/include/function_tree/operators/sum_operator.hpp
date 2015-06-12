@@ -158,6 +158,15 @@ namespace bertini {
 			
 			return retval;
 		}
+        
+        
+        
+//        virtual std::shared_ptr<Node> Differentiate()
+//        {
+//            std::shared_ptr<Node> returnValue = children_[0]->Differentiate();
+//            returnValue += children_[1]->Differentiate();
+//            return returnValue;
+//        }
 		
 		
 		
