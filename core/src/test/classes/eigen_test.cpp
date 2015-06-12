@@ -1,3 +1,25 @@
+//This file is part of Bertini 2.0.
+//
+//eigen_test.cpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//eigen_test.cpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with eigen_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  Daniel Brake
+//  University of Notre Dame
+//  ACMS
+//  Spring, Summer 2015
+
+
+
 
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
@@ -8,7 +30,7 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/LU>
 
-#include "complex.hpp"
+#include "mpfr_complex.hpp"
 
 #include <boost/timer/timer.hpp>
 
@@ -75,10 +97,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) /  RAND_MAX : B(ii,jj) = 0;
 		
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 //		std::cout << C << std::endl;
-		std::cout << "pure double time to solve:" << std::endl;
+//		std::cout << "pure double time to solve:" << std::endl;
 		//add statement on the value of C to actually test
 
 	}
@@ -102,10 +124,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1.0) + boost::multiprecision::mpfr_float(rand()) /  boost::multiprecision::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
 		
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 //		std::cout << C << std::endl;
-		std::cout << "mpfr_float pure 16 time to solve:" << std::endl;
+//		std::cout << "mpfr_float pure 16 time to solve:" << std::endl;
 	}
 
 
@@ -132,10 +154,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 	
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 //		std::cout << C << std::endl;
-		std::cout << "mpfr_float pure 100 time to solve:" << std::endl;
+//		std::cout << "mpfr_float pure 100 time to solve:" << std::endl;
 		
 	}
 
@@ -159,10 +181,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 //		std::cout << C << std::endl;
-		std::cout << "std::complex time to solve:" << std::endl;
+//		std::cout << "std::complex time to solve:" << std::endl;
 	}
 	
 	
@@ -181,12 +203,12 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 			for (int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = bertini::complex( bertini::complex(-1)/bertini::complex(ii+1) + bertini::complex(rand()) / bertini::complex(RAND_MAX)) : B(ii,jj) = bertini::complex(0);
 		
-		boost::timer::auto_cpu_timer t;
+//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
 		
 		
 //		std::cout << C << std::endl;
-		std::cout << "bertini::complex precision 100 time to solve:" << std::endl;
+//		std::cout << "bertini::complex precision 100 time to solve:" << std::endl;
 	}
 
 		

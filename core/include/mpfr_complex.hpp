@@ -1,10 +1,34 @@
-#ifndef COMPLEX_CLASS_HPP
-#define COMPLEX_CLASS_HPP
+//This file is part of Bertini 2.0.
+//
+//mpfr_complex.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//mpfr_complex.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with mpfr_complex.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  Daniel Brake
+//  University of Notre Dame
+//  ACMS
+//  Spring, Summer 2015
+//
+//
+// mpfr_complex.hpp:  Declares the class bertini::complex.
+
+
+#ifndef MPFR_COMPLEX_HPP
+#define MPFR_COMPLEX_HPP
 
 #include "config.h"
 
 
-#include "mpfr.hpp"
+#include "mpfr_extensions.hpp"
 
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
@@ -612,8 +636,8 @@ namespace bertini {
 	
 	
 	/**
-	   Complex-complex multiplication
-	   */
+	 Complex-complex multiplication
+	 */
 	inline complex operator*(complex lhs, const complex & rhs){
 		lhs *= rhs;
 		return lhs;
@@ -827,7 +851,7 @@ namespace bertini {
 	}
 	
 	/**
-	Compute sine of a complex number
+	 Compute sine of a complex number
 	 */
 	inline complex sin(const complex & z)
 	{
@@ -898,7 +922,7 @@ namespace bertini {
 	
 	
 	/**
-	Inverse sine of complex number
+	 Inverse sine of complex number
 	 */
 	inline complex asin(const complex & z)
 	{
