@@ -62,23 +62,23 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 }
 
 
-BOOST_AUTO_TEST_CASE(system_parse_1)
+
+
+
+
+BOOST_AUTO_TEST_CASE(system_parse_xyz_f1f2_t_pq)
 {
-	bertini::System sys;
+	
 	std::string str = "variable_group x, y, z;\n function f1, f2;\n pathvariable t;\n parameter p, q;\n p = t;\n q = 1-t;\n f1 = x*y*z;\n\nf2 = p*q*x - 2^(-5);\n";
 	
 	
+	
+	
+	bertini::System sys;
 	std::string::const_iterator iter = str.begin();
 	std::string::const_iterator end = str.end();
-	
-	
 	bertini::SystemParser<std::string::const_iterator> S;
-	
-	
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
-	
-	
-	
 	BOOST_CHECK(s && iter==end);
 	
 	
@@ -98,6 +98,58 @@ BOOST_AUTO_TEST_CASE(system_parse_1)
 //	std::cout << "system evaluated at\n" << var_values << " is " << sys_values << "\n";
 	
 }
+
+
+
+BOOST_AUTO_TEST_CASE(system_parse_with_subfunctions)
+{
+	
+	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
+	
+	bertini::System sys;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	bertini::SystemParser<std::string::const_iterator> S;
+	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	BOOST_CHECK(s && iter==end);
+}
+
+
+BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle)
+{
+	std::string str =
+ "variable z;\nfunction H;\nparameter q1,q2;\npathvariable t;\nq1 = cos(2*Pi*(1-t));\nq2 = sin(2*Pi*(1-t));\ns = q1 + I*q2;\nH = z^2 - s;\n";
+	
+	
+	
+	bertini::System sys;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	bertini::SystemParser<std::string::const_iterator> S;
+	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	BOOST_CHECK(s && iter==end);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle_alt)
+{
+	std::string str = " variable z; function H; parameter s; pathvariable t; s = exp(2*Pi*I*(1-t)); H = z^2 - s; ";
+	
+
+	bertini::System sys;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	bertini::SystemParser<std::string::const_iterator> S;
+	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	BOOST_CHECK(s && iter==end);
+
+}
+
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

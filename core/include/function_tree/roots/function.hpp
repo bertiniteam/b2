@@ -74,8 +74,10 @@ namespace bertini {
 		 */
 		void print(std::ostream & target) const override
 		{
-			EnsureNotEmpty();
-			entry_node_->print(target);
+			if (entry_node_)
+				entry_node_->print(target);
+			else
+				target << "emptyfunction";
 		}
 		
 		
@@ -88,8 +90,10 @@ namespace bertini {
 		 */
 		virtual std::string PrintNode() override
 		{
-			EnsureNotEmpty();
-			return entry_node_->PrintNode();
+			if (entry_node_)
+				return entry_node_->PrintNode();
+			else
+				return "emptyfunction";
 		}
 		
 		

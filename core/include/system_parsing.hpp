@@ -115,7 +115,7 @@ namespace bertini {
 		
 			
 			
-			
+			//TODO refine this so that counts are enforced at parse time?
 			root_rule_.name("root_rule_");
 			root_rule_ =
 			*(
@@ -124,23 +124,19 @@ namespace bertini {
 				hom_variable_group_ [phx::bind(&System::AddHomVariableGroup, _val, _1)]
 				|
 				variables_ [phx::bind(&System::AddUngroupedVariables, _val, _1)]
-			)
-			>>
-			*(
+				|
 				functions_ [phx::bind(&System::AddFunctions, _val, _1)]
-			  )
-			>>
-			*(
+				|
 				constants_ [phx::bind(&System::AddConstants, _val, _1)]
-				  |
+				|
 				parameters_ [phx::bind(&System::AddParameters, _val, _1)]
-				  |
+				|
 				implicit_parameters_ [phx::bind(&System::AddImplicitParameters, _val, _1)]
-				  |
+				|
 				path_variable_ [phx::bind(&System::AddPathVariable, _val, _1)]
-			  )
-			>>
-			*(
+				|
+				subfunction_ [phx::bind(&System::AddSubfunction, _val, _1)]
+				|
 				definition_
 			)
 			;
@@ -210,19 +206,61 @@ namespace bertini {
 			
 			
 			
-			
+			definition_.name("definition_");
 			definition_ = (encountered_functions_ > '=' > function_parser_ > ';') [phx::bind( [](const Fn & F, const Nd & N)
 																					 {
 																						 F->SetRoot(N);
 																					 },_1, _2)] ;
 			
 			
+			using qi::_a;
+			using qi::omit;
+			subfunction_.name("subfunction");
+			subfunction_ = new_function_ [_a = _1]  > '=' >
+					function_parser_ [_val = _a, phx::bind( [](Fn & F, const Nd & N)
+												{
+													F->SetRoot(N);
+												},_a, _1)]
+						  // omit close
+							> ';';
+			
 			
 //			debug(root_rule_);
+//			
+//			
+//			
+//			debug(functions_);
+//			debug(constants_);
+//			debug(parameters_);
+//			
+//			debug(genericfuncgp_);
+//			debug(new_function_);
+//			
+//			
+//			
+//			debug(definition_);
+//			
+//			debug(subfunction_);
+//			
+//			
+//			
+//			
+//			debug(variables_);
+//			debug(hom_variable_group_);
 //			debug(variable_group_);
-//			debug(unencountered_symbol_);
+//			debug(implicit_parameters_);
+//			debug(path_variable_);
+//			
 //			debug(new_variable_);
-//			debug(genericvargp_); (variable_group_) (valid_variable_name_)
+//			debug(genericvargp_); debug(variable_group_);
+//			
+//			debug(unencountered_symbol_);
+//			
+//			debug(valid_variable_name_);
+			
+			
+			
+			
 //			BOOST_SPIRIT_DEBUG_NODES( (unencountered_symbol_) (new_variable_) (genericvargp_))
 			
 			using phx::val;
@@ -261,6 +299,8 @@ namespace bertini {
 		
 		qi::rule<Iterator, std::vector<Fn>(), Skipper > functions_, constants_, parameters_;
 		qi::rule<Iterator, std::vector<Fn>(), Skipper > genericfuncgp_;
+		qi::rule<Iterator, Fn(), Skipper, qi::locals<Fn> >  subfunction_;
+		
 		qi::rule<Iterator, Fn()>  new_function_;
 		
 		
