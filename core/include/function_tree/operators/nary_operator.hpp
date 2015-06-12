@@ -54,6 +54,13 @@ namespace bertini {
 		{
 			children_.push_back(std::move(child));
 		}
+        
+        
+        
+        /**
+         This doesn't do anything, but NaryOperator cannot be abstract.
+         */
+//        virtual std::shared_ptr<Node> Differentiate() {return std::make_shared<Node>();};
 		
 		
 		
@@ -69,6 +76,9 @@ namespace bertini {
 		{
 			return children_[0];
 		}
+        
+        
+        
 		
 		
 		

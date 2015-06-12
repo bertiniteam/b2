@@ -35,6 +35,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		879C8BD71B2A56CC006EAD6E /* jacobian.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = jacobian.hpp; sourceTree = "<group>"; };
 		87BE1D751B1F66D900762D34 /* Function_Tree_Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Function_Tree_Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		87BE1D801B1F685600762D34 /* function_parsing.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = function_parsing.hpp; path = ../../core/include/function_tree/function_parsing.hpp; sourceTree = "<group>"; };
 		87BE1D811B1F685600762D34 /* node.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = node.hpp; sourceTree = "<group>"; };
@@ -56,9 +57,9 @@
 		87BE1D941B1F685600762D34 /* mpfr_complex.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = mpfr_complex.hpp; path = ../../core/include/mpfr_complex.hpp; sourceTree = "<group>"; };
 		87BE1D951B1F685600762D34 /* mpfr_extensions.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = mpfr_extensions.hpp; path = ../../core/include/mpfr_extensions.hpp; sourceTree = "<group>"; };
 		87BE1D961B1F685600762D34 /* system.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = system.hpp; path = ../../core/include/system.hpp; sourceTree = "<group>"; };
-		87BE1D971B1F689F00762D34 /* function_tree_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = function_tree_test.cpp; path = ../../core/src/test/classes/function_tree_test.cpp; sourceTree = "<group>"; };
+		87BE1D971B1F689F00762D34 /* function_tree_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = function_tree_test.cpp; path = ../../core/src/test/classes/function_tree_test.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		87BE1D991B1F8DA500762D34 /* class_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = class_test.cpp; path = ../../core/src/test/classes/class_test.cpp; sourceTree = "<group>"; };
-		87BE1D9C1B1FA00700762D34 /* complex_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = complex_test.cpp; path = ../../core/src/test/classes/complex_test.cpp; sourceTree = "<group>"; };
+		87BE1D9C1B1FA00700762D34 /* complex_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = complex_test.cpp; path = ../../core/src/test/classes/complex_test.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		87BE1DAA1B20E0FC00762D34 /* sin_operator.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sin_operator.hpp; sourceTree = "<group>"; };
 		87BE1DB01B22135F00762D34 /* cos_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = cos_operator.hpp; sourceTree = "<group>"; };
 		87BE1DB11B22135F00762D34 /* exp_operator.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = exp_operator.hpp; sourceTree = "<group>"; };
@@ -138,6 +139,7 @@
 			isa = PBXGroup;
 			children = (
 				87BE1D8D1B1F685600762D34 /* function.hpp */,
+				879C8BD71B2A56CC006EAD6E /* jacobian.hpp */,
 			);
 			path = roots;
 			sourceTree = "<group>";
@@ -539,6 +541,7 @@
 				87BE1D7E1B1F66D900762D34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		87BE1DD31B27348D00762D34 /* Build configuration list for PBXNativeTarget "Parsing_Test" */ = {
 			isa = XCConfigurationList;
@@ -547,6 +550,7 @@
 				87BE1DD51B27348D00762D34 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

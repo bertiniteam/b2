@@ -128,7 +128,7 @@ namespace bertini {
 		}
 		////////////// TESTING /////////////////
 		
-	private:
+	protected:
 		
 		/**
 		 Calls FreshEval on the entry node to the tree.

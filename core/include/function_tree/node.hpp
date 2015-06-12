@@ -64,6 +64,17 @@ public:
     virtual std::string PrintNode() = 0;
     
     
+    
+    /**
+     This method will differentiate each node.  The operator nodes will follow
+     the basic differentiation rules and return the appropriate type of operator
+     node.  I.e. a mult node will return a sum node.
+     
+     Symbol nodes will do ...(Still trying to figure this out)
+     */
+//    virtual std::shared_ptr<Node> Differentiate() = 0;
+    
+    
 	
 	// Tells code to run a fresh eval on node for type T
 	
