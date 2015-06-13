@@ -31,8 +31,10 @@
 
 #include <boost/type_index.hpp>
 
-using dbl = double;
-using mpfr = long double;
+#include <complex>
+#include "mpfr_complex.hpp"
+using dbl = std::complex<double>;
+using mpfr = bertini::complex;
 
 
 
@@ -152,10 +154,6 @@ protected:
 
 };
 
-	
-	
-	
-	
 	
 } // re: namespace bertini
 

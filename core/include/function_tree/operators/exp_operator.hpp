@@ -20,115 +20,70 @@
 
 
 
-#ifndef b2Test_ExpOperator_h
-#define b2Test_ExpOperator_h
+#ifndef Function_Tree_Test_exp_operator_hpp
+#define Function_Tree_Test_exp_operator_hpp
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
-
-
-
 namespace bertini {
+
+
+
+    // Node -> UnaryOperator -> ExpOperator
+    // Description: This class represents the exponential function.  FreshEval method
+    // is defined for exponential and takes the exponential of the child node.
+    class ExpOperator : public  virtual UnaryOperator
+    {
+    public:
 	
-	using std::pow;
+        ExpOperator(){}
 	
-	/**
-	 Node -> UnaryOperator -> ExpOperator
+        ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+        {};
 	 
-	 Description: This class represents the exponentiation operator.  The base is stored in
-	 children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
-	 defined as the exponention operation.
-	 */
-	class ExpOperator : public virtual UnaryOperator
-	{
-	public:
 		// These do nothing for a constant
 		std::string PrintNode() override
 		{
-			return child_->PrintNode() + "^" + std::to_string(exponent());
+            return "-" + child_->PrintNode();
 		}
 		
 		
-		
-		/**
-		 Virtual polymorphic method for printing to an arbitrary stream.
-		 */
 		virtual void print(std::ostream & target) const override
 		{
-			target << "(";
+        target << "exp(";
 			child_->print(target);
-			target << "^" << exponent() << ")";
-		}
-		
-		/**
-		 Get the integet exponent of an ExpOperator
-		 */
-		void set_exponent(int exp)
-		{
-			exponent_ = exp;
-		}
-		
-		
-		/**
-		 Get the exponent of an ExpOperator
-		 */
-		int exponent() const
-		{
-			return exponent_;
+        target << ")";
 		}
 		
 		virtual ~ExpOperator() = default;
 		
-		
-		/**
-		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
-		 */
-		ExpOperator(const std::shared_ptr<Node> & N, int p = 1) : exponent_(p), UnaryOperator(N)
-		{}
-		
-		
-		ExpOperator(){}
-		
 	protected:
 		// Specific implementation of FreshEval for exponentiate.
-		// TODO(JBC): How do we implement exp for more complicated types?
 		dbl FreshEval(dbl) override
 		{
-			return pow(child_->Eval<dbl>(), exponent_);
+            return exp(child_->Eval<dbl>());
 		}
 		
 		mpfr FreshEval(mpfr) override
 		{
-			return pow(child_->Eval<mpfr>(),exponent_);
+            return exp(child_->Eval<mpfr>());
 		}
+        };
+		
+		
+        // begin the overload of operators
+		
+		
+        inline std::shared_ptr<bertini::Node> exp(const std::shared_ptr<bertini::Node> & N)
+        {
+            return std::make_shared<bertini::ExpOperator>(N);
+        }
 		
 		
 		
-		
-		
-		
-	private:
-		
-		int exponent_ = 1; ///< Exponent for the exponenetial operator
-	};
 	
-	
-}// re: namespace bertini
+        } // re: namespace bertini
 
-
-
-namespace {
 	
-	using Node = bertini::Node;
-	using ExpOperator = bertini::ExpOperator;
 	
-	/**
-	 Overloading of the power function to create an ExpOperator with base N and power p.
-	 */
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & base, int power)
-	{
-		return std::make_shared<ExpOperator>(base,power);
-	}
-	
-}
 #endif

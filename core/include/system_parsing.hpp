@@ -112,7 +112,35 @@ namespace bertini {
 			declarative_symbols_.add("random",8);
 			declarative_symbols_.add("random_real",9);
 			
-		
+			
+			
+			
+			
+			
+			special_numbers_.add("pi", std::make_shared<SpecialNumber>("pi"));
+			special_numbers_.add("Pi", special_numbers_.at("pi"));
+			
+			special_numbers_.add("e", std::make_shared<SpecialNumber>("e"));
+			special_numbers_.add("E", special_numbers_.at("e"));
+			
+			
+			special_numbers_.add("i", std::make_shared<SpecialNumber>("i"));
+			special_numbers_.add("I", special_numbers_.at("i"));
+			
+			
+			
+			encountered_symbols_.add("pi", special_numbers_.at("pi"));
+			encountered_symbols_.add("Pi", special_numbers_.at("pi"));
+			
+			encountered_symbols_.add("e", special_numbers_.at("e"));
+			encountered_symbols_.add("E", special_numbers_.at("e"));
+			
+			
+			encountered_symbols_.add("i", special_numbers_.at("i"));
+			encountered_symbols_.add("I", special_numbers_.at("i"));
+			
+			
+			
 			
 			
 			//TODO refine this so that counts are enforced at parse time?
@@ -316,7 +344,7 @@ namespace bertini {
 		qi::symbols<char,Nd> encountered_symbols_;
 		qi::symbols<char,int> declarative_symbols_;
 		qi::symbols<char,Fn>  encountered_functions_;
-		
+		qi::symbols<char,Nd> special_numbers_;
 		
 		FunctionParser<Iterator> function_parser_;
 		

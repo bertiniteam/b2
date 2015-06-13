@@ -46,7 +46,7 @@
 #include "function_tree/operators/sum_operator.hpp"
 #include "function_tree/operators/mult_operator.hpp"
 #include "function_tree/operators/negate_operator.hpp"
-#include "function_tree/operators/exp_operator.hpp"
+#include "function_tree/operators/expon_operator.hpp"
 #include "function_tree/symbols/number.hpp"
 #include "function_tree/symbols/variable.hpp"
 
@@ -180,12 +180,6 @@ namespace bertini {
 			return produced_variables_;
 		}
 		
-		
-		
-		// the rule which determines valid variable names
-		qi::rule<Iterator, std::string()> valid_variable_name_;
-		
-		
 	private:
 		
 		
@@ -205,7 +199,8 @@ namespace bertini {
 		// Start rule used to parse variable list.
 		qi::rule<Iterator,ascii::space_type> start_;
 		
-		
+		// the rule which determines valid variable names
+		qi::rule<Iterator, std::string()> valid_variable_name_;
 		
 		
 		
