@@ -270,7 +270,7 @@ namespace bertini {
 			
 			exp_elem_.name("exp_elem_");
 			exp_elem_ =
-			symbol_ [_val = _1]
+			(symbol_  >> !qi::alnum) [_val = _1]
 			|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
 			|   (lit('-') > expression_  [_val = -_1])
 			|   (lit('+') > expression_  [_val = _1])
@@ -320,7 +320,7 @@ namespace bertini {
 			 number_with_digits_before_point_ [_val += _1]
 			 |
 			 number_with_no_point_ [_val += _1]
-			 >   // reminder -- the - before the exponent_notation here means optional
+			 >>   // reminder -- the - before the exponent_notation here means optional
 			 - exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
 			 );
 			
@@ -402,7 +402,7 @@ namespace bertini {
 			//		debug(expression_);
 			//		debug(term_);
 			//		debug(factor_);
-			//		debug(exp_elem_);
+			debug(exp_elem_);
 			//		debug(number_);
 			//		debug(number_with_no_point_);
 			//		debug(number_with_digits_after_point_);
@@ -428,7 +428,7 @@ namespace bertini {
 		
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > variable_;  // finds a previously encountered number, and associates the correct variable node with it.
 		
-		// the number_ rule wants to fund strings from the various other number_ rules, and produces a Number node
+		// the number_ rule wants to find strings from the various other number_ rules, and produces a Number node
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
 		
 		// these rules all produce strings which are fed into numbers.
