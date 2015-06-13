@@ -386,7 +386,7 @@ namespace bertini {
 			(
 			 root_rule_
 			 , std::cout
-			 << val("Error! Expecting ")
+			 << val("Function parser error:  expecting ")
 			 << _4
 			 << val(" here: \"")
 			 << construct<std::string>(_3, _2)
