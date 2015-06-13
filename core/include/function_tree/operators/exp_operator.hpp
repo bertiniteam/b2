@@ -26,33 +26,33 @@
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
 namespace bertini {
-
-
-
-    // Node -> UnaryOperator -> ExpOperator
-    // Description: This class represents the exponential function.  FreshEval method
-    // is defined for exponential and takes the exponential of the child node.
-    class ExpOperator : public  virtual UnaryOperator
-    {
-    public:
 	
-        ExpOperator(){}
 	
-        ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-        {};
+	
+	// Node -> UnaryOperator -> ExpOperator
+	// Description: This class represents the exponential function.  FreshEval method
+	// is defined for exponential and takes the exponential of the child node.
+	class ExpOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		ExpOperator(){}
+		
+		ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
 	 
 		// These do nothing for a constant
 		std::string PrintNode() override
 		{
-            return "-" + child_->PrintNode();
+			return "-" + child_->PrintNode();
 		}
 		
 		
 		virtual void print(std::ostream & target) const override
 		{
-        target << "exp(";
+			target << "exp(";
 			child_->print(target);
-        target << ")";
+			target << ")";
 		}
 		
 		virtual ~ExpOperator() = default;
@@ -61,29 +61,27 @@ namespace bertini {
 		// Specific implementation of FreshEval for exponentiate.
 		dbl FreshEval(dbl) override
 		{
-            return exp(child_->Eval<dbl>());
+			return exp(child_->Eval<dbl>());
 		}
 		
 		mpfr FreshEval(mpfr) override
 		{
-            return exp(child_->Eval<mpfr>());
+			return exp(child_->Eval<mpfr>());
 		}
-        };
-		
-		
-        // begin the overload of operators
-		
-		
-        inline std::shared_ptr<bertini::Node> exp(const std::shared_ptr<bertini::Node> & N)
-        {
-            return std::make_shared<bertini::ExpOperator>(N);
-        }
-		
-		
-		
-	
-        } // re: namespace bertini
+	};
 
 	
+} // re: namespace bertini
+
+
+namespace {
+	// begin the overload of operators
 	
+	
+	inline std::shared_ptr<bertini::Node> exp(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::ExpOperator>(N);
+	}
+}
+
 #endif

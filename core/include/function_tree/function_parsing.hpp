@@ -84,45 +84,32 @@ namespace {
 
 
 
+//////
+//
+//  the following code adapts the trig functions and other special functions to be phoenix-callable.
+//
+/////////
+
+// http://www.boost.org/doc/libs/1_58_0/libs/phoenix/doc/html/phoenix/modules/function/adapting_functions.html
+
+//BOOST_PHOENIX_ADAPT_FUNCTION(
+//							 RETURN_TYPE
+//							 , LAZY_FUNCTION
+//							 , FUNCTION
+//							 , FUNCTION_ARITY
+//							 )
 
 
 
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, cos_lazy, cos, 1);
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, sin_lazy, sin, 1);
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, tan_lazy, tan, 1);
+
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, exp_lazy, exp, 1);
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, sqrt_lazy, sqrt, 1);
 
 
-// the following code is adapted from
-// http://boost.2283326.n4.nabble.com/shared-ptr-how-to-interact-with-shared-ptr-td4665327.html
 
-//namespace boost { namespace spirit { namespace traits
-//	{
-//		template<class T> using shared_ptr = std::shared_ptr<T>;
-//		using std::make_shared;
-//
-//
-//
-//		namespace detail {
-//			template <typename T>
-//			struct transform_to_sharedptr : boost::static_visitor<shared_ptr<T> > {
-//				shared_ptr<T> operator()(shared_ptr<T>  const& v) const { return v; }
-//
-//				template <typename U>
-//				shared_ptr<T> operator()(shared_ptr<U>  const& v) const { return v; }
-//
-//				template <typename... Ts>
-//				shared_ptr<T> operator()(boost::variant<Ts...> const& v) const { return boost::apply_visitor(*this, v); }
-//
-//				template <typename U>
-//				shared_ptr<T> operator()(U                     const& v) const { return make_shared<U>(v); }
-//			};
-//		}
-//
-//		template<typename T, typename U>
-//		struct assign_to_attribute_from_value<shared_ptr<T>, U> {
-//			static void call(U const& v, shared_ptr<T>& attr) {
-//				std::cout << __PRETTY_FUNCTION__ << "\n";
-//				attr = detail::transform_to_sharedptr<T>()(v);
-//			}
-//		};
-//	}}}
 
 
 
@@ -287,6 +274,11 @@ namespace bertini {
 			|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
 			|   (lit('-') > expression_  [_val = -_1])
 			|   (lit('+') > expression_  [_val = _1])
+			|   (lit("sin") > '(' > expression_ [_val = sin_lazy(_1)] > ')' )
+			|   (lit("cos") > '(' > expression_ [_val = cos_lazy(_1)] > ')' )
+			|   (lit("tan") > '(' > expression_ [_val = tan_lazy(_1)] > ')' )
+			|   (lit("exp") > '(' > expression_ [_val = exp_lazy(_1)] > ')' )
+			|   (lit("sqrt") > '(' > expression_ [_val = sqrt_lazy(_1)] > ')' )
 			;
 			
 			
@@ -304,15 +296,11 @@ namespace bertini {
 			;
 			
 			
-//			variable_.name("variable_");
-//			variable_ = ;
 			
 			
-//			[ phx::bind( [](std::shared_ptr<Node> & input, int varnum, const std::vector<std::shared_ptr<Variable> > * input_vector)
-//											  {
-//												  input = (*input_vector)[varnum];
-//											  }
-//											  ,_val, _1, input_variables)];
+			
+			
+			
 			
 			
 			
@@ -359,7 +347,7 @@ namespace bertini {
 			>>
 			qi::lit('.')[_val += "."] // find a decimal point
 			>>
-			-(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
+			*(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
 			;
 			
 			

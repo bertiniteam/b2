@@ -27,61 +27,61 @@
 
 
 namespace bertini {
-    
-    // Node -> UnaryOperator -> CosOperator
-    // Description: This class represents the cosine function.  FreshEval method
-    // is defined for cosine and takes the cosine of the child node.
-    class CosOperator : public  virtual UnaryOperator
-    {
-    public:
-        
-        CosOperator(){}
-        
-        CosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-        {};
+	
+	// Node -> UnaryOperator -> CosOperator
+	// Description: This class represents the cosine function.  FreshEval method
+	// is defined for cosine and takes the cosine of the child node.
+	class CosOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		CosOperator(){}
+		
+		CosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+		
+		// These do nothing for a constant
+		std::string PrintNode() override
+		{
+			return "-" + child_->PrintNode();
+		}
+		
+		
+		virtual void print(std::ostream & target) const override
+		{
+			target << "cos(";
+			child_->print(target);
+			target << ")";
+		}
+		
+		virtual ~CosOperator() = default;
+		
+	protected:
+		// Specific implementation of FreshEval for negate.
+		dbl FreshEval(dbl) override
+		{
+			return cos(child_->Eval<dbl>());
+		}
+		
+		mpfr FreshEval(mpfr) override
+		{
+			return cos(child_->Eval<mpfr>());
+		}
+	};
+	
+	
+	
+} // re: namespace bertini
 
-        // These do nothing for a constant
-        std::string PrintNode() override
-        {
-            return "-" + child_->PrintNode();
-        }
-        
-        
-        virtual void print(std::ostream & target) const override
-        {
-        target << "cos(";
-        child_->print(target);
-        target << ")";
-        }
-        
-        virtual ~CosOperator() = default;
-        
-    protected:
-        // Specific implementation of FreshEval for negate.
-        dbl FreshEval(dbl) override
-        {
-            return cos(child_->Eval<dbl>());
-        }
-        
-        mpfr FreshEval(mpfr) override
-        {
-            return cos(child_->Eval<mpfr>());
-        }
-        };
-        
-        
-        // begin the overload of operators
-        
-        
-        inline std::shared_ptr<bertini::Node> cos(const std::shared_ptr<bertini::Node> & N)
-        {
-            return std::make_shared<bertini::CosOperator>(N);
-        }
-        
-        
-        
-        
-        } // re: namespace bertini
-        
-        
+
+namespace  {
+	// begin the overload of operators
+	
+	
+	inline std::shared_ptr<bertini::Node> cos(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::CosOperator>(N);
+	}
+}
+
 #endif
