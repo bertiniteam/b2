@@ -402,7 +402,7 @@ namespace bertini {
 			//		debug(expression_);
 			//		debug(term_);
 			//		debug(factor_);
-			debug(exp_elem_);
+//			debug(exp_elem_);
 			//		debug(number_);
 			//		debug(number_with_no_point_);
 			//		debug(number_with_digits_after_point_);

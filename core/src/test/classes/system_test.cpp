@@ -154,6 +154,20 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle_alt)
 
 
 
+BOOST_AUTO_TEST_CASE(system_parse_x_y_not_xy)
+{
+	std::string str = " variable x, y; function f; f = xy;";
+	
+	
+	bertini::System sys;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	bertini::SystemParser<std::string::const_iterator> S;
+	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	BOOST_CHECK(!s && iter!=end);
+	
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
