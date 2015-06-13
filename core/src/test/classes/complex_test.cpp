@@ -1,4 +1,27 @@
-#include "complex.hpp"
+//This file is part of Bertini 2.0.
+//
+//complex_test.cpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//complex_test.cpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with complex_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  Daniel Brake
+//  University of Notre Dame
+//  ACMS
+//  Spring, Summer 2015
+
+
+
+
+#include "mpfr_complex.hpp"
 #include <boost/test/unit_test.hpp>
 #include <fstream>
 
@@ -424,7 +447,7 @@ BOOST_AUTO_TEST_CASE(complex_make_random_50)
 	using mpfr_float = boost::multiprecision::mpfr_float;
 	mpfr_float::default_precision(50);  std::cout.precision(50);
 	bertini::complex z = bertini::rand();
-	std::cout << z << std::endl;
+
 }
 
 
@@ -434,7 +457,8 @@ BOOST_AUTO_TEST_CASE(complex_make_random_100)
 	using mpfr_float = boost::multiprecision::mpfr_float;
 	mpfr_float::default_precision(100);  std::cout.precision(100);
 	bertini::complex z = bertini::rand();
-	std::cout << z << std::endl;
+
+
 }
 
 
@@ -517,6 +541,20 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 	
 	BOOST_CHECK_EQUAL(z.real(),boost::multiprecision::mpfr_float("-3.651263418976498712e-2"));
 	BOOST_CHECK_EQUAL(z.imag(),boost::multiprecision::mpfr_float("0"));
+}
+
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_abs_of_i_is_one)
+{
+	bertini::complex i("0.0","1.0");
+	boost::multiprecision::mpfr_float one = abs(i);
+	std::cout << one << std::endl;
+	BOOST_CHECK_EQUAL(one,boost::multiprecision::mpfr_float("1.0"));
 }
 
 
