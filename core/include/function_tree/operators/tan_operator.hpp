@@ -27,62 +27,62 @@
 
 
 namespace bertini {
-    
-    // Node -> UnaryOperator -> TanOperator
-    // Description: This class represents the tangent function.  FreshEval method
-    // is defined for tangent and takes the tangent of the child node.
-    class TanOperator : public  virtual UnaryOperator
-    {
-    public:
-        
-        TanOperator(){}
-        
-        TanOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-        {};
-        
-        // These do nothing for a constant
-        std::string PrintNode() override
-        {
-            return "-" + child_->PrintNode();
-        }
-       
-        
-        virtual void print(std::ostream & target) const override
-        {
-        target << "tan(";
-        child_->print(target);
-        target << ")";
-        }
-        
-        virtual ~TanOperator() = default;
-        
-    protected:
-        // Specific implementation of FreshEval for negate.
-        dbl FreshEval(dbl) override
-        {
-            return tan(child_->Eval<dbl>());
-        }
-        
-        mpfr FreshEval(mpfr) override
-        {
-            return tan(child_->Eval<mpfr>());
-        }
-        };
-        
-        
-        // begin the overload of operators
-        
-        
-        inline std::shared_ptr<bertini::Node> tan(const std::shared_ptr<bertini::Node> & N)
-        {
-            return std::make_shared<bertini::TanOperator>(N);
-        }
-        
-        
-        
-        
-        } // re: namespace bertini
-        
-        
-        
+	
+	// Node -> UnaryOperator -> TanOperator
+	// Description: This class represents the tangent function.  FreshEval method
+	// is defined for tangent and takes the tangent of the child node.
+	class TanOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		TanOperator(){}
+		
+		TanOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+		
+		// These do nothing for a constant
+		std::string PrintNode() override
+		{
+			return "-" + child_->PrintNode();
+		}
+		
+		
+		virtual void print(std::ostream & target) const override
+		{
+			target << "tan(";
+			child_->print(target);
+			target << ")";
+		}
+		
+		virtual ~TanOperator() = default;
+		
+	protected:
+		// Specific implementation of FreshEval for negate.
+		dbl FreshEval(dbl) override
+		{
+			return tan(child_->Eval<dbl>());
+		}
+		
+		mpfr FreshEval(mpfr) override
+		{
+			return tan(child_->Eval<mpfr>());
+		}
+	};
+	
+	
+} // re: namespace bertini
+
+
+
+namespace {
+	// begin the overload of operators
+	
+	
+	inline std::shared_ptr<bertini::Node> tan(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::TanOperator>(N);
+	}
+	
+}
+
 #endif

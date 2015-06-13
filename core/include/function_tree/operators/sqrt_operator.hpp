@@ -27,62 +27,62 @@
 
 
 namespace bertini {
-    
-    // Node -> UnaryOperator -> SqrtOperator
-    // Description: This class represents the square root function.  FreshEval method
-    // is defined for square root and takes the square root of the child node.
-    class SqrtOperator : public  virtual UnaryOperator
-    {
-    public:
-        
-        SqrtOperator(){}
-        
-        SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-        {};
-        
-        // These do nothing for a constant
-        std::string PrintNode() override
-        {
-            return "-" + child_->PrintNode();
-        }
-        
-        
-        virtual void print(std::ostream & target) const override
-        {
-        target << "sqrt(";
-        child_->print(target);
-        target << ")";
-        }
-        
-        virtual ~SqrtOperator() = default;
-        
-    protected:
-        // Specific implementation of FreshEval for negate.
-        dbl FreshEval(dbl) override
-        {
-            return sqrt(child_->Eval<dbl>());
-        }
-        
-        mpfr FreshEval(mpfr) override
-        {
-            return sqrt(child_->Eval<mpfr>());
-        }
-        };
-        
-        
-        // begin the overload of operators
-        
-        
-        inline std::shared_ptr<bertini::Node> sqrt(const std::shared_ptr<bertini::Node> & N)
-        {
-            return std::make_shared<bertini::SqrtOperator>(N);
-        }
-        
-        
-        
-        
-        } // re: namespace bertini
-        
-        
-        
+	
+	// Node -> UnaryOperator -> SqrtOperator
+	// Description: This class represents the square root function.  FreshEval method
+	// is defined for square root and takes the square root of the child node.
+	class SqrtOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		SqrtOperator(){}
+		
+		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+		
+		// These do nothing for a constant
+		std::string PrintNode() override
+		{
+			return "-" + child_->PrintNode();
+		}
+		
+		
+		virtual void print(std::ostream & target) const override
+		{
+			target << "sqrt(";
+			child_->print(target);
+			target << ")";
+		}
+		
+		virtual ~SqrtOperator() = default;
+		
+	protected:
+		// Specific implementation of FreshEval for negate.
+		dbl FreshEval(dbl) override
+		{
+			return sqrt(child_->Eval<dbl>());
+		}
+		
+		mpfr FreshEval(mpfr) override
+		{
+			return sqrt(child_->Eval<mpfr>());
+		}
+	};
+	
+	
+	
+} // re: namespace bertini
+
+
+
+namespace {
+	// begin the overload of operators
+	
+	
+	inline std::shared_ptr<bertini::Node> sqrt(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::SqrtOperator>(N);
+	}
+}
+
 #endif
