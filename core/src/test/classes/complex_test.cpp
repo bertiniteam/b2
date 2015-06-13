@@ -549,14 +549,6 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 
 
 
-BOOST_AUTO_TEST_CASE(complex_abs_of_i_is_one)
-{
-	bertini::complex i("0.0","1.0");
-	boost::multiprecision::mpfr_float one = abs(i);
-	std::cout << one << std::endl;
-	BOOST_CHECK_EQUAL(one,boost::multiprecision::mpfr_float("1.0"));
-}
-
 
 
 BOOST_AUTO_TEST_SUITE_END()
