@@ -51,8 +51,13 @@ m4_define([_AX_CXX_COMPILE_STDCXX_14_testbody], [
     auto d = a;
 
     #include <type_traits>
+<<<<<<< HEAD
+
+    constexpr std::enable_if_t<true, int> type_traits_14(int) { return 14; }
+=======
     constexpr std::enable_if_t<true, int> type_traits_14(int) { return 14; }
 
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
     static_assert(type_traits_14(0) == 14, "missing/broken enable_if_t");
 ])
 
@@ -132,4 +137,8 @@ AC_DEFUN([AX_CXX_COMPILE_STDCXX_14], [dnl
 
     AC_SUBST(HAVE_CXX14)
   fi
+<<<<<<< HEAD
 ])
+=======
+])
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f

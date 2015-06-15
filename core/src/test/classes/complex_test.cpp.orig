@@ -319,6 +319,8 @@ BOOST_AUTO_TEST_CASE(complex_atan)
 }
 
 
+<<<<<<< HEAD
+=======
 
 
 ////////////////////// arc hyperbolic trig functions
@@ -546,8 +548,230 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 
 
 
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 
 
+////////////////////// arc hyperbolic trig functions
+
+
+BOOST_AUTO_TEST_CASE(complex_asinh)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	bertini::complex z("1.5", "2.25");
+	bertini::complex w = asinh(z);
+	
+	BOOST_CHECK(abs(real(w)- mpfr_float("1.67614738083746762411099043767860402156031800041110901006856")) < 1e-49);
+	// this value computed with matlab's vpa.
+	BOOST_CHECK(abs(imag(w)- mpfr_float("0.950053155715849776576329694197937868331910565261475162022272")) < 1e-49);
+	// this value computed with matlab's vpa.
+	
+}
+
+BOOST_AUTO_TEST_CASE(complex_acosh)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	bertini::complex z("1.5", "2.25");
+	bertini::complex w = acosh(z);
+	
+	BOOST_CHECK(abs(real(w)- mpfr_float("1.70220126917599043453132270948063371483983368727808240752544")) < 1e-49);
+	// this value computed with matlab's vpa.
+	BOOST_CHECK(abs(imag(w)- mpfr_float("1.01306822809301413744774900202177206598637709199012003381034")) < 1e-49);
+	// this value computed with matlab's vpa.
+	
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_atanh)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	bertini::complex z("1.5", "2.25");
+	bertini::complex w = atanh(z);
+	
+	BOOST_CHECK(abs(real(w)- mpfr_float("0.188961443693877322997198271883423688031632018662054076093211")) < 1e-49);
+	// this value computed with matlab's vpa.
+	BOOST_CHECK(abs(imag(w)- mpfr_float("1.26114018722767258645714375731198514259936666747537259674077")) < 1e-49);
+	// this value computed with matlab's vpa.
+	
+}
+
+
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_absolute_value)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	BOOST_CHECK_EQUAL(abs(bertini::complex("1.0","1.0")), sqrt(mpfr_float("2.0")));
+	
+}
+
+BOOST_AUTO_TEST_CASE(complex_abs_of_i_is_one)
+{
+	bertini::complex i("0.0","1.0");
+	boost::multiprecision::mpfr_float one = abs(i);
+	BOOST_CHECK_EQUAL(one,boost::multiprecision::mpfr_float("1.0"));
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_eleventh_power)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	bertini::complex z("2.0","0.5"), w;
+	
+	w = pow(z,11);
+	BOOST_CHECK_EQUAL(real(w), mpfr_float("-1319867") / mpfr_float("512") );
+	BOOST_CHECK_EQUAL(imag(w),  mpfr_float("2529647") / mpfr_float("2048"));
+	
+	
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_conjugation)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	bertini::complex z("2.0", sqrt(mpfr_float("2.0")));
+	bertini::complex w = conj(z);
+	
+	BOOST_CHECK_EQUAL(real(w),mpfr_float("2.0"));
+	BOOST_CHECK_EQUAL(imag(w),-sqrt(mpfr_float("2.0")));
+}
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_argument)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	bertini::complex z("1.0","1.0");
+	
+	BOOST_CHECK_EQUAL(arg(z), acos(mpfr_float("-1.0"))/mpfr_float("4.0"));
+}
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_make_random_50)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);  std::cout.precision(50);
+	bertini::complex z = bertini::rand();
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(complex_make_random_100)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(100);  std::cout.precision(100);
+	bertini::complex z = bertini::rand();
+
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(complex_serialization)
+{
+	using mpfr_float = boost::multiprecision::mpfr_float;
+	mpfr_float::default_precision(50);
+	
+	
+	bertini::complex z("1.23456", acos(mpfr_float("-1")));
+	
+	{
+		std::ofstream fout("serialization_test_complex");
+		
+		boost::archive::text_oarchive oa(fout);
+		
+		// write class instance to archive
+		oa << z;
+	}
+	
+	//	bertini::complex w;
+	bertini::complex w;
+	{
+		std::ifstream fin("serialization_test_complex");
+		
+		boost::archive::text_iarchive ia(fin);
+		// read class state from archive
+		ia >> w;
+	}
+	
+	BOOST_CHECK_EQUAL(real(z),real(w));
+	BOOST_CHECK_EQUAL(imag(z),imag(w));
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(complex_get_from_stream_parens_with_comma)
+{
+	std::stringstream ss;
+	ss << "(0.1234,-4.12397)";
+	
+	bertini::complex z;
+	ss >> z;
+	
+	BOOST_CHECK_EQUAL(z.real(),boost::multiprecision::mpfr_float("0.1234"));
+	BOOST_CHECK_EQUAL(z.imag(),boost::multiprecision::mpfr_float("-4.12397"));
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_get_from_stream_parens_no_comma)
+{
+	std::stringstream ss;
+	ss << "(-3.651263418976498712e-2)";
+	
+	bertini::complex z;
+	ss >> z;
+	
+	BOOST_CHECK_EQUAL(z.real(),boost::multiprecision::mpfr_float("-3.651263418976498712e-2"));
+	BOOST_CHECK_EQUAL(z.imag(),boost::multiprecision::mpfr_float("0"));
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
+{
+	std::stringstream ss;
+	ss << "-3.651263418976498712e-2";
+	
+	bertini::complex z;
+	ss >> z;
+	
+	BOOST_CHECK_EQUAL(z.real(),boost::multiprecision::mpfr_float("-3.651263418976498712e-2"));
+	BOOST_CHECK_EQUAL(z.imag(),boost::multiprecision::mpfr_float("0"));
+}
 
 
 

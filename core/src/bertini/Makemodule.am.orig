@@ -36,7 +36,11 @@ bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp \
 	include/mpfr_complex.hpp \
 	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
 	$(function_tree_header_files) \
+<<<<<<< HEAD
+	system.hpp
+=======
 	system.hpp system_parsing.hpp
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 
 
 

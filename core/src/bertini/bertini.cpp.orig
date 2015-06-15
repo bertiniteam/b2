@@ -20,8 +20,13 @@
 //
 //
 // bertini.cpp:  main source file for computational core of Bertini2
+<<<<<<< HEAD
+
+=======
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 
 
+#include "bertini.hpp"
 
 #include "bertini.hpp"
 
@@ -32,10 +37,13 @@ int Node::tabcount = 0;
 int main(int argc, char** argv)
 {
 	std::cout << "Bertini, version 2.\n\nDeveloped by B-Team.\n\nThis program is currently under development,\nand doesn't do anything useful yet." << std::endl;
+<<<<<<< HEAD
+=======
 
 	
 	bertini::SystemParser<std::string::const_iterator> S;
 	
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 	
 	return 0;
 }

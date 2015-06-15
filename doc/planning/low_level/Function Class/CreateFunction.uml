@@ -1,0 +1,92 @@
+@startuml
+title Make Function Flow Diagram
+
+partition Parser {
+(*) --> Function func()
+--> Parse expression
+--> "Binary or Unary?"
+-->[Binary] "'eL@eR'"
+-->"func.headnode_ =
+new BinaryOperation('@')"
+-->"ParseBinary('eL @ eR', func.headnode_)"
+
+"Binary or Unary?" -->[no] "'@e'"
+--> "func.headnode_ =
+new UnaryOperation('@')"
+--> ParseUnary('@e', func.headnode_)
+}
+
+partition Binary {
+"ParseBinary(String 'eL@eR', Node* op_node)" #CCCCEE --> Parse 'eL'
+--> "Is 'eL' a leaf?"
+-->[yes] "op_node->leftnode_=
+new Symbol('eL')"
+-->===LEFTDONE===
+--> "Parse 'eR'"
+--> "Is 'eR' a leaf?"
+-->[no] "Is 'eR' binary?"
+-->[yes] "'eR' = 'gL & gR'"
+--> "op_node->rightnode_ = 
+new BinaryOperator('&')"
+--> ParseBinary('gL & gR',op_node->rightnode_)
+-->"return ParseBinary" as Bret #CCCCEE
+
+"Is 'eL' a leaf?"-->[no] "Is 'eL' binary?"
+-->[yes] "'eL' = 'fL % fR'"
+--> "op_node->leftnode_ = 
+new BinaryOperator('%')"
+--> ParseBinary('fL % fR',op_node->leftnode_)
+-->===LEFTDONE===
+
+
+"Is 'eL' binary?" -->[no] "'eL' = '%f'"
+--> "op_node->leftnode_ =
+new UnaryOperator('%')"
+--> ParseUnary('%f', op_node->leftnode_)
+-->===LEFTDONE===
+
+
+"Is 'eR' binary?" -->[no] "'eR' = '&g'"
+--> "op_node->rightnode_ =
+new UnaryOperator('&')"
+--> ParseUnary('%f', op_node->rightnode_)
+-->Bret
+
+"Is 'eR' a leaf?" -->[yes] "op_node->rightnode_=
+new Symbol('eR')"
+-->Bret
+
+}
+
+
+
+partition Unary {
+"ParseUnary(String '@e', Node* node_op)" #CCCCEE --> "Parse 'e'"
+--> "Is 'e' a leaf?"
+-->[yes] "node_op->node_ =
+new Symbol('e')"
+-->"return ParseUnary" as Uret #CCCCEE
+
+"Is 'e' a leaf?" -->[no] "Is 'e' unary?"
+-->[yes] "'e' = '%f'"
+--> "op_node->node_ =
+new UnaryOperation('%')"
+--> "ParseUnary('%f', op_node->node_)"
+-->Uret
+
+"Is 'e' unary?" -->[no] "'eL' = 'fL%fR'"
+--> "op_node->node_ = 
+new BinaryOperator('%')"
+--> ParseBinary('fL % fR',op_node->node_)
+-->Uret
+
+
+
+
+
+
+}
+
+
+
+@enduml
