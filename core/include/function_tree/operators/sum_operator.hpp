@@ -160,6 +160,14 @@ namespace bertini {
 		}
 		
 		
+        
+        
+        
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            return std::make_shared<SumOperator>(children_[0]->Differentiate(), children_[1]->Differentiate());
+        }
+
 		
 		
 		

@@ -40,7 +40,6 @@ using mpfr = bertini::complex;
 
 
 
-
 namespace bertini {
 
 
@@ -126,6 +125,8 @@ public:
 	
 	///////// PUBLIC PURE METHODS /////////////////
 	virtual void print(std::ostream& target) const = 0;
+    
+    virtual std::shared_ptr<Node> Differentiate()   {return std::shared_ptr<Node>(this);};
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:

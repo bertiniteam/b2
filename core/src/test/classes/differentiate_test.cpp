@@ -43,6 +43,7 @@ using Variable = bertini::Variable;
 using Node = bertini::Node;
 using Number = bertini::Number;
 using SpecialNumber = bertini::SpecialNumber;
+using Function = bertini::Function;
 
 
 int Node::tabcount = 0;
@@ -86,26 +87,17 @@ BOOST_AUTO_TEST_SUITE(differentiate)
 /////////// Basic Operations Alone ///////////////////
 
 BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
-    using mpfr_float = boost::multiprecision::mpfr_float;
+    std::string str = "function f; variable_group x1, x2; f = x1+x2;";
     
-    
-    boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
-    
-    
-    std::shared_ptr<Number> a = std::make_shared<Number>(astr_real, astr_imag);
-    
-    dbl exact_dbl = anum_dbl*anum_dbl;
-    mpfr exact_mpfr = anum_mpfr*anum_mpfr;
-    
-    std::shared_ptr<Node> N = a;
-    
-    N *= N;
-    
-    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag()) < threshold_clearance_d);
-    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
-    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
-    
+    bertini::System sys;
+    std::shared_ptr<Function> func, diffFunc;
+    std::string::const_iterator iter = str.begin();
+    std::string::const_iterator end = str.end();
+    bertini::SystemParser<std::string::const_iterator> S;
+    bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+    func = sys.function();
+    diffFunc = std::make_shared<Function>(func->Differentiate());
+    diffFunc->print(std::cout);
 }
 
 

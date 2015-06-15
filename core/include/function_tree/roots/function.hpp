@@ -128,6 +128,16 @@ namespace bertini {
 				throw std::runtime_error("Function node type has empty root node");
 			}
 		}
+        
+        
+        /** 
+         Calls Differentiate on the entry node and creates a new Function with the result as
+         the entry node.
+         */
+        std::shared_ptr<Node> Differentiate()
+        {
+            return entry_node_->Differentiate();
+        }
 		
 		
 		////////////// TESTING /////////////////
