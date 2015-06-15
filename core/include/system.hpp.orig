@@ -20,6 +20,8 @@
 //  Spring, Summer 2015
 //
 // system.hpp:  provides the bertini::system class.
+<<<<<<< HEAD
+=======
 
 
 #ifndef BERTINI_SYSTEM_H
@@ -458,3 +460,4 @@ namespace bertini {
 
 
 
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f

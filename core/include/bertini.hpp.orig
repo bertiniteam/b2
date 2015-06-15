@@ -32,12 +32,23 @@
 #include <eigen3/Eigen/LU>
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 
+#include "mpfr_complex.hpp"
+
+<<<<<<< HEAD
+#include "function_tree.hpp"
+
+#include "system.hpp"
+=======
 #include <complex>
 #include "mpfr_complex.hpp"
 
 #include "function_tree.hpp"
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 
 #include "system.hpp"
 #include "system_parsing.hpp"

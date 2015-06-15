@@ -70,21 +70,21 @@ namespace bertini {
     };
     
 
-    // begin the overload of operators
-    
-    
-    inline std::shared_ptr<bertini::Node> sin(const std::shared_ptr<bertini::Node> & N)
-    {
-        return std::make_shared<bertini::SinOperator>(N);
-    }
-
-    
-    
     
 } // re: namespace bertini
 
 
 
+
+namespace {
+	// begin the overload of operators
+	
+	
+	inline std::shared_ptr<bertini::Node> sin(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::SinOperator>(N);
+	}
+}
 
 
 

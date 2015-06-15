@@ -23,7 +23,11 @@
 #define b2Test_Function_h
 
 
+<<<<<<< HEAD
+#include "function_tree/node.hpp"
+=======
 #include "function_tree/symbols/symbol.hpp"
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 
 
 
@@ -34,7 +38,11 @@ namespace bertini {
 	 Node -> Function
 	 This class defines a function.  It stores the entry node for a particular functions tree.
 	 */
+<<<<<<< HEAD
+	class Function : public Node
+=======
 	class Function : public NamedSymbol
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 	{
 	public:
 		
@@ -42,6 +50,10 @@ namespace bertini {
 		/**
 		 The default constructor
 		 */
+<<<<<<< HEAD
+		Function()
+		{};
+=======
 		Function() {};
 		
 		
@@ -49,6 +61,7 @@ namespace bertini {
 		
 		Function(std::string new_name) : NamedSymbol(new_name)
 		{ }
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 		
 		
 		/**
@@ -74,10 +87,15 @@ namespace bertini {
 		 */
 		void print(std::ostream & target) const override
 		{
+<<<<<<< HEAD
+			EnsureNotEmpty();
+			entry_node_->print(target);
+=======
 			if (entry_node_)
 				entry_node_->print(target);
 			else
 				target << "emptyfunction";
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 		}
 		
 		
@@ -90,10 +108,15 @@ namespace bertini {
 		 */
 		virtual std::string PrintNode() override
 		{
+<<<<<<< HEAD
+			EnsureNotEmpty();
+			return entry_node_->PrintNode();
+=======
 			if (entry_node_)
 				return entry_node_->PrintNode();
 			else
 				return "emptyfunction";
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 		}
 		
 		

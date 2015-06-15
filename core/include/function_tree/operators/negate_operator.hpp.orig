@@ -13,14 +13,15 @@
 //You should have received a copy of the GNU General Public License
 //along with negate_operator.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Created by Collins, James B. on 6/5/15.
+//  Created by Collins, James B. on 4/30/15.
 //
 //
-// cos_operator.hpp:  Declares the class  CosOperator.
+// negate_operator.hpp:  Declares the class  NegateOperator.
 
 
-#ifndef Function_Tree_Test_cos_operator_hpp
-#define Function_Tree_Test_cos_operator_hpp
+
+#ifndef b2Test_NegateOperator_h
+#define b2Test_NegateOperator_h
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
@@ -28,16 +29,16 @@
 
 namespace bertini {
 	
-	// Node -> UnaryOperator -> CosOperator
-	// Description: This class represents the cosine function.  FreshEval method
-	// is defined for cosine and takes the cosine of the child node.
-	class CosOperator : public  virtual UnaryOperator
+	// Node -> UnaryOperator -> NegateOperator
+	// Description: This class represents the negation operator.  FreshEval method
+	// is defined for negation and multiplies the value by -1.
+	class NegateOperator : public  virtual UnaryOperator
 	{
 	public:
 		
-		CosOperator(){}
+		NegateOperator(){}
 		
-		CosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
 		// These do nothing for a constant
@@ -47,41 +48,50 @@ namespace bertini {
 		}
 		
 		
+		
 		virtual void print(std::ostream & target) const override
 		{
-			target << "cos(";
+			target << "-(";
 			child_->print(target);
 			target << ")";
 		}
 		
-		virtual ~CosOperator() = default;
+		virtual ~NegateOperator() = default;
 		
 	protected:
 		// Specific implementation of FreshEval for negate.
 		dbl FreshEval(dbl) override
 		{
-			return cos(child_->Eval<dbl>());
+<<<<<<< HEAD
+			return (-1)*child_->Eval<dbl>();
+=======
+			return (-1.0)*child_->Eval<dbl>();
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 		}
 		
 		mpfr FreshEval(mpfr) override
 		{
-			return cos(child_->Eval<mpfr>());
+<<<<<<< HEAD
+			return (-1)*child_->Eval<mpfr>();
+=======
+			return -child_->Eval<mpfr>();
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 		}
 	};
-	
-	
 	
 } // re: namespace bertini
 
 
 namespace  {
-	// begin the overload of operators
 	
+	using Node = bertini::Node;
+	using NegateOperator = bertini::NegateOperator;
 	
-	inline std::shared_ptr<bertini::Node> cos(const std::shared_ptr<bertini::Node> & N)
+	inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
 	{
-		return std::make_shared<bertini::CosOperator>(N);
+		return std::make_shared<NegateOperator>(rhs);
 	}
+	
 }
 
 #endif

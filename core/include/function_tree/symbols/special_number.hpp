@@ -47,7 +47,7 @@ namespace bertini {
          "e" or "E" is exp(1) (Stored to 200 digits and obtained from Maple)
          "i" or "I" or "1i" is the imaginary number
          */
-        SpecialNumber(std::string snum) : NamedSymbol(snum)
+        SpecialNumber(std::string snum)
         {
             using namespace boost::math::constants;
             

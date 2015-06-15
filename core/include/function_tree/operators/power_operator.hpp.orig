@@ -68,7 +68,11 @@ namespace bertini {
 		
 		virtual void print(std::ostream & target) const override
 		{
+<<<<<<< HEAD
+			target << "(" << *base_ << "^" << *exponent_ << ")";
+=======
 			target << "(" << *base_ << ")^(" << *exponent_ << ")";
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 		}
 		
 		virtual ~PowerOperator() = default;
@@ -111,7 +115,11 @@ namespace bertini {
 		
 		virtual mpfr FreshEval(mpfr) override
 		{
+<<<<<<< HEAD
+			return std::pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
+=======
 			return pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 		}
 		
 	private:

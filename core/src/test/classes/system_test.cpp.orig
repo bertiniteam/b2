@@ -27,6 +27,16 @@
 
 
 
+<<<<<<< HEAD
+BOOST_AUTO_TEST_SUITE(system_class)
+
+
+
+
+
+
+
+=======
 #include <boost/test/unit_test.hpp>
 
 
@@ -167,6 +177,7 @@ BOOST_AUTO_TEST_CASE(system_parse_x_y_not_xy)
 	BOOST_CHECK(!s && iter!=end);
 	
 }
+>>>>>>> 15bc2958aabcf926fc1631aa614409cb643ee78f
 
 
 BOOST_AUTO_TEST_SUITE_END()
