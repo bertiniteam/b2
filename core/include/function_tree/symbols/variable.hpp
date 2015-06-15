@@ -60,6 +60,10 @@ namespace  bertini {
 		}
 		
 		
+        virtual std::shared_ptr<Node> Differentiate()
+        {
+            return std::make_shared<Variable>(name());
+        }
 		
 		
 		
