@@ -22,12 +22,15 @@
 #ifndef Function_Tree_Test_cos_operator_hpp
 #define Function_Tree_Test_cos_operator_hpp
 
-#include "function_tree/Node.hpp"
+#include "function_tree/node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/negate_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
 
 
 namespace bertini {
 	
+    
 	// Node -> UnaryOperator -> CosOperator
 	// Description: This class represents the cosine function.  FreshEval method
 	// is defined for cosine and takes the cosine of the child node.
@@ -53,6 +56,22 @@ namespace bertini {
 			child_->print(target);
 			target << ")";
 		}
+        
+        
+        
+        /**
+         Differentiates the cosine function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
+        {
+//            auto ret_mult = std::make_shared<MultOperator>();
+//            std::shared_ptr<Node> sin_op = std::make_shared<SinOperator>(child_);
+//            ret_mult->AddChild(sin_op);
+//            ret_mult->AddChild(child_->Differentiate());
+//            return std::make_shared<NegateOperator>(ret_mult);
+            return child_;
+        }
+
 		
 		virtual ~CosOperator() = default;
 		

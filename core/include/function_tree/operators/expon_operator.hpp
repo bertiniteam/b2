@@ -76,6 +76,16 @@ namespace bertini {
 		{
 			return exponent_;
 		}
+        
+        
+        /**
+         Differentiates a number.  Should this return the special number Zero?
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
+        {
+            return std::make_shared<Number>(0.0);
+        }
+
 		
 		virtual ~ExponOperator() = default;
 		

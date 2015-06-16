@@ -25,6 +25,8 @@
 
 #include "function_tree/node.hpp"
 #include "function_tree/operators/nary_operator.hpp"
+#include "function_tree/operators/sum_operator.hpp"
+#include "function_tree/operators/power_operator.hpp"
 
 
 namespace bertini {
@@ -107,15 +109,35 @@ namespace bertini {
         
         
         
-        
-        virtual std::shared_ptr<Node> Differentiate() override
+        /**
+         Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
         {
-            std::shared_ptr<MultOperator> left_sum =
-                std::make_shared<MultOperator>(children_[0]->Differentiate(), children_[1]);
-            std::shared_ptr<MultOperator> right_sum =
-                std::make_shared<MultOperator>(children_[1]->Differentiate(), children_[0]);
+            std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
+            for (int ii = 0; ii < children_.size(); ++ii)
+            {
+                auto term_ii = std::make_shared<MultOperator>();
+                for(int jj = 0; jj < children_.size() && jj != ii; ++jj)
+                {
+                    term_ii->AddChild(children_[jj],children_mult_or_div_[ii]);
+                }
+                if ( !(children_mult_or_div_[ii]) )
+                {
+                    auto exp_minus_two = std::make_shared<PowerOperator>(children_[ii], std::make_shared<Number>("2.0"));
+                    term_ii->AddChild(exp_minus_two);
+                    term_ii->AddChild(children_[ii]->Differentiate());
+                    ret_sum->AddChild(term_ii,false);
+                }
+                else
+                {
+                    term_ii->AddChild(children_[ii]->Differentiate(),true);
+                    ret_sum->AddChild(term_ii);
+                }
+            }
             
-            return std::make_shared<SumOperator>(left_sum, right_sum);
+            return ret_sum;
+//            return children_[0];
         }
 
 		

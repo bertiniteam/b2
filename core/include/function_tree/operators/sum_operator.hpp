@@ -116,6 +116,24 @@ namespace bertini {
 			}
 			target << ")";
 		}
+        
+        
+        
+        
+        /**
+         Return SumOperator whose children are derivatives of children_
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
+        {
+            std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
+            for (int ii = 0; ii < children_.size(); ++ii)
+            {
+                ret_sum->AddChild(children_[ii]->Differentiate(),children_sign_[ii]);
+            }
+            
+            return ret_sum;
+        }
+
 		
 	protected:
 		// Specific implementation of FreshEval for add and subtract.
@@ -162,11 +180,6 @@ namespace bertini {
 		
         
         
-        
-        virtual std::shared_ptr<Node> Differentiate() override
-        {
-            return std::make_shared<SumOperator>(children_[0]->Differentiate(), children_[1]->Differentiate());
-        }
 
 		
 		

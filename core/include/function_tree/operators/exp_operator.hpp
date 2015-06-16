@@ -25,6 +25,8 @@
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
+
 namespace bertini {
 	
 	
@@ -54,6 +56,19 @@ namespace bertini {
 			child_->print(target);
 			target << ")";
 		}
+        
+        
+        /**
+         Differentiates the exponential function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            ret_mult->AddChild(std::make_shared<ExpOperator>(child_));
+            ret_mult->AddChild(child_->Differentiate());
+            return ret_mult;
+        }
+
 		
 		virtual ~ExpOperator() = default;
 		

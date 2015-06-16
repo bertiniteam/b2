@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_SUITE(differentiate)
 /////////// Basic Operations Alone ///////////////////
 
 BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
-    std::string str = "function f; variable_group x1, x2; f = x1+x2;";
+    std::string str = "function f; variable_group x1, x2; f = -x1;";
     
     bertini::System sys;
     std::shared_ptr<Function> func, diffFunc;
