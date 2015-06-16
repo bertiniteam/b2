@@ -148,9 +148,9 @@ am_b2_class_test_OBJECTS =  \
 	src/test/classes/b2_class_test-class_test.$(OBJEXT) \
 	src/test/classes/b2_class_test-eigen_test.$(OBJEXT) \
 	src/test/classes/b2_class_test-complex_test.$(OBJEXT) \
-	src/test/classes/b2_class_test-parser_test.$(OBJEXT) \
 	src/bertini/b2_class_test-mpfr_extensions.$(OBJEXT) \
-	$(am__objects_1) $(am__objects_2)
+	$(am__objects_1) $(am__objects_2) \
+	src/test/classes/b2_class_test-system_test.$(OBJEXT)
 b2_class_test_OBJECTS = $(am_b2_class_test_OBJECTS)
 am__DEPENDENCIES_1 =
 b2_class_test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
@@ -486,7 +486,7 @@ bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp \
 	include/mpfr_complex.hpp \
 	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
 	$(function_tree_header_files) \
-	system.hpp
+	system.hpp system_parsing.hpp
 
 bertini2_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
 bertini2_CXXFLAGS = $(BOOST_CPPFLAGS)
@@ -496,11 +496,11 @@ function_tree_test_source_files = src/test/classes/function_tree_test.cpp
 b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	src/test/classes/eigen_test.cpp \
 	include/mpfr_complex.hpp src/test/classes/complex_test.cpp \
-	src/test/classes/parser_test.cpp \
 	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
 	$(function_tree_header_files) \
 	$(function_tree_test_source_files) \
-	system.hpp 
+	system.hpp system_parsing.hpp \
+	src/test/classes/system_test.cpp
 
 b2_class_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
 b2_class_test_CXXFLAGS = $(BOOST_CPPFLAGS)
@@ -635,9 +635,6 @@ src/test/classes/b2_class_test-eigen_test.$(OBJEXT):  \
 src/test/classes/b2_class_test-complex_test.$(OBJEXT):  \
 	src/test/classes/$(am__dirstamp) \
 	src/test/classes/$(DEPDIR)/$(am__dirstamp)
-src/test/classes/b2_class_test-parser_test.$(OBJEXT):  \
-	src/test/classes/$(am__dirstamp) \
-	src/test/classes/$(DEPDIR)/$(am__dirstamp)
 src/bertini/$(am__dirstamp):
 	@$(MKDIR_P) src/bertini
 	@: > src/bertini/$(am__dirstamp)
@@ -648,6 +645,9 @@ src/bertini/b2_class_test-mpfr_extensions.$(OBJEXT):  \
 	src/bertini/$(am__dirstamp) \
 	src/bertini/$(DEPDIR)/$(am__dirstamp)
 src/test/classes/b2_class_test-function_tree_test.$(OBJEXT):  \
+	src/test/classes/$(am__dirstamp) \
+	src/test/classes/$(DEPDIR)/$(am__dirstamp)
+src/test/classes/b2_class_test-system_test.$(OBJEXT):  \
 	src/test/classes/$(am__dirstamp) \
 	src/test/classes/$(DEPDIR)/$(am__dirstamp)
 
@@ -693,7 +693,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/test/classes/$(DEPDIR)/b2_class_test-complex_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/test/classes/$(DEPDIR)/b2_class_test-eigen_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/test/classes/$(DEPDIR)/b2_class_test-function_tree_test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@src/test/classes/$(DEPDIR)/b2_class_test-parser_test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/test/classes/$(DEPDIR)/b2_class_test-system_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/test/interactive_testing/$(DEPDIR)/function_tree_interactive.Po@am__quote@
 
 .cpp.o:
@@ -762,20 +762,6 @@ src/test/classes/b2_class_test-complex_test.obj: src/test/classes/complex_test.c
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-complex_test.obj `if test -f 'src/test/classes/complex_test.cpp'; then $(CYGPATH_W) 'src/test/classes/complex_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/complex_test.cpp'; fi`
 
-src/test/classes/b2_class_test-parser_test.o: src/test/classes/parser_test.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/test/classes/b2_class_test-parser_test.o -MD -MP -MF src/test/classes/$(DEPDIR)/b2_class_test-parser_test.Tpo -c -o src/test/classes/b2_class_test-parser_test.o `test -f 'src/test/classes/parser_test.cpp' || echo '$(srcdir)/'`src/test/classes/parser_test.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/test/classes/$(DEPDIR)/b2_class_test-parser_test.Tpo src/test/classes/$(DEPDIR)/b2_class_test-parser_test.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/test/classes/parser_test.cpp' object='src/test/classes/b2_class_test-parser_test.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-parser_test.o `test -f 'src/test/classes/parser_test.cpp' || echo '$(srcdir)/'`src/test/classes/parser_test.cpp
-
-src/test/classes/b2_class_test-parser_test.obj: src/test/classes/parser_test.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/test/classes/b2_class_test-parser_test.obj -MD -MP -MF src/test/classes/$(DEPDIR)/b2_class_test-parser_test.Tpo -c -o src/test/classes/b2_class_test-parser_test.obj `if test -f 'src/test/classes/parser_test.cpp'; then $(CYGPATH_W) 'src/test/classes/parser_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/parser_test.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/test/classes/$(DEPDIR)/b2_class_test-parser_test.Tpo src/test/classes/$(DEPDIR)/b2_class_test-parser_test.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/test/classes/parser_test.cpp' object='src/test/classes/b2_class_test-parser_test.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-parser_test.obj `if test -f 'src/test/classes/parser_test.cpp'; then $(CYGPATH_W) 'src/test/classes/parser_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/parser_test.cpp'; fi`
-
 src/bertini/b2_class_test-mpfr_extensions.o: src/bertini/mpfr_extensions.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/bertini/b2_class_test-mpfr_extensions.o -MD -MP -MF src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Tpo -c -o src/bertini/b2_class_test-mpfr_extensions.o `test -f 'src/bertini/mpfr_extensions.cpp' || echo '$(srcdir)/'`src/bertini/mpfr_extensions.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Tpo src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Po
@@ -803,6 +789,20 @@ src/test/classes/b2_class_test-function_tree_test.obj: src/test/classes/function
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/test/classes/function_tree_test.cpp' object='src/test/classes/b2_class_test-function_tree_test.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-function_tree_test.obj `if test -f 'src/test/classes/function_tree_test.cpp'; then $(CYGPATH_W) 'src/test/classes/function_tree_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/function_tree_test.cpp'; fi`
+
+src/test/classes/b2_class_test-system_test.o: src/test/classes/system_test.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/test/classes/b2_class_test-system_test.o -MD -MP -MF src/test/classes/$(DEPDIR)/b2_class_test-system_test.Tpo -c -o src/test/classes/b2_class_test-system_test.o `test -f 'src/test/classes/system_test.cpp' || echo '$(srcdir)/'`src/test/classes/system_test.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/test/classes/$(DEPDIR)/b2_class_test-system_test.Tpo src/test/classes/$(DEPDIR)/b2_class_test-system_test.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/test/classes/system_test.cpp' object='src/test/classes/b2_class_test-system_test.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-system_test.o `test -f 'src/test/classes/system_test.cpp' || echo '$(srcdir)/'`src/test/classes/system_test.cpp
+
+src/test/classes/b2_class_test-system_test.obj: src/test/classes/system_test.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/test/classes/b2_class_test-system_test.obj -MD -MP -MF src/test/classes/$(DEPDIR)/b2_class_test-system_test.Tpo -c -o src/test/classes/b2_class_test-system_test.obj `if test -f 'src/test/classes/system_test.cpp'; then $(CYGPATH_W) 'src/test/classes/system_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/system_test.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/test/classes/$(DEPDIR)/b2_class_test-system_test.Tpo src/test/classes/$(DEPDIR)/b2_class_test-system_test.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/test/classes/system_test.cpp' object='src/test/classes/b2_class_test-system_test.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-system_test.obj `if test -f 'src/test/classes/system_test.cpp'; then $(CYGPATH_W) 'src/test/classes/system_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/system_test.cpp'; fi`
 
 src/bertini/bertini2-bertini.o: src/bertini/bertini.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bertini2_CXXFLAGS) $(CXXFLAGS) -MT src/bertini/bertini2-bertini.o -MD -MP -MF src/bertini/$(DEPDIR)/bertini2-bertini.Tpo -c -o src/bertini/bertini2-bertini.o `test -f 'src/bertini/bertini.cpp' || echo '$(srcdir)/'`src/bertini/bertini.cpp

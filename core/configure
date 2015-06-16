@@ -3776,8 +3776,8 @@ else
     auto d = a;
 
     #include <type_traits>
-
     constexpr std::enable_if_t<true, int> type_traits_14(int) { return 14; }
+
     static_assert(type_traits_14(0) == 14, "missing/broken enable_if_t");
 
 _ACEOF
@@ -3825,8 +3825,8 @@ else
     auto d = a;
 
     #include <type_traits>
-
     constexpr std::enable_if_t<true, int> type_traits_14(int) { return 14; }
+
     static_assert(type_traits_14(0) == 14, "missing/broken enable_if_t");
 
 _ACEOF
@@ -3880,8 +3880,8 @@ else
     auto d = a;
 
     #include <type_traits>
-
     constexpr std::enable_if_t<true, int> type_traits_14(int) { return 14; }
+
     static_assert(type_traits_14(0) == 14, "missing/broken enable_if_t");
 
 _ACEOF

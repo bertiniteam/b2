@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "function_tree/node.hpp"
+#include "function_tree/operators/operator.hpp"
 
 
 namespace bertini {

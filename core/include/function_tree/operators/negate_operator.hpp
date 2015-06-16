@@ -55,6 +55,18 @@ namespace bertini {
 			child_->print(target);
 			target << ")";
 		}
+        
+        
+        
+        
+        /**
+         Returns negative of derivative of child.
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
+        {
+            return std::make_shared<NegateOperator>(child_->Differentiate());
+        }
+
 		
 		virtual ~NegateOperator() = default;
 		

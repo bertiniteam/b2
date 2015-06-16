@@ -25,7 +25,10 @@
 
 #include <cmath>
 #include "function_tree/operators/binary_operator.hpp"
+#include "function_tree/operators/sum_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
 #include "function_tree/symbols/number.hpp"
+
 
 namespace bertini {
 	class PowerOperator : public virtual BinaryOperator
@@ -71,6 +74,21 @@ namespace bertini {
 			target << "(" << *base_ << ")^(" << *exponent_ << ")";
 		}
 		
+        
+        
+        /**
+         Differentiates with the power rule.
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            return ret_mult;
+        }
+
+        
+        
+        
+        
 		virtual ~PowerOperator() = default;
 		
 		

@@ -22,11 +22,16 @@
 #ifndef Function_Tree_Test_sin_operator_hpp
 #define Function_Tree_Test_sin_operator_hpp
 
-#include "function_tree/Node.hpp"
+#include "function_tree/node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/cos_operator.hpp"
+
+
 
 
 namespace bertini {
+    
+    
     
     // Node -> UnaryOperator -> SinOperator
     // Description: This class represents the sine function.  FreshEval method
@@ -53,6 +58,21 @@ namespace bertini {
             child_->print(target);
             target << ")";
         }
+        
+        
+        
+        /**
+         Differentiates the sine function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            auto cos_op = std::make_shared<CosOperator>(child_);
+            ret_mult->AddChild(cos_op);
+            ret_mult->AddChild(child_->Differentiate());
+            return ret_mult;
+        }
+
         
         virtual ~SinOperator() = default;
         

@@ -24,6 +24,8 @@
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
+#include "function_tree/operators/power_operator.hpp"
 
 
 namespace bertini {
@@ -53,6 +55,20 @@ namespace bertini {
 			child_->print(target);
 			target << ")";
 		}
+        
+        
+        /**
+         Differentiates the square root function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() const override
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Number>(-0.5)));
+            ret_mult->AddChild(child_->Differentiate());
+            ret_mult->AddChild(std::make_shared<Number>(0.5));
+            return ret_mult;
+        }
+
 		
 		virtual ~SqrtOperator() = default;
 		

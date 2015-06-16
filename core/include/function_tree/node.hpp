@@ -126,7 +126,7 @@ public:
 	///////// PUBLIC PURE METHODS /////////////////
 	virtual void print(std::ostream& target) const = 0;
     
-    virtual std::shared_ptr<Node> Differentiate()   {return std::shared_ptr<Node>(this);};
+    virtual std::shared_ptr<Node> Differentiate() const = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:
