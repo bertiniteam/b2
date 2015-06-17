@@ -26,7 +26,7 @@
 
 namespace bertini {
 
-std::shared_ptr<Node> CosOperator::Differentiate() const
+std::shared_ptr<Node> CosOperator::Differentiate()
 {
     auto ret_mult = std::make_shared<MultOperator>();
     std::shared_ptr<Node> sin_op = std::make_shared<SinOperator>(child_);

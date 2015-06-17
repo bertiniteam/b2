@@ -62,7 +62,7 @@ namespace bertini {
         /**
          Differentiates the cosine function.
          */
-        virtual std::shared_ptr<Node> Differentiate() const override;
+        virtual std::shared_ptr<Node> Differentiate() override;
 
 		
 		virtual ~CosOperator() = default;
@@ -78,6 +78,18 @@ namespace bertini {
 		{
 			return cos(child_->Eval<mpfr>());
 		}
+        
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return cos(child_->Eval<dbl>(diff_variable));
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return cos(child_->Eval<mpfr>(diff_variable));
+        }
+
 	};
 	
 	

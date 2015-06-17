@@ -62,7 +62,7 @@ namespace bertini {
         /**
          Returns negative of derivative of child.
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             return std::make_shared<NegateOperator>(child_->Differentiate());
         }
@@ -81,6 +81,18 @@ namespace bertini {
 		{
 			return -child_->Eval<mpfr>();
 		}
+        
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return (-1.0)*child_->Eval<dbl>(diff_variable);
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return -child_->Eval<mpfr>(diff_variable);
+        }
+
 	};
 	
 } // re: namespace bertini

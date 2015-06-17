@@ -44,6 +44,7 @@ using Node = bertini::Node;
 using Number = bertini::Number;
 using SpecialNumber = bertini::SpecialNumber;
 using Function = bertini::Function;
+using Jacobian = bertini::Jacobian;
 
 
 int Node::tabcount = 0;
@@ -86,20 +87,42 @@ BOOST_AUTO_TEST_SUITE(differentiate)
 
 /////////// Basic Operations Alone ///////////////////
 
-BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
-    std::string str = "function f; variable_group x1, x2; f = -x1;";
+BOOST_AUTO_TEST_CASE(diff_wrt_each_variable){
+    std::string str = "function f; variable_group x,y,z; f = x*y +y^2 - z*x + 9;";
     
     bertini::System sys;
-    std::shared_ptr<Function> func, diffFunc;
     std::string::const_iterator iter = str.begin();
     std::string::const_iterator end = str.end();
     bertini::SystemParser<std::string::const_iterator> S;
-    bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
-    func = sys.function();
-    diffFunc = std::make_shared<Function>(func->Differentiate());
-    diffFunc->print(std::cout);
+    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+    auto func = sys.function();
+    auto vars = sys.variables();
+    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+    for(auto vv : vars)
+    {
+        JFunc->Eval<dbl>(vv);
+        JFunc->Eval<mpfr>(vv);
+    }
 }
 
+
+BOOST_AUTO_TEST_CASE(diff_3xyz){
+    std::string str = "function f; variable_group x,y,z; f = x*y +y^2 - z*x + 9;";
+    
+    bertini::System sys;
+    std::string::const_iterator iter = str.begin();
+    std::string::const_iterator end = str.end();
+    bertini::SystemParser<std::string::const_iterator> S;
+    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+    auto func = sys.function();
+    auto vars = sys.variables();
+    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+    for(auto vv : vars)
+    {
+        JFunc->Eval<dbl>(vv);
+        JFunc->Eval<mpfr>(vv);
+    }
+}
 
 
 

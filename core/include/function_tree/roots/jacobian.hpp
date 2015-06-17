@@ -54,7 +54,7 @@ namespace bertini {
         }
         
         
-        
+       
         
         
         
@@ -64,27 +64,6 @@ namespace bertini {
         
         
         
-    private:
-        
-        /**
-         Calls FreshEval on the entry node to the tree.
-         */
-        virtual dbl FreshEval(dbl d)
-        {
-            return entry_node_->Eval<dbl>();
-        }
-        
-        /**
-         Calls FreshEval on the entry node to the tree.
-         */
-        virtual mpfr FreshEval(mpfr m)
-        {
-            return entry_node_->Eval<mpfr>();
-        }
-        
-        
-        
-        std::shared_ptr<Node> entry_node_; ///< The top node for the function.
     };
     
     

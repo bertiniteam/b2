@@ -123,7 +123,7 @@ namespace bertini {
         /**
          Return SumOperator whose children are derivatives of children_
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
             for (int ii = 0; ii < children_.size(); ++ii)
@@ -177,7 +177,46 @@ namespace bertini {
 			return retval;
 		}
 		
-		
+
+        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            dbl retval{0};
+            for(int ii = 0; ii < children_.size(); ++ii)
+            {
+                if(children_sign_[ii])
+                {
+                    retval += children_[ii]->Eval<dbl>(diff_variable);
+                }
+                else
+                {
+                    retval -= children_[ii]->Eval<dbl>(diff_variable);
+                }
+            }
+            
+            return retval;
+        }
+        
+        
+        
+        
+        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            mpfr retval{0};
+            for(int ii = 0; ii < children_.size(); ++ii)
+            {
+                if(children_sign_[ii])
+                {
+                    retval += children_[ii]->Eval<mpfr>(diff_variable);
+                }
+                else
+                {
+                    retval -= children_[ii]->Eval<mpfr>(diff_variable);
+                }
+            }
+            
+            return retval;
+        }
+
         
         
 

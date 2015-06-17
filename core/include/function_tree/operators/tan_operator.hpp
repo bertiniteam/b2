@@ -61,7 +61,7 @@ namespace bertini {
         /**
          Differentiates the tangent function.
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             auto ret_mult = std::make_shared<MultOperator>();
             ret_mult->AddChild(child_->Differentiate());
@@ -84,6 +84,18 @@ namespace bertini {
 		{
 			return tan(child_->Eval<mpfr>());
 		}
+        
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return tan(child_->Eval<dbl>(diff_variable));
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return tan(child_->Eval<mpfr>(diff_variable));
+        }
+
 	};
 	
 	

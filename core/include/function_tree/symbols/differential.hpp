@@ -24,7 +24,9 @@
 #define b2Test_Differential_h
 
 
+#include "function_tree/node.hpp"
 #include "function_tree/symbols/symbol.hpp"
+#include "function_tree/symbols/variable.hpp"
 
 
 namespace bertini {
@@ -46,7 +48,7 @@ namespace bertini {
         Differential(std::shared_ptr<Variable> diff_variable)
         {
             differential_variable_ = diff_variable;
-            name("d" + diff_variable.name());
+//            name("d" + diff_variable->name());
         }
         
         
@@ -58,7 +60,7 @@ namespace bertini {
         
         virtual void print(std::ostream & target) const override
         {
-            target << std::get< std::pair<mpfr,bool> >(current_value_).first;
+            target << "d";
         }
         
         virtual void Reset() override
@@ -70,7 +72,7 @@ namespace bertini {
         /**
          Differentiates a number.  Should this return the special number Zero?
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             return std::make_shared<Number>(0.0);
         }
@@ -92,6 +94,32 @@ namespace bertini {
             return std::get< std::pair<mpfr,bool> >(current_value_).first;
         }
         
+        
+        // This should never be called for a Differential.  Only for Jacobians.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            if(differential_variable_ == diff_variable)
+            {
+                return 1.0;
+            }
+            else
+            {
+                return 0.0;
+            }
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            if(differential_variable_ == diff_variable)
+            {
+                return mpfr("1.0");
+            }
+            else
+            {
+                return mpfr("0.0");
+            }
+        }
+
         
     private:
         std::shared_ptr<Variable> differential_variable_;

@@ -133,7 +133,7 @@ namespace bertini {
         /** 
          Calls Differentiate on the entry node and returns differentiated entry node.
          */
-        std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             return entry_node_->Differentiate();
         }
@@ -146,7 +146,7 @@ namespace bertini {
 		}
 		////////////// TESTING /////////////////
 		
-	private:
+	protected:
 		
 		/**
 		 Calls FreshEval on the entry node to the tree.
@@ -164,6 +164,23 @@ namespace bertini {
 			return entry_node_->Eval<mpfr>();
 		}
 		
+        
+        /**
+         Calls FreshEval on the entry node to the tree.
+         */
+        virtual dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable)
+        {
+            return entry_node_->Eval<dbl>(diff_variable);
+        }
+        
+        /**
+         Calls FreshEval on the entry node to the tree.
+         */
+        virtual mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable)
+        {
+            return entry_node_->Eval<mpfr>(diff_variable);
+        }
+
 		
 		
 		std::shared_ptr<Node> entry_node_; ///< The top node for the function.
