@@ -131,8 +131,7 @@ namespace bertini {
         
         
         /** 
-         Calls Differentiate on the entry node and creates a new Function with the result as
-         the entry node.
+         Calls Differentiate on the entry node and returns differentiated entry node.
          */
         std::shared_ptr<Node> Differentiate() const override
         {

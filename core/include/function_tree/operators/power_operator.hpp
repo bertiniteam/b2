@@ -16,7 +16,7 @@
 //  Daniel A Brake
 //
 //
-// sum_operator.hpp:  Declares the class SumOperator.
+// power_operator.hpp:  Declares the class PowerOperator.
 
 
 
@@ -25,12 +25,13 @@
 
 #include <cmath>
 #include "function_tree/operators/binary_operator.hpp"
-#include "function_tree/operators/sum_operator.hpp"
 #include "function_tree/operators/mult_operator.hpp"
+
 #include "function_tree/symbols/number.hpp"
 
 
 namespace bertini {
+    
 	class PowerOperator : public virtual BinaryOperator
 	{
 		
@@ -82,6 +83,10 @@ namespace bertini {
         virtual std::shared_ptr<Node> Differentiate() const override
         {
             auto ret_mult = std::make_shared<MultOperator>();
+            auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, std::make_shared<Number>("1.0"),false);
+            ret_mult->AddChild(base_->Differentiate());
+            ret_mult->AddChild(exponent_);
+            ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
             return ret_mult;
         }
 
