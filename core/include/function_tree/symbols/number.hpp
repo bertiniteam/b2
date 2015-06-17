@@ -90,7 +90,7 @@ namespace bertini {
         /**
          Differentiates a number.  Should this return the special number Zero?
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             return std::make_shared<Number>(0.0);
         }
@@ -111,6 +111,18 @@ namespace bertini {
 		{
 			return std::get< std::pair<mpfr,bool> >(current_value_).first;
 		}
+        
+        // Return value of constant
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<dbl,bool> >(current_value_).first;
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<mpfr,bool> >(current_value_).first;
+        }
+
 	};
 	
 	

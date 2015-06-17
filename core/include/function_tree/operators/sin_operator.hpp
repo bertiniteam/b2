@@ -64,7 +64,7 @@ namespace bertini {
         /**
          Differentiates the sine function.
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             auto ret_mult = std::make_shared<MultOperator>();
             auto cos_op = std::make_shared<CosOperator>(child_);
@@ -87,6 +87,18 @@ namespace bertini {
         {
             return sin(child_->Eval<mpfr>());
         }
+        
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return sin(child_->Eval<dbl>(diff_variable));
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return sin(child_->Eval<mpfr>(diff_variable));
+        }
+
     };
     
 

@@ -426,6 +426,11 @@ namespace bertini {
         {
             return functions_[0];
         }
+        
+        auto variables()
+        {
+            return variables_;
+        }
 		/////////////// TESTING ////////////////////
 		
 	private:

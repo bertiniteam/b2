@@ -61,7 +61,7 @@ namespace bertini {
         /**
          Differentiates the exponential function.
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             auto ret_mult = std::make_shared<MultOperator>();
             ret_mult->AddChild(std::make_shared<ExpOperator>(child_));
@@ -83,6 +83,18 @@ namespace bertini {
 		{
 			return exp(child_->Eval<mpfr>());
 		}
+        
+        // Specific implementation of FreshEval for exponentiate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return exp(child_->Eval<dbl>(diff_variable));
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return exp(child_->Eval<mpfr>(diff_variable));
+        }
+
 	};
 
 	

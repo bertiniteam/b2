@@ -80,7 +80,7 @@ namespace bertini {
         /**
          Differentiates with the power rule.
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             auto ret_mult = std::make_shared<MultOperator>();
             auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, std::make_shared<Number>("1.0"),false);
@@ -136,7 +136,19 @@ namespace bertini {
 		{
 			return pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
 		}
-		
+	
+        
+        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::pow( base_->Eval<dbl>(diff_variable), exponent_->Eval<dbl>());
+        }
+        
+        
+        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return pow( base_->Eval<mpfr>(diff_variable), exponent_->Eval<mpfr>());
+        }
+
 	private:
 		
 		std::shared_ptr<Node> base_;

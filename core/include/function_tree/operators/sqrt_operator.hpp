@@ -60,7 +60,7 @@ namespace bertini {
         /**
          Differentiates the square root function.
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
             auto ret_mult = std::make_shared<MultOperator>();
             ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Number>(-0.5)));
@@ -83,6 +83,18 @@ namespace bertini {
 		{
 			return sqrt(child_->Eval<mpfr>());
 		}
+        
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return sqrt(child_->Eval<dbl>(diff_variable));
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return sqrt(child_->Eval<mpfr>(diff_variable));
+        }
+
 	};
 	
 	

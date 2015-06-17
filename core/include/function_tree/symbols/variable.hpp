@@ -24,6 +24,7 @@
 #define b2Test_Variable_h
 
 #include "function_tree/symbols/symbol.hpp"
+#include "function_tree/symbols/differential.hpp"
 
 
 
@@ -32,7 +33,7 @@ namespace  bertini {
 	// Node -> Symbol -> Variable
 	// Description: This class represents variable leaves in the function tree.  FreshEval returns
 	// the current value of the variable.
-	class Variable : public virtual NamedSymbol
+    class Variable : public virtual NamedSymbol, public std::enable_shared_from_this<Variable>
 	{
 	public:
 		Variable(){};
@@ -63,9 +64,9 @@ namespace  bertini {
         /**
          Differentiates a variable.  Still needs to be implemented.
          */
-        virtual std::shared_ptr<Node> Differentiate() const override
+        virtual std::shared_ptr<Node> Differentiate() override
         {
-            return std::make_shared<Variable>(name());
+            return std::make_shared<Differential>(shared_from_this());
         }
 		
 		
@@ -84,6 +85,18 @@ namespace  bertini {
 			return std::get< std::pair<mpfr,bool> >(current_value_).first;
 		}
 		
+        
+        // Return current value of the variable.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<dbl,bool> >(current_value_).first;
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<mpfr,bool> >(current_value_).first;
+        }
+
 	};
 	
 	
