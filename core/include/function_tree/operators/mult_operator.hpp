@@ -26,7 +26,6 @@
 #include "function_tree/node.hpp"
 #include "function_tree/operators/nary_operator.hpp"
 #include "function_tree/operators/sum_operator.hpp"
-#include "function_tree/operators/power_operator.hpp"
 
 
 namespace bertini {
@@ -124,8 +123,8 @@ namespace bertini {
                 }
                 if ( !(children_mult_or_div_[ii]) )
                 {
-                    auto exp_minus_two = std::make_shared<PowerOperator>(children_[ii], std::make_shared<Number>("2.0"));
-                    term_ii->AddChild(exp_minus_two);
+                    term_ii->AddChild(children_[ii],false);
+                    term_ii->AddChild(children_[ii],false);
                     term_ii->AddChild(children_[ii]->Differentiate());
                     ret_sum->AddChild(term_ii,false);
                 }
