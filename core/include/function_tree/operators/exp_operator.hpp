@@ -74,15 +74,15 @@ namespace bertini {
 		
 	protected:
 		// Specific implementation of FreshEval for exponentiate.
-		dbl FreshEval(dbl) override
-		{
-			return exp(child_->Eval<dbl>());
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return exp(child_->Eval<mpfr>());
-		}
+//		dbl FreshEval(dbl) override
+//		{
+//			return exp(child_->Eval<dbl>());
+//		}
+//		
+//		mpfr FreshEval(mpfr) override
+//		{
+//			return exp(child_->Eval<mpfr>());
+//		}
         
         // Specific implementation of FreshEval for exponentiate.
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override

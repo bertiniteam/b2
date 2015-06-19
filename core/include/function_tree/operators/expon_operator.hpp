@@ -102,15 +102,15 @@ namespace bertini {
 	protected:
 		// Specific implementation of FreshEval for exponentiate.
 		// TODO(JBC): How do we implement exp for more complicated types?
-		dbl FreshEval(dbl) override
-		{
-			return pow(child_->Eval<dbl>(), exponent_);
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return pow(child_->Eval<mpfr>(),exponent_);
-		}
+//		dbl FreshEval(dbl) override
+//		{
+//			return pow(child_->Eval<dbl>(), exponent_);
+//		}
+//		
+//		mpfr FreshEval(mpfr) override
+//		{
+//			return pow(child_->Eval<mpfr>(),exponent_);
+//		}
 	
         
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override

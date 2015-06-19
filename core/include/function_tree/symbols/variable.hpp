@@ -75,15 +75,15 @@ namespace  bertini {
 		
 	protected:
 		// Return current value of the variable.
-		dbl FreshEval(dbl) override
-		{
-			return std::get< std::pair<dbl,bool> >(current_value_).first;
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return std::get< std::pair<mpfr,bool> >(current_value_).first;
-		}
+//		dbl FreshEval(dbl) override
+//		{
+//			return std::get< std::pair<dbl,bool> >(current_value_).first;
+//		}
+//		
+//		mpfr FreshEval(mpfr) override
+//		{
+//			return std::get< std::pair<mpfr,bool> >(current_value_).first;
+//		}
 		
         
         // Return current value of the variable.

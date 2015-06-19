@@ -117,9 +117,10 @@ namespace bertini {
             for (int ii = 0; ii < children_.size(); ++ii)
             {
                 auto term_ii = std::make_shared<MultOperator>();
-                for(int jj = 0; jj < children_.size() && jj != ii; ++jj)
+                for(int jj = 0; jj < children_.size(); ++jj)
                 {
-                    term_ii->AddChild(children_[jj],children_mult_or_div_[ii]);
+                    if(jj != ii)
+                        term_ii->AddChild(children_[jj],children_mult_or_div_[jj]);
                 }
                 if ( !(children_mult_or_div_[ii]) )
                 {
@@ -145,44 +146,44 @@ namespace bertini {
 	protected:
 		// Specific implementation of FreshEval for mult and divide.
 		//  If child_mult_ = true, then multiply, else divide
-		virtual dbl FreshEval(dbl) override
-		{
-			dbl retval{1};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_mult_or_div_[ii])
-				{
-					retval *= children_[ii]->Eval<dbl>();
-				}
-				else
-				{
-					retval /= children_[ii]->Eval<dbl>();
-				}
-			}
-			
-			return retval;
-		}
-		
-		
-		
-		
-		virtual mpfr FreshEval(mpfr) override
-		{
-			mpfr retval{1};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_mult_or_div_[ii])
-				{
-					retval *= children_[ii]->Eval<mpfr>();
-				}
-				else
-				{
-					retval /= children_[ii]->Eval<mpfr>();
-				}
-			}
-			
-			return retval;
-		}
+//		virtual dbl FreshEval(dbl) override
+//		{
+//			dbl retval{1};
+//			for(int ii = 0; ii < children_.size(); ++ii)
+//			{
+//				if(children_mult_or_div_[ii])
+//				{
+//					retval *= children_[ii]->Eval<dbl>();
+//				}
+//				else
+//				{
+//					retval /= children_[ii]->Eval<dbl>();
+//				}
+//			}
+//			
+//			return retval;
+//		}
+//		
+//		
+//		
+//		
+//		virtual mpfr FreshEval(mpfr) override
+//		{
+//			mpfr retval{1};
+//			for(int ii = 0; ii < children_.size(); ++ii)
+//			{
+//				if(children_mult_or_div_[ii])
+//				{
+//					retval *= children_[ii]->Eval<mpfr>();
+//				}
+//				else
+//				{
+//					retval /= children_[ii]->Eval<mpfr>();
+//				}
+//			}
+//			
+//			return retval;
+//		}
 	
         
         virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override

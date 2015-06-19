@@ -69,15 +69,15 @@ namespace bertini {
 		
 	protected:
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl) override
-		{
-			return cos(child_->Eval<dbl>());
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return cos(child_->Eval<mpfr>());
-		}
+//		dbl FreshEval(dbl) override
+//		{
+//			return cos(child_->Eval<dbl>());
+//		}
+//		
+//		mpfr FreshEval(mpfr) override
+//		{
+//			return cos(child_->Eval<mpfr>());
+//		}
         
         // Specific implementation of FreshEval for negate.
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override

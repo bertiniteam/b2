@@ -84,7 +84,7 @@ public:
     //
     // Template type is type of value you want returned.
     template<typename T>
-    T Eval()
+    T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
     {
 		
 //		this->print(std::cout);
@@ -95,7 +95,7 @@ public:
         {
 //            std::cout << "Fresh Eval\n";
             T input{};
-            val_pair.first = FreshEval(input);
+            val_pair.first = FreshEval(input, diff_variable);
             val_pair.second = true;
         }
  
@@ -110,26 +110,26 @@ public:
      
      Template type is type of value you want returned.
      */
-    template<typename T>
-    T Eval(std::shared_ptr<Variable> diff_variable)
-    {
-        
-        //		this->print(std::cout);
-        //		std::cout << " has value ";
-        
-        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-        if(!val_pair.second)
-        {
-            //            std::cout << "Fresh Eval\n";
-            T input{};
-            val_pair.first = FreshEval(input, diff_variable);
-            val_pair.second = true;
-        }
-        
-        
-        //		std::cout << val_pair.first << std::endl;
-        return val_pair.first;
-    }
+//    template<typename T>
+//    T Eval(std::shared_ptr<Variable> diff_variable)
+//    {
+//        
+//        //		this->print(std::cout);
+//        //		std::cout << " has value ";
+//        
+//        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+//        if(!val_pair.second)
+//        {
+//            //            std::cout << "Fresh Eval\n";
+//            T input{};
+//            val_pair.first = FreshEval(input, diff_variable);
+//            val_pair.second = true;
+//        }
+//        
+//        
+//        //		std::cout << val_pair.first << std::endl;
+//        return val_pair.first;
+//    }
 	
     
 
@@ -164,8 +164,8 @@ protected:
     
     
     ///////// PRIVATE PURE METHODS /////////////////
-    virtual dbl FreshEval(dbl) = 0;
-    virtual mpfr FreshEval(mpfr) = 0;
+//    virtual dbl FreshEval(dbl) = 0;
+//    virtual mpfr FreshEval(mpfr) = 0;
     
     virtual dbl FreshEval(dbl, std::shared_ptr<Variable>) = 0;
     virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable>) = 0;
