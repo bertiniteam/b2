@@ -56,7 +56,7 @@ int Node::tabcount = 0;
 double threshold_clearance_d = 1e-10;
 
 unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS = 30;
-double threshold_clearance_mp = 1e-27;
+double threshold_clearance_mp = 1e-25;
 
 std::string xstr_real = "3.1";
 std::string xstr_imag = "4.1";
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
     for(auto vv : vars)
     {
-        JFunc->Eval<dbl>(vv);
-        JFunc->Eval<mpfr>(vv);
+        JFunc->EvalJ<dbl>(vv);
+        JFunc->EvalJ<mpfr>(vv);
     }
 }
 
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
     using mpfr_float = boost::multiprecision::mpfr_float;
     boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
     
-    std::string str = "function f; variable_group x,y,z; f = 3*x;";
+    std::string str = "function f; variable_group x,y,z; f = 3*x*y*z;";
     
     bertini::System sys;
     std::string::const_iterator iter = str.begin();
@@ -134,16 +134,25 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
     
-    std::vector<dbl> exact_dbl = {3.0, 3.0, 3.0};
-    std::vector<mpfr> exact_mpfr = {mpfr("3.0"),mpfr("3.0"),mpfr("3.0")};
+    std::vector<dbl> exact_dbl = {3.0*ynum_dbl*znum_dbl, 3.0*xnum_dbl*znum_dbl, 3.0*ynum_dbl*xnum_dbl};
+    std::vector<mpfr> exact_mpfr = {mpfr("3.0")*ynum_mpfr*znum_mpfr,mpfr("3.0")*xnum_mpfr*znum_mpfr,mpfr("3.0")*ynum_mpfr*xnum_mpfr};
 
-    for(int ii = 0; ii < vars.size(); ++ii)
-    {
-        BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[ii]).real() - exact_dbl[ii].real() ) < threshold_clearance_d);
-        BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[ii]).imag() - exact_dbl[ii].imag()) < threshold_clearance_d);
-        BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[ii]).real() - exact_mpfr[ii].real() ) < threshold_clearance_mp);
-        BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[ii]).imag() - exact_mpfr[ii].imag() ) < threshold_clearance_mp);
-    }
+    std::cout <<JFunc->EvalJ<dbl>(vars[0]).real() << std::endl;
+    
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).real() - exact_dbl[0].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).imag() - exact_dbl[0].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).real() - exact_mpfr[0].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).imag() - exact_mpfr[0].imag() ) < threshold_clearance_mp);
+    
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).real() - exact_dbl[1].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).imag() - exact_dbl[1].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).real() - exact_mpfr[1].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).imag() - exact_mpfr[1].imag() ) < threshold_clearance_mp);
+    
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).real() - exact_dbl[2].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).imag() - exact_dbl[2].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() - exact_mpfr[2].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() - exact_mpfr[2].imag() ) < threshold_clearance_mp);
 }
 
 
@@ -173,10 +182,10 @@ BOOST_AUTO_TEST_CASE(diff_constant){
     
     for(int ii = 0; ii < vars.size(); ++ii)
     {
-        BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[ii]).real() - exact_dbl[ii].real() ) < threshold_clearance_d);
-        BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[ii]).imag() - exact_dbl[ii].imag()) < threshold_clearance_d);
-        BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[ii]).real() - exact_mpfr[ii].real() ) < threshold_clearance_mp);
-        BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[ii]).imag() - exact_mpfr[ii].imag() ) < threshold_clearance_mp);
+        BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[ii]).real() - exact_dbl[ii].real() ) < threshold_clearance_d);
+        BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[ii]).imag() - exact_dbl[ii].imag()) < threshold_clearance_d);
+        BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[ii]).real() - exact_mpfr[ii].real() ) < threshold_clearance_mp);
+        BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[ii]).imag() - exact_mpfr[ii].imag() ) < threshold_clearance_mp);
     }
 }
 
@@ -185,7 +194,7 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
     using mpfr_float = boost::multiprecision::mpfr_float;
     boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
     
-    std::string str = "function f; variable_group x,y,z; f = x-y;";
+    std::string str = "function f; variable_group x,y,z; f = x-y+z-4.5+i*7.3;";
     
     bertini::System sys;
     std::string::const_iterator iter = str.begin();
@@ -205,46 +214,65 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
     std::vector<dbl> exact_dbl = {1.0, -1.0, 1.0};
     std::vector<mpfr> exact_mpfr = {mpfr("1.0"),mpfr("-1.0"),mpfr("1.0")};
     
-    BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[0]).real() - exact_dbl[0].real() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[0]).imag() - exact_dbl[0].imag()) < threshold_clearance_d);
-    BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[0]).real() - exact_mpfr[0].real() ) < threshold_clearance_mp);
-    BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[0]).imag() - exact_mpfr[0].imag() ) < threshold_clearance_mp);
-//    if(fabs(JFunc->Eval<dbl>(vars[1]).real() - exact_dbl[1].real() ) < threshold_clearance_d)
-        std::cout << JFunc->Eval<dbl>(vars[1]).real() << std::endl;
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).real() - exact_dbl[0].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).imag() - exact_dbl[0].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).real() - exact_mpfr[0].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).imag() - exact_mpfr[0].imag() ) < threshold_clearance_mp);
 
-    BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[1]).real() - exact_dbl[1].real() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[1]).imag() - exact_dbl[1].imag()) < threshold_clearance_d);
-    BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[1]).real() - exact_mpfr[1].real() ) < threshold_clearance_mp);
-    BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[1]).imag() - exact_mpfr[1].imag() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).real() - exact_dbl[1].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).imag() - exact_dbl[1].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).real() - exact_mpfr[1].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).imag() - exact_mpfr[1].imag() ) < threshold_clearance_mp);
 
-    
-    BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[2]).real() - exact_dbl[2].real() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(JFunc->Eval<dbl>(vars[2]).imag() - exact_dbl[2].imag()) < threshold_clearance_d);
-    BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[2]).real() - exact_mpfr[2].real() ) < threshold_clearance_mp);
-    BOOST_CHECK(fabs(JFunc->Eval<mpfr>(vars[2]).imag() - exact_mpfr[2].imag() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).real() - exact_dbl[2].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).imag() - exact_dbl[2].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() - exact_mpfr[2].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() - exact_mpfr[2].imag() ) < threshold_clearance_mp);
 
 }
-//
-//
-//BOOST_AUTO_TEST_CASE(diff_x_squared_times_y_cubed){
-//    std::string str = "function f; variable_group x,y,z; f = x*y +y^2 - z*x + 9;";
-//    
-//    bertini::System sys;
-//    std::string::const_iterator iter = str.begin();
-//    std::string::const_iterator end = str.end();
-//    bertini::SystemParser<std::string::const_iterator> S;
-//    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
-//    auto func = sys.function();
-//    auto vars = sys.variables();
-//    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
-//    for(auto vv : vars)
-//    {
-//        JFunc->Eval<dbl>(vv);
-//        JFunc->Eval<mpfr>(vv);
-//    }
-//}
-//
-//
+
+
+BOOST_AUTO_TEST_CASE(diff_x_squared_times_y_cubed){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
+    
+    std::string str = "function f; variable_group x,y,z; f = (x^2)*(y^3);";
+    
+    bertini::System sys;
+    std::string::const_iterator iter = str.begin();
+    std::string::const_iterator end = str.end();
+    bertini::SystemParser<std::string::const_iterator> S;
+    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+    
+    var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
+    var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
+    sys.SetVariables<dbl>(var_dbl);
+    sys.SetVariables<mpfr>(var_mpfr);
+    
+    auto func = sys.function();
+    auto vars = sys.variables();
+    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+    
+    std::vector<dbl> exact_dbl = {2.0*xnum_dbl*pow(ynum_dbl,3.0), 3.0*pow(ynum_dbl*xnum_dbl,2.0), 0.0};
+    std::vector<mpfr> exact_mpfr = {mpfr("2.0")*xnum_mpfr*pow(ynum_mpfr,3.0),mpfr("3.0")*pow(ynum_mpfr*xnum_mpfr,2.0),mpfr("0.0")};
+    
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).real() - exact_dbl[0].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).imag() - exact_dbl[0].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).real() - exact_mpfr[0].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).imag() - exact_mpfr[0].imag() ) < threshold_clearance_mp);
+    
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).real() - exact_dbl[1].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).imag() - exact_dbl[1].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).real() - exact_mpfr[1].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).imag() - exact_mpfr[1].imag() ) < threshold_clearance_mp);
+    
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).real() - exact_dbl[2].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).imag() - exact_dbl[2].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() - exact_mpfr[2].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() - exact_mpfr[2].imag() ) < threshold_clearance_mp);
+}
+
+
 //BOOST_AUTO_TEST_CASE(diff_x_pow_num1_times_y_pow_num2){
 //    std::string str = "function f; variable_group x,y,z; f = x*y +y^2 - z*x + 9;";
 //    
