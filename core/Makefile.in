@@ -143,7 +143,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 =
 am__objects_2 =  \
-	src/test/classes/b2_class_test-function_tree_test.$(OBJEXT)
+	src/test/classes/b2_class_test-function_tree_test.$(OBJEXT) \
+	include/function_tree/operators/b2_class_test-cos_operator.$(OBJEXT)
 am_b2_class_test_OBJECTS =  \
 	src/test/classes/b2_class_test-class_test.$(OBJEXT) \
 	src/test/classes/b2_class_test-eigen_test.$(OBJEXT) \
@@ -478,9 +479,11 @@ function_tree_header_files = \
 	include/function_tree/operators/exp_operator.h \
 	include/function_tree/symbols/symbol.h \
 	include/function_tree/symbols/variable.h \
+	include/function_tree/symbols/differential.h \
+	include/function_tree/symbols/special_number.h \
 	include/function_tree/symbols/number.h \
 	include/function_tree/roots/function.h \
-	include/function_parsing.h
+	include/function_tree/roots/jacobian.hpp
 
 bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp \
 	include/mpfr_complex.hpp \
@@ -490,7 +493,9 @@ bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp \
 
 bertini2_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
 bertini2_CXXFLAGS = $(BOOST_CPPFLAGS)
-function_tree_test_source_files = src/test/classes/function_tree_test.cpp
+function_tree_test_source_files = src/test/classes/function_tree_test.cpp \
+include/function_tree/operators/cos_operator.cpp
+
 
 #$(function_tree_test_source_files) is defined in the bertini/Makemodule.am file.
 b2_class_test_SOURCES = src/test/classes/class_test.cpp \
@@ -647,6 +652,15 @@ src/bertini/b2_class_test-mpfr_extensions.$(OBJEXT):  \
 src/test/classes/b2_class_test-function_tree_test.$(OBJEXT):  \
 	src/test/classes/$(am__dirstamp) \
 	src/test/classes/$(DEPDIR)/$(am__dirstamp)
+include/function_tree/operators/$(am__dirstamp):
+	@$(MKDIR_P) include/function_tree/operators
+	@: > include/function_tree/operators/$(am__dirstamp)
+include/function_tree/operators/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) include/function_tree/operators/$(DEPDIR)
+	@: > include/function_tree/operators/$(DEPDIR)/$(am__dirstamp)
+include/function_tree/operators/b2_class_test-cos_operator.$(OBJEXT):  \
+	include/function_tree/operators/$(am__dirstamp) \
+	include/function_tree/operators/$(DEPDIR)/$(am__dirstamp)
 src/test/classes/b2_class_test-system_test.$(OBJEXT):  \
 	src/test/classes/$(am__dirstamp) \
 	src/test/classes/$(DEPDIR)/$(am__dirstamp)
@@ -679,6 +693,7 @@ test_tree_interactive$(EXEEXT): $(test_tree_interactive_OBJECTS) $(test_tree_int
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f include/function_tree/operators/*.$(OBJEXT)
 	-rm -f src/bertini/*.$(OBJEXT)
 	-rm -f src/test/classes/*.$(OBJEXT)
 	-rm -f src/test/interactive_testing/*.$(OBJEXT)
@@ -686,6 +701,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@include/function_tree/operators/$(DEPDIR)/b2_class_test-cos_operator.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/bertini/$(DEPDIR)/b2_class_test-mpfr_extensions.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/bertini/$(DEPDIR)/bertini2-bertini.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/bertini/$(DEPDIR)/bertini2-mpfr_extensions.Po@am__quote@
@@ -789,6 +805,20 @@ src/test/classes/b2_class_test-function_tree_test.obj: src/test/classes/function
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/test/classes/function_tree_test.cpp' object='src/test/classes/b2_class_test-function_tree_test.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o src/test/classes/b2_class_test-function_tree_test.obj `if test -f 'src/test/classes/function_tree_test.cpp'; then $(CYGPATH_W) 'src/test/classes/function_tree_test.cpp'; else $(CYGPATH_W) '$(srcdir)/src/test/classes/function_tree_test.cpp'; fi`
+
+include/function_tree/operators/b2_class_test-cos_operator.o: include/function_tree/operators/cos_operator.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT include/function_tree/operators/b2_class_test-cos_operator.o -MD -MP -MF include/function_tree/operators/$(DEPDIR)/b2_class_test-cos_operator.Tpo -c -o include/function_tree/operators/b2_class_test-cos_operator.o `test -f 'include/function_tree/operators/cos_operator.cpp' || echo '$(srcdir)/'`include/function_tree/operators/cos_operator.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) include/function_tree/operators/$(DEPDIR)/b2_class_test-cos_operator.Tpo include/function_tree/operators/$(DEPDIR)/b2_class_test-cos_operator.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='include/function_tree/operators/cos_operator.cpp' object='include/function_tree/operators/b2_class_test-cos_operator.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o include/function_tree/operators/b2_class_test-cos_operator.o `test -f 'include/function_tree/operators/cos_operator.cpp' || echo '$(srcdir)/'`include/function_tree/operators/cos_operator.cpp
+
+include/function_tree/operators/b2_class_test-cos_operator.obj: include/function_tree/operators/cos_operator.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT include/function_tree/operators/b2_class_test-cos_operator.obj -MD -MP -MF include/function_tree/operators/$(DEPDIR)/b2_class_test-cos_operator.Tpo -c -o include/function_tree/operators/b2_class_test-cos_operator.obj `if test -f 'include/function_tree/operators/cos_operator.cpp'; then $(CYGPATH_W) 'include/function_tree/operators/cos_operator.cpp'; else $(CYGPATH_W) '$(srcdir)/include/function_tree/operators/cos_operator.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) include/function_tree/operators/$(DEPDIR)/b2_class_test-cos_operator.Tpo include/function_tree/operators/$(DEPDIR)/b2_class_test-cos_operator.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='include/function_tree/operators/cos_operator.cpp' object='include/function_tree/operators/b2_class_test-cos_operator.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -c -o include/function_tree/operators/b2_class_test-cos_operator.obj `if test -f 'include/function_tree/operators/cos_operator.cpp'; then $(CYGPATH_W) 'include/function_tree/operators/cos_operator.cpp'; else $(CYGPATH_W) '$(srcdir)/include/function_tree/operators/cos_operator.cpp'; fi`
 
 src/test/classes/b2_class_test-system_test.o: src/test/classes/system_test.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(b2_class_test_CXXFLAGS) $(CXXFLAGS) -MT src/test/classes/b2_class_test-system_test.o -MD -MP -MF src/test/classes/$(DEPDIR)/b2_class_test-system_test.Tpo -c -o src/test/classes/b2_class_test-system_test.o `test -f 'src/test/classes/system_test.cpp' || echo '$(srcdir)/'`src/test/classes/system_test.cpp
@@ -1120,6 +1150,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f include/function_tree/operators/$(DEPDIR)/$(am__dirstamp)
+	-rm -f include/function_tree/operators/$(am__dirstamp)
 	-rm -f src/bertini/$(DEPDIR)/$(am__dirstamp)
 	-rm -f src/bertini/$(am__dirstamp)
 	-rm -f src/test/classes/$(DEPDIR)/$(am__dirstamp)
@@ -1138,7 +1170,7 @@ clean-am: clean-binPROGRAMS clean-generic clean-libtool \
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf src/bertini/$(DEPDIR) src/test/classes/$(DEPDIR) src/test/interactive_testing/$(DEPDIR)
+	-rm -rf include/function_tree/operators/$(DEPDIR) src/bertini/$(DEPDIR) src/test/classes/$(DEPDIR) src/test/interactive_testing/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -1186,7 +1218,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf src/bertini/$(DEPDIR) src/test/classes/$(DEPDIR) src/test/interactive_testing/$(DEPDIR)
+	-rm -rf include/function_tree/operators/$(DEPDIR) src/bertini/$(DEPDIR) src/test/classes/$(DEPDIR) src/test/interactive_testing/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1228,6 +1260,8 @@ uninstall-am: uninstall-binPROGRAMS uninstall-includeHEADERS
 
 .PRECIOUS: Makefile
 
+	include/function_parsing.h
+	src/test/classes/differentiate_test.cpp
 
 #test_tree_interactive_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  \
 #	$(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) \
