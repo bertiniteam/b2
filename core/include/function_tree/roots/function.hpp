@@ -168,7 +168,7 @@ namespace bertini {
         /**
          Calls FreshEval on the entry node to the tree.
          */
-        virtual dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable)
+        virtual dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
         {
             return entry_node_->Eval<dbl>(diff_variable);
         }
@@ -176,7 +176,7 @@ namespace bertini {
         /**
          Calls FreshEval on the entry node to the tree.
          */
-        virtual mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable)
+        virtual mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
         {
             return entry_node_->Eval<mpfr>(diff_variable);
         }

@@ -63,10 +63,6 @@ namespace bertini {
             target << "d";
         }
         
-        virtual void Reset() override
-        {
-            // nothing to reset here
-        }
         
         
         /**
