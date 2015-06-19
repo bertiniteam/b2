@@ -126,16 +126,16 @@ namespace bertini {
 		
 	protected:
 		
-		virtual dbl FreshEval(dbl) override
-		{
-			return std::pow( base_->Eval<dbl>(), exponent_->Eval<dbl>());
-		}
-		
-		
-		virtual mpfr FreshEval(mpfr) override
-		{
-			return pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
-		}
+//		virtual dbl FreshEval(dbl) override
+//		{
+//			return std::pow( base_->Eval<dbl>(), exponent_->Eval<dbl>());
+//		}
+//		
+//		
+//		virtual mpfr FreshEval(mpfr) override
+//		{
+//			return pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
+//		}
 	
         
         virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override

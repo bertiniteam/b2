@@ -138,44 +138,44 @@ namespace bertini {
 	protected:
 		// Specific implementation of FreshEval for add and subtract.
 		//  If child_sign_ = true, then add, else subtract
-		virtual dbl FreshEval(dbl) override
-		{
-			dbl retval{0};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_sign_[ii])
-				{
-					retval += children_[ii]->Eval<dbl>();
-				}
-				else
-				{
-					retval -= children_[ii]->Eval<dbl>();
-				}
-			}
-			
-			return retval;
-		}
-		
-		
-		
-		
-		virtual mpfr FreshEval(mpfr) override
-		{
-			mpfr retval{0};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_sign_[ii])
-				{
-					retval += children_[ii]->Eval<mpfr>();
-				}
-				else
-				{
-					retval -= children_[ii]->Eval<mpfr>();
-				}
-			}
-			
-			return retval;
-		}
+//		virtual dbl FreshEval(dbl) override
+//		{
+//			dbl retval{0};
+//			for(int ii = 0; ii < children_.size(); ++ii)
+//			{
+//				if(children_sign_[ii])
+//				{
+//					retval += children_[ii]->Eval<dbl>();
+//				}
+//				else
+//				{
+//					retval -= children_[ii]->Eval<dbl>();
+//				}
+//			}
+//			
+//			return retval;
+//		}
+//		
+//		
+//		
+//		
+//		virtual mpfr FreshEval(mpfr) override
+//		{
+//			mpfr retval{0};
+//			for(int ii = 0; ii < children_.size(); ++ii)
+//			{
+//				if(children_sign_[ii])
+//				{
+//					retval += children_[ii]->Eval<mpfr>();
+//				}
+//				else
+//				{
+//					retval -= children_[ii]->Eval<mpfr>();
+//				}
+//			}
+//			
+//			return retval;
+//		}
 		
 
         virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override

@@ -84,15 +84,15 @@ namespace bertini {
         
     protected:
         // This should never be called for a Differential.  Only for Jacobians.
-        dbl FreshEval(dbl) override
-        {
-            return std::get< std::pair<dbl,bool> >(current_value_).first;
-        }
-        
-        mpfr FreshEval(mpfr) override
-        {
-            return std::get< std::pair<mpfr,bool> >(current_value_).first;
-        }
+//        dbl FreshEval(dbl) override
+//        {
+//            return std::get< std::pair<dbl,bool> >(current_value_).first;
+//        }
+//        
+//        mpfr FreshEval(mpfr) override
+//        {
+//            return std::get< std::pair<mpfr,bool> >(current_value_).first;
+//        }
         
         
         // This should never be called for a Differential.  Only for Jacobians.

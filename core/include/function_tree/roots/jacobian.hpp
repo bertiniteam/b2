@@ -24,6 +24,7 @@
 
 
 #include "function_tree/node.hpp"
+#include "function_tree/symbols/variable.hpp"
 
 
 
@@ -63,6 +64,9 @@ namespace bertini {
         
         
         
+        
+    private:
+        std::shared_ptr<Variable> current_diff_variable = nullptr;
         
     };
     
