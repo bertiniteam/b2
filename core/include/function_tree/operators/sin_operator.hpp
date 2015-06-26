@@ -22,11 +22,16 @@
 #ifndef Function_Tree_Test_sin_operator_hpp
 #define Function_Tree_Test_sin_operator_hpp
 
-#include "function_tree/Node.hpp"
+#include "function_tree/node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/cos_operator.hpp"
+
+
 
 
 namespace bertini {
+    
+    
     
     // Node -> UnaryOperator -> SinOperator
     // Description: This class represents the sine function.  FreshEval method
@@ -54,19 +59,46 @@ namespace bertini {
             target << ")";
         }
         
+        
+        
+        /**
+         Differentiates the sine function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            auto cos_op = std::make_shared<CosOperator>(child_);
+            ret_mult->AddChild(cos_op);
+            ret_mult->AddChild(child_->Differentiate());
+            return ret_mult;
+        }
+
+        
         virtual ~SinOperator() = default;
         
     protected:
         // Specific implementation of FreshEval for negate.
-        dbl FreshEval(dbl) override
+//        dbl FreshEval(dbl) override
+//        {
+//            return sin(child_->Eval<dbl>());
+//        }
+//        
+//        mpfr FreshEval(mpfr) override
+//        {
+//            return sin(child_->Eval<mpfr>());
+//        }
+        
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
         {
-            return sin(child_->Eval<dbl>());
+            return sin(child_->Eval<dbl>(diff_variable));
         }
         
-        mpfr FreshEval(mpfr) override
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
         {
-            return sin(child_->Eval<mpfr>());
+            return sin(child_->Eval<mpfr>(diff_variable));
         }
+
     };
     
 

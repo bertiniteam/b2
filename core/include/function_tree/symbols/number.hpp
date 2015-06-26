@@ -85,6 +85,16 @@ namespace bertini {
 		{
 			// nothing to reset here
 		}
+        
+        
+        /**
+         Differentiates a number.  Should this return the special number Zero?
+         */
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            return std::make_shared<Number>(0.0);
+        }
+
 		
 		
 		virtual ~Number() = default;
@@ -92,15 +102,27 @@ namespace bertini {
 		
 	protected:
 		// Return value of constant
-		dbl FreshEval(dbl) override
-		{
-			return std::get< std::pair<dbl,bool> >(current_value_).first;
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return std::get< std::pair<mpfr,bool> >(current_value_).first;
-		}
+//		dbl FreshEval(dbl) override
+//		{
+//			return std::get< std::pair<dbl,bool> >(current_value_).first;
+//		}
+//		
+//		mpfr FreshEval(mpfr) override
+//		{
+//			return std::get< std::pair<mpfr,bool> >(current_value_).first;
+//		}
+        
+        // Return value of constant
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<dbl,bool> >(current_value_).first;
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<mpfr,bool> >(current_value_).first;
+        }
+
 	};
 	
 	

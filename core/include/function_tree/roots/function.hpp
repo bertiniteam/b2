@@ -128,6 +128,15 @@ namespace bertini {
 				throw std::runtime_error("Function node type has empty root node");
 			}
 		}
+        
+        
+        /** 
+         Calls Differentiate on the entry node and returns differentiated entry node.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            return entry_node_->Differentiate();
+        }
 		
 		
 		////////////// TESTING /////////////////
@@ -137,24 +146,41 @@ namespace bertini {
 		}
 		////////////// TESTING /////////////////
 		
-	private:
+	protected:
 		
 		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		virtual dbl FreshEval(dbl d)
-		{
-			return entry_node_->Eval<dbl>();
-		}
+//		virtual dbl FreshEval(dbl d)
+//		{
+//			return entry_node_->Eval<dbl>();
+//		}
+//		
+//		/**
+//		 Calls FreshEval on the entry node to the tree.
+//		 */
+//		virtual mpfr FreshEval(mpfr m)
+//		{
+//			return entry_node_->Eval<mpfr>();
+//		}
 		
-		/**
-		 Calls FreshEval on the entry node to the tree.
-		 */
-		virtual mpfr FreshEval(mpfr m)
-		{
-			return entry_node_->Eval<mpfr>();
-		}
-		
+        
+        /**
+         Calls FreshEval on the entry node to the tree.
+         */
+        virtual dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
+        {
+            return entry_node_->Eval<dbl>(diff_variable);
+        }
+        
+        /**
+         Calls FreshEval on the entry node to the tree.
+         */
+        virtual mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
+        {
+            return entry_node_->Eval<mpfr>(diff_variable);
+        }
+
 		
 		
 		std::shared_ptr<Node> entry_node_; ///< The top node for the function.

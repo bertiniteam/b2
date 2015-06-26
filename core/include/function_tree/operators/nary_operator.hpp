@@ -70,6 +70,10 @@ namespace bertini {
 			return children_[0];
 		}
 		
+        
+        
+        
+        
 		
 		
 		////////////// TESTING /////////////////

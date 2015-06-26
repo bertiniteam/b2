@@ -22,12 +22,15 @@
 #ifndef Function_Tree_Test_cos_operator_hpp
 #define Function_Tree_Test_cos_operator_hpp
 
-#include "function_tree/Node.hpp"
+#include "function_tree/node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/negate_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
 
-
+class SinOperator;
 namespace bertini {
 	
+    
 	// Node -> UnaryOperator -> CosOperator
 	// Description: This class represents the cosine function.  FreshEval method
 	// is defined for cosine and takes the cosine of the child node.
@@ -53,20 +56,40 @@ namespace bertini {
 			child_->print(target);
 			target << ")";
 		}
+        
+        
+        
+        /**
+         Differentiates the cosine function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override;
+
 		
 		virtual ~CosOperator() = default;
 		
 	protected:
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl) override
-		{
-			return cos(child_->Eval<dbl>());
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return cos(child_->Eval<mpfr>());
-		}
+//		dbl FreshEval(dbl) override
+//		{
+//			return cos(child_->Eval<dbl>());
+//		}
+//		
+//		mpfr FreshEval(mpfr) override
+//		{
+//			return cos(child_->Eval<mpfr>());
+//		}
+        
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return cos(child_->Eval<dbl>(diff_variable));
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return cos(child_->Eval<mpfr>(diff_variable));
+        }
+
 	};
 	
 	

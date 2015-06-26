@@ -25,6 +25,7 @@
 
 #include "function_tree/node.hpp"
 #include "function_tree/operators/nary_operator.hpp"
+#include "function_tree/operators/sum_operator.hpp"
 
 
 namespace bertini {
@@ -103,51 +104,127 @@ namespace bertini {
 			}
 			target << ")";
 		}
+        
+        
+        
+        
+        /**
+         Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
+            for (int ii = 0; ii < children_.size(); ++ii)
+            {
+                auto term_ii = std::make_shared<MultOperator>();
+                for(int jj = 0; jj < children_.size(); ++jj)
+                {
+                    if(jj != ii)
+                        term_ii->AddChild(children_[jj],children_mult_or_div_[jj]);
+                }
+                if ( !(children_mult_or_div_[ii]) )
+                {
+                    term_ii->AddChild(children_[ii],false);
+                    term_ii->AddChild(children_[ii],false);
+                    term_ii->AddChild(children_[ii]->Differentiate());
+                    ret_sum->AddChild(term_ii,false);
+                }
+                else
+                {
+                    term_ii->AddChild(children_[ii]->Differentiate(),true);
+                    ret_sum->AddChild(term_ii);
+                }
+            }
+            
+            return ret_sum;
+//            return children_[0];
+        }
+
 		
 		
 		
 	protected:
 		// Specific implementation of FreshEval for mult and divide.
 		//  If child_mult_ = true, then multiply, else divide
-		virtual dbl FreshEval(dbl) override
-		{
-			dbl retval{1};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_mult_or_div_[ii])
-				{
-					retval *= children_[ii]->Eval<dbl>();
-				}
-				else
-				{
-					retval /= children_[ii]->Eval<dbl>();
-				}
-			}
-			
-			return retval;
-		}
-		
-		
-		
-		
-		virtual mpfr FreshEval(mpfr) override
-		{
-			mpfr retval{1};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_mult_or_div_[ii])
-				{
-					retval *= children_[ii]->Eval<mpfr>();
-				}
-				else
-				{
-					retval /= children_[ii]->Eval<mpfr>();
-				}
-			}
-			
-			return retval;
-		}
-		
+//		virtual dbl FreshEval(dbl) override
+//		{
+//			dbl retval{1};
+//			for(int ii = 0; ii < children_.size(); ++ii)
+//			{
+//				if(children_mult_or_div_[ii])
+//				{
+//					retval *= children_[ii]->Eval<dbl>();
+//				}
+//				else
+//				{
+//					retval /= children_[ii]->Eval<dbl>();
+//				}
+//			}
+//			
+//			return retval;
+//		}
+//		
+//		
+//		
+//		
+//		virtual mpfr FreshEval(mpfr) override
+//		{
+//			mpfr retval{1};
+//			for(int ii = 0; ii < children_.size(); ++ii)
+//			{
+//				if(children_mult_or_div_[ii])
+//				{
+//					retval *= children_[ii]->Eval<mpfr>();
+//				}
+//				else
+//				{
+//					retval /= children_[ii]->Eval<mpfr>();
+//				}
+//			}
+//			
+//			return retval;
+//		}
+	
+        
+        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            dbl retval{1};
+            for(int ii = 0; ii < children_.size(); ++ii)
+            {
+                if(children_mult_or_div_[ii])
+                {
+                    retval *= children_[ii]->Eval<dbl>(diff_variable);
+                }
+                else
+                {
+                    retval /= children_[ii]->Eval<dbl>(diff_variable);
+                }
+            }
+            
+            return retval;
+        }
+        
+        
+        
+        
+        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            mpfr retval{1};
+            for(int ii = 0; ii < children_.size(); ++ii)
+            {
+                if(children_mult_or_div_[ii])
+                {
+                    retval *= children_[ii]->Eval<mpfr>(diff_variable);
+                }
+                else
+                {
+                    retval /= children_[ii]->Eval<mpfr>(diff_variable);
+                }
+            }
+            
+            return retval;
+        }
+
 		
 		
 		
