@@ -40,9 +40,8 @@ using mpfr = bertini::complex;
 
 
 
-
 namespace bertini {
-
+class Variable;
 
 
 // Description: An interface for all nodes in a function tree, and for a function object as well.  Almost all
@@ -85,7 +84,7 @@ public:
     //
     // Template type is type of value you want returned.
     template<typename T>
-    T Eval()
+    T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
     {
 		
 //		this->print(std::cout);
@@ -96,7 +95,7 @@ public:
         {
 //            std::cout << "Fresh Eval\n";
             T input{};
-            val_pair.first = FreshEval(input);
+            val_pair.first = FreshEval(input, diff_variable);
             val_pair.second = true;
         }
  
@@ -105,6 +104,32 @@ public:
 		return val_pair.first;
     }
 	
+    /**
+     Evaluate the jacobian with respect to a particular variable.  If flag false, just return value, if flag true
+     run the specific FreshEval of the node, then set flag to false.
+     
+     Template type is type of value you want returned.
+     */
+//    template<typename T>
+//    T Eval(std::shared_ptr<Variable> diff_variable)
+//    {
+//        
+//        //		this->print(std::cout);
+//        //		std::cout << " has value ";
+//        
+//        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+//        if(!val_pair.second)
+//        {
+//            //            std::cout << "Fresh Eval\n";
+//            T input{};
+//            val_pair.first = FreshEval(input, diff_variable);
+//            val_pair.second = true;
+//        }
+//        
+//        
+//        //		std::cout << val_pair.first << std::endl;
+//        return val_pair.first;
+//    }
 	
     
 
@@ -126,6 +151,8 @@ public:
 	
 	///////// PUBLIC PURE METHODS /////////////////
 	virtual void print(std::ostream& target) const = 0;
+    
+    virtual std::shared_ptr<Node> Differentiate() = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:
@@ -137,8 +164,11 @@ protected:
     
     
     ///////// PRIVATE PURE METHODS /////////////////
-    virtual dbl FreshEval(dbl) = 0;
-    virtual mpfr FreshEval(mpfr) = 0;
+//    virtual dbl FreshEval(dbl) = 0;
+//    virtual mpfr FreshEval(mpfr) = 0;
+    
+    virtual dbl FreshEval(dbl, std::shared_ptr<Variable>) = 0;
+    virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable>) = 0;
 	
 	
 	
