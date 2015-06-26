@@ -3,7 +3,7 @@
 EXTRA_PROGRAMS += b2_class_test
 
 function_tree_test_source_files = src/test/classes/function_tree_test.cpp \
-include/function_tree/operators/cos_operator.cpp
+src/bertini/cos_operator.cpp
 
 #$(function_tree_test_source_files) is defined in the bertini/Makemodule.am file.
 
