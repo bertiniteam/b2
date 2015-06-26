@@ -15,7 +15,7 @@ b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	$(function_tree_header_files) \
 	$(function_tree_test_source_files) \
 	system.hpp system_parsing.hpp \
-	src/test/classes/system_test.cpp
+	src/test/classes/system_test.cpp \
 	src/test/classes/differentiate_test.cpp
 
 
