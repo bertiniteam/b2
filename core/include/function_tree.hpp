@@ -49,6 +49,7 @@
 #include "function_tree/symbols/special_number.hpp"
 
 #include "function_tree/roots/function.hpp"
+#include "function_tree/roots/jacobian.hpp"
 
 #include "function_tree/function_parsing.hpp"
 

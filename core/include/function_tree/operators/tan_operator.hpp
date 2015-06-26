@@ -24,6 +24,9 @@
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
+#include "function_tree/operators/cos_operator.hpp"
+#include "function_tree/operators/power_operator.hpp"
 
 
 namespace bertini {
@@ -53,20 +56,46 @@ namespace bertini {
 			child_->print(target);
 			target << ")";
 		}
+        
+        
+        /**
+         Differentiates the tangent function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            ret_mult->AddChild(child_->Differentiate());
+            ret_mult->AddChild(std::make_shared<CosOperator>(child_),false);
+            ret_mult->AddChild(std::make_shared<CosOperator>(child_),false);
+            return ret_mult;
+        }
+
 		
 		virtual ~TanOperator() = default;
 		
 	protected:
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl) override
-		{
-			return tan(child_->Eval<dbl>());
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return tan(child_->Eval<mpfr>());
-		}
+//		dbl FreshEval(dbl) override
+//		{
+//			return tan(child_->Eval<dbl>());
+//		}
+//		
+//		mpfr FreshEval(mpfr) override
+//		{
+//			return tan(child_->Eval<mpfr>());
+//		}
+        
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return tan(child_->Eval<dbl>(diff_variable));
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return tan(child_->Eval<mpfr>(diff_variable));
+        }
+
 	};
 	
 	

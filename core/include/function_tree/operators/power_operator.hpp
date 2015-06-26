@@ -16,7 +16,7 @@
 //  Daniel A Brake
 //
 //
-// sum_operator.hpp:  Declares the class SumOperator.
+// power_operator.hpp:  Declares the class PowerOperator.
 
 
 
@@ -25,9 +25,13 @@
 
 #include <cmath>
 #include "function_tree/operators/binary_operator.hpp"
+#include "function_tree/operators/mult_operator.hpp"
+
 #include "function_tree/symbols/number.hpp"
 
+
 namespace bertini {
+    
 	class PowerOperator : public virtual BinaryOperator
 	{
 		
@@ -71,6 +75,25 @@ namespace bertini {
 			target << "(" << *base_ << ")^(" << *exponent_ << ")";
 		}
 		
+        
+        
+        /**
+         Differentiates with the power rule.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, std::make_shared<Number>("1.0"),false);
+            ret_mult->AddChild(base_->Differentiate());
+            ret_mult->AddChild(exponent_);
+            ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
+            return ret_mult;
+        }
+
+        
+        
+        
+        
 		virtual ~PowerOperator() = default;
 		
 		
@@ -103,17 +126,29 @@ namespace bertini {
 		
 	protected:
 		
-		virtual dbl FreshEval(dbl) override
-		{
-			return std::pow( base_->Eval<dbl>(), exponent_->Eval<dbl>());
-		}
-		
-		
-		virtual mpfr FreshEval(mpfr) override
-		{
-			return pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
-		}
-		
+//		virtual dbl FreshEval(dbl) override
+//		{
+//			return std::pow( base_->Eval<dbl>(), exponent_->Eval<dbl>());
+//		}
+//		
+//		
+//		virtual mpfr FreshEval(mpfr) override
+//		{
+//			return pow( base_->Eval<mpfr>(), exponent_->Eval<mpfr>());
+//		}
+	
+        
+        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::pow( base_->Eval<dbl>(diff_variable), exponent_->Eval<dbl>());
+        }
+        
+        
+        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return pow( base_->Eval<mpfr>(diff_variable), exponent_->Eval<mpfr>());
+        }
+
 	private:
 		
 		std::shared_ptr<Node> base_;

@@ -76,6 +76,16 @@ namespace bertini {
 		{
 			return exponent_;
 		}
+        
+        
+        /**
+         Differentiates a number.  Should this return the special number Zero?
+         */
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            return std::make_shared<Number>(0.0);
+        }
+
 		
 		virtual ~ExponOperator() = default;
 		
@@ -92,16 +102,27 @@ namespace bertini {
 	protected:
 		// Specific implementation of FreshEval for exponentiate.
 		// TODO(JBC): How do we implement exp for more complicated types?
-		dbl FreshEval(dbl) override
-		{
-			return pow(child_->Eval<dbl>(), exponent_);
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return pow(child_->Eval<mpfr>(),exponent_);
-		}
-		
+//		dbl FreshEval(dbl) override
+//		{
+//			return pow(child_->Eval<dbl>(), exponent_);
+//		}
+//		
+//		mpfr FreshEval(mpfr) override
+//		{
+//			return pow(child_->Eval<mpfr>(),exponent_);
+//		}
+	
+        
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return pow(child_->Eval<dbl>(diff_variable), exponent_);
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return pow(child_->Eval<mpfr>(diff_variable),exponent_);
+        }
+
 		
 		
 		
