@@ -24,8 +24,11 @@ function_tree_header_files = \
 	include/function_tree/operators/exp_operator.h \
 	include/function_tree/symbols/symbol.h \
 	include/function_tree/symbols/variable.h \
+	include/function_tree/symbols/differential.h \
+	include/function_tree/symbols/special_number.h \
 	include/function_tree/symbols/number.h \
 	include/function_tree/roots/function.h \
+	include/function_tree/roots/jacobian.hpp
 	include/function_parsing.h
 
 

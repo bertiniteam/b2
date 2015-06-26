@@ -414,7 +414,24 @@ namespace bertini {
 			
 			return out;
 		}
-		
+        
+        
+        
+        
+        
+        
+        
+        /////////////// TESTING ////////////////////
+        auto function()
+        {
+            return functions_[0];
+        }
+        
+        auto variables()
+        {
+            return variables_;
+        }
+		/////////////// TESTING ////////////////////
 		
 	private:
 		
