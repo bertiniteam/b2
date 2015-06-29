@@ -149,7 +149,11 @@ namespace bertini {
 		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value)
 		{
 
-			assert(variable_values.size()==NumVariables());
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
+
 
 			// this function call traverses the entire tree, resetting everything.
 			//
@@ -181,8 +185,11 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values)
 		{
-			assert(variable_values.size()==NumVariables());
-			assert(!have_path_variable_);
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+
+			if (have_path_variable_)
+				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 
 
 			if (!is_differentiated_)
@@ -214,8 +221,11 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
 		{
-			assert(variable_values.size()==NumVariables());
-			assert(have_path_variable_);
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 
 
 			if (!is_differentiated_)
