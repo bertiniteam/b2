@@ -88,11 +88,18 @@ namespace bertini {
             	return std::make_shared<Number>(0.0);
 	        else if (exponent_==1.0)
 	        	return std::make_shared<Number>(1.0);
-			else if (exponent_==2)
-	        	return std::make_shared<MultOperator>(std::make_shared<Number>(2.0), child_);
-	        else
-	        	return std::make_shared<MultOperator>(std::make_shared<Number>(exponent_),
-	        										  std::make_shared<ExponOperator>(child_, exponent_-1));
+			else if (exponent_==2){
+				auto M = std::make_shared<MultOperator>(std::make_shared<Number>(2.0), child_);
+				M->AddChild(child_->Differentiate());
+	        	return M;
+			}
+	        else{
+	        	auto M = std::make_shared<MultOperator>(std::make_shared<Number>(exponent_), 
+	        	                                        std::make_shared<ExponOperator>(child_, exponent_-1)
+	        	                                        );
+	        	M->AddChild(child_->Differentiate());
+	        	return M;
+	        }
         }
 
 
