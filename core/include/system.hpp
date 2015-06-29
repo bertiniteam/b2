@@ -207,7 +207,6 @@ namespace bertini {
 			}
 
 			return J;
-
 		}
 
 
@@ -522,6 +521,19 @@ namespace bertini {
 			if (s.path_variable_) {
 				out << "path variable defined.  named " << s.path_variable_->name() << "\n";
 			}
+
+			if (s.is_differentiated_)
+			{
+				for (auto iter : s.jacobian_) {
+					out << (iter)->name() << "\n";
+					out << *iter << "\n";
+				}
+				out << "\n";
+			}
+			else{
+				out << "system not differentiated\n";
+			}
+
 
 			return out;
 		}
