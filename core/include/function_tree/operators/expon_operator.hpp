@@ -87,7 +87,7 @@ namespace bertini {
             if (exponent_==0.0)
             	return std::make_shared<Number>(0.0);
 	        else if (exponent_==1.0)
-	        	return std::make_shared<Number>(1.0);
+	        	return child_->Differentiate();
 			else if (exponent_==2){
 				auto M = std::make_shared<MultOperator>(std::make_shared<Number>(2.0), child_);
 				M->AddChild(child_->Differentiate());
