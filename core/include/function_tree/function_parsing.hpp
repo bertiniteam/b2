@@ -67,13 +67,13 @@ namespace {
 	{
 		template <typename... A> struct result
 		{ typedef std::shared_ptr<T> type; };
-		
+
 		template <typename... A>
 		typename result<A...>::type operator()(A&&... a) const {
 			return std::make_shared<T>(std::forward<A>(a)...);
 		}
 	};
-	
+
 	template <typename T>
 	using make_shared_ = boost::phoenix::function<make_shared_f<T> >;
 }
@@ -115,13 +115,13 @@ BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, sqrt_lazy, sqrt, 1)
 
 
 namespace bertini {
-	
-	
-	
+
+
+
 	namespace qi = ::boost::spirit::qi;
 	namespace ascii = ::boost::spirit::ascii;
-	
-	
+
+
 	// qi::grammar -> VariableParser
 	// This class describes the rule used to parse a list of variables and store a rule to
 	//  recognize variables in the function parse
@@ -130,7 +130,7 @@ namespace bertini {
 	{
 		//    namespace phx = boost::phoenix;
 	public:
-		
+
 		// Constructor is used to define the grammar to parse variables.  Variables are separated by
 		//  commas
 		VariableParser() : VariableParser::base_type(start_,"VariableParser")
@@ -142,83 +142,83 @@ namespace bertini {
 																 AddVarToRule(c);
 															 }, qi::_1 ) ]
 			% ","; // variables are separated by commas
-			
+
 			valid_variable_name_.name("valid_variable_name_");
 			valid_variable_name_ %= +qi::alpha >> *(qi::alnum | qi::char_('_'));
 		}
-		
-		
-		
-		
+
+
+
+
 		qi::rule<Iterator,boost::spirit::ascii::space_type> start() { return start_;};
-		
-		
-		
-		
+
+
+
+
 		// Accessor function for variable_
 		qi::symbols<char,int> variable() { return variable_;};
-		
+
 		// Accessor for var_count
 		int var_count() {return var_count_;};
-		
-		
-		
+
+
+
 		std::vector<std::shared_ptr<Variable> > get_var_group(){
 			return produced_variables_;
 		}
-		
+
 	private:
-		
-		
+
+
 		// Method used to add variable names to the rule var_rule.  The index of the variable
 		//  is stored as well, starting at 0.
 		void AddVarToRule(std::string const& c)
 		{
 			produced_variables_.push_back(std::make_shared<Variable>(c));
-			
+
 			variable_.add(c,var_count_);
 			var_count_++;
 		}
-		
-		
-		
-		
+
+
+
+
 		// Start rule used to parse variable list.
 		qi::rule<Iterator,ascii::space_type> start_;
-		
+
 		// the rule which determines valid variable names
 		qi::rule<Iterator, std::string()> valid_variable_name_;
-		
-		
-		
-		
+
+
+
+
 		// A rule defined to represent variables input by the user.  The rule recognizes
 		//  whatever alphanumeric string(including underscore) used by the input file to define
 		//  the variable, and returns the index of the variable, starting with 0.
 		qi::symbols<char,int> variable_;
-		
-		
+
+
 		// vector of shared pointers to nodes which represent a variable group or whatever.
 		std::vector< std::shared_ptr<Variable> > produced_variables_;
-		
-		
+
+
 		// Keeps track of the index of the variable being parsed.
 		int var_count_ = 0;
-		
+
 	};
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
 	template<typename Iterator>
 	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<Node>(), boost::spirit::ascii::space_type>
 	{
-		
+
 		//,"BRAKEPARSER"
 		// sumexpr is going to be the first rule called, the start rule.
 		FunctionParser(qi::symbols<char,std::shared_ptr<Node> > * encountered_symbols) : FunctionParser::base_type(root_rule_,"FunctionParser")
@@ -231,14 +231,14 @@ namespace bertini {
 			using qi::_val;
 			using qi::eps;
 			using qi::lit;
-			
+
 			using std::pow;
-			
-			
+			using ::pow;
+
 			root_rule_.name("root_rule_");
 			root_rule_ = expression_ [ _val = make_shared_<Function>()(_1)];
-			
-			
+
+
 			///////////////////
 			expression_.name("expression_");
 			expression_ =
@@ -247,7 +247,7 @@ namespace bertini {
 				 |  (lit('-') > term_ [_val -= _1])
 				 )
 			;
-			
+
 			term_.name("term_");
 			term_ =
 			factor_ [_val = _1]
@@ -255,7 +255,7 @@ namespace bertini {
 				 |  (lit('/') > factor_ [_val /= _1])
 				 )
 			;
-			
+
 			factor_.name("factor_");
 			factor_ =
 			exp_elem_ [_val = _1]
@@ -267,7 +267,7 @@ namespace bertini {
 										 },
 										 _val,_1)] )
 			;
-			
+
 			exp_elem_.name("exp_elem_");
 			exp_elem_ =
 			(symbol_  >> !qi::alnum) [_val = _1]
@@ -280,37 +280,37 @@ namespace bertini {
 			|   (lit("exp") > '(' > expression_ [_val = exp_lazy(_1)] > ')' )
 			|   (lit("sqrt") > '(' > expression_ [_val = sqrt_lazy(_1)] > ')' )
 			;
-			
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
 			symbol_.name("symbol_");
 			symbol_ %=
 			(*encountered_symbols) // the star here is the dereferencing of the encountered_symbols parameter to the constructor.
 			|
 			number_
 			;
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
+
+
+
 			number_.name("number_");
 			number_ =
 			long_number_string_ [ _val = make_shared_<Number>()(_1) ];
-			
-			
-			
+
+
+
 			long_number_string_.name("long_number_string_");
 			long_number_string_ = eps[_val = std::string()] >>
 			(
@@ -323,9 +323,9 @@ namespace bertini {
 			 >>   // reminder -- the - before the exponent_notation here means optional
 			 - exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
 			 );
-			
-			
-			
+
+
+
 			number_with_digits_after_point_.name("number_with_digits_after_point_");
 			number_with_digits_after_point_ = eps[_val = std::string()]
 			>>
@@ -335,11 +335,11 @@ namespace bertini {
 			>>
 			+(qi::char_(L'0',L'9')[_val += _1]) // find at least one digit after the point
 			;
-			
-			
-			
-			
-			
+
+
+
+
+
 			number_with_digits_before_point_.name("number_with_digits_before_point_");
 			number_with_digits_before_point_ = eps[_val = std::string()]
 			>>
@@ -349,17 +349,17 @@ namespace bertini {
 			>>
 			*(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
 			;
-			
-			
+
+
 			number_with_no_point_.name("number_with_no_point_");
 			number_with_no_point_ = eps[_val = std::string()]
 			>>
 			+(qi::char_(L'0',L'9')[_val += _1])
 			;
-			
-			
-			
-			
+
+
+
+
 			exponent_notation_.name("exponent_notation_");
 			exponent_notation_ = eps[_val = std::string()]
 			>> ( // start what the rule actually does
@@ -373,15 +373,15 @@ namespace bertini {
 				>>
 				+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
 			 ); // finish the rule off
-			
-			
-			
-			
+
+
+
+
 			using qi::on_error;
 			using boost::phoenix::val;
 			using boost::phoenix::construct;
-			
-			
+
+
 			on_error<qi::fail>
 			(
 			 root_rule_
@@ -393,11 +393,11 @@ namespace bertini {
 			 << val("\"")
 			 << std::endl
 			 );
-			
-			
-			
-			
-			
+
+
+
+
+
 			//		debug(root_rule_);
 			//		debug(expression_);
 			//		debug(term_);
@@ -409,34 +409,34 @@ namespace bertini {
 			//		debug(number_with_digits_before_point_);
 			//		debug(exponent_notation_);
 		}
-		
-		
-		
-		
-		
-		
+
+
+
+
+
+
 		qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type > root_rule_;
 		// the rule for kicking the entire thing off
-		
+
 		qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type> expression_, term_, factor_, exp_elem_;
 		// rules for how to turn +-*/^ into operator nodes.
-		
-		
-		
+
+
+
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > symbol_;
 		// any of the variables and numbers will be symbols.
-		
+
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > variable_;  // finds a previously encountered number, and associates the correct variable node with it.
-		
+
 		// the number_ rule wants to find strings from the various other number_ rules, and produces a Number node
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
-		
+
 		// these rules all produce strings which are fed into numbers.
 		qi::rule<Iterator, std::string()> long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
 	};
-	
-	
-	
+
+
+
 } // re: namespace bertini
 
 #endif

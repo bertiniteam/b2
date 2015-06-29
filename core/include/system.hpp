@@ -57,6 +57,10 @@ namespace bertini {
 
 	public:
 
+		System() : is_differentiated_(false), have_path_variable_(false)
+		{}
+
+
 		void precision(unsigned new_precision)
 		{
 			for (auto iter : functions_) {
@@ -175,9 +179,45 @@ namespace bertini {
 
 
 		template<typename T>
+		Mat<T> Jacobian(const Vec<T> & variable_values)
+		{
+			assert(variable_values.size()==NumVariables());
+			assert(!have_path_variable_);
+
+
+			if (!is_differentiated_)
+			{
+				jacobian_.resize(NumFunctions());
+				for (int ii = 0; ii < NumFunctions(); ++ii)
+				{
+					jacobian_[ii] = std::make_shared<bertini::Jacobian>(functions_[ii]->Differentiate());
+				}
+				is_differentiated_ = true;
+			}
+
+			SetVariables(variable_values);
+
+			Mat<T> J(NumFunctions(), NumVariables());
+			for (int ii = 0; ii < NumFunctions(); ++ii)
+			{
+				for (int jj = 0; jj < NumVariables(); ++jj)
+				{
+					J(ii,jj) = jacobian_[ii]->EvalJ<T>(variables_[jj]);
+				}
+			}
+
+			return J;
+
+		}
+
+
+
+		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
 		{
 			assert(variable_values.size()==NumVariables());
+			assert(have_path_variable_);
+
 
 			if (!is_differentiated_)
 			{
@@ -201,6 +241,7 @@ namespace bertini {
 				}
 			}
 
+			return J;
 
 		}
 
@@ -232,6 +273,7 @@ namespace bertini {
 		void SetPathVariable(T new_value)
 		{
 			path_variable_->set_current_value(new_value);
+			have_path_variable_ = true;
 		}
 
 
@@ -267,6 +309,7 @@ namespace bertini {
 		{
 			variable_groups_.push_back(v);
 			variables_.insert( variables_.end(), v.begin(), v.end() );
+			is_differentiated_ = false;
 		}
 
 
@@ -277,6 +320,19 @@ namespace bertini {
 		{
 			hom_variable_groups_.push_back(v);
 			variables_.insert( variables_.end(), v.begin(), v.end() );
+			is_differentiated_ = false;
+		}
+
+
+
+		/**
+		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
+		 */
+		void AddUngroupedVariable(Var const& v)
+		{
+			ungrouped_variables_.push_back(v);
+			variables_.push_back(v);
+			is_differentiated_ = false;
 		}
 
 
@@ -287,6 +343,7 @@ namespace bertini {
 		{
 			ungrouped_variables_.insert( variables_.end(), v.begin(), v.end() );
 			variables_.insert( variables_.end(), v.begin(), v.end() );
+			is_differentiated_ = false;
 		}
 
 
@@ -296,6 +353,7 @@ namespace bertini {
 		void AddImplicitParameter(Var const& v)
 		{
 			implicit_parameters_.push_back(v);
+			is_differentiated_ = false;
 		}
 
 
@@ -305,6 +363,7 @@ namespace bertini {
 		void AddImplicitParameters(std::vector<Var> const& v)
 		{
 			implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
+			is_differentiated_ = false;
 		}
 
 
@@ -319,6 +378,7 @@ namespace bertini {
 		void AddParameter(Fn const& F)
 		{
 			explicit_parameters_.push_back(F);
+			is_differentiated_ = false;
 		}
 
 		/**
@@ -327,6 +387,7 @@ namespace bertini {
 		void AddParameters(std::vector<Fn> const& v)
 		{
 			explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
+			is_differentiated_ = false;
 		}
 
 
@@ -338,6 +399,7 @@ namespace bertini {
 		void AddSubfunction(Fn const& F)
 		{
 			subfunctions_.push_back(F);
+			is_differentiated_ = false;
 		}
 
 		/**
@@ -346,6 +408,7 @@ namespace bertini {
 		void AddSubfunctions(std::vector<Fn> const& v)
 		{
 			subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
+			is_differentiated_ = false;
 		}
 
 
@@ -356,7 +419,19 @@ namespace bertini {
 		void AddFunction(Fn const& F)
 		{
 			functions_.push_back(F);
+			is_differentiated_ = false;
 		}
+
+		/**
+		 Add a function to the system.
+		 */
+		void AddFunction(Nd const& N)
+		{
+			Fn F = std::make_shared<Function>(N);
+			functions_.push_back(F);
+			is_differentiated_ = false;
+		}
+
 
 		/**
 		 Add some functions to the system.
@@ -364,6 +439,7 @@ namespace bertini {
 		void AddFunctions(std::vector<Fn> const& v)
 		{
 			functions_.insert( functions_.end(), v.begin(), v.end() );
+			is_differentiated_ = false;
 		}
 
 
@@ -376,6 +452,7 @@ namespace bertini {
 		void AddConstant(Fn const& F)
 		{
 			constant_subfunctions_.push_back(F);
+			is_differentiated_ = false;
 		}
 
 		/**
@@ -384,6 +461,7 @@ namespace bertini {
 		void AddConstants(std::vector<Fn> const& v)
 		{
 			constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
+			is_differentiated_ = false;
 		}
 
 
@@ -396,6 +474,7 @@ namespace bertini {
 		void AddPathVariable(Var const& v)
 		{
 			path_variable_ = v;
+			is_differentiated_ = false;
 		}
 
 
@@ -483,6 +562,8 @@ namespace bertini {
 
 
 		Var path_variable_;
+		bool have_path_variable_;
+
 
 		std::vector< Fn > constant_subfunctions_;
 
