@@ -218,6 +218,35 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 
 	auto J = S.Jacobian(v);
 
+	BOOST_CHECK_THROW(S.Jacobian(v,0.5), std::runtime_error);
+
+	std::cout << S << std::endl;
+	std::cout << "v\n" << v << std::endl;
+	std::cout << "J\n" << J << std::endl;
+}
+
+
+
+BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
+{
+	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
+	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
+	auto f1 = (1-t)*x + t*(1-x);
+	auto f2 = x-t;
+
+	bertini::System S;
+	S.AddUngroupedVariable(x);
+	S.AddPathVariable(t);
+	S.AddFunction(f1);
+	S.AddFunction(f2);
+
+	Vec<dbl> v(1);
+	v << 1.0;
+	dbl time(0.5,0.2);
+	auto J = S.Jacobian(v,time);
+
+	BOOST_CHECK_THROW(S.Jacobian(v), std::runtime_error);
+
 	std::cout << S << std::endl;
 	std::cout << "v\n" << v << std::endl;
 	std::cout << "J\n" << J << std::endl;
