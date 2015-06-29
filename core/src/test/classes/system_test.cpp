@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 
 	auto J = S.Jacobian(v);
 
-	BOOST_CHECK_THROW(S.Jacobian(v,0.5), std::runtime_error);
+	BOOST_CHECK_THROW(S.Jacobian(v,dbl(0.5)), std::runtime_error);
 
 	std::cout << S << std::endl;
 	std::cout << "v\n" << v << std::endl;
