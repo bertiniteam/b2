@@ -484,6 +484,7 @@ namespace bertini {
 		{
 			path_variable_ = v;
 			is_differentiated_ = false;
+			have_path_variable_ = true;
 		}
 
 
