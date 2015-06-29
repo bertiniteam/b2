@@ -25,16 +25,16 @@
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
-
+#include "function_tree/operators/mult_operator.hpp"
 
 
 namespace bertini {
-	
+
 	using std::pow;
-	
+
 	/**
 	 Node -> UnaryOperator -> ExponOperator
-	 
+
 	 Description: This class represents the exponentiation operator.  The base is stored in
 	 children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
 	 defined as the exponention operation.
@@ -47,9 +47,9 @@ namespace bertini {
 		{
 			return child_->PrintNode() + "^" + std::to_string(exponent());
 		}
-		
-		
-		
+
+
+
 		/**
 		 Virtual polymorphic method for printing to an arbitrary stream.
 		 */
@@ -59,7 +59,7 @@ namespace bertini {
 			child_->print(target);
 			target << "^" << exponent() << ")";
 		}
-		
+
 		/**
 		 Get the integet exponent of an ExpOperator
 		 */
@@ -67,8 +67,8 @@ namespace bertini {
 		{
 			exponent_ = exp;
 		}
-		
-		
+
+
 		/**
 		 Get the exponent of an ExpOperator
 		 */
@@ -76,29 +76,38 @@ namespace bertini {
 		{
 			return exponent_;
 		}
-        
-        
+
+
         /**
-         Differentiates a number.  Should this return the special number Zero?
+         Differentiates a number.
          */
         virtual std::shared_ptr<Node> Differentiate() override
         {
-            return std::make_shared<Number>(0.0);
+
+            if (exponent_==0.0)
+            	return std::make_shared<Number>(0.0);
+	        else if (exponent_==1.0)
+	        	return std::make_shared<Number>(1.0);
+			else if (exponent_==2)
+	        	return std::make_shared<MultOperator>(std::make_shared<Number>(2.0), child_);
+	        else
+	        	return std::make_shared<MultOperator>(std::make_shared<Number>(exponent_),
+	        										  std::make_shared<ExponOperator>(child_, exponent_-1));
         }
 
-		
+
 		virtual ~ExponOperator() = default;
-		
-		
+
+
 		/**
 		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
 		 */
 		ExponOperator(const std::shared_ptr<Node> & N, int p = 1) : exponent_(p), UnaryOperator(N)
 		{}
-		
-		
+
+
 		ExponOperator(){}
-		
+
 	protected:
 		// Specific implementation of FreshEval for exponentiate.
 		// TODO(JBC): How do we implement exp for more complicated types?
@@ -106,43 +115,43 @@ namespace bertini {
 //		{
 //			return pow(child_->Eval<dbl>(), exponent_);
 //		}
-//		
+//
 //		mpfr FreshEval(mpfr) override
 //		{
 //			return pow(child_->Eval<mpfr>(),exponent_);
 //		}
-	
-        
+
+
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
         {
             return pow(child_->Eval<dbl>(diff_variable), exponent_);
         }
-        
+
         mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
         {
             return pow(child_->Eval<mpfr>(diff_variable),exponent_);
         }
 
-		
-		
-		
-		
-		
+
+
+
+
+
 	private:
-		
+
 		int exponent_ = 1; ///< Exponent for the exponenetial operator
 	};
-	
-	
+
+
 }// re: namespace bertini
 
 
 
 namespace {
-	
+
 	using Node = bertini::Node;
 	using ExponOperator = bertini::ExponOperator;
-	
+
 	/**
 	 Overloading of the power function to create an ExpOperator with base N and power p.
 	 */
@@ -150,6 +159,6 @@ namespace {
 	{
 		return std::make_shared<ExponOperator>(base,power);
 	}
-	
+
 }
 #endif
