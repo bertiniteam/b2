@@ -1042,7 +1042,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
     mpfr exact_mpfr = pow(xnum_mpfr,anum_mpfr+pnum_mpfr);
     
     std::shared_ptr<Node> N = pow(x,a+p);
-    BOOST_CHECK_EQUAL(N->Degree(),1);
+    BOOST_CHECK_EQUAL(N->Degree(),-1);
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);

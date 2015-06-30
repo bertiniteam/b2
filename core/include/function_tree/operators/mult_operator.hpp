@@ -96,7 +96,7 @@ namespace bertini {
 						target << "1/";  
 				(*iter)->print(target);
 				if (iter!=(children_.end()-1)){
-					if (*(children_mult_or_div_.begin() + (iter-children_.begin())+1)) {
+					if (*(children_mult_or_div_.begin() + (iter-children_.begin())+1)) { // TODO i think this +1 is wrong... dab
 						target << "*";
 					}
 					else{
@@ -178,11 +178,14 @@ namespace bertini {
 		virtual int Degree() override
 		{
 			int deg = 0;
-			for (auto iter: children_)
+			for (auto iter = children_.begin(); iter!= children_.end(); iter++)
 			{
-				auto factor_deg = iter->Degree();
+				auto factor_deg = (*iter)->Degree();
+
 				if (factor_deg<0)
 					return factor_deg;
+				else if (factor_deg!=0 && !*(children_mult_or_div_.begin() + (iter-children_.begin()) ) )
+					return -1;
 				else
 					deg+=factor_deg;
 			}
