@@ -34,7 +34,7 @@ namespace bertini {
 	// Node -> Symbol -> Number
 	// Description: This class represents constant leaves to a function tree.  FreshEval simply returns
 	// the value of the constant.
-	class Number : public virtual Node
+	class Number : public virtual Symbol
 	{
 	public:
 		Number(){};
