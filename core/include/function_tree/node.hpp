@@ -135,6 +135,24 @@ public:
 	Compute the degree, optionally with respect to a single variable.
     */
     virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) = 0;
+
+
+
+    /**
+	 Compute the degree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+    */
+	virtual std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars)
+	{
+		
+		std::vector<int> deg(vars.size());
+		for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+		{
+			*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+		}
+		return deg;
+	}
+
+
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:

@@ -137,6 +137,12 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
         JFunc->EvalJ<dbl>(vv);
         JFunc->EvalJ<mpfr>(vv);
     }
+
+    std::vector<int> multidegree{1,2,1};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
+
+
 }
 
 
@@ -144,7 +150,7 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
     using mpfr_float = boost::multiprecision::mpfr_float;
     boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
 
-std::cout << "RELEVANT TEST\n\n";
+// std::cout << "RELEVANT TEST\n\n";
     std::string str = "function f; variable_group x,y,z; f = 3*x*y*z;";
 
     bertini::System sys;
@@ -168,14 +174,17 @@ std::cout << "RELEVANT TEST\n\n";
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),1);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),1);
 
-    std::cout << *JFunc << std::endl;
-    std::cout << "\n\nx" << std::endl;
+    // std::cout << *JFunc << std::endl;
+    // std::cout << "\n\nx" << std::endl;
     BOOST_CHECK_EQUAL(JFunc->Degree(vars[0]),0);
-    std::cout << "\n\ny" << std::endl;
+    // std::cout << "\n\ny" << std::endl;
     BOOST_CHECK_EQUAL(JFunc->Degree(vars[1]),0);
-    std::cout << "\n\nz" << std::endl;
+    // std::cout << "\n\nz" << std::endl;
     BOOST_CHECK_EQUAL(JFunc->Degree(vars[2]),0);
 
+    std::vector<int> multidegree{1,1,1};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
 
     std::vector<dbl> exact_dbl = {3.0*ynum_dbl*znum_dbl, 3.0*xnum_dbl*znum_dbl, 3.0*ynum_dbl*xnum_dbl};
     std::vector<mpfr> exact_mpfr = {mpfr("3.0")*ynum_mpfr*znum_mpfr,mpfr("3.0")*xnum_mpfr*znum_mpfr,mpfr("3.0")*ynum_mpfr*xnum_mpfr};
@@ -218,6 +227,9 @@ BOOST_AUTO_TEST_CASE(diff_constant){
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
+    std::vector<int> multidegree{0,0,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
@@ -261,6 +273,10 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
     auto func = sys.function();
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+
+    std::vector<int> multidegree{1,1,1};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),1);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),1);
@@ -312,6 +328,10 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
     auto func = sys.function();
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+
+    std::vector<int> multidegree{2,3,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),2);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),3);
@@ -391,6 +411,10 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
+    std::vector<int> multidegree{2,-1,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),2);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),-1);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
@@ -441,6 +465,10 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
+    std::vector<int> multidegree{3,0,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),3);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
@@ -488,6 +516,11 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
     auto func = sys.function();
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+
+    std::vector<int> multidegree{0,-1,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
+
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),-1);
@@ -539,6 +572,11 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
+    std::vector<int> multidegree{-1,0,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
+
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),-1);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
@@ -587,6 +625,10 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
     auto func = sys.function();
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+
+    std::vector<int> multidegree{0,-1,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),-1);
@@ -789,6 +831,10 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
+    std::vector<int> multidegree{0,0,3};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),3);
@@ -838,6 +884,10 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
     auto func = sys.function();
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+
+    std::vector<int> multidegree{-1,-1,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),-1);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),-1);
@@ -890,6 +940,10 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
+    std::vector<int> multidegree{-1,0,0};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),-1);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
@@ -938,6 +992,10 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
     auto func = sys.function();
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+
+    std::vector<int> multidegree{-1,0,-1};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),-1);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
