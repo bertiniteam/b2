@@ -46,7 +46,7 @@
 #include "function_tree/operators/sum_operator.hpp"
 #include "function_tree/operators/mult_operator.hpp"
 #include "function_tree/operators/negate_operator.hpp"
-#include "function_tree/operators/expon_operator.hpp"
+#include "function_tree/operators/intpow_operator.hpp"
 #include "function_tree/symbols/number.hpp"
 #include "function_tree/symbols/variable.hpp"
 
@@ -58,7 +58,7 @@
 //http://boost-spirit.com/home/articles/qi-example/tracking-the-input-position-while-parsing/
 
 
-// this solution for lazy make shared comes from the SO forum, user sehe.
+// this solution for *lazy* make shared comes from the SO forum, user sehe.
 // https://stackoverflow.com/questions/21516201/how-to-create-boost-phoenix-make-shared
 //    post found using google search terms `phoenix construct shared_ptr`
 namespace {
