@@ -23,16 +23,18 @@
 #ifndef b2Test_Differential_h
 #define b2Test_Differential_h
 
-
+#include <memory>
 #include "function_tree/node.hpp"
 #include "function_tree/symbols/symbol.hpp"
+#include "function_tree/symbols/number.hpp"
 #include "function_tree/symbols/variable.hpp"
 
 
+
 namespace bertini {
-    
-    
-    
+
+
+
     // Node -> Symbol -> SpecialNumber
     // Description: This class represents constant leaves to a function tree.  FreshEval simply returns
     // the value of the constant.
@@ -40,31 +42,30 @@ namespace bertini {
     {
     public:
         Differential(){};
-        
-        
+
+
         /**
          Input shared_ptr to a Variable.
          */
-        Differential(std::shared_ptr<Variable> diff_variable)
+        Differential(std::shared_ptr<Variable> diff_variable, std::string var_name)
         {
             differential_variable_ = diff_variable;
-//            name("d" + diff_variable->name());
+            name("d" + var_name);
         }
-        
-        
-        
+
+
         std::string PrintNode() override {return name();}
-        
-        
-        
-        
+
+
+
+
         virtual void print(std::ostream & target) const override
         {
-            target << "d";
+            target << name();
         }
-        
-        
-        
+
+
+
         /**
          Differentiates a number.  Should this return the special number Zero?
          */
@@ -72,25 +73,25 @@ namespace bertini {
         {
             return std::make_shared<Number>(0.0);
         }
-        
-        
-        
+
+
+
         virtual ~Differential() = default;
-        
-        
+
+
     protected:
         // This should never be called for a Differential.  Only for Jacobians.
 //        dbl FreshEval(dbl) override
 //        {
 //            return std::get< std::pair<dbl,bool> >(current_value_).first;
 //        }
-//        
+//
 //        mpfr FreshEval(mpfr) override
 //        {
 //            return std::get< std::pair<mpfr,bool> >(current_value_).first;
 //        }
-        
-        
+
+
         // This should never be called for a Differential.  Only for Jacobians.
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
         {
@@ -103,7 +104,7 @@ namespace bertini {
                 return 0.0;
             }
         }
-        
+
         mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
         {
             if(differential_variable_ == diff_variable)
@@ -116,12 +117,12 @@ namespace bertini {
             }
         }
 
-        
+
     private:
         std::shared_ptr<Variable> differential_variable_;
     };
-    
-    
+
+
 } // re: namespace bertini
 
 #endif
