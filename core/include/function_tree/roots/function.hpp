@@ -144,7 +144,7 @@ namespace bertini {
 		/**
         Compute the degree of a node.  For functions, the degree is the degree of the entry node.
         */
-        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
         {
             return entry_node_->Degree(v);
         }

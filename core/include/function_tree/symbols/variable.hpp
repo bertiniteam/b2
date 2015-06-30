@@ -79,7 +79,7 @@ namespace  bertini {
 
 		If this is the variable, then the degree is 1.  Otherwise, 0.
 	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 	    {
 	    	if (v)
 	    	{

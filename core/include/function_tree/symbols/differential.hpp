@@ -91,7 +91,7 @@ namespace bertini {
         /**
         Compute the degree with respect to a single variable.   For differentials, the degree is 0.
         */
-        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
         {
             return 0;
         }
