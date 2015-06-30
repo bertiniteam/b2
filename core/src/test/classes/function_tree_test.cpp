@@ -127,6 +127,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
     
+    BOOST_CHECK_EQUAL(N->Degree(),2);
 }
 
 

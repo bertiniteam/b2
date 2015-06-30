@@ -101,6 +101,13 @@ namespace bertini {
             return std::make_shared<Number>(0.0);
         }
 
+        /**
+		Compute the degree of a node.  For numbers, the degree is 0.
+        */
+		virtual int Degree() override
+		{
+			return 0;
+		}
 
 
 		virtual ~Number() = default;

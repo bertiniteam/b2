@@ -91,7 +91,36 @@ namespace bertini {
         }
 
 
+         /**
+		Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
+        */
+		virtual int Degree() override
+		{
+			auto exp_deg = exponent_->Degree();
 
+			if (exp_deg<0)
+				return exp_deg;
+
+			if (exp_deg==0)
+			{
+				dbl exp_val = exponent_->Eval<dbl>();
+
+				if (fabs(imag(exp_val))< 10*std::numeric_limits<double>::epsilon())
+				{
+					if (fabs(real(exp_val) - std::round(real(exp_val))) < 10*std::numeric_limits<double>::epsilon())
+					{
+						if (std::round(real(exp_val)) < 0)
+							return std::round(real(exp_val));
+						else
+							return base_->Degree() * std::round(real(exp_val));
+					}
+
+				}
+			}
+
+			return -1;
+			
+		}
 
 
 		virtual ~PowerOperator() = default;

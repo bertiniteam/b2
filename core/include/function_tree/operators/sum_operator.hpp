@@ -149,6 +149,26 @@ namespace bertini {
             	return std::make_shared<Number>(0.0);
         }
 
+
+        /**
+		Compute the degree of a node.  For sum functions, the degree is the max among summands.
+        */
+		virtual int Degree() override
+		{
+			int deg = 0;
+
+			for (auto iter: children_)
+			{
+				auto curr_deg = iter->Degree();
+				if (curr_deg<0)
+				    return curr_deg;
+
+				deg = std::max(deg, curr_deg);
+			}
+			return deg;
+		}
+
+
 		
 	protected:
 		// Specific implementation of FreshEval for add and subtract.

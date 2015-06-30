@@ -79,6 +79,17 @@ namespace bertini {
         virtual ~Differential() = default;
 
 
+        /**
+		Compute the degree of a node.  For numbers, the degree is 0.
+        */
+		virtual int Degree() override
+		{
+			return 0;
+		}
+
+
+
+
     protected:
         // This should never be called for a Differential.  Only for Jacobians.
 //        dbl FreshEval(dbl) override

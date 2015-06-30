@@ -70,7 +70,13 @@ namespace  bertini {
         }
 		
 		
-		
+		 /**
+		Compute the absolute degree of a node.  For variables, the degree is 1.
+        */
+		virtual int Degree() override
+		{
+			return 1;
+		}
 		
 		
 	protected:
