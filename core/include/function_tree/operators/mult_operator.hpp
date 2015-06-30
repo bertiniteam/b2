@@ -26,7 +26,7 @@
 #include "function_tree/node.hpp"
 #include "function_tree/operators/nary_operator.hpp"
 #include "function_tree/operators/sum_operator.hpp"
-
+#include "function_tree/symbols/differential.hpp"
 
 namespace bertini {
 
@@ -180,7 +180,21 @@ namespace bertini {
 			int deg = 0;
 			for (auto iter = children_.begin(); iter!= children_.end(); iter++)
 			{
+				// if the child node is a differential coming from another variable, then this degree should be 0, end of story.
+
 				auto factor_deg = (*iter)->Degree(v);
+
+				auto is_it_a_differential = std::dynamic_pointer_cast<Differential>(*iter);
+				if (is_it_a_differential)
+					if (is_it_a_differential->GetVariable()!=v)
+					{
+						// std::cout << *this << " deg " << 0 << "\n";
+						return 0;
+					}
+					
+				
+
+				
 
 				if (factor_deg<0)
 					return factor_deg;
@@ -189,6 +203,7 @@ namespace bertini {
 				else
 					deg+=factor_deg;
 			}
+			// std::cout << *this << " deg " << deg << "\n";
 			return deg;
 		}
 

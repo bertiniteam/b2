@@ -144,6 +144,7 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
     using mpfr_float = boost::multiprecision::mpfr_float;
     boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
 
+std::cout << "RELEVANT TEST\n\n";
     std::string str = "function f; variable_group x,y,z; f = 3*x*y*z;";
 
     bertini::System sys;
@@ -161,13 +162,18 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
     auto vars = sys.variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
+    BOOST_CHECK_EQUAL(func->Degree(),3);
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),1);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),1);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),1);
 
     std::cout << *JFunc << std::endl;
+    std::cout << "\n\nx" << std::endl;
     BOOST_CHECK_EQUAL(JFunc->Degree(vars[0]),0);
+    std::cout << "\n\ny" << std::endl;
     BOOST_CHECK_EQUAL(JFunc->Degree(vars[1]),0);
+    std::cout << "\n\nz" << std::endl;
     BOOST_CHECK_EQUAL(JFunc->Degree(vars[2]),0);
 
 

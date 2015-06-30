@@ -27,12 +27,12 @@
 #include "function_tree/node.hpp"
 #include "function_tree/symbols/symbol.hpp"
 #include "function_tree/symbols/number.hpp"
-#include "function_tree/symbols/variable.hpp"
+// #include "function_tree/symbols/variable.hpp"
 
 
 
 namespace bertini {
-
+    class Variable;
 
 
     // Node -> Symbol -> SpecialNumber
@@ -54,11 +54,18 @@ namespace bertini {
         }
 
 
+
+
         std::string PrintNode() override {return name();}
 
 
 
+        std::shared_ptr<Variable> GetVariable() const 
+        {
+            return differential_variable_;
+        }
 
+        
         virtual void print(std::ostream & target) const override
         {
             target << name();
