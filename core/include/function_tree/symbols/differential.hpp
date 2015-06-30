@@ -79,15 +79,15 @@ namespace bertini {
         virtual ~Differential() = default;
 
 
+
+
         /**
-		Compute the degree of a node.  For numbers, the degree is 0.
+        Compute the degree with respect to a single variable.   For differentials, the degree is 0.
         */
-		virtual int Degree() override
-		{
-			return 0;
-		}
-
-
+        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+        {
+            return 0;
+        }
 
 
     protected:

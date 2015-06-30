@@ -83,53 +83,28 @@ public:
     //  run the specific FreshEval of the node, then set flag to false.
     //
     // Template type is type of value you want returned.
-    template<typename T>
-    T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
-    {
-		
-//		this->print(std::cout);
-//		std::cout << " has value ";
-		
-        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-        if(!val_pair.second)
-        {
-//            std::cout << "Fresh Eval\n";
-            T input{};
-            val_pair.first = FreshEval(input, diff_variable);
-            val_pair.second = true;
-        }
- 
-		
-//		std::cout << val_pair.first << std::endl;
-		return val_pair.first;
-    }
-	
     /**
      Evaluate the jacobian with respect to a particular variable.  If flag false, just return value, if flag true
      run the specific FreshEval of the node, then set flag to false.
      
      Template type is type of value you want returned.
      */
-//    template<typename T>
-//    T Eval(std::shared_ptr<Variable> diff_variable)
-//    {
-//        
-//        //		this->print(std::cout);
-//        //		std::cout << " has value ";
-//        
-//        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-//        if(!val_pair.second)
-//        {
-//            //            std::cout << "Fresh Eval\n";
-//            T input{};
-//            val_pair.first = FreshEval(input, diff_variable);
-//            val_pair.second = true;
-//        }
-//        
-//        
-//        //		std::cout << val_pair.first << std::endl;
-//        return val_pair.first;
-//    }
+    template<typename T>
+    T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
+    {
+        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+        if(!val_pair.second)
+        {
+            T input{};
+            val_pair.first = FreshEval(input, diff_variable);
+            val_pair.second = true;
+        }
+ 
+		
+		return val_pair.first;
+    }
+	
+
 	
     
 
@@ -154,10 +129,12 @@ public:
     
     virtual std::shared_ptr<Node> Differentiate() = 0;
 
+
+
     /**
-	Compute the degree of a node.
+	Compute the degree, optionally with respect to a single variable.
     */
-    virtual int Degree() = 0;
+    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:
