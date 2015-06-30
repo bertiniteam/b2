@@ -65,12 +65,15 @@ namespace bertini {
         virtual std::shared_ptr<Node> Differentiate() override;
 
 		
-		 /**
-		Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
-        */
-		virtual int Degree() override
-		{
-			if (child_->Degree()==0)
+
+		/**
+		Compute the degree with respect to a single variable.
+
+		For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+	    */
+	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+	    {
+	    	if (child_->Degree(v)==0)
 			{
 				return 0;
 			}
@@ -78,9 +81,7 @@ namespace bertini {
 			{
 				return -1;
 			}
-			
-		}
-
+	    }
 
 		virtual ~CosOperator() = default;
 		

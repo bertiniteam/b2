@@ -175,12 +175,12 @@ namespace bertini {
          /**
 		Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
         */
-		virtual int Degree() override
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
 		{
 			int deg = 0;
 			for (auto iter = children_.begin(); iter!= children_.end(); iter++)
 			{
-				auto factor_deg = (*iter)->Degree();
+				auto factor_deg = (*iter)->Degree(v);
 
 				if (factor_deg<0)
 					return factor_deg;

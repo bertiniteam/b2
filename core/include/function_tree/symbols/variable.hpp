@@ -70,14 +70,30 @@ namespace  bertini {
         }
 		
 		
-		 /**
-		Compute the absolute degree of a node.  For variables, the degree is 1.
-        */
-		virtual int Degree() override
-		{
-			return 1;
-		}
+
 		
+
+
+		/**
+		Compute the degree with respect to a single variable.
+
+		If this is the variable, then the degree is 1.  Otherwise, 0.
+	    */
+	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+	    {
+	    	if (v)
+	    	{
+				if (this == v.get())
+			    	return 1;
+			    else
+			    	return 0;
+	    	}
+	    	else
+	    		return 1;
+	    	
+	    }
+
+
 		
 	protected:
 		// Return current value of the variable.
