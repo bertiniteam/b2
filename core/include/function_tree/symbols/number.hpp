@@ -109,7 +109,7 @@ namespace bertini {
 
 		For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
 	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 	    {
 	    	return 0;
 	    }

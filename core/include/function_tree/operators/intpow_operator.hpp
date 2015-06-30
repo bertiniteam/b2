@@ -109,7 +109,7 @@ namespace bertini {
 		 /**
 		Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			auto base_deg = child_->Degree(v);
 			if (base_deg<0)

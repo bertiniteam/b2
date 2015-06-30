@@ -97,7 +97,7 @@ namespace bertini {
 		 /**
 		Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			
 			auto base_deg = base_->Degree(v);

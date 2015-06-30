@@ -156,7 +156,7 @@ namespace bertini {
         /**
 		Compute the degree of a node.  For sum functions, the degree is the max among summands.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) override
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			int deg = 0;
 
