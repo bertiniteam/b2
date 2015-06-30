@@ -66,7 +66,7 @@ namespace  bertini {
          */
         virtual std::shared_ptr<Node> Differentiate() override
         {
-            return std::make_shared<Differential>(shared_from_this());
+            return std::make_shared<Differential>(shared_from_this(), name());
         }
 		
 		
@@ -99,6 +99,7 @@ namespace  bertini {
 
 	};
 	
+
 	
 } // re: namespace bertini
 

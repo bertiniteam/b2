@@ -125,13 +125,28 @@ namespace bertini {
          */
         virtual std::shared_ptr<Node> Differentiate() override
         {
+        	unsigned int counter = 0;
             std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
             for (int ii = 0; ii < children_.size(); ++ii)
             {
-                ret_sum->AddChild(children_[ii]->Differentiate(),children_sign_[ii]);
+            	auto converted = std::dynamic_pointer_cast<Number>(children_[ii]);
+            	if (converted)
+            		continue;
+            	
+            	auto temp_node = children_[ii]->Differentiate();
+				converted = std::dynamic_pointer_cast<Number>(temp_node);
+				if (converted)
+					if (converted->Eval<dbl>()==dbl(0.0))
+						continue;
+
+                ret_sum->AddChild(temp_node,children_sign_[ii]);
+                counter++;
             }
             
-            return ret_sum;
+            if (counter>0)
+            	return ret_sum;
+            else
+            	return std::make_shared<Number>(0.0);
         }
 
 		
