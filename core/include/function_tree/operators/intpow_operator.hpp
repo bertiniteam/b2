@@ -103,6 +103,20 @@ namespace bertini {
         }
 
 
+         /**
+		Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
+        */
+		virtual int Degree() override
+		{
+			auto base_deg = child_->Degree();
+			if (base_deg<0)
+				return base_deg;
+			else
+				return exponent_*base_deg;
+			
+		}
+
+
 		virtual ~IntegerPowerOperator() = default;
 
 

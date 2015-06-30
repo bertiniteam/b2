@@ -153,6 +153,11 @@ public:
 	virtual void print(std::ostream& target) const = 0;
     
     virtual std::shared_ptr<Node> Differentiate() = 0;
+
+    /**
+	Compute the degree of a node.
+    */
+    virtual int Degree() = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:
