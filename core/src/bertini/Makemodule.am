@@ -18,6 +18,7 @@ function_tree_header_files = \
 	include/function_tree/operators/mult_operator.h \
 	include/function_tree/operators/sum_operator.h \
 	include/function_tree/operators/binary_operator.h \
+	include/function_tree/operators/intpow_operator.h \
 	include/function_tree/operators/power_operator.h \
 	include/function_tree/operators/unary_operator.h \
 	include/function_tree/operators/negate_operator.h \
