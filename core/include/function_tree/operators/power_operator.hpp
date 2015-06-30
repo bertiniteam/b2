@@ -96,30 +96,48 @@ namespace bertini {
         */
 		virtual int Degree() override
 		{
+			
+			auto base_deg = base_->Degree();
 			auto exp_deg = exponent_->Degree();
-
-			if (exp_deg<0)
-				return exp_deg;
 
 			if (exp_deg==0)
 			{
-				dbl exp_val = exponent_->Eval<dbl>();
+				auto exp_val = exponent_->Eval<dbl>();
+				bool exp_is_int = false;
 
-				if (fabs(imag(exp_val))< 10*std::numeric_limits<double>::epsilon())
+				if (fabs(imag(exp_val))< 10*std::numeric_limits<double>::epsilon()) // so a real thresholding step
+					if (fabs(real(exp_val) - std::round(real(exp_val))) < 10*std::numeric_limits<double>::epsilon()) // then check that the real part is close to an integer
+						exp_is_int = true;
+
+				if (exp_is_int)
 				{
-					if (fabs(real(exp_val) - std::round(real(exp_val))) < 10*std::numeric_limits<double>::epsilon())
+					if (abs(exp_val-dbl(0.0))< 10*std::numeric_limits<double>::epsilon())
+						return 0;
+					else if (real(exp_val)<0)
+						return -1;
+					else  // positive integer.  
 					{
-						if (std::round(real(exp_val)) < 0)
-							return std::round(real(exp_val));
+						if (base_deg<0)
+							return -1;
 						else
-							return base_->Degree() * std::round(real(exp_val));
+							return base_deg*std::round(real(exp_val));
 					}
 
 				}
-			}
+				else
+				{
+					if (base_deg==0)
+						return 0;
+					else
+						return -1;
+				}
 
-			return -1;
-			
+			}
+			else
+			{
+				// there may be an edge case here where the base is the numbers 0 or 1.  but that would be stupid, wouldn't it.
+				return -1;
+			}
 		}
 
 
