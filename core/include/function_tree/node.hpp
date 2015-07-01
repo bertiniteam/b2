@@ -116,32 +116,12 @@ public:
     /**
 	 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
     */
-	std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
-	{
-		
-		std::vector<int> deg(vars.size());
-		for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
-		{
-			*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
-		}
-		return deg;
-	}
+	virtual std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const = 0;
 
 	/**
 	 Compute the overall degree with respect to a variable group.
 	*/
-	int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const
-	{
-		auto multideg = MultiDegree(vars);
-		auto deg = 0;
-		std::for_each(multideg.begin(),multideg.end(),[&](int n){
-						if (deg < 0)
-							deg = -1;
-						else
-                        	deg += n;
- 						});
-		return deg;
-	}
+	virtual int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const = 0;
 
 	/**
 	Homogenize a tree, inputting a variable group holding the non-homogeneous variables, and the new homogenizing variable.  The homvar may be an element of the variable group, that's perfectly ok.

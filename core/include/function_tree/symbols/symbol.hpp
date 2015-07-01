@@ -40,7 +40,10 @@ namespace  bertini {
 		
 		virtual ~Symbol() = default;
 		
+
 		
+		
+
 	};
 	
 	
