@@ -118,18 +118,6 @@ namespace bertini {
     
 protected:
     // Return value of constant
-//    dbl FreshEval(dbl) override
-//    {
-//        return std::get< std::pair<dbl,bool> >(current_value_).first;
-//    }
-//    
-//    mpfr FreshEval(mpfr) override
-//    {
-//        return std::get< std::pair<mpfr,bool> >(current_value_).first;
-//    }
-   
-        
-    // Return value of constant
     dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
     {
         return std::get< std::pair<dbl,bool> >(current_value_).first;
