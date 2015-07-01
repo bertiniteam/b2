@@ -28,8 +28,11 @@
 #include "function_tree/operators/mult_operator.hpp"
 
 #include "function_tree/symbols/number.hpp"
+#include "function_tree/operators/sum_operator.hpp"
 
 
+
+// #include "function_tree/operators/intpow_operator.hpp"
 namespace bertini {
 
 	class PowerOperator : public virtual BinaryOperator
@@ -91,7 +94,72 @@ namespace bertini {
         }
 
 
+        
 
+
+		 /**
+		Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
+        */
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			
+			auto base_deg = base_->Degree(v);
+			auto exp_deg = exponent_->Degree(v);
+
+			if (exp_deg==0)
+			{
+				auto exp_val = exponent_->Eval<dbl>();
+				bool exp_is_int = false;
+
+				if (fabs(imag(exp_val))< 10*std::numeric_limits<double>::epsilon()) // so a real thresholding step
+					if (fabs(real(exp_val) - std::round(real(exp_val))) < 10*std::numeric_limits<double>::epsilon()) // then check that the real part is close to an integer
+						exp_is_int = true;
+
+				if (exp_is_int)
+				{
+					if (abs(exp_val-dbl(0.0))< 10*std::numeric_limits<double>::epsilon())
+						return 0;
+					else if (real(exp_val)<0)
+						return -1;
+					else  // positive integer.  
+					{
+						if (base_deg<0)
+							return -1;
+						else
+							return base_deg*std::round(real(exp_val));
+					}
+
+				}
+				else
+				{
+					if (base_deg==0)
+						return 0;
+					else
+						return -1;
+				}
+
+			}
+			else
+			{
+				// there may be an edge case here where the base is the numbers 0 or 1.  but that would be stupid, wouldn't it.
+				return -1;
+			}
+		}
+
+
+
+
+		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			if (exponent_->Degree(vars)==0)
+			{
+				base_->Homogenize(vars, homvar);
+			}
+			else{
+				throw std::runtime_error("asking for homogenization on non-polynomial node");
+				//TODO: this will leave the system in a broken state, partially homogenized...
+			}
+		}
 
 
 		virtual ~PowerOperator() = default;
