@@ -25,11 +25,7 @@
 #include "function_tree/node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
 
-#include "function_tree/operators/negate_operator.hpp"
-#include "function_tree/operators/mult_operator.hpp"
-
-
-#include "function_tree/operators/power_operator.hpp"
+#include "function_tree/operators/arithmetic.hpp"
 
 
 
