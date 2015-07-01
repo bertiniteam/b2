@@ -536,6 +536,11 @@ namespace bertini {
 
 
 
+	/**
+	Operator for power functions with arbitrary expressions in the exponent and base.
+
+	\see IntegerPowerOperator
+	*/
 	class PowerOperator : public virtual BinaryOperator
 	{
 
@@ -613,95 +618,13 @@ namespace bertini {
 	}
 
 
-	// Node -> UnaryOperator -> SqrtOperator
-	// Description: This class represents the square root function.  FreshEval method
-	// is defined for square root and takes the square root of the child node.
-	class SqrtOperator : public  virtual UnaryOperator
-	{
-	public:
-		
-		SqrtOperator(){}
-		
-		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-		{};
-		
-
-		
-		virtual void print(std::ostream & target) const override
-		{
-			target << "sqrt(";
-			child_->print(target);
-			target << ")";
-		}
-        
-        
-        /**
-         Differentiates the square root function.
-         */
-        virtual std::shared_ptr<Node> Differentiate() override
-        {
-            auto ret_mult = std::make_shared<MultOperator>();
-            ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Number>(-0.5)));
-            ret_mult->AddChild(child_->Differentiate());
-            ret_mult->AddChild(std::make_shared<Number>(0.5));
-            return ret_mult;
-        }
-
-
-
-		/**
-		Compute the degree with respect to a single variable.
-
-		For the square root function, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-	    {
-	    	if (child_->Degree(v)==0)
-			{
-				return 0;
-			}
-			else
-			{
-				return -1;
-			}
-	    }
 
 
 
 
-		virtual ~SqrtOperator() = default;
-		
-	protected:
-		// Specific implementation of FreshEval for negate.
-//		dbl FreshEval(dbl) override
-//		{
-//			return sqrt(child_->Eval<dbl>());
-//		}
-//		
-//		mpfr FreshEval(mpfr) override
-//		{
-//			return sqrt(child_->Eval<mpfr>());
-//		}
-        
-        // Specific implementation of FreshEval for negate.
-        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            return sqrt(child_->Eval<dbl>(diff_variable));
-        }
-        
-        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            return sqrt(child_->Eval<mpfr>(diff_variable));
-        }
-
-	};
 
 
 
-	inline std::shared_ptr<bertini::Node> sqrt(const std::shared_ptr<bertini::Node> & N)
-	{
-		return std::make_shared<bertini::SqrtOperator>(N);
-	}
 
 
 
@@ -749,9 +672,6 @@ namespace bertini {
         virtual std::shared_ptr<Node> Differentiate() override;
 
 
-
-
-
 		 /**
 		Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
         */
@@ -785,15 +705,10 @@ namespace bertini {
             return pow(child_->Eval<mpfr>(diff_variable),exponent_);
         }
 
-
-
-
-
-
 	private:
 
 		int exponent_ = 1; ///< Exponent for the exponenetial operator
-	};
+	}; // re: class IntegerPowerOperator
 
 
 
@@ -801,6 +716,64 @@ namespace bertini {
 	{
 		return std::make_shared<bertini::IntegerPowerOperator>(base,power);
 	}
+
+
+
+	/**
+	Node -> UnaryOperator -> SqrtOperator
+	Description: This class represents the square root function.  FreshEval method
+	is defined for square root and takes the square root of the child node.
+	*/
+	class SqrtOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		SqrtOperator(){}
+		
+		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+		
+
+		
+		virtual void print(std::ostream & target) const override;
+        
+        
+        /**
+         Differentiates the square root function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override;
+
+
+
+		/**
+		Compute the degree with respect to a single variable.
+
+		For the square root function, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+	    */
+	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+
+
+
+		virtual ~SqrtOperator() = default;
+		
+	protected:
+
+        // Specific implementation of FreshEval for negate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+
+	};
+
+
+
+	inline std::shared_ptr<bertini::Node> sqrt(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::SqrtOperator>(N);
+	}
+
+
 
 
 	// Node -> UnaryOperator -> ExpOperator

@@ -458,15 +458,27 @@ namespace bertini{
             return pow( base_->Eval<mpfr>(diff_variable), exponent_->Eval<mpfr>());
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         /////////////////
         //
         //  IntegerPowerOperator definitions
         //
         ////////////////////
 
-    /**
-	 Virtual polymorphic method for printing to an arbitrary stream.
-	 */
 	 void IntegerPowerOperator::print(std::ostream & target) const
 	 {
 	 	target << "(";
@@ -504,6 +516,63 @@ namespace bertini{
 			return exponent_*base_deg;
 
 	}
+
+
+
+
+
+
+
+
+
+
+
+	//////////////
+	//
+	//  Square Root Operator definitions
+	//
+	/////////////////
+
+	void SqrtOperator::print(std::ostream & target) const
+		{
+			target << "sqrt(";
+			child_->print(target);
+			target << ")";
+		}
+
+
+
+	std::shared_ptr<Node> SqrtOperator::Differentiate()
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Number>(-0.5)));
+            ret_mult->AddChild(child_->Differentiate());
+            ret_mult->AddChild(std::make_shared<Number>(0.5));
+            return ret_mult;
+        }
+
+        int SqrtOperator::Degree(std::shared_ptr<Variable> const& v) const
+	    {
+	    	if (child_->Degree(v)==0)
+			{
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
+	    }
+
+	    dbl SqrtOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable) 
+        {
+            return sqrt(child_->Eval<dbl>(diff_variable));
+        }
+
+        mpfr SqrtOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+        {
+            return sqrt(child_->Eval<mpfr>(diff_variable));
+        }
+
 
 
 
