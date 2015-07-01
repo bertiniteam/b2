@@ -80,28 +80,9 @@ namespace bertini{
 	int SumOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const 
 	{
 		auto deg = 0;
-		std::cout << "here\n";
 		for (auto iter = children_.begin(); iter!=children_.end(); iter++)
 		{
-			auto multideg = (*iter)->MultiDegree(vars);
-
-			std::cout << "summand " << *iter << " has multidegree\n";
-			for (auto jter : multideg)
-			 {
-			 	std::cout << jter << " ";
-			 } 
-			 std::cout << "\n";
-
-
-			auto term_degree = 0;
-			std::for_each(multideg.begin(),multideg.end(),[&](int n){
-							if (n < 0)
-								term_degree = -1;
-							else
-	                        	term_degree += n;
-	 						});
-			std::cout << "and term degree " << term_degree << "\n";
-
+			auto term_degree = (*iter)->Degree(vars);
 			if (term_degree<0)
 				return term_degree;
 
@@ -115,7 +96,7 @@ namespace bertini{
 
 	std::vector<int> SumOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
 	{
-		std::vector<int> deg(vars.size());
+		std::vector<int> deg(vars.size(),0);
 		for (auto iter : children_)
 		{
 			auto term_deg = iter->MultiDegree(vars);
@@ -402,15 +383,7 @@ namespace bertini{
 
 		for (auto iter = children_.begin(); iter!=children_.end(); iter++)
 		{
-			auto factor_deg = 0;  
-
-			auto multideg = MultiDegree(vars);
-			std::for_each(multideg.begin(),multideg.end(),[&](int n){
-						if (n < 0)
-							factor_deg = -1;
-						else
-                        	factor_deg += n;
- 						});
+			auto factor_deg = (*iter)->Degree(vars);  
 
 			if (factor_deg<0)
 				return factor_deg;

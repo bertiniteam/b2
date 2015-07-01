@@ -192,10 +192,6 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x)
 
 	BOOST_CHECK_EQUAL(J(0),2.0);
 	BOOST_CHECK_EQUAL(J(1),1.0);
-
-	std::cout << S << std::endl;
-	std::cout << "v\n" << v << std::endl;
-	std::cout << "J\n" << J << std::endl;
 }
 
 
@@ -219,10 +215,6 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 	auto J = S.Jacobian(v);
 
 	BOOST_CHECK_THROW(S.Jacobian(v,dbl(0.5)), std::runtime_error);
-
-	std::cout << S << std::endl;
-	std::cout << "v\n" << v << std::endl;
-	std::cout << "J\n" << J << std::endl;
 }
 
 
@@ -246,10 +238,6 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 	auto J = S.Jacobian(v,time);
 
 	BOOST_CHECK_THROW(S.Jacobian(v), std::runtime_error);
-
-	std::cout << S << std::endl;
-	std::cout << "v\n" << v << std::endl;
-	std::cout << "J\n" << J << std::endl;
 }
 
 

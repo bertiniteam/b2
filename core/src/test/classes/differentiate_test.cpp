@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
     std::vector<int> multidegree{1,2,1};
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
-
+    
     BOOST_CHECK_EQUAL(func->Degree(vars), 2);
 }
 
@@ -1043,7 +1043,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
     
 
     BOOST_CHECK_EQUAL(func->Degree(vars), -1);
-    
+
     std::vector<dbl> exact_dbl = {1.0/( znum_dbl*pow( cos(xnum_dbl/znum_dbl), 2.0 ) ), 0.0, -xnum_dbl/( pow(znum_dbl, 2.0)*pow( cos(xnum_dbl/znum_dbl), 2.0 ) )};
     std::vector<mpfr> exact_mpfr = {mpfr("1.0")/( znum_mpfr*pow( cos(xnum_mpfr/znum_mpfr), mpfr("2.0") ) ), mpfr("0.0"), -xnum_mpfr/( pow(znum_mpfr, mpfr("2.0"))*pow( cos(xnum_mpfr/znum_mpfr), mpfr("2.0") ) )};
 
