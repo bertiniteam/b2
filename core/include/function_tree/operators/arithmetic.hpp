@@ -158,7 +158,7 @@ namespace bertini {
 	};
 	
 
-	
+
 	///////////////////
 	//
 	//     SUM AND DIFFERENCE ARITHMETIC OPERATORS
@@ -266,10 +266,21 @@ namespace bertini {
 	
 
 
-	// Node -> UnaryOperator -> NegateOperator
-	// Description: This class represents the negation operator.  FreshEval method
-	// is defined for negation and multiplies the value by -1.
-	class NegateOperator : public  virtual UnaryOperator
+
+
+
+
+
+
+
+
+
+	/**
+	Node -> UnaryOperator -> NegateOperator
+	Description: This class represents the negation operator.  FreshEval method
+	is defined for negation and multiplies the value by -1.
+	*/
+	class NegateOperator : public virtual UnaryOperator
 	{
 	public:
 		
@@ -279,35 +290,17 @@ namespace bertini {
 		{};
 		
 
-		
-		
-		
-		virtual void print(std::ostream & target) const override
-		{
-			target << "-(";
-			child_->print(target);
-			target << ")";
-		}
-        
-        
+
+		/**
+		Print to an arbitrary ostream.
+		*/
+		virtual void print(std::ostream & target) const override;
         
         
         /**
          Returns negative of derivative of child.
          */
-        virtual std::shared_ptr<Node> Differentiate() override
-        {
-            return std::make_shared<NegateOperator>(child_->Differentiate());
-        }
-
-		 /**
-		Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
-        */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return child_->Degree(v);
-		}
-
+        virtual std::shared_ptr<Node> Differentiate() override;
 
 
 		virtual ~NegateOperator() = default;
@@ -315,15 +308,9 @@ namespace bertini {
 	protected:
         
         // Specific implementation of FreshEval for negate.
-        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            return (-1.0)*child_->Eval<dbl>(diff_variable);
-        }
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
         
-        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            return -child_->Eval<mpfr>(diff_variable);
-        }
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 
 	};
 
@@ -332,6 +319,17 @@ namespace bertini {
 	{
 		return std::make_shared<NegateOperator>(rhs);
 	}
+
+
+
+
+
+
+
+
+
+
+
 
 	// Node -> NaryOperator -> MultOperator
 	// Description: This class represents multiplication operator.  All children are factors and are stored
@@ -355,11 +353,6 @@ namespace bertini {
 			AddChild(left, mult_or_div_left);
 			AddChild(right, mult_or_div_right);
 		}
-
-
-
-
-
 
 
 
@@ -388,29 +381,7 @@ namespace bertini {
 		/**
 		 overridden method for printing to an output stream
 		 */
-		virtual void print(std::ostream & target) const override
-		{
-			target << "(";
-			for (auto iter = children_.begin(); iter!= children_.end(); iter++) {
-				if (iter==children_.begin())
-					if (! *children_mult_or_div_.begin()  )
-						target << "1/";  
-				(*iter)->print(target);
-				if (iter!=(children_.end()-1)){
-					if (*(children_mult_or_div_.begin() + (iter-children_.begin())+1)) { // TODO i think this +1 is wrong... dab
-						target << "*";
-					}
-					else{
-						target << "/";
-					}
-
-				}
-			}
-			target << ")";
-		}
-
-
-
+		virtual void print(std::ostream & target) const override;
 
         /**
          Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
@@ -422,88 +393,17 @@ namespace bertini {
          /**
 		Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			int deg = 0;
-			for (auto iter = children_.begin(); iter!= children_.end(); iter++)
-			{
-				// if the child node is a differential coming from another variable, then this degree should be 0, end of story.
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
-				auto factor_deg = (*iter)->Degree(v);
-
-				auto is_it_a_differential = std::dynamic_pointer_cast<Differential>(*iter);
-				if (is_it_a_differential)
-					if (is_it_a_differential->GetVariable()!=v)
-					{
-						// std::cout << *this << " deg " << 0 << "\n";
-						return 0;
-					}
-					
-				
-
-				
-
-				if (factor_deg<0)
-					return factor_deg;
-				else if (factor_deg!=0 && !*(children_mult_or_div_.begin() + (iter-children_.begin()) ) )
-					return -1;
-				else
-					deg+=factor_deg;
-			}
-			// std::cout << *this << " deg " << deg << "\n";
-			return deg;
-		}
-
-		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
-		{
-			for (auto iter: children_)
-			{
-				iter->Homogenize(vars, homvar);
-			}
-		}
+		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
 
 	protected:
 
 		// Specific implementation of FreshEval for mult and divide.
 		//  If child_mult_ = true, then multiply, else divide
-        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            dbl retval{1};
-            for(int ii = 0; ii < children_.size(); ++ii)
-            {
-                if(children_mult_or_div_[ii])
-                {
-                    retval *= children_[ii]->Eval<dbl>(diff_variable);
-                }
-                else
-                {
-                    retval /= children_[ii]->Eval<dbl>(diff_variable);
-                }
-            }
+        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
 
-            return retval;
-        }
-
-
-
-
-        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            mpfr retval{1};
-            for(int ii = 0; ii < children_.size(); ++ii)
-            {
-                if(children_mult_or_div_[ii])
-                {
-                    retval *= children_[ii]->Eval<mpfr>(diff_variable);
-                }
-                else
-                {
-                    retval /= children_[ii]->Eval<mpfr>(diff_variable);
-                }
-            }
-
-            return retval;
-        }
+		virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 
 
 
