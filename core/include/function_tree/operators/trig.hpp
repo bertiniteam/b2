@@ -46,7 +46,7 @@ namespace bertini {
 
         
         
-        virtual void print(std::ostream & target) const override
+        void print(std::ostream & target) const override
         {
             target << "sin(";
             child_->print(target);
@@ -58,7 +58,7 @@ namespace bertini {
         /**
          Differentiates the sine function.
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 
 
@@ -67,7 +67,7 @@ namespace bertini {
 
         For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
         */
-        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
         {
             if (child_->Degree(v)==0)
             {
@@ -125,7 +125,7 @@ namespace bertini {
 
 		
 		
-		virtual void print(std::ostream & target) const override;
+		void print(std::ostream & target) const override;
 		
         
         
@@ -133,7 +133,7 @@ namespace bertini {
         /**
          Differentiates the cosine function.
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 		
 
@@ -142,7 +142,7 @@ namespace bertini {
 
 		For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
 	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		virtual ~CosOperator() = default;
 		
@@ -187,7 +187,7 @@ namespace bertini {
 
 		
 		
-		virtual void print(std::ostream & target) const override
+		void print(std::ostream & target) const override
 		{
 			target << "tan(";
 			child_->print(target);
@@ -198,7 +198,7 @@ namespace bertini {
         /**
          Differentiates the tangent function.
          */
-        virtual std::shared_ptr<Node> Differentiate() override
+        std::shared_ptr<Node> Differentiate() override
         {
             auto ret_mult = std::make_shared<MultOperator>();
             ret_mult->AddChild(child_->Differentiate());
@@ -215,7 +215,7 @@ namespace bertini {
 
 		For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
 	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 	    {
 	    	if (child_->Degree(v)==0)
 			{
