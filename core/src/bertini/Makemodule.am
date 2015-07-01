@@ -27,8 +27,7 @@ function_tree_header_files = \
 function_tree_source_files = \
 	src/function_tree/node.cpp \
 	src/function_tree/operators/arithmetic.cpp \
-	src/function_tree/operators/trig.cpp \
-	src/function_tree/operators/exp.cpp
+	src/function_tree/operators/trig.cpp
 
 function_tree = $(function_tree_header_files) $(function_tree_source_files)
 
