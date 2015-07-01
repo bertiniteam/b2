@@ -26,9 +26,8 @@
 
 #include "function_tree/node.hpp"
 
-#include "function_tree/operators/unary_operator.hpp"
-#include "function_tree/operators/binary_operator.hpp"
-#include "function_tree/operators/nary_operator.hpp"
+#include "function_tree/operators/operator.hpp"
+
 
 
 #include "function_tree/symbols/number.hpp"

@@ -43,12 +43,13 @@
 
 #include "function_tree/Node.hpp"
 #include "function_tree/roots/function.hpp"
+
 #include "function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/trig.hpp"
 
 #include "function_tree/symbols/number.hpp"
 #include "function_tree/symbols/variable.hpp"
 
-#include "function_tree/operators/binary_operator.hpp"
 
 
 

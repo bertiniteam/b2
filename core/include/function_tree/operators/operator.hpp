@@ -18,10 +18,12 @@
 //
 // operator.hpp:  Declares the class Operator.
 
-#ifndef b2Test_Operator_h
-#define b2Test_Operator_h
+#ifndef operator_h
+#define operator_h
 
 #include "function_tree/node.hpp"
+
+#include <vector>
 
 
 namespace bertini {
@@ -40,6 +42,143 @@ namespace bertini {
 		virtual ~Operator() = default;
 	};
 	
+
+
+
+	// Description: This class is an interface for all unary operators, such as negation.
+	// The sole child is stored in a shared_ptr.
+	class UnaryOperator : public virtual Node, public virtual Operator
+	{
+	public:
+		
+		UnaryOperator(){}
+		
+		UnaryOperator(const std::shared_ptr<Node> & N) : child_(N)
+		{}
+		
+		
+		
+		virtual ~UnaryOperator() = default;
+		
+		
+		virtual void Reset() override
+		{
+			Node::ResetStoredValues();
+			child_->Reset();
+		}
+		
+		
+		
+		virtual void SetChild(std::shared_ptr<Node> new_child)
+		{
+			child_ = new_child;
+		}
+		
+		
+		
+		//Return the only child for the unary operator
+		std::shared_ptr<Node> first_child()
+		{
+			return child_;
+		}
+		
+		
+
+		
+		
+		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			child_->Homogenize(vars, homvar);
+		}
+		
+		
+		
+	protected:
+		//Stores the single child of the unary operator
+		std::shared_ptr<Node> child_;
+	};
+
+
+
+
+
+	// Description: This class is an interface for all binary operators, such as division.
+	// Children of the operator are stored in a vector.
+	class BinaryOperator : public virtual Operator
+	{
+	public:
+		
+		
+		virtual void Reset() = 0; // override
+
+
+
+	protected:
+		
+		virtual void print(std::ostream & target) const = 0;
+				
+
+	};
+
+
+	// Description: This class is an interface for all n-ary operators, such as summation and multiplication.
+	// Children of the operator are stored in a vector and methods to add and access children are available
+	// in this interface.
+	class NaryOperator : public virtual Node, public virtual Operator
+	{
+	public:
+		
+		virtual ~NaryOperator() = default;
+		
+		
+		virtual void Reset() override
+		{
+			Node::ResetStoredValues();
+			for (auto ii:children_)
+			{
+				ii->Reset();
+			}
+		}
+		
+		// Add a child onto the container for this operator
+		virtual void AddChild(std::shared_ptr<Node> child) // override
+		{
+			children_.push_back(std::move(child));
+		}
+		
+		
+		
+		
+		
+		
+		size_t children_size()
+		{
+			return children_.size();
+		}
+		
+		std::shared_ptr<Node> first_child()
+		{
+			return children_[0];
+		}
+		
+        
+		
+		
+		
+		
+		
+	protected:
+		//Stores all children for this operator node.
+		//This is an NaryOperator and can have any number of children.
+		std::vector< std::shared_ptr<Node> > children_;
+		
+		
+		
+		
+	};
+
+
+
 } // re: namespace bertini
 
 

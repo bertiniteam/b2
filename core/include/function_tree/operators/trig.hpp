@@ -22,9 +22,7 @@
 #ifndef trig_operator_hpp
 #define trig_operator_hpp
 
-#include "function_tree/node.hpp"
-#include "function_tree/operators/unary_operator.hpp"
-
+#include "function_tree/operators/operator.hpp"
 #include "function_tree/operators/arithmetic.hpp"
 
 
