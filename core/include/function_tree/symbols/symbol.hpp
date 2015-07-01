@@ -28,11 +28,11 @@
 
 namespace  bertini {
 	
-	// Node -> Symbol
-	// Description: This class could work as an interface for all non-operators.
-	// NOTE: Currently this does nothing!!!!
-	//
-	// TODO:(JBC) This defined the FreshEval for all symbols.
+	/**
+	 Node -> Symbol
+	
+	This class could work as an interface for all non-operators.
+	*/
 	class Symbol : public virtual Node
 	{
 		
@@ -50,24 +50,39 @@ namespace  bertini {
 	
 	
 	
-	
+	/**
+	Symbols which have names are named symbols.
+	*/
 	class NamedSymbol : public virtual Symbol
 	{
 		std::string name_;
 	public:
 		
+		/**
+		Get the name of the named symbol
+		*/
 		std::string name() const
 		{
 			return name_;
 		};
 		
+		/**
+		Get the name of the named symbol
+		*/
 		void name(const std::string & new_name){name_ = new_name;};
 		
+		/**
+		Default constructor
+		*/
 		NamedSymbol(){};
+
+		/**
+		Parameterized constructor, sets the name of the symbol
+		*/
 		NamedSymbol(const std::string & new_name) : name_(new_name){};
 		
 		
-		virtual void print(std::ostream& target) const override
+		void print(std::ostream& target) const override
 		{
 			target << name();
 		}
@@ -75,7 +90,7 @@ namespace  bertini {
 		virtual ~NamedSymbol() = default;
 		
 		
-		virtual void Reset() override
+		void Reset() override
 		{
 			Node::ResetStoredValues();
 		}
