@@ -46,8 +46,8 @@ namespace  bertini {
 		
 		virtual ~Variable() = default;
 		
-		std::string PrintNode() override {return name();}
-		
+
+
 		explicit operator std::string(){return name();}
 		
 		
@@ -64,7 +64,7 @@ namespace  bertini {
         /**
          Differentiates a variable.  Still needs to be implemented.
          */
-        virtual std::shared_ptr<Node> Differentiate() override
+        std::shared_ptr<Node> Differentiate() override
         {
             return std::make_shared<Differential>(shared_from_this(), name());
         }
@@ -79,7 +79,7 @@ namespace  bertini {
 
 		If this is the variable, then the degree is 1.  Otherwise, 0.
 	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 	    {
 	    	if (v)
 	    	{
@@ -93,25 +93,14 @@ namespace  bertini {
 	    	
 	    }
 
-	    virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+	    void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			
 		}
 
 		
 	protected:
-		// Return current value of the variable.
-//		dbl FreshEval(dbl) override
-//		{
-//			return std::get< std::pair<dbl,bool> >(current_value_).first;
-//		}
-//		
-//		mpfr FreshEval(mpfr) override
-//		{
-//			return std::get< std::pair<mpfr,bool> >(current_value_).first;
-//		}
 		
-        
         // Return current value of the variable.
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
         {

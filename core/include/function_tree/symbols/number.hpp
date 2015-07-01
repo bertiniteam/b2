@@ -79,15 +79,12 @@ namespace bertini {
 
 
 
-		// These do nothing for a constant
-		std::string PrintNode() override {return "";}
-
-		virtual void print(std::ostream & target) const override
+		void print(std::ostream & target) const override
 		{
 			target << std::get< std::pair<mpfr,bool> >(current_value_).first;
 		}
 
-		virtual void Reset() override
+		void Reset() override
 		{
 			// nothing to reset here
 		}
@@ -96,7 +93,7 @@ namespace bertini {
         /**
          Differentiates a number.  Should this return the special number Zero?
          */
-        virtual std::shared_ptr<Node> Differentiate() override
+        std::shared_ptr<Node> Differentiate() override
         {
             return std::make_shared<Number>(0.0);
         }
@@ -109,13 +106,13 @@ namespace bertini {
 
 		For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
 	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 	    {
 	    	return 0;
 	    }
 
 
-	    virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+	    void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			
 		}
@@ -125,17 +122,6 @@ namespace bertini {
 
 	protected:
 		// Return value of constant
-//		dbl FreshEval(dbl) override
-//		{
-//			return std::get< std::pair<dbl,bool> >(current_value_).first;
-//		}
-//
-//		mpfr FreshEval(mpfr) override
-//		{
-//			return std::get< std::pair<mpfr,bool> >(current_value_).first;
-//		}
-
-        // Return value of constant
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
         {
             return std::get< std::pair<dbl,bool> >(current_value_).first;

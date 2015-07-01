@@ -45,7 +45,6 @@ using Number = bertini::Number;
 using SpecialNumber = bertini::SpecialNumber;
 
 
-int Node::tabcount = 0;
 
 double threshold_clearance_d = 1e-15;
 
