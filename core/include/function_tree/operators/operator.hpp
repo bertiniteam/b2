@@ -34,11 +34,6 @@ namespace bertini {
 		
 	public:
 		
-		// This method adds a child to an operator.
-		//
-		// Every interface for operator types(nary, binary and unary) implement this method.
-		//	virtual void AddChild(std::shared_ptr<Node> child) = 0;
-		//
 		virtual ~Operator() = default;
 	};
 	
@@ -47,7 +42,7 @@ namespace bertini {
 
 	// Description: This class is an interface for all unary operators, such as negation.
 	// The sole child is stored in a shared_ptr.
-	class UnaryOperator : public virtual Node, public virtual Operator
+	class UnaryOperator : public virtual Operator
 	{
 	public:
 		
@@ -61,7 +56,7 @@ namespace bertini {
 		virtual ~UnaryOperator() = default;
 		
 		
-		virtual void Reset() override
+		void Reset() override
 		{
 			Node::ResetStoredValues();
 			child_->Reset();
@@ -69,7 +64,7 @@ namespace bertini {
 		
 		
 		
-		virtual void SetChild(std::shared_ptr<Node> new_child)
+		void SetChild(std::shared_ptr<Node> new_child)
 		{
 			child_ = new_child;
 		}
@@ -87,12 +82,12 @@ namespace bertini {
 		/**
 		Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return child_->Degree(v);
 		}
 		
-		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			child_->Homogenize(vars, homvar);
 		}
@@ -137,7 +132,7 @@ namespace bertini {
 		virtual ~NaryOperator() = default;
 		
 		
-		virtual void Reset() override
+		void Reset() override
 		{
 			Node::ResetStoredValues();
 			for (auto ii:children_)
@@ -147,7 +142,7 @@ namespace bertini {
 		}
 		
 		// Add a child onto the container for this operator
-		virtual void AddChild(std::shared_ptr<Node> child) // override
+		virtual void AddChild(std::shared_ptr<Node> child)
 		{
 			children_.push_back(std::move(child));
 		}
