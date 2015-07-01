@@ -27,12 +27,12 @@
 #include "function_tree/node.hpp"
 #include "function_tree/symbols/symbol.hpp"
 #include "function_tree/symbols/number.hpp"
-#include "function_tree/symbols/variable.hpp"
+// #include "function_tree/symbols/variable.hpp"
 
 
 
 namespace bertini {
-
+    class Variable;
 
 
     // Node -> Symbol -> SpecialNumber
@@ -54,9 +54,16 @@ namespace bertini {
         }
 
 
+
+
         std::string PrintNode() override {return name();}
 
 
+
+        std::shared_ptr<Variable> GetVariable() const 
+        {
+            return differential_variable_;
+        }
 
 
         virtual void print(std::ostream & target) const override
@@ -78,6 +85,22 @@ namespace bertini {
 
         virtual ~Differential() = default;
 
+
+
+
+        /**
+        Compute the degree with respect to a single variable.   For differentials, the degree is 0.
+        */
+        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        {
+            return 0;
+        }
+
+        virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+        {
+            
+        }
+        
 
     protected:
         // This should never be called for a Differential.  Only for Jacobians.

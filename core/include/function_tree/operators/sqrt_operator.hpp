@@ -69,7 +69,28 @@ namespace bertini {
             return ret_mult;
         }
 
-		
+
+
+		/**
+		Compute the degree with respect to a single variable.
+
+		For the square root function, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+	    */
+	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+	    {
+	    	if (child_->Degree(v)==0)
+			{
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
+	    }
+
+
+
+
 		virtual ~SqrtOperator() = default;
 		
 	protected:

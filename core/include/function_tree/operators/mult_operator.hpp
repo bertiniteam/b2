@@ -25,10 +25,15 @@
 
 #include "function_tree/node.hpp"
 #include "function_tree/operators/nary_operator.hpp"
-#include "function_tree/operators/sum_operator.hpp"
 
+#include "function_tree/operators/sum_operator.hpp"
+#include "function_tree/symbols/number.hpp"
+#include "function_tree/symbols/differential.hpp"
 
 namespace bertini {
+
+	
+
 
 	// Node -> NaryOperator -> MultOperator
 	// Description: This class represents multiplication operator.  All children are factors and are stored
@@ -40,7 +45,7 @@ namespace bertini {
 
 		MultOperator(){}
 
-		MultOperator(const std::shared_ptr<Node> & left, const std::shared_ptr<Node> & right)
+		MultOperator(std::shared_ptr<Node> const& left, std::shared_ptr<Node> const& right)
 		{
 			AddChild(left);
 			AddChild(right);
@@ -96,7 +101,7 @@ namespace bertini {
 						target << "1/";  
 				(*iter)->print(target);
 				if (iter!=(children_.end()-1)){
-					if (*(children_mult_or_div_.begin() + (iter-children_.begin())+1)) {
+					if (*(children_mult_or_div_.begin() + (iter-children_.begin())+1)) { // TODO i think this +1 is wrong... dab
 						target << "*";
 					}
 					else{
@@ -114,64 +119,52 @@ namespace bertini {
         /**
          Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
          */
-        virtual std::shared_ptr<Node> Differentiate() override
-        {
-            std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
-
-            unsigned term_counter {0};
-
-            for (int ii = 0; ii < children_.size(); ++ii)
-            {
-
-            	auto local_derivative = children_[ii]->Differentiate();
-
-                auto is_it_a_number = std::dynamic_pointer_cast<Number>(local_derivative);
-                if (is_it_a_number)
-                	if (is_it_a_number->Eval<dbl>()==dbl(0.0))
-                		continue;
+        virtual std::shared_ptr<Node> Differentiate() override;
 
 
 
-                auto term_ii = std::make_shared<MultOperator>();
-                for (int jj = 0; jj < children_.size(); ++jj)
-                {
-                    if(jj != ii)
-                        term_ii->AddChild(children_[jj],children_mult_or_div_[jj]);
-                }
+         /**
+		Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
+        */
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			int deg = 0;
+			for (auto iter = children_.begin(); iter!= children_.end(); iter++)
+			{
+				// if the child node is a differential coming from another variable, then this degree should be 0, end of story.
 
+				auto factor_deg = (*iter)->Degree(v);
 
-                // if the derivative of the term under consideration is equal to 1, no need to go on.  already have the product we need.
-                if (is_it_a_number)
-                	if (is_it_a_number->Eval<dbl>()==dbl(1.0))
-                		continue;
-                	
+				auto is_it_a_differential = std::dynamic_pointer_cast<Differential>(*iter);
+				if (is_it_a_differential)
+					if (is_it_a_differential->GetVariable()!=v)
+					{
+						// std::cout << *this << " deg " << 0 << "\n";
+						return 0;
+					}
+					
+				
 
-                // the first branch is for division, and the quotient rule.
-                if ( !(children_mult_or_div_[ii]) )
-                {
-                	// divide by the 
-                    term_ii->AddChild(children_[ii],false);
-                    term_ii->AddChild(children_[ii],false);
-                    term_ii->AddChild(local_derivative);
-                    ret_sum->AddChild(term_ii,false);  // false for subtract here.
-                }
-                // the second branch is for multiplication, and the product rule
-                else
-                {
-                    term_ii->AddChild(local_derivative,true);// true for multiply, not divide
-                    ret_sum->AddChild(term_ii); //  no truth second argument, because is add.
-                }
+				
 
-                term_counter++;
+				if (factor_deg<0)
+					return factor_deg;
+				else if (factor_deg!=0 && !*(children_mult_or_div_.begin() + (iter-children_.begin()) ) )
+					return -1;
+				else
+					deg+=factor_deg;
+			}
+			// std::cout << *this << " deg " << deg << "\n";
+			return deg;
+		}
 
-            } // re: for ii
-
-            return ret_sum;
-//            return children_[0];
-        }
-
-
-
+		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			for (auto iter: children_)
+			{
+				iter->Homogenize(vars, homvar);
+			}
+		}
 
 	protected:
 		// Specific implementation of FreshEval for mult and divide.
@@ -270,15 +263,8 @@ namespace bertini {
 
 	};
 
+	
 
-} // re: namespace bertini
-
-
-namespace {
-
-
-	using Node = bertini::Node;
-	using MultOperator = bertini::MultOperator;
 
 	/*
 	multiplication operators
@@ -301,6 +287,7 @@ namespace {
 		return lhs;
 	}
 
+
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, double rhs)
 	{
 		return std::make_shared<MultOperator>(lhs,std::make_shared<Number>(rhs));
@@ -316,6 +303,8 @@ namespace {
 		return std::make_shared<MultOperator>(std::make_shared<Number>(lhs), rhs);
 	}
 
+
+
 	inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 
@@ -327,7 +316,6 @@ namespace {
 		lhs.swap(temp);
 		return lhs;
 	}
-
 
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
@@ -356,13 +344,11 @@ namespace {
 		return lhs;
 	}
 
-
 	inline std::shared_ptr<Node> operator/=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 		lhs->AddChild(rhs,false);
 		return lhs;
 	}
-
 
 	inline std::shared_ptr<Node>& operator/=(std::shared_ptr<Node> & lhs, double rhs)
 	{
@@ -385,15 +371,17 @@ namespace {
 	{
 		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Number>(rhs), false);
 	}
-
+	
 	inline std::shared_ptr<Node> operator/(double lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<MultOperator>(std::make_shared<Number>(lhs), true, rhs, false);
 	}
 
 
+} // re: namespace bertini
 
-}
+
+
 
 
 

@@ -70,8 +70,34 @@ namespace  bertini {
         }
 		
 		
+
 		
-		
+
+
+		/**
+		Compute the degree with respect to a single variable.
+
+		If this is the variable, then the degree is 1.  Otherwise, 0.
+	    */
+	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+	    {
+	    	if (v)
+	    	{
+				if (this == v.get())
+			    	return 1;
+			    else
+			    	return 0;
+	    	}
+	    	else
+	    		return 1;
+	    	
+	    }
+
+	    virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			
+		}
+
 		
 	protected:
 		// Return current value of the variable.

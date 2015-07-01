@@ -83,53 +83,28 @@ public:
     //  run the specific FreshEval of the node, then set flag to false.
     //
     // Template type is type of value you want returned.
-    template<typename T>
-    T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
-    {
-		
-//		this->print(std::cout);
-//		std::cout << " has value ";
-		
-        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-        if(!val_pair.second)
-        {
-//            std::cout << "Fresh Eval\n";
-            T input{};
-            val_pair.first = FreshEval(input, diff_variable);
-            val_pair.second = true;
-        }
- 
-		
-//		std::cout << val_pair.first << std::endl;
-		return val_pair.first;
-    }
-	
     /**
      Evaluate the jacobian with respect to a particular variable.  If flag false, just return value, if flag true
      run the specific FreshEval of the node, then set flag to false.
      
      Template type is type of value you want returned.
      */
-//    template<typename T>
-//    T Eval(std::shared_ptr<Variable> diff_variable)
-//    {
-//        
-//        //		this->print(std::cout);
-//        //		std::cout << " has value ";
-//        
-//        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-//        if(!val_pair.second)
-//        {
-//            //            std::cout << "Fresh Eval\n";
-//            T input{};
-//            val_pair.first = FreshEval(input, diff_variable);
-//            val_pair.second = true;
-//        }
-//        
-//        
-//        //		std::cout << val_pair.first << std::endl;
-//        return val_pair.first;
-//    }
+    template<typename T>
+    T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
+    {
+        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+        if(!val_pair.second)
+        {
+            T input{};
+            val_pair.first = FreshEval(input, diff_variable);
+            val_pair.second = true;
+        }
+ 
+		
+		return val_pair.first;
+    }
+	
+
 	
     
 
@@ -153,6 +128,50 @@ public:
 	virtual void print(std::ostream& target) const = 0;
     
     virtual std::shared_ptr<Node> Differentiate() = 0;
+
+
+
+    /**
+	Compute the degree, optionally with respect to a single variable.
+    */
+    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+
+
+
+    /**
+	 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+    */
+	std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	{
+		
+		std::vector<int> deg(vars.size());
+		for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+		{
+			*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+		}
+		return deg;
+	}
+
+	/**
+	 Compute the overall degree with respect to a variable group.
+	*/
+	int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const
+	{
+		auto multideg = MultiDegree(vars);
+		auto deg = 0;
+		std::for_each(multideg.begin(),multideg.end(),[&](int n){
+						if (deg < 0)
+							deg = -1;
+						else
+                        	deg += n;
+ 						});
+		return deg;
+	}
+
+	/**
+	Homogenize a tree, inputting a variable group holding the non-homogeneous variables, and the new homogenizing variable.  The homvar may be an element of the variable group, that's perfectly ok.
+	*/
+	virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:

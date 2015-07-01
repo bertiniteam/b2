@@ -25,10 +25,16 @@
 
 #include "function_tree/Node.hpp"
 #include "function_tree/operators/unary_operator.hpp"
-#include "function_tree/operators/mult_operator.hpp"
+
+
 
 
 namespace bertini {
+
+	
+
+
+
 
 	using std::pow;
 
@@ -53,12 +59,8 @@ namespace bertini {
 		/**
 		 Virtual polymorphic method for printing to an arbitrary stream.
 		 */
-		virtual void print(std::ostream & target) const override
-		{
-			target << "(";
-			child_->print(target);
-			target << "^" << exponent() << ")";
-		}
+		virtual void print(std::ostream & target) const override;
+
 
 		/**
 		 Get the integet exponent of an ExpOperator
@@ -81,26 +83,18 @@ namespace bertini {
         /**
          Differentiates a number.
          */
-        virtual std::shared_ptr<Node> Differentiate() override
-        {
+        virtual std::shared_ptr<Node> Differentiate() override;
 
-            if (exponent_==0.0)
-            	return std::make_shared<Number>(0.0);
-	        else if (exponent_==1.0)
-	        	return child_->Differentiate();
-			else if (exponent_==2){
-				auto M = std::make_shared<MultOperator>(std::make_shared<Number>(2.0), child_);
-				M->AddChild(child_->Differentiate());
-	        	return M;
-			}
-	        else{
-	        	auto M = std::make_shared<MultOperator>(std::make_shared<Number>(exponent_), 
-	        	                                        std::make_shared<IntegerPowerOperator>(child_, exponent_-1)
-	        	                                        );
-	        	M->AddChild(child_->Differentiate());
-	        	return M;
-	        }
-        }
+
+
+
+
+		 /**
+		Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
+        */
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+		
 
 
 		virtual ~IntegerPowerOperator() = default;
@@ -116,17 +110,6 @@ namespace bertini {
 		IntegerPowerOperator(){}
 
 	protected:
-		// Specific implementation of FreshEval for exponentiate.
-		// TODO(JBC): How do we implement exp for more complicated types?
-//		dbl FreshEval(dbl) override
-//		{
-//			return pow(child_->Eval<dbl>(), exponent_);
-//		}
-//
-//		mpfr FreshEval(mpfr) override
-//		{
-//			return pow(child_->Eval<mpfr>(),exponent_);
-//		}
 
 
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
@@ -150,22 +133,15 @@ namespace bertini {
 	};
 
 
+
+	inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
+	{
+		return std::make_shared<bertini::IntegerPowerOperator>(base,power);
+	}
+
 }// re: namespace bertini
 
 
 
-namespace {
 
-	using Node = bertini::Node;
-	using IntegerPowerOperator = bertini::IntegerPowerOperator;
-
-	/**
-	 Overloading of the power function to create an ExpOperator with base N and power p.
-	 */
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & base, int power)
-	{
-		return std::make_shared<IntegerPowerOperator>(base,power);
-	}
-
-}
 #endif
