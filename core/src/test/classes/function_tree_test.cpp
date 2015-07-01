@@ -131,6 +131,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
     BOOST_CHECK_EQUAL(N->Degree(),2);
     BOOST_CHECK_EQUAL(N->Degree(x),2);
     
+
 }
 
 

@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
 
-
+    BOOST_CHECK_EQUAL(func->Degree(vars), 2);
 }
 
 
@@ -179,6 +179,8 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
     std::vector<int> multidegree{1,1,1};
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
+
+    BOOST_CHECK_EQUAL(func->Degree(vars), 3);
 
     std::vector<dbl> exact_dbl = {3.0*ynum_dbl*znum_dbl, 3.0*xnum_dbl*znum_dbl, 3.0*ynum_dbl*xnum_dbl};
     std::vector<mpfr> exact_mpfr = {mpfr("3.0")*ynum_mpfr*znum_mpfr,mpfr("3.0")*xnum_mpfr*znum_mpfr,mpfr("3.0")*ynum_mpfr*xnum_mpfr};
@@ -225,6 +227,8 @@ BOOST_AUTO_TEST_CASE(diff_constant){
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
 
+    BOOST_CHECK_EQUAL(func->Degree(vars), 0);
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
@@ -269,6 +273,8 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
     std::vector<int> multidegree{1,1,1};
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
+
+    BOOST_CHECK_EQUAL(func->Degree(vars), 1);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),1);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),1);
@@ -321,6 +327,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
     std::vector<int> multidegree{2,3,0};
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
+
+    BOOST_CHECK_EQUAL(func->Degree(vars), 5);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),2);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),3);
@@ -401,6 +409,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
 
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),2);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),-1);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
@@ -453,6 +463,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
 
+    BOOST_CHECK_EQUAL(func->Degree(vars), 3);
+
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),3);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
@@ -503,6 +515,7 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
 
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),-1);
@@ -556,6 +569,7 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
 
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),-1);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
@@ -606,6 +620,8 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
     std::vector<int> multidegree{0,-1,0};
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
+
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),-1);
@@ -658,7 +674,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_z){
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),-1);
 
-   
+   BOOST_CHECK_EQUAL(func->Degree(vars), -1);
 
     std::vector<dbl> exact_dbl = {0.0,0.0, (1.0/cos(znum_dbl))*(1.0/cos(znum_dbl))};
     std::vector<mpfr> exact_mpfr = {mpfr("0.0"),mpfr("0.0"),(mpfr("1.0")/cos(znum_mpfr))*(mpfr("1.0")/cos(znum_mpfr))};
@@ -706,7 +722,7 @@ BOOST_AUTO_TEST_CASE(diff_exp_x){
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
 
-    
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
 
 
     std::vector<dbl> exact_dbl = {exp(xnum_dbl), 0.0, 0.0};
@@ -756,6 +772,7 @@ BOOST_AUTO_TEST_CASE(diff_sqrt_y){
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
 
     
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
 
     std::vector<dbl> exact_dbl = {0.0, 0.5/sqrt(ynum_dbl), 0.0};
     std::vector<mpfr> exact_mpfr = {mpfr("0.0"),mpfr("0.5")/sqrt(ynum_mpfr),mpfr("0.0")};
@@ -809,7 +826,7 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),3);
 
     
-
+    BOOST_CHECK_EQUAL(func->Degree(vars), 3);
 
     std::vector<dbl> exact_dbl = {0.0, 0.0, 3.0*(pow(znum_dbl+3.0,2.0))};
     std::vector<mpfr> exact_mpfr = {mpfr("0.0"),mpfr("0.0"),mpfr("3.0")*pow(znum_mpfr+mpfr("3.0"),mpfr("2.0"))};
@@ -857,6 +874,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
     std::vector<int> multidegree{2,2,2};
     bool multidegree_ok = multidegree==func->MultiDegree(vars);
     BOOST_CHECK(multidegree_ok);
+
+    BOOST_CHECK_EQUAL(func->Degree(vars), 2);
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),2);
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),2);
@@ -918,7 +937,7 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
 
     
-
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
 
     std::vector<dbl> exact_dbl = {cos(xnum_dbl*ynum_dbl)*ynum_dbl, cos(xnum_dbl*ynum_dbl)*xnum_dbl, 0.0};
     std::vector<mpfr> exact_mpfr = {cos(xnum_mpfr*ynum_mpfr)*ynum_mpfr,
@@ -970,7 +989,7 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
     BOOST_CHECK_EQUAL(func->Degree(vars[1]),0);
     BOOST_CHECK_EQUAL(func->Degree(vars[2]),0);
 
-    
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
 
     std::vector<dbl> exact_dbl = {-2.0*sin(pow(xnum_dbl,2.0))*xnum_dbl, 0.0, 0.0};
     std::vector<mpfr> exact_mpfr = {mpfr("-2.0")*sin(pow(xnum_mpfr,mpfr("2.0")))*xnum_mpfr,mpfr("0.0"), mpfr("0.0")};
@@ -1023,7 +1042,8 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 
     
 
-
+    BOOST_CHECK_EQUAL(func->Degree(vars), -1);
+    
     std::vector<dbl> exact_dbl = {1.0/( znum_dbl*pow( cos(xnum_dbl/znum_dbl), 2.0 ) ), 0.0, -xnum_dbl/( pow(znum_dbl, 2.0)*pow( cos(xnum_dbl/znum_dbl), 2.0 ) )};
     std::vector<mpfr> exact_mpfr = {mpfr("1.0")/( znum_mpfr*pow( cos(xnum_mpfr/znum_mpfr), mpfr("2.0") ) ), mpfr("0.0"), -xnum_mpfr/( pow(znum_mpfr, mpfr("2.0"))*pow( cos(xnum_mpfr/znum_mpfr), mpfr("2.0") ) )};
 

@@ -93,6 +93,16 @@ namespace bertini {
             return 0;
         }
 
+        int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+		{
+			return 0;
+		}
+		
+        std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+        {
+            return std::vector<int>(vars.size(),0);
+        }
+
         void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
         {
             

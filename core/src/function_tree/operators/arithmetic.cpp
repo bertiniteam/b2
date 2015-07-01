@@ -77,7 +77,57 @@ namespace bertini{
 		return deg;
 	}
 	
-	
+	int SumOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const 
+	{
+		auto deg = 0;
+		std::cout << "here\n";
+		for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+		{
+			auto multideg = (*iter)->MultiDegree(vars);
+
+			std::cout << "summand " << *iter << " has multidegree\n";
+			for (auto jter : multideg)
+			 {
+			 	std::cout << jter << " ";
+			 } 
+			 std::cout << "\n";
+
+
+			auto term_degree = 0;
+			std::for_each(multideg.begin(),multideg.end(),[&](int n){
+							if (n < 0)
+								term_degree = -1;
+							else
+	                        	term_degree += n;
+	 						});
+			std::cout << "and term degree " << term_degree << "\n";
+
+			if (term_degree<0)
+				return term_degree;
+
+			deg = std::max(deg, term_degree);
+			
+		}
+		
+		return deg;
+	}
+
+
+	std::vector<int> SumOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	{
+		std::vector<int> deg(vars.size());
+		for (auto iter : children_)
+		{
+			auto term_deg = iter->MultiDegree(vars);
+
+			for (auto iter = term_deg.begin(); iter!= term_deg.end(); ++iter)
+			{
+				*(deg.begin()+(iter-term_deg.begin())) = std::max(*(deg.begin()+(iter-term_deg.begin())), *iter);
+			}
+		}
+		return deg;
+	}
+
 	void SumOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		
@@ -160,6 +210,21 @@ namespace bertini{
 	
 	
 	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	//////////////////////
 	//
 	//  Negate operator definitions
@@ -192,6 +257,22 @@ namespace bertini{
 	
 	
 	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	
 	
 	
@@ -313,7 +394,53 @@ namespace bertini{
 		return deg;
 	}
 	
-	
+
+	int MultOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const 
+	{
+		
+		auto deg = 0;
+
+		for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+		{
+			auto factor_deg = 0;  
+
+			auto multideg = MultiDegree(vars);
+			std::for_each(multideg.begin(),multideg.end(),[&](int n){
+						if (n < 0)
+							factor_deg = -1;
+						else
+                        	factor_deg += n;
+ 						});
+
+			if (factor_deg<0)
+				return factor_deg;
+			else if (factor_deg!=0 && !*(children_mult_or_div_.begin() + (iter-children_.begin()) ) )
+				return -1;
+			else
+				deg+=factor_deg;
+		}
+
+		
+		return deg;
+	}
+
+	std::vector<int> MultOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	{
+		std::vector<int> deg(vars.size(),0);
+		for (auto iter : children_)
+		{
+			auto term_deg = iter->MultiDegree(vars);
+
+			for (auto iter = term_deg.begin(); iter!= term_deg.end(); ++iter)
+			{
+				*(deg.begin()+(iter-term_deg.begin())) += *iter;
+			}
+		}
+		return deg;
+	}
+
+
+
 	void MultOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		for (auto iter: children_)
@@ -435,7 +562,32 @@ namespace bertini{
 		}
 	}
 	
-	
+	int PowerOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const
+	{
+		auto multideg = MultiDegree(vars);
+		auto deg = 0;
+		std::for_each(multideg.begin(),multideg.end(),[&](int n){
+						if (n < 0)
+							deg = -1;
+						else
+                        	deg += n;
+ 						});
+		return deg;
+	}
+
+
+	std::vector<int> PowerOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	{
+		std::vector<int> deg(vars.size(),0);
+		for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+		{
+			*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+		}
+		return deg;
+	}
+
+
+
 	void PowerOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		if (exponent_->Degree(vars)==0)
