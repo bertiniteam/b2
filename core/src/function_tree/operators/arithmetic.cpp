@@ -160,11 +160,68 @@ namespace bertini{
 
 
 
+    //////////////////////
+    //
+    //  Negate operator definitions
+    //
+    ////////////////////////
+
+
+        void NegateOperator::print(std::ostream & target) const
+		{
+			target << "-(";
+			child_->print(target);
+			target << ")";
+		}
+
+		std::shared_ptr<Node> NegateOperator::Differentiate()
+        {
+            return std::make_shared<NegateOperator>(child_->Differentiate());
+        }
+
+        dbl NegateOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+        {
+            return -(child_->Eval<dbl>(diff_variable));
+        }
+
+        mpfr NegateOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+        {
+            return -child_->Eval<mpfr>(diff_variable);
+        }
+
+
+
+
+
+
+
 	///////////////////////
 	//
 	//  Mult Operator definitions
 	//
 	//////////////////////
+
+    void MultOperator::print(std::ostream & target) const
+		{
+			target << "(";
+			for (auto iter = children_.begin(); iter!= children_.end(); iter++) {
+				if (iter==children_.begin())
+					if (! *children_mult_or_div_.begin()  )
+						target << "1/";  
+				(*iter)->print(target);
+				if (iter!=(children_.end()-1)){
+					if (*(children_mult_or_div_.begin() + (iter-children_.begin())+1)) { // TODO i think this +1 is wrong... dab
+						target << "*";
+					}
+					else{
+						target << "/";
+					}
+
+				}
+			}
+			target << ")";
+		}
+
 
 	std::shared_ptr<Node> MultOperator::Differentiate()
         {
@@ -224,8 +281,82 @@ namespace bertini{
 
 
 
+        int MultOperator::Degree(std::shared_ptr<Variable> const& v) const
+		{
+			int deg = 0;
+			for (auto iter = children_.begin(); iter!= children_.end(); iter++)
+			{
+				// if the child node is a differential coming from another variable, then this degree should be 0, end of story.
+
+				auto factor_deg = (*iter)->Degree(v);
+
+				auto is_it_a_differential = std::dynamic_pointer_cast<Differential>(*iter);
+				if (is_it_a_differential)
+					if (is_it_a_differential->GetVariable()!=v)
+					{
+						// std::cout << *this << " deg " << 0 << "\n";
+						return 0;
+					}
+					
+				
+
+				
+
+				if (factor_deg<0)
+					return factor_deg;
+				else if (factor_deg!=0 && !*(children_mult_or_div_.begin() + (iter-children_.begin()) ) )
+					return -1;
+				else
+					deg+=factor_deg;
+			}
+			// std::cout << *this << " deg " << deg << "\n";
+			return deg;
+		}
 
 
+		void MultOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
+		{
+			for (auto iter: children_)
+			{
+				iter->Homogenize(vars, homvar);
+			}
+		}
+
+		dbl MultOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+        {
+            dbl retval{1};
+            for(int ii = 0; ii < children_.size(); ++ii)
+            {
+                if(children_mult_or_div_[ii])
+                {
+                    retval *= children_[ii]->Eval<dbl>(diff_variable);
+                }
+                else
+                {
+                    retval /= children_[ii]->Eval<dbl>(diff_variable);
+                }
+            }
+
+            return retval;
+        }
+
+        mpfr MultOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+        {
+            mpfr retval{1};
+            for(int ii = 0; ii < children_.size(); ++ii)
+            {
+                if(children_mult_or_div_[ii])
+                {
+                    retval *= children_[ii]->Eval<mpfr>(diff_variable);
+                }
+                else
+                {
+                    retval /= children_[ii]->Eval<mpfr>(diff_variable);
+                }
+            }
+
+            return retval;
+        }
 
 
         /////////////////
