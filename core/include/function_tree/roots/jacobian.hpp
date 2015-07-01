@@ -93,13 +93,7 @@ namespace bertini {
 
 
 
-        /**
-        Compute the degree of a node.  For functions, the degree is the degree of the entry node.
-        */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-        {
-            return entry_node_->Degree(v);
-        }
+        
 
         
         virtual ~Jacobian() = default;
@@ -113,6 +107,15 @@ namespace bertini {
     private:
         std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
         
+        /**
+        The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
+        */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        {
+            return entry_node_->Degree(v);
+        }
+
+
     };
     
     
