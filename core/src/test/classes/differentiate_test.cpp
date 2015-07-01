@@ -831,6 +831,63 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
 }
 
 
+
+
+BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
+    using mpfr_float = boost::multiprecision::mpfr_float;
+    boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+
+    std::string str = "function f; variable_group x,y,z; f = x^2+y^2+z^2;";
+
+    bertini::System sys;
+    std::string::const_iterator iter = str.begin();
+    std::string::const_iterator end = str.end();
+    bertini::SystemParser<std::string::const_iterator> S;
+    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+
+    var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
+    var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
+    sys.SetVariables<dbl>(var_dbl);
+    sys.SetVariables<mpfr>(var_mpfr);
+
+    auto func = sys.function();
+    auto vars = sys.variables();
+    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
+
+    std::vector<int> multidegree{2,2,2};
+    bool multidegree_ok = multidegree==func->MultiDegree(vars);
+    BOOST_CHECK(multidegree_ok);
+
+    BOOST_CHECK_EQUAL(func->Degree(vars[0]),2);
+    BOOST_CHECK_EQUAL(func->Degree(vars[1]),2);
+    BOOST_CHECK_EQUAL(func->Degree(vars[2]),2);
+
+    
+
+
+    std::vector<dbl> exact_dbl = {2.0*xnum_dbl, 2.0*ynum_dbl, 2.0*znum_dbl};
+    std::vector<mpfr> exact_mpfr = {mpfr("2.0")*xnum_mpfr, mpfr("2.0")*ynum_mpfr, mpfr("2.0")*znum_mpfr};
+
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).real() - exact_dbl[0].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).imag() - exact_dbl[0].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).real() - exact_mpfr[0].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).imag() - exact_mpfr[0].imag() ) < threshold_clearance_mp);
+
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).real() / exact_dbl[1].real() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).imag() / exact_dbl[1].imag() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).real() - exact_mpfr[1].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).imag() - exact_mpfr[1].imag() ) < threshold_clearance_mp);
+
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).real() - exact_dbl[2].real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).imag() - exact_dbl[2].imag()) < threshold_clearance_d);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() - exact_mpfr[2].real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() - exact_mpfr[2].imag() ) < threshold_clearance_mp);
+}
+
+
+
+
+
 BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
     using mpfr_float = boost::multiprecision::mpfr_float;
     boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
