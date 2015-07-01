@@ -91,7 +91,7 @@ namespace bertini {
 		
 		
 		//Special Behaviour: by default all terms added are positive
-		virtual void AddChild(std::shared_ptr<Node> child) override
+		void AddChild(std::shared_ptr<Node> child) override
 		{
 			NaryOperator::AddChild(std::move(child));
 			children_sign_.push_back(true);
@@ -110,7 +110,7 @@ namespace bertini {
 		/**
 		Method for printing to output stream
 		*/ 
-		virtual void print(std::ostream & target) const override;
+		void print(std::ostream & target) const override;
         
         
         
@@ -118,13 +118,13 @@ namespace bertini {
         /**
          Return SumOperator whose children are derivatives of children_
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 
 		/**
 		Compute the degree of a node.  For sum functions, the degree is the max among summands.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 
 		/**
@@ -138,14 +138,14 @@ namespace bertini {
 		Specific implementation of FreshEval for add and subtract.
 		 If child_sign_ = true, then add, else subtract
 		 */
-		virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
         
         
         /**
 		Specific implementation of FreshEval for add and subtract.
 		 If child_sign_ = true, then add, else subtract
 		 */
-        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 		
 	private:
 		// Stores the sign of the particular term.  There is a one-one
@@ -294,13 +294,13 @@ namespace bertini {
 		/**
 		Print to an arbitrary ostream.
 		*/
-		virtual void print(std::ostream & target) const override;
+		void print(std::ostream & target) const override;
         
         
         /**
          Returns negative of derivative of child.
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 
 		virtual ~NegateOperator() = default;
@@ -362,7 +362,7 @@ namespace bertini {
 
 
 		//Special Behaviour: by default all factors are in numerator
-		virtual void AddChild(std::shared_ptr<Node> child) override
+		void AddChild(std::shared_ptr<Node> child) override
 		{
 			NaryOperator::AddChild(std::move(child));
 			children_mult_or_div_.push_back(true);
@@ -381,29 +381,29 @@ namespace bertini {
 		/**
 		 overridden method for printing to an output stream
 		 */
-		virtual void print(std::ostream & target) const override;
+		void print(std::ostream & target) const override;
 
         /**
          Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 
 
          /**
 		Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
-		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
+		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
 
 	protected:
 
 		// Specific implementation of FreshEval for mult and divide.
 		//  If child_mult_ = true, then multiply, else divide
-        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
 
-		virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 
 
 
@@ -565,35 +565,35 @@ namespace bertini {
 		}
 
 
-		virtual void Reset() override;
+		void Reset() override;
 
 
 
-		virtual void print(std::ostream & target) const override;
+		void print(std::ostream & target) const override;
 
 
 
         /**
          Differentiates with the power rule.
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 
        
 		/**
 		Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
-		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
+		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
 
 		virtual ~PowerOperator() = default;
 
 	protected:
 
-        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
 
-        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 
 	private:
 
@@ -643,9 +643,9 @@ namespace bertini {
 
 
 		/**
-		 Virtual polymorphic method for printing to an arbitrary stream.
+		 polymorphic method for printing to an arbitrary stream.
 		 */
-		virtual void print(std::ostream & target) const override;
+		void print(std::ostream & target) const override;
 
 
 		/**
@@ -669,13 +669,13 @@ namespace bertini {
         /**
          Differentiates a number.
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 
 		 /**
 		Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		
 
@@ -748,13 +748,13 @@ namespace bertini {
 		
 
 		
-		virtual void print(std::ostream & target) const override;
+		void print(std::ostream & target) const override;
         
         
         /**
          Differentiates the square root function.
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 
 
@@ -763,7 +763,7 @@ namespace bertini {
 
 		For the square root function, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
 	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 
 
@@ -804,13 +804,13 @@ namespace bertini {
 
 		
 		
-		virtual void print(std::ostream & target) const override;
+		void print(std::ostream & target) const override;
         
         
         /**
          Differentiates the exponential function.
          */
-        virtual std::shared_ptr<Node> Differentiate() override;
+        std::shared_ptr<Node> Differentiate() override;
 
 
 
@@ -819,7 +819,7 @@ namespace bertini {
 
 		For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
 	    */
-	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		
 		virtual ~ExpOperator() = default;
