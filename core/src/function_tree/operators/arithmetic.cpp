@@ -359,6 +359,105 @@ namespace bertini{
         }
 
 
+        ////////////
+        //
+        //  Power Operator definitions
+        //
+        /////////////////
+
+        void PowerOperator::Reset()
+		{
+			Node::ResetStoredValues();
+			base_->Reset();
+			exponent_->Reset();
+		}
+
+		void PowerOperator::print(std::ostream & target) const
+		{
+			target << "(" << *base_ << ")^(" << *exponent_ << ")";
+		}
+
+
+		std::shared_ptr<Node> PowerOperator::Differentiate()
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, std::make_shared<Number>("1.0"),false);
+            ret_mult->AddChild(base_->Differentiate());
+            ret_mult->AddChild(exponent_);
+            ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
+            return ret_mult;
+        }
+
+
+        int PowerOperator::Degree(std::shared_ptr<Variable> const& v) const
+		{
+			
+			auto base_deg = base_->Degree(v);
+			auto exp_deg = exponent_->Degree(v);
+
+			if (exp_deg==0)
+			{
+				auto exp_val = exponent_->Eval<dbl>();
+				bool exp_is_int = false;
+
+				if (fabs(imag(exp_val))< 10*std::numeric_limits<double>::epsilon()) // so a real thresholding step
+					if (fabs(real(exp_val) - std::round(real(exp_val))) < 10*std::numeric_limits<double>::epsilon()) // then check that the real part is close to an integer
+						exp_is_int = true;
+
+				if (exp_is_int)
+				{
+					if (abs(exp_val-dbl(0.0))< 10*std::numeric_limits<double>::epsilon())
+						return 0;
+					else if (real(exp_val)<0)
+						return -1;
+					else  // positive integer.  
+					{
+						if (base_deg<0)
+							return -1;
+						else
+							return base_deg*std::round(real(exp_val));
+					}
+
+				}
+				else
+				{
+					if (base_deg==0)
+						return 0;
+					else
+						return -1;
+				}
+
+			}
+			else
+			{
+				// there may be an edge case here where the base is the numbers 0 or 1.  but that would be stupid, wouldn't it.
+				return -1;
+			}
+		}
+
+
+		void PowerOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
+		{
+			if (exponent_->Degree(vars)==0)
+			{
+				base_->Homogenize(vars, homvar);
+			}
+			else{
+				throw std::runtime_error("asking for homogenization on non-polynomial node");
+				//TODO: this will leave the system in a broken state, partially homogenized...
+			}
+		}
+
+		dbl PowerOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+        {
+            return std::pow( base_->Eval<dbl>(diff_variable), exponent_->Eval<dbl>());
+        }
+
+        mpfr PowerOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) 
+        {
+            return pow( base_->Eval<mpfr>(diff_variable), exponent_->Eval<mpfr>());
+        }
+
         /////////////////
         //
         //  IntegerPowerOperator definitions
