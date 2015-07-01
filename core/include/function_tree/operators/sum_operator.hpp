@@ -29,6 +29,13 @@
 
 #include "function_tree/symbols/number.hpp"
 
+#include "function_tree/operators/mult_operator.hpp"
+#include "function_tree/operators/intpow_operator.hpp"
+
+#include "function_tree/symbols/variable.hpp"
+
+
+
 
 namespace bertini {
 	
@@ -36,6 +43,10 @@ namespace bertini {
 	// Description: This class represents summation and difference operators.  All children are terms and are stored
 	// in a single vector, and a vector of bools is used to determine the sign of each term.  FreshEval method
 	// is defined for summation and difference.
+	// class IntegerPowerOperator;
+	// class MultOperator;
+	
+
 	class SumOperator : public virtual NaryOperator
 	{
 	public:
@@ -173,43 +184,43 @@ namespace bertini {
 
 
 
-		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
-		{
-			// first homogenize each summand.
-			for (auto iter: children_)
-			{
-				iter->Homogenize(vars, homvar);
-			}
+		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar);
+		// {
+		// 	// first homogenize each summand.
+		// 	for (auto iter: children_)
+		// 	{
+		// 		iter->Homogenize(vars, homvar);
+		// 	}
 
-			// then, homogenize this sum.
+		// 	// then, homogenize this sum.
 
-			// compute the highest degree among all summands.
-			int maxdegree = 0;
-			std::vector<int> term_degrees;
-			// first homogenize each summand.
-			for (auto iter: children_)
-			{
-				auto local_degree = iter->Degree(vars);
-				if (local_degree<0)
-					throw std::runtime_error("asking for homogenization on non-polynomial node");
-					// TODO: this throw would leave the tree in a partially homogenized state.  this is scary.
+		// 	// compute the highest degree among all summands.
+		// 	int maxdegree = 0;
+		// 	std::vector<int> term_degrees;
+		// 	// first homogenize each summand.
+		// 	for (auto iter: children_)
+		// 	{
+		// 		auto local_degree = iter->Degree(vars);
+		// 		if (local_degree<0)
+		// 			throw std::runtime_error("asking for homogenization on non-polynomial node");
+		// 			// TODO: this throw would leave the tree in a partially homogenized state.  this is scary.
 
-				term_degrees.push_back(local_degree);
-				maxdegree = std::max(maxdegree, local_degree);
-			}
+		// 		term_degrees.push_back(local_degree);
+		// 		maxdegree = std::max(maxdegree, local_degree);
+		// 	}
 
-			for (auto iter = children_.begin(); iter!=children_.end(); iter++)
-			{
-				auto degree_deficiency = maxdegree - *(term_degrees.begin() + (iter-children_.begin()));
-				if ( degree_deficiency > 0)
-				{
-					// hold the child temporarily.
-					auto new_multiplication_node = pow(homvar,degree_deficiency) * (iter);
-					swap(*iter,new_multiplication_node);
-				}
-			}
+		// 	for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+		// 	{
+		// 		auto degree_deficiency = maxdegree - *(term_degrees.begin() + (iter-children_.begin()));
+		// 		if ( degree_deficiency > 0)
+		// 		{
+		// 			// hold the child temporarily.
+		// 			auto new_multiplication_node = pow(homvar,degree_deficiency) * (iter);
+		// 			swap(*iter,new_multiplication_node);
+		// 		}
+		// 	}
 
-		}
+		// }
 
 		
 	protected:

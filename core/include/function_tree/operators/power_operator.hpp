@@ -28,8 +28,11 @@
 #include "function_tree/operators/mult_operator.hpp"
 
 #include "function_tree/symbols/number.hpp"
+#include "function_tree/operators/sum_operator.hpp"
 
-#include "function_tree/operators/intpow_operator.hpp"
+
+
+// #include "function_tree/operators/intpow_operator.hpp"
 namespace bertini {
 
 	class PowerOperator : public virtual BinaryOperator
