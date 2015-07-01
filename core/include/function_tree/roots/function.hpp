@@ -70,7 +70,7 @@ namespace bertini {
 		
 		
 		/**
-		 Virtual overridden function for piping the tree to an output stream.
+		 overridden function for piping the tree to an output stream.
 		 */
 		void print(std::ostream & target) const override
 		{
@@ -123,7 +123,7 @@ namespace bertini {
         /** 
          Calls Differentiate on the entry node and returns differentiated entry node.
          */
-        virtual std::shared_ptr<Node> Differentiate() override
+        std::shared_ptr<Node> Differentiate() override
         {
             return entry_node_->Differentiate();
         }
@@ -134,13 +134,13 @@ namespace bertini {
 		/**
         Compute the degree of a node.  For functions, the degree is the degree of the entry node.
         */
-        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
         {
             return entry_node_->Degree(v);
         }
 
 
-        virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+        void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			entry_node_->Homogenize(vars, homvar);
 		}
@@ -152,7 +152,7 @@ namespace bertini {
 		/**
          Calls FreshEval on the entry node to the tree.
          */
-        virtual dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
+        dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
         {
             return entry_node_->Eval<dbl>(diff_variable);
         }
@@ -160,7 +160,7 @@ namespace bertini {
         /**
          Calls FreshEval on the entry node to the tree.
          */
-        virtual mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
+        mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
         {
             return entry_node_->Eval<mpfr>(diff_variable);
         }
