@@ -26,13 +26,7 @@
 
 #include "function_tree/operators/operator.hpp"
 
-#include "function_tree/operators/unary_operator.hpp"
-#include "function_tree/operators/binary_operator.hpp"
-#include "function_tree/operators/nary_operator.hpp"
-
 #include "function_tree/operators/arithmetic.hpp"
-
-
 #include "function_tree/operators/trig.hpp"
 
 
