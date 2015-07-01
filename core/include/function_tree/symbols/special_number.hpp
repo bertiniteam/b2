@@ -111,6 +111,10 @@ namespace bertini {
             return 0;
         }
 
+        virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+        {
+            
+        }
     virtual ~SpecialNumber() = default;
     
     

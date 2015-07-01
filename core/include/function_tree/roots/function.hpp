@@ -150,6 +150,12 @@ namespace bertini {
         }
 
 
+        virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			entry_node_->Homogenize(vars, homvar);
+		}
+
+
 		////////////// TESTING /////////////////
 		virtual void PrintTree() override
 		{
