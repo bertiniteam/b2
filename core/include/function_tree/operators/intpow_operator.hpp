@@ -119,6 +119,8 @@ namespace bertini {
 			
 		}
 
+		
+
 
 		virtual ~IntegerPowerOperator() = default;
 

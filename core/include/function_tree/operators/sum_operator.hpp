@@ -172,6 +172,45 @@ namespace bertini {
 		}
 
 
+
+		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			// first homogenize each summand.
+			for (auto iter: children_)
+			{
+				iter->Homogenize(vars, homvar);
+			}
+
+			// then, homogenize this sum.
+
+			// compute the highest degree among all summands.
+			int maxdegree = 0;
+			std::vector<int> term_degrees;
+			// first homogenize each summand.
+			for (auto iter: children_)
+			{
+				auto local_degree = iter->Degree(vars);
+				if (local_degree<0)
+					throw std::runtime_error("asking for homogenization on non-polynomial node");
+					// TODO: this throw would leave the tree in a partially homogenized state.  this is scary.
+
+				term_degrees.push_back(local_degree);
+				maxdegree = std::max(maxdegree, local_degree);
+			}
+
+			for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+			{
+				auto degree_deficiency = maxdegree - *(term_degrees.begin() + (iter-children_.begin()));
+				if ( degree_deficiency > 0)
+				{
+					// hold the child temporarily.
+					auto new_multiplication_node = pow(homvar,degree_deficiency) * (iter);
+					swap(*iter,new_multiplication_node);
+				}
+			}
+
+		}
+
 		
 	protected:
 		// Specific implementation of FreshEval for add and subtract.

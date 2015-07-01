@@ -29,7 +29,7 @@
 
 #include "function_tree/symbols/number.hpp"
 
-
+#include "function_tree/operators/intpow_operator.hpp"
 namespace bertini {
 
 	class PowerOperator : public virtual BinaryOperator
@@ -143,6 +143,20 @@ namespace bertini {
 			}
 		}
 
+
+
+
+		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			if (exponent_->Degree(vars)==0)
+			{
+				base_->Homogenize(vars, homvar);
+			}
+			else{
+				throw std::runtime_error("asking for homogenization on non-polynomial node");
+				//TODO: this will leave the system in a broken state, partially homogenized...
+			}
+		}
 
 
 		virtual ~PowerOperator() = default;

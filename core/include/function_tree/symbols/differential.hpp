@@ -65,7 +65,7 @@ namespace bertini {
             return differential_variable_;
         }
 
-        
+
         virtual void print(std::ostream & target) const override
         {
             target << name();
@@ -96,6 +96,11 @@ namespace bertini {
             return 0;
         }
 
+        virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+        {
+            
+        }
+        
 
     protected:
         // This should never be called for a Differential.  Only for Jacobians.

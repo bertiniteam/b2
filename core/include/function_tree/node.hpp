@@ -152,17 +152,26 @@ public:
 		return deg;
 	}
 
-
+	/**
+	 Compute the overall degree with respect to a variable group.
+	*/
 	int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const
 	{
 		auto multideg = MultiDegree(vars);
 		auto deg = 0;
 		std::for_each(multideg.begin(),multideg.end(),[&](int n){
-                        deg += n;
+						if (deg < 0)
+							deg = -1;
+						else
+                        	deg += n;
  						});
 		return deg;
 	}
 
+	/**
+	Homogenize a tree, inputting a variable group holding the non-homogeneous variables, and the new homogenizing variable.  The homvar may be an element of the variable group, that's perfectly ok.
+	*/
+	virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:

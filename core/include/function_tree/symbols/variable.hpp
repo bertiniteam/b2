@@ -93,6 +93,10 @@ namespace  bertini {
 	    	
 	    }
 
+	    virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			
+		}
 
 		
 	protected:

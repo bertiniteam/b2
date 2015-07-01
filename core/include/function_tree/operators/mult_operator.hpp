@@ -207,6 +207,13 @@ namespace bertini {
 			return deg;
 		}
 
+		virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			for (auto iter: children_)
+			{
+				iter->Homogenize(vars, homvar);
+			}
+		}
 
 	protected:
 		// Specific implementation of FreshEval for mult and divide.
