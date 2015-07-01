@@ -63,7 +63,7 @@ namespace bertini {
         }
 
 
-        virtual void print(std::ostream & target) const override
+        void print(std::ostream & target) const override
         {
             target << name();
         }
@@ -73,7 +73,7 @@ namespace bertini {
         /**
          Differentiates a number.  Should this return the special number Zero?
          */
-        virtual std::shared_ptr<Node> Differentiate() override
+        std::shared_ptr<Node> Differentiate() override
         {
             return std::make_shared<Number>(0.0);
         }
@@ -88,12 +88,12 @@ namespace bertini {
         /**
         Compute the degree with respect to a single variable.   For differentials, the degree is 0.
         */
-        virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
         {
             return 0;
         }
 
-        virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+        void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
         {
             
         }

@@ -82,7 +82,7 @@ namespace  bertini {
 		NamedSymbol(const std::string & new_name) : name_(new_name){};
 		
 		
-		virtual void print(std::ostream& target) const override
+		void print(std::ostream& target) const override
 		{
 			target << name();
 		}
@@ -90,7 +90,7 @@ namespace  bertini {
 		virtual ~NamedSymbol() = default;
 		
 		
-		virtual void Reset() override
+		void Reset() override
 		{
 			Node::ResetStoredValues();
 		}
