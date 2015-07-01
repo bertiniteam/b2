@@ -19,40 +19,4 @@
 // cos_operator.cpp:  Defines differentiation for CosOperator.
 
 
-#include "function_tree/operators/cos_operator.hpp"
-#include "function_tree/operators/sin_operator.hpp"
 
-
-
-namespace bertini {
-
-	void CosOperator::print(std::ostream & target) const 
-	{
-		target << "cos(";
-		child_->print(target);
-		target << ")";
-	}
-
-	std::shared_ptr<Node> CosOperator::Differentiate()
-	{
-		auto ret_mult = std::make_shared<MultOperator>();
-		std::shared_ptr<Node> sin_op = std::make_shared<SinOperator>(child_);
-		ret_mult->AddChild(sin_op);
-		ret_mult->AddChild(child_->Differentiate());
-		return std::make_shared<NegateOperator>(ret_mult);
-	}
-
-    int CosOperator::Degree(std::shared_ptr<Variable> const& v) const
-    {
-    	if (child_->Degree(v)==0)
-		{
-			return 0;
-		}
-		else
-		{
-			return -1;
-		}
-    }
-
-
-} // re: bertini namespace

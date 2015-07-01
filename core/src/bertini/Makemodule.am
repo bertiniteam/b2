@@ -29,11 +29,11 @@ function_tree_header_files = \
 	include/function_tree/symbols/special_number.hpp \
 	include/function_tree/symbols/number.hpp \
 	include/function_tree/roots/function.hpp \
-	include/function_tree/roots/jacobian.hpp
+	include/function_tree/roots/jacobian.hpp \
+	include/function_tree/operators/trig.hpp
 
 function_tree_source_files = \
 	src/function_tree/operators/sum.cpp \
-	src/bertini/cos_operator.cpp \
 	src/function_tree/node.cpp \
 	src/function_tree/operators/mult.cpp \
 	src/function_tree/operators/exp.cpp \
