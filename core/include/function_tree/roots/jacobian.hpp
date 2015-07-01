@@ -120,7 +120,7 @@ namespace bertini {
         */
         int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
 		{
-			return 0;
+			return entry_node_->Degree(vars);
 		}
 
 		/**

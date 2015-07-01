@@ -142,15 +142,7 @@ namespace bertini {
 
         int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
 		{
-			auto multideg = MultiDegree(vars);
-			auto deg = 0;
-			std::for_each(multideg.begin(),multideg.end(),[&](int n){
-							if (n < 0)
-								deg = n;
-							else
-	                        	deg += n;
-	 						});
-			return deg;
+			return entry_node_->Degree(vars);
 		}
 
 
