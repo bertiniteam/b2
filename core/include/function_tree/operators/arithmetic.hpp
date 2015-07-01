@@ -107,27 +107,10 @@ namespace bertini {
 		}
 		
 		
-		virtual void print(std::ostream & target) const override
-		{
-			target << "(";
-			for (auto iter = children_.begin(); iter!= children_.end(); iter++) {
-				if (iter==children_.begin()) {
-					// on the first iteration, no need to put a + if a +
-					if ( !(*(children_sign_.begin()+(iter-children_.begin()))) )
-						target << "-";
-				}
-				else
-				{
-					if ( !(*(children_sign_.begin()+(iter-children_.begin()))) )
-						target << "-";
-					else
-						target << "+";
-				}
-				(*iter)->print(target);
-				
-			}
-			target << ")";
-		}
+		/**
+		Method for printing to output stream
+		*/ 
+		virtual void print(std::ostream & target) const override;
         
         
         
@@ -135,109 +118,34 @@ namespace bertini {
         /**
          Return SumOperator whose children are derivatives of children_
          */
-        virtual std::shared_ptr<Node> Differentiate() override
-        {
-        	unsigned int counter = 0;
-            std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
-            for (int ii = 0; ii < children_.size(); ++ii)
-            {
-            	auto converted = std::dynamic_pointer_cast<Number>(children_[ii]);
-            	if (converted)
-            		continue;
-            	
-            	auto temp_node = children_[ii]->Differentiate();
-				converted = std::dynamic_pointer_cast<Number>(temp_node);
-				if (converted)
-					if (converted->Eval<dbl>()==dbl(0.0))
-						continue;
-
-                ret_sum->AddChild(temp_node,children_sign_[ii]);
-                counter++;
-            }
-            
-            if (counter>0)
-            	return ret_sum;
-            else
-            	return std::make_shared<Number>(0.0);
-        }
+        virtual std::shared_ptr<Node> Differentiate() override;
 
 
-
-
-
-        /**
+		/**
 		Compute the degree of a node.  For sum functions, the degree is the max among summands.
         */
-		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			int deg = 0;
-
-			for (auto iter: children_)
-			{
-				auto curr_deg = iter->Degree(v);
-				if (curr_deg<0)
-				    return curr_deg;
-
-				deg = std::max(deg, curr_deg);
-			}
-			return deg;
-		}
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 
-
+		/**
+		Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
+		*/
 		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar);
 
 		
 	protected:
-		// Specific implementation of FreshEval for add and subtract.
-		//  If child_sign_ = true, then add, else subtract
-		
-
-        virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            dbl retval{0};
-            for(int ii = 0; ii < children_.size(); ++ii)
-            {
-                if(children_sign_[ii])
-                {
-                    retval += children_[ii]->Eval<dbl>(diff_variable);
-                }
-                else
-                {
-                    retval -= children_[ii]->Eval<dbl>(diff_variable);
-                }
-            }
-            
-            return retval;
-        }
+		/**
+		Specific implementation of FreshEval for add and subtract.
+		 If child_sign_ = true, then add, else subtract
+		 */
+		virtual dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
         
         
-        
-        
-        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            mpfr retval{0};
-            for(int ii = 0; ii < children_.size(); ++ii)
-            {
-                if(children_sign_[ii])
-                {
-                    retval += children_[ii]->Eval<mpfr>(diff_variable);
-                }
-                else
-                {
-                    retval -= children_[ii]->Eval<mpfr>(diff_variable);
-                }
-            }
-            
-            return retval;
-        }
-
-        
-        
-
-		
-		
-		
+        /**
+		Specific implementation of FreshEval for add and subtract.
+		 If child_sign_ = true, then add, else subtract
+		 */
+        virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 		
 	private:
 		// Stores the sign of the particular term.  There is a one-one
@@ -248,6 +156,8 @@ namespace bertini {
 		std::vector<bool> children_sign_;
 		
 	};
+	
+
 	
 	///////////////////
 	//
@@ -403,16 +313,6 @@ namespace bertini {
 		virtual ~NegateOperator() = default;
 		
 	protected:
-		// Specific implementation of FreshEval for negate.
-//		dbl FreshEval(dbl) override
-//		{
-//			return (-1.0)*child_->Eval<dbl>();
-//		}
-//		
-//		mpfr FreshEval(mpfr) override
-//		{
-//			return -child_->Eval<mpfr>();
-//		}
         
         // Specific implementation of FreshEval for negate.
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
