@@ -576,4 +576,57 @@ namespace bertini{
 
 
 
+
+
+
+
+
+
+
+
+
+
+        ///////////////
+        //
+        //  ExpOperator definitions
+        //
+        //////////////
+
+        void ExpOperator::print(std::ostream & target) const
+		{
+			target << "exp(";
+			child_->print(target);
+			target << ")";
+		}
+
+		std::shared_ptr<Node> ExpOperator::Differentiate()
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            ret_mult->AddChild(std::make_shared<ExpOperator>(child_));
+            ret_mult->AddChild(child_->Differentiate());
+            return ret_mult;
+        }
+
+        int ExpOperator::Degree(std::shared_ptr<Variable> const& v) const
+	    {
+	    	if (child_->Degree(v)==0)
+			{
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
+	    }
+
+	    dbl ExpOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+        {
+            return exp(child_->Eval<dbl>(diff_variable));
+        }
+
+        mpfr ExpOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+        {
+            return exp(child_->Eval<mpfr>(diff_variable));
+        }
+
 }
