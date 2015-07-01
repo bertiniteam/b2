@@ -5,6 +5,79 @@ namespace bertini{
 
 	using ::pow;
 
+	///////////////////////
+	//
+	//  Sum Operator definitions
+	//
+	//////////////////////
+
+	void SumOperator::print(std::ostream & target) const
+		{
+			target << "(";
+			for (auto iter = children_.begin(); iter!= children_.end(); iter++) {
+				if (iter==children_.begin()) {
+					// on the first iteration, no need to put a + if a +
+					if ( !(*(children_sign_.begin()+(iter-children_.begin()))) )
+						target << "-";
+				}
+				else
+				{
+					if ( !(*(children_sign_.begin()+(iter-children_.begin()))) )
+						target << "-";
+					else
+						target << "+";
+				}
+				(*iter)->print(target);
+				
+			}
+			target << ")";
+		}
+
+	std::shared_ptr<Node> SumOperator::Differentiate()
+        {
+        	unsigned int counter = 0;
+            std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
+            for (int ii = 0; ii < children_.size(); ++ii)
+            {
+            	auto converted = std::dynamic_pointer_cast<Number>(children_[ii]);
+            	if (converted)
+            		continue;
+            	
+            	auto temp_node = children_[ii]->Differentiate();
+				converted = std::dynamic_pointer_cast<Number>(temp_node);
+				if (converted)
+					if (converted->Eval<dbl>()==dbl(0.0))
+						continue;
+
+                ret_sum->AddChild(temp_node,children_sign_[ii]);
+                counter++;
+            }
+            
+            if (counter>0)
+            	return ret_sum;
+            else
+            	return std::make_shared<Number>(0.0);
+        }
+
+
+
+
+    int SumOperator::Degree(std::shared_ptr<Variable> const& v) const
+		{
+			int deg = 0;
+
+			for (auto iter: children_)
+			{
+				auto curr_deg = iter->Degree(v);
+				if (curr_deg<0)
+				    return curr_deg;
+
+				deg = std::max(deg, curr_deg);
+			}
+			return deg;
+		}
+
+
 	void SumOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		
@@ -48,6 +121,50 @@ namespace bertini{
 		}
 
 	}
+
+	dbl SumOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+        {
+            dbl retval{0};
+            for(int ii = 0; ii < children_.size(); ++ii)
+            {
+                if(children_sign_[ii])
+                {
+                    retval += children_[ii]->Eval<dbl>(diff_variable);
+                }
+                else
+                {
+                    retval -= children_[ii]->Eval<dbl>(diff_variable);
+                }
+            }
+            
+            return retval;
+        }
+
+    mpfr SumOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+        {
+            mpfr retval{0};
+            for(int ii = 0; ii < children_.size(); ++ii)
+            {
+                if(children_sign_[ii])
+                {
+                    retval += children_[ii]->Eval<mpfr>(diff_variable);
+                }
+                else
+                {
+                    retval -= children_[ii]->Eval<mpfr>(diff_variable);
+                }
+            }
+            
+            return retval;
+        }
+
+
+
+	///////////////////////
+	//
+	//  Mult Operator definitions
+	//
+	//////////////////////
 
 	std::shared_ptr<Node> MultOperator::Differentiate()
         {
@@ -102,52 +219,61 @@ namespace bertini{
             } // re: for ii
 
             return ret_sum;
-//            return children_[0];
         }
 
 
 
-        /**
- Virtual polymorphic method for printing to an arbitrary stream.
- */
- void IntegerPowerOperator::print(std::ostream & target) const
- {
- 	target << "(";
- 	            child_->print(target);
- 	            target << "^" << exponent() << ")";
-}
 
 
-std::shared_ptr<Node> IntegerPowerOperator::Differentiate()
-{
 
-	if (exponent_==0.0)
-		return std::make_shared<Number>(0.0);
-	else if (exponent_==1.0)
-		return child_->Differentiate();
-	else if (exponent_==2){
-		auto M = std::make_shared<MultOperator>(std::make_shared<Number>(2.0), child_);
-		M->AddChild(child_->Differentiate());
-		return M;
+
+
+        /////////////////
+        //
+        //  IntegerPowerOperator definitions
+        //
+        ////////////////////
+
+    /**
+	 Virtual polymorphic method for printing to an arbitrary stream.
+	 */
+	 void IntegerPowerOperator::print(std::ostream & target) const
+	 {
+	 	target << "(";
+	 	            child_->print(target);
+	 	            target << "^" << exponent() << ")";
 	}
-	else{
-		auto M = std::make_shared<MultOperator>(std::make_shared<Number>(exponent_), 
-		                                        std::make_shared<IntegerPowerOperator>(child_, exponent_-1)
-		                                        );
-		M->AddChild(child_->Differentiate());
-		return M;
+
+
+	std::shared_ptr<Node> IntegerPowerOperator::Differentiate()
+	{
+
+		if (exponent_==0)
+			return std::make_shared<Number>(0.0);
+		else if (exponent_==1.0)
+			return child_->Differentiate();
+		else if (exponent_==2){
+			auto M = std::make_shared<MultOperator>(std::make_shared<Number>(2.0), child_);
+			M->AddChild(child_->Differentiate());
+			return M;
+		}
+		else{
+			auto M = std::make_shared<MultOperator>(std::make_shared<Number>(exponent_), 
+			                                        std::make_shared<IntegerPowerOperator>(child_, exponent_-1) );
+			M->AddChild(child_->Differentiate());
+			return M;
+		}
 	}
-}
 
-int IntegerPowerOperator::Degree(std::shared_ptr<Variable> const& v) const
-{
-	auto base_deg = child_->Degree(v);
-	if (base_deg<0)
-		return base_deg;
-	else
-		return exponent_*base_deg;
+	int IntegerPowerOperator::Degree(std::shared_ptr<Variable> const& v) const
+	{
+		auto base_deg = child_->Degree(v);
+		if (base_deg<0)
+			return base_deg;
+		else
+			return exponent_*base_deg;
 
-}
+	}
 
 
 
