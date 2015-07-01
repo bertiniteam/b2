@@ -37,9 +37,9 @@ namespace bertini {
 		virtual ~Operator() = default;
 	};
 	
-
-
-
+	
+	
+	
 	// Description: This class is an interface for all unary operators, such as negation.
 	// The sole child is stored in a shared_ptr.
 	class UnaryOperator : public virtual Operator
@@ -78,10 +78,10 @@ namespace bertini {
 		}
 		
 		
-
+		
 		/**
-		Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
-        */
+		 Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
+		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return child_->Degree(v);
@@ -98,11 +98,11 @@ namespace bertini {
 		//Stores the single child of the unary operator
 		std::shared_ptr<Node> child_;
 	};
-
-
-
-
-
+	
+	
+	
+	
+	
 	// Description: This class is an interface for all binary operators, such as division.
 	// Children of the operator are stored in a vector.
 	class BinaryOperator : public virtual Operator
@@ -111,17 +111,17 @@ namespace bertini {
 		
 		
 		virtual void Reset() = 0; // override
-
-
-
+		
+		
+		
 	protected:
 		
 		virtual void print(std::ostream & target) const = 0;
-				
-
+		
+		
 	};
-
-
+	
+	
 	// Description: This class is an interface for all n-ary operators, such as summation and multiplication.
 	// Children of the operator are stored in a vector and methods to add and access children are available
 	// in this interface.
@@ -162,7 +162,7 @@ namespace bertini {
 			return children_[0];
 		}
 		
-        
+		
 		
 		
 		
@@ -177,9 +177,9 @@ namespace bertini {
 		
 		
 	};
-
-
-
+	
+	
+	
 } // re: namespace bertini
 
 
