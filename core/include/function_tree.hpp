@@ -37,9 +37,7 @@
 #include "function_tree/operators/unary_operator.hpp"
 #include "function_tree/operators/negate_operator.hpp"
 #include "function_tree/operators/intpow_operator.hpp"
-#include "function_tree/operators/sin_operator.hpp"
-#include "function_tree/operators/cos_operator.hpp"
-#include "function_tree/operators/tan_operator.hpp"
+#include "function_tree/operators/trig.hpp"
 #include "function_tree/operators/exp_operator.hpp"
 #include "function_tree/operators/sqrt_operator.hpp"
 
