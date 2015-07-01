@@ -79,9 +79,6 @@ namespace bertini {
 
 
 
-		// These do nothing for a constant
-		std::string PrintNode() override {return "";}
-
 		virtual void print(std::ostream & target) const override
 		{
 			target << std::get< std::pair<mpfr,bool> >(current_value_).first;

@@ -71,27 +71,6 @@ namespace bertini {
 		}
 		
         
-        
-        
-        
-		
-		
-		////////////// TESTING /////////////////
-		virtual void PrintTree() override
-		{
-			for(int ii = 0; ii < tabcount; ++ii)
-			{
-				std::cout << "\t";
-			}
-			std::cout << tabcount+1 << "." <<  boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->Eval<dbl>() << std::endl;
-			tabcount++;
-			for(auto vv : children_)
-			{
-				vv->PrintTree();
-			}
-			tabcount--;
-		}
-		////////////// TESTING /////////////////
 		
 		
 		

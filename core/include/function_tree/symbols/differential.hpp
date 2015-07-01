@@ -56,9 +56,6 @@ namespace bertini {
 
 
 
-        std::string PrintNode() override {return name();}
-
-
 
         std::shared_ptr<Variable> GetVariable() const 
         {

@@ -85,16 +85,6 @@ namespace bertini {
 		
 		
 		
-		/**
-		 This returns a string that holds a print out of the function.
-		 */
-		virtual std::string PrintNode() override
-		{
-			if (entry_node_)
-				return entry_node_->PrintNode();
-			else
-				return "emptyfunction";
-		}
 		
 		
 		/**
@@ -156,12 +146,6 @@ namespace bertini {
 		}
 
 
-		////////////// TESTING /////////////////
-		virtual void PrintTree() override
-		{
-			entry_node_->PrintTree();
-		}
-		////////////// TESTING /////////////////
 		
 	protected:
 		
