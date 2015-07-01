@@ -46,8 +46,8 @@ namespace  bertini {
 		
 		virtual ~Variable() = default;
 		
-		std::string PrintNode() override {return name();}
-		
+
+
 		explicit operator std::string(){return name();}
 		
 		

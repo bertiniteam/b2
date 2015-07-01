@@ -17,7 +17,6 @@ function_tree_header_files = \
 	include/function_tree/operators/nary_operator.hpp \
 	include/function_tree/operators/binary_operator.hpp \
 	include/function_tree/operators/unary_operator.hpp \
-	include/function_tree/operators/exp_operator.hpp \
 	include/function_tree/symbols/symbol.hpp \
 	include/function_tree/symbols/variable.hpp \
 	include/function_tree/symbols/differential.hpp \

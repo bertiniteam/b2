@@ -54,17 +54,7 @@ public:
 	virtual ~Node() = default;
 	
     ///////// PUBLIC PURE METHODS /////////////////
-    
-    
-    // This method is used to print out a function.
-    // If node is an operator, it prints the operation and calls PrintNode on all
-    //  children.
-    // If node is a symbol, prints out the correct string corresponding to that symbol
-    //
-    // Every concrete node will implement this method.
-    virtual std::string PrintNode() = 0;
-    
-    
+  
 	
 	// Tells code to run a fresh eval on node for type T
 	
@@ -107,21 +97,6 @@ public:
 
 	
     
-
-    
-    ////////////TESTING////////////////
-    static int tabcount;
-    virtual void PrintTree()
-    {
-        for(int ii = 0; ii < tabcount; ++ii)
-        {
-            std::cout << "\t";
-        }
-        std::cout << tabcount+1 << "." << boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->Eval<dbl>()<< std::endl;
-    }
-    
-    ////////////TESTING////////////////
-
 	
 	
 	///////// PUBLIC PURE METHODS /////////////////

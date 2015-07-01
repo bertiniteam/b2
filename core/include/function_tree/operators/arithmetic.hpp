@@ -25,28 +25,21 @@
 #include <string>
 
 #include "function_tree/node.hpp"
+
+#include "function_tree/operators/unary_operator.hpp"
+#include "function_tree/operators/binary_operator.hpp"
 #include "function_tree/operators/nary_operator.hpp"
 
+
 #include "function_tree/symbols/number.hpp"
-
-#include "function_tree/operators/mult_operator.hpp"
-#include "function_tree/operators/intpow_operator.hpp"
-
 #include "function_tree/symbols/variable.hpp"
-
-#include "function_tree/node.hpp"
-#include "function_tree/operators/nary_operator.hpp"
-
-#include "function_tree/operators/sum_operator.hpp"
-#include "function_tree/symbols/number.hpp"
 #include "function_tree/symbols/differential.hpp"
 
 #include <cmath>
-#include "function_tree/operators/binary_operator.hpp"
-#include "function_tree/operators/mult_operator.hpp"
 
-#include "function_tree/symbols/number.hpp"
-#include "function_tree/operators/sum_operator.hpp"
+
+
+
 
 
 
@@ -94,9 +87,7 @@ namespace bertini {
 		}
 		
 		
-		// Print the data for this node, as well as all it's children
-		//TODO (JBC): Implement this method
-		virtual std::string PrintNode() override {return "";}
+
 		
 		
 		
@@ -378,11 +369,7 @@ namespace bertini {
 		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
-		// These do nothing for a constant
-		std::string PrintNode() override
-		{
-			return "-" + child_->PrintNode();
-		}
+
 		
 		
 		
@@ -479,9 +466,7 @@ namespace bertini {
 
 		virtual ~MultOperator() = default;
 
-		// See node.hpp for description
-		// TODO:(JBC) Implement this for multiplication
-		virtual std::string PrintNode() override {return "";}
+
 
 
 		//Special Behaviour: by default all factors are in numerator
@@ -886,25 +871,6 @@ namespace bertini {
 
 
 
-		////////////// TESTING /////////////////
-		virtual void PrintTree() override
-		{
-			for(int ii = 0; ii < tabcount; ++ii)
-			{
-				std::cout << "\t";
-			}
-			std::cout << tabcount+1 << "." <<  boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->Eval<dbl>()<< std::endl;
-			tabcount++;
-			base_->PrintTree();
-			exponent_->PrintTree();
-			tabcount--;
-		}
-
-
-		// Print the data for this node, as well as all it's children
-		//TODO: delete this method
-		virtual std::string PrintNode() override {return "";}
-		////////////// TESTING /////////////////
 
 
 
@@ -956,12 +922,7 @@ namespace bertini {
 		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
-		// These do nothing for a constant
-		std::string PrintNode() override
-		{
-			return "-" + child_->PrintNode();
-		}
-		
+
 		
 		virtual void print(std::ostream & target) const override
 		{
@@ -1039,7 +1000,182 @@ namespace bertini {
 		return std::make_shared<bertini::SqrtOperator>(N);
 	}
 
-	
+
+
+	/**
+	 Node -> UnaryOperator -> IntegerPowerOperator
+
+	 Description: This class represents the exponentiation operator.  The base is stored in
+	 children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
+	 defined as the exponention operation.
+	 */
+	class IntegerPowerOperator : public virtual UnaryOperator
+	{
+	public:
+
+
+
+
+		/**
+		 Virtual polymorphic method for printing to an arbitrary stream.
+		 */
+		virtual void print(std::ostream & target) const override;
+
+
+		/**
+		 Get the integet exponent of an ExpOperator
+		 */
+		void set_exponent(int exp)
+		{
+			exponent_ = exp;
+		}
+
+
+		/**
+		 Get the exponent of an ExpOperator
+		 */
+		int exponent() const
+		{
+			return exponent_;
+		}
+
+
+        /**
+         Differentiates a number.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override;
+
+
+
+
+
+		 /**
+		Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
+        */
+		virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+		
+
+
+		virtual ~IntegerPowerOperator() = default;
+
+
+		/**
+		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
+		 */
+		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p = 1) : exponent_(p), UnaryOperator(N)
+		{}
+
+
+		IntegerPowerOperator(){}
+
+	protected:
+
+
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return pow(child_->Eval<dbl>(diff_variable), exponent_);
+        }
+
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return pow(child_->Eval<mpfr>(diff_variable),exponent_);
+        }
+
+
+
+
+
+
+	private:
+
+		int exponent_ = 1; ///< Exponent for the exponenetial operator
+	};
+
+
+
+	inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
+	{
+		return std::make_shared<bertini::IntegerPowerOperator>(base,power);
+	}
+
+
+	// Node -> UnaryOperator -> ExpOperator
+	// Description: This class represents the exponential function.  FreshEval method
+	// is defined for exponential and takes the exponential of the child node.
+	class ExpOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		ExpOperator(){}
+		
+		ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+	 
+
+		
+		
+		virtual void print(std::ostream & target) const override
+		{
+			target << "exp(";
+			child_->print(target);
+			target << ")";
+		}
+        
+        
+        /**
+         Differentiates the exponential function.
+         */
+        virtual std::shared_ptr<Node> Differentiate() override
+        {
+            auto ret_mult = std::make_shared<MultOperator>();
+            ret_mult->AddChild(std::make_shared<ExpOperator>(child_));
+            ret_mult->AddChild(child_->Differentiate());
+            return ret_mult;
+        }
+
+
+
+		/**
+		Compute the degree with respect to a single variable.
+
+		For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+	    */
+	    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+	    {
+	    	if (child_->Degree(v)==0)
+			{
+				return 0;
+			}
+			else
+			{
+				return -1;
+			}
+	    }
+
+		
+		virtual ~ExpOperator() = default;
+		
+	protected:
+        
+        // Specific implementation of FreshEval for exponentiate.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return exp(child_->Eval<dbl>(diff_variable));
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return exp(child_->Eval<mpfr>(diff_variable));
+        }
+
+	};
+
+
+	inline std::shared_ptr<bertini::Node> exp(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::ExpOperator>(N);
+	}
 
 
 } // re: namespace bertini

@@ -32,15 +32,6 @@
 
 #include "function_tree/operators/arithmetic.hpp"
 
-#include "function_tree/operators/sum_operator.hpp"
-#include "function_tree/operators/negate_operator.hpp"
-#include "function_tree/operators/mult_operator.hpp"
-#include "function_tree/operators/intpow_operator.hpp"
-#include "function_tree/operators/power_operator.hpp"
-#include "function_tree/operators/sqrt_operator.hpp"
-
-
-#include "function_tree/operators/exp_operator.hpp"
 
 #include "function_tree/operators/trig.hpp"
 

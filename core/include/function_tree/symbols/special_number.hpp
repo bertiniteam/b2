@@ -74,9 +74,7 @@ namespace bertini {
         
         
         
-    std::string PrintNode() override {return name();}    
-        
-        
+
         
     
     virtual void print(std::ostream & target) const override
