@@ -28,82 +28,137 @@
 
 
 namespace bertini {
-	
-	
-	
+
+
+
 	// Node -> Symbol -> Number
 	// Description: This class represents constant leaves to a function tree.  FreshEval simply returns
 	// the value of the constant.
-	class Number : public virtual Node
+	class Number : public virtual Symbol
 	{
 	public:
 		Number(){};
-		
-		
+
+
+		Number(int val)
+		{
+            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(val,0.0);
+            std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(val,0.0);
+		}
+
 		Number(double val)
 		{
             std::get< std::pair<dbl,bool> >(current_value_).first = dbl(val,0.0);
             std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(val,0.0);
 		}
-        
+
         Number(double rval, double ival)
         {
             std::get< std::pair<dbl,bool> >(current_value_).first = dbl(rval,ival);
             std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(rval,ival);
 		}
-		
-		
-		
+
+
+
 		// Ctor that reads in a string for the real component and converts it to a number of the appropriate type
 		Number(std::string sval)
 		{
             std::get< std::pair<dbl,bool> >(current_value_).first = dbl(stod(sval), 0.0);
 			std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(sval, "0.0");
 		}
-		
+
         // Ctor that reads in two strings for a complex number and converts it to a number of the appropriate type
         Number(std::string srval, std::string sival)
         {
             std::get< std::pair<dbl,bool> >(current_value_).first = dbl(stod(srval), stod(sival));
             std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(srval, sival);
         }
-		
-		
-		
-		
-		
-		
-		// These do nothing for a constant
-		std::string PrintNode() override {return "";}
-		
-		virtual void print(std::ostream & target) const override
+
+
+
+
+
+
+		void print(std::ostream & target) const override
 		{
 			target << std::get< std::pair<mpfr,bool> >(current_value_).first;
 		}
-		
-		virtual void Reset() override
+
+		void Reset() override
 		{
 			// nothing to reset here
 		}
+
+
+        /**
+         Differentiates a number.  Should this return the special number Zero?
+         */
+        std::shared_ptr<Node> Differentiate() override
+        {
+            return std::make_shared<Number>(0.0);
+        }
+
+       
+
+
+		/**
+		Compute the degree with respect to a single variable.
+
+		For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+	    */
+	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+	    {
+	    	return 0;
+	    }
+
+
+	    int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+		{
+			return 0;
+		}
+
+		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		{
+			return std::vector<int>(vars.size(), 0);
+		}
+
+
+	    void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			
+		}
+
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return true;
+		}
 		
-		
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return true;
+		}
+
 		virtual ~Number() = default;
-		
-		
+
+
 	protected:
 		// Return value of constant
-		dbl FreshEval(dbl) override
-		{
-			return std::get< std::pair<dbl,bool> >(current_value_).first;
-		}
-		
-		mpfr FreshEval(mpfr) override
-		{
-			return std::get< std::pair<mpfr,bool> >(current_value_).first;
-		}
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<dbl,bool> >(current_value_).first;
+        }
+
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<mpfr,bool> >(current_value_).first;
+        }
+
 	};
-	
-	
+
+
 } // re: namespace bertini
 
 #endif

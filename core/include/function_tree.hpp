@@ -26,22 +26,13 @@
 
 #include "function_tree/operators/operator.hpp"
 
-#include "function_tree/operators/nary_operator.hpp"
-#include "function_tree/operators/mult_operator.hpp"
-#include "function_tree/operators/sum_operator.hpp"
-
-#include "function_tree/operators/binary_operator.hpp"
-#include "function_tree/operators/power_operator.hpp"
+#include "function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/trig.hpp"
 
 
-#include "function_tree/operators/unary_operator.hpp"
-#include "function_tree/operators/negate_operator.hpp"
-#include "function_tree/operators/expon_operator.hpp"
-#include "function_tree/operators/sin_operator.hpp"
-#include "function_tree/operators/cos_operator.hpp"
-#include "function_tree/operators/tan_operator.hpp"
-#include "function_tree/operators/exp_operator.hpp"
-#include "function_tree/operators/sqrt_operator.hpp"
+
+
+
 
 #include "function_tree/symbols/symbol.hpp"
 #include "function_tree/symbols/variable.hpp"
@@ -49,6 +40,7 @@
 #include "function_tree/symbols/special_number.hpp"
 
 #include "function_tree/roots/function.hpp"
+#include "function_tree/roots/jacobian.hpp"
 
 #include "function_tree/function_parsing.hpp"
 

@@ -24,6 +24,7 @@
 #define b2Test_Variable_h
 
 #include "function_tree/symbols/symbol.hpp"
+#include "function_tree/symbols/differential.hpp"
 
 
 
@@ -32,7 +33,7 @@ namespace  bertini {
 	// Node -> Symbol -> Variable
 	// Description: This class represents variable leaves in the function tree.  FreshEval returns
 	// the current value of the variable.
-	class Variable : public virtual NamedSymbol
+    class Variable : public virtual NamedSymbol, public std::enable_shared_from_this<Variable>
 	{
 	public:
 		Variable(){};
@@ -45,8 +46,8 @@ namespace  bertini {
 		
 		virtual ~Variable() = default;
 		
-		std::string PrintNode() override {return name();}
-		
+
+
 		explicit operator std::string(){return name();}
 		
 		
@@ -60,25 +61,94 @@ namespace  bertini {
 		}
 		
 		
+        /**
+         Differentiates a variable.  Still needs to be implemented.
+         */
+        std::shared_ptr<Node> Differentiate() override
+        {
+            return std::make_shared<Differential>(shared_from_this(), name());
+        }
 		
 		
+
 		
-		
+
+
+		/**
+		Compute the degree with respect to a single variable.
+
+		If this is the variable, then the degree is 1.  Otherwise, 0.
+	    */
+	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+	    {
+	    	if (v)
+	    	{
+				if (this == v.get())
+			    	return 1;
+			    else
+			    	return 0;
+	    	}
+	    	else
+	    		return 1;
+	    	
+	    }
+
+
+	    int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+		{
+			for (auto iter : vars)
+				if (this==iter.get())
+					return 1;
+				
+			return 0;
+		}
+
+		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		{
+			std::vector<int> deg;
+			for (auto iter=vars.begin(); iter!=vars.end(); iter++)
+				if (this==(*iter).get())
+					deg.push_back(1);
+				else
+					deg.push_back(0);
+			return deg;
+		}
+
+
+	    void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			
+		}
+
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return true;
+		}
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return true;
+		}
 		
 	protected:
-		// Return current value of the variable.
-		dbl FreshEval(dbl) override
-		{
-			return std::get< std::pair<dbl,bool> >(current_value_).first;
-		}
 		
-		mpfr FreshEval(mpfr) override
-		{
-			return std::get< std::pair<mpfr,bool> >(current_value_).first;
-		}
-		
+        // Return current value of the variable.
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<dbl,bool> >(current_value_).first;
+        }
+        
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return std::get< std::pair<mpfr,bool> >(current_value_).first;
+        }
+
 	};
 	
+
 	
 } // re: namespace bertini
 

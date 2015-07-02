@@ -297,7 +297,7 @@ namespace bertini {
 			qi::on_error<qi::fail>
 			( root_rule_ ,
 			 std::cout<<
-			 val("Error! Expecting ")<<
+			 val("System parser error. Expecting ")<<
 			 _4<<
 			 val(" here: ")<<
 			 construct<std::string>(_3,_2)<<

@@ -70,7 +70,7 @@ namespace bertini {
 		
 		
 		/**
-		 Virtual overridden function for piping the tree to an output stream.
+		 overridden function for piping the tree to an output stream.
 		 */
 		void print(std::ostream & target) const override
 		{
@@ -85,16 +85,6 @@ namespace bertini {
 		
 		
 		
-		/**
-		 This returns a string that holds a print out of the function.
-		 */
-		virtual std::string PrintNode() override
-		{
-			if (entry_node_)
-				return entry_node_->PrintNode();
-			else
-				return "emptyfunction";
-		}
 		
 		
 		/**
@@ -128,33 +118,86 @@ namespace bertini {
 				throw std::runtime_error("Function node type has empty root node");
 			}
 		}
+        
+        
+        /** 
+         Calls Differentiate on the entry node and returns differentiated entry node.
+         */
+        std::shared_ptr<Node> Differentiate() override
+        {
+            return entry_node_->Differentiate();
+        }
 		
 		
-		////////////// TESTING /////////////////
-		virtual void PrintTree() override
+
+
+		/**
+        Compute the degree of a node.  For functions, the degree is the degree of the entry node.
+        */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        {
+            return entry_node_->Degree(v);
+        }
+
+
+        int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
 		{
-			entry_node_->PrintTree();
+			return entry_node_->Degree(vars);
 		}
-		////////////// TESTING /////////////////
+
+
+
+		/**
+		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+	    */
+		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		{
+			
+			std::vector<int> deg(vars.size());
+			for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+			{
+				*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+			}
+			return deg;
+		}
+
+
+        void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			entry_node_->Homogenize(vars, homvar);
+		}
+
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return entry_node_->IsHomogeneous(v);
+		}
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return entry_node_->IsHomogeneous(vars);
+		}
 		
-	private:
+	protected:
 		
 		/**
-		 Calls FreshEval on the entry node to the tree.
-		 */
-		virtual dbl FreshEval(dbl d)
-		{
-			return entry_node_->Eval<dbl>();
-		}
-		
-		/**
-		 Calls FreshEval on the entry node to the tree.
-		 */
-		virtual mpfr FreshEval(mpfr m)
-		{
-			return entry_node_->Eval<mpfr>();
-		}
-		
+         Calls FreshEval on the entry node to the tree.
+         */
+        dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
+        {
+            return entry_node_->Eval<dbl>(diff_variable);
+        }
+        
+        /**
+         Calls FreshEval on the entry node to the tree.
+         */
+        mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
+        {
+            return entry_node_->Eval<mpfr>(diff_variable);
+        }
+
 		
 		
 		std::shared_ptr<Node> entry_node_; ///< The top node for the function.
