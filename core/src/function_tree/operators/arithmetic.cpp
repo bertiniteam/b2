@@ -142,12 +142,20 @@ namespace bertini{
 			auto degree_deficiency = maxdegree - *(term_degrees.begin() + (iter-children_.begin()));
 			if ( degree_deficiency > 0)
 			{
+
 				// hold the child temporarily.
-				std::shared_ptr<Node> P = std::make_shared<IntegerPowerOperator>(std::dynamic_pointer_cast<Node>(homvar),degree_deficiency);
-				std::shared_ptr<Node> M = std::make_shared<MultOperator>(P,std::dynamic_pointer_cast<Node>(*iter));
+				if (degree_deficiency==1)
+				{
+					std::shared_ptr<Node> M = std::make_shared<MultOperator>(homvar,std::dynamic_pointer_cast<Node>(*iter));
+					swap(*iter,M);
+				}
+				else{
+					std::shared_ptr<Node> P = std::make_shared<IntegerPowerOperator>(std::dynamic_pointer_cast<Node>(homvar),degree_deficiency);
+					std::shared_ptr<Node> M = std::make_shared<MultOperator>(P,std::dynamic_pointer_cast<Node>(*iter));
+					swap(*iter,M);
+				}
 				
-				
-				swap(*iter,M);
+
 			}
 		}
 		
