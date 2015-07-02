@@ -171,6 +171,14 @@ namespace bertini {
 		{
 			return entry_node_->IsHomogeneous(v);
 		}
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return entry_node_->IsHomogeneous(vars);
+		}
 		
 	protected:
 		

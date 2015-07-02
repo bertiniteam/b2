@@ -189,6 +189,34 @@ namespace bertini{
 		return true;
 	}
 
+	bool SumOperator::IsHomogeneous(VariableGroup const& v) const
+	{
+		
+		for (auto iter : children_)
+		{
+			if (!iter->IsHomogeneous(v))
+				return false;
+		}
+
+		// the only hope this has of being homogeneous, is that each factor is homogeneous
+		int deg;
+
+		deg = (*(children_.begin()))->Degree(v) ;
+	
+		if (deg < 0) 
+			return false;
+
+		for (auto iter = children_.begin()+1; iter!= children_.end(); iter++)
+		{
+			auto local_degree = (*iter)->Degree(v);
+			if (local_degree!=deg)
+				return false;
+		}
+
+		return true;
+	}
+
+	
 
 	
 	dbl SumOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
@@ -474,6 +502,19 @@ namespace bertini{
 		return true;
 	}
 	
+	bool MultOperator::IsHomogeneous(VariableGroup const& v) const
+	{
+		// the only hope this has of being homogeneous, is that each factor is homogeneous
+		for (auto iter : children_)
+		{
+			if (! iter->IsHomogeneous(v))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	dbl MultOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
 	{
 		dbl retval{1};
@@ -636,11 +677,23 @@ namespace bertini{
 					if (real(exp_val) >=0 )
 						return base_->IsHomogeneous(v);
 		}
-		
-
 		return false;
 	}
 
+
+	bool PowerOperator::IsHomogeneous(VariableGroup const& v) const
+	{
+		// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
+		if (exponent_->Degree(v)==0)
+		{
+			auto exp_val = exponent_->Eval<dbl>();
+			if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
+				if (fabs(std::round(real(exp_val)) - real(exp_val)) < 10*std::numeric_limits<double>::epsilon())
+					if (real(exp_val) >=0 )
+						return base_->IsHomogeneous(v);
+		}
+		return false;
+	}
 	
 	dbl PowerOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
 	{
@@ -758,13 +811,6 @@ namespace bertini{
 		}
 	}
 	
-	bool SqrtOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
-	{
-		if (child_->Degree(v)==0)
-			return true;
-		else
-			return false;
-	}
 
 	dbl SqrtOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
 	{
@@ -822,14 +868,6 @@ namespace bertini{
 		}
 	}
 	
-	bool ExpOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
-	{
-		if (child_->Degree(v)==0)
-			return true;
-		else
-			return false;
-	}
-
 	dbl ExpOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
 	{
 		return exp(child_->Eval<dbl>(diff_variable));

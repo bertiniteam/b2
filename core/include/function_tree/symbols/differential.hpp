@@ -112,6 +112,15 @@ namespace bertini {
         {
             return true;
         }
+
+        /**
+        Check for homogeneity, with respect to a variable group.
+        */
+        bool IsHomogeneous(VariableGroup const& vars) const override
+        {
+            return true;
+        }
+        
     protected:
         // This should never be called for a Differential.  Only for Jacobians.
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
