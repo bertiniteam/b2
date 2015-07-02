@@ -43,6 +43,7 @@ using mpfr = bertini::complex;
 namespace bertini {
 class Variable;
 
+using VariableGroup = std::vector< std::shared_ptr<Variable> >;
 
 // Description: An interface for all nodes in a function tree, and for a function object as well.  Almost all
 //          methods that will be called on a node must be declared in this class.  The main evaluation method is
@@ -128,8 +129,15 @@ public:
 	*/
 	virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) = 0;
 
-
+	/**
+	Check for homogeneity, absolutely with respect to all variables, including path variables and all other variable types, or with respect to a single varaible, if passed. 
+	*/
 	virtual bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+
+	/**
+	Check for homogeneity, with respect to a variable group.
+	*/
+	virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:

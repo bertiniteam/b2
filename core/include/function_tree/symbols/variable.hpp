@@ -124,6 +124,15 @@ namespace  bertini {
 		{
 			return true;
 		}
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return true;
+		}
+		
 	protected:
 		
         // Return current value of the variable.

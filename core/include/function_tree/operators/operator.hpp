@@ -134,6 +134,22 @@ namespace bertini {
 		}
 		
 		
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			if (Degree(vars)==0)
+			{
+				return true;
+			}
+			else
+				return false;
+		}
+		
+
+
+
 	protected:
 		//Stores the single child of the unary operator
 		std::shared_ptr<Node> child_;
