@@ -40,10 +40,10 @@ using mpfr = bertini::complex;
 
 
 
-
 namespace bertini {
+class Variable;
 
-
+using VariableGroup = std::vector< std::shared_ptr<Variable> >;
 
 // Description: An interface for all nodes in a function tree, and for a function object as well.  Almost all
 //          methods that will be called on a node must be declared in this class.  The main evaluation method is
@@ -55,17 +55,7 @@ public:
 	virtual ~Node() = default;
 	
     ///////// PUBLIC PURE METHODS /////////////////
-    
-    
-    // This method is used to print out a function.
-    // If node is an operator, it prints the operation and calls PrintNode on all
-    //  children.
-    // If node is a symbol, prints out the correct string corresponding to that symbol
-    //
-    // Every concrete node will implement this method.
-    virtual std::string PrintNode() = 0;
-    
-    
+  
 	
 	// Tells code to run a fresh eval on node for type T
 	
@@ -84,50 +74,83 @@ public:
     //  run the specific FreshEval of the node, then set flag to false.
     //
     // Template type is type of value you want returned.
+    /**
+     Evaluate the jacobian with respect to a particular variable.  If flag false, just return value, if flag true
+     run the specific FreshEval of the node, then set flag to false.
+     
+     Template type is type of value you want returned.
+     */
     template<typename T>
-    T Eval()
+    T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
     {
-		
-//		this->print(std::cout);
-//		std::cout << " has value ";
-		
         auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
         if(!val_pair.second)
         {
-//            std::cout << "Fresh Eval\n";
             T input{};
-            val_pair.first = FreshEval(input);
+            val_pair.first = FreshEval(input, diff_variable);
             val_pair.second = true;
         }
  
 		
-//		std::cout << val_pair.first << std::endl;
 		return val_pair.first;
     }
 	
+
 	
     
-
-    
-    ////////////TESTING////////////////
-    static int tabcount;
-    virtual void PrintTree()
-    {
-        for(int ii = 0; ii < tabcount; ++ii)
-        {
-            std::cout << "\t";
-        }
-        std::cout << tabcount+1 << "." << boost::typeindex::type_id_runtime(*this).pretty_name() << " = " << this->Eval<dbl>()<< std::endl;
-    }
-    
-    ////////////TESTING////////////////
-
 	
 	
 	///////// PUBLIC PURE METHODS /////////////////
 	virtual void print(std::ostream& target) const = 0;
+    
+    virtual std::shared_ptr<Node> Differentiate() = 0;
+
+
+
+    /**
+	Compute the degree, optionally with respect to a single variable.
+    */
+    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+
+
+
+    /**
+	 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+    */
+	virtual std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const = 0;
+
+	/**
+	 Compute the overall degree with respect to a variable group.
+	*/
+	virtual int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const = 0;
+
+	/**
+	Homogenize a tree, inputting a variable group holding the non-homogeneous variables, and the new homogenizing variable.  The homvar may be an element of the variable group, that's perfectly ok.
+	*/
+	virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) = 0;
+
+	/**
+	Check for homogeneity, absolutely with respect to all variables, including path variables and all other variable types, or with respect to a single varaible, if passed. 
+	*/
+	virtual bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+
+	/**
+	Check for homogeneity, with respect to a variable group.
+	*/
+	virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
+
+	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const
+	{
+		return Degree(v)>=0;
+	}
+
+	bool IsPolynomial(VariableGroup const&v) const
+	{
+		return Degree(v)>=0;
+	}
+
 protected:
     //Stores the current value of the node in all required types
     //We must hard code in all types that we want here.
@@ -137,8 +160,11 @@ protected:
     
     
     ///////// PRIVATE PURE METHODS /////////////////
-    virtual dbl FreshEval(dbl) = 0;
-    virtual mpfr FreshEval(mpfr) = 0;
+//    virtual dbl FreshEval(dbl) = 0;
+//    virtual mpfr FreshEval(mpfr) = 0;
+    
+    virtual dbl FreshEval(dbl, std::shared_ptr<Variable>) = 0;
+    virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable>) = 0;
 	
 	
 	
