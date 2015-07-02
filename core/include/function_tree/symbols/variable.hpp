@@ -120,7 +120,7 @@ namespace  bertini {
 			
 		}
 
-		bool IsHomogeneous() const override
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return true;
 		}

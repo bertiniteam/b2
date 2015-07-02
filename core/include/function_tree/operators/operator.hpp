@@ -121,10 +121,11 @@ namespace bertini {
 		{
 			child_->Homogenize(vars, homvar);
 		}
+
 		
-		bool IsHomogeneous() const override
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
-			if (Degree()==0)
+			if (Degree(v)==0)
 			{
 				return true;
 			}
