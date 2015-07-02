@@ -137,6 +137,11 @@ namespace bertini {
 			return deg;
 		}
 
+		bool IsHomogeneous() const override
+		{
+			return entry_node_->IsHomogeneous();
+		}
+		
     };
     
     

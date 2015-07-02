@@ -108,7 +108,10 @@ namespace bertini {
             
         }
         
-
+        bool IsHomogeneous() const override
+        {
+            return true;
+        }
     protected:
         // This should never be called for a Differential.  Only for Jacobians.
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override

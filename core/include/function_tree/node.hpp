@@ -127,6 +127,8 @@ public:
 	Homogenize a tree, inputting a variable group holding the non-homogeneous variables, and the new homogenizing variable.  The homvar may be an element of the variable group, that's perfectly ok.
 	*/
 	virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) = 0;
+
+	virtual bool IsHomogeneous() const = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:

@@ -122,14 +122,21 @@ namespace bertini {
 			child_->Homogenize(vars, homvar);
 		}
 		
+		bool IsHomogeneous() const override
+		{
+			if (Degree()==0)
+			{
+				return true;
+			}
+			else
+				return false;
+		}
 		
 		
 	protected:
 		//Stores the single child of the unary operator
 		std::shared_ptr<Node> child_;
 	};
-	
-	
 	
 	
 	

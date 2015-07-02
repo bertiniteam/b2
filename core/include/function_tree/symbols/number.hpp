@@ -127,6 +127,11 @@ namespace bertini {
 		{
 			
 		}
+
+		bool IsHomogeneous() const override
+		{
+			return true;
+		}
 		
 		virtual ~Number() = default;
 

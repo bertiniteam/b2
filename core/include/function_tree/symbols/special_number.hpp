@@ -118,11 +118,16 @@ namespace bertini {
 		{
 			return std::vector<int>(vars.size(), 0);
 		}
-		
+
         void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
         {
             
         }
+
+        bool IsHomogeneous() const override
+		{
+			return true;
+		}
     virtual ~SpecialNumber() = default;
     
     
