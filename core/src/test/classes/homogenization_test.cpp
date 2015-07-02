@@ -31,6 +31,8 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 	BOOST_CHECK( f1->IsHomogeneous(x));
 	BOOST_CHECK( f1->IsHomogeneous(h));
 
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -55,6 +57,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 	BOOST_CHECK(f1->IsHomogeneous());
 	BOOST_CHECK(!f1->IsHomogeneous(x));
 	BOOST_CHECK(!f1->IsHomogeneous(h));
+
+
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -78,6 +84,9 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 	BOOST_CHECK(!f1->IsHomogeneous(x));
 	BOOST_CHECK(!f1->IsHomogeneous(h));
 	BOOST_CHECK(!f1->IsHomogeneous(t));
+
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -103,6 +112,8 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 	BOOST_CHECK(!f1->IsHomogeneous(h));
 	BOOST_CHECK(!f1->IsHomogeneous(t));
 
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -130,6 +141,8 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 	BOOST_CHECK( f1->IsHomogeneous(h));
 	BOOST_CHECK(!f1->IsHomogeneous(t));
 
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -161,6 +174,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 	BOOST_CHECK(!f1->IsHomogeneous(y));
 	BOOST_CHECK(!f1->IsHomogeneous(z));
 	BOOST_CHECK(!f1->IsHomogeneous(h));
+
+
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -190,7 +207,11 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 	BOOST_CHECK(!f1->IsHomogeneous(z));
 	BOOST_CHECK(!f1->IsHomogeneous(h));
 
-}
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
+
+}	
+
 
 
 
@@ -214,6 +235,9 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 
 	BOOST_CHECK(!f1->IsHomogeneous(x));
 	BOOST_CHECK(!f1->IsHomogeneous(h));
+
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -238,6 +262,8 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 	BOOST_CHECK(!f1->IsHomogeneous(x));
 	BOOST_CHECK(!f1->IsHomogeneous(h));
 
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -263,6 +289,9 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 	BOOST_CHECK(!f1->IsHomogeneous(x));
 	BOOST_CHECK( f1->IsHomogeneous(h));
 	BOOST_CHECK( f1->IsHomogeneous(y));
+
+	vars.push_back(h);
+	BOOST_CHECK(f1->IsHomogeneous(vars));
 }
 
 
@@ -364,6 +393,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 
 	BOOST_CHECK(f1->IsHomogeneous(x));
 	BOOST_CHECK(f1->IsHomogeneous(y));
+	
 
 }
 
