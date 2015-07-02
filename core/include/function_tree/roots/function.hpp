@@ -167,7 +167,10 @@ namespace bertini {
 			entry_node_->Homogenize(vars, homvar);
 		}
 
-
+		bool IsHomogeneous() const override
+		{
+			return entry_node_->IsHomogeneous();
+		}
 		
 	protected:
 		

@@ -120,7 +120,10 @@ namespace  bertini {
 			
 		}
 
-		
+		bool IsHomogeneous() const override
+		{
+			return true;
+		}
 	protected:
 		
         // Return current value of the variable.
