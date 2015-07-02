@@ -128,7 +128,8 @@ public:
 	*/
 	virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) = 0;
 
-	virtual bool IsHomogeneous() const = 0;
+
+	virtual bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
 protected:

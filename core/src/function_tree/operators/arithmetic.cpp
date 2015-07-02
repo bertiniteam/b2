@@ -162,26 +162,26 @@ namespace bertini{
 	}
 
 
-	bool SumOperator::IsHomogeneous() const
+	bool SumOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 	{
 		
 		for (auto iter : children_)
 		{
-			if (!iter->IsHomogeneous())
+			if (!iter->IsHomogeneous(v))
 				return false;
 		}
 
 		// the only hope this has of being homogeneous, is that each factor is homogeneous
 		int deg;
 
-		deg = (*(children_.begin()))->Degree() ;
+		deg = (*(children_.begin()))->Degree(v) ;
 	
 		if (deg < 0) 
 			return false;
 
 		for (auto iter = children_.begin()+1; iter!= children_.end(); iter++)
 		{
-			auto local_degree = (*iter)->Degree();
+			auto local_degree = (*iter)->Degree(v);
 			if (local_degree!=deg)
 				return false;
 		}
@@ -461,12 +461,12 @@ namespace bertini{
 	}
 
 
-	bool MultOperator::IsHomogeneous() const
+	bool MultOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 	{
 		// the only hope this has of being homogeneous, is that each factor is homogeneous
 		for (auto iter : children_)
 		{
-			if (! iter->IsHomogeneous())
+			if (! iter->IsHomogeneous(v))
 			{
 				return false;
 			}
@@ -625,16 +625,16 @@ namespace bertini{
 		}
 	}
 
-	bool PowerOperator::IsHomogeneous() const
+	bool PowerOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 	{
 		// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
-		if (exponent_->Degree()==0)
+		if (exponent_->Degree(v)==0)
 		{
 			auto exp_val = exponent_->Eval<dbl>();
 			if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 				if (fabs(std::round(real(exp_val)) - real(exp_val)) < 10*std::numeric_limits<double>::epsilon())
 					if (real(exp_val) >=0 )
-						return base_->IsHomogeneous();
+						return base_->IsHomogeneous(v);
 		}
 		
 
@@ -758,9 +758,9 @@ namespace bertini{
 		}
 	}
 	
-	bool SqrtOperator::IsHomogeneous() const
+	bool SqrtOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 	{
-		if (child_->Degree()==0)
+		if (child_->Degree(v)==0)
 			return true;
 		else
 			return false;
@@ -822,9 +822,9 @@ namespace bertini{
 		}
 	}
 	
-	bool ExpOperator::IsHomogeneous() const
+	bool ExpOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 	{
-		if (child_->Degree()==0)
+		if (child_->Degree(v)==0)
 			return true;
 		else
 			return false;

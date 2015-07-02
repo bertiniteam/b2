@@ -167,9 +167,9 @@ namespace bertini {
 			entry_node_->Homogenize(vars, homvar);
 		}
 
-		bool IsHomogeneous() const override
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
-			return entry_node_->IsHomogeneous();
+			return entry_node_->IsHomogeneous(v);
 		}
 		
 	protected:

@@ -143,7 +143,7 @@ namespace bertini {
 		 */
 		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar);
 		
-		bool IsHomogeneous() const override;
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 	protected:
 		/**
 		 Specific implementation of FreshEval for add and subtract.
@@ -313,9 +313,9 @@ namespace bertini {
 		 */
 		std::shared_ptr<Node> Differentiate() override;
 		
-		bool IsHomogeneous() const override
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
-			return child_->IsHomogeneous();
+			return child_->IsHomogeneous(v);
 		}
 
 
@@ -422,7 +422,7 @@ namespace bertini {
 
 		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
 		
-		bool IsHomogeneous() const override;
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 	protected:
 		
 		// Specific implementation of FreshEval for mult and divide.
@@ -622,7 +622,7 @@ namespace bertini {
 
 		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
 		
-		bool IsHomogeneous() const override;
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		virtual ~PowerOperator() = default;
 		
@@ -715,9 +715,9 @@ namespace bertini {
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		
-		bool IsHomogeneous() const override
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
-			return child_->IsHomogeneous();
+			return child_->IsHomogeneous(v);
 		}
 		
 		virtual ~IntegerPowerOperator() = default;
@@ -805,7 +805,7 @@ namespace bertini {
 		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
-		bool IsHomogeneous() const override;
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		
 		virtual ~SqrtOperator() = default;
@@ -862,7 +862,7 @@ namespace bertini {
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 
-		bool IsHomogeneous() const override;
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		virtual ~ExpOperator() = default;
 		
