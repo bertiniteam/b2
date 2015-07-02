@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 	BOOST_CHECK(!f1->IsHomogeneous());
 
 	BOOST_CHECK(!f1->IsHomogeneous(x));
-	BOOST_CHECK(!f1->IsHomogeneous(h));
+	BOOST_CHECK( f1->IsHomogeneous(h));
 	BOOST_CHECK( f1->IsHomogeneous(y));
 }
 
