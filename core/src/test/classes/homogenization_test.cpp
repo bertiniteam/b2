@@ -28,6 +28,9 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 0);
 	BOOST_CHECK(f1->IsHomogeneous());
+	BOOST_CHECK( f1->IsHomogeneous(x));
+	BOOST_CHECK( f1->IsHomogeneous(h));
+
 }
 
 
@@ -50,7 +53,8 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 	BOOST_CHECK_EQUAL(f1->Degree(h), 1);
 
 	BOOST_CHECK(f1->IsHomogeneous());
-
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK(!f1->IsHomogeneous(h));
 }
 
 
@@ -70,6 +74,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 1);
 	BOOST_CHECK(!f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK(!f1->IsHomogeneous(h));
+	BOOST_CHECK(!f1->IsHomogeneous(t));
 }
 
 
@@ -90,6 +98,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 1);
 	BOOST_CHECK(!f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK(!f1->IsHomogeneous(h));
+	BOOST_CHECK(!f1->IsHomogeneous(t));
 
 }
 
@@ -113,6 +125,11 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 0);
 	BOOST_CHECK(!f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK( f1->IsHomogeneous(h));
+	BOOST_CHECK(!f1->IsHomogeneous(t));
+
 }
 
 
@@ -139,6 +156,11 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 2);
 	BOOST_CHECK(f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK(!f1->IsHomogeneous(y));
+	BOOST_CHECK(!f1->IsHomogeneous(z));
+	BOOST_CHECK(!f1->IsHomogeneous(h));
 }
 
 
@@ -162,6 +184,12 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 2);
 	BOOST_CHECK(f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK(!f1->IsHomogeneous(y));
+	BOOST_CHECK(!f1->IsHomogeneous(z));
+	BOOST_CHECK(!f1->IsHomogeneous(h));
+
 }
 
 
@@ -183,6 +211,9 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 2);
 	BOOST_CHECK(f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK(!f1->IsHomogeneous(h));
 }
 
 
@@ -203,6 +234,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 1);
 	BOOST_CHECK(f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK(!f1->IsHomogeneous(h));
+
 }
 
 
@@ -224,6 +259,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 	f1->Homogenize(vars,h);
 	BOOST_CHECK_EQUAL(f1->Degree(h), 0);
 	BOOST_CHECK(!f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK(!f1->IsHomogeneous(h));
+	BOOST_CHECK( f1->IsHomogeneous(y));
 }
 
 
@@ -322,6 +361,10 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 	
 	auto f1 = a+b;
 	BOOST_CHECK(f1->IsHomogeneous());
+
+	BOOST_CHECK(f1->IsHomogeneous(x));
+	BOOST_CHECK(f1->IsHomogeneous(y));
+
 }
 
 BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
@@ -334,6 +377,9 @@ BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 	
 	auto f1 = a+b;
 	BOOST_CHECK(!f1->IsHomogeneous());
+
+	BOOST_CHECK(!f1->IsHomogeneous(x));
+	BOOST_CHECK( f1->IsHomogeneous(y));
 }
 
 
