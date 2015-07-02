@@ -43,6 +43,7 @@ using mpfr = bertini::complex;
 namespace bertini {
 class Variable;
 
+using VariableGroup = std::vector< std::shared_ptr<Variable> >;
 
 // Description: An interface for all nodes in a function tree, and for a function object as well.  Almost all
 //          methods that will be called on a node must be declared in this class.  The main evaluation method is
@@ -116,39 +117,40 @@ public:
     /**
 	 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
     */
-	std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
-	{
-		
-		std::vector<int> deg(vars.size());
-		for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
-		{
-			*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
-		}
-		return deg;
-	}
+	virtual std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const = 0;
 
 	/**
 	 Compute the overall degree with respect to a variable group.
 	*/
-	int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const
-	{
-		auto multideg = MultiDegree(vars);
-		auto deg = 0;
-		std::for_each(multideg.begin(),multideg.end(),[&](int n){
-						if (deg < 0)
-							deg = -1;
-						else
-                        	deg += n;
- 						});
-		return deg;
-	}
+	virtual int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const = 0;
 
 	/**
 	Homogenize a tree, inputting a variable group holding the non-homogeneous variables, and the new homogenizing variable.  The homvar may be an element of the variable group, that's perfectly ok.
 	*/
 	virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) = 0;
+
+	/**
+	Check for homogeneity, absolutely with respect to all variables, including path variables and all other variable types, or with respect to a single varaible, if passed. 
+	*/
+	virtual bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+
+	/**
+	Check for homogeneity, with respect to a variable group.
+	*/
+	virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
     ///////// PUBLIC PURE METHODS /////////////////
     
+
+	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const
+	{
+		return Degree(v)>=0;
+	}
+
+	bool IsPolynomial(VariableGroup const&v) const
+	{
+		return Degree(v)>=0;
+	}
+
 protected:
     //Stores the current value of the node in all required types
     //We must hard code in all types that we want here.

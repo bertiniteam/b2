@@ -42,6 +42,7 @@ serialization_test*
 *.slo
 *.lo
 *.o
+*.o-*
 *.obj
 
 # Precompiled Headers
