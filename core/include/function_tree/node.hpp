@@ -179,21 +179,22 @@ protected:
 	}
 
 };
-
+	
+	/**
+	 a single layer of indirection, though which to call the overridden virtual print() method which must be defined for each non-abstract Node type.
+	 */
+	inline std::ostream& operator<<(std::ostream & out, const bertini::Node& N)
+	{
+		N.print(out);
+		return out;
+	}
 	
 } // re: namespace bertini
 
 
 
 namespace  {
-	/**
-	 a single layer of indirection, though which to call the overridden virtual print() method which must be defined for each non-abstract Node type.
-	 */
-	std::ostream& operator<<(std::ostream & out, const bertini::Node& N)
-	{
-		N.print(out);
-		return out;
-	}
+	
 } // re: namespace {}
 
 
