@@ -93,13 +93,7 @@ namespace bertini {
 
 
 
-        /**
-        Compute the degree of a node.  For functions, the degree is the degree of the entry node.
-        */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-        {
-            return entry_node_->Degree(v);
-        }
+        
 
         
         virtual ~Jacobian() = default;
@@ -113,6 +107,50 @@ namespace bertini {
     private:
         std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
         
+        /**
+        The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
+        */
+        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        {
+            return entry_node_->Degree(v);
+        }
+
+        /**
+        The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
+        */
+        int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+		{
+			return entry_node_->Degree(vars);
+		}
+
+		/**
+		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+	    */
+		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		{
+			
+			std::vector<int> deg(vars.size());
+			for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+			{
+				*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+			}
+			return deg;
+		}
+
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return entry_node_->IsHomogeneous(v);
+		}
+
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return entry_node_->IsHomogeneous(vars);
+		}
+		
     };
     
     

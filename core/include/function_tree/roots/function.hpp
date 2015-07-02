@@ -140,12 +140,45 @@ namespace bertini {
         }
 
 
+        int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+		{
+			return entry_node_->Degree(vars);
+		}
+
+
+
+		/**
+		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+	    */
+		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		{
+			
+			std::vector<int> deg(vars.size());
+			for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+			{
+				*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+			}
+			return deg;
+		}
+
+
         void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			entry_node_->Homogenize(vars, homvar);
 		}
 
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return entry_node_->IsHomogeneous(v);
+		}
 
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return entry_node_->IsHomogeneous(vars);
+		}
 		
 	protected:
 		

@@ -77,7 +77,38 @@ namespace bertini{
 		return deg;
 	}
 	
-	
+	int SumOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const 
+	{
+		auto deg = 0;
+		for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+		{
+			auto term_degree = (*iter)->Degree(vars);
+			if (term_degree<0)
+				return term_degree;
+
+			deg = std::max(deg, term_degree);
+			
+		}
+		
+		return deg;
+	}
+
+
+	std::vector<int> SumOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	{
+		std::vector<int> deg(vars.size(),0);
+		for (auto iter : children_)
+		{
+			auto term_deg = iter->MultiDegree(vars);
+
+			for (auto iter = term_deg.begin(); iter!= term_deg.end(); ++iter)
+			{
+				*(deg.begin()+(iter-term_deg.begin())) = std::max(*(deg.begin()+(iter-term_deg.begin())), *iter);
+			}
+		}
+		return deg;
+	}
+
 	void SumOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		
@@ -111,16 +142,82 @@ namespace bertini{
 			auto degree_deficiency = maxdegree - *(term_degrees.begin() + (iter-children_.begin()));
 			if ( degree_deficiency > 0)
 			{
+
 				// hold the child temporarily.
-				std::shared_ptr<Node> P = std::make_shared<IntegerPowerOperator>(std::dynamic_pointer_cast<Node>(homvar),degree_deficiency);
-				std::shared_ptr<Node> M = std::make_shared<MultOperator>(P,std::dynamic_pointer_cast<Node>(*iter));
+				if (degree_deficiency==1)
+				{
+					std::shared_ptr<Node> M = std::make_shared<MultOperator>(homvar,std::dynamic_pointer_cast<Node>(*iter));
+					swap(*iter,M);
+				}
+				else{
+					std::shared_ptr<Node> P = std::make_shared<IntegerPowerOperator>(std::dynamic_pointer_cast<Node>(homvar),degree_deficiency);
+					std::shared_ptr<Node> M = std::make_shared<MultOperator>(P,std::dynamic_pointer_cast<Node>(*iter));
+					swap(*iter,M);
+				}
 				
-				
-				swap(*iter,M);
+
 			}
 		}
 		
 	}
+
+
+	bool SumOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
+	{
+		
+		for (auto iter : children_)
+		{
+			if (!iter->IsHomogeneous(v))
+				return false;
+		}
+
+		// the only hope this has of being homogeneous, is that each factor is homogeneous
+		int deg;
+
+		deg = (*(children_.begin()))->Degree(v) ;
+	
+		if (deg < 0) 
+			return false;
+
+		for (auto iter = children_.begin()+1; iter!= children_.end(); iter++)
+		{
+			auto local_degree = (*iter)->Degree(v);
+			if (local_degree!=deg)
+				return false;
+		}
+
+		return true;
+	}
+
+	bool SumOperator::IsHomogeneous(VariableGroup const& v) const
+	{
+		
+		for (auto iter : children_)
+		{
+			if (!iter->IsHomogeneous(v))
+				return false;
+		}
+
+		// the only hope this has of being homogeneous, is that each factor is homogeneous
+		int deg;
+
+		deg = (*(children_.begin()))->Degree(v) ;
+	
+		if (deg < 0) 
+			return false;
+
+		for (auto iter = children_.begin()+1; iter!= children_.end(); iter++)
+		{
+			auto local_degree = (*iter)->Degree(v);
+			if (local_degree!=deg)
+				return false;
+		}
+
+		return true;
+	}
+
+	
+
 	
 	dbl SumOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
 	{
@@ -160,6 +257,21 @@ namespace bertini{
 	
 	
 	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	//////////////////////
 	//
 	//  Negate operator definitions
@@ -192,6 +304,22 @@ namespace bertini{
 	
 	
 	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	
 	
 	
@@ -313,7 +441,45 @@ namespace bertini{
 		return deg;
 	}
 	
-	
+
+	int MultOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const 
+	{
+		
+		auto deg = 0;
+
+		for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+		{
+			auto factor_deg = (*iter)->Degree(vars);  
+
+			if (factor_deg<0)
+				return factor_deg;
+			else if (factor_deg!=0 && !*(children_mult_or_div_.begin() + (iter-children_.begin()) ) )
+				return -1;
+			else
+				deg+=factor_deg;
+		}
+
+		
+		return deg;
+	}
+
+	std::vector<int> MultOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	{
+		std::vector<int> deg(vars.size(),0);
+		for (auto iter : children_)
+		{
+			auto term_deg = iter->MultiDegree(vars);
+
+			for (auto iter = term_deg.begin(); iter!= term_deg.end(); ++iter)
+			{
+				*(deg.begin()+(iter-term_deg.begin())) += *iter;
+			}
+		}
+		return deg;
+	}
+
+
+
 	void MultOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		for (auto iter: children_)
@@ -321,7 +487,34 @@ namespace bertini{
 			iter->Homogenize(vars, homvar);
 		}
 	}
+
+
+	bool MultOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
+	{
+		// the only hope this has of being homogeneous, is that each factor is homogeneous
+		for (auto iter : children_)
+		{
+			if (! iter->IsHomogeneous(v))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 	
+	bool MultOperator::IsHomogeneous(VariableGroup const& v) const
+	{
+		// the only hope this has of being homogeneous, is that each factor is homogeneous
+		for (auto iter : children_)
+		{
+			if (! iter->IsHomogeneous(v))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	dbl MultOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
 	{
 		dbl retval{1};
@@ -435,7 +628,32 @@ namespace bertini{
 		}
 	}
 	
-	
+	int PowerOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const
+	{
+		auto multideg = MultiDegree(vars);
+		auto deg = 0;
+		std::for_each(multideg.begin(),multideg.end(),[&](int n){
+						if (n < 0)
+							deg = -1;
+						else
+                        	deg += n;
+ 						});
+		return deg;
+	}
+
+
+	std::vector<int> PowerOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	{
+		std::vector<int> deg(vars.size(),0);
+		for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+		{
+			*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+		}
+		return deg;
+	}
+
+
+
 	void PowerOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		if (exponent_->Degree(vars)==0)
@@ -446,6 +664,35 @@ namespace bertini{
 			throw std::runtime_error("asking for homogenization on non-polynomial node");
 			//TODO: this will leave the system in a broken state, partially homogenized...
 		}
+	}
+
+	bool PowerOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
+	{
+		// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
+		if (exponent_->Degree(v)==0)
+		{
+			auto exp_val = exponent_->Eval<dbl>();
+			if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
+				if (fabs(std::round(real(exp_val)) - real(exp_val)) < 10*std::numeric_limits<double>::epsilon())
+					if (real(exp_val) >=0 )
+						return base_->IsHomogeneous(v);
+		}
+		return false;
+	}
+
+
+	bool PowerOperator::IsHomogeneous(VariableGroup const& v) const
+	{
+		// the only hope this has of being homogeneous, is that the degree of the exponent is 0 (it's constant), and that it's an integer
+		if (exponent_->Degree(v)==0)
+		{
+			auto exp_val = exponent_->Eval<dbl>();
+			if (fabs(imag(exp_val)) < 10*std::numeric_limits<double>::epsilon())
+				if (fabs(std::round(real(exp_val)) - real(exp_val)) < 10*std::numeric_limits<double>::epsilon())
+					if (real(exp_val) >=0 )
+						return base_->IsHomogeneous(v);
+		}
+		return false;
 	}
 	
 	dbl PowerOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
@@ -517,6 +764,7 @@ namespace bertini{
 		
 	}
 	
+
 	
 	
 	
@@ -563,6 +811,7 @@ namespace bertini{
 		}
 	}
 	
+
 	dbl SqrtOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
 	{
 		return sqrt(child_->Eval<dbl>(diff_variable));

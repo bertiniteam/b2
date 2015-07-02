@@ -93,11 +93,45 @@ namespace  bertini {
 	    	
 	    }
 
+
+	    int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+		{
+			for (auto iter : vars)
+				if (this==iter.get())
+					return 1;
+				
+			return 0;
+		}
+
+		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		{
+			std::vector<int> deg;
+			for (auto iter=vars.begin(); iter!=vars.end(); iter++)
+				if (this==(*iter).get())
+					deg.push_back(1);
+				else
+					deg.push_back(0);
+			return deg;
+		}
+
+
 	    void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			
 		}
 
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return true;
+		}
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return true;
+		}
 		
 	protected:
 		
