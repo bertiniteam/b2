@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
     
     N *= N;
     BOOST_CHECK_EQUAL(N->Degree(),0);
-    
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag()) < threshold_clearance_d);
@@ -122,7 +122,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
     x->set_current_value<dbl>(std::complex<double>(3.1, 4.1));
     x->set_current_value<mpfr>(bertini::complex(xstr_real, xstr_imag));
     
-    
+    BOOST_CHECK(N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag()) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -152,6 +153,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
 
+    BOOST_CHECK(! N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag()) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -180,6 +183,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
     BOOST_CHECK_EQUAL(N->Degree(),1);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag()) < threshold_clearance_d);
@@ -262,6 +267,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
 
+    BOOST_CHECK(N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -301,6 +308,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_times_number){
     BOOST_CHECK_EQUAL(N->Degree(),2);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() / exact_dbl.real() -1) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() / exact_dbl.imag() -1) < threshold_clearance_d);
@@ -381,6 +390,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
 
+    BOOST_CHECK(! N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -417,6 +428,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x){
     std::shared_ptr<Node> N = -x;
     BOOST_CHECK_EQUAL(N->Degree(),1);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
+
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -455,6 +468,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
 
+    BOOST_CHECK(! N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -483,6 +498,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_minus_y_minus_num1l_pow_num2){
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
 
+    BOOST_CHECK(! N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -515,6 +531,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
 
+    BOOST_CHECK(! N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag()) < threshold_clearance_d);
@@ -558,6 +575,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_over_yl_pow_num2){
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
 
+    BOOST_CHECK(!N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -595,6 +613,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lnegative_xl_pow_num2){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
 
+    BOOST_CHECK(!N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -624,6 +643,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_plus_y_plus_num1){
     BOOST_CHECK_EQUAL(N->Degree(),1);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -662,6 +683,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_minus_y_minus_num1){
     BOOST_CHECK_EQUAL(N->Degree(),1);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -702,6 +725,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_times_y_times_num1){
     BOOST_CHECK_EQUAL(N->Degree(),2);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -763,6 +788,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_over_y){
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
 
+    BOOST_CHECK(!N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -813,6 +840,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_pow_num2){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
     
+    BOOST_CHECK(!N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -849,6 +877,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_over_num){
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
 
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -880,6 +909,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_times_ly_plus_num2l){
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
 
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -911,6 +941,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_times_y_plus_num2){
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
 
+    BOOST_CHECK(N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -939,6 +971,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_over_ly_plus_num2l){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
+
+    BOOST_CHECK(! N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -969,6 +1003,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_over_y_plus_num2){
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
 
+    BOOST_CHECK(! N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -993,6 +1029,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_plus_num1){
     std::shared_ptr<Node> N = pow(x,p)+a;
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
+
+    BOOST_CHECK(! N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1019,6 +1057,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_lnum1_pow_num2l){
     BOOST_CHECK_EQUAL(N->Degree(),1);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
 
+    BOOST_CHECK(N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1044,6 +1084,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_lnum1_pow_num2l){
     BOOST_CHECK_EQUAL(N->Degree(),1);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
 
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1070,6 +1111,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
 
+    BOOST_CHECK(! N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1094,6 +1137,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_over_num1){
     std::shared_ptr<Node> N = pow(x,p)/a;
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
+
+    BOOST_CHECK(! N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1120,6 +1165,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_over_lnum1_pow_num2l){
     BOOST_CHECK_EQUAL(N->Degree(),1);
     BOOST_CHECK_EQUAL(N->Degree(x),1);
 
+    BOOST_CHECK(N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1145,6 +1192,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
 
+    BOOST_CHECK(!N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1171,6 +1219,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_times_num2l){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
 
+    BOOST_CHECK(!N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1195,6 +1245,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_over_num2l){
     std::shared_ptr<Node> N = pow(x,p/a);
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
+
+
+    BOOST_CHECK(!N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1224,6 +1277,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
     
     BOOST_CHECK_EQUAL(N->Degree(),0);
 
+    BOOST_CHECK(N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1242,6 +1297,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_cos_num){
     std::shared_ptr<Node> N = cos(a);
     
     BOOST_CHECK_EQUAL(N->Degree(),0);
+
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1263,6 +1320,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_num){
     
     BOOST_CHECK_EQUAL(N->Degree(),0);
 
+    BOOST_CHECK(N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1283,6 +1342,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
     
     BOOST_CHECK_EQUAL(N->Degree(),0);
 
+    BOOST_CHECK(N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1302,6 +1363,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_num){
     std::shared_ptr<Node> N = sqrt(a);
     
     BOOST_CHECK_EQUAL(N->Degree(),0);
+
+    BOOST_CHECK(N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1328,6 +1391,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
 
+    BOOST_CHECK(!N->IsPolynomial());
+
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1350,6 +1415,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_cos_of_lx_times_numl){
     std::shared_ptr<Node> N = cos(x*a);
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
+
+    BOOST_CHECK(!N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1375,6 +1442,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_of_lx_over_numl){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
 
+    BOOST_CHECK(!N->IsPolynomial());
+    
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1394,6 +1463,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_of_negative_num){
     std::shared_ptr<Node> N = exp(-a);
     BOOST_CHECK_EQUAL(N->Degree(),0);
 
+    BOOST_CHECK(N->IsPolynomial());
+    
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1418,6 +1489,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
 
+    BOOST_CHECK(!N->IsPolynomial());
+    
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1460,7 +1533,11 @@ BOOST_AUTO_TEST_CASE(manual_construction_pi){
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+
+    BOOST_CHECK(N->IsPolynomial());
     
+
     N = std::make_shared<SpecialNumber>("Pi");
     BOOST_CHECK_EQUAL(N->Degree(),0);
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
@@ -1468,6 +1545,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_pi){
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
     
+
+    BOOST_CHECK(N->IsPolynomial());
+    
+
 }
 
 
@@ -1487,6 +1568,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_e){
     
     N = std::make_shared<SpecialNumber>("E");
     BOOST_CHECK_EQUAL(N->Degree(),0);
+
+
+    BOOST_CHECK(N->IsPolynomial());
+    
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1512,6 +1597,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_i){
     
     N = std::make_shared<SpecialNumber>("I");
     BOOST_CHECK_EQUAL(N->Degree(),0);
+
+
+    BOOST_CHECK(N->IsPolynomial());
+    
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
