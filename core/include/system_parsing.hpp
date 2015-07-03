@@ -316,8 +316,8 @@ namespace bertini {
 		qi::rule<Iterator, System(), Skipper > root_rule_;
 		
 		
-		qi::rule<Iterator, std::vector<Var>(), Skipper > variable_group_, hom_variable_group_, variables_, implicit_parameters_;
-		qi::rule<Iterator, std::vector<Var>(), Skipper > genericvargp_;
+		qi::rule<Iterator, VariableGroup(), Skipper > variable_group_, hom_variable_group_, variables_, implicit_parameters_;
+		qi::rule<Iterator, VariableGroup(), Skipper > genericvargp_;
 		
 		qi::rule<Iterator, Var(), Skipper> path_variable_;
 		qi::rule<Iterator, Var()> new_variable_;

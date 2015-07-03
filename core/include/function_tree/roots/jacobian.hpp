@@ -118,7 +118,7 @@ namespace bertini {
         /**
         The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
         */
-        int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+        int Degree(VariableGroup const& vars) const override
 		{
 			return entry_node_->Degree(vars);
 		}
@@ -126,7 +126,7 @@ namespace bertini {
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 	    */
-		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override
 		{
 			
 			std::vector<int> deg(vars.size());

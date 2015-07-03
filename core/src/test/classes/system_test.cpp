@@ -35,10 +35,11 @@
 #include "system_parsing.hpp"
 
 using System = bertini::System;
-template<typename T>
-	using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-	template<typename T>
-	using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+using Var = std::shared_ptr<bertini::Variable>;
+
+template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
 
 BOOST_AUTO_TEST_SUITE(system_class)
 
@@ -87,22 +88,6 @@ BOOST_AUTO_TEST_CASE(system_parse_xyz_f1f2_t_pq)
 	bertini::SystemParser<std::string::const_iterator> S;
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 	BOOST_CHECK(s && iter==end);
-
-
-//	std::cout << str << " got parsed into the following system in memory:\n\n";
-//
-//	std::cout << sys << std::endl;
-//
-//
-//	bertini::Vec<double> var_values(3);
-//	var_values << 1, 2, 3;
-//
-//	double t = 2.0/3.0;
-//	bertini::Vec<double> sys_values(2);
-//
-//	sys_values = sys.Eval(var_values,t);
-//
-//	std::cout << "system evaluated at\n" << var_values << " is " << sys_values << "\n";
 
 }
 
@@ -238,6 +223,34 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 	auto J = S.Jacobian(v,time);
 
 	BOOST_CHECK_THROW(S.Jacobian(v), std::runtime_error);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
+{
+	Var x1 = std::make_shared<bertini::Variable>("x1");
+	Var x2 = std::make_shared<bertini::Variable>("x2");
+
+	Var y1 = std::make_shared<bertini::Variable>("y1");
+	Var y2 = std::make_shared<bertini::Variable>("y2");
+
+
+	bertini::VariableGroup v1{x1, x2};
+	bertini::VariableGroup v2{y1, y2};
+
+	auto f1 = x1*y1 + x1;
+	auto f2 = x2*x1 + y1*y2 + x1 + y2 - 1;
+
+
+	bertini::System S;
+	S.AddVariableGroup(v1);
+	S.AddVariableGroup(v2);
+	
+	S.AddFunction(f1);
+	S.AddFunction(f2);
+
+	S.Homogenize();
 }
 
 
