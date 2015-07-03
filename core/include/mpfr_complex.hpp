@@ -555,7 +555,10 @@ namespace bertini {
 		}
 		
 		
-		
+		explicit operator std::complex<double> () const
+		{
+			return std::complex<double>(double(real_), double(imag_));
+		}
 		
 		///////
 		//TODO: write MPI methods, for sending, receiving, broadcasting, etc.  this will require becoming familiar with Boost.MPI
@@ -909,7 +912,7 @@ namespace bertini {
 		return complex( log(abs(z)), arg(z));
 	}
 	
-	
+
 	
 	/**
 	 Compute c^z, for c,z complex numbers

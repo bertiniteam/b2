@@ -74,7 +74,7 @@ namespace bertini {
          */
         std::shared_ptr<Node> Differentiate() override
         {
-            return std::make_shared<Number>(0.0);
+            return std::make_shared<Float>(0.0);
         }
 
 
