@@ -1514,7 +1514,22 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
 
 
 
+BOOST_AUTO_TEST_CASE(arctangent)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    auto N = atan(pow(x,2)+1);
 
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+
+    dbl exact_dbl = atan(pow(xnum_dbl,2)+1.0);
+    mpfr exact_mpfr = atan(pow(xnum_mpfr,2)+bertini::complex(1.0));
+
+    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+}
 
 
 
