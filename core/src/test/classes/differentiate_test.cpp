@@ -44,8 +44,7 @@
 
 using Variable = bertini::Variable;
 using Node = bertini::Node;
-using Number = bertini::Number;
-using SpecialNumber = bertini::SpecialNumber;
+
 using Function = bertini::Function;
 using Jacobian = bertini::Jacobian;
 

@@ -555,7 +555,10 @@ namespace bertini {
 		}
 		
 		
-		
+		explicit operator std::complex<double> () const
+		{
+			return std::complex<double>(double(real_), double(imag_));
+		}
 		
 		///////
 		//TODO: write MPI methods, for sending, receiving, broadcasting, etc.  this will require becoming familiar with Boost.MPI
