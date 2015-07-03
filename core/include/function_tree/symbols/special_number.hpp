@@ -23,52 +23,211 @@
 #ifndef b2Test_SpecialNumber_h
 #define b2Test_SpecialNumber_h
 
-#include <boost/math/constants/constants.hpp>
 
 #include "function_tree/symbols/symbol.hpp"
 
 #include "function_tree/operators/arithmetic.hpp"
 #include "function_tree/operators/trig.hpp"
 
+#include <cmath>
 
 
 
 namespace bertini {
     
-    std::shared_ptr<Node> Pi()
-    {
-    	return acos(std::make_shared<Integer>(-1));
-    }
-    
-    std::shared_ptr<Node> E()
-    {
-    	return exp(std::make_shared<Integer>(1));
-    }
-
-
-    std::shared_ptr<Node> I()
-    {
-    	return std::make_shared<Float>("0.0","1.0");
-    }
-
-
-    std::shared_ptr<Node> Two()
-    {
-    	return std::make_shared<Integer>(2);
-    }
-
-    std::shared_ptr<Node> One()
-    {
-    	return std::make_shared<Integer>(1);
-    }
-
-    std::shared_ptr<Node> Zero()
-    {
-    	return std::make_shared<Integer>(0);
-    }
-
+    using ::acos;
+    using ::exp;
 
     
+    namespace SpecialNumber{
+
+	    class Pi : public NamedSymbol
+	    {
+	    public:
+	    	Pi() : NamedSymbol("pi")
+	    	{}
+
+	    	virtual ~Pi() = default;
+
+
+
+	    	void print(std::ostream & target) const override
+			{
+				target << name();
+			}
+
+
+			/**
+	         Differentiates a number.  Should this return the special number Zero?
+	         */
+	        std::shared_ptr<Node> Differentiate() override
+	        {
+	            return std::make_shared<Float>(0.0);
+	        }
+
+	        /**
+			Compute the degree with respect to a single variable.
+
+			For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+		    */
+		    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		    {
+		    	return 0;
+		    }
+
+
+		    int Degree(VariableGroup const& vars) const override
+			{
+				return 0;
+			}
+
+			std::vector<int> MultiDegree(VariableGroup const& vars) const override
+			{
+				return std::vector<int>(vars.size(), 0);
+			}
+
+
+		    void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+			{
+				
+			}
+
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+			{
+				return true;
+			}
+			
+			/**
+			Check for homogeneity, with respect to a variable group.
+			*/
+			bool IsHomogeneous(VariableGroup const& vars) const override
+			{
+				return true;
+			}
+
+
+	    private:
+	    	// Return value of constant
+	        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+	        {
+	            return acos(-1.0);
+	        }
+
+	        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+	        {
+	            return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
+	        }
+
+	    };
+
+
+
+
+	    class E : public NamedSymbol
+	    {
+	    public:
+	    	E() : NamedSymbol("e")
+	    	{}
+
+	    	virtual ~E() = default;
+
+
+
+	    	void print(std::ostream & target) const override
+			{
+				target << name();
+			}
+
+
+			/**
+	         Differentiates a number.  Should this return the special number Zero?
+	         */
+	        std::shared_ptr<Node> Differentiate() override
+	        {
+	            return std::make_shared<Float>(0.0);
+	        }
+
+	        /**
+			Compute the degree with respect to a single variable.
+
+			For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+		    */
+		    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		    {
+		    	return 0;
+		    }
+
+
+		    int Degree(VariableGroup const& vars) const override
+			{
+				return 0;
+			}
+
+			std::vector<int> MultiDegree(VariableGroup const& vars) const override
+			{
+				return std::vector<int>(vars.size(), 0);
+			}
+
+
+		    void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+			{
+				
+			}
+
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+			{
+				return true;
+			}
+			
+			/**
+			Check for homogeneity, with respect to a variable group.
+			*/
+			bool IsHomogeneous(VariableGroup const& vars) const override
+			{
+				return true;
+			}
+
+
+
+	    private:
+	    	// Return value of constant
+	        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+	        {
+	            return dbl(exp(1.0f),0.0);
+	        }
+
+	        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+	        {
+	            return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
+	        }
+
+
+	    };
+
+	} // special number namespace
+
+	std::shared_ptr<Node> Pi();
+
+	std::shared_ptr<Node> E();
+
+	std::shared_ptr<Node> I();
+
+    std::shared_ptr<Node> Two();
+
+    std::shared_ptr<Node> One();
+
+    std::shared_ptr<Node> Zero();
+
+
+
+} // re: namespace bertini
+    
+#endif
+
+
+
+
+
 //     // Node -> Symbol -> SpecialNumber
 //     // Description: This class represents constant leaves to a function tree.  FreshEval simply returns
 //     // the value of the constant.
@@ -191,6 +350,5 @@ namespace bertini {
 
     
 // };
-} // re: namespace bertini
-    
-#endif
+
+
