@@ -117,14 +117,14 @@ namespace bertini {
 			
 			
 			
-			special_numbers_.add("pi", std::make_shared<SpecialNumber>("pi"));
+			special_numbers_.add("pi", Pi());
 			special_numbers_.add("Pi", special_numbers_.at("pi"));
 			
-			special_numbers_.add("e", std::make_shared<SpecialNumber>("e"));
+			special_numbers_.add("e", E());
 			special_numbers_.add("E", special_numbers_.at("e"));
 			
 			
-			special_numbers_.add("i", std::make_shared<SpecialNumber>("i"));
+			special_numbers_.add("i", I());
 			special_numbers_.add("I", special_numbers_.at("i"));
 			
 			
