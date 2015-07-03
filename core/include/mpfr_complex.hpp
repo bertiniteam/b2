@@ -909,7 +909,7 @@ namespace bertini {
 		return complex( log(abs(z)), arg(z));
 	}
 	
-	
+
 	
 	/**
 	 Compute c^z, for c,z complex numbers

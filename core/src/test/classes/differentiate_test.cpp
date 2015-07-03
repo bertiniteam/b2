@@ -1065,6 +1065,69 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 
 
 
+
+
+BOOST_AUTO_TEST_CASE(arcsine_differentiate)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    auto N = asin(pow(x,2)+1);
+    auto J = std::make_shared<Jacobian>(N->Differentiate());
+
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+
+    //(2*x)/(1 - (x^2 + 1)^2)^(1/2)
+    dbl exact_dbl = 2.0*xnum_dbl / pow(1.0 - pow((xnum_dbl*xnum_dbl + 1.0),2),0.5);
+    mpfr exact_mpfr = bertini::complex(2.0)*xnum_mpfr / pow(bertini::complex(1.0) - pow(xnum_mpfr*xnum_mpfr + bertini::complex(1.0),2),mpfr(0.5));
+
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).real() / exact_dbl.real() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+}
+
+
+BOOST_AUTO_TEST_CASE(arccosine_differentiate)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    auto N = acos(pow(x,2)+1);
+    auto J = std::make_shared<Jacobian>(N->Differentiate());
+
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+
+    dbl exact_dbl = -2.0*xnum_dbl / pow(1.0 - pow((xnum_dbl*xnum_dbl + 1.0),2),0.5);
+    mpfr exact_mpfr = -bertini::complex(2.0)*xnum_mpfr / pow(bertini::complex(1.0) - pow(xnum_mpfr*xnum_mpfr + bertini::complex(1.0),2),mpfr(0.5));
+
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).real() / exact_dbl.real() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+}
+
+BOOST_AUTO_TEST_CASE(arctangent_differentiate)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    auto N = atan(pow(x,2)+1);
+    auto J = std::make_shared<Jacobian>(N->Differentiate());
+
+
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+
+    //(2*x)/((x^2 + 1)^2 + 1)
+    dbl exact_dbl = 2.0*xnum_dbl / ( pow((xnum_dbl*xnum_dbl + 1.0),2) + 1.0);
+    mpfr exact_mpfr = bertini::complex(2.0)*xnum_mpfr / ( pow((xnum_mpfr*xnum_mpfr + bertini::complex(1.0)),2) + bertini::complex(1.0));
+
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).real() / exact_dbl.real() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+}
+
+
+
+
 //BOOST_AUTO_TEST_CASE(diff_sin_lxy_plus_z_squaredl){
 //    std::string str = "function f; variable_group x,y,z; f = x*y +y^2 - z*x + 9;";
 //
