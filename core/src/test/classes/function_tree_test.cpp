@@ -42,7 +42,7 @@
 using Variable = bertini::Variable;
 using Node = bertini::Node;
 using Float = bertini::Float;
-using SpecialNumber = bertini::SpecialNumber;
+
 
 
 
@@ -1576,7 +1576,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_pi){
     dbl exact_dbl(4*atan(1.0),0);
     mpfr exact_mpfr(mpfr_float("4.0")*atan(mpfr_float("1.0")));
     
-    std::shared_ptr<SpecialNumber> N = std::make_shared<SpecialNumber>("pi");
+    auto N = bertini::Pi();
     BOOST_CHECK_EQUAL(N->Degree(),0);
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1587,7 +1587,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_pi){
     BOOST_CHECK(N->IsPolynomial());
     
 
-    N = std::make_shared<SpecialNumber>("Pi");
+    N = bertini::Pi();
     BOOST_CHECK_EQUAL(N->Degree(),0);
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1608,20 +1608,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_e){
     dbl exact_dbl(exp(1.0),0);
     mpfr exact_mpfr(exp(mpfr_float("1.0")));
     
-    std::shared_ptr<SpecialNumber> N = std::make_shared<SpecialNumber>("e");
+    auto N = bertini::E();
     BOOST_CHECK_EQUAL(N->Degree(),0);
-    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
-    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
-    
-    N = std::make_shared<SpecialNumber>("E");
-    BOOST_CHECK_EQUAL(N->Degree(),0);
-
-
-    BOOST_CHECK(N->IsPolynomial());
-    
-
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
@@ -1636,28 +1624,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_i){
     dbl exact_dbl(0.0,1.0);
     mpfr exact_mpfr = mpfr("0.0","1.0");
     
-    std::shared_ptr<SpecialNumber> N = std::make_shared<SpecialNumber>("i");
+    auto N = bertini::I();
     BOOST_CHECK_EQUAL(N->Degree(),0);
-
-    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
-    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
-    
-    N = std::make_shared<SpecialNumber>("I");
-    BOOST_CHECK_EQUAL(N->Degree(),0);
-
 
     BOOST_CHECK(N->IsPolynomial());
-    
-
-    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
-    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
-    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
-    
-    N = std::make_shared<SpecialNumber>("1i");
-    BOOST_CHECK_EQUAL(N->Degree(),0);
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
