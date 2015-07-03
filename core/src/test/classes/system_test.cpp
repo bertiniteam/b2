@@ -35,14 +35,11 @@
 #include "system_parsing.hpp"
 
 using System = bertini::System;
-template<typename T>
-	using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-	template<typename T>
-	using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-
-
-
 using Var = std::shared_ptr<bertini::Variable>;
+
+template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
 
 BOOST_AUTO_TEST_SUITE(system_class)
 
@@ -238,11 +235,9 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 	Var y1 = std::make_shared<bertini::Variable>("y1");
 	Var y2 = std::make_shared<bertini::Variable>("y2");
 
-	Var h1 = std::make_shared<bertini::Variable>("h1");
-	Var h2 = std::make_shared<bertini::Variable>("h2");
 
-	bertini::VariableGroup v1{h1, x1, x2};
-	bertini::VariableGroup v2{h2, y1, y2};
+	bertini::VariableGroup v1{x1, x2};
+	bertini::VariableGroup v2{y1, y2};
 
 	auto f1 = x1*y1 + x1;
 	auto f2 = x2*x1 + y1*y2 + x1 + y2 - 1;
@@ -256,8 +251,6 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 	S.AddFunction(f2);
 
 	S.Homogenize();
-
-
 }
 
 

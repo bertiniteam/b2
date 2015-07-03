@@ -162,7 +162,7 @@ namespace bertini {
 
 
 
-		std::vector<std::shared_ptr<Variable> > get_var_group(){
+		VariableGroup get_var_group(){
 			return produced_variables_;
 		}
 
@@ -198,7 +198,7 @@ namespace bertini {
 
 
 		// vector of shared pointers to nodes which represent a variable group or whatever.
-		std::vector< std::shared_ptr<Variable> > produced_variables_;
+		VariableGroup produced_variables_;
 
 
 		// Keeps track of the index of the variable being parsed.

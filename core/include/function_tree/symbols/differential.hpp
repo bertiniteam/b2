@@ -27,7 +27,6 @@
 #include "function_tree/node.hpp"
 #include "function_tree/symbols/symbol.hpp"
 #include "function_tree/symbols/number.hpp"
-// #include "function_tree/symbols/variable.hpp"
 
 
 
@@ -93,17 +92,17 @@ namespace bertini {
             return 0;
         }
 
-        int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+        int Degree(VariableGroup const& vars) const override
 		{
 			return 0;
 		}
 		
-        std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+        std::vector<int> MultiDegree(VariableGroup const& vars) const override
         {
             return std::vector<int>(vars.size(),0);
         }
 
-        void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+        void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
         {
             
         }
