@@ -306,7 +306,7 @@ namespace bertini {
 
 			number_.name("number_");
 			number_ =
-			long_number_string_ [ _val = make_shared_<Number>()(_1) ];
+			long_number_string_ [ _val = make_shared_<Float>()(_1) ];
 
 
 

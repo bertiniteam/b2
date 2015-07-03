@@ -207,7 +207,7 @@ namespace bertini {
 		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
 		
 		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Number>(rhs));
+		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Float>(rhs));
 		
 		lhs.swap(temp);
 		return lhs;
@@ -225,12 +225,12 @@ namespace bertini {
 	
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, double rhs)
 	{
-		return std::make_shared<SumOperator>(lhs,std::make_shared<Number>(rhs));
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator+(double lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<SumOperator>(std::make_shared<Number>(lhs), rhs);
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 	
 	
@@ -260,7 +260,7 @@ namespace bertini {
 		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
 		
 		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Number>(rhs),false);
+		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Float>(rhs),false);
 		
 		lhs.swap(temp);
 		return lhs;
@@ -273,12 +273,12 @@ namespace bertini {
 	
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, double rhs)
 	{
-		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Number>(rhs), false);
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(double lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<SumOperator>(std::make_shared<Number>(lhs), true, rhs, false);
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 	
 	
@@ -482,7 +482,7 @@ namespace bertini {
 		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
 		
 		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Number>(rhs));
+		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Float>(rhs));
 		
 		lhs.swap(temp);
 		return lhs;
@@ -491,17 +491,17 @@ namespace bertini {
 	
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, double rhs)
 	{
-		return std::make_shared<MultOperator>(lhs,std::make_shared<Number>(rhs));
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator*(double lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<MultOperator>(std::make_shared<Number>(lhs), rhs);
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 	
 	inline std::shared_ptr<Node> operator*(int lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<MultOperator>(std::make_shared<Number>(lhs), rhs);
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 	
 	
@@ -556,7 +556,7 @@ namespace bertini {
 		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
 		
 		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Number>(rhs),false);
+		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Float>(rhs),false);
 		
 		lhs.swap(temp);
 		return lhs;
@@ -570,12 +570,12 @@ namespace bertini {
 	
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, double rhs)
 	{
-		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Number>(rhs), false);
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator/(double lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<MultOperator>(std::make_shared<Number>(lhs), true, rhs, false);
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 	
 	
@@ -674,7 +674,7 @@ namespace bertini {
 	
 	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, double p)
 	{
-		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Number>(p));
+		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
 	}
 	
 	

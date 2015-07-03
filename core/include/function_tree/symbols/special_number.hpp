@@ -27,6 +27,11 @@
 
 #include "function_tree/symbols/symbol.hpp"
 
+#include "function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/trig.hpp"
+
+
+
 
 namespace bertini {
     
@@ -93,7 +98,7 @@ namespace bertini {
      */
     std::shared_ptr<Node> Differentiate() override
     {
-        return std::make_shared<Number>(0.0);
+        return std::make_shared<Float>(0.0);
     }
 
     
