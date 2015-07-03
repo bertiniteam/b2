@@ -30,55 +30,51 @@
 namespace bertini {
 	
 	
-	
+	class TrigOperator: public virtual UnaryOperator
+	{
+	public:
+
+		TrigOperator(){}
+		TrigOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+
+		virtual ~TrigOperator() = default;
+
+		/**
+		 Compute the degree with respect to a single variable.
+		 
+		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+		 */
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+	};
+
+
+
+
+
 	// Node -> UnaryOperator -> SinOperator
 	// Description: This class represents the sine function.  FreshEval method
 	// is defined for sine and takes the sine of the child node.
-	class SinOperator : public  virtual UnaryOperator
+	class SinOperator : public  virtual TrigOperator
 	{
 	public:
 		
 		SinOperator(){}
 		
-		SinOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
 		
 		
 		
 		
-		void print(std::ostream & target) const override
-		{
-			target << "sin(";
-			child_->print(target);
-			target << ")";
-		}
-		
+		void print(std::ostream & target) const override;
 		
 		
 		/**
 		 Differentiates the sine function.
 		 */
 		std::shared_ptr<Node> Differentiate() override;
-		
-		
-		
-		/**
-		 Compute the degree with respect to a single variable.
-		 
-		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			if (child_->Degree(v)==0)
-			{
-				return 0;
-			}
-			else
-			{
-				return -1;
-			}
-		}
-		
 		
 		
 		virtual ~SinOperator() = default;
@@ -99,27 +95,64 @@ namespace bertini {
 		
 	};
 	
-	// begin the overload of operators
-	inline std::shared_ptr<bertini::Node> sin(const std::shared_ptr<bertini::Node> & N)
+
+	// Node -> TrigOperator -> ArcSinOperator
+	// Description: This class represents the inverse sine function.  FreshEval method
+	// is defined for arcsine and takes the sine of the child node.
+	class ArcSinOperator : public  virtual TrigOperator
 	{
-		return std::make_shared<bertini::SinOperator>(N);
-	}
+	public:
+		
+		ArcSinOperator(){}
+		
+		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		{};
+		
+		
+		void print(std::ostream & target) const override;
+		
+		
+		/**
+		 Differentiates the sine function.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		
+		virtual ~ArcSinOperator() = default;
+		
+	protected:
+		
+		
+		// Specific implementation of FreshEval for negate.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		{
+			return asin(child_->Eval<dbl>(diff_variable));
+		}
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			return asin(child_->Eval<mpfr>(diff_variable));
+		}
+		
+	};
+
+
+
+
 	
 	
 	
 	
-	
-	
-	// Node -> UnaryOperator -> CosOperator
+	// Node -> TrigOperator -> CosOperator
 	// Description: This class represents the cosine function.  FreshEval method
 	// is defined for cosine and takes the cosine of the child node.
-	class CosOperator : public  virtual UnaryOperator
+	class CosOperator : public  virtual TrigOperator
 	{
 	public:
 		
 		CosOperator(){}
 		
-		CosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
 		
 		
@@ -135,14 +168,6 @@ namespace bertini {
 		 */
 		std::shared_ptr<Node> Differentiate() override;
 		
-		
-		
-		/**
-		 Compute the degree with respect to a single variable.
-		 
-		 For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		virtual ~CosOperator() = default;
 		
@@ -163,69 +188,82 @@ namespace bertini {
 	};
 	
 	
-	inline std::shared_ptr<bertini::Node> cos(const std::shared_ptr<bertini::Node> & N)
-	{
-		return std::make_shared<bertini::CosOperator>(N);
-	}
-	
-	
-	
-	
-	
-	// Node -> UnaryOperator -> TanOperator
-	// Description: This class represents the tangent function.  FreshEval method
-	// is defined for tangent and takes the tangent of the child node.
-	class TanOperator : public  virtual UnaryOperator
+	// Node -> TrigOperator -> ArcCosOperator
+	// Description: This class represents the inverse cosine function.  FreshEval method
+	// is defined for arccosine and takes the arccosine of the child node.
+	class ArcCosOperator : public  virtual TrigOperator
 	{
 	public:
 		
-		TanOperator(){}
+		ArcCosOperator(){}
 		
-		TanOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
 		
 		
 		
 		
-		void print(std::ostream & target) const override
+		void print(std::ostream & target) const override;
+		
+		
+		
+		/**
+		 Differentiates the cosine function.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+
+
+		virtual ~ArcCosOperator() = default;
+		
+	protected:
+		
+		
+		// Specific implementation of FreshEval for negate.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
 		{
-			target << "tan(";
-			child_->print(target);
-			target << ")";
+			return acos(child_->Eval<dbl>(diff_variable));
 		}
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			return acos(child_->Eval<mpfr>(diff_variable));
+		}
+		
+	};
+	
+	
+	
+	
+	
+
+
+	
+	
+	
+	// Node -> TrigOperator -> TanOperator
+	// Description: This class represents the tangent function.  FreshEval method
+	// is defined for tangent and takes the tangent of the child node.
+	class TanOperator : public  virtual TrigOperator
+	{
+	public:
+		
+		TanOperator(){}
+		
+		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		{};
+		
+		
+		
+		
+		void print(std::ostream & target) const override;
 		
 		
 		/**
 		 Differentiates the tangent function.
 		 */
-		std::shared_ptr<Node> Differentiate() override
-		{
-			auto ret_mult = std::make_shared<MultOperator>();
-			ret_mult->AddChild(child_->Differentiate());
-			ret_mult->AddChild(std::make_shared<CosOperator>(child_),false);
-			ret_mult->AddChild(std::make_shared<CosOperator>(child_),false);
-			return ret_mult;
-		}
+		std::shared_ptr<Node> Differentiate() override;
 		
-		
-		
-		
-		/**
-		 Compute the degree with respect to a single variable.
-		 
-		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			if (child_->Degree(v)==0)
-			{
-				return 0;
-			}
-			else
-			{
-				return -1;
-			}
-		}
 		
 		
 		virtual ~TanOperator() = default;
@@ -247,12 +285,88 @@ namespace bertini {
 	};
 	
 	
+	// Node -> TrigOperator -> ArcTanOperator
+	// Description: This class represents the inverse tangent function.  FreshEval method
+	// is defined for arctangent and takes the arc tangent of the child node.
+	class ArcTanOperator : public  virtual TrigOperator
+	{
+	public:
+		
+		ArcTanOperator(){}
+		
+		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		{};
+		
+		
+		
+		
+		void print(std::ostream & target) const override;
+		
+		
+		/**
+		 Differentiates the tangent function.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		
+		
+		virtual ~ArcTanOperator() = default;
+		
+	protected:
+		
+		
+		// Specific implementation of FreshEval for arctangent.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		{
+			return atan(child_->Eval<dbl>(diff_variable));
+		}
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			return atan(child_->Eval<mpfr>(diff_variable));
+		}
+		
+	};
+	
+	
 	// begin the overload of operators
+
+	inline std::shared_ptr<bertini::Node> sin(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::SinOperator>(N);
+	}
 	
+	inline std::shared_ptr<bertini::Node> asin(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::ArcSinOperator>(N);
+	}
 	
+
+
+	inline std::shared_ptr<bertini::Node> cos(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::CosOperator>(N);
+	}
+
+
+
+	inline std::shared_ptr<bertini::Node> acos(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::ArcCosOperator>(N);
+	}
+
+
+
 	inline std::shared_ptr<bertini::Node> tan(const std::shared_ptr<bertini::Node> & N)
 	{
 		return std::make_shared<bertini::TanOperator>(N);
+	}
+
+
+	
+	inline std::shared_ptr<bertini::Node> atan(const std::shared_ptr<bertini::Node> & N)
+	{
+		return std::make_shared<bertini::ArcTanOperator>(N);
 	}
 	
 	

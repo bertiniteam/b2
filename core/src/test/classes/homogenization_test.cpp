@@ -7,7 +7,7 @@
 
 
 using Var = std::shared_ptr<bertini::Variable>;
-using Num = std::shared_ptr<bertini::Number>;
+using Num = std::shared_ptr<bertini::Float>;
 using VariableGroup = bertini::VariableGroup;
 
 BOOST_AUTO_TEST_SUITE(homogenization)
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_sqrt_x)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 {
-	Num n = std::make_shared<bertini::Number>("1");
+	Num n = std::make_shared<bertini::Float>("1");
 
 	auto f1 = sin(n);
 	
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 {
-	Num n = std::make_shared<bertini::Number>("1");
+	Num n = std::make_shared<bertini::Float>("1");
 
 	auto f1 = cos(n);
 	
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_1_plus_1)
 {
-	Num n = std::make_shared<bertini::Number>("1");
+	Num n = std::make_shared<bertini::Float>("1");
 
 	auto f1 = sin(n + n);
 	
