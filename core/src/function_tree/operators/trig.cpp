@@ -41,5 +41,25 @@ namespace bertini {
 		}
 	}
 	
+
+	std::shared_ptr<Node> ArcSinOperator::Differentiate()
+	{
+		return child_->Differentiate()/sqrt(1-pow(child_,2));
+	}
+
+	std::shared_ptr<Node> ArcCosOperator::Differentiate()
+	{
+		return -child_->Differentiate()/sqrt(1-pow(child_,2));
+	}
+
+
+	std::shared_ptr<Node> ArcTanOperator::Differentiate()
+	{
+		auto ret_mult = std::make_shared<MultOperator>();
+		ret_mult->AddChild(child_->Differentiate());
+		ret_mult->AddChild(1 + pow(child_,2), false);
+		return ret_mult;
+	}
+
 	
 } // re: bertini namespace
