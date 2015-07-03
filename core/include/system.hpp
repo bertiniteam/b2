@@ -37,17 +37,17 @@
 #include <eigen3/Eigen/Dense>
 
 
+
+
 namespace bertini {
 
-	template<typename T>
-	using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-	template<typename T>
-	using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+	
 	/**
 	 The fundamental polynomial system class for Bertini2.
 	 */
 	class System{
-
+		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
 		// a few local using statements to reduce typing etc.
 		using Fn = std::shared_ptr<Function>;
@@ -61,39 +61,29 @@ namespace bertini {
 		{}
 
 
-		void precision(unsigned new_precision)
-		{
-			for (auto iter : functions_) {
-//				iter->precision(new_precision);
-			}
-
-			for (auto iter : subfunctions_) {
-				//				iter->precision(new_precision);
-			}
-
-			for (auto iter : explicit_parameters_) {
-				//				iter->precision(new_precision);
-			}
-
-			for (auto iter : variables_) {
-				//				iter->precision(new_precision);
-			}
-
-			for (auto iter :implicit_parameters_) {
-				//				iter->precision(new_precision);
-			}
-
-			for (auto iter : constant_subfunctions_) {
-				//				iter->precision(new_precision);
-				//				iter->eval<>()
-			}
-
-//			path_variable_->precision(new_precision);
-
-			precision_ = new_precision;
-		}
+		void precision(unsigned new_precision);
 
 
+
+		/**
+		 Evaluate the system.
+		 */
+		template<typename T>
+		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value);
+
+
+
+		template<typename T>
+		Mat<T> Jacobian(const Vec<T> & variable_values);
+
+
+
+		template<typename T>
+		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value);
+
+	
+
+		void Homogenize();
 
 
 		/**
@@ -103,10 +93,6 @@ namespace bertini {
 		{
 			return functions_.size();
 		}
-
-
-
-
 
 		/**
 		 Get the number of variables in this system
@@ -142,117 +128,7 @@ namespace bertini {
 		}
 
 
-		/**
-		 Evaluate the system.
-		 */
-		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value)
-		{
-
-			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
-			if (!have_path_variable_)
-				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
-
-
-			// this function call traverses the entire tree, resetting everything.
-			//
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			//
-			// we need to work to correct this.
-			for (auto iter : functions_) {
-				iter->Reset();
-			}
-
-			SetVariables(variable_values);
-			SetPathVariable(path_variable_value);
-
-
-			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
-
-			{ // for scoping of the counter.
-				auto counter = 0;
-				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-					value(counter) = (*iter)->Eval<T>();
-				}
-			}
-
-			return value;
-		}
-
-
-
-		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values)
-		{
-			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
-
-			if (have_path_variable_)
-				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
-
-
-			if (!is_differentiated_)
-			{
-				jacobian_.resize(NumFunctions());
-				for (int ii = 0; ii < NumFunctions(); ++ii)
-				{
-					jacobian_[ii] = std::make_shared<bertini::Jacobian>(functions_[ii]->Differentiate());
-				}
-				is_differentiated_ = true;
-			}
-
-			SetVariables(variable_values);
-
-			Mat<T> J(NumFunctions(), NumVariables());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
-				for (int jj = 0; jj < NumVariables(); ++jj)
-				{
-					J(ii,jj) = jacobian_[ii]->EvalJ<T>(variables_[jj]);
-				}
-			}
-
-			return J;
-		}
-
-
-
-		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
-		{
-			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
-
-			if (!have_path_variable_)
-				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
-
-
-			if (!is_differentiated_)
-			{
-				jacobian_.resize(NumFunctions());
-				for (int ii = 0; ii < NumFunctions(); ++ii)
-				{
-					jacobian_[ii] = std::make_shared<bertini::Jacobian>(functions_[ii]->Differentiate());
-				}
-				is_differentiated_ = true;
-			}
-
-			SetVariables(variable_values);
-			SetPathVariable(path_variable_value);
-
-			Mat<T> J(NumFunctions(), NumVariables());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
-				for (int jj = 0; jj < NumVariables(); ++jj)
-				{
-					J(ii,jj) = jacobian_[ii]->EvalJ<T>(variables_[jj]);
-				}
-			}
-
-			return J;
-
-		}
+		
 
 
 
@@ -314,7 +190,7 @@ namespace bertini {
 		/**
 		 Add a variable group to the system.  The system will be homogenized with respect to this variable group, though this is not done at the time of this call.
 		 */
-		void AddVariableGroup(std::vector<Var> const& v)
+		void AddVariableGroup(VariableGroup const& v)
 		{
 			variable_groups_.push_back(v);
 			variables_.insert( variables_.end(), v.begin(), v.end() );
@@ -325,7 +201,7 @@ namespace bertini {
 		/**
 		 Add a homogeneous (projective) variable group to the system.  The system must be homogeneous with respect to this group, though this is not verified at the time of this call.
 		 */
-		void AddHomVariableGroup(std::vector<Var> const& v)
+		void AddHomVariableGroup(VariableGroup const& v)
 		{
 			hom_variable_groups_.push_back(v);
 			variables_.insert( variables_.end(), v.begin(), v.end() );
@@ -348,9 +224,9 @@ namespace bertini {
 		/**
 		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
 		 */
-		void AddUngroupedVariables(std::vector<Var> const& v)
+		void AddUngroupedVariables(VariableGroup const& v)
 		{
-			ungrouped_variables_.insert( variables_.end(), v.begin(), v.end() );
+			ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
 			variables_.insert( variables_.end(), v.begin(), v.end() );
 			is_differentiated_ = false;
 		}
@@ -369,7 +245,7 @@ namespace bertini {
 		/**
 		 Add some implicit parameters to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
 		 */
-		void AddImplicitParameters(std::vector<Var> const& v)
+		void AddImplicitParameters(VariableGroup const& v)
 		{
 			implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
 			is_differentiated_ = false;
@@ -493,64 +369,7 @@ namespace bertini {
 		/**
 		 Overloaded operator for printing to an arbirtary out stream.
 		 */
-		friend std::ostream& operator <<(std::ostream& out, const System & s)
-		{
-			out << "system:\n\n";
-			out << s.NumVariables() << " variables:\n";
-			for (auto iter : s.variables_) {
-				out << (iter)->name() << "\n";
-			}
-			out << "\n";
-
-			out << s.NumFunctions() << " functions:\n";
-			for (auto iter : s.functions_) {
-				out << (iter)->name() << "\n";
-				out << *iter << "\n";
-			}
-			out << "\n";
-
-
-			if (s.NumParameters()) {
-				out << s.NumParameters() << " explicit parameters:\n";
-				for (auto iter : s.explicit_parameters_) {
-					out << (iter)->name() << "\n";
-					out << *iter << "\n";
-				}
-				out << "\n";
-			}
-
-
-			if (s.NumConstants()) {
-				out << s.NumConstants() << " constants:\n";
-				for (auto iter : s.constant_subfunctions_) {
-					out << (iter)->name() << "\n";
-					out << *iter << "\n";
-				}
-				out << "\n";
-			}
-
-			if (s.path_variable_) {
-				out << "path variable defined.  named " << s.path_variable_->name() << "\n";
-			}
-
-			if (s.is_differentiated_)
-			{
-				for (auto iter : s.jacobian_) {
-					out << (iter)->name() << "\n";
-					out << *iter << "\n";
-				}
-				out << "\n";
-			}
-			else{
-				out << "system not differentiated\n";
-			}
-
-
-			return out;
-		}
-
-
-
+		friend std::ostream& operator <<(std::ostream& out, const System & s);
 
 
 
@@ -571,8 +390,8 @@ namespace bertini {
 
 
 		std::vector<Var> ungrouped_variables_;
-		std::vector<std::vector<Var> > variable_groups_;
-		std::vector<std::vector<Var> > hom_variable_groups_;
+		std::vector< VariableGroup > variable_groups_;
+		std::vector< VariableGroup > hom_variable_groups_;
 
 
 		std::vector< Fn > functions_;
@@ -580,8 +399,8 @@ namespace bertini {
 		std::vector< Fn > explicit_parameters_;
 
 
-		std::vector< Var > variables_;
-		std::vector< Var > implicit_parameters_;
+		VariableGroup variables_;
+		VariableGroup implicit_parameters_;
 
 
 		Var path_variable_;
