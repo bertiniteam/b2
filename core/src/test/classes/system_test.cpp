@@ -67,6 +67,9 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 
 
 	BOOST_CHECK(s && iter==end);
+
+
+	BOOST_CHECK(sys.IsHomogeneous());
 }
 
 
@@ -104,6 +107,8 @@ BOOST_AUTO_TEST_CASE(system_parse_with_subfunctions)
 	bertini::SystemParser<std::string::const_iterator> S;
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 	BOOST_CHECK(s && iter==end);
+
+	BOOST_CHECK(sys.IsHomogeneous());
 }
 
 
@@ -120,6 +125,8 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle)
 	bertini::SystemParser<std::string::const_iterator> S;
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 	BOOST_CHECK(s && iter==end);
+
+	BOOST_CHECK(!sys.IsHomogeneous());
 }
 
 
@@ -254,7 +261,6 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 
 	S.Homogenize();
 
-	std::cout << S << "\n";
 	BOOST_CHECK(S.IsHomogeneous());
 }
 
@@ -283,6 +289,7 @@ BOOST_AUTO_TEST_CASE(system_reorder_by_degree)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
+	BOOST_CHECK(!S.IsHomogeneous());
 	S.ReorderFunctionsByDegree();
 
 	auto degs = S.Degrees();
