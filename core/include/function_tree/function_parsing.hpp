@@ -234,7 +234,7 @@ namespace bertini {
 			using std::pow;
 			using ::pow;
 
-			root_rule_.name("root_rule_");
+			root_rule_.name("function_");
 			root_rule_ = expression_ [ _val = make_shared_<Function>()(_1)];
 
 
@@ -401,7 +401,7 @@ namespace bertini {
 			//		debug(expression_);
 			//		debug(term_);
 			//		debug(factor_);
-//			debug(exp_elem_);
+			//		debug(exp_elem_);
 			//		debug(number_);
 			//		debug(number_with_no_point_);
 			//		debug(number_with_digits_after_point_);

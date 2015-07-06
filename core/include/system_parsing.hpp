@@ -144,7 +144,7 @@ namespace bertini {
 			
 			
 			//TODO refine this so that counts are enforced at parse time?
-			root_rule_.name("root_rule_");
+			root_rule_.name("system_");
 			root_rule_ =
 			*(
 				variable_group_ [phx::bind(&System::AddVariableGroup, _val, _1)]
