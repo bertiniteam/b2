@@ -86,7 +86,7 @@ namespace bertini {
 		void Homogenize();
 
 
-
+		bool IsHomogeneous() const;
 
 
 
@@ -107,6 +107,17 @@ namespace bertini {
 		 Get the number of variables in this system
 		 */
 		auto NumVariables() const;
+
+		/**
+		 Get the number of variable groups in the system
+		*/
+		 auto NumVariableGroups() const;
+
+		/**
+		 Get the number of homogeneous variable groups in the system
+		*/
+		 auto NumHomVariableGroups() const;
+
 
 		/**
 		 Get the number of constants in this system

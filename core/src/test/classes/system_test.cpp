@@ -250,7 +250,12 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
+	BOOST_CHECK(!S.IsHomogeneous());
+
 	S.Homogenize();
+
+	std::cout << S << "\n";
+	BOOST_CHECK(S.IsHomogeneous());
 }
 
 
