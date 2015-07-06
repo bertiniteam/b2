@@ -48,7 +48,7 @@ namespace bertini
 
 
 
-	
+
 	void System::precision(unsigned new_precision)
 	{
 		for (auto iter : functions_) {
@@ -495,8 +495,42 @@ namespace bertini
 
 
 
+	std::vector<int> System::Degrees() const
+	{
+		std::vector<int> deg;
+		for (auto iter : functions_)
+		{
+			deg.push_back(iter->Degree());
+		}
+		return deg;
+	}
 
 
+
+	void System::ReorderFunctionsByDegree()
+	{
+		auto degs = Degrees();
+
+		// now we sort a vector of the indexing numbers by the degrees contained in degs.
+		std::vector<size_t> indices(degs.size());
+		//http://en.cppreference.com/w/cpp/algorithm/iota
+		//http://www.cplusplus.com/doc/tutorial/typecasting/
+		std::iota(begin(indices), end(indices), static_cast<size_t>(0));
+		std::sort( begin(indices), end(indices), [&](size_t a, size_t b) { return degs[a] < degs[b]; } );
+		
+
+
+		// finally, we re-order the functions based on the indices we just computed
+		std::vector<std::shared_ptr<Function> > re_ordered_functions(degs.size());
+		size_t ind = 0;
+		for (auto iter : indices)
+		{
+			re_ordered_functions[ind] = functions_[iter];
+			ind++;
+		}
+
+		swap(functions_, re_ordered_functions);
+	}
 
 
 

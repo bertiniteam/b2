@@ -276,11 +276,16 @@ namespace bertini {
 
 
 
+		/**
+		 Get the degrees of the functions in the system.
+		*/
+		 std::vector<int> Degrees() const;
 
 
-
-
-
+		/**
+		 Sort the functions so they are in decreasing order by degree
+		*/
+		void ReorderFunctionsByDegree();
 
 
 		/**
