@@ -86,68 +86,70 @@ namespace bertini {
 		void Homogenize();
 
 
+		bool IsHomogeneous() const;
+
+
+
+
+		//////////////////
+		//
+		//  Nummers --   functions which get the numbers of things.
+		//
+		//////////////////
+
+
 		/**
 		 Get the number of functions in this system
 		 */
-		auto NumFunctions() const
-		{
-			return functions_.size();
-		}
+		auto NumFunctions() const;
 
 		/**
 		 Get the number of variables in this system
 		 */
-		auto NumVariables() const
-		{
-			return variables_.size();
-		}
+		auto NumVariables() const;
+
+		/**
+		 Get the number of variable groups in the system
+		*/
+		 auto NumVariableGroups() const;
+
+		/**
+		 Get the number of homogeneous variable groups in the system
+		*/
+		 auto NumHomVariableGroups() const;
+
 
 		/**
 		 Get the number of constants in this system
 		 */
-		auto NumConstants() const
-		{
-			return constant_subfunctions_.size();
-		}
+		auto NumConstants() const;
 
 		/**
 		 Get the number of explicit parameters in this system
 		 */
-		auto NumParameters() const
-		{
-			return explicit_parameters_.size();
-		}
+		auto NumParameters() const;
 
 
 		/**
 		 Get the number of implicit parameters in this system
 		 */
-		auto NumImplicitParameters() const
-		{
-			return implicit_parameters_.size();
-		}
+		auto NumImplicitParameters() const;
 
 
 		
 
 
+		///////////////////
+		//
+		// Setters -- templated.
+		//
+		///////////////
 
 		/**
 		 Set the values of the variables to be equal to the input values
 		 */
 		template<typename T>
-		void SetVariables(const Vec<T> & new_values)
-		{
-			assert(new_values.size()== variables_.size());
-
-			{ // for scoping of the counter.
-				auto counter = 0;
-				for (auto iter=variables_.begin(); iter!=variables_.end(); iter++, counter++) {
-					(*iter)->set_current_value(new_values(counter));
-				}
-			}
-
-		}
+		void SetVariables(const Vec<T> & new_values);
 
 
 
@@ -155,11 +157,7 @@ namespace bertini {
 		 Set the current value of the path variable.
 		 */
 		template<typename T>
-		void SetPathVariable(T new_value)
-		{
-			path_variable_->set_current_value(new_value);
-			have_path_variable_ = true;
-		}
+		void SetPathVariable(T new_value);
 
 
 
@@ -168,91 +166,57 @@ namespace bertini {
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
 		 */
 		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values)
-		{
-			assert(new_values.size()== implicit_parameters_.size());
-
-			{
-				auto counter = 0;
-				for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++) {
-					(*iter)->set_current_value(new_values(counter));
-				}
-			}
-		}
+		void SetImplicitParameters(Vec<T> new_values);
 
 
 
 
 
 
+
+
+		//////////////////
+		//
+		//  Adders  --   functions which add things to the system.
+		//
+		//////////////////
 
 
 		/**
 		 Add a variable group to the system.  The system will be homogenized with respect to this variable group, though this is not done at the time of this call.
 		 */
-		void AddVariableGroup(VariableGroup const& v)
-		{
-			variable_groups_.push_back(v);
-			variables_.insert( variables_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddVariableGroup(VariableGroup const& v);
 
 
 		/**
 		 Add a homogeneous (projective) variable group to the system.  The system must be homogeneous with respect to this group, though this is not verified at the time of this call.
 		 */
-		void AddHomVariableGroup(VariableGroup const& v)
-		{
-			hom_variable_groups_.push_back(v);
-			variables_.insert( variables_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddHomVariableGroup(VariableGroup const& v);
 
 
 
 		/**
 		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
 		 */
-		void AddUngroupedVariable(Var const& v)
-		{
-			ungrouped_variables_.push_back(v);
-			variables_.push_back(v);
-			is_differentiated_ = false;
-		}
+		void AddUngroupedVariable(Var const& v);
 
 
 		/**
 		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
 		 */
-		void AddUngroupedVariables(VariableGroup const& v)
-		{
-			ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
-			variables_.insert( variables_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddUngroupedVariables(VariableGroup const& v);
 
 
 		/**
 		 Add an implicit parameter to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
 		 */
-		void AddImplicitParameter(Var const& v)
-		{
-			implicit_parameters_.push_back(v);
-			is_differentiated_ = false;
-		}
+		void AddImplicitParameter(Var const& v);
 
 
 		/**
 		 Add some implicit parameters to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
 		 */
-		void AddImplicitParameters(VariableGroup const& v)
-		{
-			implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
-
-
-
+		void AddImplicitParameters(VariableGroup const& v);
 
 
 
@@ -260,73 +224,42 @@ namespace bertini {
 		/**
 		 Add an explicit parameter to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
 		 */
-		void AddParameter(Fn const& F)
-		{
-			explicit_parameters_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddParameter(Fn const& F);
 
 		/**
 		 Add some explicit parameters to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
 		 */
-		void AddParameters(std::vector<Fn> const& v)
-		{
-			explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
-
+		void AddParameters(std::vector<Fn> const& v);
 
 
 
 		/**
 		 Add a subfunction to the system.
 		 */
-		void AddSubfunction(Fn const& F)
-		{
-			subfunctions_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddSubfunction(Fn const& F);
 
 		/**
 		 Add some subfunctions to the system.
 		 */
-		void AddSubfunctions(std::vector<Fn> const& v)
-		{
-			subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddSubfunctions(std::vector<Fn> const& v);
 
 
 
 		/**
 		 Add a function to the system.
 		 */
-		void AddFunction(Fn const& F)
-		{
-			functions_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddFunction(Fn const& F);
 
 		/**
 		 Add a function to the system.
 		 */
-		void AddFunction(Nd const& N)
-		{
-			Fn F = std::make_shared<Function>(N);
-			functions_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddFunction(Nd const& N);
 
 
 		/**
 		 Add some functions to the system.
 		 */
-		void AddFunctions(std::vector<Fn> const& v)
-		{
-			functions_.insert( functions_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
-
+		void AddFunctions(std::vector<Fn> const& v);
 
 
 
@@ -334,21 +267,13 @@ namespace bertini {
 		/**
 		 Add a constant function to the system.  Constants must not depend on anything which can vary -- they're constant!
 		 */
-		void AddConstant(Fn const& F)
-		{
-			constant_subfunctions_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddConstant(Fn const& F);
+
 
 		/**
 		 Add some constant functions to the system.  Constants must not depend on anything which can vary -- they're constant!
 		 */
-		void AddConstants(std::vector<Fn> const& v)
-		{
-			constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
-
+		void AddConstants(std::vector<Fn> const& v);
 
 
 
@@ -356,14 +281,22 @@ namespace bertini {
 		/**
 		 Add a variable as the Path Variable to a System.  Will overwrite any previously declared path variable.
 		 */
-		void AddPathVariable(Var const& v)
-		{
-			path_variable_ = v;
-			is_differentiated_ = false;
-			have_path_variable_ = true;
-		}
+		void AddPathVariable(Var const& v);
 
 
+
+
+
+		/**
+		 Get the degrees of the functions in the system, with respect to all variables.
+		*/
+		 std::vector<int> Degrees() const;
+
+
+		/**
+		 Sort the functions so they are in decreasing order by degree
+		*/
+		void ReorderFunctionsByDegree();
 
 
 		/**
@@ -375,9 +308,9 @@ namespace bertini {
 
 
         /////////////// TESTING ////////////////////
-        auto function()
+        auto function(unsigned index = 0)
         {
-            return functions_[0];
+            return functions_[index];
         }
 
         auto variables()
