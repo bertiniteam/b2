@@ -7,6 +7,60 @@ template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic
 namespace bertini 
 {
 
+
+
+	/////////
+	//
+	//  getters
+	//
+	/////////////////
+
+
+	auto System::NumFunctions() const
+	{
+		return functions_.size();
+	}
+
+
+	auto System::NumVariables() const
+	{
+		return variables_.size();
+	}
+
+
+	auto System::NumVariableGroups() const
+	{
+		return variable_groups_.size();
+	}
+
+	auto System::NumHomVariableGroups() const
+	{
+		return hom_variable_groups_.size();
+	}
+
+
+	auto System::NumConstants() const
+	{
+		return constant_subfunctions_.size();
+	}
+
+	auto System::NumParameters() const
+	{
+		return explicit_parameters_.size();
+	}
+
+
+	/**
+	 Get the number of implicit parameters in this system
+	 */
+	auto System::NumImplicitParameters() const
+	{
+		return implicit_parameters_.size();
+	}
+
+
+
+
 	void System::precision(unsigned new_precision)
 	{
 		for (auto iter : functions_) {
@@ -185,7 +239,7 @@ namespace bertini
 
 
 		auto group_counter = 0;
-		for (auto curr_var_gp : variable_groups_)
+		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
 		{
 			std::stringstream converter;
 			converter << "HOM_VAR_" << group_counter;
@@ -193,10 +247,11 @@ namespace bertini
 
 			for (auto curr_function : functions_)
 			{
-				curr_function->Homogenize(curr_var_gp, hom_var);
-				curr_var_gp.push_front(hom_var);
+				curr_function->Homogenize(*curr_var_gp, hom_var);
+				
 			}
-
+			curr_var_gp->push_front(hom_var);
+			variables_.push_back(hom_var);
 			group_counter++;
 		}
 
@@ -207,6 +262,332 @@ namespace bertini
 
 
 
+	bool System::IsHomogeneous() const
+	{
+		for (auto iter : functions_)
+		{
+			if (!iter->IsHomogeneous(variables_))
+			{
+				return false;
+			}
+			for (auto vars : variable_groups_)
+			{
+				if (!iter->IsHomogeneous(vars))
+				{
+					return false;
+				}
+			}
+			for (auto vars : hom_variable_groups_)
+			{
+				if (!iter->IsHomogeneous(vars))
+				{
+					return false;
+				}
+			}
+
+		}
+		return true;
+	}
+
+
+
+	
+
+
+
+	//////////////////
+	//
+	// templated setters
+	//
+	/////////////////////////////
+
+
+	template<typename T>
+	void System::SetVariables(const Vec<T> & new_values)
+	{
+		assert(new_values.size()== variables_.size());
+
+		{ // for scoping of the counter.
+			auto counter = 0;
+			for (auto iter=variables_.begin(); iter!=variables_.end(); iter++, counter++) {
+				(*iter)->set_current_value(new_values(counter));
+			}
+		}
+
+	}
+
+
+	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
+	// see
+	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+	template void System::SetVariables(const Vec<dbl> & new_values);
+	template void System::SetVariables(const Vec<mpfr> & new_values);
+
+
+	template<typename T>
+	void System::SetPathVariable(T new_value)
+	{
+		path_variable_->set_current_value(new_value);
+		have_path_variable_ = true;
+	}
+
+
+
+	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
+	// see
+	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+	template void System::SetPathVariable(dbl T);
+	template void System::SetPathVariable(mpfr T);
+
+
+	template<typename T>
+	void System::SetImplicitParameters(Vec<T> new_values)
+	{
+		assert(new_values.size()== implicit_parameters_.size());
+
+		{
+			auto counter = 0;
+			for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++) {
+				(*iter)->set_current_value(new_values(counter));
+			}
+		}
+	}
+
+	template void System::SetImplicitParameters(Vec<dbl> new_values);
+	template void System::SetImplicitParameters(Vec<mpfr> new_values);
+
+
+
+
+
+
+
+
+	////////////////////
+	//
+	//  Adders
+	//
+	//////////////////////
+
+
+
+
+
+	void System::AddVariableGroup(VariableGroup const& v)
+	{
+		variable_groups_.push_back(v);
+		variables_.insert( variables_.end(), v.begin(), v.end() );
+		is_differentiated_ = false;
+	}
+
+
+
+
+	void System::AddHomVariableGroup(VariableGroup const& v)
+	{
+		hom_variable_groups_.push_back(v);
+		variables_.insert( variables_.end(), v.begin(), v.end() );
+		is_differentiated_ = false;
+	}
+
+
+
+
+
+	void System::AddUngroupedVariable(Var const& v)
+	{
+		ungrouped_variables_.push_back(v);
+		variables_.push_back(v);
+		is_differentiated_ = false;
+	}
+
+
+
+
+	void System::AddUngroupedVariables(VariableGroup const& v)
+	{
+		ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
+		variables_.insert( variables_.end(), v.begin(), v.end() );
+		is_differentiated_ = false;
+	}
+
+
+
+ 
+	void System::AddImplicitParameter(Var const& v)
+	{
+		implicit_parameters_.push_back(v);
+		is_differentiated_ = false;
+	}
+
+
+
+
+	void System::AddImplicitParameters(VariableGroup const& v)
+	{
+		implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
+		is_differentiated_ = false;
+	}
+
+
+
+
+
+
+
+
+
+	void System::AddParameter(Fn const& F)
+	{
+		explicit_parameters_.push_back(F);
+		is_differentiated_ = false;
+	}
+
+
+
+	void System::AddParameters(std::vector<Fn> const& v)
+	{
+		explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
+		is_differentiated_ = false;
+	}
+
+
+
+
+
+	void System::AddSubfunction(Fn const& F)
+	{
+		subfunctions_.push_back(F);
+		is_differentiated_ = false;
+	}
+
+
+
+	void System::AddSubfunctions(std::vector<Fn> const& v)
+	{
+		subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
+		is_differentiated_ = false;
+	}
+
+
+
+
+
+	void System::AddFunction(Fn const& F)
+	{
+		functions_.push_back(F);
+		is_differentiated_ = false;
+	}
+
+
+
+	void System::AddFunction(Nd const& N)
+	{
+		Fn F = std::make_shared<Function>(N);
+		functions_.push_back(F);
+		is_differentiated_ = false;
+	}
+
+
+
+	void System::AddFunctions(std::vector<Fn> const& v)
+	{
+		functions_.insert( functions_.end(), v.begin(), v.end() );
+		is_differentiated_ = false;
+	}
+
+
+
+
+
+
+	void System::AddConstant(Fn const& F)
+	{
+		constant_subfunctions_.push_back(F);
+		is_differentiated_ = false;
+	}
+
+
+	void System::AddConstants(std::vector<Fn> const& v)
+	{
+		constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
+		is_differentiated_ = false;
+	}
+
+
+
+
+
+
+	void System::AddPathVariable(Var const& v)
+	{
+		path_variable_ = v;
+		is_differentiated_ = false;
+		have_path_variable_ = true;
+	}
+
+
+
+
+
+
+
+
+	std::vector<int> System::Degrees() const
+	{
+		std::vector<int> deg;
+		for (auto iter : functions_)
+		{
+			deg.push_back(iter->Degree());
+		}
+		return deg;
+	}
+
+
+
+	void System::ReorderFunctionsByDegree()
+	{
+		auto degs = Degrees();
+
+		// now we sort a vector of the indexing numbers by the degrees contained in degs.
+		std::vector<size_t> indices(degs.size());
+		//http://en.cppreference.com/w/cpp/algorithm/iota
+		//http://www.cplusplus.com/doc/tutorial/typecasting/
+		std::iota(begin(indices), end(indices), static_cast<size_t>(0));
+		std::sort( begin(indices), end(indices), [&](size_t a, size_t b) { return degs[a] > degs[b]; } );
+		
+
+
+		// finally, we re-order the functions based on the indices we just computed
+		std::vector<std::shared_ptr<Function> > re_ordered_functions(degs.size());
+		size_t ind = 0;
+		for (auto iter : indices)
+		{
+			re_ordered_functions[ind] = functions_[iter];
+			ind++;
+		}
+
+		swap(functions_, re_ordered_functions);
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+	
+	//////////////////
+	//
+	//  output operators
+	//
+	////////////////////
+
 	std::ostream& operator<<(std::ostream& out, const bertini::System & s)
 	{
 		out << "system:\n\n";
@@ -215,6 +596,20 @@ namespace bertini
 			out << (iter)->name() << "\n";
 		}
 		out << "\n";
+
+
+		out << s.NumVariableGroups() << " variable groups, containing these variables:\n";
+		auto counter = 0;
+		for (auto iter : s.variable_groups_)
+		{
+			out << "group" << counter << " - "<< "\n";
+			for (auto jter : iter)
+			{
+				out << *jter << " ";
+			}
+			out << "\n";
+			counter++;
+		}
 
 		out << s.NumFunctions() << " functions:\n";
 		for (auto iter : s.functions_) {

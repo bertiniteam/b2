@@ -67,6 +67,9 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 
 
 	BOOST_CHECK(s && iter==end);
+
+
+	BOOST_CHECK(sys.IsHomogeneous());
 }
 
 
@@ -104,6 +107,8 @@ BOOST_AUTO_TEST_CASE(system_parse_with_subfunctions)
 	bertini::SystemParser<std::string::const_iterator> S;
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 	BOOST_CHECK(s && iter==end);
+
+	BOOST_CHECK(sys.IsHomogeneous());
 }
 
 
@@ -120,6 +125,8 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle)
 	bertini::SystemParser<std::string::const_iterator> S;
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 	BOOST_CHECK(s && iter==end);
+
+	BOOST_CHECK(!sys.IsHomogeneous());
 }
 
 
@@ -250,8 +257,51 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 	S.AddFunction(f1);
 	S.AddFunction(f2);
 
+	BOOST_CHECK(!S.IsHomogeneous());
+
 	S.Homogenize();
+
+	BOOST_CHECK(S.IsHomogeneous());
 }
+
+
+
+BOOST_AUTO_TEST_CASE(system_reorder_by_degree)
+{
+	Var x1 = std::make_shared<bertini::Variable>("x1");
+	Var x2 = std::make_shared<bertini::Variable>("x2");
+
+	Var y1 = std::make_shared<bertini::Variable>("y1");
+	Var y2 = std::make_shared<bertini::Variable>("y2");
+
+
+	bertini::VariableGroup v1{x1, x2};
+	bertini::VariableGroup v2{y1, y2};
+
+	auto f1 = x1*y1 + x1;
+	auto f2 = x2*pow(x1,2) + y1*y2 + x1 + y2 - 1;
+
+
+	bertini::System S;
+	S.AddVariableGroup(v1);
+	S.AddVariableGroup(v2);
+	
+	S.AddFunction(f1);
+	S.AddFunction(f2);
+
+	BOOST_CHECK(!S.IsHomogeneous());
+	S.ReorderFunctionsByDegree();
+
+	auto degs = S.Degrees();
+
+	for (auto d = degs.begin(); d != degs.end()-1; d++)
+	{
+		BOOST_CHECK(*d >= *(d+1));
+	}
+
+}
+
+
 
 
 
