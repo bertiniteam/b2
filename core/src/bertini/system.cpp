@@ -27,6 +27,18 @@ namespace bertini
 		return variables_.size();
 	}
 
+
+	auto System::NumVariableGroups() const
+	{
+		return variable_groups_.size();
+	}
+
+	auto System::NumHomVariableGroups() const
+	{
+		return hom_variable_groups_.size();
+	}
+
+
 	auto System::NumConstants() const
 	{
 		return constant_subfunctions_.size();
@@ -227,7 +239,7 @@ namespace bertini
 
 
 		auto group_counter = 0;
-		for (auto curr_var_gp : variable_groups_)
+		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
 		{
 			std::stringstream converter;
 			converter << "HOM_VAR_" << group_counter;
@@ -235,10 +247,11 @@ namespace bertini
 
 			for (auto curr_function : functions_)
 			{
-				curr_function->Homogenize(curr_var_gp, hom_var);
-				curr_var_gp.push_front(hom_var);
+				curr_function->Homogenize(*curr_var_gp, hom_var);
+				
 			}
-
+			curr_var_gp->push_front(hom_var);
+			variables_.push_back(hom_var);
 			group_counter++;
 		}
 
@@ -249,7 +262,32 @@ namespace bertini
 
 
 
+	bool System::IsHomogeneous() const
+	{
+		for (auto iter : functions_)
+		{
+			if (!iter->IsHomogeneous(variables_))
+			{
+				return false;
+			}
+			for (auto vars : variable_groups_)
+			{
+				if (!iter->IsHomogeneous(vars))
+				{
+					return false;
+				}
+			}
+			for (auto vars : hom_variable_groups_)
+			{
+				if (!iter->IsHomogeneous(vars))
+				{
+					return false;
+				}
+			}
 
+		}
+		return true;
+	}
 
 
 
@@ -558,6 +596,20 @@ namespace bertini
 			out << (iter)->name() << "\n";
 		}
 		out << "\n";
+
+
+		out << s.NumVariableGroups() << " variable groups, containing these variables:\n";
+		auto counter = 0;
+		for (auto iter : s.variable_groups_)
+		{
+			out << "group" << counter << " - "<< "\n";
+			for (auto jter : iter)
+			{
+				out << *jter << " ";
+			}
+			out << "\n";
+			counter++;
+		}
 
 		out << s.NumFunctions() << " functions:\n";
 		for (auto iter : s.functions_) {
