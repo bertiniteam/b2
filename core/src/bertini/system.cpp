@@ -516,7 +516,7 @@ namespace bertini
 		//http://en.cppreference.com/w/cpp/algorithm/iota
 		//http://www.cplusplus.com/doc/tutorial/typecasting/
 		std::iota(begin(indices), end(indices), static_cast<size_t>(0));
-		std::sort( begin(indices), end(indices), [&](size_t a, size_t b) { return degs[a] < degs[b]; } );
+		std::sort( begin(indices), end(indices), [&](size_t a, size_t b) { return degs[a] > degs[b]; } );
 		
 
 

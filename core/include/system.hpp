@@ -277,7 +277,7 @@ namespace bertini {
 
 
 		/**
-		 Get the degrees of the functions in the system.
+		 Get the degrees of the functions in the system, with respect to all variables.
 		*/
 		 std::vector<int> Degrees() const;
 
