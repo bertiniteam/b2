@@ -255,6 +255,44 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 
 
 
+BOOST_AUTO_TEST_CASE(system_reorder_by_degree)
+{
+	Var x1 = std::make_shared<bertini::Variable>("x1");
+	Var x2 = std::make_shared<bertini::Variable>("x2");
+
+	Var y1 = std::make_shared<bertini::Variable>("y1");
+	Var y2 = std::make_shared<bertini::Variable>("y2");
+
+
+	bertini::VariableGroup v1{x1, x2};
+	bertini::VariableGroup v2{y1, y2};
+
+	auto f1 = x1*y1 + x1;
+	auto f2 = x2*pow(x1,2) + y1*y2 + x1 + y2 - 1;
+
+
+	bertini::System S;
+	S.AddVariableGroup(v1);
+	S.AddVariableGroup(v2);
+	
+	S.AddFunction(f1);
+	S.AddFunction(f2);
+
+	S.ReorderFunctionsByDegree();
+
+	auto degs = S.Degrees();
+
+	for (auto d = degs.begin(); d != degs.end()-1; d++)
+	{
+		BOOST_CHECK(*d >= *(d+1));
+	}
+
+}
+
+
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
