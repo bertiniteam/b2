@@ -150,6 +150,11 @@ namespace bertini {
 		*/
 		bool IsHomogeneous(VariableGroup const& vars) const override;
 		
+
+	 
+
+
+
 	protected:
 		/**
 		 Specific implementation of FreshEval for add and subtract.
@@ -649,6 +654,22 @@ namespace bertini {
 
 		virtual ~PowerOperator() = default;
 		
+		/**
+		 Change the precision of this variable-precision tree node.
+		 
+		 \param prec the number of digits to change precision to.
+		 */
+		virtual void precision(unsigned int prec) override
+		{
+			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			val_pair.first.precision(prec);
+
+			base_->precision(prec);
+			exponent_->precision(prec);
+		}
+
+
+
 	protected:
 		
 		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;

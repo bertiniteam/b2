@@ -106,6 +106,20 @@ namespace bertini {
 			}
 
 
+			/**
+			 Change the precision of this variable-precision tree node.
+			 
+			 \param prec the number of digits to change precision to.
+			 */
+			virtual void precision(unsigned int prec) override
+			{
+				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+				val_pair.first.precision(prec);
+			}
+
+
+
+			
 	    private:
 	    	// Return value of constant
 	        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
@@ -187,7 +201,16 @@ namespace bertini {
 				return true;
 			}
 
-
+			/**
+			 Change the precision of this variable-precision tree node.
+			 
+			 \param prec the number of digits to change precision to.
+			 */
+			virtual void precision(unsigned int prec) override
+			{
+				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+				val_pair.first.precision(prec);
+			}
 
 	    private:
 	    	// Return value of constant
