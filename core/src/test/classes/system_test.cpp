@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(system_reorder_by_degree)
 	S.AddFunction(f2);
 
 	BOOST_CHECK(!S.IsHomogeneous());
-	S.ReorderFunctionsByDegree();
+	S.ReorderFunctionsByDegreeDecreasing();
 
 	auto degs = S.Degrees();
 

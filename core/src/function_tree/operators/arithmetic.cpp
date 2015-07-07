@@ -1,6 +1,8 @@
 #include "function_tree/operators/arithmetic.hpp"
 
 
+
+
 namespace bertini{
 	
 	using ::pow;

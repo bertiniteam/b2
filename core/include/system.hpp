@@ -296,8 +296,13 @@ namespace bertini {
 		/**
 		 Sort the functions so they are in decreasing order by degree
 		*/
-		void ReorderFunctionsByDegree();
+		void ReorderFunctionsByDegreeDecreasing();
 
+
+		/**
+		 Sort the functions so they are in decreasing order by degree
+		*/
+		void ReorderFunctionsByDegreeIncreasing();
 
 		/**
 		 Overloaded operator for printing to an arbirtary out stream.
@@ -320,7 +325,6 @@ namespace bertini {
 		/////////////// TESTING ////////////////////
 
 	private:
-
 
 		std::vector<Var> ungrouped_variables_;
 		std::vector< VariableGroup > variable_groups_;
@@ -348,9 +352,6 @@ namespace bertini {
 
 		unsigned precision_;
 
-
-		// i disagree with the inclusion of this, but the real necessity of it remains to be seen.  --dab
-		Vec<bertini::complex> solutions_;
 	};
 
 }

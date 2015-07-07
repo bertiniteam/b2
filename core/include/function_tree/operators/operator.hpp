@@ -149,6 +149,20 @@ namespace bertini {
 		
 
 
+		/**
+		 Change the precision of this variable-precision tree node.
+		 
+		 \param prec the number of digits to change precision to.
+		 */
+		virtual void precision(unsigned int prec) override
+		{
+			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			val_pair.first.precision(prec);
+
+			child_->precision(prec);
+		}
+
+
 
 	protected:
 		//Stores the single child of the unary operator
@@ -219,7 +233,22 @@ namespace bertini {
 		
 		
 		
-		
+		 /**
+		 Change the precision of this variable-precision tree node.
+		 
+		 \param prec the number of digits to change precision to.
+		 */
+		virtual void precision(unsigned int prec) override
+		{
+			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			val_pair.first.precision(prec);
+
+			for (auto iter : children_)
+			{
+				iter->precision(prec);
+			}
+		}
+
 		
 		
 	protected:
