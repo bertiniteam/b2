@@ -89,22 +89,22 @@ namespace bertini
 
 		if (is_differentiated_)
 			for (auto iter : jacobian_)
-				iter->precision_(new_precision);
+				iter->precision(new_precision);
 
 		if (have_path_variable_)
 			path_variable_->precision(new_precision);
 
 
 		for (auto iter : ungrouped_variables_)
-			iter->precision_(new_precision);
+			iter->precision(new_precision);
 
 		for (auto iter : variable_groups_)
 			for (auto jter : iter)
-				jter->precision_(new_precision);
+				jter->precision(new_precision);
 
 		for (auto iter : hom_variable_groups_)
 			for (auto jter : iter)
-				jter->precision_(new_precision);
+				jter->precision(new_precision);
 
 		precision_ = new_precision;
 	}
