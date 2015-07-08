@@ -6,6 +6,7 @@ function_tree_test_source_files = src/test/classes/function_tree_test.cpp
 
 
 b2_class_test_SOURCES = src/test/classes/class_test.cpp \
+	src/test/classes/fundamentals.cpp \
 	src/test/classes/eigen_test.cpp \
 	include/mpfr_complex.hpp src/test/classes/complex_test.cpp \
 	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \

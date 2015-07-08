@@ -36,6 +36,8 @@
 
 using System = bertini::System;
 using Var = std::shared_ptr<bertini::Variable>;
+using VariableGroup = bertini::VariableGroup;
+
 
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
@@ -266,7 +268,47 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 
 
 
-BOOST_AUTO_TEST_CASE(system_reorder_by_degree)
+BOOST_AUTO_TEST_CASE(system_reorder_by_degree_decreasing)
+{
+	Var x1 = std::make_shared<bertini::Variable>("x1");
+	Var x2 = std::make_shared<bertini::Variable>("x2");
+
+	Var y1 = std::make_shared<bertini::Variable>("y1");
+	Var y2 = std::make_shared<bertini::Variable>("y2");
+
+
+	bertini::VariableGroup v1{x1, x2};
+	bertini::VariableGroup v2{y1, y2};
+
+	auto f1 = x1*y1 + x1;
+	auto f2 = x2*pow(x1,2) + y1*y2 + x1 + y2 - 1;
+
+	bertini::System S;
+	S.AddVariableGroup(v1);
+	S.AddVariableGroup(v2);
+	
+	S.AddFunction(f1); // deg 2
+	S.AddFunction(f2); // deg 3 
+	S.AddFunction(pow(x1,4) + pow(y2,5)); // deg 5
+	S.AddFunction(x1 + x2 + y1 + y2); // deg 1
+
+
+	BOOST_CHECK(!S.IsHomogeneous());
+	S.ReorderFunctionsByDegreeDecreasing();
+
+	auto degs = S.Degrees();
+
+	for (auto d = degs.begin(); d != degs.end()-1; d++)
+	{
+		BOOST_CHECK(*d >= *(d+1));
+	}
+
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(system_reorder_by_degree_increasing)
 {
 	Var x1 = std::make_shared<bertini::Variable>("x1");
 	Var x2 = std::make_shared<bertini::Variable>("x2");
@@ -290,13 +332,13 @@ BOOST_AUTO_TEST_CASE(system_reorder_by_degree)
 	S.AddFunction(f2);
 
 	BOOST_CHECK(!S.IsHomogeneous());
-	S.ReorderFunctionsByDegreeDecreasing();
+	S.ReorderFunctionsByDegreeIncreasing();
 
 	auto degs = S.Degrees();
 
 	for (auto d = degs.begin(); d != degs.end()-1; d++)
 	{
-		BOOST_CHECK(*d >= *(d+1));
+		BOOST_CHECK(*d <= *(d+1));
 	}
 
 }
@@ -306,6 +348,130 @@ BOOST_AUTO_TEST_CASE(system_reorder_by_degree)
 
 
 
+BOOST_AUTO_TEST_CASE(system_evaluate_double)
+{
+
+	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
+
+	bertini::System sys;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	bertini::SystemParser<std::string::const_iterator> S;
+	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+
+	Vec<dbl> values(2);
+
+	values(0) = dbl(2.0);
+	values(1) = dbl(3.0);
+
+	Vec<dbl> v = sys.Eval(values);
+
+	BOOST_CHECK_EQUAL(v(0), 36.0);
+
+
+	auto J = sys.Jacobian(values);
+
+	double x1 = 2;
+	double x2 = 3;
+
+	BOOST_CHECK_EQUAL(J(0,0), 2*x1*x2*x2);
+	BOOST_CHECK_EQUAL(J(0,1), x1*x1*2*x2);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
+{
+
+	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
+
+	bertini::System sys;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	bertini::SystemParser<std::string::const_iterator> S;
+	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+
+	Vec<mpfr> values(2);
+
+	values(0) = mpfr(2.0);
+	values(1) = mpfr(3.0);
+
+	Vec<mpfr> v = sys.Eval(values);
+
+	BOOST_CHECK_EQUAL(v(0), mpfr(36.0));
+
+
+	auto J = sys.Jacobian(values);
+
+	mpfr x1 = 2;
+	mpfr x2 = 3;
+	
+	BOOST_CHECK_EQUAL(J(0,0), mpfr(2.0)*x1*x2*x2);
+	BOOST_CHECK_EQUAL(J(0,1), x1*x1*mpfr(2.0)*x2);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+
+	VariableGroup v;
+	v.push_back(x); v.push_back(y);
+
+	sys.AddVariableGroup(v);
+	sys.AddFunction(x + y - 1);
+	sys.AddFunction(x - 0.5*y - 1);
+
+
+	auto TD = TotalDegreeStartSystem(sys);
+
+	auto d = TD.Degrees();
+
+	BOOST_CHECK_EQUAL(d.size(),2);
+	if (d.size()==2)
+	{
+		BOOST_CHECK_EQUAL(d[0],1);
+		BOOST_CHECK_EQUAL(d[1],1);
+	}
+	
+	
+	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+
+	VariableGroup v;
+	v.push_back(x); v.push_back(y);
+
+	sys.AddVariableGroup(v);
+	sys.AddFunction(x*y + y - 1);
+	sys.AddFunction(x*x - 0.5*y - x*y);
+
+
+	auto TD = TotalDegreeStartSystem(sys);
+
+	auto d = TD.Degrees();
+
+	BOOST_CHECK_EQUAL(d.size(),2);
+	if (d.size()==2)
+	{
+		BOOST_CHECK_EQUAL(d[0],2);
+		BOOST_CHECK_EQUAL(d[1],2);
+	}
+	
+	
+	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
+
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 
