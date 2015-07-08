@@ -47,6 +47,7 @@ namespace bertini {
 		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
+
 	};
 
 

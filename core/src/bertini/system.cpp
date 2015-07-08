@@ -64,31 +64,47 @@ namespace bertini
 	void System::precision(unsigned new_precision)
 	{
 		for (auto iter : functions_) {
-//				iter->precision(new_precision);
+			iter->precision(new_precision);
 		}
 
 		for (auto iter : subfunctions_) {
-			//				iter->precision(new_precision);
+			iter->precision(new_precision);
 		}
 
 		for (auto iter : explicit_parameters_) {
-			//				iter->precision(new_precision);
+			iter->precision(new_precision);
 		}
 
 		for (auto iter : variables_) {
-			//				iter->precision(new_precision);
+			iter->precision(new_precision);
 		}
 
 		for (auto iter :implicit_parameters_) {
-			//				iter->precision(new_precision);
+			iter->precision(new_precision);
 		}
 
 		for (auto iter : constant_subfunctions_) {
-			//				iter->precision(new_precision);
-			//				iter->eval<>()
+			iter->precision(new_precision);
 		}
 
-//			path_variable_->precision(new_precision);
+		if (is_differentiated_)
+			for (auto iter : jacobian_)
+				iter->precision(new_precision);
+
+		if (have_path_variable_)
+			path_variable_->precision(new_precision);
+
+
+		for (auto iter : ungrouped_variables_)
+			iter->precision(new_precision);
+
+		for (auto iter : variable_groups_)
+			for (auto jter : iter)
+				jter->precision(new_precision);
+
+		for (auto iter : hom_variable_groups_)
+			for (auto jter : iter)
+				jter->precision(new_precision);
 
 		precision_ = new_precision;
 	}
@@ -545,7 +561,7 @@ namespace bertini
 
 
 
-	void System::ReorderFunctionsByDegree()
+	void System::ReorderFunctionsByDegreeDecreasing()
 	{
 		auto degs = Degrees();
 
@@ -572,7 +588,30 @@ namespace bertini
 
 
 
+	void System::ReorderFunctionsByDegreeIncreasing()
+	{
+		auto degs = Degrees();
 
+		// now we sort a vector of the indexing numbers by the degrees contained in degs.
+		std::vector<size_t> indices(degs.size());
+		//http://en.cppreference.com/w/cpp/algorithm/iota
+		//http://www.cplusplus.com/doc/tutorial/typecasting/
+		std::iota(begin(indices), end(indices), static_cast<size_t>(0));
+		std::sort( begin(indices), end(indices), [&](size_t a, size_t b) { return degs[a] < degs[b]; } );
+		
+
+
+		// finally, we re-order the functions based on the indices we just computed
+		std::vector<std::shared_ptr<Function> > re_ordered_functions(degs.size());
+		size_t ind = 0;
+		for (auto iter : indices)
+		{
+			re_ordered_functions[ind] = functions_[iter];
+			ind++;
+		}
+
+		swap(functions_, re_ordered_functions);
+	}
 
 
 

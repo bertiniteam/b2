@@ -139,8 +139,16 @@ public:
 	Check for homogeneity, with respect to a variable group.
 	*/
 	virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
-    ///////// PUBLIC PURE METHODS /////////////////
     
+    
+    /**
+	 Change the precision of this variable-precision tree node.
+	 
+	 \param prec the number of digits to change precision to.
+	 */
+	virtual void precision(unsigned int prec) = 0;
+
+	///////// PUBLIC PURE METHODS /////////////////
 
 	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const
 	{
@@ -151,6 +159,11 @@ public:
 	{
 		return Degree(v)>=0;
 	}
+
+
+	
+	
+	
 
 protected:
     //Stores the current value of the node in all required types
