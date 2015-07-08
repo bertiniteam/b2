@@ -65,6 +65,10 @@ namespace bertini {
 
 
 
+
+		template<typename T>
+		Vec<T> Eval(const Vec<T> & variable_values);
+
 		/**
 		 Evaluate the system.
 		 */
@@ -89,6 +93,7 @@ namespace bertini {
 		bool IsHomogeneous() const;
 
 
+		bool IsPolynomial() const;
 
 
 		//////////////////
@@ -101,39 +106,39 @@ namespace bertini {
 		/**
 		 Get the number of functions in this system
 		 */
-		auto NumFunctions() const;
+		size_t NumFunctions() const;
 
 		/**
 		 Get the number of variables in this system
 		 */
-		auto NumVariables() const;
+		size_t NumVariables() const;
 
 		/**
 		 Get the number of variable groups in the system
 		*/
-		 auto NumVariableGroups() const;
+		 size_t NumVariableGroups() const;
 
 		/**
 		 Get the number of homogeneous variable groups in the system
 		*/
-		 auto NumHomVariableGroups() const;
+		 size_t NumHomVariableGroups() const;
 
 
 		/**
 		 Get the number of constants in this system
 		 */
-		auto NumConstants() const;
+		size_t NumConstants() const;
 
 		/**
 		 Get the number of explicit parameters in this system
 		 */
-		auto NumParameters() const;
+		size_t NumParameters() const;
 
 
 		/**
 		 Get the number of implicit parameters in this system
 		 */
-		auto NumImplicitParameters() const;
+		size_t NumImplicitParameters() const;
 
 
 		
@@ -160,6 +165,7 @@ namespace bertini {
 		void SetPathVariable(T new_value);
 
 
+		
 
 
 		/**
@@ -264,6 +270,9 @@ namespace bertini {
 
 
 
+
+
+
 		/**
 		 Add a constant function to the system.  Constants must not depend on anything which can vary -- they're constant!
 		 */
@@ -284,6 +293,42 @@ namespace bertini {
 		void AddPathVariable(Var const& v);
 
 
+		bool HavePathVariable() const;
+
+
+
+
+
+
+
+
+		/////////////// TESTING ////////////////////
+		/**
+		 Get a function by its index.  This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
+		*/
+        auto function(unsigned index = 0) const
+        {
+            return functions_[index];
+        }
+
+        /**
+		 Get the variables in the problem.
+        */
+        auto variables() const
+        {
+            return variables_;
+        }
+
+        /**
+		 Get the variable groups in the problem.
+        */
+        auto variableGroups() const
+        {
+            return variable_groups_;
+        }
+
+		/////////////// TESTING ////////////////////
+
 
 
 
@@ -292,6 +337,10 @@ namespace bertini {
 		*/
 		 std::vector<int> Degrees() const;
 
+		 /**
+		 Get the degrees of the functions in the system, with respect to a group of variables.
+		*/
+		 std::vector<int> Degrees(VariableGroup const& vars) const;
 
 		/**
 		 Sort the functions so they are in decreasing order by degree
@@ -312,17 +361,7 @@ namespace bertini {
 
 
 
-        /////////////// TESTING ////////////////////
-        auto function(unsigned index = 0)
-        {
-            return functions_[index];
-        }
-
-        auto variables()
-        {
-            return variables_;
-        }
-		/////////////// TESTING ////////////////////
+        
 
 	private:
 
@@ -330,6 +369,7 @@ namespace bertini {
 		std::vector< VariableGroup > variable_groups_;
 		std::vector< VariableGroup > hom_variable_groups_;
 
+		VariableGroup homogenizing_variables_;
 
 		std::vector< Fn > functions_;
 		std::vector< Fn > subfunctions_;
@@ -354,6 +394,10 @@ namespace bertini {
 
 	};
 
+
+
+
+	System TotalDegreeStartSystem(System const& s);
 }
 
 

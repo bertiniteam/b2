@@ -554,7 +554,12 @@ namespace bertini {
 			}
 		}
 		
-		
+		bool operator==(complex const& rhs) const
+		{
+			return (this->real()==rhs.real()) && (this->imag()==rhs.imag());
+		}
+
+
 		explicit operator std::complex<double> () const
 		{
 			return std::complex<double>(double(real_), double(imag_));
