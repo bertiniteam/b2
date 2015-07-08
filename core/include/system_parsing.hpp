@@ -144,7 +144,7 @@ namespace bertini {
 			
 			
 			//TODO refine this so that counts are enforced at parse time?
-			root_rule_.name("system_");
+			root_rule_.name("system_parsing");
 			root_rule_ =
 			*(
 				variable_group_ [phx::bind(&System::AddVariableGroup, _val, _1)]
@@ -297,7 +297,7 @@ namespace bertini {
 			qi::on_error<qi::fail>
 			( root_rule_ ,
 			 std::cout<<
-			 val("System parser error. Expecting ")<<
+			 val("System parser could not complete parsing. Expecting ")<<
 			 _4<<
 			 val(" here: ")<<
 			 construct<std::string>(_3,_2)<<
