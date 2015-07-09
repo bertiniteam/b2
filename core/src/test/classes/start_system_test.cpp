@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 	sys.AddFunction(x - 0.5*y - 1);
 
 
-	auto TD = TotalDegreeStartSystem(sys);
+	bertini::start_system::TotalDegree TD(sys);
 
 	auto d = TD.Degrees();
 
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 	sys.AddFunction(x*x - 0.5*y - x*y);
 
 
-	auto TD = TotalDegreeStartSystem(sys);
+	bertini::start_system::TotalDegree TD(sys);
 
 	auto d = TD.Degrees();
 
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	sys.AddFunction(y+1);
 	sys.AddFunction(x+y+bertini::Pi());
 
-	auto TD = TotalDegreeStartSystem(sys);
+	bertini::start_system::TotalDegree TD(sys);
 
 	auto deg = TD.Degrees();
 
@@ -113,8 +113,10 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 
 	auto sysvals = TD.Eval(vals);
 
-	BOOST_CHECK_EQUAL(sysvals(0),0.0);
-	BOOST_CHECK_EQUAL(sysvals(1),0.0);
+	for (unsigned ii = 0; ii < 2; ++ii)
+		BOOST_CHECK_EQUAL(sysvals(ii),1.0 - dbl(TD.RandomValue(ii)));
+
+
 
 	auto J = TD.Jacobian(vals);
 
@@ -129,8 +131,9 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 
 	sysvals = TD.Eval(vals);
 
-	BOOST_CHECK_EQUAL(sysvals(0),-1.0);
-	BOOST_CHECK_EQUAL(sysvals(1),-1.0);
+	for (unsigned ii = 0; ii < 2; ++ii)
+		BOOST_CHECK_EQUAL(sysvals(ii),-dbl(TD.RandomValue(ii)));
+	
 
 	J = TD.Jacobian(vals);
 
@@ -161,7 +164,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	sys.AddFunction(pow(x,3)+x*y+bertini::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	auto TD = TotalDegreeStartSystem(sys);
+	bertini::start_system::TotalDegree TD(sys);
 
 	auto deg = TD.Degrees();
 
@@ -178,9 +181,8 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 
 	auto sysvals = TD.Eval(vals);
 
-	BOOST_CHECK_EQUAL(sysvals(0),0.0);
-	BOOST_CHECK_EQUAL(sysvals(1),0.0);
-	BOOST_CHECK_EQUAL(sysvals(2),0.0);
+	for (unsigned ii = 0; ii < 3; ++ii)
+		BOOST_CHECK_EQUAL(sysvals(ii),1.0 - dbl(TD.RandomValue(ii)));
 
 
 	auto J = TD.Jacobian(vals);
@@ -203,9 +205,8 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 
 	sysvals = TD.Eval(vals);
 
-	BOOST_CHECK_EQUAL(sysvals(0),-1.0);
-	BOOST_CHECK_EQUAL(sysvals(1),-1.0);
-	BOOST_CHECK_EQUAL(sysvals(2),-1.0);
+	for (unsigned ii = 0; ii < 3; ++ii)
+		BOOST_CHECK_EQUAL(sysvals(ii),-dbl(TD.RandomValue(ii)));
 
 	J = TD.Jacobian(vals);
 
@@ -221,16 +222,37 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	BOOST_CHECK_EQUAL(J(2,1),0.0);
 	BOOST_CHECK_EQUAL(J(2,2),0.0);
 
+}
 
 
+
+
+
+
+BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y"), z = std::make_shared<bertini::Variable>("z");
+
+	VariableGroup vars;
+	vars.push_back(x); vars.push_back(y); vars.push_back(z);
+
+	sys.AddVariableGroup(vars);  
+	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(pow(x,3)+x*y+bertini::E());
+	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	bertini::start_system::TotalDegree TD(sys);
 
 	Var t = std::make_shared<bertini::Variable>("t");
 
 	auto final_mixed_sum = (1-t) * sys + t * TD;
 	final_mixed_sum.AddPathVariable(t);
 	final_mixed_sum.Homogenize();
-}
 
+
+
+}
 
 
 

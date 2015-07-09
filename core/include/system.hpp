@@ -46,6 +46,10 @@ namespace bertini {
 	 The fundamental polynomial system class for Bertini2.
 	 */
 	class System{
+		
+
+	public:
+
 		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
@@ -54,9 +58,7 @@ namespace bertini {
 		using Var = std::shared_ptr<Variable>;
 		using Nd = std::shared_ptr<Node>;
 		using Jac = std::shared_ptr<Jacobian>;
-
-	public:
-
+		
 		System() : is_differentiated_(false), have_path_variable_(false)
 		{}
 
