@@ -6,8 +6,7 @@
 
 
 
-#include "system.hpp"
-#include "system_parsing.hpp"
+#include "start_system.hpp"
 
 using System = bertini::System;
 using Var = std::shared_ptr<bertini::Variable>;
@@ -19,6 +18,72 @@ template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic
 
 
 BOOST_AUTO_TEST_SUITE(system_class)
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+
+	VariableGroup v;
+	v.push_back(x); v.push_back(y);
+
+	sys.AddVariableGroup(v);
+	sys.AddFunction(x + y - 1);
+	sys.AddFunction(x - 0.5*y - 1);
+
+
+	auto TD = TotalDegreeStartSystem(sys);
+
+	auto d = TD.Degrees();
+
+	BOOST_CHECK_EQUAL(d.size(),2);
+	if (d.size()==2)
+	{
+		BOOST_CHECK_EQUAL(d[0],1);
+		BOOST_CHECK_EQUAL(d[1],1);
+	}
+	
+	
+	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+
+	VariableGroup v;
+	v.push_back(x); v.push_back(y);
+
+	sys.AddVariableGroup(v);
+	sys.AddFunction(x*y + y - 1);
+	sys.AddFunction(x*x - 0.5*y - x*y);
+
+
+	auto TD = TotalDegreeStartSystem(sys);
+
+	auto d = TD.Degrees();
+
+	BOOST_CHECK_EQUAL(d.size(),2);
+	if (d.size()==2)
+	{
+		BOOST_CHECK_EQUAL(d[0],2);
+		BOOST_CHECK_EQUAL(d[1],2);
+	}
+	
+	
+	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
+
+}
+
+
 
 BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 {

@@ -412,8 +412,7 @@ namespace bertini {
 
 
 
-	System TotalDegreeStartSystem(System const& s);
-
+	
 
 
 
