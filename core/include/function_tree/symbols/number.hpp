@@ -140,6 +140,15 @@ namespace bertini {
 
 		}
 
+
+		Float(dbl val)
+		{
+			highest_precision_value_.precision(17);
+			highest_precision_value_.real(real(val));
+			highest_precision_value_.imag(imag(val));
+		}
+
+
 		Float(mpfr const& val)
 		{
 			highest_precision_value_.precision(val.precision());
