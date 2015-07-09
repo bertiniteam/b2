@@ -250,7 +250,9 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 	final_mixed_sum.AddPathVariable(t);
 	final_mixed_sum.Homogenize();
 
-
+	BOOST_CHECK_EQUAL(final_mixed_sum.NumVariables(),4);
+	BOOST_CHECK(final_mixed_sum.IsHomogeneous());
+	BOOST_CHECK(final_mixed_sum.IsPolynomial());
 
 }
 

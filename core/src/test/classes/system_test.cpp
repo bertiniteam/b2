@@ -261,6 +261,8 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 
 	BOOST_CHECK(!S.IsHomogeneous());
 
+	BOOST_CHECK_EQUAL(S.NumHomVariables(),0);
+
 	S.Homogenize();
 
 	BOOST_CHECK(S.IsHomogeneous());
