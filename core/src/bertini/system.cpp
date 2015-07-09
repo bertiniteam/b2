@@ -16,35 +16,35 @@ namespace bertini
 	/////////////////
 
 
-	auto System::NumFunctions() const
+	size_t System::NumFunctions() const
 	{
 		return functions_.size();
 	}
 
 
-	auto System::NumVariables() const
+	size_t System::NumVariables() const
 	{
 		return variables_.size();
 	}
 
 
-	auto System::NumVariableGroups() const
+	size_t System::NumVariableGroups() const
 	{
 		return variable_groups_.size();
 	}
 
-	auto System::NumHomVariableGroups() const
+	size_t System::NumHomVariableGroups() const
 	{
 		return hom_variable_groups_.size();
 	}
 
 
-	auto System::NumConstants() const
+	size_t System::NumConstants() const
 	{
 		return constant_subfunctions_.size();
 	}
 
-	auto System::NumParameters() const
+	size_t System::NumParameters() const
 	{
 		return explicit_parameters_.size();
 	}
@@ -53,7 +53,7 @@ namespace bertini
 	/**
 	 Get the number of implicit parameters in this system
 	 */
-	auto System::NumImplicitParameters() const
+	size_t System::NumImplicitParameters() const
 	{
 		return implicit_parameters_.size();
 	}
@@ -111,6 +111,48 @@ namespace bertini
 
 
 
+
+	template<typename T>
+	Vec<T> System::Eval(const Vec<T> & variable_values)
+	{
+
+		if (variable_values.size()!=NumVariables())
+			throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+		if (have_path_variable_)
+			throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
+
+
+		// this function call traverses the entire tree, resetting everything.
+		//
+		// TODO: it has the unfortunate side effect of resetting constant functions, too.
+		//
+		// we need to work to correct this.
+		for (auto iter : functions_) {
+			iter->Reset();
+		}
+
+		SetVariables(variable_values);
+
+
+		Vec<T> value(NumFunctions()); // create vector with correct number of entries.
+
+		{ // for scoping of the counter.
+			auto counter = 0;
+			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+				value(counter) = (*iter)->Eval<T>();
+			}
+		}
+
+		return value;
+	}
+
+	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
+	// see
+	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+	template Vec<dbl> System::Eval(const Vec<dbl> & variable_values);
+	template Vec<mpfr> System::Eval(const Vec<mpfr> & variable_values);
+
+
 	template<typename T>
 	Vec<T> System::Eval(const Vec<T> & variable_values, const T & path_variable_value)
 	{
@@ -145,6 +187,14 @@ namespace bertini
 
 		return value;
 	}
+
+
+	
+	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
+	// see
+	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+	template Vec<dbl> System::Eval(const Vec<dbl> & variable_values, dbl const& path_variable_value);
+	template Vec<mpfr> System::Eval(const Vec<mpfr> & variable_values, mpfr const& path_variable_value);
 
 
 
@@ -306,7 +356,32 @@ namespace bertini
 	}
 
 
+	bool System::IsPolynomial() const
+	{
+		for (auto iter : functions_)
+		{
+			if (!iter->IsPolynomial(variables_))
+			{
+				return false;
+			}
+			for (auto vars : variable_groups_)
+			{
+				if (!iter->IsPolynomial(vars))
+				{
+					return false;
+				}
+			}
+			for (auto vars : hom_variable_groups_)
+			{
+				if (!iter->IsPolynomial(vars))
+				{
+					return false;
+				}
+			}
 
+		}
+		return true;
+	}
 	
 
 
@@ -544,7 +619,10 @@ namespace bertini
 
 
 
-
+	bool System::HavePathVariable() const
+	{
+		return have_path_variable_;
+	}
 
 
 
@@ -560,10 +638,20 @@ namespace bertini
 	}
 
 
+	std::vector<int> System::Degrees(VariableGroup const& vars) const
+	{
+		std::vector<int> deg;
+		for (auto iter : functions_)
+		{
+			deg.push_back(iter->Degree(vars));
+		}
+		return deg;
+	}
+
 
 	void System::ReorderFunctionsByDegreeDecreasing()
 	{
-		auto degs = Degrees();
+		auto degs = Degrees(variables_);
 
 		// now we sort a vector of the indexing numbers by the degrees contained in degs.
 		std::vector<size_t> indices(degs.size());
@@ -590,7 +678,7 @@ namespace bertini
 
 	void System::ReorderFunctionsByDegreeIncreasing()
 	{
-		auto degs = Degrees();
+		auto degs = Degrees(variables_);
 
 		// now we sort a vector of the indexing numbers by the degrees contained in degs.
 		std::vector<size_t> indices(degs.size());
@@ -615,9 +703,34 @@ namespace bertini
 
 
 
+	void System::ClearVariables()
+	{
+		ungrouped_variables_.clear();
+		variable_groups_.clear();
+		hom_variable_groups_.clear();
+		homogenizing_variables_.clear();
+		variables_.clear();
+
+		path_variable_.reset();
+		have_path_variable_ = false;
+	}
 
 
 
+	void System::CopyVariableStructure(System const& other)
+	{
+		this->ClearVariables();
+
+		this->ungrouped_variables_ = other.ungrouped_variables_;
+		this->variable_groups_ = other.variable_groups_;
+		hom_variable_groups_ = other.hom_variable_groups_;
+		homogenizing_variables_ = other.homogenizing_variables_;
+		variables_ = other.variables_;
+
+		path_variable_ = other.path_variable_;
+		have_path_variable_ = other.have_path_variable_;
+
+	}
 
 
 	
@@ -696,4 +809,62 @@ namespace bertini
 
 		return out;
 	}
+
+
+
+
+
+
+
+	System System::operator+=(System const& rhs)
+	{
+		if (this->NumFunctions()!=rhs.NumFunctions())
+			throw std::runtime_error("cannot add two Systems with differing numbers of functions");
+
+		if (this->NumVariables()!=rhs.NumVariables())
+			throw std::runtime_error("cannot add two Systems with differing numbers of variables");
+
+		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
+		{
+			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->entry_node() + (*iter)->entry_node());
+		}
+
+		return *this;
+	}
+
+	System operator+(System lhs, System const& rhs)
+	{
+		return lhs+=rhs;
+	}
+
+
+	System System::operator*=(std::shared_ptr<Node> const& N)
+	{
+		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
+		{
+			(*iter)->SetRoot( N * (*iter)->entry_node());
+		}
+		return *this;
+	}
+
+
+	System operator*(System s, std::shared_ptr<Node> const&  N)
+	{
+		return s*=N;
+	}
+
+
+	System operator*(std::shared_ptr<Node> const&  N, System const& s)
+	{
+		return s*N;
+	}
+
+
+	
+
+
+
+
+
+
 }

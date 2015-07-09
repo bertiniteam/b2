@@ -46,6 +46,10 @@ namespace bertini {
 	 The fundamental polynomial system class for Bertini2.
 	 */
 	class System{
+		
+
+	public:
+
 		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
@@ -54,9 +58,7 @@ namespace bertini {
 		using Var = std::shared_ptr<Variable>;
 		using Nd = std::shared_ptr<Node>;
 		using Jac = std::shared_ptr<Jacobian>;
-
-	public:
-
+		
 		System() : is_differentiated_(false), have_path_variable_(false)
 		{}
 
@@ -64,6 +66,10 @@ namespace bertini {
 		void precision(unsigned new_precision);
 
 
+
+
+		template<typename T>
+		Vec<T> Eval(const Vec<T> & variable_values);
 
 		/**
 		 Evaluate the system.
@@ -89,6 +95,7 @@ namespace bertini {
 		bool IsHomogeneous() const;
 
 
+		bool IsPolynomial() const;
 
 
 		//////////////////
@@ -101,39 +108,39 @@ namespace bertini {
 		/**
 		 Get the number of functions in this system
 		 */
-		auto NumFunctions() const;
+		size_t NumFunctions() const;
 
 		/**
 		 Get the number of variables in this system
 		 */
-		auto NumVariables() const;
+		size_t NumVariables() const;
 
 		/**
 		 Get the number of variable groups in the system
 		*/
-		 auto NumVariableGroups() const;
+		 size_t NumVariableGroups() const;
 
 		/**
 		 Get the number of homogeneous variable groups in the system
 		*/
-		 auto NumHomVariableGroups() const;
+		 size_t NumHomVariableGroups() const;
 
 
 		/**
 		 Get the number of constants in this system
 		 */
-		auto NumConstants() const;
+		size_t NumConstants() const;
 
 		/**
 		 Get the number of explicit parameters in this system
 		 */
-		auto NumParameters() const;
+		size_t NumParameters() const;
 
 
 		/**
 		 Get the number of implicit parameters in this system
 		 */
-		auto NumImplicitParameters() const;
+		size_t NumImplicitParameters() const;
 
 
 		
@@ -160,6 +167,7 @@ namespace bertini {
 		void SetPathVariable(T new_value);
 
 
+		
 
 
 		/**
@@ -264,6 +272,9 @@ namespace bertini {
 
 
 
+
+
+
 		/**
 		 Add a constant function to the system.  Constants must not depend on anything which can vary -- they're constant!
 		 */
@@ -284,6 +295,42 @@ namespace bertini {
 		void AddPathVariable(Var const& v);
 
 
+		bool HavePathVariable() const;
+
+
+
+
+
+
+
+
+		/////////////// TESTING ////////////////////
+		/**
+		 Get a function by its index.  This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
+		*/
+        auto function(unsigned index = 0) const
+        {
+            return functions_[index];
+        }
+
+        /**
+		 Get the variables in the problem.
+        */
+        auto variables() const
+        {
+            return variables_;
+        }
+
+        /**
+		 Get the variable groups in the problem.
+        */
+        auto variableGroups() const
+        {
+            return variable_groups_;
+        }
+
+		/////////////// TESTING ////////////////////
+
 
 
 
@@ -292,6 +339,10 @@ namespace bertini {
 		*/
 		 std::vector<int> Degrees() const;
 
+		 /**
+		 Get the degrees of the functions in the system, with respect to a group of variables.
+		*/
+		 std::vector<int> Degrees(VariableGroup const& vars) const;
 
 		/**
 		 Sort the functions so they are in decreasing order by degree
@@ -310,26 +361,32 @@ namespace bertini {
 		friend std::ostream& operator <<(std::ostream& out, const System & s);
 
 
+		/**
+		 Clear the entire structure of variables in a system.
+		*/
+		void ClearVariables();
 
 
-        /////////////// TESTING ////////////////////
-        auto function(unsigned index = 0)
-        {
-            return functions_[index];
-        }
+		/**
+		 Copy the entire structure of variables from within one system to another.
+		  This copies everything -- ungrouped variables, variable groups, homogenizing variables, the path variable, the ordering of the variables.s
+		*/ 
+		void CopyVariableStructure(System const& other);
+        
 
-        auto variables()
-        {
-            return variables_;
-        }
-		/////////////// TESTING ////////////////////
+		System operator+=(System const& rhs);
+		friend System operator+(System lhs, System const& rhs);
 
+		System operator*=(std::shared_ptr<Node> const& N);
+		friend System operator*(System s, std::shared_ptr<Node> const&  N);
+		friend System operator*(std::shared_ptr<Node> const&  N, System const& s);
 	private:
 
 		std::vector<Var> ungrouped_variables_;
 		std::vector< VariableGroup > variable_groups_;
 		std::vector< VariableGroup > hom_variable_groups_;
 
+		VariableGroup homogenizing_variables_;
 
 		std::vector< Fn > functions_;
 		std::vector< Fn > subfunctions_;
@@ -353,6 +410,14 @@ namespace bertini {
 		unsigned precision_;
 
 	};
+
+
+
+
+	
+
+
+
 
 }
 

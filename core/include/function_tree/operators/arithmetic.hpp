@@ -238,6 +238,36 @@ namespace bertini {
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 	
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, dbl rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, std::make_shared<Float>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator+(dbl lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator+(mpfr lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, int rhs)
+	{
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Integer>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator+(int lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), rhs);
+	}
+
 	
 	
 	
@@ -287,7 +317,36 @@ namespace bertini {
 	}
 	
 	
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, dbl rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
 	
+	inline std::shared_ptr<Node> operator-(dbl lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator-(mpfr lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, int rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Integer>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator-(int lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
+	}
+
 	
 	
 	
@@ -504,9 +563,35 @@ namespace bertini {
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 	
-	inline std::shared_ptr<Node> operator*(int lhs,  std::shared_ptr<Node> rhs)
+
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, dbl rhs)
+	{
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator*(dbl lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator*(mpfr lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, int rhs)
+	{
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Integer>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator*(int lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), rhs);
 	}
 	
 	
@@ -573,6 +658,9 @@ namespace bertini {
 		return lhs/=rhs;
 	}
 	
+
+
+
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, double rhs)
 	{
 		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
@@ -583,6 +671,36 @@ namespace bertini {
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 	
+
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, dbl rhs)
+	{
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator/(dbl lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator/(mpfr lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, int rhs)
+	{
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Integer>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator/(int lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
+	}
 	
 	
 	/**
@@ -698,7 +816,16 @@ namespace bertini {
 		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
 	}
 	
-	
+
+	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, dbl p)
+	{
+		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
+	}
+
+	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, mpfr p)
+	{
+		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
+	}
 	
 	
 	
