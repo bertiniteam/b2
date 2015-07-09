@@ -116,10 +116,20 @@ namespace bertini {
 		size_t NumVariables() const;
 
 		/**
+		 Get the number of *homogenizing* variables in this system
+		 */
+		size_t NumHomVariables() const;
+		/**
 		 Get the number of variable groups in the system
 		*/
 		 size_t NumVariableGroups() const;
 
+
+		/**
+		 get the number of variables which are ungrouped.
+		 */
+		 size_t NumUngroupedVariables() const;
+		 
 		/**
 		 Get the number of homogeneous variable groups in the system
 		*/
@@ -302,6 +312,12 @@ namespace bertini {
 
 
 
+		/**
+		 Get the variables in the problem.
+        */
+        VariableGroup Variables() const;
+
+
 
 
 		/////////////// TESTING ////////////////////
@@ -313,13 +329,7 @@ namespace bertini {
             return functions_[index];
         }
 
-        /**
-		 Get the variables in the problem.
-        */
-        auto variables() const
-        {
-            return variables_;
-        }
+        
 
         /**
 		 Get the variable groups in the problem.
@@ -382,7 +392,7 @@ namespace bertini {
 		friend System operator*(std::shared_ptr<Node> const&  N, System const& s);
 	private:
 
-		std::vector<Var> ungrouped_variables_;
+		VariableGroup ungrouped_variables_;
 		std::vector< VariableGroup > variable_groups_;
 		std::vector< VariableGroup > hom_variable_groups_;
 
@@ -393,7 +403,7 @@ namespace bertini {
 		std::vector< Fn > explicit_parameters_;
 
 
-		VariableGroup variables_;
+		// VariableGroup variables_;
 		VariableGroup implicit_parameters_;
 
 
