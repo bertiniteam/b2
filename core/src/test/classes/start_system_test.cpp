@@ -155,6 +155,15 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	BOOST_CHECK_EQUAL(J(2,0),0.0);
 	BOOST_CHECK_EQUAL(J(2,1),0.0);
 	BOOST_CHECK_EQUAL(J(2,2),0.0);
+
+
+
+
+	Var t = std::make_shared<bertini::Variable>("t");
+
+	auto final_mixed_sum = (1-t) * sys + t * TD;
+	final_mixed_sum.AddPathVariable(t);
+	final_mixed_sum.Homogenize();
 }
 
 
