@@ -304,7 +304,15 @@ namespace bertini {
 		}
 		
 		
-		
+		/**
+		 Produce a random complex number
+		 */
+		inline static complex rand()
+		{
+			complex returnme( RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			returnme /= sqrt( returnme.abs());
+			return returnme;
+		}
 		
 		
 		
@@ -986,15 +994,7 @@ namespace bertini {
 	
 	
 	
-	/**
-	 Produce a random complex number
-	 */
-	inline complex rand()
-	{
-		complex returnme( RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")) );
-		returnme /= sqrt( bertini::abs(returnme));
-		return returnme;
-	}
+	
 	
 } // re: namespace
 
