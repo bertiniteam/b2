@@ -94,7 +94,7 @@ namespace  bertini {
 	    }
 
 
-	    int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+	    int Degree(VariableGroup const& vars) const override
 		{
 			for (auto iter : vars)
 				if (this==iter.get())
@@ -103,7 +103,7 @@ namespace  bertini {
 			return 0;
 		}
 
-		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override
 		{
 			std::vector<int> deg;
 			for (auto iter=vars.begin(); iter!=vars.end(); iter++)
@@ -115,7 +115,7 @@ namespace  bertini {
 		}
 
 
-	    void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+	    void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			
 		}
@@ -131,6 +131,18 @@ namespace  bertini {
 		bool IsHomogeneous(VariableGroup const& vars) const override
 		{
 			return true;
+		}
+
+
+		/**
+		 Change the precision of this variable-precision tree node.
+		 
+		 \param prec the number of digits to change precision to.
+		 */
+		virtual void precision(unsigned int prec) override
+		{
+			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			val_pair.first.precision(prec);
 		}
 		
 	protected:

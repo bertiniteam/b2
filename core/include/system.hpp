@@ -37,241 +37,136 @@
 #include <eigen3/Eigen/Dense>
 
 
+
+
 namespace bertini {
 
-	template<typename T>
-	using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-	template<typename T>
-	using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+	
 	/**
 	 The fundamental polynomial system class for Bertini2.
 	 */
 	class System{
+		
 
+	public:
+
+		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
 		// a few local using statements to reduce typing etc.
 		using Fn = std::shared_ptr<Function>;
 		using Var = std::shared_ptr<Variable>;
 		using Nd = std::shared_ptr<Node>;
 		using Jac = std::shared_ptr<Jacobian>;
-
-	public:
-
+		
 		System() : is_differentiated_(false), have_path_variable_(false)
 		{}
 
 
-		void precision(unsigned new_precision)
-		{
-			for (auto iter : functions_) {
-//				iter->precision(new_precision);
-			}
-
-			for (auto iter : subfunctions_) {
-				//				iter->precision(new_precision);
-			}
-
-			for (auto iter : explicit_parameters_) {
-				//				iter->precision(new_precision);
-			}
-
-			for (auto iter : variables_) {
-				//				iter->precision(new_precision);
-			}
-
-			for (auto iter :implicit_parameters_) {
-				//				iter->precision(new_precision);
-			}
-
-			for (auto iter : constant_subfunctions_) {
-				//				iter->precision(new_precision);
-				//				iter->eval<>()
-			}
-
-//			path_variable_->precision(new_precision);
-
-			precision_ = new_precision;
-		}
+		void precision(unsigned new_precision);
 
 
 
 
-		/**
-		 Get the number of functions in this system
-		 */
-		auto NumFunctions() const
-		{
-			return functions_.size();
-		}
-
-
-
-
-
-		/**
-		 Get the number of variables in this system
-		 */
-		auto NumVariables() const
-		{
-			return variables_.size();
-		}
-
-		/**
-		 Get the number of constants in this system
-		 */
-		auto NumConstants() const
-		{
-			return constant_subfunctions_.size();
-		}
-
-		/**
-		 Get the number of explicit parameters in this system
-		 */
-		auto NumParameters() const
-		{
-			return explicit_parameters_.size();
-		}
-
-
-		/**
-		 Get the number of implicit parameters in this system
-		 */
-		auto NumImplicitParameters() const
-		{
-			return implicit_parameters_.size();
-		}
-
+		template<typename T>
+		Vec<T> Eval(const Vec<T> & variable_values);
 
 		/**
 		 Evaluate the system.
 		 */
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value)
-		{
-
-			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
-			if (!have_path_variable_)
-				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
-
-
-			// this function call traverses the entire tree, resetting everything.
-			//
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			//
-			// we need to work to correct this.
-			for (auto iter : functions_) {
-				iter->Reset();
-			}
-
-			SetVariables(variable_values);
-			SetPathVariable(path_variable_value);
-
-
-			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
-
-			{ // for scoping of the counter.
-				auto counter = 0;
-				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-					value(counter) = (*iter)->Eval<T>();
-				}
-			}
-
-			return value;
-		}
+		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value);
 
 
 
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values)
-		{
-			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
-
-			if (have_path_variable_)
-				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
-
-
-			if (!is_differentiated_)
-			{
-				jacobian_.resize(NumFunctions());
-				for (int ii = 0; ii < NumFunctions(); ++ii)
-				{
-					jacobian_[ii] = std::make_shared<bertini::Jacobian>(functions_[ii]->Differentiate());
-				}
-				is_differentiated_ = true;
-			}
-
-			SetVariables(variable_values);
-
-			Mat<T> J(NumFunctions(), NumVariables());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
-				for (int jj = 0; jj < NumVariables(); ++jj)
-				{
-					J(ii,jj) = jacobian_[ii]->EvalJ<T>(variables_[jj]);
-				}
-			}
-
-			return J;
-		}
+		Mat<T> Jacobian(const Vec<T> & variable_values);
 
 
 
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
-		{
-			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value);
 
-			if (!have_path_variable_)
-				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
+	
+
+		void Homogenize();
 
 
-			if (!is_differentiated_)
-			{
-				jacobian_.resize(NumFunctions());
-				for (int ii = 0; ii < NumFunctions(); ++ii)
-				{
-					jacobian_[ii] = std::make_shared<bertini::Jacobian>(functions_[ii]->Differentiate());
-				}
-				is_differentiated_ = true;
-			}
-
-			SetVariables(variable_values);
-			SetPathVariable(path_variable_value);
-
-			Mat<T> J(NumFunctions(), NumVariables());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
-				for (int jj = 0; jj < NumVariables(); ++jj)
-				{
-					J(ii,jj) = jacobian_[ii]->EvalJ<T>(variables_[jj]);
-				}
-			}
-
-			return J;
-
-		}
+		bool IsHomogeneous() const;
 
 
+		bool IsPolynomial() const;
+
+
+		//////////////////
+		//
+		//  Nummers --   functions which get the numbers of things.
+		//
+		//////////////////
+
+
+		/**
+		 Get the number of functions in this system
+		 */
+		size_t NumFunctions() const;
+
+		/**
+		 Get the number of variables in this system
+		 */
+		size_t NumVariables() const;
+
+		/**
+		 Get the number of *homogenizing* variables in this system
+		 */
+		size_t NumHomVariables() const;
+		/**
+		 Get the number of variable groups in the system
+		*/
+		 size_t NumVariableGroups() const;
+
+
+		/**
+		 get the number of variables which are ungrouped.
+		 */
+		 size_t NumUngroupedVariables() const;
+		 
+		/**
+		 Get the number of homogeneous variable groups in the system
+		*/
+		 size_t NumHomVariableGroups() const;
+
+
+		/**
+		 Get the number of constants in this system
+		 */
+		size_t NumConstants() const;
+
+		/**
+		 Get the number of explicit parameters in this system
+		 */
+		size_t NumParameters() const;
+
+
+		/**
+		 Get the number of implicit parameters in this system
+		 */
+		size_t NumImplicitParameters() const;
+
+
+		
+
+
+		///////////////////
+		//
+		// Setters -- templated.
+		//
+		///////////////
 
 		/**
 		 Set the values of the variables to be equal to the input values
 		 */
 		template<typename T>
-		void SetVariables(const Vec<T> & new_values)
-		{
-			assert(new_values.size()== variables_.size());
-
-			{ // for scoping of the counter.
-				auto counter = 0;
-				for (auto iter=variables_.begin(); iter!=variables_.end(); iter++, counter++) {
-					(*iter)->set_current_value(new_values(counter));
-				}
-			}
-
-		}
+		void SetVariables(const Vec<T> & new_values);
 
 
 
@@ -279,104 +174,67 @@ namespace bertini {
 		 Set the current value of the path variable.
 		 */
 		template<typename T>
-		void SetPathVariable(T new_value)
-		{
-			path_variable_->set_current_value(new_value);
-			have_path_variable_ = true;
-		}
+		void SetPathVariable(T new_value);
 
 
+		
 
 
 		/**
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
 		 */
 		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values)
-		{
-			assert(new_values.size()== implicit_parameters_.size());
-
-			{
-				auto counter = 0;
-				for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++) {
-					(*iter)->set_current_value(new_values(counter));
-				}
-			}
-		}
+		void SetImplicitParameters(Vec<T> new_values);
 
 
 
 
 
 
+
+
+		//////////////////
+		//
+		//  Adders  --   functions which add things to the system.
+		//
+		//////////////////
 
 
 		/**
 		 Add a variable group to the system.  The system will be homogenized with respect to this variable group, though this is not done at the time of this call.
 		 */
-		void AddVariableGroup(std::vector<Var> const& v)
-		{
-			variable_groups_.push_back(v);
-			variables_.insert( variables_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddVariableGroup(VariableGroup const& v);
 
 
 		/**
 		 Add a homogeneous (projective) variable group to the system.  The system must be homogeneous with respect to this group, though this is not verified at the time of this call.
 		 */
-		void AddHomVariableGroup(std::vector<Var> const& v)
-		{
-			hom_variable_groups_.push_back(v);
-			variables_.insert( variables_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddHomVariableGroup(VariableGroup const& v);
 
 
 
 		/**
 		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
 		 */
-		void AddUngroupedVariable(Var const& v)
-		{
-			ungrouped_variables_.push_back(v);
-			variables_.push_back(v);
-			is_differentiated_ = false;
-		}
+		void AddUngroupedVariable(Var const& v);
 
 
 		/**
 		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
 		 */
-		void AddUngroupedVariables(std::vector<Var> const& v)
-		{
-			ungrouped_variables_.insert( variables_.end(), v.begin(), v.end() );
-			variables_.insert( variables_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddUngroupedVariables(VariableGroup const& v);
 
 
 		/**
 		 Add an implicit parameter to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
 		 */
-		void AddImplicitParameter(Var const& v)
-		{
-			implicit_parameters_.push_back(v);
-			is_differentiated_ = false;
-		}
+		void AddImplicitParameter(Var const& v);
 
 
 		/**
 		 Add some implicit parameters to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
 		 */
-		void AddImplicitParameters(std::vector<Var> const& v)
-		{
-			implicit_parameters_.insert( implicit_parameters_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
-
-
-
+		void AddImplicitParameters(VariableGroup const& v);
 
 
 
@@ -384,72 +242,44 @@ namespace bertini {
 		/**
 		 Add an explicit parameter to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
 		 */
-		void AddParameter(Fn const& F)
-		{
-			explicit_parameters_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddParameter(Fn const& F);
 
 		/**
 		 Add some explicit parameters to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
 		 */
-		void AddParameters(std::vector<Fn> const& v)
-		{
-			explicit_parameters_.insert( explicit_parameters_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
-
+		void AddParameters(std::vector<Fn> const& v);
 
 
 
 		/**
 		 Add a subfunction to the system.
 		 */
-		void AddSubfunction(Fn const& F)
-		{
-			subfunctions_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddSubfunction(Fn const& F);
 
 		/**
 		 Add some subfunctions to the system.
 		 */
-		void AddSubfunctions(std::vector<Fn> const& v)
-		{
-			subfunctions_.insert( subfunctions_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddSubfunctions(std::vector<Fn> const& v);
 
 
 
 		/**
 		 Add a function to the system.
 		 */
-		void AddFunction(Fn const& F)
-		{
-			functions_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddFunction(Fn const& F);
 
 		/**
 		 Add a function to the system.
 		 */
-		void AddFunction(Nd const& N)
-		{
-			Fn F = std::make_shared<Function>(N);
-			functions_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddFunction(Nd const& N);
 
 
 		/**
 		 Add some functions to the system.
 		 */
-		void AddFunctions(std::vector<Fn> const& v)
-		{
-			functions_.insert( functions_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
+		void AddFunctions(std::vector<Fn> const& v);
+
+
 
 
 
@@ -458,21 +288,13 @@ namespace bertini {
 		/**
 		 Add a constant function to the system.  Constants must not depend on anything which can vary -- they're constant!
 		 */
-		void AddConstant(Fn const& F)
-		{
-			constant_subfunctions_.push_back(F);
-			is_differentiated_ = false;
-		}
+		void AddConstant(Fn const& F);
+
 
 		/**
 		 Add some constant functions to the system.  Constants must not depend on anything which can vary -- they're constant!
 		 */
-		void AddConstants(std::vector<Fn> const& v)
-		{
-			constant_subfunctions_.insert( constant_subfunctions_.end(), v.begin(), v.end() );
-			is_differentiated_ = false;
-		}
-
+		void AddConstants(std::vector<Fn> const& v);
 
 
 
@@ -480,108 +302,109 @@ namespace bertini {
 		/**
 		 Add a variable as the Path Variable to a System.  Will overwrite any previously declared path variable.
 		 */
-		void AddPathVariable(Var const& v)
-		{
-			path_variable_ = v;
-			is_differentiated_ = false;
-			have_path_variable_ = true;
-		}
+		void AddPathVariable(Var const& v);
+
+
+		bool HavePathVariable() const;
+
+
 
 
 
 
 		/**
-		 Overloaded operator for printing to an arbirtary out stream.
-		 */
-		friend std::ostream& operator <<(std::ostream& out, const System & s)
-		{
-			out << "system:\n\n";
-			out << s.NumVariables() << " variables:\n";
-			for (auto iter : s.variables_) {
-				out << (iter)->name() << "\n";
-			}
-			out << "\n";
-
-			out << s.NumFunctions() << " functions:\n";
-			for (auto iter : s.functions_) {
-				out << (iter)->name() << "\n";
-				out << *iter << "\n";
-			}
-			out << "\n";
-
-
-			if (s.NumParameters()) {
-				out << s.NumParameters() << " explicit parameters:\n";
-				for (auto iter : s.explicit_parameters_) {
-					out << (iter)->name() << "\n";
-					out << *iter << "\n";
-				}
-				out << "\n";
-			}
-
-
-			if (s.NumConstants()) {
-				out << s.NumConstants() << " constants:\n";
-				for (auto iter : s.constant_subfunctions_) {
-					out << (iter)->name() << "\n";
-					out << *iter << "\n";
-				}
-				out << "\n";
-			}
-
-			if (s.path_variable_) {
-				out << "path variable defined.  named " << s.path_variable_->name() << "\n";
-			}
-
-			if (s.is_differentiated_)
-			{
-				for (auto iter : s.jacobian_) {
-					out << (iter)->name() << "\n";
-					out << *iter << "\n";
-				}
-				out << "\n";
-			}
-			else{
-				out << "system not differentiated\n";
-			}
-
-
-			return out;
-		}
+		 Get the variables in the problem.
+        */
+        VariableGroup Variables() const;
 
 
 
 
-
-
-
-        /////////////// TESTING ////////////////////
-        auto function()
+		/////////////// TESTING ////////////////////
+		/**
+		 Get a function by its index.  This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
+		*/
+        auto function(unsigned index = 0) const
         {
-            return functions_[0];
+            return functions_[index];
         }
 
-        auto variables()
+        
+
+        /**
+		 Get the variable groups in the problem.
+        */
+        auto variableGroups() const
         {
-            return variables_;
+            return variable_groups_;
         }
+
 		/////////////// TESTING ////////////////////
 
+
+
+
+		/**
+		 Get the degrees of the functions in the system, with respect to all variables.
+		*/
+		 std::vector<int> Degrees() const;
+
+		 /**
+		 Get the degrees of the functions in the system, with respect to a group of variables.
+		*/
+		 std::vector<int> Degrees(VariableGroup const& vars) const;
+
+		/**
+		 Sort the functions so they are in decreasing order by degree
+		*/
+		void ReorderFunctionsByDegreeDecreasing();
+
+
+		/**
+		 Sort the functions so they are in decreasing order by degree
+		*/
+		void ReorderFunctionsByDegreeIncreasing();
+
+		/**
+		 Overloaded operator for printing to an arbirtary out stream.
+		 */
+		friend std::ostream& operator <<(std::ostream& out, const System & s);
+
+
+		/**
+		 Clear the entire structure of variables in a system.
+		*/
+		void ClearVariables();
+
+
+		/**
+		 Copy the entire structure of variables from within one system to another.
+		  This copies everything -- ungrouped variables, variable groups, homogenizing variables, the path variable, the ordering of the variables.s
+		*/ 
+		void CopyVariableStructure(System const& other);
+        
+
+		System operator+=(System const& rhs);
+		friend System operator+(System lhs, System const& rhs);
+
+		System operator*=(std::shared_ptr<Node> const& N);
+		friend System operator*(System s, std::shared_ptr<Node> const&  N);
+		friend System operator*(std::shared_ptr<Node> const&  N, System const& s);
 	private:
 
+		VariableGroup ungrouped_variables_;
+		std::vector< VariableGroup > variable_groups_;
+		std::vector< VariableGroup > hom_variable_groups_;
 
-		std::vector<Var> ungrouped_variables_;
-		std::vector<std::vector<Var> > variable_groups_;
-		std::vector<std::vector<Var> > hom_variable_groups_;
-
+		VariableGroup homogenizing_variables_;
 
 		std::vector< Fn > functions_;
 		std::vector< Fn > subfunctions_;
 		std::vector< Fn > explicit_parameters_;
 
 
-		std::vector< Var > variables_;
-		std::vector< Var > implicit_parameters_;
+		// VariableGroup variables_;
+		VariableGroup implicit_parameters_;
 
 
 		Var path_variable_;
@@ -596,10 +419,15 @@ namespace bertini {
 
 		unsigned precision_;
 
-
-		// i disagree with the inclusion of this, but the real necessity of it remains to be seen.  --dab
-		Vec<bertini::complex> solutions_;
 	};
+
+
+
+
+	
+
+
+
 
 }
 

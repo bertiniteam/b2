@@ -1,6 +1,8 @@
 #include "function_tree/operators/arithmetic.hpp"
 
 
+
+
 namespace bertini{
 	
 	using ::pow;
@@ -56,7 +58,7 @@ namespace bertini{
 		if (counter>0)
 			return ret_sum;
 		else
-			return std::make_shared<Number>(0.0);
+			return std::make_shared<Float>(0.0);
 	}
 	
 	
@@ -77,7 +79,7 @@ namespace bertini{
 		return deg;
 	}
 	
-	int SumOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const 
+	int SumOperator::Degree(VariableGroup const& vars) const 
 	{
 		auto deg = 0;
 		for (auto iter = children_.begin(); iter!=children_.end(); iter++)
@@ -94,7 +96,7 @@ namespace bertini{
 	}
 
 
-	std::vector<int> SumOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	std::vector<int> SumOperator::MultiDegree(VariableGroup const& vars) const
 	{
 		std::vector<int> deg(vars.size(),0);
 		for (auto iter : children_)
@@ -109,7 +111,7 @@ namespace bertini{
 		return deg;
 	}
 
-	void SumOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
+	void SumOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		
 		
@@ -362,7 +364,7 @@ namespace bertini{
 			
 			auto local_derivative = children_[ii]->Differentiate();
 			
-			auto is_it_a_number = std::dynamic_pointer_cast<Number>(local_derivative);
+			auto is_it_a_number = std::dynamic_pointer_cast<Float>(local_derivative);
 			if (is_it_a_number)
 				if (is_it_a_number->Eval<dbl>()==dbl(0.0))
 					continue;
@@ -442,7 +444,7 @@ namespace bertini{
 	}
 	
 
-	int MultOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const 
+	int MultOperator::Degree(VariableGroup const& vars) const 
 	{
 		
 		auto deg = 0;
@@ -463,7 +465,7 @@ namespace bertini{
 		return deg;
 	}
 
-	std::vector<int> MultOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	std::vector<int> MultOperator::MultiDegree(VariableGroup const& vars) const
 	{
 		std::vector<int> deg(vars.size(),0);
 		for (auto iter : children_)
@@ -480,7 +482,7 @@ namespace bertini{
 
 
 
-	void MultOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
+	void MultOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		for (auto iter: children_)
 		{
@@ -574,7 +576,7 @@ namespace bertini{
 	std::shared_ptr<Node> PowerOperator::Differentiate()
 	{
 		auto ret_mult = std::make_shared<MultOperator>();
-		auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, std::make_shared<Number>("1.0"),false);
+		auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, std::make_shared<Float>("1.0"),false);
 		ret_mult->AddChild(base_->Differentiate());
 		ret_mult->AddChild(exponent_);
 		ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
@@ -628,7 +630,7 @@ namespace bertini{
 		}
 	}
 	
-	int PowerOperator::Degree(std::vector< std::shared_ptr<Variable > > const& vars) const
+	int PowerOperator::Degree(VariableGroup const& vars) const
 	{
 		auto multideg = MultiDegree(vars);
 		auto deg = 0;
@@ -642,7 +644,7 @@ namespace bertini{
 	}
 
 
-	std::vector<int> PowerOperator::MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const
+	std::vector<int> PowerOperator::MultiDegree(VariableGroup const& vars) const
 	{
 		std::vector<int> deg(vars.size(),0);
 		for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
@@ -654,7 +656,7 @@ namespace bertini{
 
 
 
-	void PowerOperator::Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar)
+	void PowerOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
 	{
 		if (exponent_->Degree(vars)==0)
 		{
@@ -738,16 +740,16 @@ namespace bertini{
 	{
 		
 		if (exponent_==0)
-			return std::make_shared<Number>(0.0);
+			return std::make_shared<Float>(0.0);
 		else if (exponent_==1.0)
 			return child_->Differentiate();
 		else if (exponent_==2){
-			auto M = std::make_shared<MultOperator>(std::make_shared<Number>(2.0), child_);
+			auto M = std::make_shared<MultOperator>(std::make_shared<Float>(2.0), child_);
 			M->AddChild(child_->Differentiate());
 			return M;
 		}
 		else{
-			auto M = std::make_shared<MultOperator>(std::make_shared<Number>(exponent_),
+			auto M = std::make_shared<MultOperator>(std::make_shared<Integer>(exponent_),
 													std::make_shared<IntegerPowerOperator>(child_, exponent_-1) );
 			M->AddChild(child_->Differentiate());
 			return M;
@@ -793,9 +795,9 @@ namespace bertini{
 	std::shared_ptr<Node> SqrtOperator::Differentiate()
 	{
 		auto ret_mult = std::make_shared<MultOperator>();
-		ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Number>(-0.5)));
+		ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Float>(-0.5)));
 		ret_mult->AddChild(child_->Differentiate());
-		ret_mult->AddChild(std::make_shared<Number>(0.5));
+		ret_mult->AddChild(std::make_shared<Float>(0.5));
 		return ret_mult;
 	}
 	

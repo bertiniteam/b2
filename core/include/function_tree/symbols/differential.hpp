@@ -27,7 +27,6 @@
 #include "function_tree/node.hpp"
 #include "function_tree/symbols/symbol.hpp"
 #include "function_tree/symbols/number.hpp"
-// #include "function_tree/symbols/variable.hpp"
 
 
 
@@ -75,7 +74,7 @@ namespace bertini {
          */
         std::shared_ptr<Node> Differentiate() override
         {
-            return std::make_shared<Number>(0.0);
+            return std::make_shared<Float>(0.0);
         }
 
 
@@ -93,17 +92,17 @@ namespace bertini {
             return 0;
         }
 
-        int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+        int Degree(VariableGroup const& vars) const override
 		{
 			return 0;
 		}
 		
-        std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+        std::vector<int> MultiDegree(VariableGroup const& vars) const override
         {
             return std::vector<int>(vars.size(),0);
         }
 
-        void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+        void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
         {
             
         }
@@ -121,6 +120,19 @@ namespace bertini {
             return true;
         }
         
+
+        /**
+		 Change the precision of this variable-precision tree node.
+		 
+		 \param prec the number of digits to change precision to.
+		 */
+		virtual void precision(unsigned int prec) override
+		{
+			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			val_pair.first.precision(prec);
+		}
+
+		
     protected:
         // This should never be called for a Differential.  Only for Jacobians.
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override

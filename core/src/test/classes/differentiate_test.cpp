@@ -44,8 +44,7 @@
 
 using Variable = bertini::Variable;
 using Node = bertini::Node;
-using Number = bertini::Number;
-using SpecialNumber = bertini::SpecialNumber;
+
 using Function = bertini::Function;
 using Jacobian = bertini::Jacobian;
 
@@ -130,7 +129,7 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
     bertini::SystemParser<std::string::const_iterator> S;
     phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
     for(auto vv : vars)
     {
@@ -165,7 +164,7 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     BOOST_CHECK_EQUAL(func->Degree(),3);
@@ -220,7 +219,7 @@ BOOST_AUTO_TEST_CASE(diff_constant){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{0,0,0};
@@ -267,7 +266,7 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{1,1,1};
@@ -321,7 +320,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{2,3,0};
@@ -402,7 +401,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{2,-1,0};
@@ -456,7 +455,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{3,0,0};
@@ -508,7 +507,7 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{0,-1,0};
@@ -562,7 +561,7 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{-1,0,0};
@@ -614,7 +613,7 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{0,-1,0};
@@ -667,7 +666,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_z){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     BOOST_CHECK_EQUAL(func->Degree(vars[0]),0);
@@ -714,7 +713,7 @@ BOOST_AUTO_TEST_CASE(diff_exp_x){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
 
@@ -763,7 +762,7 @@ BOOST_AUTO_TEST_CASE(diff_sqrt_y){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
 
@@ -814,7 +813,7 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{0,0,3};
@@ -868,7 +867,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{2,2,2};
@@ -925,7 +924,7 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{-1,-1,0};
@@ -978,7 +977,7 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{-1,0,0};
@@ -1029,7 +1028,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
     sys.SetVariables<mpfr>(var_mpfr);
 
     auto func = sys.function();
-    auto vars = sys.variables();
+    auto vars = sys.Variables();
     auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 
     std::vector<int> multidegree{-1,0,-1};
@@ -1065,6 +1064,69 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 
 
 
+
+
+BOOST_AUTO_TEST_CASE(arcsine_differentiate)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    auto N = asin(pow(x,2)+1);
+    auto J = std::make_shared<Jacobian>(N->Differentiate());
+
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+
+    //(2*x)/(1 - (x^2 + 1)^2)^(1/2)
+    dbl exact_dbl = 2.0*xnum_dbl / pow(1.0 - pow((xnum_dbl*xnum_dbl + 1.0),2),0.5);
+    mpfr exact_mpfr = bertini::complex(2.0)*xnum_mpfr / pow(bertini::complex(1.0) - pow(xnum_mpfr*xnum_mpfr + bertini::complex(1.0),2),mpfr(0.5));
+
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).real() / exact_dbl.real() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+}
+
+
+BOOST_AUTO_TEST_CASE(arccosine_differentiate)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    auto N = acos(pow(x,2)+1);
+    auto J = std::make_shared<Jacobian>(N->Differentiate());
+
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+
+    dbl exact_dbl = -2.0*xnum_dbl / pow(1.0 - pow((xnum_dbl*xnum_dbl + 1.0),2),0.5);
+    mpfr exact_mpfr = -bertini::complex(2.0)*xnum_mpfr / pow(bertini::complex(1.0) - pow(xnum_mpfr*xnum_mpfr + bertini::complex(1.0),2),mpfr(0.5));
+
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).real() / exact_dbl.real() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+}
+
+BOOST_AUTO_TEST_CASE(arctangent_differentiate)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    auto N = atan(pow(x,2)+1);
+    auto J = std::make_shared<Jacobian>(N->Differentiate());
+
+
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+
+    //(2*x)/((x^2 + 1)^2 + 1)
+    dbl exact_dbl = 2.0*xnum_dbl / ( pow((xnum_dbl*xnum_dbl + 1.0),2) + 1.0);
+    mpfr exact_mpfr = bertini::complex(2.0)*xnum_mpfr / ( pow((xnum_mpfr*xnum_mpfr + bertini::complex(1.0)),2) + bertini::complex(1.0));
+
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).real() / exact_dbl.real() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<dbl>(x).imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(J->EvalJ<mpfr>(x).imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+}
+
+
+
+
 //BOOST_AUTO_TEST_CASE(diff_sin_lxy_plus_z_squaredl){
 //    std::string str = "function f; variable_group x,y,z; f = x*y +y^2 - z*x + 9;";
 //
@@ -1074,7 +1136,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 //    bertini::SystemParser<std::string::const_iterator> S;
 //    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 //    auto func = sys.function();
-//    auto vars = sys.variables();
+//    auto vars = sys.Variables();
 //    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 //    for(auto vv : vars)
 //    {
@@ -1093,7 +1155,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 //    bertini::SystemParser<std::string::const_iterator> S;
 //    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 //    auto func = sys.function();
-//    auto vars = sys.variables();
+//    auto vars = sys.Variables();
 //    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 //    for(auto vv : vars)
 //    {
@@ -1112,7 +1174,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 //    bertini::SystemParser<std::string::const_iterator> S;
 //    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 //    auto func = sys.function();
-//    auto vars = sys.variables();
+//    auto vars = sys.Variables();
 //    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 //    for(auto vv : vars)
 //    {
@@ -1131,7 +1193,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 //    bertini::SystemParser<std::string::const_iterator> S;
 //    phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 //    auto func = sys.function();
-//    auto vars = sys.variables();
+//    auto vars = sys.Variables();
 //    auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
 //    for(auto vv : vars)
 //    {
