@@ -17,6 +17,7 @@ b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	src/test/classes/differentiate_test.cpp \
 	src/test/classes/homogenization_test.cpp \
 	src/bertini/system.cpp \
+	src/bertini/start_system.cpp include/start_system.hpp \
 	src/test/classes/start_system_test.cpp
 
 
