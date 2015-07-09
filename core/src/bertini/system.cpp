@@ -816,7 +816,7 @@ namespace bertini
 
 
 
-	System system::operator+=(System const& rhs)
+	System System::operator+=(System const& rhs)
 	{
 		if (this->NumFunctions()!=rhs.NumFunctions())
 			throw std::runtime_error("cannot add two Systems with differing numbers of functions");
@@ -826,15 +826,31 @@ namespace bertini
 
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
 		{
-			iter->SetRoot( *(other.functions_.begin()+(iter-functions.begin()))->entry_node() + (*iter)->entry_node());
+			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->entry_node() + (*iter)->entry_node());
 		}
-		
+
 		return *this;
+	}
+
+	System operator+(System lhs, System const& rhs)
+	{
+		return lhs+=rhs;
 	}
 
 
 
+	System operator*(System const& s, std::shared_ptr<Node> const&  N)
+	{
+		System result;
 
+		return result;
+	}
+	System operator*(std::shared_ptr<Node> const&  N, System const& s)
+	{
+		System result;
+
+		return result;
+	}
 
 
 	System TotalDegreeStartSystem(System const& s)

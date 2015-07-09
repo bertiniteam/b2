@@ -373,7 +373,7 @@ namespace bertini {
         
 
 		System operator+=(System const& rhs);
-		
+
 	private:
 
 		std::vector<Var> ungrouped_variables_;
@@ -410,6 +410,7 @@ namespace bertini {
 
 	System TotalDegreeStartSystem(System const& s);
 
+	System operator+(System lhs, System const& rhs);
 	System operator*(System const& s, std::shared_ptr<Node> const&  N);
 	System operator*(std::shared_ptr<Node> const&  N, System const& s);
 
