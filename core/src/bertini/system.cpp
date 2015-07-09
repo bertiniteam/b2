@@ -24,14 +24,33 @@ namespace bertini
 
 	size_t System::NumVariables() const
 	{
-		return variables_.size();
+		size_t counter = 0;
+
+		counter+=homogenizing_variables_.size();
+		for (auto iter : variable_groups_)
+			counter+= iter.size();
+		for (auto iter : hom_variable_groups_)
+			counter+= iter.size();
+		counter+=ungrouped_variables_.size();
+
+		return counter;
 	}
 
+	size_t System::NumHomVariables() const
+	{
+		return homogenizing_variables_.size();
+	}
 
 	size_t System::NumVariableGroups() const
 	{
 		return variable_groups_.size();
 	}
+
+	size_t System::NumUngroupedVariables() const
+	{
+		return ungrouped_variables_.size();
+	}
+
 
 	size_t System::NumHomVariableGroups() const
 	{
@@ -75,9 +94,6 @@ namespace bertini
 			iter->precision(new_precision);
 		}
 
-		for (auto iter : variables_) {
-			iter->precision(new_precision);
-		}
 
 		for (auto iter :implicit_parameters_) {
 			iter->precision(new_precision);
@@ -95,7 +111,7 @@ namespace bertini
 			path_variable_->precision(new_precision);
 
 
-		for (auto iter : ungrouped_variables_)
+		for (auto iter : homogenizing_variables_)
 			iter->precision(new_precision);
 
 		for (auto iter : variable_groups_)
@@ -105,6 +121,10 @@ namespace bertini
 		for (auto iter : hom_variable_groups_)
 			for (auto jter : iter)
 				jter->precision(new_precision);
+
+		for (auto iter : ungrouped_variables_)
+			iter->precision(new_precision);
+
 
 		precision_ = new_precision;
 	}
@@ -220,14 +240,12 @@ namespace bertini
 
 		SetVariables(variable_values);
 
+		auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+
 		Mat<T> J(NumFunctions(), NumVariables());
 		for (int ii = 0; ii < NumFunctions(); ++ii)
-		{
 			for (int jj = 0; jj < NumVariables(); ++jj)
-			{
-				J(ii,jj) = jacobian_[ii]->EvalJ<T>(variables_[jj]);
-			}
-		}
+				J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
 
 		return J;
 	}
@@ -261,14 +279,12 @@ namespace bertini
 		SetVariables(variable_values);
 		SetPathVariable(path_variable_value);
 
+		auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+		
 		Mat<T> J(NumFunctions(), NumVariables());
 		for (int ii = 0; ii < NumFunctions(); ++ii)
-		{
 			for (int jj = 0; jj < NumVariables(); ++jj)
-			{
-				J(ii,jj) = jacobian_[ii]->EvalJ<T>(variables_[jj]);
-			}
-		}
+				J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
 
 		return J;
 
@@ -283,7 +299,14 @@ namespace bertini
 	void System::Homogenize()
 	{
 
-		
+		// first some checks to make sure the system is compatible with the act of homogenization
+		//
+		//  a system must be:
+		//    * homogeneous already with respect to the homogeneous variable groups
+		//    * polynomial
+		//    * not partially homogenized, in the sense that some groups have been homogenized, and others haven't
+		//    
+		//
 		for (auto curr_function : functions_)
 		{	
 			for (auto curr_var_gp : hom_variable_groups_)
@@ -301,23 +324,40 @@ namespace bertini
 					throw std::runtime_error("non-polynomial function, with homogeneous variable group");
 			}
 		}
-		
 
+		bool already_had_homvars = NumHomVariables()!=0;
+		
+		if (already_had_homvars && NumHomVariables()!=NumVariableGroups())
+			throw std::runtime_error("size mismatch on number of homogenizing variables and number of variable groups");
+
+
+		if (!already_had_homvars)
+		{
+			homogenizing_variables_.resize(NumVariableGroups());
+			// already_had_homvars = false;
+		}
 
 		auto group_counter = 0;
 		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
 		{
 			std::stringstream converter;
 			converter << "HOM_VAR_" << group_counter;
-			Var hom_var = std::make_shared<Variable>(converter.str());
 
-			for (auto curr_function : functions_)
-			{
-				curr_function->Homogenize(*curr_var_gp, hom_var);
-				
+			Var hom_var;
+			if (already_had_homvars){
+				hom_var = homogenizing_variables_[group_counter];
+				if (hom_var->name()==converter.str())
+					throw std::runtime_error("duplicate names for homogenizing variables in system during homogenization");
 			}
-			curr_var_gp->push_front(hom_var);
-			variables_.push_back(hom_var);
+			else
+			{
+				hom_var = std::make_shared<Variable>(converter.str());
+				homogenizing_variables_[group_counter] = hom_var;
+			}
+		
+			for (auto curr_function : functions_)
+				curr_function->Homogenize(*curr_var_gp, hom_var);
+
 			group_counter++;
 		}
 
@@ -330,26 +370,32 @@ namespace bertini
 
 	bool System::IsHomogeneous() const
 	{
+		bool have_homvars = NumHomVariables()!=0;
+		if (have_homvars && NumHomVariables()!=NumVariableGroups())
+			throw std::runtime_error("trying to check homogoneity on a partially-formed system.  mismatch between number of homogenizing variables, and number of variable groups");
+
+
 		for (auto iter : functions_)
 		{
-			if (!iter->IsHomogeneous(variables_))
-			{
-				return false;
-			}
+			auto counter = 0;
 			for (auto vars : variable_groups_)
 			{
-				if (!iter->IsHomogeneous(vars))
-				{
+				auto tempvars = vars;
+				if (have_homvars)
+					tempvars.push_front(homogenizing_variables_[counter]);
+				counter++;
+
+				if (!iter->IsHomogeneous(tempvars))
 					return false;
-				}
+
 			}
 			for (auto vars : hom_variable_groups_)
-			{
 				if (!iter->IsHomogeneous(vars))
-				{
 					return false;
-				}
-			}
+
+			if (NumUngroupedVariables()>0)
+				if (!iter->IsHomogeneous(ungrouped_variables_))
+					return false;
 
 		}
 		return true;
@@ -358,26 +404,29 @@ namespace bertini
 
 	bool System::IsPolynomial() const
 	{
+		bool have_homvars = NumHomVariables()!=0;
+		if (have_homvars && NumHomVariables()!=NumVariableGroups())
+			throw std::runtime_error("trying to check polynomiality on a partially-formed system.  mismatch between number of homogenizing variables, and number of variable groups");
+
+
 		for (auto iter : functions_)
 		{
-			if (!iter->IsPolynomial(variables_))
-			{
-				return false;
-			}
+			auto counter = 0;
 			for (auto vars : variable_groups_)
 			{
-				if (!iter->IsPolynomial(vars))
-				{
+				auto tempvars = vars;
+				if (have_homvars)
+					tempvars.push_front(homogenizing_variables_[counter]);
+
+				counter++;
+
+				if (!iter->IsPolynomial(tempvars))
 					return false;
-				}
+
 			}
 			for (auto vars : hom_variable_groups_)
-			{
 				if (!iter->IsPolynomial(vars))
-				{
 					return false;
-				}
-			}
 
 		}
 		return true;
@@ -396,13 +445,14 @@ namespace bertini
 	template<typename T>
 	void System::SetVariables(const Vec<T> & new_values)
 	{
-		assert(new_values.size()== variables_.size());
+		assert(new_values.size()== NumVariables());
 
-		{ // for scoping of the counter.
-			auto counter = 0;
-			for (auto iter=variables_.begin(); iter!=variables_.end(); iter++, counter++) {
-				(*iter)->set_current_value(new_values(counter));
-			}
+		auto vars = Variables();
+
+		auto counter = 0;
+
+		for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
+			(*iter)->set_current_value(new_values(counter));
 		}
 
 	}
@@ -467,7 +517,6 @@ namespace bertini
 	void System::AddVariableGroup(VariableGroup const& v)
 	{
 		variable_groups_.push_back(v);
-		variables_.insert( variables_.end(), v.begin(), v.end() );
 		is_differentiated_ = false;
 	}
 
@@ -477,7 +526,6 @@ namespace bertini
 	void System::AddHomVariableGroup(VariableGroup const& v)
 	{
 		hom_variable_groups_.push_back(v);
-		variables_.insert( variables_.end(), v.begin(), v.end() );
 		is_differentiated_ = false;
 	}
 
@@ -488,7 +536,6 @@ namespace bertini
 	void System::AddUngroupedVariable(Var const& v)
 	{
 		ungrouped_variables_.push_back(v);
-		variables_.push_back(v);
 		is_differentiated_ = false;
 	}
 
@@ -498,7 +545,6 @@ namespace bertini
 	void System::AddUngroupedVariables(VariableGroup const& v)
 	{
 		ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
-		variables_.insert( variables_.end(), v.begin(), v.end() );
 		is_differentiated_ = false;
 	}
 
@@ -626,6 +672,41 @@ namespace bertini
 
 
 
+	VariableGroup System::Variables() const
+	{
+		
+
+		if (NumHomVariables()!=0 && NumHomVariables() != NumVariableGroups())
+			throw std::runtime_error("mismatch between number of homogenizing variables, and number of variables groups.  unable to form variable vector in standard ordering.");
+
+		VariableGroup vars;
+
+		vars.insert(vars.end(),homogenizing_variables_.begin(),homogenizing_variables_.end());
+
+		for (auto iter=variable_groups_.begin(); iter!=variable_groups_.end(); iter++)
+			vars.insert(vars.end(),iter->begin(),iter->end());
+			
+
+
+		for (auto iter=hom_variable_groups_.begin(); iter!=hom_variable_groups_.end(); iter++)
+			vars.insert(vars.end(),iter->begin(),iter->end());
+
+		vars.insert(vars.end(),ungrouped_variables_.begin(),ungrouped_variables_.end());
+
+	    return vars;
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	std::vector<int> System::Degrees() const
 	{
@@ -651,7 +732,7 @@ namespace bertini
 
 	void System::ReorderFunctionsByDegreeDecreasing()
 	{
-		auto degs = Degrees(variables_);
+		auto degs = Degrees(Variables());
 
 		// now we sort a vector of the indexing numbers by the degrees contained in degs.
 		std::vector<size_t> indices(degs.size());
@@ -678,7 +759,7 @@ namespace bertini
 
 	void System::ReorderFunctionsByDegreeIncreasing()
 	{
-		auto degs = Degrees(variables_);
+		auto degs = Degrees(Variables());
 
 		// now we sort a vector of the indexing numbers by the degrees contained in degs.
 		std::vector<size_t> indices(degs.size());
@@ -709,7 +790,6 @@ namespace bertini
 		variable_groups_.clear();
 		hom_variable_groups_.clear();
 		homogenizing_variables_.clear();
-		variables_.clear();
 
 		path_variable_.reset();
 		have_path_variable_ = false;
@@ -725,7 +805,6 @@ namespace bertini
 		this->variable_groups_ = other.variable_groups_;
 		hom_variable_groups_ = other.hom_variable_groups_;
 		homogenizing_variables_ = other.homogenizing_variables_;
-		variables_ = other.variables_;
 
 		path_variable_ = other.path_variable_;
 		have_path_variable_ = other.have_path_variable_;
@@ -742,63 +821,55 @@ namespace bertini
 
 	std::ostream& operator<<(std::ostream& out, const bertini::System & s)
 	{
-		out << "system:\n\n";
-		out << s.NumVariables() << " variables:\n";
-		for (auto iter : s.variables_) {
-			out << (iter)->name() << "\n";
-		}
-		out << "\n";
 
 
 		out << s.NumVariableGroups() << " variable groups, containing these variables:\n";
 		auto counter = 0;
 		for (auto iter : s.variable_groups_)
 		{
-			out << "group" << counter << " - "<< "\n";
+			out << "group " << counter << ": "<< "\n";
 			for (auto jter : iter)
-			{
 				out << *jter << " ";
-			}
+
+
 			out << "\n";
 			counter++;
 		}
 
+		out << s.NumHomVariables() << " homogenizing variables:\n";
+		for (auto iter : s.homogenizing_variables_)
+			out << iter << " ";
+		out << "\n";
+
+
 		out << s.NumFunctions() << " functions:\n";
-		for (auto iter : s.functions_) {
-			out << (iter)->name() << "\n";
-			out << *iter << "\n";
-		}
+		for (auto iter : s.functions_) 
+			out << (iter)->name() << " = " << *iter << "\n";
 		out << "\n";
 
 
 		if (s.NumParameters()) {
 			out << s.NumParameters() << " explicit parameters:\n";
-			for (auto iter : s.explicit_parameters_) {
-				out << (iter)->name() << "\n";
-				out << *iter << "\n";
-			}
+			for (auto iter : s.explicit_parameters_)
+				out << (iter)->name() << " = " << *iter << "\n";
 			out << "\n";
 		}
 
 
 		if (s.NumConstants()) {
 			out << s.NumConstants() << " constants:\n";
-			for (auto iter : s.constant_subfunctions_) {
-				out << (iter)->name() << "\n";
-				out << *iter << "\n";
-			}
+			for (auto iter : s.constant_subfunctions_)
+				out << (iter)->name() << " = " << *iter << "\n";
 			out << "\n";
 		}
 
-		if (s.path_variable_) {
+		if (s.path_variable_)
 			out << "path variable defined.  named " << s.path_variable_->name() << "\n";
-		}
 
 		if (s.is_differentiated_)
 		{
 			for (auto iter : s.jacobian_) {
-				out << (iter)->name() << "\n";
-				out << *iter << "\n";
+				out << (iter)->name() << " = " << *iter << "\n";
 			}
 			out << "\n";
 		}
