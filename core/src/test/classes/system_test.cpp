@@ -472,6 +472,48 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
 
 }
+
+
+
+BOOST_AUTO_TEST_CASE(add_two_systems)
+{
+	bertini::System sys1, sys2;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+
+	VariableGroup vars;
+	vars.push_back(x); vars.push_back(y);
+
+	sys1.AddVariableGroup(vars);  
+	sys1.AddFunction(y+1);
+	sys1.AddFunction(x*y);
+
+	sys2.AddVariableGroup(vars);  
+	sys2.AddFunction(-y-1);
+	sys2.AddFunction(-x*y);
+
+	sys1+=sys2;
+
+
+	Vec<dbl> values(2);
+
+	values << dbl(2.0), dbl(3.0);
+
+	auto v = sys1.Eval(values);
+
+	BOOST_CHECK_EQUAL(v(0), 0.0);
+	BOOST_CHECK_EQUAL(v(1), 0.0);
+
+	auto deg = sys1.Degrees();
+
+	BOOST_CHECK_EQUAL(deg.size(),2);
+	if (deg.size()==2)
+	{
+		BOOST_CHECK_EQUAL(deg[0],1);
+		BOOST_CHECK_EQUAL(deg[1],2);
+	}
+
+
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 

@@ -838,18 +838,25 @@ namespace bertini
 	}
 
 
-
-	System operator*(System const& s, std::shared_ptr<Node> const&  N)
+	System System::operator*=(std::shared_ptr<Node> const& N)
 	{
-		System result;
-
-		return result;
+		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
+		{
+			(*iter)->SetRoot( N * (*iter)->entry_node());
+		}
+		return *this;
 	}
+
+
+	System operator*(System s, std::shared_ptr<Node> const&  N)
+	{
+		return s*=N;
+	}
+
+
 	System operator*(std::shared_ptr<Node> const&  N, System const& s)
 	{
-		System result;
-
-		return result;
+		return s*N;
 	}
 
 
