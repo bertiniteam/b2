@@ -28,7 +28,7 @@ namespace bertini {
 
 			auto original_varible_groups = s.variableGroups();
 
-			auto original_variables = s.variables();
+			auto original_variables = s.Variables();
 
 
 			random_values_.resize(s.NumFunctions());
