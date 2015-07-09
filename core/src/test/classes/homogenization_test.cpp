@@ -7,8 +7,8 @@
 
 
 using Var = std::shared_ptr<bertini::Variable>;
-using Num = std::shared_ptr<bertini::Number>;
-
+using Num = std::shared_ptr<bertini::Float>;
+using VariableGroup = bertini::VariableGroup;
 
 BOOST_AUTO_TEST_SUITE(homogenization)
 
@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 	
 	BOOST_CHECK(f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 
 	f1->Homogenize(vars,h);
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 
 	f1->Homogenize(vars,h);
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 	BOOST_CHECK(!f1->IsHomogeneous());
 
 	Var h = std::make_shared<bertini::Variable>("h");
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 
 	f1->Homogenize(vars,h);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 	
 	BOOST_CHECK(f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 
 	f1->Homogenize(vars,h);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 	vars.push_back(y);
 
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 	vars.push_back(y);
 	vars.push_back(z);
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 	auto f1 = x*y+x*z+y*z-1;
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 	vars.push_back(y);
 	vars.push_back(z);
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 
 	f1->Homogenize(vars,h);
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(x);
 
 	f1->Homogenize(vars,h);
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	std::vector<Var> vars;
+	VariableGroup vars;
 	vars.push_back(y);
 
 	f1->Homogenize(vars,h);
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_sqrt_x)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 {
-	Num n = std::make_shared<bertini::Number>("1");
+	Num n = std::make_shared<bertini::Float>("1");
 
 	auto f1 = sin(n);
 	
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 {
-	Num n = std::make_shared<bertini::Number>("1");
+	Num n = std::make_shared<bertini::Float>("1");
 
 	auto f1 = cos(n);
 	
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_1_plus_1)
 {
-	Num n = std::make_shared<bertini::Number>("1");
+	Num n = std::make_shared<bertini::Float>("1");
 
 	auto f1 = sin(n + n);
 	

@@ -14,7 +14,8 @@ test_tree_interactive_source_files = \
 test_tree_interactive_SOURCES = \
 	$(test_tree_interactive_source_files) \
 	$(function_tree) \
-	system.hpp
+	system.hpp src/bertini/system.cpp \
+	src/bertini/start_system.cpp include/start_system.cpp
 
 #test_tree_interactive_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  \
 #	$(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) \

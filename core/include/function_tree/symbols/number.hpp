@@ -25,7 +25,7 @@
 
 
 #include "function_tree/symbols/symbol.hpp"
-
+#include <boost/multiprecision/mpfr.hpp>
 
 namespace bertini {
 
@@ -37,52 +37,10 @@ namespace bertini {
 	class Number : public virtual Symbol
 	{
 	public:
-		Number(){};
+
+		virtual ~Number() = default;
 
 
-		Number(int val)
-		{
-            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(val,0.0);
-            std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(val,0.0);
-		}
-
-		Number(double val)
-		{
-            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(val,0.0);
-            std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(val,0.0);
-		}
-
-        Number(double rval, double ival)
-        {
-            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(rval,ival);
-            std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(rval,ival);
-		}
-
-
-
-		// Ctor that reads in a string for the real component and converts it to a number of the appropriate type
-		Number(std::string sval)
-		{
-            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(stod(sval), 0.0);
-			std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(sval, "0.0");
-		}
-
-        // Ctor that reads in two strings for a complex number and converts it to a number of the appropriate type
-        Number(std::string srval, std::string sival)
-        {
-            std::get< std::pair<dbl,bool> >(current_value_).first = dbl(stod(srval), stod(sival));
-            std::get< std::pair<mpfr,bool> >(current_value_).first = mpfr(srval, sival);
-        }
-
-
-
-
-
-
-		void print(std::ostream & target) const override
-		{
-			target << std::get< std::pair<mpfr,bool> >(current_value_).first;
-		}
 
 		void Reset() override
 		{
@@ -90,13 +48,7 @@ namespace bertini {
 		}
 
 
-        /**
-         Differentiates a number.  Should this return the special number Zero?
-         */
-        std::shared_ptr<Node> Differentiate() override
-        {
-            return std::make_shared<Number>(0.0);
-        }
+        
 
        
 
@@ -112,18 +64,18 @@ namespace bertini {
 	    }
 
 
-	    int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override
+	    int Degree(VariableGroup const& vars) const override
 		{
 			return 0;
 		}
 
-		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override
 		{
 			return std::vector<int>(vars.size(), 0);
 		}
 
 
-	    void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override
+	    void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			
 		}
@@ -141,21 +93,171 @@ namespace bertini {
 			return true;
 		}
 
-		virtual ~Number() = default;
+		
+		/**
+		 Change the precision of this variable-precision tree node.
+		 
+		 \param prec the number of digits to change precision to.
+		 */
+		virtual void precision(unsigned int prec) override
+		{
+			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			val_pair.first.precision(prec);
+		}
+
 
 
 	protected:
+		
+
+	};
+
+
+
+	class Float : public virtual Number
+	{
+	public:
+		Float();
+
+		Float(double val)
+		{
+			if (highest_precision_value_.precision()<17)
+			{
+				highest_precision_value_.precision(17);
+			}
+			highest_precision_value_ = val;
+			
+		}
+
+
+		Float(double rval, double ival)
+		{
+			if (highest_precision_value_.precision()<17)
+			{
+				highest_precision_value_.precision(17);
+			}
+			highest_precision_value_ = mpfr(rval,ival);
+
+		}
+
+
+		Float(dbl val)
+		{
+			highest_precision_value_.precision(17);
+			highest_precision_value_.real(real(val));
+			highest_precision_value_.imag(imag(val));
+		}
+
+
+		Float(mpfr const& val)
+		{
+			highest_precision_value_.precision(val.precision());
+			highest_precision_value_ = val;
+		}
+
+		Float(boost::multiprecision::mpfr_float const& rval, boost::multiprecision::mpfr_float const& ival)
+		{
+			highest_precision_value_.precision(std::max(rval.precision(),ival.precision()));
+			highest_precision_value_.real(rval);
+			highest_precision_value_.imag(ival);
+		}
+
+		Float(std::string const& val) 
+		{
+			highest_precision_value_.precision(val.size());
+			highest_precision_value_.real(val);
+			highest_precision_value_.imag("0.0");
+		}
+
+		Float(std::string const& rval, std::string const& ival) 
+		{
+			highest_precision_value_.precision(std::max(rval.size(),ival.size()));
+			highest_precision_value_.real(rval);
+			highest_precision_value_.imag(ival);
+		}
+
+		~Float() = default;
+		
+
+
+
+
+		void print(std::ostream & target) const override
+		{
+			target << highest_precision_value_;
+		}
+
+
+		/**
+         Differentiates a number.  Should this return the special number Zero?
+         */
+        std::shared_ptr<Node> Differentiate() override
+        {
+            return std::make_shared<Float>(0.0);
+        }
+
+
+	private:
 		// Return value of constant
         dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
         {
-            return std::get< std::pair<dbl,bool> >(current_value_).first;
+            return dbl(highest_precision_value_);
         }
 
         mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
         {
-            return std::get< std::pair<mpfr,bool> >(current_value_).first;
+            return mpfr(highest_precision_value_);
         }
 
+		mpfr highest_precision_value_;
+
+	};
+
+
+
+	class Integer : public virtual Number
+	{
+	public:
+		Integer();
+
+		Integer(int val) : true_value_(val)
+		{}
+
+		~Integer() = default;
+		
+
+
+
+		void print(std::ostream & target) const override
+		{
+			target << true_value_;
+		}
+
+
+		/**
+         Differentiates a number.  Should this return the special number Zero?
+         */
+        std::shared_ptr<Node> Differentiate() override
+        {
+            return std::make_shared<Integer>(0);
+        }
+
+
+
+	private:
+
+		// Return value of constant
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return dbl(true_value_,0.0);
+        }
+
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return mpfr(true_value_,0.0);
+        }
+
+		int true_value_;
 	};
 
 

@@ -117,14 +117,14 @@ namespace bertini {
 			
 			
 			
-			special_numbers_.add("pi", std::make_shared<SpecialNumber>("pi"));
+			special_numbers_.add("pi", Pi());
 			special_numbers_.add("Pi", special_numbers_.at("pi"));
 			
-			special_numbers_.add("e", std::make_shared<SpecialNumber>("e"));
+			special_numbers_.add("e", E());
 			special_numbers_.add("E", special_numbers_.at("e"));
 			
 			
-			special_numbers_.add("i", std::make_shared<SpecialNumber>("i"));
+			special_numbers_.add("i", I());
 			special_numbers_.add("I", special_numbers_.at("i"));
 			
 			
@@ -144,7 +144,7 @@ namespace bertini {
 			
 			
 			//TODO refine this so that counts are enforced at parse time?
-			root_rule_.name("root_rule_");
+			root_rule_.name("system_parsing");
 			root_rule_ =
 			*(
 				variable_group_ [phx::bind(&System::AddVariableGroup, _val, _1)]
@@ -297,7 +297,7 @@ namespace bertini {
 			qi::on_error<qi::fail>
 			( root_rule_ ,
 			 std::cout<<
-			 val("System parser error. Expecting ")<<
+			 val("System parser could not complete parsing. Expecting ")<<
 			 _4<<
 			 val(" here: ")<<
 			 construct<std::string>(_3,_2)<<
@@ -316,8 +316,8 @@ namespace bertini {
 		qi::rule<Iterator, System(), Skipper > root_rule_;
 		
 		
-		qi::rule<Iterator, std::vector<Var>(), Skipper > variable_group_, hom_variable_group_, variables_, implicit_parameters_;
-		qi::rule<Iterator, std::vector<Var>(), Skipper > genericvargp_;
+		qi::rule<Iterator, VariableGroup(), Skipper > variable_group_, hom_variable_group_, variables_, implicit_parameters_;
+		qi::rule<Iterator, VariableGroup(), Skipper > genericvargp_;
 		
 		qi::rule<Iterator, Var(), Skipper> path_variable_;
 		qi::rule<Iterator, Var()> new_variable_;

@@ -127,12 +127,12 @@ namespace bertini {
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 
-		int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const;
+		int Degree(VariableGroup const& vars) const;
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 	    */
-		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override;
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
 
@@ -141,7 +141,7 @@ namespace bertini {
 		/**
 		 Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
 		 */
-		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar);
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar);
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -150,6 +150,11 @@ namespace bertini {
 		*/
 		bool IsHomogeneous(VariableGroup const& vars) const override;
 		
+
+	 
+
+
+
 	protected:
 		/**
 		 Specific implementation of FreshEval for add and subtract.
@@ -207,7 +212,7 @@ namespace bertini {
 		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
 		
 		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Number>(rhs));
+		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Float>(rhs));
 		
 		lhs.swap(temp);
 		return lhs;
@@ -225,14 +230,44 @@ namespace bertini {
 	
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, double rhs)
 	{
-		return std::make_shared<SumOperator>(lhs,std::make_shared<Number>(rhs));
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator+(double lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<SumOperator>(std::make_shared<Number>(lhs), rhs);
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 	
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, dbl rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, std::make_shared<Float>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator+(dbl lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator+(mpfr lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, int rhs)
+	{
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Integer>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator+(int lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), rhs);
+	}
+
 	
 	
 	
@@ -260,7 +295,7 @@ namespace bertini {
 		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
 		
 		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Number>(rhs),false);
+		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Float>(rhs),false);
 		
 		lhs.swap(temp);
 		return lhs;
@@ -273,16 +308,45 @@ namespace bertini {
 	
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, double rhs)
 	{
-		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Number>(rhs), false);
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(double lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<SumOperator>(std::make_shared<Number>(lhs), true, rhs, false);
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 	
 	
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, dbl rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
 	
+	inline std::shared_ptr<Node> operator-(dbl lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator-(mpfr lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, int rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Integer>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator-(int lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
+	}
+
 	
 	
 	
@@ -425,15 +489,15 @@ namespace bertini {
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 
-		int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override;
+		int Degree(VariableGroup const& vars) const override;
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 	    */
-		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override;
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
-		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -482,7 +546,7 @@ namespace bertini {
 		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
 		
 		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Number>(rhs));
+		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Float>(rhs));
 		
 		lhs.swap(temp);
 		return lhs;
@@ -491,17 +555,43 @@ namespace bertini {
 	
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, double rhs)
 	{
-		return std::make_shared<MultOperator>(lhs,std::make_shared<Number>(rhs));
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator*(double lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<MultOperator>(std::make_shared<Number>(lhs), rhs);
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+	
+
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, dbl rhs)
+	{
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator*(dbl lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
+	}
+	
+	inline std::shared_ptr<Node> operator*(mpfr lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, int rhs)
+	{
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Integer>(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator*(int lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<MultOperator>(std::make_shared<Number>(lhs), rhs);
+		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), rhs);
 	}
 	
 	
@@ -556,7 +646,7 @@ namespace bertini {
 		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
 		
 		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Number>(rhs),false);
+		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Float>(rhs),false);
 		
 		lhs.swap(temp);
 		return lhs;
@@ -568,16 +658,49 @@ namespace bertini {
 		return lhs/=rhs;
 	}
 	
+
+
+
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, double rhs)
 	{
-		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Number>(rhs), false);
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator/(double lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<MultOperator>(std::make_shared<Number>(lhs), true, rhs, false);
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 	
+
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, dbl rhs)
+	{
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator/(dbl lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator/(mpfr lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, int rhs)
+	{
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Integer>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator/(int lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
+	}
 	
 	
 	/**
@@ -629,16 +752,16 @@ namespace bertini {
 		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
-		int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const override;
+		int Degree(VariableGroup const& vars) const override;
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 	    */
-		std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const override;
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
 
-		void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) override;
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
@@ -649,6 +772,22 @@ namespace bertini {
 
 		virtual ~PowerOperator() = default;
 		
+		/**
+		 Change the precision of this variable-precision tree node.
+		 
+		 \param prec the number of digits to change precision to.
+		 */
+		virtual void precision(unsigned int prec) override
+		{
+			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			val_pair.first.precision(prec);
+
+			base_->precision(prec);
+			exponent_->precision(prec);
+		}
+
+
+
 	protected:
 		
 		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
@@ -674,10 +813,19 @@ namespace bertini {
 	
 	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, double p)
 	{
-		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Number>(p));
+		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
 	}
 	
-	
+
+	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, dbl p)
+	{
+		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
+	}
+
+	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, mpfr p)
+	{
+		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
+	}
 	
 	
 	

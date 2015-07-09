@@ -36,6 +36,7 @@
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
 
+#include <deque>
 
 
 
@@ -43,7 +44,7 @@ using mpfr = bertini::complex;
 namespace bertini {
 class Variable;
 
-using VariableGroup = std::vector< std::shared_ptr<Variable> >;
+using VariableGroup = std::deque< std::shared_ptr<Variable> >;
 
 // Description: An interface for all nodes in a function tree, and for a function object as well.  Almost all
 //          methods that will be called on a node must be declared in this class.  The main evaluation method is
@@ -117,17 +118,17 @@ public:
     /**
 	 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
     */
-	virtual std::vector<int> MultiDegree(std::vector< std::shared_ptr<Variable> > const& vars) const = 0;
+	virtual std::vector<int> MultiDegree(VariableGroup const& vars) const = 0;
 
 	/**
 	 Compute the overall degree with respect to a variable group.
 	*/
-	virtual int Degree(std::vector< std::shared_ptr<Variable > > const& vars) const = 0;
+	virtual int Degree(VariableGroup const& vars) const = 0;
 
 	/**
 	Homogenize a tree, inputting a variable group holding the non-homogeneous variables, and the new homogenizing variable.  The homvar may be an element of the variable group, that's perfectly ok.
 	*/
-	virtual void Homogenize(std::vector< std::shared_ptr< Variable > > const& vars, std::shared_ptr<Variable> const& homvar) = 0;
+	virtual void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) = 0;
 
 	/**
 	Check for homogeneity, absolutely with respect to all variables, including path variables and all other variable types, or with respect to a single varaible, if passed. 
@@ -138,8 +139,16 @@ public:
 	Check for homogeneity, with respect to a variable group.
 	*/
 	virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
-    ///////// PUBLIC PURE METHODS /////////////////
     
+    
+    /**
+	 Change the precision of this variable-precision tree node.
+	 
+	 \param prec the number of digits to change precision to.
+	 */
+	virtual void precision(unsigned int prec) = 0;
+
+	///////// PUBLIC PURE METHODS /////////////////
 
 	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const
 	{
@@ -150,6 +159,11 @@ public:
 	{
 		return Degree(v)>=0;
 	}
+
+
+	
+	
+	
 
 protected:
     //Stores the current value of the node in all required types
@@ -179,21 +193,22 @@ protected:
 	}
 
 };
-
+	
+	/**
+	 a single layer of indirection, though which to call the overridden virtual print() method which must be defined for each non-abstract Node type.
+	 */
+	inline std::ostream& operator<<(std::ostream & out, const bertini::Node& N)
+	{
+		N.print(out);
+		return out;
+	}
 	
 } // re: namespace bertini
 
 
 
 namespace  {
-	/**
-	 a single layer of indirection, though which to call the overridden virtual print() method which must be defined for each non-abstract Node type.
-	 */
-	std::ostream& operator<<(std::ostream & out, const bertini::Node& N)
-	{
-		N.print(out);
-		return out;
-	}
+	
 } // re: namespace {}
 
 

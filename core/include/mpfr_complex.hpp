@@ -304,7 +304,15 @@ namespace bertini {
 		}
 		
 		
-		
+		/**
+		 Produce a random complex number
+		 */
+		inline static complex rand()
+		{
+			complex returnme( RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			returnme /= sqrt( returnme.abs());
+			return returnme;
+		}
 		
 		
 		
@@ -554,8 +562,16 @@ namespace bertini {
 			}
 		}
 		
-		
-		
+		bool operator==(complex const& rhs) const
+		{
+			return (this->real()==rhs.real()) && (this->imag()==rhs.imag());
+		}
+
+
+		explicit operator std::complex<double> () const
+		{
+			return std::complex<double>(double(real_), double(imag_));
+		}
 		
 		///////
 		//TODO: write MPI methods, for sending, receiving, broadcasting, etc.  this will require becoming familiar with Boost.MPI
@@ -909,7 +925,7 @@ namespace bertini {
 		return complex( log(abs(z)), arg(z));
 	}
 	
-	
+
 	
 	/**
 	 Compute c^z, for c,z complex numbers
@@ -978,15 +994,7 @@ namespace bertini {
 	
 	
 	
-	/**
-	 Produce a random complex number
-	 */
-	inline complex rand()
-	{
-		complex returnme( RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")) );
-		returnme /= sqrt( bertini::abs(returnme));
-		return returnme;
-	}
+	
 	
 } // re: namespace
 
