@@ -703,9 +703,34 @@ namespace bertini
 
 
 
+	void System::ClearVariables()
+	{
+		ungrouped_variables_.clear();
+		variable_groups_.clear();
+		hom_variable_groups_.clear();
+		homogenizing_variables_.clear();
+		variables_.clear();
+
+		path_variable_.reset();
+		have_path_variable_ = false;
+	}
 
 
 
+	void System::CopyVariableStructure(System const& other)
+	{
+		this->ClearVariables();
+
+		this->ungrouped_variables_ = other.ungrouped_variables_;
+		this->variable_groups_ = other.variable_groups_;
+		hom_variable_groups_ = other.hom_variable_groups_;
+		homogenizing_variables_ = other.homogenizing_variables_;
+		variables_ = other.variables_;
+
+		path_variable_ = other.path_variable_;
+		have_path_variable_ = other.have_path_variable_;
+
+	}
 
 
 	
@@ -791,7 +816,21 @@ namespace bertini
 
 
 
+	System system::operator+=(System const& rhs)
+	{
+		if (this->NumFunctions()!=rhs.NumFunctions())
+			throw std::runtime_error("cannot add two Systems with differing numbers of functions");
 
+		if (this->NumVariables()!=rhs.NumVariables())
+			throw std::runtime_error("cannot add two Systems with differing numbers of variables");
+
+		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
+		{
+			iter->SetRoot( *(other.functions_.begin()+(iter-functions.begin()))->entry_node() + (*iter)->entry_node());
+		}
+		
+		return *this;
+	}
 
 
 
@@ -829,15 +868,12 @@ namespace bertini
 
 		System TD;
 
-		for (auto iter : original_varible_groups)
-		{
-			TD.AddVariableGroup(iter);
-		}
+		TD.CopyVariableStructure(s);
 
 
 		for (auto iter = original_variables.begin(); iter!=original_variables.end(); iter++)
 		{
-			TD.AddFunction(pow(*iter,*(degrees.begin() + (iter-original_variables.begin()))) - 1); // TODO: make this 1 random complex number.
+			TD.AddFunction(pow(*iter,*(degrees.begin() + (iter-original_variables.begin()))) - 1); ///< TODO: make this 1 be a random complex number.
 		} 
 
 		return TD;

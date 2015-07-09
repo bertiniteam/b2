@@ -359,10 +359,21 @@ namespace bertini {
 		friend std::ostream& operator <<(std::ostream& out, const System & s);
 
 
+		/**
+		 Clear the entire structure of variables in a system.
+		*/
+		void ClearVariables();
 
 
+		/**
+		 Copy the entire structure of variables from within one system to another.
+		  This copies everything -- ungrouped variables, variable groups, homogenizing variables, the path variable, the ordering of the variables.s
+		*/ 
+		void CopyVariableStructure(System const& other);
         
 
+		System operator+=(System const& rhs);
+		
 	private:
 
 		std::vector<Var> ungrouped_variables_;
@@ -398,6 +409,12 @@ namespace bertini {
 
 
 	System TotalDegreeStartSystem(System const& s);
+
+	System operator*(System const& s, std::shared_ptr<Node> const&  N);
+	System operator*(std::shared_ptr<Node> const&  N, System const& s);
+
+
+
 }
 
 
