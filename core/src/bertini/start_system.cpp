@@ -6,13 +6,14 @@ namespace bertini {
 
 	namespace start_system {
 
+		// constructor for TotalDegree start system, from any other *suitable* system.
 		TotalDegree::TotalDegree(System const& s)
 		{
 			if (s.NumFunctions() != s.NumVariables())
 				throw std::runtime_error("attempting to construct total degree start system from non-square target system");
 
 			if (s.HavePathVariable())
-				throw std::runtime_error("target system has path varible declared already");
+				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");
 
 			if (s.NumVariableGroups() != 1)
 				throw std::runtime_error("more than one variable group.  currently unallowed");
@@ -24,7 +25,7 @@ namespace bertini {
 				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
 
 
-			auto degrees = s.Degrees();
+			degrees_ = s.Degrees();
 
 			auto original_varible_groups = s.variableGroups();
 
@@ -46,13 +47,42 @@ namespace bertini {
 
 			for (auto iter = original_variables.begin(); iter!=original_variables.end(); iter++)
 			{
-				AddFunction(pow(*iter,*(degrees.begin() + (iter-original_variables.begin()))) - random_values_(iter-original_variables.begin())); ///< TODO: make this 1 be a random complex number.
+				AddFunction(pow(*iter,*(degrees_.begin() + (iter-original_variables.begin()))) - random_values_(iter-original_variables.begin())); ///< TODO: make this 1 be a random complex number.
 			} 
-		}
+
+			boost::multiprecision::mpfr_float::default_precision(prev_prec);
+
+		}// total degree constructor
 
 		
-	}
-	
+		
+		
+
+		size_t TotalDegree::NumStartPoints() const
+		{
+			size_t num_start_points = 1;
+			for (auto iter : degrees_)
+				num_start_points*=iter;
+			return num_start_points;
+		}
 
 
-}
+		
+		Vec<dbl> TotalDegree::GenerateStartPoint(dbl,size_t index) const
+		{
+			Vec<dbl> start_point(NumVariables());
+
+			return start_point;
+		}
+
+
+		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,size_t index) const
+		{
+			Vec<mpfr> start_point(NumVariables());
+
+			return start_point;
+		}
+
+
+	} // namespace start_system
+} //namespace bertini
