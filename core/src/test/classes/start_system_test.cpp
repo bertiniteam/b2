@@ -50,6 +50,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 	
 	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
 
+	BOOST_CHECK_EQUAL(TD.NumStartPoints(), 1);
 }
 
 
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 	
 	
 	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
-
+	BOOST_CHECK_EQUAL(TD.NumStartPoints(), 4);
 }
 
 
@@ -143,6 +144,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	BOOST_CHECK_EQUAL(J(1,0),0.0);
 	BOOST_CHECK_EQUAL(J(1,1),1.0);
 
+	BOOST_CHECK_EQUAL(TD.NumStartPoints(), 1);
 }
 
 
@@ -222,6 +224,8 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	BOOST_CHECK_EQUAL(J(2,1),0.0);
 	BOOST_CHECK_EQUAL(J(2,2),0.0);
 
+
+	BOOST_CHECK_EQUAL(TD.NumStartPoints(), 24);
 }
 
 
