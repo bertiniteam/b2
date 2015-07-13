@@ -34,11 +34,11 @@ namespace bertini {
 
 			random_values_.resize(s.NumFunctions());
 
-			auto prev_prec = boost::multiprecision::mpfr_float::default_precision();
-			boost::multiprecision::mpfr_float::default_precision(4000);
+			// auto prev_prec = boost::multiprecision::mpfr_float::default_precision();
+			// boost::multiprecision::mpfr_float::default_precision(4000);
 			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
 			{
-				random_values_(ii) = bertini::complex::rand();
+				random_values_[ii] = std::make_shared<Rational>(bertini::Rational::Rand());
 			}
 
 
@@ -47,10 +47,10 @@ namespace bertini {
 
 			for (auto iter = original_variables.begin(); iter!=original_variables.end(); iter++)
 			{
-				AddFunction(pow(*iter,*(degrees_.begin() + (iter-original_variables.begin()))) - random_values_(iter-original_variables.begin())); ///< TODO: make this 1 be a random complex number.
+				AddFunction(pow(*iter,*(degrees_.begin() + (iter-original_variables.begin()))) - random_values_[iter-original_variables.begin()]); ///< TODO: make this 1 be a random complex number.
 			} 
 
-			boost::multiprecision::mpfr_float::default_precision(prev_prec);
+			// boost::multiprecision::mpfr_float::default_precision(prev_prec);
 
 		}// total degree constructor
 

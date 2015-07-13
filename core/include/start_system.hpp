@@ -47,11 +47,11 @@ namespace bertini
 
 			mpfr RandomValue(size_t index)
 			{
-				return random_values_(index);
+				return random_values_[index]->Eval<mpfr>();
 			}
 
 
-			Vec<mpfr> const& RandomValues()
+			std::vector<std::shared_ptr<Rational> > const& RandomValues()
 			{
 				return random_values_;
 			}
@@ -65,7 +65,7 @@ namespace bertini
 			Vec<dbl> GenerateStartPoint(dbl,size_t index) const override;
 			Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const override;
 
-			Vec<mpfr> random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
+			std::vector<std::shared_ptr<Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<int> degrees_;
 		};
 	}

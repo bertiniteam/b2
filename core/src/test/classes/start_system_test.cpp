@@ -16,6 +16,9 @@ using VariableGroup = bertini::VariableGroup;
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
+extern double threshold_clearance_d;
+extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+
 
 BOOST_AUTO_TEST_SUITE(system_class)
 
@@ -115,7 +118,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	auto sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 2; ++ii)
-		BOOST_CHECK_EQUAL(sysvals(ii),1.0 - dbl(TD.RandomValue(ii)));
+		BOOST_CHECK( abs(sysvals(ii) - (1.0 - dbl(TD.RandomValue(ii)))) < threshold_clearance_d);
 
 
 
@@ -133,7 +136,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 2; ++ii)
-		BOOST_CHECK_EQUAL(sysvals(ii),-dbl(TD.RandomValue(ii)));
+		BOOST_CHECK(abs(sysvals(ii)+dbl(TD.RandomValue(ii))) < threshold_clearance_d);
 	
 
 	J = TD.Jacobian(vals);
@@ -184,7 +187,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	auto sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 3; ++ii)
-		BOOST_CHECK_EQUAL(sysvals(ii),1.0 - dbl(TD.RandomValue(ii)));
+		BOOST_CHECK( abs(sysvals(ii) - (1.0 - dbl(TD.RandomValue(ii)))) < threshold_clearance_d);
 
 
 	auto J = TD.Jacobian(vals);
@@ -208,7 +211,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 3; ++ii)
-		BOOST_CHECK_EQUAL(sysvals(ii),-dbl(TD.RandomValue(ii)));
+		BOOST_CHECK(abs(sysvals(ii)+dbl(TD.RandomValue(ii))) < threshold_clearance_d);
 
 	J = TD.Jacobian(vals);
 
