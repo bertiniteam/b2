@@ -309,7 +309,7 @@ namespace bertini {
 		 */
 		inline static complex rand()
 		{
-			complex returnme( RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
 			returnme /= sqrt( returnme.abs());
 			return returnme;
 		}
