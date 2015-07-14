@@ -935,7 +935,16 @@ namespace bertini {
 		return exp(c * log(z));
 	}
 	
-	
+	/**
+	 Compute c^z, for c,z complex numbers
+	 */
+	inline complex pow(const complex & z, const mpfr_float & c)
+	{
+		return exp(c * log(z));
+	}
+
+
+
 	
 	/**
 	 Inverse sine of complex number

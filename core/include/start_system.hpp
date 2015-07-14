@@ -1,6 +1,30 @@
+//This file is part of Bertini 2.0.
+//
+//start_system.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+//start_system.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with start_system.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+
+//  start_system.hpp
+//
+//  copyright 2015
+//  Daniel Brake
+//  University of Notre Dame
+//  ACMS
+//  Spring, Summer 2015
+
 
 #include "system.hpp"
-
+#include "limbo.hpp"
 
 
 namespace bertini 
@@ -47,11 +71,11 @@ namespace bertini
 
 			mpfr RandomValue(size_t index)
 			{
-				return random_values_(index);
+				return random_values_[index]->Eval<mpfr>();
 			}
 
 
-			Vec<mpfr> const& RandomValues()
+			std::vector<std::shared_ptr<Rational> > const& RandomValues()
 			{
 				return random_values_;
 			}
@@ -65,8 +89,8 @@ namespace bertini
 			Vec<dbl> GenerateStartPoint(dbl,size_t index) const override;
 			Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const override;
 
-			Vec<mpfr> random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
-			std::vector<int> degrees_;
+			std::vector<std::shared_ptr<Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
+			std::vector<size_t> degrees_;
 		};
 	}
 }
