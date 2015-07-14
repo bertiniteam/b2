@@ -24,7 +24,7 @@
 
 
 #include "system.hpp"
-
+#include "limbo.hpp"
 
 
 namespace bertini 
@@ -90,7 +90,7 @@ namespace bertini
 			Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const override;
 
 			std::vector<std::shared_ptr<Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
-			std::vector<int> degrees_;
+			std::vector<size_t> degrees_;
 		};
 	}
 }
