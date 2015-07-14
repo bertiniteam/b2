@@ -86,19 +86,19 @@ BOOST_AUTO_TEST_CASE(index_and_subscript_generation1)
 	std::vector<size_t> v;
 
 	std::vector<size_t> solution{0,0};
-	v = bertini::IndexToSubscript(0,dimensions);
+	v = bertini::IndexToSubscript(0ul,dimensions);
 	BOOST_CHECK(v==solution);
 
 	solution[0] = 1; solution[1] = 0;
-	v = bertini::IndexToSubscript(1,dimensions);
+	v = bertini::IndexToSubscript(1ul,dimensions);
 	BOOST_CHECK(v==solution);
 
 	solution[0] = 0; solution[1] = 1;
-	v = bertini::IndexToSubscript(2,dimensions);
+	v = bertini::IndexToSubscript(2ul,dimensions);
 	BOOST_CHECK(v==solution);
 
 	solution[0] = 1; solution[1] = 1;
-	v = bertini::IndexToSubscript(3,dimensions);
+	v = bertini::IndexToSubscript(3ul,dimensions);
 	BOOST_CHECK(v==solution);
 
 }
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(index_and_subscript_generation_out_of_range)
 
 
 	std::vector<size_t> dimensions{2,3,4,5};
-	BOOST_CHECK_THROW(bertini::IndexToSubscript(120,dimensions),std::out_of_range);
+	BOOST_CHECK_THROW(bertini::IndexToSubscript(120ul,dimensions),std::out_of_range);
 }
 
 

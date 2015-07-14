@@ -50,7 +50,9 @@ namespace bertini {
 				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
 
 
-			degrees_ = s.Degrees();
+			auto deg = s.Degrees();
+			for (auto iter : deg)
+				degrees_.push_back((size_t)iter);
 
 			auto original_varible_groups = s.variableGroups();
 
@@ -72,7 +74,7 @@ namespace bertini {
 
 			for (auto iter = original_variables.begin(); iter!=original_variables.end(); iter++)
 			{
-				AddFunction(pow(*iter,*(degrees_.begin() + (iter-original_variables.begin()))) - random_values_[iter-original_variables.begin()]); ///< TODO: make this 1 be a random complex number.
+				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-original_variables.begin()))) - random_values_[iter-original_variables.begin()]); ///< TODO: make this 1 be a random complex number.
 			} 
 
 			// boost::multiprecision::mpfr_float::default_precision(prev_prec);
@@ -96,7 +98,9 @@ namespace bertini {
 		Vec<dbl> TotalDegree::GenerateStartPoint(dbl,size_t index) const
 		{
 			Vec<dbl> start_point(NumVariables());
-
+			auto indices = IndexToSubscript(index, degrees_);
+			for (size_t ii = 0; ii< NumVariables(); ++ii)
+				start_point(ii) = exp( acos(-1.0) * dbl(0,2.0) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), 1.0 / degrees_[ii]);
 			return start_point;
 		}
 
@@ -104,7 +108,9 @@ namespace bertini {
 		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,size_t index) const
 		{
 			Vec<mpfr> start_point(NumVariables());
-
+			auto indices = IndexToSubscript(index, degrees_);
+			for (size_t ii = 0; ii< NumVariables(); ++ii)
+				start_point(ii) = exp( acos( mpfr_float(-1.0) ) * mpfr(0,2.0) * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), mpfr_float(1.0) / degrees_[ii]);
 			return start_point;
 		}
 
