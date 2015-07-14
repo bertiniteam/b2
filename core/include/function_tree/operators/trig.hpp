@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with negate_operator.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Created by Collins, James B. on 6/4/15.
+//  Created by daniel brake
 //
 //
 // trig.hpp:  Declares the trigonometric operator classes.
