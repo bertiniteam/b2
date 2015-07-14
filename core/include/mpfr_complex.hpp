@@ -309,7 +309,7 @@ namespace bertini {
 		 */
 		inline static complex rand()
 		{
-			complex returnme( RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMpfr(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
 			returnme /= sqrt( returnme.abs());
 			return returnme;
 		}
@@ -935,7 +935,16 @@ namespace bertini {
 		return exp(c * log(z));
 	}
 	
-	
+	/**
+	 Compute c^z, for c,z complex numbers
+	 */
+	inline complex pow(const complex & z, const mpfr_float & c)
+	{
+		return exp(c * log(z));
+	}
+
+
+
 	
 	/**
 	 Inverse sine of complex number

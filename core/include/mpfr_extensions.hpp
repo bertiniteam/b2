@@ -138,7 +138,8 @@ namespace bertini {
 	 
 	 \param number_to_make_random The number whose contents you are overwriting with a random number.
 	 */
-	mpfr_float RandomMpfr();
+	template <typename T>
+	T RandomMp();
 	
 
 	
@@ -149,8 +150,8 @@ namespace bertini {
 	 \return number_to_make_random The number which you desire to populate with a random number.
 	 
 	 */
-	template <unsigned int length_in_digits>
-	mpfr_float RandomMpfrUniformUnitInterval();
+	template <typename T, unsigned int length_in_digits>
+	T RandomMpUniformUnitInterval();
 	
 	
 	
@@ -166,8 +167,8 @@ namespace bertini {
 	 \return number_to_make_random The number which you desire to populate with a random number.
 	 
 	 */
-	template <unsigned int length_in_digits>
-	mpfr_float RandomMpfrUniformInInterval(const mpfr_float & a, const mpfr_float & b);
+	template <typename T, unsigned int length_in_digits>
+	T RandomMpUniformInInterval(const T & a, const T & b);
 	
 	
 	
@@ -178,7 +179,8 @@ namespace bertini {
 	 
 	 \param number_to_make_random The number whose contents you are overwriting with a random number.
 	 */
-	mpfr_float RandomMpfr(const mpfr_float & a, const mpfr_float & b);
+	template <typename T>
+	T RandomMp(const T & a, const T & b);
 	
 	
 	
