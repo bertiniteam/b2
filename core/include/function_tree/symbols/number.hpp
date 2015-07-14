@@ -26,6 +26,8 @@
 
 #include "function_tree/symbols/symbol.hpp"
 #include <boost/multiprecision/mpfr.hpp>
+#include <boost/multiprecision/gmp.hpp>
+
 
 namespace bertini {
 
@@ -259,6 +261,85 @@ namespace bertini {
 
 		int true_value_;
 	};
+
+
+
+
+	class Rational : public virtual Number
+	{
+	public:
+
+		using mpq_rational = boost::multiprecision::mpq_rational;
+
+		Rational();
+
+		Rational(int val) : true_value_real_(val), true_value_imag_(0)
+		{}
+
+		Rational(int val_real_numerator, int val_real_denomenator) : true_value_real_(val_real_numerator,val_real_denomenator), true_value_imag_(0)
+		{}
+
+		Rational(int val_real_numerator, int val_real_denomenator,
+		         int val_imag_numerator, int val_imag_denomenator) 
+					:
+					 true_value_real_(val_real_numerator,val_real_denomenator), true_value_imag_(val_imag_numerator,val_imag_denomenator)
+		{}
+
+		Rational(std::string val) : true_value_real_(val), true_value_imag_(0)
+		{}
+
+		Rational(std::string val_real, std::string val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
+		{}
+
+
+		Rational(mpq_rational const& val_real, mpq_rational const& val_imag = 0) : true_value_real_(val_real), true_value_imag_(val_imag)
+		{}
+
+
+		~Rational() = default;
+		
+		static Rational Rand()
+		{
+			return Rational(RandomMp<mpq_rational>(),RandomMp<mpq_rational>());
+		}
+
+		static Rational RandReal()
+		{
+			return Rational(RandomMp<mpq_rational>());
+		}
+
+		void print(std::ostream & target) const override
+		{
+			target << "(" << true_value_real_ << "," << true_value_imag_ << ")";
+		}
+
+
+		/**
+         Differentiates a number.  Should this return the special number Zero?
+         */
+        std::shared_ptr<Node> Differentiate() override
+        {
+            return std::make_shared<Integer>(0);
+        }
+
+
+
+	private:
+
+		// Return value of constant
+        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+        {
+            return dbl(double(true_value_real_),double(true_value_imag_));
+        }
+
+        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+        {
+            return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
+        }
+
+		mpq_rational true_value_real_, true_value_imag_;
+	};
+
 
 
 } // re: namespace bertini
