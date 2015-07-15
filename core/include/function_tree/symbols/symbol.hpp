@@ -29,9 +29,9 @@
 namespace  bertini {
 	
 	/**
-	 Node -> Symbol
-	
-	This class could work as an interface for all non-operators.
+	 \brief Abstract symbol class.
+
+	This class is an interface for all non-operators.
 	*/
 	class Symbol : public virtual Node
 	{
@@ -39,10 +39,6 @@ namespace  bertini {
 	public:
 		
 		virtual ~Symbol() = default;
-		
-
-		
-		
 
 	};
 	
@@ -54,6 +50,8 @@ namespace  bertini {
 	
 	
 	/**
+	\brief Symbols which have names are named symbols.
+	
 	Symbols which have names are named symbols.
 	*/
 	class NamedSymbol : public virtual Symbol

@@ -359,7 +359,7 @@ namespace bertini {
 	
 	
 	/**
-	/brief The negation Operator.
+	\brief The negation Operator.
 
 	 This class represents the negation Operator.  FreshEval method
 	 is defined for negation and multiplies the value by -1.
