@@ -33,9 +33,12 @@ namespace bertini {
 
 
 
-	// Node -> Symbol -> Number
-	// Description: This class represents constant leaves to a function tree.  FreshEval simply returns
-	// the value of the constant.
+	/**
+	\brief Abstract Number type from which other Numbers derive.
+
+	This class represents constant leaves to a function tree.  FreshEval simply returns
+	the value of the constant.
+	*/
 	class Number : public virtual Symbol
 	{
 	public:
@@ -115,7 +118,11 @@ namespace bertini {
 	};
 
 
+	/**
+	\brief Number type for storing floating point numbers within an expression tree.  
 
+	 Number type for storing floating point numbers within an expression tree.  The number passed in at construct time is stored as the true value, and evaluation down or up samples from this 'true value'.  Consider using a Rational or Integer if possible.
+	*/
 	class Float : public virtual Number
 	{
 	public:
@@ -216,7 +223,11 @@ namespace bertini {
 	};
 
 
+	/**
+	\brief Signed real Integer storage in an expression tree.
 
+	Signed real Integer storage in an expression tree. Consider using a Rational type.
+	*/
 	class Integer : public virtual Number
 	{
 	public:
@@ -264,7 +275,11 @@ namespace bertini {
 
 
 
+	/**
+	\brief The Rational number type for Bertini2 expression trees.
 
+	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a mpfr at evaluate time.
+	*/
 	class Rational : public virtual Number
 	{
 	public:

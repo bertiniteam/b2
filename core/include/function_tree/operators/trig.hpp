@@ -29,7 +29,11 @@
 
 namespace bertini {
 	
-	
+	/**
+	\brief Abstract class for trigonometric Operator types.
+
+	Abstract class for trigonometric Operator types.
+	*/
 	class TrigOperator: public virtual UnaryOperator
 	{
 	public:
@@ -54,9 +58,12 @@ namespace bertini {
 
 
 
-	// Node -> UnaryOperator -> SinOperator
-	// Description: This class represents the sine function.  FreshEval method
-	// is defined for sine and takes the sine of the child node.
+	/**
+	\brief Provides the sine Operator.
+
+	This class represents the sine function.  FreshEval method
+	is defined for sine and takes the sine of the child node.
+	*/
 	class SinOperator : public  virtual TrigOperator
 	{
 	public:
@@ -97,9 +104,12 @@ namespace bertini {
 	};
 	
 
-	// Node -> TrigOperator -> ArcSinOperator
-	// Description: This class represents the inverse sine function.  FreshEval method
-	// is defined for arcsine and takes the sine of the child node.
+	/**
+	\brief Provides the inverse sine Operator.
+
+	This class represents the inverse sine function.  FreshEval method
+	is defined for arcsine and takes the sine of the child node.
+	*/
 	class ArcSinOperator : public  virtual TrigOperator
 	{
 	public:
@@ -144,9 +154,12 @@ namespace bertini {
 	
 	
 	
-	// Node -> TrigOperator -> CosOperator
-	// Description: This class represents the cosine function.  FreshEval method
-	// is defined for cosine and takes the cosine of the child node.
+	/**
+	\brief  Provides the cosine Operator.
+
+	This class represents the cosine function.  FreshEval method
+	is defined for cosine and takes the cosine of the child node.
+	*/
 	class CosOperator : public  virtual TrigOperator
 	{
 	public:
@@ -189,9 +202,12 @@ namespace bertini {
 	};
 	
 	
-	// Node -> TrigOperator -> ArcCosOperator
-	// Description: This class represents the inverse cosine function.  FreshEval method
-	// is defined for arccosine and takes the arccosine of the child node.
+	/**
+	\brief Provides the arc cosine Operator.
+
+	This class represents the inverse cosine function.  FreshEval method
+	is defined for arccosine and takes the arccosine of the child node.
+	*/
 	class ArcCosOperator : public  virtual TrigOperator
 	{
 	public:
@@ -242,9 +258,12 @@ namespace bertini {
 	
 	
 	
-	// Node -> TrigOperator -> TanOperator
-	// Description: This class represents the tangent function.  FreshEval method
-	// is defined for tangent and takes the tangent of the child node.
+	/**
+	\brief Provides the tangent Operator.
+
+	This class represents the tangent function.  FreshEval method
+	is defined for tangent and takes the tangent of the child node.
+	*/
 	class TanOperator : public  virtual TrigOperator
 	{
 	public:
@@ -286,9 +305,12 @@ namespace bertini {
 	};
 	
 	
-	// Node -> TrigOperator -> ArcTanOperator
-	// Description: This class represents the inverse tangent function.  FreshEval method
-	// is defined for arctangent and takes the arc tangent of the child node.
+	/**
+	\brief Provides the inverse tangent Operator.
+
+	This class represents the inverse tangent function.  FreshEval method
+	is defined for arctangent and takes the arc tangent of the child node.
+	*/
 	class ArcTanOperator : public  virtual TrigOperator
 	{
 	public:

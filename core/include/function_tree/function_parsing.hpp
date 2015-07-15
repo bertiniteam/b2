@@ -121,99 +121,15 @@ namespace bertini {
 	namespace ascii = ::boost::spirit::ascii;
 
 
-	// qi::grammar -> VariableParser
-	// This class describes the rule used to parse a list of variables and store a rule to
-	//  recognize variables in the function parse
-	template <typename Iterator>
-	class VariableParser : qi::grammar<Iterator, boost::spirit::ascii::space_type>
-	{
-		//    namespace phx = boost::phoenix;
-	public:
-
-		// Constructor is used to define the grammar to parse variables.  Variables are separated by
-		//  commas
-		VariableParser() : VariableParser::base_type(start_,"VariableParser")
-		{
-			start_.name("VariableParser.start_");
-			start_ =
-			valid_variable_name_ [boost::phoenix::bind( [this](std::string const& c)
-															 {
-																 AddVarToRule(c);
-															 }, qi::_1 ) ]
-			% ","; // variables are separated by commas
-
-			valid_variable_name_.name("valid_variable_name_");
-			valid_variable_name_ %= +qi::alpha >> *(qi::alnum | qi::char_('_'));
-		}
 
 
+	/**
+	A Qi grammar parser for parsing text into function trees.  Currently called from the SystemParser.
 
+	\todo Improve error detection and reporting for the FunctionParser.
 
-		qi::rule<Iterator,boost::spirit::ascii::space_type> start() { return start_;};
-
-
-
-
-		// Accessor function for variable_
-		qi::symbols<char,int> variable() { return variable_;};
-
-		// Accessor for var_count
-		int var_count() {return var_count_;};
-
-
-
-		VariableGroup get_var_group(){
-			return produced_variables_;
-		}
-
-	private:
-
-
-		// Method used to add variable names to the rule var_rule.  The index of the variable
-		//  is stored as well, starting at 0.
-		void AddVarToRule(std::string const& c)
-		{
-			produced_variables_.push_back(std::make_shared<Variable>(c));
-
-			variable_.add(c,var_count_);
-			var_count_++;
-		}
-
-
-
-
-		// Start rule used to parse variable list.
-		qi::rule<Iterator,ascii::space_type> start_;
-
-		// the rule which determines valid variable names
-		qi::rule<Iterator, std::string()> valid_variable_name_;
-
-
-
-
-		// A rule defined to represent variables input by the user.  The rule recognizes
-		//  whatever alphanumeric string(including underscore) used by the input file to define
-		//  the variable, and returns the index of the variable, starting with 0.
-		qi::symbols<char,int> variable_;
-
-
-		// vector of shared pointers to nodes which represent a variable group or whatever.
-		VariableGroup produced_variables_;
-
-
-		// Keeps track of the index of the variable being parsed.
-		int var_count_ = 0;
-
-	};
-
-
-
-
-
-
-
-
-
+	\brief A Qi grammar parser for parsing text into function trees.
+	*/
 	template<typename Iterator>
 	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<Node>(), boost::spirit::ascii::space_type>
 	{
