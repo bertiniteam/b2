@@ -179,7 +179,7 @@ namespace bertini {
 	
 	
 	/**
-	\brieg an interface for all binary Operator types.
+	\brief An interface for all binary Operator types.
 
 	This class is an interface for all binary operators.
 	Children of the operator are stored in a vector.
@@ -219,7 +219,7 @@ namespace bertini {
 			Node::ResetStoredValues();
 			for (auto ii:children_)
 				ii->Reset();
-			
+
 		}
 		
 		// Add a child onto the container for this operator

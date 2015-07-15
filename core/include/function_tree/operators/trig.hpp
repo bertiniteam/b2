@@ -30,7 +30,7 @@
 namespace bertini {
 	
 	/**
-	Abstract class for trigonometric Operator types.
+	\brief Abstract class for trigonometric Operator types.
 
 	Abstract class for trigonometric Operator types.
 	*/

@@ -41,6 +41,11 @@ namespace bertini {
     
     namespace SpecialNumber{
 
+    	/**
+		\brief The number \f$\pi\f$.
+
+		The number \f$\pi\f$.  Gets its own class because it is such an important number.
+    	*/
 	    class Pi : public NamedSymbol
 	    {
 	    public:
@@ -136,7 +141,11 @@ namespace bertini {
 
 
 
+	    /**
+		\brief The number \f$e\f$.
 
+		The number \f$e\f$.  Gets its own class because it is such an important number.
+    	*/
 	    class E : public NamedSymbol
 	    {
 	    public:
@@ -229,16 +238,35 @@ namespace bertini {
 
 	} // special number namespace
 
+
+	/**
+	Construct a shared pointer to \f$\pi\f$.
+	*/
 	std::shared_ptr<Node> Pi();
 
+	/**
+	Construct a shared pointer to \f$e\f$.
+	*/
 	std::shared_ptr<Node> E();
 
+	/**
+	Construct a shared pointer to \f$i\f$.
+	*/
 	std::shared_ptr<Node> I();
 
+	/**
+	Construct a shared pointer to \f$2\f$.
+	*/
     std::shared_ptr<Node> Two();
 
+    /**
+	Construct a shared pointer to \f$1\f$.
+	*/
     std::shared_ptr<Node> One();
 
+    /**
+	Construct a shared pointer to \f$0\f$.
+	*/
     std::shared_ptr<Node> Zero();
 
 
