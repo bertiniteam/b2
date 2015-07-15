@@ -44,6 +44,8 @@ namespace bertini {
 	
 	/**
 	 The fundamental polynomial system class for Bertini2.
+
+	 Other System types are derived from this, but this class is not abstract.
 	 */
 	class System{
 		
@@ -59,42 +61,84 @@ namespace bertini {
 		using Nd = std::shared_ptr<Node>;
 		using Jac = std::shared_ptr<Jacobian>;
 		
+		/**
+		The default constructor for a system
+		*/
 		System() : is_differentiated_(false), have_path_variable_(false)
 		{}
 
 
+		/**
+		Change the precision of the entire system's functions, subfunctions, and all other nodes.
+		*/
 		void precision(unsigned new_precision);
 
 
 
+		/**
+		Evaluate the system, provided the system has no path variable defined.
 
+		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		*/
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values);
 
+
+
 		/**
-		 Evaluate the system.
+		 Evaluate the system, provided a path variable is defined for the system.
+
+		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value);
 
 
+		/**
+		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 
+		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		*/
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values);
 
 
+		/**
+		 Evaluate the Jacobian of the system, provided a path variable is defined for the system.
 
+		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
+		 \return The Jacobian matrix.
+
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 */
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value);
 
 	
+		/**
+		Homogenize the system, adding new homogenizing variables for each VariableGroup defined for the system.
 
+		\throws std::runtime_error, if the system is not polynomial, has a mismatch on the number of homogenizing variables and the number of variable groups (this would result from a partially homogenized system), or the homogenizing variable names somehow get screwed up by having duplicates.
+		*/
 		void Homogenize();
 
+		/**
+		Checks whether a system is homogeneous, overall.  This means with respect to each variable group (including homogenizing variable if defined), homogeneous variable group, and ungrouped variables, if defined.
 
+		\throws std::runtime_error, if the number of homogenizing variables does not match the number of variable_groups.
+		\return true if homogeneous, false if not
+		*/
 		bool IsHomogeneous() const;
 
+		/**
+		Checks whether a system is polynomial, overall.  This means with respect to each variable group (including homogenizing variable if defined), homogeneous variable group, and ungrouped variables, if defined.
 
+		\throws std::runtime_error, if the number of homogenizing variables does not match the number of variable_groups.
+		\return true if polynomial, false if not.
+		*/
 		bool IsPolynomial() const;
 
 
@@ -164,6 +208,15 @@ namespace bertini {
 
 		/**
 		 Set the values of the variables to be equal to the input values
+
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \throws std::runtime_error if the number of variables doesn't match.
+		 The ordering of the variables matters.  The standard ordering is 1) variable groups, with homogenizing variable first. 2) homogeneous variable groups. 3) ungrouped variables.
+
+		 The path variable is not considered a variable for this operation.  It is set separately.
+
+		 \see SetPathVariable
+		 \see Variables
 		 */
 		template<typename T>
 		void SetVariables(const Vec<T> & new_values);
@@ -172,6 +225,9 @@ namespace bertini {
 
 		/**
 		 Set the current value of the path variable.
+		
+		 \throws std::runtime_error, if a path variable is not defined.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
 		void SetPathVariable(T new_value);
@@ -182,6 +238,8 @@ namespace bertini {
 
 		/**
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
+		 
+		 
 		 */
 		template<typename T>
 		void SetImplicitParameters(Vec<T> new_values);
@@ -201,7 +259,7 @@ namespace bertini {
 
 
 		/**
-		 Add a variable group to the system.  The system will be homogenized with respect to this variable group, though this is not done at the time of this call.
+		 Add a variable group to the system.  The system may be homogenized with respect to this variable group, though this is not done at the time of this call.
 		 */
 		void AddVariableGroup(VariableGroup const& v);
 
@@ -305,6 +363,11 @@ namespace bertini {
 		void AddPathVariable(Var const& v);
 
 
+		/**
+		Query whether a path variable is set for this system
+
+		\return true if have a path variable, false if not.
+		*/
 		bool HavePathVariable() const;
 
 
@@ -314,6 +377,16 @@ namespace bertini {
 
 		/**
 		 Get the variables in the problem.
+
+		 This function returns the variables in standard ordering.
+
+		 1) variable groups first, lead by their respective homogenizing variable, if defined.
+		 2) hom_variable_groups second.
+		 3) ungrouped variables
+
+		 The order in which variables and their groups are added to a system impacts this ordering.  Bertini will ensure internal consistency.  It is up to the user to make sure the ordering is what they want for any post-processing or interpretations of results.
+
+		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
         */
         VariableGroup Variables() const;
 
@@ -346,22 +419,27 @@ namespace bertini {
 
 		/**
 		 Get the degrees of the functions in the system, with respect to all variables.
+
+		 \return A vector containing the degrees of the functions.  Negative numbers indicate the function is non-polynomial.
 		*/
 		 std::vector<int> Degrees() const;
 
 		 /**
 		 Get the degrees of the functions in the system, with respect to a group of variables.
+
+		 \return A vector containing the degrees of the functions.  Negative numbers indicate the function is non-polynomial.
+		 \param vars A group of variables with respect to which you wish to compute degrees.  Needs not be a group with respect to the system.
 		*/
 		 std::vector<int> Degrees(VariableGroup const& vars) const;
 
 		/**
-		 Sort the functions so they are in decreasing order by degree
+		 Sort the functions so they are in DEcreasing order by degree
 		*/
 		void ReorderFunctionsByDegreeDecreasing();
 
 
 		/**
-		 Sort the functions so they are in decreasing order by degree
+		 Sort the functions so they are in INcreasing order by degree
 		*/
 		void ReorderFunctionsByDegreeIncreasing();
 
@@ -372,52 +450,79 @@ namespace bertini {
 
 
 		/**
-		 Clear the entire structure of variables in a system.
+		 Clear the entire structure of variables in a system.  Reconstructing it is up to you.
 		*/
 		void ClearVariables();
 
 
 		/**
 		 Copy the entire structure of variables from within one system to another.
-		  This copies everything -- ungrouped variables, variable groups, homogenizing variables, the path variable, the ordering of the variables.s
+		  This copies everything -- ungrouped variables, variable groups, homogenizing variables, the path variable, the ordering of the variables.
+
+		  \param other Another system from which to copy the variable structure.  
+
+		  This operation does NOT affect the functions in any way.  It is up to the user to make the functions actually depend on these variables.
 		*/ 
 		void CopyVariableStructure(System const& other);
         
 
+		/**
+		Add two systems together.
+
+		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
+
+		*/
 		System operator+=(System const& rhs);
+
+		/**
+		Add two systems together.
+
+		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
+		
+		*/
 		friend System operator+(System lhs, System const& rhs);
 
+		/**
+		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		*/
 		System operator*=(std::shared_ptr<Node> const& N);
+
+		/**
+		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		*/
 		friend System operator*(System s, std::shared_ptr<Node> const&  N);
+
+		/**
+		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		*/
 		friend System operator*(std::shared_ptr<Node> const&  N, System const& s);
 	private:
 
-		VariableGroup ungrouped_variables_;
-		std::vector< VariableGroup > variable_groups_;
-		std::vector< VariableGroup > hom_variable_groups_;
+		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
+		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
+		std::vector< VariableGroup > hom_variable_groups_; ///< Homogeneous or projective variable groups.  System SHOULD be homogeneous with respect to these.  
 
-		VariableGroup homogenizing_variables_;
+		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.  
 
-		std::vector< Fn > functions_;
-		std::vector< Fn > subfunctions_;
-		std::vector< Fn > explicit_parameters_;
-
-
-		// VariableGroup variables_;
-		VariableGroup implicit_parameters_;
+		std::vector< Fn > functions_; ///< The system's functions.
+		std::vector< Fn > subfunctions_; ///< Any declared subfunctions for the system.  Can use these to ensure that complicated repeated structures are only created and evaluated once.
+		std::vector< Fn > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.  
 
 
-		Var path_variable_;
-		bool have_path_variable_;
+		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
 
 
-		std::vector< Fn > constant_subfunctions_;
-
-		std::vector< Jac > jacobian_;
-		bool is_differentiated_;
+		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
+		bool have_path_variable_; ///< Whether we have the variable or not.
 
 
-		unsigned precision_;
+		std::vector< Fn > constant_subfunctions_; ///< degree-0 functions, depending on neither variables nor the path variable.
+
+		std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
+		bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
+
+
+		unsigned precision_; ///< the current working precision of the system 
 
 	};
 
