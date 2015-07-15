@@ -18,6 +18,10 @@
 //  ACMS
 //  Spring, Summer 2015
 //
+//  This file collects the various header files which define the Bertini2  
+//  function tree node types, which are scattered through about 10 files.
+
+
 
 #ifndef BERTINI2_FUNCTION_TREE_H_
 #define BERTINI2_FUNCTION_TREE_H_
