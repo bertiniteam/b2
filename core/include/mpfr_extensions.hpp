@@ -18,7 +18,9 @@
 //  ACMS
 //  Spring, Summer 2015
 //
-
+//  This file contains extensions to types provided by Boost.Multiprecision.
+//
+//
 
 #ifndef BERTINI_MPFR_EXTENSIONS_HPP
 #define BERTINI_MPFR_EXTENSIONS_HPP
