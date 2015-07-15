@@ -36,6 +36,8 @@ namespace bertini
 		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 			
 		/**
+		\brief Abstract base class for other start systems.
+
 		Abstract base class for other start systems.  Start systems are special types of systems, to which we know solutions.  We also know how to construct various types of start systems from arbitrary polynomial systems.
 
 		This class provides the empty virtual declarations for necessary override functions for specific start systems, including NumStartPoints (provides an upper bound on the number of solutions to the target system), and the private functions GenerateStartPoint(index), in double and multiple precision.  These two Generate functions are called by the templated non-overridden function StartPoint(index), which calls the appropriate one based on template type.
@@ -61,7 +63,13 @@ namespace bertini
 		};
 
 
+
+
+
+
 		/**
+		\brief StartSystem for 1-homogeneous polynomial systems.
+
 		The most basic and easy-to-construct start system in Numerical Algebraic Geometry.  
 
 		The total degree start system uses functions of the form \f$x_i^{d_i} - r_i\f$, where \f$i\f$ is the index of the function relative to the system, \f$d_i\f$ is the degree of that function, and \f$r_i\f$ is a random complex number.  This is very similar to the roots of unity, except that they are moved away from being centered around the origin, to being centered around a random complex number.  

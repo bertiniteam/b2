@@ -92,6 +92,8 @@ namespace bertini {
 	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
 
 	\endcode
+
+	\brief Qi Parser object for parsing text into the System class.  
 	*/
 	template<typename Iterator, typename Skipper = ascii::space_type>
 	struct SystemParser : qi::grammar<Iterator, System(), Skipper>

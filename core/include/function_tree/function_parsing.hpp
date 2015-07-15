@@ -127,6 +127,8 @@ namespace bertini {
 	A Qi grammar parser for parsing text into function trees.  Currently called from the SystemParser.
 
 	\todo Improve error detection and reporting for the FunctionParser.
+
+	\brief A Qi grammar parser for parsing text into function trees.
 	*/
 	template<typename Iterator>
 	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<Node>(), boost::spirit::ascii::space_type>

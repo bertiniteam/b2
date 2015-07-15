@@ -45,11 +45,13 @@
 
 namespace bertini {
 	
-	
-	// Node -> NaryOperator -> SumOperator
-	// Description: This class represents summation and difference operators.  All children are terms and are stored
-	// in a single vector, and a vector of bools is used to determine the sign of each term.  FreshEval method
-	// is defined for summation and difference.
+	/**
+	\brief Represents summation and difference Operator.
+
+	This class represents summation and difference operators.  All children are terms and are stored
+	in a single vector, and a vector of bools is used to determine the sign of each term.  FreshEval method
+	is defined for summation and difference.
+	*/
 	class SumOperator : public virtual NaryOperator
 	{
 	public:
@@ -357,8 +359,9 @@ namespace bertini {
 	
 	
 	/**
-	 Node -> UnaryOperator -> NegateOperator
-	 Description: This class represents the negation operator.  FreshEval method
+	/brief The negation Operator.
+
+	 This class represents the negation Operator.  FreshEval method
 	 is defined for negation and multiplies the value by -1.
 	 */
 	class NegateOperator : public virtual UnaryOperator
@@ -423,10 +426,12 @@ namespace bertini {
 	
 	
 	
-	
-	// Node -> NaryOperator -> MultOperator
-	// Description: This class represents multiplication operator.  All children are factors and are stored
-	// in a vector.  FreshEval method is defined for multiplication.
+	/**
+	\brief Multiplication and division Operator.
+
+	This class represents the Operator for multiplication and division.  All children are factors and are stored
+	in a vector.  FreshEval method is defined for multiplication.
+	*/
 	class MultOperator : public virtual NaryOperator
 	{
 	public:
@@ -704,7 +709,10 @@ namespace bertini {
 	
 	
 	/**
-	 Operator for power functions with arbitrary expressions in the exponent and base.
+	\brief Operator for power functions with arbitrary expressions in the exponent and base.
+
+	Operator for power functions with arbitrary expressions in the exponent and base.
+	 
 	 
 	 \see IntegerPowerOperator
 	 */
@@ -837,9 +845,10 @@ namespace bertini {
 	
 	
 	/**
-	 Node -> UnaryOperator -> IntegerPowerOperator
-	 
-	 Description: This class represents the exponentiation operator.  The base is stored in
+	\brief This class represents the exponentiation Operator.
+
+
+	 This class represents the exponentiation operator.  The base is stored in
 	 children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
 	 defined as the exponention operation.
 	 */
@@ -954,8 +963,10 @@ namespace bertini {
 	
 	
 	/**
-	 Node -> UnaryOperator -> SqrtOperator
-	 Description: This class represents the square root function.  FreshEval method
+	\brief Represents the square root Operator
+
+
+	 This class represents the square root function.  FreshEval method
 	 is defined for square root and takes the square root of the child node.
 	 */
 	class SqrtOperator : public  virtual UnaryOperator
@@ -1008,9 +1019,12 @@ namespace bertini {
 	
 	
 	
-	// Node -> UnaryOperator -> ExpOperator
-	// Description: This class represents the exponential function.  FreshEval method
-	// is defined for exponential and takes the exponential of the child node.
+	/**
+	\brief represents the exponential function
+
+	This class represents the exponential function.  FreshEval method
+	is defined for exponential and takes the exponential of the child node.
+	*/
 	class ExpOperator : public  virtual UnaryOperator
 	{
 	public:
