@@ -51,6 +51,17 @@
 namespace bertini {
 	using boost::multiprecision::mpfr_float;
 	
+	/**
+	Custom multiple precision complex class.  Carries arbitrary precision through all defined operations.
+	Tested for compatibility with Eigen linear algebra library.
+
+	This class currently uses Boost.Multiprecision -- namely, the mpfr_float type for variable precision.
+	This class is serializable using Boost.Serialize.
+	
+	The precision of a newly-made bertini::complex is whatever current default is, set by boost::multiprecision::mpfr_float::default_precision(...).
+
+	\todo{Implement MPI send/receive commands using Boost.MPI or alternative.}
+	*/
 	class complex {
 		
 	private:
@@ -101,7 +112,7 @@ namespace bertini {
 		/**
 		 Default constructor
 		 */
-		complex():real_(), imag_(){}
+		complex() : real_(), imag_(){}
 		
 		
 		
@@ -275,29 +286,46 @@ namespace bertini {
 		
 		
 		
-		
+		/**
+		Constuct the number 0.
+		*/
 		inline static complex zero(){
 			return complex("0.0","0.0");
 		}
 		
+		/**
+		Constuct the number 0.
+		*/
 		inline static complex one(){
 			return complex("1.0","0.0");
 		}
 		
+		/**
+		Constuct the number 0.
+		*/
 		inline static complex two(){
 			return complex("2.0","0.0");
 		}
 		
+		/**
+		Constuct the number \f$i\f$.
+		*/
 		inline static complex i()
 		{
 			return complex("0.0","1.0");
 		}
 		
+		/**
+		Constuct the number 0.5.
+		*/
 		inline static complex half()
 		{
 			return complex("0.5","0.0");
 		}
 		
+		/**
+		Constuct the number 0.
+		*/
 		inline static complex minus_one()
 		{
 			return complex("-1.0","0.0");
@@ -305,7 +333,7 @@ namespace bertini {
 		
 		
 		/**
-		 Produce a random complex number
+		 Produce a random complex number, to default precision.
 		 */
 		inline static complex rand()
 		{
@@ -562,12 +590,17 @@ namespace bertini {
 			}
 		}
 		
+		/**
+		Test for exact equality of two complex numbers.  Since they are floating point numbers, this comparison is generally unreliable.
+		*/
 		bool operator==(complex const& rhs) const
 		{
 			return (this->real()==rhs.real()) && (this->imag()==rhs.imag());
 		}
 
-
+		/**
+		When explicitly asked, you can convert a bertini::complex into a std::complex<double>.  But only explicitly.  This conversion is narrowing, and should be avoided.
+		*/
 		explicit operator std::complex<double> () const
 		{
 			return std::complex<double>(double(real_), double(imag_));
@@ -807,6 +840,8 @@ namespace bertini {
 	
 	/**
 	 Compute +,- integral powers of a complex number.
+
+	 This function recursively calls itself if the power is negative, by computing the power on the inverse.
 	 */
 	inline complex pow(const complex & z, int power)
 	{
