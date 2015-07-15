@@ -71,14 +71,6 @@ namespace bertini {
 	
 	
 	
-	inline void AddAndIncrement(qi::symbols<char,int> * sym, std::string const& c, int * v)
-	{
-		sym->add(c,*v);
-		(*v)++;
-	}
-	
-	
-	
 	
 	
 	
