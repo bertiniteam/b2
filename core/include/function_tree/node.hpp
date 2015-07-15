@@ -46,9 +46,15 @@ class Variable;
 
 using VariableGroup = std::deque< std::shared_ptr<Variable> >;
 
-// Description: An interface for all nodes in a function tree, and for a function object as well.  Almost all
-//          methods that will be called on a node must be declared in this class.  The main evaluation method is
-//          defined in this class.
+/**
+An interface for all nodes in a function tree, and for a function object as well.  Almost all
+ methods that will be called on a node must be declared in this class.  The main evaluation method is
+ defined in this class.
+
+ Bertini function trees are created using std::shared_ptr's to Node base class, generally. 
+
+ \brief Abstract base class for the Bertini hybrid-precision (double-multiple) expression tree. 
+ */
 class Node
 {
 public:

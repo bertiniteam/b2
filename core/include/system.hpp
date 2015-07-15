@@ -43,6 +43,8 @@ namespace bertini {
 
 	
 	/**
+	\brief The fundamental polynomial system class for Bertini2.
+	
 	 The fundamental polynomial system class for Bertini2.
 
 	 Other System types are derived from this, but this class is not abstract.

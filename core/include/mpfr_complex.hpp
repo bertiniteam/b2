@@ -52,6 +52,8 @@ namespace bertini {
 	using boost::multiprecision::mpfr_float;
 	
 	/**
+	\brief Custom multiple precision complex class.
+	
 	Custom multiple precision complex class.  Carries arbitrary precision through all defined operations.
 	Tested for compatibility with Eigen linear algebra library.
 
