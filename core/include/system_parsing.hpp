@@ -73,7 +73,26 @@ namespace bertini {
 	
 	
 	
-	
+	/**
+	Qi Parser object for parsing text into the System class.  This ensures we can provide backwards compatibility with Bertini Classic input files.
+
+	To use this parser, construct an object of its type, then use it to parse.
+
+	\code
+	System sys;
+	std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
+
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+
+
+	bertini::SystemParser<std::string::const_iterator> S;
+
+
+	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
+
+	\endcode
+	*/
 	template<typename Iterator, typename Skipper = ascii::space_type>
 	struct SystemParser : qi::grammar<Iterator, System(), Skipper>
 	{
