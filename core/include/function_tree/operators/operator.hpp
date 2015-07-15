@@ -28,7 +28,11 @@
 
 namespace bertini {
 	
-	// Description: This class is could work as an interface for all operators in a function tree.
+	/**
+	\brief Abstract Node type from which all Operators inherit.
+
+	This class is an interface for all operators in the Bertini2 function tree.
+	*/
 	class Operator : public virtual Node
 	{
 		
@@ -39,9 +43,13 @@ namespace bertini {
 	
 	
 	
-	
-	// Description: This class is an interface for all unary operators, such as negation.
-	// The sole child is stored in a shared_ptr.
+	/**
+	\brief Interface for all unary Operator types.
+
+
+	This class is an interface for all unary operators, such as negation.
+	The sole child is stored in a shared_ptr.
+	*/
 	class UnaryOperator : public virtual Operator
 	{
 	public:
@@ -170,9 +178,12 @@ namespace bertini {
 	};
 	
 	
-	
-	// Description: This class is an interface for all binary operators, such as division.
-	// Children of the operator are stored in a vector.
+	/**
+	\brieg an interface for all binary Operator types.
+
+	This class is an interface for all binary operators.
+	Children of the operator are stored in a vector.
+	*/
 	class BinaryOperator : public virtual Operator
 	{
 	public:
@@ -189,10 +200,13 @@ namespace bertini {
 		
 	};
 	
-	
-	// Description: This class is an interface for all n-ary operators, such as summation and multiplication.
-	// Children of the operator are stored in a vector and methods to add and access children are available
-	// in this interface.
+	/**
+	\brief Abstract interface for n-ary Operator types.
+
+	This class is an interface for all n-ary operators, such as summation and multiplication.
+	Children of the operator are stored in a vector and methods to add and access children are available
+	in this interface.
+	*/
 	class NaryOperator : public virtual Node, public virtual Operator
 	{
 	public:
@@ -204,9 +218,8 @@ namespace bertini {
 		{
 			Node::ResetStoredValues();
 			for (auto ii:children_)
-			{
 				ii->Reset();
-			}
+			
 		}
 		
 		// Add a child onto the container for this operator
