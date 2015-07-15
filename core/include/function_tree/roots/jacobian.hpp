@@ -32,8 +32,9 @@ namespace bertini {
     
     
     /**
-     Node -> Function
-     This class defines a function.  It stores the entry node for a particular functions tree.
+    \brief Defines the entry point into a Jacobian tree.
+
+     This class defines a Jacobian tree.  It stores the entry node for a particular functions tree.
      */
     class Jacobian : public Function
     {

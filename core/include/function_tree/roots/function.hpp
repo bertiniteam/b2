@@ -31,8 +31,9 @@ namespace bertini {
 	
 	
 	/**
-	 Node -> Function
-	 This class defines a function.  It stores the entry node for a particular functions tree.
+	\brief Formal entry point into an expression tree.
+
+	This class defines a function.  It stores the entry node for a particular functions tree.
 	 */
 	class Function : public NamedSymbol
 	{
