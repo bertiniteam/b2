@@ -34,9 +34,11 @@ namespace bertini {
     class Variable;
 
 
-    // Node -> Symbol -> SpecialNumber
-    // Description: This class represents constant leaves to a function tree.  FreshEval simply returns
-    // the value of the constant.
+    /**
+	\brief Provides the differential type for differentiation of expression trees.
+
+    This class represents differentials.  These are produced in the course of differentiation of a non-constant expression tree.
+    */
     class Differential : public virtual NamedSymbol
     {
     public:
