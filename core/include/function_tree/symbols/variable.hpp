@@ -30,9 +30,14 @@
 
 namespace  bertini {
 	
-	// Node -> Symbol -> Variable
-	// Description: This class represents variable leaves in the function tree.  FreshEval returns
-	// the current value of the variable.
+	/**
+	\brief Represents variable leaves in the function tree.
+
+	This class represents variable leaves in the function tree.  FreshEval returns
+	the current value of the variable.
+
+	When differentiated, produces a differential referring to it.
+	*/
     class Variable : public virtual NamedSymbol, public std::enable_shared_from_this<Variable>
 	{
 	public:

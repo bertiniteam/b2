@@ -493,8 +493,10 @@ namespace bertini
 	template<typename T>
 	void System::SetPathVariable(T new_value)
 	{
+		if (!have_path_variable_)
+			throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
+
 		path_variable_->set_current_value(new_value);
-		have_path_variable_ = true;
 	}
 
 
@@ -509,14 +511,13 @@ namespace bertini
 	template<typename T>
 	void System::SetImplicitParameters(Vec<T> new_values)
 	{
-		assert(new_values.size()== implicit_parameters_.size());
+		if (new_values.size()!= implicit_parameters_.size())
+			throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
 
-		{
-			auto counter = 0;
-			for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++) {
-				(*iter)->set_current_value(new_values(counter));
-			}
-		}
+		size_t counter = 0;
+		for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++)
+			(*iter)->set_current_value(new_values(counter));
+
 	}
 
 	template void System::SetImplicitParameters(Vec<dbl> new_values);

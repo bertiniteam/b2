@@ -37,31 +37,33 @@ namespace bertini{
 	
 	\param index The index you want to convert.
 	\param dimensions The dimensions of the object you are subscripting or indexing into.
+	\return A vector containing the subscripts for the input index.
+	\throws std::out_of_range, if the index is impossible to convert.
 	*/
 	template <typename T>
 	std::vector<T> IndexToSubscript(T index, std::vector<T> const& dimensions)
 	{
 
-	    std::vector< T > subscripts(dimensions.size());//for forming a subscript from an index
+		std::vector< T > subscripts(dimensions.size());//for forming a subscript from an index
 
-	    std::vector<T> k(dimensions.size(),1);
-	    for (int ii = 0; ii < dimensions.size()-1; ++ii)
-	      k[ii+1] = k[ii]*dimensions[ii];
-
-
-	    if (index >= k.back()*dimensions.back())
-	      throw std::out_of_range("in IndexToSubscript, index exceeds max based on dimension sizes");
+		std::vector<T> k(dimensions.size(),1);
+		for (int ii = 0; ii < dimensions.size()-1; ++ii)
+		  k[ii+1] = k[ii]*dimensions[ii];
 
 
-	    for (int ii = dimensions.size()-1; ii >= 0; --ii)
-	    {
-	      T I = index%k[ii];
-	      T J = (index - I) / k[ii];
-	      subscripts[ii] = J;
-	      index = I;
-	    }
+		if (index >= k.back()*dimensions.back())
+		  throw std::out_of_range("in IndexToSubscript, index exceeds max based on dimension sizes");
 
-	    return subscripts;
+
+		for (int ii = dimensions.size()-1; ii >= 0; --ii)
+		{
+		  T I = index%k[ii];
+		  T J = (index - I) / k[ii];
+		  subscripts[ii] = J;
+		  index = I;
+		}
+
+		return subscripts;
 	  }
 
 }
