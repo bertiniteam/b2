@@ -1,0 +1,29 @@
+#this is src/tracking/Makemodule.am
+
+#this file defines the following variables:
+#
+#
+#
+#
+
+
+tracking_header_files = \
+	include/tracking.hpp \
+	include/tracking/correct.hpp \
+	include/tracking/newton_correct.hpp \
+	include/tracking/predict.hpp \
+	include/tracking/ode_predictors.hpp \
+	include/tracking/euler.hpp
+
+
+tracking_source_files = \
+	src/tracking/correct/newton_correct.cpp \
+	src/tracking/ode_predictors/euler.cpp
+
+
+
+tracking = $(tracking_header_files) $(tracking_source_files)
+
+
+
+
