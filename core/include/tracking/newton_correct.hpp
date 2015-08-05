@@ -21,3 +21,12 @@
 //  University of Notre Dame
 //  ACMS
 //  Summer 2015
+
+
+namespace bertini{
+	namespace correct{
+
+		
+	}
+}
+

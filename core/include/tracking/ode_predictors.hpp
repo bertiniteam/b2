@@ -23,3 +23,12 @@
 //  Summer 2015
 
 #include "tracking/euler.hpp"
+
+namespace bertini{
+	namespace predict{
+
+		
+	}
+}
+
+

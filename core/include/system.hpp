@@ -119,7 +119,18 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value);
 
-	
+		
+		/**
+		\brief Compute the time-derivative is a system. 
+		
+		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
+
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\throws std::runtime error if the system does not have a path variable defined.
+		*/
+		template<typename T>
+		Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value);
+
 		/**
 		Homogenize the system, adding new homogenizing variables for each VariableGroup defined for the system.
 

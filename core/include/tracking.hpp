@@ -26,3 +26,31 @@
 #include "tracking/correct.hpp"
 
 
+namespace bertini{
+
+	namespace tracking{
+
+		template <typename T>
+		int step(int predictor_choice, T current_time)
+		{
+
+
+			switch predictor_choice
+			{
+
+				default:
+				{
+
+
+				}
+			}
+
+			return 0;
+		}
+
+
+
+	}
+}
+
+

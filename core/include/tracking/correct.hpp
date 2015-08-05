@@ -25,4 +25,9 @@
 
 #include "tracking/newton_correct.hpp"
 
+namespace bertini{
+	namespace correct{
 
+		
+	}
+}

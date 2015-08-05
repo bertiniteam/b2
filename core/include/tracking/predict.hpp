@@ -23,3 +23,11 @@
 //  Summer 2015
 
 #include "tracking/ode_predictors.hpp"
+
+namespace bertini{
+	namespace predict{
+
+		
+	}
+}
+
