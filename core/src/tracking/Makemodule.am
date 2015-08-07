@@ -13,7 +13,8 @@ tracking_header_files = \
 	include/tracking/newton_correct.hpp \
 	include/tracking/predict.hpp \
 	include/tracking/ode_predictors.hpp \
-	include/tracking/euler.hpp
+	include/tracking/euler.hpp \
+	include/tracking/tracking_config.hpp
 
 
 tracking_source_files = \

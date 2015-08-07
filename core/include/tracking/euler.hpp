@@ -27,7 +27,8 @@
 
 #include "tracking/tracking_config.hpp"
 
-#include <Eigen/LU>
+#include "system.hpp"
+#include <eigen3/Eigen/LU>
 
 
 namespace bertini{
@@ -38,7 +39,7 @@ namespace bertini{
 			Perform an euler-prediction step
 
 			\param current_time The current value of the path variable.
-			\param MPType The mode for multiple precision.
+			\param PType The mode for multiple precision.
 			\param num_steps_since_last_condition_number_computation Obvious, hopefully.
 			*/
 			template <typename T>
@@ -47,13 +48,13 @@ namespace bertini{
 			               Vec<T> const& current_space, T current_time, 
 			               T const& dt,
 			               unsigned & num_steps_since_last_condition_number_computation, 
-			               unsigned frequency_of_CN_estimation, int MPType)
+			               unsigned frequency_of_CN_estimation, PrecisionType PType)
 			{
 				auto dh_dt = -S.TimeDerivative(current_time);
-				auto dh_dx = S.Jacobian(X, current_time); // this will complain if the system does not depend on time.
+				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain if the system does not depend on time.
 
 
-				if (MPType==ADAPTIVE)
+				if (PType==PrecisionType::Adaptive)
 				{
 					if (num_steps_since_last_condition_number_computation > frequency_of_CN_estimation)
 					{
@@ -65,8 +66,6 @@ namespace bertini{
 				}
 
 
-				Vec<T> next_space;
-				T next_time;
 
 				return SuccessCode::Success;
 			}

@@ -36,13 +36,13 @@ namespace bertini{
 	namespace tracking{
 
 		template <typename T>
-		int Step(int predictor_choice, T current_time)
+		SuccessCode Step(int predictor_choice, T current_time)
 		{
 
 
 
 
-			return 0;
+			return SuccessCode::Success;
 		}
 
 
