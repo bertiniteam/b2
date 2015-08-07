@@ -325,17 +325,17 @@ namespace bertini
 
 
 	template<typename T>
-	Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value)
+	Vec<T> System::TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value)
 	{
 		if (!HavePathVariable())
 			throw std::runtime_error("computing time derivative of system with no path variable defined");
 
 		SetVariables(variable_values);
-		SetPathVariable(path_variable_value):
+		SetPathVariable(path_variable_value);
 
 		Vec<T> ds_dt(NumFunctions());
 		for (int ii = 0; ii < NumFunctions(); ++ii)
-			ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_());		
+			ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);		
 
 
 		return ds_dt;
