@@ -321,6 +321,36 @@ namespace bertini
 	template Mat<dbl> System::Jacobian(const Vec<dbl> & variable_values, const dbl & path_variable_value);
 	template Mat<mpfr> System::Jacobian(const Vec<mpfr> & variable_values, const mpfr & path_variable_value);
 
+
+
+
+	template<typename T>
+	Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value)
+	{
+		if (!HavePathVariable())
+			throw std::runtime_error("computing time derivative of system with no path variable defined");
+
+		SetVariables(variable_values);
+		SetPathVariable(path_variable_value):
+
+		Vec<T> ds_dt(NumFunctions());
+		for (int ii = 0; ii < NumFunctions(); ++ii)
+			ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_());		
+
+
+		return ds_dt;
+	}
+
+
+	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
+	// see
+	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+	template<typename dbl> Vec<dbl> TimeDerivative(const Vec<dbl> & variable_values, const dbl & path_variable_value);
+	template<typename mpfr> Vec<mpfr> TimeDerivative(const Vec<mpfr> & variable_values, const mpfr & path_variable_value);
+
+
+
+
 	void System::Homogenize()
 	{
 

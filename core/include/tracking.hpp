@@ -40,15 +40,7 @@ namespace bertini{
 		{
 
 
-			switch predictor_choice
-			{
 
-				default:
-				{
-
-
-				}
-			}
 
 			return 0;
 		}

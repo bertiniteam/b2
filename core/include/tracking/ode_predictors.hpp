@@ -25,14 +25,19 @@
 #ifndef ode_predictors_hpp
 #define ode_predictors_hpp
 
-
 #include "tracking/euler.hpp"
 
 namespace bertini{
-	namespace predict{
+	namespace tracking{
 
+
+		namespace predict{
+
+			
+		}
 		
-	}
+	}// re: tracking
+
 }
 
 #endif

@@ -25,14 +25,16 @@
 #ifndef correct_hpp
 #define correct_hpp
 
-
 #include "tracking/newton_correct.hpp"
 
 namespace bertini{
-	namespace correct{
+	namespace tracking{
+		namespace correct{
 
-		
+			
+		}
 	}
+	
 }
 
 

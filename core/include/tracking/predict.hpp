@@ -22,12 +22,41 @@
 //  ACMS
 //  Summer 2015
 
+#ifndef predict_hpp
+#define predict_hpp
+
 #include "tracking/ode_predictors.hpp"
 
 namespace bertini{
-	namespace predict{
+	namespace tracking{
+		namespace predict{
 
+			template <typename T>
+			SuccessCode predict(int predictor_choice)
+			{
+				switch predictor_choice
+				{
+					case EULER:
+					{
+						
+					}
+
+					default:
+					{
+
+					}
+				}
+
+				return SuccessCode::Success;
+			}
+
+		}
 		
 	}
+
+	
 }
 
+
+
+#endif
