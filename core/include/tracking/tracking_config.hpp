@@ -25,7 +25,17 @@
 #ifndef tracking_config_hpp
 #define tracking_config_hpp
 
+namespace bertini
+{
+	namespace tracking{
 
+		enum class SuccessCode
+		{
+			Success,
+			Failure
+		};
+	}
+}
 
 
 #endif
