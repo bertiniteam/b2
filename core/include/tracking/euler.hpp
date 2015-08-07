@@ -22,6 +22,9 @@
 //  ACMS
 //  Summer 2015
 
+#ifndef euler_hpp
+#define euler_hpp
+
 
 #include <Eigen/LU>
 
@@ -63,3 +66,4 @@ namespace bertini{
 
 
 
+#endif

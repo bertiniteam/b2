@@ -22,6 +22,8 @@
 //  ACMS
 //  Summer 2015
 
+#ifndef newton_correct_hpp
+#define newton_correct_hpp
 
 namespace bertini{
 	namespace correct{
@@ -30,3 +32,4 @@ namespace bertini{
 	}
 }
 
+#endif

@@ -22,6 +22,11 @@
 //  ACMS
 //  Summer 2015
 
+
+#ifndef tracking_hpp
+#define tracking_hpp
+
+
 #include "tracking/predict.hpp"
 #include "tracking/correct.hpp"
 
@@ -53,4 +58,6 @@ namespace bertini{
 	}
 }
 
+
+#endif
 

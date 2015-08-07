@@ -22,6 +22,10 @@
 //  ACMS
 //  Summer 2015
 
+#ifndef ode_predictors_hpp
+#define ode_predictors_hpp
+
+
 #include "tracking/euler.hpp"
 
 namespace bertini{
@@ -31,4 +35,4 @@ namespace bertini{
 	}
 }
 
-
+#endif
