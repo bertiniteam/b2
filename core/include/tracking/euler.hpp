@@ -42,7 +42,7 @@ namespace bertini{
 			\param num_steps_since_last_condition_number_computation Obvious, hopefully.
 			*/
 			template <typename T>
-			SuccessCode euler_step(Vec<T> & next_space, T & next_time,
+			SuccessCode EulerStep(Vec<T> & next_space, T & next_time,
 			               System const& S,
 			               Vec<T> const& current_space, T current_time, 
 			               T const& dt,

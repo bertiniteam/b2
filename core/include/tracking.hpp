@@ -36,7 +36,7 @@ namespace bertini{
 	namespace tracking{
 
 		template <typename T>
-		int step(int predictor_choice, T current_time)
+		int Step(int predictor_choice, T current_time)
 		{
 
 

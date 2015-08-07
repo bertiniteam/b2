@@ -32,7 +32,7 @@ namespace bertini{
 		namespace predict{
 
 			template <typename T>
-			SuccessCode predict(int predictor_choice)
+			SuccessCode Predict(int predictor_choice)
 			{
 				switch predictor_choice
 				{
@@ -51,7 +51,7 @@ namespace bertini{
 			}
 
 		}
-		
+
 	}
 
 	
