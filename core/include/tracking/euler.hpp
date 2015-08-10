@@ -51,14 +51,13 @@ namespace bertini{
 			               unsigned frequency_of_CN_estimation, PrecisionType PType)
 			{
 				auto dh_dt = -S.TimeDerivative(current_time);
-				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain if the system does not depend on time.
-
+				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
 
 				if (PType==PrecisionType::Adaptive)
 				{
 					if (num_steps_since_last_condition_number_computation > frequency_of_CN_estimation)
 					{
-						// compute the condition number of the ...
+						//TODO: compute the condition number of the ...
 						num_steps_since_last_condition_number_computation = 0; // reset the counter to 0
 					}
 					else // no need to compute the condition number
