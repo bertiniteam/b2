@@ -161,6 +161,10 @@ namespace bertini {
 			return entry_node_->IsHomogeneous(vars);
 		}
 		
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+            ar & boost::serialization::base_object<Function>(*this);
+        }
     };
     
     

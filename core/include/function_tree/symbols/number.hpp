@@ -113,7 +113,12 @@ namespace bertini {
 
 
 	protected:
-		
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Symbol>(*this);
+		}
+
 
 	};
 
@@ -220,6 +225,11 @@ namespace bertini {
 
 		mpfr highest_precision_value_;
 
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Number>(*this);
+			ar & highest_precision_value_;
+		}
 	};
 
 
@@ -271,6 +281,12 @@ namespace bertini {
         }
 
 		int true_value_;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Number>(*this);
+			ar & true_value_;
+		}
 	};
 
 
@@ -330,7 +346,7 @@ namespace bertini {
 
 
 		/**
-         Differentiates a number.  Should this return the special number Zero?
+         Differentiates a number.  
          */
         std::shared_ptr<Node> Differentiate() override
         {
@@ -353,6 +369,13 @@ namespace bertini {
         }
 
 		mpq_rational true_value_real_, true_value_imag_;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Number>(*this);
+			ar & true_value_real_;
+			ar & true_value_imag_;
+		}
 	};
 
 

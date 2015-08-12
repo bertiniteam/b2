@@ -40,6 +40,11 @@ namespace  bertini {
 		
 		virtual ~Symbol() = default;
 
+	private:
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Node>(*this);
+		}
 	};
 	
 	
@@ -96,7 +101,11 @@ namespace  bertini {
 			Node::ResetStoredValues();
 		}
 		
-		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Symbol>(*this);
+			ar & name_;
+		}
 		
 	};
 	
