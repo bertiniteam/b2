@@ -41,6 +41,8 @@ namespace  bertini {
 		virtual ~Symbol() = default;
 
 	private:
+		friend class boost::serialization::access;
+
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Node>(*this);
@@ -100,6 +102,10 @@ namespace  bertini {
 		{
 			Node::ResetStoredValues();
 		}
+		
+	private:
+
+		friend class boost::serialization::access;
 		
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {

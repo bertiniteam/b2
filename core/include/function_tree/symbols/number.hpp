@@ -114,6 +114,10 @@ namespace bertini {
 
 	protected:
 
+	private:
+
+		friend class boost::serialization::access;
+
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Symbol>(*this);
@@ -225,6 +229,8 @@ namespace bertini {
 
 		mpfr highest_precision_value_;
 
+		friend class boost::serialization::access;
+
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
@@ -281,6 +287,8 @@ namespace bertini {
         }
 
 		int true_value_;
+
+		friend class boost::serialization::access;
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
@@ -370,6 +378,8 @@ namespace bertini {
 
 		mpq_rational true_value_real_, true_value_imag_;
 
+		friend class boost::serialization::access;
+		
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);

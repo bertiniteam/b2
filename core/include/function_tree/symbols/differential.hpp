@@ -165,6 +165,8 @@ namespace bertini {
     private:
         std::shared_ptr<Variable> differential_variable_;
 
+        friend class boost::serialization::access;
+        
         template <typename Archive>
         void serialize(Archive& ar, const unsigned version) {
             ar & boost::serialization::base_object<NamedSymbol>(*this);

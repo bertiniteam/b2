@@ -163,6 +163,9 @@ namespace  bertini {
             return std::get< std::pair<mpfr,bool> >(current_value_).first;
         }
 
+    private:
+
+    	friend class boost::serialization::access;
 
         template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
@@ -173,6 +176,11 @@ namespace  bertini {
 	
 
 	
+
+	
 } // re: namespace bertini
+
+
+
 
 #endif
