@@ -135,7 +135,8 @@ namespace bertini {
 	class Float : public virtual Number
 	{
 	public:
-		Float();
+		Float()
+		{}
 
 		Float(double val)
 		{
@@ -379,7 +380,7 @@ namespace bertini {
 		mpq_rational true_value_real_, true_value_imag_;
 
 		friend class boost::serialization::access;
-		
+
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
