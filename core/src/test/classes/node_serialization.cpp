@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 {
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 
-	auto f = exp(sqrt(pow(pow(x*x+ (-x) -sin(x)+cos(x)+tan(x),x),3)));
+	auto f = exp(sqrt(pow(pow(x*x+ (-x) -sin(x)+cos(x)+tan(x),x),3)))/x;
 
 	{
 		std::ofstream fout("serialization_test_node");
