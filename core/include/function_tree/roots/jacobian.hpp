@@ -114,9 +114,7 @@ namespace bertini {
 		}
         
         
-    private:
-        std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
-        
+    
         /**
         The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
         */
@@ -160,6 +158,11 @@ namespace bertini {
 		{
 			return entry_node_->IsHomogeneous(vars);
 		}
+
+        std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
+        
+    private:
+        friend class boost::serialization::access;
 		
         template <typename Archive>
         void serialize(Archive& ar, const unsigned version) {

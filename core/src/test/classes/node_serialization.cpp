@@ -37,6 +37,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <fstream>
 
 
 using Variable = bertini::Variable;
@@ -56,7 +57,28 @@ BOOST_AUTO_TEST_SUITE(node_serialization)
 
 BOOST_AUTO_TEST_CASE(serialize_variable)
 {
+	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 
+
+	{
+		std::ofstream fout("serialization_test_node");
+		
+		boost::archive::text_oarchive oa(fout);
+		
+		// write class instance to archive
+		oa << x;
+	}
+	
+	std::shared_ptr<Variable> x2;
+	{
+		std::ifstream fin("serialization_test_node");
+		
+		boost::archive::text_iarchive ia(fin);
+		// read class state from archive
+		ia >> x2;
+	}
+
+	std::cout << *x2 << "\n";
 }
 
 

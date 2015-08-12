@@ -36,6 +36,11 @@
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
 
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+
 #include <deque>
 
 
@@ -43,6 +48,7 @@ using mpfr = bertini::complex;
 
 namespace bertini {
 class Variable;
+
 
 using VariableGroup = std::deque< std::shared_ptr<Variable> >;
 
@@ -247,10 +253,12 @@ protected:
 	}
 
 private:
+	friend class boost::serialization::access;
+
 	template <typename Archive>
 	void serialize(Archive& ar, const unsigned version) {
 	}
-	
+
 };
 	
 	/**
