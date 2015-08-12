@@ -33,7 +33,7 @@ namespace  bertini {
 
 	This class is an interface for all non-operators.
 	*/
-	class Symbol : public virtual Node
+	class Symbol : public Node
 	{
 		
 	public:
@@ -61,7 +61,7 @@ namespace  bertini {
 	
 	Symbols which have names are named symbols.
 	*/
-	class NamedSymbol : public virtual Symbol
+	class NamedSymbol : public  Symbol
 	{
 		std::string name_;
 	public:
@@ -98,15 +98,10 @@ namespace  bertini {
 		virtual ~NamedSymbol() = default;
 		
 		
-		void Reset() override
-		{
-			Node::ResetStoredValues();
-		}
-		
 	private:
 
 		friend class boost::serialization::access;
-		
+
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Symbol>(*this);
