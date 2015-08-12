@@ -78,13 +78,33 @@ BOOST_AUTO_TEST_CASE(serialize_variable)
 		ia >> x2;
 	}
 
-	std::cout << *x2 << "\n";
+	BOOST_CHECK(x->name()==x2->name());
 }
 
 
 BOOST_AUTO_TEST_CASE(serialize_float)
 {
+	std::shared_ptr<Float> two_point_oh_four = std::make_shared<Float>(2.04);
 
+	{
+		std::ofstream fout("serialization_test_node");
+		
+		boost::archive::text_oarchive oa(fout);
+		
+		// write class instance to archive
+		oa << two_point_oh_four;
+	}
+	
+	std::shared_ptr<Float> two_point_oh_four2;
+	{
+		std::ifstream fin("serialization_test_node");
+		
+		boost::archive::text_iarchive ia(fin);
+		// read class state from archive
+		ia >> two_point_oh_four2;
+	}
+
+	BOOST_CHECK(two_point_oh_four->Eval<dbl>()==two_point_oh_four2->Eval<dbl>());
 }
 
 BOOST_AUTO_TEST_CASE(serialize_integer)
