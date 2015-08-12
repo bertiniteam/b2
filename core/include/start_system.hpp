@@ -60,6 +60,13 @@ namespace bertini
 			virtual Vec<dbl> GenerateStartPoint(dbl,size_t index) const = 0;
 			virtual Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const = 0;
 
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & boost::serialization::base_object<System>(*this);
+			}
+
 		};
 
 
@@ -136,6 +143,17 @@ namespace bertini
 
 			std::vector<std::shared_ptr<Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<size_t> degrees_; ///< stores the degrees of the functions.
+
+
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & boost::serialization::base_object<StartSystem>(*this);
+				ar & random_values_;
+				ar & degrees_;
+			}
+
 		};
 	}
 }
