@@ -134,6 +134,13 @@ BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 		ia >> f2;
 	}
 
+	BOOST_CHECK(x->name()==x2->name());
+
+	x->set_current_value(dbl(1.2,0.9));
+	x2->set_current_value(dbl(1.2,0.9));
+
+	BOOST_CHECK(abs(f->Eval<dbl>() - f2->Eval<dbl>()) < threshold_clearance_d);
+
 }
 
 
