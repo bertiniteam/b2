@@ -107,16 +107,35 @@ BOOST_AUTO_TEST_CASE(serialize_float)
 	BOOST_CHECK(two_point_oh_four->Eval<dbl>()==two_point_oh_four2->Eval<dbl>());
 }
 
-BOOST_AUTO_TEST_CASE(serialize_integer)
+BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 {
+	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+
+	auto f = exp(sqrt(pow(pow(x*x+ (-x) -sin(x)+cos(x)+tan(x),x),3)));
+
+	{
+		std::ofstream fout("serialization_test_node");
+		
+		boost::archive::text_oarchive oa(fout);
+		
+		// write class instance to archive
+		oa << x;
+		oa << f;
+	}
+	
+	std::shared_ptr<Node> f2;
+	std::shared_ptr<Variable> x2;
+	{
+		std::ifstream fin("serialization_test_node");
+		
+		boost::archive::text_iarchive ia(fin);
+		// read class state from archive
+		ia >> x2;
+		ia >> f2;
+	}
 
 }
 
-
-BOOST_AUTO_TEST_CASE(serialize_rational)
-{
-
-}
 
 BOOST_AUTO_TEST_SUITE_END()
 

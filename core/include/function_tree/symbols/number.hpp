@@ -248,7 +248,8 @@ namespace bertini {
 	class Integer : public virtual Number
 	{
 	public:
-		Integer();
+		Integer()
+		{}
 
 		Integer(int val) : true_value_(val)
 		{}
@@ -311,7 +312,8 @@ namespace bertini {
 
 		using mpq_rational = boost::multiprecision::mpq_rational;
 
-		Rational();
+		Rational()
+		{}
 
 		Rational(int val) : true_value_real_(val), true_value_imag_(0)
 		{}
