@@ -137,6 +137,10 @@ namespace bertini {
 	            return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
 	        }
 
+	        template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & boost::serialization::base_object<NamedSymbol>(*this);
+			}
 	    };
 
 
@@ -233,6 +237,10 @@ namespace bertini {
 	            return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
 	        }
 
+            template <typename Archive>
+    		void serialize(Archive& ar, const unsigned version) {
+    			ar & boost::serialization::base_object<NamedSymbol>(*this);
+    		}
 
 	    };
 

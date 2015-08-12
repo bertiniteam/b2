@@ -246,6 +246,11 @@ protected:
 		std::get< std::pair<mpfr,bool> >(current_value_).second = false;
 	}
 
+private:
+	template <typename Archive>
+	void serialize(Archive& ar, const unsigned version) {
+	}
+	
 };
 	
 	/**

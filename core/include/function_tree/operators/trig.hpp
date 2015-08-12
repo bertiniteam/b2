@@ -51,6 +51,11 @@ namespace bertini {
 		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<UnaryOperator>(*this);
+        }
+
 
 	};
 
@@ -101,6 +106,10 @@ namespace bertini {
 			return sin(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<TrigOperator>(*this);
+        }
 	};
 	
 
@@ -145,6 +154,10 @@ namespace bertini {
 			return asin(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<TrigOperator>(*this);
+        }
 	};
 
 
@@ -199,6 +212,10 @@ namespace bertini {
 			return cos(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<TrigOperator>(*this);
+        }
 	};
 	
 	
@@ -247,6 +264,10 @@ namespace bertini {
 			return acos(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<TrigOperator>(*this);
+        }
 	};
 	
 	
@@ -302,6 +323,10 @@ namespace bertini {
 			return tan(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<TrigOperator>(*this);
+        }
 	};
 	
 	
@@ -349,6 +374,10 @@ namespace bertini {
 			return atan(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<TrigOperator>(*this);
+        }
 	};
 	
 	

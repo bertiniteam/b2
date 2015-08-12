@@ -39,6 +39,12 @@ namespace bertini {
 	public:
 		
 		virtual ~Operator() = default;
+
+	private:
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<Node>(*this);
+        }
 	};
 	
 	
@@ -175,6 +181,12 @@ namespace bertini {
 	protected:
 		//Stores the single child of the unary operator
 		std::shared_ptr<Node> child_;
+
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<Operator>(*this);
+            ar & child_;
+        }
 	};
 	
 	
@@ -197,7 +209,10 @@ namespace bertini {
 		
 		virtual void print(std::ostream & target) const = 0;
 		
-		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<Operator>(*this);
+        }
 	};
 	
 	/**
@@ -270,7 +285,11 @@ namespace bertini {
 		std::vector< std::shared_ptr<Node> > children_;
 		
 		
-		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<Operator>(*this);
+            ar & children_;
+        }
 		
 	};
 	
