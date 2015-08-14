@@ -36,7 +36,12 @@
 
 #include <eigen3/Eigen/Dense>
 
-
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/deque.hpp>
 
 
 namespace bertini {
@@ -506,25 +511,47 @@ namespace bertini {
 
 		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.  
 
-		std::vector< Fn > functions_; ///< The system's functions.
-		std::vector< Fn > subfunctions_; ///< Any declared subfunctions for the system.  Can use these to ensure that complicated repeated structures are only created and evaluated once.
+
+		bool have_path_variable_; ///< Whether we have the variable or not.
+		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
+		
+		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
 		std::vector< Fn > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.  
 
-
-		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
-
-
-		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
-		bool have_path_variable_; ///< Whether we have the variable or not.
-
-
 		std::vector< Fn > constant_subfunctions_; ///< degree-0 functions, depending on neither variables nor the path variable.
-
+		std::vector< Fn > subfunctions_; ///< Any declared subfunctions for the system.  Can use these to ensure that complicated repeated structures are only created and evaluated once.
+		std::vector< Fn > functions_; ///< The system's functions.
+		
+		
 		std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
 		bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
 
 
 		unsigned precision_; ///< the current working precision of the system 
+
+
+		friend class boost::serialization::access;
+
+        template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & ungrouped_variables_;
+			ar & variable_groups_;
+			ar & hom_variable_groups_;
+			ar & homogenizing_variables_;
+			
+			ar & have_path_variable_;
+			ar & path_variable_;
+
+			ar & implicit_parameters_;
+			ar & explicit_parameters_;
+
+			ar & constant_subfunctions_;
+			ar & subfunctions_;
+			ar & functions_;
+
+			ar & is_differentiated_;
+			ar & jacobian_;
+		}
 
 	};
 

@@ -214,6 +214,16 @@ namespace bertini {
 		
 		
 		std::shared_ptr<Node> entry_node_; ///< The top node for the function.
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<NamedSymbol>(*this);
+            ar & entry_node_;
+        }
 	};
 	
 	
