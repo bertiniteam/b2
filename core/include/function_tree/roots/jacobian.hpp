@@ -102,65 +102,72 @@ namespace bertini {
       
         
         
-        /**
-		 Change the precision of this variable-precision tree node.
+  //       /**
+		//  Change the precision of this variable-precision tree node.
 		 
-		 \param prec the number of digits to change precision to.
-		 */
-		virtual void precision(unsigned int prec) override
-		{
-			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
-		}
+		//  \param prec the number of digits to change precision to.
+		//  */
+		// virtual void precision(unsigned int prec) override
+		// {
+		// 	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+		// 	val_pair.first.precision(prec);
+		// }
         
         
-    private:
+    
+        // /**
+        // The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
+        // */
+        // int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+        // {
+        //     return entry_node_->Degree(v);
+        // }
+
+  //       /**
+  //       The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
+  //       */
+  //       int Degree(VariableGroup const& vars) const override
+		// {
+		// 	return entry_node_->Degree(vars);
+		// }
+
+		// /**
+		//  Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+	 //    */
+		// std::vector<int> MultiDegree(VariableGroup const& vars) const override
+		// {
+			
+		// 	std::vector<int> deg(vars.size());
+		// 	for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
+		// 	{
+		// 		*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
+		// 	}
+		// 	return deg;
+		// }
+
+		// bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		// {
+		// 	return entry_node_->IsHomogeneous(v);
+		// }
+
+
+		// /**
+		// Check for homogeneity, with respect to a variable group.
+		// */
+		// bool IsHomogeneous(VariableGroup const& vars) const override
+		// {
+		// 	return entry_node_->IsHomogeneous(vars);
+		// }
+
         std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
         
-        /**
-        The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
-        */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-        {
-            return entry_node_->Degree(v);
-        }
-
-        /**
-        The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
-        */
-        int Degree(VariableGroup const& vars) const override
-		{
-			return entry_node_->Degree(vars);
-		}
-
-		/**
-		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override
-		{
-			
-			std::vector<int> deg(vars.size());
-			for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
-			{
-				*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
-			}
-			return deg;
-		}
-
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return entry_node_->IsHomogeneous(v);
-		}
-
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
-		{
-			return entry_node_->IsHomogeneous(vars);
-		}
+    private:
+        friend class boost::serialization::access;
 		
+        template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+            ar & boost::serialization::base_object<Function>(*this);
+        }
     };
     
     
