@@ -20,6 +20,8 @@ config.*
 libtool
 Makefile
 
+*.sublime-workspace
+
 bertini2
 b2_class_test
 test_tree_interactive

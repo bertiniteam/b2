@@ -113,7 +113,16 @@ namespace bertini {
 
 
 	protected:
-		
+
+	private:
+
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Symbol>(*this);
+		}
+
 
 	};
 
@@ -126,7 +135,8 @@ namespace bertini {
 	class Float : public virtual Number
 	{
 	public:
-		Float();
+		Float()
+		{}
 
 		Float(double val)
 		{
@@ -220,6 +230,13 @@ namespace bertini {
 
 		mpfr highest_precision_value_;
 
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Number>(*this);
+			ar & highest_precision_value_;
+		}
 	};
 
 
@@ -231,7 +248,8 @@ namespace bertini {
 	class Integer : public virtual Number
 	{
 	public:
-		Integer();
+		Integer()
+		{}
 
 		Integer(int val) : true_value_(val)
 		{}
@@ -271,6 +289,14 @@ namespace bertini {
         }
 
 		int true_value_;
+
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Number>(*this);
+			ar & true_value_;
+		}
 	};
 
 
@@ -286,7 +312,8 @@ namespace bertini {
 
 		using mpq_rational = boost::multiprecision::mpq_rational;
 
-		Rational();
+		Rational()
+		{}
 
 		Rational(int val) : true_value_real_(val), true_value_imag_(0)
 		{}
@@ -330,7 +357,7 @@ namespace bertini {
 
 
 		/**
-         Differentiates a number.  Should this return the special number Zero?
+         Differentiates a number.  
          */
         std::shared_ptr<Node> Differentiate() override
         {
@@ -353,6 +380,15 @@ namespace bertini {
         }
 
 		mpq_rational true_value_real_, true_value_imag_;
+
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Number>(*this);
+			ar & true_value_real_;
+			ar & true_value_imag_;
+		}
 	};
 
 
