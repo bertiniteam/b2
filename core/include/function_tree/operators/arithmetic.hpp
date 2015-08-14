@@ -179,6 +179,15 @@ namespace bertini {
 		// TODO(JBC): If we add method to delete child, must also delete children_sign_ entry.
 		std::vector<bool> children_sign_;
 		
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<NaryOperator>(*this);
+            ar & children_sign_;
+        }
 	};
 	
 	
@@ -408,6 +417,15 @@ namespace bertini {
 		
 		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 		
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<UnaryOperator>(*this);
+        }
 	};
 	
 	
@@ -531,6 +549,16 @@ namespace bertini {
 		// TODO(JBC): If we add method to delete child, must also delete children_mult_ entry.
 		std::vector<bool> children_mult_or_div_;
 		
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<NaryOperator>(*this);
+            ar & children_mult_or_div_;
+        }
 	};
 	
 	
@@ -806,6 +834,19 @@ namespace bertini {
 		
 		std::shared_ptr<Node> base_;
 		std::shared_ptr<Node> exponent_;
+
+
+	private:
+
+		friend class boost::serialization::access;
+		
+
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<BinaryOperator>(*this);
+            ar & base_;
+            ar & exponent_;
+        }
 	};
 	// end of the class PowerOperator
 	
@@ -938,6 +979,17 @@ namespace bertini {
 	private:
 		
 		int exponent_ = 1; ///< Exponent for the exponenetial operator
+
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<UnaryOperator>(*this);
+            ar & exponent_;
+        }
 	}; // re: class IntegerPowerOperator
 	
 	
@@ -1007,6 +1059,15 @@ namespace bertini {
 		
 		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 		
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<UnaryOperator>(*this);
+        }
 	};
 	
 	
@@ -1064,6 +1125,14 @@ namespace bertini {
 		
 		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 		
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+        void serialize(Archive& ar, const unsigned version) {
+        	ar & boost::serialization::base_object<UnaryOperator>(*this);
+        }
 	};
 	
 	

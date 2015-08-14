@@ -26,6 +26,8 @@
 #include "start_system.hpp"
 
 
+BOOST_CLASS_EXPORT(bertini::start_system::TotalDegree);
+
 
 namespace bertini {
 
