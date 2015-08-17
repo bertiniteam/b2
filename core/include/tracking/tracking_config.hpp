@@ -38,6 +38,7 @@ namespace bertini
 		enum class SuccessCode
 		{
 			Success,
+			HigherPrecisionNecessary,
 			Failure
 		};
 
