@@ -72,7 +72,7 @@ namespace boost { namespace serialization {
 	
 
 	/**
-	 Save a mpfr_float type to a boost archive.
+	 Save a gmp_rational type to a boost archive.
 	 */
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::gmp_rational const& r, unsigned /*version*/)
@@ -82,7 +82,7 @@ namespace boost { namespace serialization {
 	}
 	
 	/**
-	 Load a mpfr_float type from a boost archive.
+	 Load a gmp_rational type from a boost archive.
 	 */
 	template <typename Archive>
 	void load(Archive& ar, ::boost::multiprecision::backends::gmp_rational& r, unsigned /*version*/)
