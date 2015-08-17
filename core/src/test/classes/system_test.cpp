@@ -490,29 +490,6 @@ BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 
 
 
-BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
-{
-	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
-	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
-	auto f1 = (1-t)*x + t*(1-x);
-	auto f2 = x-t;
-
-	bertini::System S;
-	S.AddUngroupedVariable(x);
-	S.AddPathVariable(t);
-	S.AddFunction(f1);
-	S.AddFunction(f2);
-
-	Vec<dbl> v(1);
-	v << 1.0;
-	dbl time(0.5,0.2);
-	auto dS_dt = S.TimeDerivative(v,time);
-
-	BOOST_CHECK( abs(dS_dt(0) - dbl(-1) ) < threshold_clearance_d);
-	BOOST_CHECK( abs(dS_dt(1) - dbl(-1) ) < threshold_clearance_d);
-
-
-}
 
 BOOST_AUTO_TEST_SUITE_END()
 
