@@ -30,7 +30,6 @@
 #include "system.hpp"
 #include <eigen3/Eigen/LU>
 
-
 namespace bertini{
 	namespace tracking{
 		namespace predict{
@@ -39,7 +38,7 @@ namespace bertini{
 			Perform an euler-prediction step
 
 			\param current_time The current value of the path variable.
-			\param PType The mode for multiple precision.
+			\param PrecType The mode for multiple precision.
 			\param num_steps_since_last_condition_number_computation Obvious, hopefully.
 			*/
 			template <typename T>
@@ -48,12 +47,12 @@ namespace bertini{
 			               Vec<T> const& current_space, T current_time, 
 			               T const& dt,
 			               unsigned & num_steps_since_last_condition_number_computation, 
-			               unsigned frequency_of_CN_estimation, PrecisionType PType)
+			               unsigned frequency_of_CN_estimation, PrecisionType PrecType)
 			{
 				auto dh_dt = -S.TimeDerivative(current_time);
 				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
 
-				if (PType==PrecisionType::Adaptive)
+				if (PrecType==PrecisionType::Adaptive)
 				{
 					if (num_steps_since_last_condition_number_computation > frequency_of_CN_estimation)
 					{
@@ -64,7 +63,24 @@ namespace bertini{
 						num_steps_since_last_condition_number_computation++;
 				}
 
+				// solve dX = (dH/dx)^(-1)*Y
+				// Y = dH/dt
 
+				auto dX = dh_dx.lu().solve(dh_dt); 
+
+				// if (PrecType==PrecisionType::Adaptive)
+				// {
+				// 	if (AMP_criterion_A != ok)
+				// 	{
+				// 		return SuccessCode::HigherPrecisionNecessary;
+				// 	}
+				// 	else if (AMP_criterion_C != ok)
+				// 	{
+				// 		return SuccessCode::HigherPrecisionNecessary;
+				// 	} 
+				// }
+
+				next_space = current_space + dX * dt;
 
 				return SuccessCode::Success;
 			}
