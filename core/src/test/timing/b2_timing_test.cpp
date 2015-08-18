@@ -4,6 +4,9 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 
+#include <sstream>
+
+
 
 using System = bertini::System;
 using Var = std::shared_ptr<bertini::Variable>;
@@ -53,6 +56,10 @@ void arbitrary(boost::filesystem::path const& file)
 {
 	std::ifstream fin(file.c_str());
 
+	std::stringstream buffer;
+	buffer << fin.rdbuf();
+
+	System sys(buffer.str());
 	
 }
 
