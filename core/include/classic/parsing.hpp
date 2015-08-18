@@ -51,7 +51,8 @@ namespace bertini
 		{
 			std::string config_;
 			std::string input_;
-
+		public:
+			
 			std::string Config() const
 			{
 				return config_;
