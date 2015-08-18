@@ -1,0 +1,8 @@
+#this is src/classic/Makemodule.am
+
+
+classic_source_files = \
+	include/classic.hpp include/classic/parsing.hpp
+
+classic = $(classic_source_files)
+
