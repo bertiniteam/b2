@@ -1,6 +1,8 @@
 #include "bertini.hpp"
 
 #include <boost/timer/timer.hpp>
+#include <boost/filesystem.hpp>
+#include <fstream>
 
 
 using System = bertini::System;
@@ -11,21 +13,48 @@ using VariableGroup = bertini::VariableGroup;
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
-
+template<typename T>
+void arbitrary(boost::filesystem::path const& file);
 
 void simple_single_variable();
 void complicated_single_variable();
 
 int main(int argc, char** argv)
 {	
-	simple_single_variable();
+	switch (argc)
+	{
+		case 1:
+		{
+			simple_single_variable();
+			complicated_single_variable();
+			break;
+		}
+		case 2:
+		{	
+			boost::filesystem::path file(argv[1]);
+			arbitrary<dbl>(file);
+			break;
+		}
+		default:
+		{
+			std::cout << "timing testing not implemented with the number of arguments you gave\n";
+			break;
+		}
+	}
 
-	complicated_single_variable();
+	
 
 	return 0;
 }
 
 
+template<typename T>
+void arbitrary(boost::filesystem::path const& file)
+{
+	std::ifstream fin(file.c_str());
+
+	
+}
 
 void simple_single_variable()
 {
