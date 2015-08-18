@@ -104,6 +104,14 @@ namespace bertini {
 
 
 		/**
+		Evaluate the Jacobian matrix of the system, using the previous space and time values.
+
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		*/
+		template<typename T>
+		Mat<T> Jacobian();
+
+		/**
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.

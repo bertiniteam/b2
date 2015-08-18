@@ -16,7 +16,7 @@ template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic
 void simple_single_variable();
 void complicated_single_variable();
 
-int main()
+int main(int argc, char** argv)
 {	
 	simple_single_variable();
 
@@ -32,20 +32,26 @@ void simple_single_variable()
 	
 
 	Var x = std::make_shared<bertini::Variable>("x");
+	Var t = std::make_shared<bertini::Variable>("t");
+
 
 	Vec<dbl> v(1);
 	v << dbl(1.614234164678871592346182,-0.48717825396548971237946);
 
 	System S;
 	S.AddUngroupedVariable(x);
-	S.AddFunction(pow(x,2) + x + 1);
+	S.AddPathVariable(t);
+	S.AddFunction(pow(x,2) + x*t + pow(t,2));
 
-	boost::timer::auto_cpu_timer t;
+	boost::timer::auto_cpu_timer timing_guy;
 
-
+	auto J = S.Jacobian(v,dbl(0));
+	auto f_values = S.Eval(v,dbl(0));
 	for (unsigned ii=0; ii < 1000000; ii++)
 	{
-		auto f_values = S.Eval(v);
+		f_values = S.Eval(v,dbl(0));
+		// J = S.Jacobian<dbl>();
+		// std::cout << J << "\n";
 	}
 
 	std::cout << S << "\n";
