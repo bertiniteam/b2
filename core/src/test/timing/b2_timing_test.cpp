@@ -2,6 +2,8 @@
 
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/type_index.hpp>
+
 #include <fstream>
 
 #include <sstream>
@@ -34,6 +36,12 @@ int main(int argc, char** argv)
 		{	
 			boost::filesystem::path file(argv[1]);
 			arbitrary<dbl>(file);
+			break;
+		}
+		case 3:
+		{
+			boost::filesystem::path file(argv[1]);
+			arbitrary<dbl>(file, atoi(argv[2]));
 			break;
 		}
 		default:
@@ -81,6 +89,7 @@ void arbitrary(boost::filesystem::path const& file, unsigned num_iterations)
 		for (unsigned ii=0; ii<num_iterations; ii++)
 		{
 			f_values = S.Eval(variable_values,time);
+			// J = S.Jacobian();
 		}
 	}
 	else
@@ -94,9 +103,11 @@ void arbitrary(boost::filesystem::path const& file, unsigned num_iterations)
 		for (unsigned ii=0; ii<num_iterations; ii++)
 		{
 			f_values = S.Eval(variable_values);
+			// J = S.Jacobian();
 		}
 	}
 
+	std::cout << "results for " << num_iterations << " iterations, evaluated in " << boost::typeindex::type_id_with_cvr<decltype(time)>().pretty_name() << "\n";
 
 }
 
@@ -117,7 +128,7 @@ void simple_single_variable()
 	S.AddFunction(pow(x,2) + x*t + pow(t,2));
 
 	std::cout << S << "\n";
-	
+
 	boost::timer::auto_cpu_timer timing_guy;
 
 	auto J = S.Jacobian(v,dbl(0));
@@ -125,8 +136,7 @@ void simple_single_variable()
 	for (unsigned ii=0; ii < 1000000; ii++)
 	{
 		f_values = S.Eval(v,dbl(0));
-		// J = S.Jacobian<dbl>();
-		// std::cout << J << "\n";
+		// J = S.Jacobian();
 	}
 
 	
