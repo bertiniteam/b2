@@ -65,8 +65,6 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 
 	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
 
-	std::cout << std::string(iter,end);
-
 
 	BOOST_CHECK(s && iter==end);
 
