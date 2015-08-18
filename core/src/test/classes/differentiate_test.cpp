@@ -56,46 +56,38 @@ using Jacobian = bertini::Jacobian;
 unsigned DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS = 30;
 
 
-// double threshold_clearance_d = 1e-10;
-// double threshold_clearance_mp = 1e-25;
+double threshold_clearance_d = 1e-15;
+
+unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS = 30;
+double threshold_clearance_mp = 1e-27;
+
+std::string xstr_real = "3.1";
+std::string xstr_imag = "4.1";
+std::string ystr_real = "8.8";
+std::string ystr_imag = "9.9";
+std::string astr_real = "3.4";
+std::string astr_imag = "5.6";
+std::string bstr_real = "-0.2";
+std::string bstr_imag = "-2.1";
+std::string pstr_real = "0.8";
+std::string pstr_imag = "-1.7";
 
 
-extern double threshold_clearance_d;
-extern double threshold_clearance_mp;
-// these have been commented out, and we will use the ones defined in function_tree_test.
-// std::string xstr_real = "3.1";
-// std::string xstr_imag = "0.3";
-// std::string ystr_real = "8.8";
-// std::string ystr_imag = "1.4";
-// std::string astr_real = "3.4";
-// std::string astr_imag = "5.6";
-// std::string bstr_real = "-0.2";
-// std::string bstr_imag = "-2.1";
+dbl xnum_dbl(std::stod(xstr_real), std::stod(xstr_imag));
+dbl ynum_dbl(std::stod(ystr_real), std::stod(ystr_imag));
+dbl anum_dbl(std::stod(astr_real), std::stod(astr_imag));
+dbl bnum_dbl(std::stod(bstr_real), std::stod(bstr_imag));
+dbl pnum_dbl(std::stod(pstr_real), std::stod(pstr_imag));
+
+mpfr xnum_mpfr(xstr_real, xstr_imag);
+mpfr ynum_mpfr(ystr_real, ystr_imag);
+mpfr anum_mpfr(astr_real, astr_imag);
+mpfr bnum_mpfr(bstr_real, bstr_imag);
+mpfr pnum_mpfr(pstr_real, pstr_imag);
+
+
 std::string zstr_real = "0.8";
 std::string zstr_imag = "-1.7";
-extern std::string xstr_real;
-extern std::string xstr_imag;
-
-extern std::string ystr_real;
-extern std::string ystr_imag;
-extern std::string astr_real;
-extern std::string astr_imag;
-extern std::string bstr_real;
-extern std::string bstr_imag;
-// extern std::string zstr_real;
-// extern std::string zstr_imag;
-
-
-
-extern dbl xnum_dbl;
-extern dbl ynum_dbl;
-extern dbl anum_dbl;
-extern dbl bnum_dbl;
-
-// dbl xnum_dbl(std::stod(xstr_real), std::stod(xstr_imag));
-// dbl ynum_dbl(std::stod(ystr_real), std::stod(ystr_imag));
-// dbl anum_dbl(std::stod(astr_real), std::stod(astr_imag));
-// dbl bnum_dbl(std::stod(bstr_real), std::stod(bstr_imag));
 dbl znum_dbl(std::stod(zstr_real), std::stod(zstr_imag));
 
 extern mpfr xnum_mpfr;
@@ -103,10 +95,6 @@ extern mpfr ynum_mpfr;
 extern mpfr anum_mpfr;
 extern mpfr bnum_mpfr;
 
-// mpfr xnum_mpfr(xstr_real, xstr_imag);
-// mpfr ynum_mpfr(ystr_real, ystr_imag);
-// mpfr anum_mpfr(astr_real, astr_imag);
-// mpfr bnum_mpfr(bstr_real, bstr_imag);
 mpfr znum_mpfr(zstr_real, zstr_imag);
 
 Eigen::Matrix<dbl, 3, 1> var_dbl;
