@@ -1,0 +1,16 @@
+
+@startuml
+
+namespace bertini{
+namespace settings{
+class Gui{
+
+}
+
+}
+}
+
+
+
+
+@enduml

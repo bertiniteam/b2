@@ -1,310 +1,0 @@
-TSLP
-v6
-r1
-cCheck dependencies
-cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-cCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-
-N/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/SDKSettings.plist
-c0000000053D1B024000000000000044C
-t1406251044
-s1100
-
-N/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/CoreServices/SystemVersion.plist
-c0000000053D1B02400000000000001DE
-t1406251044
-s478
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o
-t2
-s0
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp
-c000000005388F9C5000000000000260A
-t1401485765
-s9738
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp
-c000000005388F9C50000000000000AAD
-t1401485765
-s2733
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp
-c000000005388F9C50000000000001AA4
-t1401485765
-s6820
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp
-c000000005388F9C500000000000008F3
-t1401485765
-s2291
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp
-c000000005388F9C50000000000003D35
-t1401485765
-s15669
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp
-c000000005388F9C50000000000000AAB
-t1401485765
-s2731
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp
-c000000005388F9C50000000000000737
-t1401485765
-s1847
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp
-c000000005388F9C500000000000021E3
-t1401485765
-s8675
-
-N/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp
-c000000005388F9C50000000000004D80
-t1401485765
-s19840
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp
-r0
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp
-r0
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp
-r0
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp
-r0
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp
-r0
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp
-r0
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp
-r0
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp
-r0
-
-CBuild AST from /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp
-r0
-
-CCheck dependencies
-r0
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection18"Check dependencies18"Check dependencies1c23b1e1d0a7b941^f853b7e1d0a7b941^---0#1#1#--18"Check dependencies36"CD25BDAD-ABF7-4B53-A94C-285B18C49556-
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-s430428385.717002
-e430428386.582443
-r0
-xCompileC
-xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o
-x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvm.clang.1_0.compiler
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp:9:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h:13:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:
-o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found
-o#include <gmp.h>
-o         ^
-o1 error generated.
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection97"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp196"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o SLP/AdditionOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler529cb7e1d0a7b941^634195e2d0a7b941^-623"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp:9:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h:13:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found#include <gmp.h>         ^1 error generated.-0#0#1#-19%DVTDocumentLocation2@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp0000000000000000^3558"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o SLP/AdditionOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/AdditionOp.o36"EBC7E06D-0F4A-4956-A652-06AE6A56DEB5-
-b837F38F1-7187-4431-A033-8C9DC5CB6952
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-s430428385.717688
-e430428386.483471
-r0
-xCompileC
-xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o
-x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvm.clang.1_0.compiler
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:9:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h:14:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:
-o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found
-o#include <gmp.h>
-o         ^
-o1 error generated.
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection97"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp196"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o SLP/DoubleSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler5d15b8e1d0a7b941^6b447ce2d0a7b941^-511"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:9:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h:14:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found#include <gmp.h>         ^1 error generated.1(36%IDEClangDiagnosticActivityLogMessage2@22"'gmp.h' file not found-430428386#18446744073709551615#0#3(2@114"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp:9:-430428386#18446744073709551615#0#-0#27"com.apple.dt.IDE.diagnostic23%DVTTextDocumentLocation3@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^8#9#8#9#151#0#21"Apple LLVM 5.0 Notice--2@113"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h:14:-430428386#18446744073709551615#0#-0#27"com.apple.dt.IDE.diagnostic3@96"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.h0000000000000000^13#9#13#9#254#0#21"Apple LLVM 5.0 Notice--2@109"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:-430428386#18446744073709551615#0#-0#27"com.apple.dt.IDE.diagnostic3@92"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h0000000000000000^42#9#42#9#715#0#21"Apple LLVM 5.0 Notice--2#27"com.apple.dt.IDE.diagnostic3@91"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp0000000000000000^8#9#8#9#227#0#29"Lexical or Preprocessor Issue--0#0#1#-19%DVTDocumentLocation4@98"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp0000000000000000^3558"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o SLP/DoubleSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DoubleSymb.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DoubleSymb.o36"745453D8-E7D3-4AF6-B052-9AE7C07A1B5B-
-b837F38F1-7187-4431-A033-8C9DC5CB6952
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-s430428385.719157
-e430428386.582482
-r0
-xCompileC
-xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o
-x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvm.clang.1_0.compiler
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp:6:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.h:14:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:
-o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found
-o#include <gmp.h>
-o         ^
-o1 error generated.
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection96"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp194"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o SLP/DriverSLP.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compilera92eb8e1d0a7b941^aa4895e2d0a7b941^-621"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp:6:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/AdditionOp.h:14:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found#include <gmp.h>         ^1 error generated.-0#0#1#-19%DVTDocumentLocation2@97"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp0000000000000000^3552"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o SLP/DriverSLP.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/DriverSLP.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/DriverSLP.o36"3561F842-1CB6-484C-981C-D42E18874C69-
-b837F38F1-7187-4431-A033-8C9DC5CB6952
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-s430428385.719489
-e430428386.583061
-r0
-xCompileC
-xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o
-x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvm.clang.1_0.compiler
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp:10:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.h:14:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:
-o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found
-o#include <gmp.h>
-o         ^
-o1 error generated.
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection92"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp186"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o SLP/ExpOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compilerab41b8e1d0a7b941^1d5995e2d0a7b941^-613"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp:10:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.h:14:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found#include <gmp.h>         ^1 error generated.-0#0#1#-19%DVTDocumentLocation2@93"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp0000000000000000^3528"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o SLP/ExpOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/ExpOp.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/ExpOp.o36"EB4E6833-D5DE-4B01-B5DE-9B1A77F3D201-
-b837F38F1-7187-4431-A033-8C9DC5CB6952
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-s430428385.717434
-e430428386.582438
-r0
-xCompileC
-xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o
-x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvm.clang.1_0.compiler
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp:9:
-o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.h:15:10: fatal error: 'boost/numeric/ublas/matrix.hpp' file not found
-o#include <boost/numeric/ublas/matrix.hpp>
-o         ^
-o1 error generated.
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection93"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp188"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o SLP/Factor.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compilere9b7b7e1d0a7b941^804695e2d0a7b941^-335"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp:9:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.h:15:10: fatal error: 'boost/numeric/ublas/matrix.hpp' file not found#include <boost/numeric/ublas/matrix.hpp>         ^1 error generated.-0#0#1#-19%DVTDocumentLocation2@94"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp0000000000000000^3534"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o SLP/Factor.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/Factor.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/Factor.o36"7A4226B9-CFC3-4850-8E89-7DB486EF3942-
-b837F38F1-7187-4431-A033-8C9DC5CB6952
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/IntSymb.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/IntSymb.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-r0
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-s430428385.718772
-e430428386.582436
-r0
-xCompileC
-xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o
-x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvm.clang.1_0.compiler
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp:9:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h:13:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:
-o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found
-o#include <gmp.h>
-o         ^
-o1 error generated.
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection98"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp198"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o SLP/LeafOperand.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler6517b8e1d0a7b941^b03b95e2d0a7b941^-624"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp:9:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.h:13:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found#include <gmp.h>         ^1 error generated.-0#0#1#-19%DVTDocumentLocation2@99"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp0000000000000000^3564"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o SLP/LeafOperand.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/LeafOperand.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/LeafOperand.o36"D9EE2710-1393-4F36-9463-47E28FA16180-
-b837F38F1-7187-4431-A033-8C9DC5CB6952
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-s430428385.716529
-e430428386.582492
-r0
-xCompileC
-xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o
-x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvm.clang.1_0.compiler
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp:9:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.h:14:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:
-o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found
-o#include <gmp.h>
-o         ^
-o1 error generated.
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection93"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp188"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o SLP/MultOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compilerae83b7e1d0a7b941^ec5095e2d0a7b941^-614"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp:9:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.h:14:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Operand.h:16:In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/Symbol.h:43:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found#include <gmp.h>         ^1 error generated.-0#0#1#-19%DVTDocumentLocation2@94"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp0000000000000000^3534"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o SLP/MultOp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/MultOp.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/MultOp.o36"D3332EEA-0B42-463F-9089-62402FCBD42D-
-b837F38F1-7187-4431-A033-8C9DC5CB6952
-
-CCompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
-s430428385.717231
-e430428386.481051
-r0
-xCompileC
-xDerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o
-x/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp
-xnormal
-xx86_64
-xc++
-xcom.apple.compilers.llvm.clang.1_0.compiler
-oIn file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp:3:
-o/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found
-o#include <gmp.h>
-o         ^
-o1 error generated.
-lSLF06#21%IDEActivityLogSection1@2#32"com.apple.dt.IDE.BuildLogSection90"Compile /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp182"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o SLP/amp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler37aab7e1d0a7b941^2d5f7be2d0a7b941^-280"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp:3:/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp:9:10: fatal error: 'gmp.h' file not found#include <gmp.h>         ^1 error generated.1(36%IDEClangDiagnosticActivityLogMessage2@22"'gmp.h' file not found-430428386#18446744073709551615#0#1(2@107"In file included from /Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp:3:-430428386#18446744073709551615#0#-0#27"com.apple.dt.IDE.diagnostic23%DVTTextDocumentLocation3@91"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp0000000000000000^2#9#2#9#46#0#21"Apple LLVM 5.0 Notice--2#27"com.apple.dt.IDE.diagnostic3@91"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.hpp0000000000000000^8#9#8#9#227#0#29"Lexical or Preprocessor Issue--0#0#1#-19%DVTDocumentLocation4@91"file:///Users/jcollins/Documents/West%20Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp0000000000000000^3516"CompileC DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o SLP/amp.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler    cd "/Users/jcollins/Documents/West Texas/Research/Bertini/Code/b2_MainRepo"    export LANG=en_US.US-ASCII    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -std=gnu++11 -stdlib=libc++ -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Werror=return-type -Werror=deprecated-objc-isa-usage -Werror=objc-root-class -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DDEBUG=1 -DDEBUG=1 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.9 -g -fvisibility-inlines-hidden -Wno-sign-conversion -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-generated-files.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-own-target-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-all-target-headers.hmap -iquote /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/SLP-project-headers.hmap -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/include -I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -I/Users/jbcolli2/Documents/Bertini/Boost/boost_1_55_0 -I/usr/local/include -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources/x86_64 -I/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/DerivedSources -F/Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug -MMD -MT dependencies -MF /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.d --serialize-diagnostics /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.dia -c /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/SLP/amp.cpp -o /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Intermediates/Bertini2.build/Debug/SLP.build/Objects-normal/x86_64/amp.o36"CE459194-99FB-44F2-8D93-E9FB44F0FB18-
-b837F38F1-7187-4431-A033-8C9DC5CB6952
-
-CLd /Users/jcollins/Documents/West\ Texas/Research/Bertini/Code/b2_MainRepo/DerivedData/Bertini2/Build/Products/Debug/SLP normal x86_64
-r0
-

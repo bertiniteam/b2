@@ -1,0 +1,23 @@
+@startuml
+title Make Function Flow Diagram
+
+partition Unary {
+
+(*) --> Parse @e
+--> "Make node for op @
+Add @ as head node to Function"
+--> ===Rep1===
+--> Parse e
+--> Is e a leaf?
+-->[yes] "Create leaf node for e
+and attach to @ node"
+--> (*)
+
+"Is e a leaf?" -->[no] e = %f
+--> "Create op node for %
+and attach to @ node"
+--> Redefine @:= %, e:= f
+--> ===Rep1===
+}
+
+@enduml

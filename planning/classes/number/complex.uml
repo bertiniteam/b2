@@ -1,0 +1,57 @@
+
+
+@startuml
+namespace bertini{
+
+class Complex{
+the fundamental complex number class for Bertini
+has real and imaginary parts, and all operations for complex numbers defined.
+
+==private==
+--data members--
+
+mpfr_float real_
+mpfr_float imag_
+
+
+==public==
+
+--getters--
+
+mpfr_float real()
+mpfr_float imag()
+
+
+--setters--
+void real(mpfr_float re)
+void imag(mpfr_float im)
+mpfr_float abs()
+mpfr_float angle()
+
+--operator--
+all arithmetic operators
+
+all trig and exp functions
+
+--parallelism--
+
+Send(target)
+Send(target, communicator)
+
+Receive(source, status)
+Receive(source,communicator, status)
+
+BcastSend()
+BcastReceive(source)
+
+BcastSend(communicator)
+BcastReceive(source, communicator)
+
+--serialization--
+save()
+load()
+
+}
+
+}
+@enduml
