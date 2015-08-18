@@ -56,7 +56,7 @@ void arbitrary(boost::filesystem::path const& file, unsigned num_iterations)
 
 	std::stringstream buffer;
 	buffer << fin.rdbuf();
-	
+
 	System S(buffer.str());
 
 	Vec<T> variable_values(S.NumVariables());
@@ -75,6 +75,8 @@ void arbitrary(boost::filesystem::path const& file, unsigned num_iterations)
 		auto J = S.Jacobian(variable_values,time);
 		auto f_values = S.Eval(variable_values,time);
 
+		std::cout << S << "\n";
+
 		boost::timer::auto_cpu_timer timing_guy;
 		for (unsigned ii=0; ii<num_iterations; ii++)
 		{
@@ -85,6 +87,8 @@ void arbitrary(boost::filesystem::path const& file, unsigned num_iterations)
 	{
 		auto J = S.Jacobian(variable_values);
 		auto f_values = S.Eval(variable_values);
+
+		std::cout << S << "\n";
 
 		boost::timer::auto_cpu_timer timing_guy;
 		for (unsigned ii=0; ii<num_iterations; ii++)
@@ -112,6 +116,8 @@ void simple_single_variable()
 	S.AddPathVariable(t);
 	S.AddFunction(pow(x,2) + x*t + pow(t,2));
 
+	std::cout << S << "\n";
+	
 	boost::timer::auto_cpu_timer timing_guy;
 
 	auto J = S.Jacobian(v,dbl(0));
