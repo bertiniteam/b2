@@ -17,10 +17,9 @@ template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
 template<typename T>
-void arbitrary(boost::filesystem::path const& file);
+void arbitrary(boost::filesystem::path const& file, unsigned num_iterations = 1000000);
 
 void simple_single_variable();
-void complicated_single_variable();
 
 int main(int argc, char** argv)
 {	
@@ -29,7 +28,6 @@ int main(int argc, char** argv)
 		case 1:
 		{
 			simple_single_variable();
-			complicated_single_variable();
 			break;
 		}
 		case 2:
@@ -52,15 +50,50 @@ int main(int argc, char** argv)
 
 
 template<typename T>
-void arbitrary(boost::filesystem::path const& file)
+void arbitrary(boost::filesystem::path const& file, unsigned num_iterations)
 {
 	std::ifstream fin(file.c_str());
 
 	std::stringstream buffer;
 	buffer << fin.rdbuf();
-
-	System sys(buffer.str());
 	
+	System S(buffer.str());
+
+	Vec<T> variable_values(S.NumVariables());
+
+	for (unsigned i = 0; i < variable_values.size(); ++i)
+		variable_values(i) = bertini::rand_complex();
+
+
+	
+
+	if (S.HavePathVariable())
+	{
+		T time;
+		time = bertini::rand_complex();
+
+		auto J = S.Jacobian(variable_values,time);
+		auto f_values = S.Eval(variable_values,time);
+
+		boost::timer::auto_cpu_timer timing_guy;
+		for (unsigned ii=0; ii<num_iterations; ii++)
+		{
+			f_values = S.Eval(variable_values,time);
+		}
+	}
+	else
+	{
+		auto J = S.Jacobian(variable_values);
+		auto f_values = S.Eval(variable_values);
+
+		boost::timer::auto_cpu_timer timing_guy;
+		for (unsigned ii=0; ii<num_iterations; ii++)
+		{
+			f_values = S.Eval(variable_values);
+		}
+	}
+
+
 }
 
 void simple_single_variable()
@@ -90,15 +123,8 @@ void simple_single_variable()
 		// std::cout << J << "\n";
 	}
 
-	std::cout << S << "\n";
+	
 }
 
-
-void complicated_single_variable()
-{
-	boost::timer::auto_cpu_timer t;
-
-	std::cout << "complicated_single_variable" << "\n";
-}
 
 
