@@ -47,6 +47,7 @@
 namespace bertini {
 
 	
+
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
 	
@@ -74,6 +75,8 @@ namespace bertini {
 		System() : is_differentiated_(false), have_path_variable_(false)
 		{}
 
+		System(std::string const& input);
+		
 
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
