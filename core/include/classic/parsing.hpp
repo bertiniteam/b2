@@ -132,56 +132,59 @@ namespace bertini
 					root_rule_.name("SplitFileInputConfig_root_rule");
 
 					// "CONFIG\n\ntracktype:1;\n\nEND;\n\nINPUT\n\nvariable_group x, y;\nfunction f;\nf = x^2 + y^2 - 1;\n\nEND;\n\n";
-
-					root_rule_ = (omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)];
-					// (omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)];
-					// config_end_input_end_ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
-					// config_end_end_ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
-					// config_end_input_ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_)]];
-					// config_end___ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]] >> as_string[lexeme[*(char_)]];
 					
-					// config_end_ = 
+					// (omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)];
+					root_rule_ =  
+								  (
+								  	((
+					              		(config_end_ >> input_end_)[phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+					              		 | 
+					              		(config_end_ >> end_)[phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+					              		 | 
+					              		(config_end_  >> input_)[phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+					              		 | 
+					              		(config_end_ >> no_decl_)[phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+					              	)
+					              		)
+					              	|
+					              	((
+					              	 	input_end_ | end_ | input_ | no_decl_
+					              	) 
+					              		[phx::bind(&SplitInputFile::SetInput, _val, _1)])
+					              );
+					
+					// config_end_input_end_ =  config_end_ >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
+					// config_end_end_ = config_end_ >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
+					// config_end_input_ = config_end_  >> input_;
+					// config_end___ = config_end_ >> no_decl_;
+					
 
-					// input_end_ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
-					// end_ = 
-					// input_ = 
 
+					config_end_ = omit[*(char_ - "CONFIG")] >> lexeme[*(char_ - "END;")];
 
-					// root_rule_ = (config_no_end_ [phx::bind(&SplitInputFile::SetConfig, _val, _1)] > input_yes_top_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]) 
-					// 				|
-					// 			(config_yes_end_ [phx::bind(&SplitInputFile::SetConfig, _val, _1)] > input_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]) 
-					// 				|
-					// 			( input_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]);
+					input_end_ = omit[*(char_ - "INPUT")] >> end_;
+					end_ = lexeme[*(char_ - "END;")] >> omit[*char_];
+					input_ = omit[*(char_ - "INPUT")] >> *char_;
 
-					// config_ = config_yes_end_ | config_no_end_;  config_.name("config_");
-
-					// config_yes_end_.name("config_yes_end_");
-					// config_no_end_.name("config_no_end_");
-					// config_yes_end_ = lit("CONFIG") > lexeme[+char_] > lit("END;");
-					// config_no_end_ = lit("CONFIG") > lexeme[+char_] > !lit("END;");
-
-					// input_ = input_no_top_ | input_yes_top_;
-
-					// input_.name("input_");
-					// input_yes_top_.name("input_yes_top_");
-					// input_no_top_.name("input_no_top_");
-
-					// input_yes_top_ = lit("INPUT") > lexeme[+char_] >> lit("END;");
-
-					// input_no_top_ = (!lit("INPUT")) >> (lexeme[+char_] >> lit("END;"));
+					no_decl_ = lexeme[*(char_)];
 
 
 					debug(root_rule_);
 
-					debug(config_);
-					debug(config_yes_end_);
-					debug(config_no_end_);
+					// debug(config_end_input_end_);
+					// debug(config_end_end_);
+					// debug(config_end_input_);
+					debug(config_end_);
 
+					debug(input_end_);
+					debug(end_);
 					debug(input_);
-					debug(input_yes_top_);
-					debug(input_no_top_);
+					debug(no_decl_);
 
-					BOOST_SPIRIT_DEBUG_NODES( (root_rule_) (config_) (config_yes_end_) (config_no_end_) (input_) (input_yes_top_) (input_no_top_))
+					//(config_end_input_end_) (config_end_end_) (config_end_input_) 
+					BOOST_SPIRIT_DEBUG_NODES((root_rule_) 
+					                         (config_end_) 
+					                         (input_end_) (end_) (input_) (no_decl_) )
 
 
 
@@ -191,7 +194,7 @@ namespace bertini
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("split parser could not complete parsing. Expecting ")<<
+					 val("config/input split parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -201,12 +204,7 @@ namespace bertini
 
 			private:
 				qi::rule<Iterator, SplitInputFile(), ascii::space_type > root_rule_;
-				qi::rule<Iterator, std::string(), ascii::space_type > config_;
-				qi::rule<Iterator, std::string(), ascii::space_type > config_no_end_;
-				qi::rule<Iterator, std::string(), ascii::space_type > config_yes_end_;
-				qi::rule<Iterator, std::string(), ascii::space_type > input_;
-				qi::rule<Iterator, std::string(), ascii::space_type > input_no_top_;
-				qi::rule<Iterator, std::string(), ascii::space_type > input_yes_top_;
+				qi::rule<Iterator, ascii::space_type, std::string()> input_end_, end_, input_, no_decl_, config_end_;
 			};
 
 		} // re: namespace parsing
