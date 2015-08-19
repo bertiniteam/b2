@@ -73,6 +73,12 @@ namespace bertini
 				config_ = new_config;
 			}
 
+			void SetConfigInput(std::string c, std::string i)
+			{
+				config_ = c;
+				input_ = i;
+			}
+
 			friend std::ostream& operator<<(std::ostream & out, SplitInputFile const& printme)
 			{
 				out << "--------config-----------\n\n" << printme.Config() << "\n\n-------input--------\n\n" << printme.Input();
@@ -119,32 +125,50 @@ namespace bertini
 					using qi::eps;
 					using qi::lit;
 					using qi::char_;
+					using qi::omit;
 					using boost::spirit::lexeme;
+					using boost::spirit::as_string;
 
 					root_rule_.name("SplitFileInputConfig_root_rule");
 
-					root_rule_ = (config_no_end_ [phx::bind(&SplitInputFile::SetConfig, _val, _1)] > input_yes_top_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]) 
-									|
-								(config_yes_end_ [phx::bind(&SplitInputFile::SetConfig, _val, _1)] > input_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]) 
-									|
-								( input_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]);
+					// "CONFIG\n\ntracktype:1;\n\nEND;\n\nINPUT\n\nvariable_group x, y;\nfunction f;\nf = x^2 + y^2 - 1;\n\nEND;\n\n";
 
-					config_ = config_yes_end_ | config_no_end_;  config_.name("config_");
+					root_rule_ = (omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)];
+					// (omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)];
+					// config_end_input_end_ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
+					// config_end_end_ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
+					// config_end_input_ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_)]];
+					// config_end___ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]] >> as_string[lexeme[*(char_)]];
+					
+					// config_end_ = 
 
-					config_yes_end_.name("config_yes_end_");
-					config_no_end_.name("config_no_end_");
-					config_yes_end_ = lit("CONFIG") > lexeme[+char_] > lit("END;");
-					config_no_end_ = lit("CONFIG") > lexeme[+char_] > !lit("END;");
+					// input_end_ = omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
+					// end_ = 
+					// input_ = 
 
-					input_ = input_no_top_ | input_yes_top_;
 
-					input_.name("input_");
-					input_yes_top_.name("input_yes_top_");
-					input_no_top_.name("input_no_top_");
+					// root_rule_ = (config_no_end_ [phx::bind(&SplitInputFile::SetConfig, _val, _1)] > input_yes_top_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]) 
+					// 				|
+					// 			(config_yes_end_ [phx::bind(&SplitInputFile::SetConfig, _val, _1)] > input_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]) 
+					// 				|
+					// 			( input_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]);
 
-					input_yes_top_ = lit("INPUT") > lexeme[+char_] >> lit("END;");
+					// config_ = config_yes_end_ | config_no_end_;  config_.name("config_");
 
-					input_no_top_ = (!lit("INPUT")) >> (lexeme[+char_] >> lit("END;"));
+					// config_yes_end_.name("config_yes_end_");
+					// config_no_end_.name("config_no_end_");
+					// config_yes_end_ = lit("CONFIG") > lexeme[+char_] > lit("END;");
+					// config_no_end_ = lit("CONFIG") > lexeme[+char_] > !lit("END;");
+
+					// input_ = input_no_top_ | input_yes_top_;
+
+					// input_.name("input_");
+					// input_yes_top_.name("input_yes_top_");
+					// input_no_top_.name("input_no_top_");
+
+					// input_yes_top_ = lit("INPUT") > lexeme[+char_] >> lit("END;");
+
+					// input_no_top_ = (!lit("INPUT")) >> (lexeme[+char_] >> lit("END;"));
 
 
 					debug(root_rule_);
