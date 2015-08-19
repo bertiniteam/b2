@@ -131,43 +131,74 @@ namespace bertini
 
 					root_rule_.name("SplitFileInputConfig_root_rule");
 
-					// "CONFIG\n\ntracktype:1;\n\nEND;\n\nINPUT\n\nvariable_group x, y;\nfunction f;\nf = x^2 + y^2 - 1;\n\nEND;\n\n";
-					
-					// (omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)];
-					root_rule_ =  
-								  (
-								  	(
-					              		(config_end_ > (input_end_ | end_ | input_ | no_decl_)) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
-					              	)
-					              	|
-					              	((
-					              	 	input_end_ | end_ | input_ | no_decl_
-					              	) 
-					              		[phx::bind(&SplitInputFile::SetInput, _val, _1)])
-					              );
-					//
+					root_rule_ = both_ | only_input_;
 
-					config_end_.name("config_end_");
-					config_end_ = omit[*(char_ - "CONFIG")] >> ("CONFIG" > lexeme[*(char_ - "END;")] > "END;");
+					both_.name("have_both_config_and_input");
+					both_ = (
+		              		 (omit[config_] >> end_ >> omit[input_] >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 |
+		              		 (omit[config_] >> input_ >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 |
+		              		 (omit[config_] >> end_  >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 |
+		              		 (omit[config_] >> input_ >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 |
+		              		 (omit[config_] >> end_ >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		)
+		              		;
 
-					input_end_.name("input_end_");
-					input_end_ = omit[*(char_ - "INPUT")] >> "INPUT" >> end_;
+
+		              		//this attempt for the both_ rule doesn't work because the ends are optional...
+		              		// (omit[config_] >> end_ >> omit[input_] >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		//  |
+		              		//  (omit[config_] >> omit[!end_] >> input_ >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		//  |
+		              		//  (omit[config_] >> end_ >> omit[!input_] >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		//  |
+		              		//  (omit[config_] >> omit[!end_] >> input_ >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		//  |
+		              		//  (omit[config_] >> end_ >> omit[!input_] >> omit[!end_] >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		// )
+
+		              		
+		            only_input_.name("have_only_input");
+					only_input_ = (
+				              	 		(omit[input_] >> end_ >> omit[no_decl_])
+				              	 		|
+				              	 		(omit[input_] >> no_decl_)
+				              	 		|
+				              	 		(end_ >> omit[no_decl_])
+				              	 		|
+				              	 		(no_decl_)
+				              		) 
+				              		[phx::bind(&SplitInputFile::SetInput, _val, _1)];
+
+					config_.name("config_");
+					config_ = *(char_ - "CONFIG") >> "CONFIG";
 
 					end_.name("end_");
 					end_ = lexeme[*(char_ - "END;")] >> omit[*char_];
 
 					input_.name("input_");
-					input_ = omit[*(char_ - "INPUT")] >> "INPUT" >> *char_;
+					input_ = lexeme[*(char_ - "INPUT")] >> "INPUT";
+
+
 
 					no_decl_.name("no_decl_");
 					no_decl_ = lexeme[*(char_)];
 
 
-					// debug(root_rule_);debug(config_end_);debug(input_end_);debug(end_);debug(input_);debug(no_decl_);
+					// debug(root_rule_);
+					// debug(both_); debug(only_input_);
+					// debug(config_);
+					// debug(end_);
+					// debug(input_);
+					// debug(no_decl_);
 
 					// BOOST_SPIRIT_DEBUG_NODES((root_rule_) 
-					//                          (config_end_) 
-					//                          (input_end_) (end_) (input_) (no_decl_) )
+					//                          (both_) (only_input_)
+					//                          (config_) (end_) (input_) 
+					//                          (no_decl_) )
 
 
 
@@ -186,8 +217,9 @@ namespace bertini
 				}
 
 			private:
-				qi::rule<Iterator, SplitInputFile(), ascii::space_type > root_rule_;
-				qi::rule<Iterator, ascii::space_type, std::string()> input_end_, end_, input_, no_decl_, config_end_;
+				qi::rule<Iterator, SplitInputFile(), ascii::space_type > root_rule_, both_, only_input_;
+				qi::rule<Iterator, ascii::space_type, std::string()> end_, input_, no_decl_;
+				qi::rule<Iterator, ascii::space_type> config_;
 			};
 
 		} // re: namespace parsing
