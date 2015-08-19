@@ -28,20 +28,7 @@
 
 BOOST_AUTO_TEST_SUITE(classic_parsing)
 
-BOOST_AUTO_TEST_CASE(split_apart_config_and_input_just_config_throws)
-{
-	std::string test_string = "CONFIG\n\ntracktype:1;\n\nEND;\n";
 
-	bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> parser;
-
-	bertini::classic::SplitInputFile config_and_input;
-
-	std::string::const_iterator iter = test_string.begin();
-	std::string::const_iterator end = test_string.end();
-
-	BOOST_CHECK_THROW(phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input),std::runtime_error);
-
-}
 
 BOOST_AUTO_TEST_CASE(split_apart_config_and_input_just_input)
 {
@@ -54,8 +41,6 @@ BOOST_AUTO_TEST_CASE(split_apart_config_and_input_just_input)
 	std::string::const_iterator iter = test_string.begin();
 	std::string::const_iterator end = test_string.end();
 	phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);
-
-	std::cout << config_and_input.Input() << "\n";
 
 	std::size_t found_config = config_and_input.Input().find("variable_group x, y;");
 	BOOST_CHECK(found_config!=std::string::npos);

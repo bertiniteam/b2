@@ -136,55 +136,38 @@ namespace bertini
 					// (omit[lexeme[*(char_ - "CONFIG")]] > as_string[lexeme[*(char_ - "END;")]]  >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)];
 					root_rule_ =  
 								  (
-								  	((
-					              		(config_end_ >> input_end_)[phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
-					              		 | 
-					              		(config_end_ >> end_)[phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
-					              		 | 
-					              		(config_end_  >> input_)[phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
-					              		 | 
-					              		(config_end_ >> no_decl_)[phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+								  	(
+					              		(config_end_ > (input_end_ | end_ | input_ | no_decl_)) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
 					              	)
-					              		)
 					              	|
 					              	((
 					              	 	input_end_ | end_ | input_ | no_decl_
 					              	) 
 					              		[phx::bind(&SplitInputFile::SetInput, _val, _1)])
 					              );
-					
-					// config_end_input_end_ =  config_end_ >> omit[*(char_ - "INPUT")] >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
-					// config_end_end_ = config_end_ >> as_string[lexeme[*(char_ - "END;")]] >> omit[*char_];
-					// config_end_input_ = config_end_  >> input_;
-					// config_end___ = config_end_ >> no_decl_;
-					
+					//
 
+					config_end_.name("config_end_");
+					config_end_ = omit[*(char_ - "CONFIG")] >> ("CONFIG" > lexeme[*(char_ - "END;")] > "END;");
 
-					config_end_ = omit[*(char_ - "CONFIG")] >> lexeme[*(char_ - "END;")];
+					input_end_.name("input_end_");
+					input_end_ = omit[*(char_ - "INPUT")] >> "INPUT" >> end_;
 
-					input_end_ = omit[*(char_ - "INPUT")] >> end_;
+					end_.name("end_");
 					end_ = lexeme[*(char_ - "END;")] >> omit[*char_];
-					input_ = omit[*(char_ - "INPUT")] >> *char_;
 
+					input_.name("input_");
+					input_ = omit[*(char_ - "INPUT")] >> "INPUT" >> *char_;
+
+					no_decl_.name("no_decl_");
 					no_decl_ = lexeme[*(char_)];
 
 
-					debug(root_rule_);
+					// debug(root_rule_);debug(config_end_);debug(input_end_);debug(end_);debug(input_);debug(no_decl_);
 
-					// debug(config_end_input_end_);
-					// debug(config_end_end_);
-					// debug(config_end_input_);
-					debug(config_end_);
-
-					debug(input_end_);
-					debug(end_);
-					debug(input_);
-					debug(no_decl_);
-
-					//(config_end_input_end_) (config_end_end_) (config_end_input_) 
-					BOOST_SPIRIT_DEBUG_NODES((root_rule_) 
-					                         (config_end_) 
-					                         (input_end_) (end_) (input_) (no_decl_) )
+					// BOOST_SPIRIT_DEBUG_NODES((root_rule_) 
+					//                          (config_end_) 
+					//                          (input_end_) (end_) (input_) (no_decl_) )
 
 
 
