@@ -52,7 +52,7 @@ namespace bertini
 			std::string config_;
 			std::string input_;
 		public:
-			
+
 			std::string Config() const
 			{
 				return config_;
@@ -63,6 +63,21 @@ namespace bertini
 				return input_;
 			}
 
+			void SetInput(std::string new_input)
+			{
+				input_ = new_input;
+			}
+
+			void SetConfig(std::string new_config)
+			{
+				config_ = new_config;
+			}
+
+			friend std::ostream& operator<<(std::ostream & out, SplitInputFile const& printme)
+			{
+				out << "--------config-----------\n\n" << printme.Config() << "\n\n-------input--------\n\n" << printme.Input();
+				return out;
+			}
 		};
 		namespace parsing
 		{
@@ -86,10 +101,10 @@ namespace bertini
 
 			\endcode
 
-			\brief Qi Parser object for parsing text into the System class.  
+			\brief Qi Parser object for parsing text into the SplitInputFile class.  
 			*/
-			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct SplitFileInputConfig : qi::grammar<Iterator, SplitInputFile, Skipper>
+			template<typename Iterator, typename Skipper = ascii::space_type> //boost::spirit::unused_type
+			struct SplitFileInputConfig : qi::grammar<Iterator, SplitInputFile(), Skipper>
 			{
 				
 				
@@ -103,13 +118,71 @@ namespace bertini
 					using qi::_val;
 					using qi::eps;
 					using qi::lit;
+					using qi::char_;
 					using boost::spirit::lexeme;
 
+					root_rule_.name("SplitFileInputConfig_root_rule");
 
+					root_rule_ = (config_no_end_ [phx::bind(&SplitInputFile::SetConfig, _val, _1)] > input_yes_top_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]) 
+									|
+								(config_yes_end_ [phx::bind(&SplitInputFile::SetConfig, _val, _1)] > input_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]) 
+									|
+								( input_ [phx::bind(&SplitInputFile::SetInput, _val, _1)]);
+
+					config_ = config_yes_end_ | config_no_end_;  config_.name("config_");
+
+					config_yes_end_.name("config_yes_end_");
+					config_no_end_.name("config_no_end_");
+					config_yes_end_ = lit("CONFIG") > lexeme[+char_] > lit("END;");
+					config_no_end_ = lit("CONFIG") > lexeme[+char_] > !lit("END;");
+
+					input_ = input_no_top_ | input_yes_top_;
+
+					input_.name("input_");
+					input_yes_top_.name("input_yes_top_");
+					input_no_top_.name("input_no_top_");
+
+					input_yes_top_ = lit("INPUT") > lexeme[+char_] >> lit("END;");
+
+					input_no_top_ = (!lit("INPUT")) >> (lexeme[+char_] >> lit("END;"));
+
+
+					debug(root_rule_);
+
+					debug(config_);
+					debug(config_yes_end_);
+					debug(config_no_end_);
+
+					debug(input_);
+					debug(input_yes_top_);
+					debug(input_no_top_);
+
+					BOOST_SPIRIT_DEBUG_NODES( (root_rule_) (config_) (config_yes_end_) (config_no_end_) (input_) (input_yes_top_) (input_no_top_))
+
+
+
+					using phx::val;
+					using phx::construct;
+					using namespace qi::labels;
+					qi::on_error<qi::fail>
+					( root_rule_ ,
+					 std::cout<<
+					 val("split parser could not complete parsing. Expecting ")<<
+					 _4<<
+					 val(" here: ")<<
+					 construct<std::string>(_3,_2)<<
+					 std::endl
+					 );
 				}
 
 			private:
-				qi::rule<Iterator, SplitInputFile, ascii::space_type > root_rule_;
+				qi::rule<Iterator, SplitInputFile(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, std::string(), ascii::space_type > config_;
+				qi::rule<Iterator, std::string(), ascii::space_type > config_no_end_;
+				qi::rule<Iterator, std::string(), ascii::space_type > config_yes_end_;
+				qi::rule<Iterator, std::string(), ascii::space_type > input_;
+				qi::rule<Iterator, std::string(), ascii::space_type > input_no_top_;
+				qi::rule<Iterator, std::string(), ascii::space_type > input_yes_top_;
 			};
 
 		} // re: namespace parsing

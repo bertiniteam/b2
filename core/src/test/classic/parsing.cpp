@@ -28,7 +28,70 @@
 
 BOOST_AUTO_TEST_SUITE(classic_parsing)
 
-BOOST_AUTO_TEST_CASE(split_apart_config_and_input_have_both)
+BOOST_AUTO_TEST_CASE(split_apart_config_and_input_just_config_throws)
+{
+	std::string test_string = "CONFIG\n\ntracktype:1;\n\nEND;\n";
+
+	bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> parser;
+
+	bertini::classic::SplitInputFile config_and_input;
+
+	std::string::const_iterator iter = test_string.begin();
+	std::string::const_iterator end = test_string.end();
+
+	BOOST_CHECK_THROW(phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input),std::runtime_error);
+
+}
+
+BOOST_AUTO_TEST_CASE(split_apart_config_and_input_just_input)
+{
+	std::string test_string = "INPUT\n\nvariable_group x, y;\nfunction f;\nf = x^2 + y^2 - 1;\n\nEND;\n\n";
+
+	bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> parser;
+
+	bertini::classic::SplitInputFile config_and_input;
+
+	std::string::const_iterator iter = test_string.begin();
+	std::string::const_iterator end = test_string.end();
+	phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);
+
+	std::cout << config_and_input.Input() << "\n";
+
+	std::size_t found_config = config_and_input.Input().find("variable_group x, y;");
+	BOOST_CHECK(found_config!=std::string::npos);
+
+	found_config = config_and_input.Input().find("INPUT");
+	BOOST_CHECK(found_config==std::string::npos);
+
+	found_config = config_and_input.Input().find("END;");
+	BOOST_CHECK(found_config==std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(split_apart_config_and_input_just_input_no_INPUT)
+{
+	std::string test_string = "\n\nvariable_group x, y;\nfunction f;\nf = x^2 + y^2 - 1;\n\nEND;\n\n";
+
+	bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> parser;
+
+	bertini::classic::SplitInputFile config_and_input;
+
+	std::string::const_iterator iter = test_string.begin();
+	std::string::const_iterator end = test_string.end();
+	phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);
+
+	std::cout << config_and_input.Input() << "\n";
+
+	std::size_t found_config = config_and_input.Input().find("variable_group x, y;");
+	BOOST_CHECK(found_config!=std::string::npos);
+
+	found_config = config_and_input.Input().find("INPUT");
+	BOOST_CHECK(found_config==std::string::npos);
+
+	found_config = config_and_input.Input().find("END;");
+	BOOST_CHECK(found_config==std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(split_apart_config_and_input_have_both_check_config)
 {
 	std::string test_string = "CONFIG\n\ntracktype:1;\n\nEND;\n\nINPUT\n\nvariable_group x, y;\nfunction f;\nf = x^2 + y^2 - 1;\n\nEND;\n\n";
 
@@ -40,8 +103,28 @@ BOOST_AUTO_TEST_CASE(split_apart_config_and_input_have_both)
 	std::string::const_iterator end = test_string.end();
 	phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);
 
+	std::cout << "config:\n\n";
+	std::cout << config_and_input.Config() << "\n";
+
 	std::size_t found_config = config_and_input.Config().find("tracktype:1;");
 	BOOST_CHECK(found_config!=std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(split_apart_config_and_input_have_both_check_input)
+{
+	std::string test_string = "CONFIG\n\ntracktype:1;\n\nEND;\n\nINPUT\n\nvariable_group x, y;\nfunction f;\nf = x^2 + y^2 - 1;\n\nEND;\n\n";
+
+	bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> parser;
+
+	bertini::classic::SplitInputFile config_and_input;
+
+	std::string::const_iterator iter = test_string.begin();
+	std::string::const_iterator end = test_string.end();
+	phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);
+
+	std::cout << "input:\n\n";
+	std::cout << config_and_input.Input() << "\n";
+
 
 	std::size_t found_input = config_and_input.Input().find("variable_group x, y;");
 	BOOST_CHECK(found_input!=std::string::npos);
