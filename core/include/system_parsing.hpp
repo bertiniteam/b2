@@ -392,7 +392,7 @@ namespace bertini {
 		}
 	};
 	
-	
+	inline
 	System::System(std::string const& input)
 	{
 		System sys;

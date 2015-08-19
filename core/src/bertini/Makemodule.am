@@ -33,7 +33,9 @@ function_tree_source_files = \
 function_tree = $(function_tree_header_files) $(function_tree_source_files)
 
 
-all_bertini2_sources = $(function_tree) include/bertini.hpp \
+all_bertini2_sources = include/bertini.hpp\
+	$(function_tree)  \
+	$(classic) \
 	include/mpfr_complex.hpp \
 	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
 	include/system.hpp src/bertini/system.cpp include/system_parsing.hpp \

@@ -43,13 +43,15 @@ SUFFIXES = .cpp .hpp
 # in other files.
 include src/bertini/Makemodule.am
 
+include src/classic/Makemodule.am
+
 include src/test/classes/Makemodule.am
 
 include src/test/interactive_testing/Makemodule.am
 
 include src/test/timing/Makemodule.am
 
-
+include src/test/classic/Makemodule.am
 
 
 
