@@ -133,20 +133,26 @@ namespace bertini
 
 					root_rule_ = both_ | only_input_;
 
+					// NOTE ON CONVENTIONS CURRENTLY USED:
+					// the various rules are constructed to obtain the text BEFORE the named marker, so e.g, rule config_ gets all text in the string before 'CONFIG'.  similarly for 'END;' and 'INPUT'.
+
 					both_.name("have_both_config_and_input");
 					both_ = (
-		              		 (omit[config_] >> end_ >> omit[input_] >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 (omit[config_] >> end_ >> omit[input_] >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]// 15
 		              		 |
-		              		 (omit[config_] >> input_ >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 (omit[config_] >> end_ >> omit[input_] >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)] // 14
 		              		 |
-		              		 (omit[config_] >> end_  >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 (omit[config_] >> end_ >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)] // 13
 		              		 |
-		              		 (omit[config_] >> input_ >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 (omit[config_] >> input_ >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)] // 11
 		              		 |
-		              		 (omit[config_] >> end_ >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
+		              		 (omit[config_] >> end_ >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)] // 12
+		              		 |
+		              		 (omit[config_] >> input_ >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)] // 10
 		              		)
 		              		;
 
+		              		// the rule for number 11 does not currently correctly parse text which matches it...  why???
 
 		              		//this attempt for the both_ rule doesn't work because the ends are optional...
 		              		// (omit[config_] >> end_ >> omit[input_] >> end_ >> omit[no_decl_]) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
@@ -160,16 +166,16 @@ namespace bertini
 		              		//  (omit[config_] >> end_ >> omit[!input_] >> omit[!end_] >> no_decl_) [phx::bind(&SplitInputFile::SetConfigInput, _val, _1, _2)]
 		              		// )
 
-		              		
+
 		            only_input_.name("have_only_input");
 					only_input_ = (
-				              	 		(omit[input_] >> end_ >> omit[no_decl_])
+				              	 		(omit[input_] >> end_ >> omit[no_decl_]) // 3
 				              	 		|
-				              	 		(omit[input_] >> no_decl_)
+				              	 		(omit[input_] >> no_decl_) // 2
 				              	 		|
-				              	 		(end_ >> omit[no_decl_])
+				              	 		(end_ >> omit[no_decl_])  // 1
 				              	 		|
-				              	 		(no_decl_)
+				              	 		(no_decl_) // 0
 				              		) 
 				              		[phx::bind(&SplitInputFile::SetInput, _val, _1)];
 
@@ -177,7 +183,7 @@ namespace bertini
 					config_ = *(char_ - "CONFIG") >> "CONFIG";
 
 					end_.name("end_");
-					end_ = lexeme[*(char_ - "END;")] >> omit[*char_];
+					end_ = lexeme[*(char_ - "END;")] >> "END;";
 
 					input_.name("input_");
 					input_ = lexeme[*(char_ - "INPUT")] >> "INPUT";
