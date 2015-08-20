@@ -40,9 +40,9 @@ using VariableGroup = bertini::VariableGroup;
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
-extern double threshold_clearance_d;
-extern double threshold_clearance_mp;
-extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
+double threshold_clearance_d = 1e-15;
+double threshold_clearance_mp = 1e-27;
+unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS = 30;
 
 BOOST_AUTO_TEST_SUITE(system_class)
 
