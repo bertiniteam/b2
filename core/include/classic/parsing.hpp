@@ -145,7 +145,7 @@ namespace bertini
 
 					root_rule_.name("SplitFileInputConfig_root_rule");
 
-					root_rule_ = both_ | only_input_ | unreadable_;
+					root_rule_ = both_ | unreadable_ |only_input_ ;
 
 					// NOTE ON CONVENTIONS CURRENTLY USED:
 					// the various rules are constructed to obtain the text BEFORE the named marker, so e.g, rule config_ gets all text in the string before 'CONFIG'.  similarly for 'END;' and 'INPUT'.
@@ -193,10 +193,8 @@ namespace bertini
 				              		) 
 				              		[phx::bind(&SplitInputFile::SetInput, _val, _1)];
 
-                    unreadable_.name("unreadable_input");
+                    unreadable_.name("unreadable_input"); //9 and 4 same as 12 and 1 to parser
                     unreadable_ = (
-                                   (omit[config_] >> end_ >> omit[no_decl_]) // 9
-                                   |
                                    (omit[config_] >> no_decl_) // 8
                                    |
                                    (end_ >> omit[input_] >> end_ >> omit[no_decl_])  // 7
@@ -204,8 +202,6 @@ namespace bertini
                                    (end_ >> omit[input_]  >> omit[no_decl_])  // 6
                                    |
                                    (end_ >>  end_ >> omit[no_decl_])  // 5
-                                   |
-                                   (end_ >> omit[no_decl_])  // 4
                                    )
                                     [phx::bind(&SplitInputFile::SetReadable, _val, false)];
 
