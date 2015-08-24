@@ -49,6 +49,20 @@
 
 
 namespace bertini {
+
+
+	  	using dbl = std::complex<double>;
+	  	 inline
+	  	 dbl rand_complex()
+	  	 {
+	  	 	std::default_random_engine generator;
+			std::uniform_real_distribution<double> distribution(-1.0,1.0);
+	  	 	dbl returnme(distribution(generator), distribution(generator));
+	  	 	return returnme / sqrt( abs(returnme));
+	  	 }
+
+
+
 	using boost::multiprecision::mpfr_float;
 	
 	/**

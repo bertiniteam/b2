@@ -25,6 +25,7 @@
 
 #include "system.hpp"
 
+BOOST_CLASS_EXPORT(bertini::System)
 
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
@@ -242,6 +243,28 @@ namespace bertini
 	template Vec<mpfr> System::Eval(const Vec<mpfr> & variable_values, mpfr const& path_variable_value);
 
 
+	template<typename T>
+	Mat<T> System::Jacobian()
+	{
+		assert(is_differentiated_);
+		
+		auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+
+		Mat<T> J(NumFunctions(), NumVariables());
+		for (int ii = 0; ii < NumFunctions(); ++ii)
+			for (int jj = 0; jj < NumVariables(); ++jj)
+				J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+
+		return J;
+	}
+
+
+
+	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
+	// see
+	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
+	template Mat<dbl> System::Jacobian();
+	template Mat<mpfr> System::Jacobian();
 
 	template<typename T>
 	Mat<T> System::Jacobian(const Vec<T> & variable_values)
@@ -265,14 +288,7 @@ namespace bertini
 
 		SetVariables(variable_values);
 
-		auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
-
-		Mat<T> J(NumFunctions(), NumVariables());
-		for (int ii = 0; ii < NumFunctions(); ++ii)
-			for (int jj = 0; jj < NumVariables(); ++jj)
-				J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
-
-		return J;
+		return Jacobian<T>();
 	}
 
 	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
@@ -304,15 +320,7 @@ namespace bertini
 		SetVariables(variable_values);
 		SetPathVariable(path_variable_value);
 
-		auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
-		
-		Mat<T> J(NumFunctions(), NumVariables());
-		for (int ii = 0; ii < NumFunctions(); ++ii)
-			for (int jj = 0; jj < NumVariables(); ++jj)
-				J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
-
-		return J;
-
+		return Jacobian<T>();
 	}
 
 	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  

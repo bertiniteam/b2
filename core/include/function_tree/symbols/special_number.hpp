@@ -56,10 +56,6 @@ namespace bertini {
 
 
 
-	    	void print(std::ostream & target) const override
-			{
-				target << name();
-			}
 
 
 			/**
@@ -137,6 +133,12 @@ namespace bertini {
 	            return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
 	        }
 
+	        friend class boost::serialization::access;
+
+	        template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & boost::serialization::base_object<NamedSymbol>(*this);
+			}
 	    };
 
 
@@ -155,11 +157,6 @@ namespace bertini {
 	    	virtual ~E() = default;
 
 
-
-	    	void print(std::ostream & target) const override
-			{
-				target << name();
-			}
 
 
 			/**
@@ -233,6 +230,12 @@ namespace bertini {
 	            return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
 	        }
 
+	        friend class boost::serialization::access;
+
+            template <typename Archive>
+    		void serialize(Archive& ar, const unsigned version) {
+    			ar & boost::serialization::base_object<NamedSymbol>(*this);
+    		}
 
 	    };
 

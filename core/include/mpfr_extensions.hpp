@@ -70,11 +70,32 @@ namespace boost { namespace serialization {
 		r = tmp.c_str();
 	}
 	
+
+	/**
+	 Save a mpfr_float type to a boost archive.
+	 */
+	template <typename Archive>
+	void save(Archive& ar, ::boost::multiprecision::backends::gmp_rational const& r, unsigned /*version*/)
+	{
+		std::string tmp = r.str(0,true);
+		ar & tmp;
+	}
+	
+	/**
+	 Load a mpfr_float type from a boost archive.
+	 */
+	template <typename Archive>
+	void load(Archive& ar, ::boost::multiprecision::backends::gmp_rational& r, unsigned /*version*/)
+	{
+		std::string tmp;
+		ar & tmp;
+		r = tmp.c_str();
+	}
 } } // re: namespaces
 
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpfr_float_backend<0>)
 
-
+BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_rational)
 
 
 

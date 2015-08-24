@@ -36,12 +36,18 @@
 
 #include <eigen3/Eigen/Dense>
 
-
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/deque.hpp>
 
 
 namespace bertini {
 
 	
+
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
 	
@@ -69,6 +75,8 @@ namespace bertini {
 		System() : is_differentiated_(false), have_path_variable_(false)
 		{}
 
+		System(std::string const& input);
+		
 
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
@@ -97,6 +105,14 @@ namespace bertini {
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value);
 
+
+		/**
+		Evaluate the Jacobian matrix of the system, using the previous space and time values.
+
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		*/
+		template<typename T>
+		Mat<T> Jacobian();
 
 		/**
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
@@ -506,25 +522,47 @@ namespace bertini {
 
 		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.  
 
-		std::vector< Fn > functions_; ///< The system's functions.
-		std::vector< Fn > subfunctions_; ///< Any declared subfunctions for the system.  Can use these to ensure that complicated repeated structures are only created and evaluated once.
+
+		bool have_path_variable_; ///< Whether we have the variable or not.
+		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
+		
+		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
 		std::vector< Fn > explicit_parameters_; ///< Explicit parameters.  These should be functions of the path variable only, NOT of other variables.  
 
-
-		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
-
-
-		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
-		bool have_path_variable_; ///< Whether we have the variable or not.
-
-
 		std::vector< Fn > constant_subfunctions_; ///< degree-0 functions, depending on neither variables nor the path variable.
-
+		std::vector< Fn > subfunctions_; ///< Any declared subfunctions for the system.  Can use these to ensure that complicated repeated structures are only created and evaluated once.
+		std::vector< Fn > functions_; ///< The system's functions.
+		
+		
 		std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
 		bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
 
 
 		unsigned precision_; ///< the current working precision of the system 
+
+
+		friend class boost::serialization::access;
+
+        template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & ungrouped_variables_;
+			ar & variable_groups_;
+			ar & hom_variable_groups_;
+			ar & homogenizing_variables_;
+			
+			ar & have_path_variable_;
+			ar & path_variable_;
+
+			ar & implicit_parameters_;
+			ar & explicit_parameters_;
+
+			ar & constant_subfunctions_;
+			ar & subfunctions_;
+			ar & functions_;
+
+			ar & is_differentiated_;
+			ar & jacobian_;
+		}
 
 	};
 
