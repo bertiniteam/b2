@@ -51,6 +51,8 @@ namespace bertini
 		{
 			std::string config_;
 			std::string input_;
+            
+            bool readable_ = true; //Input file cannot be split
 		public:
 
 			std::string Config() const
@@ -62,6 +64,12 @@ namespace bertini
 			{
 				return input_;
 			}
+            
+            bool Readable() const
+            {
+                return readable_;
+            }
+
 
 			void SetInput(std::string new_input)
 			{
@@ -78,6 +86,12 @@ namespace bertini
 				config_ = c;
 				input_ = i;
 			}
+            
+            void SetReadable(bool read)
+            {
+                readable_ = read;
+            }
+
 
 			friend std::ostream& operator<<(std::ostream & out, SplitInputFile const& printme)
 			{
@@ -131,7 +145,7 @@ namespace bertini
 
 					root_rule_.name("SplitFileInputConfig_root_rule");
 
-					root_rule_ = both_ | only_input_;
+					root_rule_ = both_ | only_input_ | unreadable_;
 
 					// NOTE ON CONVENTIONS CURRENTLY USED:
 					// the various rules are constructed to obtain the text BEFORE the named marker, so e.g, rule config_ gets all text in the string before 'CONFIG'.  similarly for 'END;' and 'INPUT'.
@@ -179,6 +193,22 @@ namespace bertini
 				              		) 
 				              		[phx::bind(&SplitInputFile::SetInput, _val, _1)];
 
+                    unreadable_.name("unreadable_input");
+                    unreadable_ = (
+                                   (omit[config_] >> end_ >> omit[no_decl_]) // 9
+                                   |
+                                   (omit[config_] >> no_decl_) // 8
+                                   |
+                                   (end_ >> omit[input_] >> end_ >> omit[no_decl_])  // 7
+                                   |
+                                   (end_ >> omit[input_]  >> omit[no_decl_])  // 6
+                                   |
+                                   (end_ >>  end_ >> omit[no_decl_])  // 5
+                                   |
+                                   (end_ >> omit[no_decl_])  // 4
+                                   )
+                                    [phx::bind(&SplitInputFile::SetReadable, _val, false)];
+
 					config_.name("config_");
 					config_ = *(char_ - "CONFIG") >> "CONFIG";
 
@@ -223,7 +253,7 @@ namespace bertini
 				}
 
 			private:
-				qi::rule<Iterator, SplitInputFile(), ascii::space_type > root_rule_, both_, only_input_;
+				qi::rule<Iterator, SplitInputFile(), ascii::space_type > root_rule_, both_, only_input_, unreadable_;
 				qi::rule<Iterator, ascii::space_type, std::string()> end_, input_, no_decl_;
 				qi::rule<Iterator, ascii::space_type> config_;
 			};
