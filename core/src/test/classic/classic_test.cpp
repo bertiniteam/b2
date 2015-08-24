@@ -41,4 +41,35 @@
 
 
 
+
+#include "bertini.hpp"
+#include "classic.hpp"
+
+
+using namespace bertini::classic::parsing;
+using SplitFile = bertini::classic::SplitInputFile;
+
+
+
+BOOST_AUTO_TEST_SUITE(classic_parsing_test)
+
+BOOST_AUTO_TEST_CASE(parser_works)
+{
+    std::string str = "CONFIG \n config info \n END \n INPUT \n input info \n END";
+    std::cout << str << std::endl;
+    
+    SplitFile split;
+    std::string::const_iterator iter = str.begin();
+    std::string::const_iterator end = str.end();
+    SplitFileInputConfig<std::string::const_iterator> S;
+    bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, split);
+    
+    BOOST_CHECK(s);
+    BOOST_CHECK(s && iter==end);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
 // the bottom of this file is intentionally blank.  this is the 'main' .cpp file for the built boost unit test suite for bertini 2 classes.
