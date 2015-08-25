@@ -520,6 +520,54 @@ BOOST_AUTO_TEST_CASE(uncomment)
 }
 
 
+BOOST_AUTO_TEST_CASE(test_split_and_uncomment)
+{
+    std::string test_string = "%Title of file\n CONFIG \n tracktype: 1;  %comment about setting\n %  More full comments\n %Another line of comments\n trackit: 12;\n %commentsetting: 4; \n  %%%%%%%%%%%%%%%%%END of Settings%%%%%%%%%%%%%%\n END; \n stuff %more comments\n INPUT\n %Beginning comments\n variable_group x,y; %variables\n % Parameters \n parameter t; \n function f\n %Polynomials \n f = x^2 + y;\n %End of INput\n END; stuff end";
+    
+    bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> split_parser;
+    bertini::classic::parsing::CommentStripper<std::string::const_iterator> comment_parser;
+    bertini::classic::SplitInputFile config_and_input;
+    std::string::const_iterator iter = test_string.begin();
+    std::string::const_iterator end = test_string.end();
+    phrase_parse(iter, end, split_parser, boost::spirit::ascii::space, config_and_input);
+    auto config = config_and_input.Config();
+    auto input = config_and_input.Input();
+    
+    std::string test_out = "";
+    iter = config.begin();
+    end = config.end();
+    phrase_parse(iter, end, comment_parser, boost::spirit::ascii::space, test_out);
+    config_and_input.SetConfig(test_out);
+    
+    test_out = "";
+    iter = input.begin();
+    end = input.end();
+    phrase_parse(iter, end, comment_parser, boost::spirit::ascii::space, test_out);
+    config_and_input.SetInput(test_out);
+    config = config_and_input.Config();
+    input = config_and_input.Input();
+    
+    
+    std::string rest(iter, end);
+    
+    
+    
+    BOOST_CHECK(config.find("%")==std::string::npos);
+    BOOST_CHECK(config.find("Title of file")==std::string::npos);
+    BOOST_CHECK(config.find("comment about setting")==std::string::npos);
+    BOOST_CHECK(input.find("%")==std::string::npos);
+    BOOST_CHECK(input.find("Title of file")==std::string::npos);
+    BOOST_CHECK(input.find("comment about setting")==std::string::npos);
+    
+    BOOST_CHECK(config.find("tracktype: 1;")!=std::string::npos);
+    BOOST_CHECK(config.find("trackit: 12;")!=std::string::npos);
+
+    BOOST_CHECK(input.find("variable_group x,y;")!=std::string::npos);
+    BOOST_CHECK(input.find("f = x^2 + y;")!=std::string::npos);
+    
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

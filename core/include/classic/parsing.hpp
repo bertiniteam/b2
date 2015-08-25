@@ -296,7 +296,7 @@ namespace bertini
                     
                     root_rule_.name("CommentStripper_root_rule");
                     
-                    root_rule_ = *line_[_val = _val + _1 + "\n"] >> -last_line_[_val = _val + _1 + "\n"];//+line_ | qi::eoi;
+                    root_rule_ = eps[_val = ""] >> *line_[_val = _val + _1 + "\n"] >> -last_line_[_val = _val + _1 + "\n"];//+line_ | qi::eoi;
                     
                    
                     line_.name("line_of_commented_input");
