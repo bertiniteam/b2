@@ -491,6 +491,34 @@ BOOST_AUTO_TEST_CASE(end___end_5) // 5
 }
 
 
+BOOST_AUTO_TEST_CASE(uncomment)
+{
+    std::string test_string = "%Title of file\n  \n tracktype: 1;  %comment about setting\n %  More full comments\n %Another line of comments\n trackit: 12;\n %commentsetting: 4; \n  %%%%%%%%%%%%%%%%%END of Settings%%%%%%%%%%%%%%\n";
+    
+    bertini::classic::parsing::CommentStripper<std::string::const_iterator> parser;
+    bertini::classic::SplitInputFile config_and_input;
+    std::string::const_iterator iter = test_string.begin();
+    std::string::const_iterator end = test_string.end();
+    
+    std::string test_out = "";
+    bool s = phrase_parse(iter, end, parser, boost::spirit::ascii::space, test_out);
+    
+    std::string rest(iter, end);
+    
+    
+    BOOST_CHECK(s && iter==end);
+    
+    BOOST_CHECK(test_out.find("%")==std::string::npos);
+    BOOST_CHECK(test_out.find("Title of file")==std::string::npos);
+    BOOST_CHECK(test_out.find("comment about setting")==std::string::npos);
+    BOOST_CHECK(test_out.find("Another line of comments")==std::string::npos);
+    BOOST_CHECK(test_out.find("commentsetting: 4;")==std::string::npos);
+    BOOST_CHECK(test_out.find("END of Settings")==std::string::npos);
+    
+    BOOST_CHECK(test_out.find("tracktype: 1;")!=std::string::npos);
+    BOOST_CHECK(test_out.find("trackit: 12;")!=std::string::npos);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -52,7 +52,7 @@ namespace bertini
 			std::string config_;
 			std::string input_;
             
-            bool readable_ = true; //Input file cannot be split
+            bool readable_ = true; //Input file can be split accurately
 		public:
 
 			std::string Config() const
@@ -90,6 +90,13 @@ namespace bertini
             void SetReadable(bool read)
             {
                 readable_ = read;
+            }
+            
+            
+            
+            void StripComments()
+            {
+                
             }
 
 
@@ -253,6 +260,78 @@ namespace bertini
 				qi::rule<Iterator, ascii::space_type, std::string()> end_, input_, no_decl_;
 				qi::rule<Iterator, ascii::space_type> config_;
 			};
+
+            
+            
+            
+            
+            
+            /**
+             Qi Parser object for removing comments from a line of text and then returns the uncommented line.
+             
+             To use this parser, construct an object of its type, then use it to parse.
+             
+             */
+            template<typename Iterator, typename Skipper = ascii::space_type> //boost::spirit::unused_type
+            struct CommentStripper : qi::grammar<Iterator, std::string(), Skipper>
+            {
+                
+                
+                CommentStripper() : CommentStripper::base_type(root_rule_, "CommentStripper")
+                {
+                    namespace phx = boost::phoenix;
+                    using qi::_1;
+                    using qi::_2;
+                    using qi::_3;
+                    using qi::_4;
+                    using qi::_val;
+                    using qi::eol;
+                    using qi::eoi;
+                    using qi::eps;
+                    using qi::lit;
+                    using qi::char_;
+                    using qi::omit;
+                    using boost::spirit::lexeme;
+                    using boost::spirit::as_string;
+                    
+                    root_rule_.name("CommentStripper_root_rule");
+                    
+                    root_rule_ = *line_[_val = _val + _1 + "\n"] >> -last_line_[_val = _val + _1 + "\n"];//+line_ | qi::eoi;
+                    
+                   
+                    line_.name("line_of_commented_input");
+                    line_ = lexeme[*(char_ - eol - "%") >> omit[-( "%" >> lexeme[*(char_ - eol)] )] >> (eol ) ];
+                    
+                    last_line_.name("line_of_commented_input_with_no_eol");
+                    last_line_ = lexeme[*(char_ - "%") >> omit[-( "%" >> lexeme[*(char_ - eol)] )]] ;
+                    
+                    
+//                     debug(root_rule_);
+//                     debug(line_);
+//                    
+//                     BOOST_SPIRIT_DEBUG_NODES((root_rule_) 
+//                                              (line_) )
+                    
+                    
+                    
+                    using phx::val;
+                    using phx::construct;
+                    using namespace qi::labels;
+                    qi::on_error<qi::fail>
+                    ( root_rule_ ,
+                     std::cout<<
+                     val("config/input split parser could not complete parsing. Expecting ")<<
+                     _4<<
+                     val(" here: ")<<
+                     construct<std::string>(_3,_2)<<
+                     std::endl
+                     );
+                }
+                
+            private:
+                qi::rule<Iterator, std::string(), ascii::space_type > root_rule_;
+                qi::rule<Iterator, ascii::space_type, std::string()> line_, last_line_;
+            };
 
 		} // re: namespace parsing
 
