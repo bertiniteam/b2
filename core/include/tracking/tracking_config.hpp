@@ -39,15 +39,60 @@ namespace bertini
 		{
 			Success,
 			HigherPrecisionNecessary,
+			ReduceStepSize,
 			Failure
 		};
 
-		enum class PrecisionType
-		{
-			Double,
-			FixedMultiple,
-			Adaptive
-		};
+		
+
+
+		namespace config{
+
+			enum class PrecisionType
+			{
+				Double,
+				FixedMultiple,
+				Adaptive
+			};
+
+
+			/**
+			Holds the program parameters with respect to Adaptive Multiple Precision.
+			
+			These criteria are developed in \cite{amp1, amp2}.
+
+			Let:
+			\f$J\f$ be the Jacobian matrix of the square system being solved.  
+			\f$d\f$ is the latest Newton residual.
+			\f$N\f$ is the maximum number of Newton iterations to perform.
+
+			Criterion A:
+			\f$ P > \sigma_1 + \log_{10} [ ||J^{-1}|| \epsilon (||J|| + \Phi)   ]  \f$
+			
+			Criterion B:
+			\f$ P > \sigma_1 + D + (\tau + \log_{10} ||d||) / (N-i)  \f$
+			where 
+			\f$ D = \log_{10} [||J^{-1}||((2 + \epsilon)||J|| + \epsilon \Phi) | 1] \f$
+
+			Criterion C:
+			\f$ P > \sigma_2 + \tau + \log_{10}(||J^{-1}|| \Psi + ||z||)  \f$
+
+
+			
+			*/
+			struct AdaptiveMultiplePrecisionConfig
+			{
+				double bound_on_abs_vals_of_coeffs;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
+				double bound_on_degree; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
+				double epsilon;  ///< Bound on \f$\epsilon\f$ (an error bound).  Used for AMP criteria A, B.
+				double Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
+				double Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
+
+				int safety_digits_1;
+				int safety_digits_2;
+				int maximum_precision;
+			} ;
+		}
 	}
 }
 

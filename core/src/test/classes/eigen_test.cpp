@@ -224,6 +224,43 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 //			
 //		}
 	
+
+	BOOST_AUTO_TEST_CASE(eigen_partial_pivot_solve_singular_matrix)
+	{
+
+		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(2,2), B(2,1);
+
+		A << 1, 1, 0, 0;
+
+		B << 0.5, 1;
+
+		auto LU = A.lu();
+
+
+		auto C = LU.solve(B);
+
+		std::cout << C << "\n";
+		std::cout << LU.matrixLU() << "\n";
+	}
+
+
+	BOOST_AUTO_TEST_CASE(eigen_partial_pivot_solve_near_singular_matrix)
+	{
+
+		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(2,2), B(2,1);
+
+		A << 1, 1, 1e-20, 0;
+
+		B << 0.5, 1;
+
+		auto LU = A.lu();
+
+
+		auto C = LU.solve(B);
+
+		std::cout << C << "\n";
+		std::cout << LU.matrixLU() << "\n";
+	}
 BOOST_AUTO_TEST_SUITE_END()
 
 	

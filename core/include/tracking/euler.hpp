@@ -32,8 +32,14 @@
 
 namespace bertini{
 	namespace tracking{
+
+
+
+
+
 		namespace predict{
 
+			using PrecisionType = config::PrecisionType;
 			/**
 			Perform an euler-prediction step
 
@@ -42,31 +48,40 @@ namespace bertini{
 			\param num_steps_since_last_condition_number_computation Obvious, hopefully.
 			*/
 			template <typename T>
-			SuccessCode EulerStep(Vec<T> & next_space, T & next_time,
-			               System const& S,
+			SuccessCode EulerStep(Vec<T> & next_space, T & next_time, T & condition_number_estimate,
+			               System & S,
 			               Vec<T> const& current_space, T current_time, 
 			               T const& dt,
 			               unsigned & num_steps_since_last_condition_number_computation, 
-			               unsigned frequency_of_CN_estimation, PrecisionType PrecType)
+			               unsigned frequency_of_CN_estimation, PrecisionType PrecType, config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				auto dh_dt = -S.TimeDerivative(current_time);
 				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
+
+				// solve dX = (dH/dx)^(-1)*Y
+				// Y = dH/dt
+
+				auto LU_decomposition = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
+				auto dX = LU_decomposition.solve(dh_dt); 
+
+
+
+				
+
 
 				if (PrecType==PrecisionType::Adaptive)
 				{
 					if (num_steps_since_last_condition_number_computation > frequency_of_CN_estimation)
 					{
-						//TODO: compute the condition number of the ...
+						condition_number_estimate = norm(LU_decomposition.solve(Vec<T>::Random(S.NumVariables())));
 						num_steps_since_last_condition_number_computation = 0; // reset the counter to 0
 					}
 					else // no need to compute the condition number
 						num_steps_since_last_condition_number_computation++;
 				}
 
-				// solve dX = (dH/dx)^(-1)*Y
-				// Y = dH/dt
+				
 
-				auto dX = dh_dx.lu().solve(dh_dt); 
 
 				// if (PrecType==PrecisionType::Adaptive)
 				// {
