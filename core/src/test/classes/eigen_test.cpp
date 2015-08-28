@@ -239,8 +239,6 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 		auto C = LU.solve(B);
 
-		std::cout << C << "\n";
-		std::cout << LU.matrixLU() << "\n";
 	}
 
 
@@ -258,8 +256,6 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 		auto C = LU.solve(B);
 
-		std::cout << C << "\n";
-		std::cout << LU.matrixLU() << "\n";
 	}
 BOOST_AUTO_TEST_SUITE_END()
 
