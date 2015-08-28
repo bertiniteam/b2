@@ -25,19 +25,40 @@
 #ifndef amp_criteria_hpp
 #define amp_criteria_hpp
 
+#include <boost/multiprecision/mpfr.hpp>
+
 #include "tracking/tracking_config.hpp"
 
 namespace bertini{
 	namespace tracking{
 		namespace amp{
 
-			inline
+			using AdaptiveMultiplePrecisionConfig = config::AdaptiveMultiplePrecisionConfig;
+			/**
+			Check AMP Criterion A, from \cite{amp1, amp2}.
+			*/
+			
 			template<typename T>
-			bool CriterionA(T norm_J, T norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			bool CriterionA(T const& norm_J, T const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi));
 			}
 			
+
+			
+			template<typename T>
+			bool CriterionB(T const& norm_J, T const& norm_J_inverse, unsigned num_newton_iterations_remaining, double tracking_tolerance, Vec<T> const& latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				auto D = log10(norm_J_inverse*( (2+AMP_config.epsilon)*norm_J + AMP_config.epsilon*AMP_config.Phi) + 1);
+				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + D + (tracking_tolerance + log10(norm(latest_newton_residual))) / (num_newton_iterations_remaining);
+			}
+
+			
+			template<typename T>
+			bool CriterionC(T const& norm_J_inverse, Vec<T> const& z, double tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_2 + tracking_tolerance + log10(norm_J_inverse*AMP_config.Psi + norm(z));
+			}
 		}
 	}
 	

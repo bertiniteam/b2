@@ -56,6 +56,15 @@ namespace bertini
 			};
 
 
+
+			namespace general{			
+				struct TrackingTolerances
+				{
+					double before_endgame;
+					double during_endgame;
+				};
+			}
+
 			/**
 			Holds the program parameters with respect to Adaptive Multiple Precision.
 			
@@ -77,7 +86,7 @@ namespace bertini
 			Criterion C:
 			\f$ P > \sigma_2 + \tau + \log_{10}(||J^{-1}|| \Psi + ||z||)  \f$
 
-
+	
 			
 			*/
 			struct AdaptiveMultiplePrecisionConfig

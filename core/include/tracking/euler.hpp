@@ -25,6 +25,7 @@
 #ifndef euler_hpp
 #define euler_hpp
 
+#include "tracking/amp_criteria.hpp"
 #include "tracking/tracking_config.hpp"
 
 #include "system.hpp"
@@ -48,12 +49,15 @@ namespace bertini{
 			\param num_steps_since_last_condition_number_computation Obvious, hopefully.
 			*/
 			template <typename T>
-			SuccessCode EulerStep(Vec<T> & next_space, T & next_time, T & condition_number_estimate,
+			SuccessCode EulerStep(Vec<T> & next_space, T & next_time,
 			               System & S,
 			               Vec<T> const& current_space, T current_time, 
 			               T const& dt,
+			               T & condition_number_estimate,
 			               unsigned & num_steps_since_last_condition_number_computation, 
-			               unsigned frequency_of_CN_estimation, PrecisionType PrecType, config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+			               unsigned frequency_of_CN_estimation, PrecisionType PrecType, 
+			               double tracking_tolerance,
+			               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				auto dh_dt = -S.TimeDerivative(current_time);
 				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
@@ -65,35 +69,30 @@ namespace bertini{
 				auto dX = LU_decomposition.solve(dh_dt); 
 
 
-
-				
-
-
 				if (PrecType==PrecisionType::Adaptive)
 				{
+					auto norm_J_inverse = norm(LU_decomposition.solve(Vec<T>::Random(S.NumVariables())));
+					auto norm_J = norm(dh_dx);
+
 					if (num_steps_since_last_condition_number_computation > frequency_of_CN_estimation)
 					{
-						condition_number_estimate = norm(LU_decomposition.solve(Vec<T>::Random(S.NumVariables())));
+						// TODO: this esimate may be wrong
+						condition_number_estimate = norm_J * norm_J_inverse;
 						num_steps_since_last_condition_number_computation = 0; // reset the counter to 0
 					}
 					else // no need to compute the condition number
 						num_steps_since_last_condition_number_computation++;
+
+
+					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+					{
+						return SuccessCode::HigherPrecisionNecessary;
+					}
+					else if (!amp::CriterionB(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+					{
+						return SuccessCode::HigherPrecisionNecessary;
+					} 
 				}
-
-				
-
-
-				// if (PrecType==PrecisionType::Adaptive)
-				// {
-				// 	if (AMP_criterion_A != ok)
-				// 	{
-				// 		return SuccessCode::HigherPrecisionNecessary;
-				// 	}
-				// 	else if (AMP_criterion_C != ok)
-				// 	{
-				// 		return SuccessCode::HigherPrecisionNecessary;
-				// 	} 
-				// }
 
 				next_space = current_space + dX * dt;
 
