@@ -26,11 +26,13 @@
 #include <cmath>
 
 #include "bertini.hpp"
+#include "settings/configini_parse.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/program_options.hpp>
+#include <boost/bind.hpp>
 
 using namespace boost::program_options;
 int tracktype_id;
@@ -43,33 +45,51 @@ void SetTrackType(int type)
 BOOST_AUTO_TEST_SUITE(config_settings)
 
 
-BOOST_AUTO_TEST_CASE(initial_test)
+BOOST_AUTO_TEST_CASE(parse_store_set_settings)
 {
-    
-    
-    
-    std::stringstream configfile("   \n");
+    std::stringstream configfile("TrackType = 3  \n MPType=2\n Precision  =40");
     
     options_description options{"test settings"};
     options_description track_type{"Track Type Settings"};
     options_description MP{"Multiple Precision Settings"};
     
     track_type.add_options()
-    ("Track Type", value<int>()->default_value(0)->notifier(&SetTrackType), "Defines the type of tracking that Bertini will perform");
+    ("TrackType", value<int>()->default_value(0)->notifier(&SetTrackType), "Defines the type of tracking that Bertini will perform");
     
     mpfr z;
     MP.add_options()
     ("MPType", value<int>()->default_value(2), "Defines the type of multiple precision used by Bertini")
-    ("Precision", value<int>()->default_value(96)->notifier(&z.precision), "The precision to use in calculations");
+    ("Precision", value<int>()->default_value(96)->notifier(boost::bind(&mpfr::precision,&z, _1)), "The precision to use in calculations");
+    
+    options.add(track_type);
+    options.add(MP);
     
     variables_map vm;
-    store(parse_config_file(configfile, track_type), vm);
+    store(parse_config_file(configfile, options), vm);
     notify(vm);
 
-    BOOST_CHECK_EQUAL(tracktype_id,0);
+    BOOST_CHECK(tracktype_id==3);
+    BOOST_CHECK(vm["MPType"].as<int>() == 2);
+    BOOST_CHECK_EQUAL(z.precision(),40);
 
 }
 
+
+BOOST_AUTO_TEST_CASE(parsing_to_ini)
+{
+    std::string test_string = "tracktype :1 \n MPType:-1";
+    
+    bertini::settings::parsing::ConfigToIni<std::string::const_iterator> parser;
+    std::string::const_iterator iter = test_string.begin();
+    std::string::const_iterator end = test_string.end();
+    
+    std::string str_out;
+    phrase_parse(iter, end, parser, boost::spirit::ascii::space, str_out);
+    
+    BOOST_CHECK(str_out.find("tracktype=1")!=std::string::npos);
+    BOOST_CHECK(str_out.find("MPType=-1")!=std::string::npos);
+
+}
 
 
 
