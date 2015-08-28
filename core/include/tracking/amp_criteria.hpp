@@ -40,6 +40,12 @@ namespace bertini{
 			Check AMP Criterion A, from \cite{amp1, amp2}.
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
+			
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param AMP_config The settings for adaptive multiple precision.
+
+			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
 			template<typename T>
 			bool CriterionA(T const& norm_J, T const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -52,6 +58,15 @@ namespace bertini{
 			Check AMP Criterion B, from \cite{amp1, amp2}.
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
+			
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param num_newton_iterations_remaining The number of iterations which have yet to perform.
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the ___ (log10 of it???)
+			\param latest_newton_residual The norm of the length of the most recent Newton step.
+			\param AMP_config The settings for adaptive multiple precision.
+
+			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
 			template<typename T>
 			bool CriterionB(T const& norm_J, T const& norm_J_inverse, unsigned num_newton_iterations_remaining, double tracking_tolerance, Vec<T> const& latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -64,6 +79,12 @@ namespace bertini{
 			Check AMP Criterion C, from \cite{amp1, amp2}.
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
+			
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the ___ (log10 of it???)
+			\param z The current space point?  TODO: check this. 
+			\param AMP_config The settings for adaptive multiple precision.
 			*/
 			template<typename T>
 			bool CriterionC(T const& norm_J_inverse, Vec<T> const& z, double tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
