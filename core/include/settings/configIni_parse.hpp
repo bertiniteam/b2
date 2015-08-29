@@ -38,9 +38,35 @@
 
 #include <boost/spirit/include/support_istream_iterator.hpp>
 
+#include <boost/algorithm/string.hpp>
+
 
 #include <iostream>
 #include <string>
+
+
+
+// this solution for *lazy* to_lower is adapted from the SO forum, user sehe.
+// https://stackoverflow.com/questions/21516201/how-to-create-boost-phoenix-make-shared
+//    post found using google search terms `phoenix construct shared_ptr`
+namespace {
+    struct to_lower_f
+    {
+        template <typename... A> struct result
+        { typedef std::string type; };
+        
+        template <typename A>
+        std::string operator()(A a) const {
+            return boost::algorithm::to_lower_copy(a);
+        }
+    };
+    
+    using lazy_to_lower_ = boost::phoenix::function<to_lower_f >;
+}
+
+
+
+
 
 namespace bertini
 {
@@ -99,10 +125,10 @@ namespace bertini
                     
                     
                     line_.name("line_of_settings_input");
-                    line_ = (eps >> colon_ >> yes_eol_)[_val = _1 + "=" + _2];
+                    line_ = (eps >> colon_ >> yes_eol_)[_val = lazy_to_lower_()(_1) + "=" + _2];
                     
                     last_line_.name("line_of_settings_input_with_no_eol");
-                    last_line_ = (eps >> colon_ >> no_eol_)[_val = _1 + "=" + _2];
+                    last_line_ = (eps >> colon_ >> no_eol_)[_val = lazy_to_lower_()(_1) + "=" + _2];
                     
                     colon_.name("Set of characters with no : or eol");
                     colon_ = *(char_ -  ":") >> omit[":"];

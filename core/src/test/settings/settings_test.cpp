@@ -26,7 +26,7 @@
 #include <cmath>
 
 #include "bertini.hpp"
-#include "settings/configini_parse.hpp"
+#include "settings/configIni_parse.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/test/unit_test.hpp>
@@ -87,10 +87,32 @@ BOOST_AUTO_TEST_CASE(parsing_to_ini)
     phrase_parse(iter, end, parser, boost::spirit::ascii::space, str_out);
     
     BOOST_CHECK(str_out.find("tracktype=1")!=std::string::npos);
-    BOOST_CHECK(str_out.find("MPType=-1")!=std::string::npos);
+    BOOST_CHECK(str_out.find("mptype=-1")!=std::string::npos);
 
 }
 
+
+//BOOST_AUTO_TEST_CASE(full_config_to_vm)
+//{
+//    std::string test_string = "%Title of file\n CONFIG \n tracktype: 1;  %comment about setting\n %  More full comments\n %Another line of comments\n MPType:0\n %commentsetting: 4; \n  %%%%%%%%%%%%%%%%%END of Settings%%%%%%%%%%%%%%\n END; \n stuff %more comments\n INPUT\n %Beginning comments\n variable_group x,y; %variables\n % Parameters \n parameter t; \n function f\n %Polynomials \n f = x^2 + y;\n %End of INput\n END; stuff end";
+//    
+//    bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> split_parser;
+//    bertini::classic::parsing::CommentStripper<std::string::const_iterator> comment_parser;
+//    bertini::classic::SplitInputFile config_and_input;
+//    std::string::const_iterator iter = test_string.begin();
+//    std::string::const_iterator end = test_string.end();
+//    phrase_parse(iter, end, split_parser, boost::spirit::ascii::space, config_and_input);
+//    auto config = config_and_input.Config();
+//    auto input = config_and_input.Input();
+//    
+//    std::string test_out = "";
+//    iter = config.begin();
+//    end = config.end();
+//    phrase_parse(iter, end, comment_parser, boost::spirit::ascii::space, test_out);
+//    config_and_input.SetConfig(test_out);
+//    
+//    config = config_and_input.Config();
+//}
 
 
 
