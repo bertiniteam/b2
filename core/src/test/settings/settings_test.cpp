@@ -75,26 +75,26 @@ BOOST_AUTO_TEST_CASE(parse_store_set_settings)
 }
 
 
-//BOOST_AUTO_TEST_CASE(parsing_to_ini)
-//{
-//    std::string test_string = "tracktype :1 \n MPType:-1";
-//    
-//    bertini::settings::parsing::ConfigToIni<std::string::const_iterator> parser;
-//    std::string::const_iterator iter = test_string.begin();
-//    std::string::const_iterator end = test_string.end();
-//    
-//    std::string str_out;
-//    phrase_parse(iter, end, parser, boost::spirit::ascii::space, str_out);
-//    
-//    BOOST_CHECK(str_out.find("tracktype=1")!=std::string::npos);
-//    BOOST_CHECK(str_out.find("mptype=-1")!=std::string::npos);
-//
-//}
+BOOST_AUTO_TEST_CASE(parsing_to_ini)
+{
+    std::string test_string = "tracktype :1 \n MPType:-1";
+    
+    bertini::settings::parsing::ConfigToIni<std::string::const_iterator> parser;
+    std::string::const_iterator iter = test_string.begin();
+    std::string::const_iterator end = test_string.end();
+    
+    std::string str_out;
+    phrase_parse(iter, end, parser, boost::spirit::ascii::space, str_out);
+    std::cout << "d " << str_out << std::endl;
+    BOOST_CHECK(str_out.find("tracktype=1")!=std::string::npos);
+    BOOST_CHECK(str_out.find("mptype=-1")!=std::string::npos);
+
+}
 
 
 BOOST_AUTO_TEST_CASE(full_config_to_vm)
 {
-    std::string test_string = "%Title of file\n CONFIG \n TrackType: 3;  %comment about setting\n %  More full comments\n %Another line of comments\n PRECISION:40;   %commentsetting: 4; \n  %%%%%%%%%%%%%%%%%END of Settings%%%%%%%%%%%%%%\n END; \n stuff %more comments\n INPUT\n %Beginning comments\n variable_group x,y; %variables\n % Parameters \n parameter t; \n function f\n %Polynomials \n f = x^2 + y;\n %End of INput\n END; stuff end";
+    std::string test_string = "%Title of file\n CONFIG \n TrackType: 3;  %comment about setting\n %  More full comments\n %Another line of comments\n PRECISION:40 \n  %commentsetting: 4; \n  %%%%%%%%%%%%%%%%%END of Settings%%%%%%%%%%%%%%\n END; \n stuff %more comments\n INPUT\n %Beginning comments\n variable_group x,y; %variables\n % Parameters \n parameter t; \n function f\n %Polynomials \n f = x^2 + y;\n %End of INput\n END; stuff end";
     
     bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> split_parser;
     bertini::classic::parsing::CommentStripper<std::string::const_iterator> comment_parser;
@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE(full_config_to_vm)
     end = config.end();
     phrase_parse(iter, end, config_ini_parser, boost::spirit::ascii::space, test_out);
     config_and_input.SetConfig(test_out);
-    std::string rest(iter,end);
-    std::cout << "rest = " << test_out << std::endl;
+//    std::string rest(iter,end);
+//    std::cout << "rest = " << test_out << std::endl;
     
     std::stringstream configfile(config_and_input.Config());
     
