@@ -308,9 +308,10 @@ namespace bertini
                     
 //                     debug(root_rule_);
 //                     debug(line_);
-//                    
+//                     debug(last_line_);
+//
 //                     BOOST_SPIRIT_DEBUG_NODES((root_rule_) 
-//                                              (line_) )
+//                                              (line_) (last_line_) )
                     
                     
                     
