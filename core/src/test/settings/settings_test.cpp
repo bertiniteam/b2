@@ -75,44 +75,78 @@ BOOST_AUTO_TEST_CASE(parse_store_set_settings)
 }
 
 
-BOOST_AUTO_TEST_CASE(parsing_to_ini)
-{
-    std::string test_string = "tracktype :1 \n MPType:-1";
-    
-    bertini::settings::parsing::ConfigToIni<std::string::const_iterator> parser;
-    std::string::const_iterator iter = test_string.begin();
-    std::string::const_iterator end = test_string.end();
-    
-    std::string str_out;
-    phrase_parse(iter, end, parser, boost::spirit::ascii::space, str_out);
-    
-    BOOST_CHECK(str_out.find("tracktype=1")!=std::string::npos);
-    BOOST_CHECK(str_out.find("mptype=-1")!=std::string::npos);
-
-}
-
-
-//BOOST_AUTO_TEST_CASE(full_config_to_vm)
+//BOOST_AUTO_TEST_CASE(parsing_to_ini)
 //{
-//    std::string test_string = "%Title of file\n CONFIG \n tracktype: 1;  %comment about setting\n %  More full comments\n %Another line of comments\n MPType:0\n %commentsetting: 4; \n  %%%%%%%%%%%%%%%%%END of Settings%%%%%%%%%%%%%%\n END; \n stuff %more comments\n INPUT\n %Beginning comments\n variable_group x,y; %variables\n % Parameters \n parameter t; \n function f\n %Polynomials \n f = x^2 + y;\n %End of INput\n END; stuff end";
+//    std::string test_string = "tracktype :1 \n MPType:-1";
 //    
-//    bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> split_parser;
-//    bertini::classic::parsing::CommentStripper<std::string::const_iterator> comment_parser;
-//    bertini::classic::SplitInputFile config_and_input;
+//    bertini::settings::parsing::ConfigToIni<std::string::const_iterator> parser;
 //    std::string::const_iterator iter = test_string.begin();
 //    std::string::const_iterator end = test_string.end();
-//    phrase_parse(iter, end, split_parser, boost::spirit::ascii::space, config_and_input);
-//    auto config = config_and_input.Config();
-//    auto input = config_and_input.Input();
 //    
-//    std::string test_out = "";
-//    iter = config.begin();
-//    end = config.end();
-//    phrase_parse(iter, end, comment_parser, boost::spirit::ascii::space, test_out);
-//    config_and_input.SetConfig(test_out);
+//    std::string str_out;
+//    phrase_parse(iter, end, parser, boost::spirit::ascii::space, str_out);
 //    
-//    config = config_and_input.Config();
+//    BOOST_CHECK(str_out.find("tracktype=1")!=std::string::npos);
+//    BOOST_CHECK(str_out.find("mptype=-1")!=std::string::npos);
+//
 //}
+
+
+BOOST_AUTO_TEST_CASE(full_config_to_vm)
+{
+    std::string test_string = "%Title of file\n CONFIG \n TrackType: 3;  %comment about setting\n %  More full comments\n %Another line of comments\n PRECISION:40;   %commentsetting: 4; \n  %%%%%%%%%%%%%%%%%END of Settings%%%%%%%%%%%%%%\n END; \n stuff %more comments\n INPUT\n %Beginning comments\n variable_group x,y; %variables\n % Parameters \n parameter t; \n function f\n %Polynomials \n f = x^2 + y;\n %End of INput\n END; stuff end";
+    
+    bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> split_parser;
+    bertini::classic::parsing::CommentStripper<std::string::const_iterator> comment_parser;
+    bertini::settings::parsing::ConfigToIni<std::string::const_iterator> config_ini_parser;
+    bertini::classic::SplitInputFile config_and_input;
+    std::string::const_iterator iter = test_string.begin();
+    std::string::const_iterator end = test_string.end();
+    phrase_parse(iter, end, split_parser, boost::spirit::ascii::space, config_and_input);
+    auto config = config_and_input.Config();
+    auto input = config_and_input.Input();
+    
+    std::string test_out = "";
+    iter = config.begin();
+    end = config.end();
+    phrase_parse(iter, end, comment_parser, boost::spirit::ascii::space, test_out);
+    config_and_input.SetConfig(test_out);
+    config = config_and_input.Config();
+    
+    test_out = "";
+    iter = config.begin();
+    end = config.end();
+    phrase_parse(iter, end, config_ini_parser, boost::spirit::ascii::space, test_out);
+    config_and_input.SetConfig(test_out);
+    std::string rest(iter,end);
+    std::cout << "rest = " << test_out << std::endl;
+    
+    std::stringstream configfile(config_and_input.Config());
+    
+    options_description options{"test settings"};
+    options_description track_type{"Track Type Settings"};
+    options_description MP{"Multiple Precision Settings"};
+    
+    track_type.add_options()
+    ("tracktype", value<int>()->default_value(0)->notifier(&SetTrackType), "Defines the type of tracking that Bertini will perform");
+    
+    mpfr z;
+    MP.add_options()
+    ("mptype", value<int>()->default_value(2), "Defines the type of multiple precision used by Bertini")
+    ("precision", value<int>()->default_value(96)->notifier(boost::bind(&mpfr::precision,&z, _1)), "The precision to use in calculations");
+    
+    options.add(track_type);
+    options.add(MP);
+    
+    variables_map vm;
+    store(parse_config_file(configfile, options), vm);
+    notify(vm);
+    
+    BOOST_CHECK(tracktype_id==3);
+    BOOST_CHECK(vm["mptype"].as<int>() == 2);
+    BOOST_CHECK_EQUAL(z.precision(),40);
+    
+}
 
 
 

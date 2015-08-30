@@ -131,19 +131,22 @@ namespace bertini
                     last_line_ = (eps >> colon_ >> no_eol_)[_val = lazy_to_lower_()(_1) + "=" + _2];
                     
                     colon_.name("Set of characters with no : or eol");
-                    colon_ = *(char_ -  ":") >> omit[":"];
+                    colon_ = lexeme[*(char_ -  ":") >> omit[":"] ];
                     
                     yes_eol_.name("Set of characters with eol");
-                    yes_eol_ = lexeme[*(char_ - eol) >> eol];
+                    yes_eol_ = lexeme[*(char_ - eol - ";") >> omit[-(char_(';') >> *(char_ - eol) )] >> eol];
 
                     no_eol_.name("Set of characters with no eol");
-                    no_eol_ = lexeme[*(char_)];
+                    no_eol_ = lexeme[*(char_  - ";") >> omit[-(char_(';') >> *(char_ ) )]];
                     
-                    //                     debug(root_rule_);
-                    //                     debug(line_);
-                    //
-                    //                     BOOST_SPIRIT_DEBUG_NODES((root_rule_)
-                    //                                              (line_) )
+//                                         debug(root_rule_);
+//                                         debug(line_);
+//                    debug(last_line_);
+//                    debug(yes_eol_);
+//                    debug(no_eol_);
+//                    
+//                                         BOOST_SPIRIT_DEBUG_NODES((root_rule_)
+//                                                                  (line_)(last_line_)(yes_eol_)(no_eol_) )
                     
                     
                     
