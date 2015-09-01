@@ -41,7 +41,7 @@
 #include <cmath>
 
 
-#include "function_tree/Node.hpp"
+#include "function_tree/node.hpp"
 #include "function_tree/roots/function.hpp"
 
 #include "function_tree/operators/arithmetic.hpp"
