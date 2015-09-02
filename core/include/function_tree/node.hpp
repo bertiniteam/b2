@@ -55,14 +55,17 @@ namespace bertini {
 
 using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
 
-namespace node{
-
 enum class VariableGroupType
 {
 	Homogeneous,
 	Affine,
 	Ungrouped
 };
+
+
+namespace node{
+
+
 /**
 An interface for all nodes in a function tree, and for a function object as well.  Almost all
  methods that will be called on a node must be declared in this class.  The main evaluation method is

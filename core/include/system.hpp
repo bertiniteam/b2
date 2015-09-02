@@ -71,7 +71,7 @@ namespace bertini {
 		/**
 		The default constructor for a system
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false), have_ordering(false), ordering_(OrderingChoice::Unset)
+		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), ordering_(OrderingChoice::Unset)
 		{}
 
 
@@ -399,7 +399,7 @@ namespace bertini {
 
 
 		/**
-		 Get the variables in the problem.
+		 Order the variables in the problem, 1 affine, 2 homogeneous, 3 ungrouped.
 
 		 This function returns the variables in standard ordering.
 
@@ -407,15 +407,48 @@ namespace bertini {
 		 2) hom_variable_groups second.
 		 3) ungrouped variables
 
-		 The order in which variables and their groups are added to a system impacts this ordering.  Bertini will ensure internal consistency.  It is up to the user to make sure the ordering is what they want for any post-processing or interpretations of results.
-
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
         */
         VariableGroup CanonicalVariableOrdering() const;
 
 
+
+        /**
+		 Order the variables, by the order in which the groups were added.
+
+		 This function returns the variables in First In First Out (FIFO) ordering.
+
+		 Homogenizing variables precede affine variable groups, so that groups always are grouped together.
+
+		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
+        */
+        VariableGroup FIFOVariableOrdering() const;
+
+
+        /**
+		\brief Choose to use a canonical ordering for variables.  
+
+		The system must be homogenized correctly for this to succeed.  Otherwise the underlying call to FIFOVariableOrdering may throw.
+
+		\see CanonicalariableOrdering
+        */
+        void SetCanonicalVariableOrdering();
+
+
+        /**
+		\brief Choose to use order-of-addition ordering for variables.  
+
+		The system must be homogenized correctly for this to succeed.  Otherwise the underlying call to FIFOVariableOrdering may throw.
+
+		\see FIFOVariableOrdering
+        */
+        void SetFIFOVariableOrdering();
+
         /**
 		 Get the variables in the problem; they must have already been ordered.
+
+		 \see SetCanonicalVariableOrdering
+		 \see SetFIFOVariableOrdering
 		*/
         VariableGroup Variables() const;
 
@@ -428,6 +461,8 @@ namespace bertini {
         */
         template<typename T>
         Vec<T> DehomogenizePoint(Vec<T> const& x) const;
+
+
 
 		/////////////// TESTING ////////////////////
 		/**
@@ -448,8 +483,7 @@ namespace bertini {
             return variable_groups_;
         }
 
-		/////////////// TESTING ////////////////////
-
+		
 
 
 
@@ -533,6 +567,26 @@ namespace bertini {
 		*/
 		friend System operator*(Nd const&  N, System const& s);
 	private:
+
+		/**
+		\brief Dehomogenize a point according to the FIFO variable ordering.
+
+		\see FIFOVariableOrdering
+		*/
+		template<typename T>
+	    Vec<T> DehomogenizePointFIFOOrdering(Vec<T> const& x) const;
+
+
+
+	    /**
+		\brief Dehomogenize a point according to the Canonical variable ordering.
+
+		\see CanonicalVariableOrdering
+		*/
+	    template<typename T>
+	    Vec<T> DehomogenizePointCanonicalOrdering(Vec<T> const& x) const;
+
+
 
 		enum class OrderingChoice{Unset, FIFO, Canonical};
 
