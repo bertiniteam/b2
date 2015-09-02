@@ -40,7 +40,8 @@ namespace bertini
 			Success,
 			HigherPrecisionNecessary,
 			ReduceStepSize,
-			Failure
+			GoingToInfinity,
+			FailedToConverge
 		};
 
 		

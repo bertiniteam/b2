@@ -71,7 +71,7 @@ namespace bertini {
 		/**
 		The default constructor for a system
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false)
+		System() : is_differentiated_(false), have_path_variable_(false), have_ordering(false), ordering_(OrderingChoice::Unset)
 		{}
 
 
@@ -173,9 +173,14 @@ namespace bertini {
 		size_t NumFunctions() const;
 
 		/**
-		 Get the number of variables in this system
+		 Get the total number of variables in this system, including homogenizing variables.
 		 */
 		size_t NumVariables() const;
+
+		/**
+		 Get the number of variables in this system, NOT including homogenizing variables.
+		*/
+		size_t NumNaturalVariables() const;
 
 		/**
 		 Get the number of *homogenizing* variables in this system
@@ -406,10 +411,23 @@ namespace bertini {
 
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
         */
+        VariableGroup CanonicalVariableOrdering() const;
+
+
+        /**
+		 Get the variables in the problem; they must have already been ordered.
+		*/
         VariableGroup Variables() const;
 
 
 
+        /**
+		\brief Dehomogenize a point, using the variable grouping / structure of the system.
+
+		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
+        */
+        template<typename T>
+        Vec<T> DehomogenizePoint(Vec<T> const& x) const;
 
 		/////////////// TESTING ////////////////////
 		/**
@@ -516,6 +534,8 @@ namespace bertini {
 		friend System operator*(std::shared_ptr<Node> const&  N, System const& s);
 	private:
 
+		enum class OrderingChoice{Unset, FIFO, Canonical};
+
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
 		std::vector< VariableGroup > hom_variable_groups_; ///< Homogeneous or projective variable groups.  System SHOULD be homogeneous with respect to these.  
@@ -538,6 +558,13 @@ namespace bertini {
 		bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
 
 
+		std::vector< VariableGroupType > time_order_of_variable_groups_;
+
+
+		VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
+		bool have_ordering_;
+		OrderingChoice ordering_;
+
 		unsigned precision_; ///< the current working precision of the system 
 
 
@@ -552,6 +579,11 @@ namespace bertini {
 			
 			ar & have_path_variable_;
 			ar & path_variable_;
+
+			ar & time_order_of_variable_groups_;
+
+			ar & have_ordering_;
+			ar & variable_ordering_;
 
 			ar & implicit_parameters_;
 			ar & explicit_parameters_;

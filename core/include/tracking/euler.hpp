@@ -50,14 +50,14 @@ namespace bertini{
 			*/
 			template <typename T>
 			SuccessCode EulerStep(Vec<T> & next_space, T & next_time,
-			               System & S,
-			               Vec<T> const& current_space, T current_time, 
-			               T const& dt,
-			               T & condition_number_estimate,
-			               unsigned & num_steps_since_last_condition_number_computation, 
-			               unsigned frequency_of_CN_estimation, PrecisionType PrecType, 
-			               double tracking_tolerance,
-			               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+					               System & S,
+					               Vec<T> const& current_space, T current_time, 
+					               T const& dt,
+					               T & condition_number_estimate,
+					               unsigned & num_steps_since_last_condition_number_computation, 
+					               unsigned frequency_of_CN_estimation, PrecisionType PrecType, 
+					               double tracking_tolerance,
+					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				auto dh_dt = -S.TimeDerivative(current_time);
 				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.

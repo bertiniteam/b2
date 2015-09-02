@@ -26,12 +26,65 @@
 #define newton_correct_hpp
 
 
+#include "tracking/amp_criteria.hpp"
 #include "tracking/tracking_config.hpp"
+#include "system.hpp"
 
 namespace bertini{
 	namespace tracking{
 		namespace correct{
 
+			using PrecisionType = config::PrecisionType;
+			
+			/**
+			\brief Run Newton's method.
+
+			Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
+			*/
+			template <typename T>
+			SuccessCode NewtonLoop(Vec<T> & next_space, T & next_time,
+					               System & S,
+					               Vec<T> const& current_space, // pass by value to get a copy of it
+					               T const& current_time, 
+					               PrecisionType PrecType, 
+					               double tracking_tolerance,
+					               double path_truncation_threshold,
+					               unsigned max_num_newton_iterations,
+					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				next_space = current_space;
+				for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
+				{
+					//TODO: wrap these into a single line.
+					auto f = S.Eval(current_space, current_time);
+					auto J = S.Jacobian(current_space, current_time);
+					auto LU = J.lu();
+					auto delta_z = LU.solve(-f);
+
+					if (norm(delta_z) < tracking_tolerance)
+						return SuccessCode::Success;
+
+					if (PrecType==PrecisionType::Adaptive)
+					{
+						auto norm_J_inverse = norm(LU.solve(Vec<T>::Random(S.NumVariables())));
+						if (!CriterionB(norm(J), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z, AMP_config))
+							return SuccessCode::HigherPrecisionNecessary;
+
+						if (!CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config))
+							return SuccessCode::HigherPrecisionNecessary;
+
+					}
+
+					if (norm(S.DehomogenizePoint(current_space)) > path_truncation_threshold)
+					{
+						return SuccessCode::GoingToInfinity;
+					}
+
+					next_space+=delta_z;
+				}
+
+				return SuccessCode::FailedToConverge;
+			}
 			
 		}
 		
