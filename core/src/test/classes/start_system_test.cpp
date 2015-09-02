@@ -39,7 +39,7 @@ using VariableGroup = bertini::VariableGroup;
 
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-
+extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;
 extern double threshold_clearance_mp;
 extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
@@ -277,9 +277,9 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	{
 		auto start = TD.StartPoint<dbl>(ii);
 		auto function_values = TD.Eval(start);
-
+		
 		for (size_t jj = 0; jj < function_values.size(); ++jj)
-			BOOST_CHECK(abs(function_values(jj)) < threshold_clearance_d);
+			BOOST_CHECK(abs(function_values(jj)) < relaxed_threshold_clearance_d);
 	}
 
 	boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
