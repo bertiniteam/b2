@@ -45,7 +45,7 @@ using Float = bertini::node::Float;
 
 
 
-
+double relaxed_threshold_clearance_d = 1e-14;
 double threshold_clearance_d = 1e-15;
 
 unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS = 30;
