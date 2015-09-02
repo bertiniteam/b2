@@ -100,12 +100,12 @@ namespace {
 
 
 
-BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, cos_lazy, cos, 1);
-BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, sin_lazy, sin, 1);
-BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, tan_lazy, tan, 1);
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, cos_lazy, cos, 1);
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sin_lazy, sin, 1);
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, tan_lazy, tan, 1);
 
-BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, exp_lazy, exp, 1);
-BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::Node>, sqrt_lazy, sqrt, 1);
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, exp_lazy, exp, 1);
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sqrt_lazy, sqrt, 1);
 
 
 
@@ -131,11 +131,14 @@ namespace bertini {
 	\brief A Qi grammar parser for parsing text into function trees.
 	*/
 	template<typename Iterator>
-	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<Node>(), boost::spirit::ascii::space_type>
+	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
 	{
-
-		//,"BRAKEPARSER"
-		// sumexpr is going to be the first rule called, the start rule.
+		using Node = node::Node;
+		using Function = node::Function;
+		using Float = node::Float;
+		using Integer = node::Integer;
+		using Rational = node::Rational;
+		
 		FunctionParser(qi::symbols<char,std::shared_ptr<Node> > * encountered_symbols) : FunctionParser::base_type(root_rule_,"FunctionParser")
 		{
 			namespace phx = boost::phoenix;

@@ -42,11 +42,11 @@
 
 
 
-using Variable = bertini::Variable;
-using Node = bertini::Node;
+using Variable = bertini::node::Variable;
+using Node = bertini::node::Node;
 
-using Function = bertini::Function;
-using Jacobian = bertini::Jacobian;
+using Function = bertini::node::Function;
+using Jacobian = bertini::node::Jacobian;
 
 
 
