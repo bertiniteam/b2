@@ -20,7 +20,7 @@
 
 
 #include <vector>
-
+#include <stdexcept>
 
 
 namespace bertini{
