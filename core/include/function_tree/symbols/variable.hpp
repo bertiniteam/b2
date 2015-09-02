@@ -29,7 +29,7 @@
 
 
 namespace  bertini {
-	
+namespace node{
 	/**
 	\brief Represents variable leaves in the function tree.
 
@@ -177,7 +177,7 @@ namespace  bertini {
 
 	
 
-	
+} // re: namespace node
 } // re: namespace bertini
 
 

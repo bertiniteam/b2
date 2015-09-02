@@ -29,7 +29,7 @@
 
 
 namespace bertini {
-    
+namespace node{    
     
     /**
     \brief Defines the entry point into a Jacobian tree.
@@ -170,7 +170,7 @@ namespace bertini {
         }
     };
     
-    
+} // re: namespace node
 } // re: namespace bertini
 
 

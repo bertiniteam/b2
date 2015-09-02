@@ -259,7 +259,7 @@ namespace bertini
 			jacobian_.resize(NumFunctions());
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 			{
-				jacobian_[ii] = std::make_shared<bertini::Jacobian>(functions_[ii]->Differentiate());
+				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
 			}
 			is_differentiated_ = true;
 		}
@@ -297,7 +297,7 @@ namespace bertini
 			jacobian_.resize(NumFunctions());
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 			{
-				jacobian_[ii] = std::make_shared<bertini::Jacobian>(functions_[ii]->Differentiate());
+				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
 			}
 			is_differentiated_ = true;
 		}
@@ -377,7 +377,7 @@ namespace bertini
 			}
 			else
 			{
-				hom_var = std::make_shared<Variable>(converter.str());
+				hom_var = std::make_shared<bertini::node::Variable>(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
 			}
 		
@@ -647,7 +647,7 @@ namespace bertini
 
 	void System::AddFunction(Nd const& N)
 	{
-		Fn F = std::make_shared<Function>(N);
+		Fn F = std::make_shared<node::Function>(N);
 		functions_.push_back(F);
 		is_differentiated_ = false;
 	}
@@ -771,7 +771,7 @@ namespace bertini
 
 
 		// finally, we re-order the functions based on the indices we just computed
-		std::vector<std::shared_ptr<Function> > re_ordered_functions(degs.size());
+		std::vector<std::shared_ptr<node::Function> > re_ordered_functions(degs.size());
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
@@ -798,7 +798,7 @@ namespace bertini
 
 
 		// finally, we re-order the functions based on the indices we just computed
-		std::vector<std::shared_ptr<Function> > re_ordered_functions(degs.size());
+		std::vector<std::shared_ptr<node::Function> > re_ordered_functions(degs.size());
 		size_t ind = 0;
 		for (auto iter : indices)
 		{
@@ -936,7 +936,7 @@ namespace bertini
 	}
 
 
-	System System::operator*=(std::shared_ptr<Node> const& N)
+	System System::operator*=(std::shared_ptr<node::Node> const& N)
 	{
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
 		{
@@ -946,13 +946,13 @@ namespace bertini
 	}
 
 
-	System operator*(System s, std::shared_ptr<Node> const&  N)
+	System operator*(System s, std::shared_ptr<node::Node> const&  N)
 	{
 		return s*=N;
 	}
 
 
-	System operator*(std::shared_ptr<Node> const&  N, System const& s)
+	System operator*(std::shared_ptr<node::Node> const&  N, System const& s)
 	{
 		return s*N;
 	}
