@@ -28,7 +28,7 @@
 
 
 namespace bertini {
-	
+namespace node{
 	
 	/**
 	\brief Formal entry point into an expression tree.
@@ -226,7 +226,7 @@ namespace bertini {
         }
 	};
 	
-	
+} // re: namespace node
 } // re: namespace bertini
 
 

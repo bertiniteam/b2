@@ -28,16 +28,16 @@
 
 
 namespace bertini {
-
+namespace node{
 
 	std::shared_ptr<Node> Pi()
     {
-    	return std::make_shared<SpecialNumber::Pi>();
+    	return std::make_shared<special_number::Pi>();
     }
 
     std::shared_ptr<Node> E()
     {
-    	return std::make_shared<SpecialNumber::E>();
+    	return std::make_shared<special_number::E>();
     }
 
     std::shared_ptr<Node> I()
@@ -61,5 +61,6 @@ namespace bertini {
     	return std::make_shared<Integer>(0);
     }
 
+}
 }
 

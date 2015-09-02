@@ -31,6 +31,7 @@
 
 
 namespace bertini {
+namespace node{
     class Variable;
 
 
@@ -175,7 +176,7 @@ namespace bertini {
 
     };
 
-
+} // re: namespace node
 } // re: namespace bertini
 
 #endif

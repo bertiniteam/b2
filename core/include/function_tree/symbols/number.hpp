@@ -30,7 +30,7 @@
 
 
 namespace bertini {
-
+namespace node{
 
 
 	/**
@@ -392,7 +392,7 @@ namespace bertini {
 	};
 
 
-
+} // re: namespace node
 } // re: namespace bertini
 
 #endif

@@ -29,7 +29,7 @@
 
 
 namespace bertini{
-	
+	namespace node{
 	using ::pow;
 	
 	///////////////////////
@@ -904,5 +904,7 @@ namespace bertini{
 	{
 		return exp(child_->Eval<mpfr>(diff_variable));
 	}
+
 	
-}
+} // re: namespace node
+} // re: namespace bertini

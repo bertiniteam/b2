@@ -39,9 +39,9 @@
 
 
 
-using Variable = bertini::Variable;
-using Node = bertini::Node;
-using Float = bertini::Float;
+using Variable = bertini::node::Variable;
+using Node = bertini::node::Node;
+using Float = bertini::node::Float;
 
 
 
@@ -1576,7 +1576,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_pi){
     dbl exact_dbl(4*atan(1.0),0);
     mpfr exact_mpfr(mpfr_float("4.0")*atan(mpfr_float("1.0")));
     
-    auto N = bertini::Pi();
+    auto N = bertini::node::Pi();
     BOOST_CHECK_EQUAL(N->Degree(),0);
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
@@ -1596,7 +1596,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_e){
     dbl exact_dbl(exp(1.0),0);
     mpfr exact_mpfr(exp(mpfr_float("1.0")));
     
-    auto N = bertini::E();
+    auto N = bertini::node::E();
     BOOST_CHECK_EQUAL(N->Degree(),0);
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
     BOOST_CHECK(N->Eval<dbl>().imag() == 0.0);
@@ -1612,7 +1612,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_i){
     dbl exact_dbl(0.0,1.0);
     mpfr exact_mpfr = mpfr("0.0","1.0");
     
-    auto N = bertini::I();
+    auto N = bertini::node::I();
     BOOST_CHECK_EQUAL(N->Degree(),0);
 
     BOOST_CHECK(N->IsPolynomial());

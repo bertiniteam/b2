@@ -28,7 +28,7 @@
 
 
 namespace bertini {
-	
+namespace node{	
 	/**
 	\brief Abstract class for trigonometric Operator types.
 
@@ -412,46 +412,46 @@ namespace bertini {
 	
 	// begin the overload of operators
 
-	inline std::shared_ptr<bertini::Node> sin(const std::shared_ptr<bertini::Node> & N)
+	inline std::shared_ptr<Node> sin(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<bertini::SinOperator>(N);
+		return std::make_shared<SinOperator>(N);
 	}
 	
-	inline std::shared_ptr<bertini::Node> asin(const std::shared_ptr<bertini::Node> & N)
+	inline std::shared_ptr<Node> asin(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<bertini::ArcSinOperator>(N);
+		return std::make_shared<ArcSinOperator>(N);
 	}
 	
 
 
-	inline std::shared_ptr<bertini::Node> cos(const std::shared_ptr<bertini::Node> & N)
+	inline std::shared_ptr<Node> cos(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<bertini::CosOperator>(N);
-	}
-
-
-
-	inline std::shared_ptr<bertini::Node> acos(const std::shared_ptr<bertini::Node> & N)
-	{
-		return std::make_shared<bertini::ArcCosOperator>(N);
+		return std::make_shared<CosOperator>(N);
 	}
 
 
 
-	inline std::shared_ptr<bertini::Node> tan(const std::shared_ptr<bertini::Node> & N)
+	inline std::shared_ptr<Node> acos(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<bertini::TanOperator>(N);
+		return std::make_shared<ArcCosOperator>(N);
+	}
+
+
+
+	inline std::shared_ptr<Node> tan(const std::shared_ptr<Node> & N)
+	{
+		return std::make_shared<TanOperator>(N);
 	}
 
 
 	
-	inline std::shared_ptr<bertini::Node> atan(const std::shared_ptr<bertini::Node> & N)
+	inline std::shared_ptr<Node> atan(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<bertini::ArcTanOperator>(N);
+		return std::make_shared<ArcTanOperator>(N);
 	}
 	
 	
-	
+} // re: namespace node
 } // re: namespace bertini
 
 
