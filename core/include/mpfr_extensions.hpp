@@ -55,7 +55,7 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
 	{
-		std::string tmp = r.str(0,std::ios::fixed);
+		std::string tmp = r.str(0,std::ios::scientific);
 		ar & tmp;
 	}
 	
@@ -77,7 +77,7 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::gmp_rational const& r, unsigned /*version*/)
 	{
-		std::string tmp = r.str(0,std::ios::fixed);
+		std::string tmp = r.str(0,std::ios::scientific);
 		ar & tmp;
 	}
 	
