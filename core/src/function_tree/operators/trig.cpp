@@ -27,7 +27,7 @@
 
 
 namespace bertini {
-	
+namespace node{	
 
 	int TrigOperator::Degree(std::shared_ptr<Variable> const& v) const
 	{
@@ -149,5 +149,5 @@ namespace bertini {
 		return child_->Differentiate() / (1 + pow(child_,2));
 	}
 
-	
+} // re: namespace node	
 } // re: bertini namespace

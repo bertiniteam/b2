@@ -44,7 +44,7 @@
 
 
 namespace bertini {
-	
+namespace node{	
 	/**
 	\brief Represents summation and difference Operator.
 
@@ -855,25 +855,25 @@ namespace bertini {
 	// begin the overload of operators
 	
 	
-	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, const std::shared_ptr<bertini::Node> & p)
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, const std::shared_ptr<Node> & p)
 	{
-		return std::make_shared<bertini::PowerOperator>(N,p);
+		return std::make_shared<PowerOperator>(N,p);
 	}
 	
-	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, double p)
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p)
 	{
-		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
+		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
 	}
 	
 
-	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, dbl p)
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, dbl p)
 	{
-		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
+		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
 	}
 
-	inline std::shared_ptr<bertini::Node> pow(const std::shared_ptr<bertini::Node> & N, mpfr p)
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr p)
 	{
-		return std::make_shared<bertini::PowerOperator>(N,std::make_shared<bertini::Float>(p));
+		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
 	}
 	
 	
@@ -996,7 +996,7 @@ namespace bertini {
 	
 	inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
 	{
-		return std::make_shared<bertini::IntegerPowerOperator>(base,power);
+		return std::make_shared<IntegerPowerOperator>(base,power);
 	}
 	
 	
@@ -1072,9 +1072,9 @@ namespace bertini {
 	
 	
 	
-	inline std::shared_ptr<bertini::Node> sqrt(const std::shared_ptr<bertini::Node> & N)
+	inline std::shared_ptr<Node> sqrt(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<bertini::SqrtOperator>(N);
+		return std::make_shared<SqrtOperator>(N);
 	}
 	
 	
@@ -1136,12 +1136,12 @@ namespace bertini {
 	};
 	
 	
-	inline std::shared_ptr<bertini::Node> exp(const std::shared_ptr<bertini::Node> & N)
+	inline std::shared_ptr<Node> exp(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<bertini::ExpOperator>(N);
+		return std::make_shared<ExpOperator>(N);
 	}
 	
-	
+} // re: namespace node	
 } // re: namespace bertini
 
 

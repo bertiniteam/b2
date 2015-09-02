@@ -27,6 +27,7 @@
 
 
 namespace bertini {
+namespace node{
 	
 	/**
 	\brief Abstract Node type from which all Operators inherit.
@@ -309,7 +310,7 @@ namespace bertini {
 	};
 	
 	
-	
+} // re: namespace node	
 } // re: namespace bertini
 
 

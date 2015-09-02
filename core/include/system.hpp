@@ -63,10 +63,10 @@ namespace bertini {
 		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
 		// a few local using statements to reduce typing etc.
-		using Fn = std::shared_ptr<Function>;
-		using Var = std::shared_ptr<Variable>;
-		using Nd = std::shared_ptr<Node>;
-		using Jac = std::shared_ptr<Jacobian>;
+		using Fn = std::shared_ptr<node::Function>;
+		using Var = std::shared_ptr<node::Variable>;
+		using Nd = std::shared_ptr<node::Node>;
+		using Jac = std::shared_ptr<node::Jacobian>;
 		
 		/**
 		The default constructor for a system
@@ -492,17 +492,17 @@ namespace bertini {
 		/**
 		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		System operator*=(std::shared_ptr<Node> const& N);
+		System operator*=(Nd const& N);
 
 		/**
 		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		friend System operator*(System s, std::shared_ptr<Node> const&  N);
+		friend System operator*(System s, Nd const&  N);
 
 		/**
 		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		friend System operator*(std::shared_ptr<Node> const&  N, System const& s);
+		friend System operator*(Nd const&  N, System const& s);
 	private:
 
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.

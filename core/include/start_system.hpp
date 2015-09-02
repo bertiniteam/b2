@@ -113,7 +113,7 @@ namespace bertini
 			/**
 			Get all the random values, in their Node form.
 			*/
-			std::vector<std::shared_ptr<Rational> > const& RandomValues()
+			std::vector<std::shared_ptr<node::Rational> > const& RandomValues()
 			{
 				return random_values_;
 			}
@@ -141,7 +141,7 @@ namespace bertini
 			*/
 			Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const override;
 
-			std::vector<std::shared_ptr<Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
+			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<size_t> degrees_; ///< stores the degrees of the functions.
 
 
