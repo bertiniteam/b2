@@ -67,7 +67,7 @@ namespace bertini {
 			// boost::multiprecision::mpfr_float::default_precision(4000);
 			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
 			{
-				random_values_[ii] = std::make_shared<Rational>(bertini::Rational::Rand());
+				random_values_[ii] = std::make_shared<node::Rational>(node::Rational::Rand());
 			}
 
 
@@ -102,7 +102,7 @@ namespace bertini {
 			Vec<dbl> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
 			for (size_t ii = 0; ii< NumVariables(); ++ii)
-				start_point(ii) = exp( acos(-1.0) * dbl(0,2.0) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), 1.0 / degrees_[ii]);
+				start_point(ii) = exp( std::acos(-1.0) * dbl(0,2.0) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), 1.0 / degrees_[ii]);
 			return start_point;
 		}
 

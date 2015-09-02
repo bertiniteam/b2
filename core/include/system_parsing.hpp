@@ -67,15 +67,15 @@
 namespace bertini {
 	
 	// a few local using statements to reduce typing etc.
+	using Function = node::Function;
+	using Variable = node::Variable;
+	using Node = node::Node;
+
+
 	using Fn = std::shared_ptr<Function>;
 	using Var = std::shared_ptr<Variable>;
 	using Nd = std::shared_ptr<Node>;
-	
-	
-	
-	
-	
-	
+
 	/**
 	Qi Parser object for parsing text into the System class.  This ensures we can provide backwards compatibility with Bertini Classic input files.
 
@@ -133,14 +133,14 @@ namespace bertini {
 			
 			
 			
-			special_numbers_.add("pi", Pi());
+			special_numbers_.add("pi", node::Pi());
 			special_numbers_.add("Pi", special_numbers_.at("pi"));
 			
-			special_numbers_.add("e", E());
+			special_numbers_.add("e", node::E());
 			special_numbers_.add("E", special_numbers_.at("e"));
 			
 			
-			special_numbers_.add("i", I());
+			special_numbers_.add("i", node::I());
 			special_numbers_.add("I", special_numbers_.at("i"));
 			
 			

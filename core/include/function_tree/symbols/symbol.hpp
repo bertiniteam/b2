@@ -27,7 +27,7 @@
 
 
 namespace  bertini {
-	
+namespace node {
 	/**
 	 \brief Abstract symbol class.
 
@@ -61,7 +61,7 @@ namespace  bertini {
 	
 	Symbols which have names are named symbols.
 	*/
-	class NamedSymbol : public  Symbol
+	class NamedSymbol : public Symbol
 	{
 		std::string name_;
 	public:
@@ -110,7 +110,7 @@ namespace  bertini {
 		
 	};
 	
-	
+} // re: namespace node	
 } // re: namespace bertini
 
 #endif
