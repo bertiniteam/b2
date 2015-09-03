@@ -99,6 +99,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 
 	auto d = TD.Degrees();
 
+	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
 	BOOST_CHECK_EQUAL(d.size(),2);
 	if (d.size()==2)
 	{
@@ -129,6 +130,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 
 	auto deg = TD.Degrees();
 
+	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
 	BOOST_CHECK_EQUAL(deg.size(),2);
 	if (deg.size()==2)
 	{

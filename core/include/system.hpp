@@ -650,6 +650,7 @@ namespace bertini {
 
 			ar & time_order_of_variable_groups_;
 
+			ar & ordering_;
 			ar & have_ordering_;
 			ar & variable_ordering_;
 
