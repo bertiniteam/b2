@@ -781,6 +781,7 @@ namespace bertini
 					                variable_groups_[affine_group_counter].begin(), 
 					                variable_groups_[affine_group_counter].end());
 					affine_group_counter++;
+					break;
 				}
 				case VariableGroupType::Homogeneous:
 				{
@@ -788,15 +789,19 @@ namespace bertini
 					                hom_variable_groups_[hom_group_counter].begin(), 
 					                hom_variable_groups_[hom_group_counter].end());
 					hom_group_counter++;
+					break;
 				}
 				case VariableGroupType::Ungrouped:
 				{
 					ordering.push_back(ungrouped_variables_[ungrouped_variable_counter]);
 					ungrouped_variable_counter++;
+					break;
 				}
 				default:
-				{
-					throw std::runtime_error("unacceptable VariableGroupType in FIFOVariableOrdering");
+				{	
+					std::stringstream text;
+					text << "unacceptable VariableGroupType " << group_type << " in FIFOVariableOrdering";
+					throw std::runtime_error(text.str());
 				}
 			}
 		}
@@ -808,7 +813,7 @@ namespace bertini
 		return ordering;	
 	}
 
-	VariableGroup System::CanonicalVariableOrdering() const
+	VariableGroup System::AffHomUngVariableOrdering() const
 	{
 		if (NumHomVariables() != NumVariableGroups())
 			throw std::runtime_error("mismatch between number of homogenizing variables, and number of affine variables groups.  unable to form variable vector in FIFO ordering.  you probably need to homogenize the system.");
@@ -836,27 +841,51 @@ namespace bertini
 	
 	void System::SetFIFOVariableOrdering()
 	{
-		variable_ordering_ = FIFOVariableOrdering();
 		ordering_ = OrderingChoice::FIFO;
-		have_ordering_ = true;
 	}
 
-	void System::SetCanonicalVariableOrdering()
+	void System::SetAffHomUngVariableOrdering()
 	{
-		variable_ordering_ = CanonicalVariableOrdering();
-		ordering_ = OrderingChoice::Canonical;
-		have_ordering_ = true;
+		ordering_ = OrderingChoice::AffHomUng;
 	}
 
 
 
 	VariableGroup System::Variables() const
 	{
-		if (!have_ordering_ || ordering_==OrderingChoice::Unset)
-			throw std::runtime_error("trying to get variable ordering, but is not set.");
+		if (!have_ordering_){
+			ConstructOrdering();
+		}
 
 		return variable_ordering_;
 	}
+
+
+
+	//private
+	void System::ConstructOrdering() const
+	{
+		switch (ordering_)
+		{
+			case OrderingChoice::AffHomUng:
+			{
+				variable_ordering_ = AffHomUngVariableOrdering();
+				break;
+			}
+			case OrderingChoice::FIFO:
+			{
+				variable_ordering_ = FIFOVariableOrdering();
+				break;
+			}
+			default:
+			{
+				throw std::runtime_error("invalid ordering choice");
+				break;
+			}
+		}
+		have_ordering_ = true;
+	}
+
 
 	//public
 	template<typename T>
@@ -867,23 +896,26 @@ namespace bertini
     		throw std::runtime_error("dehomogenizing point with incorrect number of coordinates");
 
     	if (!have_ordering_)
-			throw std::runtime_error("dehomogenizing point, but variable ordering is not set.");
+			ConstructOrdering();
 
 
 
 		switch (ordering_)
 		{
-			case OrderingChoice::Canonical:
+			case OrderingChoice::AffHomUng:
 			{
-				return DehomogenizePointCanonicalOrdering(x);
+				return DehomogenizePointAffHomUngOrdering(x);
+				break;
 			}
 			case OrderingChoice::FIFO:
 			{
 				return DehomogenizePointFIFOOrdering(x);
+				break;
 			}
-			default: //ordering_==OrderingChoice::Unset
+			default: //ordering_==OrderingChoice::???
 			{
 				throw std::runtime_error("invalid ordering choice");
+				break;
 			}
 		}
     }
@@ -895,10 +927,10 @@ namespace bertini
 
     // private
     template<typename T>
-    Vec<T> System::DehomogenizePointCanonicalOrdering(Vec<T> const& x) const
+    Vec<T> System::DehomogenizePointAffHomUngOrdering(Vec<T> const& x) const
     {
     	#ifndef BERTINI_DISABLE_ASSERTS
-    	assert(ordering_==OrderingChoice::Canonical);
+    	assert(ordering_==OrderingChoice::AffHomUng);
     	#endif
 
     	Vec<T> x_dehomogenized(NumNaturalVariables());
@@ -922,8 +954,8 @@ namespace bertini
 
 		return x_dehomogenized;
     }
-    template Vec<dbl> System::DehomogenizePointCanonicalOrdering(Vec<dbl> const& new_values) const;
-	template Vec<mpfr> System::DehomogenizePointCanonicalOrdering(Vec<mpfr> const& new_values) const;
+    template Vec<dbl> System::DehomogenizePointAffHomUngOrdering(Vec<dbl> const& new_values) const;
+	template Vec<mpfr> System::DehomogenizePointAffHomUngOrdering(Vec<mpfr> const& new_values) const;
 
 
     // private
@@ -952,15 +984,18 @@ namespace bertini
 					// ordering.push_back(homogenizing_variables_[affine_group_counter]);
 					// ordering.insert(ordering.end(), iter.begin(), iter.end());
 					affine_group_counter++;
+					break;
 				}
 				case VariableGroupType::Homogeneous:
 				{
+					break;
 					// ordering.insert(ordering.end(), iter.begin(), iter.end());
 				}
 				case VariableGroupType::Ungrouped:
 				{
 					// ordering.push_back(ungrouped_variables_[ungrouped_variable_counter]);
 					ungrouped_variable_counter++;
+					break;
 				}
 				default:
 				{

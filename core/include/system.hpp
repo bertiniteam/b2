@@ -36,12 +36,22 @@
 
 #include <eigen3/Eigen/Dense>
 
+#include <boost/type_index.hpp>
+
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
+
+
+//https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
+template<typename T>
+std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+{
+    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+}
 
 
 namespace bertini {
@@ -71,7 +81,7 @@ namespace bertini {
 		/**
 		The default constructor for a system
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), ordering_(OrderingChoice::Unset)
+		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), ordering_(OrderingChoice::FIFO)
 		{}
 
 
@@ -409,7 +419,7 @@ namespace bertini {
 
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
         */
-        VariableGroup CanonicalVariableOrdering() const;
+        VariableGroup AffHomUngVariableOrdering() const;
 
 
 
@@ -430,9 +440,9 @@ namespace bertini {
 
 		The system must be homogenized correctly for this to succeed.  Otherwise the underlying call to FIFOVariableOrdering may throw.
 
-		\see CanonicalariableOrdering
+		\see AffHomUngariableOrdering
         */
-        void SetCanonicalVariableOrdering();
+        void SetAffHomUngVariableOrdering();
 
 
         /**
@@ -447,7 +457,7 @@ namespace bertini {
         /**
 		 Get the variables in the problem; they must have already been ordered.
 
-		 \see SetCanonicalVariableOrdering
+		 \see SetAffHomUngVariableOrdering
 		 \see SetFIFOVariableOrdering
 		*/
         VariableGroup Variables() const;
@@ -579,16 +589,20 @@ namespace bertini {
 
 
 	    /**
-		\brief Dehomogenize a point according to the Canonical variable ordering.
+		\brief Dehomogenize a point according to the AffHomUng variable ordering.
 
-		\see CanonicalVariableOrdering
+		\see AffHomUngVariableOrdering
 		*/
 	    template<typename T>
-	    Vec<T> DehomogenizePointCanonicalOrdering(Vec<T> const& x) const;
+	    Vec<T> DehomogenizePointAffHomUngOrdering(Vec<T> const& x) const;
+
+	    /**
+		 Actually puts together the ordering of variables, and stores it internally.
+	    */
+	    void ConstructOrdering() const;
 
 
-
-		enum class OrderingChoice{Unset, FIFO, Canonical};
+		enum class OrderingChoice{FIFO, AffHomUng};
 
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
@@ -615,8 +629,8 @@ namespace bertini {
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
 
-		VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
-		bool have_ordering_;
+		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
+		mutable bool have_ordering_;
 		OrderingChoice ordering_;
 
 		unsigned precision_; ///< the current working precision of the system 
