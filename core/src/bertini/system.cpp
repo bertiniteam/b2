@@ -517,6 +517,10 @@ namespace bertini
 
 
 
+
+
+	
+
 	//////////////////
 	//
 	// templated setters
@@ -763,9 +767,25 @@ namespace bertini
 	}
 
 
+
+
+
+
+
+
+
+
+
+
+	/////////////////
+	//
+	// Variable ordering functions
+	//
+	///////////////////
+
 	VariableGroup System::FIFOVariableOrdering() const
 	{
-		if (NumHomVariables() != NumVariableGroups())
+		if (NumHomVariables()>0 && NumHomVariables() != NumVariableGroups())
 			throw std::runtime_error("mismatch between number of homogenizing variables, and number of affine variables groups.  unable to form variable vector in FIFO ordering.  you probably need to homogenize the system.");
 
 		VariableGroup ordering;
@@ -815,7 +835,7 @@ namespace bertini
 
 	VariableGroup System::AffHomUngVariableOrdering() const
 	{
-		if (NumHomVariables() != NumVariableGroups())
+		if (NumHomVariables()>0 && NumHomVariables() != NumVariableGroups())
 			throw std::runtime_error("mismatch between number of homogenizing variables, and number of affine variables groups.  unable to form variable vector in FIFO ordering.  you probably need to homogenize the system.");
 
 		VariableGroup ordering;
@@ -849,19 +869,6 @@ namespace bertini
 		ordering_ = OrderingChoice::AffHomUng;
 	}
 
-
-
-	VariableGroup System::Variables() const
-	{
-		if (!have_ordering_){
-			ConstructOrdering();
-		}
-
-		return variable_ordering_;
-	}
-
-
-
 	//private
 	void System::ConstructOrdering() const
 	{
@@ -885,6 +892,30 @@ namespace bertini
 		}
 		have_ordering_ = true;
 	}
+
+
+
+	VariableGroup System::Variables() const
+	{
+		if (!have_ordering_){
+			ConstructOrdering();
+		}
+
+		return variable_ordering_;
+	}
+
+
+
+
+
+
+
+	/////////////////
+	//
+	// Dehomogenization functions
+	//
+	///////////////////
+	
 
 
 	//public
@@ -1012,6 +1043,27 @@ namespace bertini
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /////////////////
+	//
+	// Functions involving the degrees of functions in the systems.
+	//
+	///////////////////
+
 	std::vector<int> System::Degrees() const
 	{
 		std::vector<int> deg;
@@ -1088,6 +1140,20 @@ namespace bertini
 
 
 
+
+
+
+
+
+
+
+
+	/////////////////
+	//
+	// Clearing functions
+	//
+	///////////////////
+
 	void System::ClearVariables()
 	{
 		ungrouped_variables_.clear();
@@ -1114,6 +1180,14 @@ namespace bertini
 		have_path_variable_ = other.have_path_variable_;
 
 	}
+
+
+
+
+
+
+
+
 
 
 	
@@ -1189,6 +1263,16 @@ namespace bertini
 
 
 
+
+
+
+
+
+	/////////////////
+	//
+	// Arithemetic operators
+	//
+	///////////////////
 
 
 	System System::operator+=(System const& rhs)
