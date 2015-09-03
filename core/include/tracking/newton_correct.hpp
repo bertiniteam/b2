@@ -59,6 +59,17 @@ namespace bertini{
 					auto f = S.Eval(current_space, current_time);
 					auto J = S.Jacobian(current_space, current_time);
 					auto LU = J.lu();
+
+
+					if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
+					{
+						if (PrecType==PrecisionType::Adaptive)
+							return SuccessCode::HigherPrecisionNecessary;
+						else
+							return SuccessCode::MatrixSolveFailure;
+					}
+
+
 					auto delta_z = LU.solve(-f);
 
 					if (norm(delta_z) < tracking_tolerance)

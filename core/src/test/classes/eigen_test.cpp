@@ -30,6 +30,10 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/LU>
 
+#include "limbo.hpp"
+
+#include "eigen_extensions.hpp"
+
 #include "mpfr_complex.hpp"
 
 #include <boost/timer/timer.hpp>
@@ -242,7 +246,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	}
 
 
-	BOOST_AUTO_TEST_CASE(eigen_partial_pivot_solve_near_singular_matrix)
+	BOOST_AUTO_TEST_CASE(eigen_partial_pivot_solve_near_singular_matrix_double)
 	{
 
 		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(2,2), B(2,1);
@@ -252,11 +256,41 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		B << 0.5, 1;
 
 		auto LU = A.lu();
-
-
 		auto C = LU.solve(B);
 
+		BOOST_CHECK(bertini::LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=bertini::MatrixSuccessCode::Success);
+
 	}
+
+	BOOST_AUTO_TEST_CASE(small_value_double)
+	{
+		BOOST_CHECK(bertini::IsSmallValue(std::complex<double>(1e-15,0)));
+		BOOST_CHECK(bertini::IsSmallValue(std::complex<double>(1e-14,0)));
+		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(1e-10,0)));
+		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(1e2,0)));
+	}
+
+	BOOST_AUTO_TEST_CASE(large_change_double)
+	{
+		BOOST_CHECK(bertini::IsLargeChange(1.0,1e-12));
+		BOOST_CHECK(bertini::IsLargeChange(1e5,1e-7));
+		BOOST_CHECK(!bertini::IsLargeChange(1e3,1e-4));
+		BOOST_CHECK(!bertini::IsLargeChange(1e-15,1e-18));
+	}
+
+	BOOST_AUTO_TEST_CASE(eigen_LU_partial_pivot_3x3)
+	{
+		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(3,3);
+
+		A << 0.000000010000000, 1.000000000000000,   1.000000000000000,
+			0 ,                                 1.000000000000000 ,  1.000000000000000,
+			1.000000000000000 ,  1.000000000000000 ,  0;
+
+		auto LU = A.lu();
+
+		BOOST_CHECK(bertini::LUPartialPivotDecompositionSuccessful(LU.matrixLU())==bertini::MatrixSuccessCode::Success);
+	}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 	

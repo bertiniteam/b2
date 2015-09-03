@@ -26,6 +26,8 @@
 #define tracking_config_hpp
 
 #include <eigen3/Eigen/Dense>
+#include "eigen_extensions.hpp"
+
 
 namespace bertini
 {
@@ -41,7 +43,8 @@ namespace bertini
 			HigherPrecisionNecessary,
 			ReduceStepSize,
 			GoingToInfinity,
-			FailedToConverge
+			FailedToConverge,
+			MatrixSolveFailure
 		};
 
 		

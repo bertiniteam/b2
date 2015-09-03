@@ -65,13 +65,22 @@ namespace bertini{
 				// solve dX = (dH/dx)^(-1)*Y
 				// Y = dH/dt
 
-				auto LU_decomposition = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
-				auto dX = LU_decomposition.solve(dh_dt); 
+				auto LU = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
+				
+				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
+					{
+						if (PrecType==PrecisionType::Adaptive)
+							return SuccessCode::HigherPrecisionNecessary;
+						else
+							return SuccessCode::MatrixSolveFailure;
+					}
+
+				auto dX = LU.solve(dh_dt); 
 
 
 				if (PrecType==PrecisionType::Adaptive)
 				{
-					auto norm_J_inverse = norm(LU_decomposition.solve(Vec<T>::Random(S.NumVariables())));
+					auto norm_J_inverse = norm(LU.solve(Vec<T>::Random(S.NumVariables())));
 					auto norm_J = norm(dh_dx);
 
 					if (num_steps_since_last_condition_number_computation > frequency_of_CN_estimation)

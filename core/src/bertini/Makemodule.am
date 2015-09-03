@@ -39,6 +39,7 @@ bertini2_SOURCES = \
 	src/bertini/bertini.cpp include/bertini.hpp \
 	include/mpfr_complex.hpp \
 	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
+	include/eigen_extensions.hpp \
 	include/system.hpp src/bertini/system.cpp include/system_parsing.hpp \
 	src/bertini/start_system.cpp include/start_system.hpp \
 	src/bertini/limbo.cpp include/limbo.hpp
