@@ -491,6 +491,83 @@ BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 
 
 
+
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_group)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(3);
+	v << dbl(2,3), dbl(3,4), dbl(4,5);
+
+	auto d = sys.DehomogenizePoint(v);
+
+	BOOST_CHECK(abs(d(0) - v(1)/v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(2)/v(0)) < threshold_clearance_d);
+}
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_groups)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
+	VariableGroup vars{x, y};
+	VariableGroup vars2{z, w};
+	sys.AddVariableGroup(vars);
+	sys.AddVariableGroup(vars2);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(6);
+	v << dbl(2,3), dbl(3,4), dbl(4,5), 
+		 dbl(5,6), dbl(6,7), dbl(7,8);
+
+	auto d = sys.DehomogenizePoint(v);
+
+	BOOST_CHECK(abs(d(0) - v(1)/v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(2)/v(0)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(2) - v(4)/v(3)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(3) - v(5)/v(3)) < threshold_clearance_d);
+}
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
+	Var h1 = std::make_shared<bertini::Variable>("h1"), h2 = std::make_shared<bertini::Variable>("h2");
+	VariableGroup vars{x, y};
+	VariableGroup vars2{h1,h2};
+	VariableGroup vars3{z, w};
+	sys.AddVariableGroup(vars);
+	sys.AddHomVariableGroup(vars2);
+	sys.AddVariableGroup(vars3);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(8);
+	v << dbl(2,3), dbl(3,4), dbl(4,5), 
+		 dbl(10,11), dbl(11,12),
+		 dbl(5,6), dbl(6,7), dbl(7,8);
+
+	auto d = sys.DehomogenizePoint(v);
+
+	BOOST_CHECK(abs(d(0) - v(1)/v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(2)/v(0)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(2) - v(3)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(3) - v(4)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(4) - v(6)/v(5)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(5) - v(7)/v(5)) < threshold_clearance_d);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

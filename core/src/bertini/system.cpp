@@ -934,6 +934,13 @@ namespace bertini
 
 
 
+
+
+
+
+
+
+
 	/////////////////
 	//
 	// Dehomogenization functions
@@ -1024,31 +1031,32 @@ namespace bertini
     	Vec<T> x_dehomogenized(NumNaturalVariables());
 
     	unsigned affine_group_counter = 0;
+    	unsigned hom_group_counter = 0;
     	unsigned ungrouped_variable_counter = 0;
 
     	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
     	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
-
-
 
 		for (auto iter : time_order_of_variable_groups_)
 		{
 			switch (iter){
 				case VariableGroupType::Affine:
 				{
-					// ordering.push_back(homogenizing_variables_[affine_group_counter]);
-					// ordering.insert(ordering.end(), iter.begin(), iter.end());
+					auto h = x(hom_index++);
+					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+						x_dehomogenized(dehom_index++) = x(hom_index++) / h;
 					affine_group_counter++;
 					break;
 				}
 				case VariableGroupType::Homogeneous:
 				{
+					for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
+						x_dehomogenized(dehom_index++) = x(hom_index++);
 					break;
-					// ordering.insert(ordering.end(), iter.begin(), iter.end());
 				}
 				case VariableGroupType::Ungrouped:
 				{
-					// ordering.push_back(ungrouped_variables_[ungrouped_variable_counter]);
+					x_dehomogenized(dehom_index++) = x(hom_index++);
 					ungrouped_variable_counter++;
 					break;
 				}
@@ -1058,7 +1066,6 @@ namespace bertini
 				}
 			}
 		}
-
 
 		return x_dehomogenized;
     }
