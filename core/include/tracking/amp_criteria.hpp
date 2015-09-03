@@ -62,7 +62,7 @@ namespace bertini{
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param num_newton_iterations_remaining The number of iterations which have yet to perform.
-			\param tracking_tolerance The tightness to which the path should be tracked.  This is the ___ (log10 of it???)
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance (for now)
 			\param latest_newton_residual The norm of the length of the most recent Newton step.
 			\param AMP_config The settings for adaptive multiple precision.
 
@@ -72,7 +72,7 @@ namespace bertini{
 			bool CriterionB(T const& norm_J, T const& norm_J_inverse, unsigned num_newton_iterations_remaining, double tracking_tolerance, Vec<T> const& latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				auto D = log10(norm_J_inverse*( (2+AMP_config.epsilon)*norm_J + AMP_config.epsilon*AMP_config.Phi) + 1);
-				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + D + (tracking_tolerance + log10(norm(latest_newton_residual))) / (num_newton_iterations_remaining);
+				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm(latest_newton_residual))) / (num_newton_iterations_remaining);
 			}
 
 			/**
@@ -82,14 +82,14 @@ namespace bertini{
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
-			\param tracking_tolerance The tightness to which the path should be tracked.  This is the ___ (log10 of it???)
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
 			\param z The current space point?  TODO: check this. 
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
 			template<typename T>
 			bool CriterionC(T const& norm_J_inverse, Vec<T> const& z, double tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_2 + tracking_tolerance + log10(norm_J_inverse*AMP_config.Psi + norm(z));
+				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + norm(z));
 			}
 		}
 	}
