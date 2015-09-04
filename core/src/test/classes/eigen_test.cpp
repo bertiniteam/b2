@@ -39,7 +39,13 @@
 #include <boost/timer/timer.hpp>
 
 
+extern double relaxed_threshold_clearance_d;
+extern double threshold_clearance_d;
+extern double threshold_clearance_mp;
+extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
 
+	
+	using mpfr_float = boost::multiprecision::mpfr_float;
 
 
 template <typename NumberType>
@@ -264,10 +270,17 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(small_value_double)
 	{
-		BOOST_CHECK(bertini::IsSmallValue(std::complex<double>(1e-15,0)));
-		BOOST_CHECK(bertini::IsSmallValue(std::complex<double>(1e-14,0)));
+		BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(1e-15,0)));
+		BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(1e-14,0)));
+
+		BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(-1e-15,0)));
+		BOOST_CHECK( bertini::IsSmallValue(std::complex<double>(-1e-14,0)));
+
 		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(1e-10,0)));
 		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(1e2,0)));
+
+		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(-1e-10,0)));
+		BOOST_CHECK(!bertini::IsSmallValue(std::complex<double>(-1e2,0)));
 	}
 
 	BOOST_AUTO_TEST_CASE(large_change_double)
@@ -276,6 +289,45 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		BOOST_CHECK(bertini::IsLargeChange(1e5,1e-7));
 		BOOST_CHECK(!bertini::IsLargeChange(1e3,1e-4));
 		BOOST_CHECK(!bertini::IsLargeChange(1e-15,1e-18));
+	}
+
+
+	BOOST_AUTO_TEST_CASE(small_value_multiprecision)
+	{
+
+		boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
+
+		boost::multiprecision::mpfr_float p = pow(mpfr_float(10),-mpfr_float(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS));
+
+		BOOST_CHECK( bertini::IsSmallValue(bertini::complex(p,mpfr_float(0))));
+		BOOST_CHECK( bertini::IsSmallValue(bertini::complex(-p,mpfr_float(0))));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(1e-15,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(1e-14,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(1e-10,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(1e2,0.0)));
+
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(-1e-15,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(-1e-14,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(-1e-10,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(-1e2,0.0)));
+	}
+
+	BOOST_AUTO_TEST_CASE(large_change_multiprecision)
+	{
+		boost::multiprecision::mpfr_float p = pow(mpfr_float(10),-mpfr_float(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS));
+
+		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(1.0),p));
+
+		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(1e16),mpfr_float(p*mpfr_float(1e16))));
+
+		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(-1e16),mpfr_float(p*mpfr_float(1e16))));
+		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(1e16),mpfr_float(-p*mpfr_float(1e16))));
+
+		BOOST_CHECK(!bertini::IsLargeChange(mpfr_float(1.0),mpfr_float(1e-12)));
+		BOOST_CHECK(!bertini::IsLargeChange(mpfr_float(-1.0),mpfr_float(1e-12)));
+		BOOST_CHECK(!bertini::IsLargeChange(mpfr_float(1e5),mpfr_float(1e-7)));
+		BOOST_CHECK(!bertini::IsLargeChange(mpfr_float(1e3),mpfr_float(1e-4)));
+		BOOST_CHECK(!bertini::IsLargeChange(mpfr_float(1e-15),mpfr_float(1e-18)));
 	}
 
 	BOOST_AUTO_TEST_CASE(eigen_LU_partial_pivot_3x3)

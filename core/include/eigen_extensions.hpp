@@ -30,6 +30,7 @@
 
 namespace bertini {
 
+	using std::abs;
 	/**
 	 Test a numbers being very small.
 
@@ -44,7 +45,7 @@ namespace bertini {
 	template<typename T>
 	bool IsSmallValue(T const& testme)
 	{
-		return std::abs(testme) <= Eigen::NumTraits<T>::epsilon()*100;
+		return abs(testme) <= Eigen::NumTraits<T>::epsilon()*100;
 	} 
 
 	/**
@@ -63,7 +64,7 @@ namespace bertini {
 	bool IsLargeChange(T const& numerator ,T const& denomenator)
 	{
 
-		return std::abs(numerator/denomenator) >= 1.0/Eigen::NumTraits<T>::dummy_precision();
+		return abs(numerator/denomenator) >= 1.0/Eigen::NumTraits<T>::dummy_precision();
 	} 
 
 	enum class MatrixSuccessCode
