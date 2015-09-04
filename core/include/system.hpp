@@ -267,7 +267,7 @@ namespace bertini {
 		/**
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
 		 
-		 
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
 		void SetImplicitParameters(Vec<T> new_values);
@@ -461,6 +461,8 @@ namespace bertini {
 
         /**
 		\brief Dehomogenize a point, using the variable grouping / structure of the system.
+		
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 
 		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
         */
@@ -471,7 +473,9 @@ namespace bertini {
 
 		/////////////// TESTING ////////////////////
 		/**
-		 Get a function by its index.  This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
+		 Get a function by its index.  
+
+		 This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
 		*/
         auto function(unsigned index = 0) const
         {
@@ -575,6 +579,8 @@ namespace bertini {
 
 		/**
 		\brief Dehomogenize a point according to the FIFO variable ordering.
+	
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 
 		\see FIFOVariableOrdering
 		*/
@@ -585,6 +591,8 @@ namespace bertini {
 
 	    /**
 		\brief Dehomogenize a point according to the AffHomUng variable ordering.
+		
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 
 		\see AffHomUngVariableOrdering
 		*/
@@ -592,7 +600,7 @@ namespace bertini {
 	    Vec<T> DehomogenizePointAffHomUngOrdering(Vec<T> const& x) const;
 
 	    /**
-		 Actually puts together the ordering of variables, and stores it internally.
+		 Puts together the ordering of variables, and stores it internally.
 	    */
 	    void ConstructOrdering() const;
 
