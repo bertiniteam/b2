@@ -48,10 +48,14 @@ using mpfr = bertini::complex;
 
 
 namespace bertini {
-class Variable;
 
+	namespace node{
+		class Variable;
+	}
 
-using VariableGroup = std::deque< std::shared_ptr<Variable> >;
+using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
+
+namespace node{
 
 /**
 An interface for all nodes in a function tree, and for a function object as well.  Almost all
@@ -260,17 +264,18 @@ private:
 	void serialize(Archive& ar, const unsigned version) {
 	}
 
-};
+}; // re: class node
 	
 	/**
 	 a single layer of indirection, though which to call the overridden virtual print() method which must be defined for each non-abstract Node type.
 	 */
-	inline std::ostream& operator<<(std::ostream & out, const bertini::Node& N)
+	inline std::ostream& operator<<(std::ostream & out, const Node& N)
 	{
 		N.print(out);
 		return out;
 	}
 	
+	} // re: namespace node
 } // re: namespace bertini
 
 

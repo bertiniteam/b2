@@ -42,9 +42,9 @@
 #include "system.hpp"
 #include "system_parsing.hpp"
 
-using Variable = bertini::Variable;
-using Node = bertini::Node;
-using Float = bertini::Float;
+using Variable = bertini::node::Variable;
+using Node = bertini::node::Node;
+using Float = bertini::node::Float;
 
 
 using System = bertini::System;
