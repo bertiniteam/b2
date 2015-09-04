@@ -49,7 +49,7 @@ extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
 
 
 template <typename NumberType>
-Eigen::Matrix<NumberType, Eigen::Dynamic, Eigen::Dynamic> kahan_matrix(unsigned int mat_size, NumberType c)
+Eigen::Matrix<NumberType, Eigen::Dynamic, Eigen::Dynamic> KahanMatrix(unsigned int mat_size, NumberType c)
 {
 	NumberType s, scale(1.0);
 	s = sqrt( (NumberType(1.0)-c) * (NumberType(1.0)+c) );
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		unsigned int size = 10;
 		srand(2);  rand();
 		
-		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A = kahan_matrix(size, 0.285), B(size,size), C;
+		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A = KahanMatrix(size, 0.285), B(size,size), C;
 		
 		for (int ii=0; ii<size; ii++)
 			for (int jj=0; jj<size; jj++)
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		srand(2);  rand();
 		
 		Eigen::Matrix<boost::multiprecision::mpfr_float, Eigen::Dynamic, Eigen::Dynamic> A =
-			kahan_matrix(size, boost::multiprecision::mpfr_float(0.285)), B(size,size), C;
+			KahanMatrix(size, boost::multiprecision::mpfr_float(0.285)), B(size,size), C;
 		
 		
 		for (int ii=0; ii<size; ii++)
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 		mpfr::default_precision(50);
 		
-		mpfr_matrix A = kahan_matrix(size, mpfr(0.285)), B(size,size), C;
+		mpfr_matrix A = KahanMatrix(size, mpfr(0.285)), B(size,size), C;
 		
 		for (int ii=0; ii<size; ii++){
 			for (int jj=0; jj<size; jj++){
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		srand(2);  rand();
 		
 		Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> A =
-		kahan_matrix(size, std::complex<double>(0.285)), B(size,size), C;
+		KahanMatrix(size, std::complex<double>(0.285)), B(size,size), C;
 		
 		for (int ii=0; ii<size; ii++)
 			for (int jj=0; jj<size; jj++)
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		srand(2);  rand();
 		
 		Eigen::Matrix<bertini::complex, Eigen::Dynamic, Eigen::Dynamic> A =
-		kahan_matrix(size, bertini::complex("0.285","0.0")), B(size,size), C;
+		KahanMatrix(size, bertini::complex("0.285","0.0")), B(size,size), C;
 		
 		for (int ii=0; ii<size; ii++)
 			for (int jj=0; jj<size; jj++)
@@ -335,8 +335,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(3,3);
 
 		A << 0.000000010000000, 1.000000000000000,   1.000000000000000,
-			0 ,                                 1.000000000000000 ,  1.000000000000000,
-			1.000000000000000 ,  1.000000000000000 ,  0;
+			 0 ,                1.000000000000000 ,  1.000000000000000,
+			 1.000000000000000 ,1.000000000000000 ,  0;
 
 		auto LU = A.lu();
 
