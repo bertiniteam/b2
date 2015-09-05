@@ -33,8 +33,10 @@ namespace bertini
 {
 	namespace tracking{
 
-		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+		template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
+		template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+
+
 
 
 		enum class SuccessCode
@@ -52,6 +54,11 @@ namespace bertini
 
 		namespace config{
 
+			enum class Predictor
+			{
+				Euler
+			};
+
 			enum class PrecisionType
 			{
 				Double,
@@ -64,8 +71,8 @@ namespace bertini
 			namespace general{			
 				struct TrackingTolerances
 				{
-					double before_endgame;
-					double during_endgame;
+					boost::multiprecision::mpfr_float before_endgame;
+					boost::multiprecision::mpfr_float during_endgame;
 				};
 			}
 
@@ -95,11 +102,11 @@ namespace bertini
 			*/
 			struct AdaptiveMultiplePrecisionConfig
 			{
-				double bound_on_abs_vals_of_coeffs;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
-				double bound_on_degree; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
-				double epsilon;  ///< Bound on \f$\epsilon\f$ (an error bound).  Used for AMP criteria A, B.
-				double Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
-				double Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
+				boost::multiprecision::mpfr_float bound_on_abs_vals_of_coeffs;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
+				boost::multiprecision::mpfr_float bound_on_degree; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
+				boost::multiprecision::mpfr_float epsilon;  ///< Bound on \f$\epsilon\f$ (an error bound).  Used for AMP criteria A, B.
+				boost::multiprecision::mpfr_float Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
+				boost::multiprecision::mpfr_float Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
 
 				int safety_digits_1;
 				int safety_digits_2;

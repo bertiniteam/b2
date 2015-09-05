@@ -41,14 +41,14 @@ namespace bertini{
 
 			Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
 			*/
-			template <typename T>
-			SuccessCode NewtonLoop(Vec<T> & next_space, T & next_time,
+			template <typename NumType>
+			SuccessCode NewtonLoop(Vec<NumType> & next_space, NumType & next_time,
 					               System & S,
-					               Vec<T> const& current_space, // pass by value to get a copy of it
-					               T const& current_time, 
+					               Vec<NumType> const& current_space, // pass by value to get a copy of it
+					               NumType const& current_time, 
 					               PrecisionType PrecType, 
-					               double tracking_tolerance,
-					               double path_truncation_threshold,
+					               NumType tracking_tolerance,
+					               NumType path_truncation_threshold,
 					               unsigned max_num_newton_iterations,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
@@ -77,7 +77,7 @@ namespace bertini{
 
 					if (PrecType==PrecisionType::Adaptive)
 					{
-						auto norm_J_inverse = norm(LU.solve(Vec<T>::Random(S.NumVariables())));
+						auto norm_J_inverse = norm(LU.solve(Vec<NumType>::Random(S.NumVariables())));
 						if (!CriterionB(norm(J), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 

@@ -44,9 +44,21 @@ namespace bertini{
 			/**
 			Perform an euler-prediction step
 
-			\param current_time The current value of the path variable.
-			\param PrecType The mode for multiple precision.
-			\param num_steps_since_last_condition_number_computation Obvious, hopefully.
+			\param predictor_choice The enum class selecting the predictor to be used.
+			\param next_space The computed prediction.
+			\param next_time The next time.
+			\param sys The system being solved.
+			\param current_space The current space variable vector.
+			\param current_time The current time.
+			\param dt The size of the time step.
+			\param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+			\param num_steps_since_last_condition_number_computation.  Updated in this function.
+			\param frequency_of_CN_estimation How many steps to take between condition number estimates.
+			\param prec_type The operating precision type.  
+			\param tracking_tolerance How tightly to track the path.
+			\param AMP_config The settings for adaptive multiple precision.
+
+			\tparam T The number type for evaluation.
 			*/
 			template <typename T>
 			SuccessCode EulerStep(Vec<T> & next_space, T & next_time,
@@ -56,7 +68,7 @@ namespace bertini{
 					               T & condition_number_estimate,
 					               unsigned & num_steps_since_last_condition_number_computation, 
 					               unsigned frequency_of_CN_estimation, PrecisionType PrecType, 
-					               double tracking_tolerance,
+					               T const& tracking_tolerance,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				auto dh_dt = -S.TimeDerivative(current_time);
@@ -94,13 +106,10 @@ namespace bertini{
 
 
 					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
-					{
 						return SuccessCode::HigherPrecisionNecessary;
-					}
 					else if (!amp::CriterionB(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
-					{
 						return SuccessCode::HigherPrecisionNecessary;
-					} 
+
 				}
 
 				next_space = current_space + dX * dt;

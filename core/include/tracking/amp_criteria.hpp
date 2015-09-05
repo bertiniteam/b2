@@ -47,8 +47,8 @@ namespace bertini{
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
-			template<typename T>
-			bool CriterionA(T const& norm_J, T const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename NumberType>
+			bool CriterionA(NumberType const& norm_J, NumberType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi));
 			}
@@ -68,8 +68,8 @@ namespace bertini{
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
-			template<typename T>
-			bool CriterionB(T const& norm_J, T const& norm_J_inverse, unsigned num_newton_iterations_remaining, double tracking_tolerance, Vec<T> const& latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename NumberType>
+			bool CriterionB(NumberType const& norm_J, NumberType const& norm_J_inverse, unsigned num_newton_iterations_remaining, NumberType tracking_tolerance, Vec<NumberType> const& latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				auto D = log10(norm_J_inverse*( (2+AMP_config.epsilon)*norm_J + AMP_config.epsilon*AMP_config.Phi) + 1);
 				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm(latest_newton_residual))) / (num_newton_iterations_remaining);
@@ -86,8 +86,8 @@ namespace bertini{
 			\param z The current space point?  TODO: check this. 
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
-			template<typename T>
-			bool CriterionC(T const& norm_J_inverse, Vec<T> const& z, double tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename NumberType>
+			bool CriterionC(NumberType const& norm_J_inverse, Vec<NumberType> const& z, NumberType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + norm(z));
 			}
