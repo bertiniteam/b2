@@ -42,7 +42,7 @@ namespace bertini{
 			Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
 			*/
 			template <typename NumType>
-			SuccessCode NewtonLoop(Vec<NumType> & next_space, NumType & next_time,
+			SuccessCode NewtonLoop(Vec<NumType> & next_space,
 					               System & S,
 					               Vec<NumType> const& current_space, // pass by value to get a copy of it
 					               NumType const& current_time, 

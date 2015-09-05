@@ -61,7 +61,7 @@ namespace bertini{
 			\tparam T The number type for evaluation.
 			*/
 			template <typename T>
-			SuccessCode EulerStep(Vec<T> & next_space, T & next_time,
+			SuccessCode Euler(Vec<T> & next_space, T & next_time,
 					               System & S,
 					               Vec<T> const& current_space, T current_time, 
 					               T const& dt,

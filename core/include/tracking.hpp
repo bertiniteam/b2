@@ -27,28 +27,9 @@
 #define tracking_hpp
 
 
-#include "tracking/predict.hpp"
-#include "tracking/correct.hpp"
+#include "tracking/step.hpp"
 
 
-namespace bertini{
-
-	namespace tracking{
-
-		template <typename T>
-		SuccessCode Step(int predictor_choice, T current_time)
-		{
-
-
-
-
-			return SuccessCode::Success;
-		}
-
-
-
-	}
-}
 
 
 #endif

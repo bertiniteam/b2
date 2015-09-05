@@ -15,7 +15,8 @@ tracking_header_files = \
 	include/tracking/ode_predictors.hpp \
 	include/tracking/euler.hpp \
 	include/tracking/amp_criteria.hpp \
-	include/tracking/tracking_config.hpp
+	include/tracking/tracking_config.hpp \
+	include/tracking/step.hpp
 
 
 tracking_source_files = \

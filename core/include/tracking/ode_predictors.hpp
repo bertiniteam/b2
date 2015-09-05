@@ -27,17 +27,5 @@
 
 #include "tracking/euler.hpp"
 
-namespace bertini{
-	namespace tracking{
-
-
-		namespace predict{
-
-			
-		}
-		
-	}// re: tracking
-
-}
 
 #endif

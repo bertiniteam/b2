@@ -66,7 +66,7 @@ namespace bertini{
 			{
 				case config::PredictorChoice::Euler:
 				{
-					return EulerStep(next_space, next_time,
+					return predict::Euler(next_space, next_time,
 				               		sys,
 				               		current_space, current_time, 
 				               		dt,

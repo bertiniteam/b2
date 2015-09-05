@@ -29,9 +29,28 @@
 
 namespace bertini{
 	namespace tracking{
-		namespace correct{
+		
 
-			
+		template<typename NumType>
+		SuccessCode Correct(Vec<NumType> & next_space,
+					               System & S,
+					               Vec<NumType> const& current_space, // pass by value to get a copy of it
+					               NumType const& current_time, 
+					               PrecisionType PrecType, 
+					               NumType tracking_tolerance,
+					               NumType path_truncation_threshold,
+					               unsigned max_num_newton_iterations,
+					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+		{
+			return correct::NewtonLoop(next_space,
+						               S,
+						               current_space, // pass by value to get a copy of it
+						               current_time, 
+						               PrecType, 
+						               tracking_tolerance,
+						               path_truncation_threshold,
+						               max_num_newton_iterations,
+						               AMP_config);
 		}
 	}
 	
