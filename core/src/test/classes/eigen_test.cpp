@@ -44,48 +44,11 @@ extern double threshold_clearance_d;
 extern double threshold_clearance_mp;
 extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
 
-	
-	using mpfr_float = boost::multiprecision::mpfr_float;
 
+using mpfr_float = boost::multiprecision::mpfr_float;
 
-template <typename NumberType>
-Eigen::Matrix<NumberType, Eigen::Dynamic, Eigen::Dynamic> KahanMatrix(unsigned int mat_size, NumberType c)
-{
-	NumberType s, scale(1.0);
-	s = sqrt( (NumberType(1.0)-c) * (NumberType(1.0)+c) );
-	
-	
-	Eigen::Matrix<NumberType, Eigen::Dynamic, Eigen::Dynamic> A(mat_size,mat_size);
-	
-	
-	for (unsigned int ii=0; ii<mat_size; ii++) {
-		for (unsigned int jj=0; jj<ii; jj++) {
-			A(ii,jj) = NumberType(0.0);
-		}
-		for (unsigned int jj=ii; jj<mat_size; jj++) {
-			A(ii,jj) = -c * NumberType(1.0);
-		}
-	}
-	
-	
-	for (unsigned int ii=0; ii<mat_size; ii++) {
-		A(ii,ii) += NumberType(1)+c;
-	}
-	
-	for (unsigned int jj=0; jj<mat_size; jj++){
-		for (unsigned int kk=0;kk<mat_size;kk++){
-			A(jj,kk) *= scale;
-		}
-		scale *= s;
-	}
-	
-	for (unsigned int jj=0;jj<mat_size;jj++){
-		for (unsigned int kk=0;kk<mat_size;kk++){
-			A(kk,jj)/= NumberType(jj) + NumberType(1);
-		}
-	}
-	return A;
-}
+using bertini::KahanMatrix;
+
 
 
 
