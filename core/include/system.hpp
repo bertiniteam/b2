@@ -398,8 +398,8 @@ namespace bertini {
 		 The order in which variables and their groups are added to a system impacts this ordering.  Bertini will ensure internal consistency.  It is up to the user to make sure the ordering is what they want for any post-processing or interpretations of results.
 
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
-        */
-        VariableGroup Variables() const;
+		*/
+		VariableGroup Variables() const;
 
 
 
@@ -408,20 +408,20 @@ namespace bertini {
 		/**
 		 Get a function by its index.  This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
 		*/
-        auto function(unsigned index = 0) const
-        {
-            return functions_[index];
-        }
+		auto function(unsigned index = 0) const
+		{
+			return functions_[index];
+		}
 
-        
+		
 
-        /**
+		/**
 		 Get the variable groups in the problem.
-        */
-        auto variableGroups() const
-        {
-            return variable_groups_;
-        }
+		*/
+		auto variableGroups() const
+		{
+			return variable_groups_;
+		}
 
 		/////////////// TESTING ////////////////////
 
@@ -475,7 +475,7 @@ namespace bertini {
 		  This operation does NOT affect the functions in any way.  It is up to the user to make the functions actually depend on these variables.
 		*/ 
 		void CopyVariableStructure(System const& other);
-        
+		
 
 		/**
 		Add two systems together.
@@ -536,7 +536,7 @@ namespace bertini {
 
 		friend class boost::serialization::access;
 
-        template <typename Archive>
+		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & ungrouped_variables_;
 			ar & variable_groups_;

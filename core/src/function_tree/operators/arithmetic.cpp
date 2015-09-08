@@ -663,8 +663,8 @@ namespace bertini{
 						if (n < 0)
 							deg = -1;
 						else
-                        	deg += n;
- 						});
+							deg += n;
+						});
 		return deg;
 	}
 

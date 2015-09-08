@@ -133,7 +133,7 @@ namespace node{
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
+		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
@@ -184,10 +184,10 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<NaryOperator>(*this);
-            ar & children_sign_;
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<NaryOperator>(*this);
+			ar & children_sign_;
+		}
 	};
 	
 	
@@ -258,9 +258,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
 	};
 	
 	
@@ -351,7 +351,7 @@ namespace node{
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
+		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
@@ -390,10 +390,10 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<NaryOperator>(*this);
-            ar & children_mult_or_div_;
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<NaryOperator>(*this);
+			ar & children_mult_or_div_;
+		}
 	};
 	
 	
@@ -456,7 +456,7 @@ namespace node{
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
+		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
@@ -506,11 +506,11 @@ namespace node{
 		
 
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<BinaryOperator>(*this);
-            ar & base_;
-            ar & exponent_;
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<BinaryOperator>(*this);
+			ar & base_;
+			ar & exponent_;
+		}
 	};
 	// end of the class PowerOperator
 	
@@ -628,10 +628,10 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-            ar & exponent_;
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+			ar & exponent_;
+		}
 	}; // re: class IntegerPowerOperator
 	
 	
@@ -704,9 +704,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
 	};
 	
 	
@@ -769,9 +769,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
 	};
 	
 	
@@ -824,9 +824,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
 	};
 
 	

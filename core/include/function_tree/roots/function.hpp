@@ -119,29 +119,29 @@ namespace node{
 				throw std::runtime_error("Function node type has empty root node");
 			}
 		}
-        
-        
-        /** 
-         Calls Differentiate on the entry node and returns differentiated entry node.
-         */
-        std::shared_ptr<Node> Differentiate() override
-        {
-            return entry_node_->Differentiate();
-        }
+		
+		
+		/** 
+		 Calls Differentiate on the entry node and returns differentiated entry node.
+		 */
+		std::shared_ptr<Node> Differentiate() override
+		{
+			return entry_node_->Differentiate();
+		}
 		
 		
 
 
 		/**
-        Compute the degree of a node.  For functions, the degree is the degree of the entry node.
-        */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-        {
-            return entry_node_->Degree(v);
-        }
+		Compute the degree of a node.  For functions, the degree is the degree of the entry node.
+		*/
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return entry_node_->Degree(v);
+		}
 
 
-        int Degree(VariableGroup const& vars) const override
+		int Degree(VariableGroup const& vars) const override
 		{
 			return entry_node_->Degree(vars);
 		}
@@ -150,7 +150,7 @@ namespace node{
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
+		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override
 		{
 			
@@ -163,7 +163,7 @@ namespace node{
 		}
 
 
-        void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			entry_node_->Homogenize(vars, homvar);
 		}
@@ -196,20 +196,20 @@ namespace node{
 	protected:
 		
 		/**
-         Calls FreshEval on the entry node to the tree.
-         */
-        dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
-        {
-            return entry_node_->Eval<dbl>(diff_variable);
-        }
-        
-        /**
-         Calls FreshEval on the entry node to the tree.
-         */
-        mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
-        {
-            return entry_node_->Eval<mpfr>(diff_variable);
-        }
+		 Calls FreshEval on the entry node to the tree.
+		 */
+		dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
+		{
+			return entry_node_->Eval<dbl>(diff_variable);
+		}
+		
+		/**
+		 Calls FreshEval on the entry node to the tree.
+		 */
+		mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
+		{
+			return entry_node_->Eval<mpfr>(diff_variable);
+		}
 
 		
 		
@@ -220,10 +220,10 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<NamedSymbol>(*this);
-            ar & entry_node_;
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<NamedSymbol>(*this);
+			ar & entry_node_;
+		}
 	};
 	
 } // re: namespace node

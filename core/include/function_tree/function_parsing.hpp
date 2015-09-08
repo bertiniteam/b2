@@ -227,8 +227,16 @@ namespace bertini {
 
 			number_.name("number_");
 			number_ =
-			long_number_string_ [ _val = make_shared_<Float>()(_1) ];
+				long_number_string_ [ _val = make_shared_<Float>()(_1) ]
+				|
+				integer_string_ [ _val = make_shared_<Integer>()(_1) ];
 
+
+
+
+			integer_string_.name("integer_string_");
+			integer_string_ = eps[_val = std::string()] >>
+			 number_with_no_point_ [_val += _1];
 
 
 			long_number_string_.name("long_number_string_");
@@ -238,13 +246,11 @@ namespace bertini {
 			 number_with_digits_after_point_ [_val += _1]
 			 |
 			 number_with_digits_before_point_ [_val += _1]
-			 |
-			 number_with_no_point_ [_val += _1]
 			 >>   // reminder -- the - before the exponent_notation here means optional
 			 - exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
 			 );
 
-
+			
 
 			number_with_digits_after_point_.name("number_with_digits_after_point_");
 			number_with_digits_after_point_ = eps[_val = std::string()]
@@ -352,7 +358,7 @@ namespace bertini {
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
 
 		// these rules all produce strings which are fed into numbers.
-		qi::rule<Iterator, std::string()> long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+		qi::rule<Iterator, std::string()> integer_string_, long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
 	};
 
 

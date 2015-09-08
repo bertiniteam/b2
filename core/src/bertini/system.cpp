@@ -717,7 +717,7 @@ namespace bertini
 
 		vars.insert(vars.end(),ungrouped_variables_.begin(),ungrouped_variables_.end());
 
-	    return vars;
+		return vars;
 	}
 
 
