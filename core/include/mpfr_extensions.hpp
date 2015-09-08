@@ -72,7 +72,7 @@ namespace boost { namespace serialization {
 	
 
 	/**
-	 Save a mpfr_float type to a boost archive.
+	 Save a gmp_rational type to a boost archive.
 	 */
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::gmp_rational const& r, unsigned /*version*/)
@@ -82,7 +82,7 @@ namespace boost { namespace serialization {
 	}
 	
 	/**
-	 Load a mpfr_float type from a boost archive.
+	 Load a gmp_rational type from a boost archive.
 	 */
 	template <typename Archive>
 	void load(Archive& ar, ::boost::multiprecision::backends::gmp_rational& r, unsigned /*version*/)
@@ -91,13 +91,37 @@ namespace boost { namespace serialization {
 		ar & tmp;
 		r = tmp.c_str();
 	}
+
+
+	/**
+	 Save a gmp_int type to a boost archive.
+	 */
+	template <typename Archive>
+	void save(Archive& ar, ::boost::multiprecision::backends::gmp_int const& r, unsigned /*version*/)
+	{
+		std::string tmp = r.str(0,std::ios::scientific);
+		ar & tmp;
+	}
+	
+	/**
+	 Load a gmp_int type from a boost archive.
+	 */
+	template <typename Archive>
+	void load(Archive& ar, ::boost::multiprecision::backends::gmp_int& r, unsigned /*version*/)
+	{
+		std::string tmp;
+		ar & tmp;
+		r = tmp.c_str();
+	}
+
+
 } } // re: namespaces
 
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpfr_float_backend<0>)
 
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_rational)
 
-
+BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_int)
 
 
 // reopen the Eigen namespace to inject this struct.
@@ -159,7 +183,8 @@ namespace bertini {
 	 
 	 \note this function calls the templated function RandomMpfr.
 	 
-	 \param number_to_make_random The number whose contents you are overwriting with a random number.
+	 \tparam T the number type to generate.
+	 \return The random number.
 	 */
 	template <typename T>
 	T RandomMp();
@@ -169,9 +194,9 @@ namespace bertini {
 	/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
 	 
+	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
 	 \return number_to_make_random The number which you desire to populate with a random number.
-	 
 	 */
 	template <typename T, unsigned int length_in_digits>
 	T RandomMpUniformUnitInterval();
@@ -186,9 +211,12 @@ namespace bertini {
 	/**
 	 a templated function for producing random numbers in a specified interval, of a given number of digits.
 	 
+	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
 	 \return number_to_make_random The number which you desire to populate with a random number.
 	 
+	 \param a The left bound.
+	 \param b The right bound.
 	 */
 	template <typename T, unsigned int length_in_digits>
 	T RandomMpUniformInInterval(const T & a, const T & b);
@@ -200,7 +228,11 @@ namespace bertini {
 	 
 	 \note this function calls the templated function RandomMpfrUniformInInterval.
 	 
-	 \param number_to_make_random The number whose contents you are overwriting with a random number.
+	 \tparam T the number type to generate.
+	 \param a The left bound.
+	 \param b The right bound.
+
+	 \return The random number.
 	 */
 	template <typename T>
 	T RandomMp(const T & a, const T & b);
