@@ -1773,15 +1773,15 @@ BOOST_AUTO_TEST_CASE(function_tree_combine_product_of_two_integer_powers)
     BOOST_CHECK(std::dynamic_pointer_cast<bertini::node::IntegerPowerOperator>(P));
 
     P = N/M;
-    BOOST_CHECK(std::dynamic_pointer_cast<bertini::node::IntegerPowerOperator>(P));
-    BOOST_CHECK_EQUAL(P->Degree(), 3);
+    BOOST_CHECK(!std::dynamic_pointer_cast<bertini::node::IntegerPowerOperator>(P));
+    BOOST_CHECK_EQUAL(P->Degree(), -1);
 
     N = pow(x,3);
     M = pow(x,-1);
 
     P = N/M;
-    BOOST_CHECK(std::dynamic_pointer_cast<bertini::node::IntegerPowerOperator>(P));
-    BOOST_CHECK_EQUAL(P->Degree(), 4);
+    BOOST_CHECK(!std::dynamic_pointer_cast<bertini::node::IntegerPowerOperator>(P));
+    BOOST_CHECK_EQUAL(P->Degree(), -1);
 }
 
 
