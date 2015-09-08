@@ -46,9 +46,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<Node>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Node>(*this);
+		}
 	};
 	
 	
@@ -114,15 +114,15 @@ namespace node{
 							if (n < 0)
 								deg = n;
 							else
-	                        	deg += n;
-	 						});
+								deg += n;
+							});
 			return deg;
 		}
 
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
+		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override
 		{
 			
@@ -191,10 +191,10 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<Operator>(*this);
-            ar & child_;
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Operator>(*this);
+			ar & child_;
+		}
 	};
 	
 	
@@ -223,9 +223,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<Operator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Operator>(*this);
+		}
 	};
 	
 	/**
@@ -302,10 +302,10 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<Operator>(*this);
-            ar & children_;
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Operator>(*this);
+			ar & children_;
+		}
 		
 	};
 	
