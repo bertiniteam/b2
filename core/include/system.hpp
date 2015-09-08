@@ -77,12 +77,14 @@ namespace bertini {
 
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
+
+		\param new_precision The new precision, in digits, to work in.  This only affects the mpfr types, not double.  To use low-precision (doubles), use that number type in the templated functions.
 		*/
 		void precision(unsigned new_precision);
 
 
 		/**
-		 \brief Compute and store the symbolic Jacobian of the system.
+		 \brief Compute and internally store the symbolic Jacobian of the system.
 		*/
 		void Differentiate();
 
@@ -91,9 +93,41 @@ namespace bertini {
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values);
+		Vec<T> Eval(const Vec<T> & variable_values)
+		{
+
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+			if (have_path_variable_)
+				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
+
+
+			// this function call traverses the entire tree, resetting everything.
+			//
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			//
+			// we need to work to correct this.
+			for (auto iter : functions_) {
+				iter->Reset();
+			}
+
+			SetVariables(variable_values);
+
+
+			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
+
+			{ // for scoping of the counter.
+				auto counter = 0;
+				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+					value(counter) = (*iter)->Eval<T>();
+				}
+			}
+
+			return value;
+		}
 
 
 
@@ -102,9 +136,44 @@ namespace bertini {
 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 
+		 \param variable_values The values of the variables, for the evaluation.
+		 \param path_variable_value The current value of the path variable.
 		 */
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value);
+		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value)
+		{
+
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
+
+
+			// this function call traverses the entire tree, resetting everything.
+			//
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			//
+			// we need to work to correct this.
+			for (auto iter : functions_) {
+				iter->Reset();
+			}
+
+			SetVariables(variable_values);
+			SetPathVariable(path_variable_value);
+
+
+			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
+
+			{ // for scoping of the counter.
+				auto counter = 0;
+				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+					value(counter) = (*iter)->Eval<T>();
+				}
+			}
+
+			return value;
+		}
 
 
 		/**
@@ -112,9 +181,34 @@ namespace bertini {
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		
+		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values);
+		Mat<T> Jacobian(const Vec<T> & variable_values)
+		{
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+
+			if (have_path_variable_)
+				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
+
+
+			if (!is_differentiated_)
+				Differentiate();
+
+
+			SetVariables(variable_values);
+
+			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+
+			Mat<T> J(NumFunctions(), NumVariables());
+			for (int ii = 0; ii < NumFunctions(); ++ii)
+				for (int jj = 0; jj < NumVariables(); ++jj)
+					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+
+			return J;
+		}
 
 
 		/**
@@ -122,11 +216,38 @@ namespace bertini {
 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
 		 \return The Jacobian matrix.
+		 
+		 \param variable_values The values of the variables, for the evaluation.
+		 \param path_variable_value The current value of the path variable.
 
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value);
+		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
+		{
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
+
+
+			if (!is_differentiated_)
+				Differentiate();
+
+			SetVariables(variable_values);
+			SetPathVariable(path_variable_value);
+
+			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+			
+			Mat<T> J(NumFunctions(), NumVariables());
+			for (int ii = 0; ii < NumFunctions(); ++ii)
+				for (int jj = 0; jj < NumVariables(); ++jj)
+					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+
+			return J;
+
+		}
 
 	
 		/**
@@ -225,12 +346,25 @@ namespace bertini {
 		 The ordering of the variables matters.  The standard ordering is 1) variable groups, with homogenizing variable first. 2) homogeneous variable groups. 3) ungrouped variables.
 
 		 The path variable is not considered a variable for this operation.  It is set separately.
+		 
+		 \param new_values The new updated values for the variables.
 
 		 \see SetPathVariable
 		 \see Variables
 		 */
 		template<typename T>
-		void SetVariables(const Vec<T> & new_values);
+		void SetVariables(const Vec<T> & new_values)
+		{
+			assert(new_values.size()== NumVariables());
+
+			auto vars = Variables();
+
+			auto counter = 0;
+
+			for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
+				(*iter)->set_current_value(new_values(counter));
+			}
+		}
 
 
 
@@ -239,9 +373,17 @@ namespace bertini {
 		
 		 \throws std::runtime_error, if a path variable is not defined.
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+
+		 \param new_value The new updated values for the path variable.
 		 */
 		template<typename T>
-		void SetPathVariable(T new_value);
+		void SetPathVariable(T new_value)
+		{
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
+
+			path_variable_->set_current_value(new_value);
+		}
 
 
 		
@@ -250,10 +392,19 @@ namespace bertini {
 		/**
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
 		 
-		 
+		 \param new_values The new updated values for the implicit parameters.
 		 */
 		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values);
+		void SetImplicitParameters(Vec<T> new_values)
+		{
+			if (new_values.size()!= implicit_parameters_.size())
+				throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
+
+			size_t counter = 0;
+			for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++)
+				(*iter)->set_current_value(new_values(counter));
+
+		}
 
 
 
@@ -271,12 +422,16 @@ namespace bertini {
 
 		/**
 		 Add a variable group to the system.  The system may be homogenized with respect to this variable group, though this is not done at the time of this call.
+		 
+		 \param v The variable group to add.
 		 */
 		void AddVariableGroup(VariableGroup const& v);
 
 
 		/**
 		 Add a homogeneous (projective) variable group to the system.  The system must be homogeneous with respect to this group, though this is not verified at the time of this call.
+		 
+		 \param v The variable group to add.
 		 */
 		void AddHomVariableGroup(VariableGroup const& v);
 
@@ -284,24 +439,32 @@ namespace bertini {
 
 		/**
 		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
+		 
+		 \param v The variable to add.
 		 */
 		void AddUngroupedVariable(Var const& v);
 
 
 		/**
 		 Add variables to the system which are in neither a regular variable group, nor in a homogeneous group.  This is likely used for user-defined systems, Classic userhomotopy: 1;.
+		 
+		 \param v The variables to add.
 		 */
 		void AddUngroupedVariables(VariableGroup const& v);
 
 
 		/**
 		 Add an implicit parameter to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
+
+		 \param v The implicit parameter to add.
 		 */
 		void AddImplicitParameter(Var const& v);
 
 
 		/**
 		 Add some implicit parameters to the system.  Implicit parameters are advanced by the tracker akin to variable advancement.
+
+		 \param v The implicit parameters to add.
 		 */
 		void AddImplicitParameters(VariableGroup const& v);
 
@@ -310,43 +473,61 @@ namespace bertini {
 
 		/**
 		 Add an explicit parameter to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
+
+		 \param F The parameter to add.
 		 */
 		void AddParameter(Fn const& F);
 
 		/**
 		 Add some explicit parameters to the system.  Explicit parameters should depend only on the path variable, though this is not checked in this function.
+
+		 \param F The parameters to add.
 		 */
-		void AddParameters(std::vector<Fn> const& v);
+		void AddParameters(std::vector<Fn> const& F);
 
 
 
 		/**
 		 Add a subfunction to the system.
+
+		 Tacks them onto the end of the system.
+
+		 \param F The subfunction to add.
 		 */
 		void AddSubfunction(Fn const& F);
 
 		/**
 		 Add some subfunctions to the system.
+
+		 Tacks them onto the end of the system.
+
+		 \param F The subfunctions to add.
 		 */
-		void AddSubfunctions(std::vector<Fn> const& v);
+		void AddSubfunctions(std::vector<Fn> const& F);
 
 
 
 		/**
 		 Add a function to the system.
+
+		 \param F The function to add.
 		 */
 		void AddFunction(Fn const& F);
 
 		/**
 		 Add a function to the system.
+
+		 \param F The function to add.
 		 */
-		void AddFunction(Nd const& N);
+		void AddFunction(Nd const& F);
 
 
 		/**
 		 Add some functions to the system.
+
+		 \param F The functions to add.
 		 */
-		void AddFunctions(std::vector<Fn> const& v);
+		void AddFunctions(std::vector<Fn> const& F);
 
 
 
@@ -356,20 +537,26 @@ namespace bertini {
 
 		/**
 		 Add a constant function to the system.  Constants must not depend on anything which can vary -- they're constant!
+
+		 \param C The constant to add.
 		 */
-		void AddConstant(Fn const& F);
+		void AddConstant(Fn const& C);
 
 
 		/**
 		 Add some constant functions to the system.  Constants must not depend on anything which can vary -- they're constant!
+
+		 \param C The constants to add.
 		 */
-		void AddConstants(std::vector<Fn> const& v);
+		void AddConstants(std::vector<Fn> const& C);
 
 
 
 
 		/**
 		 Add a variable as the Path Variable to a System.  Will overwrite any previously declared path variable.
+
+		 \param v The new path variable.
 		 */
 		void AddPathVariable(Var const& v);
 
@@ -408,7 +595,7 @@ namespace bertini {
 		/**
 		 Get a function by its index.  This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
 		*/
-		auto function(unsigned index = 0) const
+		auto Function(unsigned index) const
 		{
 			return functions_[index];
 		}
@@ -418,11 +605,19 @@ namespace bertini {
 		/**
 		 Get the variable groups in the problem.
 		*/
-		auto variableGroups() const
+		auto VariableGroups() const
 		{
 			return variable_groups_;
 		}
 
+
+		/**
+		 Get the homogeneous variable groups in the problem.
+		*/
+		auto HomVariableGroups() const
+		{
+			return hom_variable_groups_;
+		}
 		/////////////// TESTING ////////////////////
 
 

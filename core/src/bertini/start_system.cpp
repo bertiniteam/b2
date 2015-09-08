@@ -56,7 +56,7 @@ namespace bertini {
 			for (auto iter : deg)
 				degrees_.push_back((size_t)iter);
 
-			auto original_varible_groups = s.variableGroups();
+			auto original_varible_groups = s.VariableGroups();
 
 			auto original_variables = s.Variables();
 
