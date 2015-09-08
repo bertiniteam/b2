@@ -59,17 +59,13 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 	std::string::const_iterator iter = str.begin();
 	std::string::const_iterator end = str.end();
 
-
 	bertini::SystemParser<std::string::const_iterator> S;
-
 
 	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
 
-
 	BOOST_CHECK(s && iter==end);
-
-
 	BOOST_CHECK(sys.IsHomogeneous());
+
 }
 
 

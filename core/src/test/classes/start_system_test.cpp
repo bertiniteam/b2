@@ -329,6 +329,24 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 
 
 
+
+BOOST_AUTO_TEST_CASE(start_system_total_degree_nonpolynomial_should_throw)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+
+	VariableGroup vars;
+	vars.push_back(x); vars.push_back(y); vars.push_back(z);
+
+	sys.AddVariableGroup(vars);  
+	sys.AddFunction(exp(y)+x*y + 0.5);
+	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	BOOST_CHECK_THROW(bertini::start_system::TotalDegree TD(sys), std::runtime_error);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

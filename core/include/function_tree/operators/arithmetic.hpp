@@ -6,7 +6,7 @@
 //(at your option) any later version.
 //
 //arithmetic.hpp is distributed in the hope that it will be useful,
-//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//but WITHOUT ANY WARRANTY; without even the implied wrhsanty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
@@ -133,7 +133,7 @@ namespace node{
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
+		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
 
@@ -184,14 +184,698 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<NaryOperator>(*this);
-            ar & children_sign_;
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<NaryOperator>(*this);
+			ar & children_sign_;
+		}
 	};
 	
 	
 	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/**
+	\brief The negation Operator.
+
+	 This class represents the negation Operator.  FreshEval method
+	 is defined for negation and multiplies the value by -1.
+	 */
+	class NegateOperator : public virtual UnaryOperator
+	{
+	public:
+		
+		NegateOperator(){}
+		
+		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+		
+		
+		
+		/**
+		 Print to an arbitrary ostream.
+		 */
+		void print(std::ostream & target) const override;
+		
+		
+		/**
+		 Returns negative of derivative of child.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return child_->IsHomogeneous(v);
+		}
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return child_->IsHomogeneous(vars);
+		}
+
+		virtual ~NegateOperator() = default;
+		
+	protected:
+		
+		// Specific implementation of FreshEval for negate.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
+	};
+	
+	
+	inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
+	{
+		return std::make_shared<NegateOperator>(rhs);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/**
+	\brief Multiplication and division Operator.
+
+	This class represents the Operator for multiplication and division.  All children are factors and are stored
+	in a vector.  FreshEval method is defined for multiplication.
+	*/
+	class MultOperator : public virtual NaryOperator
+	{
+	public:
+		//
+		
+		MultOperator(){}
+		
+		MultOperator(std::shared_ptr<Node> const& left, std::shared_ptr<Node> const& right)
+		{
+			AddChild(left);
+			AddChild(right);
+		}
+		
+		
+		MultOperator(const std::shared_ptr<Node> & left, bool mult_or_div_left, const std::shared_ptr<Node> & right, bool mult_or_div_right)
+		{
+			AddChild(left, mult_or_div_left);
+			AddChild(right, mult_or_div_right);
+		}
+		
+		
+		
+		virtual ~MultOperator() = default;
+		
+		
+		
+		
+		//Special Behaviour: by default all factors are in numerator
+		void AddChild(std::shared_ptr<Node> child) override
+		{
+			NaryOperator::AddChild(std::move(child));
+			children_mult_or_div_.push_back(true);
+		}
+		
+		
+		
+		//Special Behaviour: Pass bool to set sign of term: true = mult, false = divide
+		void AddChild(std::shared_ptr<Node> child, bool mult) // not an override
+		{
+			NaryOperator::AddChild(std::move(child));
+			children_mult_or_div_.push_back(mult);
+		}
+		
+		
+		/**
+		 overridden method for printing to an output stream
+		 */
+		void print(std::ostream & target) const override;
+		
+		/**
+		 Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		
+		
+		/**
+		 Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
+		 */
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		
+
+		int Degree(VariableGroup const& vars) const override;
+
+		/**
+		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+		*/
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+		
+
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
+		
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override;
+	protected:
+		
+		// Specific implementation of FreshEval for mult and divide.
+		//  If child_mult_ = true, then multiply, else divide
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		
+		
+		
+		
+		
+		
+	private:
+		// Stores the mult/div of a factor.  There is a one-one
+		// correspondence between elements of children_sign_ and children_.  This
+		// is enforced by the AddChild method, redefined in MultOperator.
+		
+		// TODO(JBC): If we add method to delete child, must also delete children_mult_ entry.
+		std::vector<bool> children_mult_or_div_;
+		
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<NaryOperator>(*this);
+			ar & children_mult_or_div_;
+		}
+	};
+	
+	
+	
+	
+	
+	/**
+	\brief Operator for power functions with arbitrary expressions in the exponent and base.
+
+	Operator for power functions with arbitrary expressions in the exponent and base.
+	 
+	 
+	 \see IntegerPowerOperator
+	 */
+	class PowerOperator : public virtual BinaryOperator
+	{
+		
+	public:
+		
+		PowerOperator(){}
+		
+		PowerOperator(const std::shared_ptr<Node> & new_base, const std::shared_ptr<Node> & new_exponent) : base_(new_base), exponent_(new_exponent)
+		{
+		}
+		
+		
+		
+		void SetBase(std::shared_ptr<Node> new_base)
+		{
+			base_ = new_base;
+		}
+		
+		void SetExponent(std::shared_ptr<Node> new_exponent)
+		{
+			exponent_ = new_exponent;
+		}
+		
+		
+		void Reset() override;
+		
+		
+		
+		void print(std::ostream & target) const override;
+		
+		
+		
+		/**
+		 Differentiates with the power rule.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		
+		
+		/**
+		 Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
+		 */
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		
+		int Degree(VariableGroup const& vars) const override;
+
+		/**
+		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
+		*/
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+		
+
+
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
+		
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override;
+
+		virtual ~PowerOperator() = default;
+		
+		/**
+		 Change the precision of this variable-precision tree node.
+		 
+		 \param prec the number of digits to change precision to.
+		 */
+		virtual void precision(unsigned int prec) override
+		{
+			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			val_pair.first.precision(prec);
+
+			base_->precision(prec);
+			exponent_->precision(prec);
+		}
+
+
+
+	protected:
+		
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		
+	private:
+		
+		std::shared_ptr<Node> base_;
+		std::shared_ptr<Node> exponent_;
+
+
+	private:
+
+		friend class boost::serialization::access;
+		
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<BinaryOperator>(*this);
+			ar & base_;
+			ar & exponent_;
+		}
+	};
+	// end of the class PowerOperator
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/**
+	\brief This class represents the exponentiation Operator.
+
+
+	 This class represents the exponentiation operator.  The base is stored in
+	 children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
+	 defined as the exponention operation.
+	 */
+	class IntegerPowerOperator : public virtual UnaryOperator
+	{
+	public:
+		
+		
+		
+		
+		/**
+		 polymorphic method for printing to an arbitrary stream.
+		 */
+		void print(std::ostream & target) const override;
+		
+		
+		/**
+		 Get the integet exponent of an ExpOperator
+		 */
+		void set_exponent(int exp)
+		{
+			exponent_ = exp;
+		}
+		
+		
+		/**
+		 Get the exponent of an ExpOperator
+		 */
+		int exponent() const
+		{
+			return exponent_;
+		}
+		
+		
+		/**
+		 Differentiates a number.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		
+		/**
+		 Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
+		 */
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		
+		
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return child_->IsHomogeneous(v);
+		}
+		
+
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return child_->IsHomogeneous(vars);
+		}
+
+
+		virtual ~IntegerPowerOperator() = default;
+		
+		
+		/**
+		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
+		 */
+		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p = 1) : exponent_(p), UnaryOperator(N)
+		{}
+		
+		
+		IntegerPowerOperator(){}
+		
+	protected:
+		
+		
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		{
+			return pow(child_->Eval<dbl>(diff_variable), exponent_);
+		}
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			return pow(child_->Eval<mpfr>(diff_variable),exponent_);
+		}
+		
+	private:
+		
+		int exponent_ = 1; ///< Exponent for the exponenetial operator
+
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+			ar & exponent_;
+		}
+	}; // re: class IntegerPowerOperator
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/**
+	\brief Represents the square root Operator
+
+
+	 This class represents the square root function.  FreshEval method
+	 is defined for square root and takes the square root of the child node.
+	 */
+	class SqrtOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		SqrtOperator(){}
+		
+		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+		
+		
+		
+		void print(std::ostream & target) const override;
+		
+		
+		/**
+		 Differentiates the square root function.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		
+		
+		/**
+		 Compute the degree with respect to a single variable.
+		 
+		 For the square root function, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+		 */
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		
+
+		virtual ~SqrtOperator() = default;
+		
+	protected:
+		
+		// Specific implementation of FreshEval for negate.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		
+
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
+	};
+	
+	
+	
+	inline std::shared_ptr<Node> sqrt(const std::shared_ptr<Node> & N)
+	{
+		return std::make_shared<SqrtOperator>(N);
+	}
+	
+	
+	
+	
+	/**
+	\brief represents the exponential function
+
+	This class represents the exponential function.  FreshEval method
+	is defined for exponential and takes the exponential of the child node.
+	*/
+	class ExpOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		ExpOperator(){}
+		
+		ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+	 
+		
+		
+		
+		void print(std::ostream & target) const override;
+		
+		
+		/**
+		 Differentiates the exponential function.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		
+		
+		/**
+		 Compute the degree with respect to a single variable.
+		 
+		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+		 */
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		
+
+		virtual ~ExpOperator() = default;
+		
+	protected:
+		
+		// Specific implementation of FreshEval for exponentiate.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
+	};
+	
+	
+	/**
+	\brief represents the natural logarithm function
+
+	This class represents the natural logarithm function.
+	*/
+	class LogOperator : public  virtual UnaryOperator
+	{
+	public:
+		
+		LogOperator(){}
+		
+		LogOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
+		{};
+	 
+		
+		
+		
+		void print(std::ostream & target) const override;
+		
+		
+		/**
+		 Differentiates the exponential function.
+		 */
+		std::shared_ptr<Node> Differentiate() override;
+		
+		
+		
+		/**
+		 Compute the degree with respect to a single variable.
+		 
+		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+		 */
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
+		
+
+		virtual ~LogOperator() = default;
+		
+	protected:
+		
+		// Specific implementation of FreshEval for exponentiate.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		
+	private:
+
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
+	};
+
+	
+
+
+	// begin the overload of operators
+
+	inline std::shared_ptr<Node> exp(const std::shared_ptr<Node> & N)
+	{
+		return std::make_shared<ExpOperator>(N);
+	}
+	
+	inline std::shared_ptr<Node> log(const std::shared_ptr<Node> & N)
+	{
+		return std::make_shared<LogOperator>(N);
+	}
+	
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, const std::shared_ptr<Node> & p)
+	{
+		return std::make_shared<PowerOperator>(N,p);
+	}
+
+	inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
+	{
+		return std::make_shared<IntegerPowerOperator>(base,power);
+	}
+
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p)
+	{
+		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
+	}
+	
+
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, dbl p)
+	{
+		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
+	}
+
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr p)
+	{
+		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
+	}
+
+
+
+
+
+
+
 	///////////////////
 	//
 	//     SUM AND DIFFERENCE ARITHMETIC OPERATORS
@@ -358,211 +1042,10 @@ namespace node{
 		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	\brief The negation Operator.
 
-	 This class represents the negation Operator.  FreshEval method
-	 is defined for negation and multiplies the value by -1.
-	 */
-	class NegateOperator : public virtual UnaryOperator
-	{
-	public:
-		
-		NegateOperator(){}
-		
-		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-		{};
-		
-		
-		
-		/**
-		 Print to an arbitrary ostream.
-		 */
-		void print(std::ostream & target) const override;
-		
-		
-		/**
-		 Returns negative of derivative of child.
-		 */
-		std::shared_ptr<Node> Differentiate() override;
-		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return child_->IsHomogeneous(v);
-		}
 
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
-		{
-			return child_->IsHomogeneous(vars);
-		}
 
-		virtual ~NegateOperator() = default;
-		
-	protected:
-		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
 
-	private:
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-        }
-	};
-	
-	
-	inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
-	{
-		return std::make_shared<NegateOperator>(rhs);
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	\brief Multiplication and division Operator.
-
-	This class represents the Operator for multiplication and division.  All children are factors and are stored
-	in a vector.  FreshEval method is defined for multiplication.
-	*/
-	class MultOperator : public virtual NaryOperator
-	{
-	public:
-		//
-		
-		MultOperator(){}
-		
-		MultOperator(std::shared_ptr<Node> const& left, std::shared_ptr<Node> const& right)
-		{
-			AddChild(left);
-			AddChild(right);
-		}
-		
-		
-		MultOperator(const std::shared_ptr<Node> & left, bool mult_or_div_left, const std::shared_ptr<Node> & right, bool mult_or_div_right)
-		{
-			AddChild(left, mult_or_div_left);
-			AddChild(right, mult_or_div_right);
-		}
-		
-		
-		
-		virtual ~MultOperator() = default;
-		
-		
-		
-		
-		//Special Behaviour: by default all factors are in numerator
-		void AddChild(std::shared_ptr<Node> child) override
-		{
-			NaryOperator::AddChild(std::move(child));
-			children_mult_or_div_.push_back(true);
-		}
-		
-		
-		
-		//Special Behaviour: Pass bool to set sign of term: true = mult, false = divide
-		void AddChild(std::shared_ptr<Node> child, bool mult) // not an override
-		{
-			NaryOperator::AddChild(std::move(child));
-			children_mult_or_div_.push_back(mult);
-		}
-		
-		
-		/**
-		 overridden method for printing to an output stream
-		 */
-		void print(std::ostream & target) const override;
-		
-		/**
-		 Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
-		 */
-		std::shared_ptr<Node> Differentiate() override;
-		
-		
-		
-		/**
-		 Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-
-		int Degree(VariableGroup const& vars) const override;
-
-		/**
-		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
-		
-
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
-		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override;
-	protected:
-		
-		// Specific implementation of FreshEval for mult and divide.
-		//  If child_mult_ = true, then multiply, else divide
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
-		
-		
-		
-		
-		
-	private:
-		// Stores the mult/div of a factor.  There is a one-one
-		// correspondence between elements of children_sign_ and children_.  This
-		// is enforced by the AddChild method, redefined in MultOperator.
-		
-		// TODO(JBC): If we add method to delete child, must also delete children_mult_ entry.
-		std::vector<bool> children_mult_or_div_;
-		
-
-	private:
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<NaryOperator>(*this);
-            ar & children_mult_or_div_;
-        }
-	};
-	
-	
-	
 	
 	/*
 	 multiplication operators
@@ -632,13 +1115,30 @@ namespace node{
 	inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 		
+		// if the two nodes are integer power operators, and if they point the same place, then add the powers.
+
+		if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
+		{
+
+			auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
+			auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
+			if (lhs_as_intpow->first_child()==rhs_as_intpow->first_child())
+			{
+				if (lhs_as_intpow->exponent()>=0 && rhs_as_intpow->exponent()>=0)
+				{
+					std::shared_ptr<Node> temp = pow(lhs_as_intpow->first_child(),lhs_as_intpow->exponent() + rhs_as_intpow->exponent());
+					lhs.swap(temp);
+					return lhs;
+				}
+			}
+		}
+
 		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
-		
 		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
 		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(rhs);
-		
 		lhs.swap(temp);
 		return lhs;
+
 	}
 	
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
@@ -658,7 +1158,21 @@ namespace node{
 	
 	inline std::shared_ptr<Node>& operator/=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		
+
+		// if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
+		// {
+
+		// 	auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
+		// 	auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
+		// 	if (lhs_as_intpow->first_child()==rhs_as_intpow->first_child())
+		// 	{
+		// 		std::shared_ptr<Node> temp = pow(lhs_as_intpow->first_child(),lhs_as_intpow->exponent() - rhs_as_intpow->exponent());
+		// 		lhs.swap(temp);
+		// 		return lhs;
+		// 	}
+		// }
+
+
 		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
 		
 		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
@@ -734,413 +1248,13 @@ namespace node{
 	{
 		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
 	}
-	
-	
-	/**
-	\brief Operator for power functions with arbitrary expressions in the exponent and base.
-
-	Operator for power functions with arbitrary expressions in the exponent and base.
-	 
-	 
-	 \see IntegerPowerOperator
-	 */
-	class PowerOperator : public virtual BinaryOperator
-	{
-		
-	public:
-		
-		PowerOperator(){}
-		
-		PowerOperator(const std::shared_ptr<Node> & new_base, const std::shared_ptr<Node> & new_exponent) : base_(new_base), exponent_(new_exponent)
-		{
-		}
-		
-		
-		
-		void SetBase(std::shared_ptr<Node> new_base)
-		{
-			base_ = new_base;
-		}
-		
-		void SetExponent(std::shared_ptr<Node> new_exponent)
-		{
-			exponent_ = new_exponent;
-		}
-		
-		
-		void Reset() override;
-		
-		
-		
-		void print(std::ostream & target) const override;
-		
-		
-		
-		/**
-		 Differentiates with the power rule.
-		 */
-		std::shared_ptr<Node> Differentiate() override;
-		
-		
-		
-		/**
-		 Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		int Degree(VariableGroup const& vars) const override;
-
-		/**
-		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	    */
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
-		
-
-
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
-		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override;
-
-		virtual ~PowerOperator() = default;
-		
-		/**
-		 Change the precision of this variable-precision tree node.
-		 
-		 \param prec the number of digits to change precision to.
-		 */
-		virtual void precision(unsigned int prec) override
-		{
-			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
-
-			base_->precision(prec);
-			exponent_->precision(prec);
-		}
 
 
 
-	protected:
-		
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
-	private:
-		
-		std::shared_ptr<Node> base_;
-		std::shared_ptr<Node> exponent_;
-
-
-	private:
-
-		friend class boost::serialization::access;
-		
-
-		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<BinaryOperator>(*this);
-            ar & base_;
-            ar & exponent_;
-        }
-	};
-	// end of the class PowerOperator
-	
-	
-	
-	// begin the overload of operators
-	
-	
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, const std::shared_ptr<Node> & p)
-	{
-		return std::make_shared<PowerOperator>(N,p);
-	}
-	
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p)
-	{
-		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
-	}
 	
 
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, dbl p)
-	{
-		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
-	}
-
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr p)
-	{
-		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	\brief This class represents the exponentiation Operator.
 
 
-	 This class represents the exponentiation operator.  The base is stored in
-	 children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
-	 defined as the exponention operation.
-	 */
-	class IntegerPowerOperator : public virtual UnaryOperator
-	{
-	public:
-		
-		
-		
-		
-		/**
-		 polymorphic method for printing to an arbitrary stream.
-		 */
-		void print(std::ostream & target) const override;
-		
-		
-		/**
-		 Get the integet exponent of an ExpOperator
-		 */
-		void set_exponent(int exp)
-		{
-			exponent_ = exp;
-		}
-		
-		
-		/**
-		 Get the exponent of an ExpOperator
-		 */
-		int exponent() const
-		{
-			return exponent_;
-		}
-		
-		
-		/**
-		 Differentiates a number.
-		 */
-		std::shared_ptr<Node> Differentiate() override;
-		
-		
-		/**
-		 Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return child_->IsHomogeneous(v);
-		}
-		
-
-		/**
-		Check for homogeneity, with respect to a variable group.
-		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
-		{
-			return child_->IsHomogeneous(vars);
-		}
-
-
-		virtual ~IntegerPowerOperator() = default;
-		
-		
-		/**
-		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
-		 */
-		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p = 1) : exponent_(p), UnaryOperator(N)
-		{}
-		
-		
-		IntegerPowerOperator(){}
-		
-	protected:
-		
-		
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-		{
-			return pow(child_->Eval<dbl>(diff_variable), exponent_);
-		}
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-		{
-			return pow(child_->Eval<mpfr>(diff_variable),exponent_);
-		}
-		
-	private:
-		
-		int exponent_ = 1; ///< Exponent for the exponenetial operator
-
-
-	private:
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-            ar & exponent_;
-        }
-	}; // re: class IntegerPowerOperator
-	
-	
-	
-	inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
-	{
-		return std::make_shared<IntegerPowerOperator>(base,power);
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/**
-	\brief Represents the square root Operator
-
-
-	 This class represents the square root function.  FreshEval method
-	 is defined for square root and takes the square root of the child node.
-	 */
-	class SqrtOperator : public  virtual UnaryOperator
-	{
-	public:
-		
-		SqrtOperator(){}
-		
-		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-		{};
-		
-		
-		
-		void print(std::ostream & target) const override;
-		
-		
-		/**
-		 Differentiates the square root function.
-		 */
-		std::shared_ptr<Node> Differentiate() override;
-		
-		
-		
-		/**
-		 Compute the degree with respect to a single variable.
-		 
-		 For the square root function, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-
-		virtual ~SqrtOperator() = default;
-		
-	protected:
-		
-		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
-
-	private:
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-        }
-	};
-	
-	
-	
-	inline std::shared_ptr<Node> sqrt(const std::shared_ptr<Node> & N)
-	{
-		return std::make_shared<SqrtOperator>(N);
-	}
-	
-	
-	
-	
-	/**
-	\brief represents the exponential function
-
-	This class represents the exponential function.  FreshEval method
-	is defined for exponential and takes the exponential of the child node.
-	*/
-	class ExpOperator : public  virtual UnaryOperator
-	{
-	public:
-		
-		ExpOperator(){}
-		
-		ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
-		{};
-	 
-		
-		
-		
-		void print(std::ostream & target) const override;
-		
-		
-		/**
-		 Differentiates the exponential function.
-		 */
-		std::shared_ptr<Node> Differentiate() override;
-		
-		
-		
-		/**
-		 Compute the degree with respect to a single variable.
-		 
-		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-		
-
-		virtual ~ExpOperator() = default;
-		
-	protected:
-		
-		// Specific implementation of FreshEval for exponentiate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
-	private:
-
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-        }
-	};
-	
-	
-	inline std::shared_ptr<Node> exp(const std::shared_ptr<Node> & N)
-	{
-		return std::make_shared<ExpOperator>(N);
-	}
-	
 } // re: namespace node	
 } // re: namespace bertini
 

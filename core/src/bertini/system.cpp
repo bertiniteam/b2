@@ -156,128 +156,8 @@ namespace bertini
 	}
 
 
-
-
-	template<typename T>
-	Vec<T> System::Eval(const Vec<T> & variable_values)
+	void System::Differentiate()
 	{
-
-		if (variable_values.size()!=NumVariables())
-			throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
-		if (have_path_variable_)
-			throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
-
-
-		// this function call traverses the entire tree, resetting everything.
-		//
-		// TODO: it has the unfortunate side effect of resetting constant functions, too.
-		//
-		// we need to work to correct this.
-		for (auto iter : functions_) {
-			iter->Reset();
-		}
-
-		SetVariables(variable_values);
-
-
-		Vec<T> value(NumFunctions()); // create vector with correct number of entries.
-
-		{ // for scoping of the counter.
-			auto counter = 0;
-			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-				value(counter) = (*iter)->Eval<T>();
-			}
-		}
-
-		return value;
-	}
-
-	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
-	// see
-	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-	template Vec<dbl> System::Eval(const Vec<dbl> & variable_values);
-	template Vec<mpfr> System::Eval(const Vec<mpfr> & variable_values);
-
-
-	template<typename T>
-	Vec<T> System::Eval(const Vec<T> & variable_values, const T & path_variable_value)
-	{
-
-		if (variable_values.size()!=NumVariables())
-			throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
-		if (!have_path_variable_)
-			throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
-
-
-		// this function call traverses the entire tree, resetting everything.
-		//
-		// TODO: it has the unfortunate side effect of resetting constant functions, too.
-		//
-		// we need to work to correct this.
-		for (auto iter : functions_) {
-			iter->Reset();
-		}
-
-		SetVariables(variable_values);
-		SetPathVariable(path_variable_value);
-
-
-		Vec<T> value(NumFunctions()); // create vector with correct number of entries.
-
-		{ // for scoping of the counter.
-			auto counter = 0;
-			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-				value(counter) = (*iter)->Eval<T>();
-			}
-		}
-
-		return value;
-	}
-
-
-	
-	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
-	// see
-	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-	template Vec<dbl> System::Eval(const Vec<dbl> & variable_values, dbl const& path_variable_value);
-	template Vec<mpfr> System::Eval(const Vec<mpfr> & variable_values, mpfr const& path_variable_value);
-
-
-	template<typename T>
-	Mat<T> System::Jacobian()
-	{
-		assert(is_differentiated_);
-		
-		auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
-
-		Mat<T> J(NumFunctions(), NumVariables());
-		for (int ii = 0; ii < NumFunctions(); ++ii)
-			for (int jj = 0; jj < NumVariables(); ++jj)
-				J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
-
-		return J;
-	}
-
-
-
-	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
-	// see
-	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-	template Mat<dbl> System::Jacobian();
-	template Mat<mpfr> System::Jacobian();
-
-	template<typename T>
-	Mat<T> System::Jacobian(const Vec<T> & variable_values)
-	{
-		if (variable_values.size()!=NumVariables())
-			throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
-
-		if (have_path_variable_)
-			throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
-
-
-		if (!is_differentiated_)
-		{
 			jacobian_.resize(NumFunctions());
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 			{
@@ -286,48 +166,9 @@ namespace bertini
 			is_differentiated_ = true;
 		}
 
-		SetVariables(variable_values);
-
-		return Jacobian<T>();
-	}
-
-	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
-	// see
-	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-	template Mat<dbl> System::Jacobian(const Vec<dbl> & variable_values);
-	template Mat<mpfr> System::Jacobian(const Vec<mpfr> & variable_values);
-
-	template<typename T>
-	Mat<T> System::Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
-	{
-		if (variable_values.size()!=NumVariables())
-			throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
-
-		if (!have_path_variable_)
-			throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 
 
-		if (!is_differentiated_)
-		{
-			jacobian_.resize(NumFunctions());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
-				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
-			}
-			is_differentiated_ = true;
-		}
 
-		SetVariables(variable_values);
-		SetPathVariable(path_variable_value);
-
-		return Jacobian<T>();
-	}
-
-	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
-	// see
-	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-	template Mat<dbl> System::Jacobian(const Vec<dbl> & variable_values, const dbl & path_variable_value);
-	template Mat<mpfr> System::Jacobian(const Vec<mpfr> & variable_values, const mpfr & path_variable_value);
 
 	void System::Homogenize()
 	{
@@ -464,72 +305,6 @@ namespace bertini
 		}
 		return true;
 	}
-	
-
-
-
-	//////////////////
-	//
-	// templated setters
-	//
-	/////////////////////////////
-
-
-	template<typename T>
-	void System::SetVariables(const Vec<T> & new_values)
-	{
-		assert(new_values.size()== NumVariables());
-
-		auto vars = Variables();
-
-		auto counter = 0;
-
-		for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
-			(*iter)->set_current_value(new_values(counter));
-		}
-
-	}
-
-
-	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
-	// see
-	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-	template void System::SetVariables(const Vec<dbl> & new_values);
-	template void System::SetVariables(const Vec<mpfr> & new_values);
-
-
-	template<typename T>
-	void System::SetPathVariable(T new_value)
-	{
-		if (!have_path_variable_)
-			throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
-
-		path_variable_->set_current_value(new_value);
-	}
-
-
-
-	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
-	// see
-	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
-	template void System::SetPathVariable(dbl T);
-	template void System::SetPathVariable(mpfr T);
-
-
-	template<typename T>
-	void System::SetImplicitParameters(Vec<T> new_values)
-	{
-		if (new_values.size()!= implicit_parameters_.size())
-			throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
-
-		size_t counter = 0;
-		for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++)
-			(*iter)->set_current_value(new_values(counter));
-
-	}
-
-	template void System::SetImplicitParameters(Vec<dbl> new_values);
-	template void System::SetImplicitParameters(Vec<mpfr> new_values);
 
 
 

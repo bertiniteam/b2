@@ -310,14 +310,14 @@ namespace bertini {
 		}
 		
 		/**
-		Constuct the number 0.
+		Constuct the number 1.
 		*/
 		inline static complex one(){
 			return complex("1.0","0.0");
 		}
 		
 		/**
-		Constuct the number 0.
+		Constuct the number 2.
 		*/
 		inline static complex two(){
 			return complex("2.0","0.0");
@@ -340,7 +340,7 @@ namespace bertini {
 		}
 		
 		/**
-		Constuct the number 0.
+		Constuct the number -1.
 		*/
 		inline static complex minus_one()
 		{
@@ -642,7 +642,7 @@ namespace bertini {
 	
 	
 	/**
-	 Complex-complex multiplication
+	 Complex-complex addition.
 	 */
 	inline complex operator+(complex lhs, const complex & rhs){
 		lhs += rhs;
@@ -650,7 +650,7 @@ namespace bertini {
 	}
 	
 	/**
-	 Complex-real multiplication
+	 Complex-real addition.
 	 */
 	inline complex operator+(complex lhs, const mpfr_float & rhs)
 	{
@@ -659,7 +659,7 @@ namespace bertini {
 	}
 	
 	/**
-	 Real-complex multiplication
+	 Real-complex addition.
 	 */
 	inline complex operator+(const mpfr_float & lhs, complex rhs)
 	{

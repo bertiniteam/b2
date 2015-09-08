@@ -104,6 +104,7 @@ BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, cos_lazy, cos
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sin_lazy, sin, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, tan_lazy, tan, 1);
 
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, log_lazy, log, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, exp_lazy, exp, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sqrt_lazy, sqrt, 1);
 
@@ -196,6 +197,7 @@ namespace bertini {
 			|   (lit("cos") > '(' > expression_ [_val = cos_lazy(_1)] > ')' )
 			|   (lit("tan") > '(' > expression_ [_val = tan_lazy(_1)] > ')' )
 			|   (lit("exp") > '(' > expression_ [_val = exp_lazy(_1)] > ')' )
+			|   (lit("log") > '(' > expression_ [_val = log_lazy(_1)] > ')' )
 			|   (lit("sqrt") > '(' > expression_ [_val = sqrt_lazy(_1)] > ')' )
 			;
 
@@ -225,8 +227,16 @@ namespace bertini {
 
 			number_.name("number_");
 			number_ =
-			long_number_string_ [ _val = make_shared_<Float>()(_1) ];
+				long_number_string_ [ _val = make_shared_<Float>()(_1) ]
+				|
+				integer_string_ [ _val = make_shared_<Integer>()(_1) ];
 
+
+
+
+			integer_string_.name("integer_string_");
+			integer_string_ = eps[_val = std::string()] >>
+			 number_with_no_point_ [_val += _1];
 
 
 			long_number_string_.name("long_number_string_");
@@ -236,13 +246,11 @@ namespace bertini {
 			 number_with_digits_after_point_ [_val += _1]
 			 |
 			 number_with_digits_before_point_ [_val += _1]
-			 |
-			 number_with_no_point_ [_val += _1]
 			 >>   // reminder -- the - before the exponent_notation here means optional
 			 - exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
 			 );
 
-
+			
 
 			number_with_digits_after_point_.name("number_with_digits_after_point_");
 			number_with_digits_after_point_ = eps[_val = std::string()]
@@ -350,7 +358,7 @@ namespace bertini {
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
 
 		// these rules all produce strings which are fed into numbers.
-		qi::rule<Iterator, std::string()> long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+		qi::rule<Iterator, std::string()> integer_string_, long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
 	};
 
 

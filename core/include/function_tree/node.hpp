@@ -72,7 +72,7 @@ public:
 	
 	virtual ~Node() = default;
 	
-    ///////// PUBLIC PURE METHODS /////////////////
+	///////// PUBLIC PURE METHODS /////////////////
   
 
 
@@ -84,38 +84,38 @@ public:
 		ResetStoredValues();
 	};
 	
-    ///////// END PUBLIC PURE METHODS /////////////////
-    
-    
-    
+	///////// END PUBLIC PURE METHODS /////////////////
+	
+	
+	
    
-    /**
-     Evaluate the node.  If flag false, just return value, if flag true
-     run the specific FreshEval of the node, then set flag to false.
+	/**
+	 Evaluate the node.  If flag false, just return value, if flag true
+	 run the specific FreshEval of the node, then set flag to false.
 
-     Template type is type of value you want returned.
+	 Template type is type of value you want returned.
 
-     \return The value of the node.
-     \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
-     */
-    template<typename T>
-    T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
-    {
-        auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-        if(!val_pair.second)
-        {
-            T input{};
-            val_pair.first = FreshEval(input, diff_variable);
-            val_pair.second = true;
-        }
+	 \return The value of the node.
+	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
+	 */
+	template<typename T>
+	T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
+	{
+		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+		if(!val_pair.second)
+		{
+			T input{};
+			val_pair.first = FreshEval(input, diff_variable);
+			val_pair.second = true;
+		}
  
 		
 		return val_pair.first;
-    }
+	}
 	
 
 	
-    
+	
 	
 	
 	///////// PUBLIC PURE METHODS /////////////////
@@ -123,32 +123,32 @@ public:
 	Virtual method for printing Nodes to arbitrary output streams.
 	*/
 	virtual void print(std::ostream& target) const = 0;
-    
+	
 
-    /**
+	/**
 	Virtual method for differentiating the node.  Produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
 
 	\return The Jacobian for the node.
 	*/
-    virtual std::shared_ptr<Node> Differentiate() = 0;
+	virtual std::shared_ptr<Node> Differentiate() = 0;
 
 
 
-    /**
+	/**
 	Compute the degree, optionally with respect to a single variable.
 
 	\param v Shared pointer to variable with respect to which you want to compute the degree of the Node.
 	\return The degree.  Will be negative if the Node is non-polynomial.
-    */
-    virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+	*/
+	virtual int Degree(std::shared_ptr<Variable> const& v = nullptr) const = 0;
 
 
 
-    /**
+	/**
 	 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 
 	 \return A vector containing the degrees.  Negative entries indicate non-polynomiality.
-    */
+	*/
 	virtual std::vector<int> MultiDegree(VariableGroup const& vars) const = 0;
 
 	/**
@@ -180,9 +180,9 @@ public:
 	\return True if it is homogeneous, false if not.
 	*/
 	virtual bool IsHomogeneous(VariableGroup const& vars) const = 0;
-    
-    
-    /**
+	
+	
+	/**
 	 Change the precision of this variable-precision tree node.
 	 
 	 \param prec the number of digits to change precision to.
@@ -218,39 +218,39 @@ public:
 	
 
 protected:
-    //Stores the current value of the node in all required types
-    //We must hard code in all types that we want here.
-    //TODO: Initialize this to some default value, second = false
-    std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value_;
-    
-    
-    
-    ///////// PRIVATE PURE METHODS /////////////////
+	//Stores the current value of the node in all required types
+	//We must hard code in all types that we want here.
+	//TODO: Initialize this to some default value, second = false
+	std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value_;
+	
+	
+	
+	///////// PRIVATE PURE METHODS /////////////////
 //    virtual dbl FreshEval(dbl) = 0;
 //    virtual mpfr FreshEval(mpfr) = 0;
-    
-    /**
+	
+	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
 
 	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
-    */
-    virtual dbl FreshEval(dbl, std::shared_ptr<Variable>) = 0;
+	*/
+	virtual dbl FreshEval(dbl, std::shared_ptr<Variable>) = 0;
 
-    /**
+	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
 
 	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
-    */
-    virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable>) = 0;
+	*/
+	virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable>) = 0;
 	
 	
 	
-    ///////// END PRIVATE PURE METHODS /////////////////
-    
-    
-    /**
+	///////// END PRIVATE PURE METHODS /////////////////
+	
+	
+	/**
 	Set the stored values for the Node to indicate a fresh eval on the next pass.  This is so that Nodes which are referred to more than once, are only evaluated once.  The first evaluation is fresh, and then the indicator for fresh/stored is set to stored.  Subsequent evaluation calls simply return the stored number.
-    */
+	*/
 	void ResetStoredValues()
 	{
 		std::get< std::pair<dbl,bool> >(current_value_).second = false;
