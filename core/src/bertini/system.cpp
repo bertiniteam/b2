@@ -192,6 +192,16 @@ namespace bertini
 		return value;
 	}
 
+
+	void System::Differentiate()
+	{
+		jacobian_.resize(NumFunctions());
+		for (int ii = 0; ii < NumFunctions(); ++ii)
+		{
+			jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
+		}
+		is_differentiated_ = true;
+	}
 	// these two lines are explicit instantiations of the template above.  template definitions separate from declarations cause linking problems.  
 	// see
 	// https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl
@@ -255,14 +265,8 @@ namespace bertini
 
 
 		if (!is_differentiated_)
-		{
-			jacobian_.resize(NumFunctions());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
-				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
-			}
-			is_differentiated_ = true;
-		}
+			Differentiate();
+
 
 		SetVariables(variable_values);
 
@@ -293,14 +297,7 @@ namespace bertini
 
 
 		if (!is_differentiated_)
-		{
-			jacobian_.resize(NumFunctions());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
-				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
-			}
-			is_differentiated_ = true;
-		}
+			Differentiate();
 
 		SetVariables(variable_values);
 		SetPathVariable(path_variable_value);

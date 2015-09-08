@@ -81,6 +81,10 @@ namespace bertini {
 		void precision(unsigned new_precision);
 
 
+		/**
+		 \brief Compute and store the symbolic Jacobian of the system.
+		*/
+		void Differentiate();
 
 		/**
 		Evaluate the system, provided the system has no path variable defined.
