@@ -149,7 +149,6 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
     using mpfr_float = boost::multiprecision::mpfr_float;
     boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
 
-// std::cout << "RELEVANT TEST\n\n";
     std::string str = "function f; variable_group x,y,z; f = 3*x*y*z;";
 
     bertini::System sys;
