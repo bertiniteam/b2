@@ -36,13 +36,13 @@
 
 #include "mpfr_complex.hpp"
 
-#include <boost/timer/timer.hpp>
+
 
 
 extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;
-extern double threshold_clearance_mp;
-extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
+extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 
 using mpfr_float = boost::multiprecision::mpfr_float;
@@ -258,9 +258,9 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	BOOST_AUTO_TEST_CASE(small_value_multiprecision)
 	{
 
-		boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
+		boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		boost::multiprecision::mpfr_float p = pow(mpfr_float(10),-mpfr_float(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS));
+		boost::multiprecision::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
 
 		BOOST_CHECK( bertini::IsSmallValue(bertini::complex(p,mpfr_float(0))));
 		BOOST_CHECK( bertini::IsSmallValue(bertini::complex(-p,mpfr_float(0))));
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(large_change_multiprecision)
 	{
-		boost::multiprecision::mpfr_float p = pow(mpfr_float(10),-mpfr_float(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS));
+		boost::multiprecision::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
 
 		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(1.0),p));
 

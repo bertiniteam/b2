@@ -40,8 +40,8 @@ using VariableGroup = bertini::VariableGroup;
 
 
 extern double threshold_clearance_d;
-extern double threshold_clearance_mp;
-extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
+extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
@@ -69,8 +69,6 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 
 
 	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-
-	std::cout << std::string(iter,end);
 
 
 	BOOST_CHECK(s && iter==end);

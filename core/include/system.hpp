@@ -52,6 +52,7 @@
 namespace bertini {
 
 	
+
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
 	
@@ -79,6 +80,8 @@ namespace bertini {
 		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), ordering_(OrderingChoice::FIFO)
 		{}
 
+		System(std::string const& input);
+		
 
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
@@ -107,6 +110,14 @@ namespace bertini {
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value);
 
+
+		/**
+		Evaluate the Jacobian matrix of the system, using the previous space and time values.
+
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		*/
+		template<typename T>
+		Mat<T> Jacobian();
 
 		/**
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.

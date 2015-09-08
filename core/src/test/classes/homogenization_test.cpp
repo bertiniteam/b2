@@ -33,7 +33,6 @@
 
 using Var = std::shared_ptr<bertini::node::Variable>;
 using Float = std::shared_ptr<bertini::node::Float>;
-
 using VariableGroup = bertini::VariableGroup;
 
 BOOST_AUTO_TEST_SUITE(homogenization)
