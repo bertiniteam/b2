@@ -906,5 +906,56 @@ namespace bertini{
 	}
 
 	
+
+
+
+
+
+
+
+
+	///////////////
+	//
+	//  LogOperator definitions
+	//
+	//////////////
+	
+	void LogOperator::print(std::ostream & target) const
+	{
+		target << "log(";
+		child_->print(target);
+		target << ")";
+	}
+	
+	std::shared_ptr<Node> LogOperator::Differentiate()
+	{
+		auto ret_mult = std::make_shared<MultOperator>();
+		ret_mult->AddChild(child_,false);
+		ret_mult->AddChild(child_->Differentiate());
+		return ret_mult;
+	}
+	
+	int LogOperator::Degree(std::shared_ptr<Variable> const& v) const
+	{
+		if (child_->Degree(v)==0)
+		{
+			return 0;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	
+	dbl LogOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+	{
+		return log(child_->Eval<dbl>(diff_variable));
+	}
+	
+	mpfr LogOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+	{
+		return log(child_->Eval<mpfr>(diff_variable));
+	}
+
 } // re: namespace node
 } // re: namespace bertini

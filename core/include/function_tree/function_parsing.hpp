@@ -104,6 +104,7 @@ BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, cos_lazy, cos
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sin_lazy, sin, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, tan_lazy, tan, 1);
 
+BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, log_lazy, log, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, exp_lazy, exp, 1);
 BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sqrt_lazy, sqrt, 1);
 
@@ -196,6 +197,7 @@ namespace bertini {
 			|   (lit("cos") > '(' > expression_ [_val = cos_lazy(_1)] > ')' )
 			|   (lit("tan") > '(' > expression_ [_val = tan_lazy(_1)] > ')' )
 			|   (lit("exp") > '(' > expression_ [_val = exp_lazy(_1)] > ')' )
+			|   (lit("log") > '(' > expression_ [_val = log_lazy(_1)] > ')' )
 			|   (lit("sqrt") > '(' > expression_ [_val = sqrt_lazy(_1)] > ')' )
 			;
 

@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
     
     N *= N;
     
-    x->set_current_value<dbl>(std::complex<double>(3.1, 4.1));
-    x->set_current_value<mpfr>(bertini::complex(xstr_real, xstr_imag));
+    x->set_current_value<dbl>(std::complex<double>(xnum_dbl));
+    x->set_current_value<mpfr>(bertini::complex(xnum_mpfr));
     
     BOOST_CHECK(N->IsPolynomial());
 
@@ -147,8 +147,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
     
     std::shared_ptr<Node> N = pow(x, 1.0/2);
     
-    x->set_current_value<dbl>(std::complex<double>(3.1, 4.1));
-    x->set_current_value<mpfr>(bertini::complex(xstr_real, xstr_imag));
+    x->set_current_value<dbl>(std::complex<double>(xnum_dbl));
+    x->set_current_value<mpfr>(bertini::complex(xnum_mpfr));
     
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
@@ -283,6 +283,51 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+
+    N = -a-y+x;
+    BOOST_CHECK_EQUAL(N->Degree(),1);
+    BOOST_CHECK_EQUAL(N->Degree(x),1);
+    BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+
+    N = -a+x-y;
+    BOOST_CHECK_EQUAL(N->Degree(),1);
+    BOOST_CHECK_EQUAL(N->Degree(x),1);
+    BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+    N = -y-a+x;
+    BOOST_CHECK_EQUAL(N->Degree(),1);
+    BOOST_CHECK_EQUAL(N->Degree(x),1);
+    BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+
+    N = -y+x-a;
+    BOOST_CHECK_EQUAL(N->Degree(),1);
+    BOOST_CHECK_EQUAL(N->Degree(x),1);
+    BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+
     
 }
 
@@ -390,6 +435,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
     BOOST_CHECK_EQUAL(N->Degree(x),1);
     BOOST_CHECK_EQUAL(N->Degree(y),-1);
 
+    BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK(! N->IsPolynomial());
 
     BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
@@ -401,6 +447,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
     exact_mpfr = ynum_mpfr/xnum_mpfr;
     
     N = y/x;
+
+    BOOST_CHECK(! N->IsPolynomial());
+
     BOOST_CHECK_EQUAL(N->Degree(),-1);
     BOOST_CHECK_EQUAL(N->Degree(x),-1);
     BOOST_CHECK_EQUAL(N->Degree(y),1);
@@ -884,6 +933,27 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_over_num){
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
     
+
+
+    N = (x*y)/a;
+    BOOST_CHECK_EQUAL(N->Degree(),2);
+    BOOST_CHECK_EQUAL(N->Degree(x),1);
+    BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+    N = x/a*y;
+    BOOST_CHECK_EQUAL(N->Degree(),2);
+    BOOST_CHECK_EQUAL(N->Degree(x),1);
+    BOOST_CHECK_EQUAL(N->Degree(y),1);
+
+    BOOST_CHECK_SMALL(N->Eval<dbl>().real()/exact_dbl.real()-1.0,  threshold_clearance_d);
+    BOOST_CHECK_SMALL(N->Eval<dbl>().imag()/exact_dbl.imag()-1.0,  threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
 }
 
 
@@ -894,7 +964,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_times_ly_plus_num2l){
     std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
     std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
     std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-    std::shared_ptr<Float> b = std::make_shared<Float>("-0.2", "-2.1");
+    std::shared_ptr<Float> b = std::make_shared<Float>(bstr_real, bstr_imag);
     
     x->set_current_value<dbl>(xnum_dbl);
     y->set_current_value<dbl>(ynum_dbl);
@@ -926,7 +996,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_times_y_plus_num2){
     std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
     std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
     std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-    std::shared_ptr<Float> b = std::make_shared<Float>("-0.2", "-2.1");
+    std::shared_ptr<Float> b = std::make_shared<Float>(bstr_real, bstr_imag);
     
     x->set_current_value<dbl>(xnum_dbl);
     y->set_current_value<dbl>(ynum_dbl);
@@ -957,7 +1027,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_over_ly_plus_num2l){
     std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
     std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
     std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-    std::shared_ptr<Float> b = std::make_shared<Float>("-0.2", "-2.1");
+    std::shared_ptr<Float> b = std::make_shared<Float>(bstr_real, bstr_imag);
     
     x->set_current_value<dbl>(xnum_dbl);
     y->set_current_value<dbl>(ynum_dbl);
@@ -988,7 +1058,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_over_y_plus_num2){
     std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
     std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
     std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-    std::shared_ptr<Float> b = std::make_shared<Float>("-0.2", "-2.1");
+    std::shared_ptr<Float> b = std::make_shared<Float>(bstr_real, bstr_imag);
     
     x->set_current_value<dbl>(xnum_dbl);
     y->set_current_value<dbl>(ynum_dbl);
@@ -1122,7 +1192,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_over_num1){
     using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
+    
     
     std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
     std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1144,6 +1214,43 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_over_num1){
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+}
+
+
+BOOST_AUTO_TEST_CASE(manual_construction_pow_lsqrt_xl_num)
+{
+    boost::multiprecision::mpfr_float::default_precision(FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS);
+
+    auto exact_dbl = pow(sqrt(xnum_dbl),anum_dbl);
+    auto exact_mpfr = pow(sqrt(xnum_mpfr),anum_mpfr);
+
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+    
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(xnum_mpfr);
+
+    std::shared_ptr<Node> N = pow(sqrt(x),a);
+    BOOST_CHECK_EQUAL(N->Degree(),-1);
+    BOOST_CHECK_EQUAL(N->Degree(x),-1);
+
+    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+    N = pow(x,1/2.0); // N = sqrt(x)
+    BOOST_CHECK_EQUAL(N->Degree(),-1);
+    BOOST_CHECK_EQUAL(N->Degree(x),-1);
+    N = pow(N,a); // N = sqrt(x)^a
+    BOOST_CHECK_EQUAL(N->Degree(),-1);
+    BOOST_CHECK_EQUAL(N->Degree(x),-1);
+
+    BOOST_CHECK_SMALL(N->Eval<dbl>().real() / exact_dbl.real() -1, threshold_clearance_d);
+    BOOST_CHECK_SMALL(N->Eval<dbl>().imag() - exact_dbl.imag(), 10*threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
 }
 
 
@@ -1529,6 +1636,8 @@ BOOST_AUTO_TEST_CASE(arcsine_evaluate)
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+    BOOST_CHECK(!N->IsPolynomial());
 }
 
 
@@ -1547,6 +1656,8 @@ BOOST_AUTO_TEST_CASE(arccosine_evaluate)
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+    BOOST_CHECK(!N->IsPolynomial());
 }
 
 BOOST_AUTO_TEST_CASE(arctangent_evaluate)
@@ -1564,8 +1675,29 @@ BOOST_AUTO_TEST_CASE(arctangent_evaluate)
     BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
     BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
     BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+    BOOST_CHECK(!N->IsPolynomial());
 }
 
+
+BOOST_AUTO_TEST_CASE(log_evaluate)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    auto N = log(pow(x,2)+1);
+
+    x->set_current_value<dbl>(xnum_dbl);
+    x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+
+    dbl exact_dbl = log(pow(xnum_dbl,2)+1.0);
+    mpfr exact_mpfr = log(pow(xnum_mpfr,2)+bertini::complex(1.0));
+
+    BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+
+    BOOST_CHECK(!N->IsPolynomial());
+}
 
 
 ///////////// Special Numbers ///////////////////
@@ -1626,6 +1758,31 @@ BOOST_AUTO_TEST_CASE(manual_construction_i){
 
 
 
+
+BOOST_AUTO_TEST_CASE(function_tree_combine_product_of_two_integer_powers)
+{
+    std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+    std::shared_ptr<Node> N,M,P;
+
+    N = pow(x,5);
+    M = pow(x,2);
+
+    P = N*M;
+    BOOST_CHECK_EQUAL(P->Degree(), 7);
+
+    BOOST_CHECK(std::dynamic_pointer_cast<bertini::node::IntegerPowerOperator>(P));
+
+    P = N/M;
+    BOOST_CHECK(std::dynamic_pointer_cast<bertini::node::IntegerPowerOperator>(P));
+    BOOST_CHECK_EQUAL(P->Degree(), 3);
+
+    N = pow(x,3);
+    M = pow(x,-1);
+
+    P = N/M;
+    BOOST_CHECK(std::dynamic_pointer_cast<bertini::node::IntegerPowerOperator>(P));
+    BOOST_CHECK_EQUAL(P->Degree(), 4);
+}
 
 
 
