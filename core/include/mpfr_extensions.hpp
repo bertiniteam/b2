@@ -183,7 +183,8 @@ namespace bertini {
 	 
 	 \note this function calls the templated function RandomMpfr.
 	 
-	 \param number_to_make_random The number whose contents you are overwriting with a random number.
+	 \tparam T the number type to generate.
+	 \return The random number.
 	 */
 	template <typename T>
 	T RandomMp();
@@ -193,9 +194,9 @@ namespace bertini {
 	/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
 	 
+	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
 	 \return number_to_make_random The number which you desire to populate with a random number.
-	 
 	 */
 	template <typename T, unsigned int length_in_digits>
 	T RandomMpUniformUnitInterval();
@@ -210,9 +211,12 @@ namespace bertini {
 	/**
 	 a templated function for producing random numbers in a specified interval, of a given number of digits.
 	 
+	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
 	 \return number_to_make_random The number which you desire to populate with a random number.
 	 
+	 \param a The left bound.
+	 \param b The right bound.
 	 */
 	template <typename T, unsigned int length_in_digits>
 	T RandomMpUniformInInterval(const T & a, const T & b);
@@ -224,7 +228,11 @@ namespace bertini {
 	 
 	 \note this function calls the templated function RandomMpfrUniformInInterval.
 	 
-	 \param number_to_make_random The number whose contents you are overwriting with a random number.
+	 \tparam T the number type to generate.
+	 \param a The left bound.
+	 \param b The right bound.
+
+	 \return The random number.
 	 */
 	template <typename T>
 	T RandomMp(const T & a, const T & b);
