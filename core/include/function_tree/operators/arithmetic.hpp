@@ -6,7 +6,7 @@
 //(at your option) any later version.
 //
 //arithmetic.hpp is distributed in the hope that it will be useful,
-//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//but WITHOUT ANY WARRANTY; without even the implied wrhsanty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
@@ -1120,13 +1120,16 @@ namespace node{
 		if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
 		{
 
-			auto ell_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
-			auto arr_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
-			if (ell_as_intpow->first_child()==arr_as_intpow->first_child())
+			auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
+			auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
+			if (lhs_as_intpow->first_child()==rhs_as_intpow->first_child())
 			{
-				std::shared_ptr<Node> temp = pow(ell_as_intpow->first_child(),ell_as_intpow->exponent() + arr_as_intpow->exponent());
-				lhs.swap(temp);
-				return lhs;
+				if (lhs_as_intpow->exponent()>=0 && rhs_as_intpow->exponent()>=0)
+				{
+					std::shared_ptr<Node> temp = pow(lhs_as_intpow->first_child(),lhs_as_intpow->exponent() + rhs_as_intpow->exponent());
+					lhs.swap(temp);
+					return lhs;
+				}
 			}
 		}
 
@@ -1156,18 +1159,18 @@ namespace node{
 	inline std::shared_ptr<Node>& operator/=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 
-		if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
-		{
+		// if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
+		// {
 
-			auto ell_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
-			auto arr_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
-			if (ell_as_intpow->first_child()==arr_as_intpow->first_child())
-			{
-				std::shared_ptr<Node> temp = pow(ell_as_intpow->first_child(),ell_as_intpow->exponent() - arr_as_intpow->exponent());
-				lhs.swap(temp);
-				return lhs;
-			}
-		}
+		// 	auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
+		// 	auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
+		// 	if (lhs_as_intpow->first_child()==rhs_as_intpow->first_child())
+		// 	{
+		// 		std::shared_ptr<Node> temp = pow(lhs_as_intpow->first_child(),lhs_as_intpow->exponent() - rhs_as_intpow->exponent());
+		// 		lhs.swap(temp);
+		// 		return lhs;
+		// 	}
+		// }
 
 
 		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
