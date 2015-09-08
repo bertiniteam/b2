@@ -53,23 +53,23 @@ namespace node{
 		}
 
 
-        
+		
 
-       
+	   
 
 
 		/**
 		Compute the degree with respect to a single variable.
 
 		For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-	    */
-	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-	    {
-	    	return 0;
-	    }
+		*/
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return 0;
+		}
 
 
-	    int Degree(VariableGroup const& vars) const override
+		int Degree(VariableGroup const& vars) const override
 		{
 			return 0;
 		}
@@ -80,7 +80,7 @@ namespace node{
 		}
 
 
-	    void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			
 		}
@@ -208,25 +208,25 @@ namespace node{
 
 
 		/**
-         Differentiates a number.  Should this return the special number Zero?
-         */
-        std::shared_ptr<Node> Differentiate() override
-        {
-            return std::make_shared<Float>(0.0);
-        }
+		 Differentiates a number.  Should this return the special number Zero?
+		 */
+		std::shared_ptr<Node> Differentiate() override
+		{
+			return std::make_shared<Float>(0.0);
+		}
 
 
 	private:
 		// Return value of constant
-        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            return dbl(highest_precision_value_);
-        }
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		{
+			return dbl(highest_precision_value_);
+		}
 
-        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            return mpfr(highest_precision_value_);
-        }
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			return mpfr(highest_precision_value_);
+		}
 
 		mpfr highest_precision_value_;
 
@@ -248,11 +248,20 @@ namespace node{
 	class Integer : public virtual Number
 	{
 	public:
+		using mpz_int = boost::multiprecision::mpz_int;
+
 		Integer()
 		{}
 
 		Integer(int val) : true_value_(val)
 		{}
+
+		Integer(mpz_int val) : true_value_(val)
+		{}
+
+		Integer(std::string const& val) : true_value_(val)
+		{}
+
 
 		~Integer() = default;
 		
@@ -266,29 +275,29 @@ namespace node{
 
 
 		/**
-         Differentiates a number.  Should this return the special number Zero?
-         */
-        std::shared_ptr<Node> Differentiate() override
-        {
-            return std::make_shared<Integer>(0);
-        }
+		 Differentiates a number.  Should this return the special number Zero?
+		 */
+		std::shared_ptr<Node> Differentiate() override
+		{
+			return std::make_shared<Integer>(0);
+		}
 
 
 
 	private:
 
 		// Return value of constant
-        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            return dbl(true_value_,0.0);
-        }
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		{
+			return dbl(double(true_value_),0.0);
+		}
 
-        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            return mpfr(true_value_,0.0);
-        }
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			return mpfr(true_value_,0.0);
+		}
 
-		int true_value_;
+		mpz_int true_value_;
 
 		friend class boost::serialization::access;
 
@@ -322,7 +331,7 @@ namespace node{
 		{}
 
 		Rational(int val_real_numerator, int val_real_denomenator,
-		         int val_imag_numerator, int val_imag_denomenator) 
+				 int val_imag_numerator, int val_imag_denomenator) 
 					:
 					 true_value_real_(val_real_numerator,val_real_denomenator), true_value_imag_(val_imag_numerator,val_imag_denomenator)
 		{}
@@ -357,27 +366,27 @@ namespace node{
 
 
 		/**
-         Differentiates a number.  
-         */
-        std::shared_ptr<Node> Differentiate() override
-        {
-            return std::make_shared<Integer>(0);
-        }
+		 Differentiates a number.  
+		 */
+		std::shared_ptr<Node> Differentiate() override
+		{
+			return std::make_shared<Integer>(0);
+		}
 
 
 
 	private:
 
 		// Return value of constant
-        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            return dbl(double(true_value_real_),double(true_value_imag_));
-        }
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		{
+			return dbl(double(true_value_real_),double(true_value_imag_));
+		}
 
-        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
-        }
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
+		}
 
 		mpq_rational true_value_real_, true_value_imag_;
 

@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 	vars.push_back(h);
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 	vars.push_back(h);
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 	vars.push_back(h);
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 	vars.push_back(h);
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 	vars.push_back(h);
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }	
 
 
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 	vars.push_back(h);
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 	vars.push_back(h);
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 	vars.push_back(h);
 	BOOST_CHECK(f1->IsHomogeneous(vars));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_sin_x)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-    BOOST_CHECK(!f1->IsPolynomial());
+	BOOST_CHECK(!f1->IsPolynomial());
 }
 
 
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_cos_x)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-    BOOST_CHECK(!f1->IsPolynomial());
+	BOOST_CHECK(!f1->IsPolynomial());
 }
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_tan_x)
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_tan_x)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-    BOOST_CHECK(!f1->IsPolynomial());
+	BOOST_CHECK(!f1->IsPolynomial());
 }
 
 
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_exp_x)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-    BOOST_CHECK(!f1->IsPolynomial());
+	BOOST_CHECK(!f1->IsPolynomial());
 }
 
 
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_sqrt_x)
 	
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-    BOOST_CHECK(!f1->IsPolynomial());
+	BOOST_CHECK(!f1->IsPolynomial());
 }
 
 
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 	
 	BOOST_CHECK(f1->IsHomogeneous());
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 	
 	BOOST_CHECK(f1->IsHomogeneous());
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_1_plus_1)
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_sin_1_plus_1)
 	
 	BOOST_CHECK(f1->IsHomogeneous());
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 
@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 	BOOST_CHECK(f1->IsHomogeneous(y));
 
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 
 }
 
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 	BOOST_CHECK(!f1->IsHomogeneous(x));
 	BOOST_CHECK( f1->IsHomogeneous(y));
 
-    BOOST_CHECK(f1->IsPolynomial());
+	BOOST_CHECK(f1->IsPolynomial());
 }
 
 

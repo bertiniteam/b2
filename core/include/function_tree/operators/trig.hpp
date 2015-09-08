@@ -55,9 +55,9 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<UnaryOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<UnaryOperator>(*this);
+		}
 
 
 	};
@@ -114,9 +114,9 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<TrigOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<TrigOperator>(*this);
+		}
 	};
 	
 
@@ -167,9 +167,9 @@ namespace node{
 		
 
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<TrigOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<TrigOperator>(*this);
+		}
 	};
 
 
@@ -229,9 +229,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<TrigOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<TrigOperator>(*this);
+		}
 	};
 	
 	
@@ -285,9 +285,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<TrigOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<TrigOperator>(*this);
+		}
 	};
 	
 	
@@ -349,9 +349,9 @@ namespace node{
 		
 
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<TrigOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<TrigOperator>(*this);
+		}
 	};
 	
 	
@@ -404,9 +404,9 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-        	ar & boost::serialization::base_object<TrigOperator>(*this);
-        }
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<TrigOperator>(*this);
+		}
 	};
 	
 	

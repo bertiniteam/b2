@@ -32,99 +32,99 @@
 
 namespace bertini {
 namespace node{
-    class Variable;
+	class Variable;
 
 
-    /**
+	/**
 	\brief Provides the differential type for differentiation of expression trees.
 
-    This class represents differentials.  These are produced in the course of differentiation of a non-constant expression tree.
-    */
-    class Differential : public virtual NamedSymbol
-    {
-    public:
-        Differential(){};
+	This class represents differentials.  These are produced in the course of differentiation of a non-constant expression tree.
+	*/
+	class Differential : public virtual NamedSymbol
+	{
+	public:
+		Differential(){};
 
 
-        /**
-         Input shared_ptr to a Variable.
-         */
-        Differential(std::shared_ptr<Variable> diff_variable, std::string var_name)
-        {
-            differential_variable_ = diff_variable;
-            name("d" + var_name);
-        }
-
-
-
-
-
-        std::shared_ptr<Variable> GetVariable() const 
-        {
-            return differential_variable_;
-        }
-
-
-        void print(std::ostream & target) const override
-        {
-            target << name();
-        }
-
-
-
-        /**
-         Differentiates a number.  Should this return the special number Zero?
-         */
-        std::shared_ptr<Node> Differentiate() override
-        {
-            return std::make_shared<Float>(0.0);
-        }
-
-
-
-        virtual ~Differential() = default;
+		/**
+		 Input shared_ptr to a Variable.
+		 */
+		Differential(std::shared_ptr<Variable> diff_variable, std::string var_name)
+		{
+			differential_variable_ = diff_variable;
+			name("d" + var_name);
+		}
 
 
 
 
-        /**
-        Compute the degree with respect to a single variable.   For differentials, the degree is 0.
-        */
-        int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-        {
-            return 0;
-        }
 
-        int Degree(VariableGroup const& vars) const override
+		std::shared_ptr<Variable> GetVariable() const 
+		{
+			return differential_variable_;
+		}
+
+
+		void print(std::ostream & target) const override
+		{
+			target << name();
+		}
+
+
+
+		/**
+		 Differentiates a number.  Should this return the special number Zero?
+		 */
+		std::shared_ptr<Node> Differentiate() override
+		{
+			return std::make_shared<Float>(0.0);
+		}
+
+
+
+		virtual ~Differential() = default;
+
+
+
+
+		/**
+		Compute the degree with respect to a single variable.   For differentials, the degree is 0.
+		*/
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return 0;
+		}
+
+		int Degree(VariableGroup const& vars) const override
 		{
 			return 0;
 		}
 		
-        std::vector<int> MultiDegree(VariableGroup const& vars) const override
-        {
-            return std::vector<int>(vars.size(),0);
-        }
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override
+		{
+			return std::vector<int>(vars.size(),0);
+		}
 
-        void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
-        {
-            
-        }
-        
-        bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-        {
-            return true;
-        }
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+		{
+			
+		}
+		
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			return true;
+		}
 
-        /**
-        Check for homogeneity, with respect to a variable group.
-        */
-        bool IsHomogeneous(VariableGroup const& vars) const override
-        {
-            return true;
-        }
-        
+		/**
+		Check for homogeneity, with respect to a variable group.
+		*/
+		bool IsHomogeneous(VariableGroup const& vars) const override
+		{
+			return true;
+		}
+		
 
-        /**
+		/**
 		 Change the precision of this variable-precision tree node.
 		 
 		 \param prec the number of digits to change precision to.
@@ -136,45 +136,45 @@ namespace node{
 		}
 
 		
-    protected:
-        // This should never be called for a Differential.  Only for Jacobians.
-        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            if(differential_variable_ == diff_variable)
-            {
-                return 1.0;
-            }
-            else
-            {
-                return 0.0;
-            }
-        }
+	protected:
+		// This should never be called for a Differential.  Only for Jacobians.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		{
+			if(differential_variable_ == diff_variable)
+			{
+				return 1.0;
+			}
+			else
+			{
+				return 0.0;
+			}
+		}
 
-        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            if(differential_variable_ == diff_variable)
-            {
-                return mpfr("1.0");
-            }
-            else
-            {
-                return mpfr("0.0");
-            }
-        }
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			if(differential_variable_ == diff_variable)
+			{
+				return mpfr("1.0");
+			}
+			else
+			{
+				return mpfr("0.0");
+			}
+		}
 
 
-    private:
-        std::shared_ptr<Variable> differential_variable_;
+	private:
+		std::shared_ptr<Variable> differential_variable_;
 
-        friend class boost::serialization::access;
-        
-        template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-            ar & boost::serialization::base_object<NamedSymbol>(*this);
-            ar & differential_variable_;
-        }
+		friend class boost::serialization::access;
+		
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<NamedSymbol>(*this);
+			ar & differential_variable_;
+		}
 
-    };
+	};
 
 } // re: namespace node
 } // re: namespace bertini

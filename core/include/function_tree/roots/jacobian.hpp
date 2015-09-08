@@ -30,79 +30,79 @@
 
 namespace bertini {
 namespace node{    
-    
-    /**
-    \brief Defines the entry point into a Jacobian tree.
+		
+		/**
+		\brief Defines the entry point into a Jacobian tree.
 
-     This class defines a Jacobian tree.  It stores the entry node for a particular functions tree.
-     */
-    class Jacobian : public Function
-    {
-    public:
-        
-        
-        /**
-         The default constructor
-         */
-        Jacobian()
-        {};
-        
-        
-        /**
-         Constructor defines entry node at construct time.
-         */
-        Jacobian(const std::shared_ptr<Node> & entry) : Function(entry)
-        {
-        }
-        
-        
-        /**
-         Jacobians must be evaluated with EvalJ, so that when current_diff_variable changes
-         the Jacobian is reevaluated.
-         */
-        template<typename T>
-        T Eval(std::shared_ptr<Variable> diff_variable = nullptr) = delete;
-        
-        
-        // Evaluate the node.  If flag false, just return value, if flag true
-        //  run the specific FreshEval of the node, then set flag to false.
-        //
-        // Template type is type of value you want returned.
-        template<typename T>
-        T EvalJ(std::shared_ptr<Variable> diff_variable)
-        {
-            //		this->print(std::cout);
-            //		std::cout << " has value ";
-            
-            auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-            auto& variable_pair = std::get< std::pair<T,std::shared_ptr<Variable>> >(current_diff_variable_);
-            if(diff_variable != variable_pair.second)
-            {
-                //            std::cout << "Fresh Eval\n";
-                variable_pair.second = diff_variable;
-                Reset();
-                T input{};
-                val_pair.first = FreshEval(input, diff_variable);
-                val_pair.second = true;
-            }
-            
-            
-            //		std::cout << val_pair.first << std::endl;
-            return val_pair.first;
-        }
-        
+		 This class defines a Jacobian tree.  It stores the entry node for a particular functions tree.
+		 */
+		class Jacobian : public Function
+		{
+		public:
+				
+				
+				/**
+				 The default constructor
+				 */
+				Jacobian()
+				{};
+				
+				
+				/**
+				 Constructor defines entry node at construct time.
+				 */
+				Jacobian(const std::shared_ptr<Node> & entry) : Function(entry)
+				{
+				}
+				
+				
+				/**
+				 Jacobians must be evaluated with EvalJ, so that when current_diff_variable changes
+				 the Jacobian is reevaluated.
+				 */
+				template<typename T>
+				T Eval(std::shared_ptr<Variable> diff_variable = nullptr) = delete;
+				
+				
+				// Evaluate the node.  If flag false, just return value, if flag true
+				//  run the specific FreshEval of the node, then set flag to false.
+				//
+				// Template type is type of value you want returned.
+				template<typename T>
+				T EvalJ(std::shared_ptr<Variable> diff_variable)
+				{
+						//		this->print(std::cout);
+						//		std::cout << " has value ";
+						
+						auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+						auto& variable_pair = std::get< std::pair<T,std::shared_ptr<Variable>> >(current_diff_variable_);
+						if(diff_variable != variable_pair.second)
+						{
+								//            std::cout << "Fresh Eval\n";
+								variable_pair.second = diff_variable;
+								Reset();
+								T input{};
+								val_pair.first = FreshEval(input, diff_variable);
+								val_pair.second = true;
+						}
+						
+						
+						//		std::cout << val_pair.first << std::endl;
+						return val_pair.first;
+				}
+				
 
 
 
-        
+				
 
-        
-        virtual ~Jacobian() = default;
-        
-      
-        
-        
-  //       /**
+				
+				virtual ~Jacobian() = default;
+				
+			
+				
+				
+	//       /**
 		//  Change the precision of this variable-precision tree node.
 		 
 		//  \param prec the number of digits to change precision to.
@@ -112,21 +112,21 @@ namespace node{
 		// 	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 		// 	val_pair.first.precision(prec);
 		// }
-        
-        
-    
-        // /**
-        // The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
-        // */
-        // int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-        // {
-        //     return entry_node_->Degree(v);
-        // }
+				
+				
+		
+				// /**
+				// The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
+				// */
+				// int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+				// {
+				//     return entry_node_->Degree(v);
+				// }
 
-  //       /**
-  //       The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
-  //       */
-  //       int Degree(VariableGroup const& vars) const override
+	//       /**
+	//       The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
+	//       */
+	//       int Degree(VariableGroup const& vars) const override
 		// {
 		// 	return entry_node_->Degree(vars);
 		// }
@@ -159,17 +159,17 @@ namespace node{
 		// 	return entry_node_->IsHomogeneous(vars);
 		// }
 
-        std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
-        
-    private:
-        friend class boost::serialization::access;
+				std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
+				
+		private:
+				friend class boost::serialization::access;
 		
-        template <typename Archive>
-        void serialize(Archive& ar, const unsigned version) {
-            ar & boost::serialization::base_object<Function>(*this);
-        }
-    };
-    
+				template <typename Archive>
+				void serialize(Archive& ar, const unsigned version) {
+						ar & boost::serialization::base_object<Function>(*this);
+				}
+		};
+		
 } // re: namespace node
 } // re: namespace bertini
 
