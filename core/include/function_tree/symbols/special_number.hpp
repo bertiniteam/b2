@@ -35,49 +35,49 @@
 
 namespace bertini {
 namespace node{
-    using ::acos;
-    using ::exp;
+	using ::acos;
+	using ::exp;
 
-    
-    namespace special_number{
+	
+	namespace special_number{
 
-    	/**
+		/**
 		\brief The number \f$\pi\f$.
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
-    	*/
-	    class Pi : public NamedSymbol
-	    {
-	    public:
-	    	Pi() : NamedSymbol("pi")
-	    	{}
+		*/
+		class Pi : public NamedSymbol
+		{
+		public:
+			Pi() : NamedSymbol("pi")
+			{}
 
-	    	virtual ~Pi() = default;
+			virtual ~Pi() = default;
 
 
 
 
 
 			/**
-	         Differentiates a number.  Should this return the special number Zero?
-	         */
-	        std::shared_ptr<Node> Differentiate() override
-	        {
-	            return std::make_shared<Float>(0.0);
-	        }
+			 Differentiates a number.  Should this return the special number Zero?
+			 */
+			std::shared_ptr<Node> Differentiate() override
+			{
+				return std::make_shared<Float>(0.0);
+			}
 
-	        /**
+			/**
 			Compute the degree with respect to a single variable.
 
 			For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		    */
-		    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		    {
-		    	return 0;
-		    }
+			*/
+			int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+			{
+				return 0;
+			}
 
 
-		    int Degree(VariableGroup const& vars) const override
+			int Degree(VariableGroup const& vars) const override
 			{
 				return 0;
 			}
@@ -88,7 +88,7 @@ namespace node{
 			}
 
 
-		    void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 			{
 				
 			}
@@ -121,64 +121,64 @@ namespace node{
 
 
 			
-	    private:
-	    	// Return value of constant
-	        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-	        {
-	            return acos(-1.0);
-	        }
+		private:
+			// Return value of constant
+			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+			{
+				return acos(-1.0);
+			}
 
-	        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-	        {
-	            return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
-	        }
+			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+			{
+				return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
+			}
 
-	        friend class boost::serialization::access;
+			friend class boost::serialization::access;
 
-	        template <typename Archive>
+			template <typename Archive>
 			void serialize(Archive& ar, const unsigned version) {
 				ar & boost::serialization::base_object<NamedSymbol>(*this);
 			}
-	    };
+		};
 
 
 
-	    /**
+		/**
 		\brief The number \f$e\f$.
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
-    	*/
-	    class E : public NamedSymbol
-	    {
-	    public:
-	    	E() : NamedSymbol("e")
-	    	{}
+		*/
+		class E : public NamedSymbol
+		{
+		public:
+			E() : NamedSymbol("e")
+			{}
 
-	    	virtual ~E() = default;
+			virtual ~E() = default;
 
 
 
 
 			/**
-	         Differentiates a number.  Should this return the special number Zero?
-	         */
-	        std::shared_ptr<Node> Differentiate() override
-	        {
-	            return std::make_shared<Float>(0.0);
-	        }
+			 Differentiates a number.  Should this return the special number Zero?
+			 */
+			std::shared_ptr<Node> Differentiate() override
+			{
+				return std::make_shared<Float>(0.0);
+			}
 
-	        /**
+			/**
 			Compute the degree with respect to a single variable.
 
 			For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-		    */
-		    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		    {
-		    	return 0;
-		    }
+			*/
+			int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+			{
+				return 0;
+			}
 
 
-		    int Degree(VariableGroup const& vars) const override
+			int Degree(VariableGroup const& vars) const override
 			{
 				return 0;
 			}
@@ -189,7 +189,7 @@ namespace node{
 			}
 
 
-		    void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 			{
 				
 			}
@@ -218,26 +218,26 @@ namespace node{
 				val_pair.first.precision(prec);
 			}
 
-	    private:
-	    	// Return value of constant
-	        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-	        {
-	            return dbl(exp(1.0f),0.0);
-	        }
+		private:
+			// Return value of constant
+			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+			{
+				return dbl(exp(1.0f),0.0);
+			}
 
-	        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-	        {
-	            return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
-	        }
+			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+			{
+				return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
+			}
 
-	        friend class boost::serialization::access;
+			friend class boost::serialization::access;
 
-            template <typename Archive>
-    		void serialize(Archive& ar, const unsigned version) {
-    			ar & boost::serialization::base_object<NamedSymbol>(*this);
-    		}
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & boost::serialization::base_object<NamedSymbol>(*this);
+			}
 
-	    };
+		};
 
 	} // re: special_number namespace
 
@@ -260,22 +260,22 @@ namespace node{
 	/**
 	Construct a shared pointer to \f$2\f$.
 	*/
-    std::shared_ptr<Node> Two();
+	std::shared_ptr<Node> Two();
 
-    /**
+	/**
 	Construct a shared pointer to \f$1\f$.
 	*/
-    std::shared_ptr<Node> One();
+	std::shared_ptr<Node> One();
 
-    /**
+	/**
 	Construct a shared pointer to \f$0\f$.
 	*/
-    std::shared_ptr<Node> Zero();
+	std::shared_ptr<Node> Zero();
 
 
 } // re: namespace node
 } // re: namespace bertini
-    
+	
 #endif
 
 

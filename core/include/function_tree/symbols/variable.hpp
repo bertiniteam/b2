@@ -38,7 +38,7 @@ namespace node{
 
 	When differentiated, produces a differential referring to it.
 	*/
-    class Variable : public virtual NamedSymbol, public std::enable_shared_from_this<Variable>
+	class Variable : public virtual NamedSymbol, public std::enable_shared_from_this<Variable>
 	{
 	public:
 		Variable(){};
@@ -66,13 +66,13 @@ namespace node{
 		}
 		
 		
-        /**
-         Differentiates a variable.  Still needs to be implemented.
-         */
-        std::shared_ptr<Node> Differentiate() override
-        {
-            return std::make_shared<Differential>(shared_from_this(), name());
-        }
+		/**
+		 Differentiates a variable.  Still needs to be implemented.
+		 */
+		std::shared_ptr<Node> Differentiate() override
+		{
+			return std::make_shared<Differential>(shared_from_this(), name());
+		}
 		
 		
 
@@ -83,23 +83,23 @@ namespace node{
 		Compute the degree with respect to a single variable.
 
 		If this is the variable, then the degree is 1.  Otherwise, 0.
-	    */
-	    int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-	    {
-	    	if (v)
-	    	{
+		*/
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+		{
+			if (v)
+			{
 				if (this == v.get())
-			    	return 1;
-			    else
-			    	return 0;
-	    	}
-	    	else
-	    		return 1;
-	    	
-	    }
+					return 1;
+				else
+					return 0;
+			}
+			else
+				return 1;
+			
+		}
 
 
-	    int Degree(VariableGroup const& vars) const override
+		int Degree(VariableGroup const& vars) const override
 		{
 			for (auto iter : vars)
 				if (this==iter.get())
@@ -120,7 +120,7 @@ namespace node{
 		}
 
 
-	    void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			
 		}
@@ -152,22 +152,22 @@ namespace node{
 		
 	protected:
 		
-        // Return current value of the variable.
-        dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
-        {
-            return std::get< std::pair<dbl,bool> >(current_value_).first;
-        }
-        
-        mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
-        {
-            return std::get< std::pair<mpfr,bool> >(current_value_).first;
-        }
+		// Return current value of the variable.
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		{
+			return std::get< std::pair<dbl,bool> >(current_value_).first;
+		}
+		
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		{
+			return std::get< std::pair<mpfr,bool> >(current_value_).first;
+		}
 
-    private:
+	private:
 
-    	friend class boost::serialization::access;
+		friend class boost::serialization::access;
 
-        template <typename Archive>
+		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<NamedSymbol>(*this);
 		}

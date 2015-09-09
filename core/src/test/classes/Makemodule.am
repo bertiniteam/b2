@@ -6,21 +6,22 @@ function_tree_test_source_files = src/test/classes/function_tree_test.cpp
 
 
 b2_class_test_SOURCES = src/test/classes/class_test.cpp \
-	src/test/classes/fundamentals.cpp \
+	src/test/classes/fundamentals_test.cpp \
 	src/test/classes/eigen_test.cpp \
+	src/test/classes/system_test.cpp \
+	src/test/classes/differentiate_test.cpp \
+	src/test/classes/homogenization_test.cpp \
+	src/test/classes/start_system_test.cpp \
+	src/test/classes/node_serialization_test.cpp \
 	include/mpfr_complex.hpp src/test/classes/complex_test.cpp \
 	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
 	$(function_tree) \
 	$(function_tree_test_source_files) \
 	system.hpp system_parsing.hpp \
-	src/test/classes/system_test.cpp \
-	src/test/classes/differentiate_test.cpp \
-	src/test/classes/homogenization_test.cpp \
 	src/bertini/system.cpp \
 	src/bertini/start_system.cpp include/start_system.hpp \
-	src/test/classes/start_system_test.cpp \
-	src/bertini/limbo.cpp include/limbo.hpp \
-	src/test/classes/node_serialization.cpp
+	src/bertini/limbo.cpp include/limbo.hpp
+
 
 
 b2_class_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
