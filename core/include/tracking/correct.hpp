@@ -36,7 +36,7 @@ namespace bertini{
 					               System & S,
 					               Vec<NumType> const& current_space, // pass by value to get a copy of it
 					               NumType const& current_time, 
-					               PrecisionType PrecType, 
+					               config::PrecisionType PrecType, 
 					               NumType tracking_tolerance,
 					               NumType path_truncation_threshold,
 					               unsigned max_num_newton_iterations,

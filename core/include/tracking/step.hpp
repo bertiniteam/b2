@@ -40,15 +40,17 @@ namespace bertini {
 
 		*/
 		template<typename NumType>
-		SuccessCode Step(config::PredictorChoice predictor_choice,
-		                    Vec<T> & next_space, T & next_time,
+		SuccessCode Step(config::Predictor predictor_choice,
+		                    Vec<NumType> & next_space, NumType & next_time,
 				               System & sys,
-				               Vec<T> const& current_space, T current_time, 
-				               T const& dt,
-				               T & condition_number_estimate,
+				               Vec<NumType> const& current_space, NumType current_time, 
+				               NumType const& dt,
+				               NumType & condition_number_estimate,
 				               unsigned & num_steps_since_last_condition_number_computation, 
-				               unsigned frequency_of_CN_estimation, PrecisionType prec_type, 
-				               T const& tracking_tolerance,
+				               unsigned frequency_of_CN_estimation, config::PrecisionType prec_type, 
+				               NumType const& tracking_tolerance,
+				               NumType const& path_truncation_threshold,
+				               unsigned max_num_newton_iterations,
 				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 
@@ -67,10 +69,10 @@ namespace bertini {
 
 
 			SuccessCode corrector_code = Correct(next_space,
-								               S,
+								               sys,
 								               current_space, // pass by value to get a copy of it
 								               current_time, 
-								               PrecType, 
+								               prec_type, 
 								               tracking_tolerance,
 								               path_truncation_threshold,
 								               max_num_newton_iterations,

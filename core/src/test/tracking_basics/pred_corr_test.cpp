@@ -27,28 +27,40 @@
 
 
 #include <boost/test/unit_test.hpp>
-
-
-
 #include "start_system.hpp"
 
+#include <boost/multiprecision/mpfr.hpp>
+
+#include "mpfr_complex.hpp"
+#include "tracking.hpp"
+
+
 using System = bertini::System;
-using Var = std::shared_ptr<bertini::Variable>;
+using Variable = bertini::node::Variable;
+
+using Var = std::shared_ptr<Variable>;
+
 using VariableGroup = bertini::VariableGroup;
 
 
+using dbl = std::complex<double>;
+using mpfr = bertini::complex;
 
 extern double threshold_clearance_d;
-extern double threshold_clearance_mp;
-extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
+extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
-BOOST_AUTO_TEST_SUITE(system_class)
+
+
+
+BOOST_AUTO_TEST_SUITE(tracking_basics)
 
 
 BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
 {
-    // digits of precision
-    int DIGITS = 30;
+    boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+
+
     // Starting point in spacetime step
     dbl xn_d(2.3,0.2);
     dbl yn_d(1.1, 1.87);
@@ -59,16 +71,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
     // Time step
     dbl dt = .1;
     
-    double eps_d = 1e-15;
-    double eps_mp = 1e-27;
     
-    boost::multiprecision::mpfr_float::default_precision(DIGITS);
     
     bertini::System sys;
-    Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y"), t = std::make_shared<bertini::Variable>("t");
+    Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
     
-    VariableGroup vars;
-    vars.push_back(x); vars.push_back(y);
+    VariableGroup vars{x,y};
+    
     sys.AddVariableGroup(vars);
     sys.AddPathVariable(t);
     
@@ -105,8 +114,8 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
 
 BOOST_AUTO_TEST_CASE(circle_line_euler_2_corr_step)
 {
-    // digits of precision
-    int DIGITS = 30;
+    boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+
     // Starting point in spacetime step
     dbl xn_d(2.3,0.2);
     dbl yn_d(1.1, 1.87);
@@ -116,17 +125,15 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_2_corr_step)
     dbl tn = .9;
     // Time step
     dbl dt = .1;
+
     
-    double eps_d = 1e-15;
-    double eps_mp = 1e-27;
     
-    boost::multiprecision::mpfr_float::default_precision(DIGITS);
     
     bertini::System sys;
-    Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y"), t = std::make_shared<bertini::Variable>("t");
+    Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
     
-    VariableGroup vars;
-    vars.push_back(x); vars.push_back(y);
+    VariableGroup vars{x,y};
+    
     sys.AddVariableGroup(vars);
     sys.AddPathVariable(t);
     

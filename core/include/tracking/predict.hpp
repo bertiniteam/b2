@@ -50,21 +50,21 @@ namespace bertini{
 		\tparam T The number type for evaluation.
 		*/
 		template <typename T>
-		SuccessCode Predict(config::PredictorChoice predictor_choice,
+		SuccessCode Predict(config::Predictor predictor_choice,
 		                    Vec<T> & next_space, T & next_time,
 				               System & sys,
 				               Vec<T> const& current_space, T current_time, 
 				               T const& dt,
 				               T & condition_number_estimate,
 				               unsigned & num_steps_since_last_condition_number_computation, 
-				               unsigned frequency_of_CN_estimation, PrecisionType prec_type, 
+				               unsigned frequency_of_CN_estimation, config::PrecisionType prec_type, 
 				               T const& tracking_tolerance,
 				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 
-			switch predictor_choice
+			switch (predictor_choice)
 			{
-				case config::PredictorChoice::Euler:
+				case config::Predictor::Euler:
 				{
 					return predict::Euler(next_space, next_time,
 				               		sys,

@@ -46,7 +46,8 @@ namespace bertini
 			ReduceStepSize,
 			GoingToInfinity,
 			FailedToConverge,
-			MatrixSolveFailure
+			MatrixSolveFailure,
+			Failure
 		};
 
 		
