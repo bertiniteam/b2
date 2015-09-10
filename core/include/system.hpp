@@ -505,17 +505,30 @@ namespace bertini {
 
 		
 
+		/**
+		Compute an estimate of an upper bound of the absolute values of the coefficients in the system.
 
+		\returns An upper bound on the absolute values of the coefficients.
+		*/
+        mpfr_float CoefficientBound() const;
+
+
+        /**
+         \brief Compute an upper bound on the degree of the system.  
+
+         This number will be wrong if the system is non-polynomial, because degree for non-polynomial systems is not defined.
+         */
+        int DegreeBound() const;
 
 		/**
-		 Get the degrees of the functions in the system, with respect to all variables.
+		 \brief Get the degrees of the functions in the system, with respect to all variables.
 
 		 \return A vector containing the degrees of the functions.  Negative numbers indicate the function is non-polynomial.
 		*/
 		 std::vector<int> Degrees() const;
 
 		 /**
-		 Get the degrees of the functions in the system, with respect to a group of variables.
+		 \brief Get the degrees of the functions in the system, with respect to a group of variables.
 
 		 \return A vector containing the degrees of the functions.  Negative numbers indicate the function is non-polynomial.
 		 \param vars A group of variables with respect to which you wish to compute degrees.  Needs not be a group with respect to the system.
@@ -523,13 +536,13 @@ namespace bertini {
 		 std::vector<int> Degrees(VariableGroup const& vars) const;
 
 		/**
-		 Sort the functions so they are in DEcreasing order by degree
+		 \brief Sort the functions so they are in DEcreasing order by degree
 		*/
 		void ReorderFunctionsByDegreeDecreasing();
 
 
 		/**
-		 Sort the functions so they are in INcreasing order by degree
+		 \brief Sort the functions so they are in INcreasing order by degree
 		*/
 		void ReorderFunctionsByDegreeIncreasing();
 
@@ -540,13 +553,14 @@ namespace bertini {
 
 
 		/**
-		 Clear the entire structure of variables in a system.  Reconstructing it is up to you.
+		 \brief Clear the entire structure of variables in a system.  Reconstructing it is up to you.
 		*/
 		void ClearVariables();
 
 
 		/**
-		 Copy the entire structure of variables from within one system to another.
+		 \brief Copy the entire structure of variables from within one system to another.
+
 		  This copies everything -- ungrouped variables, variable groups, homogenizing variables, the path variable, the ordering of the variables.
 
 		  \param other Another system from which to copy the variable structure.  
@@ -557,7 +571,7 @@ namespace bertini {
         
 
 		/**
-		Add two systems together.
+		\brief Add two systems together.
 
 		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
 
@@ -565,7 +579,7 @@ namespace bertini {
 		System operator+=(System const& rhs);
 
 		/**
-		Add two systems together.
+		\brief Add two systems together.
 
 		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
 		
@@ -573,17 +587,23 @@ namespace bertini {
 		friend System operator+(System lhs, System const& rhs);
 
 		/**
-		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		\brief Multiply a system by an arbitrary node.  
+
+		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
 		System operator*=(Nd const& N);
 
 		/**
-		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		\brief Multiply a system by an arbitrary node.  
+
+		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
 		friend System operator*(System s, Nd const&  N);
 
 		/**
-		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		\brief Multiply a system by an arbitrary node.  
+
+		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
 		friend System operator*(Nd const&  N, System const& s);
 	private:

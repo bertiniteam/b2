@@ -28,6 +28,7 @@
 #include <eigen3/Eigen/Dense>
 #include "eigen_extensions.hpp"
 
+#include "system.hpp"
 
 namespace bertini
 {
@@ -55,6 +56,8 @@ namespace bertini
 
 		namespace config{
 
+			using mpfr_float = boost::multiprecision::mpfr_float;
+
 			enum class Predictor
 			{
 				Euler
@@ -72,8 +75,8 @@ namespace bertini
 			namespace general{			
 				struct TrackingTolerances
 				{
-					boost::multiprecision::mpfr_float before_endgame;
-					boost::multiprecision::mpfr_float during_endgame;
+					mpfr_float before_endgame;
+					mpfr_float during_endgame;
 				};
 			}
 
@@ -103,16 +106,70 @@ namespace bertini
 			*/
 			struct AdaptiveMultiplePrecisionConfig
 			{
-				boost::multiprecision::mpfr_float bound_on_abs_vals_of_coeffs;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
-				boost::multiprecision::mpfr_float bound_on_degree; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
-				boost::multiprecision::mpfr_float epsilon;  ///< Bound on \f$\epsilon\f$ (an error bound).  Used for AMP criteria A, B.
-				boost::multiprecision::mpfr_float Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
-				boost::multiprecision::mpfr_float Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
+				mpfr_float bound_on_abs_vals_of_coeffs;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
+				mpfr_float bound_on_degree; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
+				mpfr_float epsilon;  ///< Bound on \f$\epsilon\f$ (an error bound).  Used for AMP criteria A, B.
+				mpfr_float Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
+				mpfr_float Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
 
-				int safety_digits_1;
-				int safety_digits_2;
-				int maximum_precision;
+				int safety_digits_1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
+				int safety_digits_2; ///< User-chosen setting for the number of safety digits used during Criterion C.
+				unsigned int maximum_precision; ///< User-chosed setting for the maximum allowable precision.  Paths will die if their precision is requested to be set higher than this threshold.
+			
+				AdaptiveMultiplePrecisionConfig() : bound_on_abs_vals_of_coeffs("1000.0"), bound_on_degree("5.0"), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
+				{}
+
+				/**
+				 \brief Set epsilon, degree bound, and coefficient bound from system.
+				 
+				 -Epsilon is set as the square of the number of variables.
+				 -Bound on degree is set from a call to System class.  Let this be \f$D\f$  \see System::DegreeBound().
+				 -Bound on absolute values of coeffs is set from a call to System class.  Let this be \f$B\f$.  \see System::CoefficientBound().
+				*/
+				void SetBoundsAndEpsilonFrom(System const& sys)
+				{
+					epsilon = pow(mpfr_float(sys.NumVariables()),2);
+					bound_on_degree = sys.DegreeBound();
+					bound_on_abs_vals_of_coeffs = sys.CoefficientBound();
+				}
+				
+
+				/**
+				 Sets values epsilon, Phi, Psi, bound_on_degree, and bound_on_abs_vals_of_coeffs from input system.
+				
+				 	-Phi becomes \f$D*(D-1)*B\f$.
+				 	-Psi is set as \f$D*B\f$.
+				*/
+				void SetPhiPsiFromBounds()
+				{
+					Phi = bound_on_degree*(bound_on_degree-mpfr_float("1.0"))*bound_on_abs_vals_of_coeffs;
+				    Psi = bound_on_degree*bound_on_abs_vals_of_coeffs;  //Psi from the AMP paper.
+				}
+
+				void SetAMPConfigFrom(System const& sys)
+				{
+					SetBoundsAndEpsilonFrom(sys);
+					SetPhiPsiFromBounds();
+				}
 			} ;
+
+
+
+			
+			/**
+			\brief Construct a ready-to-go set of AMP settings from a system.
+
+			\see AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom
+			\see AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds
+			\see AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom
+			*/
+			inline
+			AdaptiveMultiplePrecisionConfig AMPConfigFrom(System const& sys) 
+			{
+				AdaptiveMultiplePrecisionConfig AMP;				
+				AMP.SetAMPConfigFrom(sys);
+			    return AMP;
+			}
 		}
 	}
 }

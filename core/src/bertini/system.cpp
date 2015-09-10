@@ -1084,9 +1084,19 @@ namespace bertini
 
 
 
+    //////////////////////
+    //
+    //  Functions involving coefficients of the system
+    //
+    ///////////////////////
+
+    mpfr_float System::CoefficientBound() const
+    {
+    	mpfr_float bound;
 
 
-
+    	return bound;
+    }
 
 
 
@@ -1102,25 +1112,28 @@ namespace bertini
 	//
 	///////////////////
 
+    int System::DegreeBound() const
+    {
+    	auto degs = Degrees();
+    	return *std::max_element(degs.begin(), degs.end());
+    }
+
+
 	std::vector<int> System::Degrees() const
 	{
-		std::vector<int> deg;
+		std::vector<int> degs;
 		for (auto iter : functions_)
-		{
-			deg.push_back(iter->Degree());
-		}
-		return deg;
+			degs.push_back(iter->Degree());
+		return degs;
 	}
 
 
 	std::vector<int> System::Degrees(VariableGroup const& vars) const
 	{
-		std::vector<int> deg;
+		std::vector<int> degs;
 		for (auto iter : functions_)
-		{
-			deg.push_back(iter->Degree(vars));
-		}
-		return deg;
+			degs.push_back(iter->Degree(vars));
+		return degs;
 	}
 
 

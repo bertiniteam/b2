@@ -45,6 +45,11 @@ using VariableGroup = bertini::VariableGroup;
 
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
+using mpfr_float = boost::multiprecision::mpfr_float;
+
+
+template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
+template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
 extern double threshold_clearance_d;
 extern boost::multiprecision::mpfr_float threshold_clearance_mp;
@@ -67,9 +72,9 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
     mpfr xn_mp("2.3","0.2");
     mpfr yn_mp("1.1", "1.87");
     // Starting time
-    dbl tn = .9;
+    dbl current_time = .9;
     // Time step
-    dbl dt = .1;
+    dbl delta_t = .1;
     
     
     
@@ -87,24 +92,34 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
     
     
     
+    auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-    // Solve and store in znp1_d, znp1_mp
     
-    
-    
-    
+    mpfr_float tracking_tolerance_mp("1e-5");
+    double tracking_tolerance_d(tracking_tolerance_mp);
+
 
     // Exact value of step after Euler prediction
-    std::vector<dbl> predicted_d = {dbl(2.19163044775416716032722848776575,-0.203532362690064835307109968099797),
-        dbl(1.82976707889226183423896735889061, 2.37621890895572354790101570972854)};
-    std::vector<mpfr> predicted_mp = {mpfr("2.19163044775416716032722848776575","-0.203532362690064835307109968099797"),
-        mpfr("1.82976707889226183423896735889061", "2.37621890895572354790101570972854")};
+    Vec<dbl> predicted_d(2);
+    predicted_d << dbl(2.19163044775416716032722848776575,-0.203532362690064835307109968099797),
+        dbl(1.82976707889226183423896735889061, 2.37621890895572354790101570972854);
+
+    Vec<mpfr> predicted_mp(2);
+    predicted_mp << mpfr("2.19163044775416716032722848776575","-0.203532362690064835307109968099797"),
+        mpfr("1.82976707889226183423896735889061", "2.37621890895572354790101570972854");
+    
 
     // Exact value of step after a one-Newton-step correction
-    std::vector<dbl> corrected_d = {dbl(1.27914921783237417760452216130584,0.287985101426454933172731469315295),
-        dbl(0.16018906270391684942121729748759, -0.0639966892058788740383847709589545)};
-    std::vector<mpfr> corrected_mp = {mpfr("1.27914921783237417760452216130584","0.287985101426454933172731469315295"),
-        mpfr("0.16018906270391684942121729748759", "-0.0639966892058788740383847709589545")};
+    Vec<dbl> corrected_d(2);
+    corrected_d << dbl(1.27914921783237417760452216130584,0.287985101426454933172731469315295),
+        dbl(0.16018906270391684942121729748759, -0.0639966892058788740383847709589545);
+
+    Vec<mpfr> corrected_mp(2);
+    corrected_mp << mpfr("1.27914921783237417760452216130584","0.287985101426454933172731469315295"),
+        mpfr("0.16018906270391684942121729748759", "-0.0639966892058788740383847709589545");
+
+    
+
 
     
     
@@ -122,9 +137,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_2_corr_step)
     mpfr xn_mp("2.3","0.2");
     mpfr yn_mp("1.1", "1.87");
     // Starting time
-    dbl tn = .9;
+
+    Vec<dbl> current_space(2);
+    current_space << xn_d, yn_d;
+
+    dbl current_time = .9;
     // Time step
-    dbl dt = .1;
+    dbl delta_t = .1;
 
     
     
