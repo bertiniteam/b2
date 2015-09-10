@@ -25,6 +25,9 @@
 #include <boost/test/unit_test.hpp>
 #include <fstream>
 
+using mpfr_float = boost::multiprecision::mpfr_float;
+
+#include <eigen3/Eigen/Dense>
 
 extern double threshold_clearance_d;
 extern boost::multiprecision::mpfr_float threshold_clearance_mp;
@@ -553,13 +556,6 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 }
 
 
-
-
-
-
-
-
-
 BOOST_AUTO_TEST_SUITE_END()
 
 
@@ -572,9 +568,53 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 
-BOOST_AUTO_TEST_SUITE(miscellaneous_tests_out_of_place)
+
+BOOST_AUTO_TEST_SUITE(miscellaneous_complex_tests_out_of_place)
+
+BOOST_AUTO_TEST_CASE(mpfr_complex_eigen_norm_of_vector)
+{
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	Eigen::Matrix<bertini::complex, Eigen::Dynamic, Eigen::Dynamic> A(1,3);
+	A << bertini::complex("1.0","1.0"), bertini::complex("1.0","1.0"), bertini::complex("1.0","1.0");
+	boost::multiprecision::mpfr_float n = A.norm();
+
+	BOOST_CHECK(abs(n/sqrt(boost::multiprecision::mpfr_float("6"))-mpfr_float("1"))<threshold_clearance_mp);
+}
 
 BOOST_AUTO_TEST_CASE(mpfr_float_serialization)
+{
+	
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	
+	
+	mpfr_float q = acos( mpfr_float("-1.0") );
+	
+	
+	{
+		std::ofstream fout("serialization_test_mpfr");
+		
+		boost::archive::text_oarchive oa(fout);
+		
+		// write class instance to archive
+		oa << q;
+	}
+	
+	mpfr_float w;
+	{
+		std::ifstream fin("serialization_test_mpfr");
+		
+		boost::archive::text_iarchive ia(fin);
+		// read class state from archive
+		ia >> w;
+	}
+	
+	BOOST_CHECK_EQUAL(q,w);
+	
+}
+
+
+BOOST_AUTO_TEST_CASE(mpfr_float_serialization2)
 {
 	using mpfr_float = boost::multiprecision::mpfr_float;
 	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
@@ -592,6 +632,8 @@ BOOST_AUTO_TEST_CASE(mpfr_float_serialization)
 		oa << q;
 	}
 	
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS*2);
+
 	mpfr_float w;
 	{
 		std::ifstream fin("serialization_test_mpfr");

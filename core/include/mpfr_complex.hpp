@@ -51,15 +51,15 @@
 namespace bertini {
 
 
-	  	using dbl = std::complex<double>;
-	  	 inline
-	  	 dbl rand_complex()
-	  	 {
-	  	 	std::default_random_engine generator;
+		using dbl = std::complex<double>;
+		 inline
+		 dbl rand_complex()
+		 {
+			std::default_random_engine generator;
 			std::uniform_real_distribution<double> distribution(-1.0,1.0);
-	  	 	dbl returnme(distribution(generator), distribution(generator));
-	  	 	return returnme / sqrt( abs(returnme));
-	  	 }
+			dbl returnme(distribution(generator), distribution(generator));
+			return returnme / sqrt( abs(returnme));
+		 }
 
 
 
@@ -458,7 +458,7 @@ namespace bertini {
 		 */
 		mpfr_float abs2() const
 		{
-			return pow(real(),2)+pow(imag(),2);
+			return real()*real()+imag()*imag();
 		}
 		
 		/**
@@ -1056,7 +1056,7 @@ namespace bertini {
 	
 	
 	
-} // re: namespace
+} // re: namespace bertini
 
 
 
@@ -1066,17 +1066,17 @@ namespace bertini {
 // reopen the Eigen namespace to inject this struct.
 namespace Eigen {
 	
-	using boost::multiprecision::mpfr_float;
-	using namespace boost::multiprecision;
-	
+	using mpfr_float = boost::multiprecision::mpfr_float;
 	
 	/**
 	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
+
+	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_float> contained in mpfr_extensions.
 	 */
-	template<> struct NumTraits<bertini::complex> : NumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	template<> struct NumTraits<bertini::complex> : NumTraits<mpfr_float> 
 	{
-		typedef boost::multiprecision::mpfr_float Real;
-		typedef boost::multiprecision::mpfr_float NonInteger;
+		typedef mpfr_float Real;
+		typedef mpfr_float NonInteger;
 		typedef bertini::complex Nested;// Nested;
 		enum {
 			IsComplex = 1,
@@ -1090,13 +1090,24 @@ namespace Eigen {
 		
 	};
 	
-	
-	
-	
-	
-	
-	
-}
+
+
+	namespace internal {
+		template<> inline boost::multiprecision::mpfr_float cast<bertini::complex,boost::multiprecision::mpfr_float>(bertini::complex const& x)
+		{ 
+			return x.real(); 
+		}
+
+		template<>
+		struct abs2_impl<bertini::complex>
+		{
+			static inline boost::multiprecision::mpfr_float run(const bertini::complex& x)
+			{
+				return real(x)*real(x) + imag(x)*imag(x);
+			}
+		};
+	} // re: namespace internal
+} // re: namespace Eigen
 
 
 
