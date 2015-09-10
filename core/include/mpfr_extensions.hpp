@@ -55,6 +55,8 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
 	{
+		unsigned num_digits(r.precision());
+		ar & num_digits;
 		std::string tmp = r.str(0,std::ios::scientific);
 		ar & tmp;
 	}
@@ -65,6 +67,9 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void load(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0>& r, unsigned /*version*/)
 	{
+		unsigned num_digits;
+		ar & num_digits;
+		r.precision(num_digits);
 		std::string tmp;
 		ar & tmp;
 		r = tmp.c_str();
