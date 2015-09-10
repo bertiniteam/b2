@@ -97,7 +97,38 @@ namespace bertini {
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		*/
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values);
+		Vec<T> Eval(const Vec<T> & variable_values)
+		{
+
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+			if (have_path_variable_)
+				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
+
+
+			// this function call traverses the entire tree, resetting everything.
+			//
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			//
+			// we need to work to correct this.
+			for (auto iter : functions_) {
+				iter->Reset();
+			}
+
+			SetVariables(variable_values);
+
+
+			Vec<T> function_values(NumFunctions()); // create vector with correct number of entries.
+
+			{ // for scoping of the counter.
+				auto counter = 0;
+				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+					function_values(counter) = (*iter)->Eval<T>();
+				}
+			}
+
+			return function_values;
+		}
 
 
 
@@ -108,7 +139,39 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value);
+		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value)
+		{
+
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
+
+
+			// this function call traverses the entire tree, resetting everything.
+			//
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			//
+			// we need to work to correct this.
+			for (auto iter : functions_) {
+				iter->Reset();
+			}
+
+			SetVariables(variable_values);
+			SetPathVariable(path_variable_value);
+
+
+			Vec<T> function_values(NumFunctions()); // create vector with correct number of entries.
+
+			{ // for scoping of the counter.
+				auto counter = 0;
+				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+					function_values(counter) = (*iter)->Eval<T>();
+				}
+			}
+
+			return function_values;
+		}
 
 
 		/**
@@ -117,7 +180,19 @@ namespace bertini {
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		*/
 		template<typename T>
-		Mat<T> Jacobian();
+		Mat<T> Jacobian()
+		{
+			assert(is_differentiated_);
+			
+			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+
+			Mat<T> J(NumFunctions(), NumVariables());
+			for (int ii = 0; ii < NumFunctions(); ++ii)
+				for (int jj = 0; jj < NumVariables(); ++jj)
+					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+
+			return J;
+		}
 
 		/**
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
@@ -126,7 +201,29 @@ namespace bertini {
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		*/
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values);
+		Mat<T> Jacobian(const Vec<T> & variable_values)
+		{
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+
+			if (have_path_variable_)
+				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
+
+
+			if (!is_differentiated_)
+			{
+				jacobian_.resize(NumFunctions());
+				for (int ii = 0; ii < NumFunctions(); ++ii)
+				{
+					jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
+				}
+				is_differentiated_ = true;
+			}
+
+			SetVariables(variable_values);
+
+			return Jacobian<T>();
+		}
 
 
 		/**
@@ -138,7 +235,30 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value);
+		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
+		{
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
+
+
+			if (!is_differentiated_)
+			{
+				jacobian_.resize(NumFunctions());
+				for (int ii = 0; ii < NumFunctions(); ++ii)
+				{
+					jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
+				}
+				is_differentiated_ = true;
+			}
+
+			SetVariables(variable_values);
+			SetPathVariable(path_variable_value);
+
+			return Jacobian<T>();
+		}
 
 		
 		/**
@@ -150,7 +270,34 @@ namespace bertini {
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename T>
-		Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value);
+		Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value)
+		{
+			if (!HavePathVariable())
+				throw std::runtime_error("computing time derivative of system with no path variable defined");
+
+			if (!is_differentiated_)
+			{
+				jacobian_.resize(NumFunctions());
+				for (int ii = 0; ii < NumFunctions(); ++ii)
+				{
+					jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
+				}
+				is_differentiated_ = true;
+			}
+
+
+			SetVariables(variable_values);
+			SetPathVariable(path_variable_value);
+
+			Vec<T> ds_dt(NumFunctions());
+
+
+			for (int ii = 0; ii < NumFunctions(); ++ii)
+				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);		
+
+
+			return ds_dt;
+		}
 
 		/**
 		Homogenize the system, adding new homogenizing variables for each VariableGroup defined for the system.
@@ -258,7 +405,19 @@ namespace bertini {
 		 \see Variables
 		 */
 		template<typename T>
-		void SetVariables(const Vec<T> & new_values);
+		void SetVariables(const Vec<T> & new_values)
+		{
+			assert(new_values.size()== NumVariables());
+
+			auto vars = Variables();
+
+			auto counter = 0;
+
+			for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
+				(*iter)->set_current_value(new_values(counter));
+			}
+
+		}
 
 
 
@@ -269,7 +428,13 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
-		void SetPathVariable(T new_value);
+		void SetPathVariable(T new_value)
+		{
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
+
+			path_variable_->set_current_value(new_value);
+		}
 
 
 		
@@ -281,7 +446,16 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values);
+		void SetImplicitParameters(Vec<T> new_values)
+		{
+			if (new_values.size()!= implicit_parameters_.size())
+				throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
+
+			size_t counter = 0;
+			for (auto iter=implicit_parameters_.begin(); iter!=implicit_parameters_.end(); iter++, counter++)
+				(*iter)->set_current_value(new_values(counter));
+
+		}
 
 
 
@@ -478,7 +652,36 @@ namespace bertini {
 		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
         */
         template<typename T>
-        Vec<T> DehomogenizePoint(Vec<T> const& x) const;
+	    Vec<T> DehomogenizePoint(Vec<T> const& x) const
+	        {
+
+	        	if (x.size()!=NumVariables())
+	        		throw std::runtime_error("dehomogenizing point with incorrect number of coordinates");
+
+	        	if (!have_ordering_)
+	    			ConstructOrdering();
+
+
+
+	    		switch (ordering_)
+	    		{
+	    			case OrderingChoice::AffHomUng:
+	    			{
+	    				return DehomogenizePointAffHomUngOrdering(x);
+	    				break;
+	    			}
+	    			case OrderingChoice::FIFO:
+	    			{
+	    				return DehomogenizePointFIFOOrdering(x);
+	    				break;
+	    			}
+	    			default: //ordering_==OrderingChoice::???
+	    			{
+	    				throw std::runtime_error("invalid ordering choice");
+	    				break;
+	    			}
+	    		}
+	        }
 
 
 
@@ -616,7 +819,53 @@ namespace bertini {
 		\see FIFOVariableOrdering
 		*/
 		template<typename T>
-	    Vec<T> DehomogenizePointFIFOOrdering(Vec<T> const& x) const;
+	    Vec<T> DehomogenizePointFIFOOrdering(Vec<T> const& x) const
+        {
+        	#ifndef BERTINI_DISABLE_ASSERTS
+        	assert(ordering_==OrderingChoice::FIFO);
+        	#endif
+
+        	Vec<T> x_dehomogenized(NumNaturalVariables());
+
+        	unsigned affine_group_counter = 0;
+        	unsigned hom_group_counter = 0;
+        	unsigned ungrouped_variable_counter = 0;
+
+        	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
+        	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
+
+    		for (auto iter : time_order_of_variable_groups_)
+    		{
+    			switch (iter){
+    				case VariableGroupType::Affine:
+    				{
+    					auto h = x(hom_index++);
+    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+    						x_dehomogenized(dehom_index++) = x(hom_index++) / h;
+    					affine_group_counter++;
+    					break;
+    				}
+    				case VariableGroupType::Homogeneous:
+    				{
+    					for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
+    						x_dehomogenized(dehom_index++) = x(hom_index++);
+    					break;
+    				}
+    				case VariableGroupType::Ungrouped:
+    				{
+    					x_dehomogenized(dehom_index++) = x(hom_index++);
+    					ungrouped_variable_counter++;
+    					break;
+    				}
+    				default:
+    				{
+    					throw std::runtime_error("unacceptable VariableGroupType in FIFOVariableOrdering");
+    				}
+    			}
+    		}
+
+    		return x_dehomogenized;
+        }
 
 
 
@@ -628,7 +877,33 @@ namespace bertini {
 		\see AffHomUngVariableOrdering
 		*/
 	    template<typename T>
-	    Vec<T> DehomogenizePointAffHomUngOrdering(Vec<T> const& x) const;
+	    Vec<T> DehomogenizePointAffHomUngOrdering(Vec<T> const& x) const
+        {
+        	#ifndef BERTINI_DISABLE_ASSERTS
+        	assert(ordering_==OrderingChoice::AffHomUng);
+        	#endif
+
+        	Vec<T> x_dehomogenized(NumNaturalVariables());
+
+        	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
+        	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
+
+        	for (auto iter=variable_groups_.begin(); iter!=variable_groups_.end(); iter++)
+    		{
+    			auto h = x(hom_index++);
+    			for (unsigned ii = 0; ii < iter->size(); ++ii)
+    				x_dehomogenized(dehom_index++) = x(hom_index++) / h;
+    		}
+
+    		for (auto iter=hom_variable_groups_.begin(); iter!=hom_variable_groups_.end(); iter++)
+    			for (unsigned ii = 0; ii < iter->size(); ++ii)
+    				x_dehomogenized(dehom_index++) = x(hom_index++);
+    		
+    		for (unsigned ii = 0; ii < ungrouped_variables_.size(); ++ii)
+    			x_dehomogenized(dehom_index++) = x(hom_index++);
+
+    		return x_dehomogenized;
+        }
 
 	    /**
 		 Puts together the ordering of variables, and stores it internally.

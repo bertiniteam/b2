@@ -306,6 +306,14 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		BOOST_CHECK(bertini::LUPartialPivotDecompositionSuccessful(LU.matrixLU())==bertini::MatrixSuccessCode::Success);
 	}
 
+
+	BOOST_AUTO_TEST_CASE(eigen_norm_of_vector)
+	{
+		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(1,3);
+		A << 1, 2, 3;
+		double n = A.norm();
+	}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 	

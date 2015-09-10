@@ -58,20 +58,23 @@ namespace bertini{
 			\param tracking_tolerance How tightly to track the path.
 			\param AMP_config The settings for adaptive multiple precision.
 
-			\tparam T The number type for evaluation.
+			\tparam ComplexType The number type for evaluation.
+			\tparam RealType The number type for comparisons.
 			*/
-			template <typename T>
-			SuccessCode Euler(Vec<T> & next_space, T & next_time,
+			template <typename ComplexType, typename RealType>
+			SuccessCode Euler(Vec<ComplexType> & next_space, ComplexType & next_time,
 					               System & S,
-					               Vec<T> const& current_space, T current_time, 
-					               T const& dt,
-					               T & condition_number_estimate,
+					               Vec<ComplexType> const& current_space, ComplexType current_time, 
+					               ComplexType const& dt,
+					               RealType & condition_number_estimate,
 					               unsigned & num_steps_since_last_condition_number_computation, 
 					               unsigned frequency_of_CN_estimation, PrecisionType PrecType, 
-					               T const& tracking_tolerance,
+					               RealType const& tracking_tolerance,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				auto dh_dt = -S.TimeDerivative(current_time);
+				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
+				auto dh_dt = -S.TimeDerivative(current_space, current_time);
 				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
 
 				// solve dX = (dH/dx)^(-1)*Y
@@ -92,9 +95,11 @@ namespace bertini{
 
 				if (PrecType==PrecisionType::Adaptive)
 				{
-					auto norm_J_inverse = norm(LU.solve(Vec<T>::Random(S.NumVariables())));
-					auto norm_J = norm(dh_dx);
-
+					Vec<ComplexType> randy = Vec<ComplexType>::Random(S.NumVariables());
+					Vec<ComplexType> temp_soln = LU.solve(randy);
+					
+					RealType norm_J = dh_dx.norm();
+					RealType norm_J_inverse = temp_soln.norm();
 					if (num_steps_since_last_condition_number_computation > frequency_of_CN_estimation)
 					{
 						// TODO: this esimate may be wrong
@@ -107,7 +112,7 @@ namespace bertini{
 
 					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
 						return SuccessCode::HigherPrecisionNecessary;
-					else if (!amp::CriterionB(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
 						return SuccessCode::HigherPrecisionNecessary;
 
 				}

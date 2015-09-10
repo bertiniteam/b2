@@ -47,8 +47,8 @@ namespace bertini{
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
-			template<typename NumberType>
-			bool CriterionA(NumberType const& norm_J, NumberType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename RealType>
+			bool CriterionA(RealType const& norm_J, RealType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi));
 			}
@@ -68,11 +68,12 @@ namespace bertini{
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
-			template<typename NumberType>
-			bool CriterionB(NumberType const& norm_J, NumberType const& norm_J_inverse, unsigned num_newton_iterations_remaining, NumberType tracking_tolerance, Vec<NumberType> const& latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename ComplexType, typename RealType>
+			bool CriterionB(RealType const& norm_J, RealType const& norm_J_inverse, unsigned num_newton_iterations_remaining, RealType tracking_tolerance, Vec<ComplexType> const& latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
+				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 				auto D = log10(norm_J_inverse*( (2+AMP_config.epsilon)*norm_J + AMP_config.epsilon*AMP_config.Phi) + 1);
-				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm(latest_newton_residual))) / (num_newton_iterations_remaining);
+				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(latest_newton_residual.norm())) / (num_newton_iterations_remaining);
 			}
 
 			/**
@@ -86,10 +87,11 @@ namespace bertini{
 			\param z The current space point?  TODO: check this. 
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
-			template<typename NumberType>
-			bool CriterionC(NumberType const& norm_J_inverse, Vec<NumberType> const& z, NumberType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename ComplexType ,typename RealType>
+			bool CriterionC(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + norm(z));
+				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+				return boost::multiprecision::mpfr_float::default_precision() > AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + z.norm());
 			}
 		}
 	}

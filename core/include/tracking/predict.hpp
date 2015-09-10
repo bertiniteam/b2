@@ -47,20 +47,22 @@ namespace bertini{
 		\param tracking_tolerance How tightly to track the path.
 		\param AMP_config The settings for adaptive multiple precision.
 
-		\tparam T The number type for evaluation.
+		\tparam ComplexType The complex number type for evaluation.
+		\tparam RealType The complex number type for evaluation.
 		*/
-		template <typename T>
+		template <typename ComplexType, typename RealType>
 		SuccessCode Predict(config::Predictor predictor_choice,
-		                    Vec<T> & next_space, T & next_time,
+		                    Vec<ComplexType> & next_space, ComplexType & next_time,
 				               System & sys,
-				               Vec<T> const& current_space, T current_time, 
-				               T const& dt,
-				               T & condition_number_estimate,
+				               Vec<ComplexType> const& current_space, ComplexType current_time, 
+				               ComplexType const& dt,
+				               RealType & condition_number_estimate,
 				               unsigned & num_steps_since_last_condition_number_computation, 
 				               unsigned frequency_of_CN_estimation, config::PrecisionType prec_type, 
-				               T const& tracking_tolerance,
+				               RealType const& tracking_tolerance,
 				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
+			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 
 			switch (predictor_choice)
 			{

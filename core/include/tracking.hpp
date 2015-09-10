@@ -28,6 +28,7 @@
 
 
 #include "tracking/step.hpp"
+#include "tracking/predict.hpp"
 
 
 

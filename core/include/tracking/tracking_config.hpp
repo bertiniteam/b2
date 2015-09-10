@@ -106,8 +106,8 @@ namespace bertini
 			*/
 			struct AdaptiveMultiplePrecisionConfig
 			{
-				mpfr_float bound_on_abs_vals_of_coeffs;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
-				mpfr_float bound_on_degree; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
+				mpfr_float coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
+				mpfr_float degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
 				mpfr_float epsilon;  ///< Bound on \f$\epsilon\f$ (an error bound).  Used for AMP criteria A, B.
 				mpfr_float Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
 				mpfr_float Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
@@ -116,7 +116,7 @@ namespace bertini
 				int safety_digits_2; ///< User-chosen setting for the number of safety digits used during Criterion C.
 				unsigned int maximum_precision; ///< User-chosed setting for the maximum allowable precision.  Paths will die if their precision is requested to be set higher than this threshold.
 			
-				AdaptiveMultiplePrecisionConfig() : bound_on_abs_vals_of_coeffs("1000.0"), bound_on_degree("5.0"), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
+				AdaptiveMultiplePrecisionConfig() : coefficient_bound("1000.0"), degree_bound("5.0"), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
 				{}
 
 				/**
@@ -129,21 +129,21 @@ namespace bertini
 				void SetBoundsAndEpsilonFrom(System const& sys)
 				{
 					epsilon = pow(mpfr_float(sys.NumVariables()),2);
-					bound_on_degree = sys.DegreeBound();
-					bound_on_abs_vals_of_coeffs = sys.CoefficientBound();
+					degree_bound = sys.DegreeBound();
+					coefficient_bound = sys.CoefficientBound();
 				}
 				
 
 				/**
-				 Sets values epsilon, Phi, Psi, bound_on_degree, and bound_on_abs_vals_of_coeffs from input system.
+				 Sets values epsilon, Phi, Psi, degree_bound, and coefficient_bound from input system.
 				
 				 	-Phi becomes \f$D*(D-1)*B\f$.
 				 	-Psi is set as \f$D*B\f$.
 				*/
 				void SetPhiPsiFromBounds()
 				{
-					Phi = bound_on_degree*(bound_on_degree-mpfr_float("1.0"))*bound_on_abs_vals_of_coeffs;
-				    Psi = bound_on_degree*bound_on_abs_vals_of_coeffs;  //Psi from the AMP paper.
+					Phi = degree_bound*(degree_bound-mpfr_float("1.0"))*coefficient_bound;
+				    Psi = degree_bound*coefficient_bound;  //Psi from the AMP paper.
 				}
 
 				void SetAMPConfigFrom(System const& sys)

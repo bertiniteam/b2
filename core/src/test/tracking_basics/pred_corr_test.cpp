@@ -61,20 +61,20 @@ extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 BOOST_AUTO_TEST_SUITE(tracking_basics)
 
 
-BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
+BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step_mp)
 {
     boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 
+    // Starting point in spacetime step    
+    Vec<mpfr> current_space(2);
+    current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
 
-    // Starting point in spacetime step
-    dbl xn_d(2.3,0.2);
-    dbl yn_d(1.1, 1.87);
-    mpfr xn_mp("2.3","0.2");
-    mpfr yn_mp("1.1", "1.87");
     // Starting time
-    dbl current_time = .9;
+    mpfr current_time(".9");
     // Time step
-    dbl delta_t = .1;
+    mpfr delta_t(".1");
+    
+    
     
     
     
@@ -94,9 +94,54 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
     
     auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
+    BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+    AMP.coefficient_bound = 10;
+
+
+
+    mpfr_float tracking_tolerance("1e-5");
+
+    Vec<mpfr> predicted_mp(2);
+    predicted_mp << mpfr("2.19163044775416716032722848776575","-0.203532362690064835307109968099797"),
+        mpfr("1.82976707889226183423896735889061", "2.37621890895572354790101570972854");
+
+    Vec<mpfr> next_space;
+    mpfr next_time;
     
-    mpfr_float tracking_tolerance_mp("1e-5");
-    double tracking_tolerance_d(tracking_tolerance_mp);
+    mpfr_float condition_number_estimate;
+    unsigned num_steps_since_last_condition_number_computation = 0;
+    unsigned frequency_of_CN_estimation = 1;
+
+    auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::Euler,
+                                next_space, next_time,
+                                sys,
+                                current_space, current_time, 
+                                delta_t,
+                                condition_number_estimate,
+                                num_steps_since_last_condition_number_computation, 
+                                frequency_of_CN_estimation, bertini::tracking::config::PrecisionType::Adaptive, 
+                                tracking_tolerance,
+                                AMP);
+
+
+    Vec<mpfr> corrected_mp(2);
+    corrected_mp << mpfr("1.27914921783237417760452216130584","0.287985101426454933172731469315295"),
+        mpfr("0.16018906270391684942121729748759", "-0.0639966892058788740383847709589545");
+
+
+
+
+
+
+
+
+
+
+
+    dbl xn_d(2.3,0.2);
+    dbl yn_d(1.1, 1.87);
+
+    double tracking_tolerance_d(tracking_tolerance);
 
 
     // Exact value of step after Euler prediction
@@ -104,9 +149,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
     predicted_d << dbl(2.19163044775416716032722848776575,-0.203532362690064835307109968099797),
         dbl(1.82976707889226183423896735889061, 2.37621890895572354790101570972854);
 
-    Vec<mpfr> predicted_mp(2);
-    predicted_mp << mpfr("2.19163044775416716032722848776575","-0.203532362690064835307109968099797"),
-        mpfr("1.82976707889226183423896735889061", "2.37621890895572354790101570972854");
+    
     
 
     // Exact value of step after a one-Newton-step correction
@@ -114,9 +157,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step)
     corrected_d << dbl(1.27914921783237417760452216130584,0.287985101426454933172731469315295),
         dbl(0.16018906270391684942121729748759, -0.0639966892058788740383847709589545);
 
-    Vec<mpfr> corrected_mp(2);
-    corrected_mp << mpfr("1.27914921783237417760452216130584","0.287985101426454933172731469315295"),
-        mpfr("0.16018906270391684942121729748759", "-0.0639966892058788740383847709589545");
+    
 
     
 
