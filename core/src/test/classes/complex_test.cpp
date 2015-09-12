@@ -61,6 +61,30 @@ BOOST_AUTO_TEST_CASE(complex_addition)
 }
 
 
+BOOST_AUTO_TEST_CASE(complex_subtraction)
+{
+	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	bertini::complex z("0.1","1.2");
+	bertini::complex v("0.2","1.3");
+	
+	bertini::complex r = z-v;
+	BOOST_CHECK(abs(r.real()-boost::multiprecision::mpfr_float("-0.1")) < threshold_clearance_mp);
+	BOOST_CHECK(abs(r.imag()-boost::multiprecision::mpfr_float("-0.1")) < threshold_clearance_mp);
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_negation)
+{
+	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	bertini::complex z("0.1","1.2");
+
+	bertini::complex r = -z;
+
+	BOOST_CHECK_EQUAL(r.real(),-boost::multiprecision::mpfr_float("0.1"));
+	BOOST_CHECK_EQUAL(r.imag(),-boost::multiprecision::mpfr_float("1.2"));
+}
 
 BOOST_AUTO_TEST_CASE(complex_multiplication)
 {
@@ -566,10 +590,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 
-
-
-
-BOOST_AUTO_TEST_SUITE(miscellaneous_complex_tests_out_of_place)
+BOOST_AUTO_TEST_SUITE(complex_eigen_compatibility)
 
 BOOST_AUTO_TEST_CASE(mpfr_complex_eigen_norm_of_vector)
 {
@@ -581,6 +602,28 @@ BOOST_AUTO_TEST_CASE(mpfr_complex_eigen_norm_of_vector)
 
 	BOOST_CHECK(abs(n/sqrt(boost::multiprecision::mpfr_float("6"))-mpfr_float("1"))<threshold_clearance_mp);
 }
+
+
+BOOST_AUTO_TEST_CASE(mpfr_complex_eigen_negative_of_vector)
+{
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	Eigen::Matrix<bertini::complex, Eigen::Dynamic, Eigen::Dynamic> A(1,3);
+	A << bertini::complex("1.0","1.0"), bertini::complex("1.0","1.0"), bertini::complex("1.0","1.0");
+	auto B = -A;
+
+	BOOST_CHECK_EQUAL(B(0), -A(0));
+	BOOST_CHECK_EQUAL(B(1), -A(1));
+	BOOST_CHECK_EQUAL(B(2), -A(2));
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+BOOST_AUTO_TEST_SUITE(miscellaneous_complex_tests_out_of_place)
+
+
 
 BOOST_AUTO_TEST_CASE(mpfr_float_serialization)
 {

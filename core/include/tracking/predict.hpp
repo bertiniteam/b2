@@ -35,11 +35,10 @@ namespace bertini{
 
 		\param predictor_choice The enum class selecting the predictor to be used.
 		\param next_space The computed prediction.
-		\param next_time The next time.
 		\param sys The system being solved.
 		\param current_space The current space variable vector.
 		\param current_time The current time.
-		\param dt The size of the time step.
+		\param delta_t The size of the time step.
 		\param condition_number_estimate The computed estimate of the condition number of the Jacobian.
 		\param num_steps_since_last_condition_number_computation.  Updated in this function.
 		\param frequency_of_CN_estimation How many steps to take between condition number estimates.
@@ -52,10 +51,10 @@ namespace bertini{
 		*/
 		template <typename ComplexType, typename RealType>
 		SuccessCode Predict(config::Predictor predictor_choice,
-		                    Vec<ComplexType> & next_space, ComplexType & next_time,
+		                    Vec<ComplexType> & next_space,
 				               System & sys,
 				               Vec<ComplexType> const& current_space, ComplexType current_time, 
-				               ComplexType const& dt,
+				               ComplexType const& delta_t,
 				               RealType & condition_number_estimate,
 				               unsigned & num_steps_since_last_condition_number_computation, 
 				               unsigned frequency_of_CN_estimation, config::PrecisionType prec_type, 
@@ -68,10 +67,10 @@ namespace bertini{
 			{
 				case config::Predictor::Euler:
 				{
-					return predict::Euler(next_space, next_time,
+					return predict::Euler(next_space,
 				               		sys,
 				               		current_space, current_time, 
-				               		dt,
+				               		delta_t,
 				               		condition_number_estimate,
 				               		num_steps_since_last_condition_number_computation, 
 				               		frequency_of_CN_estimation, prec_type, 

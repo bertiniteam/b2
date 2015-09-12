@@ -41,14 +41,14 @@ namespace bertini{
 
 			Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
 			*/
-			template <typename NumType>
-			SuccessCode NewtonLoop(Vec<NumType> & next_space,
+			template <typename ComplexType, typename RealType>
+			SuccessCode NewtonLoop(Vec<ComplexType> & next_space,
 					               System & S,
-					               Vec<NumType> const& current_space, // pass by value to get a copy of it
-					               NumType const& current_time, 
+					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
+					               ComplexType const& current_time, 
 					               PrecisionType PrecType, 
-					               NumType tracking_tolerance,
-					               NumType path_truncation_threshold,
+					               RealType const& tracking_tolerance,
+					               RealType const& path_truncation_threshold,
 					               unsigned max_num_newton_iterations,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
@@ -71,27 +71,29 @@ namespace bertini{
 
 
 					auto delta_z = LU.solve(-f);
+					std::cout << "correct delta_z = \n" << delta_z << std::endl;
+					next_space += delta_z;
 
-					if (norm(delta_z) < tracking_tolerance)
+					if (delta_z.norm() < tracking_tolerance)
 						return SuccessCode::Success;
 
 					if (PrecType==PrecisionType::Adaptive)
 					{
-						auto norm_J_inverse = norm(LU.solve(Vec<NumType>::Random(S.NumVariables())));
-						if (!CriterionB(norm(J), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z, AMP_config))
+						auto norm_J_inverse = LU.solve(Vec<ComplexType>::Random(S.NumVariables())).norm();
+						if (!amp::CriterionB(J.norm(), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z.norm(), AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 
-						if (!CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config))
+						if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 
 					}
 
-					if (norm(S.DehomogenizePoint(current_space)) > path_truncation_threshold)
+					if (S.DehomogenizePoint(current_space).norm() > path_truncation_threshold)
 					{
 						return SuccessCode::GoingToInfinity;
 					}
 
-					next_space+=delta_z;
+					
 				}
 
 				return SuccessCode::FailedToConverge;

@@ -822,9 +822,11 @@ namespace bertini {
 	    Vec<T> DehomogenizePointFIFOOrdering(Vec<T> const& x) const
         {
         	#ifndef BERTINI_DISABLE_ASSERTS
-        	assert(ordering_==OrderingChoice::FIFO);
+        	assert(ordering_==OrderingChoice::FIFO && "calling FIFO dehomogenize, but system is set to use a different ordering.");
+        	assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
         	#endif
 
+        	bool is_homogenized = homogenizing_variables_.size()!=0;
         	Vec<T> x_dehomogenized(NumNaturalVariables());
 
         	unsigned affine_group_counter = 0;
@@ -839,10 +841,18 @@ namespace bertini {
     			switch (iter){
     				case VariableGroupType::Affine:
     				{
-    					auto h = x(hom_index++);
-    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
-    						x_dehomogenized(dehom_index++) = x(hom_index++) / h;
-    					affine_group_counter++;
+    					if (is_homogenized)
+    					{
+	    					auto h = x(hom_index++);
+	    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+	    						x_dehomogenized(dehom_index++) = x(hom_index++) / h;
+	    					affine_group_counter++;
+	    				}
+	    				else
+	    				{
+	    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+	    						x_dehomogenized(dehom_index++) = x(hom_index++);
+	    				}
     					break;
     				}
     				case VariableGroupType::Homogeneous:

@@ -31,14 +31,14 @@ namespace bertini{
 	namespace tracking{
 		
 
-		template<typename NumType>
-		SuccessCode Correct(Vec<NumType> & next_space,
+		template <typename ComplexType, typename RealType>
+		SuccessCode Correct(Vec<ComplexType> & next_space,
 					               System & S,
-					               Vec<NumType> const& current_space, // pass by value to get a copy of it
-					               NumType const& current_time, 
+					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
+					               ComplexType const& current_time, 
 					               config::PrecisionType PrecType, 
-					               NumType tracking_tolerance,
-					               NumType path_truncation_threshold,
+					               RealType tracking_tolerance,
+					               RealType path_truncation_threshold,
 					               unsigned max_num_newton_iterations,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{

@@ -699,7 +699,7 @@ namespace bertini
 
     mpfr_float System::CoefficientBound() const
     {
-    	mpfr_float bound;
+    	mpfr_float bound("1000");
 
 
     	return bound;

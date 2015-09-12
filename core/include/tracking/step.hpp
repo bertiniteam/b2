@@ -36,28 +36,28 @@ namespace bertini {
 		/**
 	
 
-		\tparam NumType The type of number being used in the algorithm
+		\tparam ComplexType The type of number being used in the algorithm
 
 		*/
-		template<typename NumType>
+		template <typename ComplexType, typename RealType>
 		SuccessCode Step(config::Predictor predictor_choice,
-		                    Vec<NumType> & next_space, NumType & next_time,
+		                    Vec<ComplexType> & next_space, ComplexType & next_time,
 				               System & sys,
-				               Vec<NumType> const& current_space, NumType current_time, 
-				               NumType const& dt,
-				               NumType & condition_number_estimate,
+				               Vec<ComplexType> const& current_space, ComplexType current_time, 
+				               ComplexType const& delta_t,
+				               RealType & condition_number_estimate,
 				               unsigned & num_steps_since_last_condition_number_computation, 
 				               unsigned frequency_of_CN_estimation, config::PrecisionType prec_type, 
-				               NumType const& tracking_tolerance,
-				               NumType const& path_truncation_threshold,
+				               RealType const& tracking_tolerance,
+				               RealType const& path_truncation_threshold,
 				               unsigned max_num_newton_iterations,
 				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 
-			SuccessCode predictor_code = Predict(next_space, next_time,
+			SuccessCode predictor_code = Predict(next_space,
 							               		sys,
 							               		current_space, current_time, 
-							               		dt,
+							               		delta_t,
 							               		condition_number_estimate,
 							               		num_steps_since_last_condition_number_computation, 
 							               		frequency_of_CN_estimation, prec_type, 
@@ -67,16 +67,19 @@ namespace bertini {
 			if (predictor_code!=SuccessCode::Success)
 				return predictor_code;
 
+			next_time = current_time + delta_t;
 
 			SuccessCode corrector_code = Correct(next_space,
 								               sys,
 								               current_space, // pass by value to get a copy of it
-								               current_time, 
+								               next_time, 
 								               prec_type, 
 								               tracking_tolerance,
 								               path_truncation_threshold,
 								               max_num_newton_iterations,
 								               AMP_config);
+
+
 			if (corrector_code!=SuccessCode::Success)
 				return corrector_code;
 

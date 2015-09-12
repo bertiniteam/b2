@@ -27,7 +27,7 @@
 
 #include "config.h"
 
-
+#include "num_traits.hpp"
 #include "mpfr_extensions.hpp"
 
 #include <boost/multiprecision/mpfr.hpp>
@@ -1055,7 +1055,13 @@ namespace bertini {
 	
 	
 	
-	
+	template <> struct NumTraits<bertini::complex> 
+	{
+		inline static unsigned NumDigits()
+		{
+			return boost::multiprecision::mpfr_float::default_precision();
+		}
+	};
 } // re: namespace bertini
 
 
@@ -1089,15 +1095,8 @@ namespace Eigen {
 		};
 		
 	};
-	
-
 
 	namespace internal {
-		template<> inline boost::multiprecision::mpfr_float cast<bertini::complex,boost::multiprecision::mpfr_float>(bertini::complex const& x)
-		{ 
-			return x.real(); 
-		}
-
 		template<>
 		struct abs2_impl<bertini::complex>
 		{
@@ -1106,6 +1105,17 @@ namespace Eigen {
 				return real(x)*real(x) + imag(x)*imag(x);
 			}
 		};
+
+
+		template<> inline bertini::complex random<bertini::complex>()
+		{
+			return bertini::complex::rand();
+		}
+
+		template<> inline bertini::complex random<bertini::complex>(const bertini::complex& a, const bertini::complex& b)
+		{
+			return a + (b-a) * random<bertini::complex>();
+		}
 	} // re: namespace internal
 } // re: namespace Eigen
 

@@ -25,6 +25,7 @@
 #ifndef tracking_config_hpp
 #define tracking_config_hpp
 
+
 #include <eigen3/Eigen/Dense>
 #include "eigen_extensions.hpp"
 
@@ -151,9 +152,18 @@ namespace bertini
 					SetBoundsAndEpsilonFrom(sys);
 					SetPhiPsiFromBounds();
 				}
-			} ;
+			};
 
-
+			inline
+			std::ostream& operator<<(std::ostream & out, AdaptiveMultiplePrecisionConfig const& AMP)
+			{
+				out << "coefficient_bound: " << AMP.coefficient_bound << "\n";
+				out << "degree_bound: " << AMP.degree_bound << "\n";
+				out << "epsilon: " << AMP.epsilon << "\n";
+				out << "Phi: " << AMP.Phi << "\n";
+				out << "Psi: " << AMP.Psi;
+				return out;
+			}
 
 			
 			/**

@@ -31,6 +31,8 @@
 #include "system.hpp"
 #include <eigen3/Eigen/LU>
 
+#include <boost/type_index.hpp>
+
 namespace bertini{
 	namespace tracking{
 
@@ -46,11 +48,10 @@ namespace bertini{
 
 			\param predictor_choice The enum class selecting the predictor to be used.
 			\param next_space The computed prediction.
-			\param next_time The next time.
 			\param sys The system being solved.
 			\param current_space The current space variable vector.
 			\param current_time The current time.
-			\param dt The size of the time step.
+			\param delta_t The size of the time step.
 			\param condition_number_estimate The computed estimate of the condition number of the Jacobian.
 			\param num_steps_since_last_condition_number_computation.  Updated in this function.
 			\param frequency_of_CN_estimation How many steps to take between condition number estimates.
@@ -62,10 +63,10 @@ namespace bertini{
 			\tparam RealType The number type for comparisons.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode Euler(Vec<ComplexType> & next_space, ComplexType & next_time,
+			SuccessCode Euler(Vec<ComplexType> & next_space,
 					               System & S,
 					               Vec<ComplexType> const& current_space, ComplexType current_time, 
-					               ComplexType const& dt,
+					               ComplexType const& delta_t,
 					               RealType & condition_number_estimate,
 					               unsigned & num_steps_since_last_condition_number_computation, 
 					               unsigned frequency_of_CN_estimation, PrecisionType PrecType, 
@@ -74,10 +75,18 @@ namespace bertini{
 			{
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 
-				auto dh_dt = -S.TimeDerivative(current_space, current_time);
-				auto dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
+				std::cout << "current_time = " << current_time << "\n";
+				std::cout << "current_space = " << current_space << "\n";
 
-				// solve dX = (dH/dx)^(-1)*Y
+				Vec<ComplexType> dh_dt = -S.TimeDerivative(current_space, current_time);
+				Mat<ComplexType> dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
+
+				std::cout << "size of dh_dt = \n" << dh_dt.size() << "\n";
+				// std::cout << "type of dh_dt = \n" << boost::typeindex::type_id_with_cvr<decltype(dh_dt)>().pretty_name() << "\n";
+				std::cout << "dh_dt = \n" << dh_dt << "\n";
+				std::cout << "dh_dx = \n" << dh_dx << "\n";
+
+				// solve delta_x = (dH/dx)^(-1)*Y
 				// Y = dH/dt
 
 				auto LU = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
@@ -90,8 +99,9 @@ namespace bertini{
 							return SuccessCode::MatrixSolveFailure;
 					}
 
-				auto dX = LU.solve(dh_dt); 
+				auto delta_x = LU.solve(dh_dt); 
 
+				std::cout << "euler delta_x = \n" << delta_x << std::endl;
 
 				if (PrecType==PrecisionType::Adaptive)
 				{
@@ -100,7 +110,9 @@ namespace bertini{
 					
 					RealType norm_J = dh_dx.norm();
 					RealType norm_J_inverse = temp_soln.norm();
-					if (num_steps_since_last_condition_number_computation > frequency_of_CN_estimation)
+
+
+					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
 					{
 						// TODO: this esimate may be wrong
 						condition_number_estimate = norm_J * norm_J_inverse;
@@ -110,6 +122,9 @@ namespace bertini{
 						num_steps_since_last_condition_number_computation++;
 
 
+					std::cout << "norm_J: " << norm_J << " norm_J_inverse: " << norm_J_inverse << "\n";
+					std::cout << "condition_number_estimate: " << condition_number_estimate << "\n";
+
 					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
 						return SuccessCode::HigherPrecisionNecessary;
 					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
@@ -117,7 +132,9 @@ namespace bertini{
 
 				}
 
-				next_space = current_space + dX * dt;
+				std::cout << "euler delta_t * delta_x = \n" << delta_x * delta_t << std::endl;
+
+				next_space = current_space + delta_x * delta_t;
 
 				return SuccessCode::Success;
 			}
