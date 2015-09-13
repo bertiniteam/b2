@@ -60,6 +60,104 @@ extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 BOOST_AUTO_TEST_SUITE(tracking_basics)
 
+BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step_double)
+{
+
+	// Starting point in spacetime step    
+	Vec<dbl> current_space(2);
+	current_space << dbl(2.3,0.2), dbl(1.1, 1.87);
+
+	// Starting time
+	dbl current_time(0.9);
+	// Time step
+	dbl delta_t(-0.1);
+	
+	
+	
+	
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	
+	VariableGroup vars{x,y};
+	
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	
+	// Define homotopy system
+	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+	sys.AddFunction( t*(y-1.0) + (1-t)*(2.0*x + 5.0*y) );
+	
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+	AMP.coefficient_bound = 5;
+
+
+	Vec<dbl> predicted(2);
+	predicted << dbl(2.40310963516214640018253210912048,0.187706567388887830930493342816564),
+		dbl(0.370984337833979085688209698697074, 1.30889906180158745272421523674049);
+
+	Vec<dbl> euler_prediction_result;
+	dbl next_time;
+	
+	double tracking_tolerance(1e-5);
+	double condition_number_estimate;
+	unsigned num_steps_since_last_condition_number_computation = 1;
+	unsigned frequency_of_CN_estimation = 1;
+
+	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::Euler,
+								euler_prediction_result,
+								sys,
+								current_space, current_time, 
+								delta_t,
+								condition_number_estimate,
+								num_steps_since_last_condition_number_computation, 
+								frequency_of_CN_estimation, bertini::tracking::config::PrecisionType::Adaptive, 
+								tracking_tolerance,
+								AMP);
+	
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
+	for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
+		BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
+
+
+	next_time = current_time + delta_t;
+
+	//////////////
+	//
+	//  begin correction
+	//
+	////////
+
+
+	Vec<dbl> corrected(2);
+	corrected << dbl(1.46335169441695765372296267763834,0.101522740428208548465501963605153),
+		dbl(0.119255179018453854728230516080369, -0.0225606089840463441034448808011452);
+
+	Vec<dbl> newton_correction_result;
+
+	tracking_tolerance = double(1e1);
+	double path_truncation_threshold(1e4);
+	unsigned max_num_newton_iterations = 1;
+	success_code = bertini::tracking::Correct(newton_correction_result,
+								               sys,
+								               euler_prediction_result, 
+								               next_time, 
+								               bertini::tracking::config::PrecisionType::Adaptive, 
+								               tracking_tolerance,
+								               path_truncation_threshold,
+								               max_num_newton_iterations,
+								               AMP);
+
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
+		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_d);
+	
+}
+
 
 BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step_mp)
 {
@@ -77,7 +175,6 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step_mp)
 	
 	
 	
-	
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
 	
@@ -90,23 +187,17 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step_mp)
 	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 	sys.AddFunction( t*(y-1.0) + (1-t)*(2.0*x + 5.0*y) );
 	
-	
-	
+
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	std::cout << AMP << "\n";
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
-	AMP.coefficient_bound = 10;
+	AMP.coefficient_bound = 5;
 
 
-
-	
-
-	Vec<mpfr> predicted_mp(2);
-	predicted_mp << mpfr("2.40310963516214640018253210912048","0.187706567388887830930493342816564"),
+	Vec<mpfr> predicted(2);
+	predicted << mpfr("2.40310963516214640018253210912048","0.187706567388887830930493342816564"),
 		mpfr("0.370984337833979085688209698697074", "1.30889906180158745272421523674049");
 
-	std::cout << "expected delta_t*delta_x = \n" << predicted_mp - current_space << "\n";
 	Vec<mpfr> euler_prediction_result;
 	mpfr next_time;
 	
@@ -125,36 +216,25 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step_mp)
 								frequency_of_CN_estimation, bertini::tracking::config::PrecisionType::Adaptive, 
 								tracking_tolerance,
 								AMP);
-
 	
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
+	for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
+		BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 
-	std::cout << success_code << "\n";
 
 	next_time = current_time + delta_t;
 
-
-	std::cout << "euler_prediction_result\n" << euler_prediction_result << std::endl;
-	std::cout << "next_time\n" << next_time << std::endl;
-
-
-
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
-
-	BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
-
-	BOOST_CHECK(abs(euler_prediction_result(0)-predicted_mp(0)) < threshold_clearance_mp);
-	BOOST_CHECK(abs(euler_prediction_result(1)-predicted_mp(1)) < threshold_clearance_mp);
-	
-
-
-
+	//////////////
+	//
+	//  begin correction
+	//
+	////////
 
 
 	Vec<mpfr> corrected_mp(2);
 	corrected_mp << mpfr("1.46335169441695765372296267763834","0.101522740428208548465501963605153"),
 		mpfr("0.119255179018453854728230516080369", "-0.0225606089840463441034448808011452");
-
-	std::cout << "expected correct delta_x = \n" << corrected_mp - predicted_mp << "\n";
 
 	Vec<mpfr> newton_correction_result;
 
@@ -171,57 +251,10 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_1_corr_step_mp)
 								               max_num_newton_iterations,
 								               AMP);
 
-	
-
-	
-
-	std::cout << success_code << "\n";
-	std::cout << "newton_correction_result\n" << newton_correction_result << std::endl;
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
-
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-
-	BOOST_CHECK(abs(newton_correction_result(0)-corrected_mp(0)) < threshold_clearance_mp);
-	BOOST_CHECK(abs(newton_correction_result(1)-corrected_mp(1)) < threshold_clearance_mp);
-
-	
-	
-
-
-
-
-
-
-
-
-
-
-
-	dbl xn_d(2.3,0.2);
-	dbl yn_d(1.1, 1.87);
-
-	double tracking_tolerance_d(tracking_tolerance);
-
-
-	// Exact value of step after Euler prediction
-	Vec<dbl> predicted_d(2);
-	predicted_d << dbl(2.19163044775416716032722848776575,-0.203532362690064835307109968099797),
-		dbl(1.82976707889226183423896735889061, 2.37621890895572354790101570972854);
-
-	
-	
-
-	// Exact value of step after a one-Newton-step correction
-	Vec<dbl> corrected_d(2);
-	corrected_d << dbl(1.27914921783237417760452216130584,0.287985101426454933172731469315295),
-		dbl(0.16018906270391684942121729748759, -0.0639966892058788740383847709589545);
-
-	
-
-	
-
-
-	
+	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
+		BOOST_CHECK(abs(newton_correction_result(ii)-corrected_mp(ii)) < threshold_clearance_mp);
 	
 }
 
@@ -274,7 +307,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_2_corr_step)
 	// Exact value of step after Euler prediction
 	std::vector<dbl> predicted_d = {dbl(2.19163044775416716032722848776575,-0.203532362690064835307109968099797),
 		dbl(1.82976707889226183423896735889061, 2.37621890895572354790101570972854)};
-	std::vector<mpfr> predicted_mp = {mpfr("2.19163044775416716032722848776575","-0.203532362690064835307109968099797"),
+	std::vector<mpfr> predicted = {mpfr("2.19163044775416716032722848776575","-0.203532362690064835307109968099797"),
 		mpfr("1.82976707889226183423896735889061", "2.37621890895572354790101570972854")};
 	
 	// Exact value of step after a two-Newton-step correction

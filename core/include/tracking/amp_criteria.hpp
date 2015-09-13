@@ -54,7 +54,7 @@ namespace bertini{
 			{
 				std::cout << "criterion A, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
 				std::cout << "criterion A, rhs: " << AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi)) << "\n";
-				return NumTraits<RealType>::NumDigits()  > AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi));
+				return NumTraits<RealType>::NumDigits()  > AMP_config.safety_digits_1 + log10(norm_J_inverse * RealType(AMP_config.epsilon) * (norm_J + RealType(AMP_config.Phi) ) );
 			}
 			
 
@@ -75,7 +75,7 @@ namespace bertini{
 			template<typename RealType>
 			bool CriterionB(RealType const& norm_J, RealType const& norm_J_inverse, unsigned num_newton_iterations_remaining, RealType tracking_tolerance, RealType const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				auto D = log10(norm_J_inverse*( (2+AMP_config.epsilon)*norm_J + AMP_config.epsilon*AMP_config.Phi) + 1);
+				auto D = log10(norm_J_inverse*( (2+RealType(AMP_config.epsilon))*norm_J + RealType(AMP_config.epsilon)*RealType(AMP_config.Phi)) + 1);
 				std::cout << "criterion B, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
 				std::cout << "criterion B, rhs: " << AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining) << "\n";
 				return NumTraits<RealType>::NumDigits() > AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
@@ -98,7 +98,7 @@ namespace bertini{
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 				std::cout << "criterion C, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
 				std::cout << "criterion C, rhs: " << AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + z.norm()) << "\n";
-				return NumTraits<RealType>::NumDigits() > AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + z.norm());
+				return NumTraits<RealType>::NumDigits() > AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*RealType(AMP_config.Psi) + z.norm());
 			}
 		}
 	}
