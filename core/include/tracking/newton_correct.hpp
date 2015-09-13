@@ -49,15 +49,17 @@ namespace bertini{
 					               PrecisionType PrecType, 
 					               RealType const& tracking_tolerance,
 					               RealType const& path_truncation_threshold,
+					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				next_space = current_space;
 				for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
 				{
+					// std::cout << ii << "th iteration\n";
 					//TODO: wrap these into a single line.
-					auto f = S.Eval(current_space, current_time);
-					auto J = S.Jacobian(current_space, current_time);
+					auto f = S.Eval(next_space, current_time);
+					auto J = S.Jacobian(next_space, current_time);
 					auto LU = J.lu();
 
 
@@ -71,10 +73,10 @@ namespace bertini{
 
 
 					auto delta_z = LU.solve(-f);
-					std::cout << "correct delta_z = \n" << delta_z << std::endl;
+					// std::cout << "correct delta_z = \n" << delta_z << std::endl;
 					next_space += delta_z;
 
-					if (delta_z.norm() < tracking_tolerance)
+					if ( delta_z.norm() < tracking_tolerance && ii >= (min_num_newton_iterations-1) )
 						return SuccessCode::Success;
 
 					if (PrecType==PrecisionType::Adaptive)
@@ -88,7 +90,7 @@ namespace bertini{
 
 					}
 
-					if (S.DehomogenizePoint(current_space).norm() > path_truncation_threshold)
+					if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
 					{
 						return SuccessCode::GoingToInfinity;
 					}

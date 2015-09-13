@@ -50,6 +50,7 @@ namespace bertini {
 				               unsigned frequency_of_CN_estimation, config::PrecisionType prec_type, 
 				               RealType const& tracking_tolerance,
 				               RealType const& path_truncation_threshold,
+				               unsigned min_num_newton_iterations,
 				               unsigned max_num_newton_iterations,
 				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
@@ -76,6 +77,7 @@ namespace bertini {
 								               prec_type, 
 								               tracking_tolerance,
 								               path_truncation_threshold,
+								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP_config);
 

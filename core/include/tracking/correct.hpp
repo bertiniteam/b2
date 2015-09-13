@@ -39,6 +39,7 @@ namespace bertini{
 					               config::PrecisionType PrecType, 
 					               RealType tracking_tolerance,
 					               RealType path_truncation_threshold,
+					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
@@ -49,6 +50,7 @@ namespace bertini{
 						               PrecType, 
 						               tracking_tolerance,
 						               path_truncation_threshold,
+						               min_num_newton_iterations,
 						               max_num_newton_iterations,
 						               AMP_config);
 		}
