@@ -53,6 +53,11 @@ namespace bertini{
 					               unsigned max_num_newton_iterations,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
+				#endif
+
+
 				next_space = current_space;
 				for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
 				{

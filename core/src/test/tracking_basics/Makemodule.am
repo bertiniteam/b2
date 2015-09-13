@@ -4,12 +4,13 @@ EXTRA_PROGRAMS += tracking_basics_test
 
 tracking_basics_test_source_files = \
 	src/test/tracking_basics/tracking_basics_test.cpp \
-	src/test/tracking_basics/pred_corr_test.cpp
+	src/test/tracking_basics/newton_correct_test.cpp \
+	src/test/tracking_basics/euler_test.cpp
 
 
 tracking_basics_test_SOURCES = \
 	$(tracking_basics_test_source_files) \
-	$(all_bertini2_sources) 
+	$(all_bertini2_sources)
 
 
 

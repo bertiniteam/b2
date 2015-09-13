@@ -73,7 +73,9 @@ namespace bertini{
 					               RealType const& tracking_tolerance,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+				              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				              				"underlying complex type and the type for comparisons must match");
 
 				// std::cout << "current_time = " << current_time << "\n";
 				// std::cout << "current_space = " << current_space << "\n";
