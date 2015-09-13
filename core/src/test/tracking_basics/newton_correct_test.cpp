@@ -14,13 +14,11 @@
 //along with newton_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-//  newton_test.cpp
-//
 //  copyright 2015
 //  Daniel Brake
 //  University of Notre Dame
 //  ACMS
-//  Spring, Summer 2015
+//  Fall 2015
 
 //newton_test.cpp
 //
@@ -79,7 +77,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	// Define homotopy system
 	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-	sys.AddFunction( t*(y-1.0) + (1-t)*(2.0*x + 5.0*y) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
@@ -144,7 +142,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 	
 	// Define homotopy system
 	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-	sys.AddFunction( t*(y-1.0) + (1-t)*(2.0*x + 5.0*y) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
@@ -209,7 +207,7 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_double)
 	
 	// Define homotopy system
 	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-	sys.AddFunction( t*(y-1.0) + (1-t)*(2.0*x + 5.0*y) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
@@ -274,7 +272,7 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 	
 	// Define homotopy system
 	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-	sys.AddFunction( t*(y-1.0) + (1-t)*(2.0*x + 5.0*y) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);

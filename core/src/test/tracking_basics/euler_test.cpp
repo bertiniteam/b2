@@ -20,10 +20,8 @@
 //  Daniel Brake
 //  University of Notre Dame
 //  ACMS
-//  Spring, Summer 2015
+//  Fall 2015
 
-//start_system_test.cpp
-//
 
 
 #include <boost/test/unit_test.hpp>
@@ -86,7 +84,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	
 	// Define homotopy system
 	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-	sys.AddFunction( t*(y-1.0) + (1-t)*(2.0*x + 5.0*y) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
@@ -152,7 +150,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_mp)
 	
 	// Define homotopy system
 	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
-	sys.AddFunction( t*(y-1.0) + (1-t)*(2.0*x + 5.0*y) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
