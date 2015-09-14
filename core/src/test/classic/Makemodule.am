@@ -4,7 +4,7 @@ EXTRA_PROGRAMS += b2_classic_compatibility_test
 
 classic_compatibility_test_source_files = \
 	src/test/classic/classic_test.cpp \
-	src/test/classic/parsing.cpp
+	src/test/classic/classic_parsing_test.cpp
 
 
 b2_classic_compatibility_test_SOURCES = \
