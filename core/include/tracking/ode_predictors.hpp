@@ -22,8 +22,8 @@
 //  ACMS
 //  Summer 2015
 
-#ifndef ode_predictors_hpp
-#define ode_predictors_hpp
+#ifndef BERTINI_ODE_PREDICTORS_HPP
+#define BERTINI_ODE_PREDICTORS_HPP
 
 #include "tracking/euler.hpp"
 

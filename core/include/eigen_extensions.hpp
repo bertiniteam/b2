@@ -22,8 +22,8 @@
 //
 //
 
-#ifndef BERTINI_EIGEN_EXTENSIONS
-#define BERTINI_EIGEN_EXTENSIONS
+#ifndef BERTINI_EIGEN_EXTENSIONS_HPP
+#define BERTINI_EIGEN_EXTENSIONS_HPP
 
 #include <eigen3/Eigen/Dense>
 

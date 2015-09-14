@@ -23,8 +23,8 @@
 //  Summer 2015
 
 
-#ifndef tracking_hpp
-#define tracking_hpp
+#ifndef BERTINI_TRACKING_HPP
+#define BERTINI_TRACKING_HPP
 
 
 #include "tracking/step.hpp"

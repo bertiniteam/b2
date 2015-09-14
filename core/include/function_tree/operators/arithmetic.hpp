@@ -18,8 +18,8 @@
 //
 // arithmetic.hpp:  Declares the arithmetic nodes for bertini2.
 
-#ifndef operator_arithmetic_hpp
-#define operator_arithmetic_hpp
+#ifndef BERTINI_OPERATOR_ARITHMETIC_HPP
+#define BERTINI_OPERATOR_ARITHMETIC_HPP
 
 #include <vector>
 #include <string>

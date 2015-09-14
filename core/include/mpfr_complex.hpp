@@ -22,8 +22,8 @@
 // mpfr_complex.hpp:  Declares the class bertini::complex.
 
 
-#ifndef MPFR_COMPLEX_HPP
-#define MPFR_COMPLEX_HPP
+#ifndef BERTINI_MPFR_COMPLEX_HPP
+#define BERTINI_MPFR_COMPLEX_HPP
 
 #include "config.h"
 

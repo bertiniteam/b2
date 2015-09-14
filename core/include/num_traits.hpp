@@ -24,8 +24,8 @@
 
 
 
-#ifndef BERTINI_NUM_TRAITS
-#define BERTINI_NUM_TRAITS
+#ifndef BERTINI_NUM_TRAITS_HPP
+#define BERTINI_NUM_TRAITS_HPP
 
 
 #include <eigen3/Eigen/Core>

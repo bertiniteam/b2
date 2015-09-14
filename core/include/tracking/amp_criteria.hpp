@@ -22,8 +22,8 @@
 //  ACMS
 //  Summer 2015
 
-#ifndef amp_criteria_hpp
-#define amp_criteria_hpp
+#ifndef BERTINI_AMP_CRITERIA_HPP
+#define BERTINI_AMP_CRITERIA_HPP
 
 #include <boost/multiprecision/mpfr.hpp>
 

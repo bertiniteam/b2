@@ -22,8 +22,8 @@
 //  ACMS
 //  Summer 2015
 
-#ifndef correct_hpp
-#define correct_hpp
+#ifndef BERTINI_CORRECT_HPP
+#define BERTINI_CORRECT_HPP
 
 #include "tracking/newton_correct.hpp"
 

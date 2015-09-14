@@ -18,8 +18,8 @@
 //
 // limbo.hpp:  Declares functions which have not yet found a home.
 
-#ifndef BERTINI_LIMBO
-#define BERTINI_LIMBO
+#ifndef BERTINI_LIMBO_HPP
+#define BERTINI_LIMBO_HPP
 
 #include <vector>
 #include <stdexcept>

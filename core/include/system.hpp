@@ -22,8 +22,8 @@
 // system.hpp:  provides the bertini::system class.
 
 
-#ifndef BERTINI_SYSTEM_H
-#define BERTINI_SYSTEM_H
+#ifndef BERTINI_SYSTEM_HPP
+#define BERTINI_SYSTEM_HPP
 
 #include "mpfr_complex.hpp"
 

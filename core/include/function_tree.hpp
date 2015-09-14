@@ -23,8 +23,8 @@
 
 
 
-#ifndef BERTINI2_FUNCTION_TREE_H_
-#define BERTINI2_FUNCTION_TREE_H_
+#ifndef BERTINI_FUNCTION_TREE_HPP
+#define BERTINI_FUNCTION_TREE_HPP
 
 #include "function_tree/node.hpp"
 

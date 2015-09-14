@@ -22,8 +22,8 @@
 //  ACMS
 //  Summer 2015
 
-#ifndef tracking_config_hpp
-#define tracking_config_hpp
+#ifndef BERTINI_TRACKING_CONFIG_HPP
+#define BERTINI_TRACKING_CONFIG_HPP
 
 
 #include <eigen3/Eigen/Dense>

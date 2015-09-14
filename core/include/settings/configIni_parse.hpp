@@ -21,8 +21,8 @@
 // configIni_parser.hpp: Converts configuration settings into ini format
 
 
-#ifndef Function_Tree_Test_configIni_parse_hpp
-#define Function_Tree_Test_configIni_parse_hpp
+#ifndef BERTINI_CONFIG_INI_PARSE_HPP
+#define BERTINI_CONFIG_INI_PARSE_HPP
 
 
 #include <boost/fusion/adapted.hpp>

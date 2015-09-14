@@ -22,8 +22,8 @@
 //  ACMS
 //  Summer 2015
 
-#ifndef euler_hpp
-#define euler_hpp
+#ifndef BERTINI_EULER_PREDICT_HPP
+#define BERTINI_EULER_PREDICT_HPP
 
 #include "tracking/amp_criteria.hpp"
 #include "tracking/tracking_config.hpp"

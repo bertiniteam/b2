@@ -22,8 +22,8 @@
 //  ACMS
 //  Summer 2015
 
-#ifndef predict_hpp
-#define predict_hpp
+#ifndef BERTINI_PREDICT_HPP
+#define BERTINI_PREDICT_HPP
 
 #include "tracking/ode_predictors.hpp"
 

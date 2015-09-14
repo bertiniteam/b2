@@ -22,6 +22,8 @@
 //  ACMS
 //  Spring, Summer 2015
 
+#ifndef BERTINI_START_SYSTEM_HPP
+#define BERTINI_START_SYSTEM_HPP
 
 #include "system.hpp"
 #include "limbo.hpp"
@@ -157,3 +159,8 @@ namespace bertini
 		};
 	}
 }
+
+
+#endif
+
+

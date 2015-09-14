@@ -19,8 +19,8 @@
 // node.hpp:  Declares the class Node.
 
 
-#ifndef __b2Test__Node__
-#define __b2Test__Node__
+#ifndef BERTINI_NODE_BASE_HPP
+#define BERTINI_NODE_BASE_HPP
 
 
 
@@ -294,7 +294,7 @@ private:
 
 
 #endif 
-/* defined(__b2Test__Node__) */
+/* defined(BERTINI_NODE_BASE_HPP) */
 
 
 
