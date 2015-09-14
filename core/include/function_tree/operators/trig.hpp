@@ -19,8 +19,8 @@
 // trig.hpp:  Declares the trigonometric operator classes.
 
 
-#ifndef trig_operator_hpp
-#define trig_operator_hpp
+#ifndef BERTINI_TRIGONOMETRIC_OPERATOR_HPP
+#define BERTINI_TRIGONOMETRIC_OPERATOR_HPP
 
 #include "function_tree/operators/operator.hpp"
 #include "function_tree/operators/arithmetic.hpp"
