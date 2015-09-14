@@ -666,6 +666,18 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_a
 	BOOST_CHECK(abs(d(7) - v(9)) < threshold_clearance_d);
 }
 
+
+BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound)
+{
+	BOOST_CHECK_EQUAL("testing for correct estimate of coefficient bound implemented","true");
+}
+
+BOOST_AUTO_TEST_CASE(system_estimate_degree_bound)
+{
+	BOOST_CHECK_EQUAL("testing for correct estimate of degree bound implemented","true");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

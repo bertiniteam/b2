@@ -38,7 +38,6 @@
 #include <eigen3/Eigen/Core>
 
 #include <string>
-#include <assert.h>
 
 #include "num_traits.hpp"
 

@@ -182,8 +182,10 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian()
 		{
-			assert(is_differentiated_);
-			
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(is_differentiated_ && "computing Jacobian matrix with undifferentiated system, using previous space and time values.  This is indicative of not having previously evaluated the Jacobian -- which is a precondition on this function.");
+			#endif
+
 			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
 
 			Mat<T> J(NumFunctions(), NumVariables());
@@ -407,8 +409,9 @@ namespace bertini {
 		template<typename T>
 		void SetVariables(const Vec<T> & new_values)
 		{
-			assert(new_values.size()== NumVariables());
-
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(new_values.size()== NumVariables() && "variable vector of different length from system-owned variables in SetVariables");
+			#endif
 			auto vars = Variables();
 
 			auto counter = 0;
@@ -890,7 +893,7 @@ namespace bertini {
 	    Vec<T> DehomogenizePointAffHomUngOrdering(Vec<T> const& x) const
         {
         	#ifndef BERTINI_DISABLE_ASSERTS
-        	assert(ordering_==OrderingChoice::AffHomUng);
+        	assert(ordering_==OrderingChoice::AffHomUng && "calling Dehomogenize using Affine-Homogeneous-Ungrouped ordering, but system is in FIFO mode.");
         	#endif
 
         	Vec<T> x_dehomogenized(NumNaturalVariables());

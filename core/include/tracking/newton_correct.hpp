@@ -92,15 +92,12 @@ namespace bertini{
 
 						if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
-
 					}
+
 
 					if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
-					{
 						return SuccessCode::GoingToInfinity;
-					}
 
-					
 				}
 
 				return SuccessCode::FailedToConverge;

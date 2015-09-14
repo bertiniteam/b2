@@ -94,7 +94,10 @@ namespace bertini {
 		template<class Archive>
 		void save(Archive & ar, const unsigned int version) const
 		{
-			assert(real_.precision()==imag_.precision());
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(real_.precision()==imag_.precision() && "real and imaginary parts at different precision at save time for Boost serialization of bertini::complex");
+			#endif
+
 			// note, version is always the latest when saving
 			unsigned int temp_precision = real_.precision();
 			ar & temp_precision;
@@ -522,8 +525,10 @@ namespace bertini {
 		 */
 		unsigned int precision() const
 		{
-			assert(real_.precision()==imag_.precision());
-			
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(real_.precision()==imag_.precision() && "real and imaginary parts at different precision when querying precision.  somehow they got out of sync.");
+			#endif
+
 			return real_.precision();
 		}
 		

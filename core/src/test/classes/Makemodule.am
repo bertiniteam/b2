@@ -9,7 +9,7 @@ b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	src/test/classes/fundamentals.cpp \
 	src/test/classes/eigen_test.cpp \
 	include/mpfr_complex.hpp src/test/classes/complex_test.cpp \
-	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
+	include/mpfr_extensions.hpp  \
 	$(function_tree) \
 	$(function_tree_test_source_files) \
 	system.hpp system_parsing.hpp \
@@ -19,7 +19,7 @@ b2_class_test_SOURCES = src/test/classes/class_test.cpp \
 	src/bertini/system.cpp \
 	src/bertini/start_system.cpp include/start_system.hpp \
 	src/test/classes/start_system_test.cpp \
-	src/bertini/limbo.cpp include/limbo.hpp \
+	include/limbo.hpp \
 	src/test/classes/node_serialization.cpp
 
 

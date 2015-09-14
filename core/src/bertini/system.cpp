@@ -565,7 +565,7 @@ namespace bertini
 		}
 		
 		#ifndef BERTINI_DISABLE_ASSERTS
-		assert(constructed_ordering.size()==NumVariables());
+		assert(constructed_ordering.size()==NumVariables() && "resulting constructed ordering has differing size from the number of variables in the problem.");
 		#endif
 
 		return constructed_ordering;	
@@ -593,7 +593,7 @@ namespace bertini
 		constructed_ordering.insert(constructed_ordering.end(),ungrouped_variables_.begin(),ungrouped_variables_.end());
 
 		#ifndef BERTINI_DISABLE_ASSERTS
-		assert(constructed_ordering.size()==NumVariables());
+		assert(constructed_ordering.size()==NumVariables() && "resulting constructed ordering has differing size from the number of variables in the problem.");
 		#endif
 
 	    return constructed_ordering;
