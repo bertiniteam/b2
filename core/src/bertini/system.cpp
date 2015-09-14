@@ -560,9 +560,7 @@ namespace bertini
 				}
 				default:
 				{	
-					std::stringstream text;
-					text << "unacceptable VariableGroupType " << group_type << " in FIFOVariableOrdering";
-					throw std::runtime_error(text.str());
+					throw std::runtime_error("unacceptable VariableGroupType " << group_type << " in FIFOVariableOrdering");
 				}
 			}
 		}

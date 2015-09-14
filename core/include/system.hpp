@@ -46,8 +46,6 @@
 #include <boost/serialization/deque.hpp>
 
 
-#include "limbo.hpp"
-
 
 namespace bertini {
 
