@@ -1,8 +1,72 @@
-#this is src/test/classes/Makemodule.am
+#this is src/bertini/Makemodule.am
 
+#
+#  THE primary Makemodule.am file for the computational core of Bertini2
+#
+#
 bin_PROGRAMS += bertini2
 
-bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp
+
+
+
+tracking_header_files = \
+	include/tracking.hpp \
+	include/tracking/correct.hpp \
+	include/tracking/newton_correct.hpp \
+	include/tracking/predict.hpp \
+	include/tracking/ode_predictors.hpp \
+	include/tracking/euler.hpp \
+	include/tracking/amp_criteria.hpp \
+	include/tracking/tracking_config.hpp \
+	include/tracking/step.hpp
+
+
+tracking_source_files =
+
+
+tracking = $(tracking_header_files) $(tracking_source_files)
+
+
+
+
+function_tree_header_files = \
+	include/function_tree.hpp \
+	include/function_tree/node.hpp \
+	include/function_tree/operators/operator.hpp \
+	include/function_tree/symbols/symbol.hpp \
+	include/function_tree/symbols/variable.hpp \
+	include/function_tree/symbols/differential.hpp \
+	include/function_tree/symbols/special_number.hpp \
+	include/function_tree/symbols/number.hpp \
+	include/function_tree/roots/function.hpp \
+	include/function_tree/roots/jacobian.hpp \
+	include/function_tree/operators/arithmetic.hpp \
+	include/function_tree/operators/trig.hpp
+
+function_tree_source_files = \
+	src/function_tree/node.cpp \
+	src/function_tree/operators/arithmetic.cpp \
+	src/function_tree/operators/trig.cpp \
+	src/function_tree/special_number.cpp
+
+function_tree = $(function_tree_header_files) $(function_tree_source_files)
+
+
+all_bertini2_sources = \
+	$(function_tree) \
+	$(classic) \
+	$(tracking) \
+	include/bertini.hpp \
+	include/mpfr_complex.hpp \
+	include/mpfr_extensions.hpp \
+	include/eigen_extensions.hpp \
+	include/system.hpp src/bertini/system.cpp include/system_parsing.hpp \
+	src/bertini/start_system.cpp include/start_system.hpp \
+	include/limbo.hpp
+
+bertini2_SOURCES = $(all_bertini2_sources) src/bertini/bertini.cpp
+
+
 
 
 
