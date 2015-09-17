@@ -365,6 +365,76 @@ BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
 }
 
 
+BOOST_AUTO_TEST_CASE(tim_test_case_to_see_where_it_fails)
+{
+		/* This is based off the monodromy example in Matt Niemberg and Dan Bates' paper, "Using Monodromy to Avoid High Precision". 
+		There are branch points at t = 1/3 and t = 2/3. 
+		This test is attempting to step onto 2/3.
+	*/
+
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("2.154434690031868e-01","-1.105513521438423e-16"), mpfr("7.106335201775947e-01", "5.293955920339377e-22");
+
+	// Starting time
+	mpfr current_time("0.67");
+	// Time step
+	mpfr delta_t("-0.0033333333333");
+	
+	
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+
+	VariableGroup vars{x,y};
+
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	// Define homotopy system
+	sys.AddFunction( (pow(x,3)-1.0)*t + (pow(x,3) + 2)*(1-t) );
+	sys.AddFunction( (pow(y,2) - 1)*t + (pow(y,2) + 0.5)*(1-t) );
+	
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+	AMP.coefficient_bound = 5;
+
+
+	
+	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+
+
+	Vec<mpfr> corrected(2);
+	corrected << mpfr("0.002490749640238296471889307010594785130184", "-0.000000000000000003195207248478577180899988312732580669713i"),
+		mpfr(".7071067811865829299857876803460408041783","0");
+
+	Vec<mpfr> newton_correction_result;
+
+	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
+	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	unsigned max_num_newton_iterations = 10;
+	unsigned min_num_newton_iterations = 10;
+	auto success_code = bertini::tracking::Correct(newton_correction_result,
+								               sys,
+								               current_space, 
+								               current_time, 
+								               bertini::tracking::config::PrecisionType::Adaptive, 
+								               tracking_tolerance,
+								               path_truncation_threshold,
+								               min_num_newton_iterations,
+								               max_num_newton_iterations,
+								               AMP);
+
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
+		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_mp);
+
+	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+	
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
