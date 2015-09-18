@@ -95,6 +95,7 @@ namespace bertini{
 				
 				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 					{
+						std::cout << "LU Decomp fail\n";
 						if (PrecType==PrecisionType::Adaptive)
 							return SuccessCode::HigherPrecisionNecessary;
 						else

@@ -318,51 +318,51 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 
 
 
-BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
-{
-	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
-}
-
-
-BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
-{
-	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
-}
-
-
-BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
-{
-	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
-}
-
-
-BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
-{
-	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
-}
-
-
-BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_double)
-{
-	BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
-}
-
-
-BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
-{
-	BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
-}
-
-
-BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
-{
-	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
-}
-
-BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
-{
-	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
-}
+//BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
+//{
+//	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
+//}
+//
+//
+//BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
+//{
+//	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
+//}
+//
+//
+//BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
+//{
+//	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
+//}
+//
+//
+//BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
+//{
+//	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
+//}
+//
+//
+//BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_double)
+//{
+//	BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
+//}
+//
+//
+//BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
+//{
+//	BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
+//}
+//
+//
+//BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
+//{
+//	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+//}
+//
+//BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
+//{
+//	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+//}
 
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -194,34 +194,137 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_mp)
 
 BOOST_AUTO_TEST_CASE(euler_predict_linear_algebra_fails_d)
 {
-	BOOST_CHECK_EQUAL("implemented case where euler predict linear algebra fails","true");
+	// Starting point in spacetime step
+	Vec<dbl> current_space(2);
+	current_space << dbl(1.0), dbl(-4.0);
+	
+	// Starting time
+	dbl current_time(0.75);
+	// Time step
+	dbl delta_t(-0.1);
+	
+	
+	
+	
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	
+	VariableGroup vars{x,y};
+	
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	
+	// Define homotopy system
+	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
+	
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	
+	AMP.coefficient_bound = 5;
+	
+	double tracking_tolerance(1e-5);
+	double condition_number_estimate;
+	
+	unsigned num_steps_since_last_cond_num_est = 1;
+	unsigned freq_of_CN_estimation = 1;
+	
+	Vec<dbl> prediction_result;
+	
+	
+	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::Euler,
+												   prediction_result,
+												   sys,
+												   current_space, current_time,
+												   delta_t,
+												   condition_number_estimate,
+												   num_steps_since_last_cond_num_est,
+												   freq_of_CN_estimation,
+												   bertini::tracking::config::PrecisionType::Double,
+												   tracking_tolerance,
+												   AMP);
+	
+	BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailure);
+	
+	std::cout << "Success Code = " << condition_number_estimate << std::endl;
+	
 }
+	
+	
 
 BOOST_AUTO_TEST_CASE(euler_predict_linear_algebra_fails_mp)
 {
-	BOOST_CHECK_EQUAL("implemented case where euler predict linear algebra fails","true");
+	// Starting point in spacetime step
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
+	
+	// Starting time
+	mpfr current_time("0.9");
+	// Time step
+	mpfr delta_t("-0.1");
+	
+	
+	
+	
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	
+	VariableGroup vars{x,y};
+	
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	
+	// Define homotopy system
+	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
+	
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	
+	AMP.coefficient_bound = 5;
+	
+	mpfr_float tracking_tolerance("1e-5");
+	mpfr_float condition_number_estimate;
+	
+	unsigned num_steps_since_last_cond_num_est = 1;
+	unsigned freq_of_CN_estimation = 1;
+	
+	Vec<mpfr> prediction_result;
+	
+	
+	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::Euler,
+												   prediction_result,
+												   sys,
+												   current_space, current_time,
+												   delta_t,
+												   condition_number_estimate,
+												   num_steps_since_last_cond_num_est,
+												   freq_of_CN_estimation,
+												   bertini::tracking::config::PrecisionType::Adaptive,
+												   tracking_tolerance,
+												   AMP);
+	
+	BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailure);
 }
 
 
-BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_a_is_false_d)
-{
-	BOOST_CHECK_EQUAL("implemented case where euler predict criterion a violated","true");
-}
-
-BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_a_is_false_mp)
-{
-	BOOST_CHECK_EQUAL("implemented case where euler predict criterion a violated","true");
-}
-
-BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_d)
-{
-	BOOST_CHECK_EQUAL("implemented case where euler predict criterion c violated","true");
-}
-
-BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_mp)
-{
-	BOOST_CHECK_EQUAL("implemented case where euler predict criterion c violated","true");
-}
+//BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_a_is_false_d)
+//{
+//	BOOST_CHECK_EQUAL("implemented case where euler predict criterion a violated","true");
+//}
+//
+//BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_a_is_false_mp)
+//{
+//	BOOST_CHECK_EQUAL("implemented case where euler predict criterion a violated","true");
+//}
+//
+//BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_d)
+//{
+//	BOOST_CHECK_EQUAL("implemented case where euler predict criterion c violated","true");
+//}
+//
+//BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_mp)
+//{
+//	BOOST_CHECK_EQUAL("implemented case where euler predict criterion c violated","true");
+//}
 BOOST_AUTO_TEST_SUITE_END()
 
 
