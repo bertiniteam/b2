@@ -3,8 +3,8 @@
 
 
 
-#we're building b2, version 0.0.0, and the corresponding email is dan brake's
-AC_INIT([b2], [0.0.0], [danielthebrake@gmail.com],[b2], [http://github.com/danbates/b2])
+#we're building b2, version 2.0.1, and the corresponding email is dan brake's
+AC_INIT([b2], [2.0.1], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -30,8 +30,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([Makefile])
 
 
-#find the flags for C++11
-AX_CXX_COMPILE_STDCXX_11
+#find the flags for C++14
+AX_CXX_COMPILE_STDCXX_14
 
 
 #enable the creation of shared libraries
@@ -40,12 +40,6 @@ AC_ENABLE_SHARED
 #enable the creation of static libraries
 AC_ENABLE_STATIC
 
-
-#find flex / lex
-AC_PROG_LEX
-
-#find bison / yacc
-AC_PROG_YACC
 
 #find the linker
 AC_PROG_LN_S
@@ -61,12 +55,13 @@ LT_INIT
 
 
 #this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs
-#LX_FIND_MPI
+LX_FIND_MPI
 
-#AS_IF([test "$have_CXX_mpi" = "yes"],
-#	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
-#	AC_MSG_ERROR([it appears you do not have mpi installed])
-#	)
+# print a notice about the presence of MPI on the machine.
+AS_IF([test "$have_CXX_mpi" = "yes"],
+	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
+	AC_MSG_NOTICE([it appears you do not have mpi installed])
+	)
 
 
 
@@ -91,7 +86,7 @@ AC_SEARCH_LIBS([cos], [m], [], [
 
 # look for a header file in Eigen, and croak if fail to find.
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to fine Eigen 3  (eigen3/Eigen/Dense)]),[])
+AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to find Eigen 3  (eigen3/Eigen/Dense)]),[])
 AC_LANG_POP([C++])
 
 
