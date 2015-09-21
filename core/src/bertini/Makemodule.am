@@ -1,8 +1,46 @@
-#this is src/test/classes/Makemodule.am
+#this is src/bertini/Makemodule.am
 
+#
+#  THE primary Makemodule.am file for the computational core of Bertini2
+#
+#
 bin_PROGRAMS += bertini2
 
-bertini2_SOURCES = src/bertini/bertini.cpp include/bertini.hpp
+
+
+
+
+function_tree_header_files = \
+	include/function_tree.hpp \
+	include/function_tree/node.hpp \
+	include/function_tree/operators/operator.hpp \
+	include/function_tree/symbols/symbol.hpp \
+	include/function_tree/symbols/variable.hpp \
+	include/function_tree/symbols/differential.hpp \
+	include/function_tree/symbols/special_number.hpp \
+	include/function_tree/symbols/number.hpp \
+	include/function_tree/roots/function.hpp \
+	include/function_tree/roots/jacobian.hpp \
+	include/function_tree/operators/arithmetic.hpp \
+	include/function_tree/operators/trig.hpp
+
+function_tree_source_files = \
+	src/function_tree/node.cpp \
+	src/function_tree/operators/arithmetic.cpp \
+	src/function_tree/operators/trig.cpp \
+	src/function_tree/special_number.cpp
+
+function_tree = $(function_tree_header_files) $(function_tree_source_files)
+
+
+bertini2_SOURCES = $(function_tree) src/bertini/bertini.cpp include/bertini.hpp \
+	include/mpfr_complex.hpp \
+	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
+	include/system.hpp src/bertini/system.cpp include/system_parsing.hpp \
+	src/bertini/start_system.cpp include/start_system.hpp \
+	src/bertini/limbo.cpp include/limbo.hpp
+
+
 
 
 

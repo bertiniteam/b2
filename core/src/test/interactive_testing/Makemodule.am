@@ -1,0 +1,26 @@
+#this is src/test/interactive_testing/Makemodule.am
+
+
+EXTRA_PROGRAMS += test_tree_interactive
+
+
+# the variable $(function_tree_header_files) is defined in the bertini/Makemodule.am
+
+
+
+test_tree_interactive_source_files = \
+	src/test/interactive_testing/function_tree_interactive.cpp
+
+test_tree_interactive_SOURCES = \
+	$(test_tree_interactive_source_files) \
+	$(function_tree) \
+	system.hpp src/bertini/system.cpp \
+	src/bertini/start_system.cpp include/start_system.cpp
+
+#test_tree_interactive_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  \
+#	$(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) \
+#	$(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
+
+#test_tree_interactive_CXXFLAGS = $(BOOST_CPPFLAGS)
+
+
