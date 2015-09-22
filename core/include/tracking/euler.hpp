@@ -86,7 +86,7 @@ namespace bertini{
 				// std::cout << "size of dh_dt = \n" << dh_dt.size() << "\n";
 				// std::cout << "type of dh_dt = \n" << boost::typeindex::type_id_with_cvr<decltype(dh_dt)>().pretty_name() << "\n";
 				// std::cout << "dh_dt = \n" << dh_dt << "\n";
-				// std::cout << "dh_dx = \n" << dh_dx << "\n";
+//				 std::cout << "dh_dx = \n" << dh_dx << "\n";
 
 				// solve delta_x = (dH/dx)^(-1)*Y
 				// Y = dH/dt
@@ -95,7 +95,7 @@ namespace bertini{
 				
 				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 					{
-						std::cout << "LU Decomp fail\n";
+						
 						if (PrecType==PrecisionType::Adaptive)
 							return SuccessCode::HigherPrecisionNecessary;
 						else
