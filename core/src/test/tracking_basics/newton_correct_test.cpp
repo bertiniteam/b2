@@ -318,51 +318,97 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 
 
 
-BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
-{
-	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
-}
+// BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
+// {
+	/*
+		Need to violate P > sigma_1 + D + (tau + log_10(norm(d))/(N - i)
+		P: Number of digits of precision.
+		sigma_1: Number of safety digits 
+		tau: 10^(-tau) is accuracy to which we wish to track path. 
+		D := log_10(norm(J^(-1)) * epsilon * (norm(J) + Phi) ) 
+		J: Jacobian Matrix
+		epsilon: constant that accounts for growth in errors when solving a system of linear equations.
+		Phi: error function
+		d: most recent Newton Residual
+		N: maximum number of newton iterations to perform
+		i: Suppose there are N-i iterations remaining. 
+		
+	*/
+// 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
+// }
 
 
-BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
-{
-	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
-}
+// BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
+// {
+	
+// 		Need to violate P > sigma_1 + D + (tau + log_10(norm(d))/(N - i)
+// 		P: Number of digits of precision.
+// 		sigma_1: Number of safety digits 
+// 		tau: 10^(-tau) is accuracy to which we wish to track path. 
+// 		D := log_10(norm(J^(-1)) * epsilon * (norm(J) + Phi) ) 
+// 		J: Jacobian Matrix
+// 		epsilon: constant that accounts for growth in errors when solving a system of linear equations.
+// 		Phi: error function
+// 		d: most recent Newton Residual
+// 		N: maximum number of newton iterations to perform
+// 		i: Suppose there are N-i iterations remaining. 
+		
+	
+// 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
+// }
 
 
-BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
-{
-	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
-}
+// BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
+// {
+	/*
+		Need to violate P > sigma_2 + tau + log_10(norm(J^(-1) * Psi + norm(z))
+ 		P: Number of digits of precision.
+ 		sigma_2: Number of safety digits 
+ 		tau: 10^(-tau) is accuracy to which we wish to track path. 
+ 		Psi: error function
+		z: point in space
+
+	*/
+// 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
+// }
 
 
-BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
-{
-	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
-}
+// BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
+// {
+		/*
+		Need to violate P > sigma_2 + tau + log_10(norm(J^(-1) * Psi + norm(z))
+ 		P: Number of digits of precision.
+ 		sigma_2: Number of safety digits 
+ 		tau: 10^(-tau) is accuracy to which we wish to track path. 
+ 		Psi: error function
+		z: point in space
+
+	*/
+// 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
+// }
 
 
-BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_double)
-{
-	BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
-}
+// BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_double)
+// {
+// 	BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
+// }
 
 
-BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
-{
-	BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
-}
+// BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
+// {
+// 	BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
+// }
 
 
-BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
-{
-	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
-}
+// BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
+// {
+// 	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+// }
 
-BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
-{
-	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
-}
+// BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
+// {
+// 	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+// }
 
 
 BOOST_AUTO_TEST_CASE(tim_test_case_to_see_where_it_fails)
@@ -373,14 +419,18 @@ BOOST_AUTO_TEST_CASE(tim_test_case_to_see_where_it_fails)
 	*/
 
 	Vec<mpfr> current_space(2);
-	current_space << mpfr("2.154434690031868e-01","-1.105513521438423e-16"), mpfr("7.106335201775947e-01", "5.293955920339377e-22");
+
+
+ 
+	current_space << mpfr("0.1436289793361744575434783011564108836032", "-0.0000000000000001842522535723350930522507483285534300836"), mpfr("0.7071155324539784954777790166375748144087","0.0000000000000000000005320163622915052552393231644148966601752");
 
 	// Starting time
 	mpfr current_time("0.67");
 	// Time step
 	mpfr delta_t("-0.0033333333333");
 	
-	
+	current_time += delta_t;
+
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
 
@@ -390,13 +440,12 @@ BOOST_AUTO_TEST_CASE(tim_test_case_to_see_where_it_fails)
 	sys.AddPathVariable(t);
 
 	// Define homotopy system
-	sys.AddFunction( (pow(x,3)-1.0)*t + (pow(x,3) + 2)*(1-t) );
-	sys.AddFunction( (pow(y,2) - 1)*t + (pow(y,2) + 0.5)*(1-t) );
-	
+	sys.AddFunction( (pow(x,3)-1)*t + (pow(x,3) + 2)*(1-t) );
+	sys.AddFunction( (pow(y,2) - 1)*t + (pow(y,2) + mpfr("0.5"))*(1-t) );
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 	AMP.coefficient_bound = 5;
 
 
@@ -405,8 +454,10 @@ BOOST_AUTO_TEST_CASE(tim_test_case_to_see_where_it_fails)
 
 
 	Vec<mpfr> corrected(2);
-	corrected << mpfr("0.002490749640238296471889307010594785130184", "-0.000000000000000003195207248478577180899988312732580669713i"),
+	corrected << mpfr("0.002490749640238296471889307010594785130184", "-0.000000000000000003195207248478577180899988312732580669713"),
 		mpfr(".7071067811865829299857876803460408041783","0");
+
+	// 0.002490749635418822236607732672213033457617
 
 	Vec<mpfr> newton_correction_result;
 
@@ -427,10 +478,17 @@ BOOST_AUTO_TEST_CASE(tim_test_case_to_see_where_it_fails)
 
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+
+	std::cout.precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	std::cout << "newton_correction_result is " << newton_correction_result << "\n";
+	std::cout << "newton_correction_result - corrected is "<<newton_correction_result-corrected << '\n';
+	std::cout << "threshold_clearance_mp is " << threshold_clearance_mp << '\n';
+
+
 	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
 		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_mp);
 
-	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+	//BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
 	
 }
 
