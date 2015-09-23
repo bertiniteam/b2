@@ -94,12 +94,7 @@ namespace bertini{
 				auto LU = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
 				
 				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
-					{
-						if (PrecType==PrecisionType::Adaptive)
-							return SuccessCode::HigherPrecisionNecessary;
-						else
-							return SuccessCode::MatrixSolveFailure;
-					}
+					return SuccessCode::MatrixSolveFailure;
 
 				auto delta_x = LU.solve(dh_dt); 
 
@@ -118,7 +113,7 @@ namespace bertini{
 					{
 						// TODO: this esimate may be wrong
 						condition_number_estimate = norm_J * norm_J_inverse;
-						num_steps_since_last_condition_number_computation = 0; // reset the counter to 0
+						num_steps_since_last_condition_number_computation = 1; // reset the counter to 0
 					}
 					else // no need to compute the condition number
 						num_steps_since_last_condition_number_computation++;

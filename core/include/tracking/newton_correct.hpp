@@ -69,12 +69,7 @@ namespace bertini{
 
 
 					if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
-					{
-						if (PrecType==PrecisionType::Adaptive)
-							return SuccessCode::HigherPrecisionNecessary;
-						else
-							return SuccessCode::MatrixSolveFailure;
-					}
+						return SuccessCode::MatrixSolveFailure;
 
 
 					auto delta_z = LU.solve(-f);
