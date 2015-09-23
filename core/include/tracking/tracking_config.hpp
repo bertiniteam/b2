@@ -73,13 +73,121 @@ namespace bertini
 
 
 
-			namespace general{			
-				struct TrackingTolerances
-				{
-					mpfr_float before_endgame;
-					mpfr_float during_endgame;
-				};
-			}
+
+
+
+
+			struct Tolerances
+			{
+				mpfr_float newton_before_endgame;
+				mpfr_float newton_during_endgame;
+
+				mpfr_float final_tolerance;
+
+				mpfr_float path_truncation_threshold;
+			};
+
+			struct Stepping
+			{
+				mpfr_float max_step_size;
+				mpfr_float min_step_size;
+
+				mpfr_float step_size_success_factor,
+				mpfr_float step_size_fail_factor,
+
+				unsigned consecutive_successful_steps_before_stepsize_increase;
+				unsigned consecutive_successful_steps_before_precision_decrease;
+				unsigned max_num_steps;
+			};
+
+			struct Newton
+			{
+				unsigned max_num_newton_iterations;
+				unsigned min_num_newton_iterations;
+			};
+
+
+			
+			struct RenameMe
+			{
+				unsigned frequency_of_CN_estimation
+				
+				unsigned sharpendigits;
+
+				mpfr_float function_residual_tolerance;
+				mpfr_float ratio_tolerance;
+			};
+
+
+			struct Security
+			{
+				int level;
+				mpfr_float max_norm;
+			};
+
+
+
+
+
+
+			struct PowerSeries
+			{
+				mpfr_float SampleFactor;
+				unsigned max_cycle_number;
+			};
+
+			struct Cauchy
+			{
+				mpfr_float cutoff_cycle_time;
+				mpfr_float cutoff_ratio_time;
+			};
+
+
+			struct TrackBack
+			{
+				unsigned minimum_cycle;
+				bool junk_removal_test;
+				unsigned max_depth_LDT;
+			};
+
+
+
+
+
+
+
+
+			struct PostProcessing{
+				mpfr_float real_threshold;
+				mpfr_float endpoint_finite_threshold;
+				mpfr_float final_tol_multiplier;
+				mpfr_float final_tol_times_mult;
+			};
+
+
+
+
+
+
+
+
+
+
+			struct Regeneration
+			{
+				bool remove_infinite_endpoints;
+				bool higher_dimension_check;
+
+				mpfr_float newton_before_endgame;
+				mpfr_float newton_during_endgame;
+				mpfr_float final_tolerance;
+			};
+
+			
+
+
+
+
 
 			/**
 			Holds the program parameters with respect to Adaptive Multiple Precision.

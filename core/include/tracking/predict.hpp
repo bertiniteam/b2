@@ -88,6 +88,16 @@ namespace bertini{
 			return SuccessCode::Failure;
 		}
 
+
+		inline
+		unsigned PredictorOrder(config::Predictor predictor_choice)
+		{
+			switch (predictor_choice)
+			{
+				case (config::Predictor::Euler)
+					return 1;
+			}
+		}
 	
 
 	}
