@@ -3,7 +3,7 @@ function predictor_test()
 %% Test parameters
 zn = [4.641588833612776e-1; 7.416198487095662e-1]; % Point in space at time t=t_n
 tn = 0.7; dt = -.01; tnp1 = tn + dt; %Starting time t_n, and time step dt
-digits(33);  %Precision used
+digits(30);  %Precision used
 
 
 
