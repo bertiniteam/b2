@@ -334,6 +334,7 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 		i: Suppose there are N-i iterations remaining. 
 		
 	*/
+
 // 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
 // }
 
@@ -400,10 +401,66 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 // }
 
 
-// BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
-// {
-// 	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
-// }
+BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
+{
+	Vec<mpfr> current_space(1);
+	current_space << mpfr("329.200131365025965858932555654814","-0.0000000000000000627817514906492713836728689129202");
+
+	mpfr current_time("0.667");
+	mpfr delta_t("-0.0030");
+
+	current_time += delta_t;
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
+
+	VariableGroup vars{x};
+
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	sys.AddFunction( (pow(x,3)+1)*t + (-2*pow(x,3) - 5*pow(x,2) + 4*x + 1)*(1-t) );
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+	AMP.coefficient_bound = 5;
+
+
+	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+
+
+	Vec<mpfr> corrected(1);
+	corrected << mpfr("1.27945504735705300572427110511432", "-0.00000000000000000000799300123216975963732243821498472");
+
+	Vec<mpfr> newton_correction_result;
+
+	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
+	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	unsigned max_num_newton_iterations = 10;
+	unsigned min_num_newton_iterations = 10;
+	auto success_code = bertini::tracking::Correct(newton_correction_result,
+								               sys,
+								               current_space, 
+								               current_time, 
+								               bertini::tracking::config::PrecisionType::Adaptive, 
+								               tracking_tolerance,
+								               path_truncation_threshold,
+								               min_num_newton_iterations,
+								               max_num_newton_iterations,
+								               AMP);
+
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(newton_correction_result.size(),1);
+
+	std::cout << "Path Truncation Threshold is " << path_truncation_threshold << '\n';
+
+	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
+		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_mp);
+
+	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+}
 
 // BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
 // {
@@ -479,10 +536,10 @@ BOOST_AUTO_TEST_CASE(tim_test_case_to_see_where_it_fails)
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 
-	std::cout.precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
-	std::cout << "newton_correction_result is " << newton_correction_result << "\n";
-	std::cout << "newton_correction_result - corrected is "<<newton_correction_result-corrected << '\n';
-	std::cout << "threshold_clearance_mp is " << threshold_clearance_mp << '\n';
+	// std::cout.precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	// std::cout << "newton_correction_result is " << newton_correction_result << "\n";
+	// std::cout << "newton_correction_result - corrected is "<<newton_correction_result-corrected << '\n';
+	// std::cout << "threshold_clearance_mp is " << threshold_clearance_mp << '\n';
 
 
 	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)

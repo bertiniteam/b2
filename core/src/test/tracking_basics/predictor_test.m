@@ -1,20 +1,21 @@
 function predictor_test()
 
 %% Test parameters
-zn = [2.3+1i*0.2; 1.1+1i*1.87]; % Point in space at time t=t_n
-tn = 0.9; dt = -.1; tnp1 = tn + dt; %Starting time t_n, and time step dt
+zn = [vpa(1.641923555679908e+02) + vpa(2.511879593214417e-15)*1i]; % Point in space at time t=t_n
+tn = vpa(0.67); dt = vpa(-0.003333333333333); tnp1 = tn + dt; %Starting time t_n, and time step dt
 digits(33);  %Precision used
 
 
 
 %% Homotopy system
-num_vars = 2;  % number of variables
+num_vars = 1;  % number of variables
 z = sym('z',[num_vars,1]);
 syms t
 
 %%%%%%%%%%%%%%%%%%%% polynomials that make up the homotopy%%%%%%%%%%%%%%%%%%%
-H(1) = t*(z(1)^2-1) + (1-t)*(z(1)^2+z(2)^2-4);
-H(2) = t*(z(2)-1) + (1-t)*(2*z(1)+5*z(2));
+H(1) = t*(z(1)^3 + 1) + (1-t)*(-2*z(1)^3 - 5*z(1)^2 + 4*z(1) +1);
+%H(1) = t*(z(1)^2-1) + (1-t)*(z(1)^2+z(2)^2-4);
+%H(2) = t*(z(2)-1) + (1-t)*(2*z(1)+5*z(2));
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %\frac{dH}{dt}
