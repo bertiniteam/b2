@@ -42,6 +42,7 @@ serialization_test*
 *.deps
 
 *~
+*.DS_Store
 
 
 # Compiled Object files
