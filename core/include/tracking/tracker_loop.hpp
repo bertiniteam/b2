@@ -56,9 +56,10 @@ namespace bertini{
 
 		template <typename ComplexType>
 		void ConvergenceError(unsigned & new_precision, ComplexType & new_stepsize, 
-		                      unsigned old_precision, ComplexType const& old_stepsize,
-		                      RealType const& step_adjustment_factor)
+							  unsigned old_precision, ComplexType const& old_stepsize,
+							  RealType const& step_adjustment_factor)
 		{
+			
 			new_precision = old_precision;
 			new_stepsize = step_adjustment_factor*old_stepsize;
 
@@ -72,8 +73,8 @@ namespace bertini{
 
 		template <typename ComplexType> 
 		void MinimizeCost(unsigned & new_precision, ComplexType & new_stepsize, 
-	                      unsigned old_precision, ComplexType const& old_stepsize,
-	                      unsigned max_precision)
+						  unsigned old_precision, ComplexType const& old_stepsize,
+						  unsigned max_precision)
 		{
 			std::set G;
 
@@ -119,7 +120,7 @@ namespace bertini{
 
 		template <typename RealType, typename ComplexType>
 		Branch SafetyError(unsigned new_precision, RealType const& new_stepsize, Vec<ComplexType> const& new_delta_z, ComplexType const& new_delta_t,
-		                 unsigned starting_precision, RealType const& starting_stepsize, Vec<ComplexType> const& delta_z, ComplexType const& delta_t)
+						 unsigned starting_precision, RealType const& starting_stepsize, Vec<ComplexType> const& delta_z, ComplexType const& delta_t)
 		{
 			new_precision = starting_precision;
 			new_stepsize = starting_stepsize;
@@ -142,10 +143,10 @@ namespace bertini{
 
 
 
-
+		inline 
 		SuccessCode TrackPath(Vec<mpfr> & solution_at_endtime,
-		                        mpfr const& start_time, mpfr const& endtime,
-		                        Vec<mpfr> const& start_point,
+								mpfr const& start_time, mpfr const& endtime,
+								Vec<mpfr> const& start_point,
 								System & sys,
 								config::Predictor predictor_choice,
 								config::PrecisionType prec_type = config::PrecisionType::Adaptive,
@@ -161,16 +162,13 @@ namespace bertini{
 			unsigned current_precision = start_point.precision(); // get the current precision.
 
 
-
-
-			typedef bertini::NumTraits<ComplexType>::Real = RealType;
-
+			unsigned num_consecutive_successful_steps = 0;
 			unsigned num_steps_taken = 0;
 			
+
+
 			unsigned predictor_order = PredictorOrder(predictor_choice);
 
-			ComplexType current_time = start_time;
-			ComplexType delta_t = stepping.max_step_size;
 
 
 
@@ -178,15 +176,78 @@ namespace bertini{
 			unsigned num_steps_since_last_condition_number_computation = frequency_of_CN_estimation;
 			// initialize to the frequency so guaranteed to compute it the first try 
 
+			// create temporaries for use in either tracking mode, double or multiple.
+			Vec<mpfr> x_mpfr(start_point.size());
+			Vec<dbl> x_dbl(start_point.size());
+
+			mfpr t_mpfr;
+			dbl t_dbl;
+
+			mpfr delta_t_mpfr;
+			dbl delta_t_dbl
+
+			if (current_precision==16)
+			{
+				t_dbl = dbl(start_time);
+				delta_t_dbl = dbl(stepping.max_step_size);
+
+				for (unsigned ii=0; ii<start_point.size())
+					x_dbl(ii) = dbl(start_point(ii));
+			}
+			else
+			{
+				t_mpfr = mpfr(start_time);
+				delta_t_mpfr = mpfr(stepping.max_step_size);
+
+				for (unsigned ii=0; ii<start_point.size())
+					x_mpfr(ii) = mpfr(start_point(ii));
+
+				mpfr_float.default_precision(current_precision);
+				sys.precision(current_precision);
+			}
+
+
+
 			while (num_steps_taken < stepping.max_num_steps)
 			{
-
-				num_steps_taken++; // where is this supposed to be?
-
+				SuccessCode step_success_code;
 				if (current_precision==16)
-					TrackerLoop<mpfr>();
+					step_success_code = TrackerIteration<mpfr>();
 				else
-					TrackerLoop<dbl>();
+					step_success_code = TrackerIteration<dbl>();
+
+
+
+				if (step_success_code==SuccessCode::Success)
+				{
+					num_steps_taken++; 
+					num_consecutive_successful_steps++;
+					current_time += delta_t;
+				}
+				else
+				{
+					num_consecutive_successful_steps=0;
+
+					
+				}
+
+
+				if (next_precision==16 && current_precision>16)
+				{
+					// convert from multiple precision to double precision
+				}
+				else if(next_precision > 16 && current_precision == 16)
+				{
+					// convert from double to multiple precision
+
+					upsampling_needed = true;					
+				}
+
+
+				if (next_precision - current_precision > 0)
+				{
+					// sharpen here!!!
+				}
 
 			}// re: while
 
@@ -201,13 +262,24 @@ namespace bertini{
 
 
 		template <typename RealType, typename ComplexType>
-		SuccessCode TrackerLoop()
+		SuccessCode TrackerIteration(next_space, next_time, 
+									next_delta_t, next_precision,
+
+									current_space, current_time, 
+									delta_t, 
+									//precision implied by the number type
+									predictor_choice, 
+									condition_number_estimate,
+									num_steps_since_last_condition_number_computation,
+									frequency_of_CN_estimation, prec_type,
+									tracking_tolerance, AMP_config
+									)
 		{
 
 			Vec<ComplexType> tentative_next_space;
 
 			SuccessCode predictor_code = Predict(predictor_choice,
-		                                    tentative_next_space,
+											tentative_next_space,
 											sys,
 											current_space, current_time, 
 											delta_t,
@@ -220,14 +292,14 @@ namespace bertini{
 			if (predictor_code==SuccessCode::MatrixSolveFailure)
 			{
 				ConvergenceError();
-				continue;
+				return predictor_code;
 			}	
 
 
 			if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 			{	
 				SafetyError();
-				continue;
+				return predictor_code;
 			}
 
 			ComplexType tentative_next_time = current_time + delta_t;
@@ -246,15 +318,14 @@ namespace bertini{
 			if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
 			{
 					ConvergenceError();
-					continue;
+					return corrector_code;
 			}
 			else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
 			{
 					SafetyError();
-					continue;
+					return corrector_code;
 			}
 
-			current_time += delta_t;
 			return SuccessCode::Success;
 		}
 
