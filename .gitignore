@@ -1,3 +1,6 @@
+.DS_Store
+
+
 # http://www.gnu.org/software/automake
 
 Makefile.in
@@ -69,3 +72,4 @@ serialization_test*
 *.exe
 *.out
 *.app
+
