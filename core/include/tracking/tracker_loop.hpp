@@ -44,8 +44,7 @@ namespace bertini{
 			A, B
 		};
 
-		template <typename T>
-		using PrecStep = std::pair<unsigned, T>
+		
 		
 
 		template <typename RealType>
@@ -76,6 +75,9 @@ namespace bertini{
 						  unsigned old_precision, ComplexType const& old_stepsize,
 						  unsigned max_precision)
 		{
+
+			template <typename T> using PrecStep = std::pair<unsigned, T>
+
 			std::set G;
 
 			unsigned base_precision = old_precision;
@@ -142,118 +144,294 @@ namespace bertini{
 
 
 
+		/** 
+		\brief Functor-like class for tracking paths on a system
 
-		inline 
-		SuccessCode TrackPath(Vec<mpfr> & solution_at_endtime,
-								mpfr const& start_time, mpfr const& endtime,
-								Vec<mpfr> const& start_point,
-								System & sys,
-								config::Predictor predictor_choice,
-								config::PrecisionType prec_type = config::PrecisionType::Adaptive,
-								mpfr_float const& tracking_tolerance,
-								mpfr_float const& path_truncation_threshold,
-								config::Stepping const& stepping,
-								config::Newton const& newton,
-								config::Security const& security,
-								config::AdaptiveMultiplePrecisionConfig const& AMP_config 
-								)
+		*/
+		class Tracker
 		{
-
-			unsigned current_precision = start_point.precision(); // get the current precision.
-
-
-			unsigned num_consecutive_successful_steps = 0;
-			unsigned num_steps_taken = 0;
-			
-
-
-			unsigned predictor_order = PredictorOrder(predictor_choice);
+		public:
 
 
 
-
-			RealType condition_number_estimate;
-			unsigned num_steps_since_last_condition_number_computation = frequency_of_CN_estimation;
-			// initialize to the frequency so guaranteed to compute it the first try 
-
-			// create temporaries for use in either tracking mode, double or multiple.
-			Vec<mpfr> x_mpfr(start_point.size());
-			Vec<dbl> x_dbl(start_point.size());
-
-			mfpr t_mpfr;
-			dbl t_dbl;
-
-			mpfr delta_t_mpfr;
-			dbl delta_t_dbl
-
-			if (current_precision==16)
-			{
-				t_dbl = dbl(start_time);
-				delta_t_dbl = dbl(stepping.max_step_size);
-
-				for (unsigned ii=0; ii<start_point.size())
-					x_dbl(ii) = dbl(start_point(ii));
-			}
-			else
-			{
-				t_mpfr = mpfr(start_time);
-				delta_t_mpfr = mpfr(stepping.max_step_size);
-
-				for (unsigned ii=0; ii<start_point.size())
-					x_mpfr(ii) = mpfr(start_point(ii));
-
-				mpfr_float.default_precision(current_precision);
-				sys.precision(current_precision);
+			Tracker(System sys, 
+			        config::Predictor new_predictor_choice = config::Predictor::Euler,
+			        ) : tracked_system(sys)
+			{	
+				Predictor(config::Predictor new_predictor_choice);
+				
+				// initialize to the frequency so guaranteed to compute it the first try 
+				num_steps_since_last_condition_number_computation = frequency_of_CN_estimation;
 			}
 
 
 
-			while (num_steps_taken < stepping.max_num_steps)
+
+
+			SuccessCode TrackPath(Vec<mpfr> & solution_at_endtime,
+									mpfr const& start_time, mpfr const& endtime,
+									Vec<mpfr> const& start_point,
+									System & sys,
+									config::Predictor predictor_choice,
+									config::PrecisionType prec_type = config::PrecisionType::Adaptive,
+									mpfr_float const& tracking_tolerance,
+									mpfr_float const& path_truncation_threshold,
+									config::Stepping const& stepping,
+									config::Newton const& newton,
+									config::Security const& security,
+									config::AdaptiveMultiplePrecisionConfig const& AMP_config 
+									)
 			{
-				SuccessCode step_success_code;
+				current_precision = start_point.precision(); // get the current precision.
+
+				num_consecutive_successful_steps = 0;
+				num_successful_steps_taken = 0;
+				num_failed_steps = 0;
+
+
+				x_mpfr = start_point;
+				x_dbl = Vec<dbl>(start_point.size());
+
+
 				if (current_precision==16)
-					step_success_code = TrackerIteration<mpfr>();
-				else
-					step_success_code = TrackerIteration<dbl>();
+					MultipleToDouble( start_point, start_time, stepping.max_step_size);
 
 
-
-				if (step_success_code==SuccessCode::Success)
+				while (num_steps_taken < stepping.max_num_steps)
 				{
-					num_steps_taken++; 
-					num_consecutive_successful_steps++;
-					current_time += delta_t;
-				}
-				else
-				{
-					num_consecutive_successful_steps=0;
+					// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
+					SuccessCode step_success_code;
+					if (current_precision==16)
+						step_success_code = TrackerIteration<mpfr>();
+					else
+						step_success_code = TrackerIteration<dbl>();
 
-					
-				}
 
+
+					if (step_success_code==SuccessCode::Success)
+					{
+						num_steps_taken++; 
+						num_consecutive_successful_steps++;
+						current_time += delta_t;
+					}
+					else
+					{
+						num_consecutive_successful_steps=0;
+						num_failed_steps++;
+					}
+
+
+					if (next_precision!=current_precision)
+					{
+						SuccessCode precision_change_code = ChangePrecision(next_precision);
+						if (precision_change_code!=SuccessCode::Success)
+							return precision_change_code;
+					}
+
+				}// re: while
+
+
+				return SuccessCode::Success;
+			}
+
+		private:
+
+
+			/**
+			\brief Converts from double to multiple
+
+			Copies a double-precision into the multiple-precision storage vector.  You should call Newton after this to populate the new digits with non-garbage data.
+			*/
+			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point, dbl const& source_time, dbl const& source_delta_t)
+			{	
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(source_point.size() == system.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(new_precision > 16 && "must convert to precision higher than 16 when converting to multiple precision");
+				#endif
+
+				current_precision = new_precision;
+				mpfr_float.precision(new_precision);
+				system.precision(new_precision);
+
+				t_mpfr = mpfr(source_time);
+				delta_t_mpfr = mpfr(source_delta_t);
+
+				for (unsigned ii=0; ii<source_point.size())
+					x_mpfr(ii) = mpfr(source_point(ii));
+
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(t_mpfr.precision() == current_precision)
+				#endif
+			}
+
+
+			/**
+			\brief Converts from multiple to double
+
+			Copies a multiple-precision into the double storage vector, and changes precision of the time and delta_t.
+			*/
+			void MultipleToDouble(Vec<mpfr> const& source_point, mpfr const& source_time, mpfr const& source_delta_t)
+			{	
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(source_point.size() == system.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				#endif
+
+				current_precision = new_precision;
+				system.precision(16);
+
+				t_dbl = dbl(source_time);
+				delta_t_dbl = dbl(source_delta_t);
+
+				for (unsigned ii=0; ii<source_point.size())
+					x_dbl(ii) = dbl(source_point(ii));
+			}
+
+
+
+			/**
+			\brief Converts from multiple to different precision multiple precision
+
+			Copies a multiple-precision into the multiple-precision storage vector, and changes precision of the time and delta_t.
+			Also resets counter so have to re-compute the condition number on next step attempt.
+			*/
+			void MultipleToMultiple(unsigned new_precision, Vec<mpfr> const& source_point, mpfr const& source_time, mpfr const& source_delta_t)
+			{	
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(source_point.size() == system.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(new_precision > 16 && "must convert to precision higher than 16 when converting to multiple precision");
+				#endif
+
+				current_precision = new_precision;
+				mpfr_float.precision(new_precision);
+				system.precision(new_precision);
+
+				t_mpfr = mpfr(source_time);
+				delta_t_mpfr = mpfr(source_delta_t);
+
+				for (unsigned ii=0; ii<source_point.size())
+					x_mpfr(ii) = mpfr(source_point(ii));
+
+
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(t_mpfr.precision() == current_precision)
+				#endif
+			}
+
+
+
+
+
+
+			/**
+			Change precision of tracker to next_precision.  Converts the internal temporaries, and adjusts precision of system. 
+			*/
+			SuccessCode ChangePrecision(unsigned next_precision)
+			{
+				if (next_precision==current_precision)
+					return SuccessCode::Success;
+
+				num_steps_since_last_condition_number_computation = frequency_of_CN_estimation;
 
 				if (next_precision==16 && current_precision>16)
 				{
 					// convert from multiple precision to double precision
+					MultipleToDouble( x_mpfr, t_mpfr, delta_t_mpfr);
+					upsampling_needed = false;
 				}
 				else if(next_precision > 16 && current_precision == 16)
 				{
 					// convert from double to multiple precision
-
+					DoubleToMultiple( x_dbl, t_dbl, delta_t_dbl);
 					upsampling_needed = true;					
 				}
-
-
-				if (next_precision - current_precision > 0)
+				else if(next_precision < current_precision)
 				{
-					// sharpen here!!!
+					MultipleToMultiple(x_mpfr, t_mpfr, delta_t_mpfr);
+					upsampling_needed = false;
+				}
+				else if (next_precision > current_precision)
+				{
+					MultipleToMultiple(x_mpfr, t_mpfr, delta_t_mpfr);
+					upsampling_needed = true;
 				}
 
-			}// re: while
+				current_precision = next_precision;
+
+				if (upsampling_needed)
+					return = Sharpen(x_mpfr, t_mpfr, some_tolerance_based_on_precision);
+				else
+					return SuccessCode::Success;
+			}
 
 
-			return SuccessCode::Success;
-		}
+			void Predictor(config::Predictor new_predictor_choice)
+			{
+				predictor_choice = new_predictor_choice;
+				predictor_order = PredictorOrder(predictor_choice);
+			}
+
+
+
+
+
+			void Sharpen()
+			{
+
+			}
+
+			/////////////////////////////////////////////
+			//////////////////////////////////////
+			/////////////////////////////
+			////////////////////  data members stored in this class
+			////////////
+			//////
+			//
+
+
+			System tracked_system;
+
+
+
+			////////////
+			// state variables
+			/////////////
+
+
+			unsigned current_precision;
+
+			// tracking the numbers of things
+			unsigned num_total_steps_taken;
+			unsigned num_successful_steps_taken;
+			unsigned num_consecutive_successful_steps;
+			unsigned num_failed_steps;
+
+
+
+			// configuration for tracking
+			unsigned predictor_order;
+
+
+			double condition_number_estimate_dbl;
+			mpfr_float condition_number_estimate_mpfr;
+			
+			unsigned frequency_of_CN_estimation;
+			unsigned num_steps_since_last_condition_number_computation;
+
+
+			// permanent temporaries
+			dbl t_dbl;
+			mfpr t_mpfr;
+
+			dbl delta_t_dbl;
+			mpfr delta_t_mpfr;
+			
+			Vec<dbl> x_dbl;
+			Vec<mpfr> x_mpfr;
+		};
+
+
+
+		
 
 
 
