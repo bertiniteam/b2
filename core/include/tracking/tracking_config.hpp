@@ -54,6 +54,11 @@ namespace bertini
 
 		
 
+		enum 
+		{
+			PrecisionIncrement = 10
+		}
+
 
 		namespace config{
 

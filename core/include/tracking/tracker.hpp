@@ -33,10 +33,7 @@ namespace bertini{
 	namespace tracking{
 
 
-		enum 
-		{
-			PrecisionIncrement = 10
-		}
+		
 
 
 		enum class Branch
@@ -147,6 +144,7 @@ namespace bertini{
 		/** 
 		\brief Functor-like class for tracking paths on a system
 
+		create an instance of this class, feeding it the system to be tracked on, and some configuration.  Then, this this tracker to track paths of the system.
 		*/
 		class Tracker
 		{
@@ -165,21 +163,46 @@ namespace bertini{
 			}
 
 
+			/**
+			\brief Get the tracker set up for tracking.
+
+			Pass the tracker the configuration for tracking, to get it set up.
+			*/
+			void Setup(System const& sys,
+						config::Predictor predictor_choice,
+						config::PrecisionType prec_type = config::PrecisionType::Adaptive,
+						mpfr_float const& tracking_tolerance,
+						mpfr_float const& path_truncation_threshold,
+						config::Stepping const& stepping,
+						config::Newton const& newton,
+						config::Security const& security,
+						config::AdaptiveMultiplePrecisionConfig const& AMP 
+						)
+			{
+				tracked_system_ = sys;
+				Predictor(predictor_choice);
+
+
+
+				tracking_tolerance_ = tracking_tolerance;
+				path_truncation_threshold_ = path_truncation_threshold;
+
+
+				stepping_config_ = stepping;
+				newton_config_ = newton;
+				security_config_ = security;
+				AMP_config_ = AMP_config;
+			}
+
+
+
+
 
 
 
 			SuccessCode TrackPath(Vec<mpfr> & solution_at_endtime,
 									mpfr const& start_time, mpfr const& endtime,
-									Vec<mpfr> const& start_point,
-									System & sys,
-									config::Predictor predictor_choice,
-									config::PrecisionType prec_type = config::PrecisionType::Adaptive,
-									mpfr_float const& tracking_tolerance,
-									mpfr_float const& path_truncation_threshold,
-									config::Stepping const& stepping,
-									config::Newton const& newton,
-									config::Security const& security,
-									config::AdaptiveMultiplePrecisionConfig const& AMP_config 
+									Vec<mpfr> const& start_point
 									)
 			{
 				current_precision = start_point.precision(); // get the current precision.
@@ -199,6 +222,10 @@ namespace bertini{
 
 				while (num_steps_taken < stepping.max_num_steps)
 				{
+
+					unsigned next_precision;
+
+
 					// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
 					SuccessCode step_success_code;
 					if (current_precision==16)
@@ -234,13 +261,194 @@ namespace bertini{
 				return SuccessCode::Success;
 			}
 
+
+
+
+
+
+
+
+			/**
+			Change tracker to use a predictor
+
+			\param new_predictor_choice The new predictor to be used.
+
+			\see config::Predictor
+			*/
+			void Predictor(config::Predictor new_predictor_choice)
+			{
+				predictor_choice_ = new_predictor_choice;
+				predictor_order_ = PredictorOrder(predictor_choice);
+			}
+
+
+			/**
+			\brief Query the currently set predictor
+			*/
+			config::Predictor Predictor()
+			{
+				return predictor_choice_;
+			}
+
+
 		private:
+
+
+			template <typename RealType, typename ComplexType>
+			SuccessCode TrackerIteration(Vec<ComplexType> & next_space, ComplexType & next_time, 
+										ComplexType & next_delta_t, unsigned & next_precision,
+										RealType & condition_number_estimate,
+										// end the output variables
+										Vec<ComplexType> const& current_space, ComplexType const& current_time, 
+										ComplexType const& delta_t
+										)
+			{
+
+				Vec<ComplexType> tentative_next_space; // this will be populated in the Predict step
+
+				SuccessCode predictor_code = Predict(predictor_choice_,
+												tentative_next_space,
+												tracked_system_,
+												current_space, current_time, 
+												delta_t,
+												std::get<RealType>(condition_number_estimate_),
+												num_steps_since_last_condition_number_computation, 
+												frequency_of_CN_estimation, PrecisionType::Adaptive, 
+												tracking_tolerance_,
+												AMP_config);
+
+				if (predictor_code==SuccessCode::MatrixSolveFailure)
+				{
+					ConvergenceError();
+					return predictor_code;
+				}	
+
+
+				if (predictor_code==SuccessCode::HigherPrecisionNecessary)
+				{	
+					SafetyError();
+					return predictor_code;
+				}
+
+				ComplexType tentative_next_time = current_time + delta_t;
+
+				SuccessCode corrector_code = Correct(next_space,
+											   tracked_system_,
+											   current_space, // pass by value to get a copy of it
+											   tentative_next_time, 
+											   PrecisionType::Adaptive, 
+											   tracking_tolerance_,
+											   RealType(path_truncation_threshold_),
+											   min_num_newton_iterations,
+											   max_num_newton_iterations,
+											   AMP_config);
+
+				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
+				{
+						ConvergenceError();
+						return corrector_code;
+				}
+				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
+				{
+						SafetyError();
+						return corrector_code;
+				}
+
+				return SuccessCode::Success;
+			}
+
+
+
+
+			template <typename ComplexType, typename RealType>
+			SuccessCode Sharpen(Vec<ComplexType> & new_space
+			                    Vec<ComplexType> const& start_point, ComplexType const& current_time,
+			                    RealType const& tolerance)
+			{
+				SuccessCode corrector_code = Correct(next_space,
+											   tracked_system_,
+											   start_point,
+											   current_time, 
+											   PrecisionType::Adaptive, 
+											   tolerance,
+											   path_truncation_threshold_,
+											   1,
+											   newton_.max_num_newton_iterations,
+											   AMP_config_);
+			}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			/////////////////
+			//
+			//  Functions for converting between precision types
+			//
+			///////////////////////
+
+
+			/**
+			Change precision of tracker to next_precision.  Converts the internal temporaries, and adjusts precision of system. 
+			*/
+			SuccessCode ChangePrecision(unsigned next_precision)
+			{
+				if (next_precision==current_precision)
+					return SuccessCode::Success;
+
+				num_steps_since_last_condition_number_computation = frequency_of_CN_estimation;
+
+				upsampling_needed = false;
+				if (next_precision==16 && current_precision>16)
+				{
+					// convert from multiple precision to double precision
+					MultipleToDouble();
+				}
+				else if(next_precision > 16 && current_precision == 16)
+				{
+					// convert from double to multiple precision
+					DoubleToMultiple();
+					upsampling_needed = true;					
+				}
+				else if(next_precision < current_precision)
+				{
+					MultipleToMultiple();
+				}
+				else if (next_precision > current_precision)
+				{
+					MultipleToMultiple();
+					upsampling_needed = true;
+				}
+
+				current_precision = next_precision;
+
+				if (upsampling_needed)
+					return = Sharpen(std::get<Vec<mpfr> >(current_space_), std::get<mpfr >(current_time_),
+					                 tracking_tolerance) ;
+				else
+					return SuccessCode::Success;
+			}
+
+
+
 
 
 			/**
 			\brief Converts from double to multiple
 
-			Copies a double-precision into the multiple-precision storage vector.  You should call Newton after this to populate the new digits with non-garbage data.
+			Copies a double-precision into the multiple-precision storage vector.  
+
+			You should call Newton after this to populate the new digits with non-garbage data.
 			*/
 			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point, dbl const& source_time, dbl const& source_delta_t)
 			{	
@@ -253,15 +461,27 @@ namespace bertini{
 				mpfr_float.precision(new_precision);
 				system.precision(new_precision);
 
-				t_mpfr = mpfr(source_time);
-				delta_t_mpfr = mpfr(source_delta_t);
+				std::get<mpfr>(current_time_) = mpfr(source_time);
+				std::get<mpfr>(delta_t_) = mpfr(source_delta_t);
 
 				for (unsigned ii=0; ii<source_point.size())
-					x_mpfr(ii) = mpfr(source_point(ii));
+					std::get<Vec<mfpr> >(current_space_)(ii) = mpfr(source_point(ii));
 
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(t_mpfr.precision() == current_precision)
 				#endif
+			}
+
+
+
+			/**
+			\brief Converts from double to multiple
+
+			Copies the double-precision temporaries into the multiple-precision temporaries.  You should call Newton after this to populate the new digits with non-garbage data.
+			*/
+			void DoubleToMultiple(unsigned new_precision)
+			{
+				DoubleToMultiple( new_precision, std::get<Vec<dbl> >(current_space_), std::get<dbl>(current_time_), std::get<dbl>(delta_t_)
 			}
 
 
@@ -279,13 +499,22 @@ namespace bertini{
 				current_precision = new_precision;
 				system.precision(16);
 
-				t_dbl = dbl(source_time);
-				delta_t_dbl = dbl(source_delta_t);
+				std::get<dbl>(current_time_) = dbl(source_time);
+				std::get<dbl>(delta_t_) = dbl(source_delta_t);
 
 				for (unsigned ii=0; ii<source_point.size())
-					x_dbl(ii) = dbl(source_point(ii));
+					std::get<Vec<dbl> >(current_space_)(ii) = dbl(source_point(ii));
 			}
 
+			/**
+			\brief Converts from multiple to double
+
+			Changes the precision of the internal temporaries to double precision
+			*/
+			void MultipleToDouble()
+			{
+				MultipleToDouble(std::get<Vec<mpfr> >(current_space_), std::get<mpfr>(current_time_), std::get<mpfr>(delta_t_));
+			}
 
 
 			/**
@@ -305,79 +534,40 @@ namespace bertini{
 				mpfr_float.precision(new_precision);
 				system.precision(new_precision);
 
-				t_mpfr = mpfr(source_time);
-				delta_t_mpfr = mpfr(source_delta_t);
+				std::get<mpfr>(current_time_) = mpfr(source_time);
+				std::get<mpfr>(delta_t_) = mpfr(source_delta_t);
 
 				for (unsigned ii=0; ii<source_point.size())
-					x_mpfr(ii) = mpfr(source_point(ii));
+					std::get<Vec<mpfr> >(current_space_)(ii) = mpfr(source_point(ii));
 
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(t_mpfr.precision() == current_precision)
+				assert( std::get<mpfr>(current_time_).precision() == current_precision)
 				#endif
 			}
 
 
-
-
-
-
 			/**
-			Change precision of tracker to next_precision.  Converts the internal temporaries, and adjusts precision of system. 
+			\brief Converts from multiple to different precision multiple precision
+
+			Changes the precision of the internal temporaries to desired precision
 			*/
-			SuccessCode ChangePrecision(unsigned next_precision)
+			void MultipleToMultiple(unsigned new_precision)
 			{
-				if (next_precision==current_precision)
-					return SuccessCode::Success;
-
-				num_steps_since_last_condition_number_computation = frequency_of_CN_estimation;
-
-				if (next_precision==16 && current_precision>16)
-				{
-					// convert from multiple precision to double precision
-					MultipleToDouble( x_mpfr, t_mpfr, delta_t_mpfr);
-					upsampling_needed = false;
-				}
-				else if(next_precision > 16 && current_precision == 16)
-				{
-					// convert from double to multiple precision
-					DoubleToMultiple( x_dbl, t_dbl, delta_t_dbl);
-					upsampling_needed = true;					
-				}
-				else if(next_precision < current_precision)
-				{
-					MultipleToMultiple(x_mpfr, t_mpfr, delta_t_mpfr);
-					upsampling_needed = false;
-				}
-				else if (next_precision > current_precision)
-				{
-					MultipleToMultiple(x_mpfr, t_mpfr, delta_t_mpfr);
-					upsampling_needed = true;
-				}
-
-				current_precision = next_precision;
-
-				if (upsampling_needed)
-					return = Sharpen(x_mpfr, t_mpfr, some_tolerance_based_on_precision);
-				else
-					return SuccessCode::Success;
-			}
-
-
-			void Predictor(config::Predictor new_predictor_choice)
-			{
-				predictor_choice = new_predictor_choice;
-				predictor_order = PredictorOrder(predictor_choice);
+				MultipleToMultiple( new_precision, std::get<Vec<mpfr> >(current_space_), std::get<mpfr>(current_time_), std::get<mpfr>(delta_t_));
 			}
 
 
 
+			
 
 
-			void Sharpen()
-			{
 
-			}
+			
+
+
+
+			
 
 			/////////////////////////////////////////////
 			//////////////////////////////////////
@@ -388,7 +578,7 @@ namespace bertini{
 			//
 
 
-			System tracked_system;
+			System tracked_system_;
 
 
 
@@ -397,115 +587,39 @@ namespace bertini{
 			/////////////
 
 
-			unsigned current_precision;
+			unsigned current_precision_;
 
 			// tracking the numbers of things
-			unsigned num_total_steps_taken;
-			unsigned num_successful_steps_taken;
-			unsigned num_consecutive_successful_steps;
-			unsigned num_failed_steps;
-
-
+			unsigned num_total_steps_taken_;
+			unsigned num_successful_steps_taken_;
+			unsigned num_consecutive_successful_steps_;
+			unsigned num_failed_steps_;
 
 			// configuration for tracking
-			unsigned predictor_order;
+			unsigned predictor_order_;
 
-
-			double condition_number_estimate_dbl;
-			mpfr_float condition_number_estimate_mpfr;
+			std::tuple< double, mpfr_float > condition_number_estimate_;
+			std::tuple< double, mpfr_float > condition_number_estimate_;
 			
-			unsigned frequency_of_CN_estimation;
-			unsigned num_steps_since_last_condition_number_computation;
+			unsigned frequency_of_CN_estimation_;
+			unsigned num_steps_since_last_condition_number_computation_;
 
 
 			// permanent temporaries
-			dbl t_dbl;
-			mfpr t_mpfr;
 
-			dbl delta_t_dbl;
-			mpfr delta_t_mpfr;
+			std::tuple< dbl, mpfr > current_time_;
+			std::tuple< dbl, mpfr > delta_t; 
+			std::tuple< Vec<dbl>, Vec<mpfr> > current_space_;
 			
-			Vec<dbl> x_dbl;
-			Vec<mpfr> x_mpfr;
-		};
+			mpfr_float tracking_tolerance_;
+			mpfr_float path_truncation_threshold_;
 
 
-
-		
-
-
-
-
-
-
-
-		template <typename RealType, typename ComplexType>
-		SuccessCode TrackerIteration(next_space, next_time, 
-									next_delta_t, next_precision,
-
-									current_space, current_time, 
-									delta_t, 
-									//precision implied by the number type
-									predictor_choice, 
-									condition_number_estimate,
-									num_steps_since_last_condition_number_computation,
-									frequency_of_CN_estimation, prec_type,
-									tracking_tolerance, AMP_config
-									)
-		{
-
-			Vec<ComplexType> tentative_next_space;
-
-			SuccessCode predictor_code = Predict(predictor_choice,
-											tentative_next_space,
-											sys,
-											current_space, current_time, 
-											delta_t,
-											condition_number_estimate,
-											num_steps_since_last_condition_number_computation, 
-											frequency_of_CN_estimation, prec_type, 
-											tracking_tolerance,
-											AMP_config);
-
-			if (predictor_code==SuccessCode::MatrixSolveFailure)
-			{
-				ConvergenceError();
-				return predictor_code;
-			}	
-
-
-			if (predictor_code==SuccessCode::HigherPrecisionNecessary)
-			{	
-				SafetyError();
-				return predictor_code;
-			}
-
-			ComplexType tentative_next_time = current_time + delta_t;
-
-			SuccessCode corrector_code = Correct(next_space,
-										   sys,
-										   current_space, // pass by value to get a copy of it
-										   next_time, 
-										   prec_type, 
-										   tracking_tolerance,
-										   path_truncation_threshold,
-										   min_num_newton_iterations,
-										   max_num_newton_iterations,
-										   AMP_config);
-
-			if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
-			{
-					ConvergenceError();
-					return corrector_code;
-			}
-			else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
-			{
-					SafetyError();
-					return corrector_code;
-			}
-
-			return SuccessCode::Success;
-		}
+			config::Stepping stepping_config_;
+			config::Newton newton_config_;
+			config::Security security_config_;
+			config::AdaptiveMultiplePrecisionConfig AMP_config_;
+		}; // re: class Tracker
 
 
 	} // namespace tracking
