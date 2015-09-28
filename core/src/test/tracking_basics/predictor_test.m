@@ -1,7 +1,10 @@
 function predictor_test()
 
 %% Test parameters
-zn = [vpa(1.641923555679908e+02) + vpa(2.511879593214417e-15)*1i]; % Point in space at time t=t_n
+ zn = [vpa(1.641923555679908e+02) + vpa(2.511879593214417e-15)*1i]; % Point in space at time t=t_n
+
+%%zn = [vpa(1.282522469074035e+00) +  vpa(5.829619556182997e-17)*1i]; % Point in space at time t=t_n
+
 tn = vpa(0.67); dt = vpa(-0.003333333333333); tnp1 = tn + dt; %Starting time t_n, and time step dt
 digits(33);  %Precision used
 
