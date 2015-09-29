@@ -41,7 +41,7 @@ serialization_test*
 
 *~
 *.DS_Store
-Users/Tim/Git_Hub_Repos/b2/core/src/test/tracking_basics/*.m
+
 
 # Compiled Object files
 *.slo
