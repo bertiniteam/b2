@@ -118,8 +118,6 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 
 }
 
-
-
 BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 {
 
@@ -182,8 +180,6 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_mp);
 
 }
-
-
 
 BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_double)
 {
@@ -248,8 +244,6 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_double)
 
 }
 
-
-
 BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 {
 
@@ -313,84 +307,304 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 
 }
 
-
-
-
-
-
-// BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
-// {
-	/*
-		Need to violate P > sigma_1 + D + (tau + log_10(norm(d))/(N - i)
-		P: Number of digits of precision.
-		sigma_1: Number of safety digits 
-		tau: 10^(-tau) is accuracy to which we wish to track path. 
-		D := log_10(norm(J^(-1)) * epsilon * (norm(J) + Phi) ) 
-		J: Jacobian Matrix
-		epsilon: constant that accounts for growth in errors when solving a system of linear equations.
-		Phi: error function
-		d: most recent Newton Residual
-		N: maximum number of newton iterations to perform
-		i: Suppose there are N-i iterations remaining. 
-		
-	*/
-
-// 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
-// }
-
-
-// BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
-// {
+BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
+{
 	
-// 		Need to violate P > sigma_1 + D + (tau + log_10(norm(d))/(N - i)
-// 		P: Number of digits of precision.
-// 		sigma_1: Number of safety digits 
-// 		tau: 10^(-tau) is accuracy to which we wish to track path. 
-// 		D := log_10(norm(J^(-1)) * epsilon * (norm(J) + Phi) ) 
-// 		J: Jacobian Matrix
-// 		epsilon: constant that accounts for growth in errors when solving a system of linear equations.
-// 		Phi: error function
-// 		d: most recent Newton Residual
-// 		N: maximum number of newton iterations to perform
-// 		i: Suppose there are N-i iterations remaining. 
-		
-	
-// 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
-// }
-
-
-// BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
-// {
 	/*
-		Need to violate P > sigma_2 + tau + log_10(norm(J^(-1) * Psi + norm(z))
- 		P: Number of digits of precision.
- 		sigma_2: Number of safety digits 
- 		tau: 10^(-tau) is accuracy to which we wish to track path. 
- 		Psi: error function
-		z: point in space
-
+	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
+	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
+	Have trimmed current_space to have 16 digits after decimal point. Also, saftey_digits_1 has been set to 32000 
+	to set off the AMPCriterionB condition. 
 	*/
-// 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
-// }
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("256185069753.4088532364492429","-387520022558.0519122331723744"),
+					 mpfr("-0.0212298348984663","-0.1778146465316983");
+
+	mpfr current_time("0");
+	mpfr delta_t(".1");
+
+	current_time += delta_t;
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+
+	VariableGroup vars{x,y};
+
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(y - pow(x,2));
 
 
-// BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
-// {
-		/*
-		Need to violate P > sigma_2 + tau + log_10(norm(J^(-1) * Psi + norm(z))
- 		P: Number of digits of precision.
- 		sigma_2: Number of safety digits 
- 		tau: 10^(-tau) is accuracy to which we wish to track path. 
- 		Psi: error function
-		z: point in space
 
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+	AMP.coefficient_bound = 5;
+	AMP.safety_digits_1 = 32000;
+
+	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+
+
+	Vec<mpfr> corrected(2);
+	corrected << mpfr("3701884101067.778","-5599679215240.413"),
+		mpfr("-1.043206463433583e25","-2.450083921191992e25");
+
+
+
+	Vec<mpfr> newton_correction_result;
+
+	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
+	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	unsigned max_num_newton_iterations = 1;
+	unsigned min_num_newton_iterations = 1;
+	auto success_code = bertini::tracking::Correct(newton_correction_result,
+								               sys,
+								               current_space, 
+								               current_time, 
+								               bertini::tracking::config::PrecisionType::Adaptive, 
+								               tracking_tolerance,
+								               path_truncation_threshold,
+								               min_num_newton_iterations,
+								               max_num_newton_iterations,
+								               AMP);
+
+	// std::cout << "success_code is " << success_code << '\n';
+	// std::cout << "success_code for higher precision necessary is " << bertini::tracking::SuccessCode::HigherPrecisionNecessary << '\n';
+
+	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+	// BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
+
+}
+
+
+BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
+{
+
+	/*
+	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
+	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
+	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
 	*/
-// 	BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
-// }
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
+					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
+
+	mpfr current_time("0");
+	mpfr delta_t(".1");
+
+	current_time += delta_t;
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+
+	VariableGroup vars{x,y};
+
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(y - pow(x,2));
+
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+	AMP.coefficient_bound = 5;
+	AMP.safety_digits_1 = 32000;
+
+	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+
+
+	Vec<mpfr> corrected(2);
+	corrected << mpfr("3701884101067.778","-5599679215240.413"),
+		mpfr("-1.043206463433583e25","-2.450083921191992e25");
+
+
+
+	Vec<mpfr> newton_correction_result;
+
+	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
+	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	unsigned max_num_newton_iterations = 1;
+	unsigned min_num_newton_iterations = 1;
+	auto success_code = bertini::tracking::Correct(newton_correction_result,
+								               sys,
+								               current_space, 
+								               current_time, 
+								               bertini::tracking::config::PrecisionType::Adaptive,
+								               tracking_tolerance,
+								               path_truncation_threshold,
+								               min_num_newton_iterations,
+								               max_num_newton_iterations,
+								               AMP);
+
+	// std::cout << "success_code is " << success_code << '\n';
+	// std::cout << "success_code for higher precision necessary is " << bertini::tracking::SuccessCode::HigherPrecisionNecessary << '\n';
+
+	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+
+	
+	//BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion B"=="true");
+
+}
+
+
+BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
+{
+
+	/*
+	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
+	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
+	Have trimmed current_space to have 16 digits after decimal point. Also, saftey_digits_2 has been set to 32000 
+	to set off the AMPCriterionC condition. 
+	*/
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("256185069753.4088532364492429","-387520022558.0519122331723744"),
+					 mpfr("-0.0212298348984663","-0.1778146465316983");
+
+	mpfr current_time("0");
+	mpfr delta_t(".1");
+
+	current_time += delta_t;
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+
+	VariableGroup vars{x,y};
+
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(y - pow(x,2));
+
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+	AMP.coefficient_bound = 5;
+	AMP.safety_digits_2 = 32000;
+
+	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+
+
+	Vec<mpfr> corrected(2);
+	corrected << mpfr("3701884101067.778","-5599679215240.413"),
+		mpfr("-1.043206463433583e25","-2.450083921191992e25");
+
+
+
+	Vec<mpfr> newton_correction_result;
+
+	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
+	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	unsigned max_num_newton_iterations = 1;
+	unsigned min_num_newton_iterations = 1;
+	auto success_code = bertini::tracking::Correct(newton_correction_result,
+								               sys,
+								               current_space, 
+								               current_time, 
+								               bertini::tracking::config::PrecisionType::Adaptive, 
+								               tracking_tolerance,
+								               path_truncation_threshold,
+								               min_num_newton_iterations,
+								               max_num_newton_iterations,
+								               AMP);
+
+	// std::cout << "success_code is " << success_code << '\n';
+	// std::cout << "success_code for higher precision necessary is " << bertini::tracking::SuccessCode::HigherPrecisionNecessary << '\n';
+
+	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+	// BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
+
+}
+
+
+BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
+{
+	/*
+	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
+	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
+	Also, saftey_digits_2 has been set to 32000 to set off the AMPCriterionC condition. 
+	*/
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
+					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
+
+	mpfr current_time("0");
+	mpfr delta_t(".1");
+
+	current_time += delta_t;
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+
+	VariableGroup vars{x,y};
+
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(y - pow(x,2));
+
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+	AMP.coefficient_bound = 5;
+	AMP.safety_digits_2 = 32000;
+
+	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+
+
+	Vec<mpfr> corrected(2);
+	corrected << mpfr("3701884101067.778","-5599679215240.413"),
+		mpfr("-1.043206463433583e25","-2.450083921191992e25");
+
+
+
+	Vec<mpfr> newton_correction_result;
+
+	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
+	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	unsigned max_num_newton_iterations = 1;
+	unsigned min_num_newton_iterations = 1;
+	auto success_code = bertini::tracking::Correct(newton_correction_result,
+								               sys,
+								               current_space, 
+								               current_time, 
+								               bertini::tracking::config::PrecisionType::Adaptive, 
+								               tracking_tolerance,
+								               path_truncation_threshold,
+								               min_num_newton_iterations,
+								               max_num_newton_iterations,
+								               AMP);
+
+	// std::cout << "success_code is " << success_code << '\n';
+	// std::cout << "success_code for higher precision necessary is " << bertini::tracking::SuccessCode::HigherPrecisionNecessary << '\n';
+
+	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+	// BOOST_CHECK("implemented case where newton step requests higher precision due to AMP criterion C"=="true");
+
+}
 
 
 BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_double)
 {
+
 	/*Test case checking to make sure a polynomial system that is 0 will fail when the newton correction step is done.
 	This test case differs from above as it has the precision type set to double.
 	*/
@@ -450,11 +664,13 @@ BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_double)
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::MatrixSolveFailure);
 	// BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
+
 }
 
 
 BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
 {
+
 	/*Test case checking to make sure a polynomial system that is 0 will fail when the newton correction step is done.
 		This test case differs from above as it has the precision type set to adaptive.
 	*/
@@ -512,11 +728,13 @@ BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::MatrixSolveFailure);
 	// BOOST_CHECK("implemented case where newton step linear algebra fails"=="true");
+
 }
 
 
 BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
 {
+
 	/*
 	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
 	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
@@ -582,10 +800,12 @@ BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::GoingToInfinity);
 	
 	// BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+
 }
 
 BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
 {
+
 	/*
 	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
 	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. The difference from this 
@@ -652,11 +872,8 @@ BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::GoingToInfinity);
 
 	//BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+
 }
-
-
-
-
 
 BOOST_AUTO_TEST_SUITE_END()
 
