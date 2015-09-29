@@ -403,6 +403,10 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 
 BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
 {
+	/*
+	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
+	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
+	*/
 	Vec<mpfr> current_space(2);
 	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
 					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
@@ -444,34 +448,97 @@ BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
 
 	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
 	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
-	unsigned max_num_newton_iterations = 10;
-	unsigned min_num_newton_iterations = 10;
+	unsigned max_num_newton_iterations = 1;
+	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
 								               sys,
 								               current_space, 
 								               current_time, 
-								               bertini::tracking::config::PrecisionType::Adaptive, 
+								               bertini::tracking::config::PrecisionType::Double, //double for test
 								               tracking_tolerance,
 								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
 
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	// std::cout << "success_code is " << success_code << '\n';
+	// std::cout << "success_code for going to infinity is " << bertini::tracking::SuccessCode::GoingToInfinity << '\n';
+
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::GoingToInfinity);
+	
+	// BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
+}
 
-	std::cout << "Path Truncation Threshold is " << path_truncation_threshold << '\n';
+BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
+{
+	/*
+	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
+	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. The difference from this 
+	and the above version is we will use PrecisionType = Adaptive.
+	*/
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
+					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
 
-	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
-		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_mp);
+	mpfr current_time("0");
+	mpfr delta_t(".1");
+
+	current_time += delta_t;
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+
+	VariableGroup vars{x,y};
+
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+
+	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(y - pow(x,2));
+
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+	AMP.coefficient_bound = 5;
+
+
+	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+
+
+	Vec<mpfr> corrected(2);
+	corrected << mpfr("3701884101067.778","-5599679215240.413"),
+		mpfr("-1.043206463433583e25","-2.450083921191992e25");
+
+
+
+	Vec<mpfr> newton_correction_result;
+
+	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
+	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	unsigned max_num_newton_iterations = 1;
+	unsigned min_num_newton_iterations = 1;
+	auto success_code = bertini::tracking::Correct(newton_correction_result,
+								               sys,
+								               current_space, 
+								               current_time, 
+								               bertini::tracking::config::PrecisionType::Adaptive, //double for test
+								               tracking_tolerance,
+								               path_truncation_threshold,
+								               min_num_newton_iterations,
+								               max_num_newton_iterations,
+								               AMP);
+
+	std::cout << "success_code is " << success_code << '\n';
+	std::cout << "success_code for going to infinity is " << bertini::tracking::SuccessCode::GoingToInfinity << '\n';
+
+	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::GoingToInfinity);
 
 	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
 }
-
-// BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
-// {
-// 	BOOST_CHECK("implemented case where newton loop terminates due to going to infinity"=="true");
-// }
 
 
 // BOOST_AUTO_TEST_CASE(tim_test_case_to_see_where_it_fails)
