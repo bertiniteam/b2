@@ -49,6 +49,9 @@ namespace bertini
 			GoingToInfinity,
 			FailedToConverge,
 			MatrixSolveFailure,
+			MaxNumStepsTaken,
+			MaxPrecisionReached,
+			MinStepSizeReached,
 			Failure
 		};
 
@@ -56,7 +59,8 @@ namespace bertini
 
 		enum 
 		{
-			PrecisionIncrement = 10
+			PrecisionIncrement = 10,
+			LowestMultiplePrecision = 30
 		}
 
 
@@ -66,7 +70,8 @@ namespace bertini
 
 			enum class Predictor
 			{
-				Euler
+				Euler,
+				HeunEuler
 			};
 
 			enum class PrecisionType
@@ -103,6 +108,9 @@ namespace bertini
 				unsigned consecutive_successful_steps_before_stepsize_increase;
 				unsigned consecutive_successful_steps_before_precision_decrease;
 				unsigned max_num_steps;
+
+				unsigned frequency_of_CN_estimation;
+				
 			};
 
 			struct Newton
@@ -115,7 +123,6 @@ namespace bertini
 			
 			struct RenameMe
 			{
-				unsigned frequency_of_CN_estimation
 				
 				unsigned sharpendigits;
 
@@ -135,10 +142,19 @@ namespace bertini
 
 
 
-			struct PowerSeries
+
+
+
+			struct EndGame
 			{
 				mpfr_float SampleFactor;
 				unsigned max_cycle_number;
+			};
+
+
+			struct PowerSeries
+			{
+				
 			};
 
 			struct Cauchy
