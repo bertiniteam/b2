@@ -43,33 +43,47 @@ namespace bertini{
 
 		
 		
-
-		template <typename RealType>
-		RealType epsilon(unsigned precision)
+		mpfr_float MinTimeForCurrentPrecision(unsigned precision)
 		{
-			return pow( RealType(10), -precision+3);
+			if (precision==DoublePrecision)
+				return max(pow( mpfr_float("10"), -precision+3),mpfr_float("1e-150"));
+			else
+				return pow( mpfr_float("10"), -precision+3);
+		}
+
+
+		mpfr_float MinStepSizeForCurrentPrecision(unsigned precision)
+		{
+			if (precision==DoublePrecision)
+				return max(pow( mpfr_float("10"), -precision+3),mpfr_float("1e-150"));
+			else
+				return pow( mpfr_float("10"), -precision+3);
 		}
 
 
 
+		/**
+		\brief The convergence_error function from \cite{AMP2}.  
 
+		Decrease stepsize, then increase precision until the new stepsize is greater than a precision-dependent minimum stepsize.  
 
-
-
-		template <typename ComplexType>
-		void ConvergenceError(unsigned & new_precision, ComplexType & new_stepsize, 
-							  unsigned old_precision, ComplexType const& old_stepsize,
-							  RealType const& step_adjustment_factor)
+		\see MinStepSizeForCurrentPrecision
+		*/
+		void ConvergenceError(unsigned & new_precision, mpfr_float & new_stepsize, 
+							  unsigned old_precision, mpfr_float const& old_stepsize,
+							  mpfr_float const& step_adjustment_factor)
 		{
 			
 			new_precision = old_precision;
 			new_stepsize = step_adjustment_factor*old_stepsize;
 
-			while (norm(new_stepsize) < epsilon<ComplexType>(new_precision))
-				if new_precision==16
-					new_precision=30;
+			while (new_stepsize < MinStepSizeForCurrentPrecision(new_precision))
+			{
+				if (new_precision==DoublePrecision)
+					new_precision=LowestMultiplePrecision;
 				else
 					new_precision+=PrecisionIncrement;
+			}
 		}
 
 
@@ -83,7 +97,7 @@ namespace bertini{
 		*/
 		double Cost(unsigned precision)
 		{
-			if (precision==16)
+			if (precision==DoublePrecision)
 				return 1;
 			else
 				return 10.35 + 0.13 * precision;
@@ -144,22 +158,22 @@ namespace bertini{
 
 			unsigned lowest_mp_precision_to_test = min_precision;
 
-			if (min_precision==16)
+			if (min_precision==DoublePrecision)
 			{
-				unsigned test_precision = 16;
+				unsigned test_precision = DoublePrecision;
 				
 				auto test_stepsize = StepsizeSatisfyingNine(test_precision,
 				                                            unsigned current_precision,
 															tau, // -log10 of track tolerance
 							                                D, // from condition B
-							                                a, // size_proportion
+							                                size_proportion, // size_proportion
 							                                predictor_order,
 							                                num_newton_iterations,
 							                                d, // norm(delta_z, delta_t)
 							                                AMP_config);
 				
-				if (min(abs(test_stepsize),abs(old_stepsize)) > epsilon<RealType>(test_precision))
-					computed_candidates.insert(PrecStep<RealType>(test_precision, test_stepsize));
+				if (min(abs(test_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(test_precision))
+					computed_candidates.insert(PrecStep<mpfr_float>(test_precision, test_stepsize));
 
 				lowest_mp_precision_to_test = LowestMultiplePrecision;
 			}
@@ -172,13 +186,13 @@ namespace bertini{
 				                                            unsigned current_precision,
 															tau, // -log10 of track tolerance
 							                                D, // from condition B
-							                                a, // size_proportion
+							                                size_proportion, // size_proportion
 							                                predictor_order,
 							                                num_newton_iterations,
 							                                d, // norm(delta_z, delta_t)
 							                                AMP_config);
 
-				if (min(abs(test_stepsize),abs(old_stepsize)) > epsilon<RealType>(test_precision))
+				if (min(abs(test_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(test_precision))
 					computed_candidates.insert(PrecStep<mpfr_float>(test_precision, test_stepsize));
 			}
 
@@ -210,32 +224,54 @@ namespace bertini{
 
 
 
-		template <typename RealType, typename ComplexType>
+		
 		Branch SafetyError(unsigned new_precision, mpfr_float & new_stepsize, 
-		                   Vec<ComplexType> & new_delta_z, ComplexType & new_delta_t,
+		                   Vec<dbl> & new_delta_z, dbl & new_delta_t,
 
 						 unsigned current_precision, mpfr_float const& current_stepsize, 
-						 Vec<ComplexType> const& delta_z, ComplexType const& delta_t,
+						 Vec<dbl> const& delta_z, dbl const& delta_t,
 
-						 RealType const& norm_J, RealType const& norm_J_inverse,
-						 RealType const& size_proportion,
-						 unsigned predictor_order
+						 double const& norm_J, double const& norm_J_inverse,
+						 double const& size_proportion,
+						 unsigned predictor_order,
+						 unsigned max_num_newton_iterations
 						 )
 		{
-			new_precision = current_precision;
-			new_stepsize = current_stepsize;
-			new_delta_t = delta_t;
-			new_delta_z = delta_z;
+			// new_precision = current_precision;
+			// new_stepsize = current_stepsize;
+			// new_delta_t = delta_t;
+			// new_delta_z = delta_z;
 
-			while(!amp::CriterionC())
+
+			mpfr_float minimum_stepsize = MinTimeForCurrentPrecision(current_precision);
+			mpfr_float maximum_stepsize = current_stepsize * step_size_fail_factor;
+
+			if (minimum_stepsize > maximum_stepsize)
 			{
-
+				// stepsizes are incompatible, must increase precision
+				new_precision = LowestMultiplePrecision;
+				new_stepsize = current_stepsize * (1+step_size_fail_factor)/2;
 			}
-
-			if ()
-				return Branch::A;
 			else
-				return Branch::B;
+			{
+				auto eta_min = -log10(minimum_stepsize);
+				auto eta_max = -log10(maximum_stepsize);
+
+				unsigned P0 = CriterionBRHS();
+				unsigned digits_C = round(CriterionCRHS());
+
+				AMP3_update(new_precision, new_stepsize,
+		                 current_precision, current_stepsize,
+		                 digits_tau,
+		                 digits_final = 0,
+		                 P0,
+		                 digits_C,
+		                 current_time,
+		                 eta_min,
+		                 eta_max,
+		                 max_num_newton_iterations,
+		                 AMP_config);
+			}
 		}
 
 
@@ -251,6 +287,7 @@ namespace bertini{
 		                 mpfr const& current_time,
 		                 mpfr_float const& eta_min,
 		                 mpfr_float const& eta_max,
+		                 unsigned predictor_order = 0,
 		                 unsigned max_num_newton_iterations,
 		                 AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
@@ -371,7 +408,7 @@ namespace bertini{
 
 
 				// populate the current space value with the start point, in appropriate precision
-				if (current_precision_==16)
+				if (current_precision_==DoublePrecision)
 					MultipleToDouble( start_point);
 				else
 					MultipleToMultiple( start_point);
@@ -384,7 +421,7 @@ namespace bertini{
 						if (current_precision_ > AMP_config_.maximum_precision)
 							return SuccessCode::MaxPrecisionReached;
 
-						if (current_precision_==16)
+						if (current_precision_==DoublePrecision)
 							initial_refinement = ChangePrecision(LowestMultiplePrecision);
 						else
 							initial_refinement = ChangePrecision(current_precision_+PrecisionIncrement);
@@ -413,7 +450,7 @@ namespace bertini{
 
 
 
-					if (current_precision_==16)
+					if (current_precision_==DoublePrecision)
 						step_success_code = TrackerIteration<dbl>();
 					else
 						step_success_code = TrackerIteration<mpfr>();
@@ -636,6 +673,17 @@ namespace bertini{
 
 			}
 
+
+			void StepSuccessWithErrorEstimate()
+			{
+				if (current_precision_==DoublePrecision)
+					StepSuccessWithErrorEstimate(double);
+				else
+					StepSuccessWithErrorEstimate(mpfr_float);
+			}
+
+
+
 			/**
 			Computes new stepsize and precision
 			*/
@@ -663,7 +711,18 @@ namespace bertini{
 				mpfr_float eta_max = -log10(maximum_stepsize);
 
 
-				// now call AMP3_update()
+				AMP3_update(new_precision, new_stepsize,
+		                 current_precision, current_stepsize,
+		                 digits_tau,
+		                 digits_final = 0,
+		                 P0,
+		                 digits_C,
+		                 current_time,
+		                 eta_min,
+		                 eta_max,
+		                 max_num_newton_iterations,
+		                 predictor_order_,
+		                 AMP_config_);
 			}
 
 
@@ -717,13 +776,35 @@ namespace bertini{
 				mpfr_float eta_max = -log10(maximum_stepsize);
 
 
-				AMP3_update()
+				AMP3_update(new_precision, new_stepsize,
+		                 current_precision, current_stepsize,
+		                 digits_tau,
+		                 digits_final = 0,
+		                 P0,
+		                 digits_C,
+		                 current_time,
+		                 eta_min,
+		                 eta_max,
+		                 max_num_newton_iterations,
+		                 predictor_order_,
+		                 AMP_config_);
 
 				// now call AMP3_update()
 			}
 
 
 			
+
+
+
+			void StepSuccessNoErrorEstimate()
+			{
+				if (current_precision_==DoublePrecision)
+					StepSuccessNoErrorEstimate(double);
+				else
+					StepSuccessNoErrorEstimate(mpfr_float);
+			}
+
 
 
 			/////////////////
@@ -741,7 +822,7 @@ namespace bertini{
 			SuccessCode Refine()
 			{
 				SuccessCode code;
-				if (current_precision==16)
+				if (current_precision==DoublePrecision)
 				{
 					code = Refine(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), std::get<dbl>(current_time_),double(tracking_tolerance_));
 					if (code == SuccessCode::Success)
@@ -819,12 +900,12 @@ namespace bertini{
 
 				bool upsampling_needed = new_precision > current_precision_;
 
-				if (new_precision==16 && current_precision_>16)
+				if (new_precision==DoublePrecision && current_precision_>DoublePrecision)
 				{
 					// convert from multiple precision to double precision
 					MultipleToDouble();
 				}
-				else if(new_precision > 16 && current_precision_ == 16)
+				else if(new_precision > DoublePrecision && current_precision_ == DoublePrecision)
 				{
 					// convert from double to multiple precision
 					DoubleToMultiple();
@@ -869,8 +950,8 @@ namespace bertini{
 				assert(source_point.size() == std::get<Vec<dbl> >(current_space_).size() && "source point and current space point must be same size when changing precision.  Precondition not met.");
 				#endif
 
-				current_precision_ = 16;
-				system.precision(16);
+				current_precision_ = DoublePrecision;
+				system.precision(DoublePrecision);
 
 				if (std::get<Vec<dbl> >(current_space_).size()!=source_point.size())
 					std::get<Vec<dbl> >(current_space_).size(source_point.size());
@@ -904,7 +985,7 @@ namespace bertini{
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == system.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
-				assert(new_precision > 16 && "must convert to precision higher than 16 when converting to multiple precision");
+				assert(new_precision > DoublePrecision && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
 
 				current_precision_ = new_precision;
@@ -950,7 +1031,7 @@ namespace bertini{
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == system.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
-				assert(new_precision > 16 && "must convert to precision higher than 16 when converting to multiple precision");
+				assert(new_precision > DoublePrecision && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
 
 				current_precision_ = new_precision;
@@ -1001,7 +1082,7 @@ namespace bertini{
 
 			bool PrecisionSanityCheck() const
 			{	
-				if (current_precision_==16)
+				if (current_precision_==DoublePrecision)
 					return true;
 				else
 				{
