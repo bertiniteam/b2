@@ -375,12 +375,17 @@ namespace bertini{
 				Predictor(predictor_choice);
 
 				tracking_tolerance_ = tracking_tolerance;
+				digits_tracking_tolerance = round(-log10(tracking_tolerance));
+
+
 				path_truncation_threshold_ = path_truncation_threshold;
 
 				stepping_config_ = stepping;
 				newton_config_ = newton;
 				security_config_ = security;
 				AMP_config_ = AMP_config;
+
+				
 			}
 
 
@@ -516,7 +521,7 @@ namespace bertini{
 			void Predictor(config::Predictor new_predictor_choice)
 			{
 				predictor_choice_ = new_predictor_choice;
-				predictor_order_ = PredictorOrder(predictor_choice);
+				predictor_order_ = predict::Order(predictor_choice);
 			}
 
 
@@ -607,32 +612,32 @@ namespace bertini{
 				if (tracking::HasErrorEstimate(predictor_choice_))
 					return = Predict(predictor_choice_,
 									predicted_space,
-									std::get<RealType>(error_estimate),
-									std::get<RealType>(size_proportion),
-									std::get<RealType>(norm_J),
+									std::get<RealType>(error_estimate_),
+									std::get<RealType>(size_proportion_),
+									std::get<RealType>(norm_J_),
 									std::get<RealType>(norm_J_inverse_),
 									tracked_system_,
-									current_space, current_time, 
-									delta_t,
+									current_space_, current_time_, 
+									delta_t_,
 									std::get<RealType>(condition_number_estimate_),
-									num_steps_since_last_condition_number_computation, 
-									frequency_of_CN_estimation, 
+									num_steps_since_last_condition_number_computation_, 
+									frequency_of_CN_estimation_, 
 									RealType(tracking_tolerance_),
-									AMP_config);
+									AMP_config_);
 				else
 					return = Predict(predictor_choice_,
 									predicted_space,
-									std::get<RealType>(size_proportion),
-									std::get<RealType>(norm_J),
+									std::get<RealType>(size_proportion_),
+									std::get<RealType>(norm_J_),
 									std::get<RealType>(norm_J_inverse_),
 									tracked_system_,
-									current_space, current_time, 
-									delta_t,
+									current_space_, current_time_, 
+									delta_t_,
 									std::get<RealType>(condition_number_estimate_),
-									num_steps_since_last_condition_number_computation, 
-									frequency_of_CN_estimation, PrecisionType::Adaptive, 
+									num_steps_since_last_condition_number_computation_, 
+									frequency_of_CN_estimation_, PrecisionType::Adaptive, 
 									RealType(tracking_tolerance_),
-									AMP_config);
+									AMP_config_);
 			}
 
 
@@ -666,78 +671,78 @@ namespace bertini{
 			*/
 			void StepSuccess()
 			{
-				if (HasErrorEstimate(predictor_))
-					StepSuccessWithErrorEstimate();
-				else
-					StepSuccessNoErrorEstimate();
-
-			}
-
-
-			void StepSuccessWithErrorEstimate()
-			{
 				if (current_precision_==DoublePrecision)
-					StepSuccessWithErrorEstimate(double);
+					StepSuccessWithErrorEstimate<double>();
 				else
-					StepSuccessWithErrorEstimate(mpfr_float);
+					StepSuccessWithErrorEstimate<mpfr_float>();
 			}
+
+
+
+			// /**
+			// Computes new stepsize and precision
+			// */
+			// void StepSuccessWithErrorEstimate(double)
+			// {
+			// 	mpfr_float minimum_stepsize = current_stepsize_ * stepping_.step_size_fail_factor;
+
+
+			// 	unsigned precision_from_criterion_B = amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  norm_of_latest_newton_residual, AMP_config_);
+
+			// 	unsigned precision_from_criterion_C = round( amp::CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config));
+			// 	precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
+			// 	// hopefully this number is smaller than the current precision, allowing us to reduce precision
+
+
+			// 	mpfr_float maximum_stepsize = current_stepsize_;
+
+			// 	if (num_consecutive_successful_steps_ < stepping_.consecutive_successful_steps_before_stepsize_increase)
+			// 		// this space left intentionally blank
+			// 	else if (num_consecutive_successful_steps_ == stepping_.consecutive_successful_steps_before_stepsize_increase)
+			// 		maximum_stepsize = min(current_stepsize_ * stepping_.step_size_success_factor, stepping_.max_step_size);
+			// 	else
+			// 		num_consecutive_successful_steps_=0;
+
+			// 	mpfr_float eta_min = -log10(minimum_stepsize);
+			// 	mpfr_float eta_max = -log10(maximum_stepsize);
+
+
+			// 	AMP3_update(new_precision, new_stepsize,
+		 //                 current_precision, current_stepsize,
+		 //                 digits_tau,
+		 //                 digits_final = 0,
+		 //                 P0,
+		 //                 digits_C,
+		 //                 current_time,
+		 //                 eta_min,
+		 //                 eta_max,
+		 //                 max_num_newton_iterations,
+		 //                 predictor_order_,
+		 //                 AMP_config_);
+			// }
 
 
 
 			/**
 			Computes new stepsize and precision
 			*/
-			void StepSuccessWithErrorEstimate(double)
+			template <typename T>
+			void StepSuccess()
 			{
+
+				T& norm_J = std::get<T>(norm_J_);
+				T& norm_J_inverse = std::get<T>(norm_J_inverse_);
+				T& size_proportion = std::get<T>(size_proportion_);
+
+
+
 				mpfr_float minimum_stepsize = current_stepsize_ * stepping_.step_size_fail_factor;
 
 
-				unsigned precision_from_criterion_B = amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  norm_of_latest_newton_residual, AMP_config_);
+				unsigned precision_from_criterion_B = amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  size_proportion, AMP_config_);
 
-				unsigned precision_from_criterion_C = round( amp::CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config));
-				precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
-
-
-				mpfr_float maximum_stepsize = current_stepsize_;
-
-				if (num_consecutive_successful_steps_ < stepping_.consecutive_successful_steps_before_stepsize_increase)
-					// this space left intentionally blank
-				else if (num_consecutive_successful_steps_ == stepping_.consecutive_successful_steps_before_stepsize_increase)
-					maximum_stepsize = min(current_stepsize_ * stepping_.step_size_success_factor, stepping_.max_step_size);
-				else
-					num_consecutive_successful_steps_=0;
-
-				mpfr_float eta_min = -log10(minimum_stepsize);
-				mpfr_float eta_max = -log10(maximum_stepsize);
-
-
-				AMP3_update(new_precision, new_stepsize,
-		                 current_precision, current_stepsize,
-		                 digits_tau,
-		                 digits_final = 0,
-		                 P0,
-		                 digits_C,
-		                 current_time,
-		                 eta_min,
-		                 eta_max,
-		                 max_num_newton_iterations,
-		                 predictor_order_,
-		                 AMP_config_);
-			}
-
-
-
-			/**
-			Computes new stepsize and precision
-			*/
-			void StepSuccessWithErrorEstimate(mpfr_float)
-			{
-				mpfr_float minimum_stepsize = current_stepsize_ * stepping_.step_size_fail_factor;
-
-
-				unsigned precision_from_criterion_B = amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  norm_of_latest_newton_residual, AMP_config_);
-
-				unsigned precision_from_criterion_C = round( amp::CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config)); // hopefully this number is smaller than the current precision, allowing us to reduce precision
+				unsigned precision_from_criterion_C = round( amp::CriterionCRHS(norm_J_inverse, 1, tracking_tolerance, AMP_config)); 
+				// hopefully this number is smaller than the current precision, allowing us to reduce precision
 
 
 				mpfr_float maximum_stepsize = current_stepsize_;
@@ -751,16 +756,19 @@ namespace bertini{
 					// allow stepsize increase, up to maximum step size
 					maximum_stepsize = min(current_stepsize_ * stepping_.step_size_success_factor, stepping_.max_step_size);
 				}	
-				else if (num_consecutive_successful_steps_ < stepping_.consecutive_successful_steps_before_precision_decrease)
+				else if (current_precision_ > DoublePrecision) // exclude the next two cases from being executed in double precision, because cannot decrease from double.
 				{
-					precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
-				}
-				else if (num_consecutive_successful_steps_ == stepping_.consecutive_successful_steps_before_precision_decrease)
-				{
-					// allow stepsize increase, up to maximum step size
-					maximum_stepsize = min(current_stepsize_ * stepping_.step_size_success_factor, stepping_.max_step_size);
-					if (num_precision_decreases >= AMP_config_.max_num_precision_decreases)
+					if (num_consecutive_successful_steps_ < stepping_.consecutive_successful_steps_before_precision_decrease)
+					{
 						precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
+					}
+					else if (num_consecutive_successful_steps_ == stepping_.consecutive_successful_steps_before_precision_decrease)
+					{
+						// allow stepsize increase, up to maximum step size
+						maximum_stepsize = min(current_stepsize_ * stepping_.step_size_success_factor, stepping_.max_step_size);
+						if (num_precision_decreases >= AMP_config_.max_num_precision_decreases)
+							precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
+					}
 				}
 				else
 				{
@@ -769,17 +777,14 @@ namespace bertini{
 					precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
 				}
 
-
-				max_num_precision_decreases
-
 				mpfr_float eta_min = -log10(minimum_stepsize);
 				mpfr_float eta_max = -log10(maximum_stepsize);
 
 
 				AMP3_update(new_precision, new_stepsize,
 		                 current_precision, current_stepsize,
-		                 digits_tau,
-		                 digits_final = 0,
+		                 digits_tracking_tolerance,
+		                 digits_final,
 		                 P0,
 		                 digits_C,
 		                 current_time,
@@ -788,22 +793,8 @@ namespace bertini{
 		                 max_num_newton_iterations,
 		                 predictor_order_,
 		                 AMP_config_);
-
-				// now call AMP3_update()
 			}
 
-
-			
-
-
-
-			void StepSuccessNoErrorEstimate()
-			{
-				if (current_precision_==DoublePrecision)
-					StepSuccessNoErrorEstimate(double);
-				else
-					StepSuccessNoErrorEstimate(mpfr_float);
-			}
 
 
 
@@ -1148,7 +1139,7 @@ namespace bertini{
 			std::tuple< double, mpfr_float > error_estimate_;
 			std::tuple< double, mpfr_float > norm_J_;
 			std::tuple< double, mpfr_float > norm_J_inverse_;
-
+			std::tuple< double, mpfr_float > size_proportion_;
 
 			config::Stepping stepping_config_;
 			config::Newton newton_config_;

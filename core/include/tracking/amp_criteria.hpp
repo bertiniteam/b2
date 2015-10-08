@@ -121,6 +121,24 @@ namespace bertini{
 			
 
 
+			/**
+			Evaluate the right hand side of Criterion C, from \cite{amp1, amp2}.
+
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
+			\param norm_z The norm of the current space point.
+			\param AMP_config The settings for adaptive multiple precision.
+
+			\return The value of the right hand side of the inequality from Criterion C.
+			*/
+			template<typename RealType>
+			RealType CriterionCRHS(RealType const& norm_J_inverse, RealType const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*RealType(AMP_config.Psi) + norm_z);
+			}
+
+
 
 			/**
 			Evaluate the right hand side of Criterion C, from \cite{amp1, amp2}.

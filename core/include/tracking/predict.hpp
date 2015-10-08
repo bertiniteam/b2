@@ -216,7 +216,7 @@ namespace bertini{
 				switch (predictor_choice)
 				{
 					case (config::Predictor::Euler)
-						return 1;
+						return 0;
 					case (config::Predictor::HeunEuler)
 						return 1;
 				}
