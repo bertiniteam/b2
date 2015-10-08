@@ -60,6 +60,15 @@ namespace bertini{
 
 
 			/**
+			\brief Compute the expression \f$D\f$ from the AMP papers \cite{AMP1,AMP2}.
+			*/
+			template <typename RealType>
+			RealType D(RealType const& norm_J, RealType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				return log10(norm_J_inverse*( (RealType(2)+RealType(AMP_config.epsilon))*norm_J + RealType(AMP_config.epsilon)*RealType(AMP_config.Phi)) + RealType(1));
+			}
+
+			/**
 			Evaluate the right hand side of the inequality of Criterion B, from \cite{amp1, amp2}.
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
@@ -80,13 +89,11 @@ namespace bertini{
 				// std::cout << tracking_tolerance << "\n";
 				// std::cout << norm_of_latest_newton_residual << "\n";
 				// std::cout << AMP_config << "\n";
-
-				RealType D = log10(norm_J_inverse*( (RealType(2)+RealType(AMP_config.epsilon))*norm_J + RealType(AMP_config.epsilon)*RealType(AMP_config.Phi)) + RealType(1));
 				
 				// std::cout << D << "\n";
 				// std::cout << "criterion B, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
 				// std::cout << "criterion B, rhs: " << RealType(AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining)) << "\n";
-				return AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
+				return AMP_config.safety_digits_1 + D(norm_J, norm_J_inverse, AMP_config) + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
 			}
 
 

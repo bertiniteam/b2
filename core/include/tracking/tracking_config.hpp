@@ -60,6 +60,7 @@ namespace bertini
 		enum 
 		{
 			PrecisionIncrement = 10,
+			DoublePrecision = 16,
 			LowestMultiplePrecision = 30
 		}
 
@@ -245,7 +246,8 @@ namespace bertini
 				int safety_digits_1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
 				int safety_digits_2; ///< User-chosen setting for the number of safety digits used during Criterion C.
 				unsigned int maximum_precision; ///< User-chosed setting for the maximum allowable precision.  Paths will die if their precision is requested to be set higher than this threshold.
-			
+				
+				unsigned max_num_precision_decreases; ///< The maximum number of times precision can be lowered during tracking of a segment of path.
 				AdaptiveMultiplePrecisionConfig() : coefficient_bound("1000.0"), degree_bound("5.0"), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
 				{}
 
