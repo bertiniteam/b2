@@ -61,10 +61,6 @@ namespace bertini {
 			return returnme / sqrt( abs(returnme));
 		 }
 
-
-
-	using boost::multiprecision::mpfr_float;
-	
 	/**
 	\brief Custom multiple precision complex class.
 	
@@ -74,7 +70,7 @@ namespace bertini {
 	This class currently uses Boost.Multiprecision -- namely, the mpfr_float type for variable precision.
 	This class is serializable using Boost.Serialize.
 	
-	The precision of a newly-made bertini::complex is whatever current default is, set by boost::multiprecision::mpfr_float::default_precision(...).
+	The precision of a newly-made bertini::complex is whatever current default is, set by mpfr_float::default_precision(...).
 
 	\todo{Implement MPI send/receive commands using Boost.MPI or alternative.}
 	*/
@@ -1064,7 +1060,7 @@ namespace bertini {
 	{
 		inline static unsigned NumDigits()
 		{
-			return boost::multiprecision::mpfr_float::default_precision();
+			return mpfr_float::default_precision();
 		}
 	};
 } // re: namespace bertini
@@ -1077,15 +1073,17 @@ namespace bertini {
 // reopen the Eigen namespace to inject this struct.
 namespace Eigen {
 	
-	using mpfr_float = boost::multiprecision::mpfr_float;
+	
 	
 	/**
 	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
 
 	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_float> contained in mpfr_extensions.
 	 */
-	template<> struct NumTraits<bertini::complex> : NumTraits<mpfr_float> 
+	template<> struct NumTraits<bertini::complex> : NumTraits<bertini::mpfr_float> 
 	{
+		using mpfr_float = bertini::mpfr_float;
+
 		typedef mpfr_float Real;
 		typedef mpfr_float NonInteger;
 		typedef bertini::complex Nested;// Nested;
@@ -1105,7 +1103,7 @@ namespace Eigen {
 		template<>
 		struct abs2_impl<bertini::complex>
 		{
-			static inline boost::multiprecision::mpfr_float run(const bertini::complex& x)
+			static inline mpfr_float run(const bertini::complex& x)
 			{
 				return real(x)*real(x) + imag(x)*imag(x);
 			}

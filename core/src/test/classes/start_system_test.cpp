@@ -42,7 +42,7 @@ template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic
 extern double relaxed_threshold_clearance_d;
 
 extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 			BOOST_CHECK(abs(function_values(jj)) < relaxed_threshold_clearance_d);
 	}
 
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	for (size_t ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{

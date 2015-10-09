@@ -38,14 +38,14 @@ using VariableGroup = bertini::VariableGroup;
 
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
-using mpfr_float = boost::multiprecision::mpfr_float;
+using mpfr_float = bertini::mpfr_float;
 
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
 extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 

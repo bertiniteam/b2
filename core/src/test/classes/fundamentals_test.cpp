@@ -31,7 +31,7 @@
 
 
 
-using mpfr = boost::multiprecision::mpfr_float;
+using mpfr = bertini::mpfr_float;
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 

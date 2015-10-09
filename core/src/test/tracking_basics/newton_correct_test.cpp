@@ -42,14 +42,14 @@ using VariableGroup = bertini::VariableGroup;
 
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
-using mpfr_float = boost::multiprecision::mpfr_float;
+using mpfr_float = bertini::mpfr_float;
 
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
 extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 
 
 	
-	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+	bertini::mpfr_float tracking_tolerance("1e-5");
 
 
 	Vec<mpfr> corrected(2);
@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 
 	Vec<mpfr> newton_correction_result;
 
-	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
-	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	tracking_tolerance = bertini::mpfr_float("1e1");
+	bertini::mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 
 
 	
-	boost::multiprecision::mpfr_float tracking_tolerance("1e-5");
+	bertini::mpfr_float tracking_tolerance("1e-5");
 
 
 	Vec<mpfr> corrected(2);
@@ -291,8 +291,8 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 
 	Vec<mpfr> newton_correction_result;
 
-	tracking_tolerance = boost::multiprecision::mpfr_float("1e1");
-	boost::multiprecision::mpfr_float path_truncation_threshold("1e4");
+	tracking_tolerance = bertini::mpfr_float("1e1");
+	bertini::mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 2;
 	unsigned min_num_newton_iterations = 2;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,

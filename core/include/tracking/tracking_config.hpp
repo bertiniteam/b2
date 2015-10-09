@@ -67,8 +67,6 @@ namespace bertini
 
 		namespace config{
 
-			using mpfr_float = boost::multiprecision::mpfr_float;
-
 			enum class Predictor
 			{
 				Euler,
