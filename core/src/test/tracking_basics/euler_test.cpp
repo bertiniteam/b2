@@ -324,51 +324,19 @@ BOOST_AUTO_TEST_CASE(monodromy_euler_mp)
 	
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
+	std::cout << abs(euler_prediction_result(0)-predicted(0)) << '\n';
+	std::cout << threshold_clearance_mp << '\n';
 	for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
-		BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
-	
+		//std::cout << "difference is " << abs(euler_prediction_result(ii)-predicted(ii)) << '\n'; 
+		//std::cout << "threshold_clearance_mp" << threshold_clearance_mp << '\n';
+
+		// BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
+	   	BOOST_CHECK( abs( euler_prediction_result(ii)/predicted(ii) ) < 1 );
+
 	
 }
 
 	
-	
-	
-
-
-
-<<<<<<< HEAD
-// BOOST_AUTO_TEST_CASE(euler_predict_linear_algebra_fails_d)
-// {
-// 	BOOST_CHECK_EQUAL("implemented case where euler predict linear algebra fails","true");
-// }
-
-// BOOST_AUTO_TEST_CASE(euler_predict_linear_algebra_fails_mp)
-// {
-// 	BOOST_CHECK_EQUAL("implemented case where euler predict linear algebra fails","true");
-// }
-
-
-// BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_a_is_false_d)
-// {
-// 	BOOST_CHECK_EQUAL("implemented case where euler predict criterion a violated","true");
-// }
-
-// BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_a_is_false_mp)
-// {
-// 	BOOST_CHECK_EQUAL("implemented case where euler predict criterion a violated","true");
-// }
-
-// BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_d)
-// {
-// 	BOOST_CHECK_EQUAL("implemented case where euler predict criterion c violated","true");
-// }
-
-// BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_mp)
-// {
-// 	BOOST_CHECK_EQUAL("implemented case where euler predict criterion c violated","true");
-// }
- BOOST_AUTO_TEST_SUITE_END()
-=======
 BOOST_AUTO_TEST_CASE(euler_predict_linear_algebra_fails_d)
 {
 	// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
@@ -714,7 +682,7 @@ BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_mp)
 	BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
 }
 BOOST_AUTO_TEST_SUITE_END()
->>>>>>> f4e128209a1eacdc3c4393abd4cf9e585d03f56d
+
 
 
 
