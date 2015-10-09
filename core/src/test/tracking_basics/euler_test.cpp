@@ -327,11 +327,8 @@ BOOST_AUTO_TEST_CASE(monodromy_euler_mp)
 	std::cout << abs(euler_prediction_result(0)-predicted(0)) << '\n';
 	std::cout << threshold_clearance_mp << '\n';
 	for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
-		//std::cout << "difference is " << abs(euler_prediction_result(ii)-predicted(ii)) << '\n'; 
-		//std::cout << "threshold_clearance_mp" << threshold_clearance_mp << '\n';
+		 BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 
-		// BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
-	   	BOOST_CHECK( abs( euler_prediction_result(ii)/predicted(ii) ) < 1 );
 
 	
 }
