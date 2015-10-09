@@ -6,7 +6,8 @@ tracking_basics_test_source_files = \
 	src/test/tracking_basics/tracking_basics_test.cpp \
 	src/test/tracking_basics/newton_correct_test.cpp \
 	src/test/tracking_basics/euler_test.cpp \
-	src/test/tracking_basics/amp_criteria_test.cpp
+	src/test/tracking_basics/amp_criteria_test.cpp \
+	src/test/tracking_basics/tracker_test.cpp
 
 
 tracking_basics_test_SOURCES = \

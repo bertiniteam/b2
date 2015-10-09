@@ -18,7 +18,8 @@ tracking_header_files = \
 	include/tracking/euler.hpp \
 	include/tracking/amp_criteria.hpp \
 	include/tracking/tracking_config.hpp \
-	include/tracking/step.hpp
+	include/tracking/step.hpp \
+	include/tracking/tracker.hpp
 
 
 tracking_source_files =

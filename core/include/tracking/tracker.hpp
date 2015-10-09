@@ -315,12 +315,18 @@ namespace bertini{
 
 
 
+
+		class Tracker
+		{
+
+		};
+
 		/** 
 		\brief Functor-like class for tracking paths on a system
 
 		create an instance of this class, feeding it the system to be tracked on, and some configuration.  Then, this this tracker to track paths of the system.
 		*/
-		class Tracker
+		class AMPTracker : Tracker
 		{
 		public:
 
@@ -342,14 +348,11 @@ namespace bertini{
 
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
-			void Setup(System const& sys,
-						config::Predictor predictor_choice,
-						config::PrecisionType prec_type = config::PrecisionType::Adaptive,
+			void Setup(config::Predictor predictor_choice,
 						mpfr_float const& tracking_tolerance,
 						mpfr_float const& path_truncation_threshold,
 						config::Stepping const& stepping,
 						config::Newton const& newton,
-						config::Security const& security,
 						config::AdaptiveMultiplePrecisionConfig const& AMP 
 						)
 			{
@@ -364,10 +367,7 @@ namespace bertini{
 
 				stepping_config_ = stepping;
 				newton_config_ = newton;
-				security_config_ = security;
 				AMP_config_ = AMP_config;
-
-				
 			}
 
 
@@ -376,7 +376,7 @@ namespace bertini{
 
 
 
-			SuccessCode TrackPathAMP(Vec<mpfr> & solution_at_endtime,
+			SuccessCode TrackPath(Vec<mpfr> & solution_at_endtime,
 									mpfr const& start_time, mpfr const& endtime,
 									Vec<mpfr> const& start_point
 									)

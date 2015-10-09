@@ -90,34 +90,34 @@ namespace bertini
 
 			struct Tolerances
 			{
-				mpfr_float newton_before_endgame;
-				mpfr_float newton_during_endgame;
+				mpfr_float newton_before_endgame = mpfr_float("1e-5");
+				mpfr_float newton_during_endgame = mpfr_float("1e-6");;
 
-				mpfr_float final_tolerance;
+				mpfr_float final_tolerance = mpfr_float("1e-11");
 
-				mpfr_float path_truncation_threshold;
+				mpfr_float path_truncation_threshold = mpfr_float("1e5");
 			};
 
 			struct Stepping
 			{
-				mpfr_float max_step_size;
-				mpfr_float min_step_size;
+				mpfr_float max_step_size = mpfr_float("0.1");
+				mpfr_float min_step_size = mpfr_float("1e-100");
 
-				mpfr_float step_size_success_factor,
-				mpfr_float step_size_fail_factor,
+				mpfr_float step_size_success_factor = mpfr_float("2.0");
+				mpfr_float step_size_fail_factor = mpfr_float("0.5");
 
-				unsigned consecutive_successful_steps_before_stepsize_increase;
-				unsigned consecutive_successful_steps_before_precision_decrease;
-				unsigned max_num_steps;
+				unsigned consecutive_successful_steps_before_stepsize_increase = 5;
+				unsigned consecutive_successful_steps_before_precision_decrease = 10;
+				unsigned max_num_steps = 1e5;
 
-				unsigned frequency_of_CN_estimation;
+				unsigned frequency_of_CN_estimation = 1;
 				
 			};
 
 			struct Newton
 			{
-				unsigned max_num_newton_iterations;
-				unsigned min_num_newton_iterations;
+				unsigned max_num_newton_iterations = 2;
+				unsigned min_num_newton_iterations = 1;
 			};
 
 
@@ -134,8 +134,8 @@ namespace bertini
 
 			struct Security
 			{
-				int level;
-				mpfr_float max_norm;
+				int level = 0;
+				mpfr_float max_norm = mpfr_float("1e5");
 			};
 
 
@@ -148,8 +148,8 @@ namespace bertini
 
 			struct EndGame
 			{
-				mpfr_float SampleFactor;
-				unsigned max_cycle_number;
+				mpfr_float SampleFactor = mpfr_float("0.5");
+				unsigned max_cycle_number = 6;
 			};
 
 
