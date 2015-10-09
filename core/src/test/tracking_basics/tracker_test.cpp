@@ -41,8 +41,8 @@ using mpfr = bertini::complex;
 using mpfr_float = bertini::mpfr_float;
 
 
-template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
 
 extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
@@ -56,6 +56,8 @@ BOOST_AUTO_TEST_SUITE(tracker_basics)
 
 BOOST_AUTO_TEST_CASE(tracker_track_linear)
 {
+	using namespace bertini::tracking;
+
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t");
 
@@ -65,14 +67,13 @@ BOOST_AUTO_TEST_CASE(tracker_track_linear)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys,config::Predictor::Euler);
 
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
-	config::AdaptiveMultiplePrecisionConfig AMP;
 
-	tracker.Setup(config::Predictor::Euler,
-					mpfr_float("1e-5"),
+
+	tracker.Setup(mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
 					newton_preferences,

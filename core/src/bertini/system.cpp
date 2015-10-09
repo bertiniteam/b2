@@ -25,10 +25,12 @@
 
 #include "system.hpp"
 
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
+
 BOOST_CLASS_EXPORT(bertini::System)
 
-template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+
 
 namespace bertini 
 {

@@ -37,8 +37,8 @@ using Var = std::shared_ptr<bertini::node::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+using Vec = bertini::Vec;
+using Mat = bertini::Mat;
 extern double relaxed_threshold_clearance_d;
 
 extern double threshold_clearance_d;

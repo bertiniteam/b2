@@ -37,6 +37,7 @@ namespace bertini{
 
 		using namespace bertini::tracking::config;
 		using std::max;
+		using std::min;
 		using std::pow;
 
 
@@ -180,8 +181,8 @@ namespace bertini{
 							                                norm_of_stepsize, // norm(delta_z, delta_t)
 							                                AMP_config,
 							                                predictor_order);
-				
-				if (min(abs(candidate_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(candidate_precision))
+
+				if (std::min(abs(candidate_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(candidate_precision))
 					computed_candidates.insert(PrecStep<mpfr_float>(candidate_precision, candidate_stepsize));
 
 				lowest_mp_precision_to_test = LowestMultiplePrecision;
@@ -195,10 +196,10 @@ namespace bertini{
 															tau, // -log10 of track tolerance
 							                                d, // from condition B
 							                                size_proportion, // size_proportion
-							                                predictor_order,
 							                                num_newton_iterations,
 							                                norm_of_stepsize, // norm(delta_z, delta_t)
-							                                AMP_config);
+							                                AMP_config,
+							                                predictor_order);
 
 				if (min(abs(candidate_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(candidate_precision))
 					computed_candidates.insert(PrecStep<mpfr_float>(candidate_precision, candidate_stepsize));
@@ -215,7 +216,7 @@ namespace bertini{
 				double min_cost(1e300);
 				for (auto candidate : computed_candidates)
 				{	
-					double curr_cost = Cost(candidate.precision) / abs(candidate.stepsize);
+					double curr_cost = Cost(candidate.precision) / double(abs(candidate.stepsize));
 					if (curr_cost < min_cost)
 					{
 						min_cost = curr_cost;
@@ -240,6 +241,7 @@ namespace bertini{
 						 RealType const& size_proportion,
 						 unsigned num_newton_iterations,
 						 mpfr_float const& tracking_tolerance,
+						 mpfr_float const& step_size_fail_factor,
 						 mpfr_float const& step_size_success_factor,
 						 mpfr_float const& norm_of_current_solution,
 						 AdaptiveMultiplePrecisionConfig const& AMP_config,
@@ -263,11 +265,11 @@ namespace bertini{
 
 				
 
-				unsigned P0 = round(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations, RealType(tracking_tolerance),  size_proportion, AMP_config_));
+				unsigned P0 = round(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations, RealType(tracking_tolerance),  size_proportion, AMP_config));
 
 				unsigned digits_C = round( amp::CriterionCRHS(norm_J_inverse, norm_of_current_solution, RealType(tracking_tolerance), AMP_config)); 
 
-				unsigned digits_tau = ceil(-log10(tracking_tolerance));
+				unsigned digits_tau(ceil(-log10(tracking_tolerance)));
 				
 
 				AMP3_update(new_precision, new_stepsize,
@@ -325,8 +327,8 @@ namespace bertini{
 			if (digits_stepsize < old_precision)
 				digits_stepsize = min(digits_stepsize+precision_decrease_threshold, old_precision);
 
-			min_digits_needed = max(digits_tau, digits_final, digits_B, digits_C, digits_stepsize);
-			max_digits_needed = max(min_digits_needed, ceil(P0 - (predictor_order_+1)* eta_max/max_num_newton_iterations));
+			unsigned min_digits_needed = max(digits_tau, digits_final, digits_B, digits_C, digits_stepsize);
+			unsigned max_digits_needed = max(min_digits_needed, ceil(P0 - (predictor_order+1)* eta_max/max_num_newton_iterations));
 			
 
 			MinimizeCost(
@@ -362,8 +364,7 @@ namespace bertini{
 
 
 			Tracker(System sys, 
-			        config::Predictor new_predictor_choice = config::Predictor::Euler,
-			        ) : tracked_system(sys)
+			        config::Predictor new_predictor_choice) : tracked_system(sys)
 			{	
 				Predictor(config::Predictor new_predictor_choice);
 				
@@ -377,17 +378,13 @@ namespace bertini{
 
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
-			void Setup(config::Predictor predictor_choice,
-						mpfr_float const& tracking_tolerance,
+			void Setup(mpfr_float const& tracking_tolerance,
 						mpfr_float const& path_truncation_threshold,
 						config::Stepping const& stepping,
 						config::Newton const& newton,
 						config::AdaptiveMultiplePrecisionConfig const& AMP 
 						)
 			{
-				tracked_system_ = sys;
-				Predictor(predictor_choice);
-
 				tracking_tolerance_ = tracking_tolerance;
 				digits_tracking_tolerance = round(-log10(tracking_tolerance));
 

@@ -26,7 +26,7 @@
 #define BERTINI_SYSTEM_HPP
 
 #include "mpfr_complex.hpp"
-
+#include "eigen_extensions.hpp"
 #include <vector>
 #include "function_tree.hpp"
 #include <boost/multiprecision/mpfr.hpp>
@@ -62,10 +62,6 @@ namespace bertini {
 		
 
 	public:
-
-		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-
 		// a few local using statements to reduce typing etc.
 		using Fn = std::shared_ptr<node::Function>;
 		using Var = std::shared_ptr<node::Variable>;

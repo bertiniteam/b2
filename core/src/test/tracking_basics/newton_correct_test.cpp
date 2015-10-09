@@ -44,9 +44,8 @@ using dbl = std::complex<double>;
 using mpfr = bertini::complex;
 using mpfr_float = bertini::mpfr_float;
 
-
-template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
 
 extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
