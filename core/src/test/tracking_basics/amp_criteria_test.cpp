@@ -59,6 +59,7 @@ extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 BOOST_AUTO_TEST_SUITE(amp_criteria_tracking_basics)
 
 
+<<<<<<< HEAD
 // BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 // {
 // 	BOOST_CHECK_EQUAL("test implemented","true");
@@ -89,6 +90,38 @@ BOOST_AUTO_TEST_SUITE(amp_criteria_tracking_basics)
 // {
 // 	BOOST_CHECK_EQUAL("test implemented","true");
 // }
+=======
+//BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
+//{
+//	BOOST_CHECK_EQUAL("test implemented","true");
+//}
+//	
+//BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
+//{
+//	BOOST_CHECK_EQUAL("test implemented","true");
+//}
+//
+//
+//BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
+//{
+//	BOOST_CHECK_EQUAL("test implemented","true");
+//}
+//	
+//BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
+//{
+//	BOOST_CHECK_EQUAL("test implemented","true");
+//}
+//
+//BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
+//{
+//	BOOST_CHECK_EQUAL("test implemented","true");
+//}
+//	
+//BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
+//{
+//	BOOST_CHECK_EQUAL("test implemented","true");
+//}
+>>>>>>> f4e128209a1eacdc3c4393abd4cf9e585d03f56d
 
 
 

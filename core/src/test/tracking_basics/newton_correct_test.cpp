@@ -805,7 +805,6 @@ BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
 
 BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
 {
-
 	/*
 	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
 	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. The difference from this 
