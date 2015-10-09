@@ -35,14 +35,6 @@ namespace bertini{
 
 		
 
-
-		enum class Branch
-		{
-			A, B
-		};
-
-		
-		
 		mpfr_float MinTimeForCurrentPrecision(unsigned precision)
 		{
 			if (precision==DoublePrecision)
@@ -224,25 +216,15 @@ namespace bertini{
 
 
 
-		
-		Branch SafetyError(unsigned new_precision, mpfr_float & new_stepsize, 
-		                   Vec<dbl> & new_delta_z, dbl & new_delta_t,
-
+		template <typename RealType>
+		void SafetyError(unsigned new_precision, mpfr_float & new_stepsize, 
 						 unsigned current_precision, mpfr_float const& current_stepsize, 
-						 Vec<dbl> const& delta_z, dbl const& delta_t,
-
-						 double const& norm_J, double const& norm_J_inverse,
-						 double const& size_proportion,
+						 RealType const& norm_J, RealType const& norm_J_inverse,
+						 RealType const& size_proportion,
 						 unsigned predictor_order,
 						 unsigned max_num_newton_iterations
 						 )
 		{
-			// new_precision = current_precision;
-			// new_stepsize = current_stepsize;
-			// new_delta_t = delta_t;
-			// new_delta_z = delta_z;
-
-
 			mpfr_float minimum_stepsize = MinTimeForCurrentPrecision(current_precision);
 			mpfr_float maximum_stepsize = current_stepsize * step_size_fail_factor;
 
@@ -598,6 +580,34 @@ namespace bertini{
 			}
 
 
+			/**
+
+			*/
+			template<typename T>
+			void SafetyError(unsigned new_precision, mpfr_float & new_stepsize)
+			{	
+				T& norm_J = std::get<T>(norm_J_);
+				T& norm_J_inverse = std::get<T>(norm_J_inverse_);
+				T& size_proportion = std::get<T>(size_proportion_);
+
+
+				SafetyError(new_precision, new_stepsize, 
+						 current_precision_, current_stepsize_, 
+						 norm_J, norm_J_inverse,
+						 size_proportion,
+						 predictor_order_,
+						 newton_.max_num_newton_iterations;
+						 );
+			}
+
+
+
+			void ConvergenceError(unsigned new_precision, mpfr_float & new_stepsize)
+			{
+				ConvergenceError(new_precision, new_stepsize, 
+							  current_precision_, current_stepsize_,
+							  stepping_.step_size_fail_factor);
+			}
 
 			/**
 			\brief Wrapper function for calling the correct predictor.
@@ -672,55 +682,10 @@ namespace bertini{
 			void StepSuccess()
 			{
 				if (current_precision_==DoublePrecision)
-					StepSuccessWithErrorEstimate<double>();
+					StepSuccess<double>();
 				else
-					StepSuccessWithErrorEstimate<mpfr_float>();
+					StepSuccess<mpfr_float>();
 			}
-
-
-
-			// /**
-			// Computes new stepsize and precision
-			// */
-			// void StepSuccessWithErrorEstimate(double)
-			// {
-			// 	mpfr_float minimum_stepsize = current_stepsize_ * stepping_.step_size_fail_factor;
-
-
-			// 	unsigned precision_from_criterion_B = amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  norm_of_latest_newton_residual, AMP_config_);
-
-			// 	unsigned precision_from_criterion_C = round( amp::CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config));
-			// 	precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
-			// 	// hopefully this number is smaller than the current precision, allowing us to reduce precision
-
-
-			// 	mpfr_float maximum_stepsize = current_stepsize_;
-
-			// 	if (num_consecutive_successful_steps_ < stepping_.consecutive_successful_steps_before_stepsize_increase)
-			// 		// this space left intentionally blank
-			// 	else if (num_consecutive_successful_steps_ == stepping_.consecutive_successful_steps_before_stepsize_increase)
-			// 		maximum_stepsize = min(current_stepsize_ * stepping_.step_size_success_factor, stepping_.max_step_size);
-			// 	else
-			// 		num_consecutive_successful_steps_=0;
-
-			// 	mpfr_float eta_min = -log10(minimum_stepsize);
-			// 	mpfr_float eta_max = -log10(maximum_stepsize);
-
-
-			// 	AMP3_update(new_precision, new_stepsize,
-		 //                 current_precision, current_stepsize,
-		 //                 digits_tau,
-		 //                 digits_final = 0,
-		 //                 P0,
-		 //                 digits_C,
-		 //                 current_time,
-		 //                 eta_min,
-		 //                 eta_max,
-		 //                 max_num_newton_iterations,
-		 //                 predictor_order_,
-		 //                 AMP_config_);
-			// }
-
 
 
 			/**
@@ -729,19 +694,17 @@ namespace bertini{
 			template <typename T>
 			void StepSuccess()
 			{
-
 				T& norm_J = std::get<T>(norm_J_);
 				T& norm_J_inverse = std::get<T>(norm_J_inverse_);
 				T& size_proportion = std::get<T>(size_proportion_);
 
 
-
 				mpfr_float minimum_stepsize = current_stepsize_ * stepping_.step_size_fail_factor;
 
 
-				unsigned precision_from_criterion_B = amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  size_proportion, AMP_config_);
+				unsigned precision_from_criterion_B = round(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, T(tracking_tolerance),  size_proportion, AMP_config_));
 
-				unsigned precision_from_criterion_C = round( amp::CriterionCRHS(norm_J_inverse, 1, tracking_tolerance, AMP_config)); 
+				unsigned precision_from_criterion_C = round( amp::CriterionCRHS(norm_J_inverse, 1, T(tracking_tolerance), AMP_config)); 
 				// hopefully this number is smaller than the current precision, allowing us to reduce precision
 
 
@@ -782,7 +745,7 @@ namespace bertini{
 
 
 				AMP3_update(new_precision, new_stepsize,
-		                 current_precision, current_stepsize,
+		                 current_precision_, current_stepsize_,
 		                 digits_tracking_tolerance,
 		                 digits_final,
 		                 P0,
@@ -794,6 +757,16 @@ namespace bertini{
 		                 predictor_order_,
 		                 AMP_config_);
 			}
+
+
+
+
+
+
+
+
+
+
 
 
 
