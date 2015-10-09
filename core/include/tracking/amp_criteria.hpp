@@ -133,7 +133,7 @@ namespace bertini{
 			\return The value of the right hand side of the inequality from Criterion C.
 			*/
 			template<typename RealType>
-			RealType CriterionCRHS(RealType const& norm_J_inverse, RealType const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			RealType CriterionCRHS(RealType const& norm_J_inverse, RealType const& norm_z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*RealType(AMP_config.Psi) + norm_z);
 			}

@@ -62,7 +62,7 @@ namespace bertini
 			PrecisionIncrement = 10,
 			DoublePrecision = 16,
 			LowestMultiplePrecision = 30
-		}
+		};
 
 
 		namespace config{

@@ -26,6 +26,6 @@
 #define BERTINI_ODE_PREDICTORS_HPP
 
 #include "tracking/euler.hpp"
-
+#include "tracking/heun_euler.hpp"
 
 #endif

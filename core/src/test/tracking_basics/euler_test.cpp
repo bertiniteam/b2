@@ -92,6 +92,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 
+	double norm_J, norm_J_inverse, size_proportion;
 
 	Vec<dbl> predicted(2);
 	predicted << dbl(2.40310963516214640018253210912048,0.187706567388887830930493342816564),
@@ -107,12 +108,14 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 
 	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::Euler,
 								euler_prediction_result,
+								size_proportion,
+								norm_J, norm_J_inverse,
 								sys,
 								current_space, current_time, 
 								delta_t,
 								condition_number_estimate,
 								num_steps_since_last_condition_number_computation, 
-								frequency_of_CN_estimation, bertini::tracking::config::PrecisionType::Adaptive, 
+								frequency_of_CN_estimation,
 								tracking_tolerance,
 								AMP);
 	
@@ -158,6 +161,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 
+	mpfr_float norm_J, norm_J_inverse, size_proportion;
 
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.40310963516214640018253210912048","0.187706567388887830930493342816564"),
@@ -173,12 +177,14 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_mp)
 
 	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::Euler,
 								euler_prediction_result,
+								size_proportion,
+								norm_J, norm_J_inverse,
 								sys,
 								current_space, current_time, 
 								delta_t,
 								condition_number_estimate,
 								num_steps_since_last_condition_number_computation, 
-								frequency_of_CN_estimation, bertini::tracking::config::PrecisionType::Adaptive, 
+								frequency_of_CN_estimation, 
 								tracking_tolerance,
 								AMP);
 	

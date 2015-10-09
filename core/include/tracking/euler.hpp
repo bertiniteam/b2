@@ -70,6 +70,7 @@ namespace bertini{
 			*/
 			template <typename ComplexType, typename RealType>
 			SuccessCode Euler(Vec<ComplexType> & next_space,
+			                  RealType & size_proportion,
 			                  RealType & norm_J,
 			                  RealType & norm_J_inverse,
 					               System & S,
@@ -77,10 +78,14 @@ namespace bertini{
 					               ComplexType const& delta_t,
 					               RealType & condition_number_estimate,
 					               unsigned & num_steps_since_last_condition_number_computation, 
-					               unsigned frequency_of_CN_estimation, PrecisionType PrecType, 
+					               unsigned frequency_of_CN_estimation,
 					               RealType const& tracking_tolerance,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
+
+
+									
+
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 				              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 				              				"underlying complex type and the type for comparisons must match");
@@ -108,34 +113,32 @@ namespace bertini{
 
 				// std::cout << "euler delta_x = \n" << delta_x << std::endl;
 
-				if (PrecType==PrecisionType::Adaptive)
+
+				Vec<ComplexType> randy = Vec<ComplexType>::Random(S.NumVariables());
+				Vec<ComplexType> temp_soln = LU.solve(randy);
+				
+				norm_J = dh_dx.norm();
+				norm_J_inverse = temp_soln.norm();
+				size_proportion = delta_x.array().abs().maxCoeff();
+
+				if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
 				{
-					Vec<ComplexType> randy = Vec<ComplexType>::Random(S.NumVariables());
-					Vec<ComplexType> temp_soln = LU.solve(randy);
-					
-					norm_J = dh_dx.norm();
-					norm_J_inverse = temp_soln.norm();
-
-
-					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
-					{
-						// TODO: this esimate may be wrong
-						condition_number_estimate = norm_J * norm_J_inverse;
-						num_steps_since_last_condition_number_computation = 1; // reset the counter to 0
-					}
-					else // no need to compute the condition number
-						num_steps_since_last_condition_number_computation++;
-
-
-					// std::cout << "norm_J: " << norm_J << " norm_J_inverse: " << norm_J_inverse << "\n";
-					// std::cout << "condition_number_estimate: " << condition_number_estimate << "\n";
-
-					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
-						return SuccessCode::HigherPrecisionNecessary;
-					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
-						return SuccessCode::HigherPrecisionNecessary;
-
+					// TODO: this esimate may be wrong
+					condition_number_estimate = norm_J * norm_J_inverse;
+					num_steps_since_last_condition_number_computation = 1; // reset the counter to 0
 				}
+				else // no need to compute the condition number
+					num_steps_since_last_condition_number_computation++;
+
+
+				// std::cout << "norm_J: " << norm_J << " norm_J_inverse: " << norm_J_inverse << "\n";
+				// std::cout << "condition_number_estimate: " << condition_number_estimate << "\n";
+
+				if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+					return SuccessCode::HigherPrecisionNecessary;
+				else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+					return SuccessCode::HigherPrecisionNecessary;
+
 
 				// std::cout << "euler delta_t * delta_x = \n" << delta_x * delta_t << std::endl;
 
@@ -182,19 +185,9 @@ namespace bertini{
 				              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 				              				"underlying complex type and the type for comparisons must match");
 
-				// std::cout << "current_time = " << current_time << "\n";
-				// std::cout << "current_space = " << current_space << "\n";
-
 				Vec<ComplexType> dh_dt = -S.TimeDerivative(current_space, current_time);
 				Mat<ComplexType> dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
 
-				// std::cout << "size of dh_dt = \n" << dh_dt.size() << "\n";
-				// std::cout << "type of dh_dt = \n" << boost::typeindex::type_id_with_cvr<decltype(dh_dt)>().pretty_name() << "\n";
-				// std::cout << "dh_dt = \n" << dh_dt << "\n";
-				// std::cout << "dh_dx = \n" << dh_dx << "\n";
-
-				// solve delta_x = (dH/dx)^(-1)*Y
-				// Y = dH/dt
 
 				auto LU = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
 				
@@ -202,39 +195,6 @@ namespace bertini{
 					return SuccessCode::MatrixSolveFailure;
 
 				auto delta_x = LU.solve(dh_dt); 
-
-				// std::cout << "euler delta_x = \n" << delta_x << std::endl;
-
-				if (PrecType==PrecisionType::Adaptive)
-				{
-					Vec<ComplexType> randy = Vec<ComplexType>::Random(S.NumVariables());
-					Vec<ComplexType> temp_soln = LU.solve(randy);
-					
-					RealType norm_J = dh_dx.norm();
-					RealType norm_J_inverse = temp_soln.norm();
-
-
-					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
-					{
-						// TODO: this esimate may be wrong
-						condition_number_estimate = norm_J * norm_J_inverse;
-						num_steps_since_last_condition_number_computation = 1; // reset the counter to 0
-					}
-					else // no need to compute the condition number
-						num_steps_since_last_condition_number_computation++;
-
-
-					// std::cout << "norm_J: " << norm_J << " norm_J_inverse: " << norm_J_inverse << "\n";
-					// std::cout << "condition_number_estimate: " << condition_number_estimate << "\n";
-
-					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
-						return SuccessCode::HigherPrecisionNecessary;
-					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
-						return SuccessCode::HigherPrecisionNecessary;
-
-				}
-
-				// std::cout << "euler delta_t * delta_x = \n" << delta_x * delta_t << std::endl;
 
 				next_space = current_space + delta_x * delta_t;
 

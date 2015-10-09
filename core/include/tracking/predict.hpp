@@ -57,7 +57,7 @@ namespace bertini{
 				               ComplexType const& delta_t,
 				               RealType & condition_number_estimate,
 				               unsigned & num_steps_since_last_condition_number_computation, 
-				               unsigned frequency_of_CN_estimation, config::PrecisionType prec_type, 
+				               unsigned frequency_of_CN_estimation, 
 				               RealType const& tracking_tolerance,
 				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
@@ -73,9 +73,8 @@ namespace bertini{
 				               		delta_t,
 				               		condition_number_estimate,
 				               		num_steps_since_last_condition_number_computation, 
-				               		frequency_of_CN_estimation, prec_type, 
-				               		tracking_tolerance,
-				               		AMP_config);
+				               		frequency_of_CN_estimation, 
+				               		tracking_tolerance);
 					break;
 				}
 
@@ -122,17 +121,17 @@ namespace bertini{
 				case config::Predictor::Euler:
 				{
 					return predict::Euler(next_space,
-					                      size_proportion
+					                      size_proportion,
 					                      norm_J,
 					                      norm_J_inverse,
-				               		sys,
-				               		current_space, current_time, 
-				               		delta_t,
-				               		condition_number_estimate,
-				               		num_steps_since_last_condition_number_computation, 
-				               		frequency_of_CN_estimation, 
-				               		tracking_tolerance,
-				               		AMP_config);
+					               		sys,
+					               		current_space, current_time, 
+					               		delta_t,
+					               		condition_number_estimate,
+					               		num_steps_since_last_condition_number_computation, 
+					               		frequency_of_CN_estimation, 
+					               		tracking_tolerance,
+					               		AMP_config);
 					break;
 				}
 
@@ -180,7 +179,7 @@ namespace bertini{
 				{
 					return predict::HeunEuler(next_space,
 					                      error_estimate,
-					                      size_proportion
+					                      size_proportion,
 					                      norm_J,
 					                      norm_J_inverse,
 				               		sys,
@@ -188,7 +187,7 @@ namespace bertini{
 				               		delta_t,
 				               		condition_number_estimate,
 				               		num_steps_since_last_condition_number_computation, 
-				               		frequency_of_CN_estimation, prec_type, 
+				               		frequency_of_CN_estimation, 
 				               		tracking_tolerance,
 				               		AMP_config);
 					break;
@@ -215,9 +214,9 @@ namespace bertini{
 			{
 				switch (predictor_choice)
 				{
-					case (config::Predictor::Euler)
+					case (config::Predictor::Euler):
 						return 0;
-					case (config::Predictor::HeunEuler)
+					case (config::Predictor::HeunEuler):
 						return 1;
 				}
 			}
@@ -227,9 +226,9 @@ namespace bertini{
 			{
 				switch (predictor_choice)
 				{
-					case Euler:
+					case (config::Predictor::Euler):
 						return false;
-					case HeunEuler:
+					case (config::Predictor::HeunEuler):
 						return true;
 				}
 			}
