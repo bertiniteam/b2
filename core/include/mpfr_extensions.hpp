@@ -190,6 +190,11 @@ namespace bertini {
 		{
 			return mpfr_float::default_precision();
 		}
+
+		inline static unsigned NumFuzzyDigits()
+		{
+			return mpfr_float::default_precision()-3;
+		}
 	};
 	
 	 

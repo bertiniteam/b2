@@ -229,77 +229,19 @@ namespace bertini{
 
 
 
-
-		template <typename RealType>
-		void SafetyError(unsigned new_precision, mpfr_float & new_stepsize, 
-						 unsigned current_precision, mpfr_float const& current_stepsize, 
-						 mpfr const& current_time,
-						 RealType const& norm_J, RealType const& norm_J_inverse,
-						 RealType const& size_proportion,
-						 unsigned num_newton_iterations,
-						 mpfr_float const& tracking_tolerance,
-						 mpfr_float const& step_size_fail_factor,
-						 mpfr_float const& step_size_success_factor,
-						 mpfr_float const& norm_of_current_solution,
-						 AdaptiveMultiplePrecisionConfig const& AMP_config,
-						 unsigned digits_final = 0,
-						 unsigned predictor_order= 0)
-		{
-			mpfr_float minimum_stepsize = MinTimeForCurrentPrecision(current_precision);
-			mpfr_float maximum_stepsize = current_stepsize * step_size_fail_factor;
-
-			if (minimum_stepsize > maximum_stepsize)
-			{
-				// stepsizes are incompatible, must increase precision
-				new_precision = LowestMultiplePrecision;
-				new_stepsize = current_stepsize * (1+step_size_fail_factor)/2;
-			}
-			else
-			{
-				auto eta_min = -log10(minimum_stepsize);
-				auto eta_max = -log10(maximum_stepsize);
-
-
-				
-
-				unsigned P0 = round(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations, RealType(tracking_tolerance),  size_proportion, AMP_config));
-
-				unsigned digits_C = round( amp::CriterionCRHS(norm_J_inverse, norm_of_current_solution, RealType(tracking_tolerance), AMP_config)); 
-
-				unsigned digits_tau(ceil(-log10(tracking_tolerance)));
-				
-
-				AMP3_update(new_precision, new_stepsize,
-						 current_precision, current_stepsize,
-						 digits_tau,
-						 P0,
-						 digits_C,
-						 current_time,
-						 norm_J,
-						 norm_J_inverse,
-						 size_proportion,
-						 eta_min,
-						 eta_max,
-						 num_newton_iterations,
-						 AMP_config,
-						  digits_final,
-						  predictor_order);
-			}
-		}
-
-
 		/**
 		Computes the minimum and maximum precisions necessary for computation to continue.
 		*/
+		template <typename RealType>
 		void AMP3_update(unsigned & new_precision, mpfr_float & new_stepsize,
 						 unsigned current_precision, mpfr_float const& current_stepsize,
 						 unsigned digits_tau,
 						 unsigned P0,
 						 unsigned digits_C,
 						 mpfr const& current_time,
-						 mpfr_float const& norm_J,
-						 mpfr_float const& norm_J_inverse,
-						 mpfr_float const& size_proportion,
+						 RealType const& norm_J,
+						 RealType const& norm_J_inverse,
+						 RealType const& size_proportion,
 						 mpfr_float const& eta_min,
 						 mpfr_float const& eta_max,
 						 unsigned max_num_newton_iterations,
@@ -347,6 +289,64 @@ namespace bertini{
 
 			
 		}
+		
+
+		template <typename RealType>
+		void SafetyError(unsigned new_precision, mpfr_float & new_stepsize, 
+						 unsigned current_precision, mpfr_float const& current_stepsize, 
+						 mpfr const& current_time,
+						 RealType const& norm_J, RealType const& norm_J_inverse,
+						 RealType const& size_proportion,
+						 unsigned num_newton_iterations,
+						 mpfr_float const& tracking_tolerance,
+						 mpfr_float const& step_size_fail_factor,
+						 mpfr_float const& step_size_success_factor,
+						 RealType const& norm_of_current_solution,
+						 AdaptiveMultiplePrecisionConfig const& AMP_config,
+						 unsigned digits_final = 0,
+						 unsigned predictor_order= 0)
+		{
+			mpfr_float minimum_stepsize = MinTimeForCurrentPrecision(current_precision);
+			mpfr_float maximum_stepsize = current_stepsize * step_size_fail_factor;
+
+			if (minimum_stepsize > maximum_stepsize)
+			{
+				// stepsizes are incompatible, must increase precision
+				new_precision = LowestMultiplePrecision;
+				new_stepsize = current_stepsize * (1+step_size_fail_factor)/2;
+			}
+			else
+			{
+				mpfr_float eta_min = -log10(minimum_stepsize);
+				mpfr_float eta_max = -log10(maximum_stepsize);
+
+				unsigned P0 = round(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations, RealType(tracking_tolerance), size_proportion, AMP_config));
+
+				unsigned digits_C(round( amp::CriterionCRHS(norm_J_inverse, norm_of_current_solution, RealType(tracking_tolerance), AMP_config))); 
+
+				unsigned digits_tau(ceil(-log10(tracking_tolerance)));
+				
+
+				AMP3_update(new_precision, new_stepsize,
+						 current_precision, current_stepsize,
+						 digits_tau,
+						 P0,
+						 digits_C,
+						 current_time,
+						 norm_J,
+						 norm_J_inverse,
+						 size_proportion,
+						 eta_min,
+						 eta_max,
+						 num_newton_iterations,
+						 AMP_config,
+						  digits_final,
+						  predictor_order);
+			}
+		}
+
+
+		
 		
 
 		unsigned MinDigitsFromEta(mpfr_float eta, mpfr current_time)
@@ -575,12 +575,16 @@ namespace bertini{
 			template <typename ComplexType, typename RealType>
 			SuccessCode TrackerIteration()
 			{	
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
+
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
 				#endif
 
 				Vec<ComplexType>& predicted_space = std::get<Vec<ComplexType> >(temporary_space_); // this will be populated in the Predict step
-				Vec<ComplexType>& current_space = std::get<Vec<ComplexType> >(current_space_);
+				Vec<ComplexType>& current_space = std::get<Vec<ComplexType> >(current_space_); // the thing we ultimately wish to update
 				ComplexType current_time = ComplexType(current_time_);
 				ComplexType delta_t = ComplexType(delta_t_);
 
@@ -596,7 +600,7 @@ namespace bertini{
 
 				if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
-					SafetyError<RealType>();
+					SafetyError<ComplexType, RealType>();
 					return predictor_code;
 				}
 
@@ -615,7 +619,7 @@ namespace bertini{
 				}
 				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
 				{
-						SafetyError<RealType>();
+						SafetyError<ComplexType, RealType>();
 						return corrector_code;
 				}
 
@@ -629,21 +633,27 @@ namespace bertini{
 			/**
 
 			*/
-			template<typename T>
+			template<typename ComplexType, typename RealType>
 			void SafetyError()
 			{	
-				T& norm_J = std::get<T>(norm_J_);
-				T& norm_J_inverse = std::get<T>(norm_J_inverse_);
-				T& size_proportion = std::get<T>(size_proportion_);
+				RealType& norm_J = std::get<RealType>(norm_J_);
+				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
+				RealType& size_proportion = std::get<RealType>(size_proportion_);
 
 
-				SafetyError(next_precision_, next_stepsize_, 
+				bertini::tracking::SafetyError(next_precision_, next_stepsize_, 
 						 current_precision_, current_stepsize_, 
+						 current_time_,
 						 norm_J, norm_J_inverse,
 						 size_proportion,
-						 predictor_order_,
-						 newton_config_.max_num_newton_iterations
-						 );
+						 newton_config_.max_num_newton_iterations,
+						 	RealType(tracking_tolerance_),
+						 	RealType(stepping_config_.step_size_fail_factor),
+						 	RealType(stepping_config_.step_size_success_factor),
+						 	RealType(1),
+						 	AMP_config_,
+						 	digits_final_,
+						  predictor_order_);
 			}
 
 
@@ -665,21 +675,27 @@ namespace bertini{
 								Vec<ComplexType> const& current_space, 
 								ComplexType const& current_time, ComplexType const& delta_t)
 			{
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
+
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
 				RealType& size_proportion = std::get<RealType>(size_proportion_);
+				RealType& error_estimate = std::get<RealType>(error_estimate_);
+				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
 				if (predict::HasErrorEstimate(predictor_choice_))
 					return ::bertini::tracking::Predict(predictor_choice_,
 									predicted_space,
-									std::get<RealType>(error_estimate_),
-									std::get<RealType>(size_proportion_),
-									std::get<RealType>(norm_J_),
-									std::get<RealType>(norm_J_inverse_),
+									error_estimate,
+									size_proportion,
+									norm_J,
+									norm_J_inverse,
 									tracked_system_,
 									current_space, current_time, 
 									delta_t,
-									std::get<RealType>(condition_number_estimate_),
+									condition_number_estimate,
 									num_steps_since_last_condition_number_computation_, 
 									frequency_of_CN_estimation_, 
 									RealType(tracking_tolerance_),
@@ -687,15 +703,15 @@ namespace bertini{
 				else
 					return ::bertini::tracking::Predict(predictor_choice_,
 									predicted_space,
-									std::get<RealType>(size_proportion_),
-									std::get<RealType>(norm_J_),
-									std::get<RealType>(norm_J_inverse_),
+									size_proportion,
+									norm_J,
+									norm_J_inverse,
 									tracked_system_,
 									current_space, current_time, 
 									delta_t,
-									std::get<RealType>(condition_number_estimate_),
+									condition_number_estimate,
 									num_steps_since_last_condition_number_computation_, 
-									frequency_of_CN_estimation_, PrecisionType::Adaptive, 
+									frequency_of_CN_estimation_, 
 									RealType(tracking_tolerance_),
 									AMP_config_);
 			}
@@ -748,6 +764,10 @@ namespace bertini{
 								Vec<ComplexType> const& start_point, ComplexType const& current_time,
 								RealType const& tolerance)
 			{
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
+
 				return bertini::tracking::Correct(new_space,
 							   tracked_system_,
 							   start_point,
@@ -769,6 +789,11 @@ namespace bertini{
 								Vec<ComplexType> const& current_space, 
 								ComplexType const& current_time)
 			{
+
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
+
 
 				return bertini::tracking::Correct(corrected_space,
 						   tracked_system_,

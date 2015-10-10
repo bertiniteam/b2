@@ -83,16 +83,7 @@ namespace bertini{
 			template<typename RealType>
 			RealType CriterionBRHS(RealType const& norm_J, RealType const& norm_J_inverse, unsigned num_newton_iterations_remaining, RealType const& tracking_tolerance, RealType const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				// std::cout << norm_J << "\n";
-				// std::cout << norm_J_inverse << "\n";
-				// std::cout << num_newton_iterations_remaining << "\n";
-				// std::cout << tracking_tolerance << "\n";
-				// std::cout << norm_of_latest_newton_residual << "\n";
-				// std::cout << AMP_config << "\n";
 				
-				// std::cout << D << "\n";
-				// std::cout << "criterion B, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
-				// std::cout << "criterion B, rhs: " << RealType(AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining)) << "\n";
 				return AMP_config.safety_digits_1 + D(norm_J, norm_J_inverse, AMP_config) + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
 			}
 

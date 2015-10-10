@@ -113,16 +113,17 @@ namespace bertini{
 
 				if (error_estimate==RealType(0) 
 				    || 
-				    -log10(error_estimate) >= NumTraits<RealType>::NumFuzzyDigits()
+				    -log10(error_estimate) >= bertini::NumTraits<RealType>::NumFuzzyDigits()
 				    ||
-				    -log10(abs2(delta_t)) >= 2*NumTraits<RealType>::NumFuzzyDigits()
+				    -log10(abs2(delta_t)) >= 2*bertini::NumTraits<RealType>::NumFuzzyDigits()
 				    )
 				{
 					size_proportion = RealType(1);
 				}
 				else
 				{
-					size_proportion = pow(10, log10(error_estimate) - log10(abs2(delta_t))); 
+					using std::pow;
+					size_proportion = pow(RealType(10), log10(error_estimate) - log10(abs(delta_t))); 
 				}
 
 				return SuccessCode::Success;

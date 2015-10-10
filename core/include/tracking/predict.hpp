@@ -51,15 +51,15 @@ namespace bertini{
 		*/
 		template <typename ComplexType, typename RealType>
 		SuccessCode Predict(config::Predictor predictor_choice,
-		                    Vec<ComplexType> & next_space,
-				               System & sys,
-				               Vec<ComplexType> const& current_space, ComplexType current_time, 
-				               ComplexType const& delta_t,
-				               RealType & condition_number_estimate,
-				               unsigned & num_steps_since_last_condition_number_computation, 
-				               unsigned frequency_of_CN_estimation, 
-				               RealType const& tracking_tolerance,
-				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+							Vec<ComplexType> & next_space,
+							   System & sys,
+							   Vec<ComplexType> const& current_space, ComplexType current_time, 
+							   ComplexType const& delta_t,
+							   RealType & condition_number_estimate,
+							   unsigned & num_steps_since_last_condition_number_computation, 
+							   unsigned frequency_of_CN_estimation, 
+							   RealType const& tracking_tolerance,
+							   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 
@@ -68,13 +68,13 @@ namespace bertini{
 				case config::Predictor::Euler:
 				{
 					return predict::Euler(next_space,
-				               		sys,
-				               		current_space, current_time, 
-				               		delta_t,
-				               		condition_number_estimate,
-				               		num_steps_since_last_condition_number_computation, 
-				               		frequency_of_CN_estimation, 
-				               		tracking_tolerance);
+									sys,
+									current_space, current_time, 
+									delta_t,
+									condition_number_estimate,
+									num_steps_since_last_condition_number_computation, 
+									frequency_of_CN_estimation, 
+									tracking_tolerance);
 					break;
 				}
 
@@ -101,10 +101,10 @@ namespace bertini{
 		*/
 		template <typename ComplexType, typename RealType>
 		SuccessCode Predict(config::Predictor predictor_choice,
-		                    Vec<ComplexType> & next_space,
-		                    RealType & size_proportion, /*\f$a\f$ from the AMP2 paper */
-		                    RealType & norm_J,
-		                    RealType & norm_J_inverse,
+							Vec<ComplexType> & next_space,
+							RealType & size_proportion, /*\f$a\f$ from the AMP2 paper */
+							RealType & norm_J,
+							RealType & norm_J_inverse,
 							System & sys,
 							Vec<ComplexType> const& current_space, ComplexType current_time, 
 							ComplexType const& delta_t,
@@ -121,17 +121,17 @@ namespace bertini{
 				case config::Predictor::Euler:
 				{
 					return predict::Euler(next_space,
-					                      size_proportion,
-					                      norm_J,
-					                      norm_J_inverse,
-					               		sys,
-					               		current_space, current_time, 
-					               		delta_t,
-					               		condition_number_estimate,
-					               		num_steps_since_last_condition_number_computation, 
-					               		frequency_of_CN_estimation, 
-					               		tracking_tolerance,
-					               		AMP_config);
+										  size_proportion,
+										  norm_J,
+										  norm_J_inverse,
+										sys,
+										current_space, current_time, 
+										delta_t,
+										condition_number_estimate,
+										num_steps_since_last_condition_number_computation, 
+										frequency_of_CN_estimation, 
+										tracking_tolerance,
+										AMP_config);
 					break;
 				}
 
@@ -157,11 +157,11 @@ namespace bertini{
 		*/
 		template <typename ComplexType, typename RealType>
 		SuccessCode Predict(config::Predictor predictor_choice,
-		                    Vec<ComplexType> & next_space,
-		                    RealType & error_estimate,
-		                    RealType & size_proportion, /*\f$a\f$ from the AMP2 paper */
-		                    RealType & norm_J,
-		                    RealType & norm_J_inverse,
+							Vec<ComplexType> & next_space,
+							RealType & error_estimate,
+							RealType & size_proportion, /*\f$a\f$ from the AMP2 paper */
+							RealType & norm_J,
+							RealType & norm_J_inverse,
 							System & sys,
 							Vec<ComplexType> const& current_space, ComplexType current_time, 
 							ComplexType const& delta_t,
@@ -178,18 +178,18 @@ namespace bertini{
 				case config::Predictor::HeunEuler:
 				{
 					return predict::HeunEuler(next_space,
-					                      error_estimate,
-					                      size_proportion,
-					                      norm_J,
-					                      norm_J_inverse,
-				               		sys,
-				               		current_space, current_time, 
-				               		delta_t,
-				               		condition_number_estimate,
-				               		num_steps_since_last_condition_number_computation, 
-				               		frequency_of_CN_estimation, 
-				               		tracking_tolerance,
-				               		AMP_config);
+												error_estimate,
+												size_proportion,
+												norm_J,
+												norm_J_inverse,
+												sys,
+												current_space, current_time, 
+												delta_t,
+												condition_number_estimate,
+												num_steps_since_last_condition_number_computation, 
+												frequency_of_CN_estimation, 
+												tracking_tolerance,
+												AMP_config);
 					break;
 				}
 
