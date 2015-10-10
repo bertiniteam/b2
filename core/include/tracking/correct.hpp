@@ -29,14 +29,13 @@
 
 namespace bertini{
 	namespace tracking{
-		
+			
 
 		template <typename ComplexType, typename RealType>
 		SuccessCode Correct(Vec<ComplexType> & next_space,
 					               System & S,
-					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
+					               Vec<ComplexType> const& current_space, 
 					               ComplexType const& current_time, 
-					               config::PrecisionType PrecType, 
 					               RealType tracking_tolerance,
 					               RealType path_truncation_threshold,
 					               unsigned min_num_newton_iterations,
@@ -45,9 +44,8 @@ namespace bertini{
 		{
 			return correct::NewtonLoop(next_space,
 						               S,
-						               current_space, // pass by value to get a copy of it
+						               current_space, 
 						               current_time, 
-						               PrecType, 
 						               tracking_tolerance,
 						               path_truncation_threshold,
 						               min_num_newton_iterations,

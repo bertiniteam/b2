@@ -30,7 +30,7 @@
 
 #include <algorithm>
 #include "tracking/step.hpp"
-
+#include "limbo.hpp"
 namespace bertini{
 
 	namespace tracking{
@@ -40,6 +40,7 @@ namespace bertini{
 		using std::min;
 		using std::pow;
 
+		using bertini::max;
 
 		// one of these needs the current time...  i think it's mintimeforcurrentprecision...
 
@@ -63,6 +64,11 @@ namespace bertini{
 				return pow( mpfr_float("10"), -precision+3);
 		}
 
+
+		unsigned MinDigitsFromEta(mpfr_float const& eta, mpfr const& current_time)
+		{
+			return unsigned(ceil(eta)+ ceil(log10(abs(current_time)))+2);
+		}
 
 
 		/**
@@ -129,12 +135,11 @@ namespace bertini{
 		template <typename RealType> 
 		RealType StepsizeSatisfyingNine(unsigned current_precision,
 										RealType const& tau, // -log10 of track tolerance
-		                                RealType const& d, // from condition B, C
-		                                RealType const& a, // size_proportion
-		                                unsigned num_newton_iterations,
-		                                RealType const& norm_of_stepsize, // norm(delta_z, delta_t)
-		                                AdaptiveMultiplePrecisionConfig const& AMP_config,
-		                                unsigned predictor_order = 0)
+										RealType const& d, // from condition B, C
+										RealType const& a, // size_proportion
+										unsigned num_newton_iterations,
+										AdaptiveMultiplePrecisionConfig const& AMP_config,
+										unsigned predictor_order = 0)
 		{
 			RealType stepsize;
 
@@ -146,17 +151,11 @@ namespace bertini{
 
 
 
-
-
-
-
-
  
 		void MinimizeCost(unsigned & new_precision, mpfr_float & new_stepsize, 
 						  unsigned min_precision, mpfr_float const& old_stepsize,
 						  unsigned max_precision,
 						  mpfr_float const& tau, // -log10 of the current track tolerance
-						  mpfr_float const& norm_of_stepsize,
 						  mpfr_float const& norm_J,
 						  mpfr_float const& norm_J_inverse,
 						  mpfr_float const& size_proportion,
@@ -164,7 +163,7 @@ namespace bertini{
 						  AdaptiveMultiplePrecisionConfig const& AMP_config,
 						  unsigned predictor_order = 0)
 		{
-			std::set<PrecStep<mpfr_float> > computed_candidates;
+			std::vector<PrecStep<mpfr_float> > computed_candidates;
 			unsigned lowest_mp_precision_to_test = min_precision;
 
 			auto d =amp::D(norm_J, norm_J_inverse, AMP_config);
@@ -175,15 +174,14 @@ namespace bertini{
 				
 				mpfr_float candidate_stepsize = StepsizeSatisfyingNine(candidate_precision,
 															tau, // -log10 of track tolerance
-							                                d, // from condition B
-							                                size_proportion, // size_proportion
-							                                num_newton_iterations,
-							                                norm_of_stepsize, // norm(delta_z, delta_t)
-							                                AMP_config,
-							                                predictor_order);
+															d, // from condition B
+															size_proportion, // size_proportion
+															num_newton_iterations,
+															AMP_config,
+															predictor_order);
 
 				if (std::min(abs(candidate_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(candidate_precision))
-					computed_candidates.insert(PrecStep<mpfr_float>(candidate_precision, candidate_stepsize));
+					computed_candidates.push_back(PrecStep<mpfr_float>(candidate_precision, candidate_stepsize));
 
 				lowest_mp_precision_to_test = LowestMultiplePrecision;
 			}
@@ -194,15 +192,14 @@ namespace bertini{
 
 				auto candidate_stepsize = StepsizeSatisfyingNine(candidate_precision,
 															tau, // -log10 of track tolerance
-							                                d, // from condition B
-							                                size_proportion, // size_proportion
-							                                num_newton_iterations,
-							                                norm_of_stepsize, // norm(delta_z, delta_t)
-							                                AMP_config,
-							                                predictor_order);
+															d, // from condition B
+															size_proportion, // size_proportion
+															num_newton_iterations,
+															AMP_config,
+															predictor_order);
 
 				if (min(abs(candidate_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(candidate_precision))
-					computed_candidates.insert(PrecStep<mpfr_float>(candidate_precision, candidate_stepsize));
+					computed_candidates.push_back(PrecStep<mpfr_float>(candidate_precision, candidate_stepsize));
 			}
 
 			if (computed_candidates.empty())
@@ -273,17 +270,20 @@ namespace bertini{
 				
 
 				AMP3_update(new_precision, new_stepsize,
-		                 current_precision, current_stepsize,
-		                 digits_tau,
-		                 P0,
-		                 digits_C,
-		                 current_time,
-		                 eta_min,
-		                 eta_max,
-		                 num_newton_iterations,
-		                 AMP_config
-		                  digits_final,
-		                  predictor_order);
+						 current_precision, current_stepsize,
+						 digits_tau,
+						 P0,
+						 digits_C,
+						 current_time,
+						 norm_J,
+						 norm_J_inverse,
+						 size_proportion,
+						 eta_min,
+						 eta_max,
+						 num_newton_iterations,
+						 AMP_config,
+						  digits_final,
+						  predictor_order);
 			}
 		}
 
@@ -292,56 +292,66 @@ namespace bertini{
 		Computes the minimum and maximum precisions necessary for computation to continue.
 		*/
 		void AMP3_update(unsigned & new_precision, mpfr_float & new_stepsize,
-		                 unsigned old_precision, mpfr_float const& old_stepsize,
-		                 unsigned digits_tau,
-		                 unsigned P0,
-		                 unsigned digits_C,
-		                 mpfr const& current_time,
-		                 mpfr_float const& eta_min,
-		                 mpfr_float const& eta_max,
-		                 unsigned max_num_newton_iterations,
-		                 AdaptiveMultiplePrecisionConfig const& AMP_config,
-		                 unsigned digits_final = 0,
-		                 unsigned predictor_order = 0)
+						 unsigned current_precision, mpfr_float const& current_stepsize,
+						 unsigned digits_tau,
+						 unsigned P0,
+						 unsigned digits_C,
+						 mpfr const& current_time,
+						 mpfr_float const& norm_J,
+						 mpfr_float const& norm_J_inverse,
+						 mpfr_float const& size_proportion,
+						 mpfr_float const& eta_min,
+						 mpfr_float const& eta_max,
+						 unsigned max_num_newton_iterations,
+						 AdaptiveMultiplePrecisionConfig const& AMP_config,
+						 unsigned digits_final = 0,
+						 unsigned predictor_order = 0)
 		{
 			// compute the number of digits necessary to trigger a lowering.  
 			unsigned precision_decrease_threshold;
-			if (old_precision==DoublePrecision)
+			if (current_precision==DoublePrecision)
 				precision_decrease_threshold = 0; // if in double, cannot lower precision any further
-			else if (old_precision==LowestMultiplePrecision)
+			else if (current_precision==LowestMultiplePrecision)
 				precision_decrease_threshold = LowestMultiplePrecision - DoublePrecision; // if in lowest multiple, have to clear the difference down to double
 			else 
 				precision_decrease_threshold = PrecisionIncrement; // the threshold is the step between precisions in multiple precision
 
 
-			unsigned digits_B = ceil(P0 - (predictor_order+1)* eta_min/max_num_newton_iterations);
+			unsigned digits_B(ceil(P0 - (predictor_order+1)* eta_min/max_num_newton_iterations));
 
-			if (digits_B < old_precision)
-				digits_B = min(digits_B+precision_decrease_threshold, old_precision);
+			if (digits_B < current_precision)
+				digits_B = min(digits_B+precision_decrease_threshold, current_precision);
 
-			if (digits_C < old_precision)
-				digits_C = min(digits_C+precision_decrease_threshold, old_precision);
+			if (digits_C < current_precision)
+				digits_C = min(digits_C+precision_decrease_threshold, current_precision);
 
 			unsigned digits_stepsize = max(MinDigitsFromEta(eta_min,current_time), MinDigitsFromEta(eta_max,current_time));
 
-			if (digits_stepsize < old_precision)
-				digits_stepsize = min(digits_stepsize+precision_decrease_threshold, old_precision);
+			if (digits_stepsize < current_precision)
+				digits_stepsize = min(digits_stepsize+precision_decrease_threshold, current_precision);
 
 			unsigned min_digits_needed = max(digits_tau, digits_final, digits_B, digits_C, digits_stepsize);
-			unsigned max_digits_needed = max(min_digits_needed, ceil(P0 - (predictor_order+1)* eta_max/max_num_newton_iterations));
+			unsigned max_digits_needed = max(min_digits_needed, unsigned(ceil(P0 - (predictor_order+1)* eta_max/max_num_newton_iterations)));
 			
 
-			MinimizeCost(
-			             new_precision, new_stepsize, // the computed values
-					  	old_precision, old_stepsize,
-					  min_digits_needed, max_digits_needed,
-					  AMP_config);
+			MinimizeCost(new_precision, new_stepsize, 
+						min_digits_needed, current_precision,
+						max_digits_needed,
+						digits_tau, // -log10 of the current track tolerance
+						norm_J,
+						norm_J_inverse,
+						size_proportion,
+						max_num_newton_iterations,
+						AMP_config,
+						predictor_order);
+
+			
 		}
 		
 
 		unsigned MinDigitsFromEta(mpfr_float eta, mpfr current_time)
 		{
-			unsigned min_digits = ceil(eta) + ceil(log10(current_time)) + 2;
+			return unsigned(ceil(eta) + ceil(log10(abs(current_time))) + 2);
 		}
 
 
@@ -363,13 +373,11 @@ namespace bertini{
 
 
 
-			Tracker(System sys, 
-			        config::Predictor new_predictor_choice) : tracked_system(sys)
+			AMPTracker(System sys, config::Predictor new_predictor_choice) : tracked_system_(sys)
 			{	
-				Predictor(config::Predictor new_predictor_choice);
+				Predictor(new_predictor_choice);
 				
-				// initialize to the frequency so guaranteed to compute it the first try 
-				num_steps_since_last_condition_number_computation = frequency_of_CN_estimation;
+				
 			}
 
 
@@ -382,11 +390,11 @@ namespace bertini{
 						mpfr_float const& path_truncation_threshold,
 						config::Stepping const& stepping,
 						config::Newton const& newton,
-						config::AdaptiveMultiplePrecisionConfig const& AMP 
+						config::AdaptiveMultiplePrecisionConfig const& AMP_config
 						)
 			{
 				tracking_tolerance_ = tracking_tolerance;
-				digits_tracking_tolerance = round(-log10(tracking_tolerance));
+				digits_tracking_tolerance_ = unsigned(ceil(-log10(tracking_tolerance)));
 
 
 				path_truncation_threshold_ = path_truncation_threshold;
@@ -406,25 +414,36 @@ namespace bertini{
 									mpfr const& start_time, mpfr const& endtime,
 									Vec<mpfr> const& start_point
 									)
-			{
+			{	
+
+				if (start_point.size()!=tracked_system_.NumVariables())
+				{
+					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
+				}
+
 				// set up the master current time and the current step size
-				current_time_.precision(start_time.precision())
+				current_time_.precision(start_time.precision());
 				current_time_ = start_time;
 
-				current_stepsize_.precision(stepping_.initial_step_size.precision())
-				current_stepsize_ = stepping_.initial_step_size;
+				current_stepsize_.precision(stepping_config_.initial_step_size.precision());
+				current_stepsize_ = stepping_config_.initial_step_size;
 
-				current_precision_ = start_point.precision(); // get the current precision.
-				num_consecutive_successful_steps = 0;
-				num_successful_steps_taken = 0;
-				num_failed_steps = 0;
+				current_precision_ = start_point(0).precision(); // get the current precision.
+				num_consecutive_successful_steps_ = 0;
+				num_successful_steps_taken_ = 0;
+				num_failed_steps_ = 0;
+
+				num_precision_decreases_ = 0;
+
+				// initialize to the frequency so guaranteed to compute it the first try 
+				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
 
 
 				// populate the current space value with the start point, in appropriate precision
 				if (current_precision_==DoublePrecision)
 					MultipleToDouble( start_point);
 				else
-					MultipleToMultiple( start_point);
+					MultipleToMultiple(current_precision_, start_point);
 
 
 				SuccessCode initial_refinement = Refine();
@@ -445,11 +464,11 @@ namespace bertini{
 
 
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
-				while (current_time_)!=endtime)
+				while (current_time_!=endtime)
 				{
-					if (num_successful_steps_taken >= stepping_.max_num_steps)
+					if (num_successful_steps_taken_ >= stepping_config_.max_num_steps)
 						return SuccessCode::MaxNumStepsTaken;
-					if (current_stepsize_ < stepping_.min_step_size)
+					if (current_stepsize_ < stepping_config_.min_step_size)
 						return SuccessCode::MinStepSizeReached;
 					
 
@@ -464,26 +483,26 @@ namespace bertini{
 
 
 					if (current_precision_==DoublePrecision)
-						step_success_code = TrackerIteration<dbl>();
+						step_success_code_ = TrackerIteration<dbl, double>();
 					else
-						step_success_code = TrackerIteration<mpfr>();
+						step_success_code_ = TrackerIteration<mpfr, mpfr_float>();
 
 
 
-					if (step_success_code==SuccessCode::Success)
+					if (step_success_code_==SuccessCode::Success)
 					{
-						num_steps_taken_++; 
+						num_successful_steps_taken_++; 
 						num_consecutive_successful_steps_++;
 						current_time_ += delta_t_;
 					}
 					else
 					{
-						num_consecutive_successful_steps=0;
-						num_failed_steps++;
+						num_consecutive_successful_steps_=0;
+						num_failed_steps_++;
 					}
 
 
-					if (num_consecutive_successful_steps_ >= stepping_.consecutive_successful_steps_before_precision_decrease)
+					if (num_consecutive_successful_steps_ >= stepping_config_.consecutive_successful_steps_before_precision_decrease)
 					{
 						if (current_precision_==LowestMultiplePrecision)
 							MultipleToDouble();
@@ -492,16 +511,16 @@ namespace bertini{
 					}
 
 
-					if (num_consecutive_successful_steps_ >= stepping_.consecutive_successful_steps_before_stepsize_increase)
+					if (num_consecutive_successful_steps_ >= stepping_config_.consecutive_successful_steps_before_stepsize_increase)
 					{
-						if (current_stepsize_ < stepping_.max_step_size)
-							current_stepsize_ = min(stepping_.max_step_size, current_stepsize_*stepping_.step_size_success_factor);
+						if (current_stepsize_ < stepping_config_.max_step_size)
+							current_stepsize_ = min(stepping_config_.max_step_size, current_stepsize_*stepping_config_.step_size_success_factor);
 					}
 
 
-					if (next_precision!=current_precision_)
+					if (next_precision_!=current_precision_)
 					{
-						SuccessCode precision_change_code = ChangePrecision(next_precision);
+						SuccessCode precision_change_code = ChangePrecision(next_precision_);
 						if (precision_change_code!=SuccessCode::Success)
 							return precision_change_code;
 					}
@@ -529,7 +548,7 @@ namespace bertini{
 			void Predictor(config::Predictor new_predictor_choice)
 			{
 				predictor_choice_ = new_predictor_choice;
-				predictor_order_ = predict::Order(predictor_choice);
+				predictor_order_ = predict::Order(predictor_choice_);
 			}
 
 
@@ -553,23 +572,21 @@ namespace bertini{
 			// 							ComplexType const& delta_t
 										
 
-			template <typename ComplexType>
+			template <typename ComplexType, typename RealType>
 			SuccessCode TrackerIteration()
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
 				#endif
 
-				typedef NumTraits<ComplexType>::Real RealType;
-
 				Vec<ComplexType>& predicted_space = std::get<Vec<ComplexType> >(temporary_space_); // this will be populated in the Predict step
 				Vec<ComplexType>& current_space = std::get<Vec<ComplexType> >(current_space_);
-
-
 				ComplexType current_time = ComplexType(current_time_);
 				ComplexType delta_t = ComplexType(delta_t_);
 
-				SuccessCode predictor_code = Predict(predicted_space, current_space, current_time, delta_t);
+
+
+				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
 
 				if (predictor_code==SuccessCode::MatrixSolveFailure)
 				{
@@ -579,7 +596,7 @@ namespace bertini{
 
 				if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
-					SafetyError();
+					SafetyError<RealType>();
 					return predictor_code;
 				}
 
@@ -587,9 +604,9 @@ namespace bertini{
 
 				ComplexType tentative_next_time = current_time + delta_t;
 
-				SuccessCode corrector_code = Correct(tentative_next_space,
-				                                     predicted_space
-				                                     tentative_next_time);
+				SuccessCode corrector_code = Correct<ComplexType, RealType>(tentative_next_space,
+													 predicted_space,
+													 tentative_next_time);
 
 				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
 				{
@@ -598,7 +615,7 @@ namespace bertini{
 				}
 				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
 				{
-						SafetyError();
+						SafetyError<RealType>();
 						return corrector_code;
 				}
 
@@ -606,194 +623,82 @@ namespace bertini{
 			}
 
 
+
+
+
 			/**
 
 			*/
 			template<typename T>
-			void SafetyError(unsigned new_precision, mpfr_float & new_stepsize)
+			void SafetyError()
 			{	
 				T& norm_J = std::get<T>(norm_J_);
 				T& norm_J_inverse = std::get<T>(norm_J_inverse_);
 				T& size_proportion = std::get<T>(size_proportion_);
 
 
-				SafetyError(new_precision, new_stepsize, 
+				SafetyError(next_precision_, next_stepsize_, 
 						 current_precision_, current_stepsize_, 
 						 norm_J, norm_J_inverse,
 						 size_proportion,
 						 predictor_order_,
-						 newton_.max_num_newton_iterations;
+						 newton_config_.max_num_newton_iterations
 						 );
 			}
 
 
 
-			void ConvergenceError(unsigned new_precision, mpfr_float & new_stepsize)
+			
+			void ConvergenceError()
 			{
-				ConvergenceError(new_precision, new_stepsize, 
+				::bertini::tracking::ConvergenceError(next_precision_, next_stepsize_, 
 							  current_precision_, current_stepsize_,
-							  stepping_.step_size_fail_factor);
+							  stepping_config_.step_size_fail_factor);
 			}
+
 
 			/**
 			\brief Wrapper function for calling the correct predictor.
 			*/
-			template<typename ComplexType>
+			template<typename ComplexType, typename RealType>
 			SuccessCode Predict(Vec<ComplexType> & predicted_space, 
-			                    Vec<ComplexType> const& current_space, 
-			                    ComplexType const& current_time, ComplexType const& delta_t)
+								Vec<ComplexType> const& current_space, 
+								ComplexType const& current_time, ComplexType const& delta_t)
 			{
-				typedef NumTraits<ComplexType>::Real RealType;
+				RealType& norm_J = std::get<RealType>(norm_J_);
+				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
+				RealType& size_proportion = std::get<RealType>(size_proportion_);
 
-				if (tracking::HasErrorEstimate(predictor_choice_))
-					return = Predict(predictor_choice_,
+				if (predict::HasErrorEstimate(predictor_choice_))
+					return ::bertini::tracking::Predict(predictor_choice_,
 									predicted_space,
 									std::get<RealType>(error_estimate_),
 									std::get<RealType>(size_proportion_),
 									std::get<RealType>(norm_J_),
 									std::get<RealType>(norm_J_inverse_),
 									tracked_system_,
-									current_space_, current_time_, 
-									delta_t_,
+									current_space, current_time, 
+									delta_t,
 									std::get<RealType>(condition_number_estimate_),
 									num_steps_since_last_condition_number_computation_, 
 									frequency_of_CN_estimation_, 
 									RealType(tracking_tolerance_),
 									AMP_config_);
 				else
-					return = Predict(predictor_choice_,
+					return ::bertini::tracking::Predict(predictor_choice_,
 									predicted_space,
 									std::get<RealType>(size_proportion_),
 									std::get<RealType>(norm_J_),
 									std::get<RealType>(norm_J_inverse_),
 									tracked_system_,
-									current_space_, current_time_, 
-									delta_t_,
+									current_space, current_time, 
+									delta_t,
 									std::get<RealType>(condition_number_estimate_),
 									num_steps_since_last_condition_number_computation_, 
 									frequency_of_CN_estimation_, PrecisionType::Adaptive, 
 									RealType(tracking_tolerance_),
 									AMP_config_);
 			}
-
-
-
-
-			/**
-			Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
-			*/
-			template<typename ComplexType>
-			SuccessCode Correct(Vec<ComplexType> & corrected_space, 
-			                    Vec<ComplexType> const& current_space, 
-			                    ComplexType const& current_time)
-			{
-				return Correct(corrected_space,
-						   tracked_system_,
-						   current_space,
-						   current_time, 
-						   PrecisionType::Adaptive, 
-						   RealType(tracking_tolerance_),
-						   RealType(path_truncation_threshold_),
-						   newton_.min_num_newton_iterations_,
-						   newton_.max_num_newton_iterations_,
-						   AMP_config_);
-			}
-
-
-
-
-			/**
-			\brief Increase stepsize or decrease precision, because of consecutive successful steps.
-			*/
-			void StepSuccess()
-			{
-				if (current_precision_==DoublePrecision)
-					StepSuccess<double>();
-				else
-					StepSuccess<mpfr_float>();
-			}
-
-
-			/**
-			Computes new stepsize and precision
-			*/
-			template <typename T>
-			void StepSuccess()
-			{
-				T& norm_J = std::get<T>(norm_J_);
-				T& norm_J_inverse = std::get<T>(norm_J_inverse_);
-				T& size_proportion = std::get<T>(size_proportion_);
-
-
-				mpfr_float minimum_stepsize = current_stepsize_ * stepping_.step_size_fail_factor;
-
-
-				unsigned precision_from_criterion_B = round(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, T(tracking_tolerance),  size_proportion, AMP_config_));
-
-				unsigned precision_from_criterion_C = round( amp::CriterionCRHS(norm_J_inverse, 1, T(tracking_tolerance), AMP_config)); 
-				// hopefully this number is smaller than the current precision, allowing us to reduce precision
-
-
-				mpfr_float maximum_stepsize = current_stepsize_;
-
-				if (num_consecutive_successful_steps_ < stepping_.consecutive_successful_steps_before_stepsize_increase)
-				{	
-					precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
-				}
-				else if (num_consecutive_successful_steps_ == stepping_.consecutive_successful_steps_before_stepsize_increase)
-				{
-					// allow stepsize increase, up to maximum step size
-					maximum_stepsize = min(current_stepsize_ * stepping_.step_size_success_factor, stepping_.max_step_size);
-				}	
-				else if (current_precision_ > DoublePrecision) // exclude the next two cases from being executed in double precision, because cannot decrease from double.
-				{
-					if (num_consecutive_successful_steps_ < stepping_.consecutive_successful_steps_before_precision_decrease)
-					{
-						precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
-					}
-					else if (num_consecutive_successful_steps_ == stepping_.consecutive_successful_steps_before_precision_decrease)
-					{
-						// allow stepsize increase, up to maximum step size
-						maximum_stepsize = min(current_stepsize_ * stepping_.step_size_success_factor, stepping_.max_step_size);
-						if (num_precision_decreases >= AMP_config_.max_num_precision_decreases)
-							precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
-					}
-				}
-				else
-				{
-					// reset number of consecutive steps to 0.
-					num_consecutive_successful_steps_=0;
-					precision_from_criterion_C = max(precision_from_criterion_C, current_precision_);
-				}
-
-				mpfr_float eta_min = -log10(minimum_stepsize);
-				mpfr_float eta_max = -log10(maximum_stepsize);
-
-
-				AMP3_update(new_precision, new_stepsize,
-		                 current_precision_, current_stepsize_,
-		                 digits_tracking_tolerance,
-		                 digits_final,
-		                 P0,
-		                 digits_C,
-		                 current_time,
-		                 eta_min,
-		                 eta_max,
-		                 max_num_newton_iterations,
-		                 predictor_order_,
-		                 AMP_config_);
-			}
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -812,15 +717,15 @@ namespace bertini{
 			SuccessCode Refine()
 			{
 				SuccessCode code;
-				if (current_precision==DoublePrecision)
+				if (current_precision_==DoublePrecision)
 				{
-					code = Refine(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), std::get<dbl>(current_time_),double(tracking_tolerance_));
+					code = Refine(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_),double(tracking_tolerance_));
 					if (code == SuccessCode::Success)
 						std::get<Vec<dbl> >(current_space_) = std::get<Vec<dbl> >(temporary_space_);
 				}
 				else
 				{
-					code = Refine(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), std::get<mpfr>(current_time_),tracking_tolerance_);
+					code = Refine(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_, tracking_tolerance_);
 					if (code == SuccessCode::Success)
 						std::get<Vec<mpfr> >(current_space_) = std::get<Vec<mpfr> >(temporary_space_);
 				}
@@ -839,21 +744,147 @@ namespace bertini{
 			Returns new space point by reference, as new_space.  Operates at current precision.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space
-			                    Vec<ComplexType> const& start_point, ComplexType const& current_time,
-			                    RealType const& tolerance)
+			SuccessCode Refine(Vec<ComplexType> & new_space,
+								Vec<ComplexType> const& start_point, ComplexType const& current_time,
+								RealType const& tolerance)
 			{
-				return Correct(next_space,
+				return bertini::tracking::Correct(new_space,
 							   tracked_system_,
 							   start_point,
 							   current_time, 
-							   PrecisionType::Adaptive, 
 							   tolerance,
-							   path_truncation_threshold_,
-							   newton_.min_num_newton_iterations,
-							   newton_.max_num_newton_iterations,
+							   RealType(path_truncation_threshold_),
+							   newton_config_.min_num_newton_iterations,
+							   newton_config_.max_num_newton_iterations,
 							   AMP_config_);
 			}
+
+
+
+			/**
+			Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
+			*/
+			template<typename ComplexType, typename RealType>
+			SuccessCode Correct(Vec<ComplexType> & corrected_space, 
+								Vec<ComplexType> const& current_space, 
+								ComplexType const& current_time)
+			{
+
+				return bertini::tracking::Correct(corrected_space,
+						   tracked_system_,
+						   current_space,
+						   current_time, 
+						   RealType(tracking_tolerance_),
+						   RealType(path_truncation_threshold_),
+						   newton_config_.min_num_newton_iterations,
+						   newton_config_.max_num_newton_iterations,
+						   AMP_config_);
+			}
+
+
+
+
+			/**
+			\brief Increase stepsize or decrease precision, because of consecutive successful steps.
+			*/
+			template <typename T>
+			void StepSuccess()
+			{
+				T& norm_J = std::get<T>(norm_J_);
+				T& norm_J_inverse = std::get<T>(norm_J_inverse_);
+				T& size_proportion = std::get<T>(size_proportion_);
+
+
+				mpfr_float minimum_stepsize = current_stepsize_ * stepping_config_.step_size_fail_factor;
+
+
+				unsigned P0 = round(amp::CriterionBRHS(norm_J, norm_J_inverse, newton_config_.max_num_newton_iterations, T(tracking_tolerance_),  size_proportion, AMP_config_));
+
+				unsigned digits_C = round( amp::CriterionCRHS(norm_J_inverse, 1, T(tracking_tolerance_), AMP_config_)); 
+				// hopefully this number is smaller than the current precision, allowing us to reduce precision
+
+
+				mpfr_float maximum_stepsize = current_stepsize_;
+
+				if (num_consecutive_successful_steps_ < stepping_config_.consecutive_successful_steps_before_stepsize_increase)
+				{	
+					digits_C = max(digits_C, current_precision_);
+				}
+				else if (num_consecutive_successful_steps_ == stepping_config_.consecutive_successful_steps_before_stepsize_increase)
+				{
+					// allow stepsize increase, up to maximum step size
+					maximum_stepsize = min(current_stepsize_ * stepping_config_.step_size_success_factor, stepping_config_.max_step_size);
+				}	
+				else if (current_precision_ > DoublePrecision) // exclude the next two cases from being executed in double precision, because cannot decrease from double.
+				{
+					if (num_consecutive_successful_steps_ < stepping_config_.consecutive_successful_steps_before_precision_decrease)
+					{
+						digits_C = max(digits_C, current_precision_);
+					}
+					else if (num_consecutive_successful_steps_ == stepping_config_.consecutive_successful_steps_before_precision_decrease)
+					{
+						// allow stepsize increase, up to maximum step size
+						maximum_stepsize = min(current_stepsize_ * stepping_config_.step_size_success_factor, stepping_config_.max_step_size);
+						if (num_precision_decreases_ >= AMP_config_.max_num_precision_decreases)
+							digits_C = max(digits_C, current_precision_);
+					}
+				}
+				else
+				{
+					// reset number of consecutive steps to 0.
+					num_consecutive_successful_steps_=0;
+					digits_C = max(digits_C, current_precision_);
+				}
+
+				mpfr_float eta_min = -log10(minimum_stepsize);
+				mpfr_float eta_max = -log10(maximum_stepsize);
+
+
+				AMP3_update(next_precision_, next_stepsize_,
+						 current_precision_, current_stepsize_,
+						 digits_tracking_tolerance_,
+						 P0,
+						 digits_C,
+						 current_time_,
+						 norm_J,
+						 norm_J_inverse,
+						 size_proportion,
+						 eta_min,
+						 eta_max,
+						 newton_config_.max_num_newton_iterations,
+						 AMP_config_,
+						 predictor_order_,
+						 digits_final_);
+			}
+
+
+
+
+			// unsigned & new_precision, mpfr_float & new_stepsize,
+			// unsigned current_precision, mpfr_float const& current_stepsize,
+			// unsigned digits_tau,
+			// unsigned P0,
+			// unsigned digits_C,
+			// mpfr const& current_time,
+			// mpfr_float const& norm_J,
+			// mpfr_float const& norm_J_inverse,
+			// mpfr_float const& size_proportion,
+			// mpfr_float const& eta_min,
+			// mpfr_float const& eta_max,
+			// unsigned max_num_newton_iterations,
+			// AdaptiveMultiplePrecisionConfig const& AMP_config,
+			// unsigned digits_final = 0,
+			// unsigned predictor_order = 0
+
+
+
+
+
+
+
+
+
+			
 
 
 
@@ -884,9 +915,9 @@ namespace bertini{
 			SuccessCode ChangePrecision(unsigned new_precision)
 			{
 				if (new_precision==current_precision_) // no op
-					return;
+					return SuccessCode::Success;
 
-				num_steps_since_last_condition_number_computation = frequency_of_CN_estimation;
+				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
 
 				bool upsampling_needed = new_precision > current_precision_;
 
@@ -898,16 +929,13 @@ namespace bertini{
 				else if(new_precision > DoublePrecision && current_precision_ == DoublePrecision)
 				{
 					// convert from double to multiple precision
-					DoubleToMultiple();
+					DoubleToMultiple(new_precision);
 				}
-				else if(new_precision < current_precision_)
+				else
 				{
-					MultipleToMultiple();
+					MultipleToMultiple(new_precision);
 				}
-				else if (new_precision > current_precision_)
-				{
-					MultipleToMultiple();
-				}
+
 
 
 				#ifndef BERTINI_DISABLE_ASSERTS
@@ -933,20 +961,20 @@ namespace bertini{
 
 			Copies a multiple-precision into the double storage vector, and changes precision of the time and delta_t.
 			*/
-			void MultipleToDouble(Vec<mpfr> const& source_point, mpfr const& source_time, mpfr const& source_delta_t)
+			void MultipleToDouble(Vec<mpfr> const& source_point)
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == system.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(source_point.size() == std::get<Vec<dbl> >(current_space_).size() && "source point and current space point must be same size when changing precision.  Precondition not met.");
 				#endif
 
 				current_precision_ = DoublePrecision;
-				system.precision(DoublePrecision);
+				tracked_system_.precision(DoublePrecision);
 
 				if (std::get<Vec<dbl> >(current_space_).size()!=source_point.size())
-					std::get<Vec<dbl> >(current_space_).size(source_point.size());
+					std::get<Vec<dbl> >(current_space_).resize(source_point.size());
 
-				for (unsigned ii=0; ii<source_point.size())
+				for (unsigned ii=0; ii<source_point.size(); ii++)
 					std::get<Vec<dbl> >(current_space_)(ii) = dbl(source_point(ii));
 			}
 
@@ -957,10 +985,10 @@ namespace bertini{
 			*/
 			void MultipleToDouble()
 			{
-				MultipleToDouble(std::get<Vec<mpfr> >(current_space_), std::get<mpfr>(current_time_), std::get<mpfr>(delta_t_));
+				MultipleToDouble(std::get<Vec<mpfr> >(current_space_));
 			}
 
-
+			//, std::get<mpfr>(current_time_), std::get<mpfr>(delta_t_)
 
 
 
@@ -971,27 +999,27 @@ namespace bertini{
 
 			You should call Newton after this to populate the new digits with non-garbage data.
 			*/
-			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point, dbl const& source_time, dbl const& source_delta_t)
+			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point)
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == system.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
 
 				current_precision_ = new_precision;
-				mpfr_float.precision(new_precision);
-				system.precision(new_precision);
+				mpfr_float::default_precision(new_precision);
+				tracked_system_.precision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
-					std::get<Vec<mpfr> >(current_space_).size(source_point.size());
+					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
 
-				for (unsigned ii=0; ii<source_point.size())
+				for (unsigned ii=0; ii<source_point.size(); ii++)
 					std::get<Vec<mpfr> >(current_space_)(ii) = mpfr(source_point(ii));
 
 				AdjustTemporariesPrecision(new_precision);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(std::get<mpfr>(current_space_)(0).precision() == current_precision_ && "precision of time in mpfr doesn't match tracker");
+				assert(std::get<Vec<mpfr> >(current_space_)(0).precision() == current_precision_ && "precision of time in mpfr doesn't match tracker");
 				#endif
 			}
 
@@ -1004,7 +1032,7 @@ namespace bertini{
 			*/
 			void DoubleToMultiple(unsigned new_precision)
 			{
-				DoubleToMultiple( new_precision, std::get<Vec<dbl> >(current_space_), std::get<dbl>(current_time_), std::get<dbl>(delta_t_)
+				DoubleToMultiple( new_precision, std::get<Vec<dbl> >(current_space_));
 			}
 
 
@@ -1017,27 +1045,27 @@ namespace bertini{
 			Copies a multiple-precision into the multiple-precision storage vector, and changes precision of the time and delta_t.
 			Also resets counter so have to re-compute the condition number on next step attempt.
 			*/
-			void MultipleToMultiple(unsigned new_precision, Vec<mpfr> const& source_point, mpfr const& source_time, mpfr const& source_delta_t)
+			void MultipleToMultiple(unsigned new_precision, Vec<mpfr> const& source_point)
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == system.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
 
 				current_precision_ = new_precision;
-				mpfr_float.precision(new_precision);
-				system.precision(new_precision);
+				mpfr_float::default_precision(new_precision);
+				tracked_system_.precision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
-					std::get<Vec<mpfr> >(current_space_).size(source_point.size());
+					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
 
-				for (unsigned ii=0; ii<source_point.size())
+				for (unsigned ii=0; ii<source_point.size(); ii++)
 					std::get<Vec<mpfr> >(current_space_)(ii) = mpfr(source_point(ii));
 
 				AdjustTemporariesPrecision(new_precision);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(std::get<mpfr>(current_space_)(0).precision() == current_precision_ && "precision of time in mpfr doesn't match tracker");
+				assert(std::get<Vec<mpfr> >(current_space_)(0).precision() == current_precision_ && "precision of time in mpfr doesn't match tracker");
 				#endif
 			}
 
@@ -1049,7 +1077,7 @@ namespace bertini{
 			*/
 			void MultipleToMultiple(unsigned new_precision)
 			{
-				MultipleToMultiple( new_precision, std::get<Vec<mpfr> >(current_space_), std::get<mpfr>(current_time_), std::get<mpfr>(delta_t_));
+				MultipleToMultiple( new_precision, std::get<Vec<mpfr> >(current_space_));
 			}
 
 
@@ -1076,11 +1104,11 @@ namespace bertini{
 					return true;
 				else
 				{
-					auto checker = [this](bool val){return val==current_precision_};
+					auto checker = [this](bool val){return val==current_precision_;};
 				
 					return checker(tracked_system_.precision()) &&
-							checker(std::get<Vec<mpfr> >(current_space_(0))) && 
-							checker(std::get<mpfr_float>(condition_number_estimate_));
+							checker(std::get<Vec<mpfr> >(current_space_)(0).precision()) && 
+							checker(std::get<mpfr_float>(condition_number_estimate_).precision());
 				}
 				
 			}
@@ -1111,18 +1139,25 @@ namespace bertini{
 			unsigned num_successful_steps_taken_;
 			unsigned num_consecutive_successful_steps_;
 			unsigned num_failed_steps_;
+			unsigned num_precision_decreases_;
+
 
 			// configuration for tracking
+			config::Predictor predictor_choice_;
 			unsigned predictor_order_;
 
 			
 			unsigned frequency_of_CN_estimation_;
 			unsigned num_steps_since_last_condition_number_computation_;
 
+
+			unsigned digits_final_;
+			unsigned digits_tracking_tolerance_;
 			mpfr_float tracking_tolerance_;
 			mpfr_float path_truncation_threshold_;
 
 			// permanent temporaries
+			mpfr_float next_stepsize_;
 			unsigned next_precision_;
 			SuccessCode step_success_code_;
 

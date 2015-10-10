@@ -84,6 +84,10 @@ namespace bertini {
 		*/
 		void precision(unsigned new_precision);
 
+		unsigned precision() const
+		{
+			return precision_;
+		}
 
 		/**
 		 \brief Compute and internally store the symbolic Jacobian of the system.

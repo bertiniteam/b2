@@ -67,7 +67,10 @@ BOOST_AUTO_TEST_CASE(tracker_track_linear)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys,config::Predictor::Euler);
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys,config::Predictor::Euler);
+
 
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;

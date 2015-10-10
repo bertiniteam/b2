@@ -172,6 +172,12 @@ namespace bertini {
 		/**
 		 Two-parameter constructor for building a complex from two low precision numbers
 		 */
+		complex(std::complex<double> z) : real_(z.real()), imag_(z.imag())
+		{}
+
+		/**
+		 Two-parameter constructor for building a complex from two low precision numbers
+		 */
 		complex(double re, double im) : real_(re), imag_(im)
 		{}
 		
@@ -613,6 +619,11 @@ namespace bertini {
 		bool operator==(complex const& rhs) const
 		{
 			return (this->real()==rhs.real()) && (this->imag()==rhs.imag());
+		}
+
+		bool operator!=(complex const& rhs) const
+		{
+			return !(*this==rhs);
 		}
 
 		/**

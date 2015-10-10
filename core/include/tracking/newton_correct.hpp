@@ -46,7 +46,6 @@ namespace bertini{
 					               System & S,
 					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 					               ComplexType const& current_time, 
-					               PrecisionType PrecType, 
 					               RealType const& tracking_tolerance,
 					               RealType const& path_truncation_threshold,
 					               unsigned min_num_newton_iterations,
@@ -79,16 +78,13 @@ namespace bertini{
 					if ( delta_z.norm() < tracking_tolerance && ii >= (min_num_newton_iterations-1) )
 						return SuccessCode::Success;
 
-					if (PrecType==PrecisionType::Adaptive)
-					{
-						auto norm_J_inverse = LU.solve(Vec<ComplexType>::Random(S.NumVariables())).norm();
-						if (!amp::CriterionB(J.norm(), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z.norm(), AMP_config))
-							return SuccessCode::HigherPrecisionNecessary;
 
-						if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
-							return SuccessCode::HigherPrecisionNecessary;
-					}
+					auto norm_J_inverse = LU.solve(Vec<ComplexType>::Random(S.NumVariables())).norm();
+					if (!amp::CriterionB(J.norm(), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z.norm(), AMP_config))
+						return SuccessCode::HigherPrecisionNecessary;
 
+					if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
+						return SuccessCode::HigherPrecisionNecessary;
 
 					if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
 						return SuccessCode::GoingToInfinity;

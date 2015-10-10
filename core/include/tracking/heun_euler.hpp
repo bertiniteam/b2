@@ -73,8 +73,8 @@ namespace bertini{
 				               RealType const& tracking_tolerance,
 				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				static_assert(std::is_same<	typename NumTraits<RealType>::Real, 
-			              				typename NumTraits<ComplexType>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
 				Mat<ComplexType> dh_dx = S.Jacobian(current_space, current_time);
@@ -91,8 +91,12 @@ namespace bertini{
 				condition_number_estimate = norm_J*norm_J_inverse;
 
 
-				auto second_sample_point = current_space + delta_x_1*delta_t;
-				auto second_time = current_time + delta_t;
+
+
+
+
+				Vec<ComplexType> second_sample_point = current_space + delta_x_1*delta_t;
+				ComplexType second_time = current_time + delta_t;
 
 				LU = S.Jacobian(second_sample_point, second_time).lu(); // we keep the LU here because need to estimate the condition number of J^-1
 				

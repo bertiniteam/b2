@@ -97,6 +97,7 @@ namespace bertini
 
 			struct Stepping
 			{
+				mpfr_float initial_step_size = mpfr_float("0.1");
 				mpfr_float max_step_size = mpfr_float("0.1");
 				mpfr_float min_step_size = mpfr_float("1e-100");
 

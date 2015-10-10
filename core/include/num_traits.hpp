@@ -33,7 +33,7 @@
 namespace bertini
 {
 	template<typename T>
-	struct NumTraits : Eigen::NumTraits<T>
+	struct NumTraits : public Eigen::NumTraits<T>
 	{};
 
 
