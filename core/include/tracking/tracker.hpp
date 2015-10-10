@@ -289,7 +289,7 @@ namespace bertini{
 
 			
 		}
-		
+
 
 		template <typename RealType>
 		void SafetyError(unsigned new_precision, mpfr_float & new_stepsize, 
@@ -320,7 +320,7 @@ namespace bertini{
 				mpfr_float eta_min = -log10(minimum_stepsize);
 				mpfr_float eta_max = -log10(maximum_stepsize);
 
-				unsigned P0 = round(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations, RealType(tracking_tolerance), size_proportion, AMP_config));
+				unsigned P0(round(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations, RealType(tracking_tolerance), size_proportion, AMP_config)));
 
 				unsigned digits_C(round( amp::CriterionCRHS(norm_J_inverse, norm_of_current_solution, RealType(tracking_tolerance), AMP_config))); 
 
