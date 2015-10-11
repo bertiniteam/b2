@@ -56,6 +56,7 @@ BOOST_AUTO_TEST_SUITE(tracker_basics)
 
 BOOST_AUTO_TEST_CASE(tracker_track_linear)
 {
+	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
 	Var x = std::make_shared<Variable>("x");
@@ -63,9 +64,11 @@ BOOST_AUTO_TEST_CASE(tracker_track_linear)
 
 	System sys;
 
+	VariableGroup v{x};
+
 	sys.AddFunction(x-t);
 	sys.AddPathVariable(t);
-
+	sys.AddVariableGroup(v);
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
@@ -88,14 +91,14 @@ BOOST_AUTO_TEST_CASE(tracker_track_linear)
 	Vec<mpfr> x_start(1);
 	x_start << mpfr("1.0");
 
-	Vec<mpfr> x_end(1);
+	Vec<mpfr> x_end;
 
 	tracker.TrackPath(x_end,
 	                  t_start, t_end, x_start);
 
 	BOOST_CHECK_EQUAL(x_end.size(),1);
 
-	BOOST_CHECK(abs(x_end(1)-mpfr("1.0")) < 1e-5);
+	BOOST_CHECK(abs(x_end(0)-mpfr("0.0")) < 1e-5);
 
 }
 

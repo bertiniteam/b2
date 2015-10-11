@@ -102,7 +102,7 @@ namespace bertini{
 	  template <typename T>
 	  T max(T const& a, T const& b, T const& c, T const& d, T const& e)
 	  {
-	  	return max(a,max(a,b,c,d,e));
+	  	return max(a,max(b,c,d,e));
 	  }
 } // re: namespace bertini
 
