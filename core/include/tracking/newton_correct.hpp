@@ -94,6 +94,81 @@ namespace bertini{
 				return SuccessCode::FailedToConverge;
 			}
 			
+
+
+
+
+
+
+			/**
+			\brief Run Newton's method.
+
+			Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
+			*/
+			template <typename ComplexType, typename RealType>
+			SuccessCode NewtonLoop(Vec<ComplexType> & next_space,
+			                       RealType & norm_delta_z,
+			                       RealType & norm_J,
+			                       RealType & norm_J_inverse,
+			                       RealType & condition_number_estimate,
+					               System & S,
+					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
+					               ComplexType const& current_time, 
+					               RealType const& tracking_tolerance,
+					               RealType const& path_truncation_threshold,
+					               unsigned min_num_newton_iterations,
+					               unsigned max_num_newton_iterations,
+					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
+				#endif
+
+
+				next_space = current_space;
+				for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
+				{
+					// std::cout << ii << "th iteration\n";
+					//TODO: wrap these into a single line.
+					auto f = S.Eval(next_space, current_time);
+					auto J = S.Jacobian(next_space, current_time);
+					auto LU = J.lu();
+
+
+					if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
+						return SuccessCode::MatrixSolveFailure;
+
+
+					auto delta_z = LU.solve(-f);
+					// std::cout << "correct delta_z = \n" << delta_z << std::endl;
+					next_space += delta_z;
+
+
+					norm_delta_z = delta_z.norm();
+					norm_J = J.norm();
+					norm_J_inverse = LU.solve(Vec<ComplexType>::Random(S.NumVariables())).norm();
+					condition_number_estimate = norm_J*norm_J_inverse;
+
+
+
+					if ( norm_delta_z < tracking_tolerance && ii >= (min_num_newton_iterations-1) )
+						return SuccessCode::Success;
+
+
+					
+					if (!amp::CriterionB(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
+						return SuccessCode::HigherPrecisionNecessary;
+
+					if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
+						return SuccessCode::HigherPrecisionNecessary;
+
+					if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
+						return SuccessCode::GoingToInfinity;
+
+				}
+
+				return SuccessCode::FailedToConverge;
+			}
 		}
 		
 	}

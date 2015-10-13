@@ -52,6 +52,40 @@ namespace bertini{
 						               max_num_newton_iterations,
 						               AMP_config);
 		}
+
+
+
+		template <typename ComplexType, typename RealType>
+		SuccessCode Correct(Vec<ComplexType> & next_space,
+		                    RealType & norm_delta_z,
+			                       RealType & norm_J,
+			                       RealType & norm_J_inverse,
+			                       RealType & condition_number_estimate,
+					               System & S,
+					               Vec<ComplexType> const& current_space, 
+					               ComplexType const& current_time, 
+					               RealType tracking_tolerance,
+					               RealType path_truncation_threshold,
+					               unsigned min_num_newton_iterations,
+					               unsigned max_num_newton_iterations,
+					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+		{
+			return correct::NewtonLoop(next_space,
+			                           norm_delta_z,
+			                           norm_J,
+			                           norm_J_inverse,
+			                           condition_number_estimate,
+						               S,
+						               current_space, 
+						               current_time, 
+						               tracking_tolerance,
+						               path_truncation_threshold,
+						               min_num_newton_iterations,
+						               max_num_newton_iterations,
+						               AMP_config);
+		}
+
+
 	}
 	
 }

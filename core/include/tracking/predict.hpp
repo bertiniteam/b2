@@ -207,7 +207,7 @@ namespace bertini{
 		namespace predict{
 
 			/**
-			The order of the predictor.  The order of the error estimate is this plus one, i think.
+			The lowest order of the predictor.  The order of the error estimate is this plus one.
 			*/
 			inline
 			unsigned Order(config::Predictor predictor_choice)
@@ -215,7 +215,7 @@ namespace bertini{
 				switch (predictor_choice)
 				{
 					case (config::Predictor::Euler):
-						return 0;
+						return 1;
 					case (config::Predictor::HeunEuler):
 						return 1;
 				}

@@ -123,9 +123,8 @@ namespace bertini{
 
 				if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
 				{
-					// TODO: this esimate may be wrong
 					condition_number_estimate = norm_J * norm_J_inverse;
-					num_steps_since_last_condition_number_computation = 1; // reset the counter to 0
+					num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
 				}
 				else // no need to compute the condition number
 					num_steps_since_last_condition_number_computation++;

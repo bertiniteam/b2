@@ -60,7 +60,8 @@ namespace bertini
 		{
 			PrecisionIncrement = 10,
 			DoublePrecision = 16,
-			LowestMultiplePrecision = 30
+			LowestMultiplePrecision = 30,
+			MaxPrecisionAllowed = 1000
 		};
 
 

@@ -104,84 +104,73 @@ namespace bertini{
 
 		 \todo Recompute this cost function for boost::multiprecision::mpfr_float
 		*/
-		double Cost(unsigned precision)
+		mpfr_float Cost(unsigned precision)
 		{
 			if (precision==DoublePrecision)
 				return 1;
 			else
-				return 10.35 + 0.13 * precision;
+				return mpfr_float("10.35") + mpfr_float("0.13") * precision;
 		}
 
 
 
 
 
-
-		template <typename RealType>
-		struct PrecStep
-		{
-			RealType stepsize;
-			unsigned precision;
-
-			PrecStep(RealType const& ss, unsigned prec) : stepsize(ss), precision(prec)
-			{}
-
-			PrecStep(unsigned prec, RealType const& ss) : stepsize(ss), precision(prec)
-			{}
-
-		};
-
-
-		template <typename RealType> 
-		RealType StepsizeSatisfyingNine(unsigned current_precision,
-										RealType const& tau, // -log10 of track tolerance
-										RealType const& d, // from condition B, C
-										RealType const& a, // size_proportion
+		mpfr_float StepsizeSatisfyingNine(unsigned precision,
+										unsigned P0,
 										unsigned num_newton_iterations,
-										AdaptiveMultiplePrecisionConfig const& AMP_config,
 										unsigned predictor_order = 0)
 		{
-			RealType stepsize;
-
-			auto rhs = num_newton_iterations/(predictor_order+1)*( AMP_config.safety_digits_1 + d + (tau + log10(a))/num_newton_iterations) - current_precision; 
-			stepsize = pow(10,rhs);
-
-			return stepsize;
+			std::cout << "StepsizeSatisfyingNine" << std::endl;
+			std::cout << "precision " << precision << " P0 " << P0 << " N " << num_newton_iterations << " order " << predictor_order << std::endl;
+			//	(P0 - prec_to_digits(prec[i])) * maxNewtonIts / (order + 1.0);
+			std::cout << (long(P0) - long(precision))*num_newton_iterations/(predictor_order+1) << std::endl;
+			return pow(mpfr_float(10),-(long(P0) - long(precision))*num_newton_iterations/(predictor_order+1));
 		}
 
 
 
- 
+ 		template <typename RealType>
 		void MinimizeCost(unsigned & new_precision, mpfr_float & new_stepsize, 
 						  unsigned min_precision, mpfr_float const& old_stepsize,
-						  unsigned max_precision,
-						  mpfr_float const& tau, // -log10 of the current track tolerance
-						  mpfr_float const& norm_J,
-						  mpfr_float const& norm_J_inverse,
-						  mpfr_float const& size_proportion,
+						  unsigned max_precision, mpfr_float const& max_stepsize,
+						  unsigned P0,
 						  unsigned num_newton_iterations,
 						  AdaptiveMultiplePrecisionConfig const& AMP_config,
 						  unsigned predictor_order = 0)
 		{
-			std::vector<PrecStep<mpfr_float> > computed_candidates;
-			unsigned lowest_mp_precision_to_test = min_precision;
+			std::cout << "MinimizeCost" << std::endl;
+			std::cout << "max_stepsize " << max_stepsize << std::endl;
 
-			auto d =amp::D(norm_J, norm_J_inverse, AMP_config);
+			mpfr_float min_cost = Eigen::NumTraits<mpfr_float>::highest();
+
+			new_precision = MaxPrecisionAllowed+1; // initialize to an impossible value.
+			new_stepsize = old_stepsize; // initialize to original step size.
+
+
+			unsigned lowest_mp_precision_to_test = min_precision;
 
 			if (min_precision==DoublePrecision)
 			{
 				unsigned candidate_precision = DoublePrecision;
 				
-				mpfr_float candidate_stepsize = StepsizeSatisfyingNine(candidate_precision,
-															tau, // -log10 of track tolerance
-															d, // from condition B
-															size_proportion, // size_proportion
-															num_newton_iterations,
-															AMP_config,
-															predictor_order);
+				mpfr_float candidate_stepsize = min(
+				                                    StepsizeSatisfyingNine(candidate_precision,
+																		P0,
+																		num_newton_iterations,
+																		predictor_order),
+				                                    max_stepsize);
 
-				if (std::min(abs(candidate_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(candidate_precision))
-					computed_candidates.push_back(PrecStep<mpfr_float>(candidate_precision, candidate_stepsize));
+				std::cout << "for candidate precision " << candidate_precision << ", stepsize is " << candidate_stepsize << std::endl;
+
+				mpfr_float current_cost = Cost(candidate_precision) / abs(candidate_stepsize);
+
+				if (current_cost < min_cost)
+				{
+					min_cost = current_cost;
+					new_stepsize = candidate_stepsize;
+					new_precision = candidate_precision;
+				}
 
 				lowest_mp_precision_to_test = LowestMultiplePrecision;
 			}
@@ -190,38 +179,28 @@ namespace bertini{
 			for (unsigned candidate_precision = lowest_mp_precision_to_test; candidate_precision <= max_precision; candidate_precision+=PrecisionIncrement)
 			{
 
-				auto candidate_stepsize = StepsizeSatisfyingNine(candidate_precision,
-															tau, // -log10 of track tolerance
-															d, // from condition B
-															size_proportion, // size_proportion
-															num_newton_iterations,
-															AMP_config,
-															predictor_order);
+				mpfr_float candidate_stepsize = min(
+				                                    StepsizeSatisfyingNine(candidate_precision,
+																		P0,
+																		num_newton_iterations,
+																		predictor_order),
+				                                    max_stepsize);
 
-				if (min(abs(candidate_stepsize),abs(old_stepsize)) > MinStepSizeForCurrentPrecision(candidate_precision))
-					computed_candidates.push_back(PrecStep<mpfr_float>(candidate_precision, candidate_stepsize));
-			}
+				std::cout << "for candidate precision " << candidate_precision << ", stepsize is " << candidate_stepsize << std::endl;				
+				std::cout << "computed stepsize is " << StepsizeSatisfyingNine(candidate_precision,
+																		P0,
+																		num_newton_iterations,
+																		predictor_order) << std::endl;
 
-			if (computed_candidates.empty())
-			{
-				new_precision = max_precision + 1;
-				new_stepsize = old_stepsize;
-			}
-			else
-			{
-				// find the minimizer of the Cost function
-				double min_cost(1e300);
-				for (auto candidate : computed_candidates)
-				{	
-					double curr_cost = Cost(candidate.precision) / double(abs(candidate.stepsize));
-					if (curr_cost < min_cost)
-					{
-						min_cost = curr_cost;
-						new_precision = candidate.precision;
-						new_stepsize = candidate.stepsize;
-					}
+
+				mpfr_float current_cost = Cost(candidate_precision) / abs(candidate_stepsize);
+
+				if (current_cost < min_cost)
+				{
+					min_cost = current_cost;
+					new_stepsize = candidate_stepsize;
+					new_precision = candidate_precision;
 				}
-				
 			}
 		}
 
@@ -235,6 +214,7 @@ namespace bertini{
 		template <typename RealType>
 		void AMP3_update(unsigned & new_precision, mpfr_float & new_stepsize,
 						 unsigned current_precision, mpfr_float const& current_stepsize,
+						 mpfr_float const& max_stepsize,
 						 unsigned digits_tau,
 						 unsigned P0,
 						 unsigned digits_C,
@@ -249,6 +229,10 @@ namespace bertini{
 						 unsigned digits_final = 0,
 						 unsigned predictor_order = 0)
 		{
+			std::cout << "AMP3_update" << std::endl;
+			std::cout << current_precision << " " << current_stepsize << std::endl;
+
+
 			// compute the number of digits necessary to trigger a lowering.  
 			unsigned precision_decrease_threshold;
 			if (current_precision==DoublePrecision)
@@ -261,28 +245,33 @@ namespace bertini{
 
 			unsigned digits_B(ceil(P0 - (predictor_order+1)* eta_min/max_num_newton_iterations));
 
+			unsigned digits_stepsize = max(MinDigitsFromEta(eta_min,current_time), MinDigitsFromEta(eta_max,current_time));
+
+
+			std::cout << digits_tau << " " << digits_final << " " << digits_B << " " << digits_C << " " << digits_stepsize << std::endl;
+
 			if (digits_B < current_precision)
 				digits_B = min(digits_B+precision_decrease_threshold, current_precision);
 
 			if (digits_C < current_precision)
 				digits_C = min(digits_C+precision_decrease_threshold, current_precision);
 
-			unsigned digits_stepsize = max(MinDigitsFromEta(eta_min,current_time), MinDigitsFromEta(eta_max,current_time));
-
+			
 			if (digits_stepsize < current_precision)
 				digits_stepsize = min(digits_stepsize+precision_decrease_threshold, current_precision);
+
+			
+
 
 			unsigned min_digits_needed = max(digits_tau, digits_final, digits_B, digits_C, digits_stepsize);
 			unsigned max_digits_needed = max(min_digits_needed, unsigned(ceil(P0 - (predictor_order+1)* eta_max/max_num_newton_iterations)));
 			
+			std::cout << min_digits_needed << " " << max_digits_needed << std::endl;
 
-			MinimizeCost(new_precision, new_stepsize, 
+			MinimizeCost<RealType>(new_precision, new_stepsize, 
 						min_digits_needed, current_precision,
-						max_digits_needed,
-						digits_tau, // -log10 of the current track tolerance
-						norm_J,
-						norm_J_inverse,
-						size_proportion,
+						max_digits_needed, max_stepsize,
+						P0,
 						max_num_newton_iterations,
 						AMP_config,
 						predictor_order);
@@ -329,6 +318,7 @@ namespace bertini{
 
 				AMP3_update(new_precision, new_stepsize,
 						 current_precision, current_stepsize,
+						 maximum_stepsize,
 						 digits_tau,
 						 P0,
 						 digits_C,
@@ -373,10 +363,8 @@ namespace bertini{
 
 
 
-			AMPTracker(System sys, config::Predictor new_predictor_choice) : tracked_system_(sys)
+			AMPTracker(System sys) : tracked_system_(sys)
 			{	
-				Predictor(new_predictor_choice);
-				
 				
 			}
 
@@ -386,16 +374,18 @@ namespace bertini{
 
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
-			void Setup(mpfr_float const& tracking_tolerance,
+			void Setup(config::Predictor new_predictor_choice,
+			           mpfr_float const& tracking_tolerance,
 						mpfr_float const& path_truncation_threshold,
 						config::Stepping const& stepping,
 						config::Newton const& newton,
 						config::AdaptiveMultiplePrecisionConfig const& AMP_config
 						)
 			{
+				Predictor(new_predictor_choice);
+				
 				tracking_tolerance_ = tracking_tolerance;
 				digits_tracking_tolerance_ = unsigned(ceil(-log10(tracking_tolerance)));
-
 
 				path_truncation_threshold_ = path_truncation_threshold;
 
@@ -477,7 +467,8 @@ namespace bertini{
 						return SuccessCode::MaxNumStepsTaken;
 					if (current_stepsize_ < stepping_config_.min_step_size)
 						return SuccessCode::MinStepSizeReached;
-					
+					if (current_precision_ > AMP_config_.maximum_precision)
+							return SuccessCode::MaxPrecisionReached;
 
 
 
@@ -510,22 +501,7 @@ namespace bertini{
 					}
 
 
-					// if (num_consecutive_successful_steps_ >= stepping_config_.consecutive_successful_steps_before_precision_decrease)
-					// {
-					// 	if (current_precision_==LowestMultiplePrecision)
-					// 		MultipleToDouble();
-					// 	else if (current_precision_ > LowestMultiplePrecision)
-					// 		MultipleToMultiple(current_precision_ - PrecisionIncrement);
-					// }
-
-
-					// if (num_consecutive_successful_steps_ >= stepping_config_.consecutive_successful_steps_before_stepsize_increase)
-					// {
-					// 	if (current_stepsize_ < stepping_config_.max_step_size)
-					// 		current_stepsize_ = min(stepping_config_.max_step_size, current_stepsize_*stepping_config_.step_size_success_factor);
-					// }
-
-
+					// current_stepsize_ = next_stepsize_;
 					if (next_precision_!=current_precision_)
 					{
 						SuccessCode precision_change_code = ChangePrecision(next_precision_);
@@ -608,7 +584,9 @@ namespace bertini{
 				ComplexType current_time = ComplexType(current_time_);
 				ComplexType delta_t = ComplexType(delta_t_);
 
-
+				std::cout << "t = " << current_time << std::endl;
+				std::cout << "delta_t = " << delta_t << std::endl;
+				std::cout << "x = " << current_space << std::endl;
 
 				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
 
@@ -625,6 +603,9 @@ namespace bertini{
 					SafetyError<ComplexType, RealType>();
 					return predictor_code;
 				}
+
+
+				std::cout << "predicted_space = " << predicted_space << std::endl;
 
 				Vec<ComplexType>& tentative_next_space = std::get<Vec<ComplexType> >(tentative_space_); // this will be populated in the Correct step
 
@@ -647,8 +628,9 @@ namespace bertini{
 					return corrector_code;
 				}
 
-
-				StepSuccess<RealType>();
+				// copy the tentative vector into the current space vector;
+				current_space = tentative_next_space;
+				StepSuccess<ComplexType,RealType>();
 				return SuccessCode::Success;
 			}
 
@@ -665,7 +647,7 @@ namespace bertini{
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
 				RealType& size_proportion = std::get<RealType>(size_proportion_);
-
+				RealType norm_z = std::get<Vec<ComplexType> >(current_space_).norm();
 
 				bertini::tracking::SafetyError(next_precision_, next_stepsize_, 
 						 current_precision_, current_stepsize_, 
@@ -676,7 +658,7 @@ namespace bertini{
 						 	RealType(tracking_tolerance_),
 						 	RealType(stepping_config_.step_size_fail_factor),
 						 	RealType(stepping_config_.step_size_success_factor),
-						 	RealType(1),
+						 	norm_z,
 						 	AMP_config_,
 						 	digits_final_,
 						  predictor_order_);
@@ -820,15 +802,25 @@ namespace bertini{
 			              				"underlying complex type and the type for comparisons must match");
 
 
+				RealType& norm_J = std::get<RealType>(norm_J_);
+				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
+				RealType& norm_delta_z = std::get<RealType>(norm_delta_z_);
+				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
+
+
 				return bertini::tracking::Correct(corrected_space,
-						   tracked_system_,
-						   current_space,
-						   current_time, 
-						   RealType(tracking_tolerance_),
-						   RealType(path_truncation_threshold_),
-						   newton_config_.min_num_newton_iterations,
-						   newton_config_.max_num_newton_iterations,
-						   AMP_config_);
+												norm_delta_z,
+												norm_J,
+												norm_J_inverse,
+												condition_number_estimate,
+												tracked_system_,
+												current_space,
+												current_time, 
+												RealType(tracking_tolerance_),
+												RealType(path_truncation_threshold_),
+												newton_config_.min_num_newton_iterations,
+												newton_config_.max_num_newton_iterations,
+												AMP_config_);
 			}
 
 
@@ -837,21 +829,27 @@ namespace bertini{
 			/**
 			\brief Increase stepsize or decrease precision, because of consecutive successful steps.
 			*/
-			template <typename RealType>
+			template <typename ComplexType, typename RealType>
 			void StepSuccess()
 			{
+				std::cout << "StepSuccess" << std::endl;
+				std::cout << "current precision: " << current_precision_ << std::endl;
+				std::cout << "current stepsize: " << current_stepsize_ << std::endl;
+
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
 				RealType& size_proportion = std::get<RealType>(size_proportion_);
-
+				RealType norm_of_current_solution = std::get<Vec<ComplexType> > (current_space_).norm();
 
 				mpfr_float minimum_stepsize = current_stepsize_ * stepping_config_.step_size_fail_factor;
 
 
 				unsigned P0(round(amp::CriterionBRHS(norm_J, norm_J_inverse, newton_config_.max_num_newton_iterations, RealType(tracking_tolerance_),  size_proportion, AMP_config_)));
 
-				unsigned digits_C(round( amp::CriterionCRHS(norm_J_inverse, RealType(1), RealType(tracking_tolerance_), AMP_config_))); 
+				unsigned digits_C(round( amp::CriterionCRHS(norm_J_inverse, norm_of_current_solution, RealType(tracking_tolerance_), AMP_config_))); 
 				// hopefully this number is smaller than the current precision, allowing us to reduce precision
+
+				std::cout << "P0: " << P0 << " digits_C: " << digits_C << std::endl;
 
 
 				mpfr_float maximum_stepsize = current_stepsize_;
@@ -865,7 +863,7 @@ namespace bertini{
 					// allow stepsize increase, up to maximum step size
 					maximum_stepsize = min(current_stepsize_ * stepping_config_.step_size_success_factor, stepping_config_.max_step_size);
 				}	
-				else if (current_precision_ > DoublePrecision) // exclude the next two cases from being executed in double precision, because cannot decrease from double.
+				else if (current_precision_ > DoublePrecision && num_consecutive_successful_steps_>stepping_config_.consecutive_successful_steps_before_stepsize_increase) // exclude the next two cases from being executed in double precision, because cannot decrease from double.
 				{
 					if (num_consecutive_successful_steps_ < stepping_config_.consecutive_successful_steps_before_precision_decrease)
 					{
@@ -886,12 +884,14 @@ namespace bertini{
 					digits_C = max(digits_C, current_precision_);
 				}
 
+				std::cout << "maximum_stepsize " << maximum_stepsize << " minimum_stepsize " << minimum_stepsize << std::endl;
+
 				mpfr_float eta_min = -log10(minimum_stepsize);
 				mpfr_float eta_max = -log10(maximum_stepsize);
 
-
 				AMP3_update(next_precision_, next_stepsize_,
 						 current_precision_, current_stepsize_,
+						 maximum_stepsize,
 						 digits_tracking_tolerance_,
 						 P0,
 						 digits_C,
@@ -905,6 +905,9 @@ namespace bertini{
 						 AMP_config_,
 						 predictor_order_,
 						 digits_final_);
+
+				std::cout << "new precision: " << next_precision_ << std::endl;
+				std::cout << "new stepsize: " << next_stepsize_ << std::endl;
 			}
 
 
@@ -1048,7 +1051,7 @@ namespace bertini{
 
 			Copies a double-precision into the multiple-precision storage vector.  
 
-			You should call Newton after this to populate the new digits with non-garbage data.
+			You should call Refine after this to populate the new digits with non-garbage data.
 			*/
 			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point)
 			{	
@@ -1150,6 +1153,7 @@ namespace bertini{
 				std::get<mpfr_float>(error_estimate_).precision(new_precision);
 				std::get<mpfr_float>(norm_J_).precision(new_precision);
 				std::get<mpfr_float>(norm_J_inverse_).precision(new_precision);
+				std::get<mpfr_float>(norm_delta_z_).precision(new_precision);
 				std::get<mpfr_float>(size_proportion_).precision(new_precision);
 			}
 
@@ -1189,6 +1193,7 @@ namespace bertini{
 							std::get<Vec<mpfr> >(current_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(tentative_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(temporary_space_)(0).precision() == current_precision_ &&
+							std::get<mpfr_float>(norm_delta_z_).precision() == current_precision_ &&
 							std::get<mpfr_float>(condition_number_estimate_).precision() == current_precision_ &&
 							std::get<mpfr_float>(error_estimate_).precision() == current_precision_ &&
 							std::get<mpfr_float>(norm_J_).precision() == current_precision_ &&
@@ -1257,10 +1262,14 @@ namespace bertini{
 			std::tuple< Vec<dbl>, Vec<mpfr> > tentative_space_;
 			std::tuple< Vec<dbl>, Vec<mpfr> > temporary_space_;
 
+
+			
+
 			std::tuple< double, mpfr_float > condition_number_estimate_;			
 			std::tuple< double, mpfr_float > error_estimate_;
 			std::tuple< double, mpfr_float > norm_J_;
 			std::tuple< double, mpfr_float > norm_J_inverse_;
+			std::tuple< double, mpfr_float > norm_delta_z_;
 			std::tuple< double, mpfr_float > size_proportion_;
 
 			config::Stepping stepping_config_;
