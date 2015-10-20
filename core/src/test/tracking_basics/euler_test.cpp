@@ -324,8 +324,8 @@ BOOST_AUTO_TEST_CASE(monodromy_euler_mp)
 	
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
-	std::cout << abs(euler_prediction_result(0)-predicted(0)) << '\n';
-	std::cout << threshold_clearance_mp << '\n';
+	std::cout << "Difference in b2 computation and matlab is " << abs(euler_prediction_result(0)-predicted(0)) << '\n';
+	std::cout << "Threshold clearance for multiple precision is " << threshold_clearance_mp << '\n';
 	for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
 		 BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 
