@@ -307,13 +307,54 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 
 	//Check to make sure we failed.
 	BOOST_CHECK_EQUAL(CritC,false);
-	BOOST_CHECK_EQUAL("test implemented","true");
 }
-//	
-//BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
-//{
-//	BOOST_CHECK_EQUAL("test implemented","true");
-//}
+	
+BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
+{
+		/*
+	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
+	to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. 
+	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
+	*/
+	//Setting upt current space and time values for evaluation
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
+					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
+
+	mpfr current_time("0");
+	mpfr delta_t(".1");
+	current_time += delta_t;
+
+	//Defining the system and variables. 
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	VariableGroup vars{x,y};
+
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(y - pow(x,2));
+
+	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
+	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
+	auto LU = dh_dx.lu();
+
+	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
+	Vec<mpfr> temp_soln = LU.solve(randy);
+	auto norm_J_inverse = temp_soln.norm();
+
+
+	//Setting up saftety digits to trigger AMP Criterion B failure.
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	AMP.safety_digits_2 = 32000;
+	mpfr_float TrackTolBeforeEG = mpfr_float("10e-5"); //Obtained from Bertini Book.
+
+	auto CritC = bertini::tracking::amp::CriterionC(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
+
+
+	//Check to make sure we failed.
+	BOOST_CHECK_EQUAL(CritC,false);
+}
 
 
 
