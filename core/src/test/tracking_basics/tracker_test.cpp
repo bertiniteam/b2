@@ -98,7 +98,6 @@ BOOST_AUTO_TEST_CASE(tracker_track_linear)
 	                  t_start, t_end, y_start);
 
 	BOOST_CHECK_EQUAL(y_end.size(),1);
-	std::cout << y_end << std::endl;
 	BOOST_CHECK(abs(y_end(0)-mpfr("0.0")) < 1e-5);
 
 }
