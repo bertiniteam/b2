@@ -47,11 +47,11 @@ namespace bertini{
 
 		mpfr_float MinTimeForCurrentPrecision(unsigned precision)
 		{
-			mpfr_float temp = pow( mpfr_float("10"), -precision+3);
+			mpfr_float temp = pow( mpfr_float("10"), -long(precision)+3);
 			if (precision==DoublePrecision)
 				return max( temp,mpfr_float("1e-150"));
 			else
-				return pow( mpfr_float("10"), -precision+3);
+				return pow( mpfr_float("10"), -long(precision)+3);
 		}
 
 
@@ -478,7 +478,7 @@ namespace bertini{
 				// reset a bunch of counters to 0.
 				num_consecutive_successful_steps_ = 0;
 				num_successful_steps_taken_ = 0;
-				num_failed_steps_ = 0;
+				num_failed_steps_taken_ = 0;
 				num_precision_decreases_ = 0;
 
 				// initialize to the frequency so guaranteed to compute it the first try 
@@ -553,7 +553,7 @@ namespace bertini{
 						#endif
 
 						num_consecutive_successful_steps_=0;
-						num_failed_steps_++;
+						num_failed_steps_taken_++;
 					}
 
 
@@ -567,7 +567,7 @@ namespace bertini{
 
 				}// re: while
 
-				
+				// the current precision is the precision of the output solution point.
 				if (current_precision_==DoublePrecision)
 				{
 					unsigned num_vars = tracked_system_.NumVariables();
@@ -610,7 +610,12 @@ namespace bertini{
 				return predictor_choice_;
 			}
 
+			unsigned NumTotalStepsTaken () const
+			{
+				return num_failed_steps_taken_ + num_successful_steps_taken_;
+			}
 
+			
 		private:
 
 										
@@ -622,7 +627,7 @@ namespace bertini{
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "TrackerIteration " << current_precision_ << std::endl;
+				std::cout << "TrackerIteration " << NumTotalStepsTaken() << "\n" << "current_precision: " << current_precision_ << std::endl;
 				#endif
 
 				#ifndef BERTINI_DISABLE_ASSERTS
@@ -1287,7 +1292,7 @@ namespace bertini{
 			unsigned num_total_steps_taken_;
 			unsigned num_successful_steps_taken_;
 			unsigned num_consecutive_successful_steps_;
-			unsigned num_failed_steps_;
+			unsigned num_failed_steps_taken_;
 			unsigned num_precision_decreases_;
 
 
