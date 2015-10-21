@@ -59,27 +59,28 @@ BOOST_AUTO_TEST_CASE(tracker_track_linear)
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
 	Var t = std::make_shared<Variable>("t");
 
 	System sys;
 
-	VariableGroup v{x};
+	VariableGroup v{y};
 
-	sys.AddFunction(x-t);
+	sys.AddFunction(y-t);
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys,config::Predictor::Euler);
+	bertini::tracking::AMPTracker tracker(sys);
 
 
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
 
-	tracker.Setup(mpfr_float("1e-5"),
+	tracker.Setup(config::Predictor::Euler,
+	              mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
 					newton_preferences,
@@ -88,18 +89,206 @@ BOOST_AUTO_TEST_CASE(tracker_track_linear)
 	mpfr t_start("1.0");
 	mpfr t_end("0.0");
 	
-	Vec<mpfr> x_start(1);
-	x_start << mpfr("1.0");
+	Vec<mpfr> y_start(1);
+	y_start << mpfr("1.0");
 
-	Vec<mpfr> x_end;
+	Vec<mpfr> y_end;
 
-	tracker.TrackPath(x_end,
-	                  t_start, t_end, x_start);
+	tracker.TrackPath(y_end,
+	                  t_start, t_end, y_start);
 
-	BOOST_CHECK_EQUAL(x_end.size(),1);
+	BOOST_CHECK_EQUAL(y_end.size(),1);
+	std::cout << y_end << std::endl;
+	BOOST_CHECK(abs(y_end(0)-mpfr("0.0")) < 1e-5);
 
-	BOOST_CHECK(abs(x_end(0)-mpfr("0.0")) < 1e-5);
+}
 
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(tracker_track_quadratic)
+{
+	mpfr_float::default_precision(30);
+	using namespace bertini::tracking;
+
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{y};
+
+	sys.AddFunction(y-pow(t,2));
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences,
+					AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("-1.0");
+	
+	Vec<mpfr> y_start(1);
+	y_start << mpfr("1.0");
+
+	Vec<mpfr> y_end;
+
+	tracker.TrackPath(y_end,
+	                  t_start, t_end, y_start);
+
+	BOOST_CHECK_EQUAL(y_end.size(),1);
+	BOOST_CHECK(abs(y_end(0)-mpfr("1.0")) < 1e-5);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(tracker_track_sextic)
+{
+	mpfr_float::default_precision(30);
+	using namespace bertini::tracking;
+
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{y};
+
+	sys.AddFunction(y-pow(t,10));
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences,
+					AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("-2.0");
+	
+	Vec<mpfr> y_start(1);
+	y_start << mpfr("1.0");
+
+	Vec<mpfr> y_end;
+
+	tracker.TrackPath(y_end,
+	                  t_start, t_end, y_start);
+
+	BOOST_CHECK_EQUAL(y_end.size(),1);
+	BOOST_CHECK(abs(y_end(0)-mpfr("1024.0")) < 1e-5);
+
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(tracker_track_square_root)
+{
+	mpfr_float::default_precision(30);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(x-t);
+	sys.AddFunction(pow(y,2)-x);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences,
+					AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("0");
+	
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	SuccessCode tracking_success;
+
+
+	start_point << mpfr("1"), mpfr("1");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(),2);
+	BOOST_CHECK(abs(end_point(0)-mpfr("0.0")) < 1e-5);
+	BOOST_CHECK(abs(end_point(1)-mpfr("0.0")) < 1e-5);
+
+
+	start_point << mpfr("1"), mpfr("-1");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(),2);
+	BOOST_CHECK(abs(end_point(0)-mpfr("0.0")) < 1e-5);
+	BOOST_CHECK(abs(end_point(1)-mpfr("0.0")) < 1e-5);
+
+	t_start = mpfr("-1.0");
+	start_point << mpfr("-1"), mpfr("0","-1");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(),2);
+	BOOST_CHECK(abs(end_point(0)-mpfr("0.0")) < 1e-5);
+	BOOST_CHECK(abs(end_point(1)-mpfr("0.0")) < 1e-5);
+
+	start_point << mpfr("-1"), mpfr("0","1");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(),2);
+	BOOST_CHECK(abs(end_point(0)-mpfr("0.0")) < 1e-5);
+	BOOST_CHECK(abs(end_point(1)-mpfr("0.0")) < 1e-5);
 }
 
 
