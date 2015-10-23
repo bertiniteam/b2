@@ -50,8 +50,8 @@ using Float = bertini::node::Float;
 using System = bertini::System;
 
 extern double threshold_clearance_d;
-extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
-extern double threshold_clearance_mp;
+extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;

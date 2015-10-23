@@ -18,8 +18,8 @@
 //
 // operator.hpp:  Declares the class Operator.
 
-#ifndef operator_h
-#define operator_h
+#ifndef BERTINI_OPERATOR_HPP
+#define BERTINI_OPERATOR_HPP
 
 #include "function_tree/node.hpp"
 

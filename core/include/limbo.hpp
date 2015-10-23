@@ -18,9 +18,28 @@
 //
 // limbo.hpp:  Declares functions which have not yet found a home.
 
+#ifndef BERTINI_LIMBO_HPP
+#define BERTINI_LIMBO_HPP
 
 #include <vector>
 #include <stdexcept>
+
+
+
+
+
+
+
+//https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
+
+template<typename T>
+std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+{
+    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+}
+
+
+
 
 
 namespace bertini{
@@ -67,3 +86,7 @@ namespace bertini{
 	  }
 
 }
+
+
+#endif
+

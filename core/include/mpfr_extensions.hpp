@@ -38,8 +38,8 @@
 #include <eigen3/Eigen/Core>
 
 #include <string>
-#include <assert.h>
 
+#include "num_traits.hpp"
 
 
 
@@ -55,6 +55,8 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
 	{
+		unsigned num_digits(r.precision());
+		ar & num_digits;
 		std::string tmp = r.str(0,std::ios::scientific);
 		ar & tmp;
 	}
@@ -65,6 +67,9 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void load(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0>& r, unsigned /*version*/)
 	{
+		unsigned num_digits;
+		ar & num_digits;
+		r.precision(num_digits);
 		std::string tmp;
 		ar & tmp;
 		r = tmp.c_str();
@@ -177,19 +182,16 @@ namespace bertini {
 	
 	using mpfr_float = boost::multiprecision::mpfr_float;
 	
+	template <> struct NumTraits<mpfr_float> 
+	{
+		inline static unsigned NumDigits()
+		{
+			return mpfr_float::default_precision();
+		}
+	};
 	
-	/**
-	 \brief create a random number, at the current default precision
 	 
-	 \note this function calls the templated function RandomMpfr.
 	 
-	 \tparam T the number type to generate.
-	 \return The random number.
-	 */
-	template <typename T>
-	T RandomMp();
-	
-
 	
 	/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
@@ -197,9 +199,17 @@ namespace bertini {
 	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
 	 \return number_to_make_random The number which you desire to populate with a random number.
+	 
 	 */
 	template <typename T, unsigned int length_in_digits>
-	T RandomMpUniformUnitInterval();
+	T RandomMpUniformUnitInterval()
+	{
+		static boost::uniform_01<T> uf;
+		static boost::random::independent_bits_engine<
+			boost::random::mt19937, length_in_digits*1000L/301L, boost::multiprecision::mpz_int
+														> gen;
+		return uf(gen);
+	}
 	
 	
 	
@@ -219,7 +229,15 @@ namespace bertini {
 	 \param b The right bound.
 	 */
 	template <typename T, unsigned int length_in_digits>
-	T RandomMpUniformInInterval(const T & a, const T & b);
+	T RandomMpUniformInInterval(const T & a, const T & b)
+	{
+		static boost::uniform_01<T> uf;
+		static boost::random::independent_bits_engine<
+			boost::random::mt19937, length_in_digits*1000L/301L, boost::multiprecision::mpz_int
+														> gen;
+		return (b-a)*uf(gen) + a;
+
+	}
 	
 	
 	
@@ -227,17 +245,97 @@ namespace bertini {
 	 \brief create a random number in a given interval, at the current default precision
 	 
 	 \note this function calls the templated function RandomMpfrUniformInInterval.
-	 
-	 \tparam T the number type to generate.
-	 \param a The left bound.
-	 \param b The right bound.
 
-	 \return The random number.
+	 \tparam T the number type to generate.
+	 \param number_to_make_random The number whose contents you are overwriting with a random number.
 	 */
 	template <typename T>
-	T RandomMp(const T & a, const T & b);
+	T RandomMp(const T & a, const T & b)
+	{
+		auto num_digits = mpfr_float::default_precision() + 3;
+	 
+		if (num_digits<=50)
+			return RandomMpUniformInInterval<T,50>(a,b);
+		else if (num_digits<=100)
+			return RandomMpUniformInInterval<T,100>(a,b);
+		else if (num_digits<=200)
+			return RandomMpUniformInInterval<T,200>(a,b);
+		else if (num_digits<=400)
+			return RandomMpUniformInInterval<T,400>(a,b);
+		else if (num_digits<=800)
+			return RandomMpUniformInInterval<T,800>(a,b);
+		else if (num_digits<=1600)
+			return RandomMpUniformInInterval<T,1600>(a,b);
+		else if (num_digits<=3200)
+			return RandomMpUniformInInterval<T,3200>(a,b);
+		else if (num_digits<=6400)
+			return RandomMpUniformInInterval<T,6400>(a,b);
+		else if (num_digits<=8000)
+			return RandomMpUniformInInterval<T,8000>(a,b);
+		else if (num_digits<=10000)
+			return RandomMpUniformInInterval<T,10000>(a,b);
+		else if (num_digits<=12000)
+			return RandomMpUniformInInterval<T,12000>(a,b);
+		else if (num_digits<=14000)
+			return RandomMpUniformInInterval<T,14000>(a,b);
+		else if (num_digits<=16000)
+			return RandomMpUniformInInterval<T,16000>(a,b);
+		else if (num_digits<=18000)
+			return RandomMpUniformInInterval<T,18000>(a,b);
+		else if (num_digits<=20000)
+			return RandomMpUniformInInterval<T,20000>(a,b);
+		else if (num_digits<=40000)
+			return RandomMpUniformInInterval<T,40000>(a,b);
+		else
+			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.");
+	}
 	
 	
+	/**
+	 \brief create a random number, at the current default precision
+
+	 \param number_to_make_random The number whose contents you are overwriting with a random number.
+	 */
+	template <typename T>
+	T RandomMp()
+	{
+		auto num_digits = mpfr_float::default_precision() + 3;
+	
+		if (num_digits<=50)
+			return RandomMpUniformUnitInterval<T,50>();
+		else if (num_digits<=100)
+			return RandomMpUniformUnitInterval<T,100>();
+		else if (num_digits<=200)
+			return RandomMpUniformUnitInterval<T,200>();
+		else if (num_digits<=400)
+			return RandomMpUniformUnitInterval<T,400>();
+		else if (num_digits<=800)
+			return RandomMpUniformUnitInterval<T,800>();
+		else if (num_digits<=1600)
+			return RandomMpUniformUnitInterval<T,1600>();
+		else if (num_digits<=3200)
+			return RandomMpUniformUnitInterval<T,3200>();
+		else if (num_digits<=6400)
+			return RandomMpUniformUnitInterval<T,6400>();
+		else if (num_digits<=8000)
+			return RandomMpUniformUnitInterval<T,8000>();
+		else if (num_digits<=10000)
+			return RandomMpUniformUnitInterval<T,10000>();
+		else if (num_digits<=12000)
+			return RandomMpUniformUnitInterval<T,12000>();
+		else if (num_digits<=14000)
+			return RandomMpUniformUnitInterval<T,14000>();
+		else if (num_digits<=16000)
+			return RandomMpUniformUnitInterval<T,16000>();
+		else if (num_digits<=18000)
+			return RandomMpUniformUnitInterval<T,18000>();
+		else if (num_digits<=20000)
+			return RandomMpUniformUnitInterval<T,20000>();
+		else if (num_digits<=40000)
+			return RandomMpUniformUnitInterval<T,40000>();
+		else
+			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.");
+	}
 	
 	
 } // re: namespace bertini

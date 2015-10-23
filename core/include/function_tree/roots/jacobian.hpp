@@ -19,8 +19,8 @@
 // jacobian.hpp:  Declares the class Jacobian.
 
 
-#ifndef b2Test_Jacobian_h
-#define b2Test_Jacobian_h
+#ifndef BERTINI_JACOBIAN_NODE_HPP
+#define BERTINI_JACOBIAN_NODE_HPP
 
 
 #include "function_tree/node.hpp"

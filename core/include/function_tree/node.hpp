@@ -19,8 +19,8 @@
 // node.hpp:  Declares the class Node.
 
 
-#ifndef __b2Test__Node__
-#define __b2Test__Node__
+#ifndef BERTINI_NODE_BASE_HPP
+#define BERTINI_NODE_BASE_HPP
 
 
 
@@ -55,7 +55,16 @@ namespace bertini {
 
 using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
 
+enum class VariableGroupType
+{
+	Homogeneous,
+	Affine,
+	Ungrouped
+};
+
+
 namespace node{
+
 
 /**
 An interface for all nodes in a function tree, and for a function object as well.  Almost all
@@ -285,7 +294,7 @@ private:
 
 
 #endif 
-/* defined(__b2Test__Node__) */
+/* defined(BERTINI_NODE_BASE_HPP) */
 
 
 
