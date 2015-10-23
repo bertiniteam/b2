@@ -38,6 +38,10 @@ serialization_test*
 
 /config
 
+<<<<<<< HEAD
+=======
+.DS_Store
+>>>>>>> upstream/master
 *.dirstamp
 *.deps
 
