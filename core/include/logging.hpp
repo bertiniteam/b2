@@ -26,6 +26,9 @@
 #ifndef BERTINI_LOGGING_HPP
 #define BERTINI_LOGGING_HPP 
 
+ 
+#define BOOST_LOG_DYN_LINK 1
+
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -46,25 +49,33 @@ namespace bertini
 
 	struct LoggingInit
 	{
-		LoggingInit()
+		
+		// trivial logger-provided severity levels are  
+		//
+		//  trace, debug, info, warning, error, fatal
+		LoggingInit(logging::trivial::severity_level desired_level = logging::trivial::severity_level::trace, unsigned desired_rotation_size = 10*1024*1024)
 		{
 			logging::add_file_log
 			(
 			    keywords::file_name = "bertini_%N.log",
-			    keywords::rotation_size = 10 * 1024 * 1024,
-			    keywords::format = "[%TimeStamp%]: %Message%"
+			    keywords::rotation_size = desired_rotation_size,
+			    keywords::format = "%Message%" //[%TimeStamp%]: 
 			);
 
 			logging::core::get()->set_filter
 			(
-			    logging::trivial::severity >= logging::trivial::info
+			    logging::trivial::severity >= desired_level
 			);
+
+			BOOST_LOG_TRIVIAL(trace) << "initialized logging";
+
 		}
 
 		~LoggingInit(){}
 	    
 	};
 
+	using severity_level = logging::trivial::severity_level;
 
 } // re: namespace bertini
 

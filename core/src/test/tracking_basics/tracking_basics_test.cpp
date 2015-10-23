@@ -23,8 +23,8 @@
 
 
 
-
-#define BOOST_ALL_DYN_LINK 1
+ 
+#define BOOST_TEST_DYN_LINK 1
 
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
 #define BOOST_TEST_MODULE "Bertini 2 Tracking Basics Testing"
@@ -33,7 +33,12 @@
 
 #include "logging.hpp"
 
+
+using sec_level = boost::log::trivial::severity_level;
+
 using LoggingInit = bertini::LoggingInit;
+
+
 BOOST_GLOBAL_FIXTURE( LoggingInit );
 
 

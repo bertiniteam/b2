@@ -31,6 +31,9 @@
 #include <algorithm>
 #include "tracking/step.hpp"
 #include "limbo.hpp"
+#include "logging.hpp"
+
+
 namespace bertini{
 
 	namespace tracking{
@@ -82,19 +85,14 @@ namespace bertini{
 							  unsigned old_precision, mpfr_float const& old_stepsize,
 							  mpfr_float const& step_adjustment_factor)
 		{
-			#ifdef TONS_OF_SCREEN_OUTPUT
-			std::cout << "ConvergenceError" << std::endl;
-			#endif
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "ConvergenceError";
 
 			new_precision = old_precision;
 			new_stepsize = step_adjustment_factor*old_stepsize;
 
 			while (new_stepsize < MinStepSizeForCurrentPrecision(new_precision))
 			{
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << new_precision << " " << MinStepSizeForCurrentPrecision(new_precision) <<std::endl;
-				sleep(1);
-				#endif
+				BOOST_LOG_TRIVIAL(severity_level::trace) << new_precision << " " << MinStepSizeForCurrentPrecision(new_precision);
 				if (new_precision==DoublePrecision)
 					new_precision=LowestMultiplePrecision;
 				else
@@ -128,10 +126,10 @@ namespace bertini{
 										unsigned num_newton_iterations,
 										unsigned predictor_order = 0)
 		{
-			// std::cout << "StepsizeSatisfyingNine" << std::endl;
-			// std::cout << "precision " << precision << " criterion_B_rhs " << criterion_B_rhs << " N " << num_newton_iterations << " order " << predictor_order << std::endl;
+			// BOOST_LOG_TRIVIAL(severity_level::trace) << "StepsizeSatisfyingNine";
+			// BOOST_LOG_TRIVIAL(severity_level::trace) << "precision " << precision << " criterion_B_rhs " << criterion_B_rhs << " N " << num_newton_iterations << " order " << predictor_order;
 			// //	(criterion_B_rhs - prec_to_digits(prec[i])) * maxNewtonIts / (order + 1.0);
-			// std::cout << (long(criterion_B_rhs) - long(precision))*num_newton_iterations/(predictor_order+1) << std::endl;
+			// BOOST_LOG_TRIVIAL(severity_level::trace) << (long(criterion_B_rhs) - long(precision))*num_newton_iterations/(predictor_order+1);
 			return pow(mpfr_float(10),-(long(criterion_B_rhs) - long(precision))*num_newton_iterations/(predictor_order+1));
 		}
 
@@ -146,11 +144,9 @@ namespace bertini{
 						  AdaptiveMultiplePrecisionConfig const& AMP_config,
 						  unsigned predictor_order = 0)
 		{
-			#ifdef TONS_OF_SCREEN_OUTPUT
-			std::cout << "MinimizeCost" << std::endl;
-			std::cout << "max_stepsize " << max_stepsize ;
-			std::cout << " min_precision " << min_precision << " N " << num_newton_iterations << " order " << predictor_order << std::endl;
-			#endif
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "MinimizeCost";
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "max_stepsize " << max_stepsize ;
+			BOOST_LOG_TRIVIAL(severity_level::trace) << " min_precision " << min_precision << " N " << num_newton_iterations << " order " << predictor_order;
 
 			mpfr_float min_cost = Eigen::NumTraits<mpfr_float>::highest();
 
@@ -170,9 +166,8 @@ namespace bertini{
 																		num_newton_iterations,
 																		predictor_order),
 				                                    max_stepsize);
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "for candidate precision " << candidate_precision << ", stepsize is " << candidate_stepsize << std::endl;
-				#endif
+				
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "for candidate precision " << candidate_precision << ", stepsize is " << candidate_stepsize;
 
 				mpfr_float current_cost = Cost(candidate_precision) / abs(candidate_stepsize);
 
@@ -210,13 +205,11 @@ namespace bertini{
 																		num_newton_iterations,
 																		predictor_order),
 				                                    max_stepsize);
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "for candidate precision " << candidate_precision << ", stepsize is " << candidate_stepsize << std::endl;				
-				std::cout << "computed stepsize is " << StepsizeSatisfyingNine(candidate_precision,
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "for candidate precision " << candidate_precision << ", stepsize is " << candidate_stepsize;				
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "computed stepsize is " << StepsizeSatisfyingNine(candidate_precision,
 																		criterion_B_rhs,
 																		num_newton_iterations,
-																		predictor_order) << std::endl;
-				#endif
+																		predictor_order);
 
 				mpfr_float current_cost = Cost(candidate_precision) / abs(candidate_stepsize);
 
@@ -228,9 +221,7 @@ namespace bertini{
 				}
 			}
 
-			#ifdef TONS_OF_SCREEN_OUTPUT
-			std::cout << "final minimizer of cost: " << new_precision << " " << new_stepsize << std::endl;
-			#endif
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "final minimizer of cost: " << new_precision << " " << new_stepsize;
 		}
 
 
@@ -258,12 +249,10 @@ namespace bertini{
 						 unsigned digits_final = 0,
 						 unsigned predictor_order = 0)
 		{
-			#ifdef TONS_OF_SCREEN_OUTPUT
-			std::cout << "AMP3_update" << std::endl;
-			std::cout << current_precision << " " << current_stepsize << std::endl;
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "AMP3_update";
+			BOOST_LOG_TRIVIAL(severity_level::trace) << current_precision << " " << current_stepsize;
 
-			std::cout << " criterion_B_rhs " << criterion_B_rhs << " N " << max_num_newton_iterations << " digits_final " << digits_final << " order " << predictor_order << std::endl;
-			#endif
+			BOOST_LOG_TRIVIAL(severity_level::trace) << " criterion_B_rhs " << criterion_B_rhs << " N " << max_num_newton_iterations << " digits_final " << digits_final << " order " << predictor_order;
 
 			// compute the number of digits necessary to trigger a lowering.  
 			unsigned precision_decrease_threshold;
@@ -272,17 +261,13 @@ namespace bertini{
 			else 
 				precision_decrease_threshold = PrecisionIncrement; // the threshold is the step between precisions in multiple precision
 
-			#ifdef TONS_OF_SCREEN_OUTPUT
-			std::cout << "precision_decrease_threshold " << precision_decrease_threshold << std::endl;
-			#endif
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "precision_decrease_threshold " << precision_decrease_threshold;
 
 			unsigned digits_B(ceil(criterion_B_rhs - (predictor_order+1)* eta_min/max_num_newton_iterations));
 
 			unsigned digits_stepsize = max(MinDigitsFromEta(eta_min,current_time), MinDigitsFromEta(eta_max,current_time));
 
-			#ifdef TONS_OF_SCREEN_OUTPUT
-			std::cout << digits_tau << " " << digits_final << " " << digits_B << " " << digits_C << " " << digits_stepsize << std::endl;
-			#endif
+			BOOST_LOG_TRIVIAL(severity_level::trace) << digits_tau << " " << digits_final << " " << digits_B << " " << digits_C << " " << digits_stepsize;
 
 
 			// if (digits_B < current_precision)
@@ -311,9 +296,7 @@ namespace bertini{
 				)
 				max_digits_needed = current_precision;
 
-			#ifdef TONS_OF_SCREEN_OUTPUT
-			std::cout << min_digits_needed << " " << max_digits_needed << std::endl;
-			#endif
+			BOOST_LOG_TRIVIAL(severity_level::trace) << min_digits_needed << " " << max_digits_needed;
 			MinimizeCost<RealType>(new_precision, new_stepsize, 
 						min_digits_needed, current_precision,
 						max_digits_needed, max_stepsize,
@@ -412,7 +395,7 @@ namespace bertini{
 
 			AMPTracker(System sys) : tracked_system_(sys)
 			{	
-				
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "creating tracker from system " << sys;
 			}
 
 
@@ -453,6 +436,8 @@ namespace bertini{
 									)
 			{	
 
+				BOOST_LOG_TRIVIAL(severity_level::debug) << "tracking path from t=" << start_time << " to t=" << endtime << " from x = " << start_point;
+
 				if (start_point.size()!=tracked_system_.NumVariables())
 				{
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
@@ -483,12 +468,7 @@ namespace bertini{
 
 				// initialize to the frequency so guaranteed to compute it the first try 
 				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
-
-
 				
-
-				
-
 
 				SuccessCode initial_refinement = Refine();
 				if (initial_refinement!=SuccessCode::Success)
@@ -505,10 +485,7 @@ namespace bertini{
 					while (initial_refinement!=SuccessCode::Success);
 				}
 
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "in TrackPath, after possible refinement, " << current_precision_ << std::endl;
-				#endif
-
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking path, starting while loop";
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
 				while (current_time_!=endtime)
 				{
@@ -538,9 +515,7 @@ namespace bertini{
 
 					if (step_success_code_==SuccessCode::Success)
 					{	
-						#ifdef TONS_OF_SCREEN_OUTPUT
-						std::cout << "tracker iteration successful" << std::endl;
-						#endif
+						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful";
 
 						num_successful_steps_taken_++; 
 						num_consecutive_successful_steps_++;
@@ -548,9 +523,7 @@ namespace bertini{
 					}
 					else
 					{
-						#ifdef TONS_OF_SCREEN_OUTPUT
-						std::cout << "tracker iteration unsuccessful" << std::endl;
-						#endif
+						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration unsuccessful";
 
 						num_consecutive_successful_steps_=0;
 						num_failed_steps_taken_++;
@@ -615,7 +588,7 @@ namespace bertini{
 				return num_failed_steps_taken_ + num_successful_steps_taken_;
 			}
 
-			
+
 		private:
 
 										
@@ -626,9 +599,9 @@ namespace bertini{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "TrackerIteration " << NumTotalStepsTaken() << "\n" << "current_precision: " << current_precision_ << std::endl;
-				#endif
+
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "TrackerIteration " << NumTotalStepsTaken() << "current_precision: " << current_precision_;
+
 
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
@@ -639,19 +612,15 @@ namespace bertini{
 				ComplexType current_time = ComplexType(current_time_);
 				ComplexType delta_t = ComplexType(delta_t_);
 
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "t = " << current_time << std::endl;
-				std::cout << "delta_t = " << delta_t << std::endl;
-				std::cout << "x = " << current_space << std::endl;
-				#endif
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "t = " << current_time;
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "delta_t = " << delta_t;
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "x = " << current_space;
 
 				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
 
 				if (predictor_code==SuccessCode::MatrixSolveFailure)
 				{
-					#ifdef TONS_OF_SCREEN_OUTPUT
-					std::cout << "Preditor, matrix solve failure" << std::endl;
-					#endif
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Preditor, matrix solve failure";
 
 					ConvergenceError();
 					return predictor_code;
@@ -659,17 +628,13 @@ namespace bertini{
 
 				if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
-					#ifdef TONS_OF_SCREEN_OUTPUT
-					std::cout << "Preditor, higher precision necessary" << std::endl;
-					#endif
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Preditor, higher precision necessary";
 
 					SafetyError<ComplexType, RealType>();
 					return predictor_code;
 				}
 
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "predicted_space = " << predicted_space << std::endl;
-				#endif
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "predicted_space = " << predicted_space;
 
 				Vec<ComplexType>& tentative_next_space = std::get<Vec<ComplexType> >(tentative_space_); // this will be populated in the Correct step
 
@@ -681,18 +646,14 @@ namespace bertini{
 
 				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
 				{
-					#ifdef TONS_OF_SCREEN_OUTPUT
-					std::cout << "corrector, matrix solve failure or failure to converge" << std::endl;
-					#endif
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, matrix solve failure or failure to converge";
 
 					ConvergenceError();
 					return corrector_code;
 				}
 				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
 				{
-					#ifdef TONS_OF_SCREEN_OUTPUT
-					std::cout << "corrector, higher precision necessary" << std::endl;
-					#endif
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, higher precision necessary";
 
 					SafetyError<ComplexType, RealType>();
 					return corrector_code;
@@ -902,11 +863,9 @@ namespace bertini{
 			template <typename ComplexType, typename RealType>
 			void StepSuccess()
 			{
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "StepSuccess" << std::endl;
-				std::cout << "current precision: " << current_precision_ << std::endl;
-				std::cout << "current stepsize: " << current_stepsize_ << std::endl;
-				#endif
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "StepSuccess";
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "current precision: " << current_precision_;
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "current stepsize: " << current_stepsize_;
 
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
@@ -921,9 +880,7 @@ namespace bertini{
 				unsigned digits_C(round( amp::CriterionCRHS(norm_J_inverse, norm_of_current_solution, RealType(tracking_tolerance_), AMP_config_))); 
 				// hopefully this number is smaller than the current precision, allowing us to reduce precision
 
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "criterion_B_rhs: " << criterion_B_rhs << " digits_C: " << digits_C << std::endl;
-				#endif
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "criterion_B_rhs: " << criterion_B_rhs << " digits_C: " << digits_C;
 
 				mpfr_float maximum_stepsize = current_stepsize_;
 
@@ -959,9 +916,7 @@ namespace bertini{
 					num_consecutive_successful_steps_=0;
 					digits_C = max(digits_C, current_precision_);
 				}
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "maximum_stepsize " << maximum_stepsize << " minimum_stepsize " << minimum_stepsize << std::endl;
-				#endif
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "maximum_stepsize " << maximum_stepsize << " minimum_stepsize " << minimum_stepsize;
 
 				mpfr_float eta_min = -log10(minimum_stepsize);
 				mpfr_float eta_max = -log10(maximum_stepsize);
@@ -983,10 +938,8 @@ namespace bertini{
 						 digits_final_,
 						 predictor_order_);
 
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "new precision: " << next_precision_ << std::endl;
-				std::cout << "new stepsize: " << next_stepsize_ << std::endl;
-				#endif
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "new precision: " << next_precision_;
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "new stepsize: " << next_stepsize_;
 			}
 
 
@@ -1029,9 +982,8 @@ namespace bertini{
 			{
 				if (new_precision==current_precision_) // no op
 					return SuccessCode::Success;
-				#ifdef TONS_OF_SCREEN_OUTPUT
-				std::cout << "changing precision to " << new_precision << std::endl;
-				#endif
+
+				BOOST_LOG_TRIVIAL(severity_level::debug) << "changing precision to " << new_precision;
 
 				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
 
@@ -1234,21 +1186,6 @@ namespace bertini{
 
 					auto checker = [this](bool val) -> bool { return (val==current_precision_); };
 
-					// std::cout << std::get<Vec<mpfr> >(current_space_) << std::endl;
-
-					// std::cout << current_precision_ << " " << mpfr_float::default_precision() << std::endl;
-					// std::cout << tracked_system_.precision() << std::endl;
-					// std::cout << std::get<Vec<mpfr> >(current_space_)(0).precision() << std::endl; 
-					// std::cout << std::get<Vec<mpfr> >(tentative_space_)(0).precision() << std::endl; 
-					// std::cout << std::get<Vec<mpfr> >(temporary_space_)(0).precision() << std::endl; 
-					// std::cout << std::get<mpfr_float>(condition_number_estimate_).precision() << std::endl;
-					// std::cout << std::get<mpfr_float>(error_estimate_).precision() << std::endl;
-					// std::cout << std::get<mpfr_float>(norm_J_).precision() << std::endl; 
-					// std::cout << std::get<mpfr_float>(norm_J_inverse_).precision() << std::endl;
-					// std::cout << std::get<mpfr_float>(size_proportion_).precision() << std::endl;
-
-					// std::cout << checker(0) << std::endl;
-					
 					return tracked_system_.precision() == current_precision_
 							&&
 							std::get<Vec<mpfr> >(current_space_)(0).precision() == current_precision_ &&
