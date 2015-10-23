@@ -18,8 +18,8 @@
 //
 // arithmetic.hpp:  Declares the arithmetic nodes for bertini2.
 
-#ifndef operator_arithmetic_hpp
-#define operator_arithmetic_hpp
+#ifndef BERTINI_OPERATOR_ARITHMETIC_HPP
+#define BERTINI_OPERATOR_ARITHMETIC_HPP
 
 #include <vector>
 #include <string>
@@ -75,17 +75,6 @@ namespace node{
 		}
 		
 		
-		SumOperator& operator+=(const std::shared_ptr<Node> & rhs)
-		{
-			this->AddChild(rhs);
-			return *this;
-		}
-		
-		SumOperator& operator-=(const std::shared_ptr<Node> & rhs)
-		{
-			this->AddChild(rhs,false);
-			return *this;
-		}
 		
 		
 		
@@ -912,7 +901,13 @@ namespace node{
 		lhs.swap(temp);
 		return lhs;
 	}
-	
+
+	inline std::shared_ptr<Node> operator+=(std::shared_ptr<SumOperator> & lhs, const std::shared_ptr<Node> & rhs)
+	{
+		lhs->AddChild(rhs);
+		return lhs;
+	}
+
 	
 	
 	
@@ -995,6 +990,14 @@ namespace node{
 		lhs.swap(temp);
 		return lhs;
 	}
+
+	inline std::shared_ptr<Node> operator-=(std::shared_ptr<SumOperator> & lhs, const std::shared_ptr<Node> & rhs)
+	{
+		lhs->AddChild(rhs, false);
+		return lhs;
+	}
+
+	
 	
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
