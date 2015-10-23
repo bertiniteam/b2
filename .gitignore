@@ -13,8 +13,6 @@ Makefile.in
 /missing
 /stamp-h1
 
-*.sublime-workspace
-
 config.*
 
 libtool
@@ -24,8 +22,6 @@ Makefile
 
 bertini2
 b2_class_test
-b2_classic_compatibility_test
-b2_timing_test
 test_tree_interactive
 
 m4/libtool.m4
@@ -38,10 +34,7 @@ serialization_test*
 
 /config
 
-<<<<<<< HEAD
-=======
 .DS_Store
->>>>>>> upstream/master
 *.dirstamp
 *.deps
 
