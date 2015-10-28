@@ -580,6 +580,22 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 }
 
 
+
+
+BOOST_AUTO_TEST_CASE(precision_of_mpfr_is_16)
+{
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	mpfr_float a("1.23124");
+	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
+BOOST_AUTO_TEST_CASE(precision_of_mpfr_complex_is_16)
+{
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::complex a("1.23124","-0.6789124678912394");
+	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

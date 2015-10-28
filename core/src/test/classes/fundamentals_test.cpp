@@ -28,7 +28,7 @@
 #include <iostream>
 
 #include "limbo.hpp"
-
+#include "num_traits.hpp"
 
 
 using mpfr = boost::multiprecision::mpfr_float;
@@ -141,6 +141,19 @@ BOOST_AUTO_TEST_CASE(index_and_subscript_generation_out_of_range)
 	BOOST_CHECK_THROW(bertini::IndexToSubscript(120ul,dimensions),std::out_of_range);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(precision_of_double_is_16)
+{
+	double a(1.23124);
+	BOOST_CHECK_EQUAL(bertini::Precision(a), 16);
+}
+
+BOOST_AUTO_TEST_CASE(precision_of_complex_double_is_16)
+{
+	std::complex<double> a(1.23124, -0.12345679);
+	BOOST_CHECK_EQUAL(bertini::Precision(a), 16);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()
