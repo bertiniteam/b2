@@ -45,13 +45,11 @@
 namespace bertini{
 
 	typedef boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off> mpfr_float;
+	
 }
-
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
 namespace boost { namespace serialization {
-	
-	
 	/**
 	 Save a mpfr_float type to a boost archive.
 	 */
@@ -180,9 +178,18 @@ namespace Eigen {
 
 namespace bertini {
 
+	/** 
+	\brief Get the precision of a number.
+
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline
+	unsigned Precision(mpfr_float const& num)
+	{
+		return num.precision();
+	}
 	
 	
-	using mpfr_float = mpfr_float;
 	
 	template <> struct NumTraits<mpfr_float> 
 	{

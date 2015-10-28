@@ -1068,6 +1068,18 @@ namespace bertini {
 	
 	
 	
+	/** 
+	\brief Get the precision of a number.
+
+	For bertini::complex, this calls the precision member method for bertini::complex.
+	*/
+	inline
+	unsigned Precision(bertini::complex const& num)
+	{
+		return num.precision();
+	}
+
+
 	
 	template <> struct NumTraits<bertini::complex> 
 	{
