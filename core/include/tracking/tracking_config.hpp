@@ -238,9 +238,17 @@ namespace bertini
 			{
 				mpfr_float coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
 				mpfr_float degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
-				mpfr_float epsilon;  ///< Bound on \f$\epsilon\f$ (an error bound).  Used for AMP criteria A, B.
+
+				mpfr_float epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite{AMP1,AMP2}, and is used for AMP criteria A and B.  See top of page 13 of \cite{AMP1}.  A pessimistic bound is 2^n.
+				// rename to linear_solve_error_bound.
+
 				mpfr_float Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
+				// \f$\Phi\f$ is error in Jacobian evaluation divided by the unit roundoff error, \f$10^{-P}\f$
+				// rename to jacobian_eval_error_bound
+
 				mpfr_float Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
+				// Error in function evaluation, divided by the precision-dependent unit roundoff error.
+				// rename to function_eval_error_bound
 
 				int safety_digits_1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
 				int safety_digits_2; ///< User-chosen setting for the number of safety digits used during Criterion C.

@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(tracker_track_quadratic)
 
 
 
-BOOST_AUTO_TEST_CASE(tracker_track_sextic)
+BOOST_AUTO_TEST_CASE(tracker_track_decic)
 {
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;

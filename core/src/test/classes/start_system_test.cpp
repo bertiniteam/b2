@@ -308,8 +308,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 	bertini::System sys;
 	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
 
-	VariableGroup vars;
-	vars.push_back(x); vars.push_back(y); vars.push_back(z);
+	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
 	sys.AddFunction(y+x*y + 0.5);

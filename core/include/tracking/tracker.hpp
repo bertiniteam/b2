@@ -600,7 +600,7 @@ namespace bertini{
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "TrackerIteration " << NumTotalStepsTaken() << "current_precision: " << current_precision_;
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "TrackerIteration " << NumTotalStepsTaken() << "\ncurrent_precision: " << current_precision_;
 
 
 				#ifndef BERTINI_DISABLE_ASSERTS
@@ -643,6 +643,8 @@ namespace bertini{
 				SuccessCode corrector_code = Correct<ComplexType, RealType>(tentative_next_space,
 													 predicted_space,
 													 tentative_next_time);
+
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "condition number: " << std::get<mpfr_float>(condition_number_estimate_);
 
 				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
 				{
