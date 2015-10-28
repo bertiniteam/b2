@@ -48,7 +48,19 @@ namespace boost { namespace serialization {
 	
 	using mpfr_float = boost::multiprecision::mpfr_float;
 	
-	
+
+	/** 
+	\brief Get the precision of a number.
+
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline
+	unsigned Precision(mpfr_float const& num)
+	{
+		return num.precision();
+	}
+
+
 	/**
 	 Save a mpfr_float type to a boost archive.
 	 */

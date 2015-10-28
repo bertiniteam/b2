@@ -55,7 +55,27 @@ namespace bertini
 		}
 	};
 
-	
+	/**
+	\brief Get the precision of a number.
+
+	For doubles, this is trivially 16.
+	*/
+	inline
+	unsigned Precision(double num)
+	{
+		return 16;
+	}
+
+	/**
+	\brief Get the precision of a number.
+
+	For complex doubles, this is trivially 16.
+	*/
+	inline
+	unsigned Precision(std::complex<double> num)
+	{
+		return 16;
+	}
 }// re: namespace bertini
 
 
