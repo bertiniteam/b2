@@ -15,8 +15,8 @@ using Var = std::shared_ptr<bertini::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-using Vec = bertini::Vec;
-using Mat = bertini::Mat;
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
 
 
 template<typename T>
