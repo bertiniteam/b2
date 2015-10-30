@@ -292,6 +292,317 @@ BOOST_AUTO_TEST_CASE(tracker_track_square_root)
 
 
 
+
+/*
+1.  Goal:  Handle a singular start point? 
+Expected Behavior:  Doesn't start tracking.
+System:  
+  f = x^2 + (1-t)*x;
+  g = y^2 + (1-t)*y;
+Start t:   1
+Start point:  (0,0)
+End t:   0
+End point:  N/A
+*/
+BOOST_AUTO_TEST_CASE(tracker_doesnt_start_from_singular_start_point)
+{
+	mpfr_float::default_precision(30);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(pow(x,2) + (1-t)*x);
+	sys.AddFunction(pow(y,2) + (1-t)*y);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences,
+					AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("0");
+	
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	SuccessCode tracking_success;
+
+
+	start_point << mpfr("0"), mpfr("0");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::SingularStartPoint);
+	BOOST_CHECK_EQUAL(end_point.size(),0);
+}
+
+
+
+/*
+2.  Goal:  Make sure we can handle a simple, mixed (x,y in both polynomials), nonhomogeneous system.
+Expected Behavior:  Success.
+System:
+  f = x^2 + (1-t)*x - 1;
+ g = y^2 + (1-t)*x*y - 2;
+Start t:  1
+Start point:  (1, 1.414)
+End t:  0
+End point:  (6.180339887498949e-01, 1.138564265110173e+00)
+(Using Bertini default tracking tolerances.)
+*/
+BOOST_AUTO_TEST_CASE(simple_nonhomogeneous_system_trackable_initialprecision16)
+{
+	mpfr_float::default_precision(16);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(pow(x,2) + (1-t)*x - 1);
+	sys.AddFunction(pow(y,2) + (1-t)*x*y - 2);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences,
+					AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("0");
+	
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	SuccessCode tracking_success;
+
+
+	start_point << mpfr("1"), mpfr("1.414");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(),2);
+	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
+	BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(simple_nonhomogeneous_system_trackable_initialprecision30)
+{
+	mpfr_float::default_precision(30);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(pow(x,2) + (1-t)*x - 1);
+	sys.AddFunction(pow(y,2) + (1-t)*x*y - 2);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences,
+					AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("0");
+	
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	SuccessCode tracking_success;
+
+
+	start_point << mpfr("1"), mpfr("1.414");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(),2);
+	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
+	BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(simple_nonhomogeneous_system_trackable_initialprecision100)
+{
+	mpfr_float::default_precision(100);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(pow(x,2) + (1-t)*x - 1);
+	sys.AddFunction(pow(y,2) + (1-t)*x*y - 2);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences,
+					AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("0");
+	
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	SuccessCode tracking_success;
+
+
+	start_point << mpfr("1"), mpfr("1.414");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(),2);
+	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
+	BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
+}
+
+
+
+
+
+
+
+/*
+5.  Goal:  Fail when running into a singularity.
+Expected Behavior:  Path failure near t=0.5.
+Note:  There's a parameter in this system, which depends on the path variable.  This implicitly checks that functionality.
+System:
+  s= -1*(1-t) + 1*t;
+ f = x^2-s;
+ g = y^2-s;
+Start t:  1
+Start point:  (1,1)
+End t:  0
+End point:  N/A (Path should fail at t=0.5)
+*/
+BOOST_AUTO_TEST_CASE(tracker_fails_with_singularity_on_path)
+{
+	mpfr_float::default_precision(30);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	auto s = -1*(1-t) + 1*t;
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(pow(x,2) - s);
+	sys.AddFunction(pow(y,2) - s);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences,
+					AMP);
+
+	mpfr t_start("1");
+	mpfr t_end("0");
+	
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	start_point << mpfr("1"), mpfr("1");
+	SuccessCode tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success!=SuccessCode::Success);
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
