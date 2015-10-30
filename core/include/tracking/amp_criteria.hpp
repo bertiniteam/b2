@@ -25,6 +25,12 @@
 #ifndef BERTINI_AMP_CRITERIA_HPP
 #define BERTINI_AMP_CRITERIA_HPP
 
+/**
+\file amp_criteria.hpp
+
+\brief Provides the Adaptive Multiple Precision criteria functions.
+
+*/
 #include <boost/multiprecision/mpfr.hpp>
 
 #include "tracking/tracking_config.hpp"
@@ -39,13 +45,17 @@ namespace bertini{
 
 
 			/**
-			Check AMP Criterion A, from \cite{amp1, amp2}.
+			\brief Check AMP Criterion A.
+
+			From \cite AMP1, \cite AMP2.
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param AMP_config The settings for adaptive multiple precision.
+			
+			\tparam RealType The real number type
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
@@ -60,7 +70,13 @@ namespace bertini{
 
 
 			/**
-			\brief Compute the expression \f$D\f$ from the AMP papers \cite{AMP1,AMP2}.
+			\brief Compute the expression \f$D\f$ from the AMP papers \cite AMP1, \cite AMP2.
+
+			\tparam RealType The real number type
+
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param AMP_config The settings for adaptive multiple precision.
 			*/
 			template <typename RealType>
 			RealType D(RealType const& norm_J, RealType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -69,7 +85,9 @@ namespace bertini{
 			}
 
 			/**
-			Evaluate the right hand side of the inequality of Criterion B, from \cite{amp1, amp2}.
+			\brief Evaluate the right hand side of the inequality of Criterion B
+
+			From \cite AMP1, \cite AMP2.
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
@@ -77,6 +95,8 @@ namespace bertini{
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance (for now)
 			\param latest_newton_residual The norm of the length of the most recent Newton step.
 			\param AMP_config The settings for adaptive multiple precision.
+			
+			\tparam RealType the real number type.
 
 			\return The value of the right hand side of Criterion B
 			*/
@@ -89,8 +109,9 @@ namespace bertini{
 
 
 			/**
-			Check AMP Criterion B, from \cite{amp1, amp2}.
-
+			\brief Check AMP Criterion B
+			
+			This is Criterion B from \cite AMP1, \cite AMP2.
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
@@ -99,6 +120,8 @@ namespace bertini{
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance (for now)
 			\param latest_newton_residual The norm of the length of the most recent Newton step.
 			\param AMP_config The settings for adaptive multiple precision.
+			
+			\tparam RealType the real number type.
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
@@ -113,13 +136,17 @@ namespace bertini{
 
 
 			/**
-			Evaluate the right hand side of Criterion C, from \cite{amp1, amp2}.
+			\brief Evaluate the right hand side of Criterion C
+
+			This is Criterion C, from \cite AMP1, \cite AMP2.
 
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
 			\param norm_z The norm of the current space point.
 			\param AMP_config The settings for adaptive multiple precision.
+			
+			\tparam RealType the real number type.
 
 			\return The value of the right hand side of the inequality from Criterion C.
 			*/
@@ -132,12 +159,14 @@ namespace bertini{
 
 
 			/**
-			Evaluate the right hand side of Criterion C, from \cite{amp1, amp2}.
+			\brief Evaluate the right hand side of Criterion C
+
+			This is Criterion C from \cite AMP1, \cite AMP2.
 
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
-			\param z The current space point?  TODO: check this. 
+			\param z The current space point. 
 			\param AMP_config The settings for adaptive multiple precision.
 
 			\return The value of the right hand side of the inequality from Criterion C.
@@ -153,14 +182,16 @@ namespace bertini{
 
 
 			/**
-			Check AMP Criterion C, from \cite{amp1, amp2}.
+			\brief Check AMP Criterion C
+
+			This is Criterion C from \cite AMP1.
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
-			\param z The current space point?  TODO: check this. 
+			\param z The current space point. 
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
 			template<typename ComplexType ,typename RealType>

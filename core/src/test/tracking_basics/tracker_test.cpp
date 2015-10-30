@@ -50,11 +50,11 @@ extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
 
-BOOST_AUTO_TEST_SUITE(tracker_basics)
+BOOST_AUTO_TEST_SUITE(AMP_tracker_basics)
 
 
 
-BOOST_AUTO_TEST_CASE(tracker_track_linear)
+BOOST_AUTO_TEST_CASE(AMP_tracker_track_linear)
 {
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(tracker_track_linear)
 
 
 
-BOOST_AUTO_TEST_CASE(tracker_track_quadratic)
+BOOST_AUTO_TEST_CASE(AMP_tracker_track_quadratic)
 {
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(tracker_track_quadratic)
 
 
 
-BOOST_AUTO_TEST_CASE(tracker_track_decic)
+BOOST_AUTO_TEST_CASE(AMP_tracker_track_decic)
 {
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(tracker_track_decic)
 
 
 
-BOOST_AUTO_TEST_CASE(tracker_track_square_root)
+BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 {
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
@@ -304,7 +304,7 @@ Start point:  (0,0)
 End t:   0
 End point:  N/A
 */
-BOOST_AUTO_TEST_CASE(tracker_doesnt_start_from_singular_start_point)
+BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 {
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
@@ -369,7 +369,7 @@ End t:  0
 End point:  (6.180339887498949e-01, 1.138564265110173e+00)
 (Using Bertini default tracking tolerances.)
 */
-BOOST_AUTO_TEST_CASE(simple_nonhomogeneous_system_trackable_initialprecision16)
+BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision16)
 {
 	mpfr_float::default_precision(16);
 	using namespace bertini::tracking;
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(simple_nonhomogeneous_system_trackable_initialprecision16)
 
 
 
-BOOST_AUTO_TEST_CASE(simple_nonhomogeneous_system_trackable_initialprecision30)
+BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision30)
 {
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(simple_nonhomogeneous_system_trackable_initialprecision30)
 
 
 
-BOOST_AUTO_TEST_CASE(simple_nonhomogeneous_system_trackable_initialprecision100)
+BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision100)
 {
 	mpfr_float::default_precision(100);
 	using namespace bertini::tracking;
@@ -552,7 +552,7 @@ Start point:  (1,1)
 End t:  0
 End point:  N/A (Path should fail at t=0.5)
 */
-BOOST_AUTO_TEST_CASE(tracker_fails_with_singularity_on_path)
+BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 {
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;

@@ -95,7 +95,7 @@ namespace bertini{
 
 
 		/**
-		An overload of Predict which returns (by reference) error estimate, and estimates of the norm of \f$J\f$ and \f$J^{-1}\f$ from AMP2 paper \cite{AMP2}.
+		An overload of Predict which returns (by reference) error estimate, and estimates of the norm of \f$J\f$ and \f$J^{-1}\f$ from AMP2 paper \cite AMP2.
 
 		\see Predict
 		*/
@@ -151,7 +151,7 @@ namespace bertini{
 
 
 		/**
-		An overload of Predict which returns (by reference) error estimate, and estimates of the norm of \f$J\f$ and \f$J^{-1}\f$, and the size proportion \f$a\f$ from AMP2 paper \cite{AMP2}.
+		An overload of Predict which returns (by reference) error estimate, and estimates of the norm of \f$J\f$ and \f$J^{-1}\f$, and the size proportion \f$a\f$ from AMP2 paper \cite AMP2.
 
 		\see Predict
 		*/

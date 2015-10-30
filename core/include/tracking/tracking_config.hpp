@@ -25,6 +25,11 @@
 #ifndef BERTINI_TRACKING_CONFIG_HPP
 #define BERTINI_TRACKING_CONFIG_HPP
 
+/**
+\file tracking_config.hpp
+
+\brief Configs and settings for tracking
+*/
 
 #include <eigen3/Eigen/Dense>
 #include "eigen_extensions.hpp"
@@ -65,7 +70,9 @@ namespace bertini
 			MaxPrecisionAllowed = 1000
 		};
 
-
+		/** 
+		\namespace config
+		*/
 		namespace config{
 
 			enum class Predictor
@@ -214,7 +221,7 @@ namespace bertini
 			/**
 			Holds the program parameters with respect to Adaptive Multiple Precision.
 			
-			These criteria are developed in \cite{amp1, amp2}.
+			These criteria are developed in \cite AMP1, \cite AMP2.
 
 			Let:
 			\f$J\f$ be the Jacobian matrix of the square system being solved.  
@@ -240,7 +247,7 @@ namespace bertini
 				mpfr_float coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
 				mpfr_float degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
 
-				mpfr_float epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite{AMP1,AMP2}, and is used for AMP criteria A and B.  See top of page 13 of \cite{AMP1}.  A pessimistic bound is 2^n.
+				mpfr_float epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite AMP1, \cite AMP2, and is used for AMP criteria A and B.  See top of page 13 of \cite AMP1.  A pessimistic bound is \f$2^n\f$.
 				// rename to linear_solve_error_bound.
 
 				mpfr_float Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
@@ -262,9 +269,9 @@ namespace bertini
 				/**
 				 \brief Set epsilon, degree bound, and coefficient bound from system.
 				 
-				 -Epsilon is set as the square of the number of variables.
-				 -Bound on degree is set from a call to System class.  Let this be \f$D\f$  \see System::DegreeBound().
-				 -Bound on absolute values of coeffs is set from a call to System class.  Let this be \f$B\f$.  \see System::CoefficientBound().
+				 * Epsilon is set as the square of the number of variables.
+				 * Bound on degree is set from a call to System class.  Let this be \f$D\f$  \see System::DegreeBound().
+				 * Bound on absolute values of coeffs is set from a call to System class.  Let this be \f$B\f$.  \see System::CoefficientBound().
 				*/
 				void SetBoundsAndEpsilonFrom(System const& sys)
 				{
@@ -277,8 +284,8 @@ namespace bertini
 				/**
 				 Sets values epsilon, Phi, Psi, degree_bound, and coefficient_bound from input system.
 				
-				 	-Phi becomes \f$D*(D-1)*B\f$.
-				 	-Psi is set as \f$D*B\f$.
+				 * Phi becomes \f$ D*(D-1)*B \f$.
+				 * Psi is set as \f$ D*B \f$.
 				*/
 				void SetPhiPsiFromBounds()
 				{
@@ -307,6 +314,8 @@ namespace bertini
 			
 			/**
 			\brief Construct a ready-to-go set of AMP settings from a system.
+			
+			
 
 			\see AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom
 			\see AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds

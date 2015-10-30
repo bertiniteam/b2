@@ -80,7 +80,7 @@ namespace bertini{
 
 
 		/**
-		\brief The convergence_error function from \cite{AMP2}.  
+		\brief The convergence_error function from \cite AMP2.  
 
 		Decrease stepsize, then increase precision until the new stepsize is greater than a precision-dependent minimum stepsize.  
 	
@@ -111,8 +111,10 @@ namespace bertini{
 
 
 		/**
-		 \brief Compute the cost function from \cite{amp2}, \f$C(P)\f$.  As currently implemented, this is 
-		 \f$ 10.35 + 0.13 P \f$ where P is the precision.
+		 \brief Compute the cost function for arithmetic versus precision.
+
+		 From \cite AMP2, \f$C(P)\f$.  As currently implemented, this is 
+		 \f$ 10.35 + 0.13 P \f$, where P is the precision.
 		
 		 This function tells you the relative cost of arithmetic at a given precision. 
 
@@ -157,7 +159,7 @@ namespace bertini{
 		 \param[in] old_stepsize The previously used stepsize.
 		 \param[in] max_precision The maximum considered precision.
 		 \param[in] max_stepsize The maximum permitted stepsize.  
-		 \param[in] criterion_B_rhs The right hand side of CriterionB from \cite{AMP1,AMP2}
+		 \param[in] criterion_B_rhs The right hand side of CriterionB from \cite AMP1, \cite AMP2
 		 \param num_newton_iterations The number of allowed Newton corrector iterations.
 		 \param AMP_config The configuration of AMP settings for tracking.
 		 \param predictor_order The order of the predictor being used.  This is the order itself, not the order of the error estimate.
@@ -269,7 +271,7 @@ namespace bertini{
 		\param current_stepsize The current stepsize being used for tracking.
 		\param max_stepsize The maximum allowable stepsize.
 		\param digits_tracking_tolerance The number of digits required by the tracking tolerance.
-		\param criterion_B_rhs The right hand side of CriterionB from \cite{AMP1,AMP2}.
+		\param criterion_B_rhs The right hand side of CriterionB from \cite AMP1, \cite AMP2.
 		\param digits_C The number of digits required by CriterionC, same papers.
 		\param current_time The current time in tracking.
 		\param norm_J An estimate on the norm of the Jacobian.
@@ -556,6 +558,13 @@ namespace bertini{
 		\endcode
 		
 		If this documentation is insufficient, please contact the authors with suggestions, or get involved!  Pull requests welcomed.
+		
+		## Testing
+
+		* Test suite driving this class: AMP_tracker_basics.
+		* File: test/tracking_basics/tracker_test.cpp
+		* Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
+
 		*/
 		class AMPTracker : Tracker
 		{
