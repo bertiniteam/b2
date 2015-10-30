@@ -474,16 +474,41 @@ namespace bertini{
 		\class AMPTracker
 
 		\brief Functor-like class for tracking paths on a system
-	
-		##Example Usage
 		
-		Create an instance of this class, feeding it the system to be tracked on, and some configuration.  Then, this this tracker to track paths of the system.
+		
+		## Explanation
+		
+		The bertini::AMPTracker class enables tracking using Adaptive Multiple Precision on an arbitrary square homotopy.  
 
+		The intended usage is to:
+
+		1. Create a system, and instantiate some settings.
+		2. Create an AMPTracker, associating it to the system you are going to solve or track on.
+		3. Run AMPTracker::Setup, getting the settings in line for tracking.
+		4. Repeatedly, or as needed, call the AMPTracker::TrackPath function, feeding it a start point, and start and end times.  The initial precision is that of the start point.  
+
+		Working precision and stepsize are adjusted automatically to get around nearby singularities to the path.  If the endpoint is singular, this may very well fail, as prediction and correction get more and more difficult with proximity to singularities.  
+
+		The TrackPath method is intended to allow the user to track to nonsingular endpoints, or to an endgame boundary, from which an appropriate endgame will be called.
+		
+		## Some notes
+
+		The AMPTracker has internal state.  That is, it stores the current state of the path being tracked as data members.  After tracking has concluded, these statistics may be extracted.  If you need additional accessors for these data, contact the software authors.
+
+		The class additionally uses the Boost.Log library for logging.  At time of this writing, the trivial logger is being used.  As development continues we will move toward using a more sophisticated logging model.  Suggestions are welcome.
+
+		## Example Usage
+		
+		Below we demonstrate a basic usage of the AMPTracker class to track a single path.  
+
+		The pattern is as described above: create an instance of the class, feeding it the system to be tracked, and some configuration.  Then, use the tracker to track paths of the system.
 
 		\code{.cpp}
-		mpfr_float::default_precision(30);
+		mpfr_float::default_precision(30); // set initial precision.  This is not strictly necessary.
+
 		using namespace bertini::tracking;
 
+		// 1. Create the system
 		Var x = std::make_shared<Variable>("x");
 		Var y = std::make_shared<Variable>("y");
 		Var t = std::make_shared<Variable>("t");
@@ -498,36 +523,39 @@ namespace bertini{
 		sys.AddVariableGroup(v);
 
 		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
-
+		
+		//  2. Create the Tracker object, associating the system to it.
 		bertini::tracking::AMPTracker tracker(sys);
-
 
 		config::Stepping stepping_preferences;
 		config::Newton newton_preferences;
 
-
+		// 3. Get the settings into the tracker 
 		tracker.Setup(config::Predictor::Euler,
 		              	mpfr_float("1e-5"),
 						mpfr_float("1e5"),
 						stepping_preferences,
 						newton_preferences,
 						AMP);
-
+	
+		//  4. Create a start and end time.  These are complex numbers.
 		mpfr t_start("1.0");
 		mpfr t_end("0");
 		
+		//  5. Create a start point, and container for the end point.
 		Vec<mpfr> start_point(2);
+		start_point << mpfr("1"), mpfr("1.414");  // set the value of the start point.  This is Eigen syntax.
+
 		Vec<mpfr> end_point;
 
-		SuccessCode tracking_success;
-
-
-		start_point << mpfr("1"), mpfr("1.414");
-		tracking_success = tracker.TrackPath(end_point,
+		// 6. actually do the tracking
+		SuccessCode tracking_success = tracker.TrackPath(end_point,
 		                  t_start, t_end, start_point);
-
+		
+		// 7. and then onto whatever processing you are doing to the computed point.
 		\endcode
-
+		
+		If this documentation is insufficient, please contact the authors with suggestions, or get involved!  Pull requests welcomed.
 		*/
 		class AMPTracker : Tracker
 		{
