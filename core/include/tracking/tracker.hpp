@@ -22,6 +22,11 @@
 //  ACMS
 //  Fall 2015
 
+/**
+\file tracker.hpp
+
+\brief Contains the base Tracker, and AMPTracker types.
+*/
 
 #ifndef BERTINI_TRACKER_LOOP_HPP
 #define BERTINI_TRACKER_LOOP_HPP
@@ -457,6 +462,8 @@ namespace bertini{
 		\class Tracker
 
 		\brief Base tracker class for trackers offered in Bertini2.
+
+		\see AMPTracker
 		*/
 		class Tracker
 		{
@@ -467,8 +474,60 @@ namespace bertini{
 		\class AMPTracker
 
 		\brief Functor-like class for tracking paths on a system
-
+	
+		##Example Usage
+		
 		Create an instance of this class, feeding it the system to be tracked on, and some configuration.  Then, this this tracker to track paths of the system.
+
+
+		\code{.cpp}
+		mpfr_float::default_precision(30);
+		using namespace bertini::tracking;
+
+		Var x = std::make_shared<Variable>("x");
+		Var y = std::make_shared<Variable>("y");
+		Var t = std::make_shared<Variable>("t");
+
+		System sys;
+
+		VariableGroup v{x,y};
+
+		sys.AddFunction(pow(x,2) + (1-t)*x - 1);
+		sys.AddFunction(pow(y,2) + (1-t)*x*y - 2);
+		sys.AddPathVariable(t);
+		sys.AddVariableGroup(v);
+
+		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+		bertini::tracking::AMPTracker tracker(sys);
+
+
+		config::Stepping stepping_preferences;
+		config::Newton newton_preferences;
+
+
+		tracker.Setup(config::Predictor::Euler,
+		              	mpfr_float("1e-5"),
+						mpfr_float("1e5"),
+						stepping_preferences,
+						newton_preferences,
+						AMP);
+
+		mpfr t_start("1.0");
+		mpfr t_end("0");
+		
+		Vec<mpfr> start_point(2);
+		Vec<mpfr> end_point;
+
+		SuccessCode tracking_success;
+
+
+		start_point << mpfr("1"), mpfr("1.414");
+		tracking_success = tracker.TrackPath(end_point,
+		                  t_start, t_end, start_point);
+
+		\endcode
+
 		*/
 		class AMPTracker : Tracker
 		{
