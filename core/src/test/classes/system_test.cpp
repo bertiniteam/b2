@@ -39,6 +39,11 @@ using Var = std::shared_ptr<bertini::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
+extern double threshold_clearance_d;
+extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
+
+
 template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
 
@@ -449,6 +454,226 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 
 
 }
+
+
+
+
+BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
+{
+	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
+	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
+	auto f1 = (1-t)*x + t*(1-x);
+	auto f2 = x-t;
+
+	bertini::System S;
+	S.AddUngroupedVariable(x);
+	S.AddPathVariable(t);
+	S.AddFunction(f1);
+	S.AddFunction(f2);
+
+	Vec<dbl> v(1);
+	v << 1.0;
+	dbl time(0.5,0.2);
+	auto dS_dt = S.TimeDerivative(v,time);
+
+	BOOST_CHECK( abs(dS_dt(0) - dbl(-1) ) < threshold_clearance_d);
+	BOOST_CHECK( abs(dS_dt(1) - dbl(-1) ) < threshold_clearance_d);
+
+
+}
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	VariableGroup vars{x, y};
+	sys.AddVariableGroup(vars);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(3);
+	v << dbl(2,3), dbl(3,4), dbl(4,5);
+
+	auto d = sys.DehomogenizePoint(v);
+
+	BOOST_CHECK_EQUAL(d.size(),2);
+
+	BOOST_CHECK(abs(d(0) - v(1)/v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(2)/v(0)) < threshold_clearance_d);
+}
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
+	VariableGroup vars{x, y};
+	VariableGroup vars2{z, w};
+	sys.AddVariableGroup(vars);
+	sys.AddVariableGroup(vars2);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(6);
+	v << dbl(2,3), dbl(3,4), dbl(4,5), 
+		 dbl(5,6), dbl(6,7), dbl(7,8);
+
+	auto d = sys.DehomogenizePoint(v);
+
+
+	BOOST_CHECK_EQUAL(d.size(),4);
+
+	BOOST_CHECK(abs(d(0) - v(1)/v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(2)/v(0)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(2) - v(4)/v(3)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(3) - v(5)/v(3)) < threshold_clearance_d);
+}
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
+	Var h1 = std::make_shared<bertini::Variable>("h1"), h2 = std::make_shared<bertini::Variable>("h2");
+	VariableGroup vars{x, y};
+	VariableGroup vars2{h1,h2};
+	VariableGroup vars3{z, w};
+	sys.AddVariableGroup(vars);
+	sys.AddHomVariableGroup(vars2);
+	sys.AddVariableGroup(vars3);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(8);
+	v << dbl(2,3), dbl(3,4), dbl(4,5), 
+		 dbl(10,11), dbl(11,12),
+		 dbl(5,6), dbl(6,7), dbl(7,8);
+
+	auto d = sys.DehomogenizePoint(v);
+
+
+	BOOST_CHECK_EQUAL(d.size(),6);
+
+	BOOST_CHECK(abs(d(0) - v(1)/v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(2)/v(0)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(2) - v(3)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(3) - v(4)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(4) - v(6)/v(5)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(5) - v(7)/v(5)) < threshold_clearance_d);
+}
+
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	VariableGroup vars{x, y};
+	sys.AddHomVariableGroup(vars);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(2);
+	v << dbl(2,3), dbl(3,4);
+
+	auto d = sys.DehomogenizePoint(v);
+
+	BOOST_CHECK_EQUAL(d.size(),2);
+
+	BOOST_CHECK(abs(d(0) - v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(1)) < threshold_clearance_d);
+}
+
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
+	VariableGroup vars{x, y};
+
+	sys.AddHomVariableGroup(vars);
+	sys.AddUngroupedVariable(z);
+	sys.AddUngroupedVariable(w);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(4);
+	v << dbl(2,3), dbl(3,4), dbl(4,5), dbl(5,6);
+
+	auto d = sys.DehomogenizePoint(v);
+
+	BOOST_CHECK_EQUAL(d.size(),4);
+
+	BOOST_CHECK(abs(d(0) - v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(1)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(2) - v(2)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(3) - v(3)) < threshold_clearance_d);
+}
+
+BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_another_aff_grp_hom_grp)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
+	Var h1 = std::make_shared<bertini::Variable>("h1"), h2 = std::make_shared<bertini::Variable>("h2");
+	Var u1 = std::make_shared<bertini::Variable>("u1"), u2 = std::make_shared<bertini::Variable>("u2");
+
+	VariableGroup vars{x,y};
+	VariableGroup vars2{z,w};
+
+	VariableGroup vars3{h1,h2};
+
+	sys.AddVariableGroup(vars);
+	sys.AddUngroupedVariable(u1);
+	sys.AddUngroupedVariable(u2);
+	sys.AddVariableGroup(vars2);
+	sys.AddHomVariableGroup(vars3);
+
+	sys.Homogenize();
+
+	Vec<dbl> v(10);
+	v << dbl(2,3), dbl(3,4), dbl(4,5), 
+		 dbl(10,11), dbl(11,12),
+		 dbl(5,6), dbl(6,7), dbl(7,8),
+		 dbl(12,13), dbl(13,14);
+
+	auto d = sys.DehomogenizePoint(v);
+
+	BOOST_CHECK_EQUAL(d.size(),8);
+
+	BOOST_CHECK(abs(d(0) - v(1)/v(0)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(1) - v(2)/v(0)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(2) - v(3)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(3) - v(4)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(4) - v(6)/v(5)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(5) - v(7)/v(5)) < threshold_clearance_d);
+
+	BOOST_CHECK(abs(d(6) - v(8)) < threshold_clearance_d);
+	BOOST_CHECK(abs(d(7) - v(9)) < threshold_clearance_d);
+}
+
+
+BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound)
+{
+	BOOST_CHECK_EQUAL("testing for correct estimate of coefficient bound implemented","true");
+}
+
+BOOST_AUTO_TEST_CASE(system_estimate_degree_bound)
+{
+	BOOST_CHECK_EQUAL("testing for correct estimate of degree bound implemented","true");
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

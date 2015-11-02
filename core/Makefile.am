@@ -41,15 +41,20 @@ SUFFIXES = .cpp .hpp
 
 # include this one first, as it defines some useful groups of files which are used later
 # in other files.
+
 include src/bertini/Makemodule.am
+
+include src/classic/Makemodule.am
 
 include src/test/classes/Makemodule.am
 
 include src/test/interactive_testing/Makemodule.am
 
+include src/test/timing/Makemodule.am
 
+include src/test/classic/Makemodule.am
 
-
+include src/test/tracking_basics/Makemodule.am
 
 
 

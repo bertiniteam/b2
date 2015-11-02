@@ -50,16 +50,29 @@ namespace bertini
 
 	size_t System::NumVariables() const
 	{
-		size_t counter = 0;
+		size_t num_vars = 0;
 
-		counter+=homogenizing_variables_.size();
+		num_vars+=homogenizing_variables_.size();
 		for (auto iter : variable_groups_)
-			counter+= iter.size();
+			num_vars+= iter.size();
 		for (auto iter : hom_variable_groups_)
-			counter+= iter.size();
-		counter+=ungrouped_variables_.size();
+			num_vars+= iter.size();
+		num_vars+=ungrouped_variables_.size();
 
-		return counter;
+		return num_vars;
+	}
+
+	size_t System::NumNaturalVariables() const
+	{
+		size_t num_vars = 0;
+
+		for (auto iter : variable_groups_)
+			num_vars+= iter.size();
+		for (auto iter : hom_variable_groups_)
+			num_vars+= iter.size();
+		num_vars+=ungrouped_variables_.size();
+
+		return num_vars;
 	}
 
 	size_t System::NumHomVariables() const
@@ -158,13 +171,13 @@ namespace bertini
 
 	void System::Differentiate()
 	{
-		jacobian_.resize(NumFunctions());
-		for (int ii = 0; ii < NumFunctions(); ++ii)
-		{
-			jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
+			jacobian_.resize(NumFunctions());
+			for (int ii = 0; ii < NumFunctions(); ++ii)
+			{
+				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
+			}
+			is_differentiated_ = true;
 		}
-		is_differentiated_ = true;
-	}
 
 
 
@@ -305,7 +318,7 @@ namespace bertini
 		}
 		return true;
 	}
-	
+
 
 
 
@@ -327,6 +340,8 @@ namespace bertini
 	{
 		variable_groups_.push_back(v);
 		is_differentiated_ = false;
+		have_ordering_ = false;
+		time_order_of_variable_groups_.push_back( VariableGroupType::Affine);
 	}
 
 
@@ -336,6 +351,8 @@ namespace bertini
 	{
 		hom_variable_groups_.push_back(v);
 		is_differentiated_ = false;
+		have_ordering_ = false;
+		time_order_of_variable_groups_.push_back( VariableGroupType::Homogeneous);
 	}
 
 
@@ -346,6 +363,8 @@ namespace bertini
 	{
 		ungrouped_variables_.push_back(v);
 		is_differentiated_ = false;
+		have_ordering_ = false;
+		time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
 	}
 
 
@@ -355,6 +374,9 @@ namespace bertini
 	{
 		ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
 		is_differentiated_ = false;
+		have_ordering_ = false;
+		for (auto iter : v)
+			time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
 	}
 
 
@@ -481,28 +503,165 @@ namespace bertini
 
 
 
-	VariableGroup System::Variables() const
+
+
+
+
+
+
+
+
+
+	/////////////////
+	//
+	// Variable ordering functions
+	//
+	///////////////////
+
+	VariableGroup System::FIFOVariableOrdering() const
 	{
+		bool have_homvars = NumHomVariables()>0;
+		if (have_homvars && NumHomVariables() != NumVariableGroups())
+
+			throw std::runtime_error("mismatch between number of homogenizing variables, and number of affine variables groups.  unable to form variable vector in FIFO ordering.  you probably need to homogenize the system.");
+
 		
 
-		if (NumHomVariables()!=0 && NumHomVariables() != NumVariableGroups())
-			throw std::runtime_error("mismatch between number of homogenizing variables, and number of variables groups.  unable to form variable vector in standard ordering.");
+		VariableGroup constructed_ordering;
 
-		VariableGroup vars;
+		unsigned affine_group_counter = 0, ungrouped_variable_counter = 0, hom_group_counter = 0;
+		for (auto group_type : time_order_of_variable_groups_)
+		{
+			switch (group_type){
+				case VariableGroupType::Affine:
+				{
+					if (have_homvars)
+						constructed_ordering.push_back(homogenizing_variables_[affine_group_counter]);
 
-		vars.insert(vars.end(),homogenizing_variables_.begin(),homogenizing_variables_.end());
+					constructed_ordering.insert(constructed_ordering.end(), 
+					                variable_groups_[affine_group_counter].begin(), 
+					                variable_groups_[affine_group_counter].end());
+					affine_group_counter++;
+					break;
+				}
+				case VariableGroupType::Homogeneous:
+				{
+					constructed_ordering.insert(constructed_ordering.end(), 
+					                hom_variable_groups_[hom_group_counter].begin(), 
+					                hom_variable_groups_[hom_group_counter].end());
+					hom_group_counter++;
+					break;
+				}
+				case VariableGroupType::Ungrouped:
+				{
+					constructed_ordering.push_back(ungrouped_variables_[ungrouped_variable_counter]);
+					ungrouped_variable_counter++;
+					break;
+				}
+				default:
+				{	
+					throw std::runtime_error("unacceptable VariableGroupType in FIFOVariableOrdering");
+				}
+			}
+		}
+		
+		#ifndef BERTINI_DISABLE_ASSERTS
+		assert(constructed_ordering.size()==NumVariables() && "resulting constructed ordering has differing size from the number of variables in the problem.");
+		#endif
 
-		for (auto iter=variable_groups_.begin(); iter!=variable_groups_.end(); iter++)
-			vars.insert(vars.end(),iter->begin(),iter->end());
-			
+		return constructed_ordering;	
+	}
+
+	VariableGroup System::AffHomUngVariableOrdering() const
+	{
+		bool have_homvars = NumHomVariables()>0;
+
+		if (have_homvars && NumHomVariables() != NumVariableGroups())
+			throw std::runtime_error("mismatch between number of homogenizing variables, and number of affine variables groups.  unable to form variable vector in FIFO ordering.  you probably need to homogenize the system.");
+
+		VariableGroup constructed_ordering;
+
+		for (auto var_group=variable_groups_.begin(); var_group!=variable_groups_.end(); var_group++)
+		{
+			if (have_homvars)
+				constructed_ordering.push_back(*(homogenizing_variables_.begin()+ (var_group-variable_groups_.begin())));
+			constructed_ordering.insert(constructed_ordering.end(),var_group->begin(),var_group->end());
+		}
+
+		for (auto var_group=hom_variable_groups_.begin(); var_group!=hom_variable_groups_.end(); var_group++)
+			constructed_ordering.insert(constructed_ordering.end(),var_group->begin(),var_group->end());
+
+		constructed_ordering.insert(constructed_ordering.end(),ungrouped_variables_.begin(),ungrouped_variables_.end());
+
+		#ifndef BERTINI_DISABLE_ASSERTS
+		assert(constructed_ordering.size()==NumVariables() && "resulting constructed ordering has differing size from the number of variables in the problem.");
+		#endif
+
+	    return constructed_ordering;
+	}
+
+	
+	void System::SetFIFOVariableOrdering()
+	{
+		ordering_ = OrderingChoice::FIFO;
+	}
+
+	void System::SetAffHomUngVariableOrdering()
+	{
+		ordering_ = OrderingChoice::AffHomUng;
+	}
+
+	//private
+	void System::ConstructOrdering() const
+	{
+		switch (ordering_)
+		{
+			case OrderingChoice::AffHomUng:
+			{
+				variable_ordering_ = AffHomUngVariableOrdering();
+				break;
+			}
+			case OrderingChoice::FIFO:
+			{
+				variable_ordering_ = FIFOVariableOrdering();
+				break;
+			}
+			default:
+			{
+				throw std::runtime_error("invalid ordering choice");
+				break;
+			}
+		}
+		have_ordering_ = true;
+	}
 
 
-		for (auto iter=hom_variable_groups_.begin(); iter!=hom_variable_groups_.end(); iter++)
-			vars.insert(vars.end(),iter->begin(),iter->end());
 
-		vars.insert(vars.end(),ungrouped_variables_.begin(),ungrouped_variables_.end());
+	VariableGroup System::Variables() const
+	{
+		if (!have_ordering_){
+			ConstructOrdering();
+		}
 
-		return vars;
+		return variable_ordering_;
+	}
+		
+
+	void System::CopyVariableStructure(System const& other)
+	{
+		this->ClearVariables();
+
+		this->ungrouped_variables_ = other.ungrouped_variables_;
+		this->variable_groups_ = other.variable_groups_;
+		hom_variable_groups_ = other.hom_variable_groups_;
+		homogenizing_variables_ = other.homogenizing_variables_;
+
+		path_variable_ = other.path_variable_;
+		have_path_variable_ = other.have_path_variable_;
+
+		variable_ordering_ = other.variable_ordering_; 
+		have_ordering_ = other.have_ordering_;
+		ordering_ = other.ordering_;
 	}
 
 
@@ -515,28 +674,75 @@ namespace bertini
 
 
 
+	/////////////////
+	//
+	// Dehomogenization functions
+	//
+	///////////////////
+	
+
+
+
+
+
+
+
+
+
+
+			
+
+    //////////////////////
+    //
+    //  Functions involving coefficients of the system
+    //
+    ///////////////////////
+
+    mpfr_float System::CoefficientBound() const
+    {
+    	mpfr_float bound("1000");
+
+
+    	return bound;
+	}
+
+
+
+
+
+
+
+
+
+    /////////////////
+	//
+	// Functions involving the degrees of functions in the systems.
+	//
+	///////////////////
+
+    int System::DegreeBound() const
+    {
+    	auto degs = Degrees(Variables());
+    	return *std::max_element(degs.begin(), degs.end());
+    }
 
 
 	std::vector<int> System::Degrees() const
 	{
-		std::vector<int> deg;
+		std::vector<int> degs;
 		for (auto iter : functions_)
-		{
-			deg.push_back(iter->Degree());
-		}
-		return deg;
+			degs.push_back(iter->Degree());
+		return degs;
 	}
 
 
 	std::vector<int> System::Degrees(VariableGroup const& vars) const
 	{
-		std::vector<int> deg;
+		std::vector<int> degs;
 		for (auto iter : functions_)
-		{
-			deg.push_back(iter->Degree(vars));
+			degs.push_back(iter->Degree(vars));
+		return degs;
 		}
-		return deg;
-	}
 
 
 	void System::ReorderFunctionsByDegreeDecreasing()
@@ -593,6 +799,20 @@ namespace bertini
 
 
 
+
+
+
+
+
+
+
+
+	/////////////////
+	//
+	// Clearing functions
+	//
+	///////////////////
+
 	void System::ClearVariables()
 	{
 		ungrouped_variables_.clear();
@@ -606,19 +826,15 @@ namespace bertini
 
 
 
-	void System::CopyVariableStructure(System const& other)
-	{
-		this->ClearVariables();
 
-		this->ungrouped_variables_ = other.ungrouped_variables_;
-		this->variable_groups_ = other.variable_groups_;
-		hom_variable_groups_ = other.hom_variable_groups_;
-		homogenizing_variables_ = other.homogenizing_variables_;
 
-		path_variable_ = other.path_variable_;
-		have_path_variable_ = other.have_path_variable_;
 
-	}
+
+
+
+
+
+
 
 
 	
@@ -694,6 +910,15 @@ namespace bertini
 
 
 
+
+
+
+
+	/////////////////
+	//
+	// Arithemetic operators
+	//
+	///////////////////
 
 
 	System System::operator+=(System const& rhs)
