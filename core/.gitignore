@@ -35,6 +35,7 @@ serialization_test*
 
 /config
 
+.DS_Store
 *.dirstamp
 *.deps
 
