@@ -41,11 +41,11 @@
 
 extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 
-using mpfr_float = boost::multiprecision::mpfr_float;
+using mpfr_float = bertini::mpfr_float;
 
 using bertini::KahanMatrix;
 
@@ -84,17 +84,17 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	{
 		
 		unsigned int size = 10;
-		boost::multiprecision::mpfr_float::default_precision(16);
+		bertini::mpfr_float::default_precision(16);
 		
 		srand(2);  rand();
 		
-		Eigen::Matrix<boost::multiprecision::mpfr_float, Eigen::Dynamic, Eigen::Dynamic> A =
-			KahanMatrix(size, boost::multiprecision::mpfr_float(0.285)), B(size,size), C;
+		Eigen::Matrix<bertini::mpfr_float, Eigen::Dynamic, Eigen::Dynamic> A =
+			KahanMatrix(size, bertini::mpfr_float(0.285)), B(size,size), C;
 		
 		
 		for (int ii=0; ii<size; ii++)
 			for (int jj=0; jj<size; jj++)
-				jj!=ii? B(ii,jj) = -1.0/(ii+1.0) + boost::multiprecision::mpfr_float(rand()) /  boost::multiprecision::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
+				jj!=ii? B(ii,jj) = -1.0/(ii+1.0) + bertini::mpfr_float(rand()) /  bertini::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
 		
 		
 //		boost::timer::auto_cpu_timer t;
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		unsigned int size = 10;
 		srand(2);  rand();
 		
-		using mpfr = boost::multiprecision::mpfr_float;
+		using mpfr = bertini::mpfr_float;
 		using mpfr_matrix = Eigen::Matrix<mpfr, Eigen::Dynamic, Eigen::Dynamic>;
 
 		mpfr::default_precision(50);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	{
 		
 		unsigned int size = 10;
-		boost::multiprecision::mpfr_float::default_precision(100);
+		bertini::mpfr_float::default_precision(100);
 		
 		srand(2);  rand();
 		
@@ -190,10 +190,10 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 //		BOOST_AUTO_TEST_CASE(mpfr_float_num_traits){
 //			
-//			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::highest() << std::endl;
-//			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::lowest() << std::endl;
-//			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::dummy_precision() << std::endl;
-//			std::cout << Eigen::NumTraits<boost::multiprecision::mpfr_float>::epsilon() << std::endl;
+//			std::cout << Eigen::NumTraits<bertini::mpfr_float>::highest() << std::endl;
+//			std::cout << Eigen::NumTraits<bertini::mpfr_float>::lowest() << std::endl;
+//			std::cout << Eigen::NumTraits<bertini::mpfr_float>::dummy_precision() << std::endl;
+//			std::cout << Eigen::NumTraits<bertini::mpfr_float>::epsilon() << std::endl;
 //			
 //		}
 	
@@ -258,9 +258,9 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	BOOST_AUTO_TEST_CASE(small_value_multiprecision)
 	{
 
-		boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		boost::multiprecision::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
+		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
 
 		BOOST_CHECK( bertini::IsSmallValue(bertini::complex(p,mpfr_float(0))));
 		BOOST_CHECK( bertini::IsSmallValue(bertini::complex(-p,mpfr_float(0))));
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(large_change_multiprecision)
 	{
-		boost::multiprecision::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
+		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
 
 		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(1.0),p));
 

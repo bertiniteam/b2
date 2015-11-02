@@ -28,10 +28,10 @@
 #include <iostream>
 
 #include "limbo.hpp"
-#include "num_traits.hpp"
+#include "mpfr_extensions.hpp"
 
 
-using mpfr = boost::multiprecision::mpfr_float;
+using mpfr = bertini::mpfr_float;
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 

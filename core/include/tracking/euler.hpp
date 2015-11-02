@@ -45,9 +45,15 @@ namespace bertini{
 			using PrecisionType = config::PrecisionType;
 			/**
 			Perform an euler-prediction step
+	
+
+			This variant of the Euler predict function returns (by reference) the error estimate, and the norm of \f$J\f$ and \f$J^{-1}\f$
 
 			\param predictor_choice The enum class selecting the predictor to be used.
 			\param next_space The computed prediction.
+			\param error_estimate The computed estimate of the error.
+			\param norm_J The computed estimate of the norm of the Jacobian matrix.
+			\param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
 			\param sys The system being solved.
 			\param current_space The current space variable vector.
 			\param current_time The current time.
@@ -64,15 +70,22 @@ namespace bertini{
 			*/
 			template <typename ComplexType, typename RealType>
 			SuccessCode Euler(Vec<ComplexType> & next_space,
+			                  RealType & size_proportion,
+			                  RealType & norm_J,
+			                  RealType & norm_J_inverse,
 					               System & S,
 					               Vec<ComplexType> const& current_space, ComplexType current_time, 
 					               ComplexType const& delta_t,
 					               RealType & condition_number_estimate,
 					               unsigned & num_steps_since_last_condition_number_computation, 
-					               unsigned frequency_of_CN_estimation, PrecisionType PrecType, 
+					               unsigned frequency_of_CN_estimation,
 					               RealType const& tracking_tolerance,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
+
+
+									
+
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 				              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 				              				"underlying complex type and the type for comparisons must match");
@@ -100,36 +113,87 @@ namespace bertini{
 
 				// std::cout << "euler delta_x = \n" << delta_x << std::endl;
 
-				if (PrecType==PrecisionType::Adaptive)
+
+				Vec<ComplexType> randy = Vec<ComplexType>::Random(S.NumVariables());
+				Vec<ComplexType> temp_soln = LU.solve(randy);
+				
+				norm_J = dh_dx.norm();
+				norm_J_inverse = temp_soln.norm();
+				size_proportion = delta_x.array().abs().maxCoeff();
+
+				if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
 				{
-					Vec<ComplexType> randy = Vec<ComplexType>::Random(S.NumVariables());
-					Vec<ComplexType> temp_soln = LU.solve(randy);
-					
-					RealType norm_J = dh_dx.norm();
-					RealType norm_J_inverse = temp_soln.norm();
-
-
-					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
-					{
-						// TODO: this esimate may be wrong
-						condition_number_estimate = norm_J * norm_J_inverse;
-						num_steps_since_last_condition_number_computation = 1; // reset the counter to 0
-					}
-					else // no need to compute the condition number
-						num_steps_since_last_condition_number_computation++;
-
-
-					// std::cout << "norm_J: " << norm_J << " norm_J_inverse: " << norm_J_inverse << "\n";
-					// std::cout << "condition_number_estimate: " << condition_number_estimate << "\n";
-
-					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
-						return SuccessCode::HigherPrecisionNecessary;
-					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
-						return SuccessCode::HigherPrecisionNecessary;
-
+					condition_number_estimate = norm_J * norm_J_inverse;
+					num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
 				}
+				else // no need to compute the condition number
+					num_steps_since_last_condition_number_computation++;
+
+
+				// std::cout << "norm_J: " << norm_J << " norm_J_inverse: " << norm_J_inverse << "\n";
+				// std::cout << "condition_number_estimate: " << condition_number_estimate << "\n";
+
+				if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+					return SuccessCode::HigherPrecisionNecessary;
+				else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+					return SuccessCode::HigherPrecisionNecessary;
+
 
 				// std::cout << "euler delta_t * delta_x = \n" << delta_x * delta_t << std::endl;
+
+				next_space = current_space + delta_x * delta_t;
+
+				return SuccessCode::Success;
+			}
+
+
+
+
+
+
+			/**
+			Perform an euler-prediction step
+
+			\param predictor_choice The enum class selecting the predictor to be used.
+			\param next_space The computed prediction.
+			\param sys The system being solved.
+			\param current_space The current space variable vector.
+			\param current_time The current time.
+			\param delta_t The size of the time step.
+			\param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+			\param num_steps_since_last_condition_number_computation.  Updated in this function.
+			\param frequency_of_CN_estimation How many steps to take between condition number estimates.
+			\param prec_type The operating precision type.  
+			\param tracking_tolerance How tightly to track the path.
+			\param AMP_config The settings for adaptive multiple precision.
+
+			\tparam ComplexType The number type for evaluation.
+			\tparam RealType The number type for comparisons.
+			*/
+			template <typename ComplexType, typename RealType>
+			SuccessCode Euler(Vec<ComplexType> & next_space,
+					               System & S,
+					               Vec<ComplexType> const& current_space, ComplexType current_time, 
+					               ComplexType const& delta_t,
+					               RealType & condition_number_estimate,
+					               unsigned & num_steps_since_last_condition_number_computation, 
+					               unsigned frequency_of_CN_estimation, 
+					               RealType const& tracking_tolerance)
+			{
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+				              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				              				"underlying complex type and the type for comparisons must match");
+
+				Vec<ComplexType> dh_dt = -S.TimeDerivative(current_space, current_time);
+				Mat<ComplexType> dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
+
+
+				auto LU = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
+				
+				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
+					return SuccessCode::MatrixSolveFailure;
+
+				auto delta_x = LU.solve(dh_dt); 
 
 				next_space = current_space + delta_x * delta_t;
 

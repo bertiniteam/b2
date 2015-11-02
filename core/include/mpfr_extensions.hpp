@@ -42,25 +42,14 @@
 #include "num_traits.hpp"
 
 
+namespace bertini{
+
+	typedef boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off> mpfr_float;
+	
+}
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
 namespace boost { namespace serialization {
-	
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	
-
-	/** 
-	\brief Get the precision of a number.
-
-	For mpfr_floats, this calls the precision member method for mpfr_float.
-	*/
-	inline
-	unsigned Precision(mpfr_float const& num)
-	{
-		return num.precision();
-	}
-
-
 	/**
 	 Save a mpfr_float type to a boost archive.
 	 */
@@ -144,14 +133,13 @@ BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_int)
 // reopen the Eigen namespace to inject this struct.
 namespace Eigen {
 	
-	using boost::multiprecision::mpfr_float;
-	using namespace boost::multiprecision;
-	template<> struct NumTraits<boost::multiprecision::mpfr_float> : GenericNumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	using bertini::mpfr_float;
+	template<> struct NumTraits<mpfr_float> : GenericNumTraits<mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
 		
-		typedef boost::multiprecision::mpfr_float Real;
-		typedef boost::multiprecision::mpfr_float NonInteger;
-		typedef boost::multiprecision::mpfr_float Nested;
+		typedef mpfr_float Real;
+		typedef mpfr_float NonInteger;
+		typedef mpfr_float Nested;
 		enum {
 			IsComplex = 0,
 			IsInteger = 0,
@@ -165,7 +153,7 @@ namespace Eigen {
 		
 		inline static Real highest() {
 			
-			return (boost::multiprecision::mpfr_float(1) - epsilon()) * pow(boost::multiprecision::mpfr_float(2),mpfr_get_emax()-1);//);//boost::multiprecision::mpfr_float::default_precision());
+			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//mpfr_float::default_precision());
 		}
 		
 		inline static Real lowest() {
@@ -174,12 +162,12 @@ namespace Eigen {
 		
 		inline static Real dummy_precision()
 		{
-			return pow( boost::multiprecision::mpfr_float(10),-int(boost::multiprecision::mpfr_float::default_precision()-3));
+			return pow( mpfr_float(10),-int(mpfr_float::default_precision()-3));
 		}
 		
 		inline static Real epsilon()
 		{
-			return pow(boost::multiprecision::mpfr_float(10),-int(boost::multiprecision::mpfr_float::default_precision()));
+			return pow(mpfr_float(10),-int(mpfr_float::default_precision()));
 		}
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
 	};
@@ -190,15 +178,29 @@ namespace Eigen {
 
 namespace bertini {
 
+	/** 
+	\brief Get the precision of a number.
+
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline
+	unsigned Precision(mpfr_float const& num)
+	{
+		return num.precision();
+	}
 	
 	
-	using mpfr_float = boost::multiprecision::mpfr_float;
 	
 	template <> struct NumTraits<mpfr_float> 
 	{
 		inline static unsigned NumDigits()
 		{
 			return mpfr_float::default_precision();
+		}
+
+		inline static unsigned NumFuzzyDigits()
+		{
+			return mpfr_float::default_precision()-3;
 		}
 	};
 	

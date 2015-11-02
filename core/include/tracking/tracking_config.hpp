@@ -25,8 +25,12 @@
 #ifndef BERTINI_TRACKING_CONFIG_HPP
 #define BERTINI_TRACKING_CONFIG_HPP
 
+/**
+\file tracking_config.hpp
 
-#include <eigen3/Eigen/Dense>
+\brief Configs and settings for tracking
+*/
+
 #include "eigen_extensions.hpp"
 
 #include "system.hpp"
@@ -35,8 +39,7 @@ namespace bertini
 {
 	namespace tracking{
 
-		template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-		template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+		
 
 
 
@@ -49,19 +52,32 @@ namespace bertini
 			GoingToInfinity,
 			FailedToConverge,
 			MatrixSolveFailure,
-			Failure
+			MaxNumStepsTaken,
+			MaxPrecisionReached,
+			MinStepSizeReached,
+			Failure,
+			SingularStartPoint
 		};
 
 		
 
+		enum 
+		{
+			PrecisionIncrement = 10,
+			DoublePrecision = 16,
+			LowestMultiplePrecision = 30,
+			MaxPrecisionAllowed = 1000
+		};
 
+		/** 
+		\namespace config
+		*/
 		namespace config{
-
-			using mpfr_float = boost::multiprecision::mpfr_float;
 
 			enum class Predictor
 			{
-				Euler
+				Euler,
+				HeunEuler
 			};
 
 			enum class PrecisionType
@@ -73,18 +89,138 @@ namespace bertini
 
 
 
-			namespace general{			
-				struct TrackingTolerances
-				{
-					mpfr_float before_endgame;
-					mpfr_float during_endgame;
-				};
-			}
+
+
+
+
+			struct Tolerances
+			{
+				mpfr_float newton_before_endgame = mpfr_float("1e-5");
+				mpfr_float newton_during_endgame = mpfr_float("1e-6");;
+
+				mpfr_float final_tolerance = mpfr_float("1e-11");
+
+				mpfr_float path_truncation_threshold = mpfr_float("1e5");
+			};
+
+			struct Stepping
+			{
+				mpfr_float initial_step_size = mpfr_float("0.1");
+				mpfr_float max_step_size = mpfr_float("0.1");
+				mpfr_float min_step_size = mpfr_float("1e-100");
+
+				mpfr_float step_size_success_factor = mpfr_float("2.0");
+				mpfr_float step_size_fail_factor = mpfr_float("0.5");
+
+				unsigned consecutive_successful_steps_before_stepsize_increase = 5;
+				unsigned consecutive_successful_steps_before_precision_decrease = 10;
+				unsigned max_num_steps = 1e5;
+
+				unsigned frequency_of_CN_estimation = 1;
+				
+			};
+
+			struct Newton
+			{
+				unsigned max_num_newton_iterations = 2;
+				unsigned min_num_newton_iterations = 1;
+			};
+
+
+			
+			struct RenameMe
+			{
+				
+				unsigned sharpendigits;
+
+				mpfr_float function_residual_tolerance;
+				mpfr_float ratio_tolerance;
+			};
+
+
+			struct Security
+			{
+				int level = 0;
+				mpfr_float max_norm = mpfr_float("1e5");
+			};
+
+
+
+
+
+
+
+
+
+			struct EndGame
+			{
+				mpfr_float SampleFactor = mpfr_float("0.5");
+				unsigned max_cycle_number = 6;
+			};
+
+
+			struct PowerSeries
+			{
+				
+			};
+
+			struct Cauchy
+			{
+				mpfr_float cutoff_cycle_time;
+				mpfr_float cutoff_ratio_time;
+			};
+
+
+			struct TrackBack
+			{
+				unsigned minimum_cycle;
+				bool junk_removal_test;
+				unsigned max_depth_LDT;
+			};
+
+
+
+
+
+
+
+
+			struct PostProcessing{
+				mpfr_float real_threshold;
+				mpfr_float endpoint_finite_threshold;
+				mpfr_float final_tol_multiplier;
+				mpfr_float final_tol_times_mult;
+			};
+
+
+
+
+
+
+
+
+
+
+			struct Regeneration
+			{
+				bool remove_infinite_endpoints;
+				bool higher_dimension_check;
+
+				mpfr_float newton_before_endgame;
+				mpfr_float newton_during_endgame;
+				mpfr_float final_tolerance;
+			};
+
+			
+
+
+
+
 
 			/**
 			Holds the program parameters with respect to Adaptive Multiple Precision.
 			
-			These criteria are developed in \cite{amp1, amp2}.
+			These criteria are developed in \cite AMP1, \cite AMP2.
 
 			Let:
 			\f$J\f$ be the Jacobian matrix of the square system being solved.  
@@ -109,23 +245,32 @@ namespace bertini
 			{
 				mpfr_float coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
 				mpfr_float degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
-				mpfr_float epsilon;  ///< Bound on \f$\epsilon\f$ (an error bound).  Used for AMP criteria A, B.
+
+				mpfr_float epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite AMP1, \cite AMP2, and is used for AMP criteria A and B.  See top of page 13 of \cite AMP1.  A pessimistic bound is \f$2^n\f$.
+				// rename to linear_solve_error_bound.
+
 				mpfr_float Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
+				// \f$\Phi\f$ is error in Jacobian evaluation divided by the unit roundoff error, \f$10^{-P}\f$
+				// rename to jacobian_eval_error_bound
+
 				mpfr_float Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
+				// Error in function evaluation, divided by the precision-dependent unit roundoff error.
+				// rename to function_eval_error_bound
 
 				int safety_digits_1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
 				int safety_digits_2; ///< User-chosen setting for the number of safety digits used during Criterion C.
 				unsigned int maximum_precision; ///< User-chosed setting for the maximum allowable precision.  Paths will die if their precision is requested to be set higher than this threshold.
-			
+				
+				unsigned max_num_precision_decreases; ///< The maximum number of times precision can be lowered during tracking of a segment of path.
 				AdaptiveMultiplePrecisionConfig() : coefficient_bound("1000.0"), degree_bound("5.0"), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
 				{}
 
 				/**
 				 \brief Set epsilon, degree bound, and coefficient bound from system.
 				 
-				 -Epsilon is set as the square of the number of variables.
-				 -Bound on degree is set from a call to System class.  Let this be \f$D\f$  \see System::DegreeBound().
-				 -Bound on absolute values of coeffs is set from a call to System class.  Let this be \f$B\f$.  \see System::CoefficientBound().
+				 * Epsilon is set as the square of the number of variables.
+				 * Bound on degree is set from a call to System class.  Let this be \f$D\f$  \see System::DegreeBound().
+				 * Bound on absolute values of coeffs is set from a call to System class.  Let this be \f$B\f$.  \see System::CoefficientBound().
 				*/
 				void SetBoundsAndEpsilonFrom(System const& sys)
 				{
@@ -138,8 +283,8 @@ namespace bertini
 				/**
 				 Sets values epsilon, Phi, Psi, degree_bound, and coefficient_bound from input system.
 				
-				 	-Phi becomes \f$D*(D-1)*B\f$.
-				 	-Psi is set as \f$D*B\f$.
+				 * Phi becomes \f$ D*(D-1)*B \f$.
+				 * Psi is set as \f$ D*B \f$.
 				*/
 				void SetPhiPsiFromBounds()
 				{
@@ -161,13 +306,17 @@ namespace bertini
 				out << "degree_bound: " << AMP.degree_bound << "\n";
 				out << "epsilon: " << AMP.epsilon << "\n";
 				out << "Phi: " << AMP.Phi << "\n";
-				out << "Psi: " << AMP.Psi;
+				out << "Psi: " << AMP.Psi << "\n";
+				out << "safety_digits_1: " << AMP.safety_digits_1 << "\n";
+				out << "safety_digits_2: " << AMP.safety_digits_2;
 				return out;
 			}
 
 			
 			/**
 			\brief Construct a ready-to-go set of AMP settings from a system.
+			
+			
 
 			\see AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom
 			\see AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds

@@ -23,20 +23,31 @@
 
 
 
-
-#define BOOST_TEST_DYN_LINK
+ 
+#define BOOST_TEST_DYN_LINK 1
 
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
 #define BOOST_TEST_MODULE "Bertini 2 Tracking Basics Testing"
 #include <boost/test/unit_test.hpp>
 
 
+#include "logging.hpp"
 
-#include <boost/multiprecision/mpfr.hpp>
+
+using sec_level = boost::log::trivial::severity_level;
+
+using LoggingInit = bertini::LoggingInit;
+
+
+BOOST_GLOBAL_FIXTURE( LoggingInit );
+
+
+#include "mpfr_extensions.hpp"
 
 double threshold_clearance_d(1e-15);
-boost::multiprecision::mpfr_float threshold_clearance_mp("1e-28");
+bertini::mpfr_float threshold_clearance_mp("1e-28");
 unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS(30);
+
 
 
 

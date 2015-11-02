@@ -18,7 +18,8 @@ tracking_header_files = \
 	include/tracking/euler.hpp \
 	include/tracking/amp_criteria.hpp \
 	include/tracking/tracking_config.hpp \
-	include/tracking/step.hpp
+	include/tracking/step.hpp \
+	include/tracking/tracker.hpp
 
 
 tracking_source_files =
@@ -62,7 +63,8 @@ all_bertini2_sources = \
 	include/eigen_extensions.hpp \
 	include/system.hpp src/bertini/system.cpp include/system_parsing.hpp \
 	src/bertini/start_system.cpp include/start_system.hpp \
-	include/limbo.hpp
+	include/limbo.hpp \
+	include/tracking.hpp
 
 bertini2_SOURCES = $(all_bertini2_sources) src/bertini/bertini.cpp
 

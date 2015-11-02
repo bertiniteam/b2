@@ -25,7 +25,12 @@
 #ifndef BERTINI_AMP_CRITERIA_HPP
 #define BERTINI_AMP_CRITERIA_HPP
 
-#include <boost/multiprecision/mpfr.hpp>
+/**
+\file amp_criteria.hpp
+
+\brief Provides the Adaptive Multiple Precision criteria functions.
+
+*/
 
 #include "tracking/tracking_config.hpp"
 
@@ -39,28 +44,70 @@ namespace bertini{
 
 
 			/**
-			Check AMP Criterion A, from \cite{amp1, amp2}.
+			\brief Check AMP Criterion A.
+
+			From \cite AMP1, \cite AMP2.
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param AMP_config The settings for adaptive multiple precision.
+			
+			\tparam RealType The real number type
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
 			template<typename RealType>
 			bool CriterionA(RealType const& norm_J, RealType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				// std::cout << "criterion A, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
-				// std::cout << "criterion A, rhs: " << AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi)) << "\n";
 				return NumTraits<RealType>::NumDigits()  > AMP_config.safety_digits_1 + log10(norm_J_inverse * RealType(AMP_config.epsilon) * (norm_J + RealType(AMP_config.Phi) ) );
 			}
 			
 
-			/**
-			Check AMP Criterion B, from \cite{amp1, amp2}.
 
+			/**
+			\brief Compute the expression \f$D\f$ from the AMP papers \cite AMP1, \cite AMP2.
+
+			\tparam RealType The real number type
+
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param AMP_config The settings for adaptive multiple precision.
+			*/
+			template <typename RealType>
+			RealType D(RealType const& norm_J, RealType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				return log10(norm_J_inverse*( (RealType(2)+RealType(AMP_config.epsilon))*norm_J + RealType(AMP_config.epsilon)*RealType(AMP_config.Phi)) + RealType(1));
+			}
+
+			/**
+			\brief Evaluate the right hand side of the inequality of Criterion B
+
+			From \cite AMP1, \cite AMP2.
+			
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param num_newton_iterations_remaining The number of iterations which have yet to perform.
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance (for now)
+			\param latest_newton_residual The norm of the length of the most recent Newton step.
+			\param AMP_config The settings for adaptive multiple precision.
+			
+			\tparam RealType the real number type.
+
+			\return The value of the right hand side of Criterion B
+			*/
+			template<typename RealType>
+			RealType CriterionBRHS(RealType const& norm_J, RealType const& norm_J_inverse, unsigned num_newton_iterations_remaining, RealType const& tracking_tolerance, RealType const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				return AMP_config.safety_digits_1 + D(norm_J, norm_J_inverse, AMP_config) + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
+			}
+
+
+			/**
+			\brief Check AMP Criterion B
+			
+			This is Criterion B from \cite AMP1, \cite AMP2.
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
@@ -69,45 +116,83 @@ namespace bertini{
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance (for now)
 			\param latest_newton_residual The norm of the length of the most recent Newton step.
 			\param AMP_config The settings for adaptive multiple precision.
+			
+			\tparam RealType the real number type.
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
 			template<typename RealType>
 			bool CriterionB(RealType const& norm_J, RealType const& norm_J_inverse, unsigned num_newton_iterations_remaining, RealType const& tracking_tolerance, RealType const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				// std::cout << norm_J << "\n";
-				// std::cout << norm_J_inverse << "\n";
-				// std::cout << num_newton_iterations_remaining << "\n";
-				// std::cout << tracking_tolerance << "\n";
-				// std::cout << norm_of_latest_newton_residual << "\n";
-				// std::cout << AMP_config << "\n";
-
-				RealType D = log10(norm_J_inverse*( (RealType(2)+RealType(AMP_config.epsilon))*norm_J + RealType(AMP_config.epsilon)*RealType(AMP_config.Phi)) + RealType(1));
-				
-				// std::cout << D << "\n";
-				// std::cout << "criterion B, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
-				// std::cout << "criterion B, rhs: " << RealType(AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining)) << "\n";
-				return NumTraits<RealType>::NumDigits() > AMP_config.safety_digits_1 + D + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
+				return NumTraits<RealType>::NumDigits() > CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  norm_of_latest_newton_residual, AMP_config);
 			}
 
+
+			
+
+
 			/**
-			Check AMP Criterion C, from \cite{amp1, amp2}.
+			\brief Evaluate the right hand side of Criterion C
+
+			This is Criterion C, from \cite AMP1, \cite AMP2.
+
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
+			\param norm_z The norm of the current space point.
+			\param AMP_config The settings for adaptive multiple precision.
+			
+			\tparam RealType the real number type.
+
+			\return The value of the right hand side of the inequality from Criterion C.
+			*/
+			template<typename RealType>
+			RealType CriterionCRHS(RealType const& norm_J_inverse, RealType const& norm_z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*RealType(AMP_config.Psi) + norm_z);
+			}
+
+
+
+			/**
+			\brief Evaluate the right hand side of Criterion C
+
+			This is Criterion C from \cite AMP1, \cite AMP2.
+
+			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
+			\param z The current space point. 
+			\param AMP_config The settings for adaptive multiple precision.
+
+			\return The value of the right hand side of the inequality from Criterion C.
+			*/
+			template<typename ComplexType ,typename RealType>
+			RealType CriterionCRHS(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+				return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*RealType(AMP_config.Psi) + z.norm());
+			}
+
+
+			/**
+			\brief Check AMP Criterion C
+
+			This is Criterion C from \cite AMP1.
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
-			\param z The current space point?  TODO: check this. 
+			\param z The current space point. 
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
 			template<typename ComplexType ,typename RealType>
 			bool CriterionC(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-				// std::cout << "criterion C, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
-				// std::cout << "criterion C, rhs: " << AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + z.norm()) << "\n";
-				return NumTraits<RealType>::NumDigits() > AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*RealType(AMP_config.Psi) + z.norm());
+				return NumTraits<RealType>::NumDigits() > CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config);
 			}
 		}
 	}

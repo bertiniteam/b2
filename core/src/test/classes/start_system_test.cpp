@@ -37,12 +37,12 @@ using Var = std::shared_ptr<bertini::node::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
 extern double relaxed_threshold_clearance_d;
 
 extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 			BOOST_CHECK(abs(function_values(jj)) < relaxed_threshold_clearance_d);
 	}
 
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	for (size_t ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
@@ -308,8 +308,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 	bertini::System sys;
 	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
 
-	VariableGroup vars;
-	vars.push_back(x); vars.push_back(y); vars.push_back(z);
+	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
 	sys.AddFunction(y+x*y + 0.5);

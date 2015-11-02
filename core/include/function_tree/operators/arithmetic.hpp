@@ -129,7 +129,7 @@ namespace node{
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 
-		int Degree(VariableGroup const& vars) const;
+		int Degree(VariableGroup const& vars) const override;
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
@@ -143,7 +143,7 @@ namespace node{
 		/**
 		 Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
 		 */
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar);
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 

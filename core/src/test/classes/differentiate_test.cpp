@@ -52,7 +52,7 @@ using Jacobian = bertini::node::Jacobian;
 
 extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 extern std::string xstr_real;
@@ -119,8 +119,8 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
 
 
 BOOST_AUTO_TEST_CASE(diff_3xyz){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = 3*x*y*z;";
 
@@ -174,8 +174,8 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
 
 
 BOOST_AUTO_TEST_CASE(diff_constant){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = 4.5 + i*8.2;";
 
@@ -221,8 +221,8 @@ BOOST_AUTO_TEST_CASE(diff_constant){
 
 
 BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = x-y+z-4.5+i*7.3;";
 
@@ -275,8 +275,8 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
 
 
 BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = (x^2)*(y^3);";
 
@@ -356,8 +356,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
 
 
 BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = (x^2)/(y^3);";
 
@@ -410,8 +410,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
 
 
 BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = (x^2)*(x+3);";
 
@@ -462,8 +462,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
 }
 
 BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = y/(y+1);";
 
@@ -516,8 +516,8 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
 
 
 BOOST_AUTO_TEST_CASE(diff_sin_x){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = sin(x);";
 
@@ -568,8 +568,8 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
 
 
 BOOST_AUTO_TEST_CASE(diff_cos_y){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = cos(y);";
 
@@ -621,8 +621,8 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
 
 
 BOOST_AUTO_TEST_CASE(diff_tan_z){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = tan(z);";
 
@@ -668,8 +668,8 @@ BOOST_AUTO_TEST_CASE(diff_tan_z){
 
 
 BOOST_AUTO_TEST_CASE(diff_exp_x){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = exp(x);";
 
@@ -717,8 +717,8 @@ BOOST_AUTO_TEST_CASE(diff_exp_x){
 
 
 BOOST_AUTO_TEST_CASE(diff_log_x){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = log(x^2+y);";
 
@@ -766,8 +766,8 @@ BOOST_AUTO_TEST_CASE(diff_log_x){
 
 
 BOOST_AUTO_TEST_CASE(diff_sqrt_y){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = sqrt(y);";
 
@@ -817,8 +817,8 @@ BOOST_AUTO_TEST_CASE(diff_sqrt_y){
 
 /////////// Chain Rule ///////////////////
 BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = (z+3)^3;";
 
@@ -871,8 +871,8 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
 
 
 BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = x^2+y^2+z^2;";
 
@@ -930,8 +930,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
 
 
 BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = sin(x*y);";
 
@@ -983,8 +983,8 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
 
 
 BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = cos(x^2);";
 
@@ -1034,8 +1034,8 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
 
 
 BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-    boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = tan(x/z);";
 

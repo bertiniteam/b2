@@ -33,10 +33,6 @@ namespace bertini
 {
 	namespace start_system{
 
-		
-		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-			
 		/**
 		\brief Abstract base class for other start systems.
 

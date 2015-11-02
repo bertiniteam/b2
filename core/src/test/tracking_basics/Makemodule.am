@@ -1,12 +1,14 @@
 #this is src/test/tracking_basics/Makemodule.am
 
+
 EXTRA_PROGRAMS += tracking_basics_test
 
 tracking_basics_test_source_files = \
 	src/test/tracking_basics/tracking_basics_test.cpp \
+	src/test/tracking_basics/tracker_test.cpp \
 	src/test/tracking_basics/newton_correct_test.cpp \
 	src/test/tracking_basics/euler_test.cpp \
-	src/test/tracking_basics/amp_criteria_test.cpp
+	src/test/tracking_basics/amp_criteria_test.cpp 
 
 
 tracking_basics_test_SOURCES = \
@@ -15,7 +17,7 @@ tracking_basics_test_SOURCES = \
 
 
 
-tracking_basics_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
+tracking_basics_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB)
 
 tracking_basics_test_CXXFLAGS = $(BOOST_CPPFLAGS)
 

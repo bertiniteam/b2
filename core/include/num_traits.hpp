@@ -33,7 +33,7 @@
 namespace bertini
 {
 	template<typename T>
-	struct NumTraits : Eigen::NumTraits<T>
+	struct NumTraits : public Eigen::NumTraits<T>
 	{};
 
 
@@ -44,6 +44,11 @@ namespace bertini
 		{
 			return 16;
 		}
+
+		inline static unsigned NumFuzzyDigits()
+		{
+			return 14;
+		}
 	};
 
 
@@ -52,6 +57,11 @@ namespace bertini
 		inline static unsigned NumDigits()
 		{
 			return 16;
+		}
+
+		inline static unsigned NumFuzzyDigits()
+		{
+			return 14;
 		}
 	};
 

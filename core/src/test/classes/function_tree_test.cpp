@@ -45,7 +45,7 @@ using Float = bertini::node::Float;
 
 extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
+extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
 extern std::string xstr_real;
@@ -81,10 +81,10 @@ BOOST_AUTO_TEST_SUITE(function_tree_class)
 /////////// Basic Operations Alone ///////////////////
 
 BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
-	using mpfr_float = boost::multiprecision::mpfr_float;
+	using mpfr_float = bertini::mpfr_float;
 	
 	
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	
@@ -137,8 +137,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	
@@ -163,8 +163,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -247,8 +247,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -333,8 +333,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_times_number){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -417,8 +417,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_times_number){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -463,8 +463,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	
@@ -496,8 +496,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -527,7 +527,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_minus_y_minus_num1l_pow_num2){
-	using mpfr_float = boost::multiprecision::mpfr_float;
+	using mpfr_float = bertini::mpfr_float;
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -557,8 +557,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_minus_y_minus_num1l_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
 	
@@ -604,8 +604,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_over_yl_pow_num2){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -645,8 +645,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_over_yl_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lnegative_xl_pow_num2){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
@@ -672,8 +672,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lnegative_xl_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_plus_y_plus_num1){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
@@ -713,8 +713,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_plus_y_plus_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_minus_y_minus_num1){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -755,8 +755,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_minus_y_minus_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_times_y_times_num1){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -817,8 +817,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_times_y_times_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_over_y){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -872,8 +872,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_over_y){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_pow_num2){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
@@ -906,8 +906,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_pow_num2){
 /////////// Order of Operations ///////////////////
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_over_num){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -958,8 +958,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_over_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_times_ly_plus_num2l){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -990,8 +990,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_times_ly_plus_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_times_y_plus_num2){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -1021,8 +1021,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_times_y_plus_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_over_ly_plus_num2l){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -1052,8 +1052,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_over_ly_plus_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_over_y_plus_num2){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
@@ -1083,8 +1083,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_over_y_plus_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_plus_num1){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1110,8 +1110,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_plus_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_plus_lnum1_pow_num2l){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1137,8 +1137,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_lnum1_pow_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_times_lnum1_pow_num2l){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1164,8 +1164,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_lnum1_pow_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1191,8 +1191,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_over_num1){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1219,7 +1219,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_over_num1){
 
 BOOST_AUTO_TEST_CASE(manual_construction_pow_lsqrt_xl_num)
 {
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	auto exact_dbl = pow(sqrt(xnum_dbl),anum_dbl);
 	auto exact_mpfr = pow(sqrt(xnum_mpfr),anum_mpfr);
@@ -1255,8 +1255,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_pow_lsqrt_xl_num)
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_over_lnum1_pow_num2l){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1282,8 +1282,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_over_lnum1_pow_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1309,8 +1309,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_times_num2l){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1336,8 +1336,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_times_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_over_num2l){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1372,8 +1372,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_over_num2l){
 
 ///////////// Special Functions ///////////////////
 BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
 	
@@ -1394,7 +1394,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_cos_num){
-	using mpfr_float = boost::multiprecision::mpfr_float;
+	using mpfr_float = bertini::mpfr_float;
 	
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
 	
@@ -1415,8 +1415,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_cos_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_tan_num){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
 	
@@ -1437,8 +1437,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
 	
@@ -1459,8 +1459,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_num){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
 	
@@ -1481,8 +1481,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1508,7 +1508,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_cos_of_lx_times_numl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
+	using mpfr_float = bertini::mpfr_float;
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1533,8 +1533,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_cos_of_lx_times_numl){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_tan_of_lx_over_numl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1559,8 +1559,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_of_lx_over_numl){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_exp_of_negative_num){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
 	
@@ -1580,8 +1580,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_of_negative_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
 	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
@@ -1702,8 +1702,8 @@ BOOST_AUTO_TEST_CASE(log_evaluate)
 
 ///////////// Special Numbers ///////////////////
 BOOST_AUTO_TEST_CASE(manual_construction_pi){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	dbl exact_dbl(4*atan(1.0),0);
 	mpfr exact_mpfr(mpfr_float("4.0")*atan(mpfr_float("1.0")));
@@ -1722,8 +1722,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_pi){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_e){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	dbl exact_dbl(exp(1.0),0);
 	mpfr exact_mpfr(exp(mpfr_float("1.0")));
@@ -1738,8 +1738,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_e){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_i){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	dbl exact_dbl(0.0,1.0);
 	mpfr exact_mpfr = mpfr("0.0","1.0");

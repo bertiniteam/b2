@@ -15,8 +15,9 @@ using Var = std::shared_ptr<bertini::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
+
 
 template<typename T>
 void arbitrary(boost::filesystem::path const& file, unsigned num_iterations = 1000000);
