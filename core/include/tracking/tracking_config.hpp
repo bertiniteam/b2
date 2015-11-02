@@ -31,7 +31,6 @@
 \brief Configs and settings for tracking
 */
 
-#include <eigen3/Eigen/Dense>
 #include "eigen_extensions.hpp"
 
 #include "system.hpp"
@@ -307,7 +306,9 @@ namespace bertini
 				out << "degree_bound: " << AMP.degree_bound << "\n";
 				out << "epsilon: " << AMP.epsilon << "\n";
 				out << "Phi: " << AMP.Phi << "\n";
-				out << "Psi: " << AMP.Psi;
+				out << "Psi: " << AMP.Psi << "\n";
+				out << "safety_digits_1: " << AMP.safety_digits_1 << "\n";
+				out << "safety_digits_2: " << AMP.safety_digits_2;
 				return out;
 			}
 

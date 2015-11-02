@@ -31,7 +31,6 @@
 \brief Provides the Adaptive Multiple Precision criteria functions.
 
 */
-#include <boost/multiprecision/mpfr.hpp>
 
 #include "tracking/tracking_config.hpp"
 
@@ -62,8 +61,6 @@ namespace bertini{
 			template<typename RealType>
 			bool CriterionA(RealType const& norm_J, RealType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				// std::cout << "criterion A, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
-				// std::cout << "criterion A, rhs: " << AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi)) << "\n";
 				return NumTraits<RealType>::NumDigits()  > AMP_config.safety_digits_1 + log10(norm_J_inverse * RealType(AMP_config.epsilon) * (norm_J + RealType(AMP_config.Phi) ) );
 			}
 			
@@ -103,7 +100,6 @@ namespace bertini{
 			template<typename RealType>
 			RealType CriterionBRHS(RealType const& norm_J, RealType const& norm_J_inverse, unsigned num_newton_iterations_remaining, RealType const& tracking_tolerance, RealType const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				
 				return AMP_config.safety_digits_1 + D(norm_J, norm_J_inverse, AMP_config) + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
 			}
 
@@ -175,8 +171,6 @@ namespace bertini{
 			RealType CriterionCRHS(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-				// std::cout << "criterion C, lhs: " << NumTraits<RealType>::NumDigits() << "\n";
-				// std::cout << "criterion C, rhs: " << AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + z.norm()) << "\n";
 				return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*RealType(AMP_config.Psi) + z.norm());
 			}
 
@@ -198,7 +192,6 @@ namespace bertini{
 			bool CriterionC(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-
 				return NumTraits<RealType>::NumDigits() > CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config);
 			}
 		}

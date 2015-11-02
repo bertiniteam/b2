@@ -31,7 +31,7 @@ namespace bertini{
 	namespace tracking{
 
 		/**
-		Wrapper class for calling an ODE predictor.
+		Wrapper class for calling an ODE predictor, using fixed precision
 
 		\param predictor_choice The enum class selecting the predictor to be used.
 		\param next_space The computed prediction.
@@ -58,8 +58,7 @@ namespace bertini{
 							   RealType & condition_number_estimate,
 							   unsigned & num_steps_since_last_condition_number_computation, 
 							   unsigned frequency_of_CN_estimation, 
-							   RealType const& tracking_tolerance,
-							   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+							   RealType const& tracking_tolerance)
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 
@@ -90,6 +89,10 @@ namespace bertini{
 
 
 
+
+
+
+		
 
 
 
@@ -202,6 +205,60 @@ namespace bertini{
 			return SuccessCode::Failure;
 		}
 
+
+
+		/**
+		Wrapper class for calling an ODE predictor, using adaptive precision, not returning some meta-data about the step.
+
+		\param predictor_choice The enum class selecting the predictor to be used.
+		\param next_space The computed prediction.
+		\param sys The system being solved.
+		\param current_space The current space variable vector.
+		\param current_time The current time.
+		\param delta_t The size of the time step.
+		\param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+		\param num_steps_since_last_condition_number_computation.  Updated in this function.
+		\param frequency_of_CN_estimation How many steps to take between condition number estimates.
+		\param prec_type The operating precision type.  
+		\param tracking_tolerance How tightly to track the path.
+		\param AMP_config The settings for adaptive multiple precision.
+
+		\tparam ComplexType The complex number type for evaluation.
+		\tparam RealType The complex number type for evaluation.
+		*/
+		template <typename ComplexType, typename RealType>
+		SuccessCode Predict(config::Predictor predictor_choice,
+							Vec<ComplexType> & next_space,
+							   System & sys,
+							   Vec<ComplexType> const& current_space, ComplexType current_time, 
+							   ComplexType const& delta_t,
+							   RealType & condition_number_estimate,
+							   unsigned & num_steps_since_last_condition_number_computation, 
+							   unsigned frequency_of_CN_estimation, 
+							   RealType const& tracking_tolerance,
+							   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+		{
+			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
+			RealType size_proportion, norm_J, norm_J_inverse;
+
+			return Predict(predictor_choice,
+			               next_space,
+							size_proportion,
+							norm_J,
+							norm_J_inverse,
+							sys,
+							current_space, current_time, 
+							delta_t,
+							condition_number_estimate,
+							num_steps_since_last_condition_number_computation, 
+							frequency_of_CN_estimation, 
+							tracking_tolerance,
+							AMP_config);
+		}
+
+
+		
 
 
 		namespace predict{
