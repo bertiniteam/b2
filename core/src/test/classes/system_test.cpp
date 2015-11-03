@@ -38,7 +38,7 @@ using System = bertini::System;
 using Var = std::shared_ptr<bertini::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
-
+using mpfr_float = bertini::mpfr_float;
 extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
@@ -662,17 +662,69 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_a
 }
 
 
-BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound)
+BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 {
-	BOOST_CHECK_EQUAL("testing for correct estimate of coefficient bound implemented","true");
+	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
+	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
+
+	bertini::System S;
+	S.AddUngroupedVariable(x);
+	S.AddPathVariable(t);
+	S.AddFunction((1-t)*x + t*(1-x));
+	S.AddFunction(x-t);
+
+	mpfr_float coefficient_bound = S.CoefficientBound();
+	BOOST_CHECK(coefficient_bound < mpfr_float("3"));
+	BOOST_CHECK(coefficient_bound > mpfr_float("0.5"));
 }
 
-BOOST_AUTO_TEST_CASE(system_estimate_degree_bound)
+BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 {
-	BOOST_CHECK_EQUAL("testing for correct estimate of degree bound implemented","true");
+	bertini::System sys;
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+
+	VariableGroup vars{x,y,z};
+
+	sys.AddVariableGroup(vars);  
+	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	mpfr_float coefficient_bound = sys.CoefficientBound();
+	BOOST_CHECK(coefficient_bound < mpfr_float("5"));
+	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
 }
 
+BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
+{
+	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
+	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
 
+	bertini::System S;
+	S.AddUngroupedVariable(x);
+	S.AddPathVariable(t);
+	S.AddFunction((1-t)*x + t*(1-x));
+	S.AddFunction(x-t);
+
+	mpfr_float degree_bound = S.DegreeBound();
+	BOOST_CHECK(degree_bound == mpfr_float("1"));
+}
+
+BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+
+	VariableGroup vars{x,y,z};
+
+	sys.AddVariableGroup(vars);  
+	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	mpfr_float degree_bound = sys.DegreeBound();
+	BOOST_CHECK(degree_bound == mpfr_float("4"));
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 

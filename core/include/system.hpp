@@ -45,6 +45,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
 
+#include "limbo.hpp"
 
 
 namespace bertini {
@@ -92,7 +93,7 @@ namespace bertini {
 		/**
 		 \brief Compute and internally store the symbolic Jacobian of the system.
 		*/
-		void Differentiate();
+		void Differentiate() const;
 
 		/**
 		Evaluate the system, provided the system has no path variable defined.
@@ -102,7 +103,7 @@ namespace bertini {
 		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values)
+		Vec<T> Eval(const Vec<T> & variable_values) const
 		{
 
 			if (variable_values.size()!=NumVariables())
@@ -145,9 +146,11 @@ namespace bertini {
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
+
+		 \todo The Eval() function for systems has the unfortunate side effect of resetting constant functions.  Modify the System class so that only certain parts of the tree get reset.
 		 */
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value)
+		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
 
 			if (variable_values.size()!=NumVariables())
@@ -157,10 +160,6 @@ namespace bertini {
 
 
 			// this function call traverses the entire tree, resetting everything.
-			//
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			//
-			// we need to work to correct this.
 			for (auto iter : functions_) {
 				iter->Reset();
 			}
@@ -188,13 +187,12 @@ namespace bertini {
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		*/
 		template<typename T>
-		Mat<T> Jacobian()
+		Mat<T> Jacobian() const
 		{
-			#ifndef BERTINI_DISABLE_ASSERTS
-			assert(is_differentiated_ && "computing Jacobian matrix with undifferentiated system, using previous space and time values.  This is indicative of not having previously evaluated the Jacobian -- which is a precondition on this function.");
-			#endif
-
 			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+
+			if (!is_differentiated_)
+				Differentiate();
 
 			Mat<T> J(NumFunctions(), NumVariables());
 			for (int ii = 0; ii < NumFunctions(); ++ii)
@@ -213,18 +211,13 @@ namespace bertini {
 		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values)
+		Mat<T> Jacobian(const Vec<T> & variable_values) const
 		{
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (have_path_variable_)
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
-
-
-			if (!is_differentiated_)
-				Differentiate();
-
 
 			SetVariables(variable_values);
 
@@ -244,17 +237,13 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
+		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
-
-
-			if (!is_differentiated_)
-				Differentiate();
 
 			SetVariables(variable_values);
 			SetPathVariable(path_variable_value);
@@ -272,7 +261,7 @@ namespace bertini {
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename T>
-		Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value)
+		Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
@@ -284,11 +273,9 @@ namespace bertini {
 			SetPathVariable(path_variable_value);
 
 			Vec<T> ds_dt(NumFunctions());
-
 			
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);		
-
 
 			return ds_dt;
 		}
@@ -401,11 +388,11 @@ namespace bertini {
 		 \see Variables
 		 */
 		template<typename T>
-		void SetVariables(const Vec<T> & new_values)
+		void SetVariables(const Vec<T> & new_values) const
 		{
-			#ifndef BERTINI_DISABLE_ASSERTS
-			assert(new_values.size()== NumVariables() && "variable vector of different length from system-owned variables in SetVariables");
-			#endif
+			if (new_values.size()!= NumVariables())
+				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
+			
 			auto vars = Variables();
 
 			auto counter = 0;
@@ -427,7 +414,7 @@ namespace bertini {
 		 \param new_value The new updated values for the path variable.
 		 */
 		template<typename T>
-		void SetPathVariable(T new_value)
+		void SetPathVariable(T new_value) const
 		{
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
@@ -445,7 +432,7 @@ namespace bertini {
 		 \param new_values The new updated values for the implicit parameters.
 		 */
 		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values)
+		void SetImplicitParameters(Vec<T> new_values) const
 		{
 			if (new_values.size()!= implicit_parameters_.size())
 				throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
@@ -745,10 +732,11 @@ namespace bertini {
 
 		/**
 		Compute an estimate of an upper bound of the absolute values of the coefficients in the system.
-
+		
+		\param num_evaluations The number of times to compute this estimate.  Default is 1.
 		\returns An upper bound on the absolute values of the coefficients.
 		*/
-        mpfr_float CoefficientBound() const;
+        mpfr_float CoefficientBound(unsigned num_evaluations=1) const;
 
 
         /**
@@ -976,8 +964,8 @@ namespace bertini {
 		std::vector< Fn > functions_; ///< The system's functions.
 		
 		
-		std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
-		bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
+		mutable std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
+		mutable bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
 
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;

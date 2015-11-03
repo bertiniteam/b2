@@ -171,7 +171,7 @@ namespace bertini
 	}
 
 
-	void System::Differentiate()
+	void System::Differentiate() const
 	{
 			jacobian_.resize(NumFunctions());
 			for (int ii = 0; ii < NumFunctions(); ++ii)
@@ -700,11 +700,23 @@ namespace bertini
     //
     ///////////////////////
 
-    mpfr_float System::CoefficientBound() const
+    mpfr_float System::CoefficientBound(unsigned num_evaluations) const
     {
-    	mpfr_float bound("1000");
-    	
+    	mpfr_float bound("0");
 
+    	for (unsigned ii=0; ii < num_evaluations; ii++)
+    	{	
+    		Vec<mpfr> randy = Vec<mpfr>::Random(NumVariables());
+    		Vec<mpfr> f_vals;
+    		if (HavePathVariable())
+    			f_vals = Eval(randy, mpfr::rand());
+    		else
+    			f_vals = Eval(randy);
+	    	
+	    	auto dh_dx = Jacobian<mpfr>();
+	    	
+			bound = max(f_vals.array().abs().maxCoeff(),dh_dx.array().abs().maxCoeff(), bound);
+		}
     	return bound;
 	}
 
