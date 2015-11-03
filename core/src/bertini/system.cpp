@@ -707,7 +707,12 @@ namespace bertini
     	for (unsigned ii=0; ii < num_evaluations; ii++)
     	{	
     		Vec<mpfr> randy = Vec<mpfr>::Random(NumVariables());
-	    	auto f_vals = Eval(randy, mpfr::rand());
+    		Vec<mpfr> f_vals;
+    		if (HavePathVariable())
+    			f_vals = Eval(randy, mpfr::rand());
+    		else
+    			f_vals = Eval(randy);
+	    	
 	    	auto dh_dx = Jacobian<mpfr>();
 	    	
 			bound = max(f_vals.array().abs().maxCoeff(),dh_dx.array().abs().maxCoeff(), bound);

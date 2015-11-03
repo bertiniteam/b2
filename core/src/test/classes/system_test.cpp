@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_a
 }
 
 
-BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound)
+BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 {
 	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
 	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
@@ -678,7 +678,24 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound)
 	BOOST_CHECK(coefficient_bound > mpfr_float("0.5"));
 }
 
-BOOST_AUTO_TEST_CASE(system_estimate_degree_bound)
+BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+
+	VariableGroup vars{x,y,z};
+
+	sys.AddVariableGroup(vars);  
+	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	mpfr_float coefficient_bound = sys.CoefficientBound();
+	BOOST_CHECK(coefficient_bound < mpfr_float("5"));
+	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
+}
+
+BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 {
 	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
 	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
@@ -693,7 +710,21 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound)
 	BOOST_CHECK(degree_bound == mpfr_float("1"));
 }
 
+BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
 
+	VariableGroup vars{x,y,z};
+
+	sys.AddVariableGroup(vars);  
+	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	mpfr_float degree_bound = sys.DegreeBound();
+	BOOST_CHECK(degree_bound == mpfr_float("4"));
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 
