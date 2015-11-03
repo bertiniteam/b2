@@ -25,7 +25,9 @@
 //  ACMS
 //  Spring, Summer 2015
 
-
+/**
+\file system_test.cpp Unit testing for the bertini::System class.
+*/
 
 #include <boost/test/unit_test.hpp>
 
@@ -50,11 +52,20 @@ template<typename NumType> using Mat = bertini::Mat<NumType>;
 BOOST_AUTO_TEST_SUITE(system_class)
 
 
+/**
+\class bertini::System
+\test \b system_make_a_system_at_all Confirms that can default construct a System.
+*/
 BOOST_AUTO_TEST_CASE(system_make_a_system_at_all)
 {
 	System S;
 }
 
+
+/**
+\class bertini::System
+\test \b system_create_parser Confirms that can parse a system defined by a Bertini Classic style string.
+*/
 BOOST_AUTO_TEST_CASE(system_create_parser)
 {
 	System sys;
@@ -76,7 +87,10 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 
 
 
-
+/**
+\class bertini::System
+\test \b system_parse_xyz_f1f2_t_pq Confirms that can parse a system defined by a Bertini Classic style string, containing two functions, powers, parameters, a path variable, and three variables.
+*/
 BOOST_AUTO_TEST_CASE(system_parse_xyz_f1f2_t_pq)
 {
 
@@ -95,7 +109,10 @@ BOOST_AUTO_TEST_CASE(system_parse_xyz_f1f2_t_pq)
 }
 
 
-
+/**
+\class bertini::System
+\test \b system_parse_with_subfunctions Confirms that can parse a system with a subfunction.
+*/
 BOOST_AUTO_TEST_CASE(system_parse_with_subfunctions)
 {
 
@@ -112,6 +129,10 @@ BOOST_AUTO_TEST_CASE(system_parse_with_subfunctions)
 }
 
 
+/**
+\class bertini::System
+\test \b system_parse_around_the_unit_circle Tests parsing a system with cosine, sine, \f$\pi\f$, \f$i\f$, and subfunctions.
+*/
 BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle)
 {
 	std::string str =
@@ -131,7 +152,10 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle)
 
 
 
-
+/**
+\class bertini::System
+\test \b system_parse_around_the_unit_circle_alt Tests parsing an exponential function with time in it as a parameter.
+*/
 BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle_alt)
 {
 	std::string str = " variable z; function H; parameter s; pathvariable t; s = exp(2*Pi*I*(1-t)); H = z^2 - s; ";
@@ -165,7 +189,10 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle_alt)
 
 
 
-
+/**
+\class bertini::System
+\test \b system_differentiate_x Create a system with two functions, and check that can compute and evaluate its Jacobian.
+*/
 BOOST_AUTO_TEST_CASE(system_differentiate_x)
 {
 	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
@@ -187,7 +214,10 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x)
 }
 
 
-
+/**
+\class bertini::System
+\test \b system_differentiate_x_and_y Create a system with two functions and two variables, and check that can compute and evaluate its Jacobian.
+*/
 BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 {
 	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
@@ -210,7 +240,10 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 }
 
 
-
+/**
+\class bertini::System
+\test \b system_differentiate_x_and_t Create a system with two functions, one variable, one time variable, and check that can compute and evaluate its Jacobian.
+*/
 BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 {
 	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
@@ -234,6 +267,11 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 
 
 
+
+/**
+\class bertini::System
+\test \b system_homogenize_multiple_variable_groups Homogenize a system with multiple variable groups.
+*/
 BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 {
 	Var x1 = std::make_shared<bertini::Variable>("x1");
@@ -268,6 +306,10 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 
 
 
+/**
+\class bertini::System
+\test \b system_reorder_by_degree_decreasing For a system with four functions, re-order the functions so they are in decreasing degree.
+*/
 BOOST_AUTO_TEST_CASE(system_reorder_by_degree_decreasing)
 {
 	Var x1 = std::make_shared<bertini::Variable>("x1");
@@ -307,7 +349,10 @@ BOOST_AUTO_TEST_CASE(system_reorder_by_degree_decreasing)
 
 
 
-
+/**
+\class bertini::System
+\test \b system_reorder_by_degree_increasing For a system with four functions, re-order the functions so they are in increasing degree.
+*/
 BOOST_AUTO_TEST_CASE(system_reorder_by_degree_increasing)
 {
 	Var x1 = std::make_shared<bertini::Variable>("x1");
@@ -347,7 +392,10 @@ BOOST_AUTO_TEST_CASE(system_reorder_by_degree_increasing)
 
 
 
-
+/**
+\class bertini::System
+\test \b system_evaluate_double Evaluate a system in double precision.
+*/
 BOOST_AUTO_TEST_CASE(system_evaluate_double)
 {
 
@@ -379,7 +427,10 @@ BOOST_AUTO_TEST_CASE(system_evaluate_double)
 }
 
 
-
+/**
+\class bertini::System
+\test \b system_evaluate_mpfr Evaluate a system in multiple precision.
+*/
 BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 {
 
@@ -413,7 +464,10 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 
 
 
-
+/**
+\class bertini::System
+\test \b add_two_systems Test the arithmetic sum of two Systems.
+*/
 BOOST_AUTO_TEST_CASE(add_two_systems)
 {
 	bertini::System sys1, sys2;
@@ -456,7 +510,10 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 
 
 
-
+/**
+\class bertini::System
+\test \b system_differentiate_wrt_time_linear Test the arithmetic sum of two Systems.
+*/
 BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 {
 	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
@@ -485,7 +542,10 @@ BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 
 
 
-
+/**
+\class bertini::System
+\test \b system_dehomogenize_FIFO_one_aff_group Test the dehomogenization of a point using the first-in-first-out variable ordering which is standard in Bertini 1.
+*/
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
 {
 	bertini::System sys;
@@ -506,6 +566,11 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
 	BOOST_CHECK(abs(d(1) - v(2)/v(0)) < threshold_clearance_d);
 }
 
+
+/**
+\class bertini::System
+\test \b system_dehomogenize_FIFO_two_aff_groups Test the dehomogenization of a point using the first-in-first-out variable ordering which is standard in Bertini 1.
+*/
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
 {
 	bertini::System sys;
@@ -534,6 +599,12 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
 	BOOST_CHECK(abs(d(3) - v(5)/v(3)) < threshold_clearance_d);
 }
 
+
+
+/**
+\class bertini::System
+\test \b system_dehomogenize_FIFO_two_aff_groups_one_hom_group Test the dehomogenization of a point using the first-in-first-out variable ordering which is standard in Bertini 1.
+*/
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
 {
 	bertini::System sys;
@@ -570,6 +641,11 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
 }
 
 
+
+/**
+\class bertini::System
+\test \b system_dehomogenize_FIFO_one_hom_group Test the dehomogenization of a point using the first-in-first-out variable ordering which is standard in Bertini 1.
+*/
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 {
 	bertini::System sys;
@@ -591,6 +667,10 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 }
 
 
+/**
+\class bertini::System
+\test \b system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars Test the dehomogenization of a point using the first-in-first-out variable ordering which is standard in Bertini 1.
+*/
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
 {
 	bertini::System sys;
@@ -617,6 +697,10 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
 	BOOST_CHECK(abs(d(3) - v(3)) < threshold_clearance_d);
 }
 
+/**
+\class bertini::System
+\test \b system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_another_aff_grp_hom_grp Test the dehomogenization of a point using the first-in-first-out variable ordering which is standard in Bertini 1.
+*/
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_another_aff_grp_hom_grp)
 {
 	bertini::System sys;
@@ -662,6 +746,18 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_a
 }
 
 
+
+
+
+
+
+
+
+
+/**
+\class bertini::System
+\test \b system_estimate_coeff_bound_linear Test the estimation of the largest coefficient in a system, including its derivatives.
+*/
 BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 {
 	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
@@ -678,6 +774,11 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 	BOOST_CHECK(coefficient_bound > mpfr_float("0.5"));
 }
 
+
+/**
+\class bertini::System
+\test \b system_estimate_coeff_bound_quartic Test the estimation of the largest coefficient in a system, including its derivatives.
+*/
 BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 {
 	bertini::System sys;
@@ -695,6 +796,11 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
 }
 
+
+/**
+\class bertini::System
+\test \b system_estimate_degree_bound_linear Test the estimation of the degree in a system, including its derivatives.
+*/
 BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 {
 	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
@@ -710,6 +816,11 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 	BOOST_CHECK(degree_bound == mpfr_float("1"));
 }
 
+
+/**
+\class bertini::System
+\test \b system_estimate_degree_bound_quartic Test the estimation of the degree in a system, including its derivatives.
+*/
 BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 {
 	bertini::System sys;
