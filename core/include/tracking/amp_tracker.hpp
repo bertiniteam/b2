@@ -473,7 +473,7 @@ namespace bertini{
 
 		1. Create a system, and instantiate some settings.
 		2. Create an AMPTracker, associating it to the system you are going to solve or track on.
-		3. Run AMPTracker::Setup, getting the settings in line for tracking.
+		3. Run AMPTracker::Setup and AMPTracker::AMPSetup, getting the settings in line for tracking.
 		4. Repeatedly, or as needed, call the AMPTracker::TrackPath function, feeding it a start point, and start and end times.  The initial precision is that of the start point.  
 
 		Working precision and stepsize are adjusted automatically to get around nearby singularities to the path.  If the endpoint is singular, this may very well fail, as prediction and correction get more and more difficult with proximity to singularities.  
@@ -524,8 +524,9 @@ namespace bertini{
 		              	mpfr_float("1e-5"),
 						mpfr_float("1e5"),
 						stepping_preferences,
-						newton_preferences,
-						AMP);
+						newton_preferences);
+
+		tracker.AMPSetup(AMP);
 	
 		//  4. Create a start and end time.  These are complex numbers.
 		mpfr t_start("1.0");
@@ -558,7 +559,9 @@ namespace bertini{
 		public:
 
 
-
+			/**
+			\brief Construct an Adaptive Precision tracker, associating to it a System.
+			*/
 			AMPTracker(System const& sys) : Tracker(sys)
 			{	
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "creating tracker from system " << sys;
@@ -567,7 +570,9 @@ namespace bertini{
 
 			
 
-
+			/**
+			\brief Special additional setup call for the AMPTracker, selecting the config for adaptive precision.
+			*/
 			void AMPSetup(config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				AMP_config_ = AMP_config;
@@ -588,6 +593,8 @@ namespace bertini{
 				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time);
 			}
 
+
+			virtual ~AMPTracker() = default;
 		private:
 
 
