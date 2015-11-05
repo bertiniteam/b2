@@ -22,6 +22,14 @@
 //  ACMS
 //  Summer 2015
 
+/**
+\file step.hpp 
+
+\brief Provides Step wrappers for taking a generic predict-correct step.  
+
+This provides no calls for adaptive precision, those living with the AMPTracker type instead.
+*/
+
 
 #ifndef BERTINI_STEP_HPP
 #define BERTINI_STEP_HPP

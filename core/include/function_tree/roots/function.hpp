@@ -18,6 +18,13 @@
 //
 // function.hpp:  Declares the class Function.
 
+/**
+\file function.hpp
+
+\brief Provides the Function Node type, a NamedSymbol.
+
+*/
+
 
 #ifndef BERTINI_FUNCTION_NODE_HPP
 #define BERTINI_FUNCTION_NODE_HPP

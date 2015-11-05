@@ -18,7 +18,11 @@
 //
 // system_parsing.hpp:  This file contains the parser to parse systems from Bertini Classic input files.
 
+/**
+\file system_parsing.hpp
 
+\brief Contains the parser to parse systems from Bertini Classic-style input files.
+*/
 
 #ifndef BERTINI_SYSTEM_PARSING_HPP
 #define BERTINI_SYSTEM_PARSING_HPP

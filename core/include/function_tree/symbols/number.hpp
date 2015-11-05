@@ -18,6 +18,12 @@
 //
 // number.hpp:  Declares the class Number.
 
+/**
+\file number.hpp
+
+\brief Provides the Number Node types, including Rational, Float, and Integer
+
+*/
 
 
 #ifndef b2Test_Number_h

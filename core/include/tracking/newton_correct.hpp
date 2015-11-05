@@ -22,6 +22,13 @@
 //  ACMS
 //  Summer 2015
 
+/**
+\file newton_correct.hpp 
+
+\brief Implements Newton's method for square systems
+*/
+
+
 #ifndef BERTINI_NEWTON_CORRECT_HPP
 #define BERTINI_NEWTON_CORRECT_HPP
 

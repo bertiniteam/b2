@@ -18,6 +18,12 @@
 //
 // node.hpp:  Declares the class Node.
 
+/**
+\file node.hpp
+
+\brief Defines the abstract Node base class.
+
+*/
 
 #ifndef BERTINI_NODE_BASE_HPP
 #define BERTINI_NODE_BASE_HPP

@@ -22,6 +22,12 @@
 //
 //
 
+/**
+\file eigen_extensions.hpp 
+
+\brief Bertini extensions of the Eigen linear algebra library.
+*/
+
 #ifndef BERTINI_EIGEN_EXTENSIONS_HPP
 #define BERTINI_EIGEN_EXTENSIONS_HPP
 

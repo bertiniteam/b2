@@ -22,6 +22,12 @@
 //  ACMS
 //  Summer 2015
 
+/**
+\file predict.hpp 
+
+\brief Wrapper functions for calling ODE predictors for systems.
+*/
+
 #ifndef BERTINI_PREDICT_HPP
 #define BERTINI_PREDICT_HPP
 

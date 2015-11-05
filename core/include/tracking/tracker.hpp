@@ -25,7 +25,7 @@
 /**
 \file tracker.hpp
 
-\brief Contains the base Tracker type.
+\brief Contains the includes for all Tracker types.
 */
 
 #ifndef BERTINI_TRACKER_HPP

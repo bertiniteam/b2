@@ -22,6 +22,14 @@
 //
 //
 
+/**
+\file mpfr_extensions.hpp 
+
+\brief Extensions to the Boost.Multiprecision library.
+
+Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and gmp_int types.
+*/
+
 #ifndef BERTINI_MPFR_EXTENSIONS_HPP
 #define BERTINI_MPFR_EXTENSIONS_HPP
 

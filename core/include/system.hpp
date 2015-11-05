@@ -22,6 +22,12 @@
 // system.hpp:  provides the bertini::system class.
 
 
+/**
+\file system.hpp 
+
+\brief Provides the bertini::system class.
+*/
+
 #ifndef BERTINI_SYSTEM_HPP
 #define BERTINI_SYSTEM_HPP
 

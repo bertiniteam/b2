@@ -18,6 +18,16 @@
 //
 // limbo.hpp:  Declares functions which have not yet found a home.
 
+
+/**
+\file limbo.hpp 
+
+\brief Declares functions which have not yet found a home. 
+
+If you can find a better home for these functions, please make the changes and submit a pull request.
+*/
+
+
 #ifndef BERTINI_LIMBO_HPP
 #define BERTINI_LIMBO_HPP
 

@@ -22,6 +22,13 @@
 //  ACMS
 //  Spring, Summer 2015
 
+/**
+\file start_system.hpp 
+
+\brief Defines start system types.
+*/
+
+
 #ifndef BERTINI_START_SYSTEM_HPP
 #define BERTINI_START_SYSTEM_HPP
 

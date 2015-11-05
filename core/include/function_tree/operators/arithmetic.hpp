@@ -18,6 +18,13 @@
 //
 // arithmetic.hpp:  Declares the arithmetic nodes for bertini2.
 
+/**
+\file arithmetic.hpp
+
+\brief Provides the artithmetic Node types, such as Sum and Power
+
+*/
+
 #ifndef BERTINI_OPERATOR_ARITHMETIC_HPP
 #define BERTINI_OPERATOR_ARITHMETIC_HPP
 

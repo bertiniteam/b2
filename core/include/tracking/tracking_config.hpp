@@ -28,7 +28,7 @@
 /**
 \file tracking_config.hpp
 
-\brief Configs and settings for tracking
+\brief Configs and settings for tracking.
 */
 
 #include "eigen_extensions.hpp"

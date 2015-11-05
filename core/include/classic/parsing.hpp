@@ -21,6 +21,13 @@
 //
 // parsing.hpp: provides some parsers for classic mode input files.
 
+/**
+\file parsing.hpp
+
+\brief Provides some parsers for Classic mode input files.
+
+*/
+
 
 #ifndef BERTINI_CLASSIC_PARSING
 #define BERTINI_CLASSIC_PARSING
