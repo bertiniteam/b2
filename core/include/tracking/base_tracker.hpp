@@ -25,7 +25,7 @@
 /**
 \file base_tracker.hpp
 
-\brief Contains the base Tracker type.
+\brief Contains the abstract base Tracker type, from which all other Trackers inherit.
 */
 
 #ifndef BERTINI_BASE_TRACKER_HPP
@@ -45,8 +45,79 @@ namespace bertini{
 		\class Tracker
 
 		\brief Base tracker class for trackers offered in Bertini2.
-
+	
 		\see AMPTracker
+		
+		## Using a tracker
+
+		Trackers in Bertini2 are the engine for tracking a path from one space-time pair to another.  The path is implicitly described by the system being tracked.
+
+		1. Create a system.
+		2. Create a tracker, associating it to the system.
+		3. Set the config for the track.
+		4. Track from your start point and time, to the target time.
+		5. Profit.
+
+		Specific examples are given with the implemented tracker types.  So far, these types are avaiable:
+
+		* AMPTracker
+
+		Please see their detailed documentation for description of how to use them correctly.
+
+
+		## Purpose 
+
+		Since the Bertini trackers have common functionality, and we want to be able to call arbitrary algorithms using and tracker type, we use inheritance.  That is, there is common functionality in all trackers, such as
+
+		* Setup
+		* TrackPath
+		* Refine
+		
+		which we want all Trackers to be able to do.  However, the internal behaviour of a particular tracker varies -- which is why it is a different type.  In particular, the fixed precision trackers produce and work in a fixed precision, whereas the AMPTracker varies precision to get around or near branch points while tracking. 
+
+		Hence, the use of trackers in Bertini2 is through pointers or references to Trackers, enabling the use of any kind of tracking in any algorithm, and further allowing the development of new tracker types as the theory and practice advance.
+
+
+		## Creating a new tracker type
+
+		To create a new Tracker type, inherit from this, and override the following functions:
+
+		\code
+		
+		public:
+		virtual
+			SuccessCode Refine(Vec<mpfr> & new_space,
+								Vec<mpfr> const& start_point, mpfr const& current_time) = 0;
+		
+		private:
+
+		virtual
+		void TrackerLoopInitialization(mpfr const& start_time, Vec<mpfr> const& start_point) = 0;
+
+		virtual 
+		SuccessCode InitialRefinement() = 0;
+
+		virtual 
+		SuccessCode PreIterationCheck() const = 0;
+
+		virtual 
+		SuccessCode TrackerIteration() = 0;
+
+		virtual
+		void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
+
+		\endcode
+	
+		and optionally override the function
+
+		\code
+		virtual
+		void ResetCounters()
+		\endcode
+		where you probably want to call this base function, which is why it is protected, not private.
+
+
+
 		*/
 		class Tracker
 		{
@@ -57,6 +128,9 @@ namespace bertini{
 			{
 				Predictor(predict::DefaultPredictor());
 			}
+
+
+
 			/**
 			\brief Get the tracker set up for tracking.
 
@@ -197,6 +271,7 @@ namespace bertini{
 				return num_failed_steps_taken_ + num_successful_steps_taken_;
 			}
 
+			virtual ~Tracker() = default;
 
 		private:
 
