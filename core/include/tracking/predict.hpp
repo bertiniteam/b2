@@ -263,6 +263,19 @@ namespace bertini{
 
 		namespace predict{
 
+
+			/**
+			\brief Get the Bertini2 default predictor.  
+
+			Currently set to Euler, though this will change in future versions.
+			*/
+			inline
+			config::Predictor DefaultPredictor()
+			{
+				return config::Predictor::Euler;
+			}
+
+
 			/**
 			The lowest order of the predictor.  The order of the error estimate is this plus one.
 			*/

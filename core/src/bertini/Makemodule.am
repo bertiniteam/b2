@@ -19,6 +19,8 @@ tracking_header_files = \
 	include/tracking/amp_criteria.hpp \
 	include/tracking/tracking_config.hpp \
 	include/tracking/step.hpp \
+	include/tracking/base_tracker.hpp \
+	include/tracking/amp_tracker.hpp \
 	include/tracking/tracker.hpp
 
 

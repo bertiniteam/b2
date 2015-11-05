@@ -83,9 +83,10 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_linear)
 	              mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
 
+	tracker.AMPSetup(AMP);
+	
 	mpfr t_start("1.0");
 	mpfr t_end("0.0");
 	
@@ -137,8 +138,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_quadratic)
 	              mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1.0");
 	mpfr t_end("-1.0");
@@ -186,8 +188,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_decic)
 	              	mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1.0");
 	mpfr t_end("-2.0");
@@ -239,8 +242,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	              	mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1.0");
 	mpfr t_end("0");
@@ -335,8 +339,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 	              	mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1.0");
 	mpfr t_end("0");
@@ -400,8 +405,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	              	mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1.0");
 	mpfr t_end("0");
@@ -456,8 +462,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	              	mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1.0");
 	mpfr t_end("0");
@@ -511,8 +518,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	              	mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1.0");
 	mpfr t_end("0");
@@ -585,8 +593,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 	              	mpfr_float("1e-5"),
 					mpfr_float("1e5"),
 					stepping_preferences,
-					newton_preferences,
-					AMP);
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1");
 	mpfr t_end("0");
