@@ -32,7 +32,6 @@
 #define BERTINI_AMP_TRACKER_HPP
 
 #include "tracking/base_tracker.hpp"
-#include <boost/multiprecision/number.hpp>
 
 
 namespace bertini{
