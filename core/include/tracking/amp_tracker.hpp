@@ -560,7 +560,7 @@ namespace bertini{
 
 
 
-			AMPTracker(System sys) : tracked_system_(sys), Tracker()
+			AMPTracker(System const& sys) : Tracker(sys)
 			{	
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "creating tracker from system " << sys;
 			}
@@ -659,14 +659,21 @@ namespace bertini{
 			}
 
 
+			void ResetCounters() override
+			{
+				Tracker::ResetCounters();
+				num_precision_decreases_ = 0;
 
+				// initialize to the frequency so guaranteed to compute it the first try 
+				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
+			}
 
 			/** 
 			\brief Run an initial refinement of the start point, to ensure in high enough precision to start.
 
 			\return Whether initial refinement was successful.  
 			*/
-			SuccessCode InitialRefinement()
+			SuccessCode InitialRefinement() override
 			{
 				SuccessCode initial_refinement = Refine();
 				if (initial_refinement!=SuccessCode::Success)
@@ -833,23 +840,15 @@ namespace bertini{
 
 				// copy the tentative vector into the current space vector;
 				current_space = tentative_next_space;
-				StepSuccess<ComplexType,RealType>();
-
-
-				current_stepsize_ = next_stepsize_;
-				if (next_precision_!=current_precision_)
-				{
-					SuccessCode precision_change_code = ChangePrecision(next_precision_);
-					if (precision_change_code!=SuccessCode::Success)
-						return precision_change_code;
-				}
-
-
-				return SuccessCode::Success;
+				return StepSuccess<ComplexType,RealType>();
 			}
 
 
-
+			SuccessCode UpdatePrecisionAndStepsize()
+			{
+				current_stepsize_ = next_stepsize_;
+				return ChangePrecision(next_precision_);
+			}
 
 
 			/**
@@ -881,6 +880,7 @@ namespace bertini{
 						 	AMP_config_,
 						 	digits_final_,
 						  predictor_order_);
+				UpdatePrecisionAndStepsize();
 			}
 
 
@@ -893,6 +893,7 @@ namespace bertini{
 				::bertini::tracking::ConvergenceError(next_precision_, next_stepsize_, 
 							  current_precision_, current_stepsize_,
 							  stepping_config_.step_size_fail_factor);
+				UpdatePrecisionAndStepsize();
 			}
 
 
@@ -1093,7 +1094,7 @@ namespace bertini{
 			The number of consecutive successful steps is recorded as state in this class, and if this number exceeds a user-determine threshold, the precision or stepsize are allowed to favorably change.  If not, then precision can only go up or remain the same.  Stepsize can only decrease.  These changes depend on the AMP criteria and current tracking tolerance.
 			*/
 			template <typename ComplexType, typename RealType>
-			void StepSuccess()
+			SuccessCode StepSuccess()
 			{
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "StepSuccess";
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "current precision: " << current_precision_;
@@ -1172,6 +1173,8 @@ namespace bertini{
 
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "new precision: " << next_precision_;
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "new stepsize: " << next_stepsize_;
+
+				return UpdatePrecisionAndStepsize();
 			}
 
 

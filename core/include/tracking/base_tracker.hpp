@@ -53,7 +53,7 @@ namespace bertini{
 
 		public:
 
-			Tracker()
+			Tracker(System const& sys) : tracked_system_(sys)
 			{
 				Predictor(predict::DefaultPredictor());
 			}
@@ -66,8 +66,7 @@ namespace bertini{
 			           mpfr_float const& tracking_tolerance,
 						mpfr_float const& path_truncation_threshold,
 						config::Stepping const& stepping,
-						config::Newton const& newton,
-						
+						config::Newton const& newton
 						)
 			{
 				Predictor(new_predictor_choice);
@@ -201,17 +200,7 @@ namespace bertini{
 
 		private:
 
-			void ResetCounters()
-			{
-				// reset a bunch of counters to 0.
-				num_consecutive_successful_steps_ = 0;
-				num_successful_steps_taken_ = 0;
-				num_failed_steps_taken_ = 0;
-				num_precision_decreases_ = 0;
-
-				// initialize to the frequency so guaranteed to compute it the first try 
-				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
-			}
+			
 
 
 			virtual
@@ -231,6 +220,16 @@ namespace bertini{
 
 
 		protected:
+
+			virtual
+			void ResetCounters()
+			{
+				// reset a bunch of counters to 0.
+				num_consecutive_successful_steps_ = 0;
+				num_successful_steps_taken_ = 0;
+				num_failed_steps_taken_ = 0;
+			}
+
 			System tracked_system_; ///< The system being tracked.
 
 			// tracking the numbers of things
