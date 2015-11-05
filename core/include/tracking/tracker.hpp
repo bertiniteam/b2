@@ -703,7 +703,38 @@ namespace bertini{
 
 
 
+			/**
+			\brief Run Newton's method from a start point with a current time.  
 
+			Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
+
+			\tparam ComplexType The complex number type.
+			\tparam RealType The real number type.
+
+			\param[out] new_space The result of running the refinement.
+			\param start_point The base point for running Newton's method.
+			\param current_time The current time value.
+
+			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
+			*/
+			template <typename ComplexType, typename RealType>
+			SuccessCode Refine(Vec<ComplexType> & new_space,
+								Vec<ComplexType> const& start_point, ComplexType const& current_time)
+			{
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
+
+				return bertini::tracking::Correct(new_space,
+							   tracked_system_,
+							   start_point,
+							   current_time, 
+							   tracking_tolerance_,
+							   RealType(path_truncation_threshold_),
+							   newton_config_.min_num_newton_iterations,
+							   newton_config_.max_num_newton_iterations,
+							   AMP_config_);
+			}
 
 
 
@@ -1062,7 +1093,6 @@ namespace bertini{
 
 
 
-
 			/**
 			\brief Run Newton's method from a start point with a current time.  
 
@@ -1075,6 +1105,8 @@ namespace bertini{
 			\param start_point The base point for running Newton's method.
 			\param current_time The current time value.
 			\param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
+
+			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
 			template <typename ComplexType, typename RealType>
 			SuccessCode Refine(Vec<ComplexType> & new_space,
@@ -1095,6 +1127,7 @@ namespace bertini{
 							   newton_config_.max_num_newton_iterations,
 							   AMP_config_);
 			}
+			
 
 
 
