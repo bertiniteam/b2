@@ -18,6 +18,13 @@
 //
 // jacobian.hpp:  Declares the class Jacobian.
 
+/**
+\file jacobian.hpp
+
+\brief Provides the Jacobian node type.
+
+*/
+
 
 #ifndef BERTINI_JACOBIAN_NODE_HPP
 #define BERTINI_JACOBIAN_NODE_HPP

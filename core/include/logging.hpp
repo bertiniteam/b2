@@ -22,6 +22,12 @@
 //  ACMS
 //  Fall 2015
 
+/**
+\file logging.hpp 
+
+\brief Logging in Bertini using Boost.Log
+*/
+
 
 #ifndef BERTINI_LOGGING_HPP
 #define BERTINI_LOGGING_HPP 

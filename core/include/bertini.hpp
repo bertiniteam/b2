@@ -21,7 +21,11 @@
 //
 // bertini.hpp:  main header file for Bertini2.0
 
+/**
+\file bertini.hpp 
 
+\brief The main file for including the entirety of Bertini's header files.
+*/
 
 #ifndef BERTINI_HPP
 #define BERTINI_HPP

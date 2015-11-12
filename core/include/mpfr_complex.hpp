@@ -21,6 +21,12 @@
 //
 // mpfr_complex.hpp:  Declares the class bertini::complex.
 
+/**
+\file mpfr_complex 
+
+\brief The main multiprecision complex number type.
+*/
+
 
 #ifndef BERTINI_MPFR_COMPLEX_HPP
 #define BERTINI_MPFR_COMPLEX_HPP

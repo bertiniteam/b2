@@ -18,6 +18,13 @@
 //
 // operator.hpp:  Declares the class Operator.
 
+/**
+\file operator.hpp
+
+\brief Provides the abstract Operator Node type.
+
+*/
+
 #ifndef BERTINI_OPERATOR_HPP
 #define BERTINI_OPERATOR_HPP
 

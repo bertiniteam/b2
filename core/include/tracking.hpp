@@ -22,16 +22,16 @@
 //  ACMS
 //  Summer 2015
 
+/**
+\file tracking.hpp 
+\brief Includes all files for tracking in Bertini2.
+*/
+
 
 #ifndef BERTINI_TRACKING_HPP
 #define BERTINI_TRACKING_HPP
 
-
-#include "tracking/step.hpp"
-#include "tracking/predict.hpp"
 #include "tracking/tracker.hpp"
-
-
 
 #endif
 

@@ -21,6 +21,11 @@
 //  This file collects the various header files which define the Bertini2  
 //  function tree node types, which are scattered through about 10 files.
 
+/**
+\file function_tree.hpp 
+
+\brief Collects the various header files which define the Bertini2 function tree node types.
+*/
 
 
 #ifndef BERTINI_FUNCTION_TREE_HPP

@@ -22,7 +22,13 @@
 //
 //
 
+/**
+\file num_traits.hpp 
 
+\brief Provides an Eigen-like NumTraits struct for querying traits of a number type.  
+
+The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
+*/
 
 #ifndef BERTINI_NUM_TRAITS_HPP
 #define BERTINI_NUM_TRAITS_HPP

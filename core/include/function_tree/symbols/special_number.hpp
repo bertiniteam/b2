@@ -18,7 +18,12 @@
 //
 // special_number.hpp:  Declares the class SpecialNumber.
 
+/**
+\file special_number.hpp
 
+\brief Provides the special numbers \f$\pi\f$, \f$e\f$, 1, 2, 0, as Nodes
+
+*/
 
 #ifndef b2Test_SpecialNumber_h
 #define b2Test_SpecialNumber_h

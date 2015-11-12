@@ -22,6 +22,13 @@
 //  ACMS
 //  Summer 2015
 
+
+/**
+\file correct.hpp 
+
+\brief Contains wrappers for the Newton correct functions.
+*/
+
 #ifndef BERTINI_CORRECT_HPP
 #define BERTINI_CORRECT_HPP
 

@@ -22,6 +22,14 @@
 //  ACMS
 //  Fall 2015
 
+
+/**
+\file heun_euler.hpp 
+
+\brief Contains the functions for the Heun-Euler ODE predictor.
+*/
+
+
 #ifndef BERTINI_HEUN_EULER_PREDICT_HPP
 #define BERTINI_HEUN_EULER_PREDICT_HPP
 

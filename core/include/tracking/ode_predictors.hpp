@@ -22,6 +22,12 @@
 //  ACMS
 //  Summer 2015
 
+/**
+\file ode_predictors.hpp 
+
+\brief Includes for the suite of ODE predictors.
+*/
+
 #ifndef BERTINI_ODE_PREDICTORS_HPP
 #define BERTINI_ODE_PREDICTORS_HPP
 

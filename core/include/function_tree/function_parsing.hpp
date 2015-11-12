@@ -23,6 +23,13 @@
 // from qi::grammar, or they all contain a struct the inherits from grammar.  Right now
 // VariableParser does the second, and Function Parser does the first.
 
+
+/**
+\file function_parsing.hpp
+
+\brief Provides a Boost.Spirit::Qi parser for function expressions.
+*/
+
 #ifndef BERTINI_FUNCTION_PARSING_HPP
 #define BERTINI_FUNCTION_PARSING_HPP
 

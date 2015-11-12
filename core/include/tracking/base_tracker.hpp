@@ -25,6 +25,8 @@
 /**
 \file base_tracker.hpp
 
+\brief 
+
 \brief Contains the abstract base Tracker type, from which all other Trackers inherit.
 */
 

@@ -22,6 +22,11 @@
 //  ACMS
 //  Summer 2015
 
+/**
+\file euler.hpp 
+
+\brief Contains the code for the Euler ODE predictor.
+*/
 #ifndef BERTINI_EULER_PREDICT_HPP
 #define BERTINI_EULER_PREDICT_HPP
 

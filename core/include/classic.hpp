@@ -21,6 +21,12 @@
 //
 // classic.hpp:  a blanket include for classic compatibility.
 
+/**
+\file classic.hpp 
+
+\brief Includes for classic compatibility
+*/
+
 #ifndef BERTINI_CLASSIC_HPP
 #define BERTINI_CLASSIC_HPP
 
