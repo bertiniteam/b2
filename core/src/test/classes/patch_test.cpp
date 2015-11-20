@@ -208,6 +208,27 @@ BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec_default_mpfr)
 }
 
 
+BOOST_AUTO_TEST_CASE(patch_equality_checks)
+{
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	std::vector<unsigned> s1{2,3};
+	std::vector<unsigned> s2{3,4};
+
+	Patch p(s1), q(s1), r(s2);
+
+	BOOST_CHECK_EQUAL(p,p);
+	BOOST_CHECK_EQUAL(q,q);
+	BOOST_CHECK_EQUAL(r,r);
+
+	BOOST_CHECK(p!=q);
+	BOOST_CHECK(p!=r);
+	BOOST_CHECK(q!=r);
+
+	BOOST_CHECK(q!=p);
+	BOOST_CHECK(r!=p);
+	BOOST_CHECK(r!=q);
+}
 
 
 

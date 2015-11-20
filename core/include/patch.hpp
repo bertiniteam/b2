@@ -58,6 +58,28 @@ namespace bertini {
 	This class provides an adjustable-precision patch on a working space for solving a polynomial system using homotopy continuation.
 
 	The constant values for the patch are unity.
+
+	## Example code, not using a bertini::System to generate the patch. 
+	\code
+
+	std::vector<unsigned> s{2,3};
+
+	Patch p(s);
+
+	Vec<mpfr> v(5);
+	v << mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1);
+
+	auto v_rescaled = p.RescalePoint(v);
+
+	auto f = p.Eval(v_rescaled);
+	
+	\endcode
+	
+	At the end of the above example, the patch evaluates to 0 in the container \f$f\f$.
+
+	## Other ways of patching
+
+	Patches can also be applied to a system, which should first be homogenized.
 	*/
 	class Patch
 	{
@@ -367,6 +389,36 @@ namespace bertini {
 			out << "current patch precision: " << p.Precision() << "\n";
 			return out;
 		}
+
+		/**
+		\brief Check whether two patches are the same. 
+
+		\return true If have the same variable structure and coefficients.  Otherwise, false.
+		*/
+		bool operator==(Patch const rhs) const
+		{
+			if (NumVariableGroups()!=rhs.NumVariableGroups())
+				return false;
+			if (NumVariables()!=rhs.NumVariables())
+				return false;
+			for (unsigned ii=0; ii<NumVariableGroups(); ii++)
+				if (variable_group_sizes_[ii]!=rhs.variable_group_sizes_[ii])
+					return false;
+			for (unsigned ii=0; ii<NumVariableGroups(); ii++)
+				if (coefficients_highest_precision_[ii]!=rhs.coefficients_highest_precision_[ii])
+					return false;
+
+			return true;
+		}
+
+		/**
+		\brief Check whether two patches are different.
+		*/
+		bool operator!=(Patch const& rhs) const
+		{
+			return !(*this==rhs);
+		}
+
 	private:
 
 		/////////////////

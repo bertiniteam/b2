@@ -892,7 +892,8 @@ namespace bertini {
 		\brief Add two systems together.
 
 		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
-
+		
+		\throws std::runtime_error, if the patches are not compatible.  The patches must be either the same, absent, or present in one system.  They propagate to the resulting system.
 		*/
 		System operator+=(System const& rhs);
 
@@ -900,7 +901,8 @@ namespace bertini {
 		\brief Add two systems together.
 
 		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
-		
+
+		\see The += operator for System also.
 		*/
 		friend System operator+(System lhs, System const& rhs);
 

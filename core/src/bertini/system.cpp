@@ -171,7 +171,6 @@ namespace bertini
 		for (auto iter : ungrouped_variables_)
 			iter->precision(new_precision);
 
-
 		precision_ = new_precision;
 	}
 
@@ -1010,10 +1009,26 @@ namespace bertini
 		if (this->NumVariables()!=rhs.NumVariables())
 			throw std::runtime_error("cannot add two Systems with differing numbers of variables");
 
+		if (this->NumHomVariables()!=rhs.NumHomVariables())
+			throw std::runtime_error("cannot add two Systems with differing numbers of homogenizing variables");
+
+		if (this->NumTotalVariableGroups()!=rhs.NumTotalVariableGroups())
+			throw std::runtime_error("cannot add two Systems with differing total numbers of variable groups");
+
+
+		//
+		//  deal with the patches
+		//
+		if (!this->IsPatched() && rhs.IsPatched())
+			this->patch_ = rhs.patch_;
+		// the condition (this->IsPatched() && !rhs.IsPatched()) is ok.  nothing to do.
+		// the condition (!this->IsPatched() && !rhs.IsPatched()) is ok.  nothing to do.
+		else if (this->IsPatched() && rhs.IsPatched())
+			if (this->patch_ != rhs.patch_)
+				throw std::runtime_error("System+=System cannot combine two patched systems whose patches differ.");
+
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
-		{
 			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->entry_node() + (*iter)->entry_node());
-		}
 
 		return *this;
 	}
