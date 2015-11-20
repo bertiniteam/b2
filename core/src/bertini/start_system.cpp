@@ -51,6 +51,7 @@ namespace bertini {
 			if (!s.IsPolynomial())
 				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
 
+			
 
 			auto deg = s.Degrees();
 			for (auto iter : deg)
@@ -72,7 +73,8 @@ namespace bertini {
 
 
 			CopyVariableStructure(s);
-
+			if (s.IsPatched())
+				CopyPatches(s);
 
 			for (auto iter = original_variables.begin(); iter!=original_variables.end(); iter++)
 			{

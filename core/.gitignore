@@ -42,6 +42,8 @@ serialization_test*
 *.dirstamp
 *.deps
 
+*.dtps*
+
 *~
 *.DS_Store
 

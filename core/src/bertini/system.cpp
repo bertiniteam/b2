@@ -82,6 +82,11 @@ namespace bertini
 		return homogenizing_variables_.size();
 	}
 
+	size_t System::NumTotalVariableGroups() const
+	{
+		return NumVariableGroups() + NumHomVariableGroups();
+	}
+
 	size_t System::NumVariableGroups() const
 	{
 		return variable_groups_.size();
@@ -109,16 +114,16 @@ namespace bertini
 		return explicit_parameters_.size();
 	}
 
-
-	/**
-	 Get the number of implicit parameters in this system
-	 */
 	size_t System::NumImplicitParameters() const
 	{
 		return implicit_parameters_.size();
 	}
 
 
+	size_t System::NumTotalFunctions() const
+	{
+		return NumFunctions() + NumPatches();
+	}
 
 
 	void System::precision(unsigned new_precision)
@@ -174,10 +179,10 @@ namespace bertini
 	void System::Differentiate() const
 	{
 			jacobian_.resize(NumFunctions());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
+			auto num_functions = NumFunctions();
+			for (int ii = 0; ii < num_functions; ++ii)
 				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
-			}
+
 			is_differentiated_ = true;
 		}
 
@@ -343,6 +348,7 @@ namespace bertini
 		variable_groups_.push_back(v);
 		is_differentiated_ = false;
 		have_ordering_ = false;
+		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Affine);
 	}
 
@@ -354,6 +360,7 @@ namespace bertini
 		hom_variable_groups_.push_back(v);
 		is_differentiated_ = false;
 		have_ordering_ = false;
+		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Homogeneous);
 	}
 
@@ -366,6 +373,7 @@ namespace bertini
 		ungrouped_variables_.push_back(v);
 		is_differentiated_ = false;
 		have_ordering_ = false;
+		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
 	}
 
@@ -377,6 +385,7 @@ namespace bertini
 		ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
 		is_differentiated_ = false;
 		have_ordering_ = false;
+		is_patched_ = false;
 		for (auto iter : v)
 			time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
 	}
@@ -606,11 +615,13 @@ namespace bertini
 	void System::SetFIFOVariableOrdering()
 	{
 		ordering_ = OrderingChoice::FIFO;
+		is_patched_ = false;
 	}
 
 	void System::SetAffHomUngVariableOrdering()
 	{
 		ordering_ = OrderingChoice::AffHomUng;
+		is_patched_ = false;
 	}
 
 	//private
@@ -670,26 +681,75 @@ namespace bertini
 
 
 
+	std::vector<unsigned> System::VariableGroupSizesFIFO() const
+	{
+		std::vector<unsigned> s;
+
+		unsigned hom_group_counter(0), affine_group_counter(0), patch_counter(0);
+		for (auto curr_grouptype : time_order_of_variable_groups_)
+		{
+			
+			if (curr_grouptype==VariableGroupType::Homogeneous)
+				s.push_back(hom_variable_groups_[hom_group_counter++].size());
+			else if (curr_grouptype==VariableGroupType::Affine)
+				s.push_back(variable_groups_[affine_group_counter++].size()+1);
+		}
+		return s;
+	}
 
 
+	std::vector<unsigned> System::VariableGroupSizesAffHomUng() const
+	{
+		std::vector<unsigned> s;
 
+		for (auto a : variable_groups_)
+			s.push_back(a.size()+1);
 
+		for (auto h : hom_variable_groups_)
+			s.push_back(h.size());
+
+		return s;
+	}
 
 
 	/////////////////
 	//
-	// Dehomogenization functions
+	// Patching functions
 	//
 	///////////////////
 	
 
 
+	void System::AutoPatchFIFO()
+	{
+		if (!IsHomogeneous())
+			throw std::runtime_error("requesting to AutoPatch a system which is not homogenized.  Homogenize it first.");
+		
+		patch_ = Patch(VariableGroupSizesFIFO());
+
+		is_patched_ = true;
+	}
 
 
+	void System::AutoPatchAffHomUng()
+	{
+		if (!IsHomogeneous())
+			throw std::runtime_error("requesting to AutoPatch a system which is not homogenized.  Homogenize it first.");
+
+		patch_ = Patch(VariableGroupSizesAffHomUng());
+
+		is_patched_ = true;
+	}
 
 
+	void System::CopyPatches(System const& other)
+	{
+		if (!other.IsPatched())
+			throw std::runtime_error("trying to copy patch from unpatched other system.  may only copy patch from a system which is already patched.");
 
-
+		this->patch_ = other.patch_;
+		is_patched_ = true;
+	}
 
 
 			
@@ -916,6 +976,13 @@ namespace bertini
 			out << "system not differentiated\n";
 		}
 
+		if (s.IsPatched())
+		{
+			out << s.patch_;
+		}
+		else{
+			out << "system not patched\n";
+		}
 
 		return out;
 	}

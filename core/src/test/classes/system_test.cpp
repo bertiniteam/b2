@@ -41,6 +41,9 @@ using Var = std::shared_ptr<bertini::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 using mpfr_float = bertini::mpfr_float;
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
+
 extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;

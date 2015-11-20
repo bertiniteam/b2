@@ -35,6 +35,9 @@
 #include "eigen_extensions.hpp"
 #include <vector>
 #include "function_tree.hpp"
+
+#include "patch.hpp"
+
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/number.hpp>
 
@@ -67,6 +70,8 @@ namespace bertini {
 	 */
 	class System{
 		
+	private:
+		enum class OrderingChoice{FIFO, AffHomUng};
 
 	public:
 		// a few local using statements to reduce typing etc.
@@ -318,9 +323,22 @@ namespace bertini {
 
 
 		/**
-		 Get the number of functions in this system
+		 Get the number of functions in this system, excluding patches.
 		 */
 		size_t NumFunctions() const;
+
+		/**
+		Get the number of patches in this system.
+		*/
+		size_t NumPatches() const
+		{
+			return patch_.NumVariableGroups();
+		}
+
+		/**
+		Get the total number of functions, including patches
+		*/
+		size_t NumTotalFunctions() const;
 
 		/**
 		 Get the total number of variables in this system, including homogenizing variables.
@@ -336,8 +354,14 @@ namespace bertini {
 		 Get the number of *homogenizing* variables in this system
 		 */
 		size_t NumHomVariables() const;
+
 		/**
-		 Get the number of variable groups in the system
+		Get the total number of variable groups in the system, including both affine and homogenous.  Ignores the ungrouped variables, because they are not in any group.
+		*/
+		size_t NumTotalVariableGroups() const;
+
+		/**
+		 Get the number of affine variable groups in the system
 		*/
 		 size_t NumVariableGroups() const;
 
@@ -615,6 +639,13 @@ namespace bertini {
 
 
 
+		/**
+		/brief Query the current variable ordering.
+		*/
+		OrderingChoice Ordering() const
+		{
+			return ordering_;
+		}
 
 		/**
 		 Order the variables in the problem, 1 affine, 2 homogeneous, 3 ungrouped.
@@ -671,6 +702,16 @@ namespace bertini {
 		VariableGroup Variables() const;
 
 
+		/**
+		\brief Get the sizes of the variable groups, according to the current ordering
+		*/
+		std::vector<unsigned> VariableGroupSizes() const
+		{
+			if (Ordering()==OrderingChoice::FIFO)
+				return VariableGroupSizesFIFO();
+			else
+				return VariableGroupSizesAffHomUng();
+		}
 
         /**
 		\brief Dehomogenize a point, using the variable grouping / structure of the system.
@@ -691,7 +732,7 @@ namespace bertini {
 
 
 
-	    		switch (ordering_)
+	    		switch (Ordering())
 	    		{
 	    			case OrderingChoice::AffHomUng:
 	    			{
@@ -778,8 +819,53 @@ namespace bertini {
 		*/
 		void ReorderFunctionsByDegreeIncreasing();
 
+
+
+
+
+		/////////////
+		//
+		//  Functions regarding patches.
+		//
+		//////////////
+
+
+
+
+
 		/**
-		 Overloaded operator for printing to an arbirtary out stream.
+		\brief Let the system patch itself by the selected variable ordering, using the current variable groups.  
+
+		Homogeneous variable groups and affine variable groups will be supplied a patch equation.  Ungrouped variables will not.
+
+		\todo Add example code for how to use this function.
+		*/
+		void AutoPatch()
+		{
+			if (Ordering()==OrderingChoice::FIFO)
+				AutoPatchFIFO();
+			else if (Ordering()==OrderingChoice::AffHomUng)
+				AutoPatchAffHomUng();
+		}
+
+		/**
+		\brief Copy the patches from another system into this one.
+		*/
+		void CopyPatches(System const& other);
+
+
+		/**
+		\brief Query whether a system is patched.
+		*/
+		bool IsPatched() const
+		{
+			return is_patched_;
+		}
+
+
+
+		/**
+		 \brief Overloaded operator for printing to an arbirtary out stream.
 		 */
 		friend std::ostream& operator <<(std::ostream& out, const System & s);
 
@@ -839,6 +925,30 @@ namespace bertini {
 		*/
 		friend System operator*(Nd const&  N, System const& s);
 	private:
+
+		/**
+		\brief Get the sizes according to the FIFO ordering.
+		*/
+		std::vector<unsigned> VariableGroupSizesFIFO() const;
+
+		/**
+		\brief Get the sizes according to the Affine-Homogeneous-Ungrouped ordering.
+		*/
+		std::vector<unsigned> VariableGroupSizesAffHomUng() const;
+
+	
+
+		/**
+		\brief Set up patches automatically for a system using the FIFO ordering.
+		*/
+		void AutoPatchFIFO();
+
+
+		/**
+		\brief Set up patches automatically for a system using the Affine-Homogeneous-Ungrouped ordering.
+		*/
+		void AutoPatchAffHomUng();
+
 
 		/**
 		\brief Dehomogenize a point according to the FIFO variable ordering.
@@ -950,8 +1060,6 @@ namespace bertini {
 	    void ConstructOrdering() const;
 
 
-		enum class OrderingChoice{FIFO, AffHomUng};
-
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
 		std::vector< VariableGroup > hom_variable_groups_; ///< Homogeneous or projective variable groups.  System SHOULD be homogeneous with respect to these.  
@@ -969,7 +1077,9 @@ namespace bertini {
 		std::vector< Fn > subfunctions_; ///< Any declared subfunctions for the system.  Can use these to ensure that complicated repeated structures are only created and evaluated once.
 		std::vector< Fn > functions_; ///< The system's functions.
 		
-		
+		class Patch patch_; ///< Patch on the variable groups.  Assumed to be in the same order as the time_order_of_variable_groups_ if the system uses FIFO ordering, or in same order as the AffHomUng variable groups if that is set.
+		bool is_patched_;	///< Indicator of whether the system has been patched.
+
 		mutable std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
 		mutable bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
 
@@ -1011,6 +1121,10 @@ namespace bertini {
 
 			ar & is_differentiated_;
 			ar & jacobian_;
+
+			ar & precision_;
+			ar & is_patched_;
+			ar & patch_;
 		}
 
 	};

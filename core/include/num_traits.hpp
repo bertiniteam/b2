@@ -38,6 +38,10 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 
 namespace bertini
 {
+
+	using dbl = std::complex<double>;
+
+
 	template<typename T>
 	struct NumTraits : public Eigen::NumTraits<T>
 	{};
@@ -77,7 +81,7 @@ namespace bertini
 	For doubles, this is trivially 16.
 	*/
 	inline
-	unsigned Precision(double num)
+	unsigned Precision(const double num)
 	{
 		return 16;
 	}
@@ -88,10 +92,22 @@ namespace bertini
 	For complex doubles, this is trivially 16.
 	*/
 	inline
-	unsigned Precision(std::complex<double> num)
+	unsigned Precision(const std::complex<double> num)
 	{
 		return 16;
 	}
+
+
+
+	enum 
+	{
+		PrecisionIncrement = 10,
+		DoublePrecision = 16,
+		LowestMultiplePrecision = 30,
+		MaxPrecisionAllowed = 1000
+	};
+
+
 }// re: namespace bertini
 
 

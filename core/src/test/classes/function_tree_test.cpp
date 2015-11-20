@@ -43,6 +43,9 @@ using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Float = bertini::node::Float;
 
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
+
 extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;

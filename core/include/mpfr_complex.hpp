@@ -371,6 +371,15 @@ namespace bertini {
 			return returnme;
 		}
 		
+		/**
+		 Produce a random real number \f$\in [-1,\,1]\f$, to current default precision. 
+		 */
+		inline static complex RandomReal()
+		{
+			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			returnme /= sqrt( returnme.abs());
+			return returnme;
+		}
 		
 		
 		
@@ -1094,6 +1103,8 @@ namespace bertini {
 			return mpfr_float::default_precision();
 		}
 	};
+
+	using mpfr = bertini::complex;
 } // re: namespace bertini
 
 

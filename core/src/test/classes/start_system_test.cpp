@@ -36,6 +36,8 @@ using System = bertini::System;
 using Var = std::shared_ptr<bertini::node::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
