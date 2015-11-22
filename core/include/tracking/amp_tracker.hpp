@@ -567,6 +567,7 @@ namespace bertini{
 			AMPTracker(System const& sys) : Tracker(sys), current_precision_(mpfr_float::default_precision())
 			{	
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "creating tracker from system " << sys;
+				AMP_config_ = config::AMPConfigFrom(sys);
 			}
 
 
@@ -805,7 +806,7 @@ namespace bertini{
 
 				if (predictor_code==SuccessCode::MatrixSolveFailure)
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "Preditor, matrix solve failure";
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure";
 
 					ConvergenceError();
 					return predictor_code;
@@ -813,7 +814,7 @@ namespace bertini{
 
 				if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "Preditor, higher precision necessary";
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, higher precision necessary";
 
 					SafetyError<ComplexType, RealType>();
 					return predictor_code;

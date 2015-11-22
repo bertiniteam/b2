@@ -230,7 +230,6 @@ namespace bertini {
 			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
 
 			unsigned offset(function_values.size() - NumVariableGroups()); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
-
 			unsigned counter(0);
 			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
 			{
@@ -438,7 +437,7 @@ namespace bertini {
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & precision_;
-			
+
 			ar & coefficients_highest_precision_;
 
 			ar & std::get<0>(coefficients_working_);

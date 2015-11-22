@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	
 
 	bertini::tracking::AMPTracker tracker(sys);
 
@@ -520,6 +520,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 					stepping_preferences,
 					newton_preferences);
 
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 	tracker.AMPSetup(AMP);
 
 	mpfr t_start("1.0");
@@ -644,7 +645,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	BOOST_CHECK(sys.IsHomogeneous());
 	BOOST_CHECK(sys.IsPatched());	
 
-	std::cout << sys;
+	
 
 	auto TD = bertini::start_system::TotalDegree(sys);
 	TD.Homogenize();
@@ -660,6 +661,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	tracker.Setup(config::Predictor::Euler,
 	              	mpfr_float("1e-5"), mpfr_float("1e5"),
 					stepping_preferences, newton_preferences);
+	
 
 	mpfr t_start(1), t_end(0);
 	std::set<Vec<mpfr> > solutions;
@@ -667,11 +669,13 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	{
 		mpfr_float::default_precision(30);
 		final_system.precision(30);
+		auto start_point = TD.StartPoint<mpfr>(ii);
 
 		Vec<mpfr> result;
 		SuccessCode tracking_success;
 
-		tracking_success = tracker.TrackPath(result,t_start,t_end,TD.StartPoint<mpfr>(ii));
+		tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
+
 
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
 

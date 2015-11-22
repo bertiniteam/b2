@@ -132,7 +132,7 @@ namespace bertini {
 			}
 
 			if (IsPatched())
-				patch_.Eval(function_values);
+				patch_.Eval(function_values,std::get<Vec<T> >(current_variable_values_));// .segment(NumFunctions(),NumTotalVariableGroups())
 
 			return function_values;
 		}
@@ -288,10 +288,14 @@ namespace bertini {
 			SetVariables(variable_values);
 			SetPathVariable(path_variable_value);
 
-			Vec<T> ds_dt(NumFunctions());
+			Vec<T> ds_dt(NumTotalFunctions());
 			
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);		
+
+			if (IsPatched())
+				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
+					ds_dt(ii+NumFunctions()) = T(0);
 
 			return ds_dt;
 		}

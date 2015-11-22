@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 
 BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 {
-
+	mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	// Starting point in spacetime step    
 	Vec<mpfr> current_space(2);
 	current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 	sys.AddPathVariable(t);
 	
 	// Define homotopy system
-	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+	sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
@@ -173,6 +173,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 
 	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
+
 	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
 		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_mp);
 
@@ -199,7 +200,7 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_double)
 	sys.AddPathVariable(t);
 	
 	// Define homotopy system
-	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+	sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
@@ -242,7 +243,7 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_double)
 
 BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 {
-
+	mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	// Starting point in spacetime step    
 	Vec<mpfr> current_space(2);
 	current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
@@ -261,7 +262,7 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 	sys.AddPathVariable(t);
 	
 	// Define homotopy system
-	sys.AddFunction( t*(pow(x,2)-1.0) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+	sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 
@@ -311,12 +312,12 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
 	Have trimmed current_space to have 16 digits after decimal point. Also, saftey_digits_1 has been set to 32000 
 	to set off the AMPCriterionB condition. 
 	*/
-	Vec<mpfr> current_space(2);
-	current_space << mpfr("256185069753.4088532364492429","-387520022558.0519122331723744"),
-					 mpfr("-0.0212298348984663","-0.1778146465316983");
+	Vec<dbl> current_space(2);
+	current_space << dbl(25.4088532364492429,-38.0519122331723744),
+					 dbl(-0.0212298348984663,-0.1778146465316983);
 
-	mpfr current_time("0");
-	mpfr delta_t(".1");
+	dbl current_time(0);
+	dbl delta_t(.1);
 
 	current_time += delta_t;
 
@@ -340,19 +341,11 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
 	AMP.coefficient_bound = 5;
 	AMP.safety_digits_1 = 32000;
 
-	mpfr_float tracking_tolerance("1e-5");
 
+	Vec<dbl> newton_correction_result;
 
-	Vec<mpfr> corrected(2);
-	corrected << mpfr("3701884101067.778","-5599679215240.413"),
-		mpfr("-1.043206463433583e25","-2.450083921191992e25");
-
-
-
-	Vec<mpfr> newton_correction_result;
-
-	tracking_tolerance = mpfr_float("1e1");
-	mpfr_float path_truncation_threshold("1e4");
+	double tracking_tolerance = double(10);
+	double path_truncation_threshold(1e4);
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -379,7 +372,7 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
 	Also, saftey_digits_1 has been set to 32000 to set off the AMPCriterionB condition. 
 	*/
 	Vec<mpfr> current_space(2);
-	current_space << mpfr("256185069753.408853236449242927412","-387520022558.051912233172374487976"),
+	current_space << mpfr("25.408853236449242927412","-38.051912233172374487976"),
 					 mpfr("-0.0212298348984663761753389403711889","-0.177814646531698303094367623155171");
 
 	mpfr current_time("0");
@@ -408,13 +401,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
 	AMP.safety_digits_1 = 32000;
 
 	mpfr_float tracking_tolerance("1e-5");
-
-
-	Vec<mpfr> corrected(2);
-	corrected << mpfr("3701884101067.778","-5599679215240.413"),
-		mpfr("-1.043206463433583e25","-2.450083921191992e25");
-
-
 
 	Vec<mpfr> newton_correction_result;
 
