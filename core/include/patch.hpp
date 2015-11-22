@@ -221,7 +221,9 @@ namespace bertini {
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(function_values.size()>=NumVariableGroups() && "function values must be of length at least as long as the number of variable groups");
-			assert(bertini::Precision(x(0)) == this->Precision() && "precision of input vector must match current working precision of patch during evaluation");
+			assert((bertini::Precision(x(0))==DoublePrecision || bertini::Precision(x(0)) == Precision())
+			 		&& "precision of input vector must match current working precision of patch during evaluation"
+			 	  );
 			#endif
 
 			// unpack from the tuple of working coefficients
@@ -271,8 +273,11 @@ namespace bertini {
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(jacobian.rows()>=NumVariableGroups() && "input jacobian must have at least as many rows as variable groups");
-			assert(jacobian.cols()==NumVariables() && "input jacobian must have as many columns as variables");
-			assert(bertini::Precision(x(0)) == this->Precision() && "precision of input vector must match current working precision of patch during evaluation");
+			assert(jacobian.cols()==NumVariables() && "input jacobian must have as many columns as the patch has variables");
+			assert(
+			       (bertini::Precision(x(0))==DoublePrecision || bertini::Precision(x(0)) == Precision())  
+			       	    && "precision of input vector must match current working precision of patch during evaluation"
+			       );
 			#endif
 			
 			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
@@ -281,7 +286,7 @@ namespace bertini {
 			unsigned counter(0);
 			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
 				for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
-					jacobian(ii,counter++) = coefficients[ii](jj);
+					jacobian(ii+offset,counter++) = coefficients[ii](jj);
 		}
 
 		/**
@@ -314,21 +319,12 @@ namespace bertini {
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
 				assert(x.size() == NumVariables() && "input point for rescaling to fit a patch must have same length as total number of variables being patched, in all variable groups.");
-				assert(bertini::Precision(x(0)) == this->Precision() && "precision of input vector must match current working precision of patch during rescaling");
+				assert((bertini::Precision(x(0))==DoublePrecision || bertini::Precision(x(0)) == Precision())
+						&& "precision of input vector must match current working precision of patch during rescaling"
+					   );
 			#endif
 
 			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
-			
-			// unsigned counter(0);
-			// for (unsigned ii=0; ii<NumVariableGroups(); ii++)
-			// {
-			// 	T val(0);
-			// 	for (unsigned jj=0; jj<variable_group_sizes_[ii]; jj++)
-			// 		val += coefficients[ii](jj)*x(counter+jj);
-
-			// 	for (unsigned jj=0; jj<variable_group_sizes_[ii]; jj++)
-			// 		x(counter++) /= val;
-			// }
 
 			unsigned starting_index_counter(0);
 			for (unsigned ii=0; ii<NumVariableGroups(); ii++)

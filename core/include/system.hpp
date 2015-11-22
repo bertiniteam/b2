@@ -83,7 +83,7 @@ namespace bertini {
 		/**
 		The default constructor for a system
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), ordering_(OrderingChoice::FIFO)
+		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), ordering_(OrderingChoice::FIFO), precision_(mpfr_float::default_precision()), is_patched_(false)
 		{}
 
 		System(std::string const& input);
@@ -106,8 +106,43 @@ namespace bertini {
 		*/
 		void Differentiate() const;
 
+
 		/**
-		Evaluate the system, provided the system has no path variable defined.
+		\brief Evaluate the system using the previously set variable (and time) values.  
+
+		It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
+
+		\return The function values of the system
+		*/ 
+		template<typename T>
+		Vec<T> Eval() const
+		{
+
+
+			// the Reset() function call traverses the entire tree, resetting everything.
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			for (auto iter : functions_) 
+				iter->Reset();
+
+			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
+
+			unsigned counter(0);
+			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+				function_values(counter) = (*iter)->Eval<T>();
+			}
+
+			if (IsPatched())
+				patch_.Eval(function_values);
+
+			return function_values;
+		}
+
+
+		/**
+		\brief Evaluate the system, provided the system has no path variable defined.
+
+		Causes the current variable values to be set in the system.  Resets the function tree's stored numbers.  
+
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
@@ -118,33 +153,17 @@ namespace bertini {
 		{
 
 			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+			{
+				std::stringstream ss;
+				ss << "trying to evaluate system, but number of input variables (" << variable_values.size() << ") doesn't match number of system variables (" << NumVariables() << ").";
+				throw std::runtime_error(ss.str());
+			}
 			if (have_path_variable_)
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 
-
-			// this function call traverses the entire tree, resetting everything.
-			//
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			//
-			// we need to work to correct this.
-			for (auto iter : functions_) {
-				iter->Reset();
-			}
-
 			SetVariables(variable_values);
 
-
-			Vec<T> function_values(NumFunctions()); // create vector with correct number of entries.
-
-			{ // for scoping of the counter.
-				auto counter = 0;
-				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-					function_values(counter) = (*iter)->Eval<T>();
-				}
-			}
-
-			return function_values;
+			return Eval<T>();
 		}
 
 
@@ -169,26 +188,10 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
 
-
-			// this function call traverses the entire tree, resetting everything.
-			for (auto iter : functions_) {
-				iter->Reset();
-			}
-
 			SetVariables(variable_values);
 			SetPathVariable(path_variable_value);
 
-
-			Vec<T> function_values(NumFunctions()); // create vector with correct number of entries.
-
-			{ // for scoping of the counter.
-				auto counter = 0;
-				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-					function_values(counter) = (*iter)->Eval<T>();
-				}
-			}
-
-			return function_values;
+			return Eval<T>();
 		}
 
 
@@ -205,10 +208,12 @@ namespace bertini {
 			if (!is_differentiated_)
 				Differentiate();
 
-			Mat<T> J(NumFunctions(), NumVariables());
+			Mat<T> J(NumTotalFunctions(), NumVariables());
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 				for (int jj = 0; jj < NumVariables(); ++jj)
 					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+			if (IsPatched())
+				patch_.Jacobian(J,std::get<Vec<T> >(current_variable_values_));
 
 			return J;
 		}
@@ -408,7 +413,11 @@ namespace bertini {
 
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 \throws std::runtime_error if the number of variables doesn't match.
-		 The ordering of the variables matters.  The standard ordering is 1) variable groups, with homogenizing variable first. 2) homogeneous variable groups. 3) ungrouped variables.
+
+		 The ordering of the variables matters.  
+
+		 * The AffHomUng ordering is 1) variable groups, with homogenizing variable first. 2) homogeneous variable groups. 3) ungrouped variables.
+		 * The FIFO ordering uses the order in which the variable groups were added.
 
 		 The path variable is not considered a variable for this operation.  It is set separately.
 		 
@@ -422,7 +431,12 @@ namespace bertini {
 		{
 			if (new_values.size()!= NumVariables())
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
-			
+
+			#ifndef BERTINI_DISABLE_ASSERTS
+			if (Precision(new_values(0))!=DoublePrecision)
+				assert(Precision(new_values(0)) == precision() && "precision of input point in SetVariables must match the precision of the system.");
+			#endif
+
 			auto vars = Variables();
 
 			auto counter = 0;
@@ -431,6 +445,7 @@ namespace bertini {
 				(*iter)->set_current_value(new_values(counter));
 			}
 
+			std::get<Vec<T> >(current_variable_values_) = new_values;
 		}
 
 
@@ -701,7 +716,15 @@ namespace bertini {
 		*/
 		VariableGroup Variables() const;
 
+		/**
+		\brief Get an affine variable group the class has defined.
 
+		It is up to you to ensure this group exists.
+		*/
+		VariableGroup const& AffineVariableGroup(size_t index) const
+		{
+			return variable_groups_[index];
+		}
 		/**
 		\brief Get the sizes of the variable groups, according to the current ordering
 		*/
@@ -863,7 +886,18 @@ namespace bertini {
 		}
 
 
+		template <typename T>
+		Vec<T> RescalePointToFitPatch(Vec<T> const& x) const
+		{
+			return patch_.RescalePoint(x);
+		}
 
+
+		template<typename T>
+		void RescalePointToFitPatchInPlace(Vec<T> & x) const
+		{
+			patch_.RescalePointToFitInPlace(x);
+		}
 		/**
 		 \brief Overloaded operator for printing to an arbirtary out stream.
 		 */
@@ -1088,6 +1122,7 @@ namespace bertini {
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
+		mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_variable_values_;
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
 		mutable bool have_ordering_;
@@ -1100,15 +1135,16 @@ namespace bertini {
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
+
 			ar & ungrouped_variables_;
 			ar & variable_groups_;
 			ar & hom_variable_groups_;
 			ar & homogenizing_variables_;
-			
-			ar & have_path_variable_;
-			ar & path_variable_;
 
 			ar & time_order_of_variable_groups_;
+
+			ar & have_path_variable_;
+			ar & path_variable_;			
 
 			ar & ordering_;
 			ar & have_ordering_;

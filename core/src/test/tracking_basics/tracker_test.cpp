@@ -25,7 +25,7 @@
 
 
 #include <boost/test/unit_test.hpp>
-
+#include "start_system.hpp"
 #include "tracking/tracker.hpp"
 
 using System = bertini::System;
@@ -611,6 +611,73 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 }
 
 
+// has two solutions:
+//
+// 1.
+// x = -0.61803398874989484820458683
+// y = 0.16180339887498948482045868
+//
+// 2. 
+// x = 0.16180339887498948482045868
+// y = -0.6180339887498948482045868
+
+BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
+{
+	using namespace bertini::tracking;
+	mpfr_float::default_precision(30);
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddVariableGroup(v);
+
+	sys.AddFunction(x*y+1);
+	sys.AddFunction(x+y-1);
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK(sys.IsPatched());	
+
+	std::cout << sys;
+
+	std::cout << sys.NumVariables() << std::endl;
+	std::cout << sys.NumTotalFunctions() << std::endl;
+
+	auto TD = bertini::start_system::TotalDegree(sys);
+	TD.Homogenize();
+	BOOST_CHECK(TD.IsHomogeneous());
+	BOOST_CHECK(TD.IsPatched());
+
+	auto final_system = (1-t)*sys + t*TD;
+	final_system.AddPathVariable(t);
+	
+	auto tracker = AMPTracker(final_system);
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"), mpfr_float("1e5"),
+					stepping_preferences, newton_preferences);
+
+	mpfr t_start(1), t_end(0);
+	std::set<Vec<mpfr> > solutions;
+	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
+	{
+		Vec<mpfr> result;
+		SuccessCode tracking_success;
+
+		tracking_success = tracker.TrackPath(result,t_start,t_end,TD.StartPoint<mpfr>(ii));
+
+		BOOST_CHECK(tracking_success==SuccessCode::Success);
+
+	}
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

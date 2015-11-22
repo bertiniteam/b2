@@ -53,7 +53,9 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 namespace bertini{
 
 	typedef boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off> mpfr_float;
-	
+
+	using gmp_int = boost::multiprecision::gmp_int;
+	using gmp_rational = boost::multiprecision::gmp_rational;
 }
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision

@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
 
 	BOOST_CHECK(s && iter==end);
-	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK(!sys.IsHomogeneous());
 
 }
 
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(system_parse_with_subfunctions)
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 	BOOST_CHECK(s && iter==end);
 
-	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK(!sys.IsHomogeneous());
 }
 
 
