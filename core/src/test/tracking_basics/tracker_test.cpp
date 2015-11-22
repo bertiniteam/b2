@@ -646,9 +646,6 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 
 	std::cout << sys;
 
-	std::cout << sys.NumVariables() << std::endl;
-	std::cout << sys.NumTotalFunctions() << std::endl;
-
 	auto TD = bertini::start_system::TotalDegree(sys);
 	TD.Homogenize();
 	BOOST_CHECK(TD.IsHomogeneous());
@@ -656,7 +653,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 
 	auto final_system = (1-t)*sys + t*TD;
 	final_system.AddPathVariable(t);
-	
+
 	auto tracker = AMPTracker(final_system);
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
@@ -668,6 +665,9 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	std::set<Vec<mpfr> > solutions;
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
+		mpfr_float::default_precision(30);
+		final_system.precision(30);
+
 		Vec<mpfr> result;
 		SuccessCode tracking_success;
 

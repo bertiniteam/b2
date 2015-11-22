@@ -169,6 +169,9 @@ namespace bertini
 				vars_in_mpfr(ii).precision(new_precision);
 		}	
 
+		if (IsPatched())
+			patch_.Precision(new_precision);
+
 		precision_ = new_precision;
 	}
 

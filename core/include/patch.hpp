@@ -437,12 +437,14 @@ namespace bertini {
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
+			ar & precision_;
+			
 			ar & coefficients_highest_precision_;
 
 			ar & std::get<0>(coefficients_working_);
 			ar & std::get<1>(coefficients_working_);
 			ar & variable_group_sizes_;
-			ar & precision_;
+			
 		}
 
 	};

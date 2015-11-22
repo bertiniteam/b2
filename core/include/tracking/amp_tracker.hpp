@@ -564,7 +564,7 @@ namespace bertini{
 			/**
 			\brief Construct an Adaptive Precision tracker, associating to it a System.
 			*/
-			AMPTracker(System const& sys) : Tracker(sys)
+			AMPTracker(System const& sys) : Tracker(sys), current_precision_(mpfr_float::default_precision())
 			{	
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "creating tracker from system " << sys;
 			}
@@ -1286,6 +1286,8 @@ namespace bertini{
 				current_precision_ = DoublePrecision;
 				mpfr_float::default_precision(DoublePrecision);
 
+				tracked_system_.precision(16);
+
 				if (std::get<Vec<dbl> >(current_space_).size()!=source_point.size())
 					std::get<Vec<dbl> >(current_space_).resize(source_point.size());
 
@@ -1451,8 +1453,6 @@ namespace bertini{
 				else
 				{
 					assert(mpfr_float::default_precision()==current_precision_ && "current precision differs from the default precision");
-
-					auto checker = [this](bool val) -> bool { return (val==current_precision_); };
 
 					return tracked_system_.precision() == current_precision_
 							&&
