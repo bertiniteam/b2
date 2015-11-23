@@ -46,6 +46,8 @@ using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Float = bertini::node::Float;
 
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
 
 using System = bertini::System;
 

@@ -36,6 +36,8 @@ using System = bertini::System;
 using Var = std::shared_ptr<bertini::node::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -121,8 +123,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	bertini::System sys;
 	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
 
-	VariableGroup vars;
-	vars.push_back(x); vars.push_back(y);
+	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);  
 	sys.AddFunction(y+1);
@@ -133,12 +134,16 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	auto deg = TD.Degrees();
 
 	BOOST_CHECK_EQUAL(TD.NumVariables(),2);
+	BOOST_CHECK(!TD.IsPatched());
+
 	BOOST_CHECK_EQUAL(deg.size(),2);
-	if (deg.size()==2)
-	{
-		BOOST_CHECK_EQUAL(deg[0],1);
-		BOOST_CHECK_EQUAL(deg[1],1);
-	}
+	
+	BOOST_CHECK_EQUAL(deg[0],1);
+	BOOST_CHECK_EQUAL(deg[1],1);
+	
+	VariableGroup variable_ordering = TD.Variables();
+
+	BOOST_CHECK_EQUAL(variable_ordering.size(), 2);
 
 	Vec<dbl> vals(2);
 	vals << dbl(1.0),dbl(1.0);
@@ -216,7 +221,6 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 
 	for (unsigned ii = 0; ii < 3; ++ii)
 		BOOST_CHECK( abs(sysvals(ii) - (1.0 - dbl(TD.RandomValue(ii)))) < threshold_clearance_d);
-
 
 	auto J = TD.Jacobian(vals);
 
@@ -321,12 +325,31 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 
 	auto final_mixed_sum = (1-t) * sys + t * TD;
 	final_mixed_sum.AddPathVariable(t);
+
+	BOOST_CHECK(!final_mixed_sum.IsHomogeneous());
+	BOOST_CHECK(!final_mixed_sum.IsPatched());
+
 	final_mixed_sum.Homogenize();
+	final_mixed_sum.AutoPatch();
 
 	BOOST_CHECK_EQUAL(final_mixed_sum.NumVariables(),4);
+	BOOST_CHECK_EQUAL(final_mixed_sum.NumNaturalVariables(),3);
+	BOOST_CHECK_EQUAL(final_mixed_sum.NumFunctions(),3);
+	BOOST_CHECK_EQUAL(final_mixed_sum.NumTotalFunctions(),4);
+
 	BOOST_CHECK(final_mixed_sum.IsHomogeneous());
 	BOOST_CHECK(final_mixed_sum.IsPolynomial());
+	BOOST_CHECK(final_mixed_sum.IsPatched());
 
+	Vec<mpfr> v(4);
+	v << mpfr(1), mpfr(1), mpfr(1), mpfr(1);
+
+	auto f = final_mixed_sum.Eval(v,mpfr::rand());
+	BOOST_CHECK_EQUAL(f.size(), 4);
+
+	auto J = final_mixed_sum.Jacobian(v,mpfr::rand());
+	BOOST_CHECK_EQUAL(J.rows(), 4);
+	BOOST_CHECK_EQUAL(J.cols(), 4);	
 }
 
 

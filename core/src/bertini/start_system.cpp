@@ -36,51 +36,51 @@ namespace bertini {
 		// constructor for TotalDegree start system, from any other *suitable* system.
 		TotalDegree::TotalDegree(System const& s)
 		{
-			if (s.NumFunctions() != s.NumVariables())
+
+			if (s.NumHomVariableGroups() > 0)
+				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
+
+
+			if (s.NumTotalFunctions() != s.NumVariables())
 				throw std::runtime_error("attempting to construct total degree start system from non-square target system");
 
 			if (s.HavePathVariable())
 				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");
 
 			if (s.NumVariableGroups() != 1)
-				throw std::runtime_error("more than one variable group.  currently unallowed");
+				throw std::runtime_error("more than one affine variable group.  currently unallowed");
 
-			if (s.NumHomVariableGroups() > 0)
-				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
+			
 
 			if (!s.IsPolynomial())
 				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
 
+			
 
 			auto deg = s.Degrees();
 			for (auto iter : deg)
-				degrees_.push_back((size_t)iter);
+				degrees_.push_back((size_t) iter);
 
-			auto original_varible_groups = s.VariableGroups();
-
-			auto original_variables = s.Variables();
-
+			CopyVariableStructure(s);
 
 			random_values_.resize(s.NumFunctions());
 
 			// auto prev_prec = boost::multiprecision::mpfr_float::default_precision();
 			// boost::multiprecision::mpfr_float::default_precision(4000);
 			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
-			{
 				random_values_[ii] = std::make_shared<node::Rational>(node::Rational::Rand());
-			}
 
+			// by hypothesis, the system has a single variable group.
+			VariableGroup v = this->AffineVariableGroup(0);
 
-			CopyVariableStructure(s);
+			for (auto iter = v.begin(); iter!=v.end(); iter++)
+				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[iter-v.begin()]); 
+			if (s.IsHomogeneous())
+				Homogenize();
 
-
-			for (auto iter = original_variables.begin(); iter!=original_variables.end(); iter++)
-			{
-				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-original_variables.begin()))) - random_values_[iter-original_variables.begin()]); ///< TODO: make this 1 be a random complex number.
-			} 
-
+			if (s.IsPatched())
+				CopyPatches(s);
 			// boost::multiprecision::mpfr_float::default_precision(prev_prec);
-
 		}// total degree constructor
 
 		
@@ -101,8 +101,20 @@ namespace bertini {
 		{
 			Vec<dbl> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
-			for (size_t ii = 0; ii< NumVariables(); ++ii)
-				start_point(ii) = exp( std::acos(-1.0) * dbl(0,2.0) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), 1.0 / degrees_[ii]);
+
+			unsigned offset = 0;
+			if (IsPatched())
+			{
+				start_point(0) = dbl(1);
+				offset = 1;
+			}
+
+			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
+				start_point(ii+offset) = exp( std::acos(-1) * dbl(0,2) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), double(1) / degrees_[ii]);
+
+			if (IsPatched())
+				RescalePointToFitPatchInPlace(start_point);
+
 			return start_point;
 		}
 
@@ -111,8 +123,21 @@ namespace bertini {
 		{
 			Vec<mpfr> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
-			for (size_t ii = 0; ii< NumVariables(); ++ii)
-				start_point(ii) = exp( acos( mpfr_float(-1.0) ) * mpfr(0,2.0) * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), mpfr_float(1.0) / degrees_[ii]);
+
+			unsigned offset = 0;
+			if (IsPatched())
+			{
+				start_point(0) = mpfr(1);
+				offset = 1;
+			}
+
+			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
+				start_point(ii+offset) = exp( acos( mpfr_float(-1) ) * mpfr(0,2) * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), mpfr_float(1) / degrees_[ii]);
+
+			if (IsPatched())
+				RescalePointToFitPatchInPlace(start_point);
+
+
 			return start_point;
 		}
 

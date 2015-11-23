@@ -564,9 +564,10 @@ namespace bertini{
 			/**
 			\brief Construct an Adaptive Precision tracker, associating to it a System.
 			*/
-			AMPTracker(System const& sys) : Tracker(sys)
+			AMPTracker(System const& sys) : Tracker(sys), current_precision_(mpfr_float::default_precision())
 			{	
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "creating tracker from system " << sys;
+				AMP_config_ = config::AMPConfigFrom(sys);
 			}
 
 
@@ -805,7 +806,7 @@ namespace bertini{
 
 				if (predictor_code==SuccessCode::MatrixSolveFailure)
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "Preditor, matrix solve failure";
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure";
 
 					ConvergenceError();
 					return predictor_code;
@@ -813,7 +814,7 @@ namespace bertini{
 
 				if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "Preditor, higher precision necessary";
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, higher precision necessary";
 
 					SafetyError<ComplexType, RealType>();
 					return predictor_code;
@@ -1286,6 +1287,8 @@ namespace bertini{
 				current_precision_ = DoublePrecision;
 				mpfr_float::default_precision(DoublePrecision);
 
+				tracked_system_.precision(16);
+
 				if (std::get<Vec<dbl> >(current_space_).size()!=source_point.size())
 					std::get<Vec<dbl> >(current_space_).resize(source_point.size());
 
@@ -1451,8 +1454,6 @@ namespace bertini{
 				else
 				{
 					assert(mpfr_float::default_precision()==current_precision_ && "current precision differs from the default precision");
-
-					auto checker = [this](bool val) -> bool { return (val==current_precision_); };
 
 					return tracked_system_.precision() == current_precision_
 							&&

@@ -39,8 +39,7 @@
 
 #include <complex>
 #include "mpfr_complex.hpp"
-using dbl = std::complex<double>;
-using mpfr = bertini::complex;
+
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>

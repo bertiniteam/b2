@@ -63,6 +63,7 @@ all_bertini2_sources = \
 	include/mpfr_complex.hpp \
 	include/mpfr_extensions.hpp \
 	include/eigen_extensions.hpp \
+	include/patch.hpp \
 	include/system.hpp src/bertini/system.cpp include/system_parsing.hpp \
 	src/bertini/start_system.cpp include/start_system.hpp \
 	include/limbo.hpp \

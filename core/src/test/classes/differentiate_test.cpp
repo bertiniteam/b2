@@ -48,7 +48,8 @@ using Function = bertini::node::Function;
 using Jacobian = bertini::node::Jacobian;
 
 
-
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
 
 extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;

@@ -41,6 +41,9 @@ using Var = std::shared_ptr<bertini::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 using mpfr_float = bertini::mpfr_float;
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
+
 extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
@@ -79,7 +82,7 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
 
 	BOOST_CHECK(s && iter==end);
-	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK(!sys.IsHomogeneous());
 
 }
 
@@ -125,7 +128,7 @@ BOOST_AUTO_TEST_CASE(system_parse_with_subfunctions)
 	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
 	BOOST_CHECK(s && iter==end);
 
-	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK(!sys.IsHomogeneous());
 }
 
 

@@ -52,16 +52,7 @@ namespace bertini
 
 	size_t System::NumVariables() const
 	{
-		size_t num_vars = 0;
-
-		num_vars+=homogenizing_variables_.size();
-		for (auto iter : variable_groups_)
-			num_vars+= iter.size();
-		for (auto iter : hom_variable_groups_)
-			num_vars+= iter.size();
-		num_vars+=ungrouped_variables_.size();
-
-		return num_vars;
+		return NumHomVariables() + NumNaturalVariables();
 	}
 
 	size_t System::NumNaturalVariables() const
@@ -69,10 +60,10 @@ namespace bertini
 		size_t num_vars = 0;
 
 		for (auto iter : variable_groups_)
-			num_vars+= iter.size();
+			num_vars += iter.size();
 		for (auto iter : hom_variable_groups_)
-			num_vars+= iter.size();
-		num_vars+=ungrouped_variables_.size();
+			num_vars += iter.size();
+		num_vars += ungrouped_variables_.size();
 
 		return num_vars;
 	}
@@ -80,6 +71,11 @@ namespace bertini
 	size_t System::NumHomVariables() const
 	{
 		return homogenizing_variables_.size();
+	}
+
+	size_t System::NumTotalVariableGroups() const
+	{
+		return NumVariableGroups() + NumHomVariableGroups();
 	}
 
 	size_t System::NumVariableGroups() const
@@ -109,16 +105,16 @@ namespace bertini
 		return explicit_parameters_.size();
 	}
 
-
-	/**
-	 Get the number of implicit parameters in this system
-	 */
 	size_t System::NumImplicitParameters() const
 	{
 		return implicit_parameters_.size();
 	}
 
 
+	size_t System::NumTotalFunctions() const
+	{
+		return NumFunctions() + NumPatches();
+	}
 
 
 	void System::precision(unsigned new_precision)
@@ -166,6 +162,15 @@ namespace bertini
 		for (auto iter : ungrouped_variables_)
 			iter->precision(new_precision);
 
+		if (new_precision>DoublePrecision)
+		{
+			Vec<mpfr>& vars_in_mpfr = std::get<Vec<mpfr> >(current_variable_values_);
+			for (unsigned ii=0; ii<vars_in_mpfr.size(); ii++)
+				vars_in_mpfr(ii).precision(new_precision);
+		}	
+
+		if (IsPatched())
+			patch_.Precision(new_precision);
 
 		precision_ = new_precision;
 	}
@@ -174,10 +179,10 @@ namespace bertini
 	void System::Differentiate() const
 	{
 			jacobian_.resize(NumFunctions());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-			{
+			auto num_functions = NumFunctions();
+			for (int ii = 0; ii < num_functions; ++ii)
 				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
-			}
+
 			is_differentiated_ = true;
 		}
 
@@ -202,29 +207,20 @@ namespace bertini
 			{
 				if (!curr_function->IsHomogeneous(curr_var_gp))
 					throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
-
-				if (!curr_function->IsPolynomial(curr_var_gp))
-					throw std::runtime_error("non-polynomial function, with homogeneous variable group");
-			}
-
-			for (auto curr_var_gp : variable_groups_)
-			{
-				if (!curr_function->IsPolynomial(curr_var_gp))
-					throw std::runtime_error("non-polynomial function, with homogeneous variable group");
 			}
 		}
+
+		if (!IsPolynomial())
+			throw std::runtime_error("trying to homogenize a non-polynomial system.");
 
 		bool already_had_homvars = NumHomVariables()!=0;
 		
 		if (already_had_homvars && NumHomVariables()!=NumVariableGroups())
 			throw std::runtime_error("size mismatch on number of homogenizing variables and number of variable groups");
 
-
 		if (!already_had_homvars)
-		{
 			homogenizing_variables_.resize(NumVariableGroups());
-			// already_had_homvars = false;
-		}
+
 
 		auto group_counter = 0;
 		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
@@ -232,26 +228,30 @@ namespace bertini
 			std::stringstream converter;
 			converter << "HOM_VAR_" << group_counter;
 
-			Var hom_var;
+			
 			if (already_had_homvars){
-				hom_var = homogenizing_variables_[group_counter];
-				if (hom_var->name()==converter.str())
-					throw std::runtime_error("duplicate names for homogenizing variables in system during homogenization");
+				Var hom_var = homogenizing_variables_[group_counter];
+				VariableGroup temp_group = *curr_var_gp;
+				temp_group.push_front(hom_var);
+				for (auto curr_function : functions_)
+					curr_function->Homogenize(temp_group, hom_var);
 			}
 			else
 			{
-				hom_var = std::make_shared<bertini::node::Variable>(converter.str());
+				Var hom_var = std::make_shared<bertini::node::Variable>(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
+				for (auto curr_function : functions_)
+					curr_function->Homogenize(*curr_var_gp, hom_var);
 			}
 		
-			for (auto curr_function : functions_)
-				curr_function->Homogenize(*curr_var_gp, hom_var);
+			
 
 			group_counter++;
 		}
 
-		// need to add patch equations for all variable groups
-
+		#ifndef BERTINI_DISABLE_ASSERTS
+		assert(homogenizing_variables_.size() == variable_groups_.size());
+		#endif
 	}
 
 
@@ -260,9 +260,9 @@ namespace bertini
 	bool System::IsHomogeneous() const
 	{
 		bool have_homvars = NumHomVariables()!=0;
-		if (have_homvars && NumHomVariables()!=NumVariableGroups())
-			throw std::runtime_error("trying to check homogoneity on a partially-formed system.  mismatch between number of homogenizing variables, and number of variable groups");
 
+		if (NumHomVariables()!=NumVariableGroups())
+			return false;
 
 		for (auto iter : functions_)
 		{
@@ -276,8 +276,8 @@ namespace bertini
 
 				if (!iter->IsHomogeneous(tempvars))
 					return false;
-
 			}
+
 			for (auto vars : hom_variable_groups_)
 				if (!iter->IsHomogeneous(vars))
 					return false;
@@ -285,7 +285,6 @@ namespace bertini
 			if (NumUngroupedVariables()>0)
 				if (!iter->IsHomogeneous(ungrouped_variables_))
 					return false;
-
 		}
 		return true;
 	}
@@ -343,6 +342,7 @@ namespace bertini
 		variable_groups_.push_back(v);
 		is_differentiated_ = false;
 		have_ordering_ = false;
+		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Affine);
 	}
 
@@ -354,6 +354,7 @@ namespace bertini
 		hom_variable_groups_.push_back(v);
 		is_differentiated_ = false;
 		have_ordering_ = false;
+		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Homogeneous);
 	}
 
@@ -366,6 +367,7 @@ namespace bertini
 		ungrouped_variables_.push_back(v);
 		is_differentiated_ = false;
 		have_ordering_ = false;
+		is_patched_ = false;
 		time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
 	}
 
@@ -377,6 +379,7 @@ namespace bertini
 		ungrouped_variables_.insert( ungrouped_variables_.end(), v.begin(), v.end() );
 		is_differentiated_ = false;
 		have_ordering_ = false;
+		is_patched_ = false;
 		for (auto iter : v)
 			time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
 	}
@@ -524,7 +527,6 @@ namespace bertini
 	{
 		bool have_homvars = NumHomVariables()>0;
 		if (have_homvars && NumHomVariables() != NumVariableGroups())
-
 			throw std::runtime_error("mismatch between number of homogenizing variables, and number of affine variables groups.  unable to form variable vector in FIFO ordering.  you probably need to homogenize the system.");
 
 		
@@ -606,11 +608,13 @@ namespace bertini
 	void System::SetFIFOVariableOrdering()
 	{
 		ordering_ = OrderingChoice::FIFO;
+		is_patched_ = false;
 	}
 
 	void System::SetAffHomUngVariableOrdering()
 	{
 		ordering_ = OrderingChoice::AffHomUng;
+		is_patched_ = false;
 	}
 
 	//private
@@ -653,6 +657,8 @@ namespace bertini
 	{
 		this->ClearVariables();
 
+		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
+
 		this->ungrouped_variables_ = other.ungrouped_variables_;
 		this->variable_groups_ = other.variable_groups_;
 		hom_variable_groups_ = other.hom_variable_groups_;
@@ -664,32 +670,83 @@ namespace bertini
 		variable_ordering_ = other.variable_ordering_; 
 		have_ordering_ = other.have_ordering_;
 		ordering_ = other.ordering_;
+
+		
 	}
 
 
 
 
 
+	std::vector<unsigned> System::VariableGroupSizesFIFO() const
+	{
+		std::vector<unsigned> s;
+
+		unsigned hom_group_counter(0), affine_group_counter(0), patch_counter(0);
+		for (auto curr_grouptype : time_order_of_variable_groups_)
+		{
+			
+			if (curr_grouptype==VariableGroupType::Homogeneous)
+				s.push_back(hom_variable_groups_[hom_group_counter++].size());
+			else if (curr_grouptype==VariableGroupType::Affine)
+				s.push_back(variable_groups_[affine_group_counter++].size()+1);
+		}
+		return s;
+	}
 
 
+	std::vector<unsigned> System::VariableGroupSizesAffHomUng() const
+	{
+		std::vector<unsigned> s;
 
+		for (auto a : variable_groups_)
+			s.push_back(a.size()+1);
 
+		for (auto h : hom_variable_groups_)
+			s.push_back(h.size());
+
+		return s;
+	}
 
 
 	/////////////////
 	//
-	// Dehomogenization functions
+	// Patching functions
 	//
 	///////////////////
 	
 
 
+	void System::AutoPatchFIFO()
+	{
+		if (!IsHomogeneous())
+			throw std::runtime_error("requesting to AutoPatch a system which is not homogenized.  Homogenize it first.");
+		
+		patch_ = Patch(VariableGroupSizesFIFO());
+
+		is_patched_ = true;
+	}
 
 
+	void System::AutoPatchAffHomUng()
+	{
+		if (!IsHomogeneous())
+			throw std::runtime_error("requesting to AutoPatch a system which is not homogenized.  Homogenize it first.");
+
+		patch_ = Patch(VariableGroupSizesAffHomUng());
+
+		is_patched_ = true;
+	}
 
 
+	void System::CopyPatches(System const& other)
+	{
+		if (!other.IsPatched())
+			throw std::runtime_error("trying to copy patch from unpatched other system.  may only copy patch from a system which is already patched.");
 
-
+		this->patch_ = other.patch_;
+		is_patched_ = true;
+	}
 
 
 			
@@ -877,7 +934,7 @@ namespace bertini
 
 		out << s.NumHomVariables() << " homogenizing variables:\n";
 		for (auto iter : s.homogenizing_variables_)
-			out << iter << " ";
+			out << (*iter) << " ";
 		out << "\n";
 
 
@@ -916,6 +973,13 @@ namespace bertini
 			out << "system not differentiated\n";
 		}
 
+		if (s.IsPatched())
+		{
+			out << s.patch_;
+		}
+		else{
+			out << "system not patched\n";
+		}
 
 		return out;
 	}
@@ -943,10 +1007,27 @@ namespace bertini
 		if (this->NumVariables()!=rhs.NumVariables())
 			throw std::runtime_error("cannot add two Systems with differing numbers of variables");
 
+		if (this->NumHomVariables()!=rhs.NumHomVariables())
+			throw std::runtime_error("cannot add two Systems with differing numbers of homogenizing variables");
+
+		if (this->NumTotalVariableGroups()!=rhs.NumTotalVariableGroups())
+			throw std::runtime_error("cannot add two Systems with differing total numbers of variable groups");
+
+
+		//
+		//  deal with the patches
+		//
+		if (!this->IsPatched() && rhs.IsPatched())
+			CopyPatches(rhs);
+
+		// the condition (this->IsPatched() && !rhs.IsPatched()) is ok.  nothing to do.
+		// the condition (!this->IsPatched() && !rhs.IsPatched()) is ok.  nothing to do.
+		else if (this->IsPatched() && rhs.IsPatched())
+			if (this->patch_ != rhs.patch_)
+				throw std::runtime_error("System+=System cannot combine two patched systems whose patches differ.");
+
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
-		{
 			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->entry_node() + (*iter)->entry_node());
-		}
 
 		return *this;
 	}
