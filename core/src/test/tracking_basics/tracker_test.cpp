@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 //
 // 1.
 // x = -0.61803398874989484820458683
-// y = 0.16180339887498948482045868
+// y = 1.6180339887498948482045868
 //
 // 2. 
 // x = 0.16180339887498948482045868
@@ -664,7 +664,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	
 
 	mpfr t_start(1), t_end(0);
-	std::set<Vec<mpfr> > solutions;
+	std::vector<Vec<mpfr> > solutions;
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		mpfr_float::default_precision(30);
@@ -675,12 +675,32 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 		SuccessCode tracking_success;
 
 		tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
-
-
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
 
+		solutions.push_back(final_system.DehomogenizePoint(result));
 	}
 
+	Vec<mpfr> solution_1(2);
+	solution_1 << mpfr("-0.61803398874989484820458683","0"), mpfr("1.6180339887498948482045868","0");
+
+	Vec<mpfr> solution_2(2);
+	solution_2 << mpfr("1.6180339887498948482045868","0"), mpfr("-0.6180339887498948482045868","0");
+
+	unsigned num_occurences(0);
+	for (auto s : solutions)
+	{
+		if ( (s-solution_1).norm() < mpfr_float("1e-5"))
+			num_occurences++;
+	}
+	BOOST_CHECK_EQUAL(num_occurences,1);
+
+	num_occurences = 0;
+	for (auto s : solutions)
+	{
+		if ( (s-solution_2).norm() < mpfr_float("1e-5"))
+			num_occurences++;
+	}
+	BOOST_CHECK_EQUAL(num_occurences,1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
