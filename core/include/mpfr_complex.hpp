@@ -58,17 +58,6 @@
 
 namespace bertini {
 
-
-		using dbl = std::complex<double>;
-		 inline
-		 dbl rand_complex()
-		 {
-			std::default_random_engine generator;
-			std::uniform_real_distribution<double> distribution(-1.0,1.0);
-			dbl returnme(distribution(generator), distribution(generator));
-			return returnme / sqrt( abs(returnme));
-		 }
-
 	/**
 	\brief Custom multiple precision complex class.
 	
@@ -371,6 +360,12 @@ namespace bertini {
 			return returnme;
 		}
 		
+		inline static complex RandomUnit()
+		{
+			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			returnme /= returnme.abs();
+			return returnme;
+		}
 		/**
 		 Produce a random real number \f$\in [-1,\,1]\f$, to current default precision. 
 		 */
@@ -1103,6 +1098,13 @@ namespace bertini {
 			return mpfr_float::default_precision();
 		}
 	};
+
+	
+	template <> inline 
+	bertini::complex RandomUnit<bertini::complex>()
+	{
+		return bertini::complex::RandomUnit();
+	}
 
 	using mpfr = bertini::complex;
 } // re: namespace bertini

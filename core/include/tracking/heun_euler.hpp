@@ -94,7 +94,7 @@ namespace bertini{
 				auto delta_x_1 = LU.solve(-S.TimeDerivative(current_space, current_time)); 
 
 				norm_J = dh_dx.norm();
-				norm_J_inverse = LU.solve(Vec<ComplexType>::Random(S.NumVariables())).norm();
+				norm_J_inverse = LU.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
 
 				condition_number_estimate = norm_J*norm_J_inverse;
 

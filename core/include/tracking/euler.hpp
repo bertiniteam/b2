@@ -119,7 +119,7 @@ namespace bertini{
 				// std::cout << "euler delta_x = \n" << delta_x << std::endl;
 
 
-				Vec<ComplexType> randy = Vec<ComplexType>::Random(S.NumVariables());
+				Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
 				Vec<ComplexType> temp_soln = LU.solve(randy);
 				
 				norm_J = dh_dx.norm();

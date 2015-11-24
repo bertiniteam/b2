@@ -763,7 +763,7 @@ namespace bertini
 
     	for (unsigned ii=0; ii < num_evaluations; ii++)
     	{	
-    		Vec<mpfr> randy = Vec<mpfr>::Random(NumVariables());
+    		Vec<mpfr> randy = RandomOfUnits<mpfr>(NumVariables());
     		Vec<mpfr> f_vals;
     		if (HavePathVariable())
     			f_vals = Eval(randy, mpfr::rand());

@@ -31,13 +31,19 @@
 #ifndef BERTINI_EIGEN_EXTENSIONS_HPP
 #define BERTINI_EIGEN_EXTENSIONS_HPP
 
+#include "num_traits.hpp"
 #include <eigen3/Eigen/Dense>
 
 #include <boost/serialization/complex.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
 
+
 namespace bertini {
+
+	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
+	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+
 
 	using std::abs;
 	/**
@@ -154,6 +160,34 @@ namespace bertini {
 		return A;
 	}
 
+
+	/**
+	\brief Make a random matrix of units (numbers with norm 1).
+
+	\return The random matrix of units.
+
+	\param rows The number of rows.
+	\param cols The number of columns.
+	*/
+	template <typename NumberType>
+	Mat<NumberType> RandomOfUnits(uint rows, uint cols)
+	{
+		return Mat<NumberType>(rows,cols).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
+	}
+
+	/**
+	\brief Make a random vector of units (numbers with norm 1).
+
+	\return The random vector of units.
+
+	\param size The length of the vector.
+	*/
+	template <typename NumberType>
+	Vec<NumberType> RandomOfUnits(uint size)
+	{
+		return Vec<NumberType>(size).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
+	}
+
 }
 
 
@@ -222,10 +256,7 @@ namespace boost{
 } // namespace boost
 
 
-namespace bertini{
-	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
-}
+
 
 #endif
 

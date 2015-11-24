@@ -33,7 +33,7 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #ifndef BERTINI_NUM_TRAITS_HPP
 #define BERTINI_NUM_TRAITS_HPP
 
-
+#include <random>
 #include <eigen3/Eigen/Core>
 
 namespace bertini
@@ -41,6 +41,8 @@ namespace bertini
 
 	using dbl = std::complex<double>;
 
+	template<typename T>
+	T RandomUnit();
 
 	template<typename T>
 	struct NumTraits : public Eigen::NumTraits<T>
@@ -107,6 +109,23 @@ namespace bertini
 		MaxPrecisionAllowed = 1000
 	};
 
+	inline
+	std::complex<double> rand_complex()
+	{
+		std::default_random_engine generator;
+		std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		std::complex<double> returnme(distribution(generator), distribution(generator));
+		return returnme / sqrt( abs(returnme));
+	}
+
+	template <> inline
+	std::complex<double> RandomUnit<std::complex<double> >()
+	{
+		std::default_random_engine generator;
+		std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		std::complex<double> returnme(distribution(generator), distribution(generator));
+		return returnme / abs(returnme);
+	}
 
 }// re: namespace bertini
 

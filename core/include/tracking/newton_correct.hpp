@@ -163,7 +163,7 @@ namespace bertini{
 					if ( (delta_z.norm() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 						return SuccessCode::Success;
 
-					auto norm_J_inverse = LU.solve(Vec<ComplexType>::Random(S.NumVariables())).norm();
+					auto norm_J_inverse = LU.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
 					if (!amp::CriterionB(J.norm(), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z.norm(), AMP_config))
 						return SuccessCode::HigherPrecisionNecessary;
 
@@ -247,7 +247,7 @@ namespace bertini{
 
 					norm_delta_z = delta_z.norm();
 					norm_J = J.norm();
-					norm_J_inverse = LU.solve(Vec<ComplexType>::Random(S.NumVariables())).norm();
+					norm_J_inverse = LU.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
 					condition_number_estimate = norm_J*norm_J_inverse;
 
 
