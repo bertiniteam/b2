@@ -516,16 +516,35 @@ namespace bertini {
 		
 		
 		
-		
+		/**
+		\brief Is \f$z\f$ a NaN?
+		*/
 		bool isnan() const
 		{
 			using boost::math::isnan;
-			if (isnan(real()) | isnan(imag()))
+			if (isnan(real()) || isnan(imag()))
 				return true;
 			else
 				return false;
 		}
 		
+		/**
+		\brief Is \f$z\f$ \f$\infty\f$?
+		*/
+		bool isinf() const
+		{
+			using boost::math::isinf;
+			using boost::math::isnan;
+			if ( (!isnan(real()) && !isnan(imag()))
+			    &&
+			     ( isinf(real()) ||  isinf(imag()))
+			   )
+				return true;
+			else
+				return false;
+		}
+
+
 		/**
 		 Change the precision of this high-precision complex number.
 		 
