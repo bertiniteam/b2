@@ -100,14 +100,30 @@ namespace bertini
 	}
 
 
-
-	enum 
+	inline
+	unsigned PrecisionIncrement()
 	{
-		PrecisionIncrement = 10,
-		DoublePrecision = 16,
-		LowestMultiplePrecision = 30,
-		MaxPrecisionAllowed = 1000
-	};
+		return 10;
+	}
+
+	inline
+	unsigned DoublePrecision()
+	{
+		return 16;
+	}
+
+	inline
+	unsigned LowestMultiplePrecision()
+	{
+		return 30;
+	}
+		
+	inline
+	unsigned MaxPrecisionAllowed()
+	{
+		return 1000;
+	}
+	
 
 	inline
 	std::complex<double> rand_complex()

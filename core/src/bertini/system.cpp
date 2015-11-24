@@ -162,7 +162,7 @@ namespace bertini
 		for (auto iter : ungrouped_variables_)
 			iter->precision(new_precision);
 
-		if (new_precision>DoublePrecision)
+		if (new_precision>DoublePrecision())
 		{
 			Vec<mpfr>& vars_in_mpfr = std::get<Vec<mpfr> >(current_variable_values_);
 			for (unsigned ii=0; ii<vars_in_mpfr.size(); ii++)

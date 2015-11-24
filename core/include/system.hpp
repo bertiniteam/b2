@@ -437,7 +437,7 @@ namespace bertini {
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 
 			#ifndef BERTINI_DISABLE_ASSERTS
-			if (Precision(new_values(0))!=DoublePrecision)
+			if (Precision(new_values(0))!=DoublePrecision())
 				assert(Precision(new_values(0)) == precision() && "precision of input point in SetVariables must match the precision of the system.");
 			#endif
 

@@ -184,7 +184,7 @@ namespace bertini {
 		*/
 		void Precision(unsigned new_precision)
 		{
-			if (new_precision > DoublePrecision)
+			if (new_precision > DoublePrecision())
 			{
 				std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(coefficients_working_);
 
@@ -221,7 +221,7 @@ namespace bertini {
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(function_values.size()>=NumVariableGroups() && "function values must be of length at least as long as the number of variable groups");
-			assert((bertini::Precision(x(0))==DoublePrecision || bertini::Precision(x(0)) == Precision())
+			assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
 			 		&& "precision of input vector must match current working precision of patch during evaluation"
 			 	  );
 			#endif
@@ -274,7 +274,7 @@ namespace bertini {
 			assert(jacobian.rows()>=NumVariableGroups() && "input jacobian must have at least as many rows as variable groups");
 			assert(jacobian.cols()==NumVariables() && "input jacobian must have as many columns as the patch has variables");
 			assert(
-			       (bertini::Precision(x(0))==DoublePrecision || bertini::Precision(x(0)) == Precision())  
+			       (bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())  
 			       	    && "precision of input vector must match current working precision of patch during evaluation"
 			       );
 			#endif
@@ -318,7 +318,7 @@ namespace bertini {
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
 				assert(x.size() == NumVariables() && "input point for rescaling to fit a patch must have same length as total number of variables being patched, in all variable groups.");
-				assert((bertini::Precision(x(0))==DoublePrecision || bertini::Precision(x(0)) == Precision())
+				assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
 						&& "precision of input vector must match current working precision of patch during rescaling"
 					   );
 			#endif
