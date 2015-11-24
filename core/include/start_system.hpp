@@ -53,17 +53,17 @@ namespace bertini
 		public:
 			
 
-			virtual size_t NumStartPoints() const = 0;
+			virtual mpz_int NumStartPoints() const = 0;
 
 			template<typename T>
-			Vec<T> StartPoint(size_t index) const
+			Vec<T> StartPoint(mpz_int index) const
 			{
 				return GenerateStartPoint(T(),index);
 			}
 
 		private:
-			virtual Vec<dbl> GenerateStartPoint(dbl,size_t index) const = 0;
-			virtual Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const = 0;
+			virtual Vec<dbl> GenerateStartPoint(dbl,mpz_int index) const = 0;
+			virtual Vec<mpfr> GenerateStartPoint(mpfr,mpz_int index) const = 0;
 
 			friend class boost::serialization::access;
 
@@ -88,7 +88,7 @@ namespace bertini
 
 		Note that the corresponding target system MUST be square -- have the same number of functions and variables.  The start system cannot be constructed otherwise, particularly because it is written to throw at the moment if not square.
 
-		The start points are accesses by index (size_t), instead of being generated all at once.
+		The start points are accesses by index (mpz_int), instead of being generated all at once.
 		*/
 		class TotalDegree : public StartSystem
 		{
@@ -127,7 +127,7 @@ namespace bertini
 			/**
 			Get the number of start points for this total degree start system.  This is the Bezout bound for the target system.  Provided here for your convenience.
 			*/
-			size_t NumStartPoints() const override;
+			mpz_int NumStartPoints() const override;
 
 
 		private:
@@ -137,17 +137,17 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<dbl> GenerateStartPoint(dbl,size_t index) const override;
+			Vec<dbl> GenerateStartPoint(dbl,mpz_int index) const override;
 
 			/**
 			Get the ith start point, in current default precision.
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const override;
+			Vec<mpfr> GenerateStartPoint(mpfr,mpz_int index) const override;
 
 			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
-			std::vector<size_t> degrees_; ///< stores the degrees of the functions.
+			std::vector<mpz_int> degrees_; ///< stores the degrees of the functions.
 
 
 			friend class boost::serialization::access;

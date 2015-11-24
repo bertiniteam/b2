@@ -52,8 +52,7 @@
 #include <assert.h>
 
 
-
-
+#include <boost/math/special_functions/fpclassify.hpp>
 
 
 namespace bertini {
@@ -518,7 +517,14 @@ namespace bertini {
 		
 		
 		
-		
+		bool isnan() const
+		{
+			using boost::math::isnan;
+			if (isnan(real()) | isnan(imag()))
+				return true;
+			else
+				return false;
+		}
 		
 		/**
 		 Change the precision of this high-precision complex number.
@@ -1089,7 +1095,11 @@ namespace bertini {
 		return num.precision();
 	}
 
-
+	inline 
+	bool isnan(bertini::complex const& num)
+	{
+		return num.isnan();
+	}
 	
 	template <> struct NumTraits<bertini::complex> 
 	{
