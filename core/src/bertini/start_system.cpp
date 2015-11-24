@@ -87,9 +87,9 @@ namespace bertini {
 		
 		
 
-		size_t TotalDegree::NumStartPoints() const
+		mpz_int TotalDegree::NumStartPoints() const
 		{
-			size_t num_start_points = 1;
+			mpz_int num_start_points = 1;
 			for (auto iter : degrees_)
 				num_start_points*=iter;
 			return num_start_points;
@@ -97,7 +97,7 @@ namespace bertini {
 
 
 		
-		Vec<dbl> TotalDegree::GenerateStartPoint(dbl,size_t index) const
+		Vec<dbl> TotalDegree::GenerateStartPoint(dbl,mpz_int index) const
 		{
 			Vec<dbl> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
@@ -110,7 +110,7 @@ namespace bertini {
 			}
 
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( std::acos(-1) * dbl(0,2) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), double(1) / degrees_[ii]);
+				start_point(ii+offset) = exp( std::acos(-1) * dbl(0,2) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), double(1) / double(degrees_[ii]));
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
@@ -119,7 +119,7 @@ namespace bertini {
 		}
 
 
-		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,size_t index) const
+		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,mpz_int index) const
 		{
 			Vec<mpfr> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);

@@ -36,6 +36,7 @@ using System = bertini::System;
 using Var = std::shared_ptr<bertini::node::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
+using mpz_int = bertini::mpz_int;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
@@ -281,7 +282,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 
 	bertini::start_system::TotalDegree TD(sys);
 
-	for (size_t ii = 0; ii < TD.NumStartPoints(); ++ii)
+	for (mpz_int ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		auto start = TD.StartPoint<dbl>(ii);
 		auto function_values = TD.Eval(start);
@@ -292,7 +293,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 
 	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	for (size_t ii = 0; ii < TD.NumStartPoints(); ++ii)
+	for (mpz_int ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		auto start = TD.StartPoint<mpfr>(ii);
 		auto function_values = TD.Eval(start);
