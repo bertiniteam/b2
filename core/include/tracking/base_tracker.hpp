@@ -264,6 +264,14 @@ namespace bertini{
 
 
 			/**
+			\brief get a const reference to the system.
+			*/
+			const class System& System()
+			{
+				return tracked_system_;
+			}
+
+			/**
 			\brief See how many steps have been taken.
 
 			\return The total number of steps taken, including successes and fails.
