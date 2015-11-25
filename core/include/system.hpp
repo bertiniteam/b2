@@ -94,7 +94,7 @@ namespace bertini {
 
 		\param new_precision The new precision, in digits, to work in.  This only affects the mpfr types, not double.  To use low-precision (doubles), use that number type in the templated functions.
 		*/
-		void precision(unsigned new_precision);
+		void precision(unsigned new_precision) const;
 
 		unsigned precision() const
 		{
@@ -1132,7 +1132,7 @@ namespace bertini {
 		mutable bool have_ordering_;
 		OrderingChoice ordering_;
 
-		unsigned precision_; ///< the current working precision of the system 
+		mutable unsigned precision_; ///< the current working precision of the system 
 
 
 		friend class boost::serialization::access;

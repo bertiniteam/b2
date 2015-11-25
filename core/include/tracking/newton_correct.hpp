@@ -66,7 +66,7 @@ namespace bertini{
 			*/
 			template <typename ComplexType, typename RealType>
 			SuccessCode NewtonLoop(Vec<ComplexType> & next_space,
-					               System & S,
+					               System const& S,
 					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 					               ComplexType const& current_time, 
 					               RealType const& tracking_tolerance,
@@ -129,7 +129,7 @@ namespace bertini{
 			*/
 			template <typename ComplexType, typename RealType>
 			SuccessCode NewtonLoop(Vec<ComplexType> & next_space,
-					               System & S,
+					               System const& S,
 					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 					               ComplexType const& current_time, 
 					               RealType const& tracking_tolerance,
@@ -212,7 +212,7 @@ namespace bertini{
 			                       RealType & norm_J,
 			                       RealType & norm_J_inverse,
 			                       RealType & condition_number_estimate,
-					               System & S,
+					               System const& S,
 					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 					               ComplexType const& current_time, 
 					               RealType const& tracking_tolerance,

@@ -59,7 +59,7 @@ namespace bertini{
 		*/
 		template <typename ComplexType, typename RealType>
 		SuccessCode Correct(Vec<ComplexType> & next_space,
-					               System & S,
+					               System const& S,
 					               Vec<ComplexType> const& current_space, 
 					               ComplexType const& current_time, 
 					               RealType tracking_tolerance,
@@ -97,7 +97,7 @@ namespace bertini{
 		*/
 		template <typename ComplexType, typename RealType>
 		SuccessCode Correct(Vec<ComplexType> & next_space,
-					               System & S,
+					               System const& S,
 					               Vec<ComplexType> const& current_space, 
 					               ComplexType const& current_time, 
 					               RealType tracking_tolerance,
@@ -146,7 +146,7 @@ namespace bertini{
 			                       RealType & norm_J,
 			                       RealType & norm_J_inverse,
 			                       RealType & condition_number_estimate,
-					               System & S,
+					               System const& S,
 					               Vec<ComplexType> const& current_space, 
 					               ComplexType const& current_time, 
 					               RealType tracking_tolerance,

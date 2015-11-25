@@ -78,7 +78,7 @@ namespace bertini{
 			                  RealType & size_proportion,
 			                  RealType & norm_J,
 			                  RealType & norm_J_inverse,
-					               System & S,
+					               System const& S,
 					               Vec<ComplexType> const& current_space, ComplexType current_time, 
 					               ComplexType const& delta_t,
 					               RealType & condition_number_estimate,
@@ -177,7 +177,7 @@ namespace bertini{
 			*/
 			template <typename ComplexType, typename RealType>
 			SuccessCode Euler(Vec<ComplexType> & next_space,
-					               System & S,
+					               System const& S,
 					               Vec<ComplexType> const& current_space, ComplexType current_time, 
 					               ComplexType const& delta_t,
 					               RealType & condition_number_estimate,

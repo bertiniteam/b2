@@ -117,7 +117,7 @@ namespace bertini
 	}
 
 
-	void System::precision(unsigned new_precision)
+	void System::precision(unsigned new_precision) const
 	{
 		for (auto iter : functions_) {
 			iter->precision(new_precision);

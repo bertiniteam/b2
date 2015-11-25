@@ -307,7 +307,7 @@ namespace bertini{
 				num_failed_steps_taken_ = 0;
 			}
 
-			System tracked_system_; ///< The system being tracked.
+			const System& tracked_system_; ///< The system being tracked.
 
 			// tracking the numbers of things
 			unsigned num_total_steps_taken_; ///< The number of steps taken, including failures and successes.

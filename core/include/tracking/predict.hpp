@@ -58,7 +58,7 @@ namespace bertini{
 		template <typename ComplexType, typename RealType>
 		SuccessCode Predict(config::Predictor predictor_choice,
 							Vec<ComplexType> & next_space,
-							   System & sys,
+							   System const& sys,
 							   Vec<ComplexType> const& current_space, ComplexType current_time, 
 							   ComplexType const& delta_t,
 							   RealType & condition_number_estimate,
@@ -114,7 +114,7 @@ namespace bertini{
 							RealType & size_proportion, /*\f$a\f$ from the AMP2 paper */
 							RealType & norm_J,
 							RealType & norm_J_inverse,
-							System & sys,
+							System const& sys,
 							Vec<ComplexType> const& current_space, ComplexType current_time, 
 							ComplexType const& delta_t,
 							RealType & condition_number_estimate,
@@ -171,7 +171,7 @@ namespace bertini{
 							RealType & size_proportion, /*\f$a\f$ from the AMP2 paper */
 							RealType & norm_J,
 							RealType & norm_J_inverse,
-							System & sys,
+							System const& sys,
 							Vec<ComplexType> const& current_space, ComplexType current_time, 
 							ComplexType const& delta_t,
 							RealType & condition_number_estimate,
@@ -235,7 +235,7 @@ namespace bertini{
 		template <typename ComplexType, typename RealType>
 		SuccessCode Predict(config::Predictor predictor_choice,
 							Vec<ComplexType> & next_space,
-							   System & sys,
+							   System const& sys,
 							   Vec<ComplexType> const& current_space, ComplexType current_time, 
 							   ComplexType const& delta_t,
 							   RealType & condition_number_estimate,

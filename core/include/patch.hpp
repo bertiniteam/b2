@@ -182,7 +182,7 @@ namespace bertini {
 
 		\param new_precision The precision to change to.
 		*/
-		void Precision(unsigned new_precision)
+		void Precision(unsigned new_precision) const
 		{
 			if (new_precision > DoublePrecision())
 			{
@@ -424,11 +424,11 @@ namespace bertini {
 
 		std::vector< Vec< mpfr > > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
 
-		std::tuple< std::vector< Vec< mpfr > >, std::vector< Vec< dbl > > > coefficients_working_; ///< the current working coefficients of the patch.  changing precision affects these, particularly the mpfr coefficients, which are down-sampled from the highest_precision coefficients.  the doubles are only down-sampled at time of creation or modification.
+		mutable std::tuple< std::vector< Vec< mpfr > >, std::vector< Vec< dbl > > > coefficients_working_; ///< the current working coefficients of the patch.  changing precision affects these, particularly the mpfr coefficients, which are down-sampled from the highest_precision coefficients.  the doubles are only down-sampled at time of creation or modification.
 
 		std::vector<unsigned> variable_group_sizes_; ///< the sizes of the groups.  In principle, these must be at least 2.
 
-		unsigned precision_; ///< the current working precision of the patch.
+		mutable unsigned precision_; ///< the current working precision of the patch.
 
 		// add serialization support through boost.
 
