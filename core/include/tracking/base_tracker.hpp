@@ -266,7 +266,7 @@ namespace bertini{
 			/**
 			\brief get a const reference to the system.
 			*/
-			const class System& System()
+			const class System& System() const
 			{
 				return tracked_system_;
 			}
@@ -315,7 +315,7 @@ namespace bertini{
 				num_failed_steps_taken_ = 0;
 			}
 
-			const System& tracked_system_; ///< The system being tracked.
+			const class System& tracked_system_; ///< The system being tracked.
 
 			// tracking the numbers of things
 			unsigned num_total_steps_taken_; ///< The number of steps taken, including failures and successes.

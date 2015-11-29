@@ -564,7 +564,7 @@ namespace bertini{
 			/**
 			\brief Construct an Adaptive Precision tracker, associating to it a System.
 			*/
-			AMPTracker(System const& sys) : Tracker(sys), current_precision_(mpfr_float::default_precision())
+			AMPTracker(class System const& sys) : Tracker(sys), current_precision_(mpfr_float::default_precision())
 			{	
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "creating tracker from system " << sys;
 				AMP_config_ = config::AMPConfigFrom(sys);
