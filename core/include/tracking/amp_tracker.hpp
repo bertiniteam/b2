@@ -487,7 +487,9 @@ namespace bertini{
 		The AMPTracker has internal state.  That is, it stores the current state of the path being tracked as data members.  After tracking has concluded, these statistics may be extracted.  If you need additional accessors for these data, contact the software authors.
 
 		The class additionally uses the Boost.Log library for logging.  At time of this writing, the trivial logger is being used.  As development continues we will move toward using a more sophisticated logging model.  Suggestions are welcome.
-
+		
+		This class, like the other Tracker classes, uses mutable members to store the current state of the tracker.  The tracking tolerances, settings, etc, remain constant throughout a track, but the internal state such as the current time or space values, will change.  You can also expect the precision of the tracker to differ after a certain calls, too.
+		
 		## Example Usage
 		
 		Below we demonstrate a basic usage of the AMPTracker class to track a single path.  
@@ -591,7 +593,7 @@ namespace bertini{
 			\brief Refine a point given in multiprecision.
 			*/
 			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time) override
+								Vec<mpfr> const& start_point, mpfr const& current_time) const override
 			{
 				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time);
 			}
@@ -617,7 +619,7 @@ namespace bertini{
 			*/
 			template <typename ComplexType, typename RealType>
 			SuccessCode Refine(Vec<ComplexType> & new_space,
-								Vec<ComplexType> const& start_point, ComplexType const& current_time)
+								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
@@ -647,7 +649,7 @@ namespace bertini{
 			\param start_point The space values from which to start tracking.
 			*/
 			void TrackerLoopInitialization(mpfr const& start_time,
-										   Vec<mpfr> const& start_point) override
+										   Vec<mpfr> const& start_point) const override
 			{
 				// set up the master current time and the current step size
 				current_time_.precision(start_time.precision());
@@ -668,7 +670,7 @@ namespace bertini{
 			}
 
 
-			void ResetCounters() override
+			void ResetCounters() const override
 			{
 				Tracker::ResetCounters();
 				num_precision_decreases_ = 0;
@@ -682,7 +684,7 @@ namespace bertini{
 
 			\return Whether initial refinement was successful.  
 			*/
-			SuccessCode InitialRefinement() override
+			SuccessCode InitialRefinement() const override
 			{
 				SuccessCode initial_refinement = Refine();
 				if (initial_refinement!=SuccessCode::Success)
@@ -737,7 +739,7 @@ namespace bertini{
 
 			\return Success if the step was successful, and a non-success code if something went wrong, such as a linear algebra failure or AMP Criterion violation.
 			*/
-			SuccessCode TrackerIteration() override
+			SuccessCode TrackerIteration() const override
 			{
 				if (current_precision_==DoublePrecision())
 					return TrackerIteration<dbl, double>();
@@ -780,7 +782,7 @@ namespace bertini{
 			\tparam RealType The real number type.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode TrackerIteration() // not an override, because it is templated
+			SuccessCode TrackerIteration() const // not an override, because it is templated
 			{	
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
@@ -853,7 +855,7 @@ namespace bertini{
 			}
 
 
-			SuccessCode UpdatePrecisionAndStepsize()
+			SuccessCode UpdatePrecisionAndStepsize() const
 			{
 				current_stepsize_ = next_stepsize_;
 				return ChangePrecision(next_precision_);
@@ -869,7 +871,7 @@ namespace bertini{
 			\tparam RealType The real number type.
 			*/
 			template<typename ComplexType, typename RealType>
-			void SafetyError()
+			void SafetyError() const
 			{	
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
@@ -897,7 +899,7 @@ namespace bertini{
 			/**
 			 Adjust precision and stepsize due to Newton's method failure to converge in the maximum number of steps.
 			*/
-			void ConvergenceError()
+			void ConvergenceError() const
 			{
 				::bertini::tracking::ConvergenceError(next_precision_, next_stepsize_, 
 							  current_precision_, current_stepsize_,
@@ -924,7 +926,7 @@ namespace bertini{
 			template<typename ComplexType, typename RealType>
 			SuccessCode Predict(Vec<ComplexType> & predicted_space, 
 								Vec<ComplexType> const& current_space, 
-								ComplexType const& current_time, ComplexType const& delta_t)
+								ComplexType const& current_time, ComplexType const& delta_t) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
@@ -983,7 +985,7 @@ namespace bertini{
 
 			\return Whether the refinement was successful.
 			*/
-			SuccessCode Refine()
+			SuccessCode Refine() const
 			{
 				SuccessCode code;
 				if (current_precision_==DoublePrecision())
@@ -1024,7 +1026,7 @@ namespace bertini{
 			template <typename ComplexType, typename RealType>
 			SuccessCode Refine(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time,
-								RealType const& tolerance)
+								RealType const& tolerance) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
@@ -1061,7 +1063,7 @@ namespace bertini{
 			template<typename ComplexType, typename RealType>
 			SuccessCode Correct(Vec<ComplexType> & corrected_space, 
 								Vec<ComplexType> const& current_space, 
-								ComplexType const& current_time)
+								ComplexType const& current_time) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
@@ -1103,7 +1105,7 @@ namespace bertini{
 			The number of consecutive successful steps is recorded as state in this class, and if this number exceeds a user-determine threshold, the precision or stepsize are allowed to favorably change.  If not, then precision can only go up or remain the same.  Stepsize can only decrease.  These changes depend on the AMP criteria and current tracking tolerance.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode StepSuccess()
+			SuccessCode StepSuccess() const
 			{
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "StepSuccess";
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "current precision: " << current_precision_;
@@ -1225,7 +1227,7 @@ namespace bertini{
 			\param new_precision The precision to change to.
 			\return SuccessCode indicating whether the change was successful.  If the precision increases, and the refinement loop fails, this could be not Success.  Changing down is guaranteed to succeed.
 			*/
-			SuccessCode ChangePrecision(unsigned new_precision)
+			SuccessCode ChangePrecision(unsigned new_precision) const
 			{
 				if (new_precision==current_precision_) // no op
 					return SuccessCode::Success;
@@ -1278,7 +1280,7 @@ namespace bertini{
 
 			\param source_point The point into which to copy to the internally stored current space point.
 			*/
-			void MultipleToDouble(Vec<mpfr> const& source_point)
+			void MultipleToDouble(Vec<mpfr> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
@@ -1301,7 +1303,7 @@ namespace bertini{
 
 			Changes the precision of the internal temporaries to double precision
 			*/
-			void MultipleToDouble()
+			void MultipleToDouble() const
 			{
 				MultipleToDouble(std::get<Vec<mpfr> >(current_space_));
 			}
@@ -1320,7 +1322,7 @@ namespace bertini{
 			\param new_precision The new precision.
 			\param source_point The point into which to copy to the internally stored current space point.
 			*/
-			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point)
+			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
@@ -1353,7 +1355,7 @@ namespace bertini{
 
 			\param new_precision The new precision.
 			*/
-			void DoubleToMultiple(unsigned new_precision)
+			void DoubleToMultiple(unsigned new_precision) const
 			{
 				DoubleToMultiple( new_precision, std::get<Vec<dbl> >(current_space_));
 			}
@@ -1371,7 +1373,7 @@ namespace bertini{
 			\param new_precision The new precision.
 			\param source_point The point into which to copy to the internally stored current space point.
 			*/
-			void MultipleToMultiple(unsigned new_precision, Vec<mpfr> const& source_point)
+			void MultipleToMultiple(unsigned new_precision, Vec<mpfr> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
@@ -1403,7 +1405,7 @@ namespace bertini{
 
 			\param new_precision The new precision.
 			*/
-			void MultipleToMultiple(unsigned new_precision)
+			void MultipleToMultiple(unsigned new_precision) const
 			{
 				MultipleToMultiple( new_precision, std::get<Vec<mpfr> >(current_space_));
 			}
@@ -1416,7 +1418,7 @@ namespace bertini{
 
 			\brief new_precision The new precision to adjust to.
 			*/
-			void AdjustTemporariesPrecision(unsigned new_precision)
+			void AdjustTemporariesPrecision(unsigned new_precision) const
 			{
 				unsigned num_vars = tracked_system_.NumVariables();
 
@@ -1491,27 +1493,27 @@ namespace bertini{
 			/////////////
 
 
-			unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
-			unsigned next_precision_; ///< The next precision
-			unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
+			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
+			mutable unsigned next_precision_; ///< The next precision
+			mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
 
 
 
 			unsigned frequency_of_CN_estimation_; ///< How frequently the condition number should be re-estimated.
-			unsigned num_steps_since_last_condition_number_computation_; ///< How many steps have passed since the most recent condition number estimate.
+			mutable unsigned num_steps_since_last_condition_number_computation_; ///< How many steps have passed since the most recent condition number estimate.
 
 
-			std::tuple< Vec<dbl>, Vec<mpfr> > current_space_; ///< The current space value. 
-			std::tuple< Vec<dbl>, Vec<mpfr> > tentative_space_; ///< After correction, the tentative next space value
-			std::tuple< Vec<dbl>, Vec<mpfr> > temporary_space_; ///< After prediction, the tentative next space value.
+			mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_space_; ///< The current space value. 
+			mutable std::tuple< Vec<dbl>, Vec<mpfr> > tentative_space_; ///< After correction, the tentative next space value
+			mutable std::tuple< Vec<dbl>, Vec<mpfr> > temporary_space_; ///< After prediction, the tentative next space value.
 
 
-			std::tuple< double, mpfr_float > condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
-			std::tuple< double, mpfr_float > error_estimate_; ///< An estimate on the error of a step.
-			std::tuple< double, mpfr_float > norm_J_; ///< An estimate on the norm of the Jacobian
-			std::tuple< double, mpfr_float > norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
-			std::tuple< double, mpfr_float > norm_delta_z_; ///< The norm of the change in space resulting from a step.
-			std::tuple< double, mpfr_float > size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
+			mutable std::tuple< double, mpfr_float > condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
+			mutable std::tuple< double, mpfr_float > error_estimate_; ///< An estimate on the error of a step.
+			mutable std::tuple< double, mpfr_float > norm_J_; ///< An estimate on the norm of the Jacobian
+			mutable std::tuple< double, mpfr_float > norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
+			mutable std::tuple< double, mpfr_float > norm_delta_z_; ///< The norm of the change in space resulting from a step.
+			mutable std::tuple< double, mpfr_float > size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
  
 
 			config::AdaptiveMultiplePrecisionConfig AMP_config_; ///< The Adaptive Multiple Precision settings.

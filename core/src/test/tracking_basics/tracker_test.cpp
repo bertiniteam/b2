@@ -622,6 +622,8 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 // x = 0.16180339887498948482045868
 // y = -0.6180339887498948482045868
 
+
+
 BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 {
 	using namespace bertini::tracking;
@@ -702,6 +704,98 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	}
 	BOOST_CHECK_EQUAL(num_occurences,1);
 }
+
+
+
+std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& tracker, bertini::start_system::TotalDegree const& TD)
+{
+	using namespace bertini::tracking;
+	mpfr t_start(1), t_end(0);
+	std::vector<Vec<mpfr> > solutions;
+	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
+	{
+		mpfr_float::default_precision(30);
+		TD.precision(30);
+		auto start_point = TD.StartPoint<mpfr>(ii);
+
+		Vec<mpfr> result;
+		SuccessCode tracking_success;
+
+		tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
+		BOOST_CHECK(tracking_success==SuccessCode::Success);
+
+		solutions.push_back(tracker.System().DehomogenizePoint(result));
+	}
+
+	return solutions;
+}
+
+BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
+{
+	using namespace bertini::tracking;
+	mpfr_float::default_precision(30);
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddVariableGroup(v);
+
+	sys.AddFunction(x*y+1);
+	sys.AddFunction(x+y-1);
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK(sys.IsPatched());	
+
+	
+
+	auto TD = bertini::start_system::TotalDegree(sys);
+	TD.Homogenize();
+	BOOST_CHECK(TD.IsHomogeneous());
+	BOOST_CHECK(TD.IsPatched());
+
+	auto final_system = (1-t)*sys + t*TD;
+	final_system.AddPathVariable(t);
+
+	auto tracker = AMPTracker(final_system);
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"), mpfr_float("1e5"),
+					stepping_preferences, newton_preferences);
+	
+
+	auto solutions = track_total_degree(tracker, TD);
+
+	Vec<mpfr> solution_1(2);
+	solution_1 << mpfr("-0.61803398874989484820458683","0"), mpfr("1.6180339887498948482045868","0");
+
+	Vec<mpfr> solution_2(2);
+	solution_2 << mpfr("1.6180339887498948482045868","0"), mpfr("-0.6180339887498948482045868","0");
+
+	unsigned num_occurences(0);
+	for (auto s : solutions)
+	{
+		if ( (s-solution_1).norm() < mpfr_float("1e-5"))
+			num_occurences++;
+	}
+	BOOST_CHECK_EQUAL(num_occurences,1);
+
+	num_occurences = 0;
+	for (auto s : solutions)
+	{
+		if ( (s-solution_2).norm() < mpfr_float("1e-5"))
+			num_occurences++;
+	}
+	BOOST_CHECK_EQUAL(num_occurences,1);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

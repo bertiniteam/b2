@@ -173,7 +173,7 @@ namespace bertini{
 			SuccessCode TrackPath(Vec<mpfr> & solution_at_endtime,
 									mpfr const& start_time, mpfr const& endtime,
 									Vec<mpfr> const& start_point
-									)
+									) const
 			{	
 
 				BOOST_LOG_TRIVIAL(severity_level::debug) << "tracking path from t=" << start_time << " to t=" << endtime << " from x = " << start_point;
@@ -235,7 +235,7 @@ namespace bertini{
 
 			virtual
 			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time) = 0;
+								Vec<mpfr> const& start_point, mpfr const& current_time) const = 0;
 
 
 
@@ -257,7 +257,7 @@ namespace bertini{
 			/**
 			\brief Query the currently set predictor
 			*/
-			config::Predictor Predictor()
+			config::Predictor Predictor() const
 			{
 				return predictor_choice_;
 			}
@@ -289,16 +289,16 @@ namespace bertini{
 
 
 			virtual
-			void TrackerLoopInitialization(mpfr const& start_time, Vec<mpfr> const& start_point) = 0;
+			void TrackerLoopInitialization(mpfr const& start_time, Vec<mpfr> const& start_point) const = 0;
 
 			virtual 
-			SuccessCode InitialRefinement() = 0;
+			SuccessCode InitialRefinement() const = 0;
 
 			virtual 
 			SuccessCode PreIterationCheck() const = 0;
 
 			virtual 
-			SuccessCode TrackerIteration() = 0;
+			SuccessCode TrackerIteration() const = 0;
 
 			virtual
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
@@ -307,7 +307,7 @@ namespace bertini{
 		protected:
 
 			virtual
-			void ResetCounters()
+			void ResetCounters() const
 			{
 				// reset a bunch of counters to 0.
 				num_consecutive_successful_steps_ = 0;
@@ -318,10 +318,10 @@ namespace bertini{
 			const class System& tracked_system_; ///< The system being tracked.
 
 			// tracking the numbers of things
-			unsigned num_total_steps_taken_; ///< The number of steps taken, including failures and successes.
-			unsigned num_successful_steps_taken_;  ///< The number of successful steps taken so far.
-			unsigned num_consecutive_successful_steps_; ///< The number of CONSECUTIVE successful steps taken in a row.
-			unsigned num_failed_steps_taken_; ///< The total number of failed steps taken.
+			mutable unsigned num_total_steps_taken_; ///< The number of steps taken, including failures and successes.
+			mutable unsigned num_successful_steps_taken_;  ///< The number of successful steps taken so far.
+			mutable unsigned num_consecutive_successful_steps_; ///< The number of CONSECUTIVE successful steps taken in a row.
+			mutable unsigned num_failed_steps_taken_; ///< The total number of failed steps taken.
 
 			
 			// configuration for tracking
@@ -340,14 +340,14 @@ namespace bertini{
 			mpfr_float path_truncation_threshold_; ///< The threshold for path truncation.
 
 
-			mpfr current_time_; ///< The current time.
-			mpfr delta_t_; ///< The current delta_t.
-			mpfr_float current_stepsize_; ///< The current stepsize.
+			mutable mpfr current_time_; ///< The current time.
+			mutable mpfr delta_t_; ///< The current delta_t.
+			mutable mpfr_float current_stepsize_; ///< The current stepsize.
 
 
 			// permanent temporaries
-			mpfr_float next_stepsize_; /// The next stepsize
-			SuccessCode step_success_code_; ///< The code for step success.
+			mutable mpfr_float next_stepsize_; /// The next stepsize
+			mutable SuccessCode step_success_code_; ///< The code for step success.
 		};
 
 
