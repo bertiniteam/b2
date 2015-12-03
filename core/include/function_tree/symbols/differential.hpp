@@ -18,7 +18,12 @@
 //
 // differential.hpp:  Declares the class SpecialNumber.
 
+/**
+\file differential.hpp
 
+\brief Provides the differential Node class.
+
+*/
 
 #ifndef b2Test_Differential_h
 #define b2Test_Differential_h

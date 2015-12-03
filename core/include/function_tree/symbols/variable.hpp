@@ -19,7 +19,12 @@
 // variable.hpp:  Declares the class Variable.
 
 
+/**
+\file variable.hpp
 
+\brief Provides the Variable Node class.
+
+*/
 #ifndef b2Test_Variable_h
 #define b2Test_Variable_h
 

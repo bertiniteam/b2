@@ -18,8 +18,15 @@
 //
 // arithmetic.hpp:  Declares the arithmetic nodes for bertini2.
 
-#ifndef operator_arithmetic_hpp
-#define operator_arithmetic_hpp
+/**
+\file arithmetic.hpp
+
+\brief Provides the artithmetic Node types, such as Sum and Power
+
+*/
+
+#ifndef BERTINI_OPERATOR_ARITHMETIC_HPP
+#define BERTINI_OPERATOR_ARITHMETIC_HPP
 
 #include <vector>
 #include <string>
@@ -129,7 +136,7 @@ namespace node{
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 
-		int Degree(VariableGroup const& vars) const;
+		int Degree(VariableGroup const& vars) const override;
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
@@ -143,7 +150,7 @@ namespace node{
 		/**
 		 Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
 		 */
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar);
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 

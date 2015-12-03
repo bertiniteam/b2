@@ -22,6 +22,14 @@
 //
 //
 
+/**
+\file mpfr_extensions.hpp 
+
+\brief Extensions to the Boost.Multiprecision library.
+
+Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and gmp_int types.
+*/
+
 #ifndef BERTINI_MPFR_EXTENSIONS_HPP
 #define BERTINI_MPFR_EXTENSIONS_HPP
 
@@ -38,23 +46,28 @@
 #include <eigen3/Eigen/Core>
 
 #include <string>
-#include <assert.h>
+
+#include "num_traits.hpp"
 
 
+namespace bertini{
 
+	typedef boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off> mpfr_float;
+
+	using mpz_int = boost::multiprecision::mpz_int;
+	using gmp_rational = boost::multiprecision::gmp_rational;
+}
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
 namespace boost { namespace serialization {
-	
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	
-	
 	/**
 	 Save a mpfr_float type to a boost archive.
 	 */
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
 	{
+		unsigned num_digits(r.precision());
+		ar & num_digits;
 		std::string tmp = r.str(0,std::ios::scientific);
 		ar & tmp;
 	}
@@ -65,6 +78,9 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void load(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0>& r, unsigned /*version*/)
 	{
+		unsigned num_digits;
+		ar & num_digits;
+		r.precision(num_digits);
 		std::string tmp;
 		ar & tmp;
 		r = tmp.c_str();
@@ -127,14 +143,13 @@ BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_int)
 // reopen the Eigen namespace to inject this struct.
 namespace Eigen {
 	
-	using boost::multiprecision::mpfr_float;
-	using namespace boost::multiprecision;
-	template<> struct NumTraits<boost::multiprecision::mpfr_float> : GenericNumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	using bertini::mpfr_float;
+	template<> struct NumTraits<mpfr_float> : GenericNumTraits<mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
 		
-		typedef boost::multiprecision::mpfr_float Real;
-		typedef boost::multiprecision::mpfr_float NonInteger;
-		typedef boost::multiprecision::mpfr_float Nested;
+		typedef mpfr_float Real;
+		typedef mpfr_float NonInteger;
+		typedef mpfr_float Nested;
 		enum {
 			IsComplex = 0,
 			IsInteger = 0,
@@ -148,7 +163,7 @@ namespace Eigen {
 		
 		inline static Real highest() {
 			
-			return (boost::multiprecision::mpfr_float(1) - epsilon()) * pow(boost::multiprecision::mpfr_float(2),mpfr_get_emax()-1);//);//boost::multiprecision::mpfr_float::default_precision());
+			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//mpfr_float::default_precision());
 		}
 		
 		inline static Real lowest() {
@@ -157,12 +172,12 @@ namespace Eigen {
 		
 		inline static Real dummy_precision()
 		{
-			return pow( boost::multiprecision::mpfr_float(10),-int(boost::multiprecision::mpfr_float::default_precision()-3));
+			return pow( mpfr_float(10),-int(mpfr_float::default_precision()-3));
 		}
 		
 		inline static Real epsilon()
 		{
-			return pow(boost::multiprecision::mpfr_float(10),-int(boost::multiprecision::mpfr_float::default_precision()));
+			return pow(mpfr_float(10),-int(mpfr_float::default_precision()));
 		}
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
 	};
@@ -173,23 +188,34 @@ namespace Eigen {
 
 namespace bertini {
 
-	
-	
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	
-	
-	/**
-	 \brief create a random number, at the current default precision
-	 
-	 \note this function calls the templated function RandomMpfr.
-	 
-	 \tparam T the number type to generate.
-	 \return The random number.
-	 */
-	template <typename T>
-	T RandomMp();
-	
+	/** 
+	\brief Get the precision of a number.
 
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline
+	unsigned Precision(mpfr_float const& num)
+	{
+		return num.precision();
+	}
+	
+	
+	
+	template <> struct NumTraits<mpfr_float> 
+	{
+		inline static unsigned NumDigits()
+		{
+			return mpfr_float::default_precision();
+		}
+
+		inline static unsigned NumFuzzyDigits()
+		{
+			return mpfr_float::default_precision()-3;
+		}
+	};
+	
+	 
+	 
 	
 	/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
@@ -197,9 +223,17 @@ namespace bertini {
 	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
 	 \return number_to_make_random The number which you desire to populate with a random number.
+	 
 	 */
 	template <typename T, unsigned int length_in_digits>
-	T RandomMpUniformUnitInterval();
+	T RandomMpUniformUnitInterval()
+	{
+		static boost::uniform_01<T> uf;
+		static boost::random::independent_bits_engine<
+			boost::random::mt19937, length_in_digits*1000L/301L, boost::multiprecision::mpz_int
+														> gen;
+		return uf(gen);
+	}
 	
 	
 	
@@ -219,7 +253,15 @@ namespace bertini {
 	 \param b The right bound.
 	 */
 	template <typename T, unsigned int length_in_digits>
-	T RandomMpUniformInInterval(const T & a, const T & b);
+	T RandomMpUniformInInterval(const T & a, const T & b)
+	{
+		static boost::uniform_01<T> uf;
+		static boost::random::independent_bits_engine<
+			boost::random::mt19937, length_in_digits*1000L/301L, boost::multiprecision::mpz_int
+														> gen;
+		return (b-a)*uf(gen) + a;
+
+	}
 	
 	
 	
@@ -227,17 +269,97 @@ namespace bertini {
 	 \brief create a random number in a given interval, at the current default precision
 	 
 	 \note this function calls the templated function RandomMpfrUniformInInterval.
-	 
-	 \tparam T the number type to generate.
-	 \param a The left bound.
-	 \param b The right bound.
 
-	 \return The random number.
+	 \tparam T the number type to generate.
+	 \param number_to_make_random The number whose contents you are overwriting with a random number.
 	 */
 	template <typename T>
-	T RandomMp(const T & a, const T & b);
+	T RandomMp(const T & a, const T & b)
+	{
+		auto num_digits = mpfr_float::default_precision() + 3;
+	 
+		if (num_digits<=50)
+			return RandomMpUniformInInterval<T,50>(a,b);
+		else if (num_digits<=100)
+			return RandomMpUniformInInterval<T,100>(a,b);
+		else if (num_digits<=200)
+			return RandomMpUniformInInterval<T,200>(a,b);
+		else if (num_digits<=400)
+			return RandomMpUniformInInterval<T,400>(a,b);
+		else if (num_digits<=800)
+			return RandomMpUniformInInterval<T,800>(a,b);
+		else if (num_digits<=1600)
+			return RandomMpUniformInInterval<T,1600>(a,b);
+		else if (num_digits<=3200)
+			return RandomMpUniformInInterval<T,3200>(a,b);
+		else if (num_digits<=6400)
+			return RandomMpUniformInInterval<T,6400>(a,b);
+		else if (num_digits<=8000)
+			return RandomMpUniformInInterval<T,8000>(a,b);
+		else if (num_digits<=10000)
+			return RandomMpUniformInInterval<T,10000>(a,b);
+		else if (num_digits<=12000)
+			return RandomMpUniformInInterval<T,12000>(a,b);
+		else if (num_digits<=14000)
+			return RandomMpUniformInInterval<T,14000>(a,b);
+		else if (num_digits<=16000)
+			return RandomMpUniformInInterval<T,16000>(a,b);
+		else if (num_digits<=18000)
+			return RandomMpUniformInInterval<T,18000>(a,b);
+		else if (num_digits<=20000)
+			return RandomMpUniformInInterval<T,20000>(a,b);
+		else if (num_digits<=40000)
+			return RandomMpUniformInInterval<T,40000>(a,b);
+		else
+			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.");
+	}
 	
 	
+	/**
+	 \brief create a random number, at the current default precision
+
+	 \param number_to_make_random The number whose contents you are overwriting with a random number.
+	 */
+	template <typename T>
+	T RandomMp()
+	{
+		auto num_digits = mpfr_float::default_precision() + 3;
+	
+		if (num_digits<=50)
+			return RandomMpUniformUnitInterval<T,50>();
+		else if (num_digits<=100)
+			return RandomMpUniformUnitInterval<T,100>();
+		else if (num_digits<=200)
+			return RandomMpUniformUnitInterval<T,200>();
+		else if (num_digits<=400)
+			return RandomMpUniformUnitInterval<T,400>();
+		else if (num_digits<=800)
+			return RandomMpUniformUnitInterval<T,800>();
+		else if (num_digits<=1600)
+			return RandomMpUniformUnitInterval<T,1600>();
+		else if (num_digits<=3200)
+			return RandomMpUniformUnitInterval<T,3200>();
+		else if (num_digits<=6400)
+			return RandomMpUniformUnitInterval<T,6400>();
+		else if (num_digits<=8000)
+			return RandomMpUniformUnitInterval<T,8000>();
+		else if (num_digits<=10000)
+			return RandomMpUniformUnitInterval<T,10000>();
+		else if (num_digits<=12000)
+			return RandomMpUniformUnitInterval<T,12000>();
+		else if (num_digits<=14000)
+			return RandomMpUniformUnitInterval<T,14000>();
+		else if (num_digits<=16000)
+			return RandomMpUniformUnitInterval<T,16000>();
+		else if (num_digits<=18000)
+			return RandomMpUniformUnitInterval<T,18000>();
+		else if (num_digits<=20000)
+			return RandomMpUniformUnitInterval<T,20000>();
+		else if (num_digits<=40000)
+			return RandomMpUniformUnitInterval<T,40000>();
+		else
+			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.");
+	}
 	
 	
 } // re: namespace bertini

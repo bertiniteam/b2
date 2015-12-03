@@ -9,6 +9,28 @@ bin_PROGRAMS += bertini2
 
 
 
+tracking_header_files = \
+	include/tracking.hpp \
+	include/tracking/correct.hpp \
+	include/tracking/newton_correct.hpp \
+	include/tracking/predict.hpp \
+	include/tracking/ode_predictors.hpp \
+	include/tracking/euler.hpp \
+	include/tracking/amp_criteria.hpp \
+	include/tracking/tracking_config.hpp \
+	include/tracking/step.hpp \
+	include/tracking/base_tracker.hpp \
+	include/tracking/amp_tracker.hpp \
+	include/tracking/tracker.hpp
+
+
+tracking_source_files =
+
+
+tracking = $(tracking_header_files) $(tracking_source_files)
+
+
+
 
 function_tree_header_files = \
 	include/function_tree.hpp \
@@ -33,12 +55,21 @@ function_tree_source_files = \
 function_tree = $(function_tree_header_files) $(function_tree_source_files)
 
 
-bertini2_SOURCES = $(function_tree) src/bertini/bertini.cpp include/bertini.hpp \
+all_bertini2_sources = \
+	$(function_tree) \
+	$(classic) \
+	$(tracking) \
+	include/bertini.hpp \
 	include/mpfr_complex.hpp \
-	include/mpfr_extensions.hpp src/bertini/mpfr_extensions.cpp \
+	include/mpfr_extensions.hpp \
+	include/eigen_extensions.hpp \
+	include/patch.hpp \
 	include/system.hpp src/bertini/system.cpp include/system_parsing.hpp \
 	src/bertini/start_system.cpp include/start_system.hpp \
-	src/bertini/limbo.cpp include/limbo.hpp
+	include/limbo.hpp \
+	include/tracking.hpp
+
+bertini2_SOURCES = $(all_bertini2_sources) src/bertini/bertini.cpp
 
 
 

@@ -21,13 +21,19 @@
 //
 // mpfr_complex.hpp:  Declares the class bertini::complex.
 
+/**
+\file mpfr_complex 
 
-#ifndef MPFR_COMPLEX_HPP
-#define MPFR_COMPLEX_HPP
+\brief The main multiprecision complex number type.
+*/
+
+
+#ifndef BERTINI_MPFR_COMPLEX_HPP
+#define BERTINI_MPFR_COMPLEX_HPP
 
 #include "config.h"
 
-
+#include "num_traits.hpp"
 #include "mpfr_extensions.hpp"
 
 #include <boost/multiprecision/mpfr.hpp>
@@ -40,17 +46,17 @@
 
 #include <eigen3/Eigen/Core>
 
+
+#include <eigen3/Eigen/src/Core/util/ForwardDeclarations.h>
 #include <string>
 #include <assert.h>
 
 
-
-
+#include <boost/math/special_functions/fpclassify.hpp>
 
 
 namespace bertini {
-	using boost::multiprecision::mpfr_float;
-	
+
 	/**
 	\brief Custom multiple precision complex class.
 	
@@ -60,7 +66,7 @@ namespace bertini {
 	This class currently uses Boost.Multiprecision -- namely, the mpfr_float type for variable precision.
 	This class is serializable using Boost.Serialize.
 	
-	The precision of a newly-made bertini::complex is whatever current default is, set by boost::multiprecision::mpfr_float::default_precision(...).
+	The precision of a newly-made bertini::complex is whatever current default is, set by mpfr_float::default_precision(...).
 
 	\todo{Implement MPI send/receive commands using Boost.MPI or alternative.}
 	*/
@@ -80,7 +86,10 @@ namespace bertini {
 		template<class Archive>
 		void save(Archive & ar, const unsigned int version) const
 		{
-			assert(real_.precision()==imag_.precision());
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(real_.precision()==imag_.precision() && "real and imaginary parts at different precision at save time for Boost serialization of bertini::complex");
+			#endif
+
 			// note, version is always the latest when saving
 			unsigned int temp_precision = real_.precision();
 			ar & temp_precision;
@@ -156,6 +165,12 @@ namespace bertini {
 		{}
 		
 		
+		/**
+		 Two-parameter constructor for building a complex from two low precision numbers
+		 */
+		complex(std::complex<double> z) : real_(z.real()), imag_(z.imag())
+		{}
+
 		/**
 		 Two-parameter constructor for building a complex from two low precision numbers
 		 */
@@ -344,6 +359,21 @@ namespace bertini {
 			return returnme;
 		}
 		
+		inline static complex RandomUnit()
+		{
+			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			returnme /= returnme.abs();
+			return returnme;
+		}
+		/**
+		 Produce a random real number \f$\in [-1,\,1]\f$, to current default precision. 
+		 */
+		inline static complex RandomReal()
+		{
+			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			returnme /= sqrt( returnme.abs());
+			return returnme;
+		}
 		
 		
 		
@@ -444,7 +474,7 @@ namespace bertini {
 		 */
 		mpfr_float abs2() const
 		{
-			return pow(real(),2)+pow(imag(),2);
+			return real()*real()+imag()*imag();
 		}
 		
 		/**
@@ -486,9 +516,35 @@ namespace bertini {
 		
 		
 		
+		/**
+		\brief Is \f$z\f$ a NaN?
+		*/
+		bool isnan() const
+		{
+			using boost::math::isnan;
+			if (isnan(real()) || isnan(imag()))
+				return true;
+			else
+				return false;
+		}
 		
-		
-		
+		/**
+		\brief Is \f$z\f$ \f$\infty\f$?
+		*/
+		bool isinf() const
+		{
+			using boost::math::isinf;
+			using boost::math::isnan;
+			if ( (!isnan(real()) && !isnan(imag()))
+			    &&
+			     ( isinf(real()) ||  isinf(imag()))
+			   )
+				return true;
+			else
+				return false;
+		}
+
+
 		/**
 		 Change the precision of this high-precision complex number.
 		 
@@ -508,8 +564,10 @@ namespace bertini {
 		 */
 		unsigned int precision() const
 		{
-			assert(real_.precision()==imag_.precision());
-			
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(real_.precision()==imag_.precision() && "real and imaginary parts at different precision when querying precision.  somehow they got out of sync.");
+			#endif
+
 			return real_.precision();
 		}
 		
@@ -598,6 +656,11 @@ namespace bertini {
 		bool operator==(complex const& rhs) const
 		{
 			return (this->real()==rhs.real()) && (this->imag()==rhs.imag());
+		}
+
+		bool operator!=(complex const& rhs) const
+		{
+			return !(*this==rhs);
 		}
 
 		/**
@@ -1040,9 +1103,40 @@ namespace bertini {
 	
 	
 	
+	/** 
+	\brief Get the precision of a number.
+
+	For bertini::complex, this calls the precision member method for bertini::complex.
+	*/
+	inline
+	unsigned Precision(bertini::complex const& num)
+	{
+		return num.precision();
+	}
+
+	inline 
+	bool isnan(bertini::complex const& num)
+	{
+		return num.isnan();
+	}
 	
+	template <> struct NumTraits<bertini::complex> 
+	{
+		inline static unsigned NumDigits()
+		{
+			return mpfr_float::default_precision();
+		}
+	};
+
 	
-} // re: namespace
+	template <> inline 
+	bertini::complex RandomUnit<bertini::complex>()
+	{
+		return bertini::complex::RandomUnit();
+	}
+
+	using mpfr = bertini::complex;
+} // re: namespace bertini
 
 
 
@@ -1052,17 +1146,19 @@ namespace bertini {
 // reopen the Eigen namespace to inject this struct.
 namespace Eigen {
 	
-	using boost::multiprecision::mpfr_float;
-	using namespace boost::multiprecision;
 	
 	
 	/**
 	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
+
+	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_float> contained in mpfr_extensions.
 	 */
-	template<> struct NumTraits<bertini::complex> : NumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	template<> struct NumTraits<bertini::complex> : NumTraits<bertini::mpfr_float> 
 	{
-		typedef boost::multiprecision::mpfr_float Real;
-		typedef boost::multiprecision::mpfr_float NonInteger;
+		using mpfr_float = bertini::mpfr_float;
+
+		typedef mpfr_float Real;
+		typedef mpfr_float NonInteger;
 		typedef bertini::complex Nested;// Nested;
 		enum {
 			IsComplex = 1,
@@ -1075,14 +1171,52 @@ namespace Eigen {
 		};
 		
 	};
-	
-	
-	
-	
-	
-	
-	
-}
+
+	namespace internal {
+		template<>
+		struct abs2_impl<bertini::complex>
+		{
+			static inline mpfr_float run(const bertini::complex& x)
+			{
+				return real(x)*real(x) + imag(x)*imag(x);
+			}
+		};
+
+
+		template<> inline bertini::complex random<bertini::complex>()
+		{
+			return bertini::complex::rand();
+		}
+
+		template<> inline bertini::complex random<bertini::complex>(const bertini::complex& a, const bertini::complex& b)
+		{
+			return a + (b-a) * random<bertini::complex>();
+		}
+
+		template<>
+		struct conj_helper<bertini::complex, bertini::complex, false, true>
+		{
+			typedef bertini::complex Scalar;
+			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
+			{ return c + pmul(x,y); }
+
+			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
+			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::imag(x)*numext::real(y) - numext::real(x)*numext::imag(y)); }
+		};
+
+		template<>
+		struct conj_helper<bertini::complex, bertini::complex, true, false>
+		{
+			typedef bertini::complex Scalar;
+			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
+			{ return c + pmul(x,y); }
+
+			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
+			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::real(x)*numext::imag(y) - numext::imag(x)*numext::real(y)); }
+		};
+
+	} // re: namespace internal
+} // re: namespace Eigen
 
 
 
