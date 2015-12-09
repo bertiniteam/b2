@@ -89,7 +89,7 @@ namespace bertini{
 				auto LU = dh_dx.lu(); // we keep the LU here because need to estimate the condition number of J^-1
 				
 				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
-					return SuccessCode::MatrixSolveFailure;
+					return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 
 				auto delta_x_1 = LU.solve(-S.TimeDerivative(current_space, current_time)); 
 
@@ -123,7 +123,7 @@ namespace bertini{
 				    || 
 				    -log10(error_estimate) >= bertini::NumTraits<RealType>::NumFuzzyDigits()
 				    ||
-				    -log10(abs2(delta_t)) >= 2*bertini::NumTraits<RealType>::NumFuzzyDigits()
+				    -log10(norm(delta_t)) >= 2*bertini::NumTraits<RealType>::NumFuzzyDigits() // the call to norm here is the C++ norm of complex number -- abs2
 				    )
 				{
 					size_proportion = RealType(1);

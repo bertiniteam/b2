@@ -37,7 +37,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/test/unit_test.hpp>
 
-
+using mpq_rational = bertini::mpq_rational;
 
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 	dbl exact_dbl = sqrt(xnum_dbl);
 	mpfr exact_mpfr = sqrt(xnum_mpfr);
 	
-	std::shared_ptr<Node> N = pow(x, 1.0/2);
+	std::shared_ptr<Node> N = pow(x, mpq_rational(1,2));
 	
 	x->set_current_value<dbl>(std::complex<double>(xnum_dbl));
 	x->set_current_value<mpfr>(bertini::complex(xnum_mpfr));
@@ -1242,7 +1242,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_pow_lsqrt_xl_num)
 	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
 
-	N = pow(x,1/2.0); // N = sqrt(x)
+	N = pow(x,mpq_rational(1,2)); // N = sqrt(x)
 	BOOST_CHECK_EQUAL(N->Degree(),-1);
 	BOOST_CHECK_EQUAL(N->Degree(x),-1);
 	N = pow(N,a); // N = sqrt(x)^a
@@ -1609,7 +1609,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
 	N = pow(x,a);
 	BOOST_CHECK_EQUAL(N->Degree(),-1);
 	BOOST_CHECK_EQUAL(N->Degree(x),-1);
-	N = pow(N,1/2.0);
+	N = pow(N,mpq_rational(1,2));
 	BOOST_CHECK_EQUAL(N->Degree(),-1);
 	BOOST_CHECK_EQUAL(N->Degree(x),-1);
 

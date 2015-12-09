@@ -87,34 +87,37 @@ namespace bertini{
 		\code
 		
 		public:
-		virtual
-			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time) = 0;
+		SuccessCode Refine(Vec<mpfr> & new_space,
+							Vec<mpfr> const& start_point, mpfr const& current_time) override
+		{}
 		
 		private:
 
-		virtual
-		void TrackerLoopInitialization(mpfr const& start_time, Vec<mpfr> const& start_point) = 0;
+		void TrackerLoopInitialization(mpfr const& start_time, Vec<mpfr> const& start_point) override
+		{}
 
-		virtual 
-		SuccessCode InitialRefinement() = 0;
+		SuccessCode InitialRefinement() override
+		{}
 
-		virtual 
-		SuccessCode PreIterationCheck() const = 0;
+		SuccessCode PreIterationCheck() const override
+		{}
 
-		virtual 
-		SuccessCode TrackerIteration() = 0;
+		SuccessCode TrackerIteration() override
+		{}
 
-		virtual
-		void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
-
+		void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const override
+		{}
+		
 		\endcode
 	
-		and optionally override the function
+		and optionally override the following functions
 
 		\code
-		virtual
-		void ResetCounters()
+		void ResetCounters() override
+		{}
+
+		void PostTrackCleanup() override
+		{}
 		\endcode
 		where you probably want to call this base function, which is why it is protected, not private.
 
@@ -196,7 +199,10 @@ namespace bertini{
 				{	
 					SuccessCode pre_iteration_code = PreIterationCheck();
 					if (pre_iteration_code!=SuccessCode::Success)
+					{
+						PostTrackCleanup();
 						return pre_iteration_code;
+					}
 
 
 					// compute the next delta_t
@@ -216,6 +222,12 @@ namespace bertini{
 						num_successful_steps_taken_++; 
 						num_consecutive_successful_steps_++;
 						current_time_ += delta_t_;
+						num_consecutive_failed_steps_ = 0;
+					}
+					else if (step_success_code_==SuccessCode::GoingToInfinity)
+					{
+						PostTrackCleanup();
+						return step_success_code_;
 					}
 					else
 					{
@@ -223,21 +235,31 @@ namespace bertini{
 
 						num_consecutive_successful_steps_=0;
 						num_failed_steps_taken_++;
+						num_consecutive_failed_steps_++;
 					}
 				}// re: while
 
 
 				CopyFinalSolution(solution_at_endtime);
-
+				PostTrackCleanup();
 				return SuccessCode::Success;
 			}
 
 
+			/**
+			\brief Refine a point given in multiprecision.
+			
+			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, the tracking tolerance, precision, etc.  YOU must ensure that the input point has the correct precision.
+
+			\return The SuccessCode indicating whether the refinement completed.  
+
+			\param new_space The result of refinement.
+			\param start_point The seed for Newton's method for refinement.
+			\param current_time The current time value for refinement.
+			*/
 			virtual
 			SuccessCode Refine(Vec<mpfr> & new_space,
 								Vec<mpfr> const& start_point, mpfr const& current_time) const = 0;
-
-
 
 
 			/**
@@ -287,25 +309,62 @@ namespace bertini{
 
 			
 
+			/**
+			\brief Set up initialization of the internals for tracking a path.
 
+			\param start_time The time at which to start tracking.
+			\param start_point The point from which to start tracking.
+			*/
 			virtual
 			void TrackerLoopInitialization(mpfr const& start_time, Vec<mpfr> const& start_point) const = 0;
 
+			/**
+			\brief Ensure that any pre-checks on precision or accuracy of start point pass.
+
+			\return Anything but Success will terminate tracking.
+			*/
 			virtual 
 			SuccessCode InitialRefinement() const = 0;
 
+			/**
+			\brief Check internal state for whether tracking should continue.  
+
+			\return Code for whether to go on.  Tracking will terminate if the returned value is not Success.
+			*/
 			virtual 
 			SuccessCode PreIterationCheck() const = 0;
 
+			/**
+			\brief A single iteration of the tracker loop.
+
+			\return Whether the tracker loop was successful or not.  Incrementing of counters for the base class happens automatically.
+			*/
 			virtual 
 			SuccessCode TrackerIteration() const = 0;
 
+			/**
+			\brief Copy the solution from whatever internal variable it is stored in, into the output variable.
+
+			\param solution_at_endtime The output variable into which to copy the final solution.
+			*/
 			virtual
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
 
 
 		protected:
 
+			/**
+			\brief Function to be called before exiting the tracker loop.
+			*/
+			virtual
+			void PostTrackCleanup() const 
+			{}
+
+			/**
+			\brief Reset counters used during tracking.
+
+			Your custom tracker type should almost certainly call this function.
+			*/
 			virtual
 			void ResetCounters() const
 			{
@@ -313,7 +372,10 @@ namespace bertini{
 				num_consecutive_successful_steps_ = 0;
 				num_successful_steps_taken_ = 0;
 				num_failed_steps_taken_ = 0;
+				num_consecutive_failed_steps_ = 0;
+				num_total_steps_taken_ = 0;
 			}
+
 
 			const class System& tracked_system_; ///< The system being tracked.
 
@@ -321,6 +383,7 @@ namespace bertini{
 			mutable unsigned num_total_steps_taken_; ///< The number of steps taken, including failures and successes.
 			mutable unsigned num_successful_steps_taken_;  ///< The number of successful steps taken so far.
 			mutable unsigned num_consecutive_successful_steps_; ///< The number of CONSECUTIVE successful steps taken in a row.
+			mutable unsigned num_consecutive_failed_steps_; ///< The number of CONSECUTIVE failed steps taken in a row. 
 			mutable unsigned num_failed_steps_taken_; ///< The total number of failed steps taken.
 
 			

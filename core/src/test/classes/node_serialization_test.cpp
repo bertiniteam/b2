@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(serialize_variable)
 
 BOOST_AUTO_TEST_CASE(serialize_float)
 {
-	std::shared_ptr<Float> two_point_oh_four = std::make_shared<Float>(2.04);
+	std::shared_ptr<Float> two_point_oh_four = std::make_shared<Float>("2.04");
 
 	{
 		std::ofstream fout("serialization_test_node");

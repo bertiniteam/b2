@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(euler_predict_linear_algebra_fails_d)
 												   tracking_tolerance,
 												   AMP);
 	
-	BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailure);
+	BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 	
 
 }
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE(euler_predict_linear_algebra_fails_mp)
 												   tracking_tolerance,
 												   AMP);
 	
-	BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailure);
+	BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 }
 
 

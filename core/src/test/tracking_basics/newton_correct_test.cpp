@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
 }
 
 
-BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
+BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_d)
 {
 
 	/*
@@ -728,10 +728,10 @@ BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_d)
 								               max_num_newton_iterations);
 
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::GoingToInfinity);
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::FailedToConverge);
 }
 
-BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
+BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_mp)
 {
 	/*
 	Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict 
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(newton_step_going_to_infinity_mp)
 								               max_num_newton_iterations);
 
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::GoingToInfinity);
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::FailedToConverge);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -25,8 +25,8 @@
 
 */
 
-#ifndef b2Test_Differential_h
-#define b2Test_Differential_h
+#ifndef BERTINI_NODE_DIFFERENTIAL_HPP
+#define BERTINI_NODE_DIFFERENTIAL_HPP
 
 #include <memory>
 #include "function_tree/node.hpp"
@@ -82,7 +82,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() override
 		{
-			return std::make_shared<Float>(0.0);
+			return std::make_shared<Integer>(0);
 		}
 
 
@@ -159,11 +159,11 @@ namespace node{
 		{
 			if(differential_variable_ == diff_variable)
 			{
-				return mpfr("1.0");
+				return mpfr(1);
 			}
 			else
 			{
-				return mpfr("0.0");
+				return mpfr(0);
 			}
 		}
 

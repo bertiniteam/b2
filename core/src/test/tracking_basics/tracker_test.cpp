@@ -362,6 +362,60 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 
 
 
+BOOST_AUTO_TEST_CASE(AMP_tracker_tracking_fails_from_near_to_singular_start_point)
+{
+	mpfr_float::default_precision(30);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(pow(x,2) + (1-t)*x);
+	sys.AddFunction(pow(y,2) + (1-t)*y);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+	stepping_preferences.max_num_steps = 1e3;
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("0");
+	
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	SuccessCode tracking_success;
+
+	start_point << mpfr("1e-28"), mpfr("1e-28");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success==SuccessCode::MaxNumStepsTaken);
+	BOOST_CHECK_EQUAL(end_point.size(),0);
+}
+
+
+
 /*
 2.  Goal:  Make sure we can handle a simple, mixed (x,y in both polynomials), nonhomogeneous system.
 Expected Behavior:  Success.
@@ -418,7 +472,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	SuccessCode tracking_success;
 
 
-	start_point << mpfr("1"), mpfr("1.414");
+	start_point << mpfr("1"), mpfr("1.41421356237309504880168872421");
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
@@ -428,6 +482,71 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision30_tighter_track_tol)
+{
+	mpfr_float::default_precision(30);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(pow(x,2) + (1-t)*x - 1);
+	sys.AddFunction(pow(y,2) + (1-t)*x*y - 2);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+	newton_preferences.max_num_newton_iterations = 6;
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-30"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
+
+	mpfr t_start("1.0");
+	mpfr t_end("0");
+	
+	mpfr_float::default_precision(30);
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	SuccessCode tracking_success;
+
+
+	start_point << mpfr("1"), mpfr("1.41421356237309504880168872421");
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+	mpfr_float::default_precision(40);
+
+	Vec<mpfr> true_solution(2);
+	true_solution <<  mpfr("0.61803398874989484820458683436563811772030918"), mpfr("1.13856426511017256414753784441721594451116198");
+
+
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(),2);
+	BOOST_CHECK(abs(end_point(0)-true_solution(0)) < 1e-30);
+	BOOST_CHECK(abs(end_point(1)-true_solution(1)) < 1e-30);
+
+	BOOST_CHECK( (end_point - true_solution).norm() < 1e-30);
+}
 
 
 
@@ -479,6 +598,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
+	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
 	BOOST_CHECK(tracking_success==SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
@@ -536,6 +656,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
+	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),100);
 	BOOST_CHECK(tracking_success==SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
@@ -609,6 +730,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 	                  t_start, t_end, start_point);
 
 	BOOST_CHECK(tracking_success!=SuccessCode::Success);
+	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
 }
 
 
@@ -669,8 +791,6 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	std::vector<Vec<mpfr> > solutions;
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
-		mpfr_float::default_precision(30);
-		final_system.precision(30);
 		auto start_point = TD.StartPoint<mpfr>(ii);
 
 		Vec<mpfr> result;
@@ -678,7 +798,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 
 		tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
-
+		BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
 		solutions.push_back(final_system.DehomogenizePoint(result));
 	}
 
@@ -709,13 +829,12 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 
 std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& tracker, bertini::start_system::TotalDegree const& TD)
 {
+	auto initial_precision = mpfr_float::default_precision();
 	using namespace bertini::tracking;
 	mpfr t_start(1), t_end(0);
 	std::vector<Vec<mpfr> > solutions;
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
-		mpfr_float::default_precision(30);
-		TD.precision(30);
 		auto start_point = TD.StartPoint<mpfr>(ii);
 
 		Vec<mpfr> result;
@@ -723,7 +842,7 @@ std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& 
 
 		tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
-
+		BOOST_CHECK_EQUAL(mpfr_float::default_precision(),initial_precision);
 		solutions.push_back(tracker.System().DehomogenizePoint(result));
 	}
 
@@ -773,6 +892,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 
 	auto solutions = track_total_degree(tracker, TD);
 
+	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
 	Vec<mpfr> solution_1(2);
 	solution_1 << mpfr("-0.61803398874989484820458683","0"), mpfr("1.6180339887498948482045868","0");
 

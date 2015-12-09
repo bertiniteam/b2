@@ -68,7 +68,7 @@ namespace node{
 			 */
 			std::shared_ptr<Node> Differentiate() override
 			{
-				return std::make_shared<Float>(0.0);
+				return std::make_shared<Integer>(0);
 			}
 
 			/**
@@ -135,7 +135,7 @@ namespace node{
 
 			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
 			{
-				return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
+				return mpfr(acos(boost::multiprecision::mpfr_float(-1)));
 			}
 
 			friend class boost::serialization::access;
@@ -169,7 +169,7 @@ namespace node{
 			 */
 			std::shared_ptr<Node> Differentiate() override
 			{
-				return std::make_shared<Float>(0.0);
+				return std::make_shared<Integer>(0);
 			}
 
 			/**
@@ -232,7 +232,7 @@ namespace node{
 
 			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
 			{
-				return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
+				return mpfr(exp(boost::multiprecision::mpfr_float(1)));
 			}
 
 			friend class boost::serialization::access;

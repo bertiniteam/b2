@@ -136,18 +136,37 @@ namespace bertini {
 		/**
 		 Single-parameter for constructing a real-valued complex from a single real double number
 		 */
-		complex(double re) : real_(re), imag_("0.0"){}
+		explicit
+		complex(double re) : real_(re), imag_(0){}
 		
+
+		complex(int re) : real_(re), imag_(0){}
+
+		complex(int re, int im) : real_(re), imag_(im){}
+
+		complex(unsigned int re) : real_(re), imag_(0){}
+
+		complex(unsigned int re, unsigned int im) : real_(re), imag_(im){}
+
+		complex(mpz_int const& re) : real_(re), imag_(0){}
+
+		complex(mpz_int const& re, mpz_int const& im) : real_(re), imag_(im){}
+
+		explicit
+		complex(mpq_rational const& re) : real_(re), imag_(0){}
+
+		explicit
+		complex(mpq_rational const& re, mpq_rational const& im) : real_(re), imag_(im){}
 		/**
 		 Single-parameter for constructing a real-valued complex from a single high-precision number
 		 */
-		complex(const mpfr_float & re) : real_(re), imag_("0.0"){}
+		complex(const mpfr_float & re) : real_(re), imag_(0){}
 		
 		
 		/**
 		 Single-parameter for constructing a real-valued complex from a convertible single string
 		 */
-		complex(const std::string & re) : real_(re), imag_("0.0"){}
+		complex(const std::string & re) : real_(re), imag_(0){}
 		
 		
 		
@@ -168,12 +187,14 @@ namespace bertini {
 		/**
 		 Two-parameter constructor for building a complex from two low precision numbers
 		 */
+		 explicit
 		complex(std::complex<double> z) : real_(z.real()), imag_(z.imag())
 		{}
 
 		/**
 		 Two-parameter constructor for building a complex from two low precision numbers
 		 */
+		 explicit
 		complex(double re, double im) : real_(re), imag_(im)
 		{}
 		
@@ -280,6 +301,38 @@ namespace bertini {
 		void imag(const mpfr_float & new_imag){imag_ = new_imag;}
 		
 		/**
+		 Set the value of the real part of the complex number
+		 */
+		void real(int new_real){real_ = new_real;}
+		
+		/**
+		 Set the value of the imaginary part of the complex number
+		 */
+		void imag(int new_imag){imag_ = new_imag;}
+
+		/**
+		 Set the value of the real part of the complex number
+		 */
+		void real(mpz_int new_real){real_ = new_real;}
+		
+		/**
+		 Set the value of the imaginary part of the complex number
+		 */
+		void imag(mpz_int new_imag){imag_ = new_imag;}
+		
+		/**
+		 Set the value of the real part of the complex number
+		 */
+		void real(mpq_rational new_real){real_ = new_real;}
+		
+		/**
+		 Set the value of the imaginary part of the complex number
+		 */
+		void imag(mpq_rational new_imag){imag_ = new_imag;}
+
+		
+
+		/**	
 		 Set the value of the real part of the complex number, from a double-quoted string.
 		 */
 		void real(const std::string & new_real){real_ = mpfr_float(new_real);}
@@ -714,7 +767,40 @@ namespace bertini {
 	{
 		return rhs+lhs;
 	}
+
+	/**
+	 Complex-real addition.
+	 */
+	inline complex operator+(complex lhs, const mpz_int & rhs)
+	{
+		lhs.real(lhs.real()+rhs);
+		return lhs;
+	}
 	
+	/**
+	 Real-complex addition.
+	 */
+	inline complex operator+(const mpz_int & lhs, complex rhs)
+	{
+		return rhs+lhs;
+	}
+	
+	/**
+	 Complex-real addition.
+	 */
+	inline complex operator+(complex lhs, int rhs)
+	{
+		lhs.real(lhs.real()+rhs);
+		return lhs;
+	}
+	
+	/**
+	 Real-complex addition.
+	 */
+	inline complex operator+(int lhs, complex rhs)
+	{
+		return rhs+lhs;
+	}
 	
 	
 	
@@ -746,8 +832,46 @@ namespace bertini {
 		return rhs;
 	}
 	
+	/**
+	 Complex-real subtraction
+	 */
+	inline complex operator-(complex lhs, const mpz_int & rhs)
+	{
+		lhs.real(lhs.real()-rhs);
+		return lhs;
+	}
 	
+	/**
+	 Real-complex subtraction
+	 */
+	inline complex operator-(const mpz_int & lhs, complex rhs)
+	{
+		rhs.real(lhs - rhs.real());
+		rhs.imag(-rhs.imag());
+		return rhs;
+	}
+
+	/**
+	 Complex-real subtraction
+	 */
+	inline complex operator-(complex lhs, int rhs)
+	{
+		lhs.real(lhs.real()-rhs);
+		return lhs;
+	}
 	
+	/**
+	 Real-complex subtraction
+	 */
+	inline complex operator-(int lhs, complex rhs)
+	{
+		rhs.real(lhs - rhs.real());
+		rhs.imag(-rhs.imag());
+		return rhs;
+	}
+	
+
+
 	
 	/**
 	 Complex-complex multiplication
@@ -775,25 +899,51 @@ namespace bertini {
 		return rhs*lhs; // it commutes!
 	}
 	
+	/**
+	 Complex-real multiplication
+	 */
+	inline complex operator*(complex lhs, const mpz_int & rhs)
+	{
+		lhs.real(lhs.real()*rhs);
+		lhs.imag(lhs.imag()*rhs);
+		return lhs;
+	}
+	
+	/**
+	 Real-complex multiplication
+	 */
+	inline complex operator*(const mpz_int & lhs, complex rhs)
+	{
+		return rhs*lhs; // it commutes!
+	}
 	
 	
+	/**
+	 Complex-real multiplication
+	 */
+	inline complex operator*(complex lhs, int rhs)
+	{
+		lhs.real(lhs.real()*rhs);
+		lhs.imag(lhs.imag()*rhs);
+		return lhs;
+	}
 	
+	/**
+	 Real-complex multiplication
+	 */
+	inline complex operator*(int lhs, complex rhs)
+	{
+		return rhs*lhs; // it commutes!
+	}
+
+
+
 	
 	/**
 	 Complex-complex division
 	 */
 	inline complex operator/(complex lhs, const complex & rhs){
 		lhs /= rhs;
-		return lhs;
-	}
-	
-	/**
-	 Complex-real division
-	 */
-	inline complex operator/(complex lhs, const mpfr_float & rhs)
-	{
-		lhs.real(lhs.real()/rhs);
-		lhs.imag(lhs.imag()/rhs);
 		return lhs;
 	}
 	
@@ -805,7 +955,70 @@ namespace bertini {
 		mpfr_float d = rhs.abs2();
 		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
 	}
+
+	/**
+	 Complex-real division
+	 */
+	inline complex operator/(complex lhs, const mpfr_float & rhs)
+	{
+		lhs.real(lhs.real()/rhs);
+		lhs.imag(lhs.imag()/rhs);
+		return lhs;
+	}
 	
+	
+
+
+
+	/**
+	 Integer-complex division
+	 */
+	inline complex operator/(const mpz_int & lhs, const complex & rhs)
+	{
+		mpfr_float d = rhs.abs2();
+		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
+	}
+	
+	/**
+	 Complex-integer division
+	 */
+	inline complex operator/(complex lhs, const mpz_int & rhs)
+	{
+		lhs.real(lhs.real()/rhs);
+		lhs.imag(lhs.imag()/rhs);
+		return lhs;
+	}
+	
+
+	/**
+	 Integer-complex division
+	 */
+	inline complex operator/(int lhs, const complex & rhs)
+	{
+		mpfr_float d = rhs.abs2();
+		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
+	}
+	
+	/**
+	 Complex-integer division
+	 */
+	inline complex operator/(complex lhs, int rhs)
+	{
+		lhs.real(lhs.real()/rhs);
+		lhs.imag(lhs.imag()/rhs);
+		return lhs;
+	}
+
+
+	
+
+
+
+
+
+
+
+
 	/**
 	 Get the real part of a complex number
 	 */
@@ -831,7 +1044,16 @@ namespace bertini {
 		return z.conj();
 	}
 	
-	
+	/**
+	 \brief The C++ norm of complex number.
+
+	 Mathematically we think of this as the square of the absolute value.
+	*/	
+	inline mpfr_float norm(const complex & z)
+	{
+		return z.norm();
+	}
+
 	
 	/**
 	 Compute the square of the absolute value of a complex number

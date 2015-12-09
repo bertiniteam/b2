@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(y+x*y + mpfr_float("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -832,7 +832,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(y+x*y + mpfr_float("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 

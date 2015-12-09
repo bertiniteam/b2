@@ -112,7 +112,7 @@ namespace bertini{
 				auto LU = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
 				
 				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
-					return SuccessCode::MatrixSolveFailure;
+					return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 
 				auto delta_x = LU.solve(dh_dt); 
 
@@ -196,7 +196,7 @@ namespace bertini{
 				auto LU = dh_dx.lu(); // we keep the LU here because may need to estimate the condition number of J^-1
 				
 				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
-					return SuccessCode::MatrixSolveFailure;
+					return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 
 				auto delta_x = LU.solve(dh_dt); 
 

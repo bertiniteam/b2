@@ -389,7 +389,7 @@ namespace bertini{
 		\param predictor_order The order of the predictor being used.  This is the order itself, not the order of the error estimate.
 		*/
 		template <typename RealType>
-		void SafetyError(unsigned new_precision, mpfr_float & new_stepsize, 
+		void SafetyError(unsigned & new_precision, mpfr_float & new_stepsize, 
 						 unsigned current_precision, mpfr_float const& current_stepsize, 
 						 mpfr const& current_time,
 						 RealType const& norm_J, RealType const& norm_J_inverse,
@@ -562,6 +562,12 @@ namespace bertini{
 		{
 		public:
 
+			enum UpsampleRefinementOption
+			{
+			   upsample_refine_off  = 0,
+			   upsample_refine_on   = 1
+			};
+		
 
 			/**
 			\brief Construct an Adaptive Precision tracker, associating to it a System.
@@ -585,12 +591,26 @@ namespace bertini{
 
 
 			
+			/**
+			\brief Switch preservation of precision after tracking on / off
 
-
-
+			By default, precision is preserved after tracking, so the precision of the ambient workspace is returned to its previous state once Adaptive Precision tracking is done.
+			*/
+			void PrecisionPreservation(bool should_preseve_precision)
+			{
+				preserve_precision_ = should_preseve_precision;
+			}
 
 			/**
 			\brief Refine a point given in multiprecision.
+			
+			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, the tracking tolerance, precision, etc.  YOU must ensure that the input point has the correct precision.
+
+			\return The SuccessCode indicating whether the refinement completed.  
+
+			\param new_space The result of refinement.
+			\param start_point The seed for Newton's method for refinement.
+			\param current_time The current time value for refinement.
 			*/
 			SuccessCode Refine(Vec<mpfr> & new_space,
 								Vec<mpfr> const& start_point, mpfr const& current_time) const override
@@ -638,8 +658,6 @@ namespace bertini{
 
 
 
-
-
 			/**
 			\brief Set up the internals of the tracker for a fresh start.  
 
@@ -651,9 +669,21 @@ namespace bertini{
 			void TrackerLoopInitialization(mpfr const& start_time,
 										   Vec<mpfr> const& start_point) const override
 			{
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(
+				        (!preserve_precision_ 
+				         || 
+				         -log10(tracking_tolerance_) <= start_point(0).precision())
+				         && "when tracking a path, either preservation of precision must be turned off (so precision can be higher at the end of tracking), or the initial precision must be high enough to support the resulting points to the desired tolerance"
+				         );
+				#endif
+
 				// set up the master current time and the current step size
 				current_time_.precision(start_time.precision());
 				current_time_ = start_time;
+
+				if (preserve_precision_)
+					initial_precision_ = Precision(start_point(0));
 
 				current_stepsize_.precision(stepping_config_.initial_step_size.precision());
 				current_stepsize_ = stepping_config_.initial_step_size;
@@ -664,7 +694,7 @@ namespace bertini{
 				else
 					MultipleToMultiple(start_point(0).precision(), start_point);
 				
-				ChangePrecision(start_point(0).precision());
+				ChangePrecision<upsample_refine_off>(start_point(0).precision());
 
 				ResetCounters();
 			}
@@ -686,8 +716,8 @@ namespace bertini{
 			*/
 			SuccessCode InitialRefinement() const override
 			{
-				SuccessCode initial_refinement = Refine();
-				if (initial_refinement!=SuccessCode::Success)
+				SuccessCode initial_refinement_code = Refine();
+				if (initial_refinement_code!=SuccessCode::Success)
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "initial refinement at precision " << current_precision_ << " failed";
 					do {
@@ -698,11 +728,11 @@ namespace bertini{
 						}
 
 						if (current_precision_==DoublePrecision())
-							initial_refinement = ChangePrecision(LowestMultiplePrecision());
+							initial_refinement_code = ChangePrecision<upsample_refine_on>(LowestMultiplePrecision());
 						else
-							initial_refinement = ChangePrecision(current_precision_+PrecisionIncrement());
+							initial_refinement_code = ChangePrecision<upsample_refine_on>(current_precision_+PrecisionIncrement());
 					}
-					while (initial_refinement!=SuccessCode::Success);
+					while (initial_refinement_code!=SuccessCode::Success);
 				}
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "initial refinement successful at precision " << current_precision_;
 
@@ -748,14 +778,24 @@ namespace bertini{
 			}
 
 
+			void PostTrackCleanup() const override
+			{
+				if (preserve_precision_)
+					ChangePrecision(initial_precision_);
+			}
 
 			/**
 			\brief Copy from the internally stored current solution into a final solution.
+			
+			If preservation of precision is on, this function first returns to the initial precision.
 
 			\param[out] solution_at_endtime The solution at the end time
 			*/
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const override
 			{
+				if (preserve_precision_)
+					ChangePrecision(initial_precision_);
+
 				// the current precision is the precision of the output solution point.
 				if (current_precision_==DoublePrecision())
 				{
@@ -765,7 +805,15 @@ namespace bertini{
 						solution_at_endtime(ii) = mpfr(std::get<Vec<dbl> >(current_space_)(ii));
 				}
 				else
-					solution_at_endtime = std::get<Vec<mpfr> >(current_space_);
+				{
+					unsigned num_vars = tracked_system_.NumVariables();
+					solution_at_endtime.resize(num_vars);
+					for (unsigned ii=0; ii<num_vars; ii++)
+					{
+						solution_at_endtime(ii).precision(current_precision_);
+						solution_at_endtime(ii) = std::get<Vec<mpfr> >(current_space_)(ii);
+					}
+				}
 			}
 
 
@@ -805,16 +853,29 @@ namespace bertini{
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "x = " << current_space;
 
 				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
+				if (predictor_code==SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
+				{
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure in initial solve of prediction";
 
-				if (predictor_code==SuccessCode::MatrixSolveFailure)
+					next_stepsize_ = current_stepsize_;
+
+					if (current_precision_==DoublePrecision())
+						next_precision_ = LowestMultiplePrecision();
+					else
+						next_precision_ = current_precision_+(1+num_consecutive_failed_steps_) * PrecisionIncrement();
+
+					UpdatePrecisionAndStepsize();
+
+					return predictor_code;
+				}
+				else if (predictor_code==SuccessCode::MatrixSolveFailure)
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure";
 
 					ConvergenceError();
 					return predictor_code;
 				}	
-
-				if (predictor_code==SuccessCode::HigherPrecisionNecessary)
+				else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, higher precision necessary";
 
@@ -832,6 +893,8 @@ namespace bertini{
 													 predicted_space,
 													 tentative_next_time);
 
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "corrected_space = " << tentative_next_space;
+
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "condition number: " << std::get<mpfr_float>(condition_number_estimate_);
 
 				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
@@ -848,6 +911,12 @@ namespace bertini{
 					SafetyError<ComplexType, RealType>();
 					return corrector_code;
 				}
+				else if (corrector_code == SuccessCode::GoingToInfinity)
+				{
+					// there is no corrective action possible...
+					return corrector_code;
+				}
+				
 
 				// copy the tentative vector into the current space vector;
 				current_space = tentative_next_space;
@@ -855,10 +924,11 @@ namespace bertini{
 			}
 
 
+			template <UpsampleRefinementOption refine_if_necessary = upsample_refine_off>
 			SuccessCode UpdatePrecisionAndStepsize() const
 			{
 				current_stepsize_ = next_stepsize_;
-				return ChangePrecision(next_precision_);
+				return ChangePrecision<refine_if_necessary>(next_precision_);
 			}
 
 
@@ -878,8 +948,10 @@ namespace bertini{
 				RealType& size_proportion = std::get<RealType>(size_proportion_);
 				RealType norm_z = std::get<Vec<ComplexType> >(current_space_).norm();
 
+				auto min_next_precision = current_precision_ + (1+num_consecutive_failed_steps_)*PrecisionIncrement();
+
 				bertini::tracking::SafetyError(next_precision_, next_stepsize_, 
-						 current_precision_, current_stepsize_, 
+						 min_next_precision, current_stepsize_, 
 						 current_time_,
 						 norm_J, norm_J_inverse,
 						 size_proportion,
@@ -1119,7 +1191,7 @@ namespace bertini{
 				mpfr_float minimum_stepsize = current_stepsize_ * stepping_config_.step_size_fail_factor;
 
 
-				unsigned criterion_B_rhs(round(amp::CriterionBRHS(norm_J, norm_J_inverse, newton_config_.max_num_newton_iterations, RealType(tracking_tolerance_),  size_proportion, AMP_config_)));
+				unsigned criterion_B_rhs(round(max(amp::CriterionBRHS(norm_J, norm_J_inverse, newton_config_.max_num_newton_iterations, RealType(tracking_tolerance_),  size_proportion, AMP_config_),RealType(1))));
 
 				unsigned digits_C(round( amp::CriterionCRHS(norm_J_inverse, norm_of_current_solution, RealType(tracking_tolerance_), AMP_config_))); 
 				// hopefully this number is smaller than the current precision, allowing us to reduce precision
@@ -1227,6 +1299,7 @@ namespace bertini{
 			\param new_precision The precision to change to.
 			\return SuccessCode indicating whether the change was successful.  If the precision increases, and the refinement loop fails, this could be not Success.  Changing down is guaranteed to succeed.
 			*/
+			template <UpsampleRefinementOption refine_if_necessary = upsample_refine_off>
 			SuccessCode ChangePrecision(unsigned new_precision) const
 			{
 				if (new_precision==current_precision_) // no op
@@ -1234,9 +1307,9 @@ namespace bertini{
 
 				BOOST_LOG_TRIVIAL(severity_level::debug) << "changing precision to " << new_precision;
 
-				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
-
 				bool upsampling_needed = new_precision > current_precision_;
+				// reset the counter for estimating the condition number.  
+				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
 
 				if (new_precision==DoublePrecision() && current_precision_>DoublePrecision())
 				{
@@ -1260,7 +1333,7 @@ namespace bertini{
 				#endif
 
 
-				if (upsampling_needed)
+				if (refine_if_necessary && upsampling_needed)
 					return Refine();
 				else
 					return SuccessCode::Success;
@@ -1492,11 +1565,12 @@ namespace bertini{
 			// state variables
 			/////////////
 
+			bool preserve_precision_ = true;
 
 			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
 			mutable unsigned next_precision_; ///< The next precision
 			mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
-
+			mutable unsigned initial_precision_; ///< The precision at the start of tracking.
 
 
 			unsigned frequency_of_CN_estimation_; ///< How frequently the condition number should be re-estimated.

@@ -82,25 +82,23 @@ namespace bertini{
 				next_space = current_space;
 				for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
 				{
-					// std::cout << ii << "th iteration\n";
-					//TODO: wrap these into a single line.
 					auto f = S.Eval(next_space, current_time);
 					auto J = S.Jacobian(next_space, current_time);
 					auto LU = J.lu();
 
-
 					if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 						return SuccessCode::MatrixSolveFailure;
-
 
 					auto delta_z = LU.solve(-f);
 					next_space += delta_z;
 
 					if ( (delta_z.norm() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
-						return SuccessCode::Success;
-
-					if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
-						return SuccessCode::GoingToInfinity;
+					{
+						if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
+							return SuccessCode::GoingToInfinity;
+						else
+							return SuccessCode::Success;
+					}
 				}
 
 				return SuccessCode::FailedToConverge;
@@ -146,12 +144,10 @@ namespace bertini{
 				next_space = current_space;
 				for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
 				{
-					// std::cout << ii << "th iteration\n";
 					//TODO: wrap these into a single line.
 					auto f = S.Eval(next_space, current_time);
 					auto J = S.Jacobian(next_space, current_time);
 					auto LU = J.lu();
-
 
 					if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 						return SuccessCode::MatrixSolveFailure;
@@ -161,7 +157,12 @@ namespace bertini{
 					next_space += delta_z;
 
 					if ( (delta_z.norm() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
-						return SuccessCode::Success;
+					{
+						if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
+							return SuccessCode::GoingToInfinity;
+						else
+							return SuccessCode::Success;
+					}
 
 					auto norm_J_inverse = LU.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
 					if (!amp::CriterionB(J.norm(), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z.norm(), AMP_config))
@@ -169,10 +170,6 @@ namespace bertini{
 
 					if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 						return SuccessCode::HigherPrecisionNecessary;
-
-					if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
-						return SuccessCode::GoingToInfinity;
-
 				}
 
 				return SuccessCode::FailedToConverge;
@@ -229,7 +226,6 @@ namespace bertini{
 				next_space = current_space;
 				for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
 				{
-					// std::cout << ii << "th iteration\n";
 					//TODO: wrap these into a single line.
 					auto f = S.Eval(next_space, current_time);
 					auto J = S.Jacobian(next_space, current_time);
@@ -241,7 +237,6 @@ namespace bertini{
 
 
 					auto delta_z = LU.solve(-f);
-					// std::cout << "correct delta_z = \n" << delta_z << std::endl;
 					next_space += delta_z;
 
 
@@ -253,17 +248,18 @@ namespace bertini{
 
 
 					if ( (norm_delta_z < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
-						return SuccessCode::Success;
+					{
+						if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
+							return SuccessCode::GoingToInfinity;
+						else
+							return SuccessCode::Success;
+					}
 
 					if (!amp::CriterionB(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
 						return SuccessCode::HigherPrecisionNecessary;
 
 					if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 						return SuccessCode::HigherPrecisionNecessary;
-
-					if (S.DehomogenizePoint(next_space).norm() > path_truncation_threshold)
-						return SuccessCode::GoingToInfinity;
-
 				}
 
 				return SuccessCode::FailedToConverge;

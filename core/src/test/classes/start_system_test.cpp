@@ -36,6 +36,8 @@ using System = bertini::System;
 using Var = std::shared_ptr<bertini::node::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
+using mpq_rational = bertini::mpq_rational;
+using mpfr_float = bertini::mpfr_float;
 using mpz_int = bertini::mpz_int;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
@@ -65,7 +67,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 
 	sys.AddVariableGroup(v);
 	sys.AddFunction(x + y - 1);
-	sys.AddFunction(x - 0.5*y - 1);
+	sys.AddFunction(x - mpfr_float("0.5")*y - 1);
 
 
 	bertini::start_system::TotalDegree TD(sys);
@@ -97,7 +99,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 
 	sys.AddVariableGroup(v);
 	sys.AddFunction(x*y + y - 1);
-	sys.AddFunction(x*x - 0.5*y - x*y);
+	sys.AddFunction(x*x - mpfr_float("0.5")*y - x*y);
 
 
 	bertini::start_system::TotalDegree TD(sys);
@@ -199,7 +201,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(y+x*y + mpfr_float("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -276,7 +278,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(y+x*y + mpfr_float("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -316,7 +318,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(y+x*y + 0.5);
+	sys.AddFunction(y+x*y + mpfr_float("0.5"));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
@@ -366,7 +368,7 @@ BOOST_AUTO_TEST_CASE(start_system_total_degree_nonpolynomial_should_throw)
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
 
 	sys.AddVariableGroup(vars);  
-	sys.AddFunction(exp(y)+x*y + 0.5);
+	sys.AddFunction(exp(y)+x*y + mpq_rational(1,2));
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 

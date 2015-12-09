@@ -52,6 +52,7 @@ namespace bertini
 			GoingToInfinity,
 			FailedToConverge,
 			MatrixSolveFailure,
+			MatrixSolveFailureFirstPartOfPrediction,
 			MaxNumStepsTaken,
 			MaxPrecisionReached,
 			MinStepSizeReached,

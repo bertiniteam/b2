@@ -32,7 +32,7 @@
 
 #include "tracking/amp_criteria.hpp"
 
-using dbl = std::complex<double>;
+
 using System = bertini::System;
 using Variable = bertini::node::Variable;
 
@@ -41,6 +41,7 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
+using mpq_rational = bertini::mpq_rational;
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
 using mpfr_float = bertini::mpfr_float;
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
-	sys.AddFunction(dbl(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 	sys.AddFunction(y - pow(x,2));
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
-	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 	sys.AddFunction(y - pow(x,2));
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
@@ -180,7 +181,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
-	sys.AddFunction(dbl(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 	sys.AddFunction(y - pow(x,2));
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
@@ -233,7 +234,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
-	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 	sys.AddFunction(y - pow(x,2));
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
@@ -285,7 +286,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
-	sys.AddFunction(dbl(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 	sys.AddFunction(y - pow(x,2));
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp
@@ -332,7 +333,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
-	sys.AddFunction(mpfr_float(29/16)*pow(x,3) - 2*x*y + t);
+	sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 	sys.AddFunction(y - pow(x,2));
 
 	//For Criterion A to be checked we need Norm_J and inverse of Norm_J these were taken from Euler.hpp

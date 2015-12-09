@@ -115,7 +115,7 @@ namespace bertini
 	inline
 	unsigned LowestMultiplePrecision()
 	{
-		return 30;
+		return 20;
 	}
 		
 	inline
