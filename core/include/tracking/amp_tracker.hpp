@@ -417,8 +417,10 @@ namespace bertini{
 				mpfr_float eta_min = -log10(minimum_stepsize);
 				mpfr_float eta_max = -log10(maximum_stepsize);
 
-				unsigned criterion_B_rhs(ceil(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations, RealType(tracking_tolerance), size_proportion, AMP_config)));
+				unsigned criterion_B_rhs(ceil(max(amp::CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations, RealType(tracking_tolerance), size_proportion, AMP_config),RealType(1))));
 
+				
+				
 				unsigned digits_C(ceil( amp::CriterionCRHS(norm_J_inverse, norm_of_current_solution, RealType(tracking_tolerance), AMP_config))); 
 
 				unsigned digits_tracking_tolerance(ceil(-log10(tracking_tolerance)));

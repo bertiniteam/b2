@@ -288,7 +288,7 @@ namespace bertini{
 			/**
 			\brief get a const reference to the system.
 			*/
-			const class System& System() const
+			const class System& GetSystem() const
 			{
 				return tracked_system_;
 			}

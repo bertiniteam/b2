@@ -794,9 +794,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 		auto start_point = TD.StartPoint<mpfr>(ii);
 
 		Vec<mpfr> result;
-		SuccessCode tracking_success;
-
-		tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
+		SuccessCode tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
 		BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
 		solutions.push_back(final_system.DehomogenizePoint(result));
@@ -843,7 +841,7 @@ std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& 
 		tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
 		BOOST_CHECK_EQUAL(mpfr_float::default_precision(),initial_precision);
-		solutions.push_back(tracker.System().DehomogenizePoint(result));
+		solutions.push_back(tracker.GetSystem().DehomogenizePoint(result));
 	}
 
 	return solutions;

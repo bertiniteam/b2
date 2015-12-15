@@ -800,6 +800,31 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 }
 
 
+
+/**
+\class bertini::System
+\test \b system_estimate_coeff_bound_quartic Test the estimation of the largest coefficient in a system, including its derivatives.
+*/
+BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
+{
+	bertini::System sys;
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+
+	VariableGroup vars{x,y,z};
+
+	sys.AddVariableGroup(vars);  
+	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	mpfr_float coefficient_bound = sys.CoefficientBound();
+	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
+	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
+}
+
 /**
 \class bertini::System
 \test \b system_estimate_degree_bound_linear Test the estimation of the degree in a system, including its derivatives.
@@ -839,6 +864,14 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 	mpfr_float degree_bound = sys.DegreeBound();
 	BOOST_CHECK(degree_bound == mpfr_float("4"));
 }
+
+
+
+
+
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

@@ -72,7 +72,7 @@ namespace node{
 		
 		
 		/**
-		 Differentiates a variable.  Still needs to be implemented.
+		 Differentiates a variable.  
 		 */
 		std::shared_ptr<Node> Differentiate() override
 		{

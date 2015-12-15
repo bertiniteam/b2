@@ -33,7 +33,10 @@
 #include "start_system.hpp"
 
 using System = bertini::System;
-using Var = std::shared_ptr<bertini::node::Variable>;
+
+using Variable = bertini::node::Variable;
+using Var = std::shared_ptr<Variable>;
+
 using VariableGroup = bertini::VariableGroup;
 
 using mpq_rational = bertini::mpq_rational;
@@ -374,6 +377,48 @@ BOOST_AUTO_TEST_CASE(start_system_total_degree_nonpolynomial_should_throw)
 
 	BOOST_CHECK_THROW(bertini::start_system::TotalDegree TD(sys), std::runtime_error);
 }
+
+
+BOOST_AUTO_TEST_CASE(total_degree_start_system_coefficient_bound_degree_bound)
+{
+	/*
+	In this example we take a decoupled system, homogenize and patch it. Track to endgame boundary and then run our endgame on the space
+	values we have. 
+
+	Take note that in this example we have two successes while the other hit a min track time. This is accounted for. 
+	*/
+	mpfr_float::default_precision(30);
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddVariableGroup(v);
+
+	sys.AddFunction(pow(x-1,3));
+	sys.AddFunction(pow(y-1,2));
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK(sys.IsPatched());	
+
+	
+
+	auto TD = bertini::start_system::TotalDegree(sys);
+	TD.Homogenize();
+	BOOST_CHECK(TD.IsHomogeneous());
+	BOOST_CHECK(TD.IsPatched());
+
+
+	auto final_system = (1-t)*sys + t*TD;
+	final_system.AddPathVariable(t);
+}
+
 
 
 BOOST_AUTO_TEST_SUITE_END()
