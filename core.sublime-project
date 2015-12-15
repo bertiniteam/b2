@@ -1,0 +1,23 @@
+{
+	"folders":
+	[
+		{
+			"path": "core/src",
+			"file_exclude_patterns":[
+                ".dirstamp"
+            ],
+            "folder_exclude_patterns": [
+			    ".deps"
+			]
+		},
+		{
+			"path": "core/include",
+			"file_exclude_patterns":[
+                ".dirstamp"
+            ],
+            "folder_exclude_patterns": [
+			    ".deps"
+			]
+		}
+	]
+}

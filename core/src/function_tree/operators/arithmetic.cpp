@@ -83,7 +83,7 @@ namespace bertini{
 		if (counter>0)
 			return ret_sum;
 		else
-			return std::make_shared<Float>(0.0);
+			return std::make_shared<Integer>(0);
 	}
 	
 	
@@ -765,11 +765,11 @@ namespace bertini{
 	{
 		
 		if (exponent_==0)
-			return std::make_shared<Float>(0.0);
-		else if (exponent_==1.0)
+			return std::make_shared<Integer>(0);
+		else if (exponent_==1)
 			return child_->Differentiate();
 		else if (exponent_==2){
-			auto M = std::make_shared<MultOperator>(std::make_shared<Float>(2.0), child_);
+			auto M = std::make_shared<MultOperator>(std::make_shared<Integer>(2), child_);
 			M->AddChild(child_->Differentiate());
 			return M;
 		}
@@ -820,9 +820,9 @@ namespace bertini{
 	std::shared_ptr<Node> SqrtOperator::Differentiate()
 	{
 		auto ret_mult = std::make_shared<MultOperator>();
-		ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Float>(-0.5)));
+		ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Rational>(mpq_rational(-1,2))));
 		ret_mult->AddChild(child_->Differentiate());
-		ret_mult->AddChild(std::make_shared<Float>(0.5));
+		ret_mult->AddChild(std::make_shared<Rational>(mpq_rational(1,2)));
 		return ret_mult;
 	}
 	

@@ -19,7 +19,12 @@
 // variable.hpp:  Declares the class Variable.
 
 
+/**
+\file variable.hpp
 
+\brief Provides the Variable Node class.
+
+*/
 #ifndef b2Test_Variable_h
 #define b2Test_Variable_h
 
@@ -67,7 +72,7 @@ namespace node{
 		
 		
 		/**
-		 Differentiates a variable.  Still needs to be implemented.
+		 Differentiates a variable.  
 		 */
 		std::shared_ptr<Node> Differentiate() override
 		{

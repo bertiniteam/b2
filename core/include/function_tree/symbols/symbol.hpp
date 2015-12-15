@@ -18,6 +18,13 @@
 //
 // symbol.hpp:  Declares the class Symbol.
 
+/**
+\file symbol.hpp
+
+\brief Defines the abstract Symbol and NamedSymbol classes,
+
+*/
+
 #ifndef b2Test_Symbol_h
 #define b2Test_Symbol_h
 

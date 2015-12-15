@@ -18,7 +18,12 @@
 //
 // special_number.hpp:  Declares the class SpecialNumber.
 
+/**
+\file special_number.hpp
 
+\brief Provides the special numbers \f$\pi\f$, \f$e\f$, 1, 2, 0, as Nodes
+
+*/
 
 #ifndef b2Test_SpecialNumber_h
 #define b2Test_SpecialNumber_h
@@ -63,7 +68,7 @@ namespace node{
 			 */
 			std::shared_ptr<Node> Differentiate() override
 			{
-				return std::make_shared<Float>(0.0);
+				return std::make_shared<Integer>(0);
 			}
 
 			/**
@@ -130,7 +135,7 @@ namespace node{
 
 			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
 			{
-				return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
+				return mpfr(acos(boost::multiprecision::mpfr_float(-1)));
 			}
 
 			friend class boost::serialization::access;
@@ -164,7 +169,7 @@ namespace node{
 			 */
 			std::shared_ptr<Node> Differentiate() override
 			{
-				return std::make_shared<Float>(0.0);
+				return std::make_shared<Integer>(0);
 			}
 
 			/**
@@ -227,7 +232,7 @@ namespace node{
 
 			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
 			{
-				return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
+				return mpfr(exp(boost::multiprecision::mpfr_float(1)));
 			}
 
 			friend class boost::serialization::access;

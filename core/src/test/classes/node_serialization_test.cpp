@@ -46,15 +46,17 @@ using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Float = bertini::node::Float;
 
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
 
 using System = bertini::System;
 
 extern double threshold_clearance_d;
-extern unsigned FUNCTION_TREE_TEST_MPFR_DEFAULT_DIGITS;
-extern double threshold_clearance_mp;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
-template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
 
 BOOST_AUTO_TEST_SUITE(node_serialization)
 
@@ -88,7 +90,7 @@ BOOST_AUTO_TEST_CASE(serialize_variable)
 
 BOOST_AUTO_TEST_CASE(serialize_float)
 {
-	std::shared_ptr<Float> two_point_oh_four = std::make_shared<Float>(2.04);
+	std::shared_ptr<Float> two_point_oh_four = std::make_shared<Float>("2.04");
 
 	{
 		std::ofstream fout("serialization_test_node");
