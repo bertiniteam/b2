@@ -1,0 +1,26 @@
+#this is src/python/Makemodule.am
+
+
+bertini_python_header_files =
+
+bertini_python_source_files =
+
+bertini_python = \
+	$(bertini_python_header_files) \
+	$(bertini_python_source_files)
+
+
+lib_LTLIBRARIES += libpybertini.la
+
+libpybertini_ladir = $(includedir)/libpybertini_la
+
+libpybertini_la_HEADERS =
+libpybertini_la_SOURCES = $(bertini_python_header_files) $(bertini_python_source_files)
+
+
+libpybertini_la_LIBADD = $(BOOST_LDFLAGS) $(PYTHON_LDFLAGS) $(PYTHON_EXTRA_LIBS) -l$(BOOST_PYTHON_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB)
+
+libpybertini_la_LDFLAGS =  -module -rpath '$(libdir)'
+#the above -module is so that the .so file is generated.  otherwise, on mac, it may just be the mac format dynamic library.
+
+libpybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS)
