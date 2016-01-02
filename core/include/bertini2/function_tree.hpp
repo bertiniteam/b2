@@ -21,32 +21,37 @@
 //  This file collects the various header files which define the Bertini2  
 //  function tree node types, which are scattered through about 10 files.
 
+/**
+\file function_tree.hpp 
+
+\brief Collects the various header files which define the Bertini2 function tree node types.
+*/
 
 
-#ifndef BERTINI2_FUNCTION_TREE_H_
-#define BERTINI2_FUNCTION_TREE_H_
+#ifndef BERTINI_FUNCTION_TREE_HPP
+#define BERTINI_FUNCTION_TREE_HPP
 
-#include "bertini2/function_tree/node.hpp"
+#include "function_tree/node.hpp"
 
-#include "bertini2/function_tree/operators/operator.hpp"
+#include "function_tree/operators/operator.hpp"
 
-#include "bertini2/function_tree/operators/arithmetic.hpp"
-#include "bertini2/function_tree/operators/trig.hpp"
-
-
+#include "function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/trig.hpp"
 
 
 
 
-#include "bertini2/function_tree/symbols/symbol.hpp"
-#include "bertini2/function_tree/symbols/variable.hpp"
-#include "bertini2/function_tree/symbols/number.hpp"
-#include "bertini2/function_tree/symbols/special_number.hpp"
 
-#include "bertini2/function_tree/roots/function.hpp"
-#include "bertini2/function_tree/roots/jacobian.hpp"
 
-#include "bertini2/function_tree/function_parsing.hpp"
+#include "function_tree/symbols/symbol.hpp"
+#include "function_tree/symbols/variable.hpp"
+#include "function_tree/symbols/number.hpp"
+#include "function_tree/symbols/special_number.hpp"
+
+#include "function_tree/roots/function.hpp"
+#include "function_tree/roots/jacobian.hpp"
+
+#include "function_tree/function_parsing.hpp"
 
 #endif
 

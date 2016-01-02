@@ -18,12 +18,18 @@
 //
 // trig.hpp:  Declares the trigonometric operator classes.
 
+/**
+\file trig.hpp
 
-#ifndef trig_operator_hpp
-#define trig_operator_hpp
+\brief Provides the abstract TrigOperator, and the concrete types such as SinOperator.
 
-#include "bertini2/function_tree/operators/operator.hpp"
-#include "bertini2/function_tree/operators/arithmetic.hpp"
+*/
+
+#ifndef BERTINI_TRIGONOMETRIC_OPERATOR_HPP
+#define BERTINI_TRIGONOMETRIC_OPERATOR_HPP
+
+#include "function_tree/operators/operator.hpp"
+#include "function_tree/operators/arithmetic.hpp"
 
 
 

@@ -39,6 +39,46 @@
 #include <boost/test/unit_test.hpp>
 
 
+#include "bertini2/mpfr_complex.hpp"
+#include <complex>
 
+using dbl = bertini::dbl;
+using mpfr = bertini::complex;
+
+double relaxed_threshold_clearance_d = 1e-14;
+double threshold_clearance_d = 1e-15;
+
+unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS = 30;
+bertini::mpfr_float threshold_clearance_mp("1e-27");
+
+std::string xstr_real = "3.1";
+std::string xstr_imag = "4.1";
+std::string ystr_real = "8.8";
+std::string ystr_imag = "9.9";
+std::string zstr_real = "0.8";
+std::string zstr_imag = "-1.7";
+
+std::string astr_real = "3.4";
+std::string astr_imag = "5.6";
+std::string bstr_real = "-0.2";
+std::string bstr_imag = "-2.1";
+std::string pstr_real = "0.8";
+std::string pstr_imag = "-1.7";
+
+
+
+dbl xnum_dbl(std::stod(xstr_real), std::stod(xstr_imag));
+dbl ynum_dbl(std::stod(ystr_real), std::stod(ystr_imag));
+dbl znum_dbl(std::stod(zstr_real), std::stod(zstr_imag));
+dbl anum_dbl(std::stod(astr_real), std::stod(astr_imag));
+dbl bnum_dbl(std::stod(bstr_real), std::stod(bstr_imag));
+dbl pnum_dbl(std::stod(pstr_real), std::stod(pstr_imag));
+
+mpfr xnum_mpfr(xstr_real, xstr_imag);
+mpfr ynum_mpfr(ystr_real, ystr_imag);
+mpfr znum_mpfr(zstr_real, zstr_imag);
+mpfr anum_mpfr(astr_real, astr_imag);
+mpfr bnum_mpfr(bstr_real, bstr_imag);
+mpfr pnum_mpfr(pstr_real, pstr_imag);
 
 // the bottom of this file is intentionally blank.  this is the 'main' .cpp file for the built boost unit test suite for bertini 2 classes.

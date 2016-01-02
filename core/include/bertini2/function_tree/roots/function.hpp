@@ -18,12 +18,19 @@
 //
 // function.hpp:  Declares the class Function.
 
+/**
+\file function.hpp
 
-#ifndef b2Test_Function_h
-#define b2Test_Function_h
+\brief Provides the Function Node type, a NamedSymbol.
+
+*/
 
 
-#include "bertini2/function_tree/symbols/symbol.hpp"
+#ifndef BERTINI_FUNCTION_NODE_HPP
+#define BERTINI_FUNCTION_NODE_HPP
+
+
+#include "function_tree/symbols/symbol.hpp"
 
 
 

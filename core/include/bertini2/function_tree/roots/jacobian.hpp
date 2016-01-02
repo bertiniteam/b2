@@ -18,13 +18,20 @@
 //
 // jacobian.hpp:  Declares the class Jacobian.
 
+/**
+\file jacobian.hpp
 
-#ifndef b2Test_Jacobian_h
-#define b2Test_Jacobian_h
+\brief Provides the Jacobian node type.
+
+*/
 
 
-#include "bertini2/function_tree/node.hpp"
-#include "bertini2/function_tree/symbols/variable.hpp"
+#ifndef BERTINI_JACOBIAN_NODE_HPP
+#define BERTINI_JACOBIAN_NODE_HPP
+
+
+#include "function_tree/node.hpp"
+#include "function_tree/symbols/variable.hpp"
 
 
 

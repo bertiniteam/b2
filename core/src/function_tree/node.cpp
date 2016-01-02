@@ -1,4 +1,4 @@
-#include "bertini2/function_tree.hpp"
+#include "function_tree.hpp"
 
 BOOST_CLASS_EXPORT(bertini::node::Variable)
 BOOST_CLASS_EXPORT(bertini::node::Differential)
