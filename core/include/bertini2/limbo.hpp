@@ -19,6 +19,18 @@
 // limbo.hpp:  Declares functions which have not yet found a home.
 
 
+/**
+\file limbo.hpp 
+
+\brief Declares functions which have not yet found a home. 
+
+If you can find a better home for these functions, please make the changes and submit a pull request.
+*/
+
+
+#ifndef BERTINI_LIMBO_HPP
+#define BERTINI_LIMBO_HPP
+
 #include <vector>
 #include <stdexcept>
 
@@ -31,9 +43,21 @@ extern "C" {
 	char HaveBertini2();
 }
 
-namespace bertini{
 
-	
+
+//https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
+
+template<typename T>
+std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+{
+    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+}
+
+
+
+
+
+namespace bertini{
 
 	/**
 	Convert a zero-based index to a zero-based subscript vector.  Throws if the index is out-of-range based on the dimensions.
@@ -76,4 +100,27 @@ namespace bertini{
 		return subscripts;
 	  }
 
-}
+	  using std::max;
+
+	  template <typename T>
+	  T max(T const& a, T const& b, T const& c)
+	  {
+	  	return max(a,max(b,c));
+	  }
+
+	  template <typename T>
+	  T max(T const& a, T const& b, T const& c, T const& d)
+	  {
+	  	return max(a,max(b,c,d));
+	  }
+
+	  template <typename T>
+	  T max(T const& a, T const& b, T const& c, T const& d, T const& e)
+	  {
+	  	return max(a,max(b,c,d,e));
+	  }
+} // re: namespace bertini
+
+
+#endif
+

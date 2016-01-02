@@ -23,8 +23,15 @@
 // from qi::grammar, or they all contain a struct the inherits from grammar.  Right now
 // VariableParser does the second, and Function Parser does the first.
 
-#ifndef b2Test_grammar_h
-#define b2Test_grammar_h
+
+/**
+\file function_parsing.hpp
+
+\brief Provides a Boost.Spirit::Qi parser for function expressions.
+*/
+
+#ifndef BERTINI_FUNCTION_PARSING_HPP
+#define BERTINI_FUNCTION_PARSING_HPP
 
 #define BOOST_RESULT_OF_USE_DECLTYPE
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
@@ -41,14 +48,14 @@
 #include <cmath>
 
 
-#include "bertini2/function_tree/node.hpp"
-#include "bertini2/function_tree/roots/function.hpp"
+#include "function_tree/node.hpp"
+#include "function_tree/roots/function.hpp"
 
-#include "bertini2/function_tree/operators/arithmetic.hpp"
-#include "bertini2/function_tree/operators/trig.hpp"
+#include "function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/trig.hpp"
 
-#include "bertini2/function_tree/symbols/number.hpp"
-#include "bertini2/function_tree/symbols/variable.hpp"
+#include "function_tree/symbols/number.hpp"
+#include "function_tree/symbols/variable.hpp"
 
 
 

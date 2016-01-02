@@ -11,7 +11,9 @@ b2_class_test_SOURCES = \
 	test/classes/differentiate_test.cpp \
 	test/classes/homogenization_test.cpp \
 	test/classes/start_system_test.cpp \
-	test/classes/node_serialization_test.cpp
+	test/classes/node_serialization_test.cpp \
+	test/classes/patch_test.cpp \
+	test/classes/complex_test.cpp 
 
 b2_class_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) libbertini2.la
 

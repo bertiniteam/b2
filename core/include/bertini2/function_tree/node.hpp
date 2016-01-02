@@ -18,9 +18,15 @@
 //
 // node.hpp:  Declares the class Node.
 
+/**
+\file node.hpp
 
-#ifndef __b2Test__Node__
-#define __b2Test__Node__
+\brief Defines the abstract Node base class.
+
+*/
+
+#ifndef BERTINI_NODE_BASE_HPP
+#define BERTINI_NODE_BASE_HPP
 
 
 
@@ -32,9 +38,8 @@
 #include <boost/type_index.hpp>
 
 #include <complex>
-#include "bertini2/mpfr_complex.hpp"
-using dbl = std::complex<double>;
-using mpfr = bertini::complex;
+#include "mpfr_complex.hpp"
+
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -55,7 +60,16 @@ namespace bertini {
 
 using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
 
+enum class VariableGroupType
+{
+	Homogeneous,
+	Affine,
+	Ungrouped
+};
+
+
 namespace node{
+
 
 /**
 An interface for all nodes in a function tree, and for a function object as well.  Almost all
@@ -285,7 +299,7 @@ private:
 
 
 #endif 
-/* defined(__b2Test__Node__) */
+/* defined(BERTINI_NODE_BASE_HPP) */
 
 
 
