@@ -18,6 +18,7 @@ config.*
 libtool
 Makefile
 
+b2_timing_test
 b2_class_test
 test_tree_interactive
 settings_test
@@ -30,12 +31,15 @@ m4/ltversion.m4
 m4/lt~obsolete.m4
 
 serialization_test*
+*.log
+.libs/*
 
 /config
 
 .DS_Store
 *.dirstamp
 *.deps
+
 
 *~
 
