@@ -37,6 +37,10 @@ lib_LIBRARIES =
 noinst_LIBRARIES =
 noinst_LTLIBRARIES =
 
+TESTS =
+
+######  end deliberately blank items
+
 #see https://www.gnu.org/software/automake/manual/html_node/Suffixes.html
 SUFFIXES = .cpp .hpp
 

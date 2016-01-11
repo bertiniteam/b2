@@ -2,6 +2,7 @@
 
 
 EXTRA_PROGRAMS += tracking_basics_test
+TESTS += tracking_basics_test
 
 tracking_basics_test_SOURCES = \
 	test/tracking_basics/tracking_basics_test.cpp \
