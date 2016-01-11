@@ -131,8 +131,8 @@ namespace bertini{
 
 				void ClearTimesDerivativesAndSamples(){times_.clear(); s_times_.clear(); samples_.clear(); derivatives_.clear(); s_derivatives_.clear();}
 
-				void SetSampleFactor(mpfr_float new_sample_factor) {power_series_struct_.sample_factor = new_sample_factor;}
-				mpfr_float GetSampleFactor(){return power_series_struct_.sample_factor;}
+				void SetSampleFactor(mpfr_float new_sample_factor) {endgame_struct_.sample_factor = new_sample_factor;}
+				mpfr_float GetSampleFactor(){return endgame_struct_.sample_factor;}
 
 				void SetNumSamples(unsigned int new_num_samples) {Endgame::SetNumSamplePoints(new_num_samples);}
 				unsigned int GetNumSamples(){return Endgame::GetNumSamplePoints();}
@@ -279,7 +279,7 @@ namespace bertini{
 				// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
 				// //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type. 
 				mpfr_float estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).norm())/(((sample1 - sample0).transpose()*rand_vector).norm()))));
-				estimate = abs(log(power_series_struct_.sample_factor))/estimate;
+				estimate = abs(log(endgame_struct_.sample_factor))/estimate;
 				// std::cout << "estimate is " << estimate << '\n';
 				if (estimate < 1)
 				{
@@ -386,7 +386,7 @@ namespace bertini{
 				for(int ii=2; ii <= GetNumSamples(); ++ii)//start at 2 since first sample is at the endgame boundary.
 				{ 
 					 // std::cout << "ii is " << ii <<  std::endl;
-					ComplexType next_time = times_.back() * power_series_struct_.sample_factor;
+					ComplexType next_time = times_.back() * endgame_struct_.sample_factor;
 
 					SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,times_.back(),next_time,samples_.back());
 
@@ -534,7 +534,7 @@ namespace bertini{
 				while (approx_error.norm() > Endgame::GetFinalTolerance().abs())
 				{
 					SetFinalApproximation(prev_approx);
-			  		 auto next_time = times_.back() * power_series_struct_.sample_factor; //setting up next time value.
+			  		 auto next_time = times_.back() * endgame_struct_.sample_factor; //setting up next time value.
 
 			  		if (next_time.abs() < Endgame::GetMinTrackTime().abs())
 			  		{

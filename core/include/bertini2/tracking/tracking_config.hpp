@@ -57,7 +57,9 @@ namespace bertini
 			MaxPrecisionReached,
 			MinStepSizeReached,
 			Failure,
-			SingularStartPoint
+			SingularStartPoint,
+			MinTrackTimeReached,
+			SecurityMaxNormReached
 		};
 
 		
@@ -92,6 +94,8 @@ namespace bertini
 				mpfr_float newton_during_endgame = mpfr_float("1e-6");;
 
 				mpfr_float final_tolerance = mpfr_float("1e-11");
+
+				mpfr_float track_tolerance_during_endgame = mpfr_float("1e-6");
 
 				mpfr_float path_truncation_threshold = mpfr_float("1e5");
 			};
@@ -147,14 +151,21 @@ namespace bertini
 
 			struct EndGame
 			{
-				mpfr_float SampleFactor = mpfr_float("0.5");
-				unsigned max_cycle_number = 6;
+				unsigned num_sample_points = 3;
+				mpfr min_track_time = mpfr("1e-100","0"); //nbrh radius in Bertini book.
+				mpfr_float sample_factor = mpfr_float("0.5");
+				Vec<mpfr> final_approximation_at_origin;
+
 			};
 
 
 			struct PowerSeries
 			{
-				
+				unsigned max_cycle_number = 6;
+				unsigned cycle_number_amplification = 5;
+				unsigned upper_bound_on_cycle_number;
+				unsigned int cycle_number = 0;
+				mpfr_float min_difference_in_approximations = mpfr_float("1e300"); //specific to PSEG
 			};
 
 			struct Cauchy

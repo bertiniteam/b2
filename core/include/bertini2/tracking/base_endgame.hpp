@@ -148,11 +148,11 @@ namespace bertini{
 				}
 
 				void SetSecurityLevel(unsigned int new_security_level){
-					endgame_security_.security_level = new_security_level;
+					endgame_security_.level = new_security_level;
 				}
 
 				unsigned int GetSecurityLevel(){
-					return endgame_security_.security_level;
+					return endgame_security_.level;
 				}
 
 				void SetSecurityMaxNorm(mpfr_float new_max_norm){
