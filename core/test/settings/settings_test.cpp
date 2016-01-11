@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(parse_store_set_settings)
 
 BOOST_AUTO_TEST_CASE(parsing_to_ini)
 {
-    std::string test_string = "tracktype :1 \n MPType:-1";
+    std::string test_string = "tracktype :1; \n MPType:-1;";
     
     bertini::settings::parsing::ConfigToIni<std::string::const_iterator> parser;
     std::string::const_iterator iter = test_string.begin();
@@ -96,8 +96,7 @@ BOOST_AUTO_TEST_CASE(parsing_to_ini)
     
     std::string str_out;
     phrase_parse(iter, end, parser, boost::spirit::ascii::space, str_out);
-    std::cout << "d " << str_out << std::endl;
-    BOOST_CHECK(str_out.find("tracktype=1")!=std::string::npos);
+    BOOST_CHECK(str_out.find("tracktype =1")!=std::string::npos);
     BOOST_CHECK(str_out.find("mptype=-1")!=std::string::npos);
 
 }

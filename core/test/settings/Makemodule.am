@@ -2,6 +2,7 @@
 
 
 EXTRA_PROGRAMS += settings_test
+TESTS += settings_test
 
 settings_test_SOURCES = \
 	test/settings/settings_test.cpp

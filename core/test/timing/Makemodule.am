@@ -2,7 +2,7 @@
 
 
 EXTRA_PROGRAMS += b2_timing_test
-
+TESTS += b2_timing_test
 
 b2_timing_test_SOURCES = \
 	test/timing/b2_timing_test.cpp

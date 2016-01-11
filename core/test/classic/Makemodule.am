@@ -1,10 +1,11 @@
-#this is src/test/classic/Makemodule.am
+#this is test/classic/Makemodule.am
 
 EXTRA_PROGRAMS += b2_classic_compatibility_test
+TESTS += b2_classic_compatibility_test
 
 classic_compatibility_test_source_files = \
-	src/test/classic/classic_test.cpp \
-	src/test/classic/classic_parsing_test.cpp
+	test/classic/classic_test.cpp \
+	test/classic/classic_parsing_test.cpp
 
 
 b2_classic_compatibility_test_SOURCES = \

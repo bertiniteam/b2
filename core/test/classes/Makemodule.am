@@ -1,6 +1,7 @@
 #this is test/classes/Makemodule.am
 
 EXTRA_PROGRAMS += b2_class_test
+TESTS += b2_class_test
 
 b2_class_test_SOURCES = \
 	test/classes/function_tree_test.cpp \
