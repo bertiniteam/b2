@@ -109,57 +109,102 @@ namespace bertini{
 				config::Tolerances endgame_tolerances_;
 				config::Security endgame_security_;
 
-				void SetNumSamplePoints(unsigned int new_sample_points){
+				void SetEndgameStruct(config::EndGame new_endgame_settings)
+				{
+					endgame_struct_ = new_endgame_settings;
+				}
+
+				config::EndGame GetEndgameStruct()
+				{
+					return endgame_struct_;
+				}
+
+				void SetTolerancesStruct(config::Tolerances new_tolerances_settings)
+				{
+					endgame_tolerances_ = new_tolerances_settings;
+				}
+
+				config::Tolerances GetTolerancesStruct()
+				{
+					return endgame_tolerances_;
+				}
+
+				void SetSecurityStruct(config::Security new_endgame_security_settings)
+				{
+					endgame_security_ = new_endgame_security_settings;
+				}
+
+				config::Security GetSecurityStruct()
+				{
+					return endgame_security_;
+				}
+
+
+				void SetNumSamplePoints(unsigned int new_sample_points)
+				{
 					endgame_struct_.num_sample_points = new_sample_points;
 				}
-				unsigned int GetNumSamplePoints(){
+				unsigned int GetNumSamplePoints()
+				{
 					return endgame_struct_.num_sample_points;
 				}
 
-				void SetFinalTolerance(mpfr_float new_final_tolerance){
+				void SetFinalTolerance(mpfr_float new_final_tolerance)
+				{
 					endgame_tolerances_.final_tolerance = new_final_tolerance;
 				}
-				mpfr GetFinalTolerance(){
+				mpfr GetFinalTolerance()
+				{
 					return endgame_tolerances_.final_tolerance;
 				}
 
-				void SetMinTrackTime(mpfr new_min_track_time){
+				void SetMinTrackTime(mpfr new_min_track_time)
+				{
 					endgame_struct_.min_track_time = new_min_track_time;
 				}
 
-				mpfr GetMinTrackTime(){
+				mpfr GetMinTrackTime()
+				{
 					return endgame_struct_.min_track_time;
 				}
 
-				void SetTrackToleranceDuringEndgame(mpfr_float new_track_tolerance_during_endgame){
+				void SetTrackToleranceDuringEndgame(mpfr_float new_track_tolerance_during_endgame)
+				{
 					endgame_tolerances_.track_tolerance_during_endgame = new_track_tolerance_during_endgame;
 				}
 
-				mpfr_float GetTrackToleranceDuringEndgame(){
+				mpfr_float GetTrackToleranceDuringEndgame()
+				{
 					return endgame_tolerances_.track_tolerance_during_endgame;
 				}
 
-				void SetPathTruncationThreshold(mpfr_float new_path_truncation_threshold){
+				void SetPathTruncationThreshold(mpfr_float new_path_truncation_threshold)
+				{
 					endgame_tolerances_.path_truncation_threshold = new_path_truncation_threshold;
 				}
 
-				mpfr_float GetPathTruncationThreshold(){
+				mpfr_float GetPathTruncationThreshold()
+				{
 					return endgame_tolerances_.path_truncation_threshold;
 				}
 
-				void SetSecurityLevel(unsigned int new_security_level){
+				void SetSecurityLevel(unsigned int new_security_level)
+				{
 					endgame_security_.level = new_security_level;
 				}
 
-				unsigned int GetSecurityLevel(){
+				unsigned int GetSecurityLevel()
+				{
 					return endgame_security_.level;
 				}
 
-				void SetSecurityMaxNorm(mpfr_float new_max_norm){
+				void SetSecurityMaxNorm(mpfr_float new_max_norm)
+				{
 					endgame_security_.max_norm = new_max_norm;
 				}
 
-				mpfr GetSecurityMaxNorm(){
+				mpfr GetSecurityMaxNorm()
+				{
 					return endgame_security_.max_norm;
 				}
 
