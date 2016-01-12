@@ -1015,190 +1015,190 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 
 } // end compute approximation of x at t0 mp
 
-BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
-{
-	/*
-	Given a time value (usually 0.1) and a vector representing values for all other variables the first step in the power series 
-	endgame is to get some initial samples to make the first hermite interpolation. 
+// BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
+// {
+// 	/*
+// 	Given a time value (usually 0.1) and a vector representing values for all other variables the first step in the power series 
+// 	endgame is to get some initial samples to make the first hermite interpolation. 
 
-	For this reason there exists a ComputeInitialSamples function. 
+// 	For this reason there exists a ComputeInitialSamples function. 
 
-	This test case checks the computed samples vs. samples computed by hand with Matlab to see that they are within the 
-	track tolerance during the endgame. 
+// 	This test case checks the computed samples vs. samples computed by hand with Matlab to see that they are within the 
+// 	track tolerance during the endgame. 
 
-	*/
-	mpfr_float::default_precision(50);
-
-
-
-	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	// Define homotopy system
-	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+// 	*/
+// 	mpfr_float::default_precision(50);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+// 	bertini::System sys;
+// 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
+// 	VariableGroup vars{x};
+// 	sys.AddVariableGroup(vars);
+// 	sys.AddPathVariable(t);
+// 	// Define homotopy system
+// 	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+
+
+// 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+// 	bertini::tracking::AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+// 	bertini::tracking::config::Stepping stepping_preferences;
+// 	bertini::tracking::config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
-                stepping_preferences,
-                newton_preferences);
+// 	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+//                 mpfr_float("1e-5"),
+//                 mpfr_float("1e5"),
+//                 stepping_preferences,
+//                 newton_preferences);
 	
-	tracker.AMPSetup(AMP);
+// 	tracker.AMPSetup(AMP);
 
-	mpfr sample_factor = mpfr(".5");
-	mpfr origin = mpfr("0");
-	Vec<mpfr> x_origin(1);
-	x_origin << mpfr("1","0");
-	std::deque<mpfr> correct_times; //times are not vectors they are just complex numbers, these are the correct times from bertini
-	std::deque< Vec<mpfr> > correct_samples; //samples are space values that may be a vector of complex numbers, correct space values 
-											// from bertini.
+// 	mpfr sample_factor = mpfr(".5");
+// 	mpfr origin = mpfr("0");
+// 	Vec<mpfr> x_origin(1);
+// 	x_origin << mpfr("1","0");
+// 	std::deque<mpfr> correct_times; //times are not vectors they are just complex numbers, these are the correct times from bertini
+// 	std::deque< Vec<mpfr> > correct_samples; //samples are space values that may be a vector of complex numbers, correct space values 
+// 											// from bertini.
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+// 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 
-	mpfr time(1);
-	Vec<mpfr> sample(1);
-	// Vec<dbl> derivative(1);
+// 	mpfr time(1);
+// 	Vec<mpfr> sample(1);
+// 	// Vec<dbl> derivative(1);
 
-	time = mpfr(".1"); // x = .1
-	correct_times.push_back(time);
-	sample << mpfr("5.000000000000001e-01", "9.084258952712920e-17"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
-	correct_samples.push_back(sample);
+// 	time = mpfr(".1"); // x = .1
+// 	correct_times.push_back(time);
+// 	sample << mpfr("5.000000000000001e-01", "9.084258952712920e-17"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
+// 	correct_samples.push_back(sample);
 
-	time = mpfr(".05"); // x = .1/2 = .05
-	correct_times.push_back(time);
-	sample << mpfr("6.000000000000000e-01", "8.165397611531455e-19"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
-	correct_samples.push_back(sample);
+// 	time = mpfr(".05"); // x = .1/2 = .05
+// 	correct_times.push_back(time);
+// 	sample << mpfr("6.000000000000000e-01", "8.165397611531455e-19"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
+// 	correct_samples.push_back(sample);
 
-	time = mpfr(".025"); // x = .05/2 = .025
-	correct_times.push_back(time);
-	sample << mpfr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
-	correct_samples.push_back(sample);
+// 	time = mpfr(".025"); // x = .05/2 = .025
+// 	correct_times.push_back(time);
+// 	sample << mpfr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
+// 	correct_samples.push_back(sample);
 
-	unsigned int num_samples = 3; 
+// 	unsigned int num_samples = 3; 
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(".1");
-	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
+// 	mpfr current_time(1);
+// 	Vec<mpfr> current_space(1);
+// 	current_time = mpfr(".1");
+// 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::PowerSeries power_series_struct;
+// 	bertini::tracking::config::EndGame endgame_struct;
+// 	bertini::tracking::config::PowerSeries power_series_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct);
+// 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct);
 
-	My_Endgame.ComputeInitialSamples(current_time,current_space);
+// 	My_Endgame.ComputeInitialSamples(current_time,current_space);
 
-	auto samples = My_Endgame.GetSamples();
+// 	auto samples = My_Endgame.GetSamples();
 
-	for(unsigned ii = 0; ii < samples.size(); ++ii)
-	{
-		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
-	}
+// 	for(unsigned ii = 0; ii < samples.size(); ++ii)
+// 	{
+// 		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
+// 	}
 
-}//end compute initial samples mp
+// }//end compute initial samples mp
 
-BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
-{
-	/*
-	Given a time value (usually 0.1) and a vector representing values for all other variables the first step in the power series 
-	endgame is to get some initial samples to make the first hermite interpolation. 
+// BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
+// {
+// 	/*
+// 	Given a time value (usually 0.1) and a vector representing values for all other variables the first step in the power series 
+// 	endgame is to get some initial samples to make the first hermite interpolation. 
 
-	For this reason there exists a ComputeInitialSamples function. 
+// 	For this reason there exists a ComputeInitialSamples function. 
 
-	This test case checks the computed samples vs. samples computed by hand with Matlab to see that they are within the 
-	track tolerance during the endgame. 
+// 	This test case checks the computed samples vs. samples computed by hand with Matlab to see that they are within the 
+// 	track tolerance during the endgame. 
 
-	*/
-	mpfr_float::default_precision(16);
-
-
-
-	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	// Define homotopy system
-	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+// 	*/
+// 	mpfr_float::default_precision(16);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+// 	bertini::System sys;
+// 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
+// 	VariableGroup vars{x};
+// 	sys.AddVariableGroup(vars);
+// 	sys.AddPathVariable(t);
+// 	// Define homotopy system
+// 	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+
+
+// 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+// 	bertini::tracking::AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+// 	bertini::tracking::config::Stepping stepping_preferences;
+// 	bertini::tracking::config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
-                stepping_preferences,
-                newton_preferences);
+// 	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+//                 mpfr_float("1e-5"),
+//                 mpfr_float("1e5"),
+//                 stepping_preferences,
+//                 newton_preferences);
 	
-	tracker.AMPSetup(AMP);
+// 	tracker.AMPSetup(AMP);
 
-	mpfr sample_factor = mpfr(".5");
-	mpfr origin = mpfr("0");
-	Vec<mpfr> x_origin(1);
-	x_origin << mpfr("1","0");
-	std::deque<mpfr> correct_times; //times are not vectors they are just complex numbers, these are the correct times from bertini
-	std::deque< Vec<mpfr> > correct_samples; //samples are space values that may be a vector of complex numbers, correct space values 
-											// from bertini.
+// 	mpfr sample_factor = mpfr(".5");
+// 	mpfr origin = mpfr("0");
+// 	Vec<mpfr> x_origin(1);
+// 	x_origin << mpfr("1","0");
+// 	std::deque<mpfr> correct_times; //times are not vectors they are just complex numbers, these are the correct times from bertini
+// 	std::deque< Vec<mpfr> > correct_samples; //samples are space values that may be a vector of complex numbers, correct space values 
+// 											// from bertini.
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+// 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 
-	mpfr time(1);
-	Vec<mpfr> sample(1);
-	// Vec<dbl> derivative(1);
+// 	mpfr time(1);
+// 	Vec<mpfr> sample(1);
+// 	// Vec<dbl> derivative(1);
 
-	time = mpfr(".1"); // x = .1
-	correct_times.push_back(time);
-	sample << mpfr("5.000000000000001e-01", "9.084258952712920e-17"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
-	correct_samples.push_back(sample);
+// 	time = mpfr(".1"); // x = .1
+// 	correct_times.push_back(time);
+// 	sample << mpfr("5.000000000000001e-01", "9.084258952712920e-17"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
+// 	correct_samples.push_back(sample);
 
-	time = mpfr(".05"); // x = .1/2 = .05
-	correct_times.push_back(time);
-	sample << mpfr("6.000000000000000e-01", "8.165397611531455e-19"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
-	correct_samples.push_back(sample);
+// 	time = mpfr(".05"); // x = .1/2 = .05
+// 	correct_times.push_back(time);
+// 	sample << mpfr("6.000000000000000e-01", "8.165397611531455e-19"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
+// 	correct_samples.push_back(sample);
 
-	time = mpfr(".025"); // x = .05/2 = .025
-	correct_times.push_back(time);
-	sample << mpfr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
-	correct_samples.push_back(sample);
-
-
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(".1");
-	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
-
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
-
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
+// 	time = mpfr(".025"); // x = .05/2 = .025
+// 	correct_times.push_back(time);
+// 	sample << mpfr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
+// 	correct_samples.push_back(sample);
 
 
-	My_Endgame.ComputeInitialSamples(current_time,current_space);
+// 	mpfr current_time(1);
+// 	Vec<mpfr> current_space(1);
+// 	current_time = mpfr(".1");
+// 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	auto samples = My_Endgame.GetSamples();
+// 	bertini::tracking::config::PowerSeries power_series_struct;
+// 	bertini::tracking::config::Security endgame_security_struct;
+// 	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
 
-	for(unsigned ii = 0; ii < samples.size(); ++ii)
-	{
-		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
-	}
+// 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
 
-}//end compute initial samples dbl
+
+// 	My_Endgame.ComputeInitialSamples(current_time,current_space);
+
+// 	auto samples = My_Endgame.GetSamples();
+
+// 	for(unsigned ii = 0; ii < samples.size(); ++ii)
+// 	{
+// 		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
+// 	}
+
+// }//end compute initial samples dbl
 
 BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 {
