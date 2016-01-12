@@ -181,8 +181,120 @@ namespace bertini{
 
 				Vec<mpfr> GetFinalApproximation() {return Endgame::GetFinalApproximationAtOrigin();}
 
-				PowerSeriesEndgame(TrackerType const& tracker) : endgame_tracker_(tracker){} //construct_or specifying the system. Member initialization list used to initialize tracker of TrackerType
+				void SetEndgameSettings(config::EndGame new_endgame_settings){Endgame::SetEndgameStruct(new_endgame_settings);}
+
+				config::EndGame GetEndgameSettings(){return Endgame::GetEndgameStruct();}
+
+				void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings){power_series_struct_ = new_power_series_settings;}
+
+				config::PowerSeries GetPowerSeriesSettings(){return power_series_struct_;}
+
+				void SetSecuritySettings(config::Security new_security_settings){Endgame::SetSecurityStruct(new_security_settings);}
+
+				config::Security GetSecuritySettings(){return Endgame::GetSecurityStruct();}
+
+				void SetToleranceSettings(config::Tolerances new_tolerances_settings){Endgame::SetTolerancesStruct(new_tolerances_settings);}
+
+				config::Tolerances GetToleranceSettings(){return Endgame::GetTolerancesStruct();}
+
+				PowerSeriesEndgame(TrackerType const& tracker) : endgame_tracker_(tracker){} //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				
+				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::PowerSeries new_power_series_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetEndgameSettings(new_endgame_settings);
+					SetPowerSeriesSettings(new_power_series_settings);
+					SetSecuritySettings(new_security_settings);
+					SetTolerancesStruct(new_tolerances_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::PowerSeries new_power_series_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetEndgameSettings(new_endgame_settings);
+					SetPowerSeriesSettings(new_power_series_settings);
+					SetSecuritySettings(new_security_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::PowerSeries new_power_series_settings,config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetEndgameSettings(new_endgame_settings);
+					SetPowerSeriesSettings(new_power_series_settings);
+					SetTolerancesStruct(new_tolerances_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetEndgameSettings(new_endgame_settings);
+					SetSecuritySettings(new_security_settings);
+					SetTolerancesStruct(new_tolerances_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker,config::PowerSeries new_power_series_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetPowerSeriesSettings(new_power_series_settings);
+					SetSecuritySettings(new_security_settings);
+					SetTolerancesStruct(new_tolerances_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::PowerSeries new_power_series_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetEndgameSettings(new_endgame_settings);
+					SetPowerSeriesSettings(new_power_series_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetEndgameSettings(new_endgame_settings);
+					SetSecuritySettings(new_security_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetEndgameSettings(new_endgame_settings);
+					SetTolerancesStruct(new_tolerances_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::PowerSeries new_power_series_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetPowerSeriesSettings(new_power_series_settings);
+					SetSecuritySettings(new_security_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::PowerSeries new_power_series_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetPowerSeriesSettings(new_power_series_settings);
+					SetTolerancesStruct(new_tolerances_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker,config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetSecuritySettings(new_security_settings);
+					SetTolerancesStruct(new_tolerances_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetEndgameSettings(new_endgame_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::PowerSeries new_power_series_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetPowerSeriesSettings(new_power_series_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetSecuritySettings(new_security_settings);
+				} 
+
+				PowerSeriesEndgame(TrackerType const& tracker, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
+				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+					SetTolerancesStruct(new_tolerances_settings);
+				} 
+
+
+
+
+
 				~PowerSeriesEndgame() {};
 
 			/*
