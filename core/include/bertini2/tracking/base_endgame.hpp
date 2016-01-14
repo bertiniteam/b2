@@ -222,6 +222,79 @@ namespace bertini{
 				virtual void ComputeInitialSamples() {}
 
 			};
+
+
+			/*
+			Input: 
+					target_time is the time value that we wish to interpolate at.
+					samples are space values that correspond to the time values in times. 
+				 	derivatives are the dx_dt or dx_ds values at the (time,sample) values.
+
+			Output: 
+					Since we have a target_time the function returns the corrsponding space value at that time. 
+
+			Details: 
+					We compare our approximations to the tracked value to come up with the cycle number. 
+					Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
+					say we have converged. 
+			*/
+			template<typename ComplexType>		
+				Vec<ComplexType> HermiteInterpolateAndSolve(ComplexType const& target_time, const unsigned int num_sample_points, const std::deque<ComplexType> & times, const std::deque< Vec<ComplexType> > & samples, const std::deque< Vec<ComplexType> > & derivatives)
+			{
+				Eigen::IOFormat HeavyFmt(Eigen::FullPrecision);
+
+				Mat< Vec<ComplexType> > finite_difference_matrix(2*num_sample_points,2*num_sample_points);
+				Vec<ComplexType> array_of_times(2*num_sample_points);
+				
+				for(unsigned int ii=0; ii<num_sample_points; ++ii)
+				{ 
+					finite_difference_matrix(2*ii,0) = samples[ii];			/*  F[2*i][0]    = samples[i];    */
+     				finite_difference_matrix(2*ii+1,0) = samples[ii]; 		/*  F[2*i+1][0]  = samples[i];    */
+      				finite_difference_matrix(2*ii+1,1) = derivatives[ii];	/*  F[2*i+1][1]  = derivatives[i]; */
+     				array_of_times(2*ii) = times[ii];						/*  z[2*i]       = times[i];       */
+     				array_of_times(2*ii+1) =  times[ii];					/*  z[2*i+1]     = times[i];       */
+
+				}
+
+				//Add first round of finite differences to fill out rest of matrix. 
+				for(unsigned int ii=1; ii< num_sample_points; ++ii)
+				{
+					finite_difference_matrix(2*ii,1) = (ComplexType(1)/(array_of_times(2*ii) - array_of_times(2*ii - 1))) * (finite_difference_matrix(2*ii,0) - finite_difference_matrix(2*ii - 1,0));
+				
+				}
+
+				//Filliing out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
+				for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
+				{
+					// std::cout << "ii is " << ii << '\n';
+					for(unsigned int jj=2; jj <=ii; ++jj)
+					{
+						// std::cout << "jj is " << jj << '\n';
+						finite_difference_matrix(ii,jj) = (ComplexType(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));
+						
+					}
+				}
+
+				 unsigned int ii = num_sample_points - 1 ;
+				 auto Result = finite_difference_matrix(2*num_sample_points - 1,2*num_sample_points - 1); 
+				 //Start of Result from Hermite polynomial, this is using the diagonal of the 
+				 //finite difference matrix.
+
+				 while(ii >= 1)
+				{
+					Result = (Result*(target_time - array_of_times(ii)) + finite_difference_matrix(2*ii,2*ii)) * (target_time - array_of_times(ii - 1)) + finite_difference_matrix(2*ii - 1,2*ii - 1);  
+					ii--;
+				}
+				//This builds the hermite polynomial from the highest term down. 
+				//As we multiply the previous result we will construct_ the highest term down to the last term.
+
+				Result = Result * (target_time - array_of_times(0)) + finite_difference_matrix(0,0); // Last term in hermite polynomial.
+
+
+				return Result;
+			}
+
+			
 		}// end namespace endgame
 	}// end namespace tracking 
 }// end namespace bertini

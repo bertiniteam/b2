@@ -119,17 +119,17 @@ namespace bertini{
 				config::PowerSeries power_series_struct_; 
 
 				std::deque<mpfr> times_;
-				std::deque<mpfr> s_times_;
+
 
 				std::deque< Vec<mpfr> > samples_;
 
 				std::deque< Vec<mpfr> > derivatives_;
-				std::deque< Vec<mpfr> > s_derivatives_;
+
 
 				const TrackerType & endgame_tracker_;
 			public:
 
-				void ClearTimesDerivativesAndSamples(){times_.clear(); s_times_.clear(); samples_.clear(); derivatives_.clear(); s_derivatives_.clear();}
+				void ClearTimesSamplesAndDerivatives(){times_.clear(); samples_.clear(); derivatives_.clear();}
 
 				void SetSampleFactor(mpfr_float new_sample_factor) {endgame_struct_.sample_factor = new_sample_factor;}
 				mpfr_float GetSampleFactor(){return endgame_struct_.sample_factor;}
@@ -158,17 +158,11 @@ namespace bertini{
 				void SetTimes(std::deque<mpfr> times_to_set) { times_ = times_to_set;}
 				std::deque< mpfr > GetTimes() {return times_;}
 
-				void SetSTimes(std::deque<mpfr> s_times_to_set) { s_times_ = s_times_to_set;}
-				std::deque< mpfr > GetSTimes() {return s_times_;}
-
 				void SetSamples(std::deque< Vec<mpfr> > samples_to_set) { samples_ = samples_to_set;}
 				std::deque< Vec<mpfr> > GetSamples() {return samples_;}
 
 				void SetDerivatives(std::deque< Vec<mpfr> > derivatives_to_set) { derivatives_ = derivatives_to_set;}
 				std::deque< Vec<mpfr> > GetDerivatives() {return derivatives_;}
-
-				void SetSDerivatives(std::deque< Vec<mpfr> > s_derivatives_to_set) { s_derivatives_ = s_derivatives_to_set;}
-				std::deque< Vec<mpfr> > GetSDerivatives() {return s_derivatives_;}
 
 				void SetFinalTol(mpfr_float new_final_tolerance) {Endgame::SetFinalTolerance(new_final_tolerance);}
 				mpfr_float GetFinalTol(){return Endgame::GetFinalTolerance();}
@@ -292,81 +286,8 @@ namespace bertini{
 					SetTolerancesStruct(new_tolerances_settings);
 				} 
 
-
-
-
-
 				~PowerSeriesEndgame() {};
 
-			/*
-			Input: 
-					target_time is the time value that we wish to interpolate at.
-					samples are space values that correspond to the time values in times. 
-				 	derivatives are the dx_dt or dx_ds values at the (time,sample) values.
-
-			Output: 
-					Since we have a target_time the function returns the corrsponding space value at that time. 
-
-			Details: 
-					We compare our approximations to the tracked value to come up with the cycle number. 
-					Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
-					say we have converged. 
-			*/
-			template<typename ComplexType>		
-				Vec<ComplexType> HermiteInterpolateAndSolve(ComplexType const& target_time, const unsigned int num_sample_points)
-			{
-				Eigen::IOFormat HeavyFmt(Eigen::FullPrecision);
-
-				Mat< Vec<ComplexType> > finite_difference_matrix(2*num_sample_points,2*num_sample_points);
-				Vec<ComplexType> array_of_times(2*num_sample_points);
-				
-				for(unsigned int ii=0; ii<num_sample_points; ++ii)
-				{ 
-					finite_difference_matrix(2*ii,0) = samples_[ii];			/*  F[2*i][0]    = samples[i];    */
-     				finite_difference_matrix(2*ii+1,0) = samples_[ii]; 		/*  F[2*i+1][0]  = samples[i];    */
-      				finite_difference_matrix(2*ii+1,1) = s_derivatives_[ii];	/*  F[2*i+1][1]  = derivatives[i]; */
-     				array_of_times(2*ii) = s_times_[ii];						/*  z[2*i]       = times[i];       */
-     				array_of_times(2*ii+1) =  s_times_[ii];					/*  z[2*i+1]     = times[i];       */
-
-				}
-
-				//Add first round of finite differences to fill out rest of matrix. 
-				for(unsigned int ii=1; ii< num_sample_points; ++ii)
-				{
-					finite_difference_matrix(2*ii,1) = (ComplexType(1)/(array_of_times(2*ii) - array_of_times(2*ii - 1))) * (finite_difference_matrix(2*ii,0) - finite_difference_matrix(2*ii - 1,0));
-				
-				}
-
-				//Filliing out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
-				for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
-				{
-					// std::cout << "ii is " << ii << '\n';
-					for(unsigned int jj=2; jj <=ii; ++jj)
-					{
-						// std::cout << "jj is " << jj << '\n';
-						finite_difference_matrix(ii,jj) = (ComplexType(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));
-						
-					}
-				}
-
-				 unsigned int ii = num_sample_points - 1 ;
-				 auto Result = finite_difference_matrix(2*num_sample_points - 1,2*num_sample_points - 1); 
-				 //Start of Result from Hermite polynomial, this is using the diagonal of the 
-				 //finite difference matrix.
-
-				 while(ii >= 1)
-				{
-					Result = (Result*(target_time - array_of_times(ii)) + finite_difference_matrix(2*ii,2*ii)) * (target_time - array_of_times(ii - 1)) + finite_difference_matrix(2*ii - 1,2*ii - 1);  
-					ii--;
-				}
-				//This builds the hermite polynomial from the highest term down. 
-				//As we multiply the previous result we will construct_ the highest term down to the last term.
-
-				Result = Result * (target_time - array_of_times(0)) + finite_difference_matrix(0,0); // Last term in hermite polynomial.
-
-
-				return Result;
-			}
 
 			/*
 			Input: 
@@ -452,6 +373,8 @@ namespace bertini{
 				// std::cout << "upper_bound_on_cycle_number is " << upper_bound_on_cycle_number << '\n';
 				// std::cout << "num samples is " << num_sample_points << '\n';
 				// std::cout << "min found difference " << min_found_difference << '\n';
+				std::deque<mpfr> s_times;
+				std::deque< Vec<mpfr> > s_derivatives;
 				for(unsigned int cc = 1; cc <= power_series_struct_.upper_bound_on_cycle_number; ++cc)
 				{
 					 // std::cout << "cc is " << cc << '\n';				
@@ -460,11 +383,11 @@ namespace bertini{
 						// std::cout << "ii is " << ii << '\n';
 						// std::cout << "times[ii] is " << times[ii] << '\n';
 						// std::cout << "samples[ii] is " << samples[ii] << '\n';
-						s_times_.push_back(pow(times_[ii],ComplexType(1)/ComplexType(cc)));
-						s_derivatives_.push_back(derivatives_[ii]*(ComplexType(cc)*pow(times_[ii],ComplexType((cc - 1))/ComplexType(cc))));
+						s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(cc)));
+						s_derivatives.push_back(derivatives_[ii]*(ComplexType(cc)*pow(times_[ii],ComplexType((cc - 1))/ComplexType(cc))));
 					}
 
-					Vec<ComplexType> approx = HermiteInterpolateAndSolve(current_time,GetNumSamples());
+					Vec<ComplexType> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,GetNumSamples(),s_times,samples_,s_derivatives);
 
 					  // std::cout << "computed approx is " << approx << '\n';
 					  // std::cout << "norm is " << (approx - x_current_time).norm() << '\n';
@@ -475,8 +398,8 @@ namespace bertini{
 						power_series_struct_.cycle_number = cc;
 					}
 
-					s_derivatives_.clear();
-					s_times_.clear();
+					s_derivatives.clear(); // necessary so we can repopulate with different s-plane transformations based on cycle number 
+					s_times.clear();
 
 				}// end cc loop over cycle number possibilities
 
@@ -588,17 +511,19 @@ namespace bertini{
 
 				ComputeCycleNumber(times_[times_.size()-1],samples_[samples_.size()-1]); //sending in last element so that ComplexType can be known for templating.
 
+				std::cout << "cycle number is " << power_series_struct_.cycle_number << '\n';
 
 				// //Conversion to S-plane.
+				std::deque<mpfr> s_times;
+				std::deque< Vec<mpfr> > s_derivatives;
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii){
-					s_derivatives_.push_back(derivatives_[ii]*(ComplexType(power_series_struct_.cycle_number)*pow(times_[ii],(ComplexType(power_series_struct_.cycle_number) - ComplexType(1))/ComplexType(power_series_struct_.cycle_number))));
-					s_times_.push_back(pow(times_[ii],ComplexType(1)/ComplexType(power_series_struct_.cycle_number)));
+					s_derivatives.push_back(derivatives_[ii]*(ComplexType(power_series_struct_.cycle_number)*pow(times_[ii],(ComplexType(power_series_struct_.cycle_number) - ComplexType(1))/ComplexType(power_series_struct_.cycle_number))));
+					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(power_series_struct_.cycle_number)));
 				}
-				Vec<ComplexType> Approx = HermiteInterpolateAndSolve(time_t0,GetNumSamples());
-				s_times_.clear();
-				s_derivatives_.clear();
-				derivatives_.clear();
+				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0,GetNumSamples(),s_times,samples_,s_derivatives);
+
+
 				 // std::cout << "approx is " << Approx <<  '\n';
 				return Approx;
 
@@ -623,7 +548,7 @@ namespace bertini{
 			SuccessCode PSEG(const ComplexType endgame_time, const Vec<ComplexType> x_endgame_time)
 			{
 				//Set up for the endgame.
-	 			ClearTimesDerivativesAndSamples();
+	 			ClearTimesSamplesAndDerivatives();
 			 	mpfr norm_of_latest_approximation(1);
 			 	norm_of_latest_approximation = mpfr("0","0"); // settting up the norm for the latest approximation. 
 
@@ -752,6 +677,8 @@ namespace bertini{
 
 			} //end PSEG
 		}; // end powerseries class
+
+
 
 
 		}//namespace endgame

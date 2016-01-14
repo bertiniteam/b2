@@ -126,12 +126,11 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
 
+	//testing a constructor only.
 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_tolerances_struct);
-	My_Endgame.SetSTimes(times);
-	My_Endgame.SetSamples(samples);
-	My_Endgame.SetSDerivatives(derivatives);
 
-	Vec< mpfr > first_approx = My_Endgame.HermiteInterpolateAndSolve(target_time,num_samples);
+
+	Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	Vec< mpfr > matlab_first_approx(1);
 	matlab_first_approx << mpfr("1");
 
@@ -219,12 +218,11 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	bertini::tracking::config::Security endgame_security_struct;
 
 	//First Approximation at the origin.
+	//testing a constructor for the endgame on this line only.
 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct);
-	My_Endgame.SetSTimes(times);
-	My_Endgame.SetSamples(samples);
-	My_Endgame.SetSDerivatives(derivatives);
 
-	 Vec< mpfr > first_approx = My_Endgame.HermiteInterpolateAndSolve(target_time,num_samples);
+
+	 Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	 Vec< mpfr > correct(1);
 	 correct << mpfr("1");
 
@@ -242,13 +240,8 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	samples.pop_front();
 	derivatives.pop_front();
 
-	My_Endgame.SetSTimes(times);
-	My_Endgame.SetSamples(samples);
-	My_Endgame.SetSDerivatives(derivatives);
-
-
 	//Compute the second approximation.
-	Vec< mpfr > second_approx = My_Endgame.HermiteInterpolateAndSolve(target_time,num_samples);
+	Vec< mpfr > second_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	// //Check to make sure we are doing better. 
@@ -266,11 +259,8 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	samples.pop_front();
 	derivatives.pop_front();
 
-	My_Endgame.SetSTimes(times);
-	My_Endgame.SetSamples(samples);
-	My_Endgame.SetSDerivatives(derivatives);
 
-	Vec< mpfr > third_approx = My_Endgame.HermiteInterpolateAndSolve(target_time,num_samples);
+	Vec< mpfr > third_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	BOOST_CHECK(abs(third_approx(0)-correct(0)) < abs(second_approx(0)-correct(0)));
@@ -353,15 +343,13 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
-	bertini::tracking::config::PowerSeries power_series_struct;
+	bertini::tracking::config::PowerSeries power_series_settings;
 
 	//First Approximation at the origin.
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct);
-	My_Endgame.SetSTimes(times);
-	My_Endgame.SetSamples(samples);
-	My_Endgame.SetSDerivatives(derivatives);
+	//testing a constructor on next line.
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_settings);
 
-	 Vec< mpfr > first_approx = My_Endgame.HermiteInterpolateAndSolve(target_time,num_samples);
+	 Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	 Vec< mpfr > correct(1);
 	 correct << mpfr("1");
 
@@ -379,13 +367,8 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	samples.pop_front();
 	derivatives.pop_front();
 
-	My_Endgame.SetSTimes(times);
-	My_Endgame.SetSamples(samples);
-	My_Endgame.SetSDerivatives(derivatives);
-
-
 	//Compute the second approximation.
-	Vec< mpfr > second_approx = My_Endgame.HermiteInterpolateAndSolve(target_time,num_samples);
+	Vec< mpfr > second_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	// //Check to make sure we are doing better. 
@@ -403,11 +386,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	samples.pop_front();
 	derivatives.pop_front();
 
-	My_Endgame.SetSTimes(times);
-	My_Endgame.SetSamples(samples);
-	My_Endgame.SetSDerivatives(derivatives);
-
-	Vec< mpfr > third_approx = My_Endgame.HermiteInterpolateAndSolve(target_time,num_samples);
+	Vec< mpfr > third_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 	// //Make sure we are doing better at approximating. 
 	BOOST_CHECK(abs(third_approx(0)-correct(0)) < abs(second_approx(0)-correct(0)));
@@ -910,115 +889,124 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 
 	auto third_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
 
-	BOOST_CHECK((third_approx - x_origin).norm() < (second_approx - x_origin).norm());
+	std::cout << "Second approx is " << second_approx << '\n';
 
-} // end compute approximation of x at t0 mp
+	std::cout << "Third approx is " << third_approx << '\n';
 
-BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
-{
-	/* Compute approximation at origin using three sample points. 
+	std::cout << "Second diff is " << (second_approx - x_origin).norm() << '\n';
 
-	// Then, find a new sample and remove earliest known sample. 
-
-	//Compute a new approximation with the current three samples. 
-
-	Do this till we have three approximations. Check to see if the third approximation is better than second. 
-	*/
-	mpfr_float::default_precision(16);
-
-
-	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
-	// Define homotopy system
-	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
-
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
-
-	bertini::tracking::AMPTracker tracker(sys);
-	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
-
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
-                stepping_preferences,
-                newton_preferences);
-	
-	tracker.AMPSetup(AMP);
-
-	mpfr origin = mpfr("0","0");
-	Vec<mpfr> x_origin(1);
-	x_origin << mpfr("1","0");
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
-
-
-	mpfr time(1);
-	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
-
-	time = mpfr(".1"); // x = .1
-	times.push_back(time);
-	sample << mpfr(".500000000000000","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
-	samples.push_back(sample);
-
-	time = mpfr(".05"); // x = .1/2 = .05
-	times.push_back(time);
-	sample << mpfr(".6000000000000000","0"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
-	samples.push_back(sample);
-
-	time = mpfr(".025"); // x = .05/2 = .025
-	times.push_back(time);
-	sample << mpfr(".6772905941598711", "0"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
-	samples.push_back(sample);
-
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::Security endgame_security_struct;
-
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,endgame_security_struct);
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
-
-
-	auto first_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
-	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
-	times.push_back(time);
-	sample << mpfr(".7390564397293962", "0"); // f(.0125) = 7.390564397293962e-01 4.641740550953566e-19
-	samples.push_back(sample);
-
-	//Get rid of earliest sample. 
-	times.pop_front();
-	samples.pop_front();
-
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
-
-	auto second_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
-
-	time = mpfr(".00625"); //.025/2 = .0125
-	times.push_back(time);
-	sample << mpfr("0.78910678115791459147153183840413839746566925123387e0", "0.22640341504967423865456128414532605156908222616485e-16"); // f(.00625) = 0.78910678115791459147153183840413839746566925123387e0 0.22640341504967423865456128414532605156908222616485e-16
-	samples.push_back(sample);
-
-	//Get rid of earliest sample. 
-	times.pop_front();
-	samples.pop_front();
-
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
-
-	auto third_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+	std::cout << "Third diff is " << (third_approx - x_origin).norm() << '\n';
 
 
 	BOOST_CHECK((third_approx - x_origin).norm() < (second_approx - x_origin).norm());
 
 } // end compute approximation of x at t0 mp
+
+// BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
+// {
+// 	/* Compute approximation at origin using three sample points. 
+
+// 	// Then, find a new sample and remove earliest known sample. 
+
+// 	//Compute a new approximation with the current three samples. 
+
+// 	Do this till we have three approximations. Check to see if the third approximation is better than second. 
+// 	*/
+// 	mpfr_float::default_precision(16);
+
+
+// 	bertini::System sys;
+// 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
+// 	VariableGroup vars{x};
+// 	sys.AddVariableGroup(vars);
+// 	sys.AddPathVariable(t);
+// 	// Define homotopy system
+// 	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
+
+// 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+// 	bertini::tracking::AMPTracker tracker(sys);
+	
+// 	bertini::tracking::config::Stepping stepping_preferences;
+// 	bertini::tracking::config::Newton newton_preferences;
+
+// 	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+//                 mpfr_float("1e-5"),
+//                 mpfr_float("1e5"),
+//                 stepping_preferences,
+//                 newton_preferences);
+	
+// 	tracker.AMPSetup(AMP);
+
+// 	mpfr origin = mpfr("0","0");
+// 	Vec<mpfr> x_origin(1);
+// 	x_origin << mpfr("1","0");
+// 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+// 	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+// 	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+
+
+// 	mpfr time(1);
+// 	Vec<mpfr> sample(1);
+// 	// Vec<mpfr> derivative(1);
+
+// 	time = mpfr(".1"); // x = .1
+// 	times.push_back(time);
+// 	sample << mpfr(".500000000000000","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
+// 	samples.push_back(sample);
+
+// 	time = mpfr(".05"); // x = .1/2 = .05
+// 	times.push_back(time);
+// 	sample << mpfr(".6000000000000000","0"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
+// 	samples.push_back(sample);
+
+// 	time = mpfr(".025"); // x = .05/2 = .025
+// 	times.push_back(time);
+// 	sample << mpfr(".6772905941598711", "0"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
+// 	samples.push_back(sample);
+
+// 	bertini::tracking::config::EndGame endgame_struct;
+// 	bertini::tracking::config::Security endgame_security_struct;
+
+// 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,endgame_security_struct);
+// 	My_Endgame.SetTimes(times);
+// 	My_Endgame.SetSamples(samples);
+
+
+// 	auto first_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+// 	//Setting up a new sample for approximation.
+// 	time = mpfr(".0125"); //.025/2 = .0125
+// 	times.push_back(time);
+// 	sample << mpfr(".7390564397293962", "0"); // f(.0125) = 7.390564397293962e-01 4.641740550953566e-19
+// 	samples.push_back(sample);
+
+// 	//Get rid of earliest sample. 
+// 	times.pop_front();
+// 	samples.pop_front();
+
+// 	My_Endgame.SetTimes(times);
+// 	My_Endgame.SetSamples(samples);
+
+// 	auto second_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+
+// 	time = mpfr(".00625"); //.025/2 = .0125
+// 	times.push_back(time);
+// 	sample << mpfr("0.78910678115791459147153183840413839746566925123387e0", "0.22640341504967423865456128414532605156908222616485e-16"); // f(.00625) = 0.78910678115791459147153183840413839746566925123387e0 0.22640341504967423865456128414532605156908222616485e-16
+// 	samples.push_back(sample);
+
+// 	//Get rid of earliest sample. 
+// 	times.pop_front();
+// 	samples.pop_front();
+
+// 	My_Endgame.SetTimes(times);
+// 	My_Endgame.SetSamples(samples);
+
+// 	auto third_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+
+
+// 	BOOST_CHECK((third_approx - x_origin).norm() < (second_approx - x_origin).norm());
+
+// } // end compute approximation of x at t0 mp
 
 // BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 // {
@@ -1205,482 +1193,482 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 
 // }//end compute initial samples dbl
 
-BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
-{
-	/*
-	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
-	one of the solutions at t = endgame_time. 
+// BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
+// {
+// 	/*
+// 	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+// 	one of the solutions at t = endgame_time. 
 
-	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
-	the endgame. 
-	*/
+// 	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
+// 	the endgame. 
+// 	*/
 
-	mpfr_float::default_precision(30);
+// 	mpfr_float::default_precision(30);
 
-	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
+// 	bertini::System sys;
+// 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
 
-	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+// 	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
 
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+// 	VariableGroup vars{x};
+// 	sys.AddVariableGroup(vars); 
+// 	sys.AddPathVariable(t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+// 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+// 	bertini::tracking::AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+// 	bertini::tracking::config::Stepping stepping_preferences;
+// 	bertini::tracking::config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
-                mpfr_float("1e-6"),
-                mpfr_float("1e5"),
-                stepping_preferences,
-                newton_preferences);
+// 	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+//                 mpfr_float("1e-6"),
+//                 mpfr_float("1e5"),
+//                 stepping_preferences,
+//                 newton_preferences);
 	
-	tracker.AMPSetup(AMP);
+// 	tracker.AMPSetup(AMP);
 
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(".1");
-	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
+// 	mpfr current_time(1);
+// 	Vec<mpfr> current_space(1);
+// 	current_time = mpfr(".1");
+// 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	Vec<mpfr> correct(1);
-	correct << mpfr("1","0");
+// 	Vec<mpfr> correct(1);
+// 	correct << mpfr("1","0");
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
+// 	bertini::tracking::config::EndGame endgame_struct;
+// 	bertini::tracking::config::Security endgame_security_struct;
+// 	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,endgame_security_struct,endgame_tolernaces_struct);
-	My_Endgame.PSEG(current_time,current_space);
+// 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,endgame_security_struct,endgame_tolernaces_struct);
+// 	My_Endgame.PSEG(current_time,current_space);
 
-	// std::cout << "norm is "<< (My_Endgame.GetFinalApproximation() - correct).norm() << '\n';
-	// std::cout << "Tolerance is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
-	BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
+// 	// std::cout << "norm is "<< (My_Endgame.GetFinalApproximation() - correct).norm() << '\n';
+// 	// std::cout << "Tolerance is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
+// 	BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
 
-}//end compute initial samples mp
+// }//end compute initial samples mp
 
-BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
-{
-	/*
-	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
-	one of the solutions at t = endgame_time. 
+// BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
+// {
+// 	/*
+// 	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+// 	one of the solutions at t = endgame_time. 
 
-	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
-	the endgame. 
-	*/
+// 	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
+// 	the endgame. 
+// 	*/
 
-	mpfr_float::default_precision(16);
+// 	mpfr_float::default_precision(16);
 
-	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
-	VariableGroup vars{x};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+// 	bertini::System sys;
+// 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
+// 	VariableGroup vars{x};
+// 	sys.AddVariableGroup(vars); 
+// 	sys.AddPathVariable(t);
 
-	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+// 	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+// 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+// 	bertini::tracking::AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+// 	bertini::tracking::config::Stepping stepping_preferences;
+// 	bertini::tracking::config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
-                mpfr_float("1e-6"),
-                mpfr_float("1e5"),
-                stepping_preferences,
-                newton_preferences);
+// 	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+//                 mpfr_float("1e-6"),
+//                 mpfr_float("1e5"),
+//                 stepping_preferences,
+//                 newton_preferences);
 	
-	tracker.AMPSetup(AMP);
+// 	tracker.AMPSetup(AMP);
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(".1");
-	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
+// 	mpfr current_time(1);
+// 	Vec<mpfr> current_space(1);
+// 	current_time = mpfr(".1");
+// 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	Vec<mpfr> correct(1);
-	correct << mpfr("1","0");
+// 	Vec<mpfr> correct(1);
+// 	correct << mpfr("1","0");
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
+// 	bertini::tracking::config::EndGame endgame_struct;
+// 	bertini::tracking::config::PowerSeries power_series_struct;
+// 	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_tolernaces_struct);
+// 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_tolernaces_struct);
 
 
-	My_Endgame.PSEG(current_time,current_space);
-	// std::cout << "norm is "<< (My_Endgame.GetFinalApproximation() - correct).norm() << '\n';
-	// std::cout << "Tolerance is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
+// 	My_Endgame.PSEG(current_time,current_space);
+// 	// std::cout << "norm is "<< (My_Endgame.GetFinalApproximation() - correct).norm() << '\n';
+// 	// std::cout << "Tolerance is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
 
-	BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
+// 	BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
 	
-}//end pseg dbl for power series class
+// }//end pseg dbl for power series class
 
 
-BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
-{
-	/*
-	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
-	one of the solutions at t = endgame_time. 
+// BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
+// {
+// 	/*
+// 	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+// 	one of the solutions at t = endgame_time. 
 
-	In this test we do multiple variables decoupled, that has a high multiplicity (5) solution. 
+// 	In this test we do multiple variables decoupled, that has a high multiplicity (5) solution. 
 
-	*/
+// 	*/
 
-	mpfr_float::default_precision(30);
+// 	mpfr_float::default_precision(30);
 
 
 
-	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
-	VariableGroup vars{x,y};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+// 	bertini::System sys;
+// 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
+// 	VariableGroup vars{x,y};
+// 	sys.AddVariableGroup(vars); 
+// 	sys.AddPathVariable(t);
 
-	sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
-	sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
+// 	sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
+// 	sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+// 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+// 	bertini::tracking::AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+// 	bertini::tracking::config::Stepping stepping_preferences;
+// 	bertini::tracking::config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
-                mpfr_float("1e-6"),
-                mpfr_float("1e5"),
-                stepping_preferences,
-                newton_preferences);
+// 	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+//                 mpfr_float("1e-6"),
+//                 mpfr_float("1e5"),
+//                 stepping_preferences,
+//                 newton_preferences);
 	
-	tracker.AMPSetup(AMP);
+// 	tracker.AMPSetup(AMP);
 
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(2);
-	current_time = mpfr(".1");
-	current_space <<  mpfr("5.000000000000001e-01", "9.084258952712920e-17") ,mpfr("9.000000000000001e-01","4.358898943540673e-01");
+// 	mpfr current_time(1);
+// 	Vec<mpfr> current_space(2);
+// 	current_time = mpfr(".1");
+// 	current_space <<  mpfr("5.000000000000001e-01", "9.084258952712920e-17") ,mpfr("9.000000000000001e-01","4.358898943540673e-01");
 
-	Vec<mpfr> correct(2);
-	correct << mpfr("1","0"),mpfr("1","0");
+// 	Vec<mpfr> correct(2);
+// 	correct << mpfr("1","0"),mpfr("1","0");
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Security endgame_security_struct;
+// 	bertini::tracking::config::EndGame endgame_struct;
+// 	bertini::tracking::config::PowerSeries power_series_struct;
+// 	bertini::tracking::config::Security endgame_security_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct);
+// 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct);
 
-	My_Endgame.PSEG(current_time,current_space);
+// 	My_Endgame.PSEG(current_time,current_space);
 
-	BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
+// 	BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
 
-}//end pseg mp test case for power series class
+// }//end pseg mp test case for power series class
 
-BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_griewank_osborne)
-{
-	/*
-	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
-	one of the solutions at t = endgame_time. 
+// BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_griewank_osborne)
+// {
+// 	/*
+// 	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+// 	one of the solutions at t = endgame_time. 
 
-	Griewank Osborne is a very classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values 
-	at t = 0.1. 
+// 	Griewank Osborne is a very classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values 
+// 	at t = 0.1. 
 
-	Three of these paths will converge to origin and three will diverge to infinity triggering a SecurityMaxNorm issue. 
+// 	Three of these paths will converge to origin and three will diverge to infinity triggering a SecurityMaxNorm issue. 
 
-	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
-	the endgame. 
-	*/
+// 	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
+// 	the endgame. 
+// 	*/
 
-	mpfr_float::default_precision(30);
+// 	mpfr_float::default_precision(30);
 
-	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
-	VariableGroup vars{x,y};
-	sys.AddVariableGroup(vars); 
-	sys.AddPathVariable(t);
+// 	bertini::System sys;
+// 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
+// 	VariableGroup vars{x,y};
+// 	sys.AddVariableGroup(vars); 
+// 	sys.AddPathVariable(t);
 
-	sys.AddFunction(((mpfr("29")/mpfr("16"))*pow(x,3)-2*x*y)*(1-t) + (pow(x,3) - 1)*t);
-	sys.AddFunction((y - pow(x,2))*(1-t) + (pow(y,2) - 1)*t);
+// 	sys.AddFunction(((mpfr("29")/mpfr("16"))*pow(x,3)-2*x*y)*(1-t) + (pow(x,3) - 1)*t);
+// 	sys.AddFunction((y - pow(x,2))*(1-t) + (pow(y,2) - 1)*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+// 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+// 	bertini::tracking::AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+// 	bertini::tracking::config::Stepping stepping_preferences;
+// 	bertini::tracking::config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
-                stepping_preferences,
-                newton_preferences);
+// 	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+//                 mpfr_float("1e-5"),
+//                 mpfr_float("1e5"),
+//                 stepping_preferences,
+//                 newton_preferences);
 	
-	tracker.AMPSetup(AMP);
+// 	tracker.AMPSetup(AMP);
 
 
-	mpfr endgame_time(1);
-	Vec<mpfr> current_space_1(2);
-	Vec<mpfr> current_space_2(2);
-	Vec<mpfr> current_space_3(2);
-	Vec<mpfr> current_space_4(2);
-	Vec<mpfr> current_space_5(2);
-	Vec<mpfr> current_space_6(2);
+// 	mpfr endgame_time(1);
+// 	Vec<mpfr> current_space_1(2);
+// 	Vec<mpfr> current_space_2(2);
+// 	Vec<mpfr> current_space_3(2);
+// 	Vec<mpfr> current_space_4(2);
+// 	Vec<mpfr> current_space_5(2);
+// 	Vec<mpfr> current_space_6(2);
 
-	endgame_time = mpfr(".1");
+// 	endgame_time = mpfr(".1");
 
-	current_space_1 <<  mpfr("1.028694756284462e-01", "-9.661822229074768e-01"), mpfr("-8.937287306314232e-01", "-2.480445481975048e-01");
-	current_space_2 <<  mpfr("-5.219899550566304e-01", "-2.212788871407134e-17"), mpfr("3.684968541245056e-01", "2.471980953266950e-17");
-	current_space_3 <<  mpfr("1.028694756284466e-01", "9.661822229074761e-01"), mpfr("-8.937287306314221e-01", "2.480445481975040e-01");
-	current_space_4 <<  mpfr("6.098408897464429e-03", "1.058791184067875e-21"), mpfr("-9.109808533477256e+00", "-2.374402757743255e-17");
-	current_space_5 <<  mpfr("1.220071827679809e+00", "7.657177843178875e-19"), mpfr("1.386185299689565e+00", "2.852806966352484e-18");
-	current_space_6 <<  mpfr("-9.099192327775354e-01", "2.114194236346734e-17"), mpfr("8.573852849693505e-01", "-2.164338586824188e-17");
+// 	current_space_1 <<  mpfr("1.028694756284462e-01", "-9.661822229074768e-01"), mpfr("-8.937287306314232e-01", "-2.480445481975048e-01");
+// 	current_space_2 <<  mpfr("-5.219899550566304e-01", "-2.212788871407134e-17"), mpfr("3.684968541245056e-01", "2.471980953266950e-17");
+// 	current_space_3 <<  mpfr("1.028694756284466e-01", "9.661822229074761e-01"), mpfr("-8.937287306314221e-01", "2.480445481975040e-01");
+// 	current_space_4 <<  mpfr("6.098408897464429e-03", "1.058791184067875e-21"), mpfr("-9.109808533477256e+00", "-2.374402757743255e-17");
+// 	current_space_5 <<  mpfr("1.220071827679809e+00", "7.657177843178875e-19"), mpfr("1.386185299689565e+00", "2.852806966352484e-18");
+// 	current_space_6 <<  mpfr("-9.099192327775354e-01", "2.114194236346734e-17"), mpfr("8.573852849693505e-01", "-2.164338586824188e-17");
 
-	std::vector<Vec<mpfr> > current_space_values;
+// 	std::vector<Vec<mpfr> > current_space_values;
 
-	current_space_values.push_back(current_space_1);
-	current_space_values.push_back(current_space_2);
-	current_space_values.push_back(current_space_3);
-	current_space_values.push_back(current_space_4);
-	current_space_values.push_back(current_space_5);
-	current_space_values.push_back(current_space_6);
-
-
-	Vec<mpfr> correct(2);
-	correct << mpfr("0","0"),mpfr("0","0");
-
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
-
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct,endgame_tolerances_struct);
-
-	unsigned num_paths_diverging = 0;
-	unsigned num_paths_converging = 0;
-	for(auto s : current_space_values)
-	{
-		bertini::tracking::SuccessCode endgame_success = My_Endgame.PSEG(endgame_time,s);
-		if(endgame_success == bertini::tracking::SuccessCode::Success){
-			BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);// My_Endgame.GetTrackToleranceDuringEndgame());
-			num_paths_converging++;
-		}
-		if(endgame_success == bertini::tracking::SuccessCode::SecurityMaxNormReached){
-			num_paths_diverging++;
-		}
-	}
-		BOOST_CHECK_EQUAL(num_paths_converging,3);
-		BOOST_CHECK_EQUAL(num_paths_diverging,3);
-
-}//end compute griewank osborne
+// 	current_space_values.push_back(current_space_1);
+// 	current_space_values.push_back(current_space_2);
+// 	current_space_values.push_back(current_space_3);
+// 	current_space_values.push_back(current_space_4);
+// 	current_space_values.push_back(current_space_5);
+// 	current_space_values.push_back(current_space_6);
 
 
-// has six solutions at t = .1:
-// 0
-// 0.687592791426802019127961784761 0.0567041721787413764699348206477
-// 1.11076734170908975052327605226  0.207914822575706710605647487
+// 	Vec<mpfr> correct(2);
+// 	correct << mpfr("0","0"),mpfr("0","0");
 
-// 1
-// 1.02264960658155701356264444257  0.520917033127216794197167359926
-// 1.11076734170909913190783413484  0.207914822575691493611316218448
+// 	bertini::tracking::config::EndGame endgame_struct;
+// 	bertini::tracking::config::PowerSeries power_series_struct;
+// 	bertini::tracking::config::Security endgame_security_struct;
+// 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
 
-// 2
-// 0.989757601991555768794484038153 -0.57762120530600610801563732366
-// 1.11076734170909918741898536609  0.20791482257569138952790765984
+// 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct,endgame_tolerances_struct);
 
-// 3
-// 0.687592791426887395278555459299 0.0567041721787893780032385748768 
-// 0.689232658290901023523389312686 -0.207914822575691576878043065335
+// 	unsigned num_paths_diverging = 0;
+// 	unsigned num_paths_converging = 0;
+// 	for(auto s : current_space_values)
+// 	{
+// 		bertini::tracking::SuccessCode endgame_success = My_Endgame.PSEG(endgame_time,s);
+// 		if(endgame_success == bertini::tracking::SuccessCode::Success){
+// 			BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);// My_Endgame.GetTrackToleranceDuringEndgame());
+// 			num_paths_converging++;
+// 		}
+// 		if(endgame_success == bertini::tracking::SuccessCode::SecurityMaxNormReached){
+// 			num_paths_diverging++;
+// 		}
+// 	}
+// 		BOOST_CHECK_EQUAL(num_paths_converging,3);
+// 		BOOST_CHECK_EQUAL(num_paths_diverging,3);
 
-// 4
-// 1.02264960658081959931948637747  0.520917033127118696605766956908
-// 0.689232658292013194430512839668 -0.207914822576518617066069857076
-
-// 5
-// 0.989757601991599268196007422024 -0.577621205306094375358982164819
-// 0.689232658290901310861758919599 -0.207914822575714712814276165999
-
-BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
-{
-	/*
-	In this example we take a decoupled system, homogenize and patch it. Track to endgame boundary and then run our endgame on the space
-	values we have. 
-
-	Take note that in this example we have two successes while the other hit a min track time. This is accounted for. 
-	*/
-	Eigen::IOFormat HeavyFmt(Eigen::FullPrecision);
-	using namespace bertini::tracking;
-	mpfr_float::default_precision(30);
-
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
-
-	System sys;
-
-	VariableGroup v{x,y};
-
-	sys.AddVariableGroup(v);
-
-	sys.AddFunction(pow(x-1,3));
-	sys.AddFunction(pow(y-1,2));
-	sys.Homogenize();
-	sys.AutoPatch();
-
-	BOOST_CHECK(sys.IsHomogeneous());
-	BOOST_CHECK(sys.IsPatched());	
-
-	
-
-	auto TD = bertini::start_system::TotalDegree(sys);
-	TD.Homogenize();
-	BOOST_CHECK(TD.IsHomogeneous());
-	BOOST_CHECK(TD.IsPatched());
+// }//end compute griewank osborne
 
 
-	auto final_system = (1-t)*sys + t*TD;
-	final_system.AddPathVariable(t);
+// // has six solutions at t = .1:
+// // 0
+// // 0.687592791426802019127961784761 0.0567041721787413764699348206477
+// // 1.11076734170908975052327605226  0.207914822575706710605647487
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(final_system);
+// // 1
+// // 1.02264960658155701356264444257  0.520917033127216794197167359926
+// // 1.11076734170909913190783413484  0.207914822575691493611316218448
 
-	// std::cout << "AMP is " << AMP << '\n';
-	// std::cout << "final system is " << final_system << '\n';
-	// std::cout << "coefficient bound is " << final_system.CoefficientBound() << '\n';
+// // 2
+// // 0.989757601991555768794484038153 -0.57762120530600610801563732366
+// // 1.11076734170909918741898536609  0.20791482257569138952790765984
 
+// // 3
+// // 0.687592791426887395278555459299 0.0567041721787893780032385748768 
+// // 0.689232658290901023523389312686 -0.207914822575691576878043065335
 
+// // 4
+// // 1.02264960658081959931948637747  0.520917033127118696605766956908
+// // 0.689232658292013194430512839668 -0.207914822576518617066069857076
 
-	auto tracker = AMPTracker(final_system);
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
-	tracker.Setup(config::Predictor::Euler,
-	              	mpfr_float("1e-7"), mpfr_float("1e5"),
-					stepping_preferences, newton_preferences);
+// // 5
+// // 0.989757601991599268196007422024 -0.577621205306094375358982164819
+// // 0.689232658290901310861758919599 -0.207914822575714712814276165999
 
-	tracker.AMPSetup(AMP);
+// BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
+// {
+// 	/*
+// 	In this example we take a decoupled system, homogenize and patch it. Track to endgame boundary and then run our endgame on the space
+// 	values we have. 
+
+// 	Take note that in this example we have two successes while the other hit a min track time. This is accounted for. 
+// 	*/
+// 	Eigen::IOFormat HeavyFmt(Eigen::FullPrecision);
+// 	using namespace bertini::tracking;
+// 	mpfr_float::default_precision(30);
+
+// 	Var x = std::make_shared<Variable>("x");
+// 	Var y = std::make_shared<Variable>("y");
+// 	Var t = std::make_shared<Variable>("t");
+
+// 	System sys;
+
+// 	VariableGroup v{x,y};
+
+// 	sys.AddVariableGroup(v);
+
+// 	sys.AddFunction(pow(x-1,3));
+// 	sys.AddFunction(pow(y-1,2));
+// 	sys.Homogenize();
+// 	sys.AutoPatch();
+
+// 	BOOST_CHECK(sys.IsHomogeneous());
+// 	BOOST_CHECK(sys.IsPatched());	
+
 	
 
-	mpfr t_start(1), t_endgame_boundary(0.1);
-	std::vector<Vec<mpfr> > solutions;
-	std::vector<Vec<mpfr> > homogenized_solutions;
-	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
-	{
-		mpfr_float::default_precision(30);
-		final_system.precision(30);
-		auto start_point = TD.StartPoint<mpfr>(ii);
-
-		Vec<mpfr> result;
-		SuccessCode tracking_success;
-
-		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
-		BOOST_CHECK(tracking_success==SuccessCode::Success);
-
-		homogenized_solutions.push_back(result);
-		solutions.push_back(final_system.DehomogenizePoint(result));
-	}
-
-	Vec<mpfr> solution_1(2);
-	solution_1 << mpfr("0.687592791426802019127961784761","0.0567041721787413764699348206477"), mpfr("1.11076734170908975052327605226","0.207914822575706710605647487");
-
-	Vec<mpfr> solution_2(2);
-	solution_2 << mpfr("1.02264960658155701356264444257","0.520917033127216794197167359926"), mpfr("1.11076734170909913190783413484","0.207914822575691493611316218448");
-
-	Vec<mpfr> solution_3(2);
-	solution_3 << mpfr("0.989757601991555768794484038153","-0.57762120530600610801563732366"), mpfr("1.11076734170909918741898536609","0.20791482257569138952790765984");
-
-	Vec<mpfr> solution_4(2);
-	solution_4 << mpfr("0.687592791426887395278555459299","0.0567041721787893780032385748768"), mpfr("0.689232658290901023523389312686", "-0.207914822575691576878043065335");
-
-	Vec<mpfr> solution_5(2);
-	solution_5 << mpfr("1.02264960658081959931948637747","0.520917033127118696605766956908"), mpfr("0.689232658292013194430512839668","-0.207914822576518617066069857076");
-
-	Vec<mpfr> solution_6(2);
-	solution_6 << mpfr("0.989757601991599268196007422024","-0.577621205306094375358982164819"), mpfr("0.689232658290901310861758919599","-0.207914822575714712814276165999");
+// 	auto TD = bertini::start_system::TotalDegree(sys);
+// 	TD.Homogenize();
+// 	BOOST_CHECK(TD.IsHomogeneous());
+// 	BOOST_CHECK(TD.IsPatched());
 
 
-	unsigned num_occurences(0);
-	for (auto s : solutions)
-	{
-		if ( (s-solution_1).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
+// 	auto final_system = (1-t)*sys + t*TD;
+// 	final_system.AddPathVariable(t);
 
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_2).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
+// 	auto AMP = bertini::tracking::config::AMPConfigFrom(final_system);
 
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_3).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_4).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_5).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_6).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	Vec<mpfr> correct(2);
-	correct << mpfr("1","0"),mpfr("1","0");
-
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+// 	// std::cout << "AMP is " << AMP << '\n';
+// 	// std::cout << "final system is " << final_system << '\n';
+// 	// std::cout << "coefficient bound is " << final_system.CoefficientBound() << '\n';
 
 
-	std::vector<Vec<mpfr> > endgame_solutions;
 
-	unsigned num_successful_occurences = 0;
-	unsigned num_min_track_time_reached = 0;
-	for (auto s : homogenized_solutions)
-	{
-		bertini::tracking::SuccessCode endgame_success = My_Endgame.PSEG(t_endgame_boundary,s);
-		if(endgame_success == bertini::tracking::SuccessCode::Success)
-		{
-			// std::cout << "difference is " << (tracker.GetSystem().DehomogenizePoint(My_Endgame.GetFinalApproximation())-correct).norm() << '\n';
-			// if((tracker.GetSystem().DehomogenizePoint(My_Endgame.GetFinalApproximation())-correct).norm() < My_Endgame.GetTrackToleranceDuringEndgame())
-			// {
-				num_successful_occurences++;
-			// }
-		}
-		if(endgame_success == bertini::tracking::SuccessCode::MinStepSizeReached)
-		{
-			num_min_track_time_reached++;
-		}
-		// std::cout << "solution is " << My_Endgame.GetFinalApproximation() << '\n';
-	}
+// 	auto tracker = AMPTracker(final_system);
+// 	config::Stepping stepping_preferences;
+// 	config::Newton newton_preferences;
+// 	tracker.Setup(config::Predictor::Euler,
+// 	              	mpfr_float("1e-7"), mpfr_float("1e5"),
+// 					stepping_preferences, newton_preferences);
 
-	// std::cout << " num_occurences is " << num_occurences << '\n';
- 	BOOST_CHECK_EQUAL(num_successful_occurences,6);
- 	BOOST_CHECK_EQUAL(num_min_track_time_reached,0);
+// 	tracker.AMPSetup(AMP);
+	
 
-}
+// 	mpfr t_start(1), t_endgame_boundary(0.1);
+// 	std::vector<Vec<mpfr> > solutions;
+// 	std::vector<Vec<mpfr> > homogenized_solutions;
+// 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
+// 	{
+// 		mpfr_float::default_precision(30);
+// 		final_system.precision(30);
+// 		auto start_point = TD.StartPoint<mpfr>(ii);
+
+// 		Vec<mpfr> result;
+// 		SuccessCode tracking_success;
+
+// 		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
+// 		BOOST_CHECK(tracking_success==SuccessCode::Success);
+
+// 		homogenized_solutions.push_back(result);
+// 		solutions.push_back(final_system.DehomogenizePoint(result));
+// 	}
+
+// 	Vec<mpfr> solution_1(2);
+// 	solution_1 << mpfr("0.687592791426802019127961784761","0.0567041721787413764699348206477"), mpfr("1.11076734170908975052327605226","0.207914822575706710605647487");
+
+// 	Vec<mpfr> solution_2(2);
+// 	solution_2 << mpfr("1.02264960658155701356264444257","0.520917033127216794197167359926"), mpfr("1.11076734170909913190783413484","0.207914822575691493611316218448");
+
+// 	Vec<mpfr> solution_3(2);
+// 	solution_3 << mpfr("0.989757601991555768794484038153","-0.57762120530600610801563732366"), mpfr("1.11076734170909918741898536609","0.20791482257569138952790765984");
+
+// 	Vec<mpfr> solution_4(2);
+// 	solution_4 << mpfr("0.687592791426887395278555459299","0.0567041721787893780032385748768"), mpfr("0.689232658290901023523389312686", "-0.207914822575691576878043065335");
+
+// 	Vec<mpfr> solution_5(2);
+// 	solution_5 << mpfr("1.02264960658081959931948637747","0.520917033127118696605766956908"), mpfr("0.689232658292013194430512839668","-0.207914822576518617066069857076");
+
+// 	Vec<mpfr> solution_6(2);
+// 	solution_6 << mpfr("0.989757601991599268196007422024","-0.577621205306094375358982164819"), mpfr("0.689232658290901310861758919599","-0.207914822575714712814276165999");
+
+
+// 	unsigned num_occurences(0);
+// 	for (auto s : solutions)
+// 	{
+// 		if ( (s-solution_1).norm() < mpfr_float("1e-5"))
+// 			num_occurences++;
+// 	}
+// 	BOOST_CHECK_EQUAL(num_occurences,1);
+
+// 	num_occurences = 0;
+// 	for (auto s : solutions)
+// 	{
+// 		if ( (s-solution_2).norm() < mpfr_float("1e-5"))
+// 			num_occurences++;
+// 	}
+// 	BOOST_CHECK_EQUAL(num_occurences,1);
+
+// 	num_occurences = 0;
+// 	for (auto s : solutions)
+// 	{
+// 		if ( (s-solution_3).norm() < mpfr_float("1e-5"))
+// 			num_occurences++;
+// 	}
+// 	BOOST_CHECK_EQUAL(num_occurences,1);
+
+// 	num_occurences = 0;
+// 	for (auto s : solutions)
+// 	{
+// 		if ( (s-solution_4).norm() < mpfr_float("1e-5"))
+// 			num_occurences++;
+// 	}
+// 	BOOST_CHECK_EQUAL(num_occurences,1);
+
+// 	num_occurences = 0;
+// 	for (auto s : solutions)
+// 	{
+// 		if ( (s-solution_5).norm() < mpfr_float("1e-5"))
+// 			num_occurences++;
+// 	}
+// 	BOOST_CHECK_EQUAL(num_occurences,1);
+
+// 	num_occurences = 0;
+// 	for (auto s : solutions)
+// 	{
+// 		if ( (s-solution_6).norm() < mpfr_float("1e-5"))
+// 			num_occurences++;
+// 	}
+// 	BOOST_CHECK_EQUAL(num_occurences,1);
+
+// 	Vec<mpfr> correct(2);
+// 	correct << mpfr("1","0"),mpfr("1","0");
+
+// 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+
+
+// 	std::vector<Vec<mpfr> > endgame_solutions;
+
+// 	unsigned num_successful_occurences = 0;
+// 	unsigned num_min_track_time_reached = 0;
+// 	for (auto s : homogenized_solutions)
+// 	{
+// 		bertini::tracking::SuccessCode endgame_success = My_Endgame.PSEG(t_endgame_boundary,s);
+// 		if(endgame_success == bertini::tracking::SuccessCode::Success)
+// 		{
+// 			// std::cout << "difference is " << (tracker.GetSystem().DehomogenizePoint(My_Endgame.GetFinalApproximation())-correct).norm() << '\n';
+// 			// if((tracker.GetSystem().DehomogenizePoint(My_Endgame.GetFinalApproximation())-correct).norm() < My_Endgame.GetTrackToleranceDuringEndgame())
+// 			// {
+// 				num_successful_occurences++;
+// 			// }
+// 		}
+// 		if(endgame_success == bertini::tracking::SuccessCode::MinStepSizeReached)
+// 		{
+// 			num_min_track_time_reached++;
+// 		}
+// 		// std::cout << "solution is " << My_Endgame.GetFinalApproximation() << '\n';
+// 	}
+
+// 	// std::cout << " num_occurences is " << num_occurences << '\n';
+//  	BOOST_CHECK_EQUAL(num_successful_occurences,6);
+//  	BOOST_CHECK_EQUAL(num_min_track_time_reached,0);
+
+// }
 
 BOOST_AUTO_TEST_SUITE_END()
