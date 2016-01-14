@@ -141,14 +141,6 @@ namespace bertini
 				mpfr_float max_norm = mpfr_float("1e5");
 			};
 
-
-
-
-
-
-
-
-
 			struct EndGame
 			{
 				unsigned num_sample_points = 3;
@@ -157,7 +149,6 @@ namespace bertini
 				Vec<mpfr> final_approximation_at_origin;
 
 			};
-
 
 			struct PowerSeries
 			{

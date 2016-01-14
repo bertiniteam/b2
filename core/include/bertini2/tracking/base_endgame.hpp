@@ -212,7 +212,6 @@ namespace bertini{
 
 				Vec<mpfr> GetFinalApproximationAtOrigin() {return endgame_struct_.final_approximation_at_origin;}
 
-			 private:
 			 	/**
 				 \Every endgame must have a ComputeApproximationOfXAtT0 function, so we can approximate the value at the origin. 
 				*/

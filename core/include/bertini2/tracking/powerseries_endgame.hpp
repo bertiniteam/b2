@@ -201,10 +201,11 @@ namespace bertini{
 				
 				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::PowerSeries new_power_series_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
+
 					SetEndgameSettings(new_endgame_settings);
 					SetPowerSeriesSettings(new_power_series_settings);
 					SetSecuritySettings(new_security_settings);
-					SetTolerancesStruct(new_tolerances_settings);
+					SetTolerancesSettings(new_tolerances_settings);
 				} 
 
 				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::PowerSeries new_power_series_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -380,10 +381,10 @@ namespace bertini{
 			*/
 
 			void BoundOnCycleNumber()
-			{
-				Vec<mpfr> sample0 = samples_[0];
-				Vec<mpfr> sample1 = samples_[1];
-				Vec<mpfr> sample2 = samples_[2];
+			{ 
+				const Vec<mpfr> & sample0 = samples_[0];
+				const Vec<mpfr> & sample1 = samples_[1];
+				const Vec<mpfr> & sample2 = samples_[2];
 
 				Vec<mpfr> rand_vector = Vec<mpfr>::Random(sample0.size()); //should be a row vector for ease in multiplying.
 				
@@ -658,32 +659,32 @@ namespace bertini{
 					SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,current_time,next_time,samples_.back());
 					if(tracking_success == SuccessCode::FailedToConverge)
 					{
-						// std::cout << "Failed to converge. " << '\n';
+						std::cout << "Failed to converge. " << '\n';
 						return SuccessCode::FailedToConverge;
 					}	
 					else if(tracking_success == SuccessCode::HigherPrecisionNecessary)
 					{ 
-						// std::cout << "Higher precision necessary. " << '\n';
+						std::cout << "Higher precision necessary. " << '\n';
 						return SuccessCode::FailedToConverge;
 					}
 					else if(tracking_success == SuccessCode::GoingToInfinity)
 					{
-						// std::cout << "Going to infinity. " << '\n';
+						std::cout << "Going to infinity. " << '\n';
 						return SuccessCode:: FailedToConverge;
 					}
 					else if(tracking_success == SuccessCode::MatrixSolveFailure)
 					{
-						// std::cout << "Matrix solve failure. " << '\n';
+						std::cout << "Matrix solve failure. " << '\n';
 						return SuccessCode::MatrixSolveFailure;
 					}
 					else if(tracking_success == SuccessCode::MaxNumStepsTaken)
 					{
-						// std::cout << "Max num steps taken. " << '\n';
+						std::cout << "Max num steps taken. " << '\n';
 						return SuccessCode::MaxNumStepsTaken;
 					}
 					else if(tracking_success == SuccessCode::MaxPrecisionReached)
 					{
-						// std::cout << "Max precision reached. " << '\n';
+						std::cout << "Max precision reached. " << '\n';
 						return SuccessCode::MaxPrecisionReached;
 					}
 					else if(tracking_success == SuccessCode::MinStepSizeReached)
@@ -693,13 +694,13 @@ namespace bertini{
 					}
 					else if(tracking_success == SuccessCode::Failure)
 					{
-						// std::cout << "Failure. " << '\n';
+						std::cout << "Failure. " << '\n';
 						return SuccessCode::Failure;
 					}
 					else if(tracking_success == SuccessCode::SingularStartPoint)
 					{
-						// std::cout << "Singular start point. " << '\n';
-						//std::cout << "latest norm is " << prev_approx.norm() << '\n';
+						std::cout << "Singular start point. " << '\n';
+						// std::cout << "latest norm is " << prev_approx.norm() << '\n';
 						return SuccessCode::SingularStartPoint;
 					}
 					else
@@ -735,7 +736,7 @@ namespace bertini{
 			 			//std::cout << "Power series endgame converged, check final approximation at origin." << '\n';
 			 			SetFinalApproximation(latest_approx);
 			 			// std::cout << "approx_error norm is " << approx_error.norm() << '\n';
-			 			std::cout << "success" << '\n';
+			 			//std::cout << "success" << '\n';
 
 			 			return SuccessCode::Success;
 			 		}
@@ -751,6 +752,8 @@ namespace bertini{
 
 			} //end PSEG
 		}; // end powerseries class
+
+
 		}//namespace endgame
 
 	}//namespace tracking
