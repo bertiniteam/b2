@@ -205,7 +205,7 @@ namespace bertini{
 					SetEndgameSettings(new_endgame_settings);
 					SetPowerSeriesSettings(new_power_series_settings);
 					SetSecuritySettings(new_security_settings);
-					SetTolerancesSettings(new_tolerances_settings);
+					SetToleranceSettings(new_tolerances_settings);
 				} 
 
 				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::PowerSeries new_power_series_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -429,8 +429,25 @@ namespace bertini{
 
 			*/
 			template<typename ComplexType>
-			void ComputeCycleNumber(const ComplexType current_time, const Vec<ComplexType> x_current_time)
+			void ComputeCycleNumber(const ComplexType time, const Vec<ComplexType> x__at_time)
 			{
+
+				//Compute upper bound for cycle number.
+				BoundOnCycleNumber();
+				// std::cout << "upper_bound is " << upper_bound_on_cycle_number << '\n';
+
+				Vec<ComplexType> x_current_time = samples_[samples_.size()-1];
+				samples_.pop_back(); //use the last sample to compute the cycle number.
+				ComplexType current_time = times_[times_.size()-1];
+				times_.pop_back();
+
+				 // std::cout << "x_current_time is " << x_current_time << '\n';
+				 // std::cout << "current time is " << current_time << '\n';
+
+				//Compute Cycle Number
+				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
+				SetNumSamples(GetNumSamples() - 1);
+
 				mpfr_float min_found_difference = power_series_struct_.min_difference_in_approximations;
 				// std::cout << "upper_bound_on_cycle_number is " << upper_bound_on_cycle_number << '\n';
 				// std::cout << "num samples is " << num_sample_points << '\n';
@@ -462,6 +479,11 @@ namespace bertini{
 					s_times_.clear();
 
 				}// end cc loop over cycle number possibilities
+
+				SetNumSamples(GetNumSamples() + 1);
+				// std::cout << "cycle number is " << cycle_number << '\n';
+				samples_.push_back(x_current_time);
+				times_.push_back(current_time); //push most recent sample back on. 
 			}//end ComputeCycleNumber
 
 			/*
@@ -564,32 +586,10 @@ namespace bertini{
 					derivatives_.push_back(derivative);
 				}
 
+				ComputeCycleNumber(times_[times_.size()-1],samples_[samples_.size()-1]); //sending in last element so that ComplexType can be known for templating.
 
-
-
-				//Compute upper bound for cycle number.
-				BoundOnCycleNumber();
-				// std::cout << "upper_bound is " << upper_bound_on_cycle_number << '\n';
-
-				Vec<ComplexType> x_current_time = samples_[samples_.size()-1];
-				samples_.pop_back(); //use the last sample to compute the cycle number.
-				ComplexType current_time = times_[times_.size()-1];
-				times_.pop_back();
-
-				 // std::cout << "x_current_time is " << x_current_time << '\n';
-				 // std::cout << "current time is " << current_time << '\n';
-
-				//Compute Cycle Number
-				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
-				SetNumSamples(GetNumSamples() - 1);
-				ComputeCycleNumber(current_time, x_current_time); 
-				SetNumSamples(GetNumSamples() + 1);
-				// std::cout << "cycle number is " << cycle_number << '\n';
-				samples_.push_back(x_current_time);
-				times_.push_back(current_time); //push most recent sample back on. 
 
 				// //Conversion to S-plane.
-
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii){
 					s_derivatives_.push_back(derivatives_[ii]*(ComplexType(power_series_struct_.cycle_number)*pow(times_[ii],(ComplexType(power_series_struct_.cycle_number) - ComplexType(1))/ComplexType(power_series_struct_.cycle_number))));

@@ -696,8 +696,11 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
+	times.push_back(time);
 	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
+	samples.push_back(sample);
 	derivative << mpfr("2.92546875"); //f'(.0125) = 2.92546875
+	derivatives.push_back(derivative);
 
 	bertini::tracking::config::PowerSeries power_series_struct;
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
@@ -706,7 +709,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	My_Endgame.SetTimes(times);
 	My_Endgame.SetSamples(samples);
 	My_Endgame.SetDerivatives(derivatives);
-	My_Endgame.SetUpperBoundOnCycleNumber(6); // this is found from test cases above.
+	//My_Endgame.SetUpperBoundOnCycleNumber(6); // this is found from test cases above.
 
 	 My_Endgame.ComputeCycleNumber(time,sample);
 
@@ -781,11 +784,13 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	derivative << mpfr("2.851875"); //f'(.025) = 2.851875
 	derivatives.push_back(derivative);
 
-
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
+	times.push_back(time);
 	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
+	samples.push_back(sample);
 	derivative << mpfr("2.92546875"); //f'(.0125) = 2.92546875
+	derivatives.push_back(derivative);
 
 	bertini::tracking::config::PowerSeries power_series_struct;
 	bertini::tracking::config::Security endgame_security_struct;
@@ -794,7 +799,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	My_Endgame.SetTimes(times);
 	My_Endgame.SetSamples(samples);
 	My_Endgame.SetDerivatives(derivatives);
-	My_Endgame.SetUpperBoundOnCycleNumber(6); // this is found from test cases above.
+	//My_Endgame.SetUpperBoundOnCycleNumber(6); // this is found from test cases above.
 
 	 My_Endgame.ComputeCycleNumber(time,sample);
 
