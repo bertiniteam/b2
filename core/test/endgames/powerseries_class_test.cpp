@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
-	
+
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
@@ -1059,7 +1059,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 											// from bertini.
 
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-
+	std::deque<Vec<mpfr> > samples;
 	mpfr time(1);
 	Vec<mpfr> sample(1);
 	// Vec<dbl> derivative(1);
@@ -1086,14 +1086,14 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	current_time = mpfr(".1");
 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::PowerSeries power_series_struct;
+	bertini::tracking::config::EndGame endgame_settings;
+	bertini::tracking::config::PowerSeries power_series_settings;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_settings,power_series_settings);
 
-	My_Endgame.ComputeInitialSamples(current_time,current_space);
+	My_Endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, num_samples, times, samples);
 
-	auto samples = My_Endgame.GetSamples();
+	
 
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
@@ -1151,7 +1151,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 											// from bertini.
 
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-
+	std::deque< Vec<mpfr> > samples;
 	mpfr time(1);
 	Vec<mpfr> sample(1);
 	// Vec<dbl> derivative(1);
@@ -1171,6 +1171,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	sample << mpfr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
 	correct_samples.push_back(sample);
 
+	unsigned int num_samples = 3; 
 
 	mpfr current_time(1);
 	Vec<mpfr> current_space(1);
@@ -1184,9 +1185,9 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
 
 
-	My_Endgame.ComputeInitialSamples(current_time,current_space);
+	My_Endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, num_samples, times, samples);
 
-	auto samples = My_Endgame.GetSamples();
+
 
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
@@ -1251,7 +1252,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	// std::cout << "Tolerance is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
 	BOOST_CHECK((My_Endgame.GetFinalApproximation() - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
 
-}//end compute initial samples mp
+}//end pseg mp for power series class 
 
 BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 {
@@ -1373,18 +1374,18 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 
 BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_griewank_osborne)
 {
-	/*
-	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
-	one of the solutions at t = endgame_time. 
+	
+	// The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
+	// one of the solutions at t = endgame_time. 
 
-	Griewank Osborne is a very classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values 
-	at t = 0.1. 
+	// Griewank Osborne is a very classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values 
+	// at t = 0.1. 
 
-	Three of these paths will converge to origin and three will diverge to infinity triggering a SecurityMaxNorm issue. 
+	// Three of these paths will converge to origin and three will diverge to infinity triggering a SecurityMaxNorm issue. 
 
-	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
-	the endgame. 
-	*/
+	// This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
+	// the endgame. 
+	
 
 	mpfr_float::default_precision(30);
 

@@ -35,14 +35,10 @@
 \brief Contains the power series endgame type, and necessary functions.
 */
 #include <deque>
-#include <typeinfo>
-#include "tracking.hpp"
-#include "system.hpp"
 #include <boost/multiprecision/gmp.hpp>
 #include <iostream>
 #include "tracking/base_endgame.hpp"
 #include <cstdio>
-#include <new>
 
 namespace bertini{ 
 
@@ -416,51 +412,7 @@ namespace bertini{
 				return derivatives;
 			}//end ComputeCycleNumber
 
-			/*
-			Input: 
-					endgame_time is the time when we start the endgame process usually this is .1
 
-			    	x_endgame is the space value at endgame_time
-
-			    	upper_bound_on_cycle_number is the largest possible cycle number we will use to compute dx_ds and s = t^(1/c).
-
-					times is a data struct_ure that holds the time values for the corresponding samples.
-					num_sample_points is the size of times
-
-			Output: 
-					A data struct_ure holding the space values corresponding to the time values in times.
-
-
-			Details:
-					The first sample will be (x_endgame) and the first time is endgame_time.
-					From there we do a geometric progression using the sample factor which by default is 1/2.
-					The next_time = endgame_time * sample_factor.
-					We can track then to the next_time and that construct_s the next_sample.
-			*/
-			template<typename ComplexType>
-			void ComputeInitialSamples(const ComplexType endgame_time,const Vec<ComplexType> x_endgame) // passed by reference to allow times to be filled as well.
-			{
-
-				samples_.push_back(x_endgame);
-				times_.push_back(endgame_time);
-				Vec<ComplexType> next_sample;
-
-				// std::cout << "x_endgame is " << x_endgame << '\n';
-				// std::cout << "endgame_time is " << endgame_time << '\n';
-
-				for(int ii=2; ii <= GetNumSamples(); ++ii)//start at 2 since first sample is at the endgame boundary.
-				{ 
-					 // std::cout << "ii is " << ii <<  std::endl;
-					ComplexType next_time = times_.back() * endgame_struct_.sample_factor;
-
-					SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,times_.back(),next_time,samples_.back());
-
-					// std::cout << "next_sample is " << next_sample << '\n';
-					// std::cout << "next_time is " << next_time << '\n';
-					samples_.push_back(next_sample);
-					times_.push_back(next_time);		
-				}				
-			}
 			/*
 			Input: 
 					time_t0 is the time value that we wish to interpolate at.
@@ -486,6 +438,7 @@ namespace bertini{
 
 				for(unsigned ii = 0; ii < GetNumSamples();++ii)
 				{
+
 					if(Precision(samples_[ii](0)) > max_precision)
 					{
 						max_precision = Precision(samples_[ii](0));
@@ -562,10 +515,13 @@ namespace bertini{
 			 	ComplexType origin(1);
 			 	origin  = ComplexType("0","0");
 
-				ComputeInitialSamples(endgame_time, x_endgame_time);
-			 	
+				Endgame::ComputeInitialSamples(endgame_tracker_, endgame_time, x_endgame_time, GetNumSamples() ,times_, samples_);
+
+
 			 	Vec<ComplexType> prev_approx = ComputeApproximationOfXAtT0(origin);
+
 			 	Vec<ComplexType> dehom_of_prev_approx = endgame_tracker_.GetSystem().DehomogenizePoint(prev_approx);
+
 
 			 	ComplexType current_time = times_.back(); 
 

@@ -216,10 +216,51 @@ namespace bertini{
 				 \Every endgame must have a ComputeApproximationOfXAtT0 function, so we can approximate the value at the origin. 
 				*/
 				virtual Vec<mpfr> ComputeApproximationOfXAtT0() {Vec<mpfr> base(1); base << mpfr("0","0"); return base;}
-				 	/**
-				 \Every endgame must have a ComputeInitialSamples function, that computes the samples for either a Hermite interpolation or Cauchy integral computation.
+
+				/*
+				Input: 
+					endgame_time is the time when we start the endgame process usually this is .1
+
+			    	x_endgame is the space value at endgame_time
+
+			    	upper_bound_on_cycle_number is the largest possible cycle number we will use to compute dx_ds and s = t^(1/c).
+
+					times is a data struct_ure that holds the time values for the corresponding samples.
+					num_sample_points is the size of times
+
+				Output: 
+					A data struct_ure holding the space values corresponding to the time values in times.
+
+
+				Details:
+					The first sample will be (x_endgame) and the first time is endgame_time.
+					From there we do a geometric progression using the sample factor which by default is 1/2.
+					The next_time = endgame_time * sample_factor.
+					We can track then to the next_time and that construct_s the next_sample.
 				*/
-				virtual void ComputeInitialSamples() {}
+				template<typename ComplexType, typename TrackerType>
+				void ComputeInitialSamples(const TrackerType & endgame_tracker_, const ComplexType endgame_time,const Vec<ComplexType> x_endgame, unsigned int num_samples , std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
+				{
+					samples.push_back(x_endgame);
+					times.push_back(endgame_time);
+					Vec<ComplexType> next_sample;
+
+					// std::cout << "x_endgame is " << x_endgame << '\n';
+					// std::cout << "endgame_time is " << endgame_time << '\n';
+
+					for(int ii=2; ii <= num_samples; ++ii)//start at 2 since first sample is at the endgame boundary.
+					{ 
+						 // std::cout << "ii is " << ii <<  std::endl;
+						ComplexType next_time = times.back() * endgame_struct_.sample_factor;	
+
+						SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,times.back(),next_time,samples.back());
+
+						// std::cout << "next_sample is " << next_sample << '\n';
+						// std::cout << "next_time is " << next_time << '\n';
+						samples.push_back(next_sample);
+						times.push_back(next_time);		
+					}				
+				}
 
 			};
 
