@@ -119,17 +119,12 @@ namespace bertini{
 				config::PowerSeries power_series_struct_; 
 
 				std::deque<mpfr> times_;
-
-
 				std::deque< Vec<mpfr> > samples_;
-
-				std::deque< Vec<mpfr> > derivatives_;
-
 
 				const TrackerType & endgame_tracker_;
 			public:
 
-				void ClearTimesSamplesAndDerivatives(){times_.clear(); samples_.clear(); derivatives_.clear();}
+				void ClearTimesAndSamples(){times_.clear(); samples_.clear();}
 
 				void SetSampleFactor(mpfr_float new_sample_factor) {endgame_struct_.sample_factor = new_sample_factor;}
 				mpfr_float GetSampleFactor(){return endgame_struct_.sample_factor;}
@@ -161,8 +156,8 @@ namespace bertini{
 				void SetSamples(std::deque< Vec<mpfr> > samples_to_set) { samples_ = samples_to_set;}
 				std::deque< Vec<mpfr> > GetSamples() {return samples_;}
 
-				void SetDerivatives(std::deque< Vec<mpfr> > derivatives_to_set) { derivatives_ = derivatives_to_set;}
-				std::deque< Vec<mpfr> > GetDerivatives() {return derivatives_;}
+				// void SetDerivatives(std::deque< Vec<mpfr> > derivatives_to_set) { derivatives_ = derivatives_to_set;}
+				// std::deque< Vec<mpfr> > GetDerivatives() {return derivatives_;}
 
 				void SetFinalTol(mpfr_float new_final_tolerance) {Endgame::SetFinalTolerance(new_final_tolerance);}
 				mpfr_float GetFinalTol(){return Endgame::GetFinalTolerance();}
@@ -343,19 +338,29 @@ namespace bertini{
 					num_sample_points is the size of samples, times, derivatives, this is also the amount of information used in Hermite Interpolation.
 
 			Output: 
-					The actual cycle number that we find to be the best at approximating the tracked value (current_time,x_current_time)
+					The actual cycle number that we find to be the best at approximating the tracked value (current_time,x_current_time) also a set of derivatives for the samples and times given.
 
 			Details: 
 					This is done by an exhaustive search from 1 to upper_bound_on_cycle_number. There is a conversion to the s-space from t-space in this function. 
 
 			*/
 			template<typename ComplexType>
-			void ComputeCycleNumber(const ComplexType time, const Vec<ComplexType> x__at_time)
+			std::deque< Vec<ComplexType> > ComputeCycleNumber(const ComplexType time, const Vec<ComplexType> x__at_time)
 			{
-
+				//Compute dx_dt for each sample.
+				std::deque< Vec<ComplexType> > derivatives;
+				for(unsigned ii = 0; ii < GetNumSamples(); ++ii)
+				{	
+					// std::cout << "ii is " << ii <<'\n';
+					// std::cout << "Precision of sample is " << Precision(samples_[ii](0)) << '\n';
+					// std::cout << "Precision of system is " << endgame_tracker_.GetSystem().precision() << '\n';
+					// uses LU look at Eigen documentation on inverse in Eigen/LU.
+				 	Vec<ComplexType> derivative = ComplexType(-1)*(endgame_tracker_.GetSystem().Jacobian(samples_[ii],times_[ii]).inverse())*(endgame_tracker_.GetSystem().TimeDerivative(samples_[ii],times_[ii]));
+					derivatives.push_back(derivative);
+				}
 				//Compute upper bound for cycle number.
 				BoundOnCycleNumber();
-				// std::cout << "upper_bound is " << upper_bound_on_cycle_number << '\n';
+				// std::cout << "upper_bound is " << power_series_struct_.upper_bound_on_cycle_number << '\n';
 
 				Vec<ComplexType> x_current_time = samples_[samples_.size()-1];
 				samples_.pop_back(); //use the last sample to compute the cycle number.
@@ -384,7 +389,7 @@ namespace bertini{
 						// std::cout << "times[ii] is " << times[ii] << '\n';
 						// std::cout << "samples[ii] is " << samples[ii] << '\n';
 						s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(cc)));
-						s_derivatives.push_back(derivatives_[ii]*(ComplexType(cc)*pow(times_[ii],ComplexType((cc - 1))/ComplexType(cc))));
+						s_derivatives.push_back(derivatives[ii]*(ComplexType(cc)*pow(times_[ii],ComplexType((cc - 1))/ComplexType(cc))));
 					}
 
 					Vec<ComplexType> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,GetNumSamples(),s_times,samples_,s_derivatives);
@@ -407,6 +412,8 @@ namespace bertini{
 				// std::cout << "cycle number is " << cycle_number << '\n';
 				samples_.push_back(x_current_time);
 				times_.push_back(current_time); //push most recent sample back on. 
+
+				return derivatives;
 			}//end ComputeCycleNumber
 
 			/*
@@ -498,28 +505,25 @@ namespace bertini{
 				}
 
 				endgame_tracker_.GetSystem().precision(max_precision);
-				//Compute dx_dt for each sample.
-				for(unsigned ii = 0; ii < GetNumSamples(); ++ii)
-				{	
-				// 	std::cout << "ii is " << ii <<'\n';
-				// 	std::cout << "Precision of sample is " << Precision(samples_[ii](0)) << '\n';
-				// 	std::cout << "Precision of system is " << endgame_tracker_.System().precision() << '\n';
-					// uses LU look at Eigen documentation on inverse in Eigen/LU.
-				 	Vec<ComplexType> derivative = ComplexType(-1)*(endgame_tracker_.GetSystem().Jacobian(samples_[ii],times_[ii]).inverse())*(endgame_tracker_.GetSystem().TimeDerivative(samples_[ii],times_[ii]));
-					derivatives_.push_back(derivative);
-				}
+				
 
-				ComputeCycleNumber(times_[times_.size()-1],samples_[samples_.size()-1]); //sending in last element so that ComplexType can be known for templating.
 
-				std::cout << "cycle number is " << power_series_struct_.cycle_number << '\n';
+				std::deque< Vec<ComplexType> > derivatives = ComputeCycleNumber(times_[times_.size()-1],samples_[samples_.size()-1]); //sending in last element so that ComplexType can be known for templating.
+
+				// std::cout << "cycle number is " << power_series_struct_.cycle_number << '\n';
 
 				// //Conversion to S-plane.
 				std::deque<mpfr> s_times;
 				std::deque< Vec<mpfr> > s_derivatives;
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii){
-					s_derivatives.push_back(derivatives_[ii]*(ComplexType(power_series_struct_.cycle_number)*pow(times_[ii],(ComplexType(power_series_struct_.cycle_number) - ComplexType(1))/ComplexType(power_series_struct_.cycle_number))));
+					s_derivatives.push_back(derivatives[ii]*(ComplexType(power_series_struct_.cycle_number)*pow(times_[ii],(ComplexType(power_series_struct_.cycle_number) - ComplexType(1))/ComplexType(power_series_struct_.cycle_number))));
 					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(power_series_struct_.cycle_number)));
+
+					// std::cout << "s times at ii is" << s_times[ii] << '\n';
+					// std::cout << "s derivatives at ii is" << s_derivatives[ii] << '\n';
+					// std::cout << "samples at ii is" << samples_[ii] << '\n';
+
 				}
 				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0,GetNumSamples(),s_times,samples_,s_derivatives);
 
@@ -548,7 +552,7 @@ namespace bertini{
 			SuccessCode PSEG(const ComplexType endgame_time, const Vec<ComplexType> x_endgame_time)
 			{
 				//Set up for the endgame.
-	 			ClearTimesSamplesAndDerivatives();
+	 			ClearTimesAndSamples();
 			 	mpfr norm_of_latest_approximation(1);
 			 	norm_of_latest_approximation = mpfr("0","0"); // settting up the norm for the latest approximation. 
 
