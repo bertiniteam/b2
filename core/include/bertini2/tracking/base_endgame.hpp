@@ -105,112 +105,21 @@ namespace bertini{
 				/**
 				\brief The structs used to hold all relevant data for any endgame. 
 				*/
-				config::EndGame endgame_struct_;
+				config::EndGame endgame_settings_;
 				config::Tolerances endgame_tolerances_;
 				config::Security endgame_security_;
 
-				void SetEndgameStruct(config::EndGame new_endgame_settings)
-				{
-					endgame_struct_ = new_endgame_settings;
-				}
+				void SetMinTrackTime(mpfr new_min_track_time){endgame_settings_.min_track_time = new_min_track_time;}
+				mpfr GetMinTrackTime(){return endgame_settings_.min_track_time;}
 
-				config::EndGame GetEndgameStruct()
-				{
-					return endgame_struct_;
-				}
+				void SetTrackToleranceDuringEndgame(mpfr_float new_track_tolerance_during_endgame){endgame_tolerances_.track_tolerance_during_endgame = new_track_tolerance_during_endgame;}
+				mpfr_float GetTrackToleranceDuringEndgame(){return endgame_tolerances_.track_tolerance_during_endgame;}
 
-				void SetTolerancesStruct(config::Tolerances new_tolerances_settings)
-				{
-					endgame_tolerances_ = new_tolerances_settings;
-				}
-
-				config::Tolerances GetTolerancesStruct()
-				{
-					return endgame_tolerances_;
-				}
-
-				void SetSecurityStruct(config::Security new_endgame_security_settings)
-				{
-					endgame_security_ = new_endgame_security_settings;
-				}
-
-				config::Security GetSecurityStruct()
-				{
-					return endgame_security_;
-				}
+				void SetPathTruncationThreshold(mpfr_float new_path_truncation_threshold){endgame_tolerances_.path_truncation_threshold = new_path_truncation_threshold;}
+				mpfr_float GetPathTruncationThreshold(){return endgame_tolerances_.path_truncation_threshold;}
 
 
-				void SetNumSamplePoints(unsigned int new_sample_points)
-				{
-					endgame_struct_.num_sample_points = new_sample_points;
-				}
-				unsigned int GetNumSamplePoints()
-				{
-					return endgame_struct_.num_sample_points;
-				}
 
-				void SetFinalTolerance(mpfr_float new_final_tolerance)
-				{
-					endgame_tolerances_.final_tolerance = new_final_tolerance;
-				}
-				mpfr GetFinalTolerance()
-				{
-					return endgame_tolerances_.final_tolerance;
-				}
-
-				void SetMinTrackTime(mpfr new_min_track_time)
-				{
-					endgame_struct_.min_track_time = new_min_track_time;
-				}
-
-				mpfr GetMinTrackTime()
-				{
-					return endgame_struct_.min_track_time;
-				}
-
-				void SetTrackToleranceDuringEndgame(mpfr_float new_track_tolerance_during_endgame)
-				{
-					endgame_tolerances_.track_tolerance_during_endgame = new_track_tolerance_during_endgame;
-				}
-
-				mpfr_float GetTrackToleranceDuringEndgame()
-				{
-					return endgame_tolerances_.track_tolerance_during_endgame;
-				}
-
-				void SetPathTruncationThreshold(mpfr_float new_path_truncation_threshold)
-				{
-					endgame_tolerances_.path_truncation_threshold = new_path_truncation_threshold;
-				}
-
-				mpfr_float GetPathTruncationThreshold()
-				{
-					return endgame_tolerances_.path_truncation_threshold;
-				}
-
-				void SetSecurityLevel(unsigned int new_security_level)
-				{
-					endgame_security_.level = new_security_level;
-				}
-
-				unsigned int GetSecurityLevel()
-				{
-					return endgame_security_.level;
-				}
-
-				void SetSecurityMaxNorm(mpfr_float new_max_norm)
-				{
-					endgame_security_.max_norm = new_max_norm;
-				}
-
-				mpfr GetSecurityMaxNorm()
-				{
-					return endgame_security_.max_norm;
-				}
-
-				void SetFinalApproximationAtOrigin(Vec<mpfr> new_approximation){endgame_struct_.final_approximation_at_origin = new_approximation;}
-
-				Vec<mpfr> GetFinalApproximationAtOrigin() {return endgame_struct_.final_approximation_at_origin;}
 
 			 	/**
 				 \Every endgame must have a ComputeApproximationOfXAtT0 function, so we can approximate the value at the origin. 
@@ -251,7 +160,7 @@ namespace bertini{
 					for(int ii=2; ii <= num_samples; ++ii)//start at 2 since first sample is at the endgame boundary.
 					{ 
 						 // std::cout << "ii is " << ii <<  std::endl;
-						ComplexType next_time = times.back() * endgame_struct_.sample_factor;	
+						ComplexType next_time = times.back() * endgame_settings_.sample_factor;	
 
 						SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,times.back(),next_time,samples.back());
 

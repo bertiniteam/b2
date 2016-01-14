@@ -122,17 +122,17 @@ namespace bertini{
 
 				void ClearTimesAndSamples(){times_.clear(); samples_.clear();}
 
-				void SetSampleFactor(mpfr_float new_sample_factor) {endgame_struct_.sample_factor = new_sample_factor;}
-				mpfr_float GetSampleFactor(){return endgame_struct_.sample_factor;}
+				void SetSampleFactor(mpfr_float new_sample_factor) {endgame_settings_.sample_factor = new_sample_factor;}
+				mpfr_float GetSampleFactor(){return endgame_settings_.sample_factor;}
 
-				void SetNumSamples(unsigned int new_num_samples) {Endgame::SetNumSamplePoints(new_num_samples);}
-				unsigned int GetNumSamples(){return Endgame::GetNumSamplePoints();}
+				void SetNumSamples(unsigned int new_num_samples) {endgame_settings_.num_sample_points = new_num_samples;}
+				unsigned int GetNumSamples(){return endgame_settings_.num_sample_points;}
 
-				void SetSecurityLevel(unsigned int new_security_level) {Endgame::SetSecurityLevel(new_security_level);}
-				unsigned int GetSecurityLevel(){return Endgame::GetSecurityLevel();}
+				void SetSecurityLevel(unsigned int new_security_level) {endgame_security_.level = new_security_level;}
+				unsigned int GetSecurityLevel(){return endgame_security_.level;}
 
-				void SetSecurityMaxNorm(mpfr new_max_norm){Endgame::SetSecurityMaxNorm(new_max_norm);}
-				mpfr GetSecurityMaxNorm(){return Endgame::GetSecurityMaxNorm();}
+				void SetSecurityMaxNorm(mpfr new_max_norm){endgame_security_.max_norm = new_max_norm;}
+				mpfr GetSecurityMaxNorm(){return endgame_security_.max_norm;}
 
 				void SetCycleNumberAmplification(unsigned int new_cycle_number_amplification) { power_series_struct_.cycle_number_amplification = new_cycle_number_amplification;}
 				unsigned int GetCycleNumberAmplification() { return power_series_struct_.cycle_number_amplification;}
@@ -152,35 +152,25 @@ namespace bertini{
 				void SetSamples(std::deque< Vec<mpfr> > samples_to_set) { samples_ = samples_to_set;}
 				std::deque< Vec<mpfr> > GetSamples() {return samples_;}
 
-				// void SetDerivatives(std::deque< Vec<mpfr> > derivatives_to_set) { derivatives_ = derivatives_to_set;}
-				// std::deque< Vec<mpfr> > GetDerivatives() {return derivatives_;}
-
-				void SetFinalTol(mpfr_float new_final_tolerance) {Endgame::SetFinalTolerance(new_final_tolerance);}
-				mpfr_float GetFinalTol(){return Endgame::GetFinalTolerance();}
-
-				// template<typename TrackingType>
+				void SetFinalTol(mpfr_float new_final_tolerance) {endgame_tolerances_.final_tolerance = new_final_tolerance;}
+				mpfr_float GetFinalTol(){return endgame_tolerances_.final_tolerance;}
 	
 				const TrackerType & GetEndgameTracker(){return endgame_tracker_;}
 
-				void SetFinalApproximation(Vec<mpfr> new_final_approximation){Endgame::SetFinalApproximationAtOrigin(new_final_approximation);}
+				void SetFinalApproximation(Vec<mpfr> new_approximation){endgame_settings_.final_approximation_at_origin = new_approximation;}
+				Vec<mpfr> GetFinalApproximation() {return endgame_settings_.final_approximation_at_origin;}
 
-				Vec<mpfr> GetFinalApproximation() {return Endgame::GetFinalApproximationAtOrigin();}
-
-				void SetEndgameSettings(config::EndGame new_endgame_settings){Endgame::SetEndgameStruct(new_endgame_settings);}
-
-				config::EndGame GetEndgameSettings(){return Endgame::GetEndgameStruct();}
+				void SetEndgameSettings(config::EndGame new_endgame_settings){endgame_settings_ = new_endgame_settings;}
+				config::EndGame GetEndgameStruct(){ return endgame_settings_;}
 
 				void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings){power_series_struct_ = new_power_series_settings;}
-
 				config::PowerSeries GetPowerSeriesSettings(){return power_series_struct_;}
 
-				void SetSecuritySettings(config::Security new_security_settings){Endgame::SetSecurityStruct(new_security_settings);}
+				void SetSecuritySettings(config::Security new_endgame_security_settings){ endgame_security_ = new_endgame_security_settings;}
+				config::Security GetSecuritySettings(){return endgame_security_;}
 
-				config::Security GetSecuritySettings(){return Endgame::GetSecurityStruct();}
-
-				void SetToleranceSettings(config::Tolerances new_tolerances_settings){Endgame::SetTolerancesStruct(new_tolerances_settings);}
-
-				config::Tolerances GetToleranceSettings(){return Endgame::GetTolerancesStruct();}
+				void SetToleranceSettings(config::Tolerances new_tolerances_settings){endgame_tolerances_ = new_tolerances_settings;}
+				config::Tolerances GetTolerancesSettings(){return endgame_tolerances_;}
 
 				PowerSeriesEndgame(TrackerType const& tracker) : endgame_tracker_(tracker){} //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				
@@ -204,21 +194,21 @@ namespace bertini{
 				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
 					SetEndgameSettings(new_endgame_settings);
 					SetPowerSeriesSettings(new_power_series_settings);
-					SetTolerancesStruct(new_tolerances_settings);
+					SetToleranceSettings(new_tolerances_settings);
 				} 
 
 				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
 					SetEndgameSettings(new_endgame_settings);
 					SetSecuritySettings(new_security_settings);
-					SetTolerancesStruct(new_tolerances_settings);
+					SetToleranceSettings(new_tolerances_settings);
 				} 
 
 				PowerSeriesEndgame(TrackerType const& tracker,config::PowerSeries new_power_series_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
 					SetPowerSeriesSettings(new_power_series_settings);
 					SetSecuritySettings(new_security_settings);
-					SetTolerancesStruct(new_tolerances_settings);
+					SetToleranceSettings(new_tolerances_settings);
 				} 
 
 				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::PowerSeries new_power_series_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -236,7 +226,7 @@ namespace bertini{
 				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
 					SetEndgameSettings(new_endgame_settings);
-					SetTolerancesStruct(new_tolerances_settings);
+					SetToleranceSettings(new_tolerances_settings);
 				} 
 
 				PowerSeriesEndgame(TrackerType const& tracker, config::PowerSeries new_power_series_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -248,13 +238,13 @@ namespace bertini{
 				PowerSeriesEndgame(TrackerType const& tracker, config::PowerSeries new_power_series_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
 					SetPowerSeriesSettings(new_power_series_settings);
-					SetTolerancesStruct(new_tolerances_settings);
+					SetToleranceSettings(new_tolerances_settings);
 				} 
 
 				PowerSeriesEndgame(TrackerType const& tracker,config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
 					SetSecuritySettings(new_security_settings);
-					SetTolerancesStruct(new_tolerances_settings);
+					SetToleranceSettings(new_tolerances_settings);
 				} 
 
 				PowerSeriesEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -274,7 +264,7 @@ namespace bertini{
 
 				PowerSeriesEndgame(TrackerType const& tracker, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Endgame PowerSeries Security Tolerances
-					SetTolerancesStruct(new_tolerances_settings);
+					SetToleranceSettings(new_tolerances_settings);
 				} 
 
 				~PowerSeriesEndgame() {};
@@ -304,7 +294,7 @@ namespace bertini{
 				// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
 				// //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type. 
 				mpfr_float estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).norm())/(((sample1 - sample0).transpose()*rand_vector).norm()))));
-				estimate = abs(log(endgame_struct_.sample_factor))/estimate;
+				estimate = abs(log(endgame_settings_.sample_factor))/estimate;
 				// std::cout << "estimate is " << estimate << '\n';
 				if (estimate < 1)
 				{
@@ -368,7 +358,7 @@ namespace bertini{
 
 				//Compute Cycle Number
 				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
-				SetNumSamples(GetNumSamples() - 1);
+				endgame_settings_.num_sample_points = endgame_settings_.num_sample_points - 1;
 
 				mpfr_float min_found_difference = power_series_struct_.min_difference_in_approximations;
 				// std::cout << "upper_bound_on_cycle_number is " << upper_bound_on_cycle_number << '\n';
@@ -404,7 +394,7 @@ namespace bertini{
 
 				}// end cc loop over cycle number possibilities
 
-				SetNumSamples(GetNumSamples() + 1);
+				endgame_settings_.num_sample_points = endgame_settings_.num_sample_points + 1; 
 				// std::cout << "cycle number is " << cycle_number << '\n';
 				samples_.push_back(x_current_time);
 				times_.push_back(current_time); //push most recent sample back on. 
@@ -529,15 +519,16 @@ namespace bertini{
 			  	Vec<ComplexType> latest_approx;
 			    Vec<ComplexType> dehom_of_latest_approx;
 
-				while (approx_error.norm() > Endgame::GetFinalTolerance().abs())
-				{
-					SetFinalApproximation(prev_approx);
-			  		 auto next_time = times_.back() * endgame_struct_.sample_factor; //setting up next time value.
 
-			  		if (next_time.abs() < Endgame::GetMinTrackTime().abs())
+				while (approx_error.norm() > GetFinalTol().abs())
+				{
+					endgame_settings_.final_approximation_at_origin = prev_approx;
+			  		 auto next_time = times_.back() * endgame_settings_.sample_factor; //setting up next time value.
+
+			  		if (next_time.abs() < endgame_settings_.min_track_time.abs())
 			  		{
 			  			std::cout << "Error current time norm is less than min track time." << '\n';
-			  			SetFinalApproximation(prev_approx);
+			  			endgame_settings_.final_approximation_at_origin = prev_approx;
 			  			return SuccessCode::MinTrackTimeReached;
 			  		}
 
@@ -609,17 +600,18 @@ namespace bertini{
 
 			 		if(GetSecurityLevel() <= 0)
 					{
-				 		if(dehom_of_latest_approx.norm() > GetSecurityMaxNorm().abs() && dehom_of_prev_approx.norm() > GetSecurityMaxNorm().abs()){
+				 		if(dehom_of_latest_approx.norm() > endgame_security_.max_norm.abs() && dehom_of_prev_approx.norm() > endgame_security_.max_norm.abs()){
 			 				return SuccessCode::SecurityMaxNormReached;
 				 		}
 				 	}
 
 			 		approx_error = (latest_approx - prev_approx).norm();
 
-			 		if(approx_error.norm() < Endgame::GetFinalTolerance().abs())
+			 		if(approx_error.norm() < endgame_settings_.final_tolerance.abs())
 			 		{
 			 			//std::cout << "Power series endgame converged, check final approximation at origin." << '\n';
-			 			SetFinalApproximation(latest_approx);
+
+			 			endgame_settings_.final_approximation_at_origin = latest_approx;
 			 			// std::cout << "approx_error norm is " << approx_error.norm() << '\n';
 			 			//std::cout << "success" << '\n';
 
@@ -631,7 +623,7 @@ namespace bertini{
 				} //end while	
 
 			// in case if we get out of the for loop without setting. 
-			SetFinalApproximation(latest_approx);
+			endgame_settings_.final_approximation_at_origin = latest_approx;
 			// std::cout << "approx_error norm is " << approx_error.norm() << '\n';
 			return SuccessCode::Success;
 
