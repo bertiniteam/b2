@@ -112,7 +112,7 @@ namespace bertini{
 			template<typename TrackerType> 
 			class PowerSeriesEndgame : public Endgame{
 
-				config::PowerSeries power_series_struct_; 
+				config::PowerSeries power_series_settings_; 
 
 				std::deque<mpfr> times_;
 				std::deque< Vec<mpfr> > samples_;
@@ -134,17 +134,17 @@ namespace bertini{
 				void SetSecurityMaxNorm(mpfr new_max_norm){endgame_security_.max_norm = new_max_norm;}
 				mpfr GetSecurityMaxNorm(){return endgame_security_.max_norm;}
 
-				void SetCycleNumberAmplification(unsigned int new_cycle_number_amplification) { power_series_struct_.cycle_number_amplification = new_cycle_number_amplification;}
-				unsigned int GetCycleNumberAmplification() { return power_series_struct_.cycle_number_amplification;}
+				void SetCycleNumberAmplification(unsigned int new_cycle_number_amplification) { power_series_settings_.cycle_number_amplification = new_cycle_number_amplification;}
+				unsigned int GetCycleNumberAmplification() { return power_series_settings_.cycle_number_amplification;}
 
-				void SetMaxCycleNumber(unsigned int new_max_cycle_number) { power_series_struct_.max_cycle_number = new_max_cycle_number;}
-				unsigned int GetMaxCycleNumber() { return power_series_struct_.max_cycle_number;}
+				void SetMaxCycleNumber(unsigned int new_max_cycle_number) { power_series_settings_.max_cycle_number = new_max_cycle_number;}
+				unsigned int GetMaxCycleNumber() { return power_series_settings_.max_cycle_number;}
 
-				void SetCycleNumber(unsigned int new_cycle_number) {power_series_struct_.cycle_number = new_cycle_number;}
-				unsigned int GetCycleNumber() { return power_series_struct_.cycle_number;}
+				void SetCycleNumber(unsigned int new_cycle_number) {power_series_settings_.cycle_number = new_cycle_number;}
+				unsigned int GetCycleNumber() { return power_series_settings_.cycle_number;}
 
-				void SetUpperBoundOnCycleNumber(unsigned int new_upper_bound) { power_series_struct_.upper_bound_on_cycle_number = new_upper_bound;}
-				unsigned int GetUpperBoundOnCycleNumber() { return power_series_struct_.upper_bound_on_cycle_number;}
+				void SetUpperBoundOnCycleNumber(unsigned int new_upper_bound) { power_series_settings_.upper_bound_on_cycle_number = new_upper_bound;}
+				unsigned int GetUpperBoundOnCycleNumber() { return power_series_settings_.upper_bound_on_cycle_number;}
 
 				void SetTimes(std::deque<mpfr> times_to_set) { times_ = times_to_set;}
 				std::deque< mpfr > GetTimes() {return times_;}
@@ -163,8 +163,8 @@ namespace bertini{
 				void SetEndgameSettings(config::EndGame new_endgame_settings){endgame_settings_ = new_endgame_settings;}
 				config::EndGame GetEndgameStruct(){ return endgame_settings_;}
 
-				void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings){power_series_struct_ = new_power_series_settings;}
-				config::PowerSeries GetPowerSeriesSettings(){return power_series_struct_;}
+				void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings){power_series_settings_ = new_power_series_settings;}
+				config::PowerSeries GetPowerSeriesSettings(){return power_series_settings_;}
 
 				void SetSecuritySettings(config::Security new_endgame_security_settings){ endgame_security_ = new_endgame_security_settings;}
 				config::Security GetSecuritySettings(){return endgame_security_;}
@@ -298,15 +298,15 @@ namespace bertini{
 				// std::cout << "estimate is " << estimate << '\n';
 				if (estimate < 1)
 				{
-				  	power_series_struct_.upper_bound_on_cycle_number = 1;
+				  	power_series_settings_.upper_bound_on_cycle_number = 1;
 				}
 				else
 				{
 					//casting issues between auto and unsigned integer. TODO: Try to stream line this.
 					unsigned int upper_bound;
-					mpfr_float upper_bound_before_casting = round(floor(estimate + mpfr_float(.5))*power_series_struct_.cycle_number_amplification);
+					mpfr_float upper_bound_before_casting = round(floor(estimate + mpfr_float(.5))*power_series_settings_.cycle_number_amplification);
 					upper_bound = unsigned (upper_bound_before_casting);
-					power_series_struct_.upper_bound_on_cycle_number = max(upper_bound,power_series_struct_.max_cycle_number);
+					power_series_settings_.upper_bound_on_cycle_number = max(upper_bound,power_series_settings_.max_cycle_number);
 				}
 				// Make sure to use Eigen and transpose to use Linear algebra. DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want. 
 				// need to have cycle_number_amplification, this is the 5 used for 5 * estimate
@@ -335,7 +335,7 @@ namespace bertini{
 			{
 				//Compute dx_dt for each sample.
 				std::deque< Vec<ComplexType> > derivatives;
-				for(unsigned ii = 0; ii < GetNumSamples(); ++ii)
+				for(unsigned ii = 0; ii < endgame_settings_.num_sample_points; ++ii)
 				{	
 					// std::cout << "ii is " << ii <<'\n';
 					// std::cout << "Precision of sample is " << Precision(samples_[ii](0)) << '\n';
@@ -346,7 +346,7 @@ namespace bertini{
 				}
 				//Compute upper bound for cycle number.
 				BoundOnCycleNumber();
-				// std::cout << "upper_bound is " << power_series_struct_.upper_bound_on_cycle_number << '\n';
+				// std::cout << "upper_bound is " << power_series_settings_.upper_bound_on_cycle_number << '\n';
 
 				Vec<ComplexType> x_current_time = samples_[samples_.size()-1];
 				samples_.pop_back(); //use the last sample to compute the cycle number.
@@ -360,16 +360,16 @@ namespace bertini{
 				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
 				endgame_settings_.num_sample_points = endgame_settings_.num_sample_points - 1;
 
-				mpfr_float min_found_difference = power_series_struct_.min_difference_in_approximations;
+				mpfr_float min_found_difference = power_series_settings_.min_difference_in_approximations;
 				// std::cout << "upper_bound_on_cycle_number is " << upper_bound_on_cycle_number << '\n';
 				// std::cout << "num samples is " << num_sample_points << '\n';
 				// std::cout << "min found difference " << min_found_difference << '\n';
 				std::deque<mpfr> s_times;
 				std::deque< Vec<mpfr> > s_derivatives;
-				for(unsigned int cc = 1; cc <= power_series_struct_.upper_bound_on_cycle_number; ++cc)
+				for(unsigned int cc = 1; cc <= power_series_settings_.upper_bound_on_cycle_number; ++cc)
 				{
 					 // std::cout << "cc is " << cc << '\n';				
-					for(unsigned int ii=0; ii<GetNumSamples(); ++ii)// using the last sample to predict to. 
+					for(unsigned int ii=0; ii<endgame_settings_.num_sample_points; ++ii)// using the last sample to predict to. 
 					{ 
 						// std::cout << "ii is " << ii << '\n';
 						// std::cout << "times[ii] is " << times[ii] << '\n';
@@ -378,7 +378,7 @@ namespace bertini{
 						s_derivatives.push_back(derivatives[ii]*(ComplexType(cc)*pow(times_[ii],ComplexType((cc - 1))/ComplexType(cc))));
 					}
 
-					Vec<ComplexType> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,GetNumSamples(),s_times,samples_,s_derivatives);
+					Vec<ComplexType> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,endgame_settings_.num_sample_points,s_times,samples_,s_derivatives);
 
 					  // std::cout << "computed approx is " << approx << '\n';
 					  // std::cout << "norm is " << (approx - x_current_time).norm() << '\n';
@@ -386,7 +386,7 @@ namespace bertini{
 					if((approx - x_current_time).norm() < min_found_difference)
 					{
 						min_found_difference = (approx - x_current_time).norm();
-						power_series_struct_.cycle_number = cc;
+						power_series_settings_.cycle_number = cc;
 					}
 
 					s_derivatives.clear(); // necessary so we can repopulate with different s-plane transformations based on cycle number 
@@ -421,21 +421,17 @@ namespace bertini{
 			template<typename ComplexType>
 			Vec<ComplexType> ComputeApproximationOfXAtT0(const ComplexType time_t0)
 			{
-
-
 				//Checking to make sure all samples are of the same precision.
 				unsigned max_precision = 0; 
-
-				for(unsigned ii = 0; ii < GetNumSamples();++ii)
+				for(unsigned ii = 0; ii < endgame_settings_.num_sample_points;++ii)
 				{
-
 					if(Precision(samples_[ii](0)) > max_precision)
 					{
 						max_precision = Precision(samples_[ii](0));
 					}
 				}
 
-				for(unsigned ii = 0; ii < GetNumSamples();++ii)
+				for(unsigned ii = 0; ii < endgame_settings_.num_sample_points;++ii)
 				{
 					if(Precision(samples_[ii](0)) < max_precision)
 					{
@@ -448,33 +444,21 @@ namespace bertini{
 				}
 
 				endgame_tracker_.GetSystem().precision(max_precision);
-				
-
-
 				std::deque< Vec<ComplexType> > derivatives = ComputeCycleNumber(times_[times_.size()-1],samples_[samples_.size()-1]); //sending in last element so that ComplexType can be known for templating.
 
-				// std::cout << "cycle number is " << power_series_struct_.cycle_number << '\n';
+				// std::cout << "cycle number is " << power_series_settings_.cycle_number << '\n';
 
 				// //Conversion to S-plane.
 				std::deque<mpfr> s_times;
 				std::deque< Vec<mpfr> > s_derivatives;
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii){
-					s_derivatives.push_back(derivatives[ii]*(ComplexType(power_series_struct_.cycle_number)*pow(times_[ii],(ComplexType(power_series_struct_.cycle_number) - ComplexType(1))/ComplexType(power_series_struct_.cycle_number))));
-					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(power_series_struct_.cycle_number)));
-
-					// std::cout << "s times at ii is" << s_times[ii] << '\n';
-					// std::cout << "s derivatives at ii is" << s_derivatives[ii] << '\n';
-					// std::cout << "samples at ii is" << samples_[ii] << '\n';
-
+					s_derivatives.push_back(derivatives[ii]*(ComplexType(power_series_settings_.cycle_number)*pow(times_[ii],(ComplexType(power_series_settings_.cycle_number) - ComplexType(1))/ComplexType(power_series_settings_.cycle_number))));
+					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(power_series_settings_.cycle_number)));
 				}
-				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0,GetNumSamples(),s_times,samples_,s_derivatives);
+				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, endgame_settings_.num_sample_points, s_times, samples_, s_derivatives);
 
-
-				 // std::cout << "approx is " << Approx <<  '\n';
 				return Approx;
-
-
 			}//end ComputeApproximationOfXAtT0
 
 
