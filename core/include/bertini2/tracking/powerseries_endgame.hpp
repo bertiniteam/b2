@@ -520,7 +520,7 @@ namespace bertini{
 			    Vec<ComplexType> dehom_of_latest_approx;
 
 
-				while (approx_error.norm() > GetFinalTol().abs())
+				while (approx_error.norm() > GetFinalTol())
 				{
 					endgame_settings_.final_approximation_at_origin = prev_approx;
 			  		 auto next_time = times_.back() * endgame_settings_.sample_factor; //setting up next time value.
@@ -600,14 +600,15 @@ namespace bertini{
 
 			 		if(GetSecurityLevel() <= 0)
 					{
-				 		if(dehom_of_latest_approx.norm() > endgame_security_.max_norm.abs() && dehom_of_prev_approx.norm() > endgame_security_.max_norm.abs()){
+				 		if(dehom_of_latest_approx.norm() > endgame_security_.max_norm && dehom_of_prev_approx.norm() > endgame_security_.max_norm)
+				 		{
 			 				return SuccessCode::SecurityMaxNormReached;
 				 		}
 				 	}
 
 			 		approx_error = (latest_approx - prev_approx).norm();
 
-			 		if(approx_error.norm() < endgame_settings_.final_tolerance.abs())
+			 		if(approx_error.norm() < endgame_tolerances_.final_tolerance)
 			 		{
 			 			//std::cout << "Power series endgame converged, check final approximation at origin." << '\n';
 
