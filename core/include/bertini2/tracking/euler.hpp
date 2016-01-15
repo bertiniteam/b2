@@ -87,24 +87,12 @@ namespace bertini{
 					               RealType const& tracking_tolerance,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-
-
-									
-
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 				              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 				              				"underlying complex type and the type for comparisons must match");
 
-				// std::cout << "current_time = " << current_time << "\n";
-				// std::cout << "current_space = " << current_space << "\n";
-
 				Vec<ComplexType> dh_dt = -S.TimeDerivative(current_space, current_time);
 				Mat<ComplexType> dh_dx = S.Jacobian(current_space, current_time); // this will complain (throw) if the system does not depend on time.
-
-				// std::cout << "size of dh_dt = \n" << dh_dt.size() << "\n";
-				// std::cout << "type of dh_dt = \n" << boost::typeindex::type_id_with_cvr<decltype(dh_dt)>().pretty_name() << "\n";
-				// std::cout << "dh_dt = \n" << dh_dt << "\n";
-				// std::cout << "dh_dx = \n" << dh_dx << "\n";
 
 				// solve delta_x = (dH/dx)^(-1)*Y
 				// Y = dH/dt
@@ -115,9 +103,6 @@ namespace bertini{
 					return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 
 				auto delta_x = LU.solve(dh_dt); 
-
-				// std::cout << "euler delta_x = \n" << delta_x << std::endl;
-
 
 				Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
 				Vec<ComplexType> temp_soln = LU.solve(randy);
@@ -134,17 +119,10 @@ namespace bertini{
 				else // no need to compute the condition number
 					num_steps_since_last_condition_number_computation++;
 
-
-				// std::cout << "norm_J: " << norm_J << " norm_J_inverse: " << norm_J_inverse << "\n";
-				// std::cout << "condition_number_estimate: " << condition_number_estimate << "\n";
-
 				if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
 					return SuccessCode::HigherPrecisionNecessary;
 				else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
 					return SuccessCode::HigherPrecisionNecessary;
-
-
-				// std::cout << "euler delta_t * delta_x = \n" << delta_x * delta_t << std::endl;
 
 				next_space = current_space + delta_x * delta_t;
 

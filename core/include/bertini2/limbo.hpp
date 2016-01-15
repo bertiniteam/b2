@@ -45,8 +45,8 @@ extern "C" {
 
 
 
-//https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
-
+// https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
+// asked by user Adi, answered by James Adkison.  This code was provided CC-BY-SA 3.
 template<typename T>
 std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
 {

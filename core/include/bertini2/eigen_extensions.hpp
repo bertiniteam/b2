@@ -89,6 +89,15 @@ namespace bertini {
 		SmallValue
 	};
 
+	/**
+	\brief Check the diagonal elements of an LU decomposition for small values and large ratios.  
+
+	\return Success if things are ok.  LargeChange or SmallValue if one is found.
+
+	This function requires a square non-empty matrix.
+
+	\tparam Derived Matrix type from Eigen.
+	*/
 	template <typename Derived>
 	MatrixSuccessCode LUPartialPivotDecompositionSuccessful(Eigen::MatrixBase<Derived> const& LU)
 	{
@@ -120,7 +129,9 @@ namespace bertini {
 		return MatrixSuccessCode::Success;
 	}
 
-
+	/**
+	\brief Make a Kahan matrix with a given number type.
+	*/
 	template <typename NumberType>
 	Eigen::Matrix<NumberType, Eigen::Dynamic, Eigen::Dynamic> KahanMatrix(unsigned int mat_size, NumberType c)
 	{
@@ -168,6 +179,7 @@ namespace bertini {
 
 	\param rows The number of rows.
 	\param cols The number of columns.
+	\tparam NumberType the type of number to fill the matrix with.
 	*/
 	template <typename NumberType>
 	Mat<NumberType> RandomOfUnits(uint rows, uint cols)
@@ -181,6 +193,7 @@ namespace bertini {
 	\return The random vector of units.
 
 	\param size The length of the vector.
+	\tparam NumberType the type of number to fill the vector with.
 	*/
 	template <typename NumberType>
 	Vec<NumberType> RandomOfUnits(uint size)
@@ -194,6 +207,11 @@ namespace bertini {
 // the following code comes from
 // https://stackoverflow.com/questions/18382457/eigen-and-boostserialize
 // and adds support for serialization of Eigen types
+//
+// question asked by user Gabriel and answered by Shmuel Levine
+// answer code repeated here verbatim.
+// please update this comment if this code is changed, 
+// and post the modifications to the above referenced post on SO.
 namespace boost{
     namespace serialization{
 
