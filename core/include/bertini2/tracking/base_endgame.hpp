@@ -69,34 +69,19 @@ namespace bertini{
 		Since the Bertini Endgames have common functionality, and we want to be able to call arbitrary algorithms using and tracker type, we use inheritance.  That is, there is common functionality in all endgames, such as
 
 		* ComputeApproximationOfXAtT0
-
-		* ComputeInitialSamples
-		
-		which we want all Endgames to be able to do.  However, the internal behaviour of a particular endgame varies -- which is why it is a different type. In particular, the sample points needed for the power series endgame are a geometric progression time values with there space values whereas for Cauchy these samples create a polygon around the origin to use the Cauchy Integral Formula.
-		
-		Also, there are some setting that are needed for each endgame.
-
-		* Number of sample points.
-
-		* Final Tolerance
+	
 		
 
 
 
 
-		## Creating a new tracker type
+		## Creating a new endgame type
 
-		To create a new Tracker type, inherit from this, and override the following functions:
+		To create a new endgame type, inherit from this, and override the following function:
 
 		\code
 		
 		virtual Vec<mpfr> ComputeApproximationOfXAtT0() {Vec<mpfr> base(1); base << mpfr("0","0"); return base;}
-
-		virtual void ComputeInitialSamples() {}
-
-
-
-
 
 		*/
 			class Endgame
@@ -117,9 +102,6 @@ namespace bertini{
 
 				void SetPathTruncationThreshold(mpfr_float new_path_truncation_threshold){endgame_tolerances_.path_truncation_threshold = new_path_truncation_threshold;}
 				mpfr_float GetPathTruncationThreshold(){return endgame_tolerances_.path_truncation_threshold;}
-
-
-
 
 			 	/**
 				 \Every endgame must have a ComputeApproximationOfXAtT0 function, so we can approximate the value at the origin. 
@@ -154,18 +136,12 @@ namespace bertini{
 					times.push_back(endgame_time);
 					Vec<ComplexType> next_sample;
 
-					// std::cout << "x_endgame is " << x_endgame << '\n';
-					// std::cout << "endgame_time is " << endgame_time << '\n';
-
 					for(int ii=2; ii <= num_samples; ++ii)//start at 2 since first sample is at the endgame boundary.
 					{ 
-						 // std::cout << "ii is " << ii <<  std::endl;
 						ComplexType next_time = times.back() * endgame_settings_.sample_factor;	
 
 						SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,times.back(),next_time,samples.back());
 
-						// std::cout << "next_sample is " << next_sample << '\n';
-						// std::cout << "next_time is " << next_time << '\n';
 						samples.push_back(next_sample);
 						times.push_back(next_time);		
 					}				
@@ -203,7 +179,6 @@ namespace bertini{
       				finite_difference_matrix(2*ii+1,1) = derivatives[ii];	/*  F[2*i+1][1]  = derivatives[i]; */
      				array_of_times(2*ii) = times[ii];						/*  z[2*i]       = times[i];       */
      				array_of_times(2*ii+1) =  times[ii];					/*  z[2*i+1]     = times[i];       */
-
 				}
 
 				//Add first round of finite differences to fill out rest of matrix. 
@@ -216,12 +191,9 @@ namespace bertini{
 				//Filliing out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
 				for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
 				{
-					// std::cout << "ii is " << ii << '\n';
 					for(unsigned int jj=2; jj <=ii; ++jj)
 					{
-						// std::cout << "jj is " << jj << '\n';
-						finite_difference_matrix(ii,jj) = (ComplexType(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));
-						
+						finite_difference_matrix(ii,jj) = (ComplexType(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));						
 					}
 				}
 
@@ -236,11 +208,8 @@ namespace bertini{
 					ii--;
 				}
 				//This builds the hermite polynomial from the highest term down. 
-				//As we multiply the previous result we will construct_ the highest term down to the last term.
-
+				//As we multiply the previous result we will construct the highest term down to the last term.
 				Result = Result * (target_time - array_of_times(0)) + finite_difference_matrix(0,0); // Last term in hermite polynomial.
-
-
 				return Result;
 			}
 
