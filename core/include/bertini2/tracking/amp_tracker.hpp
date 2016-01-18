@@ -52,7 +52,7 @@ namespace bertini{
 		mpfr_float MinTimeForCurrentPrecision(unsigned precision)
 		{
 			if (precision==DoublePrecision())
-				return max( pow( mpfr_float(10), -long(precision)+3), mpfr_float("1e-150"));
+				return max( mpfr_float(pow( mpfr_float(10), -long(precision)+3)), mpfr_float("1e-150"));
 			else
 				return pow( mpfr_float(10), -long(precision)+3);
 		}
@@ -105,7 +105,7 @@ namespace bertini{
 		*/
 		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr const& current_time)
 		{
-			return unsigned(ceil(log_of_stepsize) + ceil(log10(abs(current_time))) + 2);
+			return mpfr_float(ceil(log_of_stepsize) + ceil(log10(abs(current_time))) + 2).convert_to<int>();
 		}
 
 
@@ -153,10 +153,10 @@ namespace bertini{
 			auto minimizer_routine = 
 				[&min_cost, &new_stepsize, &new_precision, criterion_B_rhs, num_newton_iterations, predictor_order, max_stepsize](unsigned candidate_precision)
 				{
-					auto candidate_stepsize = min(StepsizeSatisfyingCriterionB(candidate_precision, criterion_B_rhs, num_newton_iterations, predictor_order),
+					mpfr_float candidate_stepsize = min(StepsizeSatisfyingCriterionB(candidate_precision, criterion_B_rhs, num_newton_iterations, predictor_order),
 					                              max_stepsize);
 
-					auto current_cost = ArithmeticCost(candidate_precision) / abs(candidate_stepsize);
+					mpfr_float current_cost = ArithmeticCost(candidate_precision) / abs(candidate_stepsize);
 
 					if (current_cost < min_cost)
 					{
@@ -677,7 +677,7 @@ namespace bertini{
 
 
 				mpfr_float min_stepsize = current_stepsize_ * stepping_config_.step_size_fail_factor;
-				mpfr_float max_stepsize = min(current_stepsize_ * stepping_config_.step_size_success_factor, stepping_config_.max_step_size);
+				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * stepping_config_.step_size_success_factor), stepping_config_.max_step_size);
 
 
 				unsigned max_precision = current_precision_;
@@ -806,14 +806,16 @@ namespace bertini{
 					mpfr_float criterion_B_rhs = B_RHS<ComplexType,RealType>();
 
 					unsigned min_precision = max(min_next_precision,
-					                             unsigned(criterion_B_rhs),
+					                             criterion_B_rhs.convert_to<unsigned int>(),
 					                             DigitsC<ComplexType,RealType>(),
 					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, current_time_),
 					                             digits_final_
 					                             );
 					
+					mpfr_float a(ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/newton_config_.max_num_newton_iterations));
+
 					unsigned max_precision = max(min_precision, 
-					                             unsigned(ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/newton_config_.max_num_newton_iterations))
+					                             a.convert_to<unsigned int>()
 					                             );
 
 					MinimizeTrackingCost<RealType>(next_precision_, next_stepsize_, 

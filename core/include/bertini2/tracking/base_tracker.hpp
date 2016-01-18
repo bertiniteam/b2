@@ -151,7 +151,8 @@ namespace bertini{
 				Predictor(new_predictor_choice);
 				
 				tracking_tolerance_ = tracking_tolerance;
-				digits_tracking_tolerance_ = unsigned(ceil(-log10(tracking_tolerance)));
+				mpfr_float b = ceil(-log10(tracking_tolerance));
+				digits_tracking_tolerance_ = b.convert_to<unsigned int>();
 
 				path_truncation_threshold_ = path_truncation_threshold;
 
