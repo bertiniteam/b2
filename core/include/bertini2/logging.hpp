@@ -52,6 +52,18 @@ namespace bertini
 	namespace src = boost::log::sources;
 	namespace sinks = boost::log::sinks;
 	namespace keywords = boost::log::keywords;
+	
+	// the following is adapted from https://stackoverflow.com/questions/11421432/
+	// question answered by user James Adkison, asked by Adi, edited by James McNellis.
+	// the adaptation is the replacement of std::ostream with the blos type.  why the unmodified code still fails
+	// for blos types is a mystery.
+	using blos = boost::log::record_ostream;
+	template<typename T>
+	blos& operator<<(typename std::enable_if<std::is_enum<T>::value, blos>::type& stream, const T& e)
+	{
+		return stream << static_cast<typename std::underlying_type<T>::type>(e);
+	}
+
 
 	struct LoggingInit
 	{
