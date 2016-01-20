@@ -215,16 +215,16 @@ namespace bertini{
 
 					step_success_code_ = TrackerIteration();
 
-
-					if (step_success_code_==SuccessCode::Success)
+					if (infinite_path_truncation_ && (CheckGoingToInfinity()==SuccessCode::GoingToInfinity))
+					{	
+						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration indicated going to infinity";
+						PostTrackCleanup();
+						return SuccessCode::GoingToInfinity;
+					}
+					else if (step_success_code_==SuccessCode::Success)
 					{	
 						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful";
 						IncrementCountersSuccess();
-					}
-					else if (step_success_code_==SuccessCode::GoingToInfinity)
-					{
-						PostTrackCleanup();
-						return step_success_code_;
 					}
 					else
 					{
@@ -345,6 +345,16 @@ namespace bertini{
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
 
 
+			/**
+			\brief Switch resetting of initial step size to that of the stepping settings.
+
+			By default, initial step size is retrieved from the stepping settings at the start of each path track.  To turn this off, and re-use the previous step size from the previously tracked path, turn off by calling this function with false.
+			*/
+			void ReinitializeInitialStepSize(bool should_reinitialize_stepsize)
+			{
+				reinitialize_stepsize_ = should_reinitialize_stepsize;
+			}
+
 		protected:
 
 			/**
@@ -398,8 +408,25 @@ namespace bertini{
 				num_consecutive_failed_steps_++;
 			}
 
+			/**
+			\brief Check whether the path is going to infinity, as it tracks.  
+
+			This check is necessary because a homotopy may be malformed, or may have encountered a probability-0 event.  That it is a 0 probability event is why this check is disable-able via a toggle.
+			*/
+			virtual 
+			SuccessCode CheckGoingToInfinity() const = 0;
+
+			void InitializeStepsize() const
+			{
+				current_stepsize_ = stepping_config_.initial_step_size;
+			}
+
+
 
 			const class System& tracked_system_; ///< The system being tracked.
+
+			bool infinite_path_truncation_ = true; /// Whether should check if the path is going to infinity while tracking.  On by default.
+			bool reinitialize_stepsize_ = true; ///< Whether should re-initialize the stepsize with each call to Trackpath.  On by default.
 
 			// tracking the numbers of things
 			mutable unsigned num_total_steps_taken_; ///< The number of steps taken, including failures and successes.

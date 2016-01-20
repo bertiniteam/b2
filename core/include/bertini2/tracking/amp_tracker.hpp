@@ -382,14 +382,15 @@ namespace bertini{
 				#endif
 
 				// set up the master current time and the current step size
-				current_time_.precision(start_time.precision());
+				current_time_.precision(Precision(start_point(0)));
 				current_time_ = start_time;
 
 				if (preserve_precision_)
 					initial_precision_ = Precision(start_point(0));
 
-				current_stepsize_.precision(stepping_config_.initial_step_size.precision());
-				current_stepsize_ = stepping_config_.initial_step_size;
+				current_stepsize_.precision(Precision(start_point(0)));
+				if (reinitialize_stepsize_)
+					InitializeStepsize();
 
 				// populate the current space value with the start point, in appropriate precision
 				if (start_point(0).precision()==DoublePrecision())
@@ -628,6 +629,27 @@ namespace bertini{
 				// copy the tentative vector into the current space vector;
 				current_space = tentative_next_space;
 				return StepSuccess<ComplexType,RealType>();
+			}
+
+
+			/**
+			Check whether the path is going to infinity.
+			*/
+			SuccessCode CheckGoingToInfinity() const override
+			{
+				if (current_precision_ == DoublePrecision())
+					return CheckGoingToInfinity<dbl>();
+				else
+					return CheckGoingToInfinity<mpfr>();
+			}
+
+			template <typename ComplexType>
+			SuccessCode CheckGoingToInfinity() const
+			{
+				if (tracked_system_.DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
+					return SuccessCode::GoingToInfinity;
+				else
+					return SuccessCode::Success;
 			}
 
 
@@ -1086,7 +1108,6 @@ namespace bertini{
 												current_space,
 												current_time, 
 												RealType(tracking_tolerance_),
-												RealType(path_truncation_threshold_),
 												newton_config_.min_num_newton_iterations,
 												newton_config_.max_num_newton_iterations,
 												AMP_config_);
@@ -1166,7 +1187,6 @@ namespace bertini{
 							   start_point,
 							   current_time, 
 							   tracking_tolerance_,
-							   RealType(path_truncation_threshold_),
 							   newton_config_.min_num_newton_iterations,
 							   newton_config_.max_num_newton_iterations,
 							   AMP_config_);
@@ -1202,7 +1222,6 @@ namespace bertini{
 							   start_point,
 							   current_time, 
 							   tolerance,
-							   RealType(path_truncation_threshold_),
 							   newton_config_.min_num_newton_iterations,
 							   newton_config_.max_num_newton_iterations,
 							   AMP_config_);
@@ -1512,8 +1531,7 @@ namespace bertini{
 			////////////
 			// state variables
 			/////////////
-
-			bool preserve_precision_ = true;
+			bool preserve_precision_ = true; ///< Whether the tracker should change back to the initial precision after tracking paths.
 
 			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
 			mutable unsigned next_precision_; ///< The next precision

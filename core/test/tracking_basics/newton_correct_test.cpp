@@ -96,7 +96,6 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	Vec<dbl> newton_correction_result;
 
 	tracking_tolerance = double(1e1);
-	double path_truncation_threshold(1e4);
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -104,7 +103,6 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 								               current_space, 
 								               current_time, 
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -158,7 +156,6 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 	Vec<mpfr> newton_correction_result;
 
 	tracking_tolerance = bertini::mpfr_float("1e1");
-	bertini::mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -166,7 +163,6 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 								               current_space, 
 								               current_time, 
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -221,7 +217,6 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_double)
 	Vec<dbl> newton_correction_result;
 
 	tracking_tolerance = double(1e1);
-	double path_truncation_threshold(1e4);
 	unsigned max_num_newton_iterations = 2;
 	unsigned min_num_newton_iterations = 2;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -229,7 +224,6 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_double)
 								               current_space, 
 								               current_time, 
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -283,7 +277,6 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 	Vec<mpfr> newton_correction_result;
 
 	tracking_tolerance = bertini::mpfr_float("1e1");
-	bertini::mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 2;
 	unsigned min_num_newton_iterations = 2;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -291,7 +284,6 @@ BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 								               current_space, 
 								               current_time, 
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -345,7 +337,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
 	Vec<dbl> newton_correction_result;
 
 	double tracking_tolerance = double(10);
-	double path_truncation_threshold(1e4);
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -353,7 +344,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_double)
 								               current_space, 
 								               current_time,
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -405,7 +395,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
 	Vec<mpfr> newton_correction_result;
 
 	tracking_tolerance = mpfr_float("1e1");
-	mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -413,7 +402,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_B_violated_mp)
 								               current_space, 
 								               current_time,
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -473,7 +461,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
 	Vec<mpfr> newton_correction_result;
 
 	tracking_tolerance = mpfr_float("1e1");
-	mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -481,7 +468,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
 								               current_space, 
 								               current_time,
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -539,7 +525,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
 	Vec<mpfr> newton_correction_result;
 
 	tracking_tolerance = mpfr_float("1e1");
-	mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -547,7 +532,6 @@ BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
 								               current_space, 
 								               current_time,
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -599,7 +583,6 @@ BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_double)
 	Vec<mpfr> newton_correction_result;
 
 	tracking_tolerance = mpfr_float("1e1");
-	mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -607,7 +590,6 @@ BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_double)
 								               current_space, 
 								               current_time, 
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -657,7 +639,6 @@ BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
 	Vec<mpfr> newton_correction_result;
 
 	tracking_tolerance = mpfr_float("1e1");
-	mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -665,7 +646,6 @@ BOOST_AUTO_TEST_CASE(newton_step_linear_algebra_fails_mp)
 								               current_space, 
 								               current_time, 
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations,
 								               AMP);
@@ -712,7 +692,6 @@ BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_d)
 
 
 	mpfr_float tracking_tolerance("1e1");
-	mpfr_float path_truncation_threshold("1e4");
 
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
@@ -723,7 +702,6 @@ BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_d)
 								               current_space, 
 								               current_time,
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations);
 
@@ -768,7 +746,6 @@ BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_mp)
 	Vec<mpfr> newton_correction_result;
 
 	mpfr_float tracking_tolerance("1e1");
-	mpfr_float path_truncation_threshold("1e4");
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	auto success_code = bertini::tracking::Correct(newton_correction_result,
@@ -776,7 +753,6 @@ BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_mp)
 								               current_space, 
 								               current_time,
 								               tracking_tolerance,
-								               path_truncation_threshold,
 								               min_num_newton_iterations,
 								               max_num_newton_iterations);
 
