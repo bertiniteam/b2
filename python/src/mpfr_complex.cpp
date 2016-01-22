@@ -86,23 +86,7 @@ namespace bertini{
 				.def(self / other<mpfr_float>())
 				.def(self /= other<mpfr_float>())
 
-				//int
-				.def(self += other<int>())
-				.def(self + other<int>())
-				.def(other<int>() + self)
-
-				.def(self -= other<int>())
-				.def(self - other<int>())
-				.def(other<int>() - self)
-				
-				.def(other<int>() * self)
-				.def(self * other<int>())
-				.def(self *= other<int>())
-
-				.def(other<int>() / self)
-				.def(self / other<int>())
-				.def(self /= other<int>())
-				
+			
 				
 
 
@@ -154,7 +138,7 @@ namespace bertini{
 			def("sqrt",&sqrt);
 
 			def("polar",&polar);
-			def("norm",&norm);
+			def("norm",&complex::norm);
 			def("conj",&conj);
 			def("arg",&arg);
 			def("inverse",&inverse);
