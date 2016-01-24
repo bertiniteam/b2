@@ -6,7 +6,7 @@ TESTS += endgames_test
 
 endgames_test_source_files = \
 	test/endgames/endgames_test.cpp \
-	test/endgames/powerseries_class_test.cpp
+	test/endgames/cauchy_class_test.cpp
 
 
 
