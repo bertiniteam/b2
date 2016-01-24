@@ -109,7 +109,66 @@ BOOST_AUTO_TEST_CASE(circle_track_d_for_cauchy_class_test)
 
 	BOOST_CHECK((first_track_sample - sample).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
 
-} // end compute cycle number mp
+} // end circle_track_d_for_cauchy_class_test
+
+BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_test)
+{
+	mpfr_float::default_precision(30);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+
+
+	time = mpfr("0.1");
+	times.push_back(time);
+	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
+	samples.push_back(sample);
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+
+
+	auto first_track_sample =  My_Endgame.CircleTrack(time,sample);
+
+	// std::cout << "first track sample is " << first_track_sample << '\n';
+
+	BOOST_CHECK((first_track_sample - sample).norm() > My_Endgame.GetTrackToleranceDuringEndgame());
+
+	auto second_track_sample =  My_Endgame.CircleTrack(time,first_track_sample);
+
+	// std::cout << "second track sample is " << second_track_sample << '\n';
+
+	BOOST_CHECK((second_track_sample - sample).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
+	
+} // end circle_track_d_for_cauchy_class_test
 
 
 

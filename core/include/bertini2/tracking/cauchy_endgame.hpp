@@ -207,6 +207,7 @@ namespace bertini
 					Vec<ComplexType> current_sample = starting_sample;
 					Vec<ComplexType> next_sample;
 					ComplexType current_time = starting_time;
+					ComplexType next_time;
 
 					if(endgame_settings_.num_sample_points < 3) // need to make sure we won't track right through the origin.
 					{
@@ -231,7 +232,7 @@ namespace bertini
 
 					for(unsigned ii = 0; ii < endgame_settings_.num_sample_points && tracking_success == bertini::tracking::SuccessCode::Success; ++ii)
 					{
-						std::cout << "ii is " << ii << '\n';
+						// std::cout << "ii is " << ii << '\n';
 
 					// 	//calculate the next angle to stop at -2 * PI + 2 * PI * i / M
 
@@ -243,7 +244,7 @@ namespace bertini
 						// std::cout << "type of imag part is " << typeid(next_angle_to_stop_at).name() << '\n';
 						// std::cout << "sin(angle) is " << mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)) << '\n';	
 
-						ComplexType next_time = ComplexType(mpfr_float(starting_time.abs() * cos(next_angle_to_stop_at)),mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)));	
+						next_time = ComplexType(mpfr_float(starting_time.abs() * cos(next_angle_to_stop_at)),mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)));	
 
 						// std::cout << "next time is " << next_time << '\n';
 
@@ -259,6 +260,8 @@ namespace bertini
 								{//successful track
 									// consecutive_success++;
 									current_angle = next_angle_to_stop_at;	
+									current_sample = next_sample;
+									current_time = next_time;
 								}
 								else if(tracking_success == SuccessCode::HigherPrecisionNecessary)
 								{ 
@@ -309,8 +312,10 @@ namespace bertini
 					}
 
 					//final leg of tracking around the circle
-					if ((current_time - starting_time).norm() > endgame_tolerances_.track_tolerance_during_endgame )
+					if ((next_time - starting_time).norm() < endgame_tolerances_.track_tolerance_during_endgame )
 					{
+						// std::cout << "in final leg" <<'\n';
+
 						ComplexType next_time = ComplexType(mpfr_float(starting_time.abs() * cos(next_angle_to_stop_at)),mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)));	
 						SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,current_time,next_time,current_sample);
 					}
