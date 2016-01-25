@@ -48,12 +48,9 @@ namespace bertini{
 		template<typename T> Vec<T> (bertini::System::*sysEval1)(const Vec<T> &) = &bertini::System::Eval<T>;
 		template<typename T> Vec<T> (bertini::System::*sysEval2)(const Vec<T> &, const T &) = &bertini::System::Eval<T>;
 		
-		template<typename T> Mat<T> (bertini::System::*sysJac1)() = &bertini::System::Jacobian<T>;
-		template<typename T> Mat<T> (bertini::System::*sysJac2)(const Vec<T> &) = &bertini::System::Jacobian<T>;
-		template<typename T> Mat<T> (bertini::System::*sysJac3)(const Vec<T> &, const T &) = &bertini::System::Jacobian<T>;
-		
-		template<typename T> Vec<T> (bertini::System::*sysDehom)(Vec<T> const&) const = &bertini::System::DehomogenizePoint<T>;
-		
+		template<typename T> Mat<T> (bertini::System::*sysJac1)(const Vec<T> &) = &bertini::System::Jacobian<T>;
+		template<typename T> Mat<T> (bertini::System::*sysJac2)(const Vec<T> &, const T &) = &bertini::System::Jacobian<T>;
+				
 		std::vector<int> (bertini::System::*sysDeg1)() const = &bertini::System::Degrees;
 		std::vector<int> (bertini::System::*sysDeg2)(VariableGroup const&) const = &bertini::System::Degrees;
 	} // re: python
