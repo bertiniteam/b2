@@ -596,11 +596,13 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	My_Endgame.SetSamples(samples);
 	// My_Endgame.SetDerivatives(derivatives);
 
+	My_Endgame.BoundOnCycleNumber();
+
 	//My_Endgame.power_series_settings_.upper_bound_on_cycle_number;
 
 	BOOST_CHECK(My_Endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
-} // end compute bound on cycle number mp
+} // end compute bound on cycle number dbl
 
 
 BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)

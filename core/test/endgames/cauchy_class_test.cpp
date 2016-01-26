@@ -171,5 +171,442 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_t
 } // end circle_track_d_for_cauchy_class_test
 
 
+BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
+{
+	/* In the power series endgame there is a bound on that is calculated that will be used as a higher
+	bound for the exhaustive search of the best cycle number. 
+
+	This is calcuated using a modified version of the cycle test in the bertini book, page 53. 
+
+	The bound calculated is then compared against the user defined setting MaxCycleNum which is default at 6. 
+
+	We take a function (x-1)^3 because we know it should have a cycle number of 3. (This is true but will not be true near 0 or near 0.1).
+
+	This is because the path will not look cubic globally. 
+	*/
+	
+	mpfr_float::default_precision(16);
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x");
+	sys.AddFunction(pow(x - 1,3));  //f(x) = (x-1)^3
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+	// Vec<mpfr> derivative(1);
+
+	time = mpfr(.1); // x = .1
+	times.push_back(time);
+	sample << mpfr("-0.729"); // f(.1) = -0.729
+	samples.push_back(sample);
+
+
+	time = mpfr(".05"); // x = .1/2 = .05
+	times.push_back(time);
+	sample << mpfr("-0.857375"); //f(.05) = -0.857375
+	samples.push_back(sample);
+
+
+	time = mpfr(".025"); // x = .05/2 = .025
+	times.push_back(time);
+	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
+	samples.push_back(sample);
+
+
+	bertini::tracking::config::Security endgame_security_struct;
+	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto first_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	// std::cout << "first c over k is " << first_c_over_k << '\n';
+	// std::cout << "first diff " << abs(first_c_over_k - mpfr_float("1.12917")) << '\n';
+	// std::cout << "Tol is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
+
+	 BOOST_CHECK( abs(first_c_over_k - mpfr_float("1.12917")) < 1e-5 ); 
+
+	//Setting up a new sample for approximation.
+	time = mpfr(".0125"); //.025/2 = .0125
+	times.push_back(time);
+	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
+	samples.push_back(sample);
+
+	//Get rid of earliest sample. 
+	times.pop_front();
+	samples.pop_front();
+
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto second_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	// std::cout << "second_c_over_k is " << second_c_over_k << '\n';
+	// std::cout << "second diff is " << abs(second_c_over_k - mpfr_float("1.05888")) << '\n';
+	BOOST_CHECK( abs(second_c_over_k - mpfr_float("1.05888")) <  1e-5); 
+
+} // end compute c over k dbl for cauchy class 
+
+BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
+{
+	/* In the power series endgame there is a bound on that is calculated that will be used as a higher
+	bound for the exhaustive search of the best cycle number. 
+
+	This is calcuated using a modified version of the cycle test in the bertini book, page 53. 
+
+	The bound calculated is then compared against the user defined setting MaxCycleNum which is default at 6. 
+
+	We take a function (x-1)^3 because we know it should have a cycle number of 3. (This is true but will not be true near 0 or near 0.1).
+
+	This is because the path will not look cubic globally. 
+	*/
+	
+	mpfr_float::default_precision(30);
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x");
+	sys.AddFunction(pow(x - 1,3));  //f(x) = (x-1)^3
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+	// Vec<mpfr> derivative(1);
+
+	time = mpfr(.1); // x = .1
+	times.push_back(time);
+	sample << mpfr("-0.729"); // f(.1) = -0.729
+	samples.push_back(sample);
+
+
+	time = mpfr(".05"); // x = .1/2 = .05
+	times.push_back(time);
+	sample << mpfr("-0.857375"); //f(.05) = -0.857375
+	samples.push_back(sample);
+
+
+	time = mpfr(".025"); // x = .05/2 = .025
+	times.push_back(time);
+	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
+	samples.push_back(sample);
+
+
+	bertini::tracking::config::Security endgame_security_struct;
+	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto first_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	// std::cout << "first c over k is " << first_c_over_k << '\n';
+	// std::cout << "first diff " << abs(first_c_over_k - mpfr_float("1.12917")) << '\n';
+	// std::cout << "Tol is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
+
+	 BOOST_CHECK( abs(first_c_over_k - mpfr_float("1.12917")) < 1e-5 ); 
+
+	//Setting up a new sample for approximation.
+	time = mpfr(".0125"); //.025/2 = .0125
+	times.push_back(time);
+	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
+	samples.push_back(sample);
+
+	//Get rid of earliest sample. 
+	times.pop_front();
+	samples.pop_front();
+
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto second_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	// std::cout << "second_c_over_k is " << second_c_over_k << '\n';
+	// std::cout << "second diff is " << abs(second_c_over_k - mpfr_float("1.05888")) << '\n';
+	BOOST_CHECK( abs(second_c_over_k - mpfr_float("1.05888")) <  1e-5); 
+
+} // end compute c over k mp for cauchy class 
+
+BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
+{
+	/* In the power series endgame there is a bound on that is calculated that will be used as a higher
+	bound for the exhaustive search of the best cycle number. 
+
+	This is calcuated using a modified version of the cycle test in the bertini book, page 53. 
+
+	The bound calculated is then compared against the user defined setting MaxCycleNum which is default at 6. 
+
+	We take a function (x-1)^3 because we know it should have a cycle number of 3. (This is true but will not be true near 0 or near 0.1).
+
+	This is because the path will not look cubic globally. 
+	*/
+	
+	mpfr_float::default_precision(16);
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t");
+	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	std::deque<mpfr_float> c_over_k_array;
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+	// Vec<mpfr> derivative(1);
+
+	time = mpfr(".1"); // x = .1
+	times.push_back(time);
+	sample << mpfr("1.100000000000000e+00", "6.244997998398396e-01"); // f(.1) = 1.100000000000000e+00 6.244997998398396e-01
+	samples.push_back(sample);
+
+
+	time = mpfr(".05"); // x = .1/2 = .05
+	times.push_back(time);
+	sample << mpfr("1.125000000000000e+00", "4.841229182759271e-01"); //f(.05) = 1.125000000000000e+00 4.841229182759271e-01
+	samples.push_back(sample);
+
+
+	time = mpfr(".025"); // x = .05/2 = .025
+	times.push_back(time);
+	sample << mpfr("1.123854702920065e+00", "3.736283818773165e-01"); // f(.025) = 1.123854702920065e+00 3.736283818773165e-01
+	samples.push_back(sample);
+
+
+	bertini::tracking::config::Security endgame_security_struct;
+	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto first_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	c_over_k_array.push_back(first_c_over_k);
+
+	//Setting up a new sample for approximation.
+	time = mpfr(".0125"); //.025/2 = .0125
+	times.push_back(time);
+	sample << mpfr("1.111721780135302e+00", "2.886596646224579e-01"); // f(.0125) = 1.111721780135302e+00 2.886596646224579e-01
+	samples.push_back(sample);
+
+	//Get rid of earliest sample. 
+	times.pop_front();
+	samples.pop_front();
+
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto second_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	c_over_k_array.push_back(second_c_over_k);
+
+
+
+	//Setting up a new sample for approximation.
+	time = mpfr(".00625"); //.025/2 = .0125
+	times.push_back(time);
+	sample << mpfr("1.096071609421043e+00", "2.237005761359081e-01"); // f(.00625) = 1.096071609421043e+00 2.237005761359081e-01
+	samples.push_back(sample);
+
+	//Get rid of earliest sample. 
+	times.pop_front();
+	samples.pop_front();
+
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto third_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	c_over_k_array.push_back(third_c_over_k);
+
+	auto stabilized = My_Endgame.Check_For_C_Over_K_Stabilization(c_over_k_array);
+
+	BOOST_CHECK(stabilized == true);
+
+} // end check agreement function dbl for cauchy 
+
+BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
+{
+	/* In the power series endgame there is a bound on that is calculated that will be used as a higher
+	bound for the exhaustive search of the best cycle number. 
+
+	This is calcuated using a modified version of the cycle test in the bertini book, page 53. 
+
+	The bound calculated is then compared against the user defined setting MaxCycleNum which is default at 6. 
+
+	We take a function (x-1)^3 because we know it should have a cycle number of 3. (This is true but will not be true near 0 or near 0.1).
+
+	This is because the path will not look cubic globally. 
+	*/
+	
+	mpfr_float::default_precision(30);
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t");
+	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	std::deque<mpfr_float> c_over_k_array;
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+	// Vec<mpfr> derivative(1);
+
+	time = mpfr(".1"); // x = .1
+	times.push_back(time);
+	sample << mpfr("1.100000000000000e+00", "6.244997998398396e-01"); // f(.1) = 1.100000000000000e+00 6.244997998398396e-01
+	samples.push_back(sample);
+
+
+	time = mpfr(".05"); // x = .1/2 = .05
+	times.push_back(time);
+	sample << mpfr("1.125000000000000e+00", "4.841229182759271e-01"); //f(.05) = 1.125000000000000e+00 4.841229182759271e-01
+	samples.push_back(sample);
+
+
+	time = mpfr(".025"); // x = .05/2 = .025
+	times.push_back(time);
+	sample << mpfr("1.123854702920065e+00", "3.736283818773165e-01"); // f(.025) = 1.123854702920065e+00 3.736283818773165e-01
+	samples.push_back(sample);
+
+
+	bertini::tracking::config::Security endgame_security_struct;
+	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto first_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	c_over_k_array.push_back(first_c_over_k);
+
+	//Setting up a new sample for approximation.
+	time = mpfr(".0125"); //.025/2 = .0125
+	times.push_back(time);
+	sample << mpfr("1.111721780135302e+00", "2.886596646224579e-01"); // f(.0125) = 1.111721780135302e+00 2.886596646224579e-01
+	samples.push_back(sample);
+
+	//Get rid of earliest sample. 
+	times.pop_front();
+	samples.pop_front();
+
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto second_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	c_over_k_array.push_back(second_c_over_k);
+
+
+
+	//Setting up a new sample for approximation.
+	time = mpfr(".00625"); //.025/2 = .0125
+	times.push_back(time);
+	sample << mpfr("1.096071609421043e+00", "2.237005761359081e-01"); // f(.00625) = 1.096071609421043e+00 2.237005761359081e-01
+	samples.push_back(sample);
+
+	//Get rid of earliest sample. 
+	times.pop_front();
+	samples.pop_front();
+
+	My_Endgame.SetTimes(times);
+	My_Endgame.SetSamples(samples);
+
+	auto third_c_over_k = My_Endgame.Compute_C_Over_K();
+
+	c_over_k_array.push_back(third_c_over_k);
+
+	auto stabilized = My_Endgame.Check_For_C_Over_K_Stabilization(c_over_k_array);
+
+	BOOST_CHECK(stabilized == true);
+
+} // end check agreement function mp for cauchy 
+
+
 
 BOOST_AUTO_TEST_SUITE_END()

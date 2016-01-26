@@ -34,12 +34,13 @@
 \brief Contains the cauchy endgame type, and necessary functions.
 */
 
-#include <deque>
+
 #include <boost/multiprecision/gmp.hpp>
 #include <iostream>
 #include "tracking/base_endgame.hpp"
 #include <cstdio>
 #include <typeinfo> 
+
 
 
 namespace bertini
@@ -328,8 +329,125 @@ namespace bertini
 						std::cout << "ERROR: See tracking_success for error." << '\n';
 						return next_sample;
 					}
-				return next_sample;
+					return next_sample;
 				}
+
+				
+				mpfr_float Compute_C_Over_K()
+				{
+					std::deque<mpfr_float> c_over_k; // belongs in preEG_d2..... should be ComplexType
+
+					const Vec<mpfr> & sample0 = samples_[0];
+					const Vec<mpfr> & sample1 = samples_[1];
+					const Vec<mpfr> & sample2 = samples_[2];
+
+					Vec<mpfr> rand_vector = Vec<mpfr>::Random(sample0.size()); //should be a row vector for ease in multiplying.
+
+
+					// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
+					// //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type. 
+					mpfr_float estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).norm())/(((sample1 - sample0).transpose()*rand_vector).norm()))));
+					estimate = abs(log(endgame_settings_.sample_factor))/estimate;
+					// std::cout << "estimate is " << estimate << '\n';
+					if (estimate < 1)
+					{
+					  	return mpfr_float("1");
+					}
+					else
+					{	
+						return estimate;
+					}
+				}
+
+				bool Check_For_C_Over_K_Stabilization(std::deque<mpfr_float> c_over_k_array)
+				{
+					bool return_value = true;
+
+					for(unsigned ii = 1; ii < cauchy_settings_.num_needed_for_stabilization ; ++ii)
+					{
+						// std::cout << " a is " << c_over_k_array[ii-1] << '\n';
+						// std::cout << "abs(a) is " << abs(c_over_k_array[ii-1]) << '\n';
+
+
+						auto a = abs(c_over_k_array[ii-1]);
+						auto b = abs(c_over_k_array[ii]);
+
+						auto divide = a;
+
+						if(a < b)
+						{
+							divide = a/b;
+						}
+						else
+						{
+							divide = b/a;
+						}
+
+						// std::cout << "divide is " << divide << '\n';
+
+						if(divide <  cauchy_settings_.minimum_for_c_over_k_stabilization)
+						{
+							return_value = false;
+						}
+					}
+					return return_value;
+				}
+
+				template<typename ComplexType>
+				mpfr_float Find_Tolerance_For_Closed_Loop(ComplexType time, Vec<ComplexType> sample, mpfr_float minimum_tolerance, mpfr_float maximum_tolerance)
+				{
+					auto degree_max = max(endgame_tracker_.AMP.degree_bound,2); 
+					auto K = endgame_tracker_.AMP.coefficient_bound;
+					mpfr_float N;
+					mpfr_float M;
+					mpfr_float L;
+					ComplexType minimum_singular_value;
+					if(maximum_tolerance < minimum_tolerance)
+					{
+						maximum_tolerance = minimum_tolerance;
+					}
+
+					// if(samples_.back().precision < 64) //use double
+					// {
+					auto error_tolerance = mpfr_float("1e-13");
+					if(samples_.back().size() <= 1)
+					{
+						N = degree_max;
+					}
+					else
+					{
+						N = combination(degree_max + samples_.back().precision - 1, samples_.back().precision - 1);
+					}
+					M = degree_max * (degree_max - 1) * N;
+					auto jacobian_at_current_time = endgame_tracker_.GetSystem().Jacobian(sample,time);
+					Eigen::JacobiSVD<Eigen::MatrixXf> svd(jacobian_at_current_time);
+
+					//last element in singular values vector i.e., the minimum singular value
+					auto singular_value_vector = svd.singularValues();
+					minimum_singular_value = singular_value_vector(singular_value_vector.size());
+
+					auto norm_of_sample = sample.norm();
+					L = pow(norm_of_sample,degree_max - 2);
+					auto tol = K * L * M;
+					if (tol == 0) // fail-safe
+   						tol = minimum_singular_value;
+ 					else
+   					{
+   						tol = 2 / tol;
+    					tol = tol * minimum_singular_value;
+  					}
+ 					// make sure that tol is between min_tol & max_tol
+					if (tol > maximum_tolerance) // tol needs to be <= max_tol
+ 						tol = maximum_tolerance;
+					if (tol < minimum_tolerance) // tol needs to be >= min_tol
+  						tol = minimum_tolerance;
+ 					return tol;
+					// }
+				}
+
+
+
+
 
 			};
 

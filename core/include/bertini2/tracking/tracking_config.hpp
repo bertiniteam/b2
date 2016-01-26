@@ -163,6 +163,9 @@ namespace bertini
 			{
 				mpfr_float cutoff_cycle_time;
 				mpfr_float cutoff_ratio_time;
+				mpfr_float minimum_for_c_over_k_stabilization = mpfr_float("0.75");
+				unsigned int num_needed_for_stabilization = 3;
+
 			};
 
 
