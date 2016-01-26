@@ -30,6 +30,7 @@ using dbl = std::complex<double>;
 using mpfr = bertini::complex;
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(NodeEvalOverloadsDbl, bertini::node::Node::template Eval<dbl>, 0, 1);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(NodeEvalOverloadsMPFR, bertini::node::Node::template Eval<mpfr>, 0, 1);
 
 
 namespace bertini{
@@ -44,8 +45,10 @@ namespace bertini{
 			class_<bertini::python::NodeWrap, boost::noncopyable, std::shared_ptr<node::Node> >("Node", no_init)
 			.def("reset", &bertini::node::Node::Reset, &bertini::python::NodeWrap::default_Reset)
 			
-			.def("eval_dbl", &bertini::node::Node::Eval<dbl>,
+			.def("evald", &bertini::node::Node::Eval<dbl>,
 				 NodeEvalOverloadsDbl(args("DiffVar"), "Eval's docstring"))
+			.def("evalmp", &bertini::node::Node::Eval<mpfr>,
+				 NodeEvalOverloadsMPFR(args("DiffVar"), "Eval's docstring"))
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))
 			

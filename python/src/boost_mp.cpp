@@ -76,7 +76,6 @@ namespace bertini {
 				.def("precision", bmpprec1)
 				.def("precision", bmpprec2)
 
-//			    .staticmethod("default_precision")
 
 			    .def("__str__", &detail::bmp_as_str)
 			    .def("__repr__", &detail::full_precision_string)
