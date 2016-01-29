@@ -32,7 +32,7 @@
 
 namespace bertini{
 	namespace python{
-		void ExportMpfrFloat();
+		void ExportMpfr();
 		
 		using namespace boost::python;
 

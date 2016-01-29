@@ -5,11 +5,6 @@ using namespace boost::python;
 
 using mpfr_float = bertini::mpfr_float;
 
-void set_real(bertini::complex &c, mpfr_float const& r) { c.real(r);}
-mpfr_float get_real(bertini::complex const&c) { return c.real();}
-
-void set_imag(bertini::complex &c, mpfr_float const& r) { c.imag(r);}
-mpfr_float get_imag(bertini::complex const&c) { return c.imag();}
 
 
 BOOST_PYTHON_FUNCTION_OVERLOADS(MpfrComplexSetRealOverload, set_real, 1, 1);
