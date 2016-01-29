@@ -1,3 +1,4 @@
+import mpfr_test
 import function_tree_test
 import system_test
 import unittest
@@ -16,7 +17,7 @@ import unittest
 
 
 if __name__ == '__main__':
-    mods = (function_tree_test,system_test)
+    mods = (mpfr_test,function_tree_test,system_test)
     suite = unittest.TestSuite();
     for tests in mods:
         thissuite = unittest.TestLoader().loadTestsFromModule(tests);

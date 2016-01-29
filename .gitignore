@@ -38,6 +38,10 @@ serialization_test*
 
 /config
 
+# Python folders
+/.idea
+/.deps
+
 *.dirstamp
 *.deps
 
