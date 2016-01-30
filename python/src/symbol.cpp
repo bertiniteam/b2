@@ -22,7 +22,7 @@
 #include <stdio.h>
 
 #include "symbol.hpp"
-#include "boost_mp.hpp"
+#include "function_tree.hpp"
 
 
 using namespace boost::python;

@@ -24,13 +24,12 @@
 #ifndef BERTINI_PYTHON_HPP
 #define BERTINI_PYTHON_HPP
 
-#include "boost_mp.hpp"
+#include "export_mpfr.hpp"
 #include "function_tree.hpp"
 //#include "node.hpp"
 //#include "symbol.hpp"
 //#include "operator.hpp"
 //#include "root.hpp"
-#include "mpfr_complex.hpp"
 //#include "system.hpp"
 
 

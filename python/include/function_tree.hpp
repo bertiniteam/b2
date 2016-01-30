@@ -42,6 +42,8 @@
 
 #include <boost/python/wrapper.hpp>
 
+#include "export_mpfr.hpp"
+
 
 namespace bertini{
 	namespace python{

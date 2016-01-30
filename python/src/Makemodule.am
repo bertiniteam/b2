@@ -3,7 +3,7 @@
 
 bertini_python_header_files = $(includedir)/bertini_python.hpp \
 				$(includedir)/function_tree.hpp \
-				$(includedir)/boost_mp.hpp \
+				$(includedir)/export_mpfr.hpp \
 				$(includedir)/node.hpp \
 				$(includedir)/operator.hpp \
 				$(includedir)/root.hpp \
@@ -12,7 +12,7 @@ bertini_python_header_files = $(includedir)/bertini_python.hpp \
 
 bertini_python_source_files = src/bertini_python.cpp \
 				src/function_tree.cpp \
-				src/boost_mp.cpp \
+				src/export_mpfr.cpp \
 				src/node.cpp \
 				src/operator.cpp \
 				src/root.cpp \
