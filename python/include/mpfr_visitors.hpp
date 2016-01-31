@@ -9,7 +9,7 @@
 #ifndef Xcode_b2_mpfr_visitors_hpp
 #define Xcode_b2_mpfr_visitors_hpp
 
-#include "export_common.hpp"
+#include "python_common.hpp"
 
 namespace bertini{
 	namespace python{
