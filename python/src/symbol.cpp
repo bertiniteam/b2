@@ -36,14 +36,16 @@ namespace bertini{
 		void ExportSymbols()
 		{
 			
-			// Symbol class(abstract)
-			class_<bertini::node::Symbol, bases<bertini::node::Node>,std::shared_ptr<node::Symbol>, boost::noncopyable>("Symbol", no_init);
+			/////// Don't expose abstract classes for now /////////////
 			
-			
-			// NamedSymbol class(abstract)
-			class_<bertini::node::NamedSymbol, bases<bertini::node::Symbol>,std::shared_ptr<node::NamedSymbol>, boost::noncopyable >("NamedSymbol", no_init)
-			.def("print", &bertini::node::NamedSymbol::print)
-			;
+//			// Symbol class(abstract)
+//			class_<bertini::node::Symbol, bases<bertini::node::Node>,std::shared_ptr<node::Symbol>, boost::noncopyable>("Symbol", no_init);
+//			
+//			
+//			// NamedSymbol class(abstract)
+//			class_<bertini::node::NamedSymbol, bases<bertini::node::Symbol>,std::shared_ptr<node::NamedSymbol>, boost::noncopyable >("NamedSymbol", no_init)
+//			.def("print", &bertini::node::NamedSymbol::print)
+//			;
 			
 			
 			// Number class(abstract)

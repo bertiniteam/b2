@@ -24,41 +24,65 @@
 #ifndef BERTINI_PYTHON_FUNCTION_TREE_HPP
 #define BERTINI_PYTHON_FUNCTION_TREE_HPP
 
-#include <bertini2/mpfr_complex.hpp>
-#include <bertini2/function_tree/node.hpp>
-#include <bertini2/function_tree.hpp>
-#include <bertini2/system.hpp>
+#include "python_common.hpp"
 
+#include "node_export.hpp"
+#include "symbol_export.hpp"
 
-#include <boost/python.hpp>
-
-#include <boost/python/module.hpp>
-#include <boost/python/def.hpp>
-#include <boost/python/args.hpp>
-#include <boost/python/tuple.hpp>
-#include <boost/python/class.hpp>
-#include <boost/python/overloads.hpp>
-#include <boost/python/return_internal_reference.hpp>
-
-#include <boost/python/wrapper.hpp>
-
-#include "export_mpfr.hpp"
 
 
 namespace bertini{
 	namespace python{
 
+		void SetupFunctionTree()
+		{
+			// Tell Python that pointers to derived Nodes can be used as Node pointers
+			implicitly_convertible<std::shared_ptr<Float>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<special_number::Pi>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<special_number::E>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<Variable>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<Differential>, Nodeptr>();
+			
+			implicitly_convertible<std::shared_ptr<SumOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<MultOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<PowerOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<NegateOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<IntegerPowerOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<SqrtOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<ExpOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<LogOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<TrigOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<SinOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<CosOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<TanOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<ArcSinOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<ArcCosOperator>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<ArcTanOperator>, Nodeptr>();
+			
+			implicitly_convertible<std::shared_ptr<Function>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<Jacobian>, Nodeptr>();
+			
+			
+			
+			// Expose the deque containers
+			class_< std::deque< std::shared_ptr< Variable > > >("VariableGroup")
+			.def(vector_indexing_suite< std::deque< std::shared_ptr< Variable > >, true >())
+			;			
+		}
 		
-		using namespace boost::python;
-		using Node = node::Node;
-		using Nd = std::shared_ptr<node::Node>;
 		
-		void SetupFunctionTree();
-		void ExportNode();
-		void ExportSymbols();
-		void ExportOperators();
-		void ExportRoots();
-		void ExportSystem();
+		
+		
+//		using namespace boost::python;
+//		using Node = node::Node;
+//		using Nd = std::shared_ptr<node::Node>;
+//		
+//		void SetupFunctionTree();
+//		void ExportNode();
+//		void ExportSymbols();
+//		void ExportOperators();
+//		void ExportRoots();
+//		void ExportSystem();
 		
 		
 	}

@@ -3,21 +3,15 @@
 
 bertini_python_header_files = $(includedir)/bertini_python.hpp \
 				$(includedir)/function_tree.hpp \
-				$(includedir)/export_mpfr.hpp \
-				$(includedir)/node.hpp \
-				$(includedir)/operator.hpp \
-				$(includedir)/root.hpp \
-				$(includedir)/symbol.hpp \
-				$(includedir)/system.hpp
+				$(includedir)/mpfr_visitors.hpp \
+				$(includedir)/mpfr_export.hpp \
+				$(includedir)/node_visitors.hpp \
+				$(includedir)/node_export.hpp \
+				$(includedir)/symbol_visitors.hpp \
+				$(includedir)/symbol_export.hpp 
 
-bertini_python_source_files = src/bertini_python.cpp \
-				src/function_tree.cpp \
-				src/export_mpfr.cpp \
-				src/node.cpp \
-				src/operator.cpp \
-				src/root.cpp \
-				src/symbol.cpp \
-				src/system.cpp
+
+bertini_python_source_files = src/bertini_python.cpp 
 
 bertini_python = \
 	$(bertini_python_header_files) \

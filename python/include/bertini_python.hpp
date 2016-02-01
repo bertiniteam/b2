@@ -24,13 +24,8 @@
 #ifndef BERTINI_PYTHON_HPP
 #define BERTINI_PYTHON_HPP
 
-#include "export_mpfr.hpp"
+#include "mpfr_export.hpp"
 #include "function_tree.hpp"
-//#include "node.hpp"
-//#include "symbol.hpp"
-//#include "operator.hpp"
-//#include "root.hpp"
-//#include "system.hpp"
 
 
 #endif

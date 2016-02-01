@@ -1,11 +1,5 @@
 
 #include "function_tree.hpp"
-#include "bertini2/function_tree.hpp"
-#include "export_mpfr.hpp"
-
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
-#include "bertini2/function_tree/symbols/symbol.hpp"
 
 using namespace boost::python;
 

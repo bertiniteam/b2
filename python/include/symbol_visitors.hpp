@@ -6,20 +6,20 @@
 //  Copyright (c) 2016 West Texas A&M University. All rights reserved.
 //
 
-#ifndef Xcode_b2_symbol_export_hpp
-#define Xcode_b2_symbol_export_hpp
-#include <bertini2/symbol.hpp>
+#ifndef Xcode_b2_symbol_visitors_hpp
+#define Xcode_b2_symbol_visitors_hpp
+#include <bertini2/function_tree/symbols/symbol.hpp>
+#include <bertini2/function_tree/symbols/number.hpp>
 
 
 #include "python_common.hpp"
+#include "node_visitors.hpp"
 
 namespace bertini{
 	namespace python{
 		
-		using namespace boost::python;
-		//typedef boost::multiprecision::number<boost::multiprecision::mpfr_float, boost::multiprecision::et_off> bmp;
-		//		typedef boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0> , boost::multiprecision::et_off> bmp;
-		
+		using namespace bertini::node;
+
 
 		template<typename NodeBaseT>
 		class NamedSymbolBaseVisitor: public def_visitor<NamedSymbolBaseVisitor<NodeBaseT> >
@@ -39,11 +39,11 @@ namespace bertini{
 			
 			
 		private:
-			std::string (MPFRBaseT::*getname)() const = &NodeBaseT::name;
-			void (MPFRBaseT::*setname)(const std::string &) = &NodeBaseT::name;
+			std::string (NodeBaseT::*getname)() const = &NodeBaseT::name;
+			void (NodeBaseT::*setname)(const std::string &) = &NodeBaseT::name;
 			
 			
-		}
+		};
 
 		
 		///////// Symbol class(abstract) ////////////////
@@ -58,7 +58,7 @@ namespace bertini{
 			{
 				NodeBaseVisitor<NodeBaseT>().visit(cl);
 			}
-		}
+		};
 
 		
 		///////// NamedSymbol class(abstract) ////////////////
@@ -73,7 +73,7 @@ namespace bertini{
 			{
 				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
 			}
-		}
+		};
 
 		
 		///////// Number class(abstract) ////////////////
@@ -86,9 +86,9 @@ namespace bertini{
 			template<class PyClass>
 			void visit(PyClass& cl) const
 			{
-				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
+				NodeBaseVisitor<NodeBaseT>().visit(cl);
 			}
-		}
+		};
 
 		
 		///////// Float class ////////////////
@@ -101,40 +101,40 @@ namespace bertini{
 			template<class PyClass>
 			void visit(PyClass& cl) const
 			{
-				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
+				NodeBaseVisitor<NodeBaseT>().visit(cl);
 			}
-		}
+		};
 
-		
-		///////// Pi class ////////////////
-		template<typename NodeBaseT>
-		class PiVisitor: public def_visitor<PiVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
-			}
-		}
 
-		
-		
-		///////// E class ////////////////
-		template<typename NodeBaseT>
-		class EVisitor: public def_visitor<EVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
-			}
-		}
+//		///////// Pi class ////////////////
+//		template<typename NodeBaseT>
+//		class PiVisitor: public def_visitor<PiVisitor<NodeBaseT> >
+//		{
+//			friend class def_visitor_access;
+//			
+//		public:
+//			template<class PyClass>
+//			void visit(PyClass& cl) const
+//			{
+//				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
+//			}
+//		};
+//
+//		
+//		
+//		///////// E class ////////////////
+//		template<typename NodeBaseT>
+//		class EVisitor: public def_visitor<EVisitor<NodeBaseT> >
+//		{
+//			friend class def_visitor_access;
+//			
+//		public:
+//			template<class PyClass>
+//			void visit(PyClass& cl) const
+//			{
+//				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
+//			}
+//		};
 
 		
 		
@@ -148,29 +148,31 @@ namespace bertini{
 			template<class PyClass>
 			void visit(PyClass& cl) const
 			{
-				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
+				NodeBaseVisitor<NodeBaseT>().visit(cl);
 			}
-		}
+		};
 
 		
 		
-		///////// Differential class ////////////////
-		template<typename NodeBaseT>
-		class DifferentialVisitor: public def_visitor<DifferentialVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
-				
-				cl
-				.def("get_variable", &NodeBaseT::GetVariable)
-				;
-			}
-		}
-
+//		///////// Differential class ////////////////
+//		template<typename NodeBaseT>
+//		class DifferentialVisitor: public def_visitor<DifferentialVisitor<NodeBaseT> >
+//		{
+//			friend class def_visitor_access;
+//			
+//		public:
+//			template<class PyClass>
+//			void visit(PyClass& cl) const
+//			{
+//				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
+//				
+//				cl
+//				.def("get_variable", &NodeBaseT::GetVariable)
+//				;
+//			}
+//		};
+		
+	}//namespace python
+} // namespace bertini
 
 #endif

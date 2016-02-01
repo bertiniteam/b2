@@ -18,6 +18,8 @@
 #include <boost/python/overloads.hpp>
 #include <boost/python/return_internal_reference.hpp>
 
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 #include <boost/python/wrapper.hpp>
 
 #include <boost/python/operators.hpp>
@@ -28,5 +30,8 @@
 
 #include <bertini2/mpfr_extensions.hpp>
 #include <bertini2/mpfr_complex.hpp>
+
+
+using namespace boost::python;
 
 #endif

@@ -1,20 +1,26 @@
 
 #include "bertini_python.hpp"
 
-BOOST_PYTHON_MODULE(libpybertini) // this name must match the name of the generated .so file.
-{
 
-	using namespace bertini::python;
-	ExportMpfr();
-//	ExportMpfrComplex();
+namespace bertini
+{
+	namespace python
+	{
+		BOOST_PYTHON_MODULE(libpybertini) // this name must match the name of the generated .so file.
+		{
+			
+			ExportMpfr();
+			
+				SetupFunctionTree();
+				ExportNode();
+				ExportSymbols();
+			//	ExportOperators();
+			//	ExportRoots();
+			//	ExportSystem();
+			
+		}
 	
-	SetupFunctionTree();
-	ExportNode();
-	ExportSymbols();
-	ExportOperators();
-	ExportRoots();
-	ExportSystem();
-	
+	}
 }
 
 

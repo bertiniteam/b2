@@ -19,7 +19,6 @@ namespace bertini{
 	namespace python{
 		
 
-		using namespace boost::python;
 		using namespace bertini::node;
 		
 		using Node = Node;
@@ -37,6 +36,14 @@ namespace bertini{
 
 				Node::Reset();
 			}
+			
+//			void Reset()
+//			{
+//				if (override Reset = this->get_override("Reset"))
+//					Reset(); // *note*
+//				
+//				Node::Reset();
+//			}
 
 			void default_Reset()
 			{
@@ -61,17 +68,17 @@ namespace bertini{
 			void visit(PyClass& cl) const
 			{
 				cl
-				.def("degree", Deg1, Deg1Overloads())
-				.def("degree", Deg2)
+				.def("degree", &NodeBaseVisitor::Deg1)
+				.def("degree", &NodeBaseVisitor::Deg2)
 				.def("reset", &NodeBaseT::Reset)
 				.def("differentiate", &NodeBaseT::Differentiate)
 				.def("multidegree", &NodeBaseT::MultiDegree)
 				.def("homogenize", &NodeBaseT::Homogenize)
-				.def("is_homogeneous", IsHom1, IsHom1Overloads())
-				.def("is_homogeneous", IsHom2)
+				.def("is_homogeneous", &NodeBaseVisitor::IsHom1)
+				.def("is_homogeneous", &NodeBaseVisitor::IsHom2)
 				.def("precision", &NodeBaseT::precision)
-				.def("is_polynomial", IsPoly1, IsPoly1Overloads())
-				.def("is_polynomial", IsPoly2)
+				.def("is_polynomial", &NodeBaseVisitor::IsPoly1)
+				.def("is_polynomial", &NodeBaseVisitor::IsPoly2)
 				;
 			}
 			
@@ -79,17 +86,50 @@ namespace bertini{
 			
 			
 		private:
-			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(Deg1Overloads, NodeBaseT::Degree, 0, 1)
-			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
-			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
-		
-			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(IsHom1Overloads, NodeBaseT::IsHomogeneous, 0, 1)
-			bool (NodeBaseT::*IsHom1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsHomogeneous;
-			bool (NodeBaseT::*IsHom2)(VariableGroup const& vars) const= &NodeBaseT::IsHomogeneous;
+			bool Deg1(const object& obj, std::shared_ptr<Variable> const&v = nullptr) const
+			{
+				const NodeBaseT& self = extract<NodeBaseT>(obj)();
+				return self.Degree(v);
+			}
+			bool Deg2(const object& obj, VariableGroup const& v) const
+			{
+				const NodeBaseT& self = extract<NodeBaseT>(obj)();
+				return self.Degree(v);
+			}
 
-			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(IsPoly1Overloads, NodeBaseT::IsPolynomial, 0, 1)
-			bool (NodeBaseT::*IsPoly1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsPolynomial;
-			bool (NodeBaseT::*IsPoly2)(VariableGroup const& vars) const= &NodeBaseT::IsPolynomial;
+			bool IsHom1(const object& obj, std::shared_ptr<Variable> const&v = nullptr) const
+			{
+				const NodeBaseT& self = extract<NodeBaseT>(obj)();
+				return self.IsHomogeneous(v);
+			}
+			bool IsHom2(const object& obj, VariableGroup const& v) const
+			{
+				const NodeBaseT& self = extract<NodeBaseT>(obj)();
+				return self.IsHomogeneous(v);
+			}
+
+			bool IsPoly1(const object& obj, std::shared_ptr<Variable> const&v = nullptr) const
+			{
+				const NodeBaseT& self = extract<NodeBaseT>(obj)();
+				return self.IsPolynomial(v);
+			}
+			bool IsPoly2(const object& obj, VariableGroup const& v) const
+			{
+				const NodeBaseT& self = extract<NodeBaseT>(obj)();
+				return self.IsPolynomial(v);
+			}
+
+//			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(Deg1Overloads, NodeBaseT::Degree, 0, 1)
+//			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
+//			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
+//			
+//			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(IsHom1Overloads, NodeBaseT::IsHomogeneous, 0, 1)
+//			bool (NodeBaseT::*IsHom1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsHomogeneous;
+//			bool (NodeBaseT::*IsHom2)(VariableGroup const& vars) const= &NodeBaseT::IsHomogeneous;
+
+//			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(IsPoly1Overloads, NodeBaseT::IsPolynomial, 0, 1)
+//			bool (NodeBaseT::*IsPoly1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsPolynomial;
+//			bool (Node::*IsPoly2)(VariableGroup const& vars) const= &NodeBaseT::IsPolynomial;
 
 		};
 		
@@ -109,6 +149,7 @@ namespace bertini{
 			void visit(PyClass& cl) const
 			{
 				NodeBaseVisitor<NodeBaseT>().visit(cl);
+				
 				cl
 				.def("evald", &Node::Eval<dbl>,
 					 NodeEvalOverloadsDbl(args("DiffVar"), "Eval's docstring"))

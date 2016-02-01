@@ -18,20 +18,19 @@ namespace bertini{
 		
 		void ExportSymbols()
 		{
-			using bertini::node;
 			
 			// Symbol class
-			class_<Symbol, boost::noncopyable, bases<Node>, std::shared_Ptr<Symbol> >("Symbol", no_init)
+			class_<Symbol, boost::noncopyable, bases<Node>, std::shared_ptr<Symbol> >("Symbol", no_init)
 			.def(SymbolVisitor<Symbol>())
 			;
 
 			// NamedSymbol class
-			class_<NamedSymbol, boost::noncopyable, bases<Symbol>, std::shared_Ptr<Symbol> >("NamedSymbol", no_init)
+			class_<NamedSymbol, boost::noncopyable, bases<Symbol>, std::shared_ptr<NamedSymbol> >("NamedSymbol", no_init)
 			.def(NamedSymbolVisitor<NamedSymbol>())
 			;
 
 			// Number class
-			class_<Number, boost::noncopyable, bases<NamedSymbol>, std::shared_Ptr<Number> >("Number", no_init)
+			class_<Number, boost::noncopyable, bases<NamedSymbol>, std::shared_ptr<Number> >("Number", no_init)
 			.def(NumberVisitor<Number>())
 			;
 
@@ -46,17 +45,17 @@ namespace bertini{
 			;
 
 			
-			// Pi class
-			class_<special_number::Pi, bases<NamedSymbol>, std::shared_ptr<special_number::Pi> >("Pi", init<>())
-			.def(PiVisitor<special_number::Pi>())
-			;
-			
-			
-			// E class
-			class_<special_number::E, bases<NamedSymbol>, std::shared_ptr<special_number::E> >("E", init<>())
-			.def(EVisitor<special_number::E>())
-			;
-
+//			// Pi class
+//			class_<special_number::Pi, bases<NamedSymbol>, std::shared_ptr<special_number::Pi> >("Pi", init<>())
+//			.def(PiVisitor<special_number::Pi>())
+//			;
+//			
+//			
+//			// E class
+//			class_<special_number::E, bases<NamedSymbol>, std::shared_ptr<special_number::E> >("E", init<>())
+//			.def(EVisitor<special_number::E>())
+//			;
+//
 			
 			// Variable class
 			class_<Variable, bases<NamedSymbol>, std::shared_ptr<Variable> >("Variable", init< optional <std::string> >())
@@ -64,12 +63,12 @@ namespace bertini{
 			;
 
 
-			// Differential class
-			class_<Differential, bases<NamedSymbol>,std::shared_ptr<node::Differential> >("Differential", init<>())
-			.def(init<std::shared_ptr<Variable>,std::string>())
-			
-			.def(DifferentialVisitor<Differential>())
-			;
+//			// Differential class
+//			class_<Differential, bases<NamedSymbol>,std::shared_ptr<node::Differential> >("Differential", init<>())
+//			.def(init<std::shared_ptr<Variable>,std::string>())
+//			
+//			.def(DifferentialVisitor<Differential>())
+//			;
 
 		};
 		
