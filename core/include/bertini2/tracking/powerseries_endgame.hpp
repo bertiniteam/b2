@@ -39,6 +39,7 @@
 #include <iostream>
 #include "tracking/base_endgame.hpp"
 #include <cstdio>
+#include <deque>
 
 namespace bertini{ 
 
@@ -340,7 +341,7 @@ namespace bertini{
 					if((approx - x_current_time).norm() < min_found_difference)
 					{
 						min_found_difference = (approx - x_current_time).norm();
-						power_series_settings_.cycle_number = cc;
+						endgame_settings_.cycle_number = cc;
 					}
 
 					s_derivatives.clear(); // necessary so we can repopulate with different s-plane transformations based on cycle number 
@@ -403,8 +404,8 @@ namespace bertini{
 				std::deque< Vec<mpfr> > s_derivatives;
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii){
-					s_derivatives.push_back(derivatives[ii]*(ComplexType(power_series_settings_.cycle_number)*pow(times_[ii],(ComplexType(power_series_settings_.cycle_number) - ComplexType(1))/ComplexType(power_series_settings_.cycle_number))));
-					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(power_series_settings_.cycle_number)));
+					s_derivatives.push_back(derivatives[ii]*(ComplexType(endgame_settings_.cycle_number)*pow(times_[ii],(ComplexType(endgame_settings_.cycle_number) - ComplexType(1))/ComplexType(endgame_settings_.cycle_number))));
+					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(endgame_settings_.cycle_number)));
 				}
 				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, endgame_settings_.num_sample_points, s_times, samples_, s_derivatives);
 

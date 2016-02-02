@@ -98,6 +98,10 @@ namespace bertini
 				mpfr_float track_tolerance_during_endgame = mpfr_float("1e-6");
 
 				mpfr_float path_truncation_threshold = mpfr_float("1e5");
+
+				mpfr_float final_tolerance_multiplier = mpfr_float("1.0"); // This multiplier is used to cluster or de-cluster points at the target system. 
+
+				mpfr_float final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
 			};
 
 			struct Stepping
@@ -147,6 +151,7 @@ namespace bertini
 				mpfr min_track_time = mpfr("1e-100","0"); //nbrh radius in Bertini book.
 				mpfr_float sample_factor = mpfr_float("0.5");
 				Vec<mpfr> final_approximation_at_origin;
+				unsigned int cycle_number = 0;
 
 			};
 
@@ -155,16 +160,17 @@ namespace bertini
 				unsigned max_cycle_number = 6;
 				unsigned cycle_number_amplification = 5;
 				unsigned upper_bound_on_cycle_number;
-				unsigned int cycle_number = 0;
+
 				mpfr_float min_difference_in_approximations = mpfr_float("1e300"); //specific to PSEG
 			};
 
 			struct Cauchy
 			{
-				mpfr_float cutoff_cycle_time;
-				mpfr_float cutoff_ratio_time;
+				mpfr_float cycle_cutoff_time = mpfr_float("1e-8");
+				mpfr_float ratio_cutoff_time = mpfr_float("1e-14");
 				mpfr_float minimum_for_c_over_k_stabilization = mpfr_float("0.75");
 				unsigned int num_needed_for_stabilization = 3;
+				mpfr_float maximum_cauchy_ratio = mpfr_float("0.5");
 
 			};
 

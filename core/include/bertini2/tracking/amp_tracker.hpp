@@ -303,6 +303,7 @@ namespace bertini{
 			   upsample_refine_on   = 1
 			};
 		
+			config::AdaptiveMultiplePrecisionConfig AMP_config_; ///< The Adaptive Multiple Precision settings.
 
 			/**
 			\brief Construct an Adaptive Precision tracker, associating to it a System.
@@ -1537,7 +1538,7 @@ namespace bertini{
 			mutable std::tuple< double, mpfr_float > size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
  
 
-			config::AdaptiveMultiplePrecisionConfig AMP_config_; ///< The Adaptive Multiple Precision settings.
+			
 		}; // re: class Tracker
 
 

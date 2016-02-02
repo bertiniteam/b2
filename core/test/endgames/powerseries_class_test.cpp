@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 
 	 My_Endgame.ComputeCycleNumber(time,sample);
 
-	BOOST_CHECK(My_Endgame.power_series_settings_.cycle_number == 1);
+	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
 
 } // end compute cycle number mp
 
@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 
 	 My_Endgame.ComputeCycleNumber(time,sample);
 
-	BOOST_CHECK(My_Endgame.power_series_settings_.cycle_number == 1);
+	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
 
 } // end compute cycle number mp
 
