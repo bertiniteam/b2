@@ -69,8 +69,8 @@ namespace bertini{
 			{
 				cl
 				.def("precision", &NodeBaseT::precision)
-				.def("degree", Deg1)
-				.def("degree", Deg2)
+//				.def("degree", Deg1, Deg1Overloads())
+//				.def("degree", Deg2)
 				.def("reset", &NodeBaseT::Reset)
 //				.def("differentiate", &NodeBaseT::Differentiate)
 //				.def("multidegree", &NodeBaseT::MultiDegree)
@@ -88,8 +88,9 @@ namespace bertini{
 		private:
 
 			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(Deg1Overloads, NodeBaseT::Degree, 0, 1)
-			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
-			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
+//			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
+			int (Float::*Deg1)(std::shared_ptr<Variable> const&) const = &Float::Degree;
+//			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
 //
 //			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(IsHom1Overloads, NodeBaseT::IsHomogeneous, 0, 1)
 //			bool (NodeBaseT::*IsHom1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsHomogeneous;
