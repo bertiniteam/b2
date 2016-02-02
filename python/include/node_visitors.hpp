@@ -68,17 +68,17 @@ namespace bertini{
 			void visit(PyClass& cl) const
 			{
 				cl
-				.def("degree", &NodeBaseVisitor::Deg1)
-				.def("degree", &NodeBaseVisitor::Deg2)
-				.def("reset", &NodeBaseT::Reset)
-				.def("differentiate", &NodeBaseT::Differentiate)
-				.def("multidegree", &NodeBaseT::MultiDegree)
-				.def("homogenize", &NodeBaseT::Homogenize)
-				.def("is_homogeneous", &NodeBaseVisitor::IsHom1)
-				.def("is_homogeneous", &NodeBaseVisitor::IsHom2)
 				.def("precision", &NodeBaseT::precision)
-				.def("is_polynomial", &NodeBaseVisitor::IsPoly1)
-				.def("is_polynomial", &NodeBaseVisitor::IsPoly2)
+				.def("degree", Deg1)
+				.def("degree", Deg2)
+				.def("reset", &NodeBaseT::Reset)
+//				.def("differentiate", &NodeBaseT::Differentiate)
+//				.def("multidegree", &NodeBaseT::MultiDegree)
+//				.def("homogenize", &NodeBaseT::Homogenize)
+//				.def("is_homogeneous", &NodeBaseVisitor::IsHom1)
+//				.def("is_homogeneous", &NodeBaseVisitor::IsHom2)
+//				.def("is_polynomial", &NodeBaseVisitor::IsPoly1)
+//				.def("is_polynomial", &NodeBaseVisitor::IsPoly2)
 				;
 			}
 			
@@ -86,43 +86,11 @@ namespace bertini{
 			
 			
 		private:
-			bool Deg1(const object& obj, std::shared_ptr<Variable> const&v = nullptr) const
-			{
-				const NodeBaseT& self = extract<NodeBaseT>(obj)();
-				return self.Degree(v);
-			}
-			bool Deg2(const object& obj, VariableGroup const& v) const
-			{
-				const NodeBaseT& self = extract<NodeBaseT>(obj)();
-				return self.Degree(v);
-			}
 
-			bool IsHom1(const object& obj, std::shared_ptr<Variable> const&v = nullptr) const
-			{
-				const NodeBaseT& self = extract<NodeBaseT>(obj)();
-				return self.IsHomogeneous(v);
-			}
-			bool IsHom2(const object& obj, VariableGroup const& v) const
-			{
-				const NodeBaseT& self = extract<NodeBaseT>(obj)();
-				return self.IsHomogeneous(v);
-			}
-
-			bool IsPoly1(const object& obj, std::shared_ptr<Variable> const&v = nullptr) const
-			{
-				const NodeBaseT& self = extract<NodeBaseT>(obj)();
-				return self.IsPolynomial(v);
-			}
-			bool IsPoly2(const object& obj, VariableGroup const& v) const
-			{
-				const NodeBaseT& self = extract<NodeBaseT>(obj)();
-				return self.IsPolynomial(v);
-			}
-
-//			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(Deg1Overloads, NodeBaseT::Degree, 0, 1)
-//			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
-//			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
-//			
+			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(Deg1Overloads, NodeBaseT::Degree, 0, 1)
+			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
+			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
+//
 //			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(IsHom1Overloads, NodeBaseT::IsHomogeneous, 0, 1)
 //			bool (NodeBaseT::*IsHom1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsHomogeneous;
 //			bool (NodeBaseT::*IsHom2)(VariableGroup const& vars) const= &NodeBaseT::IsHomogeneous;
