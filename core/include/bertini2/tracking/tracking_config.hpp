@@ -59,7 +59,9 @@ namespace bertini
 			Failure,
 			SingularStartPoint,
 			MinTrackTimeReached,
-			SecurityMaxNormReached
+			SecurityMaxNormReached,
+			CycleNumTooHigh,
+
 		};
 
 		
@@ -171,6 +173,7 @@ namespace bertini
 				mpfr_float minimum_for_c_over_k_stabilization = mpfr_float("0.75");
 				unsigned int num_needed_for_stabilization = 3;
 				mpfr_float maximum_cauchy_ratio = mpfr_float("0.5");
+				unsigned int fail_safe_maximum_cycle_number = 250; //max number of loops before giving up. 
 
 			};
 

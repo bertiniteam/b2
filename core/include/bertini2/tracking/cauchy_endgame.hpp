@@ -256,7 +256,7 @@ namespace bertini
 				*/
 
 				template<typename ComplexType> 
-				Vec<ComplexType> CircleTrack(ComplexType starting_time, Vec<ComplexType> starting_sample)
+				SuccessCode CircleTrack(ComplexType starting_time, Vec<ComplexType> starting_sample)
 				{
 					bool first_step_of_path = true;
 					SuccessCode tracking_success = SuccessCode::Success;
@@ -332,42 +332,42 @@ namespace bertini
 								else if(tracking_success == SuccessCode::HigherPrecisionNecessary)
 								{ 
 									std::cout << "Higher precision necessary. " << '\n';
-									return next_sample;
+									return SuccessCode::HigherPrecisionNecessary;
 								}
 								else if(tracking_success == SuccessCode::GoingToInfinity)
 								{
 									std::cout << "Going to infinity. " << '\n';
-									return next_sample;
+									return SuccessCode::GoingToInfinity;
 								}
 								else if(tracking_success == SuccessCode::MatrixSolveFailure)
 								{
 									std::cout << "Matrix solve failure. " << '\n';
-									return next_sample;
+									return SuccessCode::MatrixSolveFailure;
 								}
 								else if(tracking_success == SuccessCode::MaxNumStepsTaken)
 								{
 									std::cout << "Max num steps taken. " << '\n';
-									return next_sample;
+									return SuccessCode::MaxNumStepsTaken;
 								}
 								else if(tracking_success == SuccessCode::MaxPrecisionReached)
 								{
 									std::cout << "Max precision reached. " << '\n';
-									return next_sample;
+									return SuccessCode::MaxPrecisionReached;
 								}
 								else if(tracking_success == SuccessCode::MinStepSizeReached)
 								{
 									std::cout << "Min step size reached." << '\n';
-									return next_sample;
+									return SuccessCode::MinStepSizeReached;
 								}
 								else if(tracking_success == SuccessCode::Failure)
 								{
 									std::cout << "Failure. " << '\n';
-									return next_sample;
+									return SuccessCode::Failure;
 								}
 								else if(tracking_success == SuccessCode::SingularStartPoint)
 								{
 									std::cout << "Singular start point. " << '\n';
-									return next_sample;
+									return SuccessCode::SingularStartPoint;
 								}				
 								else
 								{	
@@ -387,14 +387,16 @@ namespace bertini
 					}
 					if ( tracking_success == bertini::tracking::SuccessCode::Success)
 					{
-						return next_sample;
+						cauchy_times_.push_back(current_time);
+						cauchy_samples_.push_back(current_sample);
+						return SuccessCode::Success;
 					}
 					else
 					{
 						std::cout << "ERROR: See tracking_success for error." << '\n';
-						return next_sample;
+						return tracking_success;
 					}
-					return next_sample;
+					return tracking_success;
 				}
 
 				/*
@@ -552,9 +554,8 @@ namespace bertini
 				//Need to check with Dan if the extra parts of this are necessary. 
 				bool CheckClosedLoop(mpfr_float closed_loop_max_error)
 				{
-					//auto mininimum_digits = ceil(-1 * log(closed_loop_max_error) + mpfr_float(0.5));
-					//is binary operations going to work with different precisions correctly
-					if(abs(cauchy_samples_.front() - cauchy_samples_.back()) < closed_loop_max_error )
+					//is binary operations going to work with different precisions correctly?
+					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < closed_loop_max_error )
 					{
 						return true;
 					}
@@ -585,7 +586,7 @@ namespace bertini
 					}
 					else
 					{
-						for(unsigned int ii=0; ii <= endgame_settings_.num_sample_points; ++ii)
+						for(unsigned int ii=1; ii <= endgame_settings_.num_sample_points; ++ii)
 						{
 							norm = cauchy_samples_[ii].norm();
 							if(norm > max)
@@ -620,16 +621,107 @@ namespace bertini
 					return true;
 				}
 
-				void preCauchyLoops()
+				SuccessCode PreCauchyLoops()
 				{
 					bool continue_loop = true;
+					bool check_closed_loop = true;
+					auto fail_safe_max_cycle_number = std::max(cauchy_settings_.fail_safe_maximum_cycle_number,endgame_settings_.cycle_number);
+
+					cauchy_samples_.push_back(pseg_samples_.back()); // cauchy samples and times should be empty at this point. 
+					cauchy_times_.push_back(pseg_times_.back());
+					mpfr_float closed_loop_tolerance;
+
+					auto next_time = pseg_times_.back();
+					auto next_sample = pseg_samples_.back();
+
+					auto return_value = SuccessCode::Success;
 
 					while(continue_loop)
 					{
-						
-					}
 
-				}
+						closed_loop_tolerance = FindToleranceForClosedLoop(cauchy_times_.front(),cauchy_samples_.front());
+
+						auto tracking_success = CircleTrack(cauchy_times_.front(),cauchy_samples_.front());
+
+						endgame_settings_.cycle_number++;
+
+						if(tracking_success != SuccessCode::Success)
+						{
+							std::cout << "Note: The tracking failed while going around the origin! " << '\n';
+							break;
+						}
+						else
+						{ // find the ratio of the maximum and minimum coordinate wise for the loop. 
+							continue_loop = CompareCauchyRatios();
+
+							if(!continue_loop)
+							{
+								while(check_closed_loop)
+								{
+									if(CheckClosedLoop(closed_loop_tolerance))
+									{//error is small enough, exit the loop with success. 
+										return_value = SuccessCode::Success;
+										break;
+									}
+									else if(endgame_settings_.cycle_number > fail_safe_max_cycle_number)
+									{// too many iterations
+										std::cout << "Error: Cycle number too high to detect!" << '\n';
+										return_value = SuccessCode::CycleNumTooHigh;
+										break;
+									}
+									else
+									{//increase size of memory, is this necessary for B2? 
+
+									}
+									//compute next loop, the last sample in times and samples is the sample our loop ended on. Either where we started or on another sheet at the same time value. 
+									tracking_success = CircleTrack(cauchy_times_.back(),cauchy_samples_.back());
+
+									endgame_settings_.cycle_number++;
+
+									if(tracking_success != SuccessCode::Success)
+									{//return error
+										std::cout << "Note: The tracking failed while going around the origin! " << '\n';
+										break;
+									}
+								}
+
+								if(return_value == SuccessCode::CycleNumTooHigh)
+								{//see if we should continue to the next sample point
+									if(cauchy_times_.front().abs() < endgame_settings_.min_track_time.abs())
+									{
+										continue_loop = false;
+									}
+									else
+									{
+										continue_loop = true;
+									}
+								}
+							}//end if(!continue_loop)
+
+							if(continue_loop)
+							{//find the time for the next sample point
+								next_time = pseg_times_.back() * endgame_settings_.sample_factor;
+
+								SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
+								pseg_times_.pop_front();
+								pseg_samples_.pop_front();
+
+								pseg_times_.push_back(next_time);
+								pseg_samples_.push_back(next_sample);
+
+								if(tracking_success != SuccessCode::Success)
+								{
+									std::cout << "Error: Tracking failed in updating pseg samples." << '\n';
+								}
+								else
+								{//quit loop
+									continue_loop = false;
+								}
+							}
+						}//end else
+					} //end while(continue_loop)
+					return return_value;
+				}//end PreCauchyLoops
 
 				
 
