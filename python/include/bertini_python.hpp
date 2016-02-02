@@ -24,8 +24,8 @@
 #ifndef BERTINI_PYTHON_HPP
 #define BERTINI_PYTHON_HPP
 
-#include "mpfr_export.hpp"
-#include "function_tree.hpp"
+#include "mpfr_visitors.hpp"
+//#include "function_tree.hpp"
 
 
 #endif
