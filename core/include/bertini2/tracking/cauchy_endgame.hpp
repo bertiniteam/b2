@@ -643,6 +643,8 @@ namespace bertini
 
 						auto tracking_success = CircleTrack(cauchy_times_.front(),cauchy_samples_.front());
 
+						std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
+
 						endgame_settings_.cycle_number++;
 
 						if(tracking_success != SuccessCode::Success)
@@ -654,12 +656,15 @@ namespace bertini
 						{ // find the ratio of the maximum and minimum coordinate wise for the loop. 
 							continue_loop = CompareCauchyRatios();
 
+							std::cout << "compare cauchy ratios is " << continue_loop << '\n';
+
 							if(!continue_loop)
 							{
 								while(check_closed_loop)
 								{
 									if(CheckClosedLoop(closed_loop_tolerance))
 									{//error is small enough, exit the loop with success. 
+										std::cout << "success 1 " << '\n';
 										return_value = SuccessCode::Success;
 										break;
 									}
@@ -690,10 +695,12 @@ namespace bertini
 									if(cauchy_times_.front().abs() < endgame_settings_.min_track_time.abs())
 									{
 										continue_loop = false;
+										std::cout << "false 1" << '\n';
 									}
 									else
 									{
 										continue_loop = true;
+										std::cout << "true 1 " << '\n';
 									}
 								}
 							}//end if(!continue_loop)
@@ -719,6 +726,7 @@ namespace bertini
 								}
 							}
 						}//end else
+						return return_value;
 					} //end while(continue_loop)
 					return return_value;
 				}//end PreCauchyLoops

@@ -802,11 +802,65 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 
 	BOOST_CHECK(success_of_pre_cauchy_loops == bertini::tracking::SuccessCode::Success);
 	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
-
-
-
-
 }
 
+
+BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_test)
+{
+	mpfr_float::default_precision(30);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	std::deque<mpfr> pseg_times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > pseg_samples; //samples are space values that may be a vector of complex numbers.
+
+
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+
+
+	time = mpfr("0.1");
+	pseg_times.push_back(time);
+	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
+	pseg_samples.push_back(sample);
+
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+
+	My_Endgame.SetPSEGSamples(pseg_samples);
+	My_Endgame.SetPSEGTimes(pseg_times);
+
+	auto success_of_pre_cauchy_loops =  My_Endgame.PreCauchyLoops();
+
+	std::cout << "success code is " << success_of_pre_cauchy_loops << '\n';
+
+	BOOST_CHECK(success_of_pre_cauchy_loops == bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 2);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
