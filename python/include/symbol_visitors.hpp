@@ -20,45 +20,9 @@ namespace bertini{
 		
 		using namespace bertini::node;
 
-
-		template<typename NodeBaseT>
-		class NamedSymbolBaseVisitor: public def_visitor<NamedSymbolBaseVisitor<NodeBaseT> >
-		{
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NodeBaseVisitor<NodeBaseT>().visit(cl);
-				
-				cl
-				.add_property("name", getname, setname)
-				;
-			}
-			
-			
-			
-			
-		private:
-			std::string (NodeBaseT::*getname)() const = &NodeBaseT::name;
-			void (NodeBaseT::*setname)(const std::string &) = &NodeBaseT::name;
-			
-			
-		};
+		void ExportSymbols();
 
 		
-		///////// Symbol class(abstract) ////////////////
-		template<typename NodeBaseT>
-		class SymbolVisitor: public def_visitor<SymbolVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NodeBaseVisitor<NodeBaseT>().visit(cl);
-			}
-		};
 
 		
 		///////// NamedSymbol class(abstract) ////////////////
@@ -69,41 +33,16 @@ namespace bertini{
 			
 		public:
 			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
-			}
+			void visit(PyClass& cl) const;
+			
+		private:
+			std::string (NodeBaseT::*getname)() const = &NodeBaseT::name;
+			void (NodeBaseT::*setname)(const std::string &) = &NodeBaseT::name;
+
 		};
 
 		
-		///////// Number class(abstract) ////////////////
-		template<typename NodeBaseT>
-		class NumberVisitor: public def_visitor<NumberVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NodeBaseVisitor<NodeBaseT>().visit(cl);
-			}
-		};
-
 		
-		///////// Float class ////////////////
-		template<typename NodeBaseT>
-		class FloatVisitor: public def_visitor<FloatVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NodeBaseVisitor<NodeBaseT>().visit(cl);
-			}
-		};
 
 
 //		///////// Pi class ////////////////
@@ -139,18 +78,18 @@ namespace bertini{
 		
 		
 		///////// Variable class ////////////////
-		template<typename NodeBaseT>
-		class VariableVisitor: public def_visitor<VariableVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NodeBaseVisitor<NodeBaseT>().visit(cl);
-			}
-		};
+//		template<typename NodeBaseT>
+//		class VariableVisitor: public def_visitor<VariableVisitor<NodeBaseT> >
+//		{
+//			friend class def_visitor_access;
+//			
+//		public:
+//			template<class PyClass>
+//			void visit(PyClass& cl) const
+//			{
+//				NodeBaseVisitor<NodeBaseT>().visit(cl);
+//			}
+//		};
 
 		
 		

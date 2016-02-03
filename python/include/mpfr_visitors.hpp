@@ -17,7 +17,7 @@ namespace bertini{
 		using namespace boost::python;
 		//typedef boost::multiprecision::number<boost::multiprecision::mpfr_float, boost::multiprecision::et_off> bmp;
 		//		typedef boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0> , boost::multiprecision::et_off> bmp;
-		typedef bertini::mpfr_float bmp;
+		
 		
 		void ExportMpfr();
 		

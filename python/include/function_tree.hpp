@@ -25,15 +25,19 @@
 #define BERTINI_PYTHON_FUNCTION_TREE_HPP
 
 #include "python_common.hpp"
+#include <bertini2/function_tree.hpp>
 
-#include "node_export.hpp"
-#include "symbol_export.hpp"
+#include "node_visitors.hpp"
+#include "symbol_visitors.hpp"
 
 
 
 namespace bertini{
 	namespace python{
 
+		using namespace bertini::node;
+		using Node = Node;
+		using Nodeptr = std::shared_ptr<Node>;
 		void SetupFunctionTree()
 		{
 			// Tell Python that pointers to derived Nodes can be used as Node pointers
@@ -61,6 +65,10 @@ namespace bertini{
 			
 			implicitly_convertible<std::shared_ptr<Function>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<Jacobian>, Nodeptr>();
+			
+			
+			
+			
 			
 			
 			

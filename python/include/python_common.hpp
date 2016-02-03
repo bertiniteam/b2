@@ -17,6 +17,7 @@
 #include <boost/python/class.hpp>
 #include <boost/python/overloads.hpp>
 #include <boost/python/return_internal_reference.hpp>
+#include <boost/python/register_ptr_to_python.hpp>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -33,5 +34,6 @@
 
 
 using namespace boost::python;
+typedef bertini::mpfr_float bmp;
 
 #endif

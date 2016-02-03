@@ -3,8 +3,6 @@
 
 
 
-#ifndef BERTINI_PYTHON_BOOST_MP_HPP
-#define BERTINI_PYTHON_BOOST_MP_HPP
 #include "mpfr_visitors.hpp"
 
 
@@ -155,5 +153,4 @@ namespace bertini{
 	} //namespace python
 } // namespace bertini
 
-#endif
 
