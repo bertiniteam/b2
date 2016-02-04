@@ -39,8 +39,7 @@ namespace bertini{
 			;
 			
 			// Number class
-			class_<Number, boost::noncopyable, bases<NamedSymbol>, std::shared_ptr<Number> >("Number", no_init)
-//			.def("precision", &Number::precision)
+			class_<Number, boost::noncopyable, bases<Symbol>, std::shared_ptr<Number> >("Number", no_init)
 			;
 			
 			// Float class
