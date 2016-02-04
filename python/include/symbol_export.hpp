@@ -13,7 +13,7 @@
 
 
 #include "python_common.hpp"
-#include "node_visitors.hpp"
+#include "node_export.hpp"
 
 namespace bertini{
 	namespace python{

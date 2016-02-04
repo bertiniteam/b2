@@ -27,8 +27,8 @@
 #include "python_common.hpp"
 #include <bertini2/function_tree.hpp>
 
-#include "node_visitors.hpp"
-#include "symbol_visitors.hpp"
+#include "node_export.hpp"
+#include "symbol_export.hpp"
 
 
 

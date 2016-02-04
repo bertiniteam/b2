@@ -25,7 +25,7 @@
 #define BERTINI_PYTHON_HPP
 
 #include "python_common.hpp"
-#include "mpfr_visitors.hpp"
+#include "mpfr_export.hpp"
 #include "function_tree.hpp"
 
 

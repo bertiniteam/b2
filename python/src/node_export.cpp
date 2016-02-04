@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 
-#include "node_visitors.hpp"
+#include "node_export.hpp"
 
 //#include <bertini2/function_tree/node.hpp>
 
@@ -26,45 +26,21 @@ namespace bertini{
 				
 				Node::Reset();
 			}
+			void default_Reset(){ return this->Node::Reset();}
 			
-			void precision(unsigned int prec)
-			{
-				this->get_override("precision");
-			}
+			void precision(unsigned int prec) { this->get_override("precision")(prec); }
 			
-			void default_Reset()
-			{
-				return this->Node::Reset();
-			}
+			int Degree(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("Degree")(v); }
+			int Degree(VariableGroup const& vars) const {return this->get_override("Degree")(vars); }
 			
-			void print(std::ostream& target) const
-			{
-				this->get_override("print")();
-			}
+
+			
 		}; // re: NodeWrap
 
 
 
 
 
-		template<typename NodeBaseT>
-		template<class PyClass>
-		void NodeBaseVisitor<NodeBaseT>::visit(PyClass& cl) const
-		{
-			cl
-			
-			//				.def("degree", Deg1, Deg1Overloads())
-			//				.def("degree", Deg2)
-			.def("reset", pure_virtual(&NodeBaseT::Reset))
-			//				.def("differentiate", &NodeBaseT::Differentiate)
-			//				.def("multidegree", &NodeBaseT::MultiDegree)
-			//				.def("homogenize", &NodeBaseT::Homogenize)
-			//				.def("is_homogeneous", &NodeBaseVisitor::IsHom1)
-			//				.def("is_homogeneous", &NodeBaseVisitor::IsHom2)
-			//				.def("is_polynomial", &NodeBaseVisitor::IsPoly1)
-			//				.def("is_polynomial", &NodeBaseVisitor::IsPoly2)
-			;
-		}
 		
 	
 		
@@ -74,13 +50,25 @@ namespace bertini{
 		template<class PyClass>
 		void NodeVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
-			NodeBaseVisitor<NodeBaseT>().visit(cl);
-			
 			cl
+			.def("reset", pure_virtual(&NodeBaseT::Reset) )
+			.def("precision", pure_virtual(&NodeBaseT::precision) )
+			.def("degree", pure_virtual(&NodeVisitor::Deg0) )
+			.def("degree", pure_virtual(Deg1))
+			.def("degree", pure_virtual(Deg2) )
+//			.def("differentiate", &NodeBaseT::Differentiate)
+//			.def("multidegree", &NodeBaseT::MultiDegree)
+//			.def("homogenize", &NodeBaseT::Homogenize)
+//			.def("is_homogeneous", IsHom1)
+//			.def("is_homogeneous", IsHom2)
+//			.def("is_polynomial", IsPoly1)
+//			.def("is_polynomial", IsPoly2)
+
 			.def("evald", &Node::Eval<dbl>,
 				 NodeEvalOverloadsDbl(args("DiffVar"), "Eval's docstring"))
 			.def("evalmp", &Node::Eval<mpfr>,
 				 NodeEvalOverloadsMPFR(args("DiffVar"), "Eval's docstring"))
+			
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))
 			
@@ -164,7 +152,6 @@ namespace bertini{
 		{
 			class_<NodeWrap, boost::noncopyable, Nodeptr >("Node", no_init)
 			.def(NodeVisitor<Node>())
-			.def("precision", pure_virtual(&Node::precision) )
 			;
 			
 		};

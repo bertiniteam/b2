@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-#include "symbol_visitors.hpp"
+#include "symbol_export.hpp"
 
 
 
@@ -64,8 +64,7 @@ namespace bertini{
 			//
 			
 			// Variable class
-//			class_<Variable, bases<NamedSymbol>, std::shared_ptr<Variable> >("Variable", init< optional <std::string> >())
-//			.def(VariableVisitor<Variable>())
+			class_<Variable, bases<NamedSymbol>, std::shared_ptr<Variable> >("Variable", init< optional <std::string> >())
 			;
 			
 			
