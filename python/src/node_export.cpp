@@ -19,28 +19,28 @@ namespace bertini{
 		
 		struct NodeWrap : Node, wrapper<Node>
 		{
-//			void Reset()
-//			{
-//				if (override Reset = this->get_override("Reset"))
-//					Reset(); // *note*
-//				
-//				Node::Reset();
-//			}
+			void Reset()
+			{
+				if (override Reset = this->get_override("Reset"))
+					Reset(); // *note*
+				
+				Node::Reset();
+			}
 			
 			void precision(unsigned int prec)
 			{
-				this->get_override("precision")(prec);
+				this->get_override("precision");
 			}
 			
-//			void default_Reset()
-//			{
-//				return this->Node::Reset();
-//			}
-//			
-//			void print(std::ostream& target) const
-//			{
-//				this->get_override("print")();
-//			}
+			void default_Reset()
+			{
+				return this->Node::Reset();
+			}
+			
+			void print(std::ostream& target) const
+			{
+				this->get_override("print")();
+			}
 		}; // re: NodeWrap
 
 
@@ -55,7 +55,7 @@ namespace bertini{
 			
 			//				.def("degree", Deg1, Deg1Overloads())
 			//				.def("degree", Deg2)
-			.def("reset", &NodeBaseT::Reset)
+			.def("reset", pure_virtual(&NodeBaseT::Reset))
 			//				.def("differentiate", &NodeBaseT::Differentiate)
 			//				.def("multidegree", &NodeBaseT::MultiDegree)
 			//				.def("homogenize", &NodeBaseT::Homogenize)
@@ -163,7 +163,7 @@ namespace bertini{
 		void ExportNode()
 		{
 			class_<NodeWrap, boost::noncopyable, Nodeptr >("Node", no_init)
-//			.def(NodeVisitor<NodeWrap>())
+			.def(NodeVisitor<Node>())
 			.def("precision", pure_virtual(&Node::precision) )
 			;
 			
