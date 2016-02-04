@@ -25,6 +25,27 @@ namespace bertini{
 		}
 
 		
+		template<typename NodeBaseT>
+		template<class PyClass>
+		void VariableVisitor<NodeBaseT>::visit(PyClass& cl) const
+		{
+			cl
+			.def("set_current_value_d", &NodeBaseT::template set_current_value<dbl>)
+			.def("set_current_value_mp", &NodeBaseT::template set_current_value<mpfr>)
+			;
+		}
+
+		
+		template<typename NodeBaseT>
+		template<class PyClass>
+		void DifferentialVisitor<NodeBaseT>::visit(PyClass& cl) const
+		{
+			cl
+			.def("get_variable", &NodeBaseT::GetVariable)
+			;
+		}
+
+		
 		
 		
 		void ExportSymbols()
@@ -51,29 +72,33 @@ namespace bertini{
 			;
 			
 			
-			//			// Pi class
-			//			class_<special_number::Pi, bases<NamedSymbol>, std::shared_ptr<special_number::Pi> >("Pi", init<>())
-			//			.def(PiVisitor<special_number::Pi>())
-			//			;
-			//
-			//
-			//			// E class
-			//			class_<special_number::E, bases<NamedSymbol>, std::shared_ptr<special_number::E> >("E", init<>())
-			//			.def(EVisitor<special_number::E>())
-			//			;
-			//
+			// Pi class
+			class_<special_number::Pi, bases<NamedSymbol>, std::shared_ptr<special_number::Pi> >("Pi", init<>())
+			;
+
+
+			// E class
+			class_<special_number::E, bases<NamedSymbol>, std::shared_ptr<special_number::E> >("E", init<>())
+			;
+
 			
 			// Variable class
 			class_<Variable, bases<NamedSymbol>, std::shared_ptr<Variable> >("Variable", init< optional <std::string> >())
+			.def(VariableVisitor<Variable>())
 			;
 			
 			
-			//			// Differential class
-			//			class_<Differential, bases<NamedSymbol>,std::shared_ptr<node::Differential> >("Differential", init<>())
-			//			.def(init<std::shared_ptr<Variable>,std::string>())
-			//
-			//			.def(DifferentialVisitor<Differential>())
-			//			;
+			// Differential class
+			class_<Differential, bases<NamedSymbol>,std::shared_ptr<node::Differential> >("Differential", init<>())
+			.def(init<std::shared_ptr<Variable>,std::string>())
+			
+			.def(DifferentialVisitor<Differential>())
+			;
+			
+			
+			.def("Pi", &Pi);
+			.def("I", &I);
+			.def("E", &E);
 			
 		};
 		

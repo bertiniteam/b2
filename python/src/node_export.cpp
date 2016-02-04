@@ -33,6 +33,17 @@ namespace bertini{
 			int Degree(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("Degree")(v); }
 			int Degree(VariableGroup const& vars) const {return this->get_override("Degree")(vars); }
 			
+			std::shared_ptr<Node> Differentiate() {return this->get_override("Differentiate")(); }
+			
+			std::vector<int> MultiDegree(VariableGroup const& vars) const {return this->get_override("MultiDegree")(vars); }
+			
+			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) { this->get_override("Homogenize")(vars, homvar); }
+			
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("IsHomogeneous")(v); }
+			bool IsHomogeneous(VariableGroup const& vars) const {return this->get_override("IsHomogeneous")(vars); }
+			
+			bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const {return this->get_override("IsPolynomial")(v); }
+			bool IsPolynomial(VariableGroup const&v) const {return this->get_override("IsPolynomial")(v); }
 
 			
 		}; // re: NodeWrap
@@ -56,18 +67,20 @@ namespace bertini{
 			.def("degree", pure_virtual(&Deg0) )
 			.def("degree", pure_virtual(Deg1))
 			.def("degree", pure_virtual(Deg2) )
-//			.def("differentiate", &NodeBaseT::Differentiate)
-//			.def("multidegree", &NodeBaseT::MultiDegree)
-//			.def("homogenize", &NodeBaseT::Homogenize)
-//			.def("is_homogeneous", IsHom1)
-//			.def("is_homogeneous", IsHom2)
-//			.def("is_polynomial", IsPoly1)
-//			.def("is_polynomial", IsPoly2)
+			.def("differentiate", pure_virtual(&NodeBaseT::Differentiate) )
+			.def("multidegree", pure_virtual(&NodeBaseT::MultiDegree) )
+			.def("homogenize", pure_virtual(&NodeBaseT::Homogenize) )
+			.def("is_homogeneous", pure_virtual(IsHom0) )
+			.def("is_homogeneous", pure_virtual(IsHom1) )
+			.def("is_homogeneous", pure_virtual(IsHom2) )
+			.def("is_polynomial", pure_virtual(IsPoly0) )
+			.def("is_polynomial", pure_virtual(IsPoly1) )
+			.def("is_polynomial", pure_virtual(IsPoly2) )
 
-			.def("evald", &Node::Eval<dbl>,
-				 NodeEvalOverloadsDbl(args("DiffVar"), "Eval's docstring"))
-			.def("evalmp", &Node::Eval<mpfr>,
-				 NodeEvalOverloadsMPFR(args("DiffVar"), "Eval's docstring"))
+			.def("evald", pure_virtual(&evaldbl0) )
+			.def("evald", pure_virtual(evaldbl1) )
+			.def("evalmp", pure_virtual(&evalmp0) )
+			.def("evalmp", pure_virtual(evalmp1) )
 			
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))

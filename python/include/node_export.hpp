@@ -50,17 +50,20 @@ namespace bertini{
 			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
 			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
 			
-			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(IsHom1Overloads, NodeBaseT::IsHomogeneous, 0, 1)
+			static bool IsHom0(NodeBaseT& self) { return self.IsHomogeneous();}
 			bool (NodeBaseT::*IsHom1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsHomogeneous;
 			bool (NodeBaseT::*IsHom2)(VariableGroup const& vars) const= &NodeBaseT::IsHomogeneous;
 			
-			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(IsPoly1Overloads, NodeBaseT::IsPolynomial, 0, 1)
+			static bool IsPoly0(NodeBaseT& self) { return self.IsPolynomial();}
 			bool (NodeBaseT::*IsPoly1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsPolynomial;
 			bool (NodeBaseT::*IsPoly2)(VariableGroup const& vars) const= &NodeBaseT::IsPolynomial;
 
 			
-			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(NodeEvalOverloadsDbl, NodeBaseT::template Eval<dbl>, 0, 1);
-			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(NodeEvalOverloadsMPFR, NodeBaseT::template Eval<mpfr>, 0, 1);
+			static dbl evaldbl0(NodeBaseT& self) { return self.template Eval<dbl>();}
+			dbl (NodeBaseT::*evaldbl1)(std::shared_ptr<Variable>) = &NodeBaseT::template Eval<dbl>;
+			static mpfr evalmp0(NodeBaseT& self) { return self.template Eval<mpfr>();}
+			mpfr (NodeBaseT::*evalmp1)(std::shared_ptr<Variable>) = &NodeBaseT::template Eval<mpfr>;
+
 
 			// Addition operators
 			Nodeptr(*addNodeNode)(Nodeptr, const Nodeptr&) = &operator+;

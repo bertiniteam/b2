@@ -44,72 +44,31 @@ namespace bertini{
 		
 		
 
-
-//		///////// Pi class ////////////////
-//		template<typename NodeBaseT>
-//		class PiVisitor: public def_visitor<PiVisitor<NodeBaseT> >
-//		{
-//			friend class def_visitor_access;
-//			
-//		public:
-//			template<class PyClass>
-//			void visit(PyClass& cl) const
-//			{
-//				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
-//			}
-//		};
-//
-//		
-//		
-//		///////// E class ////////////////
-//		template<typename NodeBaseT>
-//		class EVisitor: public def_visitor<EVisitor<NodeBaseT> >
-//		{
-//			friend class def_visitor_access;
-//			
-//		public:
-//			template<class PyClass>
-//			void visit(PyClass& cl) const
-//			{
-//				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
-//			}
-//		};
-
 		
 		
 		///////// Variable class ////////////////
-//		template<typename NodeBaseT>
-//		class VariableVisitor: public def_visitor<VariableVisitor<NodeBaseT> >
-//		{
-//			friend class def_visitor_access;
-//			
-//		public:
-//			template<class PyClass>
-//			void visit(PyClass& cl) const
-//			{
-//				NodeBaseVisitor<NodeBaseT>().visit(cl);
-//			}
-//		};
+		template<typename NodeBaseT>
+		class VariableVisitor: public def_visitor<VariableVisitor<NodeBaseT> >
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+		};
 
 		
 		
 //		///////// Differential class ////////////////
-//		template<typename NodeBaseT>
-//		class DifferentialVisitor: public def_visitor<DifferentialVisitor<NodeBaseT> >
-//		{
-//			friend class def_visitor_access;
-//			
-//		public:
-//			template<class PyClass>
-//			void visit(PyClass& cl) const
-//			{
-//				NamedSymbolBaseVisitor<NodeBaseT>().visit(cl);
-//				
-//				cl
-//				.def("get_variable", &NodeBaseT::GetVariable)
-//				;
-//			}
-//		};
+		template<typename NodeBaseT>
+		class DifferentialVisitor: public def_visitor<DifferentialVisitor<NodeBaseT> >
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+		};
 		
 	}//namespace python
 } // namespace bertini
