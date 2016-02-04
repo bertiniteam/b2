@@ -53,7 +53,7 @@ namespace bertini{
 			cl
 			.def("reset", pure_virtual(&NodeBaseT::Reset) )
 			.def("precision", pure_virtual(&NodeBaseT::precision) )
-			.def("degree", pure_virtual(&NodeVisitor::Deg0) )
+			.def("degree", pure_virtual(&Deg0) )
 			.def("degree", pure_virtual(Deg1))
 			.def("degree", pure_virtual(Deg2) )
 //			.def("differentiate", &NodeBaseT::Differentiate)

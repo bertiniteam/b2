@@ -45,8 +45,8 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 			
 		private:
-			int Deg0(NodeBaseT& self) const{ return self.Degree();}
-			BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(Deg1Overloads, NodeBaseT::Degree, 0, 1)
+			
+			static int Deg0(NodeBaseT& self) { return self.Degree();}
 			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
 			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;
 			
@@ -68,15 +68,15 @@ namespace bertini{
 			Nodeptr(*addNodeDbl)(Nodeptr, dbl) = &operator+;
 			Nodeptr(*addNodeMpfr)(Nodeptr, mpfr) = &operator+;
 			Nodeptr(*addNodeInt)(Nodeptr, int) = &operator+;
-			inline Nodeptr iaddNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
+			static Nodeptr iaddNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
 				return lhs += rhs;
 			}
-			inline Nodeptr iaddNodeDouble(Nodeptr  lhs, double rhs)
+			static Nodeptr iaddNodeDouble(Nodeptr  lhs, double rhs)
 			{
 				return lhs += rhs;
 			}
-			inline SumOperator iaddSumNode(SumOperator  lhs, const Nodeptr & rhs)
+			static SumOperator iaddSumNode(SumOperator  lhs, const Nodeptr & rhs)
 			{
 				return lhs += rhs;
 			}
@@ -87,15 +87,15 @@ namespace bertini{
 			Nodeptr(*subNodeDbl)(Nodeptr, dbl) = &operator-;
 			Nodeptr(*subNodeMpfr)(Nodeptr, mpfr) = &operator-;
 			Nodeptr(*subNodeInt)(Nodeptr, int) = &operator-;
-			inline Nodeptr isubNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
+			static Nodeptr isubNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
 				return lhs -= rhs;
 			}
-			inline Nodeptr isubNodeDouble(Nodeptr  lhs, double rhs)
+			static Nodeptr isubNodeDouble(Nodeptr  lhs, double rhs)
 			{
 				return lhs -= rhs;
 			}
-			inline SumOperator isubSumNode(SumOperator  lhs, const Nodeptr & rhs)
+			static SumOperator isubSumNode(SumOperator  lhs, const Nodeptr & rhs)
 			{
 				return lhs -= rhs;
 			}
@@ -113,11 +113,11 @@ namespace bertini{
 			Nodeptr(*multNodeDbl)(Nodeptr, dbl) = &operator*;
 			Nodeptr(*multNodeMpfr)(Nodeptr, mpfr) = &operator*;
 			Nodeptr(*multNodeInt)(Nodeptr, int) = &operator*;
-			inline Nodeptr imultNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
+			static Nodeptr imultNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
 				return lhs *= rhs;
 			}
-			inline Nodeptr imultNodeDouble(Nodeptr  lhs, double rhs)
+			static Nodeptr imultNodeDouble(Nodeptr  lhs, double rhs)
 			{
 				return lhs *= rhs;
 			}
@@ -129,11 +129,11 @@ namespace bertini{
 			Nodeptr(*divNodeDbl)(Nodeptr, dbl) = &operator/;
 			Nodeptr(*divNodeMpfr)(Nodeptr, mpfr) = &operator/;
 			Nodeptr(*divNodeInt)(Nodeptr, int) = &operator/;
-			inline Nodeptr idivNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
+			static Nodeptr idivNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
 				return lhs /= rhs;
 			}
-			inline Nodeptr idivNodeDouble(Nodeptr  lhs, double rhs)
+			static Nodeptr idivNodeDouble(Nodeptr  lhs, double rhs)
 			{
 				return lhs /= rhs;
 			}
