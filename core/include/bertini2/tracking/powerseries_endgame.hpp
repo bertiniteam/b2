@@ -460,7 +460,7 @@ namespace bertini{
 					endgame_settings_.final_approximation_at_origin = prev_approx;
 			  		 auto next_time = times_.back() * endgame_settings_.sample_factor; //setting up next time value.
 
-			  		if (next_time.abs() < endgame_settings_.min_track_time.abs())
+			  		if (next_time.abs() < endgame_settings_.min_track_time)
 			  		{
 			  			std::cout << "Error current time norm is less than min track time." << '\n';
 			  			endgame_settings_.final_approximation_at_origin = prev_approx;

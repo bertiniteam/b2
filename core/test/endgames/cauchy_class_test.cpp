@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_t
 
 	BOOST_CHECK((second_track_sample - sample).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
 	
-} // end circle_track_d_for_cauchy_class_test
+} // end circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_test
 
 
 BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
@@ -379,17 +379,17 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 
 BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 {
-	/* In the power series endgame there is a bound on that is calculated that will be used as a higher
-	bound for the exhaustive search of the best cycle number. 
+	// In the power series endgame there is a bound on that is calculated that will be used as a higher
+	// bound for the exhaustive search of the best cycle number. 
 
-	This is calcuated using a modified version of the cycle test in the bertini book, page 53. 
+	// This is calcuated using a modified version of the cycle test in the bertini book, page 53. 
 
-	The bound calculated is then compared against the user defined setting MaxCycleNum which is default at 6. 
+	// The bound calculated is then compared against the user defined setting MaxCycleNum which is default at 6. 
 
-	We take a function (x-1)^3 because we know it should have a cycle number of 3. (This is true but will not be true near 0 or near 0.1).
+	// We take a function (x-1)^3 because we know it should have a cycle number of 3. (This is true but will not be true near 0 or near 0.1).
 
-	This is because the path will not look cubic globally. 
-	*/
+	// This is because the path will not look cubic globally. 
+	
 	
 	mpfr_float::default_precision(16);
 
@@ -691,9 +691,10 @@ BOOST_AUTO_TEST_CASE(find_tolerance_for_closed_loop_dbl)
 	 //std::cout << "tol is " << tol << '\n';
 
 	BOOST_CHECK(tol < 1e-5); // tol is 1e-06
+
 } // end find closed loop tol dbl
 
-BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
 {
 	mpfr_float::default_precision(16);
 
@@ -736,6 +737,217 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
 	cauchy_samples.push_back(sample);
 
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+
+	My_Endgame.SetCauchySamples(cauchy_samples);
+	My_Endgame.SetCauchyTimes(cauchy_times);
+
+
+	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
+
+	// std::cout << "first sample is " << cauchy_samples.front() << '\n';
+	// std::cout << "last sample is " << cauchy_samples.back() << '\n';
+
+	// for(int ii = 0; ii < My_Endgame.cauchy_samples_.size(); ii++)
+	// {
+	// 	std::cout << "samples at i is " << My_Endgame.cauchy_samples_[ii] << '\n';
+	// }
+
+	auto closed_loop_tolerance = My_Endgame.FindToleranceForClosedLoop(time,sample);
+
+	// std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
+
+	auto check_closed_loop = My_Endgame.CheckClosedLoop(closed_loop_tolerance);
+
+	BOOST_CHECK(check_closed_loop == true);
+
+} // end check closed loop if cycle num is 1 for cauchy class test
+
+BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class_test)
+{
+
+	mpfr_float::default_precision(30);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+
+
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+
+
+	time = mpfr("0.1");
+	cauchy_times.push_back(time);
+	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
+	cauchy_samples.push_back(sample);
+
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+
+	My_Endgame.SetCauchySamples(cauchy_samples);
+	My_Endgame.SetCauchyTimes(cauchy_times);
+
+	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
+
+	// for(int ii = 0; ii < My_Endgame.cauchy_samples_.size(); ii++)
+	// {
+	// 	std::cout << "samples at i is " << My_Endgame.cauchy_samples_[ii] << '\n';
+	// }
+
+
+	auto closed_loop_tolerance = My_Endgame.FindToleranceForClosedLoop(time,sample);
+
+	// std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
+
+	auto check_closed_loop = My_Endgame.CheckClosedLoop(closed_loop_tolerance);
+
+	BOOST_CHECK(check_closed_loop == false);
+	
+} // end check closed loop if cycle num is 1 for cauchy class test
+
+
+BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
+{
+	mpfr_float::default_precision(16);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
+
+	sys.AddFunction((x - mpfr(1))*(1-t) + (x + mpfr(1))*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	// std::cout << "tracker made " << '\n';
+
+	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+
+
+	time = mpfr(".1");
+	cauchy_times.push_back(time);
+	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
+	cauchy_samples.push_back(sample);
+
+		// std::cout << "sample made " << '\n';
+
+	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+
+		// std::cout << "endgame made " << '\n';
+
+	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
+
+		// std::cout << "circle track done " << tracking_success << '\n';
+
+	auto comparison_of_cauchy_ratios = My_Endgame.CompareCauchyRatios();
+
+		// std::cout << "comparison made  made " << comparison_of_cauchy_ratios << '\n';
+
+	//std::cout << "comparison is " << comparison_of_cauchy_ratios << '\n';
+
+
+	BOOST_CHECK(comparison_of_cauchy_ratios == true);
+
+} // end compare cauchy ratios for cauchy class test
+
+BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1_for_cauchy_class_test)
+{
+	mpfr_float::default_precision(30);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	
+	bertini::tracking::config::Stepping stepping_preferences;
+	bertini::tracking::config::Newton newton_preferences;
+
+	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+
+
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+
+
+	time = mpfr("0.1");
+	cauchy_times.push_back(time);
+	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
+	cauchy_samples.push_back(sample);
+
+
 	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
 
 	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
@@ -747,7 +959,8 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 
 	BOOST_CHECK(comparison_of_cauchy_ratios == true);
 
-} // end circle_track_d_for_cauchy_class_test
+} // end compare cauchy ratios for cycle num greater than 1 cauchy class test
+
 
 BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 {
@@ -798,12 +1011,17 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 
 	auto success_of_pre_cauchy_loops =  My_Endgame.PreCauchyLoops();
 
-	std::cout << "success code is " << success_of_pre_cauchy_loops << '\n';
+	// for(int ii = 0; ii < My_Endgame.cauchy_samples_.size(); ii++)
+	// {
+	// std::cout << "samples at i is " << My_Endgame.cauchy_samples_[ii] << '\n';
+ // 	}
+
+	// std::cout << "success code is " << success_of_pre_cauchy_loops << '\n';
 
 	BOOST_CHECK(success_of_pre_cauchy_loops == bertini::tracking::SuccessCode::Success);
 	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
-}
 
+}
 
 BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_test)
 {
@@ -857,10 +1075,16 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 
 	auto success_of_pre_cauchy_loops =  My_Endgame.PreCauchyLoops();
 
-	std::cout << "success code is " << success_of_pre_cauchy_loops << '\n';
+	// for(int ii = 0; ii < My_Endgame.cauchy_samples_.size(); ii++)
+	// {
+	// std::cout << "samples at i is " << My_Endgame.cauchy_samples_[ii] << '\n';
+ // 	}
+
+	// std::cout << "success code is " << success_of_pre_cauchy_loops << '\n';
 
 	BOOST_CHECK(success_of_pre_cauchy_loops == bertini::tracking::SuccessCode::Success);
 	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 2);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

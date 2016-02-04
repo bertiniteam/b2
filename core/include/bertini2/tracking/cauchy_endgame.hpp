@@ -79,6 +79,9 @@ namespace bertini
 				void SetPSEGSamples(std::deque< Vec<mpfr> > pseg_samples_to_set) { pseg_samples_ = pseg_samples_to_set;}
 				std::deque< Vec<mpfr> > GetPSEGSamples() {return pseg_samples_;}
 
+				void SetCauchySamples(std::deque< Vec<mpfr> > cauchy_samples_to_set) { cauchy_samples_ = cauchy_samples_to_set;}
+				std::deque< Vec<mpfr> > GetCauchySamples() {return cauchy_samples_;}
+
 				void SetCauchyTimes(std::deque<mpfr> cauchy_times_to_set) { cauchy_times_ = cauchy_times_to_set;}
 				std::deque< mpfr > GetCauchyTimes() {return cauchy_times_;}
 	
@@ -269,8 +272,8 @@ namespace bertini
 					ComplexType current_time = starting_time;
 					ComplexType next_time;
 
-					cauchy_times_.push_back(current_time);
-					cauchy_samples_.push_back(current_sample);
+					// cauchy_times_.push_back(current_time);
+					// cauchy_samples_.push_back(current_sample);
 
 					if(endgame_settings_.num_sample_points < 3) // need to make sure we won't track right through the origin.
 					{
@@ -322,6 +325,7 @@ namespace bertini
 								if (tracking_success == bertini::tracking::SuccessCode::Success)
 								{//successful track
 									// consecutive_success++;
+									// std::cout << "added another " << '\n';
 									current_angle = next_angle_to_stop_at;	
 									current_sample = next_sample;
 									current_time = next_time;
@@ -387,8 +391,9 @@ namespace bertini
 					}
 					if ( tracking_success == bertini::tracking::SuccessCode::Success)
 					{
-						cauchy_times_.push_back(current_time);
-						cauchy_samples_.push_back(current_sample);
+						// std::cout << "added at end" << '\n';
+						// cauchy_times_.push_back(current_time);
+						// cauchy_samples_.push_back(current_sample);
 						return SuccessCode::Success;
 					}
 					else
@@ -412,7 +417,7 @@ namespace bertini
 				
 				mpfr_float ComputeCOverK()
 				{
-					std::deque<mpfr_float> c_over_k; // belongs in preEG_d2..... should be ComplexType
+					
 
 					const Vec<mpfr> & sample0 = pseg_samples_[0];
 					const Vec<mpfr> & sample1 = pseg_samples_[1];
@@ -575,10 +580,8 @@ namespace bertini
 
 				bool CompareCauchyRatios()
 				{
-					mpfr_float min = mpfr_float(1e300);
-					mpfr_float max = 0;
-					mpfr_float norm;
-
+					mpfr_float min(1e300);
+					mpfr_float max(0);
 
 					if(cauchy_times_.front().norm() < cauchy_settings_.ratio_cutoff_time)
 					{
@@ -586,7 +589,8 @@ namespace bertini
 					}
 					else
 					{
-						for(unsigned int ii=1; ii <= endgame_settings_.num_sample_points; ++ii)
+						mpfr_float norm;
+						for(unsigned int ii=0; ii < endgame_settings_.num_sample_points; ++ii)
 						{
 							norm = cauchy_samples_[ii].norm();
 							if(norm > max)
@@ -643,7 +647,7 @@ namespace bertini
 
 						auto tracking_success = CircleTrack(cauchy_times_.front(),cauchy_samples_.front());
 
-						std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
+						// std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
 
 						endgame_settings_.cycle_number++;
 
@@ -656,15 +660,16 @@ namespace bertini
 						{ // find the ratio of the maximum and minimum coordinate wise for the loop. 
 							continue_loop = CompareCauchyRatios();
 
-							std::cout << "compare cauchy ratios is " << continue_loop << '\n';
+							// std::cout << "compare cauchy ratios is " << continue_loop << '\n';
 
-							if(!continue_loop)
+							if(continue_loop)
 							{
+								// std::cout << "yeah buddy ! " << '\n';
 								while(check_closed_loop)
 								{
 									if(CheckClosedLoop(closed_loop_tolerance))
 									{//error is small enough, exit the loop with success. 
-										std::cout << "success 1 " << '\n';
+										// std::cout << "success 1 " << '\n';
 										return_value = SuccessCode::Success;
 										break;
 									}
@@ -695,12 +700,12 @@ namespace bertini
 									if(cauchy_times_.front().abs() < endgame_settings_.min_track_time.abs())
 									{
 										continue_loop = false;
-										std::cout << "false 1" << '\n';
+										// std::cout << "false 1" << '\n';
 									}
 									else
 									{
 										continue_loop = true;
-										std::cout << "true 1 " << '\n';
+										// std::cout << "true 1 " << '\n';
 									}
 								}
 							}//end if(!continue_loop)
@@ -730,6 +735,130 @@ namespace bertini
 					} //end while(continue_loop)
 					return return_value;
 				}//end PreCauchyLoops
+
+				template<typename ComplexType>
+				SuccessCode ComputeFirstApproximation(ComplexType endgame_time, Vec<ComplexType> x_endgame_time, ComplexType &approximation_time, Vec<ComplexType> &approximation)
+				{
+					//initialize array holding c_over_k estimates
+					std::deque<mpfr_float> c_over_k_array; 
+
+					//Compute initial samples for pseg
+					ComputeInitialSamples(endgame_tracker_, endgame_time, x_endgame_time, endgame_settings_.num_sample_points, pseg_times_, pseg_samples_);
+
+					c_over_k_array.push_back(ComputeCOverK());
+
+					Vec<ComplexType> next_sample;
+					ComplexType next_time;
+
+					auto tracking_success = SuccessCode::Success;
+					unsigned ii = 1;
+					//track until for more c_over_k eetimates or until we reach a cutoff time. 
+					while(tracking_success == SuccessCode::Success && ii < cauchy_settings_.num_needed_for_stabilization && next_time.abs() < cauchy_settings_.ratio_cutoff_time)
+					{
+						pseg_samples_.pop_front();
+						pseg_times_.pop_front();
+
+						next_time = pseg_times_.back() * endgame_settings_.sample_factor;
+
+						SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
+
+						pseg_samples_.push_back(next_sample);
+						pseg_times_.push_back(next_time);
+
+						if(tracking_success == SuccessCode::Success)
+						{
+							c_over_k_array.push_back(ComputeCOverK());
+						}
+						++ii;
+					}//end while
+
+					//check to see if we continue. 
+					if(tracking_success == SuccessCode::Success)
+					{
+						//have we stabilized yet? 
+						auto check_for_stabilization = CheckForCOverKStabilization(c_over_k_array);
+
+						while(tracking_success == SuccessCode::Success && !check_for_stabilization && pseg_times_.back().abs() > cauchy_settings_.cycle_cutoff_time)
+						{
+							c_over_k_array.pop_front();
+
+							pseg_samples_.pop_front();
+							pseg_times_.pop_front();
+
+							next_time = pseg_times_.back() * endgame_settings_.sample_factor;
+
+							SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
+
+							pseg_samples_.push_back(next_sample);	
+							pseg_times_.push_back(next_time);
+
+							if(tracking_success == SuccessCode::Success)
+							{
+								c_over_k_array.push_back(ComputeCOverK());
+								check_for_stabilization = CheckForCOverKStabilization(c_over_k_array);
+							}
+
+						}//end while
+
+					}//end if(tracking_success == SuccessCode::Success)
+
+
+					if(tracking_success == SuccessCode::Success)
+					{//perform cauchy loops
+						auto cauchy_loop_success = SuccessCode::CycleNumTooHigh;
+						do
+						{
+							cauchy_loop_success = PreCauchyLoops();
+
+							if(cauchy_loop_success == SuccessCode::CycleNumTooHigh)
+							{//see if we still can continue
+								if(pseg_times_.back().abs() >  endgame_settings_.min_track_time)
+								{//track to next sample point
+									pseg_samples_.pop_front();
+									pseg_times_.pop_front();
+
+									next_time = pseg_times_.back() * endgame_settings_.sample_factor;
+
+									SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
+
+									pseg_samples_.push_back(next_sample);	
+									pseg_times_.push_back(next_time);
+
+									if(tracking_success == SuccessCode::Success)
+									{//make sure we do another loop
+										cauchy_loop_success = SuccessCode::CycleNumTooHigh;
+									}
+								}
+								else
+								{//we need to break out of the loop
+									break;
+								}
+							}
+						} while (cauchy_loop_success == SuccessCode::CycleNumTooHigh);
+
+						if(cauchy_loop_success == SuccessCode::Success)
+						{//find pseg approx by three sample points. 
+
+						}
+						else
+						{
+							endgame_settings_.cycle_number = 0;
+							approximation_time = pseg_times_.back();
+							approximation = pseg_samples_.back();
+						}	
+					}
+					else
+					{
+						endgame_settings_.cycle_number = 0;
+						approximation_time = pseg_times_.back();
+						approximation = pseg_samples_.back();
+					}
+
+
+
+
+
+				}//end ComputeFirstApproximation
 
 				
 

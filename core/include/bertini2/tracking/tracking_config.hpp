@@ -150,7 +150,7 @@ namespace bertini
 			struct EndGame
 			{
 				unsigned num_sample_points = 3;
-				mpfr min_track_time = mpfr("1e-100","0"); //nbrh radius in Bertini book.
+				mpfr min_track_time = mpfr_float("1e-100"); //nbrh radius in Bertini book.
 				mpfr_float sample_factor = mpfr_float("0.5");
 				Vec<mpfr> final_approximation_at_origin;
 				unsigned int cycle_number = 0;
