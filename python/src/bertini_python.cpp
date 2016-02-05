@@ -18,7 +18,7 @@ namespace bertini
 			ExportNode();
 			ExportSymbols();
 			ExportOperators();
-			//	ExportRoots();
+			ExportRoots();
 			//	ExportSystem();
 			
 		}

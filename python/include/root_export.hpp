@@ -32,5 +32,17 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 		};
 
+		
+		template<typename NodeBaseT>
+		class JacobianVisitor: public def_visitor<JacobianVisitor<NodeBaseT> >
+		{
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+		};
+
+		
+	}
+}
 
 #endif

@@ -6,14 +6,16 @@ bertini_python_header_files = $(includedir)/bertini_python.hpp \
 				$(includedir)/mpfr_export.hpp \
 				$(includedir)/node_export.hpp \
 				$(includedir)/symbol_export.hpp \
-				$(includedir)/operator_export.hpp
+				$(includedir)/operator_export.hpp \
+				$(includedir)/root_export.hpp
 
 
 bertini_python_source_files = src/bertini_python.cpp \
 				src/mpfr_export.cpp \
 				src/node_export.cpp \
 				src/symbol_export.cpp \
-				src/operator_export.cpp
+				src/operator_export.cpp \
+				src/root_export.cpp
 
 bertini_python = \
 	$(bertini_python_header_files) \

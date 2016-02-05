@@ -111,7 +111,7 @@ namespace bertini{
 			;
 
 			// NaryOperator class
-			class_<NaryOperator, boost::noncopyable, bases<Operator>, std::shared_ptr<NaryOperator> >("NaryOperator", no_init)
+			class_<NaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<NaryOperator> >("NaryOperator", no_init)
 			.def(NaryOpVisitor<NaryOperator>())
 			;
 
