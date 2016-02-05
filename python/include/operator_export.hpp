@@ -9,8 +9,9 @@
 #ifndef Xcode_b2_operator_visitors_hpp
 #define Xcode_b2_operator_visitors_hpp
 
-#include <bertini2/operator.hpp>
-#include <bertini2/arithmetic.hpp>
+#include <bertini2/function_tree/operators/operator.hpp>
+#include <bertini2/function_tree/operators/arithmetic.hpp>
+#include <bertini2/function_tree/operators/trig.hpp>
 
 #include "python_common.hpp"
 
@@ -19,80 +20,43 @@ namespace bertini{
 		
 		using namespace boost::python;
 		using namespace bertini::node;
+
+		using Node = Node;
+		using Nodeptr = std::shared_ptr<Node>;
 		
+		void ExportOperators();
 		
 		template<typename NodeBaseT>
-		class UnaryOpBaseVisitor: public def_visitor<UnaryOpBaseVisitor<NodeBaseT> >
+		class UnaryOpVisitor: public def_visitor<UnaryOpVisitor<NodeBaseT> >
 		{
 		public:
 			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NodeBaseVisitor<NodeBaseT>().visit(cl);
-				
-				cl
-				.def("set_child", &NodeBaseT::SetChild)
-				.def("first_child", &NodeBaseT::first_child)
-				;
-			}
-		}
+			void visit(PyClass& cl) const;
+		};
 
 	
+		
 		template<typename NodeBaseT>
-		class BinaryOpBaseVisitor: public def_visitor<BinaryOpBaseVisitor<NodeBaseT> >
+		class NaryOpVisitor: public def_visitor<NaryOpVisitor<NodeBaseT> >
 		{
 		public:
 			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NodeBaseVisitor<NodeBaseT>().visit(cl);
-			}
-		}
+			void visit(PyClass& cl) const;
+		};
 
 		
 		
+		
+		
+		///////// SumOperator & MultOperator class ////////////////
 		template<typename NodeBaseT>
-		class NaryOpBaseVisitor: public def_visitor<NaryOpBaseVisitor<NodeBaseT> >
-		{
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NodeBaseVisitor<NodeBaseT>().visit(cl);
-				
-				cl
-				.def("add_child", addChild1)
-				.def("first_child", &NodeBaseT::first_child)
-				.def("children_size", &NodeBaseT::children_size)
-				;
-			}
-			
-			
-		private:
-			void (NodeBaseT::*addChild1)(std::shared_ptr<Node> child) = &NodeBaseT::AddChild;
-
-		}
-
-		
-		
-		
-		
-		///////// SumOperator class ////////////////
-		template<typename NodeBaseT>
-		class SumOpVisitor: public def_visitor<SumOpVisitor<NodeBaseT> >
+		class SumMultOpVisitor: public def_visitor<SumMultOpVisitor<NodeBaseT> >
 		{
 			friend class def_visitor_access;
 			
 		public:
 			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NaryOpBaseVisitor<NodeBaseT>().visit(cl);
-				
-				cl
-				.def("add_child", addChild2)
-				;
-			}
+			void visit(PyClass& cl) const;
 			
 			
 			
@@ -100,57 +64,9 @@ namespace bertini{
 		private:
 			void (NodeBaseT::*addChild2)(std::shared_ptr<Node> child, bool) = &NodeBaseT::AddChild;
 
-		}
+		};
 
 		
-		
-		
-		
-		///////// NegateOperator class ////////////////
-		template<typename NodeBaseT>
-		class NegateOpVisitor: public def_visitor<NegateOpVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				UnaryOpBaseVisitor<NodeBaseT>().visit(cl);
-			}
-		}
-
-		
-		
-		
-		
-		///////// MultOperator class ////////////////
-		template<typename NodeBaseT>
-		class MultOpVisitor: public def_visitor<MultOpVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				NaryOpBaseVisitor<NodeBaseT>().visit(cl);
-				
-				cl
-				.def("add_child", addChild2)
-				;
-			}
-			
-			
-			
-			
-		private:
-			void (NodeBaseT::*addChild2)(std::shared_ptr<Node> child, bool) = &NodeBaseT::AddChild;
-			
-		}
-
-		
-
 		///////// PowerOperator class ////////////////
 		template<typename NodeBaseT>
 		class PowerOpVisitor: public def_visitor<PowerOpVisitor<NodeBaseT> >
@@ -159,96 +75,32 @@ namespace bertini{
 			
 		public:
 			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				BinaryOpBaseVisitor<NodeBaseT>().visit(cl);
-				
-				cl
-				.def("set_base", &NodeBaseT::SetBase)
-				.def("set_exponent", &NodeBaseT::SetExponent)
-				;
-			}
+			void visit(PyClass& cl) const;
 			
-		}
+		};
 
-	
-		
 		
 		///////// IntegerPowerOperator class ////////////////
 		template<typename NodeBaseT>
-		class IntPowerOpVisitor: public def_visitor<IntPowerOpVisitor<NodeBaseT> >
+		class IntPowOpVisitor: public def_visitor<IntPowOpVisitor<NodeBaseT> >
 		{
 			friend class def_visitor_access;
 			
 		public:
 			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				UnaryOpBaseVisitor<NodeBaseT>().visit(cl);
-				
-				cl
-				.add_property("exponent", &NodeBaseT::exponent, &NodeBaseT::set_exponent)
-				;
-			}
+			void visit(PyClass& cl) const;
 			
-		}
-
-	
-		
-		///////// SqrtOperator class ////////////////
-		template<typename NodeBaseT>
-		class SqrtOpVisitor: public def_visitor<SqrtOpVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
+		private:
+			std::string (NodeBaseT::*getexp)() const = &NodeBaseT::exponent;
+			void (NodeBaseT::*setexp)(const std::string &) = &NodeBaseT::set_exponent;
 			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				UnaryOpBaseVisitor<NodeBaseT>().visit(cl);
-			}
-			
-		}
+		};
 
 		
 		
-		///////// ExpOperator class ////////////////
-		template<typename NodeBaseT>
-		class ExpOpVisitor: public def_visitor<ExpOpVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				UnaryOpBaseVisitor<NodeBaseT>().visit(cl);
-			}
-			
-		}
+	} //re: namespace python
+}//re: namespace bertini
 
-		
-		
-		///////// LogOperator class ////////////////
-		template<typename NodeBaseT>
-		class LogOpVisitor: public def_visitor<LogOpVisitor<NodeBaseT> >
-		{
-			friend class def_visitor_access;
-			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const
-			{
-				UnaryOpBaseVisitor<NodeBaseT>().visit(cl);
-			}
-			
-		}
-
-		
-		
-		
-		
-		
 		
 		
 		

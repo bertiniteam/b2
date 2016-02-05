@@ -44,6 +44,7 @@ namespace bertini{
 			
 			bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const {return this->get_override("IsPolynomial")(v); }
 			bool IsPolynomial(VariableGroup const&v) const {return this->get_override("IsPolynomial")(v); }
+			
 
 			
 		}; // re: NodeWrap
@@ -62,7 +63,7 @@ namespace bertini{
 		void NodeVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("reset", pure_virtual(&NodeBaseT::Reset) )
+			.def("reset", &NodeBaseT::Reset, &NodeWrap::default_Reset)
 			.def("precision", pure_virtual(&NodeBaseT::precision) )
 			.def("degree", pure_virtual(&Deg0) )
 			.def("degree", pure_virtual(Deg1))
@@ -77,10 +78,10 @@ namespace bertini{
 			.def("is_polynomial", pure_virtual(IsPoly1) )
 			.def("is_polynomial", pure_virtual(IsPoly2) )
 
-			.def("evald", pure_virtual(&evaldbl0) )
-			.def("evald", pure_virtual(evaldbl1) )
-			.def("evalmp", pure_virtual(&evalmp0) )
-			.def("evalmp", pure_virtual(evalmp1) )
+			.def("evald", &evaldbl0 )
+			.def("evald", evaldbl1 )
+			.def("evalmp", &evalmp0 )
+			.def("evalmp", evalmp1 )
 			
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))

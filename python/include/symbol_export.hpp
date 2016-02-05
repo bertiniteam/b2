@@ -10,10 +10,14 @@
 #define Xcode_b2_symbol_visitors_hpp
 #include <bertini2/function_tree/symbols/symbol.hpp>
 #include <bertini2/function_tree/symbols/number.hpp>
+#include <bertini2/function_tree/symbols/special_number.hpp>
+#include <bertini2/function_tree/symbols/variable.hpp>
+#include <bertini2/function_tree/symbols/differential.hpp>
+
 
 
 #include "python_common.hpp"
-#include "node_export.hpp"
+
 
 namespace bertini{
 	namespace python{
@@ -55,6 +59,10 @@ namespace bertini{
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
+			
+		private:
+//			void (NodeBaseT::*set_d)(dbl val) const= &NodeBaseT::template set_current_value<dbl>;
+//			void (NodeBaseT::*set_mp)(mpfr val) const= &NodeBaseT::template set_current_value<mpfr>;
 		};
 
 		

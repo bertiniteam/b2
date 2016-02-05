@@ -29,6 +29,7 @@
 
 #include "node_export.hpp"
 #include "symbol_export.hpp"
+#include "operator_export.hpp"
 
 
 

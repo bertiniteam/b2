@@ -30,8 +30,8 @@ namespace bertini{
 		void VariableVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("set_current_value_d", &NodeBaseT::template set_current_value<dbl>)
-			.def("set_current_value_mp", &NodeBaseT::template set_current_value<mpfr>)
+			.def("set_current_value", &NodeBaseT::template set_current_value<dbl>)
+			.def("set_current_value", &NodeBaseT::template set_current_value<mpfr>)
 			;
 		}
 
@@ -96,9 +96,9 @@ namespace bertini{
 			;
 			
 			
-			.def("Pi", &Pi);
-			.def("I", &I);
-			.def("E", &E);
+			def("Pi", &Pi);
+			def("I", &I);
+			def("E", &E);
 			
 		};
 		
