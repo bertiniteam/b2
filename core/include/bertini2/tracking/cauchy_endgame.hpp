@@ -1020,7 +1020,7 @@ namespace bertini
 				void FindCauchySamples(ComplexType starting_time, Vec<ComplexType> starting_sample)
 				{
 					cauchy_times_.push_back(starting_time);
-					cauchy_times_.push_back(starting_sample);
+					cauchy_samples_.push_back(starting_sample);
 					endgame_settings_.cycle_number = 0;
 
 					auto check_closed_loop = false;
