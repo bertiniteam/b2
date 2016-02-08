@@ -95,7 +95,7 @@ namespace bertini{
 				config::Tolerances endgame_tolerances_;
 				config::Security endgame_security_;
 
-				void SetMinTrackTime(mpfr new_min_track_time){endgame_settings_.min_track_time = new_min_track_time;}
+				void SetMinTrackTime(mpfr_float new_min_track_time){endgame_settings_.min_track_time = new_min_track_time;}
 				mpfr GetMinTrackTime(){return endgame_settings_.min_track_time;}
 
 				void SetTrackToleranceDuringEndgame(mpfr_float new_track_tolerance_during_endgame){endgame_tolerances_.track_tolerance_during_endgame = new_track_tolerance_during_endgame;}
