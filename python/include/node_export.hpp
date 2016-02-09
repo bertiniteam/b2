@@ -58,11 +58,23 @@ namespace bertini{
 			bool (NodeBaseT::*IsPoly1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::IsPolynomial;
 			bool (NodeBaseT::*IsPoly2)(VariableGroup const& vars) const= &NodeBaseT::IsPolynomial;
 
+			// Can't create member function pointer to Eval with zero arguments because implementation
+			// uses default arguments
+			template <typename T>
+			static T Eval0(NodeBaseT& self) { return self.template Eval<T>();}
 			
-			static dbl evaldbl0(NodeBaseT& self) { return self.template Eval<dbl>();}
-			dbl (NodeBaseT::*evaldbl1)(std::shared_ptr<Variable>) = &NodeBaseT::template Eval<dbl>;
-			static mpfr evalmp0(NodeBaseT& self) { return self.template Eval<mpfr>();}
-			mpfr (NodeBaseT::*evalmp1)(std::shared_ptr<Variable>) = &NodeBaseT::template Eval<mpfr>;
+			template <typename T>
+			using Eval1_ptr = T (NodeBaseT::*)(std::shared_ptr<Variable>);
+			template <typename T>
+			static Eval1_ptr<T> return_Eval1_ptr()
+			{
+				return &NodeBaseT::template Eval<T>;
+			};
+			
+//			static dbl evaldbl0(NodeBaseT& self) { return self.template Eval<dbl>();}
+//			dbl (NodeBaseT::*evaldbl1)(std::shared_ptr<Variable>) = &NodeBaseT::template Eval<dbl>;
+//			static mpfr evalmp0(NodeBaseT& self) { return self.template Eval<mpfr>();}
+//			mpfr (NodeBaseT::*evalmp1)(std::shared_ptr<Variable>) = &NodeBaseT::template Eval<mpfr>;
 
 
 			// Addition operators

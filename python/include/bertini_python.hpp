@@ -27,6 +27,7 @@
 #include "python_common.hpp"
 #include "mpfr_export.hpp"
 #include "function_tree.hpp"
+#include "system_export.hpp"
 
 
 #endif

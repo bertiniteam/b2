@@ -19,7 +19,7 @@ namespace bertini
 			ExportSymbols();
 			ExportOperators();
 			ExportRoots();
-			//	ExportSystem();
+			ExportSystem();
 			
 		}
 	

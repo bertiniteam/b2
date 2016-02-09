@@ -7,69 +7,76 @@
 //
 
 #include <stdio.h>
-#include "symbol_export.hpp"
+#include "system_export.hpp"
 
 
 
 namespace bertini{
 	namespace python{
 		
-		template<typename NodeBaseT>
+		template<typename SystemBaseT>
 		template<class PyClass>
-		void SystemVisitor<NodeBaseT>::visit(PyClass& cl) const
+		void SystemVisitor<SystemBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("precision", &System::precision)
-			.def("differentiate", &System::Differentiate)
-			.def("eval", sysEval1<dbl>)
-			.def("eval", sysEval2<dbl>)
-			.def("jacobian", sysJac1<dbl>)
-			.def("jacobian", sysJac2<dbl>)
-			.def("homogenize", &System::Homogenize)
-			.def("is_homogenous", &System::IsHomogeneous)
-			.def("is_polynomial", &System::IsPolynomial)
+			.def("precision", &SystemBaseT::precision)
+			.def("differentiate", &SystemBaseT::Differentiate)
+			.def("eval", return_Eval1_ptr<dbl>() )
+			.def("eval", return_Eval1_ptr<mpfr>() )
+			.def("eval", return_Eval2_ptr<dbl>() )
+			.def("eval", return_Eval2_ptr<mpfr>() )
+			.def("jacobian", return_Jac1_ptr<dbl>() )
+			.def("jacobian", return_Jac1_ptr<mpfr>() )
+			.def("jacobian", return_Jac2_ptr<dbl>() )
+			.def("jacobian", return_Jac2_ptr<mpfr>() )
+			.def("homogenize", &SystemBaseT::Homogenize)
+			.def("is_homogenous", &SystemBaseT::IsHomogeneous)
+			.def("is_polynomial", &SystemBaseT::IsPolynomial)
 			
-			.def("num_functions", &System::NumFunctions)
-			.def("num_variables", &System::NumVariables)
-			.def("num_hom_variables", &System::NumHomVariables)
-			.def("num_variable_groups", &System::NumVariableGroups)
-			.def("num_ungrouped_variables", &System::NumUngroupedVariables)
-			.def("num_hom_variable_groups", &System::NumHomVariableGroups)
-			.def("num_constants", &System::NumConstants)
-			.def("num_parameters", &System::NumParameters)
-			.def("num_implicit_parameters", &System::NumImplicitParameters)
+			.def("num_functions", &SystemBaseT::NumFunctions)
+			.def("num_variables", &SystemBaseT::NumVariables)
+			.def("num_hom_variables", &SystemBaseT::NumHomVariables)
+			.def("num_variable_groups", &SystemBaseT::NumVariableGroups)
+			.def("num_ungrouped_variables", &SystemBaseT::NumUngroupedVariables)
+			.def("num_hom_variable_groups", &SystemBaseT::NumHomVariableGroups)
+			.def("num_constants", &SystemBaseT::NumConstants)
+			.def("num_parameters", &SystemBaseT::NumParameters)
+			.def("num_implicit_parameters", &SystemBaseT::NumImplicitParameters)
 			
-			.def("set_variables_dbl", &System::SetVariables<dbl>)
-			.def("set_path_variable_dbl", &System::SetPathVariable<dbl>)
-			.def("set_implicit_parameters_dbl", &System::SetImplicitParameters<dbl>)
+			.def("set_variables_dbl", &SystemBaseT::template SetVariables<dbl>)
+			.def("set_variables_dbl", &SystemBaseT::template SetVariables<mpfr>)
+			.def("set_path_variable_dbl", &SystemBaseT::template SetPathVariable<dbl>)
+			.def("set_path_variable_dbl", &SystemBaseT::template SetPathVariable<mpfr>)
+			.def("set_implicit_parameters_dbl", &SystemBaseT::template SetImplicitParameters<dbl>)
+			.def("set_implicit_parameters_dbl", &SystemBaseT::template SetImplicitParameters<mpfr>)
 			
-			.def("add_variable_group", &System::AddVariableGroup)
-			.def("add_hom_variable_group", &System::AddHomVariableGroup)
-			.def("add_ungrouped_variable", &System::AddUngroupedVariable)
-			.def("add_ungrouped_variables", &System::AddUngroupedVariables)
-			.def("add_implicit_parameter", &System::AddImplicitParameter)
-			.def("add_implicit_parameters", &System::AddImplicitParameters)
-			.def("add_parameter", &System::AddParameter)
-			.def("add_parameters", &System::AddParameters)
-			.def("add_subfunction", &System::AddSubfunction)
-			.def("add_subfunctions", &System::AddSubfunctions)
+			.def("add_variable_group", &SystemBaseT::AddVariableGroup)
+			.def("add_hom_variable_group", &SystemBaseT::AddHomVariableGroup)
+			.def("add_ungrouped_variable", &SystemBaseT::AddUngroupedVariable)
+			.def("add_ungrouped_variables", &SystemBaseT::AddUngroupedVariables)
+			.def("add_implicit_parameter", &SystemBaseT::AddImplicitParameter)
+			.def("add_implicit_parameters", &SystemBaseT::AddImplicitParameters)
+			.def("add_parameter", &SystemBaseT::AddParameter)
+			.def("add_parameters", &SystemBaseT::AddParameters)
+			.def("add_subfunction", &SystemBaseT::AddSubfunction)
+			.def("add_subfunctions", &SystemBaseT::AddSubfunctions)
 			.def("add_function", sysAddFunc1)
 			.def("add_function", sysAddFunc2)
-			.def("add_functions", &System::AddFunctions)
-			.def("add_constant", &System::AddConstant)
-			.def("add_constants", &System::AddConstants)
-			.def("add_path_variable", &System::AddPathVariable)
-			.def("have_path_variable", &System::HavePathVariable)
+			.def("add_functions", &SystemBaseT::AddFunctions)
+			.def("add_constant", &SystemBaseT::AddConstant)
+			.def("add_constants", &SystemBaseT::AddConstants)
+			.def("add_path_variable", &SystemBaseT::AddPathVariable)
+			.def("have_path_variable", &SystemBaseT::HavePathVariable)
 			
-			.def("function", &System::Function)
-			.def("variable_groups", &System::VariableGroups)
-			.def("hom_variable_groups", &System::HomVariableGroups)
+			.def("function", &SystemBaseT::Function)
+			.def("variable_groups", &SystemBaseT::VariableGroups)
+			.def("hom_variable_groups", &SystemBaseT::HomVariableGroups)
 			.def("degrees", sysDeg1)
 			.def("degrees", sysDeg2)
-			.def("reorder_functions_by_degree_decreasing", &System::ReorderFunctionsByDegreeDecreasing)
-			.def("reorder_functions_by_degree_increasing", &System::ReorderFunctionsByDegreeIncreasing)
-			.def("clear_variables", &System::ClearVariables)
-			.def("copy_variable_structure", &System::CopyVariableStructure)
+			.def("reorder_functions_by_degree_decreasing", &SystemBaseT::ReorderFunctionsByDegreeDecreasing)
+			.def("reorder_functions_by_degree_increasing", &SystemBaseT::ReorderFunctionsByDegreeIncreasing)
+			.def("clear_variables", &SystemBaseT::ClearVariables)
+			.def("copy_variable_structure", &SystemBaseT::CopyVariableStructure)
 			
 			
 			.def(self_ns::str(self_ns::self))
@@ -87,9 +94,11 @@ namespace bertini{
 		{
 			
 			// System class
-			class_<System, std::shared_ptr<System> >("System", init<>())
-			.def(SystemVisitor<System>())
+			class_<System, std::shared_ptr<bertini::System> >("System", init<>())
+			.def(SystemVisitor<bertini::System>())
 			;
+			
+		}
 
 
 	}
