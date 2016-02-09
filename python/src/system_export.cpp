@@ -1,0 +1,96 @@
+//
+//  system_export.cpp
+//  Xcode_b2
+//
+//  Created by Collins, James B. on 2/9/16.
+//  Copyright (c) 2016 West Texas A&M University. All rights reserved.
+//
+
+#include <stdio.h>
+#include "symbol_export.hpp"
+
+
+
+namespace bertini{
+	namespace python{
+		
+		template<typename NodeBaseT>
+		template<class PyClass>
+		void SystemVisitor<NodeBaseT>::visit(PyClass& cl) const
+		{
+			cl
+			.def("precision", &System::precision)
+			.def("differentiate", &System::Differentiate)
+			.def("eval", sysEval1<dbl>)
+			.def("eval", sysEval2<dbl>)
+			.def("jacobian", sysJac1<dbl>)
+			.def("jacobian", sysJac2<dbl>)
+			.def("homogenize", &System::Homogenize)
+			.def("is_homogenous", &System::IsHomogeneous)
+			.def("is_polynomial", &System::IsPolynomial)
+			
+			.def("num_functions", &System::NumFunctions)
+			.def("num_variables", &System::NumVariables)
+			.def("num_hom_variables", &System::NumHomVariables)
+			.def("num_variable_groups", &System::NumVariableGroups)
+			.def("num_ungrouped_variables", &System::NumUngroupedVariables)
+			.def("num_hom_variable_groups", &System::NumHomVariableGroups)
+			.def("num_constants", &System::NumConstants)
+			.def("num_parameters", &System::NumParameters)
+			.def("num_implicit_parameters", &System::NumImplicitParameters)
+			
+			.def("set_variables_dbl", &System::SetVariables<dbl>)
+			.def("set_path_variable_dbl", &System::SetPathVariable<dbl>)
+			.def("set_implicit_parameters_dbl", &System::SetImplicitParameters<dbl>)
+			
+			.def("add_variable_group", &System::AddVariableGroup)
+			.def("add_hom_variable_group", &System::AddHomVariableGroup)
+			.def("add_ungrouped_variable", &System::AddUngroupedVariable)
+			.def("add_ungrouped_variables", &System::AddUngroupedVariables)
+			.def("add_implicit_parameter", &System::AddImplicitParameter)
+			.def("add_implicit_parameters", &System::AddImplicitParameters)
+			.def("add_parameter", &System::AddParameter)
+			.def("add_parameters", &System::AddParameters)
+			.def("add_subfunction", &System::AddSubfunction)
+			.def("add_subfunctions", &System::AddSubfunctions)
+			.def("add_function", sysAddFunc1)
+			.def("add_function", sysAddFunc2)
+			.def("add_functions", &System::AddFunctions)
+			.def("add_constant", &System::AddConstant)
+			.def("add_constants", &System::AddConstants)
+			.def("add_path_variable", &System::AddPathVariable)
+			.def("have_path_variable", &System::HavePathVariable)
+			
+			.def("function", &System::Function)
+			.def("variable_groups", &System::VariableGroups)
+			.def("hom_variable_groups", &System::HomVariableGroups)
+			.def("degrees", sysDeg1)
+			.def("degrees", sysDeg2)
+			.def("reorder_functions_by_degree_decreasing", &System::ReorderFunctionsByDegreeDecreasing)
+			.def("reorder_functions_by_degree_increasing", &System::ReorderFunctionsByDegreeIncreasing)
+			.def("clear_variables", &System::ClearVariables)
+			.def("copy_variable_structure", &System::CopyVariableStructure)
+			
+			
+			.def(self_ns::str(self_ns::self))
+			.def(self_ns::repr(self_ns::self))
+			.def(self += self)
+			.def(self + self) //Test this, operator may not have correct signature
+			.def(self *= std::shared_ptr<node::Node>())
+			.def(self * std::shared_ptr<node::Node>())
+			.def(std::shared_ptr<node::Node>() * self)
+			;
+		}
+
+		
+		void ExportSystem()
+		{
+			
+			// System class
+			class_<System, std::shared_ptr<System> >("System", init<>())
+			.def(SystemVisitor<System>())
+			;
+
+
+	}
+}

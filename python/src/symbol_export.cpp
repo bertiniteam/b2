@@ -96,9 +96,9 @@ namespace bertini{
 			;
 			
 			
-			def("Pi", &Pi);
-			def("I", &I);
-			def("E", &E);
+			def("make_pi", &Pi);
+			def("make_i", &I);
+			def("make_e", &E);
 			
 		};
 		

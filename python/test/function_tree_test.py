@@ -1,111 +1,415 @@
 from libpybertini import *
+import numpy as np;
 import unittest
 
 
-dbltol = 1e-15;
-class NumberTest(unittest.TestCase):
-    def test_eval_float(self):
-        z = Float(3.4, 5.7)
-        zd = z.evald()
-        self.assertEqual(zd.real,3.4)
-        self.assertEqual(zd.imag,5.7)
+class SymbolTest(unittest.TestCase):
+    def setUp(self):
+        default_precision(30);
+        self.x_d = complex(-2.43,.21 )
+        self.y_d = complex(4.84, -1.94)
+        self.z_d = complex(-6.48, -.731)
+        self.p_d = complex(-.321, -.72)
+        self.tol_d = float(1e-15);
 
-    def test_diff_float(self):
-        z = Float(3.4, 5.7)
-        dz = z.differentiate()
-        dz_dbl = dz.evald()
-        self.assertEqual(dz_dbl.real,0.0)
-        self.assertEqual(dz_dbl.imag,0.0)
-
-    def test_pi(self):
-        z = Pi()
-        self.assertEqual(z.evald().real,3.14159265358979324)
-        self.assertEqual(z.evald().imag, 0.0)
-
-    def test_e(self):
-        z = E()
-        self.assertEqual(z.evald().real,2.71828182845904524)
-        self.assertEqual(z.evald().imag, 0.0)
+        self.x_mp = mpfr_complex("-2.43",".21" )
+        self.y_mp = mpfr_complex("4.84", "-1.94")
+        self.z_mp = mpfr_complex("-6.48", "-.731")
+        self.p_mp = mpfr_complex("-.321", "-.72")
+        self.tol_mp = mpfr_float("1e-27");
 
 
+    def test_Float_construct(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        x = Float(x_d)
+        x = Float(4.3, -9e-3)
+        x = Float(y_mp)
+        x = Float(mpfr_float("9.3"), mpfr_float("-3"))
+        x = Float("9.2", "-43.2e2")
 
-class VariableTest(unittest.TestCase):
-    def test_eval_variable(self):
-        v = Variable("x")
-        v.set_current_value(4.56 + 8j)
-        self.assertEqual(v.evald().real, 4.56)
-        self.assertEqual(v.evald().imag, 8)
 
-    def test_variable_deg(self):
-        v = Variable("x")
-        w = Variable("y")
-        vg = VariableGroup()
-        vg.append(v)
-        vg.append(w)
-        self.assertEqual(v.degree(v),1)
-        self.assertEqual(v.degree(w),0)
-        self.assertEqual(v.degree(vg),1)
-        self.assertTrue(v.is_homogeneous)
+    def test_Float_eval(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        x = Float(x_d); y = Float(y_mp); z = Float(z_d);
+
+        self.assertLessEqual(np.abs(x.evald().real/(-2.43)-1), tol_d)
+        self.assertLessEqual(np.abs(x.evald().imag/(.21)-1), tol_d)
+
+        self.assertLessEqual(abs(y.evalmp().real/mpfr_float("4.84")-1), tol_mp)
+        self.assertLessEqual(abs(y.evalmp().imag/mpfr_float("-1.94")-1), tol_mp)
+
+    def test_Float_funcs(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        x = Float(x_d); y = Float(y_mp); z = Float(z_d);
+
+        self.assertEqual(x.degree(), 0)
+        d = y.differentiate()
+        self.assertLessEqual(abs(d.evalmp().real-mpfr_float("0")), tol_mp)
+        self.assertLessEqual(abs(d.evalmp().imag-mpfr_float("0")), tol_mp)
+        self.assertTrue(y.is_homogeneous())
+        self.assertTrue(y.is_polynomial())
+
+
+
+
+
+    def test_Variable_construct(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        x = Variable()
+        x = Variable("x")
+
+
+    def test_Variable_eval(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        x = Variable(); y = Variable();
+        x.set_current_value(x_d); x.set_current_value(x_mp)
+
+        self.assertLessEqual(np.abs(x.evald().real/(-2.43)-1), tol_d)
+        self.assertLessEqual(np.abs(x.evald().imag/(.21)-1), tol_d)
+
+        self.assertLessEqual(abs(x.evalmp().real/mpfr_float("-2.43")-1), tol_mp)
+        self.assertLessEqual(abs(x.evalmp().imag/mpfr_float(".21")-1), tol_mp)
+
+    def test_Variable_funcs(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        x = Variable(); y = Variable()
+
+        self.assertEqual(x.degree(), 1)
+        self.assertEqual(x.degree(x), 1)
+        self.assertEqual(x.degree(y), 0)
+        d = y.differentiate()
+        self.assertTrue(y.is_homogeneous())
+        self.assertTrue(y.is_polynomial())
+
+
+
+    def test_Pi_construct(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        x = Pi()
+        y = make_pi()
+
+        self.assertLessEqual(np.abs(x.evald().real/(3.1415926535897932384626433832795028841971693994)-1), tol_d)
+        self.assertLessEqual(np.abs(x.evald().imag - (0)), tol_d)
+
+        self.assertLessEqual(abs(x.evalmp().real/mpfr_float("3.1415926535897932384626433832795028841971693994")-1), tol_mp)
+        self.assertLessEqual(abs(x.evalmp().imag - mpfr_float("0")), tol_mp)
+
+        self.assertLessEqual(np.abs(y.evald().real/(3.1415926535897932384626433832795028841971693994)-1), tol_d)
+        self.assertLessEqual(np.abs(y.evald().imag - (0)), tol_d)
+
+        self.assertLessEqual(abs(y.evalmp().real/mpfr_float("3.1415926535897932384626433832795028841971693994")-1), tol_mp)
+        self.assertLessEqual(abs(y.evalmp().imag - mpfr_float("0")), tol_mp)
+
+
+    def test_E_construct(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        x = E()
+        y = make_e()
+
+        self.assertLessEqual(np.abs(x.evald().real/(2.7182818284590452353602874713526624977572470937)-1), tol_d)
+        self.assertLessEqual(np.abs(x.evald().imag - (0)), tol_d)
+
+        self.assertLessEqual(abs(x.evalmp().real - mpfr_float("2.7182818284590452353602874713526624977572470937")), tol_mp)
+        self.assertLessEqual(abs(x.evalmp().imag - mpfr_float("0")), tol_mp)
+
+        self.assertLessEqual(np.abs(y.evald().real/(2.7182818284590452353602874713526624977572470937)-1), tol_d)
+        self.assertLessEqual(np.abs(y.evald().imag - (0)), tol_d)
+
+        self.assertLessEqual(abs(y.evalmp().real/mpfr_float("2.7182818284590452353602874713526624977572470937")-1), tol_mp)
+        self.assertLessEqual(abs(y.evalmp().imag - mpfr_float("0")), tol_mp)
+
+
+    def test_I_construct(self):
+        x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
+        x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
+        y = make_i()
+
+        self.assertLessEqual(np.abs(y.evald().real - (0)), tol_d)
+        self.assertLessEqual(np.abs(y.evald().imag/(1.0)-1), tol_d)
+
+        self.assertLessEqual(abs(y.evalmp().real - mpfr_float("0")), tol_mp)
+        self.assertLessEqual(abs(y.evalmp().imag/mpfr_float("1.0")-1), tol_mp)
+
+
 
 
 
 class OperatorTest(unittest.TestCase):
-    def test_sum_numbers(self):
-        x = Float(5.97,4.22)
-        y = Variable("x")
-        y.set_current_value(4.56 - 8.3j)
-        s = x+y;
-        eval_s = s.evald()
-        self.assertEqual(eval_s.real,5.97+4.56)
-        self.assertEqual(eval_s.imag,4.22-8.3)
+    def setUp(self):
+        default_precision(30);
+        self.x = Variable()
+        self.x.set_current_value(complex(-2.43,.21 ))
+        self.y = Variable()
+        self.y.set_current_value(complex(4.84, -1.94))
+        self.z = Variable()
+        self.z.set_current_value(complex(-6.48, -.731))
+        self.p = Variable()
+        self.p.set_current_value(complex(-.321, -.72))
+        self.a = Float(complex(3.12, .612))
+        self.b = Float(complex(-.823, 2.62))
+        self.tol_d = float(9e-14);
 
-        s = y+5.97
-        self.assertEqual(s.evald().real,4.56+5.97)
-        self.assertEqual(s.evald().imag,-8.3)
+        self.x.set_current_value(mpfr_complex("-2.43",".21" ))
+        self.y.set_current_value(mpfr_complex("4.84", "-1.94"))
+        self.z.set_current_value(mpfr_complex("-6.48", "-.731"))
+        self.p.set_current_value(mpfr_complex("-.321", "-.72"))
+        self.a = Float(mpfr_complex("3.12", ".612"))
+        self.b = Float(mpfr_complex("-.823", "2.62"))
+        self.tol_mp = mpfr_float("1e-27");
 
-        s = 5.97+y
-        self.assertEqual(s.evald().real,4.56+5.97)
-        self.assertEqual(s.evald().imag,-8.3)
+    def test_plus(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
 
-        s = y+(5.97+4.22j)
-        self.assertEqual(s.evald().real,4.56+5.97)
-        self.assertEqual(s.evald().imag,-8.3+4.22)
+        f = Function(x+y+a)
+        self.assertLessEqual(np.abs(f.evald().real/(5.53)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(-1.118)-1), tol_d)
 
-        s = (5.97+4.22j)+y
-        self.assertEqual(s.evald().real,4.56+5.97)
-        self.assertEqual(s.evald().imag,-8.3+4.22)
+        self.assertLessEqual(abs(f.evalmp().real/mpfr_float("5.53")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag/mpfr_float("-1.118")-1), tol_mp)
 
-        s = y+5
-        self.assertEqual(s.evald().real,4.56+5)
-        self.assertEqual(s.evald().imag,-8.3)
+        f = Function(x+3.87)
+        self.assertLessEqual(np.abs(f.evald().real/(1.44)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(0.21)-1), tol_d)
 
-        s = 5+y
-        self.assertEqual(s.evald().real,4.56+5)
-        self.assertEqual(s.evald().imag,-8.3)
+        f = Function(x+mpfr_complex("3.87", "-2.1"))
+        self.assertLessEqual(np.abs(f.evald().real/(1.44)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(-1.89)-1), tol_d)
 
-        z = mpfr_complex(5.97,4.22)
-        s = y+z
-        self.assertEqual(s.evald().real,4.56+5.97)
-        self.assertEqual(s.evald().imag,-8.3+4.22)
+        self.assertLessEqual(abs(f.evalmp().real/mpfr_float("1.44")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag/mpfr_float("-1.89")-1), tol_mp)
 
-        s = z+y
-        self.assertEqual(s.evald().real,4.56+5.97)
-        self.assertEqual(s.evald().imag,-8.3+4.22)
+        f = Function(x+(-5))
+        self.assertLessEqual(np.abs(f.evald().real/(-7.43)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(0.21)-1), tol_d)
 
-    def test_add_sub_mult_div(self):
-        x = Variable("x"); y = Variable("y"); z = Variable("z")
-        xdbl = 4.56 + 3.4j; ydbl = -3.2 - .72j; zdbl = 3.65 - 2.341j;
-        x.set_current_value(xdbl)
-        y.set_current_value(ydbl)
-        z.set_current_value(zdbl)
+        self.assertLessEqual(abs(f.evalmp().real/mpfr_float("-7.43")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag/mpfr_float("0.21")-1), tol_mp)
 
-        g = Function(x+y - z*y + x/(y*z) - (x*x*y+3.2)/z)
+        f = Function(x); f += y; f += a;
+        self.assertLessEqual(np.abs(f.evald().real/(5.53)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(-1.118)-1), tol_d)
 
-        gexact = xdbl+ydbl - zdbl*ydbl + xdbl/(ydbl*zdbl) - (xdbl*xdbl*ydbl+3.2)/zdbl
+        self.assertLessEqual(abs(f.evalmp().real/mpfr_float("5.53")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag/mpfr_float("-1.118")-1), tol_mp)
 
-        self.assertTrue(g.evald().real/gexact.real - 1 < dbltol)
-        self.assertTrue(g.evald().imag/gexact.imag - 1 < dbltol)
+        f = Function(x); f += 3.87;
+        self.assertLessEqual(np.abs(f.evald().real/(1.44)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(0.21)-1), tol_d)
 
 
 
-# unittest.main()
+    def test_sub(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(x-y-a)
+        self.assertLessEqual(np.abs(f.evald().real/(-10.39)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(1.538)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real/mpfr_float("-10.39")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag/mpfr_float("1.538")-1), tol_mp)
+
+        f = Function(y-3.87)
+        self.assertLessEqual(np.abs(f.evald().real/(0.97)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(-1.94)-1), tol_d)
+
+        f = Function(y-complex(3.87,0))
+        self.assertLessEqual(np.abs(f.evald().real / (0.97)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-1.94)-1), tol_d)
+
+
+        f = Function(y-mpfr_complex("3.87", "-2.1"))
+        self.assertLessEqual(np.abs(f.evald().real / (0.97)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (0.16)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("0.97")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("0.16")-1), tol_mp)
+
+        f = Function(y-(-5))
+        self.assertLessEqual(np.abs(f.evald().real / (9.84)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-1.94)-1), tol_d)
+
+        f = Function(x); f -= y; f -= a;
+        self.assertLessEqual(np.abs(f.evald().real / (-10.39)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (1.538)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-10.39")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("1.538")-1), tol_mp)
+
+        f = Function(y); f -= 3.87;
+        self.assertLessEqual(np.abs(f.evald().real / (0.97)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-1.94)-1), tol_d)
+
+
+    def test_num_times_var(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(a*x*b*y)
+
+        self.assertLessEqual(np.abs(f.evald().real / (3.4011196056)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-110.9953448712)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("3.4011196056")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-110.9953448712")-1), tol_mp)
+
+    def test_var_times_var(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(x*y*z)
+        self.assertLessEqual(np.abs(f.evald().real / (77.7616926)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-28.8346602)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("77.7616926")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-28.8346602")-1), tol_mp)
+
+    def test_var_div_var(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(x/y)
+        self.assertLessEqual(np.abs(f.evald().real / (-.44755270475041560619657805305047592426404601827)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-.13600253041648890000441351713180233327939034617)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-.44755270475041560619657805305047592426404601827")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-.13600253041648890000441351713180233327939034617")-1), tol_mp)
+
+    def test_trans_funcs(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(sin(x))
+        self.assertLessEqual(np.abs(f.evald().real/(-.66749329633668695550441899166308616328986315948)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag/(-.16020928942503633132090203927960650380076680938)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-.66749329633668695550441899166308616328986315948")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-.16020928942503633132090203927960650380076680938")-1), tol_mp)
+
+        f = Function(cos(y))
+        self.assertLessEqual(np.abs(f.evald().real / (0.45194679593300564730917329070452033759984813611)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-3.3798161097977088705360399142708324234265626016)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("0.45194679593300564730917329070452033759984813611")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-3.3798161097977088705360399142708324234265626016")-1), tol_mp)
+
+        f = Function(tan(z))
+        self.assertLessEqual(np.abs(f.evald().real / (-.11998086808607765336591715593714295443402911227)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-.63859741450762243500349270264429166927927928889)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-.11998086808607765336591715593714295443402911227")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-.63859741450762243500349270264429166927927928889")-1), tol_mp)
+
+        f = Function(asin(x))
+        self.assertLessEqual(np.abs(f.evald().real / (-1.4763431474004472804452143435221887167393328861)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (1.5406263884278099750127157814537559611048741005)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-1.4763431474004472804452143435221887167393328861")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("1.5406263884278099750127157814537559611048741005")-1), tol_mp)
+
+        f = Function(acos(y))
+        self.assertLessEqual(np.abs(f.evald().real / (0.38769800860408664087229892623614567735197135529)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (2.3379037587834289977359318611458042347281923566)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("0.38769800860408664087229892623614567735197135529")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("2.3379037587834289977359318611458042347281923566")-1), tol_mp)
+
+        f = Function(atan(z))
+        self.assertLessEqual(np.abs(f.evald().real / (-1.4195347801361539102032503530226060969949192059)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-0.16801358511827150554928904776095870747673962940e-1)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-1.4195347801361539102032503530226060969949192059")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-0.16801358511827150554928904776095870747673962940e-1")-1), tol_mp)
+
+        f = Function(exp(y))
+        self.assertLessEqual(np.abs(f.evald().real / (-45.639359208255772966298371983389382308765171859)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-117.94721623715960520658000231550940351946595854)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-45.639359208255772966298371983389382308765171859")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-117.94721623715960520658000231550940351946595854")-1), tol_mp)
+
+        f = Function(log(z))
+        self.assertLessEqual(np.abs(f.evald().real / (1.8750432590213669716781046977781508038070552297)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-3.0292589170775161726973168096174940982043177322)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("1.8750432590213669716781046977781508038070552297")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-3.0292589170775161726973168096174940982043177322")-1), tol_mp)
+
+    def test_power(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(y**3)
+        self.assertLessEqual(np.abs(f.evald().real / (58.732432)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-129.035608)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("58.732432")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-129.035608")-1), tol_mp)
+
+        f = Function(pow(y,3))
+        self.assertLessEqual(np.abs(f.evald().real / (58.732432)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-129.035608)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("58.732432")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-129.035608")-1), tol_mp)
+
+        f = Function(x**p)
+        self.assertLessEqual(np.abs(f.evald().real / (-.35190932545709434788093164550270669097948909024)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-6.7687858345625791466707575744042177964518271087)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-.35190932545709434788093164550270669097948909024")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-6.7687858345625791466707575744042177964518271087")-1), tol_mp)
+
+        f = Function(pow(x,p))
+        self.assertLessEqual(np.abs(f.evald().real / (-.35190932545709434788093164550270669097948909024)-1), tol_d)
+        self.assertLessEqual(np.abs(f.evald().imag / (-6.7687858345625791466707575744042177964518271087)-1), tol_d)
+
+        self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-.35190932545709434788093164550270669097948909024")-1), tol_mp)
+        self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("-6.7687858345625791466707575744042177964518271087")-1), tol_mp)
+
+
+    def test_Operator_degree(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(x**3-9*y*y*z*pow(x,4));
+        w = VariableGroup(); w.append(x); w.append(y);
+        self.assertEqual(f.degree(),7)
+        self.assertEqual(f.degree(x),4)
+        self.assertEqual(f.degree(y),2)
+        self.assertEqual(f.degree(z),1)
+        self.assertEqual(f.degree(w),6)
+        w = VariableGroup(); w.append(y); w.append(z);
+        self.assertEqual(f.degree(w),3)
+
+    def test_Operator_ishom(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(y**2 - 9*y*z + 3*x*x - y*82*x - pow(z,2))
+        self.assertTrue(f.is_homogeneous())
+        f = Function(y**2 - 9*y*z + 3*x*x - y*82*x - pow(z,4))
+        self.assertFalse(f.is_homogeneous())
+        f = Function(y**2 - 9*y*z + 3*x*x - 5)
+        self.assertFalse(f.is_homogeneous())
+
+    def test_Operator_ispoly(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        f = Function(y**2 - 9*y*z + 3*x*x - y*82*x - pow(z,2))
+        self.assertTrue(f.is_polynomial());
+
+        f = Function(x**2*y - 9 + sin(z))
+        self.assertFalse(f.is_polynomial())
+
+
