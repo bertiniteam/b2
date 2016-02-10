@@ -354,6 +354,28 @@ namespace bertini{
 			}
 
 
+			/**
+			\brief Refine a point given in multiprecision.
+			
+			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
+
+			\return The SuccessCode indicating whether the refinement completed.  
+
+			\param new_space The result of refinement.
+			\param start_point The seed for Newton's method for refinement.
+			\param current_time The current time value for refinement.
+			\param tolerance The tolerance to which to refine.
+			*/
+			SuccessCode Refine(Vec<mpfr> & new_space,
+								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const override
+			{
+				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time, tolerance);
+			}
+
+
+
+
+			
 			virtual ~AMPTracker() = default;
 
 
