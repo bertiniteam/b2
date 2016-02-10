@@ -101,7 +101,7 @@ namespace bertini
 
 				mpfr_float path_truncation_threshold = mpfr_float("1e5");
 
-				mpfr_float final_tolerance_multiplier = mpfr_float("1.0"); // This multiplier is used to cluster or de-cluster points at the target system. 
+				mpfr_float final_tolerance_multiplier = mpfr_float("10.0"); // This multiplier is used to cluster or de-cluster points at the target system. 
 
 				mpfr_float final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
 			};

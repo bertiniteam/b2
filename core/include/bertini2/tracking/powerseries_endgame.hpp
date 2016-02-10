@@ -281,7 +281,8 @@ namespace bertini{
 				}
 				// Make sure to use Eigen and transpose to use Linear algebra. DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want. 
 				// need to have cycle_number_amplification, this is the 5 used for 5 * estimate
-			}
+
+			}//end BoundOnCycleNumber
 
 
 			/*
@@ -354,6 +355,7 @@ namespace bertini{
 				times_.push_back(current_time); //push most recent sample back on. 
 
 				return derivatives;
+
 			}//end ComputeCycleNumber
 
 
@@ -400,8 +402,8 @@ namespace bertini{
 				std::deque< Vec<ComplexType> > derivatives = ComputeCycleNumber(times_[times_.size()-1],samples_[samples_.size()-1]); //sending in last element so that ComplexType can be known for templating.
 
 				// //Conversion to S-plane.
-				std::deque<mpfr> s_times;
-				std::deque< Vec<mpfr> > s_derivatives;
+				std::deque<ComplexType> s_times;//SHOULD BE COMPLEXTYPE
+				std::deque< Vec<ComplexType> > s_derivatives;
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii){
 					s_derivatives.push_back(derivatives[ii]*(ComplexType(endgame_settings_.cycle_number)*pow(times_[ii],(ComplexType(endgame_settings_.cycle_number) - ComplexType(1))/ComplexType(endgame_settings_.cycle_number))));
@@ -410,6 +412,7 @@ namespace bertini{
 				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, endgame_settings_.num_sample_points, s_times, samples_, s_derivatives);
 
 				return Approx;
+
 			}//end ComputeApproximationOfXAtT0
 
 
@@ -555,13 +558,13 @@ namespace bertini{
 			 		prev_approx = latest_approx;
 				    dehom_of_prev_approx = dehom_of_latest_approx;
 				} //end while	
-
-			// in case if we get out of the for loop without setting. 
-			endgame_settings_.final_approximation_at_origin = latest_approx;
-			// std::cout << "approx_error norm is " << approx_error.norm() << '\n';
-			return SuccessCode::Success;
+				// in case if we get out of the for loop without setting. 
+				endgame_settings_.final_approximation_at_origin = latest_approx;
+				// std::cout << "approx_error norm is " << approx_error.norm() << '\n';
+				return SuccessCode::Success;
 
 			} //end PSEG
+
 		}; // end powerseries class
 
 
