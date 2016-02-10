@@ -151,7 +151,8 @@ namespace bertini{
 				Predictor(new_predictor_choice);
 				
 				tracking_tolerance_ = tracking_tolerance;
-				digits_tracking_tolerance_ = unsigned(ceil(-log10(tracking_tolerance)));
+				mpfr_float b = ceil(-log10(tracking_tolerance));
+				digits_tracking_tolerance_ = b.convert_to<unsigned int>();
 
 				path_truncation_threshold_ = path_truncation_threshold;
 
@@ -214,16 +215,16 @@ namespace bertini{
 
 					step_success_code_ = TrackerIteration();
 
-
-					if (step_success_code_==SuccessCode::Success)
+					if (infinite_path_truncation_ && (CheckGoingToInfinity()==SuccessCode::GoingToInfinity))
+					{	
+						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration indicated going to infinity";
+						PostTrackCleanup();
+						return SuccessCode::GoingToInfinity;
+					}
+					else if (step_success_code_==SuccessCode::Success)
 					{	
 						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful";
 						IncrementCountersSuccess();
-					}
-					else if (step_success_code_==SuccessCode::GoingToInfinity)
-					{
-						PostTrackCleanup();
-						return step_success_code_;
 					}
 					else
 					{
@@ -254,6 +255,24 @@ namespace bertini{
 			SuccessCode Refine(Vec<mpfr> & new_space,
 								Vec<mpfr> const& start_point, mpfr const& current_time) const = 0;
 
+
+
+
+			/**
+			\brief Refine a point given in multiprecision.
+			
+			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
+
+			\return The SuccessCode indicating whether the refinement completed.  
+
+			\param new_space The result of refinement.
+			\param start_point The seed for Newton's method for refinement.
+			\param current_time The current time value for refinement.
+			\param tolerance The tolerance to which to refine.
+			*/
+			virtual
+			SuccessCode Refine(Vec<mpfr> & new_space,
+								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const = 0;
 
 			/**
 			\brief Change tracker to use a predictor
@@ -344,6 +363,16 @@ namespace bertini{
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
 
 
+			/**
+			\brief Switch resetting of initial step size to that of the stepping settings.
+
+			By default, initial step size is retrieved from the stepping settings at the start of each path track.  To turn this off, and re-use the previous step size from the previously tracked path, turn off by calling this function with false.
+			*/
+			void ReinitializeInitialStepSize(bool should_reinitialize_stepsize)
+			{
+				reinitialize_stepsize_ = should_reinitialize_stepsize;
+			}
+
 		protected:
 
 			/**
@@ -397,8 +426,25 @@ namespace bertini{
 				num_consecutive_failed_steps_++;
 			}
 
+			/**
+			\brief Check whether the path is going to infinity, as it tracks.  
+
+			This check is necessary because a homotopy may be malformed, or may have encountered a probability-0 event.  That it is a 0 probability event is why this check is disable-able via a toggle.
+			*/
+			virtual 
+			SuccessCode CheckGoingToInfinity() const = 0;
+
+			void InitializeStepsize() const
+			{
+				current_stepsize_ = stepping_config_.initial_step_size;
+			}
+
+
 
 			const class System& tracked_system_; ///< The system being tracked.
+
+			bool infinite_path_truncation_ = true; /// Whether should check if the path is going to infinity while tracking.  On by default.
+			bool reinitialize_stepsize_ = true; ///< Whether should re-initialize the stepsize with each call to Trackpath.  On by default.
 
 			// tracking the numbers of things
 			mutable unsigned num_total_steps_taken_; ///< The number of steps taken, including failures and successes.

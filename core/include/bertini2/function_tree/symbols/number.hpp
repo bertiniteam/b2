@@ -151,6 +151,7 @@ namespace node{
 		Integer(mpz_int val) : true_value_(val)
 		{}
 
+		explicit
 		Integer(std::string const& val) : true_value_(val)
 		{}
 
@@ -218,7 +219,7 @@ namespace node{
 		Float(mpfr const& val) : highest_precision_value_(val)
 		{}
 
-		Float(mpfr_float const& rval, mpfr_float const& ival) : highest_precision_value_(rval,ival)
+		Float(mpfr_float const& rval, mpfr_float const& ival = 0) : highest_precision_value_(rval,ival)
 		{}
 
 		Float(std::string const& val) : highest_precision_value_(val)

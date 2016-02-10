@@ -101,13 +101,16 @@ namespace bertini {
 	\endcode
 
 	\brief Qi Parser object for parsing text into the System class.  
+
+	This parser could not have been written without the help of SO user sehe.
 	*/
 	template<typename Iterator, typename Skipper = ascii::space_type>
 	struct SystemParser : qi::grammar<Iterator, System(), Skipper>
 	{
 		
 		
-		SystemParser() :	function_parser_(&encountered_symbols_), /*initialize here with address of encountered_symbols*/
+		SystemParser() :	function_parser_(&encountered_symbols_), 
+		/*initialize here with address of encountered_symbols*/
 							SystemParser::base_type(root_rule_)
 		{
 			namespace phx = boost::phoenix;

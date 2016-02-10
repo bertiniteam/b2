@@ -63,7 +63,6 @@ namespace bertini{
 					               Vec<ComplexType> const& current_space, 
 					               ComplexType const& current_time, 
 					               RealType tracking_tolerance,
-					               RealType path_truncation_threshold,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations)
 		{
@@ -72,7 +71,6 @@ namespace bertini{
 						               current_space, 
 						               current_time, 
 						               tracking_tolerance,
-						               path_truncation_threshold,
 						               min_num_newton_iterations,
 						               max_num_newton_iterations);
 		}
@@ -101,7 +99,6 @@ namespace bertini{
 					               Vec<ComplexType> const& current_space, 
 					               ComplexType const& current_time, 
 					               RealType tracking_tolerance,
-					               RealType path_truncation_threshold,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -111,7 +108,6 @@ namespace bertini{
 						               current_space, 
 						               current_time, 
 						               tracking_tolerance,
-						               path_truncation_threshold,
 						               min_num_newton_iterations,
 						               max_num_newton_iterations,
 						               AMP_config);
@@ -150,7 +146,6 @@ namespace bertini{
 					               Vec<ComplexType> const& current_space, 
 					               ComplexType const& current_time, 
 					               RealType tracking_tolerance,
-					               RealType path_truncation_threshold,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
 					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -164,7 +159,6 @@ namespace bertini{
 						               current_space, 
 						               current_time, 
 						               tracking_tolerance,
-						               path_truncation_threshold,
 						               min_num_newton_iterations,
 						               max_num_newton_iterations,
 						               AMP_config);

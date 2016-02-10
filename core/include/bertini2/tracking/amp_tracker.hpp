@@ -52,7 +52,7 @@ namespace bertini{
 		mpfr_float MinTimeForCurrentPrecision(unsigned precision)
 		{
 			if (precision==DoublePrecision())
-				return max( pow( mpfr_float(10), -long(precision)+3), mpfr_float("1e-150"));
+				return max( mpfr_float(pow( mpfr_float(10), -long(precision)+3)), mpfr_float("1e-150"));
 			else
 				return pow( mpfr_float(10), -long(precision)+3);
 		}
@@ -105,7 +105,7 @@ namespace bertini{
 		*/
 		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr const& current_time)
 		{
-			return unsigned(ceil(log_of_stepsize) + ceil(log10(abs(current_time))) + 2);
+			return mpfr_float(ceil(log_of_stepsize) + ceil(log10(abs(current_time))) + 2).convert_to<int>();
 		}
 
 
@@ -153,10 +153,10 @@ namespace bertini{
 			auto minimizer_routine = 
 				[&min_cost, &new_stepsize, &new_precision, criterion_B_rhs, num_newton_iterations, predictor_order, max_stepsize](unsigned candidate_precision)
 				{
-					auto candidate_stepsize = min(StepsizeSatisfyingCriterionB(candidate_precision, criterion_B_rhs, num_newton_iterations, predictor_order),
+					mpfr_float candidate_stepsize = min(StepsizeSatisfyingCriterionB(candidate_precision, criterion_B_rhs, num_newton_iterations, predictor_order),
 					                              max_stepsize);
 
-					auto current_cost = ArithmeticCost(candidate_precision) / abs(candidate_stepsize);
+					mpfr_float current_cost = ArithmeticCost(candidate_precision) / abs(candidate_stepsize);
 
 					if (current_cost < min_cost)
 					{
@@ -355,6 +355,28 @@ namespace bertini{
 			}
 
 
+			/**
+			\brief Refine a point given in multiprecision.
+			
+			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
+
+			\return The SuccessCode indicating whether the refinement completed.  
+
+			\param new_space The result of refinement.
+			\param start_point The seed for Newton's method for refinement.
+			\param current_time The current time value for refinement.
+			\param tolerance The tolerance to which to refine.
+			*/
+			SuccessCode Refine(Vec<mpfr> & new_space,
+								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const override
+			{
+				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time, tolerance);
+			}
+
+
+
+
+			
 			virtual ~AMPTracker() = default;
 
 
@@ -383,14 +405,15 @@ namespace bertini{
 				#endif
 
 				// set up the master current time and the current step size
-				current_time_.precision(start_time.precision());
+				current_time_.precision(Precision(start_point(0)));
 				current_time_ = start_time;
 
 				if (preserve_precision_)
 					initial_precision_ = Precision(start_point(0));
 
-				current_stepsize_.precision(stepping_config_.initial_step_size.precision());
-				current_stepsize_ = stepping_config_.initial_step_size;
+				current_stepsize_.precision(Precision(start_point(0)));
+				if (reinitialize_stepsize_)
+					InitializeStepsize();
 
 				// populate the current space value with the start point, in appropriate precision
 				if (start_point(0).precision()==DoublePrecision())
@@ -632,6 +655,27 @@ namespace bertini{
 			}
 
 
+			/**
+			Check whether the path is going to infinity.
+			*/
+			SuccessCode CheckGoingToInfinity() const override
+			{
+				if (current_precision_ == DoublePrecision())
+					return CheckGoingToInfinity<dbl>();
+				else
+					return CheckGoingToInfinity<mpfr>();
+			}
+
+			template <typename ComplexType>
+			SuccessCode CheckGoingToInfinity() const
+			{
+				if (tracked_system_.DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
+					return SuccessCode::GoingToInfinity;
+				else
+					return SuccessCode::Success;
+			}
+
+
 
 			/**
 			\brief Commit the next precision and stepsize, and adjust internals.
@@ -678,7 +722,7 @@ namespace bertini{
 
 
 				mpfr_float min_stepsize = current_stepsize_ * stepping_config_.step_size_fail_factor;
-				mpfr_float max_stepsize = min(current_stepsize_ * stepping_config_.step_size_success_factor, stepping_config_.max_step_size);
+				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * stepping_config_.step_size_success_factor), stepping_config_.max_step_size);
 
 
 				unsigned max_precision = current_precision_;
@@ -807,14 +851,16 @@ namespace bertini{
 					mpfr_float criterion_B_rhs = B_RHS<ComplexType,RealType>();
 
 					unsigned min_precision = max(min_next_precision,
-					                             unsigned(criterion_B_rhs),
+					                             criterion_B_rhs.convert_to<unsigned int>(),
 					                             DigitsC<ComplexType,RealType>(),
 					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, current_time_),
 					                             digits_final_
 					                             );
 					
+					mpfr_float a(ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/newton_config_.max_num_newton_iterations));
+
 					unsigned max_precision = max(min_precision, 
-					                             unsigned(ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/newton_config_.max_num_newton_iterations))
+					                             a.convert_to<unsigned int>()
 					                             );
 
 					MinimizeTrackingCost<RealType>(next_precision_, next_stepsize_, 
@@ -1085,7 +1131,6 @@ namespace bertini{
 												current_space,
 												current_time, 
 												RealType(tracking_tolerance_),
-												RealType(path_truncation_threshold_),
 												newton_config_.min_num_newton_iterations,
 												newton_config_.max_num_newton_iterations,
 												AMP_config_);
@@ -1165,7 +1210,6 @@ namespace bertini{
 							   start_point,
 							   current_time, 
 							   tracking_tolerance_,
-							   RealType(path_truncation_threshold_),
 							   newton_config_.min_num_newton_iterations,
 							   newton_config_.max_num_newton_iterations,
 							   AMP_config_);
@@ -1201,7 +1245,6 @@ namespace bertini{
 							   start_point,
 							   current_time, 
 							   tolerance,
-							   RealType(path_truncation_threshold_),
 							   newton_config_.min_num_newton_iterations,
 							   newton_config_.max_num_newton_iterations,
 							   AMP_config_);
@@ -1511,8 +1554,7 @@ namespace bertini{
 			////////////
 			// state variables
 			/////////////
-
-			bool preserve_precision_ = true;
+			bool preserve_precision_ = true; ///< Whether the tracker should change back to the initial precision after tracking paths.
 
 			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
 			mutable unsigned next_precision_; ///< The next precision
