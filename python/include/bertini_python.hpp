@@ -25,9 +25,11 @@
 #define BERTINI_PYTHON_HPP
 
 #include "python_common.hpp"
+#include "containers_export.hpp"
 #include "mpfr_export.hpp"
 #include "function_tree.hpp"
 #include "system_export.hpp"
+#include "parser_export.hpp"
 
 
 #endif

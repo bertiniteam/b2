@@ -2,6 +2,7 @@ import mpfr_test
 import function_tree_test
 import differentiation_test
 import system_test
+import parser_test
 import unittest
 
 
@@ -18,7 +19,7 @@ import unittest
 
 
 if __name__ == '__main__':
-    mods = (mpfr_test,function_tree_test, differentiation_test)
+    mods = (mpfr_test,function_tree_test, differentiation_test, system_test, parser_test)
     suite = unittest.TestSuite();
     for tests in mods:
         thissuite = unittest.TestLoader().loadTestsFromModule(tests);

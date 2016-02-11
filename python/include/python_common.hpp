@@ -36,4 +36,8 @@
 using namespace boost::python;
 typedef bertini::mpfr_float bmp;
 
+
+
+
+
 #endif

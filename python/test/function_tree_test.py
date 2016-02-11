@@ -412,4 +412,25 @@ class OperatorTest(unittest.TestCase):
         f = Function(x**2*y - 9 + sin(z))
         self.assertFalse(f.is_polynomial())
 
+    def test_Homogenize(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; a = self.a; b = self.b;
+        tol_d = self.tol_d; tol_mp = self.tol_mp;
+
+        h = Variable("h");
+        f = Function(x**2 + y**2 + z**2 - 1)
+
+        vars = VariableGroup();
+        vars.append(y); vars.append(x); vars.append(z);
+
+        f.homogenize(vars,h);
+        self.assertEqual(f.degree(h),2)
+        self.assertTrue(f.is_homogeneous())
+
+        self.assertFalse(f.is_homogeneous(x))
+        self.assertFalse(f.is_homogeneous(y))
+        self.assertFalse(f.is_homogeneous(z))
+        self.assertFalse(f.is_homogeneous(h))
+
+        vars.append(h);
+        self.assertTrue(f.is_homogeneous(vars))
 

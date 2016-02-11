@@ -74,10 +74,6 @@ namespace bertini{
 			
 			
 			
-			// Expose the deque containers
-			class_< std::deque< std::shared_ptr< Variable > > >("VariableGroup")
-			.def(vector_indexing_suite< std::deque< std::shared_ptr< Variable > >, true >())
-			;			
 		}
 		
 		

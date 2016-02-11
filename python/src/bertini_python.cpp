@@ -11,6 +11,7 @@ namespace bertini
 
 		BOOST_PYTHON_MODULE(libpybertini) // this name must match the name of the generated .so file.
 		{
+			ExportContainers();
 			
 			ExportMpfr();
 		
@@ -19,8 +20,10 @@ namespace bertini
 			ExportSymbols();
 			ExportOperators();
 			ExportRoots();
+			
 			ExportSystem();
 			
+			ExportParsers();
 		}
 	
 	}
