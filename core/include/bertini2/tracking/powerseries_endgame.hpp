@@ -397,6 +397,10 @@ namespace bertini{
 						}
 					}
 				}
+				for(unsigned ii = 0; ii < samples_.size(); ++ii)
+				{
+					endgame_tracker_.Refine(samples_[ii],samples_[ii],cauchy_times_[ii],endgame_tolerances_.final_tolerance);
+				}
 
 				endgame_tracker_.GetSystem().precision(max_precision);
 				std::deque< Vec<ComplexType> > derivatives = ComputeCycleNumber(times_[times_.size()-1],samples_[samples_.size()-1]); //sending in last element so that ComplexType can be known for templating.

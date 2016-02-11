@@ -150,28 +150,28 @@ namespace bertini{
 
 			};
 
-			//finds C(d,n) - combination of d choose n 
-			mpfr_float ComputeCombination(mpfr_float d, mpfr_float n)
-			{
-				mpfr_float return_value;
-				  // error checking
- 				if (d >= n && n >= 0)
- 				{ // find the smallest of n & d - n since C(d,n) = C(d,d-n)
-   					return_value = 1;
-  					n = min(n, d - n);
+			// //finds C(d,n) - combination of d choose n 
+			// mpfr_float ComputeCombination(mpfr_float d, mpfr_float n)
+			// {
+			// 	mpfr_float return_value;
+			// 	  // error checking
+ 		// 		if (d >= n && n >= 0)
+ 		// 		{ // find the smallest of n & d - n since C(d,n) = C(d,d-n)
+   // 					return_value = 1;
+  	// 				n = min(n, d - n);
 
-  					for (unsigned int ii = 0; ii < n; ii++)
-   					{ // update retVal
-     					return_value = return_value / (ii + mpfr_float("1.0"));
-     					return_value = return_value * (d - ii);
-   					}
-  				}
-  				else
-  				{ // no combinations
-   					return_value = 0;
-  				}
-				return return_value;
-			}
+  	// 				for (unsigned int ii = 0; ii < n; ii++)
+   // 					{ // update retVal
+   //   					return_value = return_value / (ii + mpfr_float("1.0"));
+   //   					return_value = return_value * (d - ii);
+   // 					}
+  	// 			}
+  	// 			else
+  	// 			{ // no combinations
+   // 					return_value = 0;
+  	// 			}
+			// 	return return_value;
+			// }
 
 
 			/*

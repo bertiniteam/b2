@@ -90,8 +90,8 @@ namespace bertini
 				void SetEndgameSettings(config::EndGame new_endgame_settings){endgame_settings_ = new_endgame_settings;}
 				config::EndGame GetEndgameStruct(){ return endgame_settings_;}
 
-				void SetCauchySettings(config::PowerSeries new_cauchy_settings){cauchy_settings_ = new_cauchy_settings;}
-				config::PowerSeries GetCauchySettings(){return cauchy_settings_;}
+				void SetCauchySettings(config::Cauchy new_cauchy_settings){cauchy_settings_ = new_cauchy_settings;}
+				config::Cauchy GetCauchySettings(){return cauchy_settings_;}
 
 				void SetSecuritySettings(config::Security new_endgame_security_settings){ endgame_security_ = new_endgame_security_settings;}
 				config::Security GetSecuritySettings(){return endgame_security_;}
@@ -500,57 +500,57 @@ namespace bertini
 				*/
 
 
-				template<typename ComplexType>
-				mpfr_float FindToleranceForClosedLoop(ComplexType x_time, Vec<ComplexType> x_sample)
-				{
-					auto degree_max = std::max(endgame_tracker_.AMP_config_.degree_bound,mpfr_float("2.0")); 
-					auto K = endgame_tracker_.AMP_config_.coefficient_bound;
-					mpfr_float N;
-					mpfr_float M;
-					mpfr_float L;
+				// template<typename ComplexType>
+				// mpfr_float FindToleranceForClosedLoop(ComplexType x_time, Vec<ComplexType> x_sample)
+				// {
+				// 	auto degree_max = std::max(endgame_tracker_.AMP_config_.degree_bound,mpfr_float("2.0")); 
+				// 	auto K = endgame_tracker_.AMP_config_.coefficient_bound;
+				// 	mpfr_float N;
+				// 	mpfr_float M;
+				// 	mpfr_float L;
 
-					if(max_closed_loop_tolerance_ < min_closed_loop_tolerance_)
-					{
-						max_closed_loop_tolerance_ = min_closed_loop_tolerance_;
-					}
+				// 	if(max_closed_loop_tolerance_ < min_closed_loop_tolerance_)
+				// 	{
+				// 		max_closed_loop_tolerance_ = min_closed_loop_tolerance_;
+				// 	}
 
-					// if(samples_.back().precision < 64) //use double
-					// {
-					auto error_tolerance = mpfr_float("1e-13");
-					if(x_sample.size() <= 1)
-					{
-						N = degree_max;
-					}
-					else
-					{
-						N = ComputeCombination(degree_max + x_sample[0].precision() - 1, x_sample[0].precision() - 1);
-					}
-					M = degree_max * (degree_max - 1) * N;
-					auto jacobian_at_current_time = endgame_tracker_.GetSystem().Jacobian(x_sample,x_time);
+				// 	// if(samples_.back().precision < 64) //use double
+				// 	// {
+				// 	auto error_tolerance = mpfr_float("1e-13");
+				// 	if(x_sample.size() <= 1)
+				// 	{
+				// 		N = degree_max;
+				// 	}
+				// 	else
+				// 	{
+				// 		N = ComputeCombination(degree_max + x_sample[0].precision() - 1, x_sample[0].precision() - 1);
+				// 	}
+				// 	M = degree_max * (degree_max - 1) * N;
+				// 	auto jacobian_at_current_time = endgame_tracker_.GetSystem().Jacobian(x_sample,x_time);
 
 
-					auto minimum_singular_value = Eigen::JacobiSVD< Mat<ComplexType> >(jacobian_at_current_time).singularValues()(endgame_tracker_.GetSystem().NumVariables() - 1 );
+				// 	auto minimum_singular_value = Eigen::JacobiSVD< Mat<ComplexType> >(jacobian_at_current_time).singularValues()(endgame_tracker_.GetSystem().NumVariables() - 1 );
 
-					auto norm_of_sample = x_sample.norm();
-					L = pow(norm_of_sample,degree_max - 2);
-					auto tol = K * L * M;
-					// std::cout << "TOL IS " << tol << '\n';
-					if (tol == 0) // fail-safe
-   						tol = minimum_singular_value;
- 					else
-   					{
-   						tol = mpfr_float("2.0") / tol;
-    					tol = tol * minimum_singular_value;
-  					}
- 					// make sure that tol is between min_tol & max_tol
-					if (tol > max_closed_loop_tolerance_) // tol needs to be <= max_tol
- 						tol = max_closed_loop_tolerance_;
-					if (tol < min_closed_loop_tolerance_) // tol needs to be >= min_tol
-  						tol = min_closed_loop_tolerance_;
- 					return tol;
-					// }
+				// 	auto norm_of_sample = x_sample.norm();
+				// 	L = pow(norm_of_sample,degree_max - 2);
+				// 	auto tol = K * L * M;
+				// 	// std::cout << "TOL IS " << tol << '\n';
+				// 	if (tol == 0) // fail-safe
+   	// 					tol = minimum_singular_value;
+ 			// 		else
+   	// 				{
+   	// 					tol = mpfr_float("2.0") / tol;
+    // 					tol = tol * minimum_singular_value;
+  		// 			}
+ 			// 		// make sure that tol is between min_tol & max_tol
+				// 	if (tol > max_closed_loop_tolerance_) // tol needs to be <= max_tol
+ 			// 			tol = max_closed_loop_tolerance_;
+				// 	if (tol < min_closed_loop_tolerance_) // tol needs to be >= min_tol
+  		// 				tol = min_closed_loop_tolerance_;
+ 			// 		return tol;
+				// 	// }
 
-				}// end FindToleranceForClosedLoop
+				// }// end FindToleranceForClosedLoop
 
 				/*
 				Input: An mpfr_float for the maximum error allowed for a loop to be consider closed. This tolerance is found above.
@@ -562,23 +562,23 @@ namespace bertini
 				*/
 
 				//Need to check with Dan if the extra parts of this are necessary. 
-				bool CheckClosedLoop(mpfr_float closed_loop_max_error)
+				bool CheckClosedLoop()
 				{
 
 
 					//is binary operations going to work with different precisions correctly?
-					std::cout << "closed loop max error is " <<  closed_loop_max_error << '\n';
-					std::cout << "diff before refinement is " << (cauchy_samples_.front() - cauchy_samples_.back()).norm() << '\n';
-					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < closed_loop_max_error )
+					// std::cout << "closed loop max error is " <<  closed_loop_max_error << '\n';
+					// std::cout << "diff before refinement is " << (cauchy_samples_.front() - cauchy_samples_.back()).norm() << '\n';
+					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < endgame_tolerances_.track_tolerance_during_endgame)
 					{
 						return true;
 					}
 					endgame_tracker_.Refine(cauchy_samples_.front(),cauchy_samples_.front(),cauchy_times_.front(),endgame_tolerances_.final_tolerance);
 					endgame_tracker_.Refine(cauchy_samples_.back(),cauchy_samples_.back(),cauchy_times_.back(),endgame_tolerances_.final_tolerance);
 
-					std::cout << "closed loop max error is " <<  closed_loop_max_error << '\n';
-					std::cout << "difference after refinement is " << (cauchy_samples_.front() - cauchy_samples_.back()).norm() << '\n';
-					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < closed_loop_max_error )
+					// std::cout << "closed loop max error is " <<  closed_loop_max_error << '\n';
+					// std::cout << "difference after refinement is " << (cauchy_samples_.front() - cauchy_samples_.back()).norm() << '\n';
+					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < endgame_tolerances_.track_tolerance_during_endgame)
 					{
 						return true;
 					}
@@ -674,7 +674,7 @@ namespace bertini
 					{
 						// std::cout << "in continue loop " << '\n';
 
-						closed_loop_tolerance = FindToleranceForClosedLoop(cauchy_times_.front(),cauchy_samples_.front());
+						//closed_loop_tolerance = FindToleranceForClosedLoop(cauchy_times_.front(),cauchy_samples_.front());
 
 						auto tracking_success = CircleTrack(cauchy_times_.front(),cauchy_samples_.front());
 
@@ -698,7 +698,7 @@ namespace bertini
 								// std::cout << "yeah buddy ! " << '\n';
 								while(check_closed_loop)
 								{
-									if(CheckClosedLoop(closed_loop_tolerance))
+									if(CheckClosedLoop())
 									{//error is small enough, exit the loop with success. 
 										// std::cout << "success 1 " << '\n';
 										return_value = SuccessCode::Success;
@@ -1106,9 +1106,9 @@ namespace bertini
 						}
 						else
 						{//check to see if we closed the loop
-							auto closed_loop_tolerance = FindToleranceForClosedLoop(cauchy_times_.front(),cauchy_samples_.front());
+							//auto closed_loop_tolerance = FindToleranceForClosedLoop(cauchy_times_.front(),cauchy_samples_.front());
 
-							if(CheckClosedLoop(closed_loop_tolerance))
+							if(CheckClosedLoop())
 							{
 								return SuccessCode::Success;
 							}
@@ -1165,11 +1165,11 @@ namespace bertini
 						do
 						{
 							approximate_error = (latest_approx - prev_approx).norm();
-							std::cout << "approximate_error is " << approximate_error << '\n';
+							// std::cout << "approximate_error is " << approximate_error << '\n';
 
 							if(approximate_error < endgame_tolerances_.final_tolerance)
 							{
-								std::cout << "success" << '\n';
+								// std::cout << "success" << '\n';
 								endgame_settings_.final_approximation_at_origin = latest_approx;
 								return SuccessCode::Success;
 							}
@@ -1181,7 +1181,7 @@ namespace bertini
 							}
 							else if(endgame_security_.level <= 0 && dehom_of_latest_approx.norm() > endgame_security_.max_norm && dehom_of_latest_approx.norm() > endgame_security_.max_norm)
 							{//we are too large, break out of loop to return error.
-								std::cout << "max norm reached" << '\n';
+								// std::cout << "max norm reached" << '\n';
 								return SuccessCode::SecurityMaxNormReached;
 							}
 							else
@@ -1197,15 +1197,15 @@ namespace bertini
 
 									if(tracking_success == SuccessCode::Success)
 									{
-										std::cout << '\n' << '\n' << '\n';
-										std::cout << "success tracking to next thing" << '\n';
-										closed_loop_tolerance = FindToleranceForClosedLoop(next_time,next_sample);
-										std::cout << "closed loop tol is " << closed_loop_tolerance << '\n';
+										// std::cout << '\n' << '\n' << '\n';
+										// std::cout << "success tracking to next thing" << '\n';
+									//	closed_loop_tolerance = FindToleranceForClosedLoop(next_time,next_sample);
+										// std::cout << "closed loop tol is " << closed_loop_tolerance << '\n';
 
-										std::cout << "next time is " << next_time << '\n';
-										std::cout << "next sample is " << next_sample << '\n';
+										// std::cout << "next time is " << next_time << '\n';
+										// std::cout << "next sample is " << next_sample << '\n';
 										finding_cauchy_samples_success = FindCauchySamples(next_time,next_sample);
-										std::cout << "cycle num is " << endgame_settings_.cycle_number << '\n';
+										// std::cout << "cycle num is " << endgame_settings_.cycle_number << '\n';
 
 
 										latest_approx = ComputeCauchyApproximationOfXAtT0(cauchy_samples_);
