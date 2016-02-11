@@ -14,6 +14,8 @@ namespace bertini
 			ExportContainers();
 			
 			ExportMpfr();
+			
+			ExportMinieigen();
 		
 			SetupFunctionTree();
 			ExportNode();
