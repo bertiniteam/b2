@@ -18,10 +18,18 @@ bertini_python_source_files = src/bertini_python.cpp \
 				src/operator_export.cpp \
 				src/root_export.cpp \
 				src/system_export.cpp \
-				minieigen/src/expose-complex.cpp \
-				minieigen/src/expose-vectors.cpp \ 
-				minieigen/src/expose-matrices.cpp \ 
+				minieigen/src/expose-complex.cpp 
+				minieigen/src/expose-vectors.cpp \
+				minieigen/src/expose-matrices.cpp \
 				minieigen/src/expose-converters.cpp 
+				minieigen/src/double-conversion/bignum-dtoa.cc \
+				minieigen/src/double-conversion/bignum.cc \
+				minieigen/src/double-conversion/cached-powers.cc \
+				minieigen/src/double-conversion/diy-fp.cc \
+				minieigen/src/double-conversion/double-conversion.cc \
+				minieigen/src/double-conversion/fast-dtoa.cc \
+				minieigen/src/double-conversion/fixed-dtoa.cc \
+				minieigen/src/double-conversion/strtod.cc 
 
 
 bertini_python = \
