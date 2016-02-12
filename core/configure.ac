@@ -86,7 +86,7 @@ AC_SEARCH_LIBS([cos], [m], [], [
 
 # look for a header file in Eigen, and croak if fail to find.
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to find Eigen 3  (eigen3/Eigen/Dense)]),[])
+AC_CHECK_HEADERS([Eigen/Dense],[],AC_MSG_ERROR([unable to find Eigen 3  (Eigen/Dense)]),[])
 AC_LANG_POP([C++])
 
 

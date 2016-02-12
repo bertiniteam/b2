@@ -24,7 +24,7 @@
 
 #include "function_tree.hpp"
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <vector>
 
 
