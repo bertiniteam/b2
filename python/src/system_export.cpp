@@ -43,12 +43,12 @@ namespace bertini{
 			.def("num_parameters", &SystemBaseT::NumParameters)
 			.def("num_implicit_parameters", &SystemBaseT::NumImplicitParameters)
 			
-			.def("set_variables_dbl", &SystemBaseT::template SetVariables<dbl>)
-			.def("set_variables_dbl", &SystemBaseT::template SetVariables<mpfr>)
-			.def("set_path_variable_dbl", &SystemBaseT::template SetPathVariable<dbl>)
-			.def("set_path_variable_dbl", &SystemBaseT::template SetPathVariable<mpfr>)
-			.def("set_implicit_parameters_dbl", &SystemBaseT::template SetImplicitParameters<dbl>)
-			.def("set_implicit_parameters_dbl", &SystemBaseT::template SetImplicitParameters<mpfr>)
+			.def("set_variables", &SystemBaseT::template SetVariables<dbl>)
+			.def("set_variables", &SystemBaseT::template SetVariables<mpfr>)
+			.def("set_path_variable", &SystemBaseT::template SetPathVariable<dbl>)
+			.def("set_path_variable", &SystemBaseT::template SetPathVariable<mpfr>)
+			.def("set_implicit_parameters", &SystemBaseT::template SetImplicitParameters<dbl>)
+			.def("set_implicit_parameters", &SystemBaseT::template SetImplicitParameters<mpfr>)
 			
 			.def("add_variable_group", &SystemBaseT::AddVariableGroup)
 			.def("add_hom_variable_group", &SystemBaseT::AddHomVariableGroup)
