@@ -44,7 +44,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 
 #include <eigen3/Eigen/src/Core/util/ForwardDeclarations.h>

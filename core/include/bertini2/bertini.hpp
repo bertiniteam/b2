@@ -32,8 +32,8 @@
 
 #include "config.h"
 
-#include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/LU>
+#include <Eigen/Dense>
+#include <Eigen/LU>
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
 

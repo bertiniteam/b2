@@ -43,7 +43,7 @@
 
 #include <assert.h>
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include <boost/type_index.hpp>
 

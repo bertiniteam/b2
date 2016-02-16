@@ -43,7 +43,7 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 #include <string>
 
