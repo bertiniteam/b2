@@ -116,7 +116,7 @@ class SystemTest(unittest.TestCase):
         tol_d = self.toldbl;
         sys = parse_system('function f1, f2; variable_group x,y,z; f1 = x+2; f2 = y*y;')
 
-        z = Variable("z");
+        z = Variable("z")
         sys *= Float(2);
 
         vals = VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
