@@ -38,7 +38,7 @@
 #include "tracking/tracking_config.hpp"
 
 #include "system.hpp"
-#include <eigen3/Eigen/LU>
+#include <Eigen/LU>
 
 #include <boost/type_index.hpp>
 

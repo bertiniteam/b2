@@ -32,7 +32,7 @@
 #define BERTINI_EIGEN_EXTENSIONS_HPP
 
 #include "num_traits.hpp"
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 #include <boost/serialization/complex.hpp>
 #include <boost/serialization/array.hpp>

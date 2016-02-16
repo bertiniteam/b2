@@ -47,7 +47,7 @@
 #include <Eigen/Core>
 
 
-#include <eigen3/Eigen/src/Core/util/ForwardDeclarations.h>
+#include <Eigen/src/Core/util/ForwardDeclarations.h>
 #include <string>
 #include <assert.h>
 

@@ -34,7 +34,7 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #define BERTINI_NUM_TRAITS_HPP
 
 #include <random>
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 namespace bertini
 {
