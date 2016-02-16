@@ -108,7 +108,7 @@ AC_DEFUN([AX_BOOST_LOG],
 			fi
 
 			if test "x$ax_lib" = "x"; then
-				AC_MSG_ERROR(Could not find a version of the library!)
+				AC_MSG_ERROR(Could not find a version of the Boost.Log library!)
 			fi
 
 			if test "x$link_log" = "xno"; then
