@@ -83,3 +83,4 @@ serialization_test*
 *.exe
 *.out
 *.app
+python/autom4te.cache
