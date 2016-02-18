@@ -31,13 +31,141 @@
 #ifndef BERTINI_EIGEN_EXTENSIONS_HPP
 #define BERTINI_EIGEN_EXTENSIONS_HPP
 
+
 #include "num_traits.hpp"
-#include <Eigen/Dense>
+
 
 #include <boost/serialization/complex.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
 
+#include <Eigen/Dense>
+#include <Eigen/LU>
+#include <Eigen/SVD>
+// reopen the Eigen namespace to inject this struct.
+namespace Eigen {
+	
+	using mpfr_float = bertini::mpfr_float;
+	template<> struct NumTraits<mpfr_float> : GenericNumTraits<mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	{
+		
+		typedef mpfr_float Real;
+		typedef mpfr_float NonInteger;
+		typedef mpfr_float Nested;
+		enum {
+			IsComplex = 0,
+			IsInteger = 0,
+			IsSigned = 1,
+			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
+			ReadCost = 20,
+			AddCost = 30,
+			MulCost = 40
+		};
+		
+		
+		inline static Real highest() {
+			
+			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//mpfr_float::default_precision());
+		}
+		
+		inline static Real lowest() {
+			return -highest();
+		}
+		
+		inline static Real dummy_precision()
+		{
+			return pow( mpfr_float(10),-int(mpfr_float::default_precision()-3));
+		}
+		
+		inline static Real epsilon()
+		{
+			return pow(mpfr_float(10),-int(mpfr_float::default_precision()));
+		}
+		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
+	};
+
+}
+
+
+
+
+
+// reopen the Eigen namespace to inject this struct.
+namespace Eigen {
+	
+	
+	
+	/**
+	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
+
+	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_float> contained in mpfr_extensions.
+	 */
+	template<> struct NumTraits<bertini::complex> : NumTraits<bertini::mpfr_float> 
+	{
+		using mpfr_float = bertini::mpfr_float;
+
+		typedef mpfr_float Real;
+		typedef mpfr_float NonInteger;
+		typedef bertini::complex Nested;// Nested;
+		enum {
+			IsComplex = 1,
+			IsInteger = 0,
+			IsSigned = 1,
+			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
+			ReadCost = 2 * NumTraits<Real>::ReadCost,
+			AddCost = 2 * NumTraits<Real>::AddCost,
+			MulCost = 4 * NumTraits<Real>::MulCost + 2 * NumTraits<Real>::AddCost
+		};
+		
+	};
+
+	namespace internal {
+		template<>
+		struct abs2_impl<bertini::complex>
+		{
+			static inline mpfr_float run(const bertini::complex& x)
+			{
+				return real(x)*real(x) + imag(x)*imag(x);
+			}
+		};
+
+
+		template<> inline bertini::complex random<bertini::complex>()
+		{
+			return bertini::complex::rand();
+		}
+
+		template<> inline bertini::complex random<bertini::complex>(const bertini::complex& a, const bertini::complex& b)
+		{
+			return a + (b-a) * random<bertini::complex>();
+		}
+
+		template<>
+		struct conj_helper<bertini::complex, bertini::complex, false, true>
+		{
+			typedef bertini::complex Scalar;
+			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
+			{ return c + pmul(x,y); }
+
+			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
+			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::imag(x)*numext::real(y) - numext::real(x)*numext::imag(y)); }
+		};
+
+		template<>
+		struct conj_helper<bertini::complex, bertini::complex, true, false>
+		{
+			typedef bertini::complex Scalar;
+			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
+			{ return c + pmul(x,y); }
+
+			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
+			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::real(x)*numext::imag(y) - numext::imag(x)*numext::real(y)); }
+		};
+
+	} // re: namespace internal
+} // re: namespace Eigen
+
+#include <Eigen/Dense>
 
 namespace bertini {
 
@@ -45,7 +173,7 @@ namespace bertini {
 	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
 
-	using std::abs;
+	
 	/**
 	 Test a numbers being very small.
 
@@ -60,6 +188,7 @@ namespace bertini {
 	template<typename T>
 	bool IsSmallValue(T const& testme)
 	{
+		using std::abs;
 		return abs(testme) <= Eigen::NumTraits<T>::epsilon()*100;
 	} 
 
@@ -78,7 +207,7 @@ namespace bertini {
 	template<typename T>
 	bool IsLargeChange(T const& numerator ,T const& denomenator)
 	{
-
+		using std::abs;
 		return abs(numerator/denomenator) >= 1.0/Eigen::NumTraits<T>::dummy_precision();
 	} 
 
@@ -135,6 +264,7 @@ namespace bertini {
 	template <typename NumberType>
 	Eigen::Matrix<NumberType, Eigen::Dynamic, Eigen::Dynamic> KahanMatrix(unsigned int mat_size, NumberType c)
 	{
+		using std::sqrt;
 		NumberType s, scale(1.0);
 		s = sqrt( (NumberType(1.0)-c) * (NumberType(1.0)+c) );
 		

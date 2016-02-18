@@ -21,23 +21,16 @@
 
 
 
-#include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/random.hpp>
-
 #include <boost/test/unit_test.hpp>
 
 
+
+
+
+#include "eigen_extensions.hpp"
+
 #include <Eigen/Dense>
 #include <Eigen/LU>
-
-#include "bertini2/limbo.hpp"
-
-#include "bertini2/eigen_extensions.hpp"
-
-#include "bertini2/mpfr_complex.hpp"
-
-
-
 
 extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;
@@ -314,6 +307,35 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		double n = A.norm();
 	}
 
+		BOOST_AUTO_TEST_CASE(dot_product_with_mpfr_type)
+		{
+			
+			using data_type = bertini::mpfr;
+			
+			Eigen::Matrix<data_type, 3, 1> v(data_type(2),data_type(4),data_type(3));
+			Eigen::Matrix<data_type, 3, 1> w(data_type(1),data_type(2),data_type(-1));
+
+			data_type result = v.dot(w);
+			data_type exact(7);
+			
+			BOOST_CHECK_EQUAL(result, exact);
+			
+		}
+
+
+	BOOST_AUTO_TEST_CASE(svd_with_mpfr_type)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << 2, 1, 1, 2;
+		
+		// this is commented out because et_on breaks this with eigen 3.2.7.  this issue is fixed with upcoming eigen release.  hence, we need to control et_on/et_off with a compile-time option and requirements on the version of eigen used.
+		// Eigen::JacobiSVD<Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic>> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+		
+		
+	}
 BOOST_AUTO_TEST_SUITE_END()
 
 	

@@ -32,7 +32,9 @@
 #define BERTINI_SYSTEM_HPP
 
 #include "mpfr_complex.hpp"
+#include "mpfr_extensions.hpp"
 #include "eigen_extensions.hpp"
+
 #include <vector>
 #include "function_tree.hpp"
 
@@ -43,7 +45,7 @@
 
 #include <assert.h>
 
-#include <Eigen/Dense>
+
 
 #include <boost/type_index.hpp>
 
@@ -55,7 +57,7 @@
 #include <boost/serialization/deque.hpp>
 
 #include "limbo.hpp"
-
+#include <Eigen/Dense>
 
 namespace bertini {
 

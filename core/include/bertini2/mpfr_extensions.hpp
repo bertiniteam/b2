@@ -43,16 +43,14 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <Eigen/Core>
-
 #include <string>
 
-#include "num_traits.hpp"
+
 
 
 namespace bertini{
 
-	typedef boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off> mpfr_float;
+	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>;
 
 	using mpz_int = boost::multiprecision::mpz_int;
 	using mpq_rational = boost::multiprecision::mpq_rational;
@@ -140,84 +138,57 @@ BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_rational)
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_int)
 
 
-// reopen the Eigen namespace to inject this struct.
-namespace Eigen {
-	
-	using bertini::mpfr_float;
-	template<> struct NumTraits<mpfr_float> : GenericNumTraits<mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+
+
+// from John Maddock, a boost multiprecision author, via email 2016.02.16 and 
+// https://svn.boost.org/trac/boost/ticket/11149
+namespace boost { namespace multiprecision {
+
+template <class Backend, class tag, class A1, class A2, class A3, class A4> 
+	inline number<Backend, et_on> min(const number<Backend, et_on>& arg, const detail::expression<tag, A1, A2, A3, A4>& a)
 	{
-		
-		typedef mpfr_float Real;
-		typedef mpfr_float NonInteger;
-		typedef mpfr_float Nested;
-		enum {
-			IsComplex = 0,
-			IsInteger = 0,
-			IsSigned = 1,
-			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
-			ReadCost = 20,
-			AddCost = 30,
-			MulCost = 40
-		};
-		
-		
-		inline static Real highest() {
-			
-			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//mpfr_float::default_precision());
-		}
-		
-		inline static Real lowest() {
-			return -highest();
-		}
-		
-		inline static Real dummy_precision()
-		{
-			return pow( mpfr_float(10),-int(mpfr_float::default_precision()-3));
-		}
-		
-		inline static Real epsilon()
-		{
-			return pow(mpfr_float(10),-int(mpfr_float::default_precision()));
-		}
-		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
-	};
-}
-
-
-
-
-namespace bertini {
-
-	/** 
-	\brief Get the precision of a number.
-
-	For mpfr_floats, this calls the precision member method for mpfr_float.
-	*/
-	inline
-	unsigned Precision(mpfr_float const& num)
-	{
-		return num.precision();
+		number<Backend, et_on> t(a);
+		return (std::min)(arg, t);
 	}
-	
-	
-	
-	template <> struct NumTraits<mpfr_float> 
+template <class tag, class A1, class A2, class A3, class A4, class Backend> 
+	inline number<Backend, et_on> min(const detail::expression<tag, A1, A2, A3, A4>& arg, const number<Backend, et_on>& a)
 	{
-		inline static unsigned NumDigits()
-		{
-			return mpfr_float::default_precision();
-		}
+		number<Backend, et_on> t(arg);
+		return (std::min)(arg, a);
+	}
+template <class tag, class A1, class A2, class A3, class A4, class tagb, class A1b, class A2b, class A3b, class A4b> 
+	inline typename detail::expression<tag, A1, A2, A3, A4>::result_type min(const detail::expression<tag, A1, A2, A3, A4>& arg, const detail::expression<tagb, A1b, A2b, A3b, A4b>& a)
+	{
+		using N = typename detail::expression<tag, A1, A2, A3, A4>::result_type;
+		N t1(arg), t2(a);
+		return (std::min)(arg, a);
+	}
 
-		inline static unsigned NumFuzzyDigits()
-		{
-			return mpfr_float::default_precision()-3;
-		}
-	};
-	
-	 
-	 
-	
-	/**
+template <class Backend, class tag, class A1, class A2, class A3, class A4>
+	inline number<Backend, et_on> max(const number<Backend, et_on>& arg, const detail::expression<tag, A1, A2, A3, A4>& a)
+	{
+		number<Backend, et_on> t(a);
+		return (std::max)(arg, t);
+	}
+template <class tag, class A1, class A2, class A3, class A4, class Backend>
+	inline number<Backend, et_on> max(const detail::expression<tag, A1, A2, A3, A4>& arg, const number<Backend, et_on>& a)
+	{
+		number<Backend, et_on> t(arg);
+		return (std::max)(arg, a);
+	}
+template <class tag, class A1, class A2, class A3, class A4, class tagb, class A1b, class A2b, class A3b, class A4b>
+	inline typename detail::expression<tag, A1, A2, A3, A4>::result_type max(const detail::expression<tag, A1, A2, A3, A4>& arg, const detail::expression<tagb, A1b, A2b, A3b, A4b>& a)
+	{	
+		using N = typename detail::expression<tag, A1, A2, A3, A4>::result_type;
+		N t1(arg), t2(a);
+		return (std::max)(arg, a);
+	}
+
+} }
+
+namespace bertini
+{
+		/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
 	 
 	 \tparam T the number type to generate.
@@ -363,6 +334,7 @@ namespace bertini {
 	
 	
 } // re: namespace bertini
+
 
 
 #endif

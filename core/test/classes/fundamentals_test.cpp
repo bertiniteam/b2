@@ -28,13 +28,20 @@
 #include <iostream>
 
 #include "bertini2/limbo.hpp"
-#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/num_traits.hpp"
 
 
 using mpfr = bertini::mpfr_float;
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
+
+BOOST_AUTO_TEST_CASE(max_et_on)
+{
+	mpfr a(1), b(2), c(4);
+	auto d = max(a,b*b+c);
+
+}
 
 BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 {

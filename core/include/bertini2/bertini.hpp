@@ -32,13 +32,11 @@
 
 #include "config.h"
 
-#include <Eigen/Dense>
-#include <Eigen/LU>
-#include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/random.hpp>
+
 
 
 #include <complex>
+#include "mpfr_extensions.hpp"
 #include "mpfr_complex.hpp"
 
 #include "function_tree.hpp"
@@ -47,6 +45,9 @@
 #include "system_parsing.hpp"
 
 #include "classic.hpp"
+
+#include <Eigen/Dense>
+#include <Eigen/LU>
 
 
 #endif

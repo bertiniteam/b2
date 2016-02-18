@@ -39,8 +39,7 @@
 #include <boost/test/unit_test.hpp>
 
 
-#include "bertini2/mpfr_complex.hpp"
-#include <complex>
+#include "bertini2/num_traits.hpp"
 
 using dbl = bertini::dbl;
 using mpfr = bertini::complex;

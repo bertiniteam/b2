@@ -4,10 +4,10 @@ EXTRA_PROGRAMS += b2_class_test
 TESTS += b2_class_test
 
 b2_class_test_SOURCES = \
-	test/classes/function_tree_test.cpp \
-	test/classes/class_test.cpp \
 	test/classes/fundamentals_test.cpp \
 	test/classes/eigen_test.cpp \
+	test/classes/function_tree_test.cpp \
+	test/classes/class_test.cpp \
 	test/classes/system_test.cpp \
 	test/classes/differentiate_test.cpp \
 	test/classes/homogenization_test.cpp \

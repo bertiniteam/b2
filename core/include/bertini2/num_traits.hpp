@@ -34,18 +34,24 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #define BERTINI_NUM_TRAITS_HPP
 
 #include <random>
-#include <Eigen/Core>
+#include <complex>
+#include <cmath>
+#include "mpfr_complex.hpp"
+#include "mpfr_extensions.hpp"
+
+
 
 namespace bertini
 {
 
 	using dbl = std::complex<double>;
+	using mpfr = bertini::complex;
 
 	template<typename T>
 	T RandomUnit();
 
 	template<typename T>
-	struct NumTraits : public Eigen::NumTraits<T>
+	struct NumTraits
 	{};
 
 
@@ -128,6 +134,8 @@ namespace bertini
 	inline
 	std::complex<double> rand_complex()
 	{
+		using std::abs;
+		using std::sqrt;
 		std::default_random_engine generator;
 		std::uniform_real_distribution<double> distribution(-1.0,1.0);
 		std::complex<double> returnme(distribution(generator), distribution(generator));
@@ -143,8 +151,63 @@ namespace bertini
 		return returnme / abs(returnme);
 	}
 
+	template <> 
+	inline 
+	bertini::complex RandomUnit<bertini::complex>()
+	{
+		return bertini::complex::RandomUnit();
+	}
 }// re: namespace bertini
 
+
+
+
+
+
+
+
+
+
+
+
+namespace bertini {
+
+	/** 
+	\brief Get the precision of a number.
+
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline
+	unsigned Precision(mpfr_float const& num)
+	{
+		return num.precision();
+	}
+	
+	
+	
+	template <> struct NumTraits<mpfr_float> 
+	{
+		inline static unsigned NumDigits()
+		{
+			return mpfr_float::default_precision();
+		}
+
+		inline static unsigned NumFuzzyDigits()
+		{
+			return mpfr_float::default_precision()-3;
+		}
+	};	
+
+
+
+	template <> struct NumTraits<bertini::complex> 
+	{
+		inline static unsigned NumDigits()
+		{
+			return mpfr_float::default_precision();
+		}
+	};
+}
 
 #endif
 

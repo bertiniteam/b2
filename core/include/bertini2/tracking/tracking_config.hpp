@@ -30,7 +30,7 @@
 
 \brief Configs and settings for tracking.
 */
-
+#include "mpfr_extensions.hpp"
 #include "eigen_extensions.hpp"
 
 #include "system.hpp"

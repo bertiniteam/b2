@@ -21,12 +21,12 @@
 
 
 
-#include "bertini2/mpfr_complex.hpp"
+#include "bertini2/num_traits.hpp"
 #include <boost/test/unit_test.hpp>
 #include <fstream>
 
 using mpfr_float = bertini::mpfr_float;
-
+#include "eigen_extensions.hpp"
 #include <eigen3/Eigen/Dense>
 
 extern double threshold_clearance_d;

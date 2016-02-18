@@ -32,9 +32,10 @@
 #define BERTINI_PATCH_HPP
 
 #include "mpfr_complex.hpp"
-#include "eigen_extensions.hpp"
+
 #include "mpfr_extensions.hpp"
 #include "num_traits.hpp"
+#include "eigen_extensions.hpp"
 
 #include <vector>
 

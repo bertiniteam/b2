@@ -33,26 +33,14 @@
 
 #include "config.h"
 
-#include "num_traits.hpp"
 #include "mpfr_extensions.hpp"
-
-#include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/random.hpp>
-
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <Eigen/Core>
-
-
-#include <Eigen/src/Core/util/ForwardDeclarations.h>
 #include <string>
 #include <assert.h>
-
-
-#include <boost/math/special_functions/fpclassify.hpp>
 
 
 namespace bertini {
@@ -1341,21 +1329,6 @@ namespace bertini {
 	{
 		return num.isnan();
 	}
-	
-	template <> struct NumTraits<bertini::complex> 
-	{
-		inline static unsigned NumDigits()
-		{
-			return mpfr_float::default_precision();
-		}
-	};
-
-	
-	template <> inline 
-	bertini::complex RandomUnit<bertini::complex>()
-	{
-		return bertini::complex::RandomUnit();
-	}
 
 	using mpfr = bertini::complex;
 } // re: namespace bertini
@@ -1365,80 +1338,6 @@ namespace bertini {
 
 
 
-// reopen the Eigen namespace to inject this struct.
-namespace Eigen {
-	
-	
-	
-	/**
-	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
-
-	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_float> contained in mpfr_extensions.
-	 */
-	template<> struct NumTraits<bertini::complex> : NumTraits<bertini::mpfr_float> 
-	{
-		using mpfr_float = bertini::mpfr_float;
-
-		typedef mpfr_float Real;
-		typedef mpfr_float NonInteger;
-		typedef bertini::complex Nested;// Nested;
-		enum {
-			IsComplex = 1,
-			IsInteger = 0,
-			IsSigned = 1,
-			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
-			ReadCost = 2 * NumTraits<Real>::ReadCost,
-			AddCost = 2 * NumTraits<Real>::AddCost,
-			MulCost = 4 * NumTraits<Real>::MulCost + 2 * NumTraits<Real>::AddCost
-		};
-		
-	};
-
-	namespace internal {
-		template<>
-		struct abs2_impl<bertini::complex>
-		{
-			static inline mpfr_float run(const bertini::complex& x)
-			{
-				return real(x)*real(x) + imag(x)*imag(x);
-			}
-		};
-
-
-		template<> inline bertini::complex random<bertini::complex>()
-		{
-			return bertini::complex::rand();
-		}
-
-		template<> inline bertini::complex random<bertini::complex>(const bertini::complex& a, const bertini::complex& b)
-		{
-			return a + (b-a) * random<bertini::complex>();
-		}
-
-		template<>
-		struct conj_helper<bertini::complex, bertini::complex, false, true>
-		{
-			typedef bertini::complex Scalar;
-			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
-			{ return c + pmul(x,y); }
-
-			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
-			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::imag(x)*numext::real(y) - numext::real(x)*numext::imag(y)); }
-		};
-
-		template<>
-		struct conj_helper<bertini::complex, bertini::complex, true, false>
-		{
-			typedef bertini::complex Scalar;
-			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
-			{ return c + pmul(x,y); }
-
-			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
-			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::real(x)*numext::imag(y) - numext::imag(x)*numext::real(y)); }
-		};
-
-	} // re: namespace internal
-} // re: namespace Eigen
 
 
 

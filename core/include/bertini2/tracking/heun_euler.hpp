@@ -38,6 +38,7 @@
 #include "tracking/tracking_config.hpp"
 
 #include "system.hpp"
+#include "mpfr_extensions.hpp"
 #include <Eigen/LU>
 
 #include <boost/type_index.hpp>
