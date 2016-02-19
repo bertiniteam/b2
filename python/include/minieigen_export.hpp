@@ -12,7 +12,7 @@
 #include <bertini2/function_tree.hpp>
 
 #include "common.hpp"
-#include "expose.hpp"
+#include "converters.hpp"
 #include "visitors.hpp"
 
 #include "python_common.hpp"
@@ -23,7 +23,10 @@ namespace bertini{
 		
 		void ExportMinieigen()
 		{
-			expose_converters(); // in expose-converters.cpp
+			custom_VectorAnyAny_from_sequence<Eigen::Matrix<dbl,Eigen::Dynamic,1>>();
+			custom_VectorAnyAny_from_sequence<Eigen::Matrix<mpfr,Eigen::Dynamic,1>>();
+			custom_MatrixAnyAny_from_sequence<Eigen::Matrix<dbl,Eigen::Dynamic,Eigen::Dynamic>>();
+			custom_MatrixAnyAny_from_sequence<Eigen::Matrix<mpfr,Eigen::Dynamic,Eigen::Dynamic>>();
 			
 			
 			class_<Eigen::Matrix<dbl,Eigen::Dynamic,1>>("VectorXd","/*TODO*/",
