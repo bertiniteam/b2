@@ -31,13 +31,13 @@ namespace bertini{
 			
 			class_<Eigen::Matrix<dbl,Eigen::Dynamic,1>>("VectorXd","/*TODO*/",
 														 py::init<>()).def(VectorVisitor<Eigen::Matrix<dbl,Eigen::Dynamic,1>>());
-//			class_<Eigen::Matrix<mpfr,Eigen::Dynamic,1>>("VectorXmp","/*TODO*/",
-//														py::init<>()).def(VectorVisitor<Eigen::Matrix<mpfr,Eigen::Dynamic,1>>());
+			class_<Eigen::Matrix<mpfr,Eigen::Dynamic,1>>("VectorXmp","/*TODO*/",
+														py::init<>()).def(VectorVisitor<Eigen::Matrix<mpfr,Eigen::Dynamic,1>>());
 			
 			class_<Eigen::Matrix<dbl,Eigen::Dynamic,Eigen::Dynamic>>("MatrixXd","/*TODO*/",
 														py::init<>()).def(MatrixVisitor<Eigen::Matrix<dbl,Eigen::Dynamic,Eigen::Dynamic>>());
-//			class_<Eigen::Matrix<mpfr,Eigen::Dynamic,Eigen::Dynamic>>("MatrixXmp","/*TODO*/",
-//														 py::init<>()).def(MatrixVisitor<Eigen::Matrix<mpfr,Eigen::Dynamic,Eigen::Dynamic>>());
+			class_<Eigen::Matrix<mpfr,Eigen::Dynamic,Eigen::Dynamic>>("MatrixXmp","/*TODO*/",
+														 py::init<>()).def(MatrixVisitor<Eigen::Matrix<mpfr,Eigen::Dynamic,Eigen::Dynamic>>());
 
 		};
 		
