@@ -140,8 +140,7 @@ namespace node{
 	class Integer : public virtual Number
 	{
 	public:
-		using mpz_int = boost::multiprecision::mpz_int;
-
+		
 		Integer()
 		{}
 
@@ -306,12 +305,12 @@ namespace node{
 		
 		static Rational Rand()
 		{
-			return Rational(RandomMp<mpq_rational>(),RandomMp<mpq_rational>());
+			return Rational(RandomRat(),RandomRat());
 		}
 
 		static Rational RandReal()
 		{
-			return Rational(RandomMp<mpq_rational>());
+			return Rational(RandomRat());
 		}
 
 		void print(std::ostream & target) const override

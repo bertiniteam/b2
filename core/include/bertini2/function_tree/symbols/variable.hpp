@@ -25,8 +25,8 @@
 \brief Provides the Variable Node class.
 
 */
-#ifndef b2Test_Variable_h
-#define b2Test_Variable_h
+#ifndef BERTINI_FUNCTION_TREE_VARIABLE_HPP
+#define BERTINI_FUNCTION_TREE_VARIABLE_HPP
 
 #include "function_tree/symbols/symbol.hpp"
 #include "function_tree/symbols/differential.hpp"

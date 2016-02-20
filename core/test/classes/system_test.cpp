@@ -868,6 +868,38 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 
 
 
+/**
+\class bertini::System
+\test \b system_multiply_by_node Ensure that multiplication of a system by a node doesn't affect other copies of a system
+*/
+BOOST_AUTO_TEST_CASE(system_multiply_by_node)
+{
+	bertini::System sys1, sys2;
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+
+	VariableGroup vars{x,y,z};
+
+	sys1.AddVariableGroup(vars);  
+	sys1.AddFunction(x);
+	sys1.AddFunction(y);
+	sys1.AddFunction(z);
+
+	sys2.AddVariableGroup(vars);  
+	sys2.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys2.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys2.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	Var t = std::make_shared<bertini::node::Variable>("t");
+
+	auto sys_copy1 = t*sys1;
+	auto sys_copy2 = (1-t)*sys2;
+
+	auto sys_copy3 = sys_copy1 + sys_copy2; // this line couples the two systems...  this coupling is total garbage!!!  this 'homotopy' should never be used.
+}
+
+
+
+
 
 
 

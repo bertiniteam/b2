@@ -61,6 +61,8 @@ namespace bertini
 				return GenerateStartPoint(T(),index);
 			}
 
+			virtual ~StartSystem() = default;
+			
 		private:
 			virtual Vec<dbl> GenerateStartPoint(dbl,mpz_int index) const = 0;
 			virtual Vec<mpfr> GenerateStartPoint(mpfr,mpz_int index) const = 0;

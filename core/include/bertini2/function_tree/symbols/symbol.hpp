@@ -25,8 +25,8 @@
 
 */
 
-#ifndef b2Test_Symbol_h
-#define b2Test_Symbol_h
+#ifndef BERTINI_FUNCTION_TREE_SYMBOL_HPP
+#define BERTINI_FUNCTION_TREE_SYMBOL_HPP
 
 
 #include "function_tree/node.hpp"

@@ -36,8 +36,7 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
-
-#include <random>
+#include <boost/random.hpp>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -52,8 +51,12 @@ namespace bertini{
 
 	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off>;
 
-	using mpz_int = boost::multiprecision::mpz_int;
-	using mpq_rational = boost::multiprecision::mpq_rational;
+	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_off>;
+
+	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_off>;
+
+	// using mpz_int = boost::multiprecision::mpz_int;
+	// using mpq_rational = boost::multiprecision::mpq_rational;
 }
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
@@ -148,148 +151,157 @@ BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_int)
 namespace bertini
 {
 	/**
-	 a templated function for producing random numbers in the unit interval, of a given number of digits.
-	 
-	 \tparam T the number type to generate.
-	 \tparam length_in_digits The length of the desired random number
-	 \return number_to_make_random The number which you desire to populate with a random number.
-	 
-	 */
-	template <typename T, unsigned int length_in_digits>
-	T RandomMpUniformUnitInterval()
+	Generate a random integer number between -10^digits and 10^digits
+	*/
+	template <unsigned long digits = 50>
+	inline
+	mpz_int RandomInt()
 	{
-		static boost::uniform_01<T> uf;
-		static boost::random::independent_bits_engine<
-			boost::random::mt19937, length_in_digits*1000L/301L, boost::multiprecision::mpz_int
-														> gen;
-		return uf(gen);
+		using namespace boost::random;
+   		static mt19937 mt;
+	    static uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
+	    return ui(mt);
 	}
 	
 	
-	
-	
-	
-	
-	
+	/**
+	Generate a random rational number with numerator and denomenator between -10^digits and 10^digits
+	*/
+	template <unsigned long digits = 50>
+	mpq_rational RandomRat()
+	{
+   		using namespace boost::random;
+   		static mt19937 mt;
+	    static uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
+	    return mpq_rational(ui(mt),ui(mt));
+	}
+
+
+	/**
+	 a templated function for producing random numbers in the unit interval, of a given number of digits.
+	 
+	 \tparam length_in_digits The length of the desired random number
+	 */
+	template <unsigned int length_in_digits>
+	mpfr_float RandomMp()
+	{	
+
+		using namespace boost::multiprecision;
+   		using namespace boost::random;
+
+   		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
+   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
+
+		return mpfr_float(ur(gen));
+	}
 	
 	/**
 	 a templated function for producing random numbers in a specified interval, of a given number of digits.
 	 
-	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
-	 \return number_to_make_random The number which you desire to populate with a random number.
 	 
 	 \param a The left bound.
 	 \param b The right bound.
 	 */
-	template <typename T, unsigned int length_in_digits>
-	T RandomMpUniformInInterval(const T & a, const T & b)
+	template <unsigned int length_in_digits>
+	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
 	{
-		static boost::uniform_01<T> uf;
-		static boost::random::independent_bits_engine<
-			boost::random::mt19937, length_in_digits*1000L/301L, boost::multiprecision::mpz_int
-														> gen;
-		return (b-a)*uf(gen) + a;
-
+		return (b-a)*RandomMp<length_in_digits>()+a;
 	}
+
+
+
+	/**
+	 \brief create a random number, at the current default precision
+	 */
+	inline
+	mpfr_float RandomMp()
+	{
+		auto num_digits = mpfr_float::default_precision() + 3;
 	
-	
+		if (num_digits<=50)
+			return RandomMp<50>();
+		else if (num_digits<=100)
+			return RandomMp<100>();
+		else if (num_digits<=200)
+			return RandomMp<200>();
+		else if (num_digits<=400)
+			return RandomMp<400>();
+		else if (num_digits<=800)
+			return RandomMp<800>();
+		else if (num_digits<=1600)
+			return RandomMp<1600>();
+		else if (num_digits<=3200)
+			return RandomMp<3200>();
+		else if (num_digits<=6400)
+			return RandomMp<6400>();
+		else if (num_digits<=8000)
+			return RandomMp<8000>();
+		else if (num_digits<=10000)
+			return RandomMp<10000>();
+		else if (num_digits<=12000)
+			return RandomMp<12000>();
+		else if (num_digits<=14000)
+			return RandomMp<14000>();
+		else if (num_digits<=16000)
+			return RandomMp<16000>();
+		else if (num_digits<=18000)
+			return RandomMp<18000>();
+		else if (num_digits<=20000)
+			return RandomMp<20000>();
+		else if (num_digits<=40000)
+			return RandomMp<40000>();
+		else
+			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.  If you have a better solution to this problem, please write the authors of this software.");
+	}
+
 	
 	/**
 	 \brief create a random number in a given interval, at the current default precision
-	 
-	 \note this function calls the templated function RandomMpfrUniformInInterval.
-
-	 \tparam T the number type to generate.
-	 \param number_to_make_random The number whose contents you are overwriting with a random number.
-	 */
-	template <typename T>
-	T RandomMp(const T & a, const T & b)
+	*/
+	inline
+	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
 	{
 		auto num_digits = mpfr_float::default_precision() + 3;
 	 
 		if (num_digits<=50)
-			return RandomMpUniformInInterval<T,50>(a,b);
+			return RandomMp<50>(a,b);
 		else if (num_digits<=100)
-			return RandomMpUniformInInterval<T,100>(a,b);
+			return RandomMp<100>(a,b);
 		else if (num_digits<=200)
-			return RandomMpUniformInInterval<T,200>(a,b);
+			return RandomMp<200>(a,b);
 		else if (num_digits<=400)
-			return RandomMpUniformInInterval<T,400>(a,b);
+			return RandomMp<400>(a,b);
 		else if (num_digits<=800)
-			return RandomMpUniformInInterval<T,800>(a,b);
+			return RandomMp<800>(a,b);
 		else if (num_digits<=1600)
-			return RandomMpUniformInInterval<T,1600>(a,b);
+			return RandomMp<1600>(a,b);
 		else if (num_digits<=3200)
-			return RandomMpUniformInInterval<T,3200>(a,b);
+			return RandomMp<3200>(a,b);
 		else if (num_digits<=6400)
-			return RandomMpUniformInInterval<T,6400>(a,b);
+			return RandomMp<6400>(a,b);
 		else if (num_digits<=8000)
-			return RandomMpUniformInInterval<T,8000>(a,b);
+			return RandomMp<8000>(a,b);
 		else if (num_digits<=10000)
-			return RandomMpUniformInInterval<T,10000>(a,b);
+			return RandomMp<10000>(a,b);
 		else if (num_digits<=12000)
-			return RandomMpUniformInInterval<T,12000>(a,b);
+			return RandomMp<12000>(a,b);
 		else if (num_digits<=14000)
-			return RandomMpUniformInInterval<T,14000>(a,b);
+			return RandomMp<14000>(a,b);
 		else if (num_digits<=16000)
-			return RandomMpUniformInInterval<T,16000>(a,b);
+			return RandomMp<16000>(a,b);
 		else if (num_digits<=18000)
-			return RandomMpUniformInInterval<T,18000>(a,b);
+			return RandomMp<18000>(a,b);
 		else if (num_digits<=20000)
-			return RandomMpUniformInInterval<T,20000>(a,b);
+			return RandomMp<20000>(a,b);
 		else if (num_digits<=40000)
-			return RandomMpUniformInInterval<T,40000>(a,b);
+			return RandomMp<40000>(a,b);
 		else
-			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.");
+			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.  If you have a better solution to this problem, please write the authors of this software.");
 	}
 	
 	
-	/**
-	 \brief create a random number, at the current default precision
-
-	 \param number_to_make_random The number whose contents you are overwriting with a random number.
-	 */
-	template <typename T>
-	T RandomMp()
-	{
-		auto num_digits = mpfr_float::default_precision() + 3;
 	
-		if (num_digits<=50)
-			return RandomMpUniformUnitInterval<T,50>();
-		else if (num_digits<=100)
-			return RandomMpUniformUnitInterval<T,100>();
-		else if (num_digits<=200)
-			return RandomMpUniformUnitInterval<T,200>();
-		else if (num_digits<=400)
-			return RandomMpUniformUnitInterval<T,400>();
-		else if (num_digits<=800)
-			return RandomMpUniformUnitInterval<T,800>();
-		else if (num_digits<=1600)
-			return RandomMpUniformUnitInterval<T,1600>();
-		else if (num_digits<=3200)
-			return RandomMpUniformUnitInterval<T,3200>();
-		else if (num_digits<=6400)
-			return RandomMpUniformUnitInterval<T,6400>();
-		else if (num_digits<=8000)
-			return RandomMpUniformUnitInterval<T,8000>();
-		else if (num_digits<=10000)
-			return RandomMpUniformUnitInterval<T,10000>();
-		else if (num_digits<=12000)
-			return RandomMpUniformUnitInterval<T,12000>();
-		else if (num_digits<=14000)
-			return RandomMpUniformUnitInterval<T,14000>();
-		else if (num_digits<=16000)
-			return RandomMpUniformUnitInterval<T,16000>();
-		else if (num_digits<=18000)
-			return RandomMpUniformUnitInterval<T,18000>();
-		else if (num_digits<=20000)
-			return RandomMpUniformUnitInterval<T,20000>();
-		else if (num_digits<=40000)
-			return RandomMpUniformUnitInterval<T,40000>();
-		else
-			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.");
-	}
 	
 	
 } // re: namespace bertini

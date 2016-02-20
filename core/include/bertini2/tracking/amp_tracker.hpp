@@ -389,9 +389,11 @@ namespace bertini{
 			Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
 
 			\param start_time The time at which to start tracking.
+			\param end_time The time to which to track.
 			\param start_point The space values from which to start tracking.
 			*/
 			void TrackerLoopInitialization(mpfr const& start_time,
+			                               mpfr const& end_time,
 										   Vec<mpfr> const& start_point) const override
 			{
 				#ifndef BERTINI_DISABLE_ASSERTS
@@ -412,7 +414,7 @@ namespace bertini{
 
 				current_stepsize_.precision(Precision(start_point(0)));
 				if (reinitialize_stepsize_)
-					InitializeStepsize();
+					SetStepSize(min(stepping_config_.initial_step_size,abs(start_time-end_time)/stepping_config_.min_num_steps));
 
 				// populate the current space value with the start point, in appropriate precision
 				if (start_point(0).precision()==DoublePrecision())
@@ -686,7 +688,7 @@ namespace bertini{
 			template <UpsampleRefinementOption refine_if_necessary = upsample_refine_off>
 			SuccessCode UpdatePrecisionAndStepsize() const
 			{
-				current_stepsize_ = next_stepsize_;
+				SetStepSize(next_stepsize_);
 				return ChangePrecision<refine_if_necessary>(next_precision_);
 			}
 
