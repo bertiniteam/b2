@@ -50,7 +50,7 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 
 namespace bertini{
 
-	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>;
+	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off>;
 
 	using mpz_int = boost::multiprecision::mpz_int;
 	using mpq_rational = boost::multiprecision::mpq_rational;
@@ -138,57 +138,16 @@ BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_rational)
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_int)
 
 
-
-
-// from John Maddock, a boost multiprecision author, via email 2016.02.16 and 
+// if you wish to use et_on with Boost.Multiprecision with Eigen 3.2.x or earlier, you must apply a patch to Boost.MP related to bug 11149, and use the following non-standard lines.
 // https://svn.boost.org/trac/boost/ticket/11149
-namespace boost { namespace multiprecision {
 
-template <class Backend, class tag, class A1, class A2, class A3, class A4> 
-	inline number<Backend, et_on> min(const number<Backend, et_on>& arg, const detail::expression<tag, A1, A2, A3, A4>& a)
-	{
-		number<Backend, et_on> t(a);
-		return (std::min)(arg, t);
-	}
-template <class tag, class A1, class A2, class A3, class A4, class Backend> 
-	inline number<Backend, et_on> min(const detail::expression<tag, A1, A2, A3, A4>& arg, const number<Backend, et_on>& a)
-	{
-		number<Backend, et_on> t(arg);
-		return (std::min)(arg, a);
-	}
-template <class tag, class A1, class A2, class A3, class A4, class tagb, class A1b, class A2b, class A3b, class A4b> 
-	inline typename detail::expression<tag, A1, A2, A3, A4>::result_type min(const detail::expression<tag, A1, A2, A3, A4>& arg, const detail::expression<tagb, A1b, A2b, A3b, A4b>& a)
-	{
-		using N = typename detail::expression<tag, A1, A2, A3, A4>::result_type;
-		N t1(arg), t2(a);
-		return (std::min)(arg, a);
-	}
-
-template <class Backend, class tag, class A1, class A2, class A3, class A4>
-	inline number<Backend, et_on> max(const number<Backend, et_on>& arg, const detail::expression<tag, A1, A2, A3, A4>& a)
-	{
-		number<Backend, et_on> t(a);
-		return (std::max)(arg, t);
-	}
-template <class tag, class A1, class A2, class A3, class A4, class Backend>
-	inline number<Backend, et_on> max(const detail::expression<tag, A1, A2, A3, A4>& arg, const number<Backend, et_on>& a)
-	{
-		number<Backend, et_on> t(arg);
-		return (std::max)(arg, a);
-	}
-template <class tag, class A1, class A2, class A3, class A4, class tagb, class A1b, class A2b, class A3b, class A4b>
-	inline typename detail::expression<tag, A1, A2, A3, A4>::result_type max(const detail::expression<tag, A1, A2, A3, A4>& arg, const detail::expression<tagb, A1b, A2b, A3b, A4b>& a)
-	{	
-		using N = typename detail::expression<tag, A1, A2, A3, A4>::result_type;
-		N t1(arg), t2(a);
-		return (std::max)(arg, a);
-	}
-
-} }
+// namespace std{ using boost::multiprecision::min; using
+//  boost::multiprecision::max;
+// }
 
 namespace bertini
 {
-		/**
+	/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
 	 
 	 \tparam T the number type to generate.
