@@ -23,17 +23,16 @@
 //  Fall 2015
 
 
-
 #ifndef BERTINI_TRACKING_BASE_ENDGAME_HPP
 #define BERTINI_TRACKING_BASE_ENDGAME_HPP
 
 /**
 \file base_endgame.hpp
 
-\brief 
-
-\brief Contains parent class for all endgames.
+\brief Contains parent class, Endgame, the parent class for all endgames.
 */
+
+
 #include <typeinfo>
 #include "tracking.hpp"
 #include "system.hpp"
@@ -48,17 +47,15 @@
 namespace bertini{ 
 
 	namespace tracking {
-		/*!
- 		*  \addtogroup endgame
- 		*  @{
-		 */
+
 		namespace endgame {
 		/**
 		\class Endgame
 
 		\brief Base endgame class for all endgames offered in Bertini2.
 	
-		\see powerseries
+		\see PowerSeriesEndgame
+		\see CauchyEndgame
 		
 		## Using an endgame
 
@@ -67,77 +64,72 @@ namespace bertini{
 
 		## Purpose 
 
-		Since the Bertini Endgames have common functionality, and we want to be able to call arbitrary algorithms using and tracker type, we use inheritance.  That is, there is common functionality in all endgames, such as
+		Since the Bertini Endgames have common functionality, and we want to be able to call arbitrary algorithms using and tracker type, we use inheritance. That is, there is common functionality in all endgames, such as
 
-		* ComputeApproximationOfXAtT0
-	
-		
+		ComputeInitialSamples
 
-
-
-
+		Also, there are settings that will be kept at this level to not duplicate code. 
+			
 		## Creating a new endgame type
 
-		To create a new endgame type, inherit from this, and override the following function:
-
-		\code
-		
-		virtual Vec<mpfr> ComputeApproximationOfXAtT0() {Vec<mpfr> base(1); base << mpfr("0","0"); return base;}
-
+		 To create a new endgame type, inherit from this class. 
 		*/
+		
 			class Endgame
 			{
 			public:
 				/**
-				\brief The structs used to hold all relevant data for any endgame. 
+				\brief Settings that will be used in every endgame. For example, the number of samples points, the cycle number, and the final approximation of that we compute 
+				using the endgame. 
 				*/
 				config::EndGame endgame_settings_;
-				config::Tolerances endgame_tolerances_;
-				config::Security endgame_security_;
-
-				void SetMinTrackTime(mpfr_float new_min_track_time){endgame_settings_.min_track_time = new_min_track_time;}
-				mpfr GetMinTrackTime(){return endgame_settings_.min_track_time;}
-
-				void SetTrackToleranceDuringEndgame(mpfr_float new_track_tolerance_during_endgame){endgame_tolerances_.track_tolerance_during_endgame = new_track_tolerance_during_endgame;}
-				mpfr_float GetTrackToleranceDuringEndgame(){return endgame_tolerances_.track_tolerance_during_endgame;}
-
-				void SetPathTruncationThreshold(mpfr_float new_path_truncation_threshold){endgame_tolerances_.path_truncation_threshold = new_path_truncation_threshold;}
-				mpfr_float GetPathTruncationThreshold(){return endgame_tolerances_.path_truncation_threshold;}
-
-			 	/**
-				 \Every endgame must have a ComputeApproximationOfXAtT0 function, so we can approximate the value at the origin. 
+				/**
+				\brief There are tolerances that are specific to the endgame. These settings are stored inside of this data member. 
 				*/
-				virtual Vec<mpfr> ComputeApproximationOfXAtT0() {Vec<mpfr> base(1); base << mpfr("0","0"); return base;}
-
+				config::Tolerances endgame_tolerances_;
+				/**
+				During the endgame we may be checking that we are not computing when we have detected divergent paths or other undesirable behavior. The setttings for these checks are 
+				in this data member. 
+				*/
+				config::Security endgame_security_;
+				 	
 				/*
-				Input: 
-					endgame_time is the time when we start the endgame process usually this is .1
+				Input:  endgame_tracker_: a template parameter for the endgame created. This tracker will be used to compute our samples. 
+						endgame_time: is the time when we start the endgame process usually this is .1
+						x_endgame: is the space value at endgame_time
+						times: a deque of time values. These values will be templated to be ComplexType 
+						samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of ComplexType. 
 
-			    	x_endgame is the space value at endgame_time
-
-			    	upper_bound_on_cycle_number is the largest possible cycle number we will use to compute dx_ds and s = t^(1/c).
-
-					times is a data struct_ure that holds the time values for the corresponding samples.
-					num_sample_points is the size of times
-
-				Output: 
-					A data struct_ure holding the space values corresponding to the time values in times.
+				Output: Since times and samples are sent in by reference there is no output value.
 
 
 				Details:
 					The first sample will be (x_endgame) and the first time is endgame_time.
 					From there we do a geometric progression using the sample factor which by default is 1/2.
 					The next_time = endgame_time * sample_factor.
-					We can track then to the next_time and that construct_s the next_sample.
+					We can track then to the next_time and that construct the next_sample. This is done for Power Series Endgame and the Cauchy endgame.
 				*/
+				/**
+				\brief Whether we are using the PowerSeriesEndgame or the CauchyEndgame we need to have an initial set of samples to start the endgame. This function populates two deques 
+				so that we are ready to start the endgame. 
+
+				\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
+				\param endgame_time The time value at which we start the endgame. 
+				\param x_endgame The current space point at endgame_time.
+				\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
+				\param samples a deque that will hold all the samples corresponding to the time values in times. 
+
+				\tparam ComplexType The complex number type.
+				\tparam TrackerType The tracker type. 
+				*/	
 				template<typename ComplexType, typename TrackerType>
-				void ComputeInitialSamples(const TrackerType & endgame_tracker_, const ComplexType endgame_time,const Vec<ComplexType> x_endgame, unsigned int num_samples , std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
+				void ComputeInitialSamples(const TrackerType & endgame_tracker_, const ComplexType endgame_time,const Vec<ComplexType> x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
 				{
 					samples.push_back(x_endgame);
 					times.push_back(endgame_time);
 					Vec<ComplexType> next_sample;
 
-					for(int ii=2; ii <= num_samples; ++ii)//start at 2 since first sample is at the endgame boundary.
+					for(int ii=2; ii <= endgame_settings_.num_sample_points; ++ii)//start at 2 since first sample is at the endgame boundary.
 					{ 
 						ComplexType next_time = times.back() * endgame_settings_.sample_factor;	
 
@@ -150,29 +142,35 @@ namespace bertini{
 
 			};
 
-			// //finds C(d,n) - combination of d choose n 
-			// mpfr_float ComputeCombination(mpfr_float d, mpfr_float n)
-			// {
-			// 	mpfr_float return_value;
-			// 	  // error checking
- 		// 		if (d >= n && n >= 0)
- 		// 		{ // find the smallest of n & d - n since C(d,n) = C(d,d-n)
-   // 					return_value = 1;
-  	// 				n = min(n, d - n);
+			/*
+				Input: Two numbers d and n. These numbers will be used to compute d choose n. 
 
-  	// 				for (unsigned int ii = 0; ii < n; ii++)
-   // 					{ // update retVal
-   //   					return_value = return_value / (ii + mpfr_float("1.0"));
-   //   					return_value = return_value * (d - ii);
-   // 					}
-  	// 			}
-  	// 			else
-  	// 			{ // no combinations
-   // 					return_value = 0;
-  	// 			}
-			// 	return return_value;
-			// }
+				Output: The value of d choose n. 
 
+				Details: This is used to help find the closed loop tolerance for CauchyEndgame. After discussions it was deemed not necessary and that we should be using 
+						the tracking tolerance during endgame as the tolerance for closing a loop. 
+			
+				mpfr_float ComputeCombination(mpfr_float d, mpfr_float n)
+				{
+					mpfr_float return_value;
+					// error checking
+ 					if (d >= n && n >= 0)
+ 					{ // find the smallest of n & d - n since C(d,n) = C(d,d-n)
+   						return_value = 1;
+  						n = min(n, d - n);
+  						for (unsigned int ii = 0; ii < n; ii++)
+   						{ // update retVal
+     						return_value = return_value / (ii + mpfr_float("1.0"));
+     						return_value = return_value * (d - ii);
+   						}
+  					}
+  					else
+  					{ // no combinations
+   						return_value = 0;
+  					}
+					return return_value;
+				}
+			*/
 
 			/*
 			Input: 
@@ -188,6 +186,18 @@ namespace bertini{
 					Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
 					say we have converged. 
 			*/
+
+			/**
+			\brief
+
+			\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
+			\param endgame_time The time value at which we start the endgame. 
+			\param x_endgame The current space point at endgame_time.
+			\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
+			\param samples a deque that will hold all the samples corresponding to the time values in times. 
+
+			\tparam ComplexType The complex number type.
+			*/			
 			template<typename ComplexType>		
 				Vec<ComplexType> HermiteInterpolateAndSolve(ComplexType const& target_time, const unsigned int num_sample_points, const std::deque<ComplexType> & times, const std::deque< Vec<ComplexType> > & samples, const std::deque< Vec<ComplexType> > & derivatives)
 			{

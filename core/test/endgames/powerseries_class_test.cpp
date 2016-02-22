@@ -138,14 +138,14 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 
 	BOOST_CHECK(abs(first_approx.norm() - mpfr("0.9999999767578209232082898114211261253459","0").norm()) < My_Endgame.GetTrackToleranceDuringEndgame()); // answer was found using matlab for a check. difference is diff is 2.32422e-08
 
-}//end basic hermite test case mp
+}//end basic hermite test case mp against matlab
 
 
 BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 {
 	/*This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
 
-	The test case will construct 3 samples with derivative,time, and space values for the function x^8e-7 + 1.
+	The test case will construct 3 samples with derivative,time, and space values for the function x^8 + 1.
 
 	After the three samples have been constructed there will be a hermite interpolation. 
 
@@ -269,22 +269,22 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 
 BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 {
-	// 	/*This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
+	/*This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
 
-	// 	The test case will construct 3 samples with derivative,time, and space values for the function x^8e-7 + 1.
+	The test case will construct 3 samples with derivative,time, and space values for the function x^8 + 1.
 
-	// 	After the three samples have been constructed there will be a hermite interpolation. 
+	After the three samples have been constructed there will be a hermite interpolation. 
 
-	// 	Next, a new sample is constructed and the earliest sample is discarded. Leaving us three samples that are "nearer"
-	// 	to the target at the origin. 
+	Next, a new sample is constructed and the earliest sample is discarded. Leaving us three samples that are "nearer"
+	to the target at the origin. 
 
-	// 	A new approximation is made, with the a new sample and approximation done afterwards. 
+	A new approximation is made, with the a new sample and approximation done afterwards. 
 
-	// 	We then check to make sure our approximations are getting better by checking the distance from the correct answer and the 
-	// 	various approximations made. 
+	We then check to make sure our approximations are getting better by checking the distance from the correct answer and the 
+	various approximations made. 
 
-	// 	*/
-	// 	//This is used to print out the vectors in maximum precision. 
+	*/
+
  	Eigen::IOFormat HeavyFmt(Eigen::FullPrecision);
 	mpfr_float::default_precision(16);
 
@@ -445,22 +445,18 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	times.push_back(time);
 	sample << mpfr("-0.729"); // f(.1) = -0.729
 	samples.push_back(sample);
-	// derivative << mpfr("2.43"); //f'(.1) = 2.43
-	// derivatives.push_back(derivative);
+
 
 	time = mpfr(".05"); // x = .1/2 = .05
 	times.push_back(time);
 	sample << mpfr("-0.857375"); //f(.05) = -0.857375
 	samples.push_back(sample);
-	// derivative << mpfr("2.7075"); //f'(.05) = 2.7075
-	// derivatives.push_back(derivative);
+
 
 	time = mpfr(".025"); // x = .05/2 = .025
 	times.push_back(time);
 	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
-	// derivative << mpfr("2.851875"); //f'(.025) = 2.851875
-	// derivatives.push_back(derivative);
 
 	bertini::tracking::config::EndGame endgame_struct;
 
@@ -480,13 +476,11 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	times.push_back(time);
 	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
 	samples.push_back(sample);
-	// derivative << mpfr("2.92546875"); //f'(.0125) = 2.92546875 
-	// derivatives.push_back(derivative);
+
 
 	//Get rid of earliest sample. 
 	times.pop_front();
 	samples.pop_front();
-	// derivatives.pop_front();
 
 	My_Endgame.SetTimes(times);
 	My_Endgame.SetSamples(samples);
@@ -538,7 +532,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
@@ -548,22 +542,19 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	times.push_back(time);
 	sample << mpfr("-0.729"); // f(.1) = -0.729
 	samples.push_back(sample);
-	// derivative << mpfr("2.43"); //f'(.1) = 2.43
-	// derivatives.push_back(derivative);
+
 
 	time = mpfr(".05"); // x = .1/2 = .05
 	times.push_back(time);
 	sample << mpfr("-0.857375"); //f(.05) = -0.857375
 	samples.push_back(sample);
-	// derivative << mpfr("2.7075"); //f'(.05) = 2.7075
-	// derivatives.push_back(derivative);
+
 
 	time = mpfr(".025"); // x = .05/2 = .025
 	times.push_back(time);
 	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
-	// derivative << mpfr("2.851875"); //f'(.025) = 2.851875
-	// derivatives.push_back(derivative);
+
 
 	bertini::tracking::config::Security endgame_security_struct;
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
@@ -584,17 +575,15 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	times.push_back(time);
 	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
 	samples.push_back(sample);
-	// derivative << mpfr("2.92546875"); //f'(.0125) = 2.92546875 
-	// derivatives.push_back(derivative);
+
 
 	//Get rid of earliest sample. 
 	times.pop_front();
 	samples.pop_front();
-	// derivatives.pop_front();
+
 
 	My_Endgame.SetTimes(times);
 	My_Endgame.SetSamples(samples);
-	// My_Endgame.SetDerivatives(derivatives);
 
 	My_Endgame.BoundOnCycleNumber();
 
@@ -647,32 +636,29 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
+
 
 	time = mpfr(".1"); // x = .1
 	times.push_back(time);
 	sample << mpfr("-0.729"); // f(.1) = -0.729
 	samples.push_back(sample);
-	// derivative << mpfr("2.43"); //f'(.1) = 2.43
-	// derivatives.push_back(derivative);
+
 
 	time = mpfr(".05"); // x = .1/2 = .05
 	times.push_back(time);
 	sample << mpfr("-0.857375"); //f(.05) = -0.857375
 	samples.push_back(sample);
-	// derivative << mpfr("2.7075"); //f'(.05) = 2.7075
-	// derivatives.push_back(derivative);
+
 
 	time = mpfr(".025"); // x = .05/2 = .025
 	times.push_back(time);
 	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
-	// derivative << mpfr("2.851875"); //f'(.025) = 2.851875
-	// derivatives.push_back(derivative);
+
 
 
 	//Setting up a new sample for approximation.
@@ -680,8 +666,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	times.push_back(time);
 	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
 	samples.push_back(sample);
-	// derivative << mpfr("2.92546875"); //f'(.0125) = 2.92546875
-	// derivatives.push_back(derivative);
+
 
 	bertini::tracking::config::PowerSeries power_series_struct;
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
@@ -689,10 +674,9 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_tolerances_struct);
 	My_Endgame.SetTimes(times);
 	My_Endgame.SetSamples(samples);
-	// My_Endgame.SetDerivatives(derivatives);
-	//My_Endgame.SetUpperBoundOnCycleNumber(6); // this is found from test cases above.
 
-	 My_Endgame.ComputeCycleNumber(time,sample);
+
+	auto derivatives = My_Endgame.ComputeCycleNumber(time,sample);
 
 	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
 
@@ -740,40 +724,36 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	// std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
+
 
 	time = mpfr(".1"); // x = .1
 	times.push_back(time);
 	sample << mpfr("-0.729"); // f(.1) = -0.729
 	samples.push_back(sample);
-	// derivative << mpfr("2.43"); //f'(.1) = 2.43
-	// derivatives.push_back(derivative);
+
 
 	time = mpfr(".05"); // x = .1/2 = .05
 	times.push_back(time);
 	sample << mpfr("-0.857375"); //f(.05) = -0.857375
 	samples.push_back(sample);
-	// derivative << mpfr("2.7075"); //f'(.05) = 2.7075
-	// derivatives.push_back(derivative);
+
 
 	time = mpfr(".025"); // x = .05/2 = .025
 	times.push_back(time);
 	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
-	// derivative << mpfr("2.851875"); //f'(.025) = 2.851875
-	// derivatives.push_back(derivative);
+
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
 	times.push_back(time);
 	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
 	samples.push_back(sample);
-	// derivative << mpfr("2.92546875"); //f'(.0125) = 2.92546875
-	// derivatives.push_back(derivative);
+
 
 	bertini::tracking::config::PowerSeries power_series_struct;
 	bertini::tracking::config::Security endgame_security_struct;
@@ -781,10 +761,9 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_security_struct);
 	My_Endgame.SetTimes(times);
 	My_Endgame.SetSamples(samples);
-	// My_Endgame.SetDerivatives(derivatives);
-	//My_Endgame.SetUpperBoundOnCycleNumber(6); // this is found from test cases above.
 
-	 My_Endgame.ComputeCycleNumber(time,sample);
+
+	auto derivatives = My_Endgame.ComputeCycleNumber(time,sample);
 
 	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
 
@@ -793,14 +772,15 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 {
 	
-	// Compute approximation at origin using three sample points. 
+	/*
+	Compute approximation at origin using three sample points. 
 
-	// Then, find a new sample and remove earliest known sample. 
-
-	// Compute a new approximation with the current three samples. 
-
-	//  Do this till we have three approximations. Check to see if the third approximation is better than second. 
+	Then, find a new sample and remove earliest known sample. 
 	
+	Compute a new approximation with the current three samples. 
+	
+	Do this till we have three approximations. Check to see if the third approximation is better than second. 
+	*/
 
 	mpfr_float::default_precision(30);
 
@@ -833,7 +813,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	x_origin << mpfr("1","0");
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+
 
 
 	mpfr time(1);
@@ -893,26 +873,18 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 
 	auto third_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
 
-	// std::cout << "Second approx is " << second_approx << '\n';
-
-	// std::cout << "Third approx is " << third_approx << '\n';
-
-	// std::cout << "Second diff is " << (second_approx - x_origin).norm() << '\n';
-
-	// std::cout << "Third diff is " << (third_approx - x_origin).norm() << '\n';
-
-
 	BOOST_CHECK((third_approx - x_origin).norm() < (second_approx - x_origin).norm());
 
 } // end compute approximation of x at t0 mp
 
 BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 {
-	/* Compute approximation at origin using three sample points. 
+	/* 
+	Compute approximation at origin using three sample points. 
 
-	// Then, find a new sample and remove earliest known sample. 
+	Then, find a new sample and remove earliest known sample. 
 
-	//Compute a new approximation with the current three samples. 
+	Compute a new approximation with the current three samples. 
 
 	Do this till we have three approximations. Check to see if the third approximation is better than second. 
 	*/
@@ -947,12 +919,10 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	x_origin << mpfr("1","0");
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
 
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	times.push_back(time);
@@ -1064,7 +1034,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	std::deque<Vec<mpfr> > samples;
 	mpfr time(1);
 	Vec<mpfr> sample(1);
-	// Vec<dbl> derivative(1);
+
 
 	time = mpfr(".1"); // x = .1
 	correct_times.push_back(time);
@@ -1156,7 +1126,6 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	std::deque< Vec<mpfr> > samples;
 	mpfr time(1);
 	Vec<mpfr> sample(1);
-	// Vec<dbl> derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	correct_times.push_back(time);
@@ -1250,8 +1219,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,endgame_security_struct,endgame_tolernaces_struct);
 	My_Endgame.PSEG(current_time,current_space);
 
-	// std::cout << "norm is "<< (My_Endgame.GetFinalApproximation() - correct).norm() << '\n';
-	// std::cout << "Tolerance is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
+
 	BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp for power series class 
@@ -1307,8 +1275,6 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 
 
 	My_Endgame.PSEG(current_time,current_space);
-	// std::cout << "norm is "<< (My_Endgame.GetFinalApproximation() - correct).norm() << '\n';
-	// std::cout << "Tolerance is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
 
 	BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
 	
@@ -1374,7 +1340,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 
 }//end pseg mp test case for power series class
 
-BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_griewank_osborne)
+BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 {
 	
 	// The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
@@ -1503,7 +1469,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	In this example we take a decoupled system, homogenize and patch it. Track to endgame boundary and then run our endgame on the space
 	values we have. 
 
-	Take note that in this example we have two successes while the other hit a min track time. This is accounted for. 
 	*/
 	Eigen::IOFormat HeavyFmt(Eigen::FullPrecision);
 	using namespace bertini::tracking;
