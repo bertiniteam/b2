@@ -115,7 +115,6 @@ namespace node{
 	protected:
 
 	private:
-
 		friend class boost::serialization::access;
 
 		template <typename Archive>
@@ -135,8 +134,7 @@ namespace node{
 	class Float : public virtual Number
 	{
 	public:
-		Float()
-		{}
+		
 
 		Float(double val)
 		{
@@ -232,6 +230,8 @@ namespace node{
 
 		friend class boost::serialization::access;
 
+		Float() = default;
+
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
@@ -250,8 +250,7 @@ namespace node{
 	public:
 		using mpz_int = boost::multiprecision::mpz_int;
 
-		Integer()
-		{}
+		
 
 		Integer(int val) : true_value_(val)
 		{}
@@ -300,7 +299,7 @@ namespace node{
 		mpz_int true_value_;
 
 		friend class boost::serialization::access;
-
+		Integer() = default;
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
@@ -321,8 +320,7 @@ namespace node{
 
 		using mpq_rational = boost::multiprecision::mpq_rational;
 
-		Rational()
-		{}
+		
 
 		Rational(int val) : true_value_real_(val), true_value_imag_(0)
 		{}
@@ -376,7 +374,7 @@ namespace node{
 
 
 	private:
-
+		
 		// Return value of constant
 		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
 		{
@@ -389,7 +387,7 @@ namespace node{
 		}
 
 		mpq_rational true_value_real_, true_value_imag_;
-
+		Rational() = default;
 		friend class boost::serialization::access;
 
 		template <typename Archive>

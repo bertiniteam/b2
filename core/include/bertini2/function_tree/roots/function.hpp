@@ -40,10 +40,6 @@ namespace node{
 	public:
 		
 		
-		/**
-		 The default constructor
-		 */
-		Function() {};
 		
 		
 
@@ -55,7 +51,7 @@ namespace node{
 		/**
 		 Constructor defines entry node at construct time.
 		 */
-		Function(const std::shared_ptr<Node> & entry) : entry_node_(entry)
+		Function(const std::shared_ptr<Node> & entry) : NamedSymbol("unnamed_function"), entry_node_(entry)
 		{
 		}
 		
@@ -214,9 +210,13 @@ namespace node{
 		
 		
 		std::shared_ptr<Node> entry_node_; ///< The top node for the function.
-
+		
+		Function() = default;
 	private:
-
+		/**
+		 The default constructor
+		 */
+		
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
