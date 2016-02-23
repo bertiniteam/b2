@@ -578,6 +578,7 @@ namespace bertini
 				
 				mpfr_float ComputeCOverK()
 				{//Obtain samples for computing C over K.
+					// std::cout << "Compute C over K " << '\n';
 					const Vec<mpfr> & sample0 = pseg_samples_[0];
 					const Vec<mpfr> & sample1 = pseg_samples_[1];
 					const Vec<mpfr> & sample2 = pseg_samples_[2];
@@ -711,7 +712,7 @@ namespace bertini
 
 				Details: Take a point used to start CircleTrack along with last point tracked to in CircleTrack. We see if the difference between the two points
 				is less than the tracking tolerance during endgame. If so, we declare these points to be the same. 	
-				
+				*/
 
 				/**
 				\brief Function that determines if we have closed a loop after calling CircleTrack().
@@ -725,7 +726,6 @@ namespace bertini
 
 					endgame_tracker_.Refine(cauchy_samples_.front(),cauchy_samples_.front(),cauchy_times_.front(),endgame_tolerances_.final_tolerance);
 					endgame_tracker_.Refine(cauchy_samples_.back(),cauchy_samples_.back(),cauchy_times_.back(),endgame_tolerances_.final_tolerance);
-
 					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < endgame_tolerances_.track_tolerance_during_endgame)
 					{
 						return true;
@@ -933,6 +933,7 @@ namespace bertini
 				template<typename ComplexType>
 				SuccessCode ComputeFirstApproximation(ComplexType endgame_time, Vec<ComplexType> x_endgame_time, ComplexType &approximation_time, Vec<ComplexType> &approximation)
 				{
+					// std::cout << "First approx " << '\n';
 					//initialize array holding c_over_k estimates
 					std::deque<mpfr_float> c_over_k_array; 
 
@@ -1153,6 +1154,7 @@ namespace bertini
 				template<typename ComplexType>
 				Vec<ComplexType> ComputeCauchyApproximationOfXAtT0(std::deque< Vec<ComplexType> > cauchy_samples)
 				{
+					// std::cout << "Cauchy approx " << '\n';
 					endgame_tracker_.Refine(cauchy_samples_[0],cauchy_samples_[0],cauchy_times_[0],endgame_tolerances_.track_tolerance_during_endgame);
 
 					Vec<ComplexType> approximation = cauchy_samples_[0]; 
@@ -1213,6 +1215,12 @@ namespace bertini
 							{
 								std::cout << "Note: The tracking failed while going around the origin! " << '\n';
 								return SuccessCode::HigherPrecisionNecessary;
+							}
+
+							if(tracking_success == SuccessCode::GoingToInfinity)
+							{
+								std::cout << "Note: The tracking failed while going around the origin! " << '\n';
+								return SuccessCode::GoingToInfinity;
 							}
 						}
 						else
@@ -1293,22 +1301,25 @@ namespace bertini
 						}
 						do
 						{
+
 							approximate_error = (latest_approx - prev_approx).norm(); //Calculate the error between approximations. 
 
-							if(approximate_error < endgame_tolerances_.final_tolerance)
-							{
+							// dehom of prev approx and last approx not used because they are not updated with the most current information. However, prev approx and last approx are 
+							// the most current. This is from how the do while loop below is done. 
+							if(endgame_security_.level <= 0 && endgame_tracker_.GetSystem().DehomogenizePoint(prev_approx).norm() > endgame_security_.max_norm &&  endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx).norm() > endgame_security_.max_norm)
+							{//we are too large, break out of loop to return error.
 								endgame_settings_.final_approximation_at_origin = latest_approx;
-								return SuccessCode::Success;
+								return SuccessCode::SecurityMaxNormReached;
 							}
 							else if(cauchy_times_.front().abs() < endgame_settings_.min_track_time)
 							{//we are too close to t = 0 but we do not have the correct tolerance - so we exit
 								endgame_settings_.final_approximation_at_origin = latest_approx;
 								return SuccessCode::FailedToConverge;
 							}
-							else if(endgame_security_.level <= 0 && dehom_of_prev_approx.norm() > endgame_security_.max_norm && dehom_of_latest_approx.norm() > endgame_security_.max_norm)
-							{//we are too large, break out of loop to return error.
+							else if(approximate_error < endgame_tolerances_.final_tolerance)
+							{
 								endgame_settings_.final_approximation_at_origin = latest_approx;
-								return SuccessCode::SecurityMaxNormReached;
+								return SuccessCode::Success;
 							}
 							else
 							{
@@ -1326,6 +1337,12 @@ namespace bertini
 
 										finding_cauchy_samples_success = FindCauchySamples(next_time,next_sample);
 
+										//Added because of Griewank osborne test case where tracker throws a GoingToInfinity the cauchy endgame should stop instead of attempting to continue. 
+										//This is because the tracker will not track to any meaningful space values. 
+										if(finding_cauchy_samples_success == SuccessCode::GoingToInfinity)
+										{
+											return SuccessCode::GoingToInfinity;
+										}
 
 										latest_approx = ComputeCauchyApproximationOfXAtT0(cauchy_samples_);
 										if(endgame_security_.level <= 0)

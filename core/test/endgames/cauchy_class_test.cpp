@@ -1522,8 +1522,6 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
 	VariableGroup vars{x,y};
 	griewank_osborn_sys.AddVariableGroup(vars); 
-	// sys.AddFunction(((mpfr("29")/mpfr("16"))*pow(x,3)-2*x*y)*(1-t) + (pow(x,3) - 1)*t);
-	// sys.AddFunction((y - pow(x,2))*(1-t) + (pow(y,2) - 1)*t);
 
 	griewank_osborn_sys.AddFunction((mpfr("29")/mpfr("16"))*pow(x,3)-2*x*y);
 	griewank_osborn_sys.AddFunction((y - pow(x,2)));
@@ -1538,14 +1536,8 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 	BOOST_CHECK(griewank_TD.IsHomogeneous());
 	BOOST_CHECK(griewank_TD.IsPatched());
 
-	std::cout << "griewank system " << griewank_osborn_sys << '\n' << '\n';
-	std::cout << "griewank_TD system " << griewank_TD << '\n' << '\n';
 	auto final_griewank_osborn_system = (1-t)*griewank_osborn_sys + t*griewank_TD;
 	final_griewank_osborn_system.AddPathVariable(t);
-
-	std::cout << "griewank system " << griewank_osborn_sys << '\n' << '\n';
-	std::cout << "griewank_TD system " << griewank_TD << '\n' << '\n';
-	std::cout << "final system " << final_griewank_osborn_system << '\n' << '\n';
 
 
 	auto griewank_AMP = bertini::tracking::config::AMPConfigFrom(final_griewank_osborn_system);
@@ -1556,7 +1548,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 	bertini::tracking::config::Newton newton_preferences;
 
 	tracker.Setup(bertini::tracking::config::Predictor::Euler,
-                mpfr_float("1e-5"),
+                mpfr_float("1e-6"),
                 mpfr_float("1e5"),
                 stepping_preferences,
                 newton_preferences);
@@ -1598,17 +1590,20 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 	unsigned num_paths_converging = 0;
 	for(auto s : griewank_homogenized_solutions) //current_space_values)
 	{
-		// std::cout << "solution is " << final_griewank_osborn_system.DehomogenizePoint(s) << '\n';
+		// std::cout << ".1 solution is " << final_griewank_osborn_system.DehomogenizePoint(s) << '\n';
 
 		bertini::tracking::SuccessCode endgame_success = My_Endgame.CauchyEG(t_endgame_boundary,s);
 
-		// std::cout << "solution is " << My_Endgame.endgame_tracker_.GetSystem().DehomogenizePoint(My_Endgame.endgame_settings_.final_approximation_at_origin) << '\n';
+		// std::cout << "endgame solution is " << final_griewank_osborn_system.DehomogenizePoint(My_Endgame.endgame_settings_.final_approximation_at_origin) << '\n';
+
 		if(endgame_success == bertini::tracking::SuccessCode::Success)
 		{
+			// std::cout << "CONVERGED" <<'\n';
 			num_paths_converging++;
 		}
-		if(endgame_success == bertini::tracking::SuccessCode::SecurityMaxNormReached)
+		if(endgame_success == bertini::tracking::SuccessCode::SecurityMaxNormReached || endgame_success == bertini::tracking::SuccessCode::GoingToInfinity)
 		{
+			// std::cout << "DIVERGED" << '\n';
 			num_paths_diverging++;
 		}
 	}
@@ -1728,7 +1723,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 		bertini::tracking::SuccessCode endgame_success = My_Endgame.CauchyEG(t_endgame_boundary,s);
 		if(endgame_success == bertini::tracking::SuccessCode::Success)
 		{
-			// std::cout << "difference is " << (tracker.GetSystem().DehomogenizePoint(My_Endgame.GetFinalApproximation())-correct).norm() << '\n';
 			if((tracker.GetSystem().DehomogenizePoint(My_Endgame.endgame_settings_.final_approximation_at_origin)-correct).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame)
 			{
 				num_successful_occurences++;
