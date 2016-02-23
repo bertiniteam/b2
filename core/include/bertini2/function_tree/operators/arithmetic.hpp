@@ -37,9 +37,10 @@
 
 
 
-#include "function_tree/symbols/number.hpp"
-#include "function_tree/symbols/variable.hpp"
-#include "function_tree/symbols/differential.hpp"
+#include "bertini2/function_tree/symbols/number.hpp"
+#include "bertini2/function_tree/symbols/special_number.hpp"
+#include "bertini2/function_tree/symbols/variable.hpp"
+#include "bertini2/function_tree/symbols/differential.hpp"
 
 #include <cmath>
 
@@ -66,7 +67,10 @@ namespace node{
 		
 		
 		
-		SumOperator(){}
+		SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
+		{
+			AddChild(s, add_or_sub);
+		}
 		
 		SumOperator(const std::shared_ptr<Node> & left, const std::shared_ptr<Node> & right)
 		{
@@ -188,6 +192,8 @@ namespace node{
 		
 	private:
 
+		SumOperator() = default;
+
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -218,8 +224,6 @@ namespace node{
 	class NegateOperator : public virtual UnaryOperator
 	{
 	public:
-		
-		NegateOperator(){}
 		
 		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
@@ -262,6 +266,8 @@ namespace node{
 
 	private:
 
+		NegateOperator() = default;
+
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -295,9 +301,16 @@ namespace node{
 	class MultOperator : public virtual NaryOperator
 	{
 	public:
-		//
+
+		/**
+		 single-node instantiation.  
 		
-		MultOperator(){}
+		 if evaluated, would return simply the value of s.
+		 */
+		MultOperator(std::shared_ptr<Node> const& s)
+		{
+			AddChild(s);
+		}
 		
 		MultOperator(std::shared_ptr<Node> const& left, std::shared_ptr<Node> const& right)
 		{
@@ -384,6 +397,9 @@ namespace node{
 		
 		
 	private:
+		
+		MultOperator() = default;
+
 		// Stores the mult/div of a factor.  There is a one-one
 		// correspondence between elements of children_sign_ and children_.  This
 		// is enforced by the AddChild method, redefined in MultOperator.
@@ -420,7 +436,6 @@ namespace node{
 		
 	public:
 		
-		PowerOperator(){}
 		
 		PowerOperator(const std::shared_ptr<Node> & new_base, const std::shared_ptr<Node> & new_exponent) : base_(new_base), exponent_(new_exponent)
 		{
@@ -502,6 +517,8 @@ namespace node{
 		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 		
 	private:
+				
+		PowerOperator() = default;
 		
 		std::shared_ptr<Node> base_;
 		std::shared_ptr<Node> exponent_;
@@ -610,7 +627,6 @@ namespace node{
 		{}
 		
 		
-		IntegerPowerOperator(){}
 		
 	protected:
 		
@@ -627,10 +643,10 @@ namespace node{
 		
 	private:
 		
+		IntegerPowerOperator() = default;
+
+
 		int exponent_ = 1; ///< Exponent for the exponenetial operator
-
-
-	private:
 
 		friend class boost::serialization::access;
 		
@@ -671,8 +687,6 @@ namespace node{
 	{
 	public:
 		
-		SqrtOperator(){}
-		
 		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
@@ -708,6 +722,8 @@ namespace node{
 
 	private:
 
+		SqrtOperator() = default;
+
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -735,8 +751,6 @@ namespace node{
 	class ExpOperator : public  virtual UnaryOperator
 	{
 	public:
-		
-		ExpOperator(){}
 		
 		ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
@@ -772,7 +786,7 @@ namespace node{
 		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 		
 	private:
-
+		ExpOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -790,8 +804,6 @@ namespace node{
 	class LogOperator : public  virtual UnaryOperator
 	{
 	public:
-		
-		LogOperator(){}
 		
 		LogOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
@@ -827,7 +839,7 @@ namespace node{
 		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
 		
 	private:
-
+		LogOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -877,7 +889,7 @@ namespace node{
 
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpq_rational const& p)
 	{
-		return std::make_shared<PowerOperator>(N,std::make_shared<Rational>(p));
+		return std::make_shared<PowerOperator>(N,std::make_shared<Rational>(p,0));
 	}
 
 
@@ -902,14 +914,11 @@ namespace node{
 	
 	inline std::shared_ptr<Node>& operator+=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
-		
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(rhs);
-		
+		std::shared_ptr<Node> temp = std::make_shared<SumOperator>(lhs,rhs);		
 		lhs.swap(temp);
 		return lhs;
 	}
+		
 	
 	
 	
@@ -961,12 +970,12 @@ namespace node{
 
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
-		return std::make_shared<SumOperator>(lhs,std::make_shared<Rational>(rhs));
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Rational>(rhs,0));
 	}
 	
 	inline std::shared_ptr<Node> operator+(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<SumOperator>(std::make_shared<Rational>(lhs), rhs);
+		return std::make_shared<SumOperator>(std::make_shared<Rational>(lhs,0), rhs);
 	}
 	
 	
@@ -980,14 +989,11 @@ namespace node{
 	
 	inline std::shared_ptr<Node>& operator-=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
-		
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(rhs,false);
-		
+		std::shared_ptr<Node> temp = std::make_shared<SumOperator>(lhs,true,rhs,false);
 		lhs.swap(temp);
 		return lhs;
 	}
+		
 	
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
@@ -998,17 +1004,17 @@ namespace node{
 	{
 		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
-
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr rhs)
-	{
-		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
-	}
 	
 	inline std::shared_ptr<Node> operator-(mpfr_float lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
+	}
+	
 	inline std::shared_ptr<Node> operator-(mpfr lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
@@ -1036,12 +1042,12 @@ namespace node{
 
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
-		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Rational>(rhs), false);
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Rational>(rhs,0), false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<SumOperator>(std::make_shared<Rational>(lhs), true, rhs, false);
+		return std::make_shared<SumOperator>(std::make_shared<Rational>(lhs,0), true, rhs, false);
 	}
 
 
@@ -1098,12 +1104,12 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
-		return std::make_shared<MultOperator>(lhs,std::make_shared<Rational>(rhs));
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Rational>(rhs,0));
 	}
 	
 	inline std::shared_ptr<Node> operator*(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<MultOperator>(std::make_shared<Rational>(lhs), rhs);
+		return std::make_shared<MultOperator>(std::make_shared<Rational>(lhs,0), rhs);
 	}
 
 
@@ -1129,9 +1135,7 @@ namespace node{
 			}
 		}
 
-		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(rhs);
+		std::shared_ptr<Node> temp = std::make_shared<MultOperator>(lhs,rhs);
 		lhs.swap(temp);
 		return lhs;
 
@@ -1169,11 +1173,7 @@ namespace node{
 		// }
 
 
-		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
-		
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(rhs,false);
-		
+		std::shared_ptr<Node> temp = std::make_shared<MultOperator>(lhs,true,rhs,false);
 		lhs.swap(temp);
 		return lhs;
 	}
@@ -1233,12 +1233,12 @@ namespace node{
 
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
-		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Rational>(rhs), false);
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Rational>(rhs,0), false);
 	}
 	
 	inline std::shared_ptr<Node> operator/(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return std::make_shared<MultOperator>(std::make_shared<Rational>(lhs), true, rhs, false);
+		return std::make_shared<MultOperator>(std::make_shared<Rational>(lhs,0), true, rhs, false);
 	}
 
 

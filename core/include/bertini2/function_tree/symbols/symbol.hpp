@@ -86,11 +86,7 @@ namespace node {
 		*/
 		void name(const std::string & new_name){name_ = new_name;};
 		
-		/**
-		Default constructor
-		*/
-		NamedSymbol(){};
-
+		
 		/**
 		Parameterized constructor, sets the name of the symbol
 		*/
@@ -104,7 +100,8 @@ namespace node {
 		
 		virtual ~NamedSymbol() = default;
 		
-		
+	protected:
+		NamedSymbol() = default;
 	private:
 
 		friend class boost::serialization::access;

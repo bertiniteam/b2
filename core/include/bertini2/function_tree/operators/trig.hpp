@@ -44,7 +44,7 @@ namespace node{
 	{
 	public:
 
-		TrigOperator(){}
+		
 		TrigOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 
@@ -56,7 +56,8 @@ namespace node{
 		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
 		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-
+	protected:
+		TrigOperator(){}
 	private:
 		friend class boost::serialization::access;
 
@@ -81,8 +82,6 @@ namespace node{
 	class SinOperator : public  virtual TrigOperator
 	{
 	public:
-		
-		SinOperator(){}
 		
 		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -116,7 +115,7 @@ namespace node{
 		}
 		
 	private:
-
+		SinOperator() = default;
 		friend class boost::serialization::access;
 
 		template <typename Archive>
@@ -136,7 +135,7 @@ namespace node{
 	{
 	public:
 		
-		ArcSinOperator(){}
+		
 		
 		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -168,7 +167,7 @@ namespace node{
 		}
 		
 	private:
-
+		ArcSinOperator() = default;
 		friend class boost::serialization::access;
 		
 
@@ -195,7 +194,7 @@ namespace node{
 	{
 	public:
 		
-		CosOperator(){}
+		
 		
 		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -231,7 +230,7 @@ namespace node{
 		}
 		
 	private:
-
+		CosOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -251,7 +250,7 @@ namespace node{
 	{
 	public:
 		
-		ArcCosOperator(){}
+		
 		
 		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -287,7 +286,7 @@ namespace node{
 		}
 		
 	private:
-
+		ArcCosOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -315,7 +314,7 @@ namespace node{
 	{
 	public:
 		
-		TanOperator(){}
+		
 		
 		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -350,7 +349,7 @@ namespace node{
 		}
 		
 	private:
-
+		TanOperator() = default;
 		friend class boost::serialization::access;
 		
 
@@ -371,7 +370,7 @@ namespace node{
 	{
 	public:
 		
-		ArcTanOperator(){}
+		
 		
 		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -406,7 +405,7 @@ namespace node{
 		}
 		
 	private:
-
+		ArcTanOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>

@@ -46,7 +46,7 @@ namespace node{
 	class Variable : public virtual NamedSymbol, public std::enable_shared_from_this<Variable>
 	{
 	public:
-		Variable(){};
+		
 		
 		Variable(std::string new_name) : NamedSymbol(new_name)
 		{ }
@@ -167,7 +167,7 @@ namespace node{
 		{
 			return std::get< std::pair<mpfr,bool> >(current_value_).first;
 		}
-
+		Variable() = default;
 	private:
 
 		friend class boost::serialization::access;

@@ -141,8 +141,6 @@ namespace node{
 	{
 	public:
 		
-		Integer()
-		{}
 
 		Integer(int val) : true_value_(val)
 		{}
@@ -193,6 +191,8 @@ namespace node{
 
 		friend class boost::serialization::access;
 
+		Integer() = default;
+
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
@@ -211,8 +211,6 @@ namespace node{
 	class Float : public virtual Number
 	{
 	public:
-		Float()
-		{}
 
 
 		Float(mpfr const& val) : highest_precision_value_(val)
@@ -263,7 +261,7 @@ namespace node{
 		mpfr highest_precision_value_;
 
 		friend class boost::serialization::access;
-
+		Float() = default;
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
@@ -285,8 +283,18 @@ namespace node{
 	{
 	public:
 
+		using mpq_rational = bertini::mpq_rational;
 
-		Rational()
+		
+
+		Rational(int val) : true_value_real_(val), true_value_imag_(0)
+		{}
+
+
+		Rational(int val_real_numerator, int val_real_denomenator,
+				 int val_imag_numerator, int val_imag_denomenator) 
+					:
+					 true_value_real_(val_real_numerator,val_real_denomenator), true_value_imag_(val_imag_numerator,val_imag_denomenator)
 		{}
 
 		Rational(std::string val) : true_value_real_(val), true_value_imag_(0)
@@ -295,8 +303,10 @@ namespace node{
 		Rational(std::string val_real, std::string val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
 		{}
 
+		Rational(mpq_rational const& val_real) : true_value_real_(val_real), true_value_imag_(0)
+		{}
 
-		Rational(mpq_rational const& val_real, mpq_rational const& val_imag = 0) : true_value_real_(val_real), true_value_imag_(val_imag)
+		Rational(mpq_rational const& val_real, mpq_rational const& val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
 		{}
 
 		Rational(int, int) = delete;
@@ -310,7 +320,7 @@ namespace node{
 
 		static Rational RandReal()
 		{
-			return Rational(RandomRat());
+			return Rational(RandomRat(),0);
 		}
 
 		void print(std::ostream & target) const override
@@ -343,7 +353,7 @@ namespace node{
 		}
 
 		mpq_rational true_value_real_, true_value_imag_;
-
+		Rational() = default;
 		friend class boost::serialization::access;
 
 		template <typename Archive>

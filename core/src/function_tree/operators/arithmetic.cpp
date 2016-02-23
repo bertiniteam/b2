@@ -63,7 +63,7 @@ namespace bertini{
 	std::shared_ptr<Node> SumOperator::Differentiate()
 	{
 		unsigned int counter = 0;
-		std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
+		std::shared_ptr<Node> ret_sum = Zero();
 		for (int ii = 0; ii < children_.size(); ++ii)
 		{
 			auto converted = std::dynamic_pointer_cast<Number>(children_[ii]);
@@ -76,14 +76,15 @@ namespace bertini{
 				if (converted->Eval<dbl>()==dbl(0.0))
 					continue;
 			
-			ret_sum->AddChild(temp_node,children_sign_[ii]);
 			counter++;
+			if (counter==1)
+				ret_sum = std::make_shared<SumOperator>(temp_node,children_sign_[ii]);
+			else
+				std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddChild(temp_node,children_sign_[ii]);
+			
 		}
 		
-		if (counter>0)
 			return ret_sum;
-		else
-			return std::make_shared<Integer>(0);
 	}
 	
 	
@@ -380,54 +381,47 @@ namespace bertini{
 	
 	std::shared_ptr<Node> MultOperator::Differentiate()
 	{
-		std::shared_ptr<SumOperator> ret_sum = std::make_shared<SumOperator>();
+		std::shared_ptr<Node> ret_sum = node::Zero();
 		
 		unsigned term_counter {0};
-		
+		// this loop implements the generic product rule, perhaps inefficiently.
 		for (int ii = 0; ii < children_.size(); ++ii)
 		{
 			
 			auto local_derivative = children_[ii]->Differentiate();
 			
+			// if the derivative of the current term is 0, then stop 
 			auto is_it_a_number = std::dynamic_pointer_cast<Float>(local_derivative);
 			if (is_it_a_number)
 				if (is_it_a_number->Eval<dbl>()==dbl(0.0))
 					continue;
 			
+			// no, the term's derivative is not 0.  
 			
-			
-			auto term_ii = std::make_shared<MultOperator>();
+			// create the product of the remaining terms
+			auto term_ii = std::make_shared<MultOperator>(local_derivative);
 			for (int jj = 0; jj < children_.size(); ++jj)
 			{
 				if(jj != ii)
 					term_ii->AddChild(children_[jj],children_mult_or_div_[jj]);
 			}
 			
-			
-			// if the derivative of the term under consideration is equal to 1, no need to go on.  already have the product we need.
+			// and then either 1. multiply it against the current derivative, or 2. invoke the quotient rule.
 			if (is_it_a_number)
 				if (is_it_a_number->Eval<dbl>()==dbl(1.0))
 					continue;
 			
+			// if the derivative of the term under consideration is equal to 1, no need to go on.  already have the product we need.
 			
-			// the first branch is for division, and the quotient rule.
+			// if is division, need this for the quotient rule
 			if ( !(children_mult_or_div_[ii]) )
-			{
-				// divide by the
-				term_ii->AddChild(children_[ii],false);
-				term_ii->AddChild(children_[ii],false);
-				term_ii->AddChild(local_derivative);
-				ret_sum->AddChild(term_ii,false);  // false for subtract here.
-			}
-			// the second branch is for multiplication, and the product rule
-			else
-			{
-				term_ii->AddChild(local_derivative,true);// true for multiply, not divide
-				ret_sum->AddChild(term_ii); //  no truth second argument, because is add.
-			}
+				term_ii->AddChild(pow(children_[ii],2),false); // draw a line and square below
 			
 			term_counter++;
-			
+			if (term_counter==1)
+				ret_sum = std::make_shared<SumOperator>(term_ii,children_mult_or_div_[ii]);
+			else
+				std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddChild(term_ii,children_mult_or_div_[ii]);
 		} // re: for ii
 		
 		return ret_sum;
@@ -449,7 +443,6 @@ namespace bertini{
 			if (is_it_a_differential)
 				if (is_it_a_differential->GetVariable()!=v)
 				{
-					// std::cout << *this << " deg " << 0 << "\n";
 					return 0;
 				}
 			
@@ -464,7 +457,6 @@ namespace bertini{
 			else
 				deg+=factor_deg;
 		}
-		// std::cout << *this << " deg " << deg << "\n";
 		return deg;
 	}
 	
@@ -600,9 +592,9 @@ namespace bertini{
 	
 	std::shared_ptr<Node> PowerOperator::Differentiate()
 	{
-		auto ret_mult = std::make_shared<MultOperator>();
+		
 		auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, std::make_shared<Float>("1.0"),false);
-		ret_mult->AddChild(base_->Differentiate());
+		auto ret_mult = std::make_shared<MultOperator>(base_->Differentiate());
 		ret_mult->AddChild(exponent_);
 		ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
 		return ret_mult;
@@ -819,10 +811,9 @@ namespace bertini{
 	
 	std::shared_ptr<Node> SqrtOperator::Differentiate()
 	{
-		auto ret_mult = std::make_shared<MultOperator>();
-		ret_mult->AddChild(std::make_shared<PowerOperator>(child_, std::make_shared<Rational>(mpq_rational(-1,2))));
+		auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, std::make_shared<Rational>(mpq_rational(-1,2),0)));
 		ret_mult->AddChild(child_->Differentiate());
-		ret_mult->AddChild(std::make_shared<Rational>(mpq_rational(1,2)));
+		ret_mult->AddChild(std::make_shared<Rational>(mpq_rational(1,2),0));
 		return ret_mult;
 	}
 	
@@ -877,10 +868,7 @@ namespace bertini{
 	
 	std::shared_ptr<Node> ExpOperator::Differentiate()
 	{
-		auto ret_mult = std::make_shared<MultOperator>();
-		ret_mult->AddChild(std::make_shared<ExpOperator>(child_));
-		ret_mult->AddChild(child_->Differentiate());
-		return ret_mult;
+		return exp(child_)*child_->Differentiate();
 	}
 	
 	int ExpOperator::Degree(std::shared_ptr<Variable> const& v) const
@@ -929,10 +917,7 @@ namespace bertini{
 	
 	std::shared_ptr<Node> LogOperator::Differentiate()
 	{
-		auto ret_mult = std::make_shared<MultOperator>();
-		ret_mult->AddChild(child_,false);
-		ret_mult->AddChild(child_->Differentiate());
-		return ret_mult;
+		return std::make_shared<MultOperator>(child_,false,child_->Differentiate(),true);
 	}
 	
 	int LogOperator::Degree(std::shared_ptr<Variable> const& v) const

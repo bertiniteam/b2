@@ -48,11 +48,7 @@ namespace node{
 		public:
 				
 				
-				/**
-				 The default constructor
-				 */
-				Jacobian()
-				{};
+				
 				
 				
 				/**
@@ -167,7 +163,7 @@ namespace node{
 		// }
 
 				std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
-				
+				Jacobian() = default;
 		private:
 				friend class boost::serialization::access;
 		
