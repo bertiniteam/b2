@@ -1222,6 +1222,10 @@ namespace bertini
 								std::cout << "Note: The tracking failed while going around the origin! " << '\n';
 								return SuccessCode::GoingToInfinity;
 							}
+
+							//NEW!!!!!!
+							std::cout << "Note: The tracking failed while going around the origin! " << '\n';
+							return tracking_success;
 						}
 						else
 						{//check to see if we closed the loop
