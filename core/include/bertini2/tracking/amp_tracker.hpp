@@ -48,7 +48,7 @@ namespace bertini{
 		using bertini::max;
 
 
-
+		inline
 		mpfr_float MinTimeForCurrentPrecision(unsigned precision)
 		{
 			if (precision==DoublePrecision())
@@ -57,7 +57,7 @@ namespace bertini{
 				return pow( mpfr_float(10), -long(precision)+3);
 		}
 
-
+		inline
 		mpfr_float MinStepSizeForPrecision(unsigned precision)
 		{
 			return MinTimeForCurrentPrecision(precision);
@@ -74,6 +74,7 @@ namespace bertini{
 
 		 \todo Recompute this cost function for boost::multiprecision::mpfr_float
 		*/
+		inline
 		mpfr_float ArithmeticCost(unsigned precision)
 		{
 			if (precision==DoublePrecision())
@@ -88,6 +89,7 @@ namespace bertini{
 		/**
 		 \Compute a stepsize satisfying AMP Criterion B with a given precision
 		*/
+		inline
 		mpfr_float StepsizeSatisfyingCriterionB(unsigned precision,
 										mpfr_float const& criterion_B_rhs,
 										unsigned num_newton_iterations,
@@ -103,12 +105,13 @@ namespace bertini{
 		\param log_of_stepsize log10 of a stepsize
 		\param current_time The current time
 		*/
+		inline
 		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr const& current_time)
 		{
 			return mpfr_float(ceil(log_of_stepsize) + ceil(log10(abs(current_time))) + 2).convert_to<int>();
 		}
 
-
+		inline
 		unsigned MinDigitsForStepsizeInterval(mpfr_float const& min_stepsize, mpfr_float const& max_stepsize, mpfr const& current_time)
 		{
 			return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),current_time), MinDigitsForLogOfStepsize(-log10(max_stepsize),current_time));
