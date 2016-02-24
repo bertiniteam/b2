@@ -35,6 +35,91 @@ BOOST_CLASS_EXPORT(bertini::System)
 namespace bertini 
 {
 
+	void swap(System & a, System & b)
+	{
+		using std::swap;
+
+		swap(a.ungrouped_variables_,b.ungrouped_variables_);
+		swap(a.variable_groups_,b.variable_groups_);
+		swap(a.hom_variable_groups_,b.hom_variable_groups_);
+		swap(a.homogenizing_variables_,b.homogenizing_variables_);
+
+		swap(a.time_order_of_variable_groups_,b.time_order_of_variable_groups_);
+
+		swap(a.have_path_variable_,b.have_path_variable_);
+		swap(a.path_variable_,b.path_variable_);
+
+		swap(a.ordering_,b.ordering_);
+		swap(a.have_ordering_,b.have_ordering_);
+		swap(a.variable_ordering_,b.variable_ordering_);
+
+		swap(a.implicit_parameters_,b.implicit_parameters_);
+		swap(a.explicit_parameters_,b.explicit_parameters_);
+
+		swap(a.constant_subfunctions_,b.constant_subfunctions_);
+		swap(a.subfunctions_,b.subfunctions_);
+		swap(a.functions_,b.functions_);
+
+		swap(a.is_differentiated_,b.is_differentiated_);
+		swap(a.jacobian_,b.jacobian_);
+
+		swap(a.precision_,b.precision_);
+		swap(a.is_patched_,b.is_patched_);
+		swap(a.patch_,b.patch_);
+	}
+
+	// the copy constructor
+	System::System(System const& other)
+	{
+		ungrouped_variables_ = other.ungrouped_variables_;
+		variable_groups_  = other.variable_groups_;
+		hom_variable_groups_ =  other.hom_variable_groups_;
+		homogenizing_variables_ = other.homogenizing_variables_;
+		have_path_variable_ = other.have_path_variable_;
+		path_variable_ = other.path_variable_;
+		implicit_parameters_ = other.implicit_parameters_;
+		
+		patch_ = other.patch_;
+		is_patched_ = other.is_patched_;
+
+		jacobian_ = other.jacobian_;
+		is_differentiated_ = other.is_differentiated_;
+
+
+		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
+
+		current_variable_values_ = other.current_variable_values_;
+
+		variable_ordering_ = other.variable_ordering_;
+		have_ordering_ =  other.have_ordering_;
+		ordering_ = ordering_;
+
+		precision_ = other.precision_;
+
+		// now to do the members which are not simply copied
+		constant_subfunctions_.resize(other.constant_subfunctions_.size());
+		for (unsigned ii = 0; ii < constant_subfunctions_.size(); ++ii)
+			constant_subfunctions_[ii] = std::make_shared<bertini::node::Function>(other.constant_subfunctions_[ii]->entry_node());
+
+		subfunctions_.resize(other.subfunctions_.size());
+		for (unsigned ii = 0; ii < subfunctions_.size(); ++ii)
+			subfunctions_[ii] = std::make_shared<bertini::node::Function>(other.subfunctions_[ii]->entry_node());
+
+		functions_.resize(other.functions_.size());
+		for (unsigned ii = 0; ii < functions_.size(); ++ii)
+			functions_[ii] = std::make_shared<bertini::node::Function>(other.functions_[ii]->entry_node());
+
+		explicit_parameters_.resize(other.explicit_parameters_.size());
+		for (unsigned ii = 0; ii < explicit_parameters_.size(); ++ii)
+			explicit_parameters_[ii] = std::make_shared<bertini::node::Function>(other.explicit_parameters_[ii]->entry_node());
+	}
+
+	// the assignment operator
+	System& System::operator=(System other)
+	{
+		swap(*this, other);
+		return *this;
+	}
 
 
 	/////////

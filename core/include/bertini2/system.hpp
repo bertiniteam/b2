@@ -32,7 +32,9 @@
 #define BERTINI_SYSTEM_HPP
 
 #include "mpfr_complex.hpp"
+#include "mpfr_extensions.hpp"
 #include "eigen_extensions.hpp"
+
 #include <vector>
 #include "function_tree.hpp"
 
@@ -43,7 +45,7 @@
 
 #include <assert.h>
 
-#include <eigen3/Eigen/Dense>
+
 
 #include <boost/type_index.hpp>
 
@@ -55,7 +57,7 @@
 #include <boost/serialization/deque.hpp>
 
 #include "limbo.hpp"
-
+#include <Eigen/Dense>
 
 namespace bertini {
 
@@ -81,13 +83,43 @@ namespace bertini {
 		using Jac = std::shared_ptr<node::Jacobian>;
 		
 		/**
-		The default constructor for a system
+		\brief The default constructor for a system.
 		*/
 		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), ordering_(OrderingChoice::FIFO), precision_(mpfr_float::default_precision()), is_patched_(false)
 		{}
 
+		/** 
+		\brief The copy operator, creates a system from a string using the Bertini parser for Bertini classic syntax.
+		*/
 		System(std::string const& input);
 		
+		/** 
+		\brief The copy operator
+		*/
+		System(System const& other);
+
+		/** 
+		\brief The move copy operator
+		*/
+		System(System && other) : System()
+		{
+			swap(*this, other);
+		}
+
+		/** 
+		\brief The assignment operator
+		*/
+		System& operator=(System other);
+
+		/**
+		\brief The move assignment operator
+		*/
+		System& operator=(System && other) = default;
+
+		/**
+		The free swap function for systems.
+		*/
+		friend void swap(System & a, System & b);
 
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
@@ -96,6 +128,9 @@ namespace bertini {
 		*/
 		void precision(unsigned new_precision) const;
 
+		/**
+		\brief Get the current precision of a system.
+		*/
 		unsigned precision() const
 		{
 			return precision_;

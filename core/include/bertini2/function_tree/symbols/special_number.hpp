@@ -25,8 +25,8 @@
 
 */
 
-#ifndef b2Test_SpecialNumber_h
-#define b2Test_SpecialNumber_h
+#ifndef BERTINI_FUNCTION_TREE_SPECIAL_NUMBER_HPP
+#define BERTINI_FUNCTION_TREE_SPECIAL_NUMBER_HPP
 
 
 #include "function_tree/symbols/symbol.hpp"
@@ -135,7 +135,7 @@ namespace node{
 
 			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
 			{
-				return mpfr(acos(boost::multiprecision::mpfr_float(-1)));
+				return mpfr(acos(mpfr_float(-1)));
 			}
 
 			friend class boost::serialization::access;
@@ -232,7 +232,7 @@ namespace node{
 
 			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
 			{
-				return mpfr(exp(boost::multiprecision::mpfr_float(1)));
+				return mpfr(exp(mpfr_float(1)));
 			}
 
 			friend class boost::serialization::access;

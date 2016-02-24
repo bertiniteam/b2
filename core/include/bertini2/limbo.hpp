@@ -103,24 +103,27 @@ namespace bertini{
 		return subscripts;
 	  }
 
-	  using std::max;
+	  
 
 	  template <typename T>
 	  T max(T const& a, T const& b, T const& c)
 	  {
+	  	using std::max;
 	  	return max(a,max(b,c));
 	  }
 
 	  template <typename T>
 	  T max(T const& a, T const& b, T const& c, T const& d)
 	  {
-	  	return max(a,max(b,c,d));
+	  	using std::max;
+	  	return max(a,bertini::max(b,c,d));
 	  }
 
 	  template <typename T>
 	  T max(T const& a, T const& b, T const& c, T const& d, T const& e)
 	  {
-	  	return max(a,max(b,c,d,e));
+	  	using std::max;
+	  	return max(a,bertini::max(b,c,d,e));
 	  }
 } // re: namespace bertini
 

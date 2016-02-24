@@ -416,7 +416,8 @@ namespace bertini {
 			throw std::runtime_error("unable to correctly parse string in construction of system");
 		}
 
-		std::swap(sys,*this);
+		using std::swap;
+		swap(sys,*this);
 	}
 	
 }

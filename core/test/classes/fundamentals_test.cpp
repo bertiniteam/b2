@@ -16,25 +16,68 @@
 
 //  fundamentals.cpp
 //
-//  copyright 2015
+//  copyright 2015, 2016
 //  Daniel Brake
 //  University of Notre Dame
 //  ACMS
 //  Spring, Summer 2015
+//  Spring 2016
 
 
 #include <boost/test/unit_test.hpp>
 #include <boost/multiprecision/mpfr.hpp>
+#include <boost/multiprecision/random.hpp>
 #include <iostream>
 
 #include "bertini2/limbo.hpp"
-#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/num_traits.hpp"
 
+#include <boost/random.hpp>
 
 using mpfr = bertini::mpfr_float;
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
+
+BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
+{	
+	using mpfr_50 = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<50>, boost::multiprecision::et_off>;
+
+	using namespace boost::multiprecision;
+	using namespace boost::random;
+	mpfr_float::default_precision(50);
+	uniform_real_distribution<mpfr_50> ur(0,1);
+	independent_bits_engine<mt19937, 50L*1000L/301L, mpz_int> gen;
+
+	auto c = ur(gen);
+
+	mpfr_float r(c);
+	mpfr_float s(ur(gen));
+}
+
+
+BOOST_AUTO_TEST_CASE(make_random_mpfr_float_100)
+{	
+	using mpfr_100 = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<100>, boost::multiprecision::et_off>;
+
+	using namespace boost::multiprecision;
+	using namespace boost::random;
+	mpfr_float::default_precision(100);
+	uniform_real_distribution<mpfr_100> ur(0,1);
+	independent_bits_engine<mt19937, 100L*1000L/301L, mpz_int> gen;
+
+	auto c = ur(gen);
+
+	mpfr_float r(c);
+	mpfr_float s(ur(gen));
+}
+
+BOOST_AUTO_TEST_CASE(max_et_on)
+{
+	mpfr a(1), b(2), c(4);
+	// auto d = max(a,b*b+c);
+
+}
 
 BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 {

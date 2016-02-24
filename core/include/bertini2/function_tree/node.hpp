@@ -37,8 +37,7 @@
 
 #include <boost/type_index.hpp>
 
-#include <complex>
-#include "mpfr_complex.hpp"
+#include "num_traits.hpp"
 
 
 #include <boost/archive/text_oarchive.hpp>

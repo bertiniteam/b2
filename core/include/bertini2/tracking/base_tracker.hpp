@@ -186,7 +186,7 @@ namespace bertini{
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
 				
-				TrackerLoopInitialization(start_time, start_point);
+				TrackerLoopInitialization(start_time, endtime, start_point);
 				
 
 				SuccessCode initial_refinement_code = InitialRefinement();
@@ -315,6 +315,16 @@ namespace bertini{
 				return num_failed_steps_taken_ + num_successful_steps_taken_;
 			}
 
+			/**
+			\brief Set how large the stepsize should be.
+
+			\param new_stepsize The new value.
+			*/ 
+			void SetStepSize(mpfr_float const& new_stepsize) const
+			{
+				current_stepsize_ = new_stepsize;
+			}
+
 			virtual ~Tracker() = default;
 
 		private:
@@ -325,10 +335,11 @@ namespace bertini{
 			\brief Set up initialization of the internals for tracking a path.
 
 			\param start_time The time at which to start tracking.
+			\param end_time The time to which to track.
 			\param start_point The point from which to start tracking.
 			*/
 			virtual
-			void TrackerLoopInitialization(mpfr const& start_time, Vec<mpfr> const& start_point) const = 0;
+			void TrackerLoopInitialization(mpfr const& start_time, mpfr const& end_time, Vec<mpfr> const& start_point) const = 0;
 
 			/**
 			\brief Ensure that any pre-checks on precision or accuracy of start point pass.
@@ -433,11 +444,6 @@ namespace bertini{
 			*/
 			virtual 
 			SuccessCode CheckGoingToInfinity() const = 0;
-
-			void InitializeStepsize() const
-			{
-				current_stepsize_ = stepping_config_.initial_step_size;
-			}
 
 
 
