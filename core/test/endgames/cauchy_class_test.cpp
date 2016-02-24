@@ -1437,7 +1437,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
 	x_origin << mpfr("1.0","0.0");
 
-	tracker.PrecisionPreservation(false);
+	
 	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
 
 	auto cauchy_endgame_success = My_Endgame.CauchyEG(time,sample);
