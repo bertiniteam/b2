@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 
 
 
-	BOOST_CHECK(abs(first_approx.norm() - mpfr("0.9999999767578209232082898114211261253459","0").norm()) < My_Endgame.GetTrackToleranceDuringEndgame()); // answer was found using matlab for a check. difference is diff is 2.32422e-08
+	BOOST_CHECK(abs(first_approx.norm() - mpfr("0.9999999767578209232082898114211261253459","0").norm()) < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame); // answer was found using matlab for a check. difference is diff is 2.32422e-08
 
 }//end basic hermite test case mp against matlab
 
@@ -1063,13 +1063,13 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 
 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_settings,power_series_settings);
 
-	My_Endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, num_samples, times, samples);
+	My_Endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, times, samples);
 
 	
 
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
-		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
+		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
 	}
 
 }//end compute initial samples mp
@@ -1156,13 +1156,13 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
 
 
-	My_Endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, num_samples, times, samples);
+	My_Endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, times, samples);
 
 
 
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
-		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.GetTrackToleranceDuringEndgame());
+		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
 	}
 
 }//end compute initial samples dbl
