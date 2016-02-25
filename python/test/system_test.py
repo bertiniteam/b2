@@ -49,6 +49,25 @@ class SystemTest(unittest.TestCase):
         self.assertTrue(np.abs(e[1].real - exact_real[1]) < self.toldbl*np.abs(exact_real[1]));
         self.assertTrue(np.abs(e[1].imag - exact_imag[1]) < self.toldbl*np.abs(exact_imag[1]));
 
+
+        s = parse_system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
+        self.toldbl = mpfr_float('1e-27');
+        exact_real = (mpfr_float('-32.841085'), mpfr_float('-62.9317230'))
+        exact_imag = (mpfr_float('-26.66705'), mpfr_float('-196.39641065'))
+        self.a = mpfr_complex('4.897', '1.23')
+        v = VectorXmp((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
+
+        e = s.eval(v)
+
+        self.assertLessEqual(abs(e[0].real / exact_real[0]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[0].imag / exact_imag[0]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[1].real / exact_real[1]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[1].imag / exact_imag[1]-1) , self.toldbl);
+
+
+
+
+
     def test_system_Jac(self):
         exact_real = ((-9.32, 3.5, 0), \
                       (-94.745870,3.8979,-13.5848))
@@ -80,6 +99,33 @@ class SystemTest(unittest.TestCase):
         self.assertTrue(np.abs(e[1][1].imag - exact_imag[1][1]) <= self.toldbl*np.abs(exact_imag[1][1]));
         self.assertTrue(np.abs(e[1][2].real - exact_real[1][2]) <= self.toldbl*np.abs(exact_real[1][2]));
         self.assertTrue(np.abs(e[1][2].imag - exact_imag[1][2]) <= self.toldbl*np.abs(exact_imag[1][2]));
+
+
+
+
+        s = parse_system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
+        self.toldbl = mpfr_float('1e-27');
+        exact_real = ((mpfr_float('-9.32'), mpfr_float('3.5'), mpfr_float('0')), \
+                      (mpfr_float('-71.082170'),mpfr_float('3.8979'),mpfr_float('-3.5')))
+        exact_imag = ((mpfr_float('.0765'), mpfr_float('2.89'), mpfr_float('0')),\
+                      (mpfr_float('-51.20410'),mpfr_float('20.230'),mpfr_float('-2.89')))
+        v = VectorXmp((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
+
+        s.differentiate();
+        e = s.jacobian(v);
+
+        self.assertLessEqual(abs(e[0][0].real / exact_real[0][0]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[0][0].imag / exact_imag[0][0]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[0][1].real / exact_real[0][1]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[0][1].imag / exact_imag[0][1]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[0][2].real ) , self.toldbl);
+        self.assertLessEqual(abs(e[0][2].imag ) , self.toldbl);
+        self.assertLessEqual(abs(e[1][0].real / exact_real[1][0]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[1][0].imag / exact_imag[1][0]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[1][1].real / exact_real[1][1]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[1][1].imag / exact_imag[1][1]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[1][2].real / exact_real[1][2]-1) , self.toldbl);
+        self.assertLessEqual(abs(e[1][2].imag / exact_imag[1][2]-1) , self.toldbl);
 
 
 
@@ -116,7 +162,7 @@ class SystemTest(unittest.TestCase):
         tol_d = self.toldbl;
         sys = parse_system('function f1, f2; variable_group x,y,z; f1 = x+2; f2 = y*y;')
 
-        z = Variable("z")
+        z = Variable("z");
         sys *= Float(2);
 
         vals = VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
@@ -130,29 +176,4 @@ class SystemTest(unittest.TestCase):
 
 
 
-    def test_setters(self):
-        x = self.x; y = self.y; z = self.z; a = self.a;
 
-        sys = parse_system('function f1, f2; variable_group x,y,z; pathvariable t; f1 = x+2; f2 = y*y;')
-
-        vals = VectorXd((4,5,9));
-        sys.set_variables(vals);
-
-        pathval = complex(6,3);
-        sys.set_path_variable(pathval)
-
-
-
-
-
-
-# class SystemFunctionsTest(unittest.TestCase):
-#     def setUp(self):
-#         self.toldbl = 1e-15;
-#         self.x = Variable("x");
-#         self.y = Variable("y");
-#         self.z = Variable("z");
-#         self.a = Float(4.897, 1.23)
-#
-#         self.f = Function(self.x*self.y);
-#         self.g = Function(pow(self.x,2)*self.y - self.a*self.z*self.x);

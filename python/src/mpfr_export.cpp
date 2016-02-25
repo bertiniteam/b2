@@ -54,11 +54,6 @@ namespace bertini{
 			MPFRBaseVisitor<MPFRBaseT>().visit(cl);
 			
 			cl
-			.def(init<std::string>())
-			.def(init<int>())
-			.def(init<long int>())
-			.def(init<MPFRBaseT>())
-			
 			.def("__add__",&MPFRFloatVisitor::__add_int).def("__iadd__",&MPFRFloatVisitor::__iadd_int)
 			.def("__radd__",&MPFRFloatVisitor::__radd_int)
 			.def("__sub__",&MPFRFloatVisitor::__sub_int).def("__isub__",&MPFRFloatVisitor::__isub_int)
@@ -80,8 +75,9 @@ namespace bertini{
 			.def(self != self)
 			;
 			
-			def("default_precision", def_prec1);
-			def("default_precision", def_prec2);
+			def("default_precision", MPFRFloatVisitor<bmp>::def_prec1);
+			def("default_precision", MPFRFloatVisitor<bmp>::def_prec2);
+
 		};
 
 
@@ -92,16 +88,6 @@ namespace bertini{
 			MPFRBaseVisitor<MPFRBaseT>().visit(cl);
 			
 			cl
-			.def(init<double>())
-			.def(init<mpfr_float>())
-			.def(init<std::string>())
-			.def(init<mpfr_float,mpfr_float>())
-			.def(init<double, double>())
-			.def(init<std::string, mpfr_float>())
-			.def(init<mpfr_float, std::string>())
-			.def(init<std::string, std::string>())
-			.def(init<MPFRBaseT>())
-			
 			.def("__add__",&MPFRComplexVisitor::__add_float).def("__iadd__",&MPFRComplexVisitor::__iadd_float)
 			.def("__radd__",&MPFRComplexVisitor::__radd_float)
 			.def("__sub__",&MPFRComplexVisitor::__sub_float).def("__isub__",&MPFRComplexVisitor::__isub_float)
@@ -142,11 +128,31 @@ namespace bertini{
 
 		void ExportMpfr()
 		{
+//			boost::multiprecision::mpz_int
+//			class_<boost::multiprecision::mpz_int>("mpfr_int", init<>())
+//			.def(MPFRFloatVisitor<boost::multiprecision::mpz_int>());
+
 			class_<bmp>("mpfr_float", init<>())
+			.def(init<std::string>())
+			.def(init<int>())
+			.def(init<long int>())
+			.def(init<bmp>())
 			.def(MPFRFloatVisitor<bmp>());
 			
 			class_<bertini::complex>("mpfr_complex", init<>())
+			.def(init<double>())
+			.def(init<mpfr_float>())
+			.def(init<std::string>())
+			.def(init<mpfr_float,mpfr_float>())
+			.def(init<double, double>())
+			.def(init<std::string, mpfr_float>())
+			.def(init<mpfr_float, std::string>())
+			.def(init<std::string, std::string>())
+			.def(init<bertini::complex>())
 			.def(MPFRComplexVisitor<bertini::complex>());
+			
+			
+			
 		};
 
 		
