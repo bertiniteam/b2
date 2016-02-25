@@ -37,7 +37,7 @@
 #include "tracking/step.hpp"
 #include "limbo.hpp"
 #include "logging.hpp"
-
+#include "detail/visitation.hpp"
 
 namespace bertini{
 
@@ -124,7 +124,7 @@ namespace bertini{
 
 
 		*/
-		class Tracker
+		class Tracker : public Observable<>
 		{
 
 		public:

@@ -299,6 +299,8 @@ namespace bertini{
 		class AMPTracker : public Tracker
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE();
+			
 
 			enum UpsampleRefinementOption
 			{
