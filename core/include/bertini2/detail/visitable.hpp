@@ -23,54 +23,16 @@
 //  Spring 2016
 
 /**
-\file visit.hpp
+\file visitable.hpp
 
-\brief Contains the Visit___ types
+\brief Contains the visitable base types
 */
 
+#pragma once
+
+#include "detail/visitor.hpp"
+
 namespace bertini{
-
-	/**
-	A strawman class for implementing the visitor pattern.  
-
-	Deliberately empty, the non-base visitors must derive from it.  Don't directly derive from this class, use Visitor.
-	*/
-	class VisitorBase
-	{
-	public:
-		virtual ~VisitorBase() = default;
-	};
-
-
-	/**
-	The first non-trivial visitor class.  Derive from this.
-	*/
-	template<class VisitedT, typename RetT = void>
-	class Visitor
-	{
-	public:
-		typedef RetT ReturnType;
-		virtual ReturnType Visit(VisitedT&) = 0;
-		virtual ~Visitor() = default;
-	};
-
-
-
-	/**
-	Defines the default behaviour when an unknown visitor is encountered during visitation.  
-
-	Assumes the return type is default constructible.
-	*/
-	template<class VisitedT, typename RetT>
-	struct DefaultCatchAll
-	{
-		static RetT OnUnknownVisitor(VisitedT&, VisitorBase&)
-		{
-			return RetT();
-		}
-	};
-
-
 	/**
 	The base class for visitable types.  
 
@@ -104,35 +66,25 @@ namespace bertini{
 		{ return AcceptBase(*this, guest); }
 
 
-
-	template<class ObservedT, typename RetT = void>
-	class Observer : Visitor<ObservedT, RetT>
-	{
-	public:
-		virtual ~Observer() = default;
-	};
-
-
-
-	namespace {
-		template<class ObservedT, typename RetT>
-		using ObserverContainer = std::vector<Observer<ObservedT, RetT>*>;
-	}
-
 	template< typename RetT = void, template<class,class> class CatchAll = DefaultCatchAll>
 	class Observable : public VisitableBase<RetT, CatchAll>
-	{
-		ObserverContainer<Observable, RetT> watchers_;
+	{	
 	public:
+		typedef RetT ReturnType;
 		virtual ~Observable() = default;
 
 		typedef Observer<Observable,RetT> ObsT;
 
 		void AddObserver(ObsT& new_observer)
 		{
-			watchers_.push_back(new_observer);
+			current_watchers_.push_back(new_observer);
 		}
+
+	private:
+		template<class ObservedT>
+		using ObserverContainer = std::vector<Observer<ObservedT, ReturnType>*>;
+
+		ObserverContainer<Observable> current_watchers_;
 	};
 
-
-}
+} // namespace bertini

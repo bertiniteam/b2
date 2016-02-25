@@ -37,7 +37,7 @@
 #include "tracking/step.hpp"
 #include "limbo.hpp"
 #include "logging.hpp"
-#include "detail/visitation.hpp"
+#include "detail/visitable.hpp"
 
 namespace bertini{
 
