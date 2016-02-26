@@ -93,10 +93,8 @@ namespace bertini{
 		{
 
 			for (auto& obs : current_watchers_)
-			{
-				std::cout << "notifying an observer\n";
 				obs->Update(e);
-			}
+
 		}
 
 

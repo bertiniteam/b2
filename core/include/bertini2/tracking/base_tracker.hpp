@@ -125,8 +125,7 @@ namespace bertini{
 
 
 		*/
-		template<class TrackerT>
-		class Tracker : public Observable<Tracker<TrackerT> >
+		class Tracker
 		{
 
 		public:
@@ -225,7 +224,6 @@ namespace bertini{
 					}
 					else if (step_success_code_==SuccessCode::Success)
 					{	
-						this->NotifyObservers(SuccessfulStep<Tracker<TrackerT> >(*this));
 						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful";
 						IncrementCountersSuccess();
 					}
@@ -487,6 +485,12 @@ namespace bertini{
 			// permanent temporaries
 			mutable mpfr_float next_stepsize_; /// The next stepsize
 			mutable SuccessCode step_success_code_; ///< The code for step success.
+
+			public: 
+			unsigned NumVariables() const
+			{
+				return tracked_system_.NumVariables();
+			}
 		};
 
 

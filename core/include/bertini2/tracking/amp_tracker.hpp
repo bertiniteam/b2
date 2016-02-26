@@ -296,10 +296,10 @@ namespace bertini{
 		* Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
 
 		*/
-		class AMPTracker : public Tracker<AMPTracker>
+		class AMPTracker : public Tracker, public Observable<AMPTracker>
 		{
 		public:
-			BERTINI_DEFAULT_VISITABLE();
+			BERTINI_DEFAULT_VISITABLE()
 			
 
 			enum UpsampleRefinementOption
@@ -716,6 +716,7 @@ namespace bertini{
 			template <typename ComplexType, typename RealType>
 			SuccessCode StepSuccess() const
 			{
+				NotifyObservers(SuccessfulStep<AMPTracker>(*this));
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "\nStepSuccess()";
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "current precision: " << current_precision_;
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "current stepsize: " << current_stepsize_;
@@ -1587,6 +1588,20 @@ namespace bertini{
  
 
 			config::AdaptiveMultiplePrecisionConfig AMP_config_; ///< The Adaptive Multiple Precision settings.
+
+		public:
+			// function offered for observers.
+
+			template<typename T>
+			Vec<T> CurrentPoint() const
+			{
+				return std::get<Vec<T> >(current_space_);
+			}
+
+			unsigned CurrentPrecision() const
+			{
+				return current_precision_;
+			}
 		}; // re: class Tracker
 
 

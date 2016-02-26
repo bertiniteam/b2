@@ -38,35 +38,77 @@ namespace bertini {
 
 	namespace tracking{
 
-		// class TrackingObserver :
-		// 	public Observer<TrackingObserver, Tracker>
-		// {
-
-		// };
-
-		// public VisitorBase,
-		class PathAccumulator : public Observer<Tracker<AMPTracker> >
+		template<class ObservedT>
+		class PrecisionAccumulator : public Observer<ObservedT>
 		{
 			virtual void Update(EventBase const& e) override
 			{
-				const TrackingEvent<Tracker<AMPTracker> >* p = dynamic_cast<const TrackingEvent<Tracker<AMPTracker> >*>(&e);
+				const TrackingEvent<ObservedT>* p = dynamic_cast<const TrackingEvent<ObservedT>*>(&e);
 				if (p)
 				{
-					std::cout << "asdf\n";
 					Visit(p->Get());
 				}
 				else
 				{
-					std::cout << "failed conversion to SuccessfulStep...\n";
+					std::cout << "failed conversion to known event type...\n";
 				}
 			}
 
 
-			virtual void Visit(Tracker<AMPTracker> const& t) override
+			virtual void Visit(ObservedT const& t) override
 			{
-				std::cout << "visiting tracker\n";
+				precisions_.push_back(t.CurrentPrecision());
 			}
+
+		public:
+			const std::vector<unsigned>& Precisions() const
+			{
+				return precisions_;
+			}
+
+		private:
+			std::vector<unsigned> precisions_;
 		};
 
+		template<class ObservedT, template<class> class EventT = SuccessfulStep>
+		class PathAccumulator : public Observer<ObservedT>
+		{
+			virtual void Update(EventBase const& e) override
+			{
+				const EventT<ObservedT>* p = dynamic_cast<const EventT<ObservedT>*>(&e);
+				if (p)
+				{
+					Visit(p->Get());
+				}
+				else
+				{
+					std::cout << "failed conversion to known event type...\n";
+				}
+			}
+
+
+			virtual void Visit(ObservedT const& t) override
+			{
+				if (t.CurrentPrecision()==DoublePrecision())
+				{
+					Vec<mpfr> temp(t.NumVariables());
+					for (unsigned ii=0; ii<t.NumVariables(); ++ii)
+						temp(ii) = mpfr(t.template CurrentPoint<dbl>()(ii));
+					
+					path_.push_back(temp);
+				}
+				else
+					path_.push_back(t.template CurrentPoint<mpfr>());
+			}
+
+		public:
+			const std::vector<Vec<mpfr> >& Path() const
+			{
+				return path_;
+			}
+
+		private:
+			std::vector<Vec<mpfr> > path_;
+		};
 	}
 }// re: namespace bertini
