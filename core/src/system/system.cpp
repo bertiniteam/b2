@@ -49,7 +49,6 @@ namespace bertini
 		swap(a.have_path_variable_,b.have_path_variable_);
 		swap(a.path_variable_,b.path_variable_);
 
-		swap(a.ordering_,b.ordering_);
 		swap(a.have_ordering_,b.have_ordering_);
 		swap(a.variable_ordering_,b.variable_ordering_);
 
@@ -69,7 +68,7 @@ namespace bertini
 	}
 
 	// the copy constructor
-	System::System(System const& other)
+	System::System(System const& other) : System()
 	{
 		ungrouped_variables_ = other.ungrouped_variables_;
 		variable_groups_  = other.variable_groups_;
@@ -92,7 +91,6 @@ namespace bertini
 
 		variable_ordering_ = other.variable_ordering_;
 		have_ordering_ =  other.have_ordering_;
-		ordering_ = ordering_;
 
 		precision_ = other.precision_;
 
@@ -608,7 +606,7 @@ namespace bertini
 	//
 	///////////////////
 
-	VariableGroup System::FIFOVariableOrdering() const
+	VariableGroup System::VariableOrdering() const
 	{
 		bool have_homvars = NumHomVariables()>0;
 		if (have_homvars && NumHomVariables() != NumVariableGroups())
@@ -661,68 +659,13 @@ namespace bertini
 		return constructed_ordering;	
 	}
 
-	VariableGroup System::AffHomUngVariableOrdering() const
-	{
-		bool have_homvars = NumHomVariables()>0;
-
-		if (have_homvars && NumHomVariables() != NumVariableGroups())
-			throw std::runtime_error("mismatch between number of homogenizing variables, and number of affine variables groups.  unable to form variable vector in FIFO ordering.  you probably need to homogenize the system.");
-
-		VariableGroup constructed_ordering;
-
-		for (auto var_group=variable_groups_.begin(); var_group!=variable_groups_.end(); var_group++)
-		{
-			if (have_homvars)
-				constructed_ordering.push_back(*(homogenizing_variables_.begin()+ (var_group-variable_groups_.begin())));
-			constructed_ordering.insert(constructed_ordering.end(),var_group->begin(),var_group->end());
-		}
-
-		for (auto var_group=hom_variable_groups_.begin(); var_group!=hom_variable_groups_.end(); var_group++)
-			constructed_ordering.insert(constructed_ordering.end(),var_group->begin(),var_group->end());
-
-		constructed_ordering.insert(constructed_ordering.end(),ungrouped_variables_.begin(),ungrouped_variables_.end());
-
-		#ifndef BERTINI_DISABLE_ASSERTS
-		assert(constructed_ordering.size()==NumVariables() && "resulting constructed ordering has differing size from the number of variables in the problem.");
-		#endif
-
-	    return constructed_ordering;
-	}
 
 	
-	void System::SetFIFOVariableOrdering()
-	{
-		ordering_ = OrderingChoice::FIFO;
-		is_patched_ = false;
-	}
-
-	void System::SetAffHomUngVariableOrdering()
-	{
-		ordering_ = OrderingChoice::AffHomUng;
-		is_patched_ = false;
-	}
 
 	//private
 	void System::ConstructOrdering() const
 	{
-		switch (ordering_)
-		{
-			case OrderingChoice::AffHomUng:
-			{
-				variable_ordering_ = AffHomUngVariableOrdering();
-				break;
-			}
-			case OrderingChoice::FIFO:
-			{
-				variable_ordering_ = FIFOVariableOrdering();
-				break;
-			}
-			default:
-			{
-				throw std::runtime_error("invalid ordering choice");
-				break;
-			}
-		}
+		variable_ordering_ = VariableOrdering();
 		have_ordering_ = true;
 	}
 
@@ -754,9 +697,6 @@ namespace bertini
 
 		variable_ordering_ = other.variable_ordering_; 
 		have_ordering_ = other.have_ordering_;
-		ordering_ = other.ordering_;
-
-		
 	}
 
 
@@ -780,20 +720,6 @@ namespace bertini
 	}
 
 
-	std::vector<unsigned> System::VariableGroupSizesAffHomUng() const
-	{
-		std::vector<unsigned> s;
-
-		for (auto a : variable_groups_)
-			s.push_back(a.size()+1);
-
-		for (auto h : hom_variable_groups_)
-			s.push_back(h.size());
-
-		return s;
-	}
-
-
 	/////////////////
 	//
 	// Patching functions
@@ -812,16 +738,6 @@ namespace bertini
 		is_patched_ = true;
 	}
 
-
-	void System::AutoPatchAffHomUng()
-	{
-		if (!IsHomogeneous())
-			throw std::runtime_error("requesting to AutoPatch a system which is not homogenized.  Homogenize it first.");
-
-		patch_ = Patch(VariableGroupSizesAffHomUng());
-
-		is_patched_ = true;
-	}
 
 
 	void System::CopyPatches(System const& other)
@@ -1117,7 +1033,7 @@ namespace bertini
 		return *this;
 	}
 
-	System operator+(System lhs, System const& rhs)
+	const System operator+(System lhs, System const& rhs)
 	{
 		return lhs+=rhs;
 	}
@@ -1133,13 +1049,13 @@ namespace bertini
 	}
 
 
-	System operator*(System s, std::shared_ptr<node::Node> const&  N)
+	const System operator*(System s, std::shared_ptr<node::Node> const&  N)
 	{
 		return s*=N;
 	}
 
 
-	System operator*(std::shared_ptr<node::Node> const&  N, System const& s)
+	const System operator*(std::shared_ptr<node::Node> const&  N, System const& s)
 	{
 		return s*N;
 	}
