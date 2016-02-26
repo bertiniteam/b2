@@ -70,6 +70,10 @@ namespace bertini {
 			std::vector<unsigned> precisions_;
 		};
 
+		/**
+		Example usage:
+		PathAccumulator<AMPTracker> path_accumulator;
+		*/
 		template<class ObservedT, template<class> class EventT = SuccessfulStep>
 		class PathAccumulator : public Observer<ObservedT>
 		{

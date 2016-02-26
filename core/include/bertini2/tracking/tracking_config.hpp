@@ -320,6 +320,7 @@ namespace bertini
 			\see AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom
 			*/
 			inline
+			static
 			AdaptiveMultiplePrecisionConfig AMPConfigFrom(System const& sys) 
 			{
 				AdaptiveMultiplePrecisionConfig AMP;				

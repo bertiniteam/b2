@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.0.
 //
-//path_accumulation.cpp is free software: you can redistribute it and/or modify
+//test/tracking_basics/path_observers.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//path_accumulation.cpp is distributed in the hope that it will be useful,
+//test/tracking_basics/path_observers.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with path_accumulation.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with test/tracking_basics/path_observers.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 
 //  Daniel Brake
@@ -19,14 +19,14 @@
 //  ACMS
 //  Spring 2016
 
-//path_accumulation.cpp
+//test/tracking_basics/path_observers.cpp
 //
 
 
 #include <boost/test/unit_test.hpp>
 
-#include "tracking/amp_tracker.hpp"
-#include "tracking/observers.hpp"
+#include "bertini2/tracking/amp_tracker.hpp"
+#include "bertini2/tracking/observers.hpp"
 
 
 
