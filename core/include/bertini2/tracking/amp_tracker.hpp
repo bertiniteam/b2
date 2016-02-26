@@ -296,7 +296,7 @@ namespace bertini{
 		* Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
 
 		*/
-		class AMPTracker : public Tracker
+		class AMPTracker : public Tracker<AMPTracker>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE();

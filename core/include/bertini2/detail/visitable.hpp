@@ -31,6 +31,7 @@
 #pragma once
 
 #include "detail/visitor.hpp"
+#include "detail/events.hpp"
 
 namespace bertini{
 	/**
@@ -66,25 +67,44 @@ namespace bertini{
 		{ return AcceptBase(*this, guest); }
 
 
-	template< typename RetT = void, template<class,class> class CatchAll = DefaultCatchAll>
+	template<class SelfT, typename RetT = void, template<class,class> class CatchAll = DefaultCatchAll>
 	class Observable : public VisitableBase<RetT, CatchAll>
 	{	
 	public:
 		typedef RetT ReturnType;
+		using ST = SelfT;
+		using bla = Observer<ST, RetT>;
+	
+		
 		virtual ~Observable() = default;
 
-		typedef Observer<Observable,RetT> ObsT;
 
-		void AddObserver(ObsT& new_observer)
+
+		void AddObserver(bla* new_observer)
 		{
+			std::cout << "added observer\n";
 			current_watchers_.push_back(new_observer);
 		}
 
-	private:
-		template<class ObservedT>
-		using ObserverContainer = std::vector<Observer<ObservedT, ReturnType>*>;
+	protected:
 
-		ObserverContainer<Observable> current_watchers_;
+
+		void NotifyObservers(EventBase const& e) const
+		{
+
+			for (auto& obs : current_watchers_)
+			{
+				std::cout << "notifying an observer\n";
+				obs->Update(e);
+			}
+		}
+
+
+	private:
+
+		using ObserverContainer = std::vector<Observer<ST, RetT>*>;
+
+		ObserverContainer current_watchers_;
 	};
 
 } // namespace bertini

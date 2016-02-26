@@ -38,6 +38,7 @@
 #include "limbo.hpp"
 #include "logging.hpp"
 #include "detail/visitable.hpp"
+#include "bertini2/tracking/events.hpp"
 
 namespace bertini{
 
@@ -124,7 +125,8 @@ namespace bertini{
 
 
 		*/
-		class Tracker : public Observable<>
+		template<class TrackerT>
+		class Tracker : public Observable<Tracker<TrackerT> >
 		{
 
 		public:
@@ -223,6 +225,7 @@ namespace bertini{
 					}
 					else if (step_success_code_==SuccessCode::Success)
 					{	
+						this->NotifyObservers(SuccessfulStep<Tracker<TrackerT> >(*this));
 						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful";
 						IncrementCountersSuccess();
 					}

@@ -28,6 +28,9 @@
 \brief Contains the visitor base types
 */
 
+#pragma once
+#include "bertini2/detail/events.hpp"
+
 namespace bertini{
 
 	/**
@@ -50,7 +53,7 @@ namespace bertini{
 	{
 	public:
 		typedef RetT ReturnType;
-		virtual ReturnType Visit(VisitedT&) = 0;
+		virtual ReturnType Visit(VisitedT const &) = 0;
 		virtual ~Visitor() = default;
 	};
 
@@ -83,6 +86,8 @@ namespace bertini{
 	{
 	public:
 		virtual ~Observer() = default;
+
+		virtual void Update(EventBase const& e) = 0;
 	};
 
 
