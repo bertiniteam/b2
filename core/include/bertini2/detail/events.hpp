@@ -29,7 +29,8 @@
 */
 
 
-#pragma once
+#ifndef BERTINI_DETAIL_EVENTS_HPP
+#define BERTINI_DETAIL_EVENTS_HPP
 
 namespace bertini {
 
@@ -60,4 +61,4 @@ namespace bertini {
 	};
 } //re: namespace bertini
 
-
+#endif

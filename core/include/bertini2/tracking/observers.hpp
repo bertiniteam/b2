@@ -41,7 +41,7 @@ namespace bertini {
 		template<class ObservedT>
 		class PrecisionAccumulator : public Observer<ObservedT>
 		{
-			virtual void Update(EventBase const& e) override
+			virtual void Observe(EventBase const& e) override
 			{
 				const TrackingEvent<ObservedT>* p = dynamic_cast<const TrackingEvent<ObservedT>*>(&e);
 				if (p)
@@ -77,7 +77,7 @@ namespace bertini {
 		template<class ObservedT, template<class> class EventT = SuccessfulStep>
 		class PathAccumulator : public Observer<ObservedT>
 		{
-			virtual void Update(EventBase const& e) override
+			virtual void Observe(EventBase const& e) override
 			{
 				const EventT<ObservedT>* p = dynamic_cast<const EventT<ObservedT>*>(&e);
 				if (p)

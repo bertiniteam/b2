@@ -28,7 +28,9 @@
 \brief Contains the visitor base types
 */
 
-#pragma once
+#ifndef BERTINI_DETAIL_VISITOR_HPP
+#define BERTINI_DETAIL_VISITOR_HPP
+
 #include "bertini2/detail/events.hpp"
 
 namespace bertini{
@@ -57,37 +59,22 @@ namespace bertini{
 		virtual ~Visitor() = default;
 	};
 
-
-
-	/**
-	Defines the default behaviour when an unknown visitor is encountered during visitation.  
-
-	Assumes the return type is default constructible.
-	*/
-	template<class VisitedT, typename RetT>
-	struct DefaultConstructCatchAll
-	{
-		static RetT OnUnknownVisitor(VisitedT&, VisitorBase&)
-		{
-			return RetT();
-		}
-	};
-
-	template<class VisitedT, typename RetT>
-	using DefaultCatchAll = DefaultConstructCatchAll<VisitedT, RetT>;
-
-
 	
 
-
+	class AnyObserver
+	{
+	public:
+		virtual ~AnyObserver() = default;
+		virtual void Observe(EventBase const& e) = 0;
+	};
 
 	template<class ObservedT, typename RetT = void>
-	class Observer : Visitor<ObservedT, RetT>
+	class Observer : public Visitor<ObservedT, RetT>, public AnyObserver
 	{
 	public:
 		virtual ~Observer() = default;
 
-		virtual void Update(EventBase const& e) = 0;
+		
 	};
 
 
@@ -95,3 +82,5 @@ namespace bertini{
 
 
 }
+
+#endif

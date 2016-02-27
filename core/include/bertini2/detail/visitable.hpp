@@ -28,12 +28,33 @@
 \brief Contains the visitable base types
 */
 
-#pragma once
+#ifndef BERTINI_DETAIL_VISITABLE_HPP
+#define BERTINI_DETAIL_VISITABLE_HPP
 
 #include "detail/visitor.hpp"
 #include "detail/events.hpp"
 
 namespace bertini{
+
+
+	/**
+	Defines the default behaviour when an unknown visitor is encountered during visitation.  
+
+	Assumes the return type is default constructible.
+	*/
+	template<class VisitedT, typename RetT>
+	struct DefaultConstruct
+	{
+		static RetT OnUnknownVisitor(VisitedT&, VisitorBase&)
+		{
+			return RetT();
+		}
+	};
+
+	template<class VisitedT, typename RetT>
+	using DefaultCatchAll = DefaultConstruct<VisitedT, RetT>;
+
+
 	/**
 	The base class for visitable types.  
 
@@ -71,16 +92,12 @@ namespace bertini{
 	class Observable : public VisitableBase<RetT, CatchAll>
 	{	
 	public:
-		typedef RetT ReturnType;
-		using ST = SelfT;
-		using bla = Observer<ST, RetT>;
-	
-		
+
 		virtual ~Observable() = default;
 
 
 
-		void AddObserver(bla* new_observer)
+		void AddObserver(AnyObserver* new_observer)
 		{
 			std::cout << "added observer\n";
 			current_watchers_.push_back(new_observer);
@@ -93,16 +110,20 @@ namespace bertini{
 		{
 
 			for (auto& obs : current_watchers_)
-				obs->Update(e);
+				obs->Observe(e);
 
 		}
 
 
 	private:
 
-		using ObserverContainer = std::vector<Observer<ST, RetT>*>;
+		using ObserverContainer = std::vector<AnyObserver*>;
 
 		ObserverContainer current_watchers_;
 	};
 
 } // namespace bertini
+
+
+#endif
+
