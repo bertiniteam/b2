@@ -71,10 +71,7 @@ namespace bertini {
 	 Other System types are derived from this, but this class is not abstract.
 	 */
 	class System{
-		
-	private:
-		enum class OrderingChoice{FIFO, AffHomUng};
-
+	
 	public:
 		// a few local using statements to reduce typing etc.
 		using Fn = std::shared_ptr<node::Function>;
@@ -85,7 +82,7 @@ namespace bertini {
 		/**
 		\brief The default constructor for a system.
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), ordering_(OrderingChoice::FIFO), precision_(mpfr_float::default_precision()), is_patched_(false)
+		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(mpfr_float::default_precision()), is_patched_(false)
 		{}
 
 		/** 
@@ -691,31 +688,6 @@ namespace bertini {
 
 
 
-
-
-		/**
-		/brief Query the current variable ordering.
-		*/
-		OrderingChoice Ordering() const
-		{
-			return ordering_;
-		}
-
-		/**
-		 Order the variables in the problem, 1 affine, 2 homogeneous, 3 ungrouped.
-
-		 This function returns the variables in standard ordering.
-
-		 1) variable groups first, lead by their respective homogenizing variable, if defined.
-		 2) hom_variable_groups second.
-		 3) ungrouped variables
-
-		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
-        */
-        VariableGroup AffHomUngVariableOrdering() const;
-
-
-
         /**
 		 Order the variables, by the order in which the groups were added.
 
@@ -725,33 +697,11 @@ namespace bertini {
 
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
         */
-        VariableGroup FIFOVariableOrdering() const;
+        VariableGroup VariableOrdering() const;
 
 
         /**
-		\brief Choose to use a canonical ordering for variables.  
-
-		The system must be homogenized correctly for this to succeed.  Otherwise the underlying call to FIFOVariableOrdering may throw.
-
-		\see AffHomUngariableOrdering
-        */
-        void SetAffHomUngVariableOrdering();
-
-
-        /**
-		\brief Choose to use order-of-addition ordering for variables.  
-
-		The system must be homogenized correctly for this to succeed.  Otherwise the underlying call to FIFOVariableOrdering may throw.
-
-		\see FIFOVariableOrdering
-        */
-        void SetFIFOVariableOrdering();
-
-        /**
-		 Get the variables in the problem; they must have already been ordered.
-
-		 \see SetAffHomUngVariableOrdering
-		 \see SetFIFOVariableOrdering
+		 Get the variables in the problem.
 		*/
 		VariableGroup Variables() const;
 
@@ -769,10 +719,7 @@ namespace bertini {
 		*/
 		std::vector<unsigned> VariableGroupSizes() const
 		{
-			if (Ordering()==OrderingChoice::FIFO)
-				return VariableGroupSizesFIFO();
-			else
-				return VariableGroupSizesAffHomUng();
+			return VariableGroupSizesFIFO();
 		}
 
         /**
@@ -792,26 +739,7 @@ namespace bertini {
 	        	if (!have_ordering_)
 	    			ConstructOrdering();
 
-
-
-	    		switch (Ordering())
-	    		{
-	    			case OrderingChoice::AffHomUng:
-	    			{
-	    				return DehomogenizePointAffHomUngOrdering(x);
-	    				break;
-	    			}
-	    			case OrderingChoice::FIFO:
-	    			{
-	    				return DehomogenizePointFIFOOrdering(x);
-	    				break;
-	    			}
-	    			default: //ordering_==OrderingChoice::???
-	    			{
-	    				throw std::runtime_error("invalid ordering choice");
-	    				break;
-	    			}
-	    		}
+	    		return DehomogenizePointFIFO(x);
 	        }
 
 
@@ -904,10 +832,7 @@ namespace bertini {
 		*/
 		void AutoPatch()
 		{
-			if (Ordering()==OrderingChoice::FIFO)
-				AutoPatchFIFO();
-			else if (Ordering()==OrderingChoice::AffHomUng)
-				AutoPatchAffHomUng();
+			AutoPatchFIFO();
 		}
 
 		/**
@@ -977,7 +902,7 @@ namespace bertini {
 
 		\see The += operator for System also.
 		*/
-		friend System operator+(System lhs, System const& rhs);
+		friend const System operator+(System lhs, System const& rhs);
 
 		/**
 		\brief Multiply a system by an arbitrary node.  
@@ -991,14 +916,14 @@ namespace bertini {
 
 		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		friend System operator*(System s, Nd const&  N);
+		friend const System operator*(System s, Nd const&  N);
 
 		/**
 		\brief Multiply a system by an arbitrary node.  
 
 		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		friend System operator*(Nd const&  N, System const& s);
+		friend const System operator*(Nd const&  N, System const& s);
 	private:
 
 		/**
@@ -1006,23 +931,12 @@ namespace bertini {
 		*/
 		std::vector<unsigned> VariableGroupSizesFIFO() const;
 
-		/**
-		\brief Get the sizes according to the Affine-Homogeneous-Ungrouped ordering.
-		*/
-		std::vector<unsigned> VariableGroupSizesAffHomUng() const;
-
-	
 
 		/**
 		\brief Set up patches automatically for a system using the FIFO ordering.
 		*/
 		void AutoPatchFIFO();
 
-
-		/**
-		\brief Set up patches automatically for a system using the Affine-Homogeneous-Ungrouped ordering.
-		*/
-		void AutoPatchAffHomUng();
 
 
 		/**
@@ -1033,10 +947,9 @@ namespace bertini {
 		\see FIFOVariableOrdering
 		*/
 		template<typename T>
-	    Vec<T> DehomogenizePointFIFOOrdering(Vec<T> const& x) const
+	    Vec<T> DehomogenizePointFIFO(Vec<T> const& x) const
         {
         	#ifndef BERTINI_DISABLE_ASSERTS
-        	assert(ordering_==OrderingChoice::FIFO && "calling FIFO dehomogenize, but system is set to use a different ordering.");
         	assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
         	#endif
 
@@ -1091,44 +1004,6 @@ namespace bertini {
     		return x_dehomogenized;
         }
 
-
-
-	    /**
-		\brief Dehomogenize a point according to the AffHomUng variable ordering.
-		
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
-
-		\see AffHomUngVariableOrdering
-		*/
-	    template<typename T>
-	    Vec<T> DehomogenizePointAffHomUngOrdering(Vec<T> const& x) const
-        {
-        	#ifndef BERTINI_DISABLE_ASSERTS
-        	assert(ordering_==OrderingChoice::AffHomUng && "calling Dehomogenize using Affine-Homogeneous-Ungrouped ordering, but system is in FIFO mode.");
-        	#endif
-
-        	Vec<T> x_dehomogenized(NumNaturalVariables());
-
-        	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
-        	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
-
-        	for (auto iter=variable_groups_.begin(); iter!=variable_groups_.end(); iter++)
-    		{
-    			auto h = x(hom_index++);
-    			for (unsigned ii = 0; ii < iter->size(); ++ii)
-    				x_dehomogenized(dehom_index++) = x(hom_index++) / h;
-    		}
-
-    		for (auto iter=hom_variable_groups_.begin(); iter!=hom_variable_groups_.end(); iter++)
-    			for (unsigned ii = 0; ii < iter->size(); ++ii)
-    				x_dehomogenized(dehom_index++) = x(hom_index++);
-    		
-    		for (unsigned ii = 0; ii < ungrouped_variables_.size(); ++ii)
-    			x_dehomogenized(dehom_index++) = x(hom_index++);
-
-    		return x_dehomogenized;
-        }
-
 	    /**
 		 Puts together the ordering of variables, and stores it internally.
 	    */
@@ -1165,7 +1040,6 @@ namespace bertini {
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
 		mutable bool have_ordering_;
-		OrderingChoice ordering_;
 
 		mutable unsigned precision_; ///< the current working precision of the system 
 
@@ -1185,9 +1059,8 @@ namespace bertini {
 			ar & have_path_variable_;
 			ar & path_variable_;			
 
-			ar & ordering_;
-			ar & have_ordering_;
 			ar & variable_ordering_;
+			ar & have_ordering_;
 
 			ar & implicit_parameters_;
 			ar & explicit_parameters_;
