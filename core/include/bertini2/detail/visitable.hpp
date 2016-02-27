@@ -88,7 +88,7 @@ namespace bertini{
 		{ return AcceptBase(*this, guest); }
 
 
-	template<class SelfT, typename RetT = void, template<class,class> class CatchAll = DefaultCatchAll>
+	template<typename RetT = void, template<class,class> class CatchAll = DefaultCatchAll>
 	class Observable : public VisitableBase<RetT, CatchAll>
 	{	
 	public:
@@ -106,7 +106,7 @@ namespace bertini{
 	protected:
 
 
-		void NotifyObservers(EventBase const& e) const
+		void NotifyObservers(AnyEvent const& e) const
 		{
 
 			for (auto& obs : current_watchers_)

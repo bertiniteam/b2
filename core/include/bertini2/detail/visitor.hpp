@@ -65,7 +65,7 @@ namespace bertini{
 	{
 	public:
 		virtual ~AnyObserver() = default;
-		virtual void Observe(EventBase const& e) = 0;
+		virtual void Observe(AnyEvent const& e) = 0;
 	};
 
 	template<class ObservedT, typename RetT = void>

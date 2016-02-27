@@ -36,55 +36,13 @@ namespace bertini {
 	namespace tracking{
 
 
-	template<class ObservedT>
-	class TrackingEvent : public Event<ObservedT>
-	{
-	public:
-		
-		TrackingEvent(const ObservedT & obs) : Event<ObservedT>(obs)
-		{}
+	
 
-		virtual ~TrackingEvent() = default;
+	ADD_BERTINI_EVENT_TYPE(TrackingEvent,Event)
 
-		TrackingEvent() = delete;
-	private:
-		
-	};
+	ADD_BERTINI_EVENT_TYPE(SuccessfulStep,TrackingEvent)
 
-	#define BERTINI_EVENT_TYPE(event_name,event_subtype) \
-	template<class ObservedT> \
-	class event_name : public event_subtype<ObservedT> \
-	{ \
-	public: \
-		event_name(const ObservedT & obs) : event_subtype<ObservedT>(obs){} \
-		virtual ~event_name() = default; \
-		event_name() = delete; \
-	};
-
-	BERTINI_EVENT_TYPE(HigherPrecisionNecessary,TrackingEvent)
-
-
-	template<class ObservedT>
-	class SuccessfulStep : public TrackingEvent<ObservedT>
-	{
-	public:
-		SuccessfulStep(const ObservedT & obs) : TrackingEvent<ObservedT>(obs)
-		{}
-
-		virtual ~SuccessfulStep() = default;
-		SuccessfulStep() = delete;
-	};
-
-	template<class ObservedT>
-	class FailedStep : public TrackingEvent<ObservedT>
-	{
-	public:
-		FailedStep(const ObservedT & obs) : TrackingEvent<ObservedT>(obs)
-		{}
-
-		virtual ~FailedStep() = default;
-		FailedStep() = delete;
-	};
+	ADD_BERTINI_EVENT_TYPE(FailedStep,TrackingEvent)
 
 
 
@@ -93,103 +51,33 @@ namespace bertini {
 	//
 	//  Precision events
 
-	template<class ObservedT>
-	class PrecisionChanged : public TrackingEvent<ObservedT>
-	{
-	public:
-		PrecisionChanged(const ObservedT & obs) : TrackingEvent<ObservedT>(obs)
-		{}
+	ADD_BERTINI_EVENT_TYPE(PrecisionEvent,TrackingEvent)
 
-		virtual ~PrecisionChanged() = default;
-		PrecisionChanged() = delete;
-	};
+	ADD_BERTINI_EVENT_TYPE(PrecisionIncreased,PrecisionEvent)
 
-	template<class ObservedT>
-	class PrecisionIncreased : public PrecisionChanged<ObservedT>
-	{
-	public:
-		PrecisionIncreased(const ObservedT & obs) : PrecisionChanged<ObservedT>(obs)
-		{}
+	ADD_BERTINI_EVENT_TYPE(PrecisionDecreased,PrecisionEvent)
 
-		virtual ~PrecisionIncreased() = default;
-		PrecisionIncreased() = delete;
-	};
-
-	template<class ObservedT>
-	class PrecisionDecreased : public PrecisionChanged<ObservedT>
-	{
-	public:
-		PrecisionDecreased(const ObservedT & obs) : PrecisionChanged<ObservedT>(obs)
-		{}
-
-		virtual ~PrecisionDecreased() = default;
-		PrecisionDecreased() = delete;
-	};
-
+	ADD_BERTINI_EVENT_TYPE(HigherPrecisionNecessary,PrecisionEvent)
 
 	////////////
 	//
 	//  Stepsize events
 
-	template<class ObservedT>
-	class StepsizeChanged : public TrackingEvent<ObservedT>
-	{
-	public:
-		StepsizeChanged(const ObservedT & obs) : TrackingEvent<ObservedT>(obs)
-		{}
+	ADD_BERTINI_EVENT_TYPE(StepsizeEvent,TrackingEvent)
 
-		virtual ~StepsizeChanged() = default;
-		StepsizeChanged() = delete;
-	};
+	ADD_BERTINI_EVENT_TYPE(StepsizeDecreased,StepsizeEvent)
 
-	template<class ObservedT>
-	class StepsizeIncreased : public StepsizeChanged<ObservedT>
-	{
-	public:
-		StepsizeIncreased(const ObservedT & obs) : StepsizeChanged<ObservedT>(obs)
-		{}
-
-		virtual ~StepsizeIncreased() = default;
-		StepsizeIncreased() = delete;
-	};
-
-	template<class ObservedT>
-	class StepsizeDecreased : public StepsizeChanged<ObservedT>
-	{
-	public:
-		StepsizeDecreased(const ObservedT & obs) : StepsizeChanged<ObservedT>(obs)
-		{}
-
-		virtual ~StepsizeDecreased() = default;
-		StepsizeDecreased() = delete;
-	};
+	ADD_BERTINI_EVENT_TYPE(StepsizeIncreased,StepsizeEvent)
 
 
 	///////////
 	//
 	//  beginning and end events
 
-	template<class ObservedT>
-	class TrackingStarted : public TrackingEvent<ObservedT>
-	{
-	public:
-		TrackingStarted(const ObservedT & obs) : TrackingEvent<ObservedT>(obs)
-		{}
+	ADD_BERTINI_EVENT_TYPE(TrackingStarted,TrackingEvent)
 
-		virtual ~TrackingStarted() = default;
-		TrackingStarted() = delete;
-	};
+	ADD_BERTINI_EVENT_TYPE(TrackingEnded, TrackingEvent)
 
-	template<class ObservedT>
-	class TrackingFinished : public TrackingEvent<ObservedT>
-	{
-	public:
-		TrackingFinished(const ObservedT & obs) : TrackingEvent<ObservedT>(obs)
-		{}
-
-		virtual ~TrackingFinished() = default;
-		TrackingFinished() = delete;
-	};
 }// re: namespace tracking
 }// re: namespace bertini
 

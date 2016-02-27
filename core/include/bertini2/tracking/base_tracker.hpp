@@ -125,7 +125,7 @@ namespace bertini{
 
 
 		*/
-		class Tracker
+		class Tracker : public Observable<>
 		{
 
 		public:

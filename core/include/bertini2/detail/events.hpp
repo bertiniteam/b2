@@ -35,14 +35,14 @@
 namespace bertini {
 
 
-	class EventBase
+	class AnyEvent
 	{
 	public:
-		virtual ~EventBase() = default;
+		virtual ~AnyEvent() = default;
 	};
 
 	template<class ObsT>
-	class Event : public EventBase
+	class Event : public AnyEvent
 	{
 	public:
 		Event(ObsT const& obs) : current_observable_(obs)
@@ -58,6 +58,17 @@ namespace bertini {
 		const ObsT& current_observable_;
 
 		
+	};
+
+
+	#define ADD_BERTINI_EVENT_TYPE(event_name,event_subtype) \
+	template<class ObservedT> \
+	class event_name : public event_subtype<ObservedT> \
+	{ \
+	public: \
+		event_name(const ObservedT & obs) : event_subtype<ObservedT>(obs){} \
+		virtual ~event_name() = default; \
+		event_name() = delete; \
 	};
 } //re: namespace bertini
 
