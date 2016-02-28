@@ -57,7 +57,8 @@ namespace bertini
 			MaxPrecisionReached,
 			MinStepSizeReached,
 			Failure,
-			SingularStartPoint
+			SingularStartPoint,
+			ExternallyTerminated
 		};
 
 		
