@@ -48,10 +48,6 @@ namespace bertini {
 				{
 					Visit(p->Get());
 				}
-				else
-				{
-					std::cout << "failed conversion to known event type...\n";
-				}
 			}
 
 
@@ -75,7 +71,7 @@ namespace bertini {
 		PathAccumulator<AMPTracker> path_accumulator;
 		*/
 		template<class ObservedT, template<class> class EventT = SuccessfulStep>
-		class PathAccumulator : public Observer<ObservedT>
+		class AMPPathAccumulator : public Observer<ObservedT>
 		{
 			virtual void Observe(AnyEvent const& e) override
 			{
@@ -83,10 +79,6 @@ namespace bertini {
 				if (p)
 				{
 					Visit(p->Get());
-				}
-				else
-				{
-					std::cout << "failed conversion to known event type...\n";
 				}
 			}
 

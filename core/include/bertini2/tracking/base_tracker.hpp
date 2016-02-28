@@ -187,12 +187,10 @@ namespace bertini{
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
 				
-				TrackerLoopInitialization(start_time, endtime, start_point);
 				
-
-				SuccessCode initial_refinement_code = InitialRefinement();
-				if (initial_refinement_code!=SuccessCode::Success)
-					return initial_refinement_code;
+				SuccessCode initialization_code = TrackerLoopInitialization(start_time, endtime, start_point);;
+				if (initialization_code!=SuccessCode::Success)
+					return initialization_code;
 
 
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "starting while loop";
@@ -219,16 +217,19 @@ namespace bertini{
 					if (infinite_path_truncation_ && (CheckGoingToInfinity()==SuccessCode::GoingToInfinity))
 					{	
 						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration indicated going to infinity";
+						NotifyObservers(InfinitePathTruncation<Tracker>(*this));
 						PostTrackCleanup();
 						return SuccessCode::GoingToInfinity;
 					}
 					else if (step_success_code_==SuccessCode::Success)
 					{	
+						NotifyObservers(SuccessfulStep<Tracker>(*this));
 						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful";
 						IncrementCountersSuccess();
 					}
 					else
 					{
+						NotifyObservers(FailedStep<Tracker>(*this));
 						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration unsuccessful";
 						IncrementCountersFail();
 					}
@@ -340,15 +341,9 @@ namespace bertini{
 			\param start_point The point from which to start tracking.
 			*/
 			virtual
-			void TrackerLoopInitialization(mpfr const& start_time, mpfr const& end_time, Vec<mpfr> const& start_point) const = 0;
+			SuccessCode TrackerLoopInitialization(mpfr const& start_time, mpfr const& end_time, Vec<mpfr> const& start_point) const = 0;
 
-			/**
-			\brief Ensure that any pre-checks on precision or accuracy of start point pass.
-
-			\return Anything but Success will terminate tracking.
-			*/
-			virtual 
-			SuccessCode InitialRefinement() const = 0;
+			
 
 			/**
 			\brief Check internal state for whether tracking should continue.  
@@ -448,7 +443,7 @@ namespace bertini{
 
 
 
-			const class System& tracked_system_; ///< The system being tracked.
+			const class System& tracked_system_; ///< Reference to the system being tracked.
 
 			bool infinite_path_truncation_ = true; /// Whether should check if the path is going to infinity while tracking.  On by default.
 			bool reinitialize_stepsize_ = true; ///< Whether should re-initialize the stepsize with each call to Trackpath.  On by default.

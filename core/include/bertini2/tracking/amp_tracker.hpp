@@ -397,7 +397,7 @@ namespace bertini{
 			\param end_time The time to which to track.
 			\param start_point The space values from which to start tracking.
 			*/
-			void TrackerLoopInitialization(mpfr const& start_time,
+			SuccessCode TrackerLoopInitialization(mpfr const& start_time,
 			                               mpfr const& end_time,
 										   Vec<mpfr> const& start_point) const override
 			{
@@ -409,6 +409,8 @@ namespace bertini{
 				         && "when tracking a path, either preservation of precision must be turned off (so precision can be higher at the end of tracking), or the initial precision must be high enough to support the resulting points to the desired tolerance"
 				         );
 				#endif
+
+				
 
 				// set up the master current time and the current step size
 				current_time_.precision(Precision(start_point(0)));
@@ -430,6 +432,12 @@ namespace bertini{
 				ChangePrecision<upsample_refine_off>(start_point(0).precision());
 
 				ResetCounters();
+
+				SuccessCode initial_refinement_code = InitialRefinement();
+				if (initial_refinement_code!=SuccessCode::Success)
+					return initial_refinement_code;
+				
+				return SuccessCode::Success;
 			}
 
 
@@ -448,7 +456,7 @@ namespace bertini{
 
 			\return Whether initial refinement was successful.  
 			*/
-			SuccessCode InitialRefinement() const override
+			SuccessCode InitialRefinement() const
 			{
 				SuccessCode initial_refinement_code = Refine();
 				if (initial_refinement_code!=SuccessCode::Success)

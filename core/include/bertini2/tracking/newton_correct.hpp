@@ -41,7 +41,6 @@ namespace bertini{
 	namespace tracking{
 		namespace correct{
 
-			using PrecisionType = config::PrecisionType;
 			
 
 			/**

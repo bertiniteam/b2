@@ -78,6 +78,8 @@ namespace bertini {
 
 	ADD_BERTINI_EVENT_TYPE(TrackingEnded, TrackingEvent)
 
+	ADD_BERTINI_EVENT_TYPE(InfinitePathTruncation, TrackingEvent)
+	
 }// re: namespace tracking
 }// re: namespace bertini
 
