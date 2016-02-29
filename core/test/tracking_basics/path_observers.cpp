@@ -165,22 +165,14 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 
 	SuccessCode tracking_success;
 
-	AMPPathAccumulator<AMPTracker> path_accumulator;
-	PrecisionAccumulator<AMPTracker> precision_accumulator;
+	GoryDetailLogger<AMPTracker> tons_of_detail;
 
-	tracker.AddObserver(&path_accumulator);
-	tracker.AddObserver(&precision_accumulator);
+	tracker.AddObserver(&tons_of_detail);
 
 	start_point << mpfr(1), mpfr(1);
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	for (auto iter : path_accumulator.Path())
-		std::cout << iter << "\n";
-
-	for (auto iter : precision_accumulator.Precisions())
-		std::cout << iter << " ";
-	
 }
 
 

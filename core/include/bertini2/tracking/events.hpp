@@ -44,8 +44,45 @@ namespace bertini {
 
 	ADD_BERTINI_EVENT_TYPE(FailedStep,TrackingEvent)
 
+	ADD_BERTINI_EVENT_TYPE(NewStep,TrackingEvent)
+
+	ADD_BERTINI_EVENT_TYPE(SingularStartPoint,TrackingEvent)
+
+	template<class ObservedT, typename NumT>
+	class SuccessfulPredict : public TrackingEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		SuccessfulPredict(const ObservedT & obs, 
+		             Vec<NumT> const& resulting_point) : TrackingEvent<ObservedT>(obs),
+													resulting_point_(resulting_point)
+		{}
 
 
+		virtual ~SuccessfulPredict() = default;
+		SuccessfulPredict() = delete;
+
+		const Vec<NumT>& ResultingPoint() const {return resulting_point_;}
+	private:
+		const Vec<NumT>& resulting_point_;
+	};
+
+	template<class ObservedT, typename NumT>
+	class SuccessfulCorrect : public TrackingEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		SuccessfulCorrect(const ObservedT & obs, 
+		             Vec<NumT> const& resulting_point) : TrackingEvent<ObservedT>(obs),
+													resulting_point_(resulting_point)
+		{}
+
+
+		virtual ~SuccessfulCorrect() = default;
+		SuccessfulCorrect() = delete;
+		
+		const Vec<NumT>& ResultingPoint() const {return resulting_point_;}
+	private:
+		const Vec<NumT>& resulting_point_;
+	};
 
 	////////////
 	//
@@ -53,12 +90,57 @@ namespace bertini {
 
 	ADD_BERTINI_EVENT_TYPE(PrecisionEvent,TrackingEvent)
 
-	ADD_BERTINI_EVENT_TYPE(PrecisionIncreased,PrecisionEvent)
+	template<class ObservedT>
+	class PrecisionChanged : public PrecisionEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		PrecisionChanged(const ObservedT & obs, 
+		             unsigned previous, unsigned next) : PrecisionEvent<ObservedT>(obs),
+													prev_(previous),
+													next_(next)
+		{}
 
-	ADD_BERTINI_EVENT_TYPE(PrecisionDecreased,PrecisionEvent)
+
+		virtual ~PrecisionChanged() = default;
+		PrecisionChanged() = delete;
+		
+		auto Previous() const {return prev_;}
+		auto Next() const {return next_;}
+	private:
+		const unsigned prev_, next_;
+	};
+
+	template<class ObservedT>
+	class PrecisionIncreased : public PrecisionEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		PrecisionIncreased(const ObservedT & obs, 
+		             unsigned previous, unsigned next) : PrecisionChanged<ObservedT>(obs, previous, next)
+		{}
+		virtual ~PrecisionIncreased() = default;
+		PrecisionIncreased() = delete;
+	};
+
+	template<class ObservedT>
+	class PrecisionDecreased : public PrecisionEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		PrecisionDecreased(const ObservedT & obs, 
+		             unsigned previous, unsigned next) : PrecisionChanged<ObservedT>(obs, previous, next)
+		{}
+		virtual ~PrecisionDecreased() = default;
+		PrecisionDecreased() = delete;
+	};
 
 	ADD_BERTINI_EVENT_TYPE(HigherPrecisionNecessary,PrecisionEvent)
+	ADD_BERTINI_EVENT_TYPE(PredictorHigherPrecisionNecessary,HigherPrecisionNecessary)
+	ADD_BERTINI_EVENT_TYPE(CorrectorHigherPrecisionNecessary,HigherPrecisionNecessary)
 
+
+	ADD_BERTINI_EVENT_TYPE(MatrixSolveFailure,PrecisionEvent)
+	ADD_BERTINI_EVENT_TYPE(PredictorMatrixSolveFailure,MatrixSolveFailure)
+	ADD_BERTINI_EVENT_TYPE(FirstStepPredictorMatrixSolveFailure,MatrixSolveFailure)
+	ADD_BERTINI_EVENT_TYPE(CorrectorMatrixSolveFailure,MatrixSolveFailure)
 	////////////
 	//
 	//  Stepsize events
@@ -79,7 +161,32 @@ namespace bertini {
 	ADD_BERTINI_EVENT_TYPE(TrackingEnded, TrackingEvent)
 
 	ADD_BERTINI_EVENT_TYPE(InfinitePathTruncation, TrackingEvent)
-	
+
+	template<class ObservedT, typename NumT>
+	class Initializing : public TrackingEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		Initializing(const ObservedT & obs, 
+		             NumT const& start_time, 
+		             NumT const& endtime, 
+		             Vec<NumT> const& start_point) : TrackingEvent<ObservedT>(obs),
+													start_time_(start_time),
+													end_time_(endtime),
+													start_point_(start_point)
+		{}
+
+
+		virtual ~Initializing() = default;
+		Initializing() = delete;
+
+		const NumT& StartTime() const {return start_time_;}
+		const NumT& EndTime() const {return end_time_;}
+		const Vec<NumT>& StartPoint() const {return start_point_;}
+	private:
+		const NumT& start_time_;
+		const NumT& end_time_;
+		const Vec<NumT>& start_point_;
+	};
 }// re: namespace tracking
 }// re: namespace bertini
 

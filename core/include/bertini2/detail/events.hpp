@@ -31,19 +31,19 @@
 
 #ifndef BERTINI_DETAIL_EVENTS_HPP
 #define BERTINI_DETAIL_EVENTS_HPP
-
+#include <boost/type_index.hpp>
 namespace bertini {
 
 
 	class AnyEvent
-	{
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		virtual ~AnyEvent() = default;
 	};
 
 	template<class ObsT>
 	class Event : public AnyEvent
-	{
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		Event(ObsT const& obs) : current_observable_(obs)
 		{}
@@ -64,7 +64,7 @@ namespace bertini {
 	#define ADD_BERTINI_EVENT_TYPE(event_name,event_subtype) \
 	template<class ObservedT> \
 	class event_name : public event_subtype<ObservedT> \
-	{ \
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS \
 	public: \
 		event_name(const ObservedT & obs) : event_subtype<ObservedT>(obs){} \
 		virtual ~event_name() = default; \

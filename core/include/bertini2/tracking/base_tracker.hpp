@@ -180,20 +180,15 @@ namespace bertini{
 									Vec<mpfr> const& start_point
 									) const
 			{	
-
-				BOOST_LOG_TRIVIAL(severity_level::debug) << "tracking path from t=" << start_time << " to t=" << endtime << " from x = " << start_point;
-
 				if (start_point.size()!=tracked_system_.NumVariables())
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
 				
 				
-				SuccessCode initialization_code = TrackerLoopInitialization(start_time, endtime, start_point);;
+				SuccessCode initialization_code = TrackerLoopInitialization(start_time, endtime, start_point);
 				if (initialization_code!=SuccessCode::Success)
 					return initialization_code;
 
-
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "starting while loop";
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
 				while (current_time_!=endtime)
 				{	
@@ -216,21 +211,16 @@ namespace bertini{
 
 					if (infinite_path_truncation_ && (CheckGoingToInfinity()==SuccessCode::GoingToInfinity))
 					{	
-						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration indicated going to infinity";
-						NotifyObservers(InfinitePathTruncation<Tracker>(*this));
+						OnInfiniteTruncation();
 						PostTrackCleanup();
 						return SuccessCode::GoingToInfinity;
 					}
 					else if (step_success_code_==SuccessCode::Success)
 					{	
-						NotifyObservers(SuccessfulStep<Tracker>(*this));
-						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful";
 						IncrementCountersSuccess();
 					}
 					else
 					{
-						NotifyObservers(FailedStep<Tracker>(*this));
-						BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration unsuccessful";
 						IncrementCountersFail();
 					}
 				}// re: while
@@ -441,6 +431,8 @@ namespace bertini{
 			virtual 
 			SuccessCode CheckGoingToInfinity() const = 0;
 
+			virtual 
+			void OnInfiniteTruncation() const = 0;
 
 
 			const class System& tracked_system_; ///< Reference to the system being tracked.
@@ -485,6 +477,21 @@ namespace bertini{
 			unsigned NumVariables() const
 			{
 				return tracked_system_.NumVariables();
+			}
+
+			auto CurrentTime() const
+			{
+				return current_time_;
+			}
+
+			auto DeltaT() const
+			{
+				return delta_t_;
+			}
+
+			auto CurrentStepsize() const
+			{
+				return current_time_;
 			}
 		};
 

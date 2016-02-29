@@ -147,8 +147,6 @@ namespace bertini{
 						  unsigned num_newton_iterations,
 						  unsigned predictor_order = 0)
 		{
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "\nMinimizeTrackingCost()";
-
 			mpfr_float min_cost = Eigen::NumTraits<mpfr_float>::highest();
 			new_precision = MaxPrecisionAllowed()+1; // initialize to an impossible value.
 			new_stepsize = old_stepsize; // initialize to original step size.
@@ -188,8 +186,6 @@ namespace bertini{
 
 			for (unsigned candidate_precision = lowest_mp_precision_to_test; candidate_precision <= max_precision; candidate_precision+=PrecisionIncrement())
 				minimizer_routine(candidate_precision);
-
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "final minimizer of cost: " << new_precision << " " << new_stepsize;
 		}
 
 
@@ -314,7 +310,6 @@ namespace bertini{
 			*/
 			AMPTracker(class System const& sys) : Tracker(sys), current_precision_(mpfr_float::default_precision())
 			{	
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "creating tracker from system " << sys;
 				AMP_config_ = config::AMPConfigFrom(sys);
 			}
 
@@ -410,7 +405,7 @@ namespace bertini{
 				         );
 				#endif
 
-				
+				NotifyObservers(Initializing<Tracker,mpfr>(*this,start_time, end_time, start_point));
 
 				// set up the master current time and the current step size
 				current_time_.precision(Precision(start_point(0)));
@@ -461,11 +456,10 @@ namespace bertini{
 				SuccessCode initial_refinement_code = Refine();
 				if (initial_refinement_code!=SuccessCode::Success)
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "initial refinement at precision " << current_precision_ << " failed";
 					do {
 						if (current_precision_ > AMP_config_.maximum_precision)
 						{
-							BOOST_LOG_TRIVIAL(severity_level::trace) << " singular start point, tracking failed.";
+							NotifyObservers(SingularStartPoint<AMPTracker>(*this));
 							return SuccessCode::SingularStartPoint;
 						}
 
@@ -476,8 +470,6 @@ namespace bertini{
 					}
 					while (initial_refinement_code!=SuccessCode::Success);
 				}
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "initial refinement successful at precision " << current_precision_;
-
 				return SuccessCode::Success;
 			}		
 
@@ -511,6 +503,7 @@ namespace bertini{
 			{
 				if (preserve_precision_)
 					ChangePrecision(initial_precision_);
+				NotifyObservers(TrackingEnded<AMPTracker>(*this));
 			}
 
 			/**
@@ -578,27 +571,21 @@ namespace bertini{
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nTrackerIteration() " << NumTotalStepsTaken() << "\ncurrent_precision: " << current_precision_;
-
-
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
 				#endif
+
+				NotifyObservers(NewStep<AMPTracker>(*this));
 
 				Vec<ComplexType>& predicted_space = std::get<Vec<ComplexType> >(temporary_space_); // this will be populated in the Predict step
 				Vec<ComplexType>& current_space = std::get<Vec<ComplexType> >(current_space_); // the thing we ultimately wish to update
 				ComplexType current_time = ComplexType(current_time_);
 				ComplexType delta_t = ComplexType(delta_t_);
 
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "t = " << current_time;
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "delta_t = " << delta_t;
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "x = " << current_space;
-
 				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
 				if (predictor_code==SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure in initial solve of prediction";
-
+					NotifyObservers(FirstStepPredictorMatrixSolveFailure<AMPTracker>(*this));
 					next_stepsize_ = current_stepsize_;
 
 					if (current_precision_==DoublePrecision())
@@ -612,24 +599,18 @@ namespace bertini{
 				}
 				else if (predictor_code==SuccessCode::MatrixSolveFailure)
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure";
-
+					NotifyObservers(PredictorMatrixSolveFailure<AMPTracker>(*this));
 					NewtonConvergenceError();// decrease stepsize, and adjust precision as necessary
 					return predictor_code;
 				}	
 				else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, higher precision necessary";
-
+					NotifyObservers(PredictorHigherPrecisionNecessary<AMPTracker>(*this));
 					AMPCriterionError<ComplexType, RealType>();
 					return predictor_code;
 				}
 
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "predicted_space = " << predicted_space;
-
-
-
-
+				NotifyObservers(SuccessfulPredict<AMPTracker, ComplexType>(*this, predicted_space));
 
 				Vec<ComplexType>& tentative_next_space = std::get<Vec<ComplexType> >(tentative_space_); // this will be populated in the Correct step
 
@@ -639,19 +620,16 @@ namespace bertini{
 													 predicted_space,
 													 tentative_next_time);
 
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "condition number: " << std::get<RealType>(condition_number_estimate_);
-
 				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, matrix solve failure or failure to converge";
-
+					
+					NotifyObservers(CorrectorMatrixSolveFailure<AMPTracker>(*this));
 					NewtonConvergenceError();
 					return corrector_code;
 				}
 				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, higher precision necessary";
-
+					NotifyObservers(CorrectorHigherPrecisionNecessary<AMPTracker>(*this));
 					AMPCriterionError<ComplexType, RealType>();
 					return corrector_code;
 				}
@@ -661,7 +639,7 @@ namespace bertini{
 					return corrector_code;
 				}
 
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "corrected_space = " << tentative_next_space;
+				NotifyObservers(SuccessfulCorrect<AMPTracker, ComplexType>(*this, tentative_next_space));
 
 				// copy the tentative vector into the current space vector;
 				current_space = tentative_next_space;
@@ -724,18 +702,6 @@ namespace bertini{
 			template <typename ComplexType, typename RealType>
 			SuccessCode StepSuccess() const
 			{
-				NotifyObservers(SuccessfulStep<AMPTracker>(*this));
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "\nStepSuccess()";
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "current precision: " << current_precision_;
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "current stepsize: " << current_stepsize_;
-
-				// if ( (num_successful_steps_since_stepsize_increase_ < stepping_config_.consecutive_successful_steps_before_stepsize_increase)
-				//     &&
-				//      (num_successful_steps_since_stepsize_increase_ < stepping_config_.consecutive_successful_steps_before_precision_decrease) )
-				// 	return SuccessCode::Success;
-
-
-
 				mpfr_float min_stepsize = current_stepsize_ * stepping_config_.step_size_fail_factor;
 				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * stepping_config_.step_size_success_factor), stepping_config_.max_step_size);
 
@@ -753,10 +719,6 @@ namespace bertini{
 				    (num_precision_decreases_ >= AMP_config_.max_num_precision_decreases))
 					min_precision = max(min_precision, current_precision_); // disallow precision changing 
 
-
-
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "maximum precision " << max_precision << " minimum precision " << min_precision;
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "maximum stepsize " << max_stepsize << " minimum stepsize " << min_stepsize;
 
 				MinimizeTrackingCost<RealType>(next_precision_, next_stepsize_, 
 							min_precision, min_stepsize,
@@ -780,9 +742,6 @@ namespace bertini{
 				else
 					num_successful_steps_since_precision_decrease_ ++;
 
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "new precision: " << next_precision_;
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "new stepsize: " << next_stepsize_;
-
 				return UpdatePrecisionAndStepsize();
 			}
 
@@ -805,15 +764,11 @@ namespace bertini{
 			*/
 			void NewtonConvergenceError() const
 			{
-
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "\nNewtonConvergenceError()";
-
 				next_precision_ = current_precision_;
 				next_stepsize_ = stepping_config_.step_size_fail_factor*current_stepsize_;
 
 				while (next_stepsize_ < MinStepSizeForPrecision(next_precision_))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << next_precision_ << " " << MinStepSizeForPrecision(next_precision_);
 					if (next_precision_==DoublePrecision())
 						next_precision_=LowestMultiplePrecision();
 					else
@@ -842,8 +797,6 @@ namespace bertini{
 			template<typename ComplexType, typename RealType>
 			void AMPCriterionError() const
 			{	
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "\nAMPCriterionError()";
-
 				unsigned min_next_precision;
 				if (current_precision_==DoublePrecision())
 					min_next_precision = LowestMultiplePrecision(); // precision increases
@@ -1021,6 +974,7 @@ namespace bertini{
 			void IncrementCountersSuccess() const override
 			{
 				Tracker::IncrementCountersSuccess();
+				NotifyObservers(SuccessfulStep<AMPTracker>(*this));
 			}
 
 			/**
@@ -1031,10 +985,15 @@ namespace bertini{
 				Tracker::IncrementCountersFail();
 				num_successful_steps_since_precision_decrease_ = 0;
 				num_successful_steps_since_stepsize_increase_ = 0;
+				NotifyObservers(FailedStep<AMPTracker>(*this));
 			}
 
 
 
+			void OnInfiniteTruncation() const override
+			{
+				NotifyObservers(InfinitePathTruncation<AMPTracker>(*this));
+			}
 
 
 			////////////////
@@ -1310,7 +1269,8 @@ namespace bertini{
 				if (new_precision==current_precision_) // no op
 					return SuccessCode::Success;
 
-				BOOST_LOG_TRIVIAL(severity_level::debug) << "changing precision to " << new_precision;
+				NotifyObservers(PrecisionChanged<AMPTracker>(*this,current_precision_,new_precision));
+				
 
 				bool upsampling_needed = new_precision > current_precision_;
 				// reset the counter for estimating the condition number.  
