@@ -85,10 +85,7 @@ AC_SEARCH_LIBS([cos], [m], [], [
   ])
 
 # look for a header file in Eigen, and croak if fail to find.
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([Eigen/Dense],[],AC_MSG_ERROR([unable to find Eigen 3  (Eigen/Dense)]),[])
-AC_LANG_POP([C++])
-
+AX_EIGEN
 
 AX_BOOST_BASE([1.55],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.55, but it was not found in your system])])
 AX_BOOST_SYSTEM
