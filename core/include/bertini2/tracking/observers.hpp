@@ -41,7 +41,7 @@ namespace bertini {
 
 		template<class ObservedT>
 		class PrecisionAccumulator : public Observer<ObservedT>
-		{
+		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 			virtual void Observe(AnyEvent const& e) override
 			{
 				const TrackingEvent<ObservedT>* p = dynamic_cast<const TrackingEvent<ObservedT>*>(&e);
@@ -73,7 +73,7 @@ namespace bertini {
 		*/
 		template<class ObservedT, template<class> class EventT = SuccessfulStep>
 		class AMPPathAccumulator : public Observer<ObservedT>
-		{
+		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 			virtual void Observe(AnyEvent const& e) override
 			{
 				const EventT<ObservedT>* p = dynamic_cast<const EventT<ObservedT>*>(&e);
@@ -112,7 +112,7 @@ namespace bertini {
 
 		template<class ObservedT>
 		class GoryDetailLogger : public Observer<ObservedT>
-		{
+		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
 
 
@@ -122,49 +122,50 @@ namespace bertini {
 
 				if (auto p = dynamic_cast<const Initializing<ObservedT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path from t=" << p->StartTime() << " to t=" << p->EndTime() << " from x = " << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
+					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
 				}
 				else if (auto p = dynamic_cast<const Initializing<ObservedT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path from t=" << p->StartTime() << " to t=" << p->EndTime() << " from x = " << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
+					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
 				}
 
+				else if(auto p = dynamic_cast<const TrackingEnded<ObservedT>*>(&e))
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking ended";
 
 				else if (auto p = dynamic_cast<const NewStep<ObservedT>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nTrackerIteration " << p->Get().NumTotalStepsTaken() << "\ncurrent_precision: " << p->Get().CurrentPrecision();
-
 					auto t = p->Get();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Tracker iteration " << t.NumTotalStepsTaken() << "\ncurrent precision: " << t.CurrentPrecision();
 
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "t = " << t.CurrentTime();
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "current stepsize: " << t.CurrentStepsize();
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "delta_t = " << t.DeltaT();
-
-					if (t.CurrentPrecision()==DoublePrecision())
-						BOOST_LOG_TRIVIAL(severity_level::trace) << "x = " << t.template CurrentPoint<dbl>();
-					else
-						BOOST_LOG_TRIVIAL(severity_level::trace) << "x = " << t.template CurrentPoint<mpfr>();
-
+					
+					BOOST_LOG_TRIVIAL(severity_level::trace) 
+						<< "t = " << t.CurrentTime() 
+						<< "\ncurrent stepsize: " << t.CurrentStepsize() 
+						<< "\ndelta_t = " << t.DeltaT() << "\ncurrent x = ";
+						if (t.CurrentPrecision()==DoublePrecision())
+						    BOOST_LOG_TRIVIAL(severity_level::trace) << t.template CurrentPoint<dbl>();
+					    else
+						    BOOST_LOG_TRIVIAL(severity_level::trace) << t.template CurrentPoint<mpfr>();
 				}
 
 
 
 				else if (auto p = dynamic_cast<const SingularStartPoint<ObservedT>*>(&e))
-					BOOST_LOG_TRIVIAL(severity_level::trace) << " singular start point.";
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "singular start point";
 				else if (auto p = dynamic_cast<const InfinitePathTruncation<ObservedT>*>(&e))
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration indicated going to infinity";
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration indicated going to infinity, truncated path";
 
 
 
 
 				else if (auto p = dynamic_cast<const SuccessfulStep<ObservedT>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful";
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful\n\n\n";
 				}
 				
 				else if (auto p = dynamic_cast<const FailedStep<ObservedT>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration unsuccessful";
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration unsuccessful\n\n\n";
 				}
 
 
@@ -209,8 +210,8 @@ namespace bertini {
 				else if (auto p = dynamic_cast<const PrecisionChanged<ObservedT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "changing precision from " << p->Previous() << " to " << p->Next();
 				
-
-				//BOOST_LOG_TRIVIAL(severity_level::debug) << boost::typeindex::type_id_runtime(e).pretty_name();
+				else
+					BOOST_LOG_TRIVIAL(severity_level::debug) << "unlogged event, of type: " << boost::typeindex::type_id_runtime(e).pretty_name();
 			}
 
 			virtual void Visit(ObservedT const& t) override
@@ -218,6 +219,22 @@ namespace bertini {
 		};
 
 
+
+		template<class ObservedT>
+		class StepFailScreenPrinter : public Observer<ObservedT>
+		{ BOOST_TYPE_INDEX_REGISTER_CLASS
+		public:
+
+
+			virtual void Observe(AnyEvent const& e) override
+			{
+				if (auto p = dynamic_cast<const FailedStep<ObservedT>*>(&e))
+					std::cout << "observed step failure" << std::endl;
+			}
+
+			virtual void Visit(ObservedT const& t) override
+			{}
+		};
 
 	} //re: namespace tracking
 

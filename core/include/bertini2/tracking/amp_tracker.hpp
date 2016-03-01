@@ -405,7 +405,7 @@ namespace bertini{
 				         );
 				#endif
 
-				NotifyObservers(Initializing<Tracker,mpfr>(*this,start_time, end_time, start_point));
+				NotifyObservers(Initializing<AMPTracker,mpfr>(*this,start_time, end_time, start_point));
 
 				// set up the master current time and the current step size
 				current_time_.precision(Precision(start_point(0)));
@@ -431,7 +431,7 @@ namespace bertini{
 				SuccessCode initial_refinement_code = InitialRefinement();
 				if (initial_refinement_code!=SuccessCode::Success)
 					return initial_refinement_code;
-				
+
 				return SuccessCode::Success;
 			}
 

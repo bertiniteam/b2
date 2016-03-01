@@ -109,14 +109,7 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 
 	start_point << mpfr(1), mpfr(1);
 	tracking_success = tracker.TrackPath(end_point,
-	                  t_start, t_end, start_point);
-
-	for (auto iter : path_accumulator.Path())
-		std::cout << iter << "\n";
-
-	for (auto iter : precision_accumulator.Precisions())
-		std::cout << iter << " ";
-	
+	                  t_start, t_end, start_point);	
 }
 
 
@@ -174,6 +167,65 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 	                  t_start, t_end, start_point);
 
 }
+
+
+
+BOOST_AUTO_TEST_CASE(union_of_observers)
+{
+	mpfr_float::default_precision(16);
+	using namespace bertini::tracking;
+
+	Var x = std::make_shared<Variable>("x");
+	Var y = std::make_shared<Variable>("y");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddFunction(x-t);
+	sys.AddFunction(pow(y,2)-x);
+	sys.AddPathVariable(t);
+	sys.AddVariableGroup(v);
+
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+
+
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+
+	tracker.Setup(config::Predictor::Euler,
+	              	mpfr_float("1e-5"),
+					mpfr_float("1e5"),
+					stepping_preferences,
+					newton_preferences);
+
+	tracker.AMPSetup(AMP);
+
+	mpfr t_start(1);
+	mpfr t_end(0);
+	
+	Vec<mpfr> start_point(2);
+	Vec<mpfr> end_point;
+
+	SuccessCode tracking_success;
+
+	bertini::MultiObserver<AMPTracker, GoryDetailLogger, StepFailScreenPrinter> agglomeration;
+
+	tracker.AddObserver(&agglomeration);
+
+	start_point << mpfr(1), mpfr(1);
+	tracking_success = tracker.TrackPath(end_point,
+	                  t_start, t_end, start_point);
+
+}
+
+
+
+
 
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -31,6 +31,15 @@
 #ifndef BERTINI_DETAIL_VISITOR_HPP
 #define BERTINI_DETAIL_VISITOR_HPP
 
+#include <tuple>
+#include <utility>
+
+#include <boost/fusion/include/std_tuple.hpp>
+#include <boost/fusion/adapted/std_tuple.hpp>
+
+#include <boost/fusion/algorithm/iteration/for_each.hpp>
+#include <boost/fusion/include/for_each.hpp>
+
 #include "bertini2/detail/events.hpp"
 
 namespace bertini{
@@ -41,7 +50,7 @@ namespace bertini{
 	Deliberately empty, the non-base visitors must derive from it.  Don't directly derive from this class, use Visitor.
 	*/
 	class VisitorBase
-	{
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		virtual ~VisitorBase() = default;
 	};
@@ -52,7 +61,7 @@ namespace bertini{
 	*/
 	template<class VisitedT, typename RetT = void>
 	class Visitor
-	{
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		typedef RetT ReturnType;
 		virtual ReturnType Visit(VisitedT const &) = 0;
@@ -62,7 +71,7 @@ namespace bertini{
 	
 
 	class AnyObserver
-	{
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		virtual ~AnyObserver() = default;
 		virtual void Observe(AnyEvent const& e) = 0;
@@ -70,7 +79,7 @@ namespace bertini{
 
 	template<class ObservedT, typename RetT = void>
 	class Observer : public Visitor<ObservedT, RetT>, public AnyObserver
-	{
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		virtual ~Observer() = default;
 
@@ -78,7 +87,30 @@ namespace bertini{
 	};
 
 
+
 	
+
+	template<class ObservedT, template<class> class... ObserverTypes>
+	class MultiObserver : public Observer<ObservedT>
+	{	BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		void Observe(AnyEvent const& e) override
+		{	
+		    using namespace boost::fusion;
+		    auto f = [&e](auto &obs) { obs.Observe(e); };
+		    for_each(observers_, f);
+		}
+
+		void Visit(ObservedT const& t) override
+		{
+			using namespace boost::fusion;
+		    auto f = [&t](auto &obs) { obs.Visit(t); };
+		    for_each(observers_, f);
+		}
+
+		std::tuple<ObserverTypes<ObservedT>...> observers_;
+		virtual ~MultiObserver() = default;
+	};
 
 
 }

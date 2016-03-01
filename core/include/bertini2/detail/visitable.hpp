@@ -99,7 +99,6 @@ namespace bertini{
 
 		void AddObserver(AnyObserver* new_observer)
 		{
-			std::cout << "added observer\n";
 			current_watchers_.push_back(new_observer);
 		}
 
