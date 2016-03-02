@@ -387,7 +387,6 @@ namespace bertini{
 		// this loop implements the generic product rule, perhaps inefficiently.
 		for (int ii = 0; ii < children_.size(); ++ii)
 		{
-			
 			auto local_derivative = children_[ii]->Differentiate();
 			
 			// if the derivative of the current term is 0, then stop 
@@ -642,7 +641,7 @@ namespace bertini{
 		}
 		else
 		{
-			// there may be an edge case here where the base is the numbers 0 or 1.  but that would be stupid, wouldn't it.
+			// there may be an edge case here where the base is the number 0 or 1.  but that would be stupid, wouldn't it.
 			return -1;
 		}
 	}

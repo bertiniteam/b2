@@ -3,8 +3,8 @@
 
 
 
-#we're building b2, version 2.0.1, and the corresponding email is dan brake's
-AC_INIT([b2], [2.0.1], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
+#we're building b2, version 2.0-alpha2, and the corresponding email is dan brake's
+AC_INIT([b2], [2.0-alpha2], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:

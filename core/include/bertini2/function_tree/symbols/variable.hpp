@@ -169,7 +169,7 @@ namespace node{
 		}
 		Variable() = default;
 	private:
-
+		
 		friend class boost::serialization::access;
 
 		template <typename Archive>
