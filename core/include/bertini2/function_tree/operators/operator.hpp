@@ -64,8 +64,6 @@ namespace node{
 	{
 	public:
 		
-		UnaryOperator(){}
-		
 		UnaryOperator(const std::shared_ptr<Node> & N) : child_(N)
 		{}
 		
@@ -185,9 +183,8 @@ namespace node{
 	protected:
 		//Stores the single child of the unary operator
 		std::shared_ptr<Node> child_;
-
+		UnaryOperator(){}
 	private:
-
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -216,10 +213,9 @@ namespace node{
 	protected:
 		
 		virtual void print(std::ostream & target) const = 0;
-		
+		BinaryOperator(){}
 
 	private:
-
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -296,9 +292,8 @@ namespace node{
 		//Stores all children for this operator node.
 		//This is an NaryOperator and can have any number of children.
 		std::vector< std::shared_ptr<Node> > children_;
-		
+		NaryOperator(){}
 	private:
-
 		friend class boost::serialization::access;
 		
 		template <typename Archive>

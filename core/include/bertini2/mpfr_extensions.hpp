@@ -35,7 +35,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 
 #include <string>
 #include <assert.h>
