@@ -116,53 +116,45 @@ namespace bertini{
 			;
 
 			// SumOperator class
-			class_<SumOperator, bases<NaryOperator>, std::shared_ptr<SumOperator> >("SumOperator", init<>() )
-			.def(init<const Nodeptr&, const Nodeptr &>() )
+			class_<SumOperator, bases<NaryOperator>, std::shared_ptr<SumOperator> >("SumOperator", init<const Nodeptr&, const Nodeptr &>() )
 			.def(init<const Nodeptr&, bool, const Nodeptr&, bool>() )
 			
 			.def(SumMultOpVisitor<SumOperator>())
 			;
 
 			// NegateOperator class
-			class_<NegateOperator, bases<UnaryOperator>, std::shared_ptr<NegateOperator> >("NegateOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<NegateOperator, bases<UnaryOperator>, std::shared_ptr<NegateOperator> >("NegateOperator", init<const Nodeptr&>() )
 			;
 
 			// MultOperator class
-			class_<MultOperator, bases<NaryOperator>, std::shared_ptr<MultOperator> >("MultOperator", init<>() )
-			.def(init<const Nodeptr&, const Nodeptr &>() )
+			class_<MultOperator, bases<NaryOperator>, std::shared_ptr<MultOperator> >("MultOperator", init<const Nodeptr&, const Nodeptr &>() )
 			.def(init<const Nodeptr&, bool, const Nodeptr&, bool>() )
 			
 			.def(SumMultOpVisitor<MultOperator>())
 			;
 			
 			// PowerOperator class
-			class_<PowerOperator, bases<BinaryOperator>, std::shared_ptr<PowerOperator> >("PowerOperator", init<>() )
-			.def(init<const Nodeptr&, const Nodeptr &>() )
+			class_<PowerOperator, bases<BinaryOperator>, std::shared_ptr<PowerOperator> >("PowerOperator", init<const Nodeptr&, const Nodeptr &>() )
 			
 			.def(PowerOpVisitor<PowerOperator>())
 			;
 			
 			// IntegerPowerOperator class
-			class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPowerOperator", init<>() )
-			.def(init<const Nodeptr&, optional<int> >() )
+			class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPowerOperator", init<const Nodeptr&, optional<int> >()  )
 			
 			.def(PowerOpVisitor<IntegerPowerOperator>())
 			;
 
 			// SqrtOperator class
-			class_<SqrtOperator, bases<UnaryOperator>, std::shared_ptr<SqrtOperator> >("SqrtOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<SqrtOperator, bases<UnaryOperator>, std::shared_ptr<SqrtOperator> >("SqrtOperator", init<const Nodeptr&>() )
 			;
 
 			// ExpOperator class
-			class_<ExpOperator, bases<UnaryOperator>, std::shared_ptr<ExpOperator> >("ExpOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<ExpOperator, bases<UnaryOperator>, std::shared_ptr<ExpOperator> >("ExpOperator", init<const Nodeptr&>() )
 			;
 
 			// LogOperator class
-			class_<LogOperator, bases<UnaryOperator>, std::shared_ptr<LogOperator> >("LogOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<LogOperator, bases<UnaryOperator>, std::shared_ptr<LogOperator> >("LogOperator", init<const Nodeptr&>() )
 			;
 			
 			
@@ -172,29 +164,23 @@ namespace bertini{
 			;
 
 			// SinOperator class
-			class_<SinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<SinOperator> >("SinOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<SinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<SinOperator> >("SinOperator", init<const Nodeptr&>() )
 			;
 			// CosOperator class
-			class_<CosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<CosOperator> >("CosOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<CosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<CosOperator> >("CosOperator", init<const Nodeptr&>() )
 			;
 			// TanOperator class
-			class_<TanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<TanOperator> >("TanOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<TanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<TanOperator> >("TanOperator", init<const Nodeptr&>() )
 			;
 
 			// ArcSinOperator class
-			class_<ArcSinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcSinOperator> >("ArcSinOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<ArcSinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcSinOperator> >("ArcSinOperator", init<const Nodeptr&>() )
 			;
 			// ArcCosOperator class
-			class_<ArcCosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcCosOperator> >("ArcCosOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<ArcCosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcCosOperator> >("ArcCosOperator", init<const Nodeptr&>() )
 			;
 			// ArcTanOperator class
-			class_<ArcTanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcTanOperator> >("ArcTanOperator", init<>() )
-			.def(init<const Nodeptr&>() )
+			class_<ArcTanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcTanOperator> >("ArcTanOperator", init<const Nodeptr&>() )
 			;
 
 

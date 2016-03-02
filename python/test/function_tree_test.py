@@ -59,14 +59,13 @@ class SymbolTest(unittest.TestCase):
     def test_Variable_construct(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
         x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
-        x = Variable()
         x = Variable("x")
 
 
     def test_Variable_eval(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
         x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
-        x = Variable(); y = Variable();
+        x = Variable("x"); y = Variable("y");
         x.set_current_value(x_d); x.set_current_value(x_mp)
 
         self.assertLessEqual(np.abs(x.evald().real/(-2.43)-1), tol_d)
@@ -78,7 +77,7 @@ class SymbolTest(unittest.TestCase):
     def test_Variable_funcs(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
         x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
-        x = Variable(); y = Variable()
+        x = Variable("x"); y = Variable("y")
 
         self.assertEqual(x.degree(), 1)
         self.assertEqual(x.degree(x), 1)
@@ -145,13 +144,13 @@ class SymbolTest(unittest.TestCase):
 class OperatorTest(unittest.TestCase):
     def setUp(self):
         default_precision(30);
-        self.x = Variable()
+        self.x = Variable("x")
         self.x.set_current_value(complex(-2.43,.21 ))
-        self.y = Variable()
+        self.y = Variable("y")
         self.y.set_current_value(complex(4.84, -1.94))
-        self.z = Variable()
+        self.z = Variable("z")
         self.z.set_current_value(complex(-6.48, -.731))
-        self.p = Variable()
+        self.p = Variable("p")
         self.p.set_current_value(complex(-.321, -.72))
         self.a = Float(complex(3.12, .612))
         self.b = Float(complex(-.823, 2.62))

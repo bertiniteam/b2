@@ -41,8 +41,7 @@ namespace bertini{
 		void ExportRoots()
 		{
 			// Function class
-			class_<Function, bases<NamedSymbol>, std::shared_ptr<Function> >("Function", init<>())
-			.def(init<std::string>() )
+			class_<Function, bases<NamedSymbol>, std::shared_ptr<Function> >("Function", init<std::string>())
 			.def(init<const Nodeptr&>() )
 			
 			.def(FunctionVisitor<Function>())
@@ -50,8 +49,7 @@ namespace bertini{
 
 			
 			// Jacobian class
-			class_<Jacobian, bases<Function>, std::shared_ptr<Jacobian> >("Jacobian", init<>())
-			.def(init<const Nodeptr&>() )
+			class_<Jacobian, bases<Function>, std::shared_ptr<Jacobian> >("Jacobian", init<const Nodeptr&>())
 			
 			.def(JacobianVisitor<Jacobian>())
 			;

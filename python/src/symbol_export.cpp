@@ -64,11 +64,11 @@ namespace bertini{
 			;
 			
 			// Float class
-			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", init< optional<double, double> >())
+			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", init< double, double >())
 			.def(init<dbl>())
 			.def(init<mpfr>())
 			.def(init< bmp, bmp >())
-			.def(init< optional<std::string, std::string> >())
+			.def(init< std::string, std::string >())
 			;
 			
 			
@@ -83,14 +83,13 @@ namespace bertini{
 
 			
 			// Variable class
-			class_<Variable, bases<NamedSymbol>, std::shared_ptr<Variable> >("Variable", init< optional <std::string> >())
+			class_<Variable, bases<NamedSymbol>, std::shared_ptr<Variable> >("Variable", init< std::string >())
 			.def(VariableVisitor<Variable>())
 			;
 			
 			
 			// Differential class
-			class_<Differential, bases<NamedSymbol>,std::shared_ptr<node::Differential> >("Differential", init<>())
-			.def(init<std::shared_ptr<Variable>,std::string>())
+			class_<Differential, bases<NamedSymbol>,std::shared_ptr<node::Differential> >("Differential", init<std::shared_ptr<Variable>,std::string>())
 			
 			.def(DifferentialVisitor<Differential>())
 			;
