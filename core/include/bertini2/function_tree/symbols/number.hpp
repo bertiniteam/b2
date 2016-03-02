@@ -120,7 +120,6 @@ namespace node{
 	protected:
 
 	private:
-
 		friend class boost::serialization::access;
 
 		template <typename Archive>
