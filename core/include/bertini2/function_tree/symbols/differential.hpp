@@ -43,13 +43,13 @@ namespace node{
 	class Differential : public virtual NamedSymbol
 	{
 	public:
-		Differential(){};
+		
 
 
 		/**
 		 Input shared_ptr to a Variable.
 		 */
-		Differential(std::shared_ptr<Variable> diff_variable, std::string var_name)
+		Differential(std::shared_ptr<Variable> diff_variable, std::string var_name) : NamedSymbol(var_name)
 		{
 			differential_variable_ = diff_variable;
 			name("d" + var_name);
@@ -164,6 +164,7 @@ namespace node{
 
 
 	private:
+		Differential() = default;
 		std::shared_ptr<Variable> differential_variable_;
 
 		friend class boost::serialization::access;
