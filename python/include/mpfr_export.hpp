@@ -38,33 +38,138 @@ namespace bertini{
 			static MPFRBaseT __isub__(MPFRBaseT& a, const MPFRBaseT& b){ a-=b; return a; };
 			static MPFRBaseT __mul__(const MPFRBaseT& a, const MPFRBaseT& b){ return a*b; };
 			static MPFRBaseT __imul__(MPFRBaseT& a, const MPFRBaseT& b){ a*=b; return a; };
+
+			static MPFRBaseT __abs__(MPFRBaseT const& x){ return abs(x);}
+			
+			static std::string __str__(const object& obj)
+			{
+				std::ostringstream oss;
+				const MPFRBaseT& self=extract<MPFRBaseT>(obj)();
+				std::stringstream ss;
+				ss << self;
+				return ss.str();
+			};
+
+
+		};
+
+		
+		template<typename MPFRBaseT>
+		class MPFRFloatBaseVisitor: public def_visitor<MPFRFloatBaseVisitor<MPFRBaseT> >
+		{
+			friend class def_visitor_access;
+
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+			
+		private:
 			static MPFRBaseT __div__(const MPFRBaseT& a, const MPFRBaseT& b){ return a/b; };
 			static MPFRBaseT __idiv__(MPFRBaseT& a, const MPFRBaseT& b){ a/=b; return a; };
 			static MPFRBaseT __pow__(const MPFRBaseT& a, const MPFRBaseT& b){ return pow(a,b); };
-
-			static MPFRBaseT __abs__(MPFRBaseT const& x){ return abs(x);}
+			
 			static MPFRBaseT __log__(MPFRBaseT const& x){ return log(x);}
 			static MPFRBaseT __exp__(MPFRBaseT const& x){ return exp(x);}
 			static MPFRBaseT __sqrt__(MPFRBaseT const& x){ return sqrt(x);}
-
+			
 			static MPFRBaseT __sin__(MPFRBaseT const& x){ return sin(x);}
 			static MPFRBaseT __cos__(MPFRBaseT const& x){ return cos(x);}
 			static MPFRBaseT __tan__(MPFRBaseT const& x){ return tan(x);}
-
+			
 			static MPFRBaseT __asin__(MPFRBaseT const& x){ return asin(x);}
 			static MPFRBaseT __acos__(MPFRBaseT const& x){ return acos(x);}
 			static MPFRBaseT __atan__(MPFRBaseT const& x){ return atan(x);}
-
+			
 			static MPFRBaseT __sinh__(MPFRBaseT const& x){ return sinh(x);}
 			static MPFRBaseT __cosh__(MPFRBaseT const& x){ return cosh(x);}
 			static MPFRBaseT __tanh__(MPFRBaseT const& x){ return tanh(x);}
 			
 			unsigned (MPFRBaseT::*bmpprec1)() const= &MPFRBaseT::precision;
 			void (MPFRBaseT::*bmpprec2)(unsigned) = &MPFRBaseT::precision;
-
-
-
+			
+			
+			
 		};
+
+
+		
+		// boost::multiprecision int class
+		template<typename MPFRBaseT>
+		class MPFRIntVisitor: public def_visitor<MPFRIntVisitor<MPFRBaseT>>
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+			
+			
+		private:
+			static MPFRBaseT __add_int(const MPFRBaseT& a, const int& b){ return a+b; };
+			static MPFRBaseT __iadd_int(MPFRBaseT& a, const int& b){ a+=b; return a; };
+			static MPFRBaseT __radd_int(const MPFRBaseT& b, const int& a){ return a+b; };
+			static MPFRBaseT __sub_int(const MPFRBaseT& a, const int& b){ return a-b; };
+			static MPFRBaseT __isub_int(MPFRBaseT& a, const int& b){ a-=b; return a; };
+			static MPFRBaseT __rsub_int(const MPFRBaseT& b, const int& a){ return a-b; };
+			static MPFRBaseT __mul_int(const MPFRBaseT& a, const int& b){ return a*b; };
+			static MPFRBaseT __imul_int(MPFRBaseT& a, const int& b){ a*=b; return a; };
+			static MPFRBaseT __rmul_int(const MPFRBaseT& b, const int& a){ return a*b; };
+			static MPFRBaseT __pow__(const MPFRBaseT& a, const int& b){ return pow(a,b); };
+			
+			static std::string __repr__(const object& obj)
+			{
+				std::ostringstream oss;
+				const MPFRBaseT& self=extract<MPFRBaseT>(obj)();
+				std::stringstream ss;
+				ss << self.str(0,std::ios::scientific);
+				return ss.str();
+			};
+			
+		};
+
+	
+		
+		// boost::multiprecision rational class
+		template<typename MPFRBaseT>
+		class MPFRRationalVisitor: public def_visitor<MPFRRationalVisitor<MPFRBaseT>>
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+			
+			
+		private:
+			static MPFRBaseT __add_int(const MPFRBaseT& a, const int& b){ return a+b; };
+			static MPFRBaseT __iadd_int(MPFRBaseT& a, const int& b){ a+=b; return a; };
+			static MPFRBaseT __radd_int(const MPFRBaseT& b, const int& a){ return a+b; };
+			static MPFRBaseT __sub_int(const MPFRBaseT& a, const int& b){ return a-b; };
+			static MPFRBaseT __isub_int(MPFRBaseT& a, const int& b){ a-=b; return a; };
+			static MPFRBaseT __rsub_int(const MPFRBaseT& b, const int& a){ return a-b; };
+			static MPFRBaseT __mul_int(const MPFRBaseT& a, const int& b){ return a*b; };
+			static MPFRBaseT __imul_int(MPFRBaseT& a, const int& b){ a*=b; return a; };
+			static MPFRBaseT __rmul_int(const MPFRBaseT& b, const int& a){ return a*b; };
+			static MPFRBaseT __div__(const MPFRBaseT& a, const MPFRBaseT& b){ return a/b; };
+			static MPFRBaseT __idiv__(MPFRBaseT& a, const MPFRBaseT& b){ a/=b; return a; };
+			
+			static std::string __repr__(const object& obj)
+			{
+				std::ostringstream oss;
+				const MPFRBaseT& self=extract<MPFRBaseT>(obj)();
+				std::stringstream ss;
+				ss << self.str(0,std::ios::scientific);
+				return ss.str();
+			};
+			
+		};
+
+		
+		
+		
 		
 		
 		// boost::multiprecision float class
@@ -94,14 +199,6 @@ namespace bertini{
 			static MPFRBaseT __rdiv_int(const MPFRBaseT& b, const int& a){ return a/b; };
 			static MPFRBaseT __pow_int(const MPFRBaseT& a, const int& b){ return pow(a,b); };
 			
-			static std::string __str__(const object& obj)
-			{
-				std::ostringstream oss;
-				const MPFRBaseT& self=extract<MPFRBaseT>(obj)();
-				std::stringstream ss;
-				ss << self;
-				return ss.str();
-			};
 			
 			static std::string __repr__(const object& obj)
 			{
