@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_linear)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_quadratic)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_decic)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_tracking_DOES_SOMETHING_PREDICTABLE_from_near_t
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 	stepping_preferences.max_num_steps = 1e2;
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 	newton_preferences.max_num_newton_iterations = 6;
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -707,7 +707,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	final_system.AddPathVariable(t);
 
 	auto tracker = AMPTracker(final_system);
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 	tracker.Setup(config::Predictor::Euler,
 	              	mpfr_float("1e-5"), mpfr_float("1e5"),
@@ -883,7 +883,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 	final_system.AddPathVariable(t);
 
 	auto tracker = AMPTracker(final_system);
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 	tracker.Setup(config::Predictor::Euler,
 	              	mpfr_float("1e-5"), mpfr_float("1e5"),

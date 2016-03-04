@@ -292,11 +292,13 @@ namespace bertini{
 		* Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
 
 		*/
-		class AMPTracker : public Tracker
+		class AMPTracker : public Tracker<AMPTracker>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
+			typedef Tracker<AMPTracker> Base;
+
 
 			enum UpsampleRefinementOption
 			{
@@ -347,11 +349,11 @@ namespace bertini{
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			*/
-			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time) const override
-			{
-				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time);
-			}
+			// SuccessCode Refine(Vec<mpfr> & new_space,
+			// 					Vec<mpfr> const& start_point, mpfr const& current_time) const override
+			// {
+			// 	return Refine<mpfr, mpfr_float>(new_space, start_point, current_time);
+			// }
 
 
 			/**
@@ -366,11 +368,11 @@ namespace bertini{
 			\param current_time The current time value for refinement.
 			\param tolerance The tolerance to which to refine.
 			*/
-			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const override
-			{
-				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time, tolerance);
-			}
+			// SuccessCode Refine(Vec<mpfr> & new_space,
+			// 					Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const override
+			// {
+			// 	return Refine<mpfr, mpfr_float>(new_space, start_point, current_time, tolerance);
+			// }
 
 
 
@@ -653,21 +655,10 @@ namespace bertini{
 			SuccessCode CheckGoingToInfinity() const override
 			{
 				if (current_precision_ == DoublePrecision())
-					return CheckGoingToInfinity<dbl>();
+					return Base::CheckGoingToInfinity<dbl>();
 				else
-					return CheckGoingToInfinity<mpfr>();
+					return Base::CheckGoingToInfinity<mpfr>();
 			}
-
-			template <typename ComplexType>
-			SuccessCode CheckGoingToInfinity() const
-			{
-				if (tracked_system_.DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
-					return SuccessCode::GoingToInfinity;
-				else
-					return SuccessCode::Success;
-			}
-
-
 
 			/**
 			\brief Commit the next precision and stepsize, and adjust internals.
@@ -1003,7 +994,10 @@ namespace bertini{
 			/////////////////
 
 
-			/**
+			
+
+
+/**
 			\brief Wrapper function for calling the correct predictor.
 			
 			This function computes the next predicted space value, and sets some internals based on the prediction, such as the norm of the Jacobian.
@@ -1112,6 +1106,76 @@ namespace bertini{
 
 
 
+			/**
+			\brief Run Newton's method from a start point with a current time.  
+
+			Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
+
+			\tparam ComplexType The complex number type.
+			\tparam RealType The real number type.
+
+			\param[out] new_space The result of running the refinement.
+			\param start_point The base point for running Newton's method.
+			\param current_time The current time value.
+
+			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
+			*/
+			template <typename ComplexType, typename RealType>
+			SuccessCode Refine(Vec<ComplexType> & new_space,
+								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
+			{
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
+
+				return bertini::tracking::Correct(new_space,
+							   tracked_system_,
+							   start_point,
+							   current_time, 
+							   tracking_tolerance_,
+							   newton_config_.min_num_newton_iterations,
+							   newton_config_.max_num_newton_iterations,
+							   AMP_config_);
+			}
+
+
+
+
+
+
+			/**
+			\brief Run Newton's method from a start point with a current time.  
+
+			Returns new space point by reference, as new_space.  Operates at current precision.
+
+			\tparam ComplexType The complex number type.
+			\tparam RealType The real number type.
+
+			\param[out] new_space The result of running the refinement.
+			\param start_point The base point for running Newton's method.
+			\param current_time The current time value.
+			\param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
+
+			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
+			*/
+			template <typename ComplexType, typename RealType>
+			SuccessCode Refine(Vec<ComplexType> & new_space,
+								Vec<ComplexType> const& start_point, ComplexType const& current_time,
+								RealType const& tolerance) const
+			{
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
+
+				return bertini::tracking::Correct(new_space,
+							   tracked_system_,
+							   start_point,
+							   current_time, 
+							   tolerance,
+							   newton_config_.min_num_newton_iterations,
+							   newton_config_.max_num_newton_iterations,
+							   AMP_config_);
+			}
 
 
 
@@ -1154,98 +1218,6 @@ namespace bertini{
 				}
 				return code;
 			}
-
-
-
-			/**
-			\brief Run Newton's method from a start point with a current time.  
-
-			Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
-
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
-
-			\param[out] new_space The result of running the refinement.
-			\param start_point The base point for running Newton's method.
-			\param current_time The current time value.
-
-			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
-			*/
-			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space,
-								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
-			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
-				return bertini::tracking::Correct(new_space,
-							   tracked_system_,
-							   start_point,
-							   current_time, 
-							   tracking_tolerance_,
-							   newton_config_.min_num_newton_iterations,
-							   newton_config_.max_num_newton_iterations,
-							   AMP_config_);
-			}
-
-
-			/**
-			\brief Run Newton's method from a start point with a current time.  
-
-			Returns new space point by reference, as new_space.  Operates at current precision.
-
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
-
-			\param[out] new_space The result of running the refinement.
-			\param start_point The base point for running Newton's method.
-			\param current_time The current time value.
-			\param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
-
-			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
-			*/
-			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space,
-								Vec<ComplexType> const& start_point, ComplexType const& current_time,
-								RealType const& tolerance) const
-			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
-				return bertini::tracking::Correct(new_space,
-							   tracked_system_,
-							   start_point,
-							   current_time, 
-							   tolerance,
-							   newton_config_.min_num_newton_iterations,
-							   newton_config_.max_num_newton_iterations,
-							   AMP_config_);
-			}
-			
-
-
-
-			
-
-
-
-
-			
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 			/////////////////
@@ -1535,43 +1507,18 @@ namespace bertini{
 			mutable unsigned next_precision_; ///< The next precision
 			mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
 			mutable unsigned initial_precision_; ///< The precision at the start of tracking.
-
-
-			unsigned frequency_of_CN_estimation_; ///< How frequently the condition number should be re-estimated.
-			mutable unsigned num_steps_since_last_condition_number_computation_; ///< How many steps have passed since the most recent condition number estimate.
-			mutable unsigned num_successful_steps_since_stepsize_increase_; ///< How many successful steps have been taken since increased stepsize.
 			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
-
-			mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_space_; ///< The current space value. 
-			mutable std::tuple< Vec<dbl>, Vec<mpfr> > tentative_space_; ///< After correction, the tentative next space value
-			mutable std::tuple< Vec<dbl>, Vec<mpfr> > temporary_space_; ///< After prediction, the tentative next space value.
-
-
-			mutable std::tuple< double, mpfr_float > condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
-			mutable std::tuple< double, mpfr_float > error_estimate_; ///< An estimate on the error of a step.
-			mutable std::tuple< double, mpfr_float > norm_J_; ///< An estimate on the norm of the Jacobian
-			mutable std::tuple< double, mpfr_float > norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
-			mutable std::tuple< double, mpfr_float > norm_delta_z_; ///< The norm of the change in space resulting from a step.
-			mutable std::tuple< double, mpfr_float > size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
- 
 
 			config::AdaptiveMultiplePrecisionConfig AMP_config_; ///< The Adaptive Multiple Precision settings.
 
 		public:
-			// function offered for observers.
+			// functions offered for observers.
 
-			template<typename T>
-			Vec<T> CurrentPoint() const
-			{
-				return std::get<Vec<T> >(current_space_);
-			}
-
-			unsigned CurrentPrecision() const
+			unsigned CurrentPrecision() const override
 			{
 				return current_precision_;
 			}
 		}; // re: class Tracker
-
 
 	} // namespace tracking
 } // namespace bertini

@@ -31,6 +31,7 @@
 #ifndef BERTINI_TRACKER_HPP
 #define BERTINI_TRACKER_HPP
 
+#include "tracking/fixed_precision_tracker.hpp"
 #include "tracking/amp_tracker.hpp"
 
 

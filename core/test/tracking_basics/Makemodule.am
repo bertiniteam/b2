@@ -5,6 +5,7 @@ EXTRA_PROGRAMS += tracking_basics_test
 TESTS += tracking_basics_test
 
 tracking_basics_test_SOURCES = \
+	test/tracking_basics/fixed_precision_tracker_test.cpp \
 	test/tracking_basics/tracking_basics_test.cpp \
 	test/tracking_basics/tracker_test.cpp \
 	test/tracking_basics/newton_correct_test.cpp \

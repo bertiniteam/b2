@@ -67,6 +67,12 @@ namespace bertini
 		{
 			return 14;
 		}
+
+		inline
+		static unsigned TolToDigits(double tol)
+		{
+			return ceil(-log10(tol));
+		}
 	};
 
 
@@ -195,6 +201,13 @@ namespace bertini {
 		inline static unsigned NumFuzzyDigits()
 		{
 			return mpfr_float::default_precision()-3;
+		}
+
+		inline
+		static unsigned TolToDigits(mpfr_float tol)
+		{
+			auto b = ceil(-log10(tol));
+			return b.convert_to<unsigned int>();
 		}
 	};	
 

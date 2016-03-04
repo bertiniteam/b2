@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
+	config::Stepping<mpfr_float> stepping_preferences;
 	config::Newton newton_preferences;
 
 

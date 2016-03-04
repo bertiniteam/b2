@@ -125,8 +125,17 @@ namespace bertini{
 
 
 		*/
+		template<class D>
 		class Tracker : public Observable<>
 		{
+
+
+			friend class Tracker<D>;
+			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
+			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+
+			using CT = BaseComplexType;
+			using RT = BaseRealType;
 
 		public:
 
@@ -136,32 +145,73 @@ namespace bertini{
 			}
 
 
+			/**
+			\brief Get the tracker set up for tracking.
+
+			Pass the tracker the configuration for tracking, to get it set up.
+			*/
+			// template<typename R = RT, typename std::enable_if<std::is_same<R, mpfr_float>::value>::type >
+			// void Setup(config::Predictor new_predictor_choice,
+			//            R const& tracking_tolerance,
+			// 			R const& path_truncation_threshold,
+			// 			config::Stepping<R> const& stepping,
+			// 			config::Newton const& newton)
+			// {
+			// 	Predictor(new_predictor_choice);
+				
+			// 	tracking_tolerance_ = tracking_tolerance;
+			// 	R b = ceil(-log10(tracking_tolerance));
+			// 	digits_tracking_tolerance_ = b.template convert_to<unsigned int>();
+
+			// 	path_truncation_threshold_ = path_truncation_threshold;
+
+			// 	stepping_config_ = stepping;
+			// 	newton_config_ = newton;
+			// }
+
+
+			// template<typename R = RT, typename std::enable_if<std::is_same<R, double>::value>::type >
+			// void Setup(config::Predictor new_predictor_choice,
+			//            R const& tracking_tolerance,
+			// 			R const& path_truncation_threshold,
+			// 			config::Stepping<R> const& stepping,
+			// 			config::Newton const& newton)
+			// {
+			// 	Predictor(new_predictor_choice);
+				
+			// 	tracking_tolerance_ = tracking_tolerance;
+			// 	digits_tracking_tolerance_ = ceil(-log10(tracking_tolerance));
+
+			// 	path_truncation_threshold_ = path_truncation_threshold;
+
+			// 	stepping_config_ = stepping;
+			// 	newton_config_ = newton;
+			// }
 
 			/**
 			\brief Get the tracker set up for tracking.
 
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
+			// template<typename R = RT, typename std::enable_if<std::is_same<R, double>::value>::type >
+
+			template<typename R = RT>
 			void Setup(config::Predictor new_predictor_choice,
-			           mpfr_float const& tracking_tolerance,
-						mpfr_float const& path_truncation_threshold,
-						config::Stepping const& stepping,
-						config::Newton const& newton
-						)
+			           R const& tracking_tolerance,
+						R const& path_truncation_threshold,
+						config::Stepping<R> const& stepping,
+						config::Newton const& newton)
 			{
 				Predictor(new_predictor_choice);
 				
 				tracking_tolerance_ = tracking_tolerance;
-				mpfr_float b = ceil(-log10(tracking_tolerance));
-				digits_tracking_tolerance_ = b.convert_to<unsigned int>();
+				digits_tracking_tolerance_ = NumTraits<R>::TolToDigits(tracking_tolerance);
 
 				path_truncation_threshold_ = path_truncation_threshold;
 
 				stepping_config_ = stepping;
 				newton_config_ = newton;
 			}
-
-
 
 
 			/**
@@ -175,15 +225,15 @@ namespace bertini{
 			
 			The is the fundamental method for the tracker.  First, you create and set up the tracker, telling it what system you will solve, and the settings to use.  Then, you actually do the tracking.
 			*/
-			SuccessCode TrackPath(Vec<mpfr> & solution_at_endtime,
-									mpfr const& start_time, mpfr const& endtime,
-									Vec<mpfr> const& start_point
+			SuccessCode TrackPath(Vec<CT> & solution_at_endtime,
+									CT const& start_time, CT const& endtime,
+									Vec<CT> const& start_point
 									) const
 			{	
 				if (start_point.size()!=tracked_system_.NumVariables())
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
-				
+				using std::abs;
 				
 				SuccessCode initialization_code = TrackerLoopInitialization(start_time, endtime, start_point);
 				if (initialization_code!=SuccessCode::Success)
@@ -243,15 +293,51 @@ namespace bertini{
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			*/
-			virtual
-			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time) const = 0;
+			// virtual
+			// SuccessCode Refine(Vec<mpfr> & new_space,
+			// 					Vec<mpfr> const& start_point, mpfr const& current_time) const = 0;
+
+
+
+
+			// *
+			// \brief Refine a point given in multiprecision.
+			
+			// Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
+
+			// \return The SuccessCode indicating whether the refinement completed.  
+
+			// \param new_space The result of refinement.
+			// \param start_point The seed for Newton's method for refinement.
+			// \param current_time The current time value for refinement.
+			// \param tolerance The tolerance to which to refine.
+			
+			// virtual
+			// SuccessCode Refine(Vec<mpfr> & new_space,
+			// 					Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const = 0;
+
+			/**
+			\brief Refine a point to tolerance implicitly internally set.
+			
+			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, the tracking tolerance, precision, etc.  YOU must ensure that the input point has the correct precision.
+
+			\return The SuccessCode indicating whether the refinement completed.  
+
+			\param new_space The result of refinement.
+			\param start_point The seed for Newton's method for refinement.
+			\param current_time The current time value for refinement.
+			*/
+			SuccessCode Refine(Vec<CT> & new_space,
+								Vec<CT> const& start_point, CT const& current_time) const
+			{
+				return D::template Refine<CT, BaseRealType>(new_space, start_point, current_time);
+			}
 
 
 
 
 			/**
-			\brief Refine a point given in multiprecision.
+			\brief Refine a point to a given tolerance.
 			
 			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
 
@@ -262,9 +348,12 @@ namespace bertini{
 			\param current_time The current time value for refinement.
 			\param tolerance The tolerance to which to refine.
 			*/
-			virtual
-			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const = 0;
+			SuccessCode Refine(Vec<CT> & new_space,
+								Vec<CT> const& start_point, CT const& current_time, RT const& tolerance) const
+			{
+				return D::template Refine<CT,RT>(new_space, start_point, current_time, tolerance);
+			}
+
 
 			/**
 			\brief Change tracker to use a predictor
@@ -312,7 +401,7 @@ namespace bertini{
 
 			\param new_stepsize The new value.
 			*/ 
-			void SetStepSize(mpfr_float const& new_stepsize) const
+			void SetStepSize(RT const& new_stepsize) const
 			{
 				current_stepsize_ = new_stepsize;
 			}
@@ -331,7 +420,7 @@ namespace bertini{
 			\param start_point The point from which to start tracking.
 			*/
 			virtual
-			SuccessCode TrackerLoopInitialization(mpfr const& start_time, mpfr const& end_time, Vec<mpfr> const& start_point) const = 0;
+			SuccessCode TrackerLoopInitialization(CT const& start_time, CT const& end_time, Vec<CT> const& start_point) const = 0;
 
 			
 
@@ -357,7 +446,7 @@ namespace bertini{
 			\param solution_at_endtime The output variable into which to copy the final solution.
 			*/
 			virtual
-			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
+			void CopyFinalSolution(Vec<CT> & solution_at_endtime) const = 0;
 
 
 			/**
@@ -371,6 +460,21 @@ namespace bertini{
 			}
 
 		protected:
+
+
+			
+
+
+			template <typename ComplexType>
+			SuccessCode CheckGoingToInfinity() const
+			{
+				if (tracked_system_.DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
+					return SuccessCode::GoingToInfinity;
+				else
+					return SuccessCode::Success;
+			}
+
+
 
 			/**
 			\brief Function to be called before exiting the tracker loop.
@@ -452,26 +556,47 @@ namespace bertini{
 			config::Predictor predictor_choice_; ///< The predictor to use while tracking.
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
-			config::Stepping stepping_config_; ///< The stepping configuration.
+			config::Stepping<RT> stepping_config_; ///< The stepping configuration.
 			config::Newton newton_config_; ///< The newton configuration.
-			config::Security security_config_; ///< The security settings.
 
 
 
 			unsigned digits_final_ = 0; ///< The number of digits to track to, due to being in endgame zone.
 			unsigned digits_tracking_tolerance_; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
-			mpfr_float tracking_tolerance_; ///< The tracking tolerance.
-			mpfr_float path_truncation_threshold_; ///< The threshold for path truncation.
+			RT tracking_tolerance_; ///< The tracking tolerance.
+			RT path_truncation_threshold_; ///< The threshold for path truncation.
 
 
-			mutable mpfr current_time_; ///< The current time.
-			mutable mpfr delta_t_; ///< The current delta_t.
-			mutable mpfr_float current_stepsize_; ///< The current stepsize.
+			mutable CT current_time_; ///< The current time.
+			mutable CT delta_t_; ///< The current delta_t.
+			mutable RT current_stepsize_; ///< The current stepsize.
 
 
 			// permanent temporaries
-			mutable mpfr_float next_stepsize_; /// The next stepsize
+			mutable RT next_stepsize_; /// The next stepsize
 			mutable SuccessCode step_success_code_; ///< The code for step success.
+
+
+
+			unsigned frequency_of_CN_estimation_; ///< How frequently the condition number should be re-estimated.
+			mutable unsigned num_steps_since_last_condition_number_computation_; ///< How many steps have passed since the most recent condition number estimate.
+			mutable unsigned num_successful_steps_since_stepsize_increase_; ///< How many successful steps have been taken since increased stepsize.
+			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
+
+			mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_space_; ///< The current space value. 
+			mutable std::tuple< Vec<dbl>, Vec<mpfr> > tentative_space_; ///< After correction, the tentative next space value
+			mutable std::tuple< Vec<dbl>, Vec<mpfr> > temporary_space_; ///< After prediction, the tentative next space value.
+
+
+			mutable std::tuple< double, mpfr_float > condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
+			mutable std::tuple< double, mpfr_float > error_estimate_; ///< An estimate on the error of a step.
+			mutable std::tuple< double, mpfr_float > norm_J_; ///< An estimate on the norm of the Jacobian
+			mutable std::tuple< double, mpfr_float > norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
+			mutable std::tuple< double, mpfr_float > norm_delta_z_; ///< The norm of the change in space resulting from a step.
+			mutable std::tuple< double, mpfr_float > size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
+
+
+
 
 			public: 
 			unsigned NumVariables() const
@@ -491,8 +616,17 @@ namespace bertini{
 
 			auto CurrentStepsize() const
 			{
-				return current_time_;
+				return current_stepsize_;
 			}
+
+
+			template<typename T>
+			Vec<T> CurrentPoint() const
+			{
+				return std::get<Vec<T> >(current_space_);
+			}
+
+			virtual unsigned CurrentPrecision() const = 0;
 		};
 
 

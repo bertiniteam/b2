@@ -40,8 +40,40 @@ namespace bertini
 	namespace tracking{
 
 		
+		template<class T>
+		struct TrackerTraits
+		{};
 
 
+		
+
+		class DoublePrecisionTracker;
+
+		template<>
+		struct TrackerTraits<DoublePrecisionTracker>
+		{
+			using BaseComplexType = dbl;
+			using BaseRealType = double;
+		};
+
+		class AMPTracker;
+		template<>
+		struct TrackerTraits<AMPTracker>
+		{
+			using BaseComplexType = mpfr;
+			using BaseRealType = mpfr_float;
+		};
+
+
+		template<class D>
+		class FixedPrecisionTracker;
+
+		template<class D>
+		struct TrackerTraits<FixedPrecisionTracker<D> >
+		{
+			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
+			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+		};
 
 
 		enum class SuccessCode
@@ -86,8 +118,15 @@ namespace bertini
 
 
 
-
+			template<typename T>
 			struct Tolerances
+			{
+				
+			};
+
+
+			template<>
+			struct Tolerances<mpfr_float>
 			{
 				mpfr_float newton_before_endgame = mpfr_float("1e-5");
 				mpfr_float newton_during_endgame = mpfr_float("1e-6");;
@@ -97,7 +136,45 @@ namespace bertini
 				mpfr_float path_truncation_threshold = mpfr_float("1e5");
 			};
 
+			template<>
+			struct Tolerances<double>
+			{
+				double newton_before_endgame = double(1e-5);
+				double newton_during_endgame = double(1e-6);;
+
+				double final_tolerance = double(1e-11);
+
+				double path_truncation_threshold = double(1e5);
+			};
+
+			template<typename T>
 			struct Stepping
+			{};
+
+
+
+			template<>
+			struct Stepping<double>
+			{
+				double initial_step_size = double(0.1);
+				double max_step_size = double(0.1);
+				double min_step_size = double(1e-100);
+
+				double step_size_success_factor = double(2.0);
+				double step_size_fail_factor = double(0.5);
+
+				unsigned consecutive_successful_steps_before_stepsize_increase = 5;
+
+				unsigned min_num_steps = 1;
+				unsigned max_num_steps = 1e5;
+
+				unsigned frequency_of_CN_estimation = 1;
+				
+			};
+
+
+			template<>
+			struct Stepping<mpfr_float>
 			{
 				mpfr_float initial_step_size = mpfr_float("0.1");
 				mpfr_float max_step_size = mpfr_float("0.1");
@@ -115,6 +192,7 @@ namespace bertini
 				
 			};
 
+			
 			struct Newton
 			{
 				unsigned max_num_newton_iterations = 2;
