@@ -56,6 +56,16 @@ namespace bertini
 			using BaseRealType = double;
 		};
 
+
+		class MultiplePrecisionTracker;
+
+		template<>
+		struct TrackerTraits<MultiplePrecisionTracker>
+		{
+			using BaseComplexType = mpfr;
+			using BaseRealType = mpfr_float;
+		};
+
 		class AMPTracker;
 		template<>
 		struct TrackerTraits<AMPTracker>

@@ -80,33 +80,7 @@ namespace bertini{
 
 			FixedPrecisionTracker(System const& sys) : Base(sys){}
 
-			/**
-			\brief Set up the internals of the tracker for a fresh start.  
-
-			Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
-
-			\param start_time The time at which to start tracking.
-			\param end_time The time to which to track.
-			\param start_point The space values from which to start tracking.
-			*/
-			SuccessCode TrackerLoopInitialization(CT const& start_time,
-			                               CT const& end_time,
-										   Vec<CT> const& start_point) const override
-			{
-				this->NotifyObservers(Initializing<FixedPrecisionTracker,CT>(*this,start_time, end_time, start_point));
-
-				// set up the master current time and the current step size
-				this->current_time_ = start_time;
-				std::get<Vec<CT> >(this->current_space_) = start_point;
-				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(this->stepping_config_.initial_step_size,abs(start_time-end_time)/this->stepping_config_.min_num_steps));
-
-				ResetCounters();
-
-				return SuccessCode::Success;
-			}
-
-
+			
 			void ResetCounters() const override
 			{
 				Base::ResetCounters();
@@ -453,39 +427,6 @@ namespace bertini{
 							   this->newton_config_.max_num_newton_iterations);
 			}
 
-			/////////////////
-			//
-			//  Functions for refining a current space value
-			//
-			///////////////////////
-
-
-			// /**
-			// \brief Run Newton's method from the currently stored time and space value, in current precision.
-
-			// This overwrites the value of the current space, if successful, with the refined value.
-
-			// \return Whether the refinement was successful.
-			// */
-			// SuccessCode Refine() const
-			// {
-			// 	SuccessCode code;
-			// 	if (current_precision_==DoublePrecision())
-			// 	{
-			// 		code = Refine(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_),double(tracking_tolerance_));
-			// 		if (code == SuccessCode::Success)
-			// 			std::get<Vec<dbl> >(current_space_) = std::get<Vec<dbl> >(temporary_space_);
-			// 	}
-			// 	else
-			// 	{
-			// 		code = Refine(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_, tracking_tolerance_);
-			// 		if (code == SuccessCode::Success)
-			// 			std::get<Vec<mpfr> >(current_space_) = std::get<Vec<mpfr> >(temporary_space_);
-			// 	}
-			// 	return code;
-			// }
-
-
 
 			/////////////////////////////////////////////
 			//////////////////////////////////////
@@ -527,10 +468,110 @@ namespace bertini{
 				return DoublePrecision();
 			}
 
+
+			/**
+			\brief Set up the internals of the tracker for a fresh start.  
+
+			Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
+
+			\param start_time The time at which to start tracking.
+			\param end_time The time to which to track.
+			\param start_point The space values from which to start tracking.
+			*/
+			SuccessCode TrackerLoopInitialization(BaseComplexType const& start_time,
+			                               BaseComplexType const& end_time,
+										   Vec<BaseComplexType> const& start_point) const override
+			{
+				this->NotifyObservers(Initializing<DoublePrecisionTracker,BaseComplexType>(*this,start_time, end_time, start_point));
+
+				// set up the master current time and the current step size
+				this->current_time_ = start_time;
+				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
+				if (this->reinitialize_stepsize_)
+					this->SetStepSize(min(this->stepping_config_.initial_step_size,abs(start_time-end_time)/this->stepping_config_.min_num_steps));
+
+				ResetCounters();
+
+				return SuccessCode::Success;
+			}
+
+
 		private:
 
-		}; // re: class Tracker
+		}; // re: DoublePrecisionTracker
 
+
+		class MultiplePrecisionTracker : public FixedPrecisionTracker<MultiplePrecisionTracker>
+		{
+		public:
+			using BaseComplexType = mpfr;
+			using BaseRealType = mpfr_float;
+
+			BERTINI_DEFAULT_VISITABLE()
+
+			/**
+			\brief Construct a Multiple Precision tracker, associating to it a System.
+			*/
+			MultiplePrecisionTracker(class System const& sys, unsigned p) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(p)
+			{	
+				if (p!=mpfr_float::default_precision())
+					throw std::runtime_error("creating a fixed multiple precision tracker with differing precision from current default");
+			}
+
+
+			MultiplePrecisionTracker() = delete;
+
+			virtual ~MultiplePrecisionTracker() = default;
+
+
+			unsigned CurrentPrecision() const override
+			{
+				return precision_;
+			}
+
+
+			/**
+			\brief Set up the internals of the tracker for a fresh start.  
+
+			Copies the start time, current stepsize, and start point.  Adjusts the current precision to match the precision of the start point.  Zeros counters.
+
+			\param start_time The time at which to start tracking.
+			\param end_time The time to which to track.
+			\param start_point The space values from which to start tracking.
+			*/
+			SuccessCode TrackerLoopInitialization(BaseComplexType const& start_time,
+			                               BaseComplexType const& end_time,
+										   Vec<BaseComplexType> const& start_point) const override
+			{
+
+				if (start_point(0).precision()!=mpfr_float::default_precision())
+					throw std::runtime_error("start point for fixed multiple precision tracker has differing precision from default, tracking cannot start");
+
+				if (start_point(0).precision()!=CurrentPrecision())
+					throw std::runtime_error("start point for fixed multiple precision tracker has differing precision from tracker's precision, tracking cannot start");
+
+				if (mpfr_float::default_precision()!=CurrentPrecision())
+					throw std::runtime_error("current default precision differs from tracker's precision, tracking cannot start");
+
+
+				this->NotifyObservers(Initializing<MultiplePrecisionTracker,BaseComplexType>(*this,start_time, end_time, start_point));
+
+				// set up the master current time and the current step size
+				this->current_time_ = start_time;
+				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
+				if (this->reinitialize_stepsize_)
+					this->SetStepSize(min(this->stepping_config_.initial_step_size,abs(start_time-end_time)/this->stepping_config_.min_num_steps));
+
+				ResetCounters();
+
+				return SuccessCode::Success;
+			}
+
+
+		private:
+
+			unsigned precision_;
+		}; // re: MultiplePrecisionTracker
 	} // namespace tracking
 } // namespace bertini
 
