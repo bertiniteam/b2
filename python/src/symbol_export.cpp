@@ -96,14 +96,14 @@ namespace bertini{
 
 			
 			// Integer class
-			class_<Integer, bases<NamedSymbol>, std::shared_ptr<Integer> >("Integer", init< int >())
+			class_<Integer, bases<Number>, std::shared_ptr<Integer> >("Integer", init< int >())
 			.def(init<mpz_int>())
 			.def(init<std::string const&>())
 			;
 
 			
 			// Rational class
-			class_<Rational, bases<NamedSymbol>, std::shared_ptr<Rational> >("Rational", init< int >())
+			class_<Rational, bases<Number>, std::shared_ptr<Rational> >("Rational", init< int >())
 			.def(init<int, int>())
 			.def(init<int, int, int, int>())
 			.def(init<std::string>())
