@@ -97,7 +97,7 @@ namespace bertini{
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;
-
+				std::get<Vec<CT> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
 					this->SetStepSize(min(this->stepping_config_.initial_step_size,abs(start_time-end_time)/this->stepping_config_.min_num_steps));
 
