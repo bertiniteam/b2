@@ -27,8 +27,8 @@
 #include <boost/test/unit_test.hpp>
 
 
-#include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/LU>
+#include <Eigen/Dense>
+#include <Eigen/LU>
 
 #include "mpfr_complex.hpp"
 
