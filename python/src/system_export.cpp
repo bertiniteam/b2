@@ -13,6 +13,9 @@
 
 namespace bertini{
 	namespace python{
+		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+		
+		
 		
 		template<typename SystemBaseT>
 		template<class PyClass>
@@ -88,15 +91,43 @@ namespace bertini{
 			.def(std::shared_ptr<node::Node>() * self)
 			;
 		}
+		
+		
+		
+		
+		
+		template<typename SystemBaseT>
+		template<class PyClass>
+		void StartSystemVisitor<SystemBaseT>::visit(PyClass& cl) const
+		{
+			cl
+			.def("num_start_points", &SystemBaseT::NumStartPoints)
+			.def("start_pointd", return_GenStart_ptr<dbl>() )
+			.def("start_pointmp", return_GenStart_ptr<mpfr>() )
+			;
 
+
+		};
 		
 		void ExportSystem()
 		{
 			
 			// System class
-			class_<System, std::shared_ptr<bertini::System> >("System", init<>())
-			.def(SystemVisitor<bertini::System>())
+			class_<System, std::shared_ptr<System> >("System", init<>())
+			.def(SystemVisitor<System>())
 			;
+			
+			// StartSystem class
+			class_<start_system::StartSystem, boost::noncopyable, bases<System>, std::shared_ptr<start_system::StartSystem> >("StartSystem", no_init)
+			.def(StartSystemVisitor<start_system::StartSystem>())
+			;
+
+			// TotalDegree class
+			class_<start_system::TotalDegree, bases<start_system::StartSystem>, std::shared_ptr<start_system::TotalDegree> >("TotalDegree", init<System const&>())
+			.def("random_value", &start_system::TotalDegree::RandomValue)
+			.def("random_values", &start_system::TotalDegree::RandomValues, return_value_policy<copy_const_reference>())
+			;
+
 			
 		}
 

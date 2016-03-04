@@ -20,6 +20,10 @@
 void ExportContainers()
 {
 	// Expose the deque containers
+	class_< std::vector<std::shared_ptr< bertini::node::Rational > > >("ListRational")
+	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Rational> > , true >())
+	;
+
 	class_< bertini::VariableGroup >("VariableGroup")
 	.def(vector_indexing_suite< bertini::VariableGroup, true >())
 	;

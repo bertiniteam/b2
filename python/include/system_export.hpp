@@ -9,6 +9,7 @@
 #ifndef Xcode_b2_system_export_hpp
 #define Xcode_b2_system_export_hpp
 #include <bertini2/system.hpp>
+#include <bertini2/start_system.hpp>
 
 
 
@@ -90,9 +91,33 @@ namespace bertini{
 				return &SystemBaseT::template Jacobian<T>;
 			};
 
+		};
+		
+		
+		
+		
+		
+		
+		
+		///////// StartSystem class ////////////////
+		template<typename SystemBaseT>
+		class StartSystemVisitor: public def_visitor<StartSystemVisitor<SystemBaseT> >
+		{
+			friend class def_visitor_access;
 			
-
-
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+			
+		private:
+			template <typename T>
+			using GenStart_ptr = Vec<T> (SystemBaseT::*)(size_t) const;
+			template <typename T>
+			static GenStart_ptr<T> return_GenStart_ptr()
+			{
+				return &SystemBaseT::template StartPoint<T>;
+			};
 		};
 		
 	}

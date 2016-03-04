@@ -153,9 +153,25 @@ namespace bertini{
 			static MPFRBaseT __mul_int(const MPFRBaseT& a, const int& b){ return a*b; };
 			static MPFRBaseT __imul_int(MPFRBaseT& a, const int& b){ a*=b; return a; };
 			static MPFRBaseT __rmul_int(const MPFRBaseT& b, const int& a){ return a*b; };
+			static MPFRBaseT __div_int(const MPFRBaseT& a, const int& b){ return a/b; };
+			static MPFRBaseT __idiv_int(MPFRBaseT& a, const int& b){ a/=b; return a; };
+			static MPFRBaseT __rdiv_int(const MPFRBaseT& b, const int& a){ return a/b; };
+
 			static MPFRBaseT __div__(const MPFRBaseT& a, const MPFRBaseT& b){ return a/b; };
 			static MPFRBaseT __idiv__(MPFRBaseT& a, const MPFRBaseT& b){ a/=b; return a; };
-			
+
+			static MPFRBaseT __add_mpint(const MPFRBaseT& a, const boost::multiprecision::mpz_int& b){ return a+b; };
+			static MPFRBaseT __iadd_mpint(MPFRBaseT& a, const boost::multiprecision::mpz_int& b){ a+=b; return a; };
+			static MPFRBaseT __radd_mpint(const MPFRBaseT& b, const boost::multiprecision::mpz_int& a){ return a+b; };
+			static MPFRBaseT __sub_mpint(const MPFRBaseT& a, const boost::multiprecision::mpz_int& b){ return a-b; };
+			static MPFRBaseT __isub_mpint(MPFRBaseT& a, const boost::multiprecision::mpz_int& b){ a-=b; return a; };
+			static MPFRBaseT __rsub_mpint(const MPFRBaseT& b, const boost::multiprecision::mpz_int& a){ return a-b; };
+			static MPFRBaseT __mul_mpint(const MPFRBaseT& a, const boost::multiprecision::mpz_int& b){ return a*b; };
+			static MPFRBaseT __imul_mpint(MPFRBaseT& a, const boost::multiprecision::mpz_int& b){ a*=b; return a; };
+			static MPFRBaseT __rmul_mpint(const MPFRBaseT& b, const boost::multiprecision::mpz_int& a){ return a*b; };
+			static MPFRBaseT __div_mpint(const MPFRBaseT& a, const boost::multiprecision::mpz_int& b){ return a/b; };
+			static MPFRBaseT __idiv_mpint(MPFRBaseT& a, const boost::multiprecision::mpz_int& b){ a/=b; return a; };
+
 			static std::string __repr__(const object& obj)
 			{
 				std::ostringstream oss;

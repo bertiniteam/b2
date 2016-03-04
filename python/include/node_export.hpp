@@ -71,10 +71,6 @@ namespace bertini{
 				return &NodeBaseT::template Eval<T>;
 			};
 			
-//			static dbl evaldbl0(NodeBaseT& self) { return self.template Eval<dbl>();}
-//			dbl (NodeBaseT::*evaldbl1)(std::shared_ptr<Variable>) = &NodeBaseT::template Eval<dbl>;
-//			static mpfr evalmp0(NodeBaseT& self) { return self.template Eval<mpfr>();}
-//			mpfr (NodeBaseT::*evalmp1)(std::shared_ptr<Variable>) = &NodeBaseT::template Eval<mpfr>;
 
 
 			// Addition operators

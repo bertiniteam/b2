@@ -23,6 +23,8 @@ namespace bertini{
 	namespace python{
 		
 		using namespace bertini::node;
+		using mpz_int = boost::multiprecision::mpz_int;
+		using mpq_rational = boost::multiprecision::mpq_rational;
 
 		void ExportSymbols();
 
@@ -46,7 +48,34 @@ namespace bertini{
 		};
 
 		
+
+		///////// Integer class ////////////////
+		template<typename NodeBaseT>
+		class IntegerVisitor: public def_visitor<IntegerVisitor<NodeBaseT> >
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+		};
+
 		
+		
+		
+		///////// Rational class ////////////////
+		template<typename NodeBaseT>
+		class RationalVisitor: public def_visitor<RationalVisitor<NodeBaseT> >
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+		};
+
 
 		
 		
@@ -60,9 +89,6 @@ namespace bertini{
 			template<class PyClass>
 			void visit(PyClass& cl) const;
 			
-		private:
-//			void (NodeBaseT::*set_d)(dbl val) const= &NodeBaseT::template set_current_value<dbl>;
-//			void (NodeBaseT::*set_mp)(mpfr val) const= &NodeBaseT::template set_current_value<mpfr>;
 		};
 
 		

@@ -103,7 +103,19 @@ namespace bertini{
 			.def("__rsub__",&MPFRRationalVisitor::__rsub_int)
 			.def("__mul__",&MPFRRationalVisitor::__mul_int).def("__imul__",&MPFRRationalVisitor::__imul_int)
 			.def("__rmul__",&MPFRRationalVisitor::__rmul_int)
+			.def("__div__",&MPFRRationalVisitor::__div_int).def("__idiv__",&MPFRRationalVisitor::__idiv_int)
+			.def("__rdiv__",&MPFRRationalVisitor::__rdiv_int)
+			
 			.def("__div__",&MPFRRationalVisitor::__div__).def("__idiv__",&MPFRRationalVisitor::__idiv__)
+
+			.def("__add__",&MPFRRationalVisitor::__add_mpint).def("__iadd__",&MPFRRationalVisitor::__iadd_mpint)
+			.def("__radd__",&MPFRRationalVisitor::__radd_mpint)
+			.def("__sub__",&MPFRRationalVisitor::__sub_mpint).def("__isub__",&MPFRRationalVisitor::__isub_mpint)
+			.def("__rsub__",&MPFRRationalVisitor::__rsub_int)
+			.def("__mul__",&MPFRRationalVisitor::__mul_mpint).def("__imul__",&MPFRRationalVisitor::__imul_mpint)
+			.def("__rmul__",&MPFRRationalVisitor::__rmul_mpint)
+			.def("__div__",&MPFRRationalVisitor::__div_mpint).def("__idiv__",&MPFRRationalVisitor::__idiv_mpint)
+
 			.def("__repr__", &MPFRRationalVisitor::__repr__)
 			
 			.def(self < self)

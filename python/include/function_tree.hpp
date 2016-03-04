@@ -46,6 +46,8 @@ namespace bertini{
 			implicitly_convertible<std::shared_ptr<Float>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<special_number::Pi>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<special_number::E>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<Integer>, Nodeptr>();
+			implicitly_convertible<std::shared_ptr<Rational>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<Variable>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<Differential>, Nodeptr>();
 			
@@ -79,16 +81,6 @@ namespace bertini{
 		
 		
 		
-//		using namespace boost::python;
-//		using Node = node::Node;
-//		using Nd = std::shared_ptr<node::Node>;
-//		
-//		void SetupFunctionTree();
-//		void ExportNode();
-//		void ExportSymbols();
-//		void ExportOperators();
-//		void ExportRoots();
-//		void ExportSystem();
 		
 		
 	}
