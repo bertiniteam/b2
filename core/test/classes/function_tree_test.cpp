@@ -1790,3 +1790,24 @@ BOOST_AUTO_TEST_CASE(function_tree_combine_product_of_two_integer_powers)
 
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+
+
+// BOOST_AUTO_TEST_SUITE(function_tree_default_constructors)
+
+// BOOST_AUTO_TEST_CASE(function)
+// {
+
+// 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+//     std::shared_ptr<Node> f = std::make_shared<Function>();
+//     f += x;
+//     BOOST_CHECK_EQUAL(f->Eval<dbl>(),dbl(0));
+
+// }
+// BOOST_AUTO_TEST_SUITE_END()
+
+
+
+
+

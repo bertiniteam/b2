@@ -223,7 +223,6 @@ namespace node{
 		BinaryOperator(){}
 
 	private:
-
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
