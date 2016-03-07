@@ -24,7 +24,9 @@
 										"bertini_*.log",
 										"config.log",
 										"config.status",
-										"configure"],
+										"configure",
+										"*.trs",
+										"*.log"],
 			"folder_exclude_patterns": [
 				".deps",
 				".libs",
