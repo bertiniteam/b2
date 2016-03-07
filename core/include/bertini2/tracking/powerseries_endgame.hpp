@@ -580,6 +580,7 @@ namespace bertini{
 			  		if (next_time.abs() < endgame_settings_.min_track_time)
 			  		{
 			  			std::cout << "Error current time norm is less than min track time." << '\n';
+
 			  			endgame_settings_.final_approximation_at_origin = prev_approx;
 			  			return SuccessCode::MinTrackTimeReached;
 			  		}

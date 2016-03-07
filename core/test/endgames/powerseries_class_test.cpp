@@ -1486,11 +1486,13 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 
 	sys.AddFunction(pow(x-1,3));
 	sys.AddFunction(pow(y-1,2));
+
 	sys.Homogenize();
 	sys.AutoPatch();
 
 	BOOST_CHECK(sys.IsHomogeneous());
 	BOOST_CHECK(sys.IsPatched());	
+
 
 	
 
@@ -1500,14 +1502,11 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	BOOST_CHECK(TD.IsPatched());
 
 
+
 	auto final_system = (1-t)*sys + t*TD;
 	final_system.AddPathVariable(t);
 
 	auto AMP = bertini::tracking::config::AMPConfigFrom(final_system);
-
-	// std::cout << "AMP is " << AMP << '\n';
-	// std::cout << "final system is " << final_system << '\n';
-	// std::cout << "coefficient bound is " << final_system.CoefficientBound() << '\n';
 
 
 
@@ -1540,73 +1539,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 		solutions.push_back(final_system.DehomogenizePoint(result));
 	}
 
-	Vec<mpfr> solution_1(2);
-	solution_1 << mpfr("0.687592791426802019127961784761","0.0567041721787413764699348206477"), mpfr("1.11076734170908975052327605226","0.207914822575706710605647487");
-
-	Vec<mpfr> solution_2(2);
-	solution_2 << mpfr("1.02264960658155701356264444257","0.520917033127216794197167359926"), mpfr("1.11076734170909913190783413484","0.207914822575691493611316218448");
-
-	Vec<mpfr> solution_3(2);
-	solution_3 << mpfr("0.989757601991555768794484038153","-0.57762120530600610801563732366"), mpfr("1.11076734170909918741898536609","0.20791482257569138952790765984");
-
-	Vec<mpfr> solution_4(2);
-	solution_4 << mpfr("0.687592791426887395278555459299","0.0567041721787893780032385748768"), mpfr("0.689232658290901023523389312686", "-0.207914822575691576878043065335");
-
-	Vec<mpfr> solution_5(2);
-	solution_5 << mpfr("1.02264960658081959931948637747","0.520917033127118696605766956908"), mpfr("0.689232658292013194430512839668","-0.207914822576518617066069857076");
-
-	Vec<mpfr> solution_6(2);
-	solution_6 << mpfr("0.989757601991599268196007422024","-0.577621205306094375358982164819"), mpfr("0.689232658290901310861758919599","-0.207914822575714712814276165999");
-
-
-	unsigned num_occurences(0);
-	for (auto s : solutions)
-	{
-		if ( (s-solution_1).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_2).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_3).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_4).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_5).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
-	num_occurences = 0;
-	for (auto s : solutions)
-	{
-		if ( (s-solution_6).norm() < mpfr_float("1e-5"))
-			num_occurences++;
-	}
-	BOOST_CHECK_EQUAL(num_occurences,1);
-
 	Vec<mpfr> correct(2);
 	correct << mpfr("1","0"),mpfr("1","0");
 
@@ -1622,20 +1554,15 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 		bertini::tracking::SuccessCode endgame_success = My_Endgame.PSEG(t_endgame_boundary,s);
 		if(endgame_success == bertini::tracking::SuccessCode::Success)
 		{
-			// std::cout << "difference is " << (tracker.GetSystem().DehomogenizePoint(My_Endgame.GetFinalApproximation())-correct).norm() << '\n';
-			// if((tracker.GetSystem().DehomogenizePoint(My_Endgame.GetFinalApproximation())-correct).norm() < My_Endgame.GetTrackToleranceDuringEndgame())
-			// {
 				num_successful_occurences++;
-			// }
+
 		}
 		if(endgame_success == bertini::tracking::SuccessCode::MinStepSizeReached)
 		{
 			num_min_track_time_reached++;
 		}
-		// std::cout << "solution is " << My_Endgame.GetFinalApproximation() << '\n';
 	}
 
-	// std::cout << " num_occurences is " << num_occurences << '\n';
  	BOOST_CHECK_EQUAL(num_successful_occurences,6);
  	BOOST_CHECK_EQUAL(num_min_track_time_reached,0);
 
