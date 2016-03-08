@@ -223,13 +223,10 @@ namespace bertini{
 						return SuccessCode::GoingToInfinity;
 					}
 					else if (step_success_code_==SuccessCode::Success)
-					{	
-						IncrementCountersSuccess();
-					}
+						OnStepSuccess();
 					else
-					{
-						IncrementCountersFail();
-					}
+						OnStepFail();
+
 				}// re: while
 
 
@@ -462,8 +459,7 @@ namespace bertini{
 
 			Your custom override, if provided, should almost certainly call this function.
 			*/
-			virtual
-			void IncrementCountersSuccess() const
+			void IncrementBaseCountersSuccess() const
 			{
 				num_successful_steps_taken_++; 
 				num_consecutive_successful_steps_++;
@@ -471,18 +467,25 @@ namespace bertini{
 				num_consecutive_failed_steps_ = 0;
 			}
 
+			virtual
+			void OnStepSuccess() const = 0;
+
+
 			/**
 			\brief Increment and reset counters after a failed TrackerIteration()
 
 			Your custom override, if provided, should almost certainly call this function.
 			*/
-			virtual
-			void IncrementCountersFail() const
+			void IncrementBaseCountersFail() const
 			{
 				num_consecutive_successful_steps_=0;
 				num_failed_steps_taken_++;
 				num_consecutive_failed_steps_++;
 			}
+
+
+			virtual
+			void OnStepFail() const = 0;
 
 			/**
 			\brief Check whether the path is going to infinity, as it tracks.  

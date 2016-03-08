@@ -240,18 +240,18 @@ namespace bertini{
 			/**
 			\brief Increment and reset counters after a successful TrackerIteration()
 			*/
-			void IncrementCountersSuccess() const override
+			void OnStepSuccess() const override
 			{
-				Base::IncrementCountersSuccess();
+				Base::IncrementBaseCountersSuccess();
 				this->NotifyObservers(SuccessfulStep<EmitterType >(*this));
 			}
 
 			/**
 			\brief Increment and reset counters after a failed TrackerIteration()
 			*/
-			void IncrementCountersFail() const override
+			void OnStepFail() const override
 			{
-				Base::IncrementCountersFail();
+				Base::IncrementBaseCountersFail();
 				this->num_successful_steps_since_stepsize_increase_ = 0;
 				this->NotifyObservers(FailedStep<EmitterType >(*this));
 			}
