@@ -39,12 +39,15 @@ namespace bertini {
 
 	namespace tracking{
 
-		template<class ObservedT>
-		class PrecisionAccumulator : public Observer<ObservedT>
+		template<class TrackerT>
+		class PrecisionAccumulator : public Observer<TrackerT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
+
+			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
 			virtual void Observe(AnyEvent const& e) override
 			{
-				const TrackingEvent<ObservedT>* p = dynamic_cast<const TrackingEvent<ObservedT>*>(&e);
+				const TrackingEvent<EmitterT>* p = dynamic_cast<const TrackingEvent<EmitterT>*>(&e);
 				if (p)
 				{
 					Visit(p->Get());
@@ -52,7 +55,7 @@ namespace bertini {
 			}
 
 
-			virtual void Visit(ObservedT const& t) override
+			virtual void Visit(TrackerT const& t) override
 			{
 				precisions_.push_back(t.CurrentPrecision());
 			}
@@ -71,12 +74,15 @@ namespace bertini {
 		Example usage:
 		PathAccumulator<AMPTracker> path_accumulator;
 		*/
-		template<class ObservedT, template<class> class EventT = SuccessfulStep>
-		class AMPPathAccumulator : public Observer<ObservedT>
+		template<class TrackerT, template<class> class EventT = SuccessfulStep>
+		class AMPPathAccumulator : public Observer<TrackerT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
+
+			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
 			virtual void Observe(AnyEvent const& e) override
 			{
-				const EventT<ObservedT>* p = dynamic_cast<const EventT<ObservedT>*>(&e);
+				const EventT<EmitterT>* p = dynamic_cast<const EventT<EmitterT>*>(&e);
 				if (p)
 				{
 					Visit(p->Get());
@@ -84,7 +90,7 @@ namespace bertini {
 			}
 
 
-			virtual void Visit(ObservedT const& t) override
+			virtual void Visit(TrackerT const& t) override
 			{
 				if (t.CurrentPrecision()==DoublePrecision())
 				{
@@ -110,31 +116,32 @@ namespace bertini {
 
 
 
-		template<class ObservedT>
-		class GoryDetailLogger : public Observer<ObservedT>
+		template<class TrackerT>
+		class GoryDetailLogger : public Observer<TrackerT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
 
+			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
 			virtual void Observe(AnyEvent const& e) override
 			{
 				
 
-				if (auto p = dynamic_cast<const Initializing<ObservedT,dbl>*>(&e))
+				if (auto p = dynamic_cast<const Initializing<EmitterT,dbl>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
 				}
-				else if (auto p = dynamic_cast<const Initializing<ObservedT,mpfr>*>(&e))
+				else if (auto p = dynamic_cast<const Initializing<EmitterT,mpfr>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
 				}
 
-				else if(auto p = dynamic_cast<const TrackingEnded<ObservedT>*>(&e))
+				else if(auto p = dynamic_cast<const TrackingEnded<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking ended";
 
-				else if (auto p = dynamic_cast<const NewStep<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const NewStep<EmitterT>*>(&e))
 				{
-					auto t = p->Get();
+					auto& t = p->Get();
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Tracker iteration " << t.NumTotalStepsTaken() << "\ncurrent precision: " << t.CurrentPrecision();
 
 					
@@ -150,20 +157,20 @@ namespace bertini {
 
 
 
-				else if (auto p = dynamic_cast<const SingularStartPoint<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const SingularStartPoint<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "singular start point";
-				else if (auto p = dynamic_cast<const InfinitePathTruncation<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const InfinitePathTruncation<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration indicated going to infinity, truncated path";
 
 
 
 
-				else if (auto p = dynamic_cast<const SuccessfulStep<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulStep<EmitterT>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful\n\n\n";
 				}
 				
-				else if (auto p = dynamic_cast<const FailedStep<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const FailedStep<EmitterT>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration unsuccessful\n\n\n";
 				}
@@ -173,66 +180,67 @@ namespace bertini {
 
 				
 
-				else if (auto p = dynamic_cast<const SuccessfulPredict<ObservedT,mpfr>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,mpfr>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful, result:\n" << p->ResultingPoint();
 				}
-				else if (auto p = dynamic_cast<const SuccessfulPredict<ObservedT,dbl>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,dbl>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful, result:\n" << p->ResultingPoint();
 				}
 
-				else if (auto p = dynamic_cast<const SuccessfulCorrect<ObservedT,mpfr>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,mpfr>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful, result:\n" << p->ResultingPoint();
 				}
-				else if (auto p = dynamic_cast<const SuccessfulCorrect<ObservedT,dbl>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,dbl>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful, result:\n" << p->ResultingPoint();
 				}
 
 
-				else if (auto p = dynamic_cast<const PredictorHigherPrecisionNecessary<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const PredictorHigherPrecisionNecessary<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, higher precision necessary";
-				else if (auto p = dynamic_cast<const CorrectorHigherPrecisionNecessary<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const CorrectorHigherPrecisionNecessary<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, higher precision necessary";				
 
 
 
-				else if (auto p = dynamic_cast<const CorrectorMatrixSolveFailure<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const CorrectorMatrixSolveFailure<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, higher precision necessary";				
-				else if (auto p = dynamic_cast<const PredictorMatrixSolveFailure<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const PredictorMatrixSolveFailure<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "predictor, matrix solve failure or failure to converge";	
-				else if (auto p = dynamic_cast<const FirstStepPredictorMatrixSolveFailure<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const FirstStepPredictorMatrixSolveFailure<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure in initial solve of prediction";	
 
 					
-				else if (auto p = dynamic_cast<const PrecisionChanged<ObservedT>*>(&e))
+				else if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "changing precision from " << p->Previous() << " to " << p->Next();
 				
 				else
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "unlogged event, of type: " << boost::typeindex::type_id_runtime(e).pretty_name();
 			}
 
-			virtual void Visit(ObservedT const& t) override
+			virtual void Visit(TrackerT const& t) override
 			{}
 		};
 
 
 
-		template<class ObservedT>
-		class StepFailScreenPrinter : public Observer<ObservedT>
+		template<class TrackerT>
+		class StepFailScreenPrinter : public Observer<TrackerT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
-
+			
+			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
 			virtual void Observe(AnyEvent const& e) override
 			{
-				if (auto p = dynamic_cast<const FailedStep<ObservedT>*>(&e))
+				if (auto p = dynamic_cast<const FailedStep<EmitterT>*>(&e))
 					std::cout << "observed step failure" << std::endl;
 			}
 
-			virtual void Visit(ObservedT const& t) override
+			virtual void Visit(TrackerT const& t) override
 			{}
 		};
 

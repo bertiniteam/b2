@@ -16,11 +16,11 @@
 
 //  tracking_config.hpp
 //
-//  copyright 2015
+//  copyright 2015, 2016
 //  Daniel Brake
 //  University of Notre Dame
 //  ACMS
-//  Summer 2015
+//  Summer 2015, Spring 2016
 
 #ifndef BERTINI_TRACKING_CONFIG_HPP
 #define BERTINI_TRACKING_CONFIG_HPP
@@ -46,7 +46,9 @@ namespace bertini
 
 
 		
-
+		template<class D>
+		class FixedPrecisionTracker;
+		class MultiplePrecisionTracker;
 		class DoublePrecisionTracker;
 
 		template<>
@@ -54,16 +56,16 @@ namespace bertini
 		{
 			using BaseComplexType = dbl;
 			using BaseRealType = double;
+			using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
 		};
 
-
-		class MultiplePrecisionTracker;
 
 		template<>
 		struct TrackerTraits<MultiplePrecisionTracker>
 		{
 			using BaseComplexType = mpfr;
 			using BaseRealType = mpfr_float;
+			using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 		};
 
 		class AMPTracker;
@@ -72,17 +74,18 @@ namespace bertini
 		{
 			using BaseComplexType = mpfr;
 			using BaseRealType = mpfr_float;
+			using EventEmitterType = AMPTracker;
 		};
 
 
-		template<class D>
-		class FixedPrecisionTracker;
+		
 
 		template<class D>
 		struct TrackerTraits<FixedPrecisionTracker<D> >
 		{
 			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
 			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+			using EventEmitterType = typename TrackerTraits<D>::EventEmitterType;
 		};
 
 
@@ -127,51 +130,27 @@ namespace bertini
 
 
 
-
 			template<typename T>
 			struct Tolerances
-			{
-				
+			{	
+				T newton_before_endgame = T(1)/T(100,000);
+				T newton_during_endgame = T(1)/T(1,000,000);
+
+				T final_tolerance = T(1)/T(100,000,000,000);
+
+				T path_truncation_threshold = T(100,000);
 			};
 
-
-			template<>
-			struct Tolerances<mpfr_float>
-			{
-				mpfr_float newton_before_endgame = mpfr_float("1e-5");
-				mpfr_float newton_during_endgame = mpfr_float("1e-6");;
-
-				mpfr_float final_tolerance = mpfr_float("1e-11");
-
-				mpfr_float path_truncation_threshold = mpfr_float("1e5");
-			};
-
-			template<>
-			struct Tolerances<double>
-			{
-				double newton_before_endgame = double(1e-5);
-				double newton_during_endgame = double(1e-6);;
-
-				double final_tolerance = double(1e-11);
-
-				double path_truncation_threshold = double(1e5);
-			};
 
 			template<typename T>
 			struct Stepping
-			{};
-
-
-
-			template<>
-			struct Stepping<double>
 			{
-				double initial_step_size = double(0.1);
-				double max_step_size = double(0.1);
-				double min_step_size = double(1e-100);
+				T initial_step_size = T(1)/T(10);
+				T max_step_size = T(1)/T(10);
+				T min_step_size = T(1e-100);
 
-				double step_size_success_factor = double(2.0);
-				double step_size_fail_factor = double(0.5);
+				T step_size_success_factor = T(2);
+				T step_size_fail_factor = T(1)/T(2);
 
 				unsigned consecutive_successful_steps_before_stepsize_increase = 5;
 
@@ -179,28 +158,8 @@ namespace bertini
 				unsigned max_num_steps = 1e5;
 
 				unsigned frequency_of_CN_estimation = 1;
-				
 			};
 
-
-			template<>
-			struct Stepping<mpfr_float>
-			{
-				mpfr_float initial_step_size = mpfr_float("0.1");
-				mpfr_float max_step_size = mpfr_float("0.1");
-				mpfr_float min_step_size = mpfr_float("1e-100");
-
-				mpfr_float step_size_success_factor = mpfr_float("2.0");
-				mpfr_float step_size_fail_factor = mpfr_float("0.5");
-
-				unsigned consecutive_successful_steps_before_stepsize_increase = 5;
-
-				unsigned min_num_steps = 1;
-				unsigned max_num_steps = 1e5;
-
-				unsigned frequency_of_CN_estimation = 1;
-				
-			};
 
 			
 			struct Newton
@@ -220,11 +179,11 @@ namespace bertini
 				mpfr_float ratio_tolerance;
 			};
 
-
+			template<typename T>
 			struct Security
 			{
 				int level = 0;
-				mpfr_float max_norm = mpfr_float("1e5");
+				T max_norm = T(100,000);
 			};
 
 
@@ -347,7 +306,7 @@ namespace bertini
 				unsigned consecutive_successful_steps_before_precision_decrease = 10;
 
 				unsigned max_num_precision_decreases = 10; ///< The maximum number of times precision can be lowered during tracking of a segment of path.
-				AdaptiveMultiplePrecisionConfig() : coefficient_bound("1000.0"), degree_bound("5.0"), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
+				AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
 				{}
 
 				/**
@@ -373,7 +332,7 @@ namespace bertini
 				*/
 				void SetPhiPsiFromBounds()
 				{
-					Phi = degree_bound*(degree_bound-mpfr_float("1.0"))*coefficient_bound;
+					Phi = degree_bound*(degree_bound-mpfr_float(1))*coefficient_bound;
 				    Psi = degree_bound*coefficient_bound;  //Psi from the AMP paper.
 				}
 

@@ -14,11 +14,11 @@
 //along with tracker_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-//  copyright 2015
+//  copyright 2016
 //  Daniel Brake
 //  University of Notre Dame
 //  ACMS
-//  Fall 2015
+//  Spring 2016
 
 //tracker_test.cpp
 //
@@ -27,6 +27,7 @@
 #include <boost/test/unit_test.hpp>
 #include "start_system.hpp"
 #include "tracking/fixed_precision_tracker.hpp"
+#include "bertini2/tracking/observers.hpp"
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
@@ -130,6 +131,9 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 					mpfr_float("1e5"),
 					stepping_preferences,
 					newton_preferences);
+
+	GoryDetailLogger<MultiplePrecisionTracker> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
 
 	
 	mpfr t_start(1);

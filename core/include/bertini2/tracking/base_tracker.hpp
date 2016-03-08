@@ -129,8 +129,6 @@ namespace bertini{
 		class Tracker : public Observable<>
 		{
 
-
-			friend class Tracker<D>;
 			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
 			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
 
@@ -145,48 +143,7 @@ namespace bertini{
 			}
 
 
-			/**
-			\brief Get the tracker set up for tracking.
 
-			Pass the tracker the configuration for tracking, to get it set up.
-			*/
-			// template<typename R = RT, typename std::enable_if<std::is_same<R, mpfr_float>::value>::type >
-			// void Setup(config::Predictor new_predictor_choice,
-			//            R const& tracking_tolerance,
-			// 			R const& path_truncation_threshold,
-			// 			config::Stepping<R> const& stepping,
-			// 			config::Newton const& newton)
-			// {
-			// 	Predictor(new_predictor_choice);
-				
-			// 	tracking_tolerance_ = tracking_tolerance;
-			// 	R b = ceil(-log10(tracking_tolerance));
-			// 	digits_tracking_tolerance_ = b.template convert_to<unsigned int>();
-
-			// 	path_truncation_threshold_ = path_truncation_threshold;
-
-			// 	stepping_config_ = stepping;
-			// 	newton_config_ = newton;
-			// }
-
-
-			// template<typename R = RT, typename std::enable_if<std::is_same<R, double>::value>::type >
-			// void Setup(config::Predictor new_predictor_choice,
-			//            R const& tracking_tolerance,
-			// 			R const& path_truncation_threshold,
-			// 			config::Stepping<R> const& stepping,
-			// 			config::Newton const& newton)
-			// {
-			// 	Predictor(new_predictor_choice);
-				
-			// 	tracking_tolerance_ = tracking_tolerance;
-			// 	digits_tracking_tolerance_ = ceil(-log10(tracking_tolerance));
-
-			// 	path_truncation_threshold_ = path_truncation_threshold;
-
-			// 	stepping_config_ = stepping;
-			// 	newton_config_ = newton;
-			// }
 
 			/**
 			\brief Get the tracker set up for tracking.

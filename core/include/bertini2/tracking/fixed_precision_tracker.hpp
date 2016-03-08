@@ -1,33 +1,30 @@
 //This file is part of Bertini 2.0.
 //
-//amp_tracker.hpp is free software: you can redistribute it and/or modify
+//fixed_precision_tracker.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//amp_tracker.hpp is distributed in the hope that it will be useful,
+//fixed_precision_tracker.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with amp_tracker.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with fixed_precision_tracker.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-//  amp_tracker.hpp
+//  fixed_precision_tracker.hpp
 //
-//  copyright 2015
+//  copyright 2016
 //  Daniel Brake
 //  University of Notre Dame
 //  ACMS
-//  Fall 2015
+//  Spring 2016
 
 /**
-\file amp_tracker.hpp
+\file fixed_precision_tracker.hpp
 
-\brief 
-
-\brief Contains the EmittedType  type, and necessary functions.
 */
 
 #ifndef BERTINI_FIXED_PRECISION_TRACKER_HPP
@@ -58,25 +55,23 @@ namespace bertini{
 
 		\brief Functor-like class for tracking paths on a system
 		*/
-		template<class D>
-		class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<D> >
+		template<class DerivedT>
+		class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<DerivedT> >
 		{	
 		public:
 
-			// typedef typename D::CT ComplexType;
-			// typedef typename D::RT RealType;
-
-			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
-			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+			using BaseComplexType = typename TrackerTraits<DerivedT>::BaseComplexType;
+			using BaseRealType = typename TrackerTraits<DerivedT>::BaseRealType;
 
 			using CT = BaseComplexType;
 			using RT = BaseRealType;
 
 			virtual ~FixedPrecisionTracker() = default;
 
-			typedef FixedPrecisionTracker<D> EmittedType;
+			typedef FixedPrecisionTracker<DerivedT> EmitterType;
+			typedef Tracker<FixedPrecisionTracker<DerivedT> > Base;
 
-			typedef Tracker<FixedPrecisionTracker<D> > Base;
+
 
 			FixedPrecisionTracker(System const& sys) : Base(sys){}
 
@@ -117,7 +112,7 @@ namespace bertini{
 
 			void PostTrackCleanup() const override
 			{
-				this->NotifyObservers(TrackingEnded<EmittedType >(*this));
+				this->NotifyObservers(TrackingEnded<EmitterType>(*this));
 			}
 
 			/**
@@ -157,7 +152,7 @@ namespace bertini{
 			              				typename Eigen::NumTraits<CT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				this->NotifyObservers(NewStep<EmittedType >(*this));
+				this->NotifyObservers(NewStep<EmitterType >(*this));
 
 				Vec<CT>& predicted_space = std::get<Vec<CT> >(this->temporary_space_); // this will be populated in the Predict step
 				Vec<CT>& current_space = std::get<Vec<CT> >(this->current_space_); // the thing we ultimately wish to update
@@ -168,7 +163,7 @@ namespace bertini{
 
 				if (predictor_code!=SuccessCode::Success)
 				{
-					this->NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmittedType >(*this));
+					this->NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType >(*this));
 
 					this->next_stepsize_ = this->stepping_config_.step_size_fail_factor*this->current_stepsize_;
 
@@ -177,7 +172,7 @@ namespace bertini{
 					return predictor_code;
 				}
 
-				this->NotifyObservers(SuccessfulPredict<EmittedType , CT>(*this, predicted_space));
+				this->NotifyObservers(SuccessfulPredict<EmitterType , CT>(*this, predicted_space));
 
 				Vec<CT>& tentative_next_space = std::get<Vec<CT> >(this->tentative_space_); // this will be populated in the Correct step
 
@@ -194,7 +189,7 @@ namespace bertini{
 				}
 				else if (corrector_code!=SuccessCode::Success)
 				{
-					this->NotifyObservers(CorrectorMatrixSolveFailure<EmittedType >(*this));
+					this->NotifyObservers(CorrectorMatrixSolveFailure<EmitterType >(*this));
 
 					this->next_stepsize_ = this->stepping_config_.step_size_fail_factor*this->current_stepsize_;
 					UpdateStepsize();
@@ -203,7 +198,7 @@ namespace bertini{
 				}
 
 				
-				this->NotifyObservers(SuccessfulCorrect<EmittedType , CT>(*this, tentative_next_space));
+				this->NotifyObservers(SuccessfulCorrect<EmitterType , CT>(*this, tentative_next_space));
 
 				// copy the tentative vector into the current space vector;
 				current_space = tentative_next_space;
@@ -248,7 +243,7 @@ namespace bertini{
 			void IncrementCountersSuccess() const override
 			{
 				Base::IncrementCountersSuccess();
-				this->NotifyObservers(SuccessfulStep<EmittedType >(*this));
+				this->NotifyObservers(SuccessfulStep<EmitterType >(*this));
 			}
 
 			/**
@@ -258,14 +253,14 @@ namespace bertini{
 			{
 				Base::IncrementCountersFail();
 				this->num_successful_steps_since_stepsize_increase_ = 0;
-				this->NotifyObservers(FailedStep<EmittedType >(*this));
+				this->NotifyObservers(FailedStep<EmitterType >(*this));
 			}
 
 
 
 			void OnInfiniteTruncation() const override
 			{
-				this->NotifyObservers(InfinitePathTruncation<EmittedType >(*this));
+				this->NotifyObservers(InfinitePathTruncation<EmitterType>(*this));
 			}
 
 			//////////////
@@ -449,7 +444,10 @@ namespace bertini{
 			using BaseComplexType = dbl;
 			using BaseRealType = double;
 
+			using EmitterType = typename TrackerTraits<DoublePrecisionTracker>::EventEmitterType;
+
 			BERTINI_DEFAULT_VISITABLE()
+
 
 			/**
 			\brief Construct an Adaptive Precision tracker, associating to it a System.
@@ -482,7 +480,7 @@ namespace bertini{
 			                               BaseComplexType const& end_time,
 										   Vec<BaseComplexType> const& start_point) const override
 			{
-				this->NotifyObservers(Initializing<DoublePrecisionTracker,BaseComplexType>(*this,start_time, end_time, start_point));
+				this->NotifyObservers(Initializing<EmitterType,BaseComplexType>(*this,start_time, end_time, start_point));
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;
@@ -507,15 +505,16 @@ namespace bertini{
 			using BaseComplexType = mpfr;
 			using BaseRealType = mpfr_float;
 
-			BERTINI_DEFAULT_VISITABLE()
+			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 
+			BERTINI_DEFAULT_VISITABLE()
 			/**
 			\brief Construct a Multiple Precision tracker, associating to it a System.
 			*/
 			MultiplePrecisionTracker(class System const& sys, unsigned p) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(p)
 			{	
 				if (p!=mpfr_float::default_precision())
-					throw std::runtime_error("creating a fixed multiple precision tracker with differing precision from current default");
+					throw std::runtime_error("erroneously creating a fixed multiple precision tracker with differing precision from current default");
 			}
 
 
@@ -554,7 +553,7 @@ namespace bertini{
 					throw std::runtime_error("current default precision differs from tracker's precision, tracking cannot start");
 
 
-				this->NotifyObservers(Initializing<MultiplePrecisionTracker,BaseComplexType>(*this,start_time, end_time, start_point));
+				this->NotifyObservers(Initializing<EmitterType,BaseComplexType>(*this,start_time, end_time, start_point));
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;
@@ -567,7 +566,21 @@ namespace bertini{
 				return SuccessCode::Success;
 			}
 
-
+			bool PrecisionSanityCheck() const
+			{	
+				return tracked_system_.precision() == precision_ &&
+						mpfr_float::default_precision()==precision_ && 
+						std::get<Vec<mpfr> >(current_space_)(0).precision() == precision_ &&
+						std::get<Vec<mpfr> >(tentative_space_)(0).precision() == precision_ &&
+						std::get<Vec<mpfr> >(temporary_space_)(0).precision() == precision_ &&
+						std::get<mpfr_float>(norm_delta_z_).precision() == precision_ &&
+						std::get<mpfr_float>(condition_number_estimate_).precision() == precision_ &&
+						std::get<mpfr_float>(error_estimate_).precision() == precision_ &&
+						std::get<mpfr_float>(norm_J_).precision() == precision_ &&
+						std::get<mpfr_float>(norm_J_inverse_).precision() == precision_ &&
+						std::get<mpfr_float>(size_proportion_).precision() == precision_
+						        ;				
+			}
 		private:
 
 			unsigned precision_;
