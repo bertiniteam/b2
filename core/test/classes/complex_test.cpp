@@ -602,6 +602,7 @@ BOOST_AUTO_TEST_CASE(precision_random_real_default)
 	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	auto a = bertini::complex::RandomReal();
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_real_highest)
@@ -610,6 +611,7 @@ BOOST_AUTO_TEST_CASE(precision_random_real_highest)
 	bertini::complex a;
 	RandomReal(a,1000);
 	BOOST_CHECK_EQUAL(bertini::Precision(a), 1000);
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_unit_default)
@@ -617,6 +619,7 @@ BOOST_AUTO_TEST_CASE(precision_random_unit_default)
 	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	auto a = bertini::complex::RandomUnit();
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_unit_highest)
@@ -625,6 +628,7 @@ BOOST_AUTO_TEST_CASE(precision_random_unit_highest)
 	bertini::complex a;
 	bertini::RandomUnit(a,1000);
 	BOOST_CHECK_EQUAL(bertini::Precision(a), 1000);
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_default)
@@ -632,6 +636,7 @@ BOOST_AUTO_TEST_CASE(precision_random_default)
 	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	auto a = bertini::complex::rand();
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_highest)
@@ -639,7 +644,8 @@ BOOST_AUTO_TEST_CASE(precision_random_highest)
 	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	bertini::complex a;
 	bertini::rand(a,1000);
-	BOOST_CHECK_EQUAL(bertini::Precision(a), 1000);
+	BOOST_CHECK_EQUAL(Precision(a), 1000);
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
 }
 
 

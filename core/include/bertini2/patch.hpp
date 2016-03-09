@@ -97,6 +97,45 @@ namespace bertini {
 
 
 		/**
+		Custom copy constructor, ensuring the max-precision coefficients are copied in highest precision
+		*/
+		Patch(Patch const& other)
+		{	
+			variable_group_sizes_ = other.variable_group_sizes_;
+			precision_ = mpfr_float::default_precision();
+
+			// a little shorthand unpacking the tuple
+			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(this->coefficients_working_);
+			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(this->coefficients_working_);
+
+			coefficients_highest_precision_.resize(other.NumVariableGroups());
+			coefficients_mpfr.resize(variable_group_sizes_.size());
+			coefficients_dbl.resize(variable_group_sizes_.size());
+
+			for (unsigned ii(0); ii<other.NumVariableGroups(); ++ii)
+			{
+				auto curr_size = variable_group_sizes_[ii];
+
+				coefficients_highest_precision_[ii].resize(curr_size);
+				coefficients_dbl[ii].resize(curr_size);
+				coefficients_mpfr[ii].resize(curr_size);
+
+				for (unsigned jj(0); jj<curr_size; jj++)
+				{
+					coefficients_highest_precision_[ii](jj).precision(other.coefficients_highest_precision_[ii](jj).precision());
+
+					coefficients_highest_precision_[ii](jj) = other.coefficients_highest_precision_[ii](jj);
+
+					coefficients_dbl[ii](jj) = dbl(coefficients_highest_precision_[ii](jj));
+					coefficients_mpfr[ii](jj) = mpfr(coefficients_highest_precision_[ii](jj));
+
+					assert(coefficients_highest_precision_[ii](jj) == other.coefficients_highest_precision_[ii](jj));
+				}
+			}
+		}
+
+
+		/**
 		\brief Constructor making a random complex patch on a space whose structure is described by the input argument.
 
 		The sizes input give the number of total variables, including homogenizing variables, for the product of spaces forming the total space to be patched.  The patch has no idea whether the underlying space is projective or affine -- that is handled somewhere else, likely in a bertini::System.
@@ -107,19 +146,26 @@ namespace bertini {
 		*/
 		Patch(std::vector<unsigned> const& sizes) : variable_group_sizes_(sizes), coefficients_highest_precision_(sizes.size()), precision_(mpfr_float::default_precision())
 		{
+			using bertini::RandomComplex;
+
 			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(coefficients_working_);
 			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(coefficients_working_);
 
+			coefficients_highest_precision_.resize(sizes.size());
 			coefficients_dbl.resize(sizes.size());
 			coefficients_mpfr.resize(sizes.size());
 
 			for (size_t ii=0; ii<sizes.size(); ++ii)
 			{
-				coefficients_highest_precision_[ii] = Vec<mpfr>::Random(sizes[ii]);
-				coefficients_mpfr[ii] = coefficients_highest_precision_[ii];
-				coefficients_dbl[ii] = Vec<dbl>(sizes[ii]);
+				coefficients_highest_precision_[ii].resize(sizes[ii]);
+				coefficients_dbl[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
+				{
+					RandomComplex(coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
 					coefficients_dbl[ii](jj) = dbl(coefficients_highest_precision_[ii](jj));
+				}
+
+				coefficients_mpfr[ii] = coefficients_highest_precision_[ii]; // copy into current default precision
 			}
 		}
 
@@ -137,27 +183,30 @@ namespace bertini {
 		\brief Construct random REAL patch on a space.
 		*/
 		static Patch RandomReal(std::vector<unsigned> const& sizes)
-		{
+		{	
+			using bertini::RandomReal;
+
 			Patch p;
 
 			p.variable_group_sizes_ = sizes;
 
-			p.coefficients_highest_precision_.resize(sizes.size());
+			
 
 			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(p.coefficients_working_);
 			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(p.coefficients_working_);
 
+			p.coefficients_highest_precision_.resize(sizes.size());
 			coefficients_mpfr.resize(sizes.size());
 			coefficients_dbl.resize(sizes.size());
 
 			for (size_t ii=0; ii<sizes.size(); ++ii)
 			{
-				p.coefficients_highest_precision_[ii] = Vec<mpfr>(sizes[ii]);
+				p.coefficients_highest_precision_[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-					p.coefficients_highest_precision_[ii](jj) = mpfr::RandomReal();
+					RandomReal(p.coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
 
 				coefficients_mpfr[ii] = p.coefficients_highest_precision_[ii];
-				coefficients_dbl[ii] = Vec<dbl>(sizes[ii]);
+				coefficients_dbl[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 					coefficients_dbl[ii](jj) = dbl(p.coefficients_highest_precision_[ii](jj));
 			}
