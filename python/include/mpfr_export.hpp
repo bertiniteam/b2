@@ -1,13 +1,27 @@
+//This file is part of Bertini 2.0.
 //
-//  mpfr_visitors.hpp
-//  Xcode_b2
+// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
 //
-//  Created by Collins, James B. on 1/29/16.
-//  Copyright (c) 2016 West Texas A&M University. All rights reserved.
+// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
 //
+//You should have received a copy of the GNU General Public License
+//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  James Collins
+//  West Texas A&M University
+//  Spring 2016
+//
+//
+//  python/mpfr_export.hpp:  Header file for exposing all multiprecision data types, those from boost and bertini::complex.
 
-#ifndef Xcode_b2_mpfr_visitors_hpp
-#define Xcode_b2_mpfr_visitors_hpp
+#ifndef Xcode_b2_mpfr_export_hpp
+#define Xcode_b2_mpfr_export_hpp
 
 #include "python_common.hpp"
 
@@ -15,12 +29,20 @@ namespace bertini{
 	namespace python{
 		
 		using namespace boost::python;
-		//typedef boost::multiprecision::number<boost::multiprecision::mpfr_float, boost::multiprecision::et_off> bmp;
-		//		typedef boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0> , boost::multiprecision::et_off> bmp;
 		
 		
 		void ExportMpfr();
 		
+		
+		// NOTE: Must redefine all aritmethic operators to support expresion templating in the mp data types
+		
+		
+		
+		
+		/**
+		 A base visitor exposing methods common to all multiprecision data types.  Mostly arithmetic and printing methods.
+		 
+		*/
 		template<typename MPFRBaseT>
 		class MPFRBaseVisitor: public def_visitor<MPFRBaseVisitor<MPFRBaseT> >
 		{
@@ -54,6 +76,12 @@ namespace bertini{
 		};
 
 		
+		
+		
+		
+		/**
+		 A base visitor exposing methods common to all float multiprecision data types.  These include trancendental functions and precision method.
+		*/
 		template<typename MPFRBaseT>
 		class MPFRFloatBaseVisitor: public def_visitor<MPFRFloatBaseVisitor<MPFRBaseT> >
 		{
@@ -94,7 +122,11 @@ namespace bertini{
 
 
 		
-		// boost::multiprecision int class
+		
+		
+		/**
+		 Visitor exposing important methods from the boost::multiprecision::mpz_int class
+		*/
 		template<typename MPFRBaseT>
 		class MPFRIntVisitor: public def_visitor<MPFRIntVisitor<MPFRBaseT>>
 		{
@@ -131,7 +163,11 @@ namespace bertini{
 
 	
 		
-		// boost::multiprecision rational class
+		
+		
+		/**
+		 Visitor exposing important methods from the boost::multiprecision::mpq_rational class
+		 */
 		template<typename MPFRBaseT>
 		class MPFRRationalVisitor: public def_visitor<MPFRRationalVisitor<MPFRBaseT>>
 		{
@@ -188,7 +224,9 @@ namespace bertini{
 		
 		
 		
-		// boost::multiprecision float class
+		/**
+		 Visitor exposing important methods from the bmp class, where bmp is defined in the bertini core.  This is the boost multiprecision real float class.
+		 */
 		template<typename MPFRBaseT>
 		class MPFRFloatVisitor: public def_visitor<MPFRFloatVisitor<MPFRBaseT>>
 		{
@@ -232,7 +270,13 @@ namespace bertini{
 		
 		
 		
-		// bertini::complex class
+		
+		
+		
+		
+		/**
+		 Visitor exposing important methods from the bertini::complex
+		 */
 		template<typename MPFRBaseT>
 		class MPFRComplexVisitor: public def_visitor<MPFRComplexVisitor<MPFRBaseT>>
 		{

@@ -13,10 +13,9 @@
 //You should have received a copy of the GNU General Public License
 //along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Fall 2015
+//  James Collins
+//  West Texas A&M University
+//  Spring 2016
 //
 //
 //  python/bertini_python.hpp:  the main header file for the python interface for bertini.

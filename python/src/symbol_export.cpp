@@ -1,10 +1,33 @@
+//This file is part of Bertini 2.0.
 //
-//  symbol_export.cpp
-//  Xcode_b2
+// python/function_tree.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//This file is part of Bertini 2.0.
 //
-//  Created by Collins, James B. on 2/2/16.
-//  Copyright (c) 2016 West Texas A&M University. All rights reserved.
+// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
 //
+// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  James Collins
+//  West Texas A&M University
+//  Spring 2016
+//
+//
+//  python/symbol_export.cpp:  Source file for exposing symbol nodes to python.
+
+
+
 
 #include <stdio.h>
 

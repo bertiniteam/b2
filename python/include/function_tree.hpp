@@ -4,22 +4,27 @@
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
+//This file is part of Bertini 2.0.
 //
-// python/function_tree.hpp is distributed in the hope that it will be useful,
+// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+// python/bertini_python.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with  python/function_tree.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+//  James Collins
+//  West Texas A&M University
+//  Spring 2016
 //
 //
-//  python/function_tree.hpp:  the header file for the python interface for function_tree class.
+//  python/function_tree.hpp:  Header file for all node types.
 
 #ifndef BERTINI_PYTHON_FUNCTION_TREE_HPP
 #define BERTINI_PYTHON_FUNCTION_TREE_HPP
@@ -42,7 +47,7 @@ namespace bertini{
 		using Nodeptr = std::shared_ptr<Node>;
 		void SetupFunctionTree()
 		{
-			// Tell Python that pointers to derived Nodes can be used as Node pointers
+			// Tell Python that pointers to derived Nodes can be used as Node pointers when passed to methods
 			implicitly_convertible<std::shared_ptr<Float>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<special_number::Pi>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<special_number::E>, Nodeptr>();
@@ -69,12 +74,6 @@ namespace bertini{
 			
 			implicitly_convertible<std::shared_ptr<Function>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<Jacobian>, Nodeptr>();
-			
-			
-			
-			
-			
-			
 			
 		}
 		

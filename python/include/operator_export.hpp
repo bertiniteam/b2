@@ -1,10 +1,33 @@
+//This file is part of Bertini 2.0.
 //
-//  operator_visitors.hpp
-//  Xcode_b2
+// python/function_tree.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//This file is part of Bertini 2.0.
 //
-//  Created by Collins, James B. on 1/30/16.
-//  Copyright (c) 2016 West Texas A&M University. All rights reserved.
+// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
 //
+// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  James Collins
+//  West Texas A&M University
+//  Spring 2016
+//
+//
+//  python/operator_export.hpp:  Header file for exposing operator nodes to python.
+
+
+
 
 #ifndef Xcode_b2_operator_visitors_hpp
 #define Xcode_b2_operator_visitors_hpp
@@ -24,8 +47,18 @@ namespace bertini{
 		using Node = Node;
 		using Nodeptr = std::shared_ptr<Node>;
 		
+		
+		
+		
 		void ExportOperators();
 		
+		
+		
+		
+		
+		/**
+		 UnaryOperator class(abstract)
+		 */
 		template<typename NodeBaseT>
 		class UnaryOpVisitor: public def_visitor<UnaryOpVisitor<NodeBaseT> >
 		{
@@ -36,6 +69,9 @@ namespace bertini{
 
 	
 		
+		
+		/** NaryOperator class(abstract)
+		 */
 		template<typename NodeBaseT>
 		class NaryOpVisitor: public def_visitor<NaryOpVisitor<NodeBaseT> >
 		{
@@ -48,7 +84,9 @@ namespace bertini{
 		
 		
 		
-		///////// SumOperator & MultOperator class ////////////////
+		/**
+		 SumOperator and MultOperator classes
+		 */
 		template<typename NodeBaseT>
 		class SumMultOpVisitor: public def_visitor<SumMultOpVisitor<NodeBaseT> >
 		{
@@ -67,7 +105,11 @@ namespace bertini{
 		};
 
 		
-		///////// PowerOperator class ////////////////
+		
+		
+		/**
+		 PowerOperator class
+		 */
 		template<typename NodeBaseT>
 		class PowerOpVisitor: public def_visitor<PowerOpVisitor<NodeBaseT> >
 		{
@@ -80,7 +122,9 @@ namespace bertini{
 		};
 
 		
-		///////// IntegerPowerOperator class ////////////////
+		/**
+		 IntegerPowerOperator class 
+		 */
 		template<typename NodeBaseT>
 		class IntPowOpVisitor: public def_visitor<IntPowOpVisitor<NodeBaseT> >
 		{

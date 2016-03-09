@@ -1,3 +1,24 @@
+//This file is part of Bertini 2.0.
+//
+// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//
+// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  James Collins
+//  West Texas A&M University
+//  Spring 2016
+//
+//
+//  python/mpfr_export.cpp:  Source file for exposing all multiprecision data types, those from boost and bertini::complex.
 
 
 
@@ -157,6 +178,8 @@ namespace bertini{
 			.def(self != self)
 			;
 			
+			
+			// default_precision are defined as free functions in python
 			def("default_precision", MPFRFloatVisitor<bmp>::def_prec1);
 			def("default_precision", MPFRFloatVisitor<bmp>::def_prec2);
 
@@ -188,6 +211,7 @@ namespace bertini{
 			;
 			
 			
+			// All complex specific function are free in python
 			def("real",&real);
 			def("imag",&imag);
 			

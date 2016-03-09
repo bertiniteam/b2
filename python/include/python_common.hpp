@@ -1,13 +1,28 @@
+//This file is part of Bertini 2.0.
 //
-//  export_common.hpp
-//  Xcode_b2
+// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
 //
-//  Created by Collins, James B. on 1/30/16.
-//  Copyright (c) 2016 West Texas A&M University. All rights reserved.
+// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
 //
+//You should have received a copy of the GNU General Public License
+//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  James Collins
+//  West Texas A&M University
+//  Spring 2016
+//
+//
+//  python/python_common.hpp:  A common header file for all python exposure files
 
-#ifndef Xcode_b2_export_common_hpp
-#define Xcode_b2_export_common_hpp
+
+#ifndef Xcode_b2_python_common_hpp
+#define Xcode_b2_python_common_hpp
 
 #include <boost/python.hpp>
 

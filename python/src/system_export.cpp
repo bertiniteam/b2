@@ -1,10 +1,30 @@
+//This file is part of Bertini 2.0.
 //
-//  system_export.cpp
-//  Xcode_b2
+// python/function_tree.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
+//This file is part of Bertini 2.0.
 //
-//  Created by Collins, James B. on 2/9/16.
-//  Copyright (c) 2016 West Texas A&M University. All rights reserved.
+// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//it under the terms of the GNU General Public License as published by
+//the Free Software Foundation, either version 3 of the License, or
+//(at your option) any later version.
 //
+// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU General Public License for more details.
+//
+//You should have received a copy of the GNU General Public License
+//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+//  James Collins
+//  West Texas A&M University
+//  Spring 2016
+//
+//
+//  python/system_export.cpp:  Source file for exposing systems to python, including start systems.
 
 #include <stdio.h>
 #include "system_export.hpp"
@@ -14,6 +34,14 @@
 namespace bertini{
 	namespace python{
 		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
+
+		
+		struct StartSystemWrap : start_system::StartSystem, wrapper<start_system::StartSystem>
+		{
+			size_t NumStartPoints() const {return this->get_override("NumStartPoints")(); }
+		}; // re: StartSystemWrap
+
+		
 		
 		
 		
@@ -85,7 +113,7 @@ namespace bertini{
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))
 			.def(self += self)
-			.def(self + self) //Test this, operator may not have correct signature
+			.def(self + self) 
 			.def(self *= std::shared_ptr<node::Node>())
 			.def(self * std::shared_ptr<node::Node>())
 			.def(std::shared_ptr<node::Node>() * self)
@@ -118,7 +146,7 @@ namespace bertini{
 			;
 			
 			// StartSystem class
-			class_<start_system::StartSystem, boost::noncopyable, bases<System>, std::shared_ptr<start_system::StartSystem> >("StartSystem", no_init)
+			class_<StartSystemWrap, boost::noncopyable, bases<System>, std::shared_ptr<start_system::StartSystem> >("StartSystem", no_init)
 			.def(StartSystemVisitor<start_system::StartSystem>())
 			;
 
