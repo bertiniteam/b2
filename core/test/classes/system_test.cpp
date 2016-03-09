@@ -900,7 +900,29 @@ BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 
 
 
+BOOST_AUTO_TEST_CASE(concatenate_two_systems)
+{
 
+	bertini::System sys1, sys2;
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+
+	VariableGroup vars{x,y,z};
+
+	sys1.AddVariableGroup(vars);  
+	sys1.AddFunction(x);
+	sys1.AddFunction(y);
+	sys1.AddFunction(z);
+
+	sys2.AddVariableGroup(vars);  
+	sys2.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys2.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys2.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+
+	auto sys3 = Concatenate(sys1, sys2);
+
+	BOOST_CHECK_EQUAL(sys3.NumFunctions(),6);
+}
 
 
 

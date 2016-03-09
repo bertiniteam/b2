@@ -841,6 +841,11 @@ namespace bertini {
 		void CopyPatches(System const& other);
 
 
+		Patch GetPatch() const
+		{
+			return patch_;
+		}
+
 		/**
 		\brief Query whether a system is patched.
 		*/
@@ -1080,8 +1085,19 @@ namespace bertini {
 	};
 
 
+	/**
+	\brief Contcatenate two compatible systems.
 
+	Two systems are compatible for concatenation if they have the same variable structure, and if they have the same patch (if patched).
 
+	\param sys1 The top system.
+	\param sys2 The bottom system.
+
+	If both patched both must have same patch.  If not both are patched, then the patch will propagate to the returned system. 
+
+	If the two patches have differing variable orderings, the call to Concatenate will throw.
+	*/
+	System Concatenate(System sys1, System const& sys2);
 	
 
 
