@@ -395,14 +395,14 @@ namespace bertini {
 		 */
 		inline static complex rand()
 		{
-			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 			returnme /= sqrt( returnme.abs());
 			return returnme;
 		}
 		
 		inline static complex RandomUnit()
 		{
-			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 			returnme /= returnme.abs();
 			return returnme;
 		}
@@ -411,7 +411,7 @@ namespace bertini {
 		 */
 		inline static complex RandomReal()
 		{
-			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 			returnme /= sqrt( returnme.abs());
 			return returnme;
 		}
@@ -715,6 +715,9 @@ namespace bertini {
 		///////
 		//TODO: write MPI methods, for sending, receiving, broadcasting, etc.  this will require becoming familiar with Boost.MPI
 		
+		friend void RandomReal(bertini::complex & a, unsigned num_digits);
+		friend void rand(bertini::complex & a, unsigned num_digits);
+		friend void RandomUnit(bertini::complex & a, unsigned num_digits);
 	}; // end declaration of the bertini::complex number class
 	
 	
@@ -1328,6 +1331,42 @@ namespace bertini {
 	bool isnan(bertini::complex const& num)
 	{
 		return num.isnan();
+	}
+
+	inline 
+	void RandomReal(bertini::complex & a, unsigned num_digits)
+	{
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		a.imag_ = 0;
+	}
+
+	inline 
+	void rand(bertini::complex & a, unsigned num_digits)
+	{
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		RandomMp(a.imag_,num_digits);
+	}
+
+	inline 
+	void RandomComplex(bertini::complex & a, unsigned num_digits)
+	{
+		rand(a,num_digits);
+	}
+
+
+	inline 
+	void RandomUnit(bertini::complex & a, unsigned num_digits)
+	{
+		auto prev_precision = mpfr_float::default_precision();
+
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		RandomMp(a.imag_,num_digits);
+		a /= abs(a);
+
+		mpfr_float::default_precision(prev_precision);
 	}
 
 	using mpfr = bertini::complex;

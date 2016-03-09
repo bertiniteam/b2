@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 BOOST_AUTO_TEST_CASE(precision_of_mpfr_is_16)
 {
 	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-	mpfr_float a("1.23124");
+	bertini::complex a("1.23124");
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
 }
 
@@ -595,6 +595,53 @@ BOOST_AUTO_TEST_CASE(precision_of_mpfr_complex_is_16)
 	bertini::complex a("1.23124","-0.6789124678912394");
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
 }
+
+
+BOOST_AUTO_TEST_CASE(precision_random_real_default)
+{
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	auto a = bertini::complex::RandomReal();
+	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
+BOOST_AUTO_TEST_CASE(precision_random_real_highest)
+{	using namespace bertini;
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::complex a;
+	RandomReal(a,1000);
+	BOOST_CHECK_EQUAL(bertini::Precision(a), 1000);
+}
+
+BOOST_AUTO_TEST_CASE(precision_random_unit_default)
+{
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	auto a = bertini::complex::RandomUnit();
+	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
+BOOST_AUTO_TEST_CASE(precision_random_unit_highest)
+{	using namespace bertini;
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::complex a;
+	bertini::RandomUnit(a,1000);
+	BOOST_CHECK_EQUAL(bertini::Precision(a), 1000);
+}
+
+BOOST_AUTO_TEST_CASE(precision_random_default)
+{
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	auto a = bertini::complex::rand();
+	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
+BOOST_AUTO_TEST_CASE(precision_random_highest)
+{	using namespace bertini;
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::complex a;
+	bertini::rand(a,1000);
+	BOOST_CHECK_EQUAL(bertini::Precision(a), 1000);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

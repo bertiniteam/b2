@@ -7,7 +7,8 @@ basics_header_files = \
 	include/bertini2/mpfr_extensions.hpp 
 
 basics_source_files = \
-	src/basics/limbo.cpp
+	src/basics/limbo.cpp \
+	src/basics/mpfr_extensions.cpp
 
 
 basics = $(basics_header_files) $(basics_source_files)
