@@ -276,18 +276,16 @@ namespace bertini{
 				template<typename ComplexType>
 				void ComputeInitialSamples(const ComplexType & start_time,const Vec<ComplexType> & x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
 				{
-					samples.push_back(x_endgame);
-					times.push_back(start_time);
-					Vec<ComplexType> next_sample;
+					samples.resize(endgame_settings_.num_sample_points);
+					times.resize(endgame_settings_.num_sample_points);
 
-					for(int ii=2; ii <= endgame_settings_.num_sample_points; ++ii)//start at 2 since first sample is at the endgame boundary.
+					samples[0] = x_endgame;
+					times[0] = start_time;
+
+					for(int ii=1; ii < endgame_settings_.num_sample_points; ++ii)
 					{ 
-						ComplexType next_time = times.back() * endgame_settings_.sample_factor;	
-
-						SuccessCode tracking_success = tracker_.TrackPath(next_sample,times.back(),next_time,samples.back());
-
-						samples.push_back(next_sample);
-						times.push_back(next_time);		
+						times[ii] = times[ii-1] * endgame_settings_.sample_factor;	
+						SuccessCode tracking_success = tracker_.TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
 					}				
 				}
 

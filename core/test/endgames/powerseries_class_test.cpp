@@ -217,11 +217,11 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
-	config::Security endgame_security_struct;
+	config::Security security_settings;
 
 	//First Approximation at the origin.
 	//testing a constructor for the endgame on this line only.
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_security_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,security_settings);
 
 
 	 Vec< mpfr > first_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
@@ -558,10 +558,10 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	samples.push_back(sample);
 
 
-	config::Security endgame_security_struct;
+	config::Security security_settings;
 	config::Tolerances endgame_tolerances_struct;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,security_settings,endgame_tolerances_struct);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -756,9 +756,9 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 
 
 	config::PowerSeries power_series_struct;
-	config::Security endgame_security_struct;
+	config::Security security_settings;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_struct,endgame_security_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_struct,security_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -940,9 +940,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	samples.push_back(sample);
 
 	config::Endgame endgame_struct;
-	config::Security endgame_security_struct;
+	config::Security security_settings;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,endgame_security_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,security_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -1150,10 +1150,10 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
 	config::PowerSeries power_series_struct;
-	config::Security endgame_security_struct;
-	config::Tolerances endgame_tolernaces_struct;
+	config::Security security_settings;
+	config::Tolerances endgame_tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_struct,security_settings,endgame_tolerances);
 
 
 	my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
@@ -1213,10 +1213,10 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	correct << mpfr(1,0);
 
 	config::Endgame endgame_struct;
-	config::Security endgame_security_struct;
-	config::Tolerances endgame_tolernaces_struct;
+	config::Security security_settings;
+	config::Tolerances endgame_tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,endgame_security_struct,endgame_tolernaces_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,security_settings,endgame_tolerances);
 	my_endgame.PSEG(current_time,current_space);
 
 
@@ -1269,9 +1269,9 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 
 	config::Endgame endgame_struct;
 	config::PowerSeries power_series_struct;
-	config::Tolerances endgame_tolernaces_struct;
+	config::Tolerances endgame_tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_tolernaces_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_tolerances);
 
 
 	my_endgame.PSEG(current_time,current_space);
@@ -1330,9 +1330,9 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 
 	config::Endgame endgame_struct;
 	config::PowerSeries power_series_struct;
-	config::Security endgame_security_struct;
+	config::Security security_settings;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,security_settings);
 
 	my_endgame.PSEG(current_time,current_space);
 
@@ -1414,10 +1414,10 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 
 	config::Endgame endgame_struct;
 	config::PowerSeries power_series_struct;
-	config::Security endgame_security_struct;
+	config::Security security_settings;
 	config::Tolerances endgame_tolerances_struct;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct,endgame_tolerances_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,security_settings,endgame_tolerances_struct);
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
@@ -1470,7 +1470,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	values we have. 
 
 	*/
-	Eigen::IOFormat HeavyFmt(Eigen::FullPrecision);
 	using namespace bertini::tracking;
 	mpfr_float::default_precision(30);
 
@@ -1514,7 +1513,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 	tracker.Setup(config::Predictor::Euler,
-	              	mpfr_float("1e-7"), mpfr_float("1e5"),
+	              	mpfr_float("1e-5"), mpfr_float("1e5"),
 					stepping_preferences, newton_preferences);
 
 	tracker.AMPSetup(AMP);
@@ -1549,7 +1548,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 
 	unsigned num_successful_occurences = 0;
 	unsigned num_min_track_time_reached = 0;
-	for (auto s : homogenized_solutions)
+	for (auto const& s : homogenized_solutions)
 	{
 		SuccessCode endgame_success = my_endgame.PSEG(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)

@@ -288,13 +288,13 @@ namespace bertini{
 			std::deque< Vec<ComplexType> > ComputeCycleNumber()
 			{
 				//Compute dx_dt for each sample.
-				std::deque< Vec<ComplexType> > derivatives;
+				std::deque< Vec<ComplexType> > derivatives(this->EndgameSettings().num_sample_points);
 				for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points; ++ii)
 				{	
 					// uses LU look at Eigen documentation on inverse in Eigen/LU.
-				 	Vec<ComplexType> derivative = ComplexType(-1)*(this->GetSystem().Jacobian(samples_[ii],times_[ii]).inverse())*(this->GetSystem().TimeDerivative(samples_[ii],times_[ii]));
-					derivatives.push_back(derivative);
+				 	derivatives[ii] = -(this->GetSystem().Jacobian(samples_[ii],times_[ii]).inverse())*(this->GetSystem().TimeDerivative(samples_[ii],times_[ii]));
 				}
+
 				//Compute upper bound for cycle number.
 				ComputeBoundOnCycleNumber();
 
@@ -303,33 +303,33 @@ namespace bertini{
 
 				//Compute Cycle Number
 				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
-				auto used_num_pts = this->EndgameSettings().num_sample_points - 1;
+				auto num_used_points = this->EndgameSettings().num_sample_points - 1;
 
 				mpfr_float min_found_difference = power_series_settings_.min_difference_in_approximations;
 
-				std::deque<mpfr> s_times;
-				std::deque< Vec<mpfr> > s_derivatives;
+
+				std::deque<mpfr> s_times(num_used_points);
+				std::deque< Vec<mpfr> > s_derivatives(num_used_points);
+
 				for(unsigned int cc = 1; cc <= upper_bound_on_cycle_number_; ++cc)
 				{			
-					for(unsigned int ii=0; ii<this->EndgameSettings().num_sample_points; ++ii)// using the last sample to predict to. 
+					for(unsigned int ii=0; ii<num_used_points; ++ii)// using the last sample to predict to. 
 					{ 
-						s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(cc)));
-						s_derivatives.push_back(derivatives[ii]*(ComplexType(cc)*pow(times_[ii],ComplexType((cc - 1))/ComplexType(cc))));
+						s_times[ii] = pow(times_[ii],ComplexType(1)/ComplexType(cc));
+						s_derivatives[ii] = derivatives[ii]*( cc*pow(times_[ii], ComplexType(cc - 1)/cc));
 					}
 
-					Vec<ComplexType> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,this->EndgameSettings().num_sample_points,s_times,samples_,s_derivatives);
+					Vec<ComplexType> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,num_used_points,s_times,samples_,s_derivatives);
 
-					if((approx - x_current_time).norm() < min_found_difference)
+					auto curr_diff = (approx - x_current_time).norm();
+					if(curr_diff < min_found_difference)
 					{
-						min_found_difference = (approx - x_current_time).norm();
+						min_found_difference = curr_diff;
 						this->cycle_number_ = cc;
 					}
 
-					s_derivatives.clear(); // necessary so we can repopulate with different s-plane transformations based on cycle number 
-					s_times.clear();
-
 				}// end cc loop over cycle number possibilities
-				
+
 				return derivatives;
 			}//end ComputeCycleNumber
 
@@ -358,7 +358,7 @@ namespace bertini{
 			\tparam ComplexType The complex number type.
 			*/
 			template<typename ComplexType>
-			Vec<ComplexType> ComputeApproximationOfXAtT0(const ComplexType time_t0)
+			Vec<ComplexType> ComputeApproximationOfXAtT0(const ComplexType & time_t0)
 			{
 				//Checking to make sure all samples are of the same precision. Is this necessary if all samples are refined to final tolerance?
 				unsigned max_precision = 0; 
@@ -389,13 +389,11 @@ namespace bertini{
 					if (c<1)
 						throw std::runtime_error("cycle number is 0 while computing approximation of root at target time");
 
-					s_derivatives.push_back(derivatives[ii]*(ComplexType(c)*pow(times_[ii],ComplexType(c-1)/ComplexType(c))));
-					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(c)));
+					s_derivatives.push_back(derivatives[ii]*( c*pow(times_[ii],ComplexType(c-1)/c )));
+					s_times.push_back(pow(times_[ii],ComplexType(1)/c));
 				}
-				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, samples_, s_derivatives);
 
-				return Approx;
-
+				return bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, samples_, s_derivatives);
 			}//end ComputeApproximationOfXAtT0
 
 
@@ -422,35 +420,31 @@ namespace bertini{
 			\tparam ComplexType The complex number type.
 			*/		
 			template<typename ComplexType>
-			SuccessCode PSEG(const ComplexType start_time, const Vec<ComplexType> start_point)
+			SuccessCode PSEG(const ComplexType & start_time, const Vec<ComplexType> & start_point)
 			{
 				//Set up for the endgame.
 	 			ClearTimesAndSamples();
-			 	mpfr norm_of_latest_approximation(1);
-			 	norm_of_latest_approximation = mpfr(0,0); // settting up the norm for the latest approximation. 
 
-			 	mpfr approx_error(1);  //setting up the error of successive approximations. 
-			 	approx_error = mpfr(1,0);
+			 	mpfr_float approx_error(1);  //setting up the error of successive approximations. 
 			 	
-			 	ComplexType origin(1);
-			 	origin  = ComplexType(0,0);
+			 	ComplexType origin(0);
 
 				this->ComputeInitialSamples(start_time, start_point, times_, samples_);
 
 
 			 	Vec<ComplexType> prev_approx = ComputeApproximationOfXAtT0(origin);
 
-			 	Vec<ComplexType> dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx);
+			 	mpfr_float norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
 
 
 			 	ComplexType current_time = times_.back(); 
 
 			  	Vec<ComplexType> next_sample;
 			  	Vec<ComplexType> latest_approx;
-			    Vec<ComplexType> dehom_of_latest_approx;
+			    mpfr_float norm_of_dehom_of_latest_approx;
 
 
-				while (approx_error.norm() > this->Tolerances().final_tolerance)
+				while (approx_error > this->Tolerances().final_tolerance)
 				{
 					this->final_approximation_at_origin_ = prev_approx;
 			  		 auto next_time = times_.back() * this->EndgameSettings().sample_factor; //setting up next time value.
@@ -478,26 +472,23 @@ namespace bertini{
 			 		samples_.pop_front();
 
 			 		latest_approx = ComputeApproximationOfXAtT0(origin);
-			 		dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx);
+			 		norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
 
 			 		if(this->SecuritySettings().level <= 0)
-					{
-				 		if(dehom_of_latest_approx.norm() > this->SecuritySettings().max_norm && dehom_of_prev_approx.norm() > this->SecuritySettings().max_norm)
-				 		{
+				 		if(norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm && norm_of_dehom_of_prev_approx > this->SecuritySettings().max_norm)
 			 				return SuccessCode::SecurityMaxNormReached;
-				 		}
-				 	}
+
 
 			 		approx_error = (latest_approx - prev_approx).norm();
 
-			 		if(approx_error.norm() < this->Tolerances().final_tolerance)
+			 		if(approx_error < this->Tolerances().final_tolerance)
 			 		{//success!
 			 			this->final_approximation_at_origin_ = latest_approx;
 			 			return SuccessCode::Success;
 			 		}
 
 			 		prev_approx = latest_approx;
-				    dehom_of_prev_approx = dehom_of_latest_approx;
+				    norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 				} //end while	
 				// in case if we get out of the for loop without setting. 
 				this->final_approximation_at_origin_ = latest_approx;
