@@ -180,43 +180,6 @@ namespace bertini{
 				const TrackerType& tracker_;
 			public:	
 
-				// /**
-				// constructor
-				// */
-				// BaseEndgame(TrackerType const& t,
-				//             config::Endgame const& egs,
-				//             config::Tolerances const& tols,
-				//             config::Security const& sec) : tracker_(t),
-				// 										endgame_settings_(egs), 
-				// 										tolerances_(tols), 
-				// 										security_(sec)
-				// {} 
-
-
-				// /**
-				// constructor
-				// */
-				// BaseEndgame(TrackerType const& t,
-				//             config::Tolerances const& tols,
-				//             config::Endgame const& egs,
-				//             config::Security const& sec) : tracker_(t),
-				// 										endgame_settings_(egs), 
-				// 										tolerances_(tols), 
-				// 										security_(sec)
-				// {} 
-
-				// /**
-				// constructor
-				// */
-				// BaseEndgame(TrackerType const& t,
-				//             config::Endgame const& egs,
-				//             config::Security const& sec,
-				//             config::Tolerances const& tols) : tracker_(t),
-				// 										endgame_settings_(egs), 
-				// 										tolerances_(tols), 
-				// 										security_(sec)
-				// {} 
-
 
 				explicit BaseEndgame(TrackerType const& tr, const std::tuple< const config::Endgame&, const config::Security&, const config::Tolerances& >& settings )
 			      : tracker_(tr),
