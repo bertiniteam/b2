@@ -1494,7 +1494,7 @@ BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
 	Vec<mpfr> correct(2);
 	correct << mpfr(1,0),mpfr(1,0);
 
-	config::EndGame endgame_settings;
+	config::Endgame endgame_settings;
 	config::Cauchy cauchy_settings;
 	config::Security endgame_security_settings;
 
@@ -1580,7 +1580,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 	Vec<mpfr> correct(2);
 	correct << mpfr(0,0),mpfr(0,0);
 
-	config::EndGame endgame_settings;
+	config::Endgame endgame_settings;
 	config::Cauchy cauchy_settings;
 	config::Security security_settings;
 	config::Tolerances tolerances_settings;

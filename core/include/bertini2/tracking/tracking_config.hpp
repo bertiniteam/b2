@@ -148,7 +148,7 @@ namespace bertini
 				mpfr_float max_norm = mpfr_float("1e5");
 			};
 
-			struct EndGame
+			struct Endgame
 			{
 				unsigned num_sample_points = 3;
 				mpfr_float min_track_time = mpfr_float("1e-100"); //nbrh radius in Bertini book.

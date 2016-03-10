@@ -61,6 +61,8 @@ extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 BOOST_AUTO_TEST_SUITE(powerseries_endgame_class_basics)
 
+using namespace bertini::tracking;
+
 BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 {
 	/*This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
@@ -78,13 +80,13 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 	sys.AddFunction( pow(x,8) + 1 );  //f(x) = x^8 + 1
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
-	bertini::tracking::AMPTracker tracker(sys);
+	auto AMP = config::AMPConfigFrom(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -92,7 +94,7 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 	tracker.AMPSetup(AMP);
 
 	mpfr target_time(1);
-	target_time = mpfr("0","0"); //our target time is the origin.
+	target_time = mpfr(0,0); //our target time is the origin.
 	unsigned int num_samples = 3;
 
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
@@ -124,13 +126,13 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::Tolerances endgame_tolerances_struct;
 
 	//testing a constructor only.
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_tolerances_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_tolerances_struct);
 
 
-	Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > first_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	Vec< mpfr > matlab_first_approx(1);
 	matlab_first_approx << mpfr("1");
 
@@ -167,14 +169,14 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -183,7 +185,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	tracker.AMPSetup(AMP);
 
 	mpfr target_time(1);
-	target_time = mpfr("0","0"); //our target time is the origin.
+	target_time = mpfr(0,0); //our target time is the origin.
 	unsigned int num_samples = 3;
 
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
@@ -215,14 +217,14 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
-	bertini::tracking::config::Security endgame_security_struct;
+	config::Security endgame_security_struct;
 
 	//First Approximation at the origin.
 	//testing a constructor for the endgame on this line only.
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_security_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_security_struct);
 
 
-	 Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	 Vec< mpfr > first_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	 Vec< mpfr > correct(1);
 	 correct << mpfr("1");
 
@@ -241,7 +243,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	derivatives.pop_front();
 
 	//Compute the second approximation.
-	Vec< mpfr > second_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > second_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	// //Check to make sure we are doing better. 
@@ -260,7 +262,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	derivatives.pop_front();
 
 
-	Vec< mpfr > third_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > third_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	BOOST_CHECK(abs(third_approx(0)-correct(0)) < abs(second_approx(0)-correct(0)));
@@ -295,14 +297,14 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -311,7 +313,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	tracker.AMPSetup(AMP);
 
 	mpfr target_time(1);
-	target_time = mpfr("0","0"); //our target time is the origin.
+	target_time = mpfr(0,0); //our target time is the origin.
 	unsigned int num_samples = 3;
 
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
@@ -343,13 +345,13 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
-	bertini::tracking::config::PowerSeries power_series_settings;
+	config::PowerSeries power_series_settings;
 
 	//First Approximation at the origin.
 	//testing a constructor on next line.
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,power_series_settings);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_settings);
 
-	 Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	 Vec< mpfr > first_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	 Vec< mpfr > correct(1);
 	 correct << mpfr("1");
 
@@ -368,7 +370,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	derivatives.pop_front();
 
 	//Compute the second approximation.
-	Vec< mpfr > second_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > second_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	// //Check to make sure we are doing better. 
@@ -386,7 +388,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	samples.pop_front();
 	derivatives.pop_front();
 
-	Vec< mpfr > third_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > third_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 	// //Make sure we are doing better at approximating. 
 	BOOST_CHECK(abs(third_approx(0)-correct(0)) < abs(second_approx(0)-correct(0)));
@@ -418,14 +420,14 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -458,9 +460,9 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
 
-	bertini::tracking::config::EndGame endgame_struct;
+	config::Endgame endgame_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -515,14 +517,14 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -556,10 +558,10 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	samples.push_back(sample);
 
 
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::Security endgame_security_struct;
+	config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -619,14 +621,14 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -668,10 +670,10 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	samples.push_back(sample);
 
 
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::PowerSeries power_series_struct;
+	config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,power_series_struct,endgame_tolerances_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_struct,endgame_tolerances_struct);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -707,14 +709,14 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -755,10 +757,10 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	samples.push_back(sample);
 
 
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Security endgame_security_struct;
+	config::PowerSeries power_series_struct;
+	config::Security endgame_security_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,power_series_struct,endgame_security_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_struct,endgame_security_struct);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -793,14 +795,14 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	// Define homotopy system
 	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -808,9 +810,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	
 	tracker.AMPSetup(AMP);
 
-	mpfr origin = mpfr("0","0");
+	mpfr origin = mpfr(0,0);
 	Vec<mpfr> x_origin(1);
-	x_origin << mpfr("1","0");
+	x_origin << mpfr(1,0);
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
 
@@ -835,10 +837,10 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	sample << mpfr("0.67729059415987117534436422700325955211292174181447e0", "0.38712848412230230944976856052769427012481164605204e-16"); // f(.025) = 0.67729059415987117534436422700325955211292174181447e0 0.38712848412230230944976856052769427012481164605204e-16 from bertini classic
 	samples.push_back(sample);
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::Endgame endgame_struct;
+	config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,endgame_tolerances_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,endgame_tolerances_struct);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -899,14 +901,14 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	// Define homotopy system
 	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -914,9 +916,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	
 	tracker.AMPSetup(AMP);
 
-	mpfr origin = mpfr("0","0");
+	mpfr origin = mpfr(0,0);
 	Vec<mpfr> x_origin(1);
-	x_origin << mpfr("1","0");
+	x_origin << mpfr(1,0);
 	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
 
@@ -939,10 +941,10 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	sample << mpfr(".6772905941598711", "0"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
 	samples.push_back(sample);
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::Security endgame_security_struct;
+	config::Endgame endgame_struct;
+	config::Security endgame_security_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,endgame_security_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,endgame_security_struct);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -1007,14 +1009,14 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1025,7 +1027,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	mpfr sample_factor = mpfr(".5");
 	mpfr origin = mpfr("0");
 	Vec<mpfr> x_origin(1);
-	x_origin << mpfr("1","0");
+	x_origin << mpfr(1,0);
 	std::deque<mpfr> correct_times; //times are not vectors they are just complex numbers, these are the correct times from bertini
 	std::deque< Vec<mpfr> > correct_samples; //samples are space values that may be a vector of complex numbers, correct space values 
 											// from bertini.
@@ -1058,12 +1060,12 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	current_time = mpfr(".1");
 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	bertini::tracking::config::EndGame endgame_settings;
-	bertini::tracking::config::PowerSeries power_series_settings;
+	config::Endgame endgame_settings;
+	config::PowerSeries power_series_settings;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_settings,power_series_settings);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,power_series_settings);
 
-	my_endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, times, samples);
+	my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
 
 	
 
@@ -1099,14 +1101,14 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1117,7 +1119,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	mpfr sample_factor = mpfr(".5");
 	mpfr origin = mpfr("0");
 	Vec<mpfr> x_origin(1);
-	x_origin << mpfr("1","0");
+	x_origin << mpfr(1,0);
 	std::deque<mpfr> correct_times; //times are not vectors they are just complex numbers, these are the correct times from bertini
 	std::deque< Vec<mpfr> > correct_samples; //samples are space values that may be a vector of complex numbers, correct space values 
 											// from bertini.
@@ -1149,14 +1151,14 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	current_time = mpfr(".1");
 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
+	config::PowerSeries power_series_struct;
+	config::Security endgame_security_struct;
+	config::Tolerances endgame_tolernaces_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
 
 
-	my_endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, times, samples);
+	my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
 
 
 
@@ -1188,14 +1190,14 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-6"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1210,13 +1212,13 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
 	Vec<mpfr> correct(1);
-	correct << mpfr("1","0");
+	correct << mpfr(1,0);
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
+	config::Endgame endgame_struct;
+	config::Security endgame_security_struct;
+	config::Tolerances endgame_tolernaces_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,endgame_security_struct,endgame_tolernaces_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,endgame_security_struct,endgame_tolernaces_struct);
 	my_endgame.PSEG(current_time,current_space);
 
 
@@ -1244,14 +1246,14 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 
 	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-6"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1265,13 +1267,13 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
 
 	Vec<mpfr> correct(1);
-	correct << mpfr("1","0");
+	correct << mpfr(1,0);
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
+	config::Endgame endgame_struct;
+	config::PowerSeries power_series_struct;
+	config::Tolerances endgame_tolernaces_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_tolernaces_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_tolernaces_struct);
 
 
 	my_endgame.PSEG(current_time,current_space);
@@ -1304,14 +1306,14 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 	sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
 	sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-6"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1326,13 +1328,13 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 	current_space <<  mpfr("5.000000000000001e-01", "9.084258952712920e-17") ,mpfr("9.000000000000001e-01","4.358898943540673e-01");
 
 	Vec<mpfr> correct(2);
-	correct << mpfr("1","0"),mpfr("1","0");
+	correct << mpfr(1,0),mpfr(1,0);
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Security endgame_security_struct;
+	config::Endgame endgame_struct;
+	config::PowerSeries power_series_struct;
+	config::Security endgame_security_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct);
 
 	my_endgame.PSEG(current_time,current_space);
 
@@ -1366,14 +1368,14 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	sys.AddFunction(((mpfr("29")/mpfr("16"))*pow(x,3)-2*x*y)*(1-t) + (pow(x,3) - 1)*t);
 	sys.AddFunction((y - pow(x,2))*(1-t) + (pow(y,2) - 1)*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1410,25 +1412,25 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 
 
 	Vec<mpfr> correct(2);
-	correct << mpfr("0","0"),mpfr("0","0");
+	correct << mpfr(0,0),mpfr(0,0);
 
-	bertini::tracking::config::EndGame endgame_struct;
-	bertini::tracking::config::PowerSeries power_series_struct;
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::Endgame endgame_struct;
+	config::PowerSeries power_series_struct;
+	config::Security endgame_security_struct;
+	config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct,endgame_tolerances_struct);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct,endgame_tolerances_struct);
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
 	for(auto s : current_space_values)
 	{
-		bertini::tracking::SuccessCode endgame_success = my_endgame.PSEG(endgame_time,s);
-		if(endgame_success == bertini::tracking::SuccessCode::Success){
+		SuccessCode endgame_success = my_endgame.PSEG(endgame_time,s);
+		if(endgame_success == SuccessCode::Success){
 			BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);// my_endgame.GetTrackToleranceDuringEndgame());
 			num_paths_converging++;
 		}
-		if(endgame_success == bertini::tracking::SuccessCode::SecurityMaxNormReached){
+		if(endgame_success == SuccessCode::SecurityMaxNormReached){
 			num_paths_diverging++;
 		}
 	}
@@ -1506,7 +1508,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	auto final_system = (1-t)*sys + t*TD;
 	final_system.AddPathVariable(t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(final_system);
+	auto AMP = config::AMPConfigFrom(final_system);
 
 
 
@@ -1540,9 +1542,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	}
 
 	Vec<mpfr> correct(2);
-	correct << mpfr("1","0"),mpfr("1","0");
+	correct << mpfr(1,0),mpfr(1,0);
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker);
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker);
 
 
 	std::vector<Vec<mpfr> > endgame_solutions;
@@ -1551,13 +1553,13 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	unsigned num_min_track_time_reached = 0;
 	for (auto s : homogenized_solutions)
 	{
-		bertini::tracking::SuccessCode endgame_success = my_endgame.PSEG(t_endgame_boundary,s);
-		if(endgame_success == bertini::tracking::SuccessCode::Success)
+		SuccessCode endgame_success = my_endgame.PSEG(t_endgame_boundary,s);
+		if(endgame_success == SuccessCode::Success)
 		{
 				num_successful_occurences++;
 
 		}
-		if(endgame_success == bertini::tracking::SuccessCode::MinStepSizeReached)
+		if(endgame_success == SuccessCode::MinStepSizeReached)
 		{
 			num_min_track_time_reached++;
 		}

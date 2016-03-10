@@ -42,7 +42,7 @@
 #include <boost/multiprecision/mpfr.hpp>
 #include "mpfr_complex.hpp"
 
-
+#include "bertini2/enable_permuted_arguments.hpp"
 
 namespace bertini{ 
 
@@ -148,8 +148,9 @@ namespace bertini{
 
 		 To create a new endgame type, inherit from this class. 
 		*/
-		
-			class Endgame
+			
+			template<class TrackerType>
+			class BaseEndgame
 			{
 
 			protected:
@@ -162,7 +163,7 @@ namespace bertini{
 				\brief Settings that will be used in every endgame. For example, the number of samples points, the cycle number, and the final approximation of that we compute 
 				using the endgame. 
 				*/
-				config::EndGame endgame_settings_;
+				config::Endgame endgame_settings_;
 				/**
 				\brief There are tolerances that are specific to the endgame. These settings are stored inside of this data member. 
 				*/
@@ -173,12 +174,68 @@ namespace bertini{
 				*/
 				config::Security security_;
 
+				/**
+				\brief A tracker tha must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values in the Cauchy endgame. 
+				*/
+				const TrackerType& tracker_;
 			public:	
+
+				// /**
+				// constructor
+				// */
+				// BaseEndgame(TrackerType const& t,
+				//             config::Endgame const& egs,
+				//             config::Tolerances const& tols,
+				//             config::Security const& sec) : tracker_(t),
+				// 										endgame_settings_(egs), 
+				// 										tolerances_(tols), 
+				// 										security_(sec)
+				// {} 
+
+
+				// /**
+				// constructor
+				// */
+				// BaseEndgame(TrackerType const& t,
+				//             config::Tolerances const& tols,
+				//             config::Endgame const& egs,
+				//             config::Security const& sec) : tracker_(t),
+				// 										endgame_settings_(egs), 
+				// 										tolerances_(tols), 
+				// 										security_(sec)
+				// {} 
+
+				// /**
+				// constructor
+				// */
+				// BaseEndgame(TrackerType const& t,
+				//             config::Endgame const& egs,
+				//             config::Security const& sec,
+				//             config::Tolerances const& tols) : tracker_(t),
+				// 										endgame_settings_(egs), 
+				// 										tolerances_(tols), 
+				// 										security_(sec)
+				// {} 
+
+
+				explicit BaseEndgame(TrackerType const& tr, const std::tuple< const config::Endgame&, const config::Security&, const config::Tolerances& >& settings )
+			      : tracker_(tr),
+			      	endgame_settings_( std::get<0>(settings) ),
+			        security_( std::get<1>(settings) ),
+			        tolerances_( std::get<2>(settings) )
+			   	{}
+
+			    template< typename... Ts >
+   				BaseEndgame(TrackerType const& tr, const Ts&... ts ) : BaseEndgame(tr, Unpermute< config::Endgame, config::Security, config::Tolerances >( ts... ) ) 
+   				{}
+
 
 				unsigned CycleNumber() const { return cycle_number_;}
 				void CycleNumber(unsigned c) { cycle_number_ = c;}
+				void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
 
-				config::EndGame& EndgameSettings()
+				
+				config::Endgame& EndgameSettings()
 				{
 					return endgame_settings_;
 				}
@@ -193,8 +250,50 @@ namespace bertini{
 					return security_;
 				}
 
+
+
+				/**
+				\brief Setter for the general settings in tracking_conifg.hpp under Endgame.
+				*/
+				void SetEndgameSettings(config::Endgame new_endgame_settings){endgame_settings_ = new_endgame_settings;}
+
+				/**
+				\brief Getter for the general settings in tracking_conifg.hpp under Endgame.
+				*/
+				config::Endgame GetEndgameStruct(){ return endgame_settings_;}
+
+				
+
+				/**
+				\brief Setter for the security settings in tracking_conifg.hpp under Security.
+				*/
+				void SetSecuritySettings(config::Security new_endgame_security_settings){ security_ = new_endgame_security_settings;}
+
+				/**
+				\brief Getter for the security settings in tracking_conifg.hpp under Security.
+				*/
+				config::Security GetSecuritySettings(){return security_;}
+
+				/**
+				\brief Setter for the tolerance settings in tracking_conifg.hpp under Tolerances.
+				*/
+				void SetToleranceSettings(config::Tolerances new_tolerances_settings){tolerances_ = new_tolerances_settings;}
+
+				/**
+				\brief Getter for the tolerance settings in tracking_conifg.hpp under Tolerances.
+				*/
+				config::Tolerances GetTolerancesSettings(){return tolerances_;}
+
+
+				/**
+				\brief Getter for the tracker used inside of an instance of the endgame. 
+				*/
+				const TrackerType & GetTracker(){return tracker_;}
+
+
 				const Vec<mpfr>& FinalApproximation() const {return final_approximation_at_origin_;}
 
+				const System& GetSystem() const { return tracker_.GetSystem();}
 				/*
 				Input:  endgame_tracker_: a template parameter for the endgame created. This tracker will be used to compute our samples. 
 						endgame_time: is the time when we start the endgame process usually this is .1
@@ -224,8 +323,8 @@ namespace bertini{
 				\tparam ComplexType The complex number type.
 				\tparam TrackerType The tracker type. 
 				*/	
-				template<typename ComplexType, typename TrackerType>
-				void ComputeInitialSamples(const TrackerType & endgame_tracker_, const ComplexType & start_time,const Vec<ComplexType> & x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
+				template<typename ComplexType>
+				void ComputeInitialSamples(const ComplexType & start_time,const Vec<ComplexType> & x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
 				{
 					samples.push_back(x_endgame);
 					times.push_back(start_time);
@@ -235,7 +334,7 @@ namespace bertini{
 					{ 
 						ComplexType next_time = times.back() * endgame_settings_.sample_factor;	
 
-						SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,times.back(),next_time,samples.back());
+						SuccessCode tracking_success = tracker_.TrackPath(next_sample,times.back(),next_time,samples.back());
 
 						samples.push_back(next_sample);
 						times.push_back(next_time);		
