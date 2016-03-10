@@ -132,7 +132,7 @@ namespace bertini{
 			template<typename TrackerType> 
 			class PowerSeriesEndgame : public BaseEndgame<TrackerType>
 			{
-			public:
+			private:
 
 				/**
 				\brief Settings that are specific to the Power series endgame. 
@@ -149,7 +149,13 @@ namespace bertini{
 				*/			
 				std::deque< Vec<mpfr> > samples_;
 
+			public:
 
+				const config::PowerSeries& PowerSeriesSettings() const
+				{
+					return power_series_settings_;
+				}
+				
 				/**
 				\brief Function that clears all samples and times from data members for the Power Series endgame
 				*/	
@@ -279,7 +285,7 @@ namespace bertini{
 			\tparam ComplexType The complex number type.
 			*/		
 			template<typename ComplexType>
-			std::deque< Vec<ComplexType> > ComputeCycleNumber(const ComplexType time, const Vec<ComplexType> x__at_time)
+			std::deque< Vec<ComplexType> > ComputeCycleNumber(const ComplexType & time, const Vec<ComplexType> & x__at_time)
 			{
 				//Compute dx_dt for each sample.
 				std::deque< Vec<ComplexType> > derivatives;

@@ -469,9 +469,9 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	my_endgame.BoundOnCycleNumber();
 
 
-	BOOST_CHECK(my_endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
-	auto first_upper_bound = my_endgame.power_series_settings_.upper_bound_on_cycle_number;
+	auto first_upper_bound = my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number;
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	my_endgame.BoundOnCycleNumber();
 
 
-	BOOST_CHECK(my_endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
 } // end compute bound on cycle number mp
 
@@ -568,9 +568,9 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	my_endgame.BoundOnCycleNumber();
 
 
-	BOOST_CHECK(my_endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
-	auto first_upper_bound = my_endgame.power_series_settings_.upper_bound_on_cycle_number;;
+	auto first_upper_bound = my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number;;
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
@@ -589,9 +589,8 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 
 	my_endgame.BoundOnCycleNumber();
 
-	//my_endgame.power_series_settings_.upper_bound_on_cycle_number;
 
-	BOOST_CHECK(my_endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
 } // end compute bound on cycle number dbl
 
