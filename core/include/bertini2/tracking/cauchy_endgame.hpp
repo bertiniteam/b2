@@ -142,7 +142,7 @@ namespace bertini
 			template<typename TrackerType> 
 			class CauchyEndgame : public Endgame
 			{
-				public:
+			private:
 
 				/**
 				\brief Settings that are specific to the Cauchy endgame. 
@@ -178,6 +178,12 @@ namespace bertini
 				\brief A tracker tha must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values in the Cauchy endgame. 
 				*/
 				const TrackerType & endgame_tracker_;
+
+			public:
+
+				// some getters
+				const std::deque< Vec<mpfr> >& CauchySamples() const {return cauchy_samples_;}
+				const std::deque<mpfr>& CauchyTimes() const {return cauchy_times_;}
 
 				/**
 				\brief Function that clears all samples and times from data members for the Cauchy endgame
@@ -248,28 +254,28 @@ namespace bertini
 				/**
 				\brief Setter for the security settings in tracking_conifg.hpp under Security.
 				*/
-				void SetSecuritySettings(config::Security new_endgame_security_settings){ endgame_security_ = new_endgame_security_settings;}
+				void SetSecuritySettings(config::Security new_endgame_security_settings){ security_ = new_endgame_security_settings;}
 
 				/**
 				\brief Getter for the security settings in tracking_conifg.hpp under Security.
 				*/
-				config::Security GetSecuritySettings(){return endgame_security_;}
+				config::Security GetSecuritySettings(){return security_;}
 
 				/**
 				\brief Setter for the tolerance settings in tracking_conifg.hpp under Tolerances.
 				*/
-				void SetToleranceSettings(config::Tolerances new_tolerances_settings){endgame_tolerances_ = new_tolerances_settings;}
+				void SetToleranceSettings(config::Tolerances new_tolerances_settings){tolerances_ = new_tolerances_settings;}
 
 				/**
 				\brief Getter for the tolerance settings in tracking_conifg.hpp under Tolerances.
 				*/
-				config::Tolerances GetTolerancesSettings(){return endgame_tolerances_;}
+				config::Tolerances GetTolerancesSettings(){return tolerances_;}
 
 				//constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				CauchyEndgame(TrackerType const& tracker) : endgame_tracker_(tracker)
 				{
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 				
 				CauchyEndgame(TrackerType const& tracker, config::Cauchy new_cauchy_settings ,config::EndGame new_endgame_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -280,8 +286,8 @@ namespace bertini
 					SetSecuritySettings(new_security_settings);
 					SetToleranceSettings(new_tolerances_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::Cauchy new_cauchy_settings ,config::EndGame new_endgame_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -290,8 +296,8 @@ namespace bertini
 					SetEndgameSettings(new_endgame_settings);
 					SetSecuritySettings(new_security_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::Cauchy new_cauchy_settings ,config::EndGame new_endgame_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -300,8 +306,8 @@ namespace bertini
 					SetEndgameSettings(new_endgame_settings);
 					SetToleranceSettings(new_tolerances_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -310,8 +316,8 @@ namespace bertini
 					SetSecuritySettings(new_security_settings);
 					SetToleranceSettings(new_tolerances_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker,config::Cauchy new_cauchy_settings, config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -320,8 +326,8 @@ namespace bertini
 					SetSecuritySettings(new_security_settings);
 					SetToleranceSettings(new_tolerances_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::Cauchy new_cauchy_settings ,config::EndGame new_endgame_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -329,8 +335,8 @@ namespace bertini
 					SetCauchySettings(new_cauchy_settings);
 					SetEndgameSettings(new_endgame_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -338,8 +344,8 @@ namespace bertini
 					SetEndgameSettings(new_endgame_settings);
 					SetSecuritySettings(new_security_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -347,8 +353,8 @@ namespace bertini
 					SetEndgameSettings(new_endgame_settings);
 					SetToleranceSettings(new_tolerances_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::Cauchy new_cauchy_settings, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -356,8 +362,8 @@ namespace bertini
 					SetCauchySettings(new_cauchy_settings);
 					SetSecuritySettings(new_security_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::Cauchy new_cauchy_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -365,8 +371,8 @@ namespace bertini
 					SetCauchySettings(new_cauchy_settings);
 					SetToleranceSettings(new_tolerances_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker,config::Security new_security_settings, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -374,40 +380,40 @@ namespace bertini
 					SetSecuritySettings(new_security_settings);
 					SetToleranceSettings(new_tolerances_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::EndGame new_endgame_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Cauchy Endgame Security Tolerances
 					SetEndgameSettings(new_endgame_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::Cauchy new_cauchy_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Cauchy Endgame Security Tolerances
 					SetCauchySettings(new_cauchy_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::Security new_security_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Cauchy Endgame Security Tolerances
 					SetSecuritySettings(new_security_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				CauchyEndgame(TrackerType const& tracker, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Cauchy Endgame Security Tolerances
 					SetToleranceSettings(new_tolerances_settings);
 
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = std::max(tolerances_.newton_during_endgame,tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				~CauchyEndgame() {};
@@ -477,9 +483,9 @@ namespace bertini
 						next_time = ComplexType(mpfr_float(starting_time.abs() * cos(next_angle_to_stop_at)),mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)));	
 
 
-						while((next_angle_to_stop_at - current_angle).norm() > endgame_tolerances_.track_tolerance_during_endgame)
+						while((next_angle_to_stop_at - current_angle).norm() > tolerances_.track_tolerance_during_endgame)
 						{//while our angles are not the same. 	
-							if ((next_angle_to_stop_at - current_angle).norm() > endgame_tolerances_.track_tolerance_during_endgame)
+							if ((next_angle_to_stop_at - current_angle).norm() > tolerances_.track_tolerance_during_endgame)
 							{
 								SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,current_time,next_time,current_sample);	
 
@@ -541,7 +547,7 @@ namespace bertini
 					}
 
 					//final leg of tracking around the circle.
-					if ((next_time - starting_time).norm() < endgame_tolerances_.track_tolerance_during_endgame )
+					if ((next_time - starting_time).norm() < tolerances_.track_tolerance_during_endgame )
 					{
 						ComplexType next_time = ComplexType(mpfr_float(starting_time.abs() * cos(next_angle_to_stop_at)),mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)));	
 						SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,current_time,next_time,current_sample);
@@ -719,14 +725,14 @@ namespace bertini
 				*/
 				bool CheckClosedLoop()
 				{
-					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < endgame_tolerances_.track_tolerance_during_endgame)
+					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < tolerances_.track_tolerance_during_endgame)
 					{
 						return true;
 					}
 
-					endgame_tracker_.Refine(cauchy_samples_.front(),cauchy_samples_.front(),cauchy_times_.front(),endgame_tolerances_.final_tolerance);
-					endgame_tracker_.Refine(cauchy_samples_.back(),cauchy_samples_.back(),cauchy_times_.back(),endgame_tolerances_.final_tolerance);
-					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < endgame_tolerances_.track_tolerance_during_endgame)
+					endgame_tracker_.Refine(cauchy_samples_.front(),cauchy_samples_.front(),cauchy_times_.front(),tolerances_.final_tolerance);
+					endgame_tracker_.Refine(cauchy_samples_.back(),cauchy_samples_.back(),cauchy_times_.back(),tolerances_.final_tolerance);
+					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < tolerances_.track_tolerance_during_endgame)
 					{
 						return true;
 					}
@@ -775,10 +781,10 @@ namespace bertini
 							}
 						}
 
-						if(min > endgame_tolerances_.final_tolerance && max > endgame_tolerances_.final_tolerance)
+						if(min > tolerances_.final_tolerance && max > tolerances_.final_tolerance)
 						{
 							norm = min / max;
-							if(norm < cauchy_settings_.maximum_cauchy_ratio && (max - min) > endgame_tolerances_.final_tolerance)
+							if(norm < cauchy_settings_.maximum_cauchy_ratio && (max - min) > tolerances_.final_tolerance)
 							{
 								return false;
 							}
@@ -807,7 +813,7 @@ namespace bertini
 				{
 					bool continue_loop = true;
 					bool check_closed_loop = true;
-					auto fail_safe_max_cycle_number = std::max(cauchy_settings_.fail_safe_maximum_cycle_number,endgame_settings_.cycle_number);
+					auto fail_safe_max_cycle_number = std::max(cauchy_settings_.fail_safe_maximum_cycle_number,cycle_number_);
 
 					cauchy_samples_.push_back(pseg_samples_.back()); // cauchy samples and times should be empty before this point. 
 					cauchy_times_.push_back(pseg_times_.back());
@@ -822,7 +828,7 @@ namespace bertini
 					{
 						auto tracking_success = CircleTrack(cauchy_times_.front(),cauchy_samples_.front());
 
-						endgame_settings_.cycle_number++;
+						cycle_number_++;
 
 						if(tracking_success != SuccessCode::Success)
 						{
@@ -843,7 +849,7 @@ namespace bertini
 										return_value = SuccessCode::Success;
 										break;
 									}
-									else if(endgame_settings_.cycle_number > fail_safe_max_cycle_number)
+									else if(cycle_number_ > fail_safe_max_cycle_number)
 									{// too many iterations
 										std::cout << "Error: Cycle number too high to detect!" << '\n';
 										return_value = SuccessCode::CycleNumTooHigh;
@@ -856,7 +862,7 @@ namespace bertini
 									//compute next loop, the last sample in times and samples is the sample our loop ended on. Either where we started or on another sheet at the same time value. 
 									tracking_success = CircleTrack(cauchy_times_.back(),cauchy_samples_.back());
 
-									endgame_settings_.cycle_number++;
+									cycle_number_++;
 
 									if(tracking_success != SuccessCode::Success)
 									{//return error
@@ -1041,7 +1047,7 @@ namespace bertini
 						}
 						else
 						{
-							endgame_settings_.cycle_number = 0;
+							cycle_number_ = 0;
 							approximation_time = pseg_times_.back();
 							approximation = pseg_samples_.back();
 							return SuccessCode::Success;
@@ -1049,7 +1055,7 @@ namespace bertini
 					}
 					else
 					{
-						endgame_settings_.cycle_number = 0;
+						cycle_number_ = 0;
 						approximation_time = pseg_times_.back();
 						approximation = pseg_samples_.back();
 						return SuccessCode::Success;
@@ -1124,10 +1130,10 @@ namespace bertini
 
 					for(unsigned ii = 0; ii < pseg_samples_.size(); ++ii)
 					{
-						s_derivatives.push_back(pseg_derivatives[ii]*(ComplexType(endgame_settings_.cycle_number)*pow(pseg_times_[ii],(ComplexType(endgame_settings_.cycle_number) - ComplexType(1))/ComplexType(endgame_settings_.cycle_number))));
-						s_times.push_back(pow(pseg_times_[ii],ComplexType(1)/ComplexType(endgame_settings_.cycle_number)));
+						s_derivatives.push_back(pseg_derivatives[ii]*(ComplexType(cycle_number_)*pow(pseg_times_[ii],(ComplexType(cycle_number_) - ComplexType(1))/ComplexType(cycle_number_))));
+						s_times.push_back(pow(pseg_times_[ii],ComplexType(1)/ComplexType(cycle_number_)));
 
-						endgame_tracker_.Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],endgame_tolerances_.track_tolerance_during_endgame);
+						endgame_tracker_.Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],tolerances_.track_tolerance_during_endgame);
 					}
 
 					Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, endgame_settings_.num_sample_points, s_times, pseg_samples_, s_derivatives);
@@ -1155,16 +1161,16 @@ namespace bertini
 				Vec<ComplexType> ComputeCauchyApproximationOfXAtT0(std::deque< Vec<ComplexType> > cauchy_samples)
 				{
 					// std::cout << "Cauchy approx " << '\n';
-					endgame_tracker_.Refine(cauchy_samples_[0],cauchy_samples_[0],cauchy_times_[0],endgame_tolerances_.track_tolerance_during_endgame);
+					endgame_tracker_.Refine(cauchy_samples_[0],cauchy_samples_[0],cauchy_times_[0],tolerances_.track_tolerance_during_endgame);
 
 					Vec<ComplexType> approximation = cauchy_samples_[0]; 
 
-					for(unsigned int ii = 1; ii < endgame_settings_.cycle_number * endgame_settings_.num_sample_points; ++ii)
+					for(unsigned int ii = 1; ii < cycle_number_ * endgame_settings_.num_sample_points; ++ii)
 					{
-						endgame_tracker_.Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],endgame_tolerances_.final_tolerance);
+						endgame_tracker_.Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],tolerances_.final_tolerance);
 						approximation += cauchy_samples[ii];
 					}
-					approximation /= (endgame_settings_.cycle_number * endgame_settings_.num_sample_points);
+					approximation /= (cycle_number_ * endgame_settings_.num_sample_points);
 					return approximation;
 
 				}
@@ -1195,7 +1201,7 @@ namespace bertini
 					cauchy_samples_.clear();
 					cauchy_times_.push_back(starting_time);
 					cauchy_samples_.push_back(starting_sample);
-					endgame_settings_.cycle_number = 0;
+					cycle_number_ = 0;
 
 					auto check_closed_loop = false;
 
@@ -1207,7 +1213,7 @@ namespace bertini
 						//track around the origin once.
 						tracking_success = CircleTrack(cauchy_times_.back(),cauchy_samples_.back());
 
-						endgame_settings_.cycle_number++;
+						cycle_number_++;
 
 						if(tracking_success != SuccessCode::Success)
 						{
@@ -1233,7 +1239,7 @@ namespace bertini
 							{
 								return SuccessCode::Success;
 							}
-							else if(endgame_settings_.cycle_number > cauchy_settings_.fail_safe_maximum_cycle_number)
+							else if(cycle_number_ > cauchy_settings_.fail_safe_maximum_cycle_number)
 							{//too many iterations
 								std::cout << "ERROR: Cycle number too high to detect! " << '\n';
 								return SuccessCode::CycleNumTooHigh;
@@ -1273,7 +1279,7 @@ namespace bertini
 				SuccessCode CauchyEG(ComplexType endgame_time, Vec<ComplexType> endgame_sample)
 				{
 					ClearTimesAndSamples(); //clear times and samples before we begin.
-					endgame_settings_.cycle_number = 0;
+					cycle_number_ = 0;
 					ComplexType origin("0.0","0.0");
 
 					ComplexType next_time;
@@ -1299,7 +1305,7 @@ namespace bertini
 						latest_approx = ComputeCauchyApproximationOfXAtT0(cauchy_samples_);
 						Vec<ComplexType> dehom_of_latest_approx = endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx);
 
-						if(endgame_security_.level <= 0)
+						if(security_.level <= 0)
 						{
 							Vec<ComplexType> dehom_of_latest_approx = endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx);
 						}
@@ -1310,19 +1316,19 @@ namespace bertini
 
 							// dehom of prev approx and last approx not used because they are not updated with the most current information. However, prev approx and last approx are 
 							// the most current. This is from how the do while loop below is done. 
-							if(endgame_security_.level <= 0 && endgame_tracker_.GetSystem().DehomogenizePoint(prev_approx).norm() > endgame_security_.max_norm &&  endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx).norm() > endgame_security_.max_norm)
+							if(security_.level <= 0 && endgame_tracker_.GetSystem().DehomogenizePoint(prev_approx).norm() > security_.max_norm &&  endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx).norm() > security_.max_norm)
 							{//we are too large, break out of loop to return error.
-								endgame_settings_.final_approximation_at_origin = latest_approx;
+								final_approximation_at_origin_ = latest_approx;
 								return SuccessCode::SecurityMaxNormReached;
 							}
 							else if(cauchy_times_.front().abs() < endgame_settings_.min_track_time)
 							{//we are too close to t = 0 but we do not have the correct tolerance - so we exit
-								endgame_settings_.final_approximation_at_origin = latest_approx;
+								final_approximation_at_origin_ = latest_approx;
 								return SuccessCode::FailedToConverge;
 							}
-							else if(approximate_error < endgame_tolerances_.final_tolerance)
+							else if(approximate_error < tolerances_.final_tolerance)
 							{
-								endgame_settings_.final_approximation_at_origin = latest_approx;
+								final_approximation_at_origin_ = latest_approx;
 								return SuccessCode::Success;
 							}
 							else
@@ -1349,7 +1355,7 @@ namespace bertini
 										}
 
 										latest_approx = ComputeCauchyApproximationOfXAtT0(cauchy_samples_);
-										if(endgame_security_.level <= 0)
+										if(security_.level <= 0)
 										{
 									 		Vec<ComplexType> dehom_of_latest_approx = endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx);
 										}
@@ -1358,17 +1364,17 @@ namespace bertini
 									if(finding_cauchy_samples_success == SuccessCode::CycleNumTooHigh && cauchy_times_.front().abs() < endgame_settings_.min_track_time)
 									{// wer are too close to t = 0 but we do have the correct tolerance -so we exit.
 										std::cout << "min track time reached " << '\n';
-										endgame_settings_.final_approximation_at_origin = latest_approx;
+										final_approximation_at_origin_ = latest_approx;
 										return SuccessCode::MinTrackTimeReached;
 									}
 								}while(finding_cauchy_samples_success != SuccessCode::Success); //executes at least once on no errors. 
 							}
-						}while(approximate_error > endgame_tolerances_.final_tolerance);
+						}while(approximate_error > tolerances_.final_tolerance);
 
-						endgame_settings_.final_approximation_at_origin = latest_approx;
+						final_approximation_at_origin_ = latest_approx;
 						return SuccessCode::Success;
 					}
-					endgame_settings_.final_approximation_at_origin = latest_approx;
+					final_approximation_at_origin_ = latest_approx;
 					return SuccessCode::Success;
 				} //end CauchyEG
 			};

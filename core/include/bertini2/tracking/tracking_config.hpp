@@ -153,9 +153,6 @@ namespace bertini
 				unsigned num_sample_points = 3;
 				mpfr_float min_track_time = mpfr_float("1e-100"); //nbrh radius in Bertini book.
 				mpfr_float sample_factor = mpfr_float("0.5");
-				Vec<mpfr> final_approximation_at_origin;
-				unsigned int cycle_number = 0;
-
 			};
 
 			struct PowerSeries

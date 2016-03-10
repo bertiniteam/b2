@@ -49,6 +49,80 @@ namespace bertini{
 	namespace tracking {
 
 		namespace endgame {
+
+		/*
+			Input: 
+					target_time is the time value that we wish to interpolate at.
+					samples are space values that correspond to the time values in times. 
+				 	derivatives are the dx_dt or dx_ds values at the (time,sample) values.
+
+			Output: 
+					Since we have a target_time the function returns the corrsponding space value at that time. 
+
+			Details: 
+					We compare our approximations to the tracked value to come up with the cycle number. 
+					Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
+					say we have converged. 
+			*/
+
+			/**
+			\brief
+
+			\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
+			\param endgame_time The time value at which we start the endgame. 
+			\param x_endgame The current space point at endgame_time.
+			\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
+			\param samples a deque that will hold all the samples corresponding to the time values in times. 
+
+			\tparam ComplexType The complex number type.
+			*/			
+			template<typename ComplexType>		
+				Vec<ComplexType> HermiteInterpolateAndSolve(ComplexType const& target_time, const unsigned int num_sample_points, const std::deque<ComplexType> & times, const std::deque< Vec<ComplexType> > & samples, const std::deque< Vec<ComplexType> > & derivatives)
+			{
+				Mat< Vec<ComplexType> > finite_difference_matrix(2*num_sample_points,2*num_sample_points);
+				Vec<ComplexType> array_of_times(2*num_sample_points);
+				
+				for(unsigned int ii=0; ii<num_sample_points; ++ii)
+				{ 
+					finite_difference_matrix(2*ii,0) = samples[ii];			/*  F[2*i][0]    = samples[i];    */
+     				finite_difference_matrix(2*ii+1,0) = samples[ii]; 		/*  F[2*i+1][0]  = samples[i];    */
+      				finite_difference_matrix(2*ii+1,1) = derivatives[ii];	/*  F[2*i+1][1]  = derivatives[i]; */
+     				array_of_times(2*ii) = times[ii];						/*  z[2*i]       = times[i];       */
+     				array_of_times(2*ii+1) =  times[ii];					/*  z[2*i+1]     = times[i];       */
+				}
+
+				//Add first round of finite differences to fill out rest of matrix. 
+				for(unsigned int ii=1; ii< num_sample_points; ++ii)
+				{
+					finite_difference_matrix(2*ii,1) = (ComplexType(1)/(array_of_times(2*ii) - array_of_times(2*ii - 1))) * (finite_difference_matrix(2*ii,0) - finite_difference_matrix(2*ii - 1,0));
+				
+				}
+
+				//Filliing out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
+				for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
+				{
+					for(unsigned int jj=2; jj <=ii; ++jj)
+					{
+						finite_difference_matrix(ii,jj) = (ComplexType(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));						
+					}
+				}
+
+				 unsigned int ii = num_sample_points - 1 ;
+				 auto Result = finite_difference_matrix(2*num_sample_points - 1,2*num_sample_points - 1); 
+				 //Start of Result from Hermite polynomial, this is using the diagonal of the 
+				 //finite difference matrix.
+
+				 while(ii >= 1)
+				{
+					Result = (Result*(target_time - array_of_times(ii)) + finite_difference_matrix(2*ii,2*ii)) * (target_time - array_of_times(ii - 1)) + finite_difference_matrix(2*ii - 1,2*ii - 1);  
+					ii--;
+				}
+				//This builds the hermite polynomial from the highest term down. 
+				//As we multiply the previous result we will construct the highest term down to the last term.
+				Result = Result * (target_time - array_of_times(0)) + finite_difference_matrix(0,0); // Last term in hermite polynomial.
+				return Result;
+			}
+
 		/**
 		\class Endgame
 
@@ -77,7 +151,13 @@ namespace bertini{
 		
 			class Endgame
 			{
-			public:
+
+			protected:
+				// state variables
+				mutable Vec<mpfr> final_approximation_at_origin_; 
+				mutable unsigned int cycle_number_ = 0; 
+
+
 				/**
 				\brief Settings that will be used in every endgame. For example, the number of samples points, the cycle number, and the final approximation of that we compute 
 				using the endgame. 
@@ -86,13 +166,35 @@ namespace bertini{
 				/**
 				\brief There are tolerances that are specific to the endgame. These settings are stored inside of this data member. 
 				*/
-				config::Tolerances endgame_tolerances_;
+				config::Tolerances tolerances_;
 				/**
 				During the endgame we may be checking that we are not computing when we have detected divergent paths or other undesirable behavior. The setttings for these checks are 
 				in this data member. 
 				*/
-				config::Security endgame_security_;
-				 	
+				config::Security security_;
+
+			public:	
+
+				unsigned CycleNumber() const { return cycle_number_;}
+				void CycleNumber(unsigned c) { cycle_number_ = c;}
+
+				config::EndGame& EndgameSettings()
+				{
+					return endgame_settings_;
+				}
+
+				config::Tolerances& Tolerances()
+				{
+					return tolerances_;
+				}
+
+				config::Security& SecuritySettings()
+				{
+					return security_;
+				}
+
+				const Vec<mpfr>& FinalApproximation() const {return final_approximation_at_origin_;}
+
 				/*
 				Input:  endgame_tracker_: a template parameter for the endgame created. This tracker will be used to compute our samples. 
 						endgame_time: is the time when we start the endgame process usually this is .1
@@ -104,9 +206,9 @@ namespace bertini{
 
 
 				Details:
-					The first sample will be (x_endgame) and the first time is endgame_time.
+					The first sample will be (x_endgame) and the first time is start_time.
 					From there we do a geometric progression using the sample factor which by default is 1/2.
-					The next_time = endgame_time * sample_factor.
+					The next_time = start_time * sample_factor.
 					We can track then to the next_time and that construct the next_sample. This is done for Power Series Endgame and the Cauchy endgame.
 				*/
 				/**
@@ -114,8 +216,8 @@ namespace bertini{
 				so that we are ready to start the endgame. 
 
 				\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
-				\param endgame_time The time value at which we start the endgame. 
-				\param x_endgame The current space point at endgame_time.
+				\param start_time The time value at which we start the endgame. 
+				\param x_endgame The current space point at start_time.
 				\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 				\param samples a deque that will hold all the samples corresponding to the time values in times. 
 
@@ -123,10 +225,10 @@ namespace bertini{
 				\tparam TrackerType The tracker type. 
 				*/	
 				template<typename ComplexType, typename TrackerType>
-				void ComputeInitialSamples(const TrackerType & endgame_tracker_, const ComplexType endgame_time,const Vec<ComplexType> x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
+				void ComputeInitialSamples(const TrackerType & endgame_tracker_, const ComplexType & start_time,const Vec<ComplexType> & x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
 				{
 					samples.push_back(x_endgame);
-					times.push_back(endgame_time);
+					times.push_back(start_time);
 					Vec<ComplexType> next_sample;
 
 					for(int ii=2; ii <= endgame_settings_.num_sample_points; ++ii)//start at 2 since first sample is at the endgame boundary.
@@ -172,80 +274,7 @@ namespace bertini{
 				}
 			*/
 
-			/*
-			Input: 
-					target_time is the time value that we wish to interpolate at.
-					samples are space values that correspond to the time values in times. 
-				 	derivatives are the dx_dt or dx_ds values at the (time,sample) values.
-
-			Output: 
-					Since we have a target_time the function returns the corrsponding space value at that time. 
-
-			Details: 
-					We compare our approximations to the tracked value to come up with the cycle number. 
-					Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
-					say we have converged. 
-			*/
-
-			/**
-			\brief
-
-			\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
-			\param endgame_time The time value at which we start the endgame. 
-			\param x_endgame The current space point at endgame_time.
-			\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
-			\param samples a deque that will hold all the samples corresponding to the time values in times. 
-
-			\tparam ComplexType The complex number type.
-			*/			
-			template<typename ComplexType>		
-				Vec<ComplexType> HermiteInterpolateAndSolve(ComplexType const& target_time, const unsigned int num_sample_points, const std::deque<ComplexType> & times, const std::deque< Vec<ComplexType> > & samples, const std::deque< Vec<ComplexType> > & derivatives)
-			{
-				Eigen::IOFormat HeavyFmt(Eigen::FullPrecision);
-
-				Mat< Vec<ComplexType> > finite_difference_matrix(2*num_sample_points,2*num_sample_points);
-				Vec<ComplexType> array_of_times(2*num_sample_points);
-				
-				for(unsigned int ii=0; ii<num_sample_points; ++ii)
-				{ 
-					finite_difference_matrix(2*ii,0) = samples[ii];			/*  F[2*i][0]    = samples[i];    */
-     				finite_difference_matrix(2*ii+1,0) = samples[ii]; 		/*  F[2*i+1][0]  = samples[i];    */
-      				finite_difference_matrix(2*ii+1,1) = derivatives[ii];	/*  F[2*i+1][1]  = derivatives[i]; */
-     				array_of_times(2*ii) = times[ii];						/*  z[2*i]       = times[i];       */
-     				array_of_times(2*ii+1) =  times[ii];					/*  z[2*i+1]     = times[i];       */
-				}
-
-				//Add first round of finite differences to fill out rest of matrix. 
-				for(unsigned int ii=1; ii< num_sample_points; ++ii)
-				{
-					finite_difference_matrix(2*ii,1) = (ComplexType(1)/(array_of_times(2*ii) - array_of_times(2*ii - 1))) * (finite_difference_matrix(2*ii,0) - finite_difference_matrix(2*ii - 1,0));
-				
-				}
-
-				//Filliing out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
-				for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
-				{
-					for(unsigned int jj=2; jj <=ii; ++jj)
-					{
-						finite_difference_matrix(ii,jj) = (ComplexType(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));						
-					}
-				}
-
-				 unsigned int ii = num_sample_points - 1 ;
-				 auto Result = finite_difference_matrix(2*num_sample_points - 1,2*num_sample_points - 1); 
-				 //Start of Result from Hermite polynomial, this is using the diagonal of the 
-				 //finite difference matrix.
-
-				 while(ii >= 1)
-				{
-					Result = (Result*(target_time - array_of_times(ii)) + finite_difference_matrix(2*ii,2*ii)) * (target_time - array_of_times(ii - 1)) + finite_difference_matrix(2*ii - 1,2*ii - 1);  
-					ii--;
-				}
-				//This builds the hermite polynomial from the highest term down. 
-				//As we multiply the previous result we will construct the highest term down to the last term.
-				Result = Result * (target_time - array_of_times(0)) + finite_difference_matrix(0,0); // Last term in hermite polynomial.
-				return Result;
-			}
+			
 
 			
 		}// end namespace endgame

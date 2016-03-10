@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
 
 	//testing a constructor only.
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_tolerances_struct);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_tolerances_struct);
 
 
 	Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 
 
 
-	BOOST_CHECK(abs(first_approx.norm() - mpfr("0.9999999767578209232082898114211261253459","0").norm()) < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame); // answer was found using matlab for a check. difference is diff is 2.32422e-08
+	BOOST_CHECK(abs(first_approx.norm() - mpfr("0.9999999767578209232082898114211261253459","0").norm()) < endgame_tolerances_struct.track_tolerance_during_endgame); // answer was found using matlab for a check. difference is diff is 2.32422e-08
 
 }//end basic hermite test case mp against matlab
 
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 
 	//First Approximation at the origin.
 	//testing a constructor for the endgame on this line only.
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_security_struct);
 
 
 	 Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 
 	//First Approximation at the origin.
 	//testing a constructor on next line.
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_settings);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,power_series_settings);
 
 	 Vec< mpfr > first_approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	 Vec< mpfr > correct(1);
@@ -460,16 +460,16 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 
 	bertini::tracking::config::EndGame endgame_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct);
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	My_Endgame.BoundOnCycleNumber();
+	my_endgame.BoundOnCycleNumber();
 
 
-	BOOST_CHECK(My_Endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
-	auto first_upper_bound = My_Endgame.power_series_settings_.upper_bound_on_cycle_number;
+	auto first_upper_bound = my_endgame.power_series_settings_.upper_bound_on_cycle_number;
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
@@ -482,13 +482,13 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	times.pop_front();
 	samples.pop_front();
 
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	My_Endgame.BoundOnCycleNumber();
+	my_endgame.BoundOnCycleNumber();
 
 
-	BOOST_CHECK(My_Endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
 } // end compute bound on cycle number mp
 
@@ -559,16 +559,16 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	bertini::tracking::config::Security endgame_security_struct;
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	My_Endgame.BoundOnCycleNumber();
+	my_endgame.BoundOnCycleNumber();
 
 
-	BOOST_CHECK(My_Endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
-	auto first_upper_bound = My_Endgame.power_series_settings_.upper_bound_on_cycle_number;;
+	auto first_upper_bound = my_endgame.power_series_settings_.upper_bound_on_cycle_number;;
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
@@ -582,14 +582,14 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	samples.pop_front();
 
 
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	My_Endgame.BoundOnCycleNumber();
+	my_endgame.BoundOnCycleNumber();
 
-	//My_Endgame.power_series_settings_.upper_bound_on_cycle_number;
+	//my_endgame.power_series_settings_.upper_bound_on_cycle_number;
 
-	BOOST_CHECK(My_Endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.power_series_settings_.upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
 
 } // end compute bound on cycle number dbl
 
@@ -671,14 +671,14 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	bertini::tracking::config::PowerSeries power_series_struct;
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_tolerances_struct);
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,power_series_struct,endgame_tolerances_struct);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
 
-	auto derivatives = My_Endgame.ComputeCycleNumber(time,sample);
+	auto derivatives = my_endgame.ComputeCycleNumber(time,sample);
 
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
+	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
 } // end compute cycle number mp
 
@@ -758,14 +758,14 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	bertini::tracking::config::PowerSeries power_series_struct;
 	bertini::tracking::config::Security endgame_security_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_security_struct);
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,power_series_struct,endgame_security_struct);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
 
-	auto derivatives = My_Endgame.ComputeCycleNumber(time,sample);
+	auto derivatives = my_endgame.ComputeCycleNumber(time,sample);
 
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
+	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
 } // end compute cycle number mp
 
@@ -838,11 +838,11 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	bertini::tracking::config::EndGame endgame_struct;
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,endgame_tolerances_struct);
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,endgame_tolerances_struct);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	auto first_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+	auto first_approx = my_endgame.ComputeApproximationOfXAtT0(origin);
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
 	times.push_back(time);
@@ -853,10 +853,10 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	times.pop_front();
 	samples.pop_front();
 
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	auto second_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+	auto second_approx = my_endgame.ComputeApproximationOfXAtT0(origin);
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".00625"); //.025/2 = .0125
@@ -868,10 +868,10 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	times.pop_front();
 	samples.pop_front();
 
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	auto third_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+	auto third_approx = my_endgame.ComputeApproximationOfXAtT0(origin);
 
 	BOOST_CHECK((third_approx - x_origin).norm() < (second_approx - x_origin).norm());
 
@@ -942,12 +942,12 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	bertini::tracking::config::EndGame endgame_struct;
 	bertini::tracking::config::Security endgame_security_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,endgame_security_struct);
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,endgame_security_struct);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
 
-	auto first_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+	auto first_approx = my_endgame.ComputeApproximationOfXAtT0(origin);
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
 	times.push_back(time);
@@ -958,10 +958,10 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	times.pop_front();
 	samples.pop_front();
 
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	auto second_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+	auto second_approx = my_endgame.ComputeApproximationOfXAtT0(origin);
 
 	time = mpfr(".00625"); //.025/2 = .0125
 	times.push_back(time);
@@ -972,10 +972,10 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	times.pop_front();
 	samples.pop_front();
 
-	My_Endgame.SetTimes(times);
-	My_Endgame.SetSamples(samples);
+	my_endgame.SetTimes(times);
+	my_endgame.SetSamples(samples);
 
-	auto third_approx = My_Endgame.ComputeApproximationOfXAtT0(origin);
+	auto third_approx = my_endgame.ComputeApproximationOfXAtT0(origin);
 
 
 	BOOST_CHECK((third_approx - x_origin).norm() < (second_approx - x_origin).norm());
@@ -1061,15 +1061,15 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	bertini::tracking::config::EndGame endgame_settings;
 	bertini::tracking::config::PowerSeries power_series_settings;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_settings,power_series_settings);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_settings,power_series_settings);
 
-	My_Endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, times, samples);
+	my_endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, times, samples);
 
 	
 
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
-		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
+		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	}
 
 }//end compute initial samples mp
@@ -1153,16 +1153,16 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	bertini::tracking::config::Security endgame_security_struct;
 	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,power_series_struct,endgame_security_struct,endgame_tolernaces_struct);
 
 
-	My_Endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, times, samples);
+	my_endgame.Endgame::ComputeInitialSamples(tracker, current_time, current_space, times, samples);
 
 
 
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
-		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
+		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	}
 
 }//end compute initial samples dbl
@@ -1216,11 +1216,11 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	bertini::tracking::config::Security endgame_security_struct;
 	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,endgame_security_struct,endgame_tolernaces_struct);
-	My_Endgame.PSEG(current_time,current_space);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,endgame_security_struct,endgame_tolernaces_struct);
+	my_endgame.PSEG(current_time,current_space);
 
 
-	BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp for power series class 
 
@@ -1271,12 +1271,12 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 	bertini::tracking::config::PowerSeries power_series_struct;
 	bertini::tracking::config::Tolerances endgame_tolernaces_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_tolernaces_struct);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_tolernaces_struct);
 
 
-	My_Endgame.PSEG(current_time,current_space);
+	my_endgame.PSEG(current_time,current_space);
 
-	BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
 	
 }//end pseg dbl for power series class
 
@@ -1332,11 +1332,11 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 	bertini::tracking::config::PowerSeries power_series_struct;
 	bertini::tracking::config::Security endgame_security_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct);
 
-	My_Endgame.PSEG(current_time,current_space);
+	my_endgame.PSEG(current_time,current_space);
 
-	BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - correct).norm() < 1e-4);//My_Endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp test case for power series class
 
@@ -1417,15 +1417,15 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	bertini::tracking::config::Security endgame_security_struct;
 	bertini::tracking::config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct,endgame_tolerances_struct);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker,endgame_struct,power_series_struct,endgame_security_struct,endgame_tolerances_struct);
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
 	for(auto s : current_space_values)
 	{
-		bertini::tracking::SuccessCode endgame_success = My_Endgame.PSEG(endgame_time,s);
+		bertini::tracking::SuccessCode endgame_success = my_endgame.PSEG(endgame_time,s);
 		if(endgame_success == bertini::tracking::SuccessCode::Success){
-			BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - correct).norm() < 1e-4);// My_Endgame.GetTrackToleranceDuringEndgame());
+			BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);// my_endgame.GetTrackToleranceDuringEndgame());
 			num_paths_converging++;
 		}
 		if(endgame_success == bertini::tracking::SuccessCode::SecurityMaxNormReached){
@@ -1542,7 +1542,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	Vec<mpfr> correct(2);
 	correct << mpfr("1","0"),mpfr("1","0");
 
-	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> my_endgame(tracker);
 
 
 	std::vector<Vec<mpfr> > endgame_solutions;
@@ -1551,7 +1551,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	unsigned num_min_track_time_reached = 0;
 	for (auto s : homogenized_solutions)
 	{
-		bertini::tracking::SuccessCode endgame_success = My_Endgame.PSEG(t_endgame_boundary,s);
+		bertini::tracking::SuccessCode endgame_success = my_endgame.PSEG(t_endgame_boundary,s);
 		if(endgame_success == bertini::tracking::SuccessCode::Success)
 		{
 				num_successful_occurences++;

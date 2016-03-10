@@ -59,6 +59,8 @@ extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 BOOST_AUTO_TEST_SUITE(cauchy_endgame_class_basics)
 
+using namespace bertini::tracking;
+
 BOOST_AUTO_TEST_CASE(circle_track_d_for_cauchy_class_test)
 {
 	/*
@@ -78,14 +80,14 @@ BOOST_AUTO_TEST_CASE(circle_track_d_for_cauchy_class_test)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -101,16 +103,16 @@ BOOST_AUTO_TEST_CASE(circle_track_d_for_cauchy_class_test)
 	Vec<mpfr> sample(1);
 
 
-	time = mpfr(".1");
+	time = mpfr("0.1");
 	cauchy_times.push_back(time);
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
 	cauchy_samples.push_back(sample);
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	auto first_track_success =  My_Endgame.CircleTrack(time,sample);
+	auto first_track_success =  my_endgame.CircleTrack(time,sample);
 
-	BOOST_CHECK((My_Endgame.cauchy_samples_.back() - sample).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
+	BOOST_CHECK((my_endgame.CauchySamples().back() - sample).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 
 } // end circle_track_d_for_cauchy_class_test
 
@@ -127,21 +129,21 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_t
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -163,23 +165,23 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_t
 	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
 	cauchy_samples.push_back(sample);
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
 
-	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 
-	auto first_track_sample = My_Endgame.cauchy_samples_.back();
+	auto first_track_sample = my_endgame.CauchySamples().back();
 	// std::cout << "first track sample is " << first_track_sample << '\n';
 
-	BOOST_CHECK((first_track_sample - sample).norm() > My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
+	BOOST_CHECK((first_track_sample - sample).norm() > my_endgame.Tolerances().track_tolerance_during_endgame);
 
-	tracking_success =  My_Endgame.CircleTrack(time,first_track_sample);
+	tracking_success =  my_endgame.CircleTrack(time,first_track_sample);
 
-	auto second_track_sample = My_Endgame.cauchy_samples_.back();
+	auto second_track_sample = my_endgame.CauchySamples().back();
 
 	// std::cout << "second track sample is " << second_track_sample << '\n';
 
-	BOOST_CHECK((second_track_sample - sample).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
+	BOOST_CHECK((second_track_sample - sample).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	
 } // end circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_test
 
@@ -202,14 +204,14 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -243,18 +245,18 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 	pseg_samples.push_back(sample);
 
 
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::Security endgame_security_struct;
+	config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto first_c_over_k = My_Endgame.ComputeCOverK();
+	auto first_c_over_k = my_endgame.ComputeCOverK();
 
 	// std::cout << "first c over k is " << first_c_over_k << '\n';
 	// std::cout << "first diff " << abs(first_c_over_k - mpfr_float("1.12917")) << '\n';
-	// std::cout << "Tol is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
+	// std::cout << "Tol is " << my_endgame.GetTrackToleranceDuringEndgame() << '\n';
 
 	 BOOST_CHECK( abs(first_c_over_k - mpfr_float("1.12917")) < 1e-5 ); 
 
@@ -268,10 +270,10 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 	pseg_times.pop_front();
 	pseg_samples.pop_front();
 
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto second_c_over_k = My_Endgame.ComputeCOverK();
+	auto second_c_over_k = my_endgame.ComputeCOverK();
 
 	// std::cout << "second_c_over_k is " << second_c_over_k << '\n';
 	// std::cout << "second diff is " << abs(second_c_over_k - mpfr_float("1.05888")) << '\n';
@@ -297,14 +299,14 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -338,18 +340,18 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 	pseg_samples.push_back(sample);
 
 
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::Security endgame_security_struct;
+	config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto first_c_over_k = My_Endgame.ComputeCOverK();
+	auto first_c_over_k = my_endgame.ComputeCOverK();
 
 	// std::cout << "first c over k is " << first_c_over_k << '\n';
 	// std::cout << "first diff " << abs(first_c_over_k - mpfr_float("1.12917")) << '\n';
-	// std::cout << "Tol is " << My_Endgame.GetTrackToleranceDuringEndgame() << '\n';
+	// std::cout << "Tol is " << my_endgame.GetTrackToleranceDuringEndgame() << '\n';
 
 	 BOOST_CHECK( abs(first_c_over_k - mpfr_float("1.12917")) < 1e-5 ); 
 
@@ -363,10 +365,10 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 	pseg_times.pop_front();
 	pseg_samples.pop_front();
 
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto second_c_over_k = My_Endgame.ComputeCOverK();
+	auto second_c_over_k = my_endgame.ComputeCOverK();
 
 	// std::cout << "second_c_over_k is " << second_c_over_k << '\n';
 	// std::cout << "second diff is " << abs(second_c_over_k - mpfr_float("1.05888")) << '\n';
@@ -388,19 +390,19 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t");
-	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -434,14 +436,14 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 	pseg_samples.push_back(sample);
 
 
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::Security endgame_security_struct;
+	config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto first_c_over_k = My_Endgame.ComputeCOverK();
+	auto first_c_over_k = my_endgame.ComputeCOverK();
 
 	c_over_k_array.push_back(first_c_over_k);
 
@@ -455,10 +457,10 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 	pseg_times.pop_front();
 	pseg_samples.pop_front();
 
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto second_c_over_k = My_Endgame.ComputeCOverK();
+	auto second_c_over_k = my_endgame.ComputeCOverK();
 
 	c_over_k_array.push_back(second_c_over_k);
 
@@ -474,14 +476,14 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 	pseg_times.pop_front();
 	pseg_samples.pop_front();
 
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto third_c_over_k = My_Endgame.ComputeCOverK();
+	auto third_c_over_k = my_endgame.ComputeCOverK();
 
 	c_over_k_array.push_back(third_c_over_k);
 
-	auto stabilized = My_Endgame.CheckForCOverKStabilization(c_over_k_array);
+	auto stabilized = my_endgame.CheckForCOverKStabilization(c_over_k_array);
 
 	BOOST_CHECK(stabilized == true);
 
@@ -499,19 +501,19 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t");
-	sys.AddFunction( pow(x - mpfr("1"),3)*(1-t) + (pow(x,3) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -545,14 +547,14 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 	pseg_samples.push_back(sample);
 
 
-	bertini::tracking::config::Security endgame_security_struct;
-	bertini::tracking::config::Tolerances endgame_tolerances_struct;
+	config::Security endgame_security_struct;
+	config::Tolerances endgame_tolerances_struct;
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker,endgame_security_struct,endgame_tolerances_struct);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto first_c_over_k = My_Endgame.ComputeCOverK();
+	auto first_c_over_k = my_endgame.ComputeCOverK();
 
 	c_over_k_array.push_back(first_c_over_k);
 
@@ -566,10 +568,10 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 	pseg_times.pop_front();
 	pseg_samples.pop_front();
 
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto second_c_over_k = My_Endgame.ComputeCOverK();
+	auto second_c_over_k = my_endgame.ComputeCOverK();
 
 	c_over_k_array.push_back(second_c_over_k);
 
@@ -585,14 +587,14 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 	pseg_times.pop_front();
 	pseg_samples.pop_front();
 
-	My_Endgame.SetPSEGTimes(pseg_times);
-	My_Endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
 
-	auto third_c_over_k = My_Endgame.ComputeCOverK();
+	auto third_c_over_k = my_endgame.ComputeCOverK();
 
 	c_over_k_array.push_back(third_c_over_k);
 
-	auto stabilized = My_Endgame.CheckForCOverKStabilization(c_over_k_array);
+	auto stabilized = my_endgame.CheckForCOverKStabilization(c_over_k_array);
 
 	BOOST_CHECK(stabilized == true);
 
@@ -619,14 +621,14 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -648,27 +650,27 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
 	cauchy_samples.push_back(sample);
 
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	My_Endgame.SetCauchySamples(cauchy_samples);
-	My_Endgame.SetCauchyTimes(cauchy_times);
+	my_endgame.SetCauchySamples(cauchy_samples);
+	my_endgame.SetCauchyTimes(cauchy_times);
 
 
-	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 
 	// std::cout << "first sample is " << cauchy_samples.front() << '\n';
 	// std::cout << "last sample is " << cauchy_samples.back() << '\n';
 
-	// for(int ii = 0; ii < My_Endgame.cauchy_samples_.size(); ii++)
+	// for(int ii = 0; ii < my_endgame.CauchySamples().size(); ii++)
 	// {
-	// 	std::cout << "samples at i is " << My_Endgame.cauchy_samples_[ii] << '\n';
+	// 	std::cout << "samples at i is " << my_endgame.CauchySamples()[ii] << '\n';
 	// }
 
-	//auto closed_loop_tolerance = My_Endgame.FindToleranceForClosedLoop(time,sample);
+	//auto closed_loop_tolerance = my_endgame.FindToleranceForClosedLoop(time,sample);
 
 	// std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
 
-	auto check_closed_loop = My_Endgame.CheckClosedLoop();
+	auto check_closed_loop = my_endgame.CheckClosedLoop();
 
 	BOOST_CHECK(check_closed_loop == true);
 
@@ -689,7 +691,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 
 	VariableGroup vars{x};
@@ -697,14 +699,14 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -727,24 +729,24 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class
 	cauchy_samples.push_back(sample);
 
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	My_Endgame.SetCauchySamples(cauchy_samples);
-	My_Endgame.SetCauchyTimes(cauchy_times);
+	my_endgame.SetCauchySamples(cauchy_samples);
+	my_endgame.SetCauchyTimes(cauchy_times);
 
-	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 
-	// for(int ii = 0; ii < My_Endgame.cauchy_samples_.size(); ii++)
+	// for(int ii = 0; ii < my_endgame.CauchySamples().size(); ii++)
 	// {
-	// 	std::cout << "samples at i is " << My_Endgame.cauchy_samples_[ii] << '\n';
+	// 	std::cout << "samples at i is " << my_endgame.CauchySamples()[ii] << '\n';
 	// }
 
 
-	//auto closed_loop_tolerance = My_Endgame.FindToleranceForClosedLoop(time,sample);
+	//auto closed_loop_tolerance = my_endgame.FindToleranceForClosedLoop(time,sample);
 
 	// std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
 
-	auto check_closed_loop = My_Endgame.CheckClosedLoop();
+	auto check_closed_loop = my_endgame.CheckClosedLoop();
 
 	BOOST_CHECK(check_closed_loop == false);
 	
@@ -774,16 +776,16 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 
 
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -808,15 +810,15 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 
 		// std::cout << "sample made " << '\n';
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
 		// std::cout << "endgame made " << '\n';
 
-	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 
 		// std::cout << "circle track done " << tracking_success << '\n';
 
-	auto comparison_of_cauchy_ratios = My_Endgame.CompareCauchyRatios();
+	auto comparison_of_cauchy_ratios = my_endgame.CompareCauchyRatios();
 
 		// std::cout << "comparison made  made " << comparison_of_cauchy_ratios << '\n';
 
@@ -841,21 +843,21 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1_for_cauchy_c
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -878,11 +880,11 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1_for_cauchy_c
 	cauchy_samples.push_back(sample);
 
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	auto tracking_success =  My_Endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 
-	auto comparison_of_cauchy_ratios = My_Endgame.CompareCauchyRatios();
+	auto comparison_of_cauchy_ratios = my_endgame.CompareCauchyRatios();
 
 	//std::cout << "comparison is " << comparison_of_cauchy_ratios << '\n';
 
@@ -912,14 +914,14 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -939,22 +941,22 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
 	pseg_samples.push_back(sample);
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	My_Endgame.SetPSEGSamples(pseg_samples);
-	My_Endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
 
-	auto success_of_pre_cauchy_loops =  My_Endgame.PreCauchyLoops();
+	auto success_of_pre_cauchy_loops =  my_endgame.PreCauchyLoops();
 
-	// for(int ii = 0; ii < My_Endgame.cauchy_samples_.size(); ii++)
+	// for(int ii = 0; ii < my_endgame.CauchySamples().size(); ii++)
 	// {
-	// std::cout << "samples at i is " << My_Endgame.cauchy_samples_[ii] << '\n';
+	// std::cout << "samples at i is " << my_endgame.CauchySamples()[ii] << '\n';
  // 	}
 
 	// std::cout << "success code is " << success_of_pre_cauchy_loops << '\n';
 
-	BOOST_CHECK(success_of_pre_cauchy_loops == bertini::tracking::SuccessCode::Success);
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
+	BOOST_CHECK(success_of_pre_cauchy_loops == SuccessCode::Success);
+	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
 }//end pre_cauchy_loops_for_cauchy_class_test
 
@@ -971,21 +973,21 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1008,15 +1010,15 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 	pseg_samples.push_back(sample);
 
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	My_Endgame.SetPSEGSamples(pseg_samples);
-	My_Endgame.SetPSEGTimes(pseg_times);
+	my_endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
 
-	auto success_of_pre_cauchy_loops =  My_Endgame.PreCauchyLoops();
+	auto success_of_pre_cauchy_loops =  my_endgame.PreCauchyLoops();
 
-	BOOST_CHECK(success_of_pre_cauchy_loops == bertini::tracking::SuccessCode::Success);
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 2);
+	BOOST_CHECK(success_of_pre_cauchy_loops == SuccessCode::Success);
+	BOOST_CHECK(my_endgame.CycleNumber() == 2);
 
 }// end pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_test
 
@@ -1038,14 +1040,14 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
 	// Define homotopy system
 	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1053,9 +1055,9 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
 	
 	tracker.AMPSetup(AMP);
 
-	mpfr origin = mpfr("0","0");
+	mpfr origin = mpfr(0,0);
 	Vec<mpfr> x_origin(1);
-	x_origin << mpfr("1","0");
+	x_origin << mpfr(1,0);
 	//std::deque<mpfr> times; //times are not vectors they are just complex numbers.
 	//std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
 
@@ -1067,18 +1069,18 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
 
 	time = mpfr(".1"); // x = .1
 	// times.push_back(time);
-	sample << mpfr(".500000000000000","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
+	sample << mpfr("0.5","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
 	// samples.push_back(sample);
 
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
 
 
-	auto first_approx_success = My_Endgame.ComputeFirstApproximation(time,sample,origin,first_approx);
+	auto first_approx_success = my_endgame.ComputeFirstApproximation(time,sample,origin,first_approx);
 
 	BOOST_CHECK((first_approx - x_origin).norm() < 1e-2);
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 3);
+	BOOST_CHECK(my_endgame.CycleNumber() == 3);
 
 }// end first_approximation_using_pseg_for_cauchy_class_test
 
@@ -1102,14 +1104,14 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_t
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1129,22 +1131,22 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_t
 	cauchy_times.push_back(time);
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
 	cauchy_samples.push_back(sample);
-	x_origin << mpfr("1.0","0.0");
+	x_origin << mpfr(1,0);
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	My_Endgame.SetCauchyTimes(cauchy_times);
-	My_Endgame.SetCauchySamples(cauchy_samples);
+	my_endgame.SetCauchyTimes(cauchy_times);
+	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto first_track_success =  My_Endgame.CircleTrack(time,sample);
+	auto first_track_success =  my_endgame.CircleTrack(time,sample);
 
-	My_Endgame.endgame_settings_.cycle_number = 1;
+	my_endgame.CycleNumber(1);
 
-	auto first_cauchy_approx = My_Endgame.ComputeCauchyApproximationOfXAtT0(My_Endgame.cauchy_samples_);
+	auto first_cauchy_approx = my_endgame.ComputeCauchyApproximationOfXAtT0(my_endgame.CauchySamples());
 
 	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
 
-	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
+	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 
 }// end compute_cauchy_approximation_cycle_num_1_for_cauchy_class_test
 
@@ -1162,21 +1164,21 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1197,28 +1199,28 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 	cauchy_times.push_back(time);
 	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
 	cauchy_samples.push_back(sample);
-	x_origin << mpfr("1.0","0.0");
+	x_origin << mpfr(1,0);
 
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	My_Endgame.SetCauchyTimes(cauchy_times);
-	My_Endgame.SetCauchySamples(cauchy_samples);
+	my_endgame.SetCauchyTimes(cauchy_times);
+	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto first_track_success =  My_Endgame.CircleTrack(time,sample);
-	auto second_track_success = My_Endgame.CircleTrack(My_Endgame.cauchy_times_.back(),My_Endgame.cauchy_samples_.back());
+	auto first_track_success =  my_endgame.CircleTrack(time,sample);
+	auto second_track_success = my_endgame.CircleTrack(my_endgame.CauchyTimes().back(),my_endgame.CauchySamples().back());
 
-	My_Endgame.endgame_settings_.cycle_number = 2;
+	my_endgame.CycleNumber(2);
 
-	// for(int i = 0; i < My_Endgame.cauchy_samples_.size(); ++i){
-	// 	std::cout << My_Endgame.cauchy_samples_[i] << '\n';
+	// for(int i = 0; i < my_endgame.CauchySamples().size(); ++i){
+	// 	std::cout << my_endgame.CauchySamples()[i] << '\n';
 	// }
 
-	auto first_cauchy_approx = My_Endgame.ComputeCauchyApproximationOfXAtT0(My_Endgame.cauchy_samples_);
+	auto first_cauchy_approx = my_endgame.ComputeCauchyApproximationOfXAtT0(my_endgame.CauchySamples());
 
 	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
 
-	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
+	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 
 }// end compute_cauchy_approximation_cycle_num_greater_than_1_for_cauchy_class_test
 
@@ -1234,21 +1236,21 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
 
-	sys.AddFunction((x - mpfr(1))*(1-t) + (x + mpfr(1))*t);
+	sys.AddFunction((x - 1)*(1-t) + (x + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1267,15 +1269,15 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	auto finding_cauchy_samples_success = My_Endgame.FindCauchySamples(time,sample);
+	auto finding_cauchy_samples_success = my_endgame.FindCauchySamples(time,sample);
 
 	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
 
-	BOOST_CHECK((My_Endgame.cauchy_samples_.back() - My_Endgame.cauchy_samples_.front()).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
-	BOOST_CHECK(My_Endgame.cauchy_samples_.size() == 4);
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
+	BOOST_CHECK((my_endgame.CauchySamples().back() - my_endgame.CauchySamples().front()).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
+	BOOST_CHECK(my_endgame.CauchySamples().size() == 4);
+	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
 }// end find_cauchy_samples_cycle_num_1_for_cauchy_class_test
 
@@ -1290,21 +1292,21 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_cla
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1324,13 +1326,13 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_cla
 	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
 
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	auto finding_cauchy_samples_success = My_Endgame.FindCauchySamples(time,sample);
+	auto finding_cauchy_samples_success = my_endgame.FindCauchySamples(time,sample);
 
-	BOOST_CHECK((My_Endgame.cauchy_samples_.back() - My_Endgame.cauchy_samples_.front()).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
-	BOOST_CHECK(My_Endgame.cauchy_samples_.size() == 7);
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 2);
+	BOOST_CHECK((my_endgame.CauchySamples().back() - my_endgame.CauchySamples().front()).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
+	BOOST_CHECK(my_endgame.CauchySamples().size() == 7);
+	BOOST_CHECK(my_endgame.CycleNumber() == 2);
 
 }// end find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_class_test
 
@@ -1353,14 +1355,14 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_1)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1378,16 +1380,16 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_1)
 	time = mpfr(".1");
 
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
-	x_origin << mpfr("1.0","0.0");
+	x_origin << mpfr(1,0);
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	auto cauchy_endgame_success = My_Endgame.CauchyEG(time,sample);
+	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
 
-	 // std::cout << "first cauchy approx is " << My_Endgame.endgame_settings_.final_approximation_at_origin << '\n';
+	 // std::cout << "first cauchy approx is " << my_endgame.FinalApproximation() << '\n';
 
-	BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - x_origin).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 1);
+	BOOST_CHECK((my_endgame.FinalApproximation() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
+	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
 }// end cauchy_endgame_test_cycle_num_1
 
@@ -1402,21 +1404,21 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - mpfr("1"),2)*(1-t) + (pow(x,2) + mpfr("1"))*t);
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1435,17 +1437,17 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	time = mpfr("0.1");
 
 	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
-	x_origin << mpfr("1.0","0.0");
+	x_origin << mpfr(1,0);
 
 	
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	auto cauchy_endgame_success = My_Endgame.CauchyEG(time,sample);
+	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
 
-	// std::cout << "first cauchy approx is " << My_Endgame.endgame_settings_.final_approximation_at_origin << '\n';
+	// std::cout << "first cauchy approx is " << my_endgame.FinalApproximation() << '\n';
 
-	BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - x_origin).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
-	BOOST_CHECK(My_Endgame.endgame_settings_.cycle_number == 2);
+	BOOST_CHECK((my_endgame.FinalApproximation() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
+	BOOST_CHECK(my_endgame.CycleNumber() == 2);
 
 }// end cauchy_endgame_test_cycle_num_greater_than_1
 
@@ -1468,14 +1470,14 @@ BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
 	sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
 	sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = config::AMPConfigFrom(sys);
 
-	bertini::tracking::AMPTracker tracker(sys);
+	AMPTracker tracker(sys);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1490,17 +1492,17 @@ BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
 	current_space <<  mpfr("5.000000000000001e-01", "9.084258952712920e-17") ,mpfr("9.000000000000001e-01","4.358898943540673e-01");
 
 	Vec<mpfr> correct(2);
-	correct << mpfr("1","0"),mpfr("1","0");
+	correct << mpfr(1,0),mpfr(1,0);
 
-	bertini::tracking::config::EndGame endgame_settings;
-	bertini::tracking::config::Cauchy cauchy_settings;
-	bertini::tracking::config::Security endgame_security_settings;
+	config::EndGame endgame_settings;
+	config::Cauchy cauchy_settings;
+	config::Security endgame_security_settings;
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,cauchy_settings,endgame_settings,endgame_security_settings);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker,cauchy_settings,endgame_settings,endgame_security_settings);
 
-	My_Endgame.CauchyEG(current_time,current_space);
+	my_endgame.CauchyEG(current_time,current_space);
 
-	BOOST_CHECK((My_Endgame.endgame_settings_.final_approximation_at_origin - correct).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame);
+	BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 
 }// end cauchy_mp_for_cauchy_class_multiple_variables
 
@@ -1540,14 +1542,14 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 	final_griewank_osborn_system.AddPathVariable(t);
 
 
-	auto griewank_AMP = bertini::tracking::config::AMPConfigFrom(final_griewank_osborn_system);
+	auto griewank_AMP = config::AMPConfigFrom(final_griewank_osborn_system);
 
-	bertini::tracking::AMPTracker tracker(final_griewank_osborn_system);
+	AMPTracker tracker(final_griewank_osborn_system);
 	
-	bertini::tracking::config::Stepping stepping_preferences;
-	bertini::tracking::config::Newton newton_preferences;
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
 
-	tracker.Setup(bertini::tracking::config::Predictor::Euler,
+	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-6"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1566,24 +1568,24 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 		auto start_point = griewank_TD.StartPoint<mpfr>(ii);
 
 		Vec<mpfr> result;
-		bertini::tracking::SuccessCode tracking_success;
+		SuccessCode tracking_success;
 
 		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
-		BOOST_CHECK(tracking_success==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(tracking_success==SuccessCode::Success);
 
 		griewank_homogenized_solutions.push_back(result);
 		griewank_solutions.push_back(final_griewank_osborn_system.DehomogenizePoint(result));
 	}
 
 	Vec<mpfr> correct(2);
-	correct << mpfr("0","0"),mpfr("0","0");
+	correct << mpfr(0,0),mpfr(0,0);
 
-	bertini::tracking::config::EndGame endgame_settings;
-	bertini::tracking::config::Cauchy cauchy_settings;
-	bertini::tracking::config::Security security_settings;
-	bertini::tracking::config::Tolerances tolerances_settings;
+	config::EndGame endgame_settings;
+	config::Cauchy cauchy_settings;
+	config::Security security_settings;
+	config::Tolerances tolerances_settings;
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,cauchy_settings,endgame_settings,security_settings,tolerances_settings);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker,cauchy_settings,endgame_settings,security_settings,tolerances_settings);
 
 
 	unsigned num_paths_diverging = 0;
@@ -1592,16 +1594,16 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 	{
 		// std::cout << ".1 solution is " << final_griewank_osborn_system.DehomogenizePoint(s) << '\n';
 
-		bertini::tracking::SuccessCode endgame_success = My_Endgame.CauchyEG(t_endgame_boundary,s);
+		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
 
-		// std::cout << "endgame solution is " << final_griewank_osborn_system.DehomogenizePoint(My_Endgame.endgame_settings_.final_approximation_at_origin) << '\n';
+		// std::cout << "endgame solution is " << final_griewank_osborn_system.DehomogenizePoint(my_endgame.FinalApproximation()) << '\n';
 
-		if(endgame_success == bertini::tracking::SuccessCode::Success)
+		if(endgame_success == SuccessCode::Success)
 		{
 			// std::cout << "CONVERGED" <<'\n';
 			num_paths_converging++;
 		}
-		if(endgame_success == bertini::tracking::SuccessCode::SecurityMaxNormReached || endgame_success == bertini::tracking::SuccessCode::GoingToInfinity)
+		if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
 		{
 			// std::cout << "DIVERGED" << '\n';
 			num_paths_diverging++;
@@ -1677,7 +1679,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	auto final_system = (1-t)*sys + t*TD;
 	final_system.AddPathVariable(t);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(final_system);
+	auto AMP = config::AMPConfigFrom(final_system);
 
 	auto tracker = AMPTracker(final_system);
 	config::Stepping stepping_preferences;
@@ -1709,9 +1711,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	}
 
 	Vec<mpfr> correct(2);
-	correct << mpfr("1","0"),mpfr("1","0");
+	correct << mpfr(1,0),mpfr(1,0);
 
-	bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker);
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
 
 	std::vector<Vec<mpfr> > endgame_solutions;
@@ -1720,10 +1722,10 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	unsigned num_min_track_time_reached = 0;
 	for (auto s : homogenized_solutions)
 	{
-		bertini::tracking::SuccessCode endgame_success = My_Endgame.CauchyEG(t_endgame_boundary,s);
-		if(endgame_success == bertini::tracking::SuccessCode::Success)
+		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
+		if(endgame_success == SuccessCode::Success)
 		{
-			if((tracker.GetSystem().DehomogenizePoint(My_Endgame.endgame_settings_.final_approximation_at_origin)-correct).norm() < My_Endgame.endgame_tolerances_.track_tolerance_during_endgame)
+			if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation())-correct).norm() < my_endgame.Tolerances().track_tolerance_during_endgame)
 			{
 				num_successful_occurences++;
 			}

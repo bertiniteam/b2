@@ -206,22 +206,22 @@ namespace bertini{
 				/**
 				\brief Setter for the security settings in tracking_conifg.hpp under Security.
 				*/	
-				void SetSecuritySettings(config::Security new_endgame_security_settings){ endgame_security_ = new_endgame_security_settings;}
+				void SetSecuritySettings(config::Security new_endgame_security_settings){ security_ = new_endgame_security_settings;}
 
 				/**
 				\brief Getter for the security settings in tracking_conifg.hpp under Security.
 				*/	
-				config::Security GetSecuritySettings(){return endgame_security_;}
+				config::Security GetSecuritySettings(){return security_;}
 
 				/**
 				\brief Setter for the tolerance settings in tracking_conifg.hpp under Tolerances.
 				*/	
-				void SetToleranceSettings(config::Tolerances new_tolerances_settings){endgame_tolerances_ = new_tolerances_settings;}
+				void SetToleranceSettings(config::Tolerances new_tolerances_settings){tolerances_ = new_tolerances_settings;}
 
 				/**
 				\brief Getter for the tolerance settings in tracking_conifg.hpp under Tolerances.
 				*/	
-				config::Tolerances GetTolerancesSettings(){return endgame_tolerances_;}
+				config::Tolerances GetTolerancesSettings(){return tolerances_;}
 
 
 				//constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
@@ -435,7 +435,7 @@ namespace bertini{
 					if((approx - x_current_time).norm() < min_found_difference)
 					{
 						min_found_difference = (approx - x_current_time).norm();
-						endgame_settings_.cycle_number = cc;
+						this->cycle_number_ = cc;
 					}
 
 					s_derivatives.clear(); // necessary so we can repopulate with different s-plane transformations based on cycle number 
@@ -500,7 +500,7 @@ namespace bertini{
 				}
 				for(unsigned ii = 0; ii < samples_.size(); ++ii)
 				{
-					endgame_tracker_.Refine(samples_[ii],samples_[ii],times_[ii],endgame_tolerances_.final_tolerance);
+					endgame_tracker_.Refine(samples_[ii],samples_[ii],times_[ii],tolerances_.final_tolerance);
 				}
 
 				endgame_tracker_.GetSystem().precision(max_precision);
@@ -511,8 +511,8 @@ namespace bertini{
 				std::deque< Vec<ComplexType> > s_derivatives;
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii){
-					s_derivatives.push_back(derivatives[ii]*(ComplexType(endgame_settings_.cycle_number)*pow(times_[ii],(ComplexType(endgame_settings_.cycle_number) - ComplexType(1))/ComplexType(endgame_settings_.cycle_number))));
-					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(endgame_settings_.cycle_number)));
+					s_derivatives.push_back(derivatives[ii]*(ComplexType(cycle_number_)*pow(times_[ii],(ComplexType(cycle_number_) - ComplexType(1))/ComplexType(cycle_number_))));
+					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(cycle_number_)));
 				}
 				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, endgame_settings_.num_sample_points, s_times, samples_, s_derivatives);
 
@@ -572,16 +572,16 @@ namespace bertini{
 			    Vec<ComplexType> dehom_of_latest_approx;
 
 
-				while (approx_error.norm() > endgame_tolerances_.final_tolerance)
+				while (approx_error.norm() > tolerances_.final_tolerance)
 				{
-					endgame_settings_.final_approximation_at_origin = prev_approx;
+					final_approximation_at_origin_ = prev_approx;
 			  		 auto next_time = times_.back() * endgame_settings_.sample_factor; //setting up next time value.
 
 			  		if (next_time.abs() < endgame_settings_.min_track_time)
 			  		{
 			  			std::cout << "Error current time norm is less than min track time." << '\n';
 
-			  			endgame_settings_.final_approximation_at_origin = prev_approx;
+			  			final_approximation_at_origin_ = prev_approx;
 			  			return SuccessCode::MinTrackTimeReached;
 			  		}
 
@@ -649,9 +649,9 @@ namespace bertini{
 			 		latest_approx = ComputeApproximationOfXAtT0(origin);
 			 		dehom_of_latest_approx = endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx);
 
-			 		if(endgame_security_.level <= 0)
+			 		if(security_.level <= 0)
 					{
-				 		if(dehom_of_latest_approx.norm() > endgame_security_.max_norm && dehom_of_prev_approx.norm() > endgame_security_.max_norm)
+				 		if(dehom_of_latest_approx.norm() > security_.max_norm && dehom_of_prev_approx.norm() > security_.max_norm)
 				 		{
 			 				return SuccessCode::SecurityMaxNormReached;
 				 		}
@@ -659,9 +659,9 @@ namespace bertini{
 
 			 		approx_error = (latest_approx - prev_approx).norm();
 
-			 		if(approx_error.norm() < endgame_tolerances_.final_tolerance)
+			 		if(approx_error.norm() < tolerances_.final_tolerance)
 			 		{//success!
-			 			endgame_settings_.final_approximation_at_origin = latest_approx;
+			 			final_approximation_at_origin_ = latest_approx;
 			 			return SuccessCode::Success;
 			 		}
 
@@ -669,7 +669,7 @@ namespace bertini{
 				    dehom_of_prev_approx = dehom_of_latest_approx;
 				} //end while	
 				// in case if we get out of the for loop without setting. 
-				endgame_settings_.final_approximation_at_origin = latest_approx;
+				final_approximation_at_origin_ = latest_approx;
 				return SuccessCode::Success;
 
 			} //end PSEG
