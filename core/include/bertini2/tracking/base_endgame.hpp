@@ -198,17 +198,17 @@ namespace bertini{
 				void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
 
 				
-				config::Endgame& EndgameSettings()
+				const config::Endgame& EndgameSettings()
 				{
 					return endgame_settings_;
 				}
 
-				config::Tolerances& Tolerances()
+				const config::Tolerances& Tolerances()
 				{
 					return tolerances_;
 				}
 
-				config::Security& SecuritySettings()
+				const config::Security& SecuritySettings()
 				{
 					return security_;
 				}
@@ -220,10 +220,6 @@ namespace bertini{
 				*/
 				void SetEndgameSettings(config::Endgame new_endgame_settings){endgame_settings_ = new_endgame_settings;}
 
-				/**
-				\brief Getter for the general settings in tracking_conifg.hpp under Endgame.
-				*/
-				config::Endgame GetEndgameStruct(){ return endgame_settings_;}
 
 				
 
@@ -232,20 +228,11 @@ namespace bertini{
 				*/
 				void SetSecuritySettings(config::Security new_endgame_security_settings){ security_ = new_endgame_security_settings;}
 
-				/**
-				\brief Getter for the security settings in tracking_conifg.hpp under Security.
-				*/
-				config::Security GetSecuritySettings(){return security_;}
 
 				/**
 				\brief Setter for the tolerance settings in tracking_conifg.hpp under Tolerances.
 				*/
 				void SetToleranceSettings(config::Tolerances new_tolerances_settings){tolerances_ = new_tolerances_settings;}
-
-				/**
-				\brief Getter for the tolerance settings in tracking_conifg.hpp under Tolerances.
-				*/
-				config::Tolerances GetTolerancesSettings(){return tolerances_;}
 
 
 				/**

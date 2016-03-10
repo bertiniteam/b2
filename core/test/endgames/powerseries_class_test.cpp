@@ -466,12 +466,12 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.BoundOnCycleNumber();
+	my_endgame.ComputeBoundOnCycleNumber();
 
 
-	BOOST_CHECK(my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
 
-	auto first_upper_bound = my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number;
+	auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
@@ -487,10 +487,10 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.BoundOnCycleNumber();
+	my_endgame.ComputeBoundOnCycleNumber();
 
 
-	BOOST_CHECK(my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
 
 } // end compute bound on cycle number mp
 
@@ -565,12 +565,12 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.BoundOnCycleNumber();
+	my_endgame.ComputeBoundOnCycleNumber();
 
 
-	BOOST_CHECK(my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
 
-	auto first_upper_bound = my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number;;
+	auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
@@ -587,10 +587,10 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.BoundOnCycleNumber();
+	my_endgame.ComputeBoundOnCycleNumber();
 
 
-	BOOST_CHECK(my_endgame.PowerSeriesSettings().upper_bound_on_cycle_number == 6); // max_cycle_num implemented max(5,6) = 6
+	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
 
 } // end compute bound on cycle number dbl
 
@@ -676,8 +676,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-
-	auto derivatives = my_endgame.ComputeCycleNumber(time,sample);
+	my_endgame.ComputeCycleNumber<mpfr>();
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
@@ -764,7 +763,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	my_endgame.SetSamples(samples);
 
 
-	auto derivatives = my_endgame.ComputeCycleNumber(time,sample);
+	auto derivatives = my_endgame.ComputeCycleNumber<mpfr>();
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 

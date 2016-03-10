@@ -142,20 +142,26 @@ namespace bertini{
 				/**
 				\brief A deque holding the time values for different space values used in the Power series endgame. 
 				*/	
-				std::deque<mpfr> times_;
+				mutable std::deque<mpfr> times_;
 		
 				/**
 				\brief A deque holding the space values used in the Power series endgame. 
 				*/			
-				std::deque< Vec<mpfr> > samples_;
+				mutable std::deque< Vec<mpfr> > samples_;
 
+				/**
+				\brief State variable representing a computed upper bound on the cycle number.
+				*/
+				mutable unsigned upper_bound_on_cycle_number_;
 			public:
+
+				auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
 
 				const config::PowerSeries& PowerSeriesSettings() const
 				{
 					return power_series_settings_;
 				}
-				
+
 				/**
 				\brief Function that clears all samples and times from data members for the Power Series endgame
 				*/	
@@ -169,7 +175,7 @@ namespace bertini{
 				/**
 				\brief Function to get the times used for the Power Series endgame.
 				*/	
-				std::deque< mpfr > GetTimes() {return times_;}
+				std::deque< mpfr > GetTimes() const {return times_;}
 
 				/**
 				\brief Function to set the space values used for the Power Series endgame.
@@ -179,7 +185,7 @@ namespace bertini{
 				/**
 				\brief Function to get the space values used for the Power Series endgame.
 				*/	
-				std::deque< Vec<mpfr> > GetSamples() {return samples_;}
+				std::deque< Vec<mpfr> > GetSamples() const {return samples_;}
 	
 
 
@@ -187,12 +193,6 @@ namespace bertini{
 				\brief Setter for the specific settings in tracking_conifg.hpp under PowerSeries.
 				*/	
 				void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings){power_series_settings_ = new_power_series_settings;}
-
-				/**
-				\brief Getter for the specific settings in tracking_conifg.hpp under PowerSeries
-				*/	
-				config::PowerSeries GetPowerSeriesSettings(){return power_series_settings_;}
-
 
 
 				explicit PowerSeriesEndgame(TrackerType const& tr, 
@@ -225,7 +225,7 @@ namespace bertini{
 			/**
 			\brief Function that computes an upper bound on the cycle number. Consult page 53 of \cite Bates .
 			*/
-			void BoundOnCycleNumber()
+			void ComputeBoundOnCycleNumber()
 			{ 
 				const Vec<mpfr> & sample0 = samples_[0];
 				const Vec<mpfr> & sample1 = samples_[1];
@@ -240,7 +240,7 @@ namespace bertini{
 				estimate = abs(log(this->EndgameSettings().sample_factor))/estimate;
 				if (estimate < 1)
 				{
-				  	power_series_settings_.upper_bound_on_cycle_number = 1;
+				  	upper_bound_on_cycle_number_ = 1;
 				}
 				else
 				{
@@ -248,12 +248,12 @@ namespace bertini{
 					unsigned int upper_bound;
 					mpfr_float upper_bound_before_casting = round(floor(estimate + mpfr_float(.5))*power_series_settings_.cycle_number_amplification);
 					upper_bound = unsigned (upper_bound_before_casting);
-					power_series_settings_.upper_bound_on_cycle_number = max(upper_bound,power_series_settings_.max_cycle_number);
+					upper_bound_on_cycle_number_ = max(upper_bound,power_series_settings_.max_cycle_number);
 				}
 				// Make sure to use Eigen and transpose to use Linear algebra. DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want. 
 				// need to have cycle_number_amplification, this is the 5 used for 5 * estimate
 
-			}//end BoundOnCycleNumber
+			}//end ComputeBoundOnCycleNumber
 
 
 			/*
@@ -285,7 +285,7 @@ namespace bertini{
 			\tparam ComplexType The complex number type.
 			*/		
 			template<typename ComplexType>
-			std::deque< Vec<ComplexType> > ComputeCycleNumber(const ComplexType & time, const Vec<ComplexType> & x__at_time)
+			std::deque< Vec<ComplexType> > ComputeCycleNumber()
 			{
 				//Compute dx_dt for each sample.
 				std::deque< Vec<ComplexType> > derivatives;
@@ -296,22 +296,20 @@ namespace bertini{
 					derivatives.push_back(derivative);
 				}
 				//Compute upper bound for cycle number.
-				BoundOnCycleNumber();
+				ComputeBoundOnCycleNumber();
 
-				Vec<ComplexType> x_current_time = samples_[samples_.size()-1];
-				samples_.pop_back(); //use the last sample to compute the cycle number.
-				ComplexType current_time = times_[times_.size()-1];
-				times_.pop_back();
+				const Vec<ComplexType>& x_current_time = samples_.back();
+				const ComplexType& current_time        = times_.back();
 
 				//Compute Cycle Number
 				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
-				this->EndgameSettings().num_sample_points = this->EndgameSettings().num_sample_points - 1;
+				auto used_num_pts = this->EndgameSettings().num_sample_points - 1;
 
 				mpfr_float min_found_difference = power_series_settings_.min_difference_in_approximations;
 
 				std::deque<mpfr> s_times;
 				std::deque< Vec<mpfr> > s_derivatives;
-				for(unsigned int cc = 1; cc <= power_series_settings_.upper_bound_on_cycle_number; ++cc)
+				for(unsigned int cc = 1; cc <= upper_bound_on_cycle_number_; ++cc)
 				{			
 					for(unsigned int ii=0; ii<this->EndgameSettings().num_sample_points; ++ii)// using the last sample to predict to. 
 					{ 
@@ -331,13 +329,8 @@ namespace bertini{
 					s_times.clear();
 
 				}// end cc loop over cycle number possibilities
-
-				this->EndgameSettings().num_sample_points = this->EndgameSettings().num_sample_points + 1; 
-				samples_.push_back(x_current_time);
-				times_.push_back(current_time); //push most recent sample back on. 
-
+				
 				return derivatives;
-
 			}//end ComputeCycleNumber
 
 
@@ -369,40 +362,34 @@ namespace bertini{
 			{
 				//Checking to make sure all samples are of the same precision. Is this necessary if all samples are refined to final tolerance?
 				unsigned max_precision = 0; 
-				for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-				{
-					if(Precision(samples_[ii](0)) > max_precision)
-					{
-						max_precision = Precision(samples_[ii](0));
-					}
-				}
 
-				for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-				{
-					if(Precision(samples_[ii](0)) < max_precision)
-					{
+				for(auto& sample : samples_)
+					if(Precision(sample(0)) > max_precision)
+						max_precision = Precision(sample(0));
+
+				for(auto& sample : samples_)
+					if(Precision(sample(0)) < max_precision)
 						for(unsigned jj = 0; jj < this->GetSystem().NumVariables();++jj)
-						{
-							samples_[ii](jj).precision(max_precision);
-						}
-					}
-				}
+							sample(jj).precision(max_precision);
+		
+
 				for(unsigned ii = 0; ii < samples_.size(); ++ii)
-				{
 					this->GetTracker().Refine(samples_[ii],samples_[ii],times_[ii],this->Tolerances().final_tolerance);
-				}
+
 
 				this->GetSystem().precision(max_precision);
-				std::deque< Vec<ComplexType> > derivatives = ComputeCycleNumber(times_[times_.size()-1],samples_[samples_.size()-1]); //sending in last element so that ComplexType can be known for templating.
+				auto derivatives = ComputeCycleNumber<ComplexType>();
 
 				// //Conversion to S-plane.
-				std::deque<ComplexType> s_times;//SHOULD BE COMPLEXTYPE
+				std::deque<ComplexType> s_times;
 				std::deque< Vec<ComplexType> > s_derivatives;
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii){
 					auto c = this->CycleNumber();
+					if (c<1)
+						throw std::runtime_error("cycle number is 0 while computing approximation of root at target time");
 
-					s_derivatives.push_back(derivatives[ii]*(ComplexType(c)*pow(times_[ii],(ComplexType(c) - ComplexType(1))/ComplexType(c))));
+					s_derivatives.push_back(derivatives[ii]*(ComplexType(c)*pow(times_[ii],ComplexType(c-1)/ComplexType(c))));
 					s_times.push_back(pow(times_[ii],ComplexType(1)/ComplexType(c)));
 				}
 				Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, samples_, s_derivatives);
@@ -413,7 +400,7 @@ namespace bertini{
 
 
 			/*
-			Input: Endgame_time is the endgame boundary default set to .1 and x_endgame_time is the space value we are given at endgame_time
+			Input: start_time is the endgame boundary default set to .1 and start_point is the space value we are given at start_time
 
 
 			Output: SuccessCode if we were successful or if we have encountered an error. 
@@ -429,26 +416,26 @@ namespace bertini{
 			Tracking forward with the number of sample points, this function will make approximations using Hermite interpolation. This process will continue until two consecutive
 			approximations are withing final tolerance of each other. 
 
-			\param[out] endgame_time The time value at which we start the endgame. 
-			\param endgame_sample The current space point at endgame_time.
+			\param[out] start_time The time value at which we start the endgame. 
+			\param endgame_sample The current space point at start_time.
 
 			\tparam ComplexType The complex number type.
 			*/		
 			template<typename ComplexType>
-			SuccessCode PSEG(const ComplexType endgame_time, const Vec<ComplexType> x_endgame_time)
+			SuccessCode PSEG(const ComplexType start_time, const Vec<ComplexType> start_point)
 			{
 				//Set up for the endgame.
 	 			ClearTimesAndSamples();
 			 	mpfr norm_of_latest_approximation(1);
-			 	norm_of_latest_approximation = mpfr("0","0"); // settting up the norm for the latest approximation. 
+			 	norm_of_latest_approximation = mpfr(0,0); // settting up the norm for the latest approximation. 
 
 			 	mpfr approx_error(1);  //setting up the error of successive approximations. 
-			 	approx_error = mpfr("1","0");
+			 	approx_error = mpfr(1,0);
 			 	
 			 	ComplexType origin(1);
-			 	origin  = ComplexType("0","0");
+			 	origin  = ComplexType(0,0);
 
-				this->ComputeInitialSamples(endgame_time, x_endgame_time, times_, samples_);
+				this->ComputeInitialSamples(start_time, start_point, times_, samples_);
 
 
 			 	Vec<ComplexType> prev_approx = ComputeApproximationOfXAtT0(origin);
