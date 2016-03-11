@@ -293,8 +293,6 @@ namespace bertini
 					mpfr_float radius = abs(starting_time), angle = arg(starting_time);
 					mpfr_float angle_increment = 2*acos(mpfr_float(-1)) / (this->EndgameSettings().num_sample_points);
 
-					SuccessCode tracking_success = SuccessCode::Success;
-
 					auto number_of_steps = 0;
 					ComplexType i(0,1); 
 
@@ -320,13 +318,19 @@ namespace bertini
 							next_time = starting_time;
 
 						std::cout << "circle tracking from " << current_time << " to " << next_time << ", starting sample:\n" << current_sample << "\n\n\n";
-						SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample, current_time, next_time, current_sample);	
-
+						auto tracking_success = this->GetTracker().TrackPath(next_sample, current_time, next_time, current_sample);	
+						std::cout << "tracked end point:\n" << next_sample << "\n\n";
 						if (tracking_success != SuccessCode::Success)
 						{
 							std::cout << "tracker fail in circle track, type " << int(tracking_success) << std::endl;
 							return tracking_success;
 						}
+						std::cout << "refining point to " << this->Tolerances().final_tolerance/100 << '\n';
+						this->GetTracker().Refine(next_sample,next_sample,next_time,
+						                          this->Tolerances().final_tolerance/100,
+						                          this->EndgameSettings().max_num_newton_iterations);
+						std::cout << "refined point:\n" << next_sample << "\n\n";
+						
 
 						current_sample = next_sample;
 						current_time = next_time;
@@ -357,7 +361,7 @@ namespace bertini
 				
 				mpfr_float ComputeCOverK()
 				{//Obtain samples for computing C over K.
-					// std::cout << "Compute C over K " << '\n';
+					assert(pseg_samples_.size()>=3);
 					const Vec<mpfr> & sample0 = pseg_samples_[0];
 					const Vec<mpfr> & sample1 = pseg_samples_[1];
 					const Vec<mpfr> & sample2 = pseg_samples_[2];
@@ -392,9 +396,8 @@ namespace bertini
 				*/
 
 				bool CheckForCOverKStabilization(std::deque<mpfr_float> const& c_over_k_array)
-				{
-					bool return_value = true;
-
+				{	std::cout << "CheckForCOverKStabilization()\n";
+					assert(c_over_k_array.size()>=cauchy_settings_.num_needed_for_stabilization);
 					for(unsigned ii = 1; ii < cauchy_settings_.num_needed_for_stabilization ; ++ii)
 					{
 						auto a = abs(c_over_k_array[ii-1]);
@@ -408,9 +411,9 @@ namespace bertini
 							divide = b/a;
 
 						if(divide <  cauchy_settings_.minimum_for_c_over_k_stabilization)
-							return_value = false;
+							return false;
 					}
-					return return_value;
+					return true;
 
 				}//end CheckForCOverKStabilization
 
@@ -487,16 +490,22 @@ namespace bertini
 				\brief Function that determines if we have closed a loop after calling CircleTrack().
 				*/
 				bool CheckClosedLoop()
-				{	std::cout << "CheckClosedLoop()\n";
+				{	std::cout << "CheckClosedLoop()\n"; std::cout << "have " << cauchy_samples_.size() << " samples to work with\n";
 					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < this->GetTracker().TrackingTolerance())
+					{
+						std::cout << "loop is closed, no refinement needed\n";
 						return true;
+					}
 					std::cout << "closed loop check: pre-refinement " << (cauchy_samples_.front() - cauchy_samples_.back()).norm() << ", required tol " << this->GetTracker().TrackingTolerance() << std::endl;
-					this->GetTracker().Refine(cauchy_samples_.front(),cauchy_samples_.front(),cauchy_times_.front(),this->Tolerances().final_tolerance);
-					this->GetTracker().Refine(cauchy_samples_.back(),cauchy_samples_.back(),cauchy_times_.back(),this->Tolerances().final_tolerance);
+					this->GetTracker().Refine(cauchy_samples_.front(),cauchy_samples_.front(),cauchy_times_.front(),this->Tolerances().final_tolerance,this->EndgameSettings().max_num_newton_iterations);
+					this->GetTracker().Refine(cauchy_samples_.back(),cauchy_samples_.back(),cauchy_times_.back(),this->Tolerances().final_tolerance,this->EndgameSettings().max_num_newton_iterations);
 					std::cout << "closed loop check: post-refinement " << (cauchy_samples_.front() - cauchy_samples_.back()).norm() << std::endl;
 					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < this->GetTracker().TrackingTolerance())
+					{
+						std::cout << "loop is closed, after refinement\n";
 						return true;
-
+					}
+					std::cout << "loop not closed\n";
 					return false;	
 
 				}//end CheckClosedLoop
@@ -681,123 +690,70 @@ namespace bertini
 				SuccessCode InitialPowerSeriesApproximation(ComplexType const& start_time, Vec<ComplexType> const& start_point, ComplexType & approximation_time, Vec<ComplexType> & approximation)
 				{	std::cout << "InitialPowerSeriesApproximation()\n\n";
 					//initialize array holding c_over_k estimates
-					std::deque<mpfr_float> c_over_k_array; 
+					std::deque<mpfr_float> c_over_k; 
 
 					//Compute initial samples for pseg
-					this->ComputeInitialSamples(start_time, start_point, pseg_times_, pseg_samples_);
+					auto initial_sample_success = this->ComputeInitialSamples(start_time, start_point, pseg_times_, pseg_samples_);
+					if (initial_sample_success!=SuccessCode::Success)
+						return initial_sample_success;
 
-					c_over_k_array.push_back(ComputeCOverK());
+					c_over_k.push_back(ComputeCOverK());
 
 					Vec<ComplexType> next_sample;
-					ComplexType next_time = pseg_times_.back();
+					ComplexType next_time;
 
-					auto tracking_success = SuccessCode::Success;
-					unsigned ii = 1;
-
-
+					unsigned ii = 0;
 					//track until for more c_over_k estimates or until we reach a cutoff time. 
-					while(tracking_success == SuccessCode::Success && ii < cauchy_settings_.num_needed_for_stabilization && next_time.abs() > cauchy_settings_.ratio_cutoff_time)
-					{
-						pseg_samples_.pop_front();
-						pseg_times_.pop_front();
-
+					while ( (ii < cauchy_settings_.num_needed_for_stabilization) )
+					{	std::cout << "getting next c/k\n";
 						next_time = pseg_times_.back() * this->EndgameSettings().sample_factor;
 
-						SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
+						auto tracking_success = this->GetTracker().TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
+						if (tracking_success!=SuccessCode::Success)
+							return tracking_success;
 
+						pseg_samples_.pop_front();
+						pseg_times_.pop_front();
 						pseg_samples_.push_back(next_sample);
 						pseg_times_.push_back(next_time);
-
-
-						if(tracking_success == SuccessCode::Success)
-							c_over_k_array.push_back(ComputeCOverK());
+						c_over_k.push_back(ComputeCOverK());
 
 						++ii;
 					}//end while
-					std::cout << "have c_over_k_array\n";
+
+					std::cout << "have initial c_over_k:\n";
+					for (auto iter : c_over_k)
+						std::cout << iter << std::endl;
 					//check to see if we continue. 
-					if(tracking_success == SuccessCode::Success)
+
+					//have we stabilized yet? 
+
+					while(!CheckForCOverKStabilization(c_over_k) && pseg_times_.back().abs() > cauchy_settings_.cycle_cutoff_time)
 					{
-						//have we stabilized yet? 
-						auto check_for_stabilization = CheckForCOverKStabilization(c_over_k_array);
+						next_time = pseg_times_.back() * this->EndgameSettings().sample_factor;
 
-						while(tracking_success == SuccessCode::Success && !check_for_stabilization && pseg_times_.back().abs() > cauchy_settings_.cycle_cutoff_time)
-						{
-							c_over_k_array.pop_front();
+						auto tracking_success = this->GetTracker().TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
+						if(tracking_success != SuccessCode::Success)
+							return tracking_success;
 
-							pseg_samples_.pop_front();
-							pseg_times_.pop_front();
+						c_over_k.pop_front();
+						pseg_samples_.pop_front();
+						pseg_times_.pop_front();
 
-							next_time = pseg_times_.back() * this->EndgameSettings().sample_factor;
+						pseg_samples_.push_back(next_sample);	
+						pseg_times_.push_back(next_time);
+						c_over_k.push_back(ComputeCOverK());
 
-							SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
-
-							pseg_samples_.push_back(next_sample);	
-							pseg_times_.push_back(next_time);
-
-							if(tracking_success == SuccessCode::Success)
-							{
-								c_over_k_array.push_back(ComputeCOverK());
-								check_for_stabilization = CheckForCOverKStabilization(c_over_k_array);
-							}
-
-						}//end while
-					}//end if(tracking_success == SuccessCode::Success)
+					}//end while
 					std::cout << "have c/k stabilization\n";
-
-					if(tracking_success == SuccessCode::Success)
-					{//perform cauchy loops
-						auto cauchy_loop_success = SuccessCode::CycleNumTooHigh;
-						do
-						{
-							cauchy_loop_success = InitialCauchyLoops();
-
-							if(cauchy_loop_success == SuccessCode::CycleNumTooHigh)
-							{//see if we still can continue
-								if(pseg_times_.back().abs() >  this->EndgameSettings().min_track_time)
-								{//track to next sample point
-									pseg_samples_.pop_front();
-									pseg_times_.pop_front();
-
-									next_time = pseg_times_.back() * this->EndgameSettings().sample_factor;
-
-									SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
-
-									pseg_samples_.push_back(next_sample);	
-									pseg_times_.push_back(next_time);
-
-									if(tracking_success == SuccessCode::Success)
-									{//make sure we do another loop
-										cauchy_loop_success = SuccessCode::CycleNumTooHigh;
-									}
-								}
-								else //we need to break out of the loop
-									break;
-
-							}
-						} while (cauchy_loop_success == SuccessCode::CycleNumTooHigh);
-
-						if(cauchy_loop_success == SuccessCode::Success)
-						{//find pseg approx by three sample points. 
-
-							approximation = ComputePSEGApproximationAtT0(approximation_time);
-							return SuccessCode::Success;
-						}
-						else
-						{
-							this->CycleNumber(0);
-							approximation_time = pseg_times_.back();
-							approximation = pseg_samples_.back();
-							return SuccessCode::Success;
-						}	
-					}
-					else
-					{
-						this->CycleNumber(0);
-						approximation_time = pseg_times_.back();
-						approximation = pseg_samples_.back();
-						return tracking_success;
-					}
+	
+					auto cauchy_loop_success = InitialCauchyLoops();
+					if(cauchy_loop_success != SuccessCode::Success)
+						return cauchy_loop_success;
+					std::cout << "have initial cauchy loops\n";
+					approximation = ComputePSEGApproximationAtT0(approximation_time);
+					std::cout << "have first approximation\n";
+					return SuccessCode::Success;
 
 				}//end InitialPowerSeriesApproximation
 
@@ -863,7 +819,9 @@ namespace bertini
 						s_derivatives.push_back(pseg_derivatives[ii]*(ComplexType(this->CycleNumber())*pow(pseg_times_[ii],(ComplexType(this->CycleNumber()) - ComplexType(1))/this->CycleNumber())));
 						s_times.push_back(pow(pseg_times_[ii],ComplexType(1)/ComplexType(this->CycleNumber())));
 
-						this->GetTracker().Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],this->Tolerances().track_tolerance_during_endgame);
+						this->GetTracker().Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],
+						                          this->Tolerances().final_tolerance/100,
+						                          this->EndgameSettings().max_num_newton_iterations);
 					}
 
 					return bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, pseg_samples_, s_derivatives);
@@ -894,13 +852,13 @@ namespace bertini
 						throw std::runtime_error(err_msg.str());
 					}
 
-					// this->GetTracker().Refine(cauchy_samples_[0],cauchy_samples_[0],cauchy_times_[0],this->Tolerances().final_tolerance);
+					Vec<ComplexType> approximate_root = Vec<ComplexType>::Zero(this->GetSystem().NumVariables());//= (cauchy_samples_[0]+cauchy_samples_.back())/2; 
 
-					Vec<ComplexType> approximate_root = Vec<ComplexType>::Zero(this->GetSystem().NumVariables()); 
-
-					for(unsigned int ii = 0; ii < this->CycleNumber() * this->EndgameSettings().num_sample_points+1; ++ii)
+					for(unsigned int ii = 0; ii < this->CycleNumber() * this->EndgameSettings().num_sample_points; ++ii)
 					{
-						this->GetTracker().Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],this->Tolerances().final_tolerance);
+						this->GetTracker().Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],
+						                          this->Tolerances().final_tolerance/100,
+						                          this->EndgameSettings().max_num_newton_iterations);
 						approximate_root += cauchy_samples_[ii];
 					}
 					approximate_root /= (this->CycleNumber() * this->EndgameSettings().num_sample_points);
@@ -1003,7 +961,7 @@ namespace bertini
 
 					//Compute the first approximation using the power series approximation technique. 
 					auto initial_ps_success = InitialPowerSeriesApproximation(start_time, start_point, origin, prev_approx);  // last argument is output here
-					if(initial_ps_success == SuccessCode::Success)
+					if(initial_ps_success != SuccessCode::Success)
 						return initial_ps_success;
 
 					next_time = pseg_times_.back();
@@ -1063,11 +1021,15 @@ namespace bertini
 						//This is because the tracker will not track to any meaningful space values. 
 						if (cauchy_samples_success == SuccessCode::GoingToInfinity)
 							return SuccessCode::GoingToInfinity;
-
-						if (cauchy_samples_success != SuccessCode::Success && cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
+						else if (cauchy_samples_success != SuccessCode::Success && cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
 						{// we are too close to t = 0 but we do have the correct tolerance -so we exit.
 							this->final_approximation_at_origin_ = latest_approx;
 							return SuccessCode::MinTrackTimeReached;
+						}
+						else if(cauchy_samples_success != SuccessCode::Success)
+						{
+							this->final_approximation_at_origin_ = latest_approx;
+							return cauchy_samples_success;
 						}
 
 					} while (approximate_error > this->Tolerances().final_tolerance);

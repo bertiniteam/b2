@@ -374,7 +374,9 @@ namespace bertini{
 		
 
 				for(unsigned ii = 0; ii < samples_.size(); ++ii)
-					this->GetTracker().Refine(samples_[ii],samples_[ii],times_[ii],this->Tolerances().final_tolerance);
+					this->GetTracker().Refine(samples_[ii],samples_[ii],times_[ii],
+					                          this->Tolerances().final_tolerance,
+					                          this->EndgameSettings().max_num_newton_iterations);
 
 
 				this->GetSystem().precision(max_precision);

@@ -1417,8 +1417,8 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
-	newton_preferences.max_num_newton_iterations = 4;
-	newton_preferences.min_num_newton_iterations = 2;
+	newton_preferences.max_num_newton_iterations = 2;
+	newton_preferences.min_num_newton_iterations = 1;
 
 	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
@@ -1450,8 +1450,70 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
-
+	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
 }// end cauchy_endgame_test_cycle_num_greater_than_1
+
+
+BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision_16)
+{
+	/*
+		Full blown test to see if we can actually find the singular point at the origin. 
+	*/
+	mpfr_float::default_precision(16);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto AMP = config::AMPConfigFrom(sys);
+
+	AMPTracker tracker(sys);
+	
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+	newton_preferences.max_num_newton_iterations = 2;
+	newton_preferences.min_num_newton_iterations = 1;
+
+	tracker.Setup(config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+
+
+
+	mpfr time(1);
+	Vec<mpfr> sample(1);
+	Vec<mpfr> x_origin(1);
+
+
+	time = mpfr("0.1");
+
+	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
+	x_origin << mpfr(1,0);
+
+	
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
+
+	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
+
+	// std::cout << "first cauchy approx is " << my_endgame.FinalApproximation() << '\n';
+	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
+	BOOST_CHECK((my_endgame.FinalApproximation() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
+	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
+	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),bertini::DoublePrecision());
+}// end cauchy_endgame_test_cycle_num_greater_than_1
+
 
 BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
 {

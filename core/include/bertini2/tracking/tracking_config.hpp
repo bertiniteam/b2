@@ -153,6 +153,7 @@ namespace bertini
 				unsigned num_sample_points = 3;
 				mpfr_float min_track_time = mpfr_float("1e-100"); //nbrh radius in Bertini book.
 				mpfr_float sample_factor = mpfr_float("0.5");
+				unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 			};
 
 			struct PowerSeries

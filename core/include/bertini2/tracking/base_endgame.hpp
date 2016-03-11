@@ -274,7 +274,7 @@ namespace bertini{
 				\tparam TrackerType The tracker type. 
 				*/	
 				template<typename ComplexType>
-				void ComputeInitialSamples(const ComplexType & start_time,const Vec<ComplexType> & x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
+				SuccessCode ComputeInitialSamples(const ComplexType & start_time,const Vec<ComplexType> & x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
 				{
 					samples.resize(endgame_settings_.num_sample_points);
 					times.resize(endgame_settings_.num_sample_points);
@@ -285,8 +285,11 @@ namespace bertini{
 					for(int ii=1; ii < endgame_settings_.num_sample_points; ++ii)
 					{ 
 						times[ii] = times[ii-1] * endgame_settings_.sample_factor;	
-						SuccessCode tracking_success = tracker_.TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
+						auto tracking_success = tracker_.TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
+						if (tracking_success!=SuccessCode::Success)
+							return tracking_success;
 					}				
+					return SuccessCode::Success;
 				}
 
 			};

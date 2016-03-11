@@ -247,7 +247,7 @@ namespace bertini{
 
 			\return The SuccessCode indicating whether the refinement completed.  
 
-			\param new_space The result of refinement.
+			\param[out] new_space The result of refinement.
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			*/
@@ -261,18 +261,19 @@ namespace bertini{
 			/**
 			\brief Refine a point given in multiprecision.
 			
-			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
+			Runs Newton's method using the current settings for tracking, precision, etc, EXCEPT for the tracking tolerance and number of iterations, which you feed in here.  YOU must ensure that the input point has the correct precision.
 
 			\return The SuccessCode indicating whether the refinement completed.  
 
-			\param new_space The result of refinement.
+			\param[out] new_space The result of refinement.
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			\param tolerance The tolerance to which to refine.
+			\param max_iterations The maximum allowable number of iterations to perform.
 			*/
 			virtual
 			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const = 0;
+								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance, unsigned max_iterations) const = 0;
 
 			/**
 			\brief Change tracker to use a predictor

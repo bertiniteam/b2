@@ -347,7 +347,7 @@ namespace bertini{
 
 			\return The SuccessCode indicating whether the refinement completed.  
 
-			\param new_space The result of refinement.
+			\param[out] new_space The result of refinement.
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			*/
@@ -361,19 +361,20 @@ namespace bertini{
 			/**
 			\brief Refine a point given in multiprecision.
 			
-			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
+			Runs Newton's method using the current settings for tracking, precision, etc, EXCEPT for the tracking tolerance and number of iterations, which you feed in here.  YOU must ensure that the input point has the correct precision.
 
 			\return The SuccessCode indicating whether the refinement completed.  
 
-			\param new_space The result of refinement.
+			\param[out] new_space The result of refinement.
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			\param tolerance The tolerance to which to refine.
+			\param max_iterations The maximum allowable number of iterations to perform.
 			*/
 			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const override
+								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance, unsigned max_iterations) const override
 			{
-				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time, tolerance);
+				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time, tolerance, max_iterations);
 			}
 
 
@@ -1173,13 +1174,13 @@ namespace bertini{
 				SuccessCode code;
 				if (current_precision_==DoublePrecision())
 				{
-					code = Refine(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_),double(tracking_tolerance_));
+					code = Refine<dbl,double>(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_));
 					if (code == SuccessCode::Success)
 						std::get<Vec<dbl> >(current_space_) = std::get<Vec<dbl> >(temporary_space_);
 				}
 				else
 				{
-					code = Refine(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_, tracking_tolerance_);
+					code = Refine<mpfr,mpfr_float>(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_);
 					if (code == SuccessCode::Success)
 						std::get<Vec<mpfr> >(current_space_) = std::get<Vec<mpfr> >(temporary_space_);
 				}
@@ -1214,7 +1215,7 @@ namespace bertini{
 							   tracked_system_,
 							   start_point,
 							   current_time, 
-							   tracking_tolerance_,
+							   RealType(tracking_tolerance_),
 							   newton_config_.min_num_newton_iterations,
 							   newton_config_.max_num_newton_iterations,
 							   AMP_config_);
@@ -1233,13 +1234,13 @@ namespace bertini{
 			\param start_point The base point for running Newton's method.
 			\param current_time The current time value.
 			\param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
-
+			\param max_iterations The maximum allowable number of iterations to perform.
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
 			template <typename ComplexType, typename RealType>
 			SuccessCode Refine(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time,
-								RealType const& tolerance) const
+								RealType const& tolerance, unsigned max_iterations) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
@@ -1250,8 +1251,8 @@ namespace bertini{
 							   start_point,
 							   current_time, 
 							   tolerance,
-							   newton_config_.min_num_newton_iterations,
-							   newton_config_.max_num_newton_iterations,
+							   1,
+							   max_iterations,
 							   AMP_config_);
 			}
 			
