@@ -279,10 +279,22 @@ namespace bertini
 
 				template<typename ComplexType> 
 				SuccessCode CircleTrack(ComplexType const& starting_time, Vec<ComplexType> const& starting_sample)
-				{
-					bool first_step_of_path = true;
+				{	std::cout << "CircleTrack()\n";
+
+					if (this->EndgameSettings().num_sample_points < 3) // need to make sure we won't track right through the origin.
+					{
+						std::stringstream err_msg;
+						err_msg << "ERROR: The number of sample points " << this->EndgameSettings().num_sample_points << " for circle tracking must be >= 3";
+						throw std::runtime_error(err_msg.str());
+					}	
+
+					// the initial sample has already been added to the sample repo... so don't do that here, please
+					
+					mpfr_float radius = abs(starting_time), angle = arg(starting_time);
+					mpfr_float angle_increment = 2*acos(mpfr_float(-1)) / (this->EndgameSettings().num_sample_points);
+
 					SuccessCode tracking_success = SuccessCode::Success;
-					auto current_angle = ComplexType(-2 * M_PI);
+
 					auto number_of_steps = 0;
 					ComplexType i(0,1); 
 
@@ -291,74 +303,38 @@ namespace bertini
 					ComplexType current_time = starting_time;
 					ComplexType next_time;
 
-					if(this->EndgameSettings().num_sample_points < 3) // need to make sure we won't track right through the origin.
+					
+
+					
+ 	
+
+					for (unsigned ii = 0; ii < this->EndgameSettings().num_sample_points; ++ii)
 					{
-						std::cout << "ERROR: The number of sample points " << this->EndgameSettings().num_sample_points << " for circle tracking must be >= 3!" << '\n';
-					}	
-
-					if(starting_time.norm() <= 0) // error checking on radius of circle to track around. 
-					{
-						std::cout << "ERROR: The radius of the circle " << starting_time << " needs to be positive! " << '\n';
-					}
- 
-					if(first_step_of_path)
-					{		
-						first_step_of_path = false;			
-					}
-
-					auto consecutive_success = 0; 
-					auto next_angle_to_stop_at = mpfr_float(2 * M_PI * (1.0 / (this->EndgameSettings().num_sample_points) - 1));
-					auto absolute_value_of_distance_left = (next_angle_to_stop_at - current_angle) * starting_time;
-
-					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points && tracking_success == SuccessCode::Success; ++ii)
-					{
-					 	//calculate the next angle to stop at -2 * PI + 2 * PI * ii / M
-
-						next_angle_to_stop_at = 2 * M_PI * ((ii + 1.0) / (this->EndgameSettings().num_sample_points) - 1);
-						absolute_value_of_distance_left = (next_angle_to_stop_at - current_angle) * starting_time;
-
 						//setting up the time value for the next sample. 
-						next_time = ComplexType(mpfr_float(starting_time.abs() * cos(next_angle_to_stop_at)),mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)));	
-
-
-						while((next_angle_to_stop_at - current_angle).norm() > this->Tolerances().track_tolerance_during_endgame)
-						{//while our angles are not the same. 	
-							if ((next_angle_to_stop_at - current_angle).norm() > this->Tolerances().track_tolerance_during_endgame)
-							{
-								SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,current_time,next_time,current_sample);	
-
-								if (tracking_success == SuccessCode::Success)
-								{//successful track
-									current_angle = next_angle_to_stop_at;	
-									current_sample = next_sample;
-									current_time = next_time;
-									cauchy_times_.push_back(current_time);
-									cauchy_samples_.push_back(current_sample);
-
-								}
-								else
-									return tracking_success;
-									
-							}		
+						if (ii!=this->EndgameSettings().num_sample_points-1)
+						{
+							angle += angle_increment;
+							next_time = polar(radius, angle);
 						}
+						else
+							next_time = starting_time;
+
+						std::cout << "circle tracking from " << current_time << " to " << next_time << ", starting sample:\n" << current_sample << "\n\n\n";
+						SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample, current_time, next_time, current_sample);	
+
+						if (tracking_success != SuccessCode::Success)
+						{
+							std::cout << "tracker fail in circle track, type " << int(tracking_success) << std::endl;
+							return tracking_success;
+						}
+
+						current_sample = next_sample;
+						current_time = next_time;
+						cauchy_times_.push_back(current_time);
+						cauchy_samples_.push_back(current_sample);
 					}
 
-					//final leg of tracking around the circle.
-					if ((next_time - starting_time).norm() < this->Tolerances().track_tolerance_during_endgame )
-					{
-						ComplexType next_time = ComplexType(mpfr_float(starting_time.abs() * cos(next_angle_to_stop_at)),mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)));	
-						SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,current_time,next_time,current_sample);
-					}
-					if ( tracking_success == SuccessCode::Success)
-					{
-						return SuccessCode::Success;
-					}
-					else
-					{
-						std::cout << "ERROR: See tracking_success for error." << '\n';
-						return tracking_success;
-					}
-					return tracking_success;
+					return SuccessCode::Success;
 
 				}//end CircleTrack
 
@@ -394,13 +370,9 @@ namespace bertini
 					mpfr_float estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).norm())/(((sample1 - sample0).transpose()*rand_vector).norm()))));
 					estimate = abs(log(this->EndgameSettings().sample_factor))/estimate;
 					if (estimate < 1)
-					{
 					  	return mpfr_float(1);
-					}
 					else
-					{	
 						return estimate;
-					}
 
 				}//end ComputeCOverK
 
@@ -416,10 +388,10 @@ namespace bertini
 				/**
 				\brief Function to determine if ratios of c/k estimates are withing a user defined threshold. 			
 
-				\param[out] c_over_k_array A deque of computed values for c/k.
+				\param c_over_k_array A deque of computed values for c/k.
 				*/
 
-				bool CheckForCOverKStabilization(std::deque<mpfr_float> c_over_k_array)
+				bool CheckForCOverKStabilization(std::deque<mpfr_float> const& c_over_k_array)
 				{
 					bool return_value = true;
 
@@ -515,18 +487,15 @@ namespace bertini
 				\brief Function that determines if we have closed a loop after calling CircleTrack().
 				*/
 				bool CheckClosedLoop()
-				{
-					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < this->Tolerances().track_tolerance_during_endgame)
-					{
+				{	std::cout << "CheckClosedLoop()\n";
+					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < this->GetTracker().TrackingTolerance())
 						return true;
-					}
-
+					std::cout << "closed loop check: pre-refinement " << (cauchy_samples_.front() - cauchy_samples_.back()).norm() << ", required tol " << this->GetTracker().TrackingTolerance() << std::endl;
 					this->GetTracker().Refine(cauchy_samples_.front(),cauchy_samples_.front(),cauchy_times_.front(),this->Tolerances().final_tolerance);
 					this->GetTracker().Refine(cauchy_samples_.back(),cauchy_samples_.back(),cauchy_times_.back(),this->Tolerances().final_tolerance);
-					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < this->Tolerances().track_tolerance_during_endgame)
-					{
+					std::cout << "closed loop check: post-refinement " << (cauchy_samples_.front() - cauchy_samples_.back()).norm() << std::endl;
+					if((cauchy_samples_.front() - cauchy_samples_.back()).norm() < this->GetTracker().TrackingTolerance())
 						return true;
-					}
 
 					return false;	
 
@@ -547,8 +516,8 @@ namespace bertini
 
 				If the ratio of the maximum and minimum norm are within the threshold maximum_cauchy_ratio, and the difference is greater than final tolerance than we are successful. 
 				*/
-				bool CompareCauchyRatios()
-				{
+				bool RatioEGOperatingZoneTest()
+				{	std::cout << "RatioEGOperatingZoneTest()\n";
 					mpfr_float min(1e300);
 					mpfr_float max(0);
 
@@ -583,7 +552,7 @@ namespace bertini
 					}
 					return true;
 
-				}//end CompareCauchyRatios
+				}//end RatioEGOperatingZoneTest
 
 
 				/*
@@ -592,7 +561,7 @@ namespace bertini
 				Output: SuccessCode declaring if we are successful or not. 
 
 				Details: Computes cauchy samples using Circle Track. Compares the ratios of the maximum and minimum norms of cauchy samples 
-						 using CompareCauchyRatios. Then attempts to see if we have closed our loop, otherwise it continues the process outlined.
+						 using RatioEGOperatingZoneTest. Then attempts to see if we have closed our loop, otherwise it continues the process outlined.
 				*/
 
 				/**
@@ -600,104 +569,88 @@ namespace bertini
 				maximum and minimum norms are withing some tolerance. When this is the case we return success. If this does not happen we will return an error depending on the error 
 				encountered. 
 				*/		 
-				SuccessCode PreCauchyLoops()
-				{
+				SuccessCode InitialCauchyLoops()
+				{	std::cout << "InitialCauchyLoops()\n";
 					using std::max;
 					bool continue_loop = true;
-					bool check_closed_loop = true;
+
 					auto fail_safe_max_cycle_number = max(cauchy_settings_.fail_safe_maximum_cycle_number,this->CycleNumber());
-
-					cauchy_samples_.push_back(pseg_samples_.back()); // cauchy samples and times should be empty before this point. 
-					cauchy_times_.push_back(pseg_times_.back());
-					mpfr_float closed_loop_tolerance;
-
-					auto next_time = pseg_times_.back();
-					auto next_sample = pseg_samples_.back();
 
 					auto return_value = SuccessCode::Success;
 
-					while(continue_loop)
-					{
+					while (continue_loop)
+					{	
+						cauchy_times_.clear();
+						cauchy_samples_.clear();
+						cauchy_samples_.push_back(pseg_samples_.back()); // cauchy samples and times should be empty before this point. 
+						cauchy_times_.push_back(pseg_times_.back());
+
+						auto next_time = pseg_times_.back();
+						auto next_sample = pseg_samples_.back();
+
+						// track around a circle once.  we'll use it to measure whether we believe we are in the eg operating zone, based on the ratio of ratios of norms of sample points around the circle
 						auto tracking_success = CircleTrack(cauchy_times_.front(),cauchy_samples_.front());
 
 						this->IncrementCycleNumber(1);
 
-						if(tracking_success != SuccessCode::Success)
-						{
-							std::cout << "Note: The tracking failed while going around the origin! " << '\n';
-							break;
-						}
-						else
-						{ // find the ratio of the maximum and minimum coordinate wise for the loop. 
-							continue_loop = CompareCauchyRatios();
+						if (tracking_success != SuccessCode::Success)
+							return tracking_success;
 
-
-							if(continue_loop)
+						// find the ratio of the maximum and minimum coordinate wise for the loop. 
+						if (RatioEGOperatingZoneTest())
+						{ // then we believe we are in the EG operating zone, since the path is relatively flat.  i still disbelieve this is a good test (dab 20160310)
+							while (true)
 							{
-								while(check_closed_loop)
-								{
-									if(CheckClosedLoop())
-									{//error is small enough, exit the loop with success. 
-										return_value = SuccessCode::Success;
-										break;
-									}
-									else if(this->CycleNumber() > fail_safe_max_cycle_number)
-									{// too many iterations
-										std::cout << "Error: Cycle number too high to detect!" << '\n';
-										return_value = SuccessCode::CycleNumTooHigh;
-										break;
-									}
-									else
-									{//increase size of memory, is this necessary for B2? 
-
-									}
-									//compute next loop, the last sample in times and samples is the sample our loop ended on. Either where we started or on another sheet at the same time value. 
-									tracking_success = CircleTrack(cauchy_times_.back(),cauchy_samples_.back());
-
-									this->IncrementCycleNumber(1);
-
-									if(tracking_success != SuccessCode::Success)
-									{//return error
-										std::cout << "Note: The tracking failed while going around the origin! " << '\n';
-										break;
-									}
+								if (CheckClosedLoop())
+								{//error is small enough, exit the loop with success. 
+									return_value = SuccessCode::Success;
+									continue_loop = false;
+									break;
+								}
+								else if(this->CycleNumber() > fail_safe_max_cycle_number)
+								{// too many iterations
+									return_value = SuccessCode::CycleNumTooHigh;
+									continue_loop = false;
+									break;
 								}
 
-								if(return_value == SuccessCode::CycleNumTooHigh)
-								{//see if we should continue to the next sample point
-									if(cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
-										continue_loop = false;
-									else
-										continue_loop = true;
-								}
-							}//end if(!continue_loop)
+								//compute next loop, the last sample in times and samples is the sample our loop ended on. Either where we started or on another sheet at the same time value. 
+								tracking_success = CircleTrack(cauchy_times_.back(),cauchy_samples_.back());
 
-							if(continue_loop)
-							{//find the time for the next sample point
-								next_time = pseg_times_.back() * this->EndgameSettings().sample_factor;
-
-								SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
-								pseg_times_.pop_front();
-								pseg_samples_.pop_front();
-
-								pseg_times_.push_back(next_time);
-								pseg_samples_.push_back(next_sample);
+								this->IncrementCycleNumber(1);
 
 								if(tracking_success != SuccessCode::Success)
-								{
-									std::cout << "Error: Tracking failed in updating pseg samples." << '\n';
-								}
-								else
-								{//quit loop
-									continue_loop = false;
-								}
+									return tracking_success;
 							}
-						}//end else
-						return return_value;
-					} //end while(continue_loop)
-					return return_value;
 
-				}//end PreCauchyLoops
+							if(return_value == SuccessCode::CycleNumTooHigh)
+							{//see if we should continue to the next sample point
+								if(cauchy_times_.back().abs() < this->EndgameSettings().min_track_time)
+									continue_loop = false;
+								else
+									continue_loop = true;
+							}
+						}//end if (RatioEGOperatingZoneTest())
+						else 
+						{
+							std::cout << "not in EG zone yet, shrinking radius\n\n";
+							//find the time for the next sample point
+							next_time = pseg_times_.back() * this->EndgameSettings().sample_factor;
+
+							SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,pseg_times_.back(),next_time,pseg_samples_.back());
+							pseg_times_.pop_front();
+							pseg_samples_.pop_front();
+
+							pseg_times_.push_back(next_time);
+							pseg_samples_.push_back(next_sample);
+
+							if(tracking_success != SuccessCode::Success)
+								return tracking_success;
+						}
+					} //end while(continue_loop)
+
+					return return_value;
+				}//end InitialCauchyLoops
 
 
 				/*
@@ -709,7 +662,7 @@ namespace bertini
 						 like what is done in the Power Series Endgame. We continue to track forward in this manner until we have stabilization of the cycle number being approximated. 
 						 This prevents the unnecessary circle tracking if we are possibly not in the endgame operating zone. 
 
-						 Once we have stabilization we then perform preCauchyLoops while get the accurate cycle number, and check the norms of the samples and make sure we are ready 
+						 Once we have stabilization we then perform InitialCauchyLoops while get the accurate cycle number, and check the norms of the samples and make sure we are ready 
 						 to approximate. When ready we call ComputePSEGApproximationOfXAtT0. This function will use a hermtie interpolater to get an approximation of the value at the origin. 
 				*/
 				/**
@@ -726,7 +679,7 @@ namespace bertini
 
 				template<typename ComplexType>
 				SuccessCode InitialPowerSeriesApproximation(ComplexType const& start_time, Vec<ComplexType> const& start_point, ComplexType & approximation_time, Vec<ComplexType> & approximation)
-				{
+				{	std::cout << "InitialPowerSeriesApproximation()\n\n";
 					//initialize array holding c_over_k estimates
 					std::deque<mpfr_float> c_over_k_array; 
 
@@ -757,12 +710,11 @@ namespace bertini
 
 
 						if(tracking_success == SuccessCode::Success)
-						{
 							c_over_k_array.push_back(ComputeCOverK());
-						}
+
 						++ii;
 					}//end while
-
+					std::cout << "have c_over_k_array\n";
 					//check to see if we continue. 
 					if(tracking_success == SuccessCode::Success)
 					{
@@ -791,14 +743,14 @@ namespace bertini
 
 						}//end while
 					}//end if(tracking_success == SuccessCode::Success)
-
+					std::cout << "have c/k stabilization\n";
 
 					if(tracking_success == SuccessCode::Success)
 					{//perform cauchy loops
 						auto cauchy_loop_success = SuccessCode::CycleNumTooHigh;
 						do
 						{
-							cauchy_loop_success = PreCauchyLoops();
+							cauchy_loop_success = InitialCauchyLoops();
 
 							if(cauchy_loop_success == SuccessCode::CycleNumTooHigh)
 							{//see if we still can continue
@@ -819,10 +771,9 @@ namespace bertini
 										cauchy_loop_success = SuccessCode::CycleNumTooHigh;
 									}
 								}
-								else
-								{//we need to break out of the loop
+								else //we need to break out of the loop
 									break;
-								}
+
 							}
 						} while (cauchy_loop_success == SuccessCode::CycleNumTooHigh);
 
@@ -845,9 +796,8 @@ namespace bertini
 						this->CycleNumber(0);
 						approximation_time = pseg_times_.back();
 						approximation = pseg_samples_.back();
-						return SuccessCode::Success;
+						return tracking_success;
 					}
-					return SuccessCode::Success;
 
 				}//end InitialPowerSeriesApproximation
 
@@ -859,7 +809,7 @@ namespace bertini
 
 				Details: This function handles computing an approximation at the origin. 
 					We compute the derivatives at the different times and samples. We then make sure all samples are to the same precision before refining them to final tolerance. 
-					By PreCauchyLoops we know what the cycle number is sow we convert derivatives and times to the s-plane where s = t^(1/(cyle number).
+					By InitialCauchyLoops we know what the cycle number is sow we convert derivatives and times to the s-plane where s = t^(1/(cyle number).
 					We use the converted times and derivatives along with the samples to do a Hermite interpolation which is found in base_endgame.hpp.
 				*/
 
@@ -937,17 +887,24 @@ namespace bertini
 				template<typename ComplexType>
 				Vec<ComplexType> ComputeCauchyApproximationOfXAtT0()
 				{
-					this->GetTracker().Refine(cauchy_samples_[0],cauchy_samples_[0],cauchy_times_[0],this->Tolerances().track_tolerance_during_endgame);
+					if (cauchy_samples_.size() != this->CycleNumber() * this->EndgameSettings().num_sample_points+1)
+					{
+						std::stringstream err_msg;
+						err_msg << "to compute cauchy approximation, cauchy_samples must be of size " << this->CycleNumber() * this->EndgameSettings().num_sample_points+1 << " but is of size " << cauchy_samples_.size() << '\n';
+						throw std::runtime_error(err_msg.str());
+					}
 
-					Vec<ComplexType> approximation = cauchy_samples_[0]; 
+					// this->GetTracker().Refine(cauchy_samples_[0],cauchy_samples_[0],cauchy_times_[0],this->Tolerances().final_tolerance);
 
-					for(unsigned int ii = 1; ii < this->CycleNumber() * this->EndgameSettings().num_sample_points; ++ii)
+					Vec<ComplexType> approximate_root = Vec<ComplexType>::Zero(this->GetSystem().NumVariables()); 
+
+					for(unsigned int ii = 0; ii < this->CycleNumber() * this->EndgameSettings().num_sample_points+1; ++ii)
 					{
 						this->GetTracker().Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],this->Tolerances().final_tolerance);
-						approximation += cauchy_samples_[ii];
+						approximate_root += cauchy_samples_[ii];
 					}
-					approximation /= (this->CycleNumber() * this->EndgameSettings().num_sample_points);
-					return approximation;
+					approximate_root /= (this->CycleNumber() * this->EndgameSettings().num_sample_points);
+					return approximate_root;
 
 				}
 
@@ -973,6 +930,7 @@ namespace bertini
 				template<typename ComplexType>
 				SuccessCode ComputeCauchySamples(ComplexType const& starting_time, Vec<ComplexType> const& starting_sample)
 				{
+					std::cout << "ComputeCauchySamples()\n";
 					cauchy_times_.clear();
 					cauchy_samples_.clear();
 					cauchy_times_.push_back(starting_time);
@@ -980,25 +938,27 @@ namespace bertini
 					this->CycleNumber(0);
 
 
-					while( true )
+					while( this->CycleNumber() < cauchy_settings_.fail_safe_maximum_cycle_number )
 					{
+						std::cout << "ComputeCauchySamples() iteration " << this->CycleNumber() << "\n";
 						//track around the origin once.
-						auto tracking_success = CircleTrack(starting_time,starting_sample);
-
+						auto tracking_success = CircleTrack(cauchy_times_.back(),cauchy_samples_.back());
 						this->IncrementCycleNumber(1);
 
+						std::cout << "loop ended at time \n" << cauchy_times_.back() << " and point\n" << cauchy_samples_.back() << "\n\n";
 						if(tracking_success != SuccessCode::Success)
+						{
+							std::cout << "Cauchy loop fail tracking\n\n";
 							return tracking_success;
-						else
-						{//check to see if we closed the loop
-							if(CheckClosedLoop())
-								return SuccessCode::Success;
-							else if(this->CycleNumber() > cauchy_settings_.fail_safe_maximum_cycle_number)
-								return SuccessCode::CycleNumTooHigh;
+						}
+						else if(CheckClosedLoop())
+						{
+							std::cout << "Cauchy loop is CLOSED\n\n";
+							return SuccessCode::Success;
 						}
 					} 
-					return SuccessCode::Success;
 
+					return SuccessCode::CycleNumTooHigh;
 				}//end ComputeCauchySamples
 				
 
@@ -1028,7 +988,7 @@ namespace bertini
 				*/
 				template<typename ComplexType>
 				SuccessCode CauchyEG(ComplexType start_time, Vec<ComplexType> start_point)
-				{
+				{	std::cout << "CauchyEG()\n";
 					ClearTimesAndSamples(); //clear times and samples before we begin.
 					this->CycleNumber(0);
 					ComplexType origin(0,0);
@@ -1036,95 +996,82 @@ namespace bertini
 					ComplexType next_time;
 					Vec<ComplexType> next_sample;
 
-					Vec<ComplexType> prev_approx;
-					Vec<ComplexType> latest_approx;
-					mpfr_float approximate_error(1);
+					Vec<ComplexType> prev_approx, latest_approx;
+					mpfr_float approximate_error;
 
-					auto tracking_success = SuccessCode::Success;
-					auto cauchy_samples_success = SuccessCode::Success;
-					mpfr_float closed_loop_tolerance;
+				
 
 					//Compute the first approximation using the power series approximation technique. 
-					auto endgame_success = InitialPowerSeriesApproximation(start_time, start_point, origin, prev_approx);  // last argument is output here
-					next_time = pseg_times_.back();
+					auto initial_ps_success = InitialPowerSeriesApproximation(start_time, start_point, origin, prev_approx);  // last argument is output here
+					if(initial_ps_success == SuccessCode::Success)
+						return initial_ps_success;
 
+					next_time = pseg_times_.back();
 					mpfr_float norm_of_dehom_of_prev_approx, norm_of_dehom_of_latest_approx;
 
 					if(this->SecuritySettings().level <= 0)
 						norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
-
-					if(endgame_success == SuccessCode::Success)
+					std::cout << "entering do-while in CauchyEG()\n";
+					do
 					{
 						//Compute a cauchy approximation.
 						latest_approx = ComputeCauchyApproximationOfXAtT0<ComplexType>();
-
+						std::cout << "latest_approx\n" << latest_approx << "\n\n";
 						if(this->SecuritySettings().level <= 0)
 							norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
 
-						do
+						approximate_error = (latest_approx - prev_approx).norm(); //Calculate the error between approximations. 
+						std::cout << "approximate_error " << approximate_error << "\n\n";
+						// dehom of prev approx and last approx not used because they are not updated with the most current information. However, prev approx and last approx are 
+						// the most current. 
+
+						if(approximate_error < this->Tolerances().final_tolerance)
 						{
-							approximate_error = (latest_approx - prev_approx).norm(); //Calculate the error between approximations. 
+							this->final_approximation_at_origin_ = latest_approx;
+							return SuccessCode::Success;
+						}
+						else if(cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
+						{//we are too close to t = 0 but we do not have the correct tolerance - so we exit
+							this->final_approximation_at_origin_ = latest_approx;
+							return SuccessCode::FailedToConverge;
+						}
+						else if(this->SecuritySettings().level <= 0 && 
+						   norm_of_dehom_of_prev_approx   > this->SecuritySettings().max_norm &&  
+						   norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm  )
+						{//we are too large, break out of loop to return error.
+							this->final_approximation_at_origin_ = latest_approx;
+							return SuccessCode::SecurityMaxNormReached;
+						}
 
-							// dehom of prev approx and last approx not used because they are not updated with the most current information. However, prev approx and last approx are 
-							// the most current. This is from how the do while loop below is done. 
-							if(this->SecuritySettings().level <= 0 && 
-							   norm_of_dehom_of_prev_approx   > this->SecuritySettings().max_norm &&  
-							   norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm
-							  )
-							{//we are too large, break out of loop to return error.
-								this->final_approximation_at_origin_ = latest_approx;
-								return SuccessCode::SecurityMaxNormReached;
-							}
-							else if(cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
-							{//we are too close to t = 0 but we do not have the correct tolerance - so we exit
-								this->final_approximation_at_origin_ = latest_approx;
-								return SuccessCode::FailedToConverge;
-							}
-							else if(approximate_error < this->Tolerances().final_tolerance)
-							{
-								this->final_approximation_at_origin_ = latest_approx;
-								return SuccessCode::Success;
-							}
-							else
-							{
-								prev_approx = latest_approx;
-								norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 
-								do
-								{
-									next_time *= this->EndgameSettings().sample_factor;
+						prev_approx = latest_approx;
+						norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 
-									tracking_success = this->GetTracker().TrackPath(next_sample,cauchy_times_.front(),next_time,cauchy_samples_.front());
+						next_time *= this->EndgameSettings().sample_factor;
 
-									if (tracking_success == SuccessCode::Success)
-									{
+						auto tracking_success = this->GetTracker().TrackPath(next_sample,cauchy_times_.back(),next_time,cauchy_samples_.front());
+						if (tracking_success != SuccessCode::Success)
+							return tracking_success;
 
-										cauchy_samples_success = ComputeCauchySamples(next_time,next_sample);
+						pseg_times_.push_back(next_time);  pseg_times_.pop_front();
+						pseg_samples_.push_back(next_sample); pseg_samples_.pop_front();
 
-										//Added because of Griewank osborne test case where tracker returns GoingToInfinity.  
-										//The cauchy endgame should stop instead of attempting to continue. 
-										//This is because the tracker will not track to any meaningful space values. 
-										if (cauchy_samples_success == SuccessCode::GoingToInfinity)
-											return SuccessCode::GoingToInfinity;
+						auto cauchy_samples_success = ComputeCauchySamples(next_time,next_sample);
 
-										latest_approx = ComputeCauchyApproximationOfXAtT0<ComplexType>();
-										if (this->SecuritySettings().level <= 0)
-											norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
-									}
+						//Added because of Griewank osborne test case where tracker returns GoingToInfinity.  
+						//The cauchy endgame should stop instead of attempting to continue. 
+						//This is because the tracker will not track to any meaningful space values. 
+						if (cauchy_samples_success == SuccessCode::GoingToInfinity)
+							return SuccessCode::GoingToInfinity;
 
-									if (cauchy_samples_success == SuccessCode::CycleNumTooHigh && cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
-									{// we are too close to t = 0 but we do have the correct tolerance -so we exit.
-										this->final_approximation_at_origin_ = latest_approx;
-										return SuccessCode::MinTrackTimeReached;
-									}
+						if (cauchy_samples_success != SuccessCode::Success && cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
+						{// we are too close to t = 0 but we do have the correct tolerance -so we exit.
+							this->final_approximation_at_origin_ = latest_approx;
+							return SuccessCode::MinTrackTimeReached;
+						}
 
-								} while (cauchy_samples_success != SuccessCode::Success); //executes at least once on no errors. 
-							} // re: if/elseif/else chain -- this is the else branch
-						} while (approximate_error > this->Tolerances().final_tolerance);
+					} while (approximate_error > this->Tolerances().final_tolerance);
 
-						this->final_approximation_at_origin_ = latest_approx;
-						return SuccessCode::Success;
-					}
 					this->final_approximation_at_origin_ = latest_approx;
 					return SuccessCode::Success;
 				} //end CauchyEG

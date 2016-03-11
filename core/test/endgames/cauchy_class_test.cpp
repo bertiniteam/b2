@@ -760,7 +760,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 	// of sample points are within a tolerance. If so, we can start actually using the Cauchy Integral Formula to extrapolate approximations 
 	// at the origin. 
 
-	// In this example, since the cycle number is 1, we should see that our CompareCauchyRatios function says that we are good to proceed 
+	// In this example, since the cycle number is 1, we should see that our RatioEGOperatingZoneTest function says that we are good to proceed 
 	// in using the Cauchy Integral Formula. 
 	
 	mpfr_float::default_precision(16);
@@ -818,7 +818,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 
 		// std::cout << "circle track done " << tracking_success << '\n';
 
-	auto comparison_of_cauchy_ratios = my_endgame.CompareCauchyRatios();
+	auto comparison_of_cauchy_ratios = my_endgame.RatioEGOperatingZoneTest();
 
 		// std::cout << "comparison made  made " << comparison_of_cauchy_ratios << '\n';
 
@@ -884,7 +884,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1_for_cauchy_c
 
 	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 
-	auto comparison_of_cauchy_ratios = my_endgame.CompareCauchyRatios();
+	auto comparison_of_cauchy_ratios = my_endgame.RatioEGOperatingZoneTest();
 
 	//std::cout << "comparison is " << comparison_of_cauchy_ratios << '\n';
 
@@ -898,7 +898,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 {
 	/*
 		In the cauchy endgame we want to compute cauchy loops and make sure that we have that the max and min norms of the samples around the 
-		origin are within some heuristic value. The function PreCauchyLoops does this while holding onto the cycle number. 
+		origin are within some heuristic value. The function InitialCauchyLoops does this while holding onto the cycle number. 
 		This test case is making sure we succeed and get the correct cycle number. 
 	*/
 	mpfr_float::default_precision(16);
@@ -946,7 +946,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 	my_endgame.SetPSEGSamples(pseg_samples);
 	my_endgame.SetPSEGTimes(pseg_times);
 
-	auto success_of_pre_cauchy_loops =  my_endgame.PreCauchyLoops();
+	auto success_of_pre_cauchy_loops =  my_endgame.InitialCauchyLoops();
 
 	// for(int ii = 0; ii < my_endgame.CauchySamples().size(); ii++)
 	// {
@@ -964,7 +964,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 {
 	/*
 		In the cauchy endgame we want to compute cauchy loops and make sure that we have that the max and min norms of the samples around the 
-		origin are within some heuristic value. The function PreCauchyLoops does this while holding onto the cycle number. 
+		origin are within some heuristic value. The function InitialCauchyLoops does this while holding onto the cycle number. 
 		This test case is making sure we succeed and get the correct cycle number. 
 	*/
 	mpfr_float::default_precision(30);
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 	my_endgame.SetPSEGSamples(pseg_samples);
 	my_endgame.SetPSEGTimes(pseg_times);
 
-	auto success_of_pre_cauchy_loops =  my_endgame.PreCauchyLoops();
+	auto success_of_pre_cauchy_loops =  my_endgame.InitialCauchyLoops();
 
 	BOOST_CHECK(success_of_pre_cauchy_loops == SuccessCode::Success);
 	BOOST_CHECK(my_endgame.CycleNumber() == 2);
@@ -1417,6 +1417,8 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
+	newton_preferences.max_num_newton_iterations = 4;
+	newton_preferences.min_num_newton_iterations = 2;
 
 	tracker.Setup(config::Predictor::Euler,
                 mpfr_float("1e-5"),
@@ -1445,7 +1447,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
 
 	// std::cout << "first cauchy approx is " << my_endgame.FinalApproximation() << '\n';
-
+	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 

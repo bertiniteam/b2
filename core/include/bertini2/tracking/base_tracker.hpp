@@ -327,6 +327,11 @@ namespace bertini{
 
 			virtual ~Tracker() = default;
 
+			auto TrackingTolerance() const
+			{
+				return tracking_tolerance_;
+			}
+			
 		private:
 
 			
