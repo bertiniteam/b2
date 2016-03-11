@@ -431,18 +431,12 @@ namespace bertini
 						auto divide = a;
 
 						if(a < b)
-						{
 							divide = a/b;
-						}
 						else
-						{
 							divide = b/a;
-						}
 
 						if(divide <  cauchy_settings_.minimum_for_c_over_k_stabilization)
-						{
 							return_value = false;
-						}
 					}
 					return return_value;
 
@@ -672,13 +666,9 @@ namespace bertini
 								if(return_value == SuccessCode::CycleNumTooHigh)
 								{//see if we should continue to the next sample point
 									if(cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
-									{
 										continue_loop = false;
-									}
 									else
-									{
 										continue_loop = true;
-									}
 								}
 							}//end if(!continue_loop)
 
@@ -735,7 +725,7 @@ namespace bertini
 				*/
 
 				template<typename ComplexType>
-				SuccessCode ComputeFirstApproximation(ComplexType const& start_time, Vec<ComplexType> const& start_point, ComplexType & approximation_time, Vec<ComplexType> & approximation)
+				SuccessCode InitialPowerSeriesApproximation(ComplexType const& start_time, Vec<ComplexType> const& start_point, ComplexType & approximation_time, Vec<ComplexType> & approximation)
 				{
 					//initialize array holding c_over_k estimates
 					std::deque<mpfr_float> c_over_k_array; 
@@ -752,7 +742,7 @@ namespace bertini
 					unsigned ii = 1;
 
 
-					//track until for more c_over_k eetimates or until we reach a cutoff time. 
+					//track until for more c_over_k estimates or until we reach a cutoff time. 
 					while(tracking_success == SuccessCode::Success && ii < cauchy_settings_.num_needed_for_stabilization && next_time.abs() > cauchy_settings_.ratio_cutoff_time)
 					{
 						pseg_samples_.pop_front();
@@ -859,7 +849,7 @@ namespace bertini
 					}
 					return SuccessCode::Success;
 
-				}//end ComputeFirstApproximation
+				}//end InitialPowerSeriesApproximation
 
 				/*
 				Input: time_t0 is the time value that we wish to interpolate at.
@@ -888,34 +878,27 @@ namespace bertini
 					std::deque< Vec<ComplexType> > pseg_derivatives;
 					//initialize the derivative otherwise the first computation in the loop will be wrong. 
 
-					Vec<ComplexType> pseg_derivative = (ComplexType(-1)*(this->GetSystem().Jacobian(pseg_samples_[0],pseg_times_[0]).inverse()))*this->GetSystem().TimeDerivative(pseg_samples_[0],pseg_times_[0]);
+					Vec<ComplexType> pseg_derivative = -(this->GetSystem().Jacobian(pseg_samples_[0],pseg_times_[0]).inverse())*this->GetSystem().TimeDerivative(pseg_samples_[0],pseg_times_[0]);
 					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points; ++ii)
 					{	
 						// uses LU look at Eigen documentation on inverse in Eigen/LU.
-					 	Vec<ComplexType> pseg_derivative = (ComplexType(-1)*(this->GetSystem().Jacobian(pseg_samples_[ii],pseg_times_[ii]).inverse()))*this->GetSystem().TimeDerivative(pseg_samples_[ii],pseg_times_[ii]);
+					 	Vec<ComplexType> pseg_derivative = -(this->GetSystem().Jacobian(pseg_samples_[ii],pseg_times_[ii]).inverse())*this->GetSystem().TimeDerivative(pseg_samples_[ii],pseg_times_[ii]);
 						pseg_derivatives.push_back(pseg_derivative);
 					}
 
 					//Checking to make sure all samples are of the same precision.
 					unsigned max_precision = 0; 
-					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-					{
-						if(Precision(pseg_samples_[ii](0)) > max_precision)
-						{
-							max_precision = Precision(pseg_samples_[ii](0));
-						}
-					}
 
 					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-					{
+						if(Precision(pseg_samples_[ii](0)) > max_precision)
+							max_precision = Precision(pseg_samples_[ii](0));
+
+
+					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
 						if(Precision(pseg_samples_[ii](0)) < max_precision)
-						{
 							for(unsigned jj = 0; jj < this->GetSystem().NumVariables();++jj)
-							{
 								pseg_samples_[ii](jj).precision(max_precision);
-							}
-						}
-					}
+
 
 					this->GetSystem().precision(max_precision);
 
@@ -927,16 +910,13 @@ namespace bertini
 
 					for(unsigned ii = 0; ii < pseg_samples_.size(); ++ii)
 					{
-						s_derivatives.push_back(pseg_derivatives[ii]*(ComplexType(this->CycleNumber())*pow(pseg_times_[ii],(ComplexType(this->CycleNumber()) - ComplexType(1))/ComplexType(this->CycleNumber()))));
+						s_derivatives.push_back(pseg_derivatives[ii]*(ComplexType(this->CycleNumber())*pow(pseg_times_[ii],(ComplexType(this->CycleNumber()) - ComplexType(1))/this->CycleNumber())));
 						s_times.push_back(pow(pseg_times_[ii],ComplexType(1)/ComplexType(this->CycleNumber())));
 
 						this->GetTracker().Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],this->Tolerances().track_tolerance_during_endgame);
 					}
 
-					Vec<ComplexType> Approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, pseg_samples_, s_derivatives);
-
-					return Approx;
-
+					return bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, pseg_samples_, s_derivatives);
 				}//end ComputePSEGApproximationOfXAtT0
 
 				/*
@@ -955,9 +935,8 @@ namespace bertini
 				\tparam ComplexType The complex number type.
 				*/
 				template<typename ComplexType>
-				Vec<ComplexType> ComputeCauchyApproximationOfXAtT0(std::deque< Vec<ComplexType> > const& cauchy_samples)
+				Vec<ComplexType> ComputeCauchyApproximationOfXAtT0()
 				{
-					// std::cout << "Cauchy approx " << '\n';
 					this->GetTracker().Refine(cauchy_samples_[0],cauchy_samples_[0],cauchy_times_[0],this->Tolerances().track_tolerance_during_endgame);
 
 					Vec<ComplexType> approximation = cauchy_samples_[0]; 
@@ -965,7 +944,7 @@ namespace bertini
 					for(unsigned int ii = 1; ii < this->CycleNumber() * this->EndgameSettings().num_sample_points; ++ii)
 					{
 						this->GetTracker().Refine(cauchy_samples_[ii],cauchy_samples_[ii],cauchy_times_[ii],this->Tolerances().final_tolerance);
-						approximation += cauchy_samples[ii];
+						approximation += cauchy_samples_[ii];
 					}
 					approximation /= (this->CycleNumber() * this->EndgameSettings().num_sample_points);
 					return approximation;
@@ -992,7 +971,7 @@ namespace bertini
 				\tparam ComplexType The complex number type.
 				*/
 				template<typename ComplexType>
-				SuccessCode FindCauchySamples(ComplexType const& starting_time, Vec<ComplexType> const& starting_sample)
+				SuccessCode ComputeCauchySamples(ComplexType const& starting_time, Vec<ComplexType> const& starting_sample)
 				{
 					cauchy_times_.clear();
 					cauchy_samples_.clear();
@@ -1000,52 +979,27 @@ namespace bertini
 					cauchy_samples_.push_back(starting_sample);
 					this->CycleNumber(0);
 
-					auto check_closed_loop = false;
 
-					auto tracking_success = SuccessCode::Success;
-					auto finding_cauchy_samples_success = SuccessCode::Success;
-
-					while(!check_closed_loop)
+					while( true )
 					{
 						//track around the origin once.
-						tracking_success = CircleTrack(cauchy_times_.back(),cauchy_samples_.back());
+						auto tracking_success = CircleTrack(starting_time,starting_sample);
 
 						this->IncrementCycleNumber(1);
 
 						if(tracking_success != SuccessCode::Success)
-						{
-							if(tracking_success == SuccessCode::HigherPrecisionNecessary)
-							{
-								std::cout << "Note: The tracking failed while going around the origin! " << '\n';
-								return SuccessCode::HigherPrecisionNecessary;
-							}
-
-							if(tracking_success == SuccessCode::GoingToInfinity)
-							{
-								std::cout << "Note: The tracking failed while going around the origin! " << '\n';
-								return SuccessCode::GoingToInfinity;
-							}
-
-							//NEW!!!!!!
-							std::cout << "Note: The tracking failed while going around the origin! " << '\n';
 							return tracking_success;
-						}
 						else
 						{//check to see if we closed the loop
 							if(CheckClosedLoop())
-							{
 								return SuccessCode::Success;
-							}
 							else if(this->CycleNumber() > cauchy_settings_.fail_safe_maximum_cycle_number)
-							{//too many iterations
-								std::cout << "ERROR: Cycle number too high to detect! " << '\n';
 								return SuccessCode::CycleNumTooHigh;
-							}
 						}
 					} 
 					return SuccessCode::Success;
 
-				}//end FindCauchySamples
+				}//end ComputeCauchySamples
 				
 
 				/*
@@ -1068,12 +1022,12 @@ namespace bertini
 				the cyle number is made, and after the maximum and minimum norms of tracked space values around the origin are withing a certain tolerance. 			
 
 				\param[out] start_time The time value at which we start the endgame. 
-				\param endgame_sample The current space point at start_time.
+				\param start_point The current space point at start_time.
 
 				\tparam ComplexType The complex number type.
 				*/
 				template<typename ComplexType>
-				SuccessCode CauchyEG(ComplexType start_time, Vec<ComplexType> endgame_sample)
+				SuccessCode CauchyEG(ComplexType start_time, Vec<ComplexType> start_point)
 				{
 					ClearTimesAndSamples(); //clear times and samples before we begin.
 					this->CycleNumber(0);
@@ -1087,33 +1041,36 @@ namespace bertini
 					mpfr_float approximate_error(1);
 
 					auto tracking_success = SuccessCode::Success;
-					auto finding_cauchy_samples_success = SuccessCode::Success;
+					auto cauchy_samples_success = SuccessCode::Success;
 					mpfr_float closed_loop_tolerance;
 
 					//Compute the first approximation using the power series approximation technique. 
-					auto endgame_success = ComputeFirstApproximation(start_time, endgame_sample, origin, prev_approx); 
+					auto endgame_success = InitialPowerSeriesApproximation(start_time, start_point, origin, prev_approx);  // last argument is output here
 					next_time = pseg_times_.back();
 
-					Vec<ComplexType> dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx);
+					mpfr_float norm_of_dehom_of_prev_approx, norm_of_dehom_of_latest_approx;
+
+					if(this->SecuritySettings().level <= 0)
+						norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
 
 					if(endgame_success == SuccessCode::Success)
 					{
 						//Compute a cauchy approximation.
-						latest_approx = ComputeCauchyApproximationOfXAtT0(cauchy_samples_);
-						Vec<ComplexType> dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx);
+						latest_approx = ComputeCauchyApproximationOfXAtT0<ComplexType>();
 
 						if(this->SecuritySettings().level <= 0)
-						{
-							Vec<ComplexType> dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx);
-						}
+							norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
+
 						do
 						{
-
 							approximate_error = (latest_approx - prev_approx).norm(); //Calculate the error between approximations. 
 
 							// dehom of prev approx and last approx not used because they are not updated with the most current information. However, prev approx and last approx are 
 							// the most current. This is from how the do while loop below is done. 
-							if(this->SecuritySettings().level <= 0 && this->GetSystem().DehomogenizePoint(prev_approx).norm() > this->SecuritySettings().max_norm &&  this->GetSystem().DehomogenizePoint(latest_approx).norm() > this->SecuritySettings().max_norm)
+							if(this->SecuritySettings().level <= 0 && 
+							   norm_of_dehom_of_prev_approx   > this->SecuritySettings().max_norm &&  
+							   norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm
+							  )
 							{//we are too large, break out of loop to return error.
 								this->final_approximation_at_origin_ = latest_approx;
 								return SuccessCode::SecurityMaxNormReached;
@@ -1131,42 +1088,39 @@ namespace bertini
 							else
 							{
 								prev_approx = latest_approx;
-								dehom_of_prev_approx = dehom_of_latest_approx;
+								norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 
 								do
 								{
-									next_time = next_time * this->EndgameSettings().sample_factor;
+									next_time *= this->EndgameSettings().sample_factor;
 
 									tracking_success = this->GetTracker().TrackPath(next_sample,cauchy_times_.front(),next_time,cauchy_samples_.front());
 
-									if(tracking_success == SuccessCode::Success)
+									if (tracking_success == SuccessCode::Success)
 									{
 
-										finding_cauchy_samples_success = FindCauchySamples(next_time,next_sample);
+										cauchy_samples_success = ComputeCauchySamples(next_time,next_sample);
 
-										//Added because of Griewank osborne test case where tracker throws a GoingToInfinity the cauchy endgame should stop instead of attempting to continue. 
+										//Added because of Griewank osborne test case where tracker returns GoingToInfinity.  
+										//The cauchy endgame should stop instead of attempting to continue. 
 										//This is because the tracker will not track to any meaningful space values. 
-										if(finding_cauchy_samples_success == SuccessCode::GoingToInfinity)
-										{
+										if (cauchy_samples_success == SuccessCode::GoingToInfinity)
 											return SuccessCode::GoingToInfinity;
-										}
 
-										latest_approx = ComputeCauchyApproximationOfXAtT0(cauchy_samples_);
-										if(this->SecuritySettings().level <= 0)
-										{
-									 		Vec<ComplexType> dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx);
-										}
+										latest_approx = ComputeCauchyApproximationOfXAtT0<ComplexType>();
+										if (this->SecuritySettings().level <= 0)
+											norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
 									}
 
-									if(finding_cauchy_samples_success == SuccessCode::CycleNumTooHigh && cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
+									if (cauchy_samples_success == SuccessCode::CycleNumTooHigh && cauchy_times_.front().abs() < this->EndgameSettings().min_track_time)
 									{// we are too close to t = 0 but we do have the correct tolerance -so we exit.
-										std::cout << "min track time reached " << '\n';
 										this->final_approximation_at_origin_ = latest_approx;
 										return SuccessCode::MinTrackTimeReached;
 									}
-								}while(finding_cauchy_samples_success != SuccessCode::Success); //executes at least once on no errors. 
-							}
-						}while(approximate_error > this->Tolerances().final_tolerance);
+
+								} while (cauchy_samples_success != SuccessCode::Success); //executes at least once on no errors. 
+							} // re: if/elseif/else chain -- this is the else branch
+						} while (approximate_error > this->Tolerances().final_tolerance);
 
 						this->final_approximation_at_origin_ = latest_approx;
 						return SuccessCode::Success;

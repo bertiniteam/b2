@@ -1077,7 +1077,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
 
 
 
-	auto first_approx_success = my_endgame.ComputeFirstApproximation(time,sample,origin,first_approx);
+	auto first_approx_success = my_endgame.InitialPowerSeriesApproximation(time,sample,origin,first_approx);
 
 	BOOST_CHECK((first_approx - x_origin).norm() < 1e-2);
 	BOOST_CHECK(my_endgame.CycleNumber() == 3);
@@ -1142,7 +1142,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_t
 
 	my_endgame.CycleNumber(1);
 
-	auto first_cauchy_approx = my_endgame.ComputeCauchyApproximationOfXAtT0(my_endgame.CauchySamples());
+	auto first_cauchy_approx = my_endgame.ComputeCauchyApproximationOfXAtT0<mpfr>();
 
 	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
 
@@ -1216,7 +1216,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 	// 	std::cout << my_endgame.CauchySamples()[i] << '\n';
 	// }
 
-	auto first_cauchy_approx = my_endgame.ComputeCauchyApproximationOfXAtT0(my_endgame.CauchySamples());
+	auto first_cauchy_approx = my_endgame.ComputeCauchyApproximationOfXAtT0<mpfr>();
 
 	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
 
@@ -1227,7 +1227,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
 {
 	/*
-		To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by FindCauchySamples. 
+		To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples. 
 	*/
 
 	mpfr_float::default_precision(16);
@@ -1271,7 +1271,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
 
 	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	auto finding_cauchy_samples_success = my_endgame.FindCauchySamples(time,sample);
+	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,sample);
 
 	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
 
@@ -1284,7 +1284,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
 BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_class_test)
 {
 	/*
-		To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by FindCauchySamples. 
+		To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples. 
 	*/
 	mpfr_float::default_precision(30);
 
@@ -1328,11 +1328,11 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_cla
 
 	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-	auto finding_cauchy_samples_success = my_endgame.FindCauchySamples(time,sample);
+	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,sample);
 
 	BOOST_CHECK((my_endgame.CauchySamples().back() - my_endgame.CauchySamples().front()).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
-	BOOST_CHECK(my_endgame.CauchySamples().size() == 7);
-	BOOST_CHECK(my_endgame.CycleNumber() == 2);
+	BOOST_CHECK_EQUAL(my_endgame.CauchySamples().size(), 7);
+	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 
 }// end find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_class_test
 
@@ -1389,7 +1389,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_1)
 	 // std::cout << "first cauchy approx is " << my_endgame.FinalApproximation() << '\n';
 
 	BOOST_CHECK((my_endgame.FinalApproximation() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
-	BOOST_CHECK(my_endgame.CycleNumber() == 1);
+	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 1);
 
 }// end cauchy_endgame_test_cycle_num_1
 
@@ -1447,7 +1447,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	// std::cout << "first cauchy approx is " << my_endgame.FinalApproximation() << '\n';
 
 	BOOST_CHECK((my_endgame.FinalApproximation() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
-	BOOST_CHECK(my_endgame.CycleNumber() == 2);
+	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 
 }// end cauchy_endgame_test_cycle_num_greater_than_1
 
