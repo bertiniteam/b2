@@ -174,9 +174,10 @@ namespace bertini{
 			
 			The is the fundamental method for the tracker.  First, you create and set up the tracker, telling it what system you will solve, and the settings to use.  Then, you actually do the tracking.
 			*/
-			SuccessCode TrackPath(Vec<mpfr> & solution_at_endtime,
-									mpfr const& start_time, mpfr const& endtime,
-									Vec<mpfr> const& start_point
+			template<typename CT>
+			SuccessCode TrackPath(Vec<CT> & solution_at_endtime,
+									CT const& start_time, CT const& endtime,
+									Vec<CT> const& start_point
 									) const
 			{	
 
@@ -193,10 +194,11 @@ namespace bertini{
 				if (initial_refinement_code!=SuccessCode::Success)
 					return initial_refinement_code;
 
+				mpfr endtime_mp(endtime);
 
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "starting while loop";
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
-				while (current_time_!=endtime)
+				while (current_time_!=endtime_mp)
 				{	
 					SuccessCode pre_iteration_code = PreIterationCheck();
 					if (pre_iteration_code!=SuccessCode::Success)
@@ -207,10 +209,10 @@ namespace bertini{
 
 
 					// compute the next delta_t
-					if (abs(endtime-current_time_) < abs(current_stepsize_))
-						delta_t_ = endtime-current_time_;
+					if (abs(endtime_mp-current_time_) < abs(current_stepsize_))
+						delta_t_ = endtime_mp-current_time_;
 					else
-						delta_t_ = current_stepsize_ * (endtime - current_time_)/abs(endtime - current_time_);
+						delta_t_ = current_stepsize_ * (endtime_mp - current_time_)/abs(endtime_mp - current_time_);
 
 
 					step_success_code_ = TrackerIteration();
@@ -251,29 +253,35 @@ namespace bertini{
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			*/
-			virtual
-			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time) const = 0;
+			// virtual
+			// SuccessCode Refine(Vec<mpfr> & new_space,
+			// 					Vec<mpfr> const& start_point, mpfr const& current_time) const = 0;
+
+			// virtual
+			// SuccessCode Refine(Vec<dbl> & new_space,
+			// 					Vec<dbl> const& start_point, dbl const& current_time) const = 0;
 
 
-
-
-			/**
-			\brief Refine a point given in multiprecision.
+			// *
+			// \brief Refine a point given in multiprecision.
 			
-			Runs Newton's method using the current settings for tracking, precision, etc, EXCEPT for the tracking tolerance and number of iterations, which you feed in here.  YOU must ensure that the input point has the correct precision.
+			// Runs Newton's method using the current settings for tracking, precision, etc, EXCEPT for the tracking tolerance and number of iterations, which you feed in here.  YOU must ensure that the input point has the correct precision.
 
-			\return The SuccessCode indicating whether the refinement completed.  
+			// \return The SuccessCode indicating whether the refinement completed.  
 
-			\param[out] new_space The result of refinement.
-			\param start_point The seed for Newton's method for refinement.
-			\param current_time The current time value for refinement.
-			\param tolerance The tolerance to which to refine.
-			\param max_iterations The maximum allowable number of iterations to perform.
-			*/
-			virtual
-			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance, unsigned max_iterations) const = 0;
+			// \param[out] new_space The result of refinement.
+			// \param start_point The seed for Newton's method for refinement.
+			// \param current_time The current time value for refinement.
+			// \param tolerance The tolerance to which to refine.
+			// \param max_iterations The maximum allowable number of iterations to perform.
+			
+			// virtual
+			// SuccessCode Refine(Vec<mpfr> & new_space,
+			// 					Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance, unsigned max_iterations) const = 0;
+
+			// virtual
+			// SuccessCode Refine(Vec<dbl> & new_space,
+			// 					Vec<dbl> const& start_point, dbl const& current_time, double const& tolerance, unsigned max_iterations) const = 0;
 
 			/**
 			\brief Change tracker to use a predictor
@@ -347,6 +355,9 @@ namespace bertini{
 			virtual
 			void TrackerLoopInitialization(mpfr const& start_time, mpfr const& end_time, Vec<mpfr> const& start_point) const = 0;
 
+			virtual
+			void TrackerLoopInitialization(dbl const& start_time, dbl const& end_time, Vec<dbl> const& start_point) const = 0;
+
 			/**
 			\brief Ensure that any pre-checks on precision or accuracy of start point pass.
 
@@ -379,6 +390,8 @@ namespace bertini{
 			virtual
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
 
+			virtual
+			void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const = 0;
 
 			/**
 			\brief Switch resetting of initial step size to that of the stepping settings.

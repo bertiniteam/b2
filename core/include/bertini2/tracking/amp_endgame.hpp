@@ -182,7 +182,7 @@ namespace bertini{
 				*/
 				const TrackerType& tracker_;
 
-				unsigned precision_;
+				unsigned precision_, initial_precision_;
 				bool preserve_precision_ = true; ///< Whether the endgame should change back to the initial precision after running 
 
 
@@ -402,7 +402,7 @@ namespace bertini{
 				*/	
 				template<typename CT>
 				SuccessCode ComputeInitialSamples(const CT & start_time,const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
-				{
+				{	using RT = typename Eigen::NumTraits<CT>::Real;
 					samples.resize(endgame_settings_.num_sample_points);
 					times.resize(endgame_settings_.num_sample_points);
 
@@ -411,7 +411,7 @@ namespace bertini{
 
 					for(int ii=1; ii < endgame_settings_.num_sample_points; ++ii)
 					{ 
-						times[ii] = times[ii-1] * endgame_settings_.sample_factor;	
+						times[ii] = times[ii-1] * RT(endgame_settings_.sample_factor);	
 						auto tracking_success = tracker_.TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
 						if (tracking_success!=SuccessCode::Success)
 							return tracking_success;

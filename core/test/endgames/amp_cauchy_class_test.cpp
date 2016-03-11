@@ -57,7 +57,7 @@ extern boost::multiprecision::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
-BOOST_AUTO_TEST_SUITE(cauchy_endgame_class_basics)
+BOOST_AUTO_TEST_SUITE(amp_cauchy_endgame)
 
 using namespace bertini::tracking;
 
@@ -1513,6 +1513,61 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),bertini::DoublePrecision());
 }// end cauchy_endgame_test_cycle_num_greater_than_1
+
+BOOST_AUTO_TEST_CASE(cauchy_d_for_cauchy_class_multiple_variables)
+{
+	/*
+		Full blown test to see if we can actually find the non singular point at the origin. This example has multiple variables. 
+	*/
+
+	mpfr_float::default_precision(30);
+
+
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
+	VariableGroup vars{x,y};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+	sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
+	sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
+
+	auto AMP = config::AMPConfigFrom(sys);
+
+	AMPTracker tracker(sys);
+	
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+
+	tracker.Setup(config::Predictor::Euler,
+                mpfr_float("1e-5"),
+                mpfr_float("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.AMPSetup(AMP);
+
+
+	dbl current_time(1);
+	Vec<dbl> current_space(2);
+	current_time = dbl(0.1);
+	current_space <<  dbl(5.000000000000001e-01, 9.084258952712920e-17) ,dbl(9.000000000000001e-01,4.358898943540673e-01);
+
+	Vec<dbl> correct(2);
+	correct << dbl(1,0),dbl(1,0);
+
+	config::Endgame endgame_settings;
+	config::Cauchy cauchy_settings;
+	config::Security endgame_security_settings;
+
+	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker,cauchy_settings,endgame_settings,endgame_security_settings);
+
+	my_endgame.CauchyEG(current_time,current_space);
+
+	BOOST_CHECK((my_endgame.FinalApproximation<dbl>() - correct).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
+
+}// end cauchy_mp_for_cauchy_class_multiple_variables
 
 
 BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)

@@ -419,6 +419,8 @@ namespace bertini
 				SuccessCode CircleTrack(CT const& starting_time, Vec<CT> const& starting_sample)
 				{	std::cout << "CircleTrack()\n";
 					using RT = typename Eigen::NumTraits<CT>::Real;
+					using std::acos;
+
 					if (this->EndgameSettings().num_sample_points < 3) // need to make sure we won't track right through the origin.
 					{
 						std::stringstream err_msg;
@@ -446,6 +448,8 @@ namespace bertini
 						//setting up the time value for the next sample. 
 						if (ii!=this->EndgameSettings().num_sample_points-1)
 						{
+							using std::polar;
+							using bertini::polar;
 							angle += angle_increment;
 							next_time = polar(radius, angle);
 						}
@@ -498,6 +502,9 @@ namespace bertini
 				auto ComputeCOverK() -> typename Eigen::NumTraits<CT>::Real
 				{//Obtain samples for computing C over K.
 					using RT = typename Eigen::NumTraits<CT>::Real;
+					using std::abs;
+					using std::log;
+
 					const auto& pseg_samples = std::get<SampCont<CT> >(pseg_samples_);
 
 					assert(pseg_samples.size()>=3);
@@ -511,7 +518,7 @@ namespace bertini
 					// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
 					// //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type. 
 					RT estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).norm())/(((sample1 - sample0).transpose()*rand_vector).norm()))));
-					estimate = abs(log(this->EndgameSettings().sample_factor))/estimate;
+					estimate = abs(log(RT(this->EndgameSettings().sample_factor)))/estimate;
 					if (estimate < 1)
 					  	return RT(1);
 					else
@@ -535,7 +542,9 @@ namespace bertini
 				*/
 				template<typename RT>
 				bool CheckForCOverKStabilization(TimeCont<RT> const& c_over_k_array)
-				{	std::cout << "CheckForCOverKStabilization()\n";
+				{	
+					using std::abs;
+					std::cout << "CheckForCOverKStabilization()\n";
 					assert(c_over_k_array.size()>=cauchy_settings_.num_needed_for_stabilization);
 					for(unsigned ii = 1; ii < cauchy_settings_.num_needed_for_stabilization ; ++ii)
 					{
@@ -631,6 +640,7 @@ namespace bertini
 				template<typename CT>
 				bool CheckClosedLoop()
 				{	
+					using RT = typename Eigen::NumTraits<CT>::Real;
 					auto& times = std::get<TimeCont<CT> >(cauchy_times_);
 					auto& samples = std::get<SampCont<CT> >(cauchy_samples_);
 					std::cout << "CheckClosedLoop()\n"; std::cout << "have " << samples.size() << " samples to work with\n";
@@ -640,8 +650,8 @@ namespace bertini
 						return true;
 					}
 					std::cout << "closed loop check: pre-refinement " << (samples.front() - samples.back()).norm() << ", required tol " << this->GetTracker().TrackingTolerance() << std::endl;
-					this->GetTracker().Refine(samples.front(),samples.front(),times.front(),this->Tolerances().final_tolerance,this->EndgameSettings().max_num_newton_iterations);
-					this->GetTracker().Refine(samples.back(),samples.back(),times.back(),this->Tolerances().final_tolerance,this->EndgameSettings().max_num_newton_iterations);
+					this->GetTracker().Refine(samples.front(),samples.front(),times.front(),RT(this->Tolerances().final_tolerance),this->EndgameSettings().max_num_newton_iterations);
+					this->GetTracker().Refine(samples.back(),samples.back(),times.back(),RT(this->Tolerances().final_tolerance),this->EndgameSettings().max_num_newton_iterations);
 					std::cout << "closed loop check: post-refinement " << (samples.front() - samples.back()).norm() << std::endl;
 					if((samples.front() - samples.back()).norm() < this->GetTracker().TrackingTolerance())
 					{
@@ -676,7 +686,7 @@ namespace bertini
 					RT max(0);
 					auto& times = std::get<TimeCont<CT> >(cauchy_times_);
 					auto& samples = std::get<SampCont<CT> >(cauchy_samples_);
-					if(times.front().norm() < cauchy_settings_.ratio_cutoff_time)
+					if(norm(times.front()) < cauchy_settings_.ratio_cutoff_time)
 					{
 						return true;
 					}
@@ -726,7 +736,9 @@ namespace bertini
 				*/		 
 				template<typename CT>
 				SuccessCode InitialCauchyLoops()
-				{	std::cout << "InitialCauchyLoops()\n";
+				{	
+					using RT = typename Eigen::NumTraits<CT>::Real;
+					std::cout << "InitialCauchyLoops()\n";
 					auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
 					auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
 					auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
@@ -786,7 +798,7 @@ namespace bertini
 
 							if(return_value == SuccessCode::CycleNumTooHigh)
 							{//see if we should continue to the next sample point
-								if(cau_times.back().abs() < this->EndgameSettings().min_track_time)
+								if(abs(cau_times.back()) < this->EndgameSettings().min_track_time)
 									continue_loop = false;
 								else
 									continue_loop = true;
@@ -796,7 +808,7 @@ namespace bertini
 						{
 							std::cout << "not in EG zone yet, shrinking radius\n\n";
 							//find the time for the next sample point
-							next_time = ps_times.back() * this->EndgameSettings().sample_factor;
+							next_time = ps_times.back() * RT(this->EndgameSettings().sample_factor);
 
 							SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
 							ps_times.pop_front();
@@ -864,7 +876,7 @@ namespace bertini
 					//track until for more c_over_k estimates or until we reach a cutoff time. 
 					while ( (ii < cauchy_settings_.num_needed_for_stabilization) )
 					{	std::cout << "getting next c/k\n";
-						next_time = ps_times.back() * this->EndgameSettings().sample_factor;
+						next_time = ps_times.back() * RT(this->EndgameSettings().sample_factor);
 
 						auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
 						if (tracking_success!=SuccessCode::Success)
@@ -886,9 +898,9 @@ namespace bertini
 
 					//have we stabilized yet? 
 
-					while(!CheckForCOverKStabilization(c_over_k) && ps_times.back().abs() > cauchy_settings_.cycle_cutoff_time)
+					while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()) > cauchy_settings_.cycle_cutoff_time)
 					{
-						next_time = ps_times.back() * this->EndgameSettings().sample_factor;
+						next_time = ps_times.back() * RT(this->EndgameSettings().sample_factor);
 
 						auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
 						if(tracking_success != SuccessCode::Success)
@@ -956,20 +968,20 @@ namespace bertini
 					}
 
 					//Checking to make sure all samples are of the same precision.
-					unsigned max_precision = 0; 
+					// unsigned max_precision = 0; 
 
-					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-						if(Precision(ps_samples[ii](0)) > max_precision)
-							max_precision = Precision(ps_samples[ii](0));
-
-
-					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-						if(Precision(ps_samples[ii](0)) < max_precision)
-							for(unsigned jj = 0; jj < this->GetSystem().NumVariables();++jj)
-								ps_samples[ii](jj).precision(max_precision);
+					// for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
+					// 	if(Precision(ps_samples[ii](0)) > max_precision)
+					// 		max_precision = Precision(ps_samples[ii](0));
 
 
-					this->GetSystem().precision(max_precision);
+					// for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
+					// 	if(Precision(ps_samples[ii](0)) < max_precision)
+					// 		for(unsigned jj = 0; jj < this->GetSystem().NumVariables();++jj)
+					// 			ps_samples[ii](jj).precision(max_precision);
+
+
+					// this->GetSystem().precision(max_precision);
 
 			 		//Conversion to S-plane.
 					std::deque<CT> s_times;
@@ -979,11 +991,11 @@ namespace bertini
 
 					for(unsigned ii = 0; ii < ps_samples.size(); ++ii)
 					{
-						s_derivatives.push_back(pseg_derivatives[ii]*(CT(this->CycleNumber())*pow(ps_times[ii],(CT(this->CycleNumber()) - CT(1))/this->CycleNumber())));
-						s_times.push_back(pow(ps_times[ii],CT(1)/CT(this->CycleNumber())));
+						s_derivatives.push_back(pseg_derivatives[ii]*(RT(this->CycleNumber())*pow(ps_times[ii],(RT(this->CycleNumber()) - RT(1))/this->CycleNumber())));
+						s_times.push_back(pow(ps_times[ii],RT(1)/RT(this->CycleNumber())));
 
 						this->GetTracker().Refine(ps_samples[ii],ps_samples[ii],ps_times[ii],
-						                          this->Tolerances().final_tolerance/100,
+						                          RT(this->Tolerances().final_tolerance)/100,
 						                          this->EndgameSettings().max_num_newton_iterations);
 					}
 
@@ -1007,7 +1019,7 @@ namespace bertini
 				*/
 				template<typename CT>
 				Vec<CT> ComputeCauchyApproximationOfXAtT0()
-				{
+				{	using RT = typename Eigen::NumTraits<CT>::Real;
 					auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
 					auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
 
@@ -1023,11 +1035,11 @@ namespace bertini
 					for(unsigned int ii = 0; ii < this->CycleNumber() * this->EndgameSettings().num_sample_points; ++ii)
 					{
 						this->GetTracker().Refine(cau_samples[ii],cau_samples[ii],cau_times[ii],
-						                          this->Tolerances().final_tolerance/100,
+						                          RT(this->Tolerances().final_tolerance)/100,
 						                          this->EndgameSettings().max_num_newton_iterations);
 						approximate_root += cau_samples[ii];
 					}
-					approximate_root /= (this->CycleNumber() * this->EndgameSettings().num_sample_points);
+					approximate_root /= RT(this->CycleNumber() * this->EndgameSettings().num_sample_points);
 					return approximate_root;
 
 				}
@@ -1116,6 +1128,10 @@ namespace bertini
 				template<typename CT>
 				SuccessCode CauchyEG(CT start_time, Vec<CT> start_point)
 				{	
+					if (this->preserve_precision_)
+						this->initial_precision_ = mpfr_float::default_precision();
+
+
 					using RT = typename Eigen::NumTraits<CT>::Real;
 
 					auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
@@ -1133,7 +1149,7 @@ namespace bertini
 
 					Vec<CT> prev_approx, latest_approx;
 					RT approximate_error;
-
+					Vec<CT>& final_approx = std::get<Vec<CT> >(this->final_approximation_at_origin_);
 				
 
 					//Compute the first approximation using the power series approximation technique. 
@@ -1162,19 +1178,19 @@ namespace bertini
 
 						if(approximate_error < this->Tolerances().final_tolerance)
 						{
-							this->final_approximation_at_origin_ = latest_approx;
+							final_approx = latest_approx;
 							return SuccessCode::Success;
 						}
-						else if(cau_times.front().abs() < this->EndgameSettings().min_track_time)
+						else if(abs(cau_times.front()) < this->EndgameSettings().min_track_time)
 						{//we are too close to t = 0 but we do not have the correct tolerance - so we exit
-							this->final_approximation_at_origin_ = latest_approx;
+							final_approx = latest_approx;
 							return SuccessCode::FailedToConverge;
 						}
 						else if(this->SecuritySettings().level <= 0 && 
 						   norm_of_dehom_of_prev_approx   > this->SecuritySettings().max_norm &&  
 						   norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm  )
 						{//we are too large, break out of loop to return error.
-							this->final_approximation_at_origin_ = latest_approx;
+							final_approx = latest_approx;
 							return SuccessCode::SecurityMaxNormReached;
 						}
 
@@ -1182,7 +1198,7 @@ namespace bertini
 						prev_approx = latest_approx;
 						norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 
-						next_time *= this->EndgameSettings().sample_factor;
+						next_time *= RT(this->EndgameSettings().sample_factor);
 
 						auto tracking_success = this->GetTracker().TrackPath(next_sample,cau_times.back(),next_time,cau_samples.front());
 						if (tracking_success != SuccessCode::Success)
@@ -1198,20 +1214,20 @@ namespace bertini
 						//This is because the tracker will not track to any meaningful space values. 
 						if (cauchy_samples_success == SuccessCode::GoingToInfinity)
 							return SuccessCode::GoingToInfinity;
-						else if (cauchy_samples_success != SuccessCode::Success && cau_times.front().abs() < this->EndgameSettings().min_track_time)
+						else if (cauchy_samples_success != SuccessCode::Success && abs(cau_times.front()) < this->EndgameSettings().min_track_time)
 						{// we are too close to t = 0 but we do have the correct tolerance -so we exit.
-							this->final_approximation_at_origin_ = latest_approx;
+							final_approx = latest_approx;
 							return SuccessCode::MinTrackTimeReached;
 						}
 						else if(cauchy_samples_success != SuccessCode::Success)
 						{
-							this->final_approximation_at_origin_ = latest_approx;
+							final_approx = latest_approx;
 							return cauchy_samples_success;
 						}
 
 					} while (approximate_error > this->Tolerances().final_tolerance);
 
-					this->final_approximation_at_origin_ = latest_approx;
+					final_approx = latest_approx;
 					return SuccessCode::Success;
 				} //end CauchyEG
 			};

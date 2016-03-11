@@ -352,11 +352,16 @@ namespace bertini{
 			\param current_time The current time value for refinement.
 			*/
 			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time) const override
+								Vec<mpfr> const& start_point, mpfr const& current_time) const
 			{
-				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time);
+				return RefineImpl<mpfr, mpfr_float>(new_space, start_point, current_time);
 			}
 
+			SuccessCode Refine(Vec<dbl> & new_space,
+								Vec<dbl> const& start_point, dbl const& current_time) const
+			{
+				return RefineImpl<dbl, double>(new_space, start_point, current_time);
+			}
 
 			/**
 			\brief Refine a point given in multiprecision.
@@ -372,12 +377,16 @@ namespace bertini{
 			\param max_iterations The maximum allowable number of iterations to perform.
 			*/
 			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance, unsigned max_iterations) const override
+								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance, unsigned max_iterations) const
 			{
-				return Refine<mpfr, mpfr_float>(new_space, start_point, current_time, tolerance, max_iterations);
+				return RefineImpl<mpfr, mpfr_float>(new_space, start_point, current_time, tolerance, max_iterations);
 			}
 
-
+			SuccessCode Refine(Vec<dbl> & new_space,
+								Vec<dbl> const& start_point, dbl const& current_time, double const& tolerance, unsigned max_iterations) const
+			{
+				return RefineImpl<dbl, double>(new_space, start_point, current_time, tolerance, max_iterations);
+			}
 
 
 			
@@ -431,6 +440,30 @@ namespace bertini{
 
 				ResetCounters();
 			}
+
+
+			void TrackerLoopInitialization(dbl const& start_time,
+			                               dbl const& end_time,
+										   Vec<dbl> const& start_point) const override
+			{
+				// set up the master current time and the current step size
+				current_time_.precision(Precision(start_point(0)));
+				current_time_ = mpfr(start_time);
+
+				if (preserve_precision_)
+					initial_precision_ = Precision(start_point(0));
+
+				current_stepsize_.precision(Precision(start_point(0)));
+				if (reinitialize_stepsize_)
+					SetStepSize(min(double(stepping_config_.initial_step_size),abs(start_time-end_time)/stepping_config_.min_num_steps));
+
+				// populate the current space value with the start point, in appropriate precision
+				DoubleToDouble( start_point);
+
+				ChangePrecision<upsample_refine_off>(DoublePrecision());
+				ResetCounters();
+			}
+
 
 
 			void ResetCounters() const override
@@ -538,7 +571,25 @@ namespace bertini{
 			}
 
 
+			void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const override
+			{
+				if (preserve_precision_)
+					ChangePrecision(initial_precision_);
 
+				// the current precision is the precision of the output solution point.
+				if (current_precision_==DoublePrecision())
+				{
+					solution_at_endtime = std::get<Vec<dbl> >(current_space_);
+				}
+				else
+				{
+					unsigned num_vars = tracked_system_.NumVariables();
+					solution_at_endtime.resize(num_vars);
+					for (unsigned ii=0; ii<num_vars; ii++)
+						solution_at_endtime(ii) = dbl(std::get<Vec<mpfr> >(current_space_)(ii));
+
+				}
+			}
 
 			/**
 			\brief Run an iteration of the tracker loop.
@@ -1174,13 +1225,13 @@ namespace bertini{
 				SuccessCode code;
 				if (current_precision_==DoublePrecision())
 				{
-					code = Refine<dbl,double>(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_));
+					code = RefineImpl<dbl,double>(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_));
 					if (code == SuccessCode::Success)
 						std::get<Vec<dbl> >(current_space_) = std::get<Vec<dbl> >(temporary_space_);
 				}
 				else
 				{
-					code = Refine<mpfr,mpfr_float>(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_);
+					code = RefineImpl<mpfr,mpfr_float>(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_);
 					if (code == SuccessCode::Success)
 						std::get<Vec<mpfr> >(current_space_) = std::get<Vec<mpfr> >(temporary_space_);
 				}
@@ -1204,7 +1255,7 @@ namespace bertini{
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space,
+			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
@@ -1238,7 +1289,7 @@ namespace bertini{
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space,
+			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time,
 								RealType const& tolerance, unsigned max_iterations) const
 			{
@@ -1340,6 +1391,38 @@ namespace bertini{
 
 
 			
+
+			/**
+			\brief Converts from double to double
+
+			Copies a multiple-precision into the double storage vector, and changes precision of the time and delta_t.
+
+			\param source_point The point into which to copy to the internally stored current space point.
+			*/
+			void DoubleToDouble(Vec<dbl> const& source_point) const
+			{	
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				#endif
+
+				current_precision_ = DoublePrecision();
+				mpfr_float::default_precision(DoublePrecision());
+
+				tracked_system_.precision(16);
+
+				std::get<Vec<dbl> >(current_space_) = source_point;
+			}
+
+			/**
+			\brief Converts from multiple to double
+
+			Changes the precision of the internal temporaries to double precision
+			*/
+			void DoubleToDouble() const
+			{
+				DoubleToDouble(std::get<Vec<dbl> >(current_space_));
+			}
+
 
 
 			/**
