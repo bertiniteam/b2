@@ -191,7 +191,10 @@ namespace bertini{
 
 				SuccessCode initial_refinement_code = InitialRefinement();
 				if (initial_refinement_code!=SuccessCode::Success)
+				{
+					PostTrackCleanup();
 					return initial_refinement_code;
+				}
 
 
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "starting while loop";
