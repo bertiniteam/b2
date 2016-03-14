@@ -512,8 +512,6 @@ namespace bertini{
 			*/
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const override
 			{
-				if (preserve_precision_)
-					ChangePrecision(initial_precision_);
 
 				// the current precision is the precision of the output solution point.
 				if (current_precision_==DoublePrecision())
@@ -1352,7 +1350,7 @@ namespace bertini{
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				#endif
-
+				previous_precision_ = current_precision_;
 				current_precision_ = DoublePrecision();
 				mpfr_float::default_precision(DoublePrecision());
 
@@ -1395,7 +1393,7 @@ namespace bertini{
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
-
+				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
@@ -1446,7 +1444,7 @@ namespace bertini{
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
-
+				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
@@ -1560,6 +1558,7 @@ namespace bertini{
 			/////////////
 			bool preserve_precision_ = true; ///< Whether the tracker should change back to the initial precision after tracking paths.
 
+			mutable unsigned previous_precision_; ///< The previous precision of the tracker.
 			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
 			mutable unsigned next_precision_; ///< The next precision
 			mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
