@@ -182,7 +182,8 @@ namespace bertini{
 				*/
 				const TrackerType& tracker_;
 
-				unsigned precision_, initial_precision_;
+				mutable unsigned precision_;
+				unsigned initial_precision_;
 				bool preserve_precision_ = true; ///< Whether the endgame should change back to the initial precision after running 
 
 
@@ -195,9 +196,7 @@ namespace bertini{
 				*/
 				void ChangeTemporariesPrecision(unsigned new_precision) const
 				{
-					tracker_.precision(new_precision);
-
-					TrackerType::ChangeTemporariesPrecisionImpl();
+					ChangeTemporariesPrecisionImpl(new_precision);
 				}
 
 				/**
@@ -223,7 +222,7 @@ namespace bertini{
 					}
 					ChangeTemporariesPrecision(new_precision);
 
-					TrackerType::MultipleToMultipleImpl();
+					MultipleToMultipleImpl(new_precision);
 				}
 
 				/**
@@ -248,7 +247,7 @@ namespace bertini{
 					}
 					ChangeTemporariesPrecision(new_precision);
 
-					TrackerType::DoubleToMultipleImpl();
+					DoubleToMultipleImpl(new_precision);
 				}
 
 				/**
@@ -270,15 +269,22 @@ namespace bertini{
 					for (unsigned ii=0; ii<source_point.size(); ii++)
 						target_point(ii) = dbl(source_point(ii));
 
-					tracker_.precision(16);
+					ChangeTemporariesPrecision(DoublePrecision());
 
-					TrackerType::MultipleToDoubleImpl();
+					MultipleToDoubleImpl();
 				}
 
-				bool PrecisionSanityCheck()
+				bool PrecisionSanityCheck() const
 				{
 					return true;
 				}
+
+
+				virtual void ChangeTemporariesPrecisionImpl(unsigned new_precision) const = 0;
+				virtual void MultipleToMultipleImpl(unsigned new_precision) const = 0;
+				virtual void DoubleToMultipleImpl(unsigned new_precision) const = 0;
+				virtual void MultipleToDoubleImpl() const = 0;
+
 			public:	
 
 				/**
@@ -307,12 +313,17 @@ namespace bertini{
 					return SuccessCode::Success;
 				}
 
+				auto Precision() const
+				{ return precision_; }
+
+
 
 				explicit AMPEndgame(TrackerType const& tr, const std::tuple< const config::Endgame&, const config::Security&, const config::Tolerances& >& settings )
 			      : tracker_(tr),
 			      	endgame_settings_( std::get<0>(settings) ),
 			        security_( std::get<1>(settings) ),
-			        tolerances_( std::get<2>(settings) )
+			        tolerances_( std::get<2>(settings) ),
+			        precision_(mpfr_float::default_precision())
 			   	{}
 
 			    template< typename... Ts >

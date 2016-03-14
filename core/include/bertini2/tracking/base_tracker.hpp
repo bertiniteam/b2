@@ -192,7 +192,10 @@ namespace bertini{
 
 				SuccessCode initial_refinement_code = InitialRefinement();
 				if (initial_refinement_code!=SuccessCode::Success)
+				{
+					PostTrackCleanup();
 					return initial_refinement_code;
+				}
 
 				mpfr endtime_mp(endtime);
 

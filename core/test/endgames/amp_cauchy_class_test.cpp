@@ -1504,7 +1504,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision
 
 	
 	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
-
+	std::cout.precision(8);
 	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
 
 	// std::cout << "first cauchy approx is " << my_endgame.FinalApproximation<mpfr>() << '\n';

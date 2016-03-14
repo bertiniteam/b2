@@ -169,10 +169,10 @@ namespace bertini
 
 
 				
-				void ChangeTemporariesPrecisionImpl()
+				void ChangeTemporariesPrecisionImpl(unsigned new_precision) const override
 				{ }
 
-				void MultipleToMultipleImpl(unsigned new_precision)
+				void MultipleToMultipleImpl(unsigned new_precision) const override
 				{
 					{
 						auto& times = std::get<TimeCont<mpfr> >(cauchy_times_);
@@ -196,7 +196,7 @@ namespace bertini
 					}
 				}
 
-				void DoubleToMultipleImpl(unsigned new_precision)
+				void DoubleToMultipleImpl(unsigned new_precision) const override
 				{
 					{
 						auto& times_m = std::get<TimeCont<mpfr> >(cauchy_times_);
@@ -250,7 +250,7 @@ namespace bertini
 					}
 				}
 
-				void MultipleToDoubleImpl()
+				void MultipleToDoubleImpl() const override
 				{
 					{
 						auto& times_m = std::get<TimeCont<mpfr> >(cauchy_times_);
@@ -464,12 +464,13 @@ namespace bertini
 							std::cout << "tracker fail in circle track, type " << int(tracking_success) << std::endl;
 							return tracking_success;
 						}
-						std::cout << "refining point to " << this->Tolerances().final_tolerance/100 << '\n';
-						auto refinement_success = this->GetTracker().Refine(next_sample,next_sample,next_time,
-						                          RT(this->Tolerances().final_tolerance)/100,
-						                          this->EndgameSettings().max_num_newton_iterations);
-						std::cout << "refinement success: " << int(refinement_success) << '\n';
-						std::cout << "refined point:\n" << next_sample << "\n\n";
+						
+						auto refinement_success = RefineSample(next_sample, next_sample, next_time);
+						if (refinement_success != SuccessCode::Success)
+						{
+							std::cout << "refinement fail in circle track, type " << int(refinement_success) << std::endl;
+							return refinement_success;
+						}
 						
 
 						current_sample = next_sample;
@@ -482,6 +483,98 @@ namespace bertini
 
 				}//end CircleTrack
 
+
+				SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& next_sample, mpfr const& next_time)
+				{
+					using RT = mpfr_float;
+
+					std::cout << "refining point to " << this->Tolerances().final_tolerance/100 << '\n';
+
+					auto refinement_success = this->GetTracker().Refine(result,next_sample,next_time,
+					                          	RT(this->Tolerances().final_tolerance)/100,
+					                          	this->EndgameSettings().max_num_newton_iterations);
+
+					std::cout << "refinement success: " << int(refinement_success) << '\n';
+					
+					if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
+					    refinement_success==SuccessCode::FailedToConverge)
+					{
+						auto prev_precision = this->Precision();
+						auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
+						mpfr_float::default_precision(temp_higher_prec);
+						this->GetTracker().ChangePrecision(temp_higher_prec);
+						std::cout << "trying precision " << temp_higher_prec << std::endl;
+
+
+						auto next_sample_higher_prec = next_sample;
+						auto result_higher_prec = Vec<mpfr>(next_sample.size());
+						auto time_higher_precision = next_time;
+
+						assert(time_higher_precision.precision()==mpfr_float::default_precision());
+
+						refinement_success = this->GetTracker().Refine(result_higher_prec,
+						                                               next_sample_higher_prec,
+						                                               time_higher_precision,
+					                          							RT(this->Tolerances().final_tolerance)/100,
+					                          							this->EndgameSettings().max_num_newton_iterations);
+						std::cout << "second attempt, refinement success: " << int(refinement_success) << '\n';
+						std::cout << "refined point:\n" << next_sample << "\n\n";
+
+						mpfr_float::default_precision(prev_precision);
+						this->GetTracker().ChangePrecision(prev_precision);
+						result = result_higher_prec;
+						assert(result(0).precision()==mpfr_float::default_precision());
+					}
+
+					return refinement_success;
+				}
+
+				SuccessCode RefineSample(Vec<dbl> & result, Vec<dbl> const& next_sample, dbl const& next_time)
+				{
+					using RT = double;
+
+					std::cout << "refining point to " << this->Tolerances().final_tolerance/100 << '\n';
+
+					auto refinement_success = this->GetTracker().Refine(result,next_sample,next_time,
+					                          	RT(this->Tolerances().final_tolerance)/100,
+					                          	this->EndgameSettings().max_num_newton_iterations);
+
+					std::cout << "refinement success: " << int(refinement_success) << '\n';
+					
+					if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
+					    refinement_success==SuccessCode::FailedToConverge)
+					{
+						auto prev_precision = this->Precision();
+						auto temp_higher_prec = LowestMultiplePrecision();
+						mpfr_float::default_precision(temp_higher_prec);
+						this->GetTracker().ChangePrecision(temp_higher_prec);
+						std::cout << "trying precision " << temp_higher_prec << std::endl;
+
+
+						auto next_sample_higher_prec = Vec<mpfr>(next_sample.size());
+						for (int ii=0; ii<next_sample.size(); ++ii)
+							next_sample_higher_prec(ii) = mpfr(next_sample(ii));
+
+						auto result_higher_prec = Vec<mpfr>(next_sample.size());
+						mpfr time_higher_precision(next_time);
+
+						refinement_success = this->GetTracker().Refine(result_higher_prec,
+						                                               next_sample_higher_prec,
+						                                               time_higher_precision,
+					                          							RT(this->Tolerances().final_tolerance)/100,
+					                          							this->EndgameSettings().max_num_newton_iterations);
+
+						std::cout << "second attempt, refinement success: " << int(refinement_success) << '\n';
+						std::cout << "refined point:\n" << next_sample << "\n\n";
+
+						mpfr_float::default_precision(prev_precision);
+						this->GetTracker().ChangePrecision(prev_precision);
+						for (unsigned ii(0); ii<next_sample.size(); ++ii)
+							result(ii) = dbl(result_higher_prec(ii));
+					}
+
+					return refinement_success;
+				}
 				/*
 				Input: 
 					All input is available through class data members. 
@@ -753,6 +846,7 @@ namespace bertini
 
 					while (continue_loop)
 					{	
+						this->CycleNumber(0);
 						cau_times.clear();
 						cau_samples.clear();
 						cau_samples.push_back(ps_samples.back()); // cauchy samples and times should be empty before this point. 

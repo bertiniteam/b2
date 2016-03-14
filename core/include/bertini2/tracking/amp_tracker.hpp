@@ -1337,7 +1337,7 @@ namespace bertini{
 			//
 			///////////////////////
 
-
+		public:
 			/**
 			Change precision of tracker to next_precision.  Converts the internal temporaries, and adjusts precision of system. Then refines if necessary.
 
@@ -1390,7 +1390,7 @@ namespace bertini{
 
 
 
-			
+			private:
 
 			/**
 			\brief Converts from double to double
