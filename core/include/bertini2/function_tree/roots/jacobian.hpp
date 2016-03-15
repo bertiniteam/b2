@@ -43,7 +43,7 @@ namespace node{
 
 		 This class defines a Jacobian tree.  It stores the entry node for a particular functions tree.
 		 */
-		class Jacobian : public Function
+		class Jacobian : public virtual Function
 		{
 		public:
 				
@@ -64,7 +64,7 @@ namespace node{
 				 the Jacobian is reevaluated.
 				 */
 				template<typename T>
-				T Eval(std::shared_ptr<Variable> diff_variable = nullptr) = delete;
+				T Eval(std::shared_ptr<Variable> diff_variable = nullptr) const = delete;
 				
 				
 				// Evaluate the node.  If flag false, just return value, if flag true
@@ -72,97 +72,41 @@ namespace node{
 				//
 				// Template type is type of value you want returned.
 				template<typename T>
-				T EvalJ(std::shared_ptr<Variable> diff_variable)
+				T EvalJ(std::shared_ptr<Variable> diff_variable) const
 				{
-						//		this->print(std::cout);
-						//		std::cout << " has value ";
-						
 						auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-						auto& variable_pair = std::get< std::pair<T,std::shared_ptr<Variable>> >(current_diff_variable_);
-						if(diff_variable != variable_pair.second)
+
+						if(diff_variable == current_diff_variable_ && std::get< std::pair<T,bool> >(current_value_).second)
+							return val_pair.first;
+						else
 						{
-								//            std::cout << "Fresh Eval\n";
-								variable_pair.second = diff_variable;
+								current_diff_variable_ = diff_variable;
 								Reset();
-								T input{};
-								val_pair.first = FreshEval(input, diff_variable);
-								val_pair.second = true;
-						}
-						
-						
-						//		std::cout << val_pair.first << std::endl;
-						return val_pair.first;
+								std::get< std::pair<T,bool> >(current_value_).first  = FreshEval(T(), diff_variable);
+								std::get< std::pair<T,bool> >(current_value_).second = true;
+								return std::get< std::pair<T,bool> >(current_value_).first;
+						}						
 				}
 				
 
 
 
-				
+				/**
+				 The function which flips the fresh eval bit back to fresh.
+				 */
+				void Reset() const override
+				{
+					EnsureNotEmpty();
+					
+					Node::ResetStoredValues();
+					entry_node_->Reset();
+				}
 
 				
 				virtual ~Jacobian() = default;
 				
-			
-				
-				
-	//       /**
-		//  Change the precision of this variable-precision tree node.
-		 
-		//  \param prec the number of digits to change precision to.
-		//  */
-		// virtual void precision(unsigned int prec) override
-		// {
-		// 	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-		// 	val_pair.first.precision(prec);
-		// }
-				
-				
-		
-				// /**
-				// The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
-				// */
-				// int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-				// {
-				//     return entry_node_->Degree(v);
-				// }
-
-	//       /**
-	//       The computation of degree for Jacobians is challenging and not correctly implemented, so it is private.
-	//       */
-	//       int Degree(VariableGroup const& vars) const override
-		// {
-		// 	return entry_node_->Degree(vars);
-		// }
-
-		// /**
-		//  Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
-	 //    */
-		// std::vector<int> MultiDegree(VariableGroup const& vars) const override
-		// {
-			
-		// 	std::vector<int> deg(vars.size());
-		// 	for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
-		// 	{
-		// 		*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
-		// 	}
-		// 	return deg;
-		// }
-
-		// bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		// {
-		// 	return entry_node_->IsHomogeneous(v);
-		// }
-
-
-		// /**
-		// Check for homogeneity, with respect to a variable group.
-		// */
-		// bool IsHomogeneous(VariableGroup const& vars) const override
-		// {
-		// 	return entry_node_->IsHomogeneous(vars);
-		// }
-
-				std::tuple< std::pair<dbl,std::shared_ptr<Variable>>, std::pair<mpfr,std::shared_ptr<Variable>> > current_diff_variable_;
+	
+				mutable std::shared_ptr<Variable> current_diff_variable_;
 				Jacobian() = default;
 		private:
 				/**

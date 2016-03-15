@@ -239,6 +239,9 @@ namespace bertini {
 
 			if (!is_differentiated_)
 				Differentiate();
+			else
+				for (const auto& iter : jacobian_) 
+					iter->Reset();
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
 			for (int ii = 0; ii < NumFunctions(); ++ii)

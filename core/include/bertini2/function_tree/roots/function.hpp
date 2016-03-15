@@ -42,7 +42,7 @@ namespace node{
 
 	This class defines a function.  It stores the entry node for a particular functions tree.
 	 */
-	class Function : public NamedSymbol
+	class Function : public virtual NamedSymbol
 	{
 	public:
 		
@@ -94,7 +94,7 @@ namespace node{
 		/**
 		 The function which flips the fresh eval bit back to fresh.
 		 */
-		void Reset() override
+		void Reset() const override
 		{
 			EnsureNotEmpty();
 			
@@ -127,7 +127,7 @@ namespace node{
 		/** 
 		 Calls Differentiate on the entry node and returns differentiated entry node.
 		 */
-		std::shared_ptr<Node> Differentiate() override
+		std::shared_ptr<Node> Differentiate() const override
 		{
 			return entry_node_->Differentiate();
 		}
@@ -190,7 +190,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -201,7 +201,7 @@ namespace node{
 		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return entry_node_->Eval<dbl>(diff_variable);
 		}
@@ -209,7 +209,7 @@ namespace node{
 		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return entry_node_->Eval<mpfr>(diff_variable);
 		}

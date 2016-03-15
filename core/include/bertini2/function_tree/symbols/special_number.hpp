@@ -51,7 +51,7 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public NamedSymbol
+		class Pi : public virtual NamedSymbol
 		{
 		public:
 			Pi() : NamedSymbol("pi")
@@ -60,13 +60,16 @@ namespace node{
 			virtual ~Pi() = default;
 
 
-
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+			}
 
 
 			/**
 			 Differentiates a number.  Should this return the special number Zero?
 			 */
-			std::shared_ptr<Node> Differentiate() override
+			std::shared_ptr<Node> Differentiate() const override
 			{
 				return std::make_shared<Integer>(0);
 			}
@@ -117,7 +120,7 @@ namespace node{
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) override
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);
@@ -128,12 +131,12 @@ namespace node{
 			
 		private:
 			// Return value of constant
-			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 			{
 				return acos(-1.0);
 			}
 
-			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 			{
 				return mpfr(acos(mpfr_float(-1)));
 			}
@@ -153,7 +156,7 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public NamedSymbol
+		class E : public virtual NamedSymbol
 		{
 		public:
 			E() : NamedSymbol("e")
@@ -162,12 +165,15 @@ namespace node{
 			virtual ~E() = default;
 
 
-
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+			}
 
 			/**
 			 Differentiates a number.  Should this return the special number Zero?
 			 */
-			std::shared_ptr<Node> Differentiate() override
+			std::shared_ptr<Node> Differentiate() const override
 			{
 				return std::make_shared<Integer>(0);
 			}
@@ -217,7 +223,7 @@ namespace node{
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) override
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);
@@ -225,12 +231,12 @@ namespace node{
 
 		private:
 			// Return value of constant
-			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 			{
 				return dbl(exp(1.0f),0.0);
 			}
 
-			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 			{
 				return mpfr(exp(mpfr_float(1)));
 			}
