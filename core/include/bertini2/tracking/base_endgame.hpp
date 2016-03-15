@@ -50,7 +50,12 @@ namespace bertini{
 
 		namespace endgame {
 
-		/*
+			template<typename T> using SampCont = std::deque<Vec<T> >;
+			template<typename T> using TimeCont = std::deque<T>;
+
+
+
+			/*
 			Input: 
 					target_time is the time value that we wish to interpolate at.
 					samples are space values that correspond to the time values in times. 
@@ -74,13 +79,13 @@ namespace bertini{
 			\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 			\param samples a deque that will hold all the samples corresponding to the time values in times. 
 
-			\tparam ComplexType The complex number type.
+			\tparam CT The complex number type.
 			*/			
-			template<typename ComplexType>		
-				Vec<ComplexType> HermiteInterpolateAndSolve(ComplexType const& target_time, const unsigned int num_sample_points, const std::deque<ComplexType> & times, const std::deque< Vec<ComplexType> > & samples, const std::deque< Vec<ComplexType> > & derivatives)
+			template<typename CT>		
+				Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const std::deque<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives)
 			{
-				Mat< Vec<ComplexType> > finite_difference_matrix(2*num_sample_points,2*num_sample_points);
-				Vec<ComplexType> array_of_times(2*num_sample_points);
+				Mat< Vec<CT> > finite_difference_matrix(2*num_sample_points,2*num_sample_points);
+				Vec<CT> array_of_times(2*num_sample_points);
 				
 				for(unsigned int ii=0; ii<num_sample_points; ++ii)
 				{ 
@@ -94,16 +99,16 @@ namespace bertini{
 				//Add first round of finite differences to fill out rest of matrix. 
 				for(unsigned int ii=1; ii< num_sample_points; ++ii)
 				{
-					finite_difference_matrix(2*ii,1) = (ComplexType(1)/(array_of_times(2*ii) - array_of_times(2*ii - 1))) * (finite_difference_matrix(2*ii,0) - finite_difference_matrix(2*ii - 1,0));
+					finite_difference_matrix(2*ii,1) = (CT(1)/(array_of_times(2*ii) - array_of_times(2*ii - 1))) * (finite_difference_matrix(2*ii,0) - finite_difference_matrix(2*ii - 1,0));
 				
 				}
 
-				//Filliing out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
+				//Filling out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
 				for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
 				{
 					for(unsigned int jj=2; jj <=ii; ++jj)
 					{
-						finite_difference_matrix(ii,jj) = (ComplexType(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));						
+						finite_difference_matrix(ii,jj) = (CT(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));						
 					}
 				}
 
@@ -123,39 +128,15 @@ namespace bertini{
 				return Result;
 			}
 
-		/**
-		\class Endgame
 
-		\brief Base endgame class for all endgames offered in Bertini2.
-	
-		\see PowerSeriesEndgame
-		\see CauchyEndgame
-		
-		## Using an endgame
-
-		Endgames in Bertini2 are the engine for finishing homotopy continuation where we may encounter singular solutions.
-		The path is implicitly described by the system being tracked.
-
-		## Purpose 
-
-		Since the Bertini Endgames have common functionality, and we want to be able to call arbitrary algorithms using and tracker type, we use inheritance. That is, there is common functionality in all endgames, such as
-
-		ComputeInitialSamples
-
-		Also, there are settings that will be kept at this level to not duplicate code. 
-			
-		## Creating a new endgame type
-
-		 To create a new endgame type, inherit from this class. 
-		*/
-			
 			template<class TrackerType>
-			class BaseEndgame
+			class EndgameBase
 			{
 
 			protected:
+
 				// state variables
-				mutable Vec<mpfr> final_approximation_at_origin_; 
+				mutable std::tuple<Vec<dbl>, Vec<mpfr> > final_approximation_at_origin_; 
 				mutable unsigned int cycle_number_ = 0; 
 
 
@@ -178,10 +159,11 @@ namespace bertini{
 				\brief A tracker tha must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values in the Cauchy endgame. 
 				*/
 				const TrackerType& tracker_;
-			public:	
+
+			public:
 
 
-				explicit BaseEndgame(TrackerType const& tr, const std::tuple< const config::Endgame&, const config::Security&, const config::Tolerances& >& settings )
+				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame&, const config::Security&, const config::Tolerances& >& settings )
 			      : tracker_(tr),
 			      	endgame_settings_( std::get<0>(settings) ),
 			        security_( std::get<1>(settings) ),
@@ -189,7 +171,7 @@ namespace bertini{
 			   	{}
 
 			    template< typename... Ts >
-   				BaseEndgame(TrackerType const& tr, const Ts&... ts ) : BaseEndgame(tr, Unpermute< config::Endgame, config::Security, config::Tolerances >( ts... ) ) 
+   				EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Unpermute< config::Endgame, config::Security, config::Tolerances >( ts... ) ) 
    				{}
 
 
@@ -198,6 +180,7 @@ namespace bertini{
 				void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
 
 				
+
 				const config::Endgame& EndgameSettings()
 				{
 					return endgame_settings_;
@@ -240,16 +223,16 @@ namespace bertini{
 				*/
 				const TrackerType & GetTracker(){return tracker_;}
 
-
-				const Vec<mpfr>& FinalApproximation() const {return final_approximation_at_origin_;}
+				template<typename CT>
+				const Vec<CT>& FinalApproximation() const {return std::get<Vec<CT> >(final_approximation_at_origin_);}
 
 				const System& GetSystem() const { return tracker_.GetSystem();}
 				/*
 				Input:  endgame_tracker_: a template parameter for the endgame created. This tracker will be used to compute our samples. 
 						endgame_time: is the time when we start the endgame process usually this is .1
 						x_endgame: is the space value at endgame_time
-						times: a deque of time values. These values will be templated to be ComplexType 
-						samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of ComplexType. 
+						times: a deque of time values. These values will be templated to be CT 
+						samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of CT. 
 
 				Output: Since times and samples are sent in by reference there is no output value.
 
@@ -270,12 +253,12 @@ namespace bertini{
 				\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 				\param samples a deque that will hold all the samples corresponding to the time values in times. 
 
-				\tparam ComplexType The complex number type.
+				\tparam CT The complex number type.
 				\tparam TrackerType The tracker type. 
 				*/	
-				template<typename ComplexType>
-				SuccessCode ComputeInitialSamples(const ComplexType & start_time,const Vec<ComplexType> & x_endgame, std::deque<ComplexType> & times, std::deque< Vec<ComplexType> > & samples) // passed by reference to allow times to be filled as well.
-				{
+				template<typename CT>
+				SuccessCode ComputeInitialSamples(const CT & start_time,const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
+				{	using RT = typename Eigen::NumTraits<CT>::Real;
 					samples.resize(endgame_settings_.num_sample_points);
 					times.resize(endgame_settings_.num_sample_points);
 
@@ -284,7 +267,7 @@ namespace bertini{
 
 					for(int ii=1; ii < endgame_settings_.num_sample_points; ++ii)
 					{ 
-						times[ii] = times[ii-1] * endgame_settings_.sample_factor;	
+						times[ii] = times[ii-1] * RT(endgame_settings_.sample_factor);	
 						auto tracking_success = tracker_.TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
 						if (tracking_success!=SuccessCode::Success)
 							return tracking_success;
@@ -293,39 +276,6 @@ namespace bertini{
 				}
 
 			};
-
-			/*
-				Input: Two numbers d and n. These numbers will be used to compute d choose n. 
-
-				Output: The value of d choose n. 
-
-				Details: This is used to help find the closed loop tolerance for CauchyEndgame. After discussions it was deemed not necessary and that we should be using 
-						the tracking tolerance during endgame as the tolerance for closing a loop. 
-			
-				mpfr_float ComputeCombination(mpfr_float d, mpfr_float n)
-				{
-					mpfr_float return_value;
-					// error checking
- 					if (d >= n && n >= 0)
- 					{ // find the smallest of n & d - n since C(d,n) = C(d,d-n)
-   						return_value = 1;
-  						n = min(n, d - n);
-  						for (unsigned int ii = 0; ii < n; ii++)
-   						{ // update retVal
-     						return_value = return_value / (ii + mpfr_float("1.0"));
-     						return_value = return_value * (d - ii);
-   						}
-  					}
-  					else
-  					{ // no combinations
-   						return_value = 0;
-  					}
-					return return_value;
-				}
-			*/
-
-			
-
 			
 		}// end namespace endgame
 	}// end namespace tracking 

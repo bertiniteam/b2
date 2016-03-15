@@ -156,10 +156,10 @@ namespace bertini{
 
 
 
-				void ChangeTemporariesPrecisionImpl()
+				void ChangeTemporariesPrecisionImpl(unsigned new_precision) const override
 				{ }
 
-				void MultipleToMultipleImpl(unsigned new_precision)
+				void MultipleToMultipleImpl(unsigned new_precision) const override
 				{
 					auto& times = std::get<TimeCont<mpfr> >(times_);
 					for (auto& t : times)
@@ -171,7 +171,7 @@ namespace bertini{
 							s(ii).precision(new_precision);
 				}
 
-				void DoubleToMultipleImpl(unsigned new_precision)
+				void DoubleToMultipleImpl(unsigned new_precision) const override
 				{
 					auto& times_m = std::get<TimeCont<mpfr> >(times_);
 					auto& times_d = std::get<TimeCont<dbl> >(times_);
@@ -198,7 +198,7 @@ namespace bertini{
 					}
 				}
 
-				void MultipleToDoubleImpl()
+				void MultipleToDoubleImpl() const override
 				{
 					auto& times_m = std::get<TimeCont<mpfr> >(times_);
 					auto& times_d = std::get<TimeCont<dbl> >(times_);
@@ -235,29 +235,37 @@ namespace bertini{
 				/**
 				\brief Function that clears all samples and times from data members for the Power Series endgame
 				*/	
-				void ClearTimesAndSamples(){times_.clear(); samples_.clear();}
+				template<typename CT>
+				void ClearTimesAndSamples()
+				{
+					std::get<TimeCont<CT> >(times_).clear(); 
+					std::get<SampCont<CT> >(samples_).clear();
+				}
 
 				/**
 				\brief Function to set the times used for the Power Series endgame.
 				*/	
-				void SetTimes(std::deque<mpfr> times_to_set) { times_ = times_to_set;}
+				template<typename CT>
+				void SetTimes(TimeCont<CT> times_to_set) { std::get<TimeCont<CT> >(times_) = times_to_set;}
 
 				/**
 				\brief Function to get the times used for the Power Series endgame.
 				*/	
-				std::deque< mpfr > GetTimes() const {return times_;}
+				template<typename CT>
+				auto GetTimes() const {return std::get<TimeCont<CT> >(times_);}
 
 				/**
 				\brief Function to set the space values used for the Power Series endgame.
 				*/	
-				void SetSamples(std::deque< Vec<mpfr> > samples_to_set) { samples_ = samples_to_set;}
+				template<typename CT>
+				void SetSamples(SampCont<CT> samples_to_set) { std::get<SampCont<CT> >(samples_) = samples_to_set;}
 
 				/**
 				\brief Function to get the space values used for the Power Series endgame.
 				*/	
-				std::deque< Vec<mpfr> > GetSamples() const {return samples_;}
+				template<typename CT>
+				auto GetSamples() const {return std::get<SampCont<CT> >(samples_);}
 	
-
 
 				/**
 				\brief Setter for the specific settings in tracking_conifg.hpp under PowerSeries.
@@ -295,18 +303,23 @@ namespace bertini{
 			/**
 			\brief Function that computes an upper bound on the cycle number. Consult page 53 of \cite Bates .
 			*/
+			template<typename CT>
 			void ComputeBoundOnCycleNumber()
 			{ 
-				const Vec<mpfr> & sample0 = samples_[0];
-				const Vec<mpfr> & sample1 = samples_[1];
-				const Vec<mpfr> & sample2 = samples_[2];
+				using RT = typename Eigen::NumTraits<CT>::Real;
 
-				Vec<mpfr> rand_vector = Vec<mpfr>::Random(sample0.size()); //should be a row vector for ease in multiplying.
+				const auto& samples = std::get<SampCont<CT> >(samples_);
+
+				const Vec<CT> & sample0 = samples[0];
+				const Vec<CT> & sample1 = samples[1];
+				const Vec<CT> & sample2 = samples[2];
+
+				Vec<CT> rand_vector = Vec<CT>::Random(sample0.size()); //should be a row vector for ease in multiplying.
 				
 
 				// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
 				// //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type. 
-				mpfr_float estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).norm())/(((sample1 - sample0).transpose()*rand_vector).norm()))));
+				RT estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).norm())/(((sample1 - sample0).transpose()*rand_vector).norm()))));
 				estimate = abs(log(this->EndgameSettings().sample_factor))/estimate;
 				if (estimate < 1)
 				{
@@ -316,7 +329,7 @@ namespace bertini{
 				{
 					//casting issues between auto and unsigned integer. TODO: Try to stream line this.
 					unsigned int upper_bound;
-					mpfr_float upper_bound_before_casting = round(floor(estimate + mpfr_float(.5))*power_series_settings_.cycle_number_amplification);
+					RT upper_bound_before_casting = round(floor(estimate + RT(.5))*power_series_settings_.cycle_number_amplification);
 					upper_bound = unsigned (upper_bound_before_casting);
 					upper_bound_on_cycle_number_ = max(upper_bound,power_series_settings_.max_cycle_number);
 				}
@@ -352,44 +365,49 @@ namespace bertini{
 			\param[out] time is the last time inside of the times_ deque.
 			\param x_at_time is the last sample inside of the samples_ deque. 
 
-			\tparam ComplexType The complex number type.
+			\tparam CT The complex number type.
 			*/		
-			template<typename ComplexType>
-			std::deque< Vec<ComplexType> > ComputeCycleNumber()
+			template<typename CT>
+			SampCont<CT> ComputeCycleNumber()
 			{
+				using RT = typename Eigen::NumTraits<CT>::Real;
+
+				const auto& samples = std::get<SampCont<CT> >(samples_);
+	 			const auto& times   = std::get<TimeCont<CT> >(times_);
+
 				//Compute dx_dt for each sample.
-				std::deque< Vec<ComplexType> > derivatives(this->EndgameSettings().num_sample_points);
+				SampCont<CT> derivatives(this->EndgameSettings().num_sample_points);
 				for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points; ++ii)
 				{	
 					// uses LU look at Eigen documentation on inverse in Eigen/LU.
-				 	derivatives[ii] = -(this->GetSystem().Jacobian(samples_[ii],times_[ii]).inverse())*(this->GetSystem().TimeDerivative(samples_[ii],times_[ii]));
+				 	derivatives[ii] = -(this->GetSystem().Jacobian(samples[ii],times[ii]).inverse())*(this->GetSystem().TimeDerivative(samples[ii],times[ii]));
 				}
 
 				//Compute upper bound for cycle number.
-				ComputeBoundOnCycleNumber();
+				ComputeBoundOnCycleNumber<CT>();
 
-				const Vec<ComplexType>& x_current_time = samples_.back();
-				const ComplexType& current_time        = times_.back();
+				const Vec<CT>& x_current_time = samples.back();
+				const CT& current_time        = times.back();
 
 				//Compute Cycle Number
 				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
 				auto num_used_points = this->EndgameSettings().num_sample_points - 1;
 
-				mpfr_float min_found_difference = power_series_settings_.min_difference_in_approximations;
+				RT min_found_difference = power_series_settings_.min_difference_in_approximations;
 
 
-				std::deque<mpfr> s_times(num_used_points);
-				std::deque< Vec<mpfr> > s_derivatives(num_used_points);
+				std::deque<CT> s_times(num_used_points);
+				std::deque< Vec<CT> > s_derivatives(num_used_points);
 
 				for(unsigned int cc = 1; cc <= upper_bound_on_cycle_number_; ++cc)
 				{			
 					for(unsigned int ii=0; ii<num_used_points; ++ii)// using the last sample to predict to. 
 					{ 
-						s_times[ii] = pow(times_[ii],ComplexType(1)/ComplexType(cc));
-						s_derivatives[ii] = derivatives[ii]*( cc*pow(times_[ii], ComplexType(cc - 1)/cc));
+						s_times[ii] = pow(times[ii],CT(1)/CT(cc));
+						s_derivatives[ii] = derivatives[ii]*( cc*pow(times[ii], CT(cc - 1)/cc));
 					}
 
-					Vec<ComplexType> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,num_used_points,s_times,samples_,s_derivatives);
+					Vec<CT> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,num_used_points,s_times,samples,s_derivatives);
 
 					auto curr_diff = (approx - x_current_time).norm();
 					if(curr_diff < min_found_difference)
@@ -425,47 +443,50 @@ namespace bertini{
 
 			\param[out] time_t0 is the time value corresponding to the space value we are trying to approximate.
 
-			\tparam ComplexType The complex number type.
+			\tparam CT The complex number type.
 			*/
-			template<typename ComplexType>
-			Vec<ComplexType> ComputeApproximationOfXAtT0(const ComplexType & time_t0)
+			template<typename CT>
+			Vec<CT> ComputeApproximationOfXAtT0(const CT & time_t0)
 			{
+				auto& samples = std::get<SampCont<CT> >(samples_);
+	 			auto& times   = std::get<TimeCont<CT> >(times_);
+
 				//Checking to make sure all samples are of the same precision. Is this necessary if all samples are refined to final tolerance?
 				unsigned max_precision = 0; 
 
-				for(auto& sample : samples_)
+				for(auto& sample : samples)
 					if(Precision(sample(0)) > max_precision)
 						max_precision = Precision(sample(0));
 
-				for(auto& sample : samples_)
+				for(auto& sample : samples)
 					if(Precision(sample(0)) < max_precision)
 						for(unsigned jj = 0; jj < this->GetSystem().NumVariables();++jj)
 							sample(jj).precision(max_precision);
 		
 
-				for(unsigned ii = 0; ii < samples_.size(); ++ii)
-					this->GetTracker().Refine(samples_[ii],samples_[ii],times_[ii],
+				for(unsigned ii = 0; ii < samples.size(); ++ii)
+					this->GetTracker().Refine(samples[ii],samples[ii],times[ii],
 					                          this->Tolerances().final_tolerance,
 					                          this->EndgameSettings().max_num_newton_iterations);
 
 
 				this->GetSystem().precision(max_precision);
-				auto derivatives = ComputeCycleNumber<ComplexType>();
+				auto derivatives = ComputeCycleNumber<CT>();
 
 				// //Conversion to S-plane.
-				std::deque<ComplexType> s_times;
-				std::deque< Vec<ComplexType> > s_derivatives;
+				TimeCont<CT> s_times;
+				SampCont<CT> s_derivatives;
 
-				for(unsigned ii = 0; ii < samples_.size(); ++ii){
+				for(unsigned ii = 0; ii < samples.size(); ++ii){
 					auto c = this->CycleNumber();
 					if (c<1)
 						throw std::runtime_error("cycle number is 0 while computing approximation of root at target time");
 
-					s_derivatives.push_back(derivatives[ii]*( c*pow(times_[ii],ComplexType(c-1)/c )));
-					s_times.push_back(pow(times_[ii],ComplexType(1)/c));
+					s_derivatives.push_back(derivatives[ii]*( c*pow(times[ii],CT(c-1)/c )));
+					s_times.push_back(pow(times[ii],CT(1)/c));
 				}
 
-				return bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, samples_, s_derivatives);
+				return bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, samples, s_derivatives);
 			}//end ComputeApproximationOfXAtT0
 
 
@@ -489,59 +510,65 @@ namespace bertini{
 			\param[out] start_time The time value at which we start the endgame. 
 			\param endgame_sample The current space point at start_time.
 
-			\tparam ComplexType The complex number type.
+			\tparam CT The complex number type.
 			*/		
-			template<typename ComplexType>
-			SuccessCode PSEG(const ComplexType & start_time, const Vec<ComplexType> & start_point)
+			template<typename CT>
+			SuccessCode PSEG(const CT & start_time, const Vec<CT> & start_point)
 			{
+				using RT = typename Eigen::NumTraits<CT>::Real;
 				//Set up for the endgame.
-	 			ClearTimesAndSamples();
+	 			ClearTimesAndSamples<CT>();
 
-			 	mpfr_float approx_error(1);  //setting up the error of successive approximations. 
+	 			auto& samples = std::get<SampCont<CT> >(samples_);
+	 			auto& times   = std::get<TimeCont<CT> >(times_);
+
+			 	RT approx_error(1);  //setting up the error of successive approximations. 
 			 	
-			 	ComplexType origin(0);
+			 	CT origin(0);
 
-				this->ComputeInitialSamples(start_time, start_point, times_, samples_);
-
-
-			 	Vec<ComplexType> prev_approx = ComputeApproximationOfXAtT0(origin);
-
-			 	mpfr_float norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
+				this->ComputeInitialSamples(start_time, start_point, times, samples);
 
 
-			 	ComplexType current_time = times_.back(); 
+			 	Vec<CT> prev_approx = ComputeApproximationOfXAtT0(origin);
 
-			  	Vec<ComplexType> next_sample;
-			  	Vec<ComplexType> latest_approx;
-			    mpfr_float norm_of_dehom_of_latest_approx;
+			 	RT norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
+
+			 	
+
+			 	CT current_time = times.back(); 
+
+			  	Vec<CT> next_sample;
+			  	Vec<CT> latest_approx;
+			  	Vec<CT>& final_approx = std::get<Vec<CT> >(this->final_approximation_at_origin_);
+			    RT norm_of_dehom_of_latest_approx;
 
 
 				while (approx_error > this->Tolerances().final_tolerance)
 				{
-					this->final_approximation_at_origin_ = prev_approx;
-			  		 auto next_time = times_.back() * this->EndgameSettings().sample_factor; //setting up next time value.
+					final_approx = prev_approx;
+			  		 auto next_time = times.back() * this->EndgameSettings().sample_factor; //setting up next time value.
 
 			  		if (next_time.abs() < this->EndgameSettings().min_track_time)
 			  		{
 			  			std::cout << "Error current time norm is less than min track time." << '\n';
 
-			  			this->final_approximation_at_origin_ = prev_approx;
+			  			final_approx = prev_approx;
 			  			return SuccessCode::MinTrackTimeReached;
 			  		}
 
-					SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,current_time,next_time,samples_.back());
+					SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,current_time,next_time,samples.back());
 					if(tracking_success != SuccessCode::Success)
 						return tracking_success;
 
 
 					//push most current time into deque, and lose the least recent time.
-			 		times_.push_back(next_time);
-			 		current_time = times_.back();
-			 		times_.pop_front(); 
+			 		times.push_back(next_time);
+			 		current_time = times.back();
+			 		times.pop_front(); 
 
 
-			 		samples_.push_back(next_sample);
-			 		samples_.pop_front();
+			 		samples.push_back(next_sample);
+			 		samples.pop_front();
 
 			 		latest_approx = ComputeApproximationOfXAtT0(origin);
 			 		norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
@@ -555,7 +582,7 @@ namespace bertini{
 
 			 		if(approx_error < this->Tolerances().final_tolerance)
 			 		{//success!
-			 			this->final_approximation_at_origin_ = latest_approx;
+			 			final_approx = latest_approx;
 			 			return SuccessCode::Success;
 			 		}
 
@@ -563,7 +590,7 @@ namespace bertini{
 				    norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 				} //end while	
 				// in case if we get out of the for loop without setting. 
-				this->final_approximation_at_origin_ = latest_approx;
+				final_approx = latest_approx;
 				return SuccessCode::Success;
 
 			} //end PSEG

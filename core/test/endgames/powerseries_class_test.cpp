@@ -28,7 +28,7 @@
 #include "bertini2/limbo.hpp"
 #include "bertini2/mpfr_complex.hpp"
 #include <deque>
-#include "bertini2/tracking/powerseries_endgame.hpp"
+#include "bertini2/tracking/amp_powerseries_endgame.hpp"
 #include "bertini2/start_system.hpp"
 
 
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeBoundOnCycleNumber();
+	my_endgame.ComputeBoundOnCycleNumber<mpfr>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeBoundOnCycleNumber();
+	my_endgame.ComputeBoundOnCycleNumber<mpfr>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeBoundOnCycleNumber();
+	my_endgame.ComputeBoundOnCycleNumber<mpfr>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeBoundOnCycleNumber();
+	my_endgame.ComputeBoundOnCycleNumber<mpfr>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
@@ -1220,7 +1220,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	my_endgame.PSEG(current_time,current_space);
 
 
-	BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp for power series class 
 
@@ -1276,7 +1276,7 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 
 	my_endgame.PSEG(current_time,current_space);
 
-	BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
 	
 }//end pseg dbl for power series class
 
@@ -1336,7 +1336,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 
 	my_endgame.PSEG(current_time,current_space);
 
-	BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-4);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp test case for power series class
 
@@ -1425,7 +1425,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	{
 		SuccessCode endgame_success = my_endgame.PSEG(endgame_time,s);
 		if(endgame_success == SuccessCode::Success){
-			BOOST_CHECK((my_endgame.FinalApproximation() - correct).norm() < 1e-4);// my_endgame.GetTrackToleranceDuringEndgame());
+			BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-4);// my_endgame.GetTrackToleranceDuringEndgame());
 			num_paths_converging++;
 		}
 		if(endgame_success == SuccessCode::SecurityMaxNormReached){
