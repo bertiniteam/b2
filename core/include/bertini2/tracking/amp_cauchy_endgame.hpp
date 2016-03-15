@@ -484,13 +484,13 @@ namespace bertini
 				}//end CircleTrack
 
 
-				SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& next_sample, mpfr const& next_time)
+				SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time)
 				{
 					using RT = mpfr_float;
 
 					std::cout << "refining point to " << this->Tolerances().final_tolerance/100 << '\n';
 
-					auto refinement_success = this->GetTracker().Refine(result,next_sample,next_time,
+					auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 					                          	RT(this->Tolerances().final_tolerance)/100,
 					                          	this->EndgameSettings().max_num_newton_iterations);
 
@@ -506,9 +506,9 @@ namespace bertini
 						std::cout << "trying precision " << temp_higher_prec << std::endl;
 
 
-						auto next_sample_higher_prec = next_sample;
-						auto result_higher_prec = Vec<mpfr>(next_sample.size());
-						auto time_higher_precision = next_time;
+						auto next_sample_higher_prec = current_sample;
+						auto result_higher_prec = Vec<mpfr>(current_sample.size());
+						auto time_higher_precision = current_time;
 
 						assert(time_higher_precision.precision()==mpfr_float::default_precision());
 
@@ -518,7 +518,7 @@ namespace bertini
 					                          							RT(this->Tolerances().final_tolerance)/100,
 					                          							this->EndgameSettings().max_num_newton_iterations);
 						std::cout << "second attempt, refinement success: " << int(refinement_success) << '\n';
-						std::cout << "refined point:\n" << next_sample << "\n\n";
+						std::cout << "refined point:\n" << current_sample << "\n\n";
 
 						mpfr_float::default_precision(prev_precision);
 						this->GetTracker().ChangePrecision(prev_precision);
@@ -529,13 +529,13 @@ namespace bertini
 					return refinement_success;
 				}
 
-				SuccessCode RefineSample(Vec<dbl> & result, Vec<dbl> const& next_sample, dbl const& next_time)
+				SuccessCode RefineSample(Vec<dbl> & result, Vec<dbl> const& current_sample, dbl const& current_time)
 				{
 					using RT = double;
 
 					std::cout << "refining point to " << this->Tolerances().final_tolerance/100 << '\n';
 
-					auto refinement_success = this->GetTracker().Refine(result,next_sample,next_time,
+					auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 					                          	RT(this->Tolerances().final_tolerance)/100,
 					                          	this->EndgameSettings().max_num_newton_iterations);
 
@@ -551,12 +551,12 @@ namespace bertini
 						std::cout << "trying precision " << temp_higher_prec << std::endl;
 
 
-						auto next_sample_higher_prec = Vec<mpfr>(next_sample.size());
-						for (int ii=0; ii<next_sample.size(); ++ii)
-							next_sample_higher_prec(ii) = mpfr(next_sample(ii));
+						auto next_sample_higher_prec = Vec<mpfr>(current_sample.size());
+						for (int ii=0; ii<current_sample.size(); ++ii)
+							next_sample_higher_prec(ii) = mpfr(current_sample(ii));
 
-						auto result_higher_prec = Vec<mpfr>(next_sample.size());
-						mpfr time_higher_precision(next_time);
+						auto result_higher_prec = Vec<mpfr>(current_sample.size());
+						mpfr time_higher_precision(current_time);
 
 						refinement_success = this->GetTracker().Refine(result_higher_prec,
 						                                               next_sample_higher_prec,
@@ -565,11 +565,11 @@ namespace bertini
 					                          							this->EndgameSettings().max_num_newton_iterations);
 
 						std::cout << "second attempt, refinement success: " << int(refinement_success) << '\n';
-						std::cout << "refined point:\n" << next_sample << "\n\n";
+						std::cout << "refined point:\n" << current_sample << "\n\n";
 
 						mpfr_float::default_precision(prev_precision);
 						this->GetTracker().ChangePrecision(prev_precision);
-						for (unsigned ii(0); ii<next_sample.size(); ++ii)
+						for (unsigned ii(0); ii<current_sample.size(); ++ii)
 							result(ii) = dbl(result_higher_prec(ii));
 					}
 
