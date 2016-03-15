@@ -275,7 +275,7 @@ namespace bertini{
 			*/
 			virtual
 			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const = 0;
+								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance, unsigned max_iterations) const = 0;
 
 			/**
 			\brief Change tracker to use a predictor

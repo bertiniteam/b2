@@ -171,6 +171,21 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
 	BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).imag() / exact_dbl[2].imag() -1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() / exact_mpfr[2].real() -1) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() / exact_mpfr[2].imag() -1) < threshold_clearance_mp);
+
+	var_mpfr << bertini::complex::rand(),bertini::complex::rand(),bertini::complex::rand();
+	sys.SetVariables<mpfr>(var_mpfr);
+	exact_mpfr[0] = 3*var_mpfr(1)*var_mpfr(2);
+	exact_mpfr[1] = 3*var_mpfr(0)*var_mpfr(2);
+	exact_mpfr[2] = 3*var_mpfr(0)*var_mpfr(1);
+
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).real() / exact_mpfr[0].real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).imag() / exact_mpfr[0].imag() -1) < threshold_clearance_mp);
+
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).real() / exact_mpfr[1].real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).imag() / exact_mpfr[1].imag() -1) < threshold_clearance_mp);
+
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() / exact_mpfr[2].real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() / exact_mpfr[2].imag() -1) < threshold_clearance_mp);
 }
 
 
@@ -1149,7 +1164,74 @@ BOOST_AUTO_TEST_CASE(arctangent_differentiate)
 }
 
 
+BOOST_AUTO_TEST_CASE(integer_power)
+{
+	using mpfr =bertini::complex;
+	using mpfr_float = bertini::mpfr_float;
+
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	bertini::Var x = std::make_shared<Variable>("x");
+	bertini::Var t = std::make_shared<Variable>("t"); 
+
+	auto f = pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t;
+	std::shared_ptr<Jacobian> j = std::make_shared<Jacobian>(f->Differentiate());
 
 
+	x->set_current_value(mpfr("-0.844487","-0.535576"));
+	t->set_current_value(mpfr("0.779871","0.712645"));
+
+	auto J = j->EvalJ<mpfr>(x);
+	std::cout << J << "\n";
+	BOOST_CHECK(abs(J - mpfr("-2.12923","0.354137999999999999999999999997")) < threshold_clearance_mp);
+
+
+	x->set_current_value(mpfr("0.900000000000000","0.435889894354067355223698198386"));
+    t->set_current_value(mpfr("0.1"));
+    j->Reset();
+	J = j->EvalJ<mpfr>(x);
+	std::cout << J << "\n";
+
+	BOOST_CHECK(abs( real(J) ) < threshold_clearance_mp);
+	BOOST_CHECK(abs( imag(J) - mpfr_float("0.871779788708134710447396396772")) < threshold_clearance_mp);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(integer_power_system)
+{
+	using mpfr =bertini::complex;
+	using mpfr_float = bertini::mpfr_float;
+	using System = bertini::System;
+
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	System sys;
+	bertini::Var x = std::make_shared<Variable>("x");
+	bertini::Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+
+	sys.AddVariableGroup(bertini::VariableGroup({x})); 
+	sys.AddPathVariable(t);
+
+	bertini::Vec<mpfr> curr_x(1);
+	curr_x << mpfr("-0.844487","-0.535576");
+	mpfr curr_t("0.779871","0.712645");
+
+	auto J = sys.Jacobian(curr_x,curr_t);
+std::cout << J << "\n";
+	BOOST_CHECK(abs(real(J(0,0)) - mpfr_float("-2.12923200000000001352873368887")) < threshold_clearance_mp);
+	BOOST_CHECK(abs(imag(J(0,0)) - mpfr_float("0.354137999999999841804765310371")) < threshold_clearance_mp);
+
+	curr_x << mpfr("0.900000000000000","0.435889894354067355223698198386");
+	curr_t = mpfr("0.1");
+	J = sys.Jacobian(curr_x,curr_t);
+std::cout << J << "\n";
+	BOOST_CHECK(abs( real(J(0,0)) ) < threshold_clearance_mp);
+	BOOST_CHECK(abs( imag(J(0,0)) - mpfr_float("0.871779788708134710447396396772")) < threshold_clearance_mp);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
