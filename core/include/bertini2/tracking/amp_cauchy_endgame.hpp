@@ -417,7 +417,7 @@ namespace bertini
 
 				template<typename CT> 
 				SuccessCode CircleTrack(CT const& starting_time, Vec<CT> const& starting_sample)
-				{	std::cout << "CircleTrack()\n";
+				{	
 					using RT = typename Eigen::NumTraits<CT>::Real;
 					using std::acos;
 
@@ -456,9 +456,7 @@ namespace bertini
 						else
 							next_time = starting_time;
 
-						std::cout << "circle tracking from " << current_time << " to " << next_time << ", starting sample:\n" << current_sample << "\n\n\n";
 						auto tracking_success = this->GetTracker().TrackPath(next_sample, current_time, next_time, current_sample);	
-						std::cout << "tracked end point:\n" << next_sample << "\n\n";
 						if (tracking_success != SuccessCode::Success)
 						{
 							std::cout << "tracker fail in circle track, type " << int(tracking_success) << std::endl;
@@ -488,13 +486,10 @@ namespace bertini
 				{
 					using RT = mpfr_float;
 
-					std::cout << "refining point to " << this->Tolerances().final_tolerance/100 << '\n';
-
 					auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 					                          	RT(this->Tolerances().final_tolerance)/100,
 					                          	this->EndgameSettings().max_num_newton_iterations);
 
-					std::cout << "refinement success: " << int(refinement_success) << '\n';
 					
 					if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 					    refinement_success==SuccessCode::FailedToConverge)
@@ -503,7 +498,6 @@ namespace bertini
 						auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
 						mpfr_float::default_precision(temp_higher_prec);
 						this->GetTracker().ChangePrecision(temp_higher_prec);
-						std::cout << "trying precision " << temp_higher_prec << std::endl;
 
 
 						auto next_sample_higher_prec = current_sample;
@@ -517,8 +511,6 @@ namespace bertini
 						                                               time_higher_precision,
 					                          							RT(this->Tolerances().final_tolerance)/100,
 					                          							this->EndgameSettings().max_num_newton_iterations);
-						std::cout << "second attempt, refinement success: " << int(refinement_success) << '\n';
-						std::cout << "refined point:\n" << current_sample << "\n\n";
 
 						mpfr_float::default_precision(prev_precision);
 						this->GetTracker().ChangePrecision(prev_precision);
@@ -533,13 +525,10 @@ namespace bertini
 				{
 					using RT = double;
 
-					std::cout << "refining point to " << this->Tolerances().final_tolerance/100 << '\n';
-
 					auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 					                          	RT(this->Tolerances().final_tolerance)/100,
 					                          	this->EndgameSettings().max_num_newton_iterations);
 
-					std::cout << "refinement success: " << int(refinement_success) << '\n';
 					
 					if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 					    refinement_success==SuccessCode::FailedToConverge)
@@ -548,7 +537,6 @@ namespace bertini
 						auto temp_higher_prec = LowestMultiplePrecision();
 						mpfr_float::default_precision(temp_higher_prec);
 						this->GetTracker().ChangePrecision(temp_higher_prec);
-						std::cout << "trying precision " << temp_higher_prec << std::endl;
 
 
 						auto next_sample_higher_prec = Vec<mpfr>(current_sample.size());
@@ -564,8 +552,6 @@ namespace bertini
 					                          							RT(this->Tolerances().final_tolerance)/100,
 					                          							this->EndgameSettings().max_num_newton_iterations);
 
-						std::cout << "second attempt, refinement success: " << int(refinement_success) << '\n';
-						std::cout << "refined point:\n" << current_sample << "\n\n";
 
 						mpfr_float::default_precision(prev_precision);
 						this->GetTracker().ChangePrecision(prev_precision);
@@ -637,7 +623,7 @@ namespace bertini
 				bool CheckForCOverKStabilization(TimeCont<RT> const& c_over_k_array)
 				{	
 					using std::abs;
-					std::cout << "CheckForCOverKStabilization()\n";
+
 					assert(c_over_k_array.size()>=cauchy_settings_.num_needed_for_stabilization);
 					for(unsigned ii = 1; ii < cauchy_settings_.num_needed_for_stabilization ; ++ii)
 					{
@@ -736,22 +722,19 @@ namespace bertini
 					using RT = typename Eigen::NumTraits<CT>::Real;
 					auto& times = std::get<TimeCont<CT> >(cauchy_times_);
 					auto& samples = std::get<SampCont<CT> >(cauchy_samples_);
-					std::cout << "CheckClosedLoop()\n"; std::cout << "have " << samples.size() << " samples to work with\n";
+
 					if((samples.front() - samples.back()).norm() < this->GetTracker().TrackingTolerance())
 					{
-						std::cout << "loop is closed, no refinement needed\n";
 						return true;
 					}
-					std::cout << "closed loop check: pre-refinement " << (samples.front() - samples.back()).norm() << ", required tol " << this->GetTracker().TrackingTolerance() << std::endl;
+
 					this->GetTracker().Refine(samples.front(),samples.front(),times.front(),RT(this->Tolerances().final_tolerance),this->EndgameSettings().max_num_newton_iterations);
 					this->GetTracker().Refine(samples.back(),samples.back(),times.back(),RT(this->Tolerances().final_tolerance),this->EndgameSettings().max_num_newton_iterations);
-					std::cout << "closed loop check: post-refinement " << (samples.front() - samples.back()).norm() << std::endl;
+
 					if((samples.front() - samples.back()).norm() < this->GetTracker().TrackingTolerance())
 					{
-						std::cout << "loop is closed, after refinement\n";
 						return true;
 					}
-					std::cout << "loop not closed\n";
 					return false;	
 
 				}//end CheckClosedLoop
@@ -773,7 +756,7 @@ namespace bertini
 				*/
 				template<typename CT>
 				bool RatioEGOperatingZoneTest()
-				{	std::cout << "RatioEGOperatingZoneTest()\n";
+				{	
 					using RT = typename Eigen::NumTraits<CT>::Real;
 					RT min(1e300);
 					RT max(0);
@@ -831,7 +814,6 @@ namespace bertini
 				SuccessCode InitialCauchyLoops()
 				{	
 					using RT = typename Eigen::NumTraits<CT>::Real;
-					std::cout << "InitialCauchyLoops()\n";
 					auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
 					auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
 					auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
@@ -900,7 +882,6 @@ namespace bertini
 						}//end if (RatioEGOperatingZoneTest())
 						else 
 						{
-							std::cout << "not in EG zone yet, shrinking radius\n\n";
 							//find the time for the next sample point
 							next_time = ps_times.back() * RT(this->EndgameSettings().sample_factor);
 
@@ -949,7 +930,6 @@ namespace bertini
 				{	
 					using RT = typename Eigen::NumTraits<CT>::Real;
 
-					std::cout << "InitialPowerSeriesApproximation()\n\n";
 					//initialize array holding c_over_k estimates
 					std::deque<RT> c_over_k; 
 
@@ -969,7 +949,7 @@ namespace bertini
 					unsigned ii = 0;
 					//track until for more c_over_k estimates or until we reach a cutoff time. 
 					while ( (ii < cauchy_settings_.num_needed_for_stabilization) )
-					{	std::cout << "getting next c/k\n";
+					{	
 						next_time = ps_times.back() * RT(this->EndgameSettings().sample_factor);
 
 						auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
@@ -985,13 +965,8 @@ namespace bertini
 						++ii;
 					}//end while
 
-					std::cout << "have initial c_over_k:\n";
-					for (auto iter : c_over_k)
-						std::cout << iter << std::endl;
-					//check to see if we continue. 
 
 					//have we stabilized yet? 
-
 					while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()) > cauchy_settings_.cycle_cutoff_time)
 					{
 						next_time = ps_times.back() * RT(this->EndgameSettings().sample_factor);
@@ -1009,14 +984,11 @@ namespace bertini
 						c_over_k.push_back(ComputeCOverK<CT>());
 
 					}//end while
-					std::cout << "have c/k stabilization\n";
 	
 					auto cauchy_loop_success = InitialCauchyLoops<CT>();
 					if(cauchy_loop_success != SuccessCode::Success)
 						return cauchy_loop_success;
-					std::cout << "have initial cauchy loops\n";
 					approximation = ComputePSEGApproximationAtT0(approximation_time);
-					std::cout << "have first approximation\n";
 					return SuccessCode::Success;
 
 				}//end InitialPowerSeriesApproximation
@@ -1163,7 +1135,6 @@ namespace bertini
 					auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
 					auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
 
-					std::cout << "ComputeCauchySamples()\n";
 					cau_times.clear();
 					cau_samples.clear();
 					cau_times.push_back(starting_time);
@@ -1173,12 +1144,10 @@ namespace bertini
 
 					while( this->CycleNumber() < cauchy_settings_.fail_safe_maximum_cycle_number )
 					{
-						std::cout << "ComputeCauchySamples() iteration " << this->CycleNumber() << "\n";
 						//track around the origin once.
 						auto tracking_success = CircleTrack(cau_times.back(),cau_samples.back());
 						this->IncrementCycleNumber(1);
 
-						std::cout << "loop ended at time \n" << cau_times.back() << " and point\n" << cau_samples.back() << "\n\n";
 						if(tracking_success != SuccessCode::Success)
 						{
 							std::cout << "Cauchy loop fail tracking\n\n";
@@ -1186,7 +1155,6 @@ namespace bertini
 						}
 						else if(CheckClosedLoop<CT>())
 						{
-							std::cout << "Cauchy loop is CLOSED\n\n";
 							return SuccessCode::Success;
 						}
 					} 
@@ -1233,7 +1201,7 @@ namespace bertini
 					auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
 					auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
 
-					std::cout << "CauchyEG()\n";
+
 					ClearTimesAndSamples<CT>(); //clear times and samples before we begin.
 					this->CycleNumber(0);
 					CT origin(0,0);
@@ -1256,17 +1224,15 @@ namespace bertini
 
 					if(this->SecuritySettings().level <= 0)
 						norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
-					std::cout << "entering do-while in CauchyEG()\n";
 					do
 					{
 						//Compute a cauchy approximation.
 						latest_approx = ComputeCauchyApproximationOfXAtT0<CT>();
-						std::cout << "latest_approx\n" << latest_approx << "\n\n";
 						if(this->SecuritySettings().level <= 0)
 							norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
 
 						approximate_error = (latest_approx - prev_approx).norm(); //Calculate the error between approximations. 
-						std::cout << "approximate_error " << approximate_error << "\n\n";
+
 						// dehom of prev approx and last approx not used because they are not updated with the most current information. However, prev approx and last approx are 
 						// the most current. 
 
