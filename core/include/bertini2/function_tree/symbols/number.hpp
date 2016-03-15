@@ -52,7 +52,7 @@ namespace node{
 
 
 
-		void Reset() override
+		void Reset() const override
 		{
 			// nothing to reset here
 		}
@@ -109,7 +109,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -166,7 +166,7 @@ namespace node{
 		/**
 		 Differentiates a number.  Should this return the special number Zero?
 		 */
-		std::shared_ptr<Node> Differentiate() override
+		std::shared_ptr<Node> Differentiate() const override
 		{
 			return std::make_shared<Integer>(0);
 		}
@@ -176,12 +176,12 @@ namespace node{
 	private:
 
 		// Return value of constant
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return dbl(double(true_value_),0);
 		}
 
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return mpfr(true_value_,0);
 		}
@@ -239,7 +239,7 @@ namespace node{
 		/**
 		 Differentiates a number.  Should this return the special number Zero?
 		 */
-		std::shared_ptr<Node> Differentiate() override
+		std::shared_ptr<Node> Differentiate() const override
 		{
 			return std::make_shared<Integer>(0);
 		}
@@ -247,12 +247,12 @@ namespace node{
 
 	private:
 		// Return value of constant
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return dbl(highest_precision_value_);
 		}
 
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return mpfr(highest_precision_value_);
 		}
@@ -331,7 +331,7 @@ namespace node{
 		/**
 		 Differentiates a number.  
 		 */
-		std::shared_ptr<Node> Differentiate() override
+		std::shared_ptr<Node> Differentiate() const override
 		{
 			return std::make_shared<Integer>(0);
 		}
@@ -341,12 +341,12 @@ namespace node{
 	private:
 
 		// Return value of constant
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return dbl(double(true_value_real_),double(true_value_imag_));
 		}
 
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
 		}

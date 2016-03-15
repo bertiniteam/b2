@@ -54,17 +54,18 @@ namespace node{
 		/**
 		 Input shared_ptr to a Variable.
 		 */
-		Differential(std::shared_ptr<Variable> diff_variable, std::string var_name) : NamedSymbol(var_name)
+		Differential(std::shared_ptr<const Variable> diff_variable, std::string var_name) : NamedSymbol('d'+ var_name), differential_variable_(diff_variable)
 		{
-			differential_variable_ = diff_variable;
-			name("d" + var_name);
 		}
 
 
+		void Reset() const override
+		{
+			Node::ResetStoredValues();
+		}
 
 
-
-		std::shared_ptr<Variable> GetVariable() const 
+		auto GetVariable() const 
 		{
 			return differential_variable_;
 		}
@@ -80,7 +81,7 @@ namespace node{
 		/**
 		 Differentiates a number.  Should this return the special number Zero?
 		 */
-		std::shared_ptr<Node> Differentiate() override
+		std::shared_ptr<Node> Differentiate() const override
 		{
 			return std::make_shared<Integer>(0);
 		}
@@ -134,7 +135,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -143,7 +144,7 @@ namespace node{
 		
 	protected:
 		// This should never be called for a Differential.  Only for Jacobians.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			if(differential_variable_ == diff_variable)
 			{
@@ -155,7 +156,7 @@ namespace node{
 			}
 		}
 
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			if(differential_variable_ == diff_variable)
 			{
@@ -170,15 +171,27 @@ namespace node{
 
 	private:
 		Differential() = default;
-		std::shared_ptr<Variable> differential_variable_;
+		std::shared_ptr<const Variable> differential_variable_;
+
 
 		friend class boost::serialization::access;
 		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		template<class Archive>
+		void save(Archive & ar, const unsigned int version) const
+		{
 			ar & boost::serialization::base_object<NamedSymbol>(*this);
 			ar & differential_variable_;
+			// ar & const_cast<std::shared_ptr<const Variable> >(differential_variable_);
 		}
+		
+		template<class Archive>
+		void load(Archive & ar, const unsigned int version)
+		{
+			ar & boost::serialization::base_object<NamedSymbol>(*this);
+			ar & std::const_pointer_cast<Variable>(differential_variable_);
+		}
+		
+		// BOOST_SERIALIZATION_SPLIT_MEMBER()
 
 	};
 

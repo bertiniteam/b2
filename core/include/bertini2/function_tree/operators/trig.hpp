@@ -79,7 +79,7 @@ namespace node{
 	This class represents the sine function.  FreshEval method
 	is defined for sine and takes the sine of the child node.
 	*/
-	class SinOperator : public  virtual TrigOperator
+	class SinOperator : public virtual TrigOperator
 	{
 	public:
 		
@@ -95,7 +95,7 @@ namespace node{
 		/**
 		 Differentiates the sine function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		virtual ~SinOperator() = default;
@@ -104,12 +104,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return sin(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return sin(child_->Eval<mpfr>(diff_variable));
 		}
@@ -147,7 +147,7 @@ namespace node{
 		/**
 		 Differentiates the sine function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		virtual ~ArcSinOperator() = default;
@@ -156,12 +156,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return asin(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return asin(child_->Eval<mpfr>(diff_variable));
 		}
@@ -210,7 +210,7 @@ namespace node{
 		/**
 		 Differentiates the cosine function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		virtual ~CosOperator() = default;
@@ -219,12 +219,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return cos(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return cos(child_->Eval<mpfr>(diff_variable));
 		}
@@ -265,7 +265,7 @@ namespace node{
 		/**
 		 Differentiates the cosine function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 
 
@@ -275,12 +275,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return acos(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return acos(child_->Eval<mpfr>(diff_variable));
 		}
@@ -328,7 +328,7 @@ namespace node{
 		/**
 		 Differentiates the tangent function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -338,12 +338,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return tan(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return tan(child_->Eval<mpfr>(diff_variable));
 		}
@@ -384,7 +384,7 @@ namespace node{
 		/**
 		 Differentiates the tangent function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -394,12 +394,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for arctangent.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return atan(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
 		{
 			return atan(child_->Eval<mpfr>(diff_variable));
 		}
