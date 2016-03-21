@@ -531,7 +531,9 @@ namespace bertini{
 
 			 	Vec<CT> prev_approx = ComputeApproximationOfXAtT0(origin);
 
-			 	RT norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
+			 	RT norm_of_dehom_of_prev_approx;
+			 	if(this->SecuritySettings().level <= 0)
+			 	 	norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
 
 			 	
 
@@ -571,11 +573,15 @@ namespace bertini{
 			 		samples.pop_front();
 
 			 		latest_approx = ComputeApproximationOfXAtT0(origin);
-			 		norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
+			 		
 
 			 		if(this->SecuritySettings().level <= 0)
+			 		{
+			 			norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
+
 				 		if(norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm && norm_of_dehom_of_prev_approx > this->SecuritySettings().max_norm)
 			 				return SuccessCode::SecurityMaxNormReached;
+			 		}
 
 
 			 		approx_error = (latest_approx - prev_approx).norm();
@@ -587,7 +593,9 @@ namespace bertini{
 			 		}
 
 			 		prev_approx = latest_approx;
-				    norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
+
+			 		if(this->SecuritySettings().level <= 0)
+					    norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 				} //end while	
 				// in case if we get out of the for loop without setting. 
 				final_approx = latest_approx;
