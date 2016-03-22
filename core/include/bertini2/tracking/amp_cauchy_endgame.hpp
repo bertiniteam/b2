@@ -1112,6 +1112,14 @@ namespace bertini
 				template<typename CT>
 				SuccessCode CauchyEG(CT start_time, Vec<CT> start_point)
 				{	
+					if (start_point.size()!=this->GetSystem().NumVariables())
+					{
+						std::stringstream err_msg;
+						err_msg << "number of variables in start point for CauchyEG, " << start_point.size() << ", must match the number of variables in the system, " << this->GetSystem().NumVariables();
+						throw std::runtime_error(err_msg.str());
+					}
+
+
 					if (this->preserve_precision_)
 						this->initial_precision_ = mpfr_float::default_precision();
 

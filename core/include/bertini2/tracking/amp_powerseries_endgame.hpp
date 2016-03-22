@@ -518,6 +518,13 @@ namespace bertini{
 			template<typename CT>
 			SuccessCode PSEG(const CT & start_time, const Vec<CT> & start_point)
 			{
+				if (start_point.size()!=this->GetSystem().NumVariables())
+				{
+					std::stringstream err_msg;
+					err_msg << "number of variables in start point for PSEG, " << start_point.size() << ", must match the number of variables in the system, " << this->GetSystem().NumVariables();
+					throw std::runtime_error(err_msg.str());
+				}
+
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << mpfr_float::default_precision() << "\n\n";
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point(0)) << "\n\n";
 
