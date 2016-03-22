@@ -318,10 +318,20 @@ namespace bertini{
 				
 
 				// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
-				// //Also, the .transpose*rand_vector returns an expression template that we do .norm of since abs is not available for that expression type. 
-				RT estimate = abs(log(abs((((sample2 - sample1).transpose()*rand_vector).norm())/(((sample1 - sample0).transpose()*rand_vector).norm()))));
-				estimate = abs(log(this->EndgameSettings().sample_factor))/estimate;
-				if (estimate < 1)
+				RT estimate = abs(log(this->EndgameSettings().sample_factor))
+								/
+							  abs(
+				                  log(
+				                      abs(
+				                          ((sample2 - sample1).transpose()*rand_vector).norm()
+				                          /
+				                          ((sample1 - sample0).transpose()*rand_vector).norm()
+				                          )
+				                      )
+				                  );
+
+				std::cout << estimate << std::endl;
+				if (estimate < 1 || isnan(estimate))
 				{
 				  	upper_bound_on_cycle_number_ = 1;
 				}

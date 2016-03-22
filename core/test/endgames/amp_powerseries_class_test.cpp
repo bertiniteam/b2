@@ -1265,7 +1265,7 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_struct,security_settings,endgame_tolerances);
 	my_endgame.PSEG(t_endgame_boundary,eg_boundary_point);
 
-	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),2);//my_endgame.
+	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),1);//my_endgame.
 	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct_root).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp for power series class 
