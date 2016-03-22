@@ -28,7 +28,7 @@
 #include "bertini2/limbo.hpp"
 #include "bertini2/mpfr_complex.hpp"
 #include <deque>
-#include "bertini2/tracking/cauchy_endgame.hpp"
+#include "bertini2/tracking/amp_cauchy_endgame.hpp"
 #include "bertini2/start_system.hpp"
 
 

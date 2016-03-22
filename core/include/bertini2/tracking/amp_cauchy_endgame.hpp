@@ -463,7 +463,7 @@ namespace bertini
 							return tracking_success;
 						}
 						
-						auto refinement_success = RefineSample(next_sample, next_sample, next_time);
+						auto refinement_success = this->RefineSample(next_sample, next_sample, next_time);
 						if (refinement_success != SuccessCode::Success)
 						{
 							std::cout << "refinement fail in circle track, type " << int(refinement_success) << std::endl;
@@ -482,85 +482,7 @@ namespace bertini
 				}//end CircleTrack
 
 
-				SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time)
-				{
-					using RT = mpfr_float;
-
-					auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-					                          	RT(this->Tolerances().final_tolerance)/100,
-					                          	this->EndgameSettings().max_num_newton_iterations);
-
-					
-					if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
-					    refinement_success==SuccessCode::FailedToConverge)
-					{
-						auto prev_precision = this->Precision();
-						auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
-						mpfr_float::default_precision(temp_higher_prec);
-						this->GetTracker().ChangePrecision(temp_higher_prec);
-
-
-						auto next_sample_higher_prec = current_sample;
-						auto result_higher_prec = Vec<mpfr>(current_sample.size());
-						auto time_higher_precision = current_time;
-
-						assert(time_higher_precision.precision()==mpfr_float::default_precision());
-
-						refinement_success = this->GetTracker().Refine(result_higher_prec,
-						                                               next_sample_higher_prec,
-						                                               time_higher_precision,
-					                          							RT(this->Tolerances().final_tolerance)/100,
-					                          							this->EndgameSettings().max_num_newton_iterations);
-
-						mpfr_float::default_precision(prev_precision);
-						this->GetTracker().ChangePrecision(prev_precision);
-						result = result_higher_prec;
-						assert(result(0).precision()==mpfr_float::default_precision());
-					}
-
-					return refinement_success;
-				}
-
-				SuccessCode RefineSample(Vec<dbl> & result, Vec<dbl> const& current_sample, dbl const& current_time)
-				{
-					using RT = double;
-
-					auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-					                          	RT(this->Tolerances().final_tolerance)/100,
-					                          	this->EndgameSettings().max_num_newton_iterations);
-
-					
-					if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
-					    refinement_success==SuccessCode::FailedToConverge)
-					{
-						auto prev_precision = this->Precision();
-						auto temp_higher_prec = LowestMultiplePrecision();
-						mpfr_float::default_precision(temp_higher_prec);
-						this->GetTracker().ChangePrecision(temp_higher_prec);
-
-
-						auto next_sample_higher_prec = Vec<mpfr>(current_sample.size());
-						for (int ii=0; ii<current_sample.size(); ++ii)
-							next_sample_higher_prec(ii) = mpfr(current_sample(ii));
-
-						auto result_higher_prec = Vec<mpfr>(current_sample.size());
-						mpfr time_higher_precision(current_time);
-
-						refinement_success = this->GetTracker().Refine(result_higher_prec,
-						                                               next_sample_higher_prec,
-						                                               time_higher_precision,
-					                          							RT(this->Tolerances().final_tolerance)/100,
-					                          							this->EndgameSettings().max_num_newton_iterations);
-
-
-						mpfr_float::default_precision(prev_precision);
-						this->GetTracker().ChangePrecision(prev_precision);
-						for (unsigned ii(0); ii<current_sample.size(); ++ii)
-							result(ii) = dbl(result_higher_prec(ii));
-					}
-
-					return refinement_success;
-				}
+				
 				/*
 				Input: 
 					All input is available through class data members. 
@@ -988,8 +910,8 @@ namespace bertini
 					auto cauchy_loop_success = InitialCauchyLoops<CT>();
 					if(cauchy_loop_success != SuccessCode::Success)
 						return cauchy_loop_success;
-					approximation = ComputePSEGApproximationAtT0(approximation_time);
-					return SuccessCode::Success;
+
+					return ComputePSEGApproximationAtT0(approximation, approximation_time);
 
 				}//end InitialPowerSeriesApproximation
 
@@ -1014,7 +936,7 @@ namespace bertini
 				\tparam CT The complex number type.
 				*/
 				template<typename CT>
-				Vec<CT> ComputePSEGApproximationAtT0(const CT time_t0)
+				SuccessCode ComputePSEGApproximationAtT0(Vec<CT>& result, const CT time_t0)
 				{
 					using RT = typename Eigen::NumTraits<CT>::Real;
 
@@ -1034,20 +956,19 @@ namespace bertini
 					}
 
 					//Checking to make sure all samples are of the same precision.
-					// unsigned max_precision = 0; 
+					unsigned max_precision = 0; 
 
-					// for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-					// 	if(Precision(ps_samples[ii](0)) > max_precision)
-					// 		max_precision = Precision(ps_samples[ii](0));
+					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
+						if(Precision(ps_samples[ii](0)) > max_precision)
+							max_precision = Precision(ps_samples[ii](0));
 
+					this->ChangePrecision(max_precision);
 
 					// for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
 					// 	if(Precision(ps_samples[ii](0)) < max_precision)
 					// 		for(unsigned jj = 0; jj < this->GetSystem().NumVariables();++jj)
 					// 			ps_samples[ii](jj).precision(max_precision);
 
-
-					// this->GetSystem().precision(max_precision);
 
 			 		//Conversion to S-plane.
 					std::deque<CT> s_times;
@@ -1060,12 +981,13 @@ namespace bertini
 						s_derivatives.push_back(pseg_derivatives[ii]*(RT(this->CycleNumber())*pow(ps_times[ii],(RT(this->CycleNumber()) - RT(1))/this->CycleNumber())));
 						s_times.push_back(pow(ps_times[ii],RT(1)/RT(this->CycleNumber())));
 
-						this->GetTracker().Refine(ps_samples[ii],ps_samples[ii],ps_times[ii],
-						                          RT(this->Tolerances().final_tolerance)/100,
-						                          this->EndgameSettings().max_num_newton_iterations);
+						auto refine_code = this->RefineSample(ps_samples[ii],ps_samples[ii],ps_times[ii]);
+						if (refine_code != SuccessCode:: Success)
+							return refine_code;
 					}
 
-					return bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, ps_samples, s_derivatives);
+					result = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, ps_samples, s_derivatives);
+					return SuccessCode::Success;
 				}//end ComputePSEGApproximationOfXAtT0
 
 				/*
@@ -1084,7 +1006,7 @@ namespace bertini
 				\tparam CT The complex number type.
 				*/
 				template<typename CT>
-				Vec<CT> ComputeCauchyApproximationOfXAtT0()
+				SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<CT>& result)
 				{	using RT = typename Eigen::NumTraits<CT>::Real;
 					auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
 					auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
@@ -1096,17 +1018,17 @@ namespace bertini
 						throw std::runtime_error(err_msg.str());
 					}
 
-					Vec<CT> approximate_root = Vec<CT>::Zero(this->GetSystem().NumVariables());//= (cau_samples[0]+cau_samples.back())/2; 
+					result = Vec<CT>::Zero(this->GetSystem().NumVariables());//= (cau_samples[0]+cau_samples.back())/2; 
 
 					for(unsigned int ii = 0; ii < this->CycleNumber() * this->EndgameSettings().num_sample_points; ++ii)
 					{
-						this->GetTracker().Refine(cau_samples[ii],cau_samples[ii],cau_times[ii],
-						                          RT(this->Tolerances().final_tolerance)/100,
-						                          this->EndgameSettings().max_num_newton_iterations);
-						approximate_root += cau_samples[ii];
+						auto refine_code = this->RefineSample(cau_samples[ii],cau_samples[ii],cau_times[ii]);
+						if (refine_code!=SuccessCode::Success)
+							return refine_code;
+						result += cau_samples[ii];
 					}
-					approximate_root /= RT(this->CycleNumber() * this->EndgameSettings().num_sample_points);
-					return approximate_root;
+					result /= RT(this->CycleNumber() * this->EndgameSettings().num_sample_points);
+					return SuccessCode::Success;
 
 				}
 
@@ -1227,7 +1149,10 @@ namespace bertini
 					do
 					{
 						//Compute a cauchy approximation.
-						latest_approx = ComputeCauchyApproximationOfXAtT0<CT>();
+						auto extrapolation_success = ComputeCauchyApproximationOfXAtT0<CT>(latest_approx);
+						if (extrapolation_success!=SuccessCode::Success)
+							return extrapolation_success;
+
 						if(this->SecuritySettings().level <= 0)
 							norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
 

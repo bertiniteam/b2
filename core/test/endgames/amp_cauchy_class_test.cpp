@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
 
-	sys.AddFunction((x - mpfr(1))*(1-t) + (x + mpfr(1))*t);
+	sys.AddFunction((x - 1)*(1-t) + (x + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -1142,7 +1142,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_t
 
 	my_endgame.CycleNumber(1);
 
-	auto first_cauchy_approx = my_endgame.ComputeCauchyApproximationOfXAtT0<mpfr>();
+	Vec<mpfr> first_cauchy_approx;
+	auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<mpfr>(first_cauchy_approx);
 
 	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
 
@@ -1216,7 +1217,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 	// 	std::cout << my_endgame.GetCauchySamples<mpfr>()[i] << '\n';
 	// }
 
-	auto first_cauchy_approx = my_endgame.ComputeCauchyApproximationOfXAtT0<mpfr>();
+	Vec<mpfr> first_cauchy_approx;
+	auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<mpfr>(first_cauchy_approx);
 
 	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
 

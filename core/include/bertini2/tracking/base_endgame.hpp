@@ -84,22 +84,25 @@ namespace bertini{
 			template<typename CT>		
 				Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const std::deque<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives)
 			{
-				Mat< Vec<CT> > finite_difference_matrix(2*num_sample_points,2*num_sample_points);
-				Vec<CT> array_of_times(2*num_sample_points);
+				assert(times.size() >= num_sample_points && "must have sufficient number of sample times");
+				assert(samples.size() >= num_sample_points && "must have sufficient number of sample points");
+
+				Mat< Vec<CT> > space_differences(2*num_sample_points,2*num_sample_points);
+				Vec<CT> time_differences(2*num_sample_points);
 				
 				for(unsigned int ii=0; ii<num_sample_points; ++ii)
 				{ 
-					finite_difference_matrix(2*ii,0) = samples[ii];			/*  F[2*i][0]    = samples[i];    */
-     				finite_difference_matrix(2*ii+1,0) = samples[ii]; 		/*  F[2*i+1][0]  = samples[i];    */
-      				finite_difference_matrix(2*ii+1,1) = derivatives[ii];	/*  F[2*i+1][1]  = derivatives[i]; */
-     				array_of_times(2*ii) = times[ii];						/*  z[2*i]       = times[i];       */
-     				array_of_times(2*ii+1) =  times[ii];					/*  z[2*i+1]     = times[i];       */
+					space_differences(2*ii,0) = samples[ii];		/*  F[2*i][0]    = samples[i];    */
+     				space_differences(2*ii+1,0) = samples[ii]; 		/*  F[2*i+1][0]  = samples[i];    */
+      				space_differences(2*ii+1,1) = derivatives[ii];	/*  F[2*i+1][1]  = derivatives[i]; */
+     				time_differences(2*ii) = times[ii];				/*  z[2*i]       = times[i];       */
+     				time_differences(2*ii+1) =  times[ii];			/*  z[2*i+1]     = times[i];       */
 				}
 
 				//Add first round of finite differences to fill out rest of matrix. 
 				for(unsigned int ii=1; ii< num_sample_points; ++ii)
 				{
-					finite_difference_matrix(2*ii,1) = (CT(1)/(array_of_times(2*ii) - array_of_times(2*ii - 1))) * (finite_difference_matrix(2*ii,0) - finite_difference_matrix(2*ii - 1,0));
+					space_differences(2*ii,1) = (CT(1)/(time_differences(2*ii) - time_differences(2*ii - 1))) * (space_differences(2*ii,0) - space_differences(2*ii - 1,0));
 				
 				}
 
@@ -108,23 +111,23 @@ namespace bertini{
 				{
 					for(unsigned int jj=2; jj <=ii; ++jj)
 					{
-						finite_difference_matrix(ii,jj) = (CT(1)/(array_of_times(ii) - array_of_times(ii - jj)))*(finite_difference_matrix(ii,jj-1) - finite_difference_matrix(ii-1,jj-1));						
+						space_differences(ii,jj) = (CT(1)/(time_differences(ii) - time_differences(ii - jj)))*(space_differences(ii,jj-1) - space_differences(ii-1,jj-1));						
 					}
 				}
 
 				 unsigned int ii = num_sample_points - 1 ;
-				 auto Result = finite_difference_matrix(2*num_sample_points - 1,2*num_sample_points - 1); 
+				 auto Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
 				 //Start of Result from Hermite polynomial, this is using the diagonal of the 
 				 //finite difference matrix.
 
 				 while(ii >= 1)
 				{
-					Result = (Result*(target_time - array_of_times(ii)) + finite_difference_matrix(2*ii,2*ii)) * (target_time - array_of_times(ii - 1)) + finite_difference_matrix(2*ii - 1,2*ii - 1);  
+					Result = (Result*(target_time - time_differences(ii)) + space_differences(2*ii,2*ii)) * (target_time - time_differences(ii - 1)) + space_differences(2*ii - 1,2*ii - 1);  
 					ii--;
 				}
 				//This builds the hermite polynomial from the highest term down. 
 				//As we multiply the previous result we will construct the highest term down to the last term.
-				Result = Result * (target_time - array_of_times(0)) + finite_difference_matrix(0,0); // Last term in hermite polynomial.
+				Result = Result * (target_time - time_differences(0)) + space_differences(0,0); // Last term in hermite polynomial.
 				return Result;
 			}
 

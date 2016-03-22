@@ -379,6 +379,7 @@ namespace bertini{
 				SampCont<CT> derivatives(this->EndgameSettings().num_sample_points);
 				for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points; ++ii)
 				{	
+					BOOST_LOG_TRIVIAL(severity_level::trace) << mpfr_float::default_precision() << " " << this->GetSystem().precision() << " " << Precision(samples[ii](0)) << std::endl;
 					// uses LU look at Eigen documentation on inverse in Eigen/LU.
 				 	derivatives[ii] = -(this->GetSystem().Jacobian(samples[ii],times[ii]).inverse())*(this->GetSystem().TimeDerivative(samples[ii],times[ii]));
 				}
@@ -393,27 +394,27 @@ namespace bertini{
 				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
 				auto num_used_points = this->EndgameSettings().num_sample_points - 1;
 
-				RT min_found_difference = power_series_settings_.min_difference_in_approximations;
-
+				RT min_found_difference = mpfr_float("1e300");
 
 				std::deque<CT> s_times(num_used_points);
 				std::deque< Vec<CT> > s_derivatives(num_used_points);
 
-				for(unsigned int cc = 1; cc <= upper_bound_on_cycle_number_; ++cc)
+				for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 				{			
 					for(unsigned int ii=0; ii<num_used_points; ++ii)// using the last sample to predict to. 
 					{ 
-						s_times[ii] = pow(times[ii],CT(1)/CT(cc));
-						s_derivatives[ii] = derivatives[ii]*( cc*pow(times[ii], CT(cc - 1)/cc));
+						s_times[ii] = pow(times[ii],1/RT(candidate));
+						s_derivatives[ii] = derivatives[ii]*( candidate*pow(times[ii], RT(candidate - 1)/candidate));
 					}
 
-					Vec<CT> approx = bertini::tracking::endgame::HermiteInterpolateAndSolve(current_time,num_used_points,s_times,samples,s_derivatives);
+					Vec<CT> approx = HermiteInterpolateAndSolve(current_time,num_used_points,s_times,samples,s_derivatives);
 
 					auto curr_diff = (approx - x_current_time).norm();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "candidate cycle number: " << candidate << "curr_diff in computing cycle number: " << curr_diff;
 					if(curr_diff < min_found_difference)
 					{
 						min_found_difference = curr_diff;
-						this->cycle_number_ = cc;
+						this->cycle_number_ = candidate;
 					}
 
 				}// end cc loop over cycle number possibilities
@@ -441,52 +442,54 @@ namespace bertini{
 			This function will compute the cycle number and then dialate the time and derivatives accordingly. After dialation this function will 
 			call a Hermite interpolater to interpolate to the time that we were passed in. 
 
-			\param[out] time_t0 is the time value corresponding to the space value we are trying to approximate.
+			\param[out] t0 is the time value corresponding to the space value we are trying to approximate.
 
 			\tparam CT The complex number type.
 			*/
 			template<typename CT>
-			Vec<CT> ComputeApproximationOfXAtT0(const CT & time_t0)
-			{
+			SuccessCode ComputeApproximationOfXAtT0(Vec<CT>& result, const CT & t0)
+			{	
+				using RT = typename Eigen::NumTraits<CT>::Real;
+
 				auto& samples = std::get<SampCont<CT> >(samples_);
 	 			auto& times   = std::get<TimeCont<CT> >(times_);
 
-				//Checking to make sure all samples are of the same precision. Is this necessary if all samples are refined to final tolerance?
-				unsigned max_precision = 0; 
+	 			assert(samples.size()==times.size() && "must have same number of samples in times and spaces");
 
-				for(auto& sample : samples)
-					if(Precision(sample(0)) > max_precision)
-						max_precision = Precision(sample(0));
+				EnsureAtUniformPrecision(samples, times);
 
-				for(auto& sample : samples)
-					if(Precision(sample(0)) < max_precision)
-						for(unsigned jj = 0; jj < this->GetSystem().NumVariables();++jj)
-							sample(jj).precision(max_precision);
-		
-
-				for(unsigned ii = 0; ii < samples.size(); ++ii)
-					this->GetTracker().Refine(samples[ii],samples[ii],times[ii],
-					                          this->Tolerances().final_tolerance,
-					                          this->EndgameSettings().max_num_newton_iterations);
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "pseg samples used for extrapolation:\n\n";
+				for (const auto& asdf : samples)
+					BOOST_LOG_TRIVIAL(severity_level::trace) << asdf << std::endl;
+				for (const auto& asdf : times)
+					BOOST_LOG_TRIVIAL(severity_level::trace) << asdf << std::endl;
 
 
-				this->GetSystem().precision(max_precision);
+				for (unsigned ii = 0; ii < samples.size(); ++ii)
+				{	
+					auto refine_success = this->RefineSample(samples[ii],samples[ii],times[ii]);
+					if (refine_success!=SuccessCode::Success)
+						return refine_success;
+				}
+
 				auto derivatives = ComputeCycleNumber<CT>();
-
+				auto c = this->CycleNumber();
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "cycle number: " << c << std::endl;
 				// //Conversion to S-plane.
 				TimeCont<CT> s_times;
 				SampCont<CT> s_derivatives;
 
 				for(unsigned ii = 0; ii < samples.size(); ++ii){
-					auto c = this->CycleNumber();
-					if (c<1)
+					
+					if (c==0)
 						throw std::runtime_error("cycle number is 0 while computing approximation of root at target time");
 
-					s_derivatives.push_back(derivatives[ii]*( c*pow(times[ii],CT(c-1)/c )));
-					s_times.push_back(pow(times[ii],CT(1)/c));
+					s_derivatives.push_back(derivatives[ii]*( c*pow(times[ii],RT(c-1)/c )));
+					s_times.push_back(pow(times[ii],RT(1)/c));
 				}
 
-				return bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, samples, s_derivatives);
+				result = bertini::tracking::endgame::HermiteInterpolateAndSolve(t0, this->EndgameSettings().num_sample_points, s_times, samples, s_derivatives);
+				return SuccessCode::Success;
 			}//end ComputeApproximationOfXAtT0
 
 
@@ -515,6 +518,11 @@ namespace bertini{
 			template<typename CT>
 			SuccessCode PSEG(const CT & start_time, const Vec<CT> & start_point)
 			{
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << mpfr_float::default_precision() << "\n\n";
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point(0)) << "\n\n";
+
+				mpfr_float::default_precision(Precision(start_point(0)));
+
 				using RT = typename Eigen::NumTraits<CT>::Real;
 				//Set up for the endgame.
 	 			ClearTimesAndSamples<CT>();
@@ -526,10 +534,18 @@ namespace bertini{
 			 	
 			 	CT origin(0);
 
-				this->ComputeInitialSamples(start_time, start_point, times, samples);
+				auto initial_sample_success = this->ComputeInitialSamples(start_time, start_point, times, samples);
+				if (initial_sample_success!=SuccessCode::Success)
+				{
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "initial sample gathering failed, code " << int(initial_sample_success) << std::endl;
+					return initial_sample_success;
+				}
 
+			 	Vec<CT> prev_approx;
+			 	auto extrapolation_code = ComputeApproximationOfXAtT0(prev_approx, origin);
+			 	if (extrapolation_code != SuccessCode::Success)
+			 		return extrapolation_code;
 
-			 	Vec<CT> prev_approx = ComputeApproximationOfXAtT0(origin);
 
 			 	RT norm_of_dehom_of_prev_approx;
 			 	if(this->SecuritySettings().level <= 0)
@@ -552,28 +568,35 @@ namespace bertini{
 
 			  		if (next_time.abs() < this->EndgameSettings().min_track_time)
 			  		{
-			  			std::cout << "Error current time norm is less than min track time." << '\n';
+			  			BOOST_LOG_TRIVIAL(severity_level::trace) << "Error current time norm is less than min track time." << '\n';
 
 			  			final_approx = prev_approx;
 			  			return SuccessCode::MinTrackTimeReached;
 			  		}
 
+			  		BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking to t = " << next_time << ", default precision: " << mpfr_float::default_precision() << "\n";
 					SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,current_time,next_time,samples.back());
-					if(tracking_success != SuccessCode::Success)
+					if (tracking_success != SuccessCode::Success)
 						return tracking_success;
 
 
 					//push most current time into deque, and lose the least recent time.
+			 		current_time = next_time;
 			 		times.push_back(next_time);
-			 		current_time = times.back();
 			 		times.pop_front(); 
 
 
 			 		samples.push_back(next_sample);
 			 		samples.pop_front();
 
-			 		latest_approx = ComputeApproximationOfXAtT0(origin);
-			 		
+			 		auto approx_code = ComputeApproximationOfXAtT0(latest_approx, origin);
+			 		if (approx_code!=SuccessCode::Success)
+			 		{
+			 			BOOST_LOG_TRIVIAL(severity_level::trace) << "failed to compute the approximation at " << origin << "\n\n";
+			 			return approx_code;
+			 		}
+
+			 		BOOST_LOG_TRIVIAL(severity_level::trace) << "latest approximation:\n" << latest_approx << '\n';
 
 			 		if(this->SecuritySettings().level <= 0)
 			 		{
@@ -585,6 +608,8 @@ namespace bertini{
 
 
 			 		approx_error = (latest_approx - prev_approx).norm();
+
+			 		BOOST_LOG_TRIVIAL(severity_level::trace) << "corresponding error:\n" << approx_error << '\n';
 
 			 		if(approx_error < this->Tolerances().final_tolerance)
 			 		{//success!

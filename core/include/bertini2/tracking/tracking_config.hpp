@@ -160,8 +160,6 @@ namespace bertini
 			{
 				unsigned max_cycle_number = 6;
 				unsigned cycle_number_amplification = 5;
-
-				mpfr_float min_difference_in_approximations = mpfr_float("1e300"); //specific to PSEG
 			};
 
 			struct Cauchy

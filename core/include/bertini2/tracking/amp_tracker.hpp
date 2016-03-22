@@ -418,24 +418,25 @@ namespace bertini{
 				         );
 				#endif
 
+				initial_precision_ = Precision(start_point(0));
+				mpfr_float::default_precision(initial_precision_);
 				// set up the master current time and the current step size
-				current_time_.precision(Precision(start_point(0)));
+				current_time_.precision(initial_precision_);
 				current_time_ = start_time;
 
-				if (preserve_precision_)
-					initial_precision_ = Precision(start_point(0));
+				
 
-				current_stepsize_.precision(Precision(start_point(0)));
+				current_stepsize_.precision(initial_precision_);
 				if (reinitialize_stepsize_)
 					SetStepSize(min(stepping_config_.initial_step_size,abs(start_time-end_time)/stepping_config_.min_num_steps));
 
 				// populate the current space value with the start point, in appropriate precision
-				if (start_point(0).precision()==DoublePrecision())
+				if (initial_precision_==DoublePrecision())
 					MultipleToDouble( start_point);
 				else
-					MultipleToMultiple(start_point(0).precision(), start_point);
+					MultipleToMultiple(initial_precision_, start_point);
 				
-				ChangePrecision<upsample_refine_off>(start_point(0).precision());
+				ChangePrecision<upsample_refine_off>(initial_precision_);
 
 				ResetCounters();
 			}
@@ -446,13 +447,12 @@ namespace bertini{
 										   Vec<dbl> const& start_point) const override
 			{
 				// set up the master current time and the current step size
-				current_time_.precision(Precision(start_point(0)));
+				initial_precision_ = Precision(DoublePrecision());
+				mpfr_float::default_precision(initial_precision_);
+				current_time_.precision(initial_precision_);
 				current_time_ = mpfr(start_time);
 
-				if (preserve_precision_)
-					initial_precision_ = Precision(start_point(0));
-
-				current_stepsize_.precision(Precision(start_point(0)));
+				current_stepsize_.precision(initial_precision_);
 				if (reinitialize_stepsize_)
 					SetStepSize(min(double(stepping_config_.initial_step_size),abs(start_time-end_time)/stepping_config_.min_num_steps));
 
@@ -1658,7 +1658,7 @@ namespace bertini{
 			////////////
 			// state variables
 			/////////////
-			bool preserve_precision_ = true; ///< Whether the tracker should change back to the initial precision after tracking paths.
+			bool preserve_precision_ = false; ///< Whether the tracker should change back to the initial precision after tracking paths.
 
 			mutable unsigned previous_precision_; ///< The previous precision of the tracker.
 			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
