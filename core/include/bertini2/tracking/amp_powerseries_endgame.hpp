@@ -316,7 +316,12 @@ namespace bertini{
 
 				Vec<CT> rand_vector = Vec<CT>::Random(sample0.size()); //should be a row vector for ease in multiplying.
 				
-
+				if (sample2==sample1 || sample1==sample0)
+				{
+					upper_bound_on_cycle_number_ = 1;
+					return;
+				}
+				
 				// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
 				RT estimate = abs(log(this->EndgameSettings().sample_factor))
 								/
@@ -330,11 +335,8 @@ namespace bertini{
 				                      )
 				                  );
 
-				std::cout << estimate << std::endl;
-				if (estimate < 1 || isnan(estimate))
-				{
+				if (estimate < 1) // would be nan if sample points are same as each other
 				  	upper_bound_on_cycle_number_ = 1;
-				}
 				else
 				{
 					//casting issues between auto and unsigned integer. TODO: Try to stream line this.
