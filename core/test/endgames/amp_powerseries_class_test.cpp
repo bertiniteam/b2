@@ -1222,7 +1222,7 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2)-1)*t);
 
 
 	VariableGroup vars{x};
@@ -1245,17 +1245,18 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 	tracker.AMPSetup(AMP);
 
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(1);
-	current_space << mpfr(1);
-
-	Vec<mpfr> eg_boundary_point;
+	mpfr start_time(1);
+	Vec<mpfr> start_point(1); start_point << mpfr(1);
 	mpfr t_endgame_boundary("0.1");
-	tracker.TrackPath(eg_boundary_point, current_time, t_endgame_boundary, current_space);
+	
+	Vec<mpfr> eg_boundary_point;
+	auto init_success = tracker.TrackPath(eg_boundary_point, start_time, t_endgame_boundary, start_point);
 
-	Vec<mpfr> correct(1);
-	correct << mpfr(1,0);
+	BOOST_CHECK(init_success==SuccessCode::Success);
+	BOOST_CHECK(abs(eg_boundary_point(0) - 1)< 1e-5);
+
+	Vec<mpfr> correct_root(1);
+	correct_root << mpfr(1,0);
 
 	config::Endgame endgame_struct;
 	config::Security security_settings;
@@ -1265,7 +1266,7 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 	my_endgame.PSEG(t_endgame_boundary,eg_boundary_point);
 
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),2);//my_endgame.
-	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct_root).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp for power series class 
 
