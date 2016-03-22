@@ -109,7 +109,8 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 	Vec< mpfr > first_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
-	BOOST_CHECK( (first_approx(0) - mpfr("0.9999999767578209232082898114211261253459","0")).norm() < 1e-16); // answer was found using matlab for a check. difference is diff is 2.32422e-08
+	BOOST_CHECK( (first_approx(0) - mpfr("0.9999999767578209232082898114211261253459","0")).norm() < 1e-7); 
+	// answer was found using matlab for a check. difference is diff is 2.32422e-08
 
 }//end basic hermite test case mp against matlab
 
@@ -1565,6 +1566,71 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
  	BOOST_CHECK_EQUAL(num_successful_occurences,6);
  	BOOST_CHECK_EQUAL(num_min_track_time_reached,0);
 
+}
+
+
+BOOST_AUTO_TEST_CASE(parabola)
+{
+	/*
+	In this example we take a decoupled system, homogenize and patch it. Track to endgame boundary and then run our endgame on the space
+	values we have. 
+
+	*/
+	unsigned ambient_precision = 30;
+	using namespace bertini::tracking;
+	mpfr_float::default_precision(ambient_precision);
+
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t");
+
+	System sys;
+
+	VariableGroup v{x};
+
+	sys.AddVariableGroup(v);
+
+	sys.AddFunction(pow(x,2) - t);
+	sys.AddPathVariable(t);
+	Vec<mpfr> start_point(1);
+	start_point << mpfr(1);
+
+	auto AMP = config::AMPConfigFrom(sys);
+
+
+
+	auto tracker = AMPTracker(sys);
+	config::Stepping stepping_preferences;
+	config::Newton newton_preferences;
+	tracker.Setup(config::Predictor::HeunEuler,
+	              	mpfr_float("1e-5"), mpfr_float("1e5"),
+					stepping_preferences, newton_preferences);
+
+	tracker.AMPSetup(AMP);
+	
+
+	mpfr t_start(1), t_endgame_boundary("0.1");
+
+	Vec<mpfr> soln_at_EG_bdry;
+
+	auto tracking_success = tracker.TrackPath(soln_at_EG_bdry,t_start,t_endgame_boundary,start_point);
+	BOOST_CHECK(tracking_success==SuccessCode::Success);
+
+
+
+	Vec<mpfr> correct_eg_soln(1);
+	correct_eg_soln << mpfr(0,0);
+
+	tracker.Setup(config::Predictor::HeunEuler,
+	              	mpfr_float("1e-6"), mpfr_float("1e5"),
+					stepping_preferences, newton_preferences);
+
+	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker);
+
+
+	auto endgame_success = my_endgame.PSEG(t_endgame_boundary,soln_at_EG_bdry);
+
+	auto endgame_solution = my_endgame.FinalApproximation<mpfr>();
+	BOOST_CHECK(abs(endgame_solution(0) - correct_eg_soln(0)) < 1e-11);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

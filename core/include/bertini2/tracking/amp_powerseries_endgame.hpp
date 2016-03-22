@@ -375,9 +375,13 @@ namespace bertini{
 				const auto& samples = std::get<SampCont<CT> >(samples_);
 	 			const auto& times   = std::get<TimeCont<CT> >(times_);
 
+	 			assert((samples.size() == times.size()) && "must have same number of times and samples");
+				assert((samples.size() >= 3) && "must have at least 3 samples");
+
+	 			auto num_samples = samples.size();
 				//Compute dx_dt for each sample.
-				SampCont<CT> derivatives(this->EndgameSettings().num_sample_points);
-				for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points; ++ii)
+				SampCont<CT> derivatives(num_samples);
+				for(unsigned ii = 0; ii < num_samples; ++ii)
 				{	
 					BOOST_LOG_TRIVIAL(severity_level::trace) << mpfr_float::default_precision() << " " << this->GetSystem().precision() << " " << Precision(samples[ii](0)) << std::endl;
 					// uses LU look at Eigen documentation on inverse in Eigen/LU.
@@ -387,30 +391,33 @@ namespace bertini{
 				//Compute upper bound for cycle number.
 				ComputeBoundOnCycleNumber<CT>();
 
-				const Vec<CT>& x_current_time = samples.back();
-				const CT& current_time        = times.back();
+				const Vec<CT>& most_recent_sample = samples.back();
+				const CT& most_recent_time        = times.back();
 
 				//Compute Cycle Number
 				 //num_sample_points - 1 because we are using the most current sample to do an exhaustive search for the best cycle number. 
-				auto num_used_points = this->EndgameSettings().num_sample_points - 1;
+				auto num_used_points = num_samples-1;
 
-				RT min_found_difference = mpfr_float("1e300");
+				auto min_found_difference = Eigen::NumTraits<RT>::highest();
 
-				std::deque<CT> s_times(num_used_points);
-				std::deque< Vec<CT> > s_derivatives(num_used_points);
+				SampCont<CT> temp_samples = samples; // take a copy
+				temp_samples.pop_back(); // remove the last item from it.  
+				TimeCont<CT> s_times(num_used_points);
+				SampCont<CT> s_derivatives(num_used_points);
 
 				for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 				{			
 					for(unsigned int ii=0; ii<num_used_points; ++ii)// using the last sample to predict to. 
 					{ 
-						s_times[ii] = pow(times[ii],1/RT(candidate));
-						s_derivatives[ii] = derivatives[ii]*( candidate*pow(times[ii], RT(candidate - 1)/candidate));
+						s_times[ii] = pow(times[ii],RT(1)/RT(candidate));
+						s_derivatives[ii] = derivatives[ii] * (candidate * pow(times[ii], static_cast<RT>(candidate-1)/candidate));
 					}
 
-					Vec<CT> approx = HermiteInterpolateAndSolve(current_time,num_used_points,s_times,samples,s_derivatives);
+					auto curr_diff = (HermiteInterpolateAndSolve(
+					                      pow(most_recent_time,static_cast<RT>(1)/candidate),
+					                      num_used_points,s_times,temp_samples,s_derivatives) 
+					                 - most_recent_sample).norm();
 
-					auto curr_diff = (approx - x_current_time).norm();
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "candidate cycle number: " << candidate << "curr_diff in computing cycle number: " << curr_diff;
 					if(curr_diff < min_found_difference)
 					{
 						min_found_difference = curr_diff;
@@ -458,13 +465,6 @@ namespace bertini{
 
 				EnsureAtUniformPrecision(samples, times);
 
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "pseg samples used for extrapolation:\n\n";
-				for (const auto& asdf : samples)
-					BOOST_LOG_TRIVIAL(severity_level::trace) << asdf << std::endl;
-				for (const auto& asdf : times)
-					BOOST_LOG_TRIVIAL(severity_level::trace) << asdf << std::endl;
-
-
 				for (unsigned ii = 0; ii < samples.size(); ++ii)
 				{	
 					auto refine_success = this->RefineSample(samples[ii],samples[ii],times[ii]);
@@ -474,7 +474,7 @@ namespace bertini{
 
 				auto derivatives = ComputeCycleNumber<CT>();
 				auto c = this->CycleNumber();
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "cycle number: " << c << std::endl;
+
 				// //Conversion to S-plane.
 				TimeCont<CT> s_times;
 				SampCont<CT> s_derivatives;
@@ -568,7 +568,7 @@ namespace bertini{
 
 			  		if (next_time.abs() < this->EndgameSettings().min_track_time)
 			  		{
-			  			BOOST_LOG_TRIVIAL(severity_level::trace) << "Error current time norm is less than min track time." << '\n';
+			  			BOOST_LOG_TRIVIAL(severity_level::trace) << "Current time norm is less than min track time." << '\n';
 
 			  			final_approx = prev_approx;
 			  			return SuccessCode::MinTrackTimeReached;
@@ -588,6 +588,8 @@ namespace bertini{
 
 			 		samples.push_back(next_sample);
 			 		samples.pop_front();
+
+			 		assert(samples.size()==times.size() && "samples and times must be of same size here");
 
 			 		auto approx_code = ComputeApproximationOfXAtT0(latest_approx, origin);
 			 		if (approx_code!=SuccessCode::Success)
