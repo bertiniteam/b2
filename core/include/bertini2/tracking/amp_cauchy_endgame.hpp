@@ -943,50 +943,41 @@ namespace bertini
 					auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
 					auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
 
-					//Compute dx_dt for each sample.
-					std::deque< Vec<CT> > pseg_derivatives;
-					//initialize the derivative otherwise the first computation in the loop will be wrong. 
-
-					Vec<CT> pseg_derivative = -(this->GetSystem().Jacobian(ps_samples[0],ps_times[0]).inverse())*this->GetSystem().TimeDerivative(ps_samples[0],ps_times[0]);
-					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points; ++ii)
-					{	
-						// uses LU look at Eigen documentation on inverse in Eigen/LU.
-					 	Vec<CT> pseg_derivative = -(this->GetSystem().Jacobian(ps_samples[ii],ps_times[ii]).inverse())*this->GetSystem().TimeDerivative(ps_samples[ii],ps_times[ii]);
-						pseg_derivatives.push_back(pseg_derivative);
-					}
-
-					//Checking to make sure all samples are of the same precision.
-					unsigned max_precision = 0; 
-
-					for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-						if(Precision(ps_samples[ii](0)) > max_precision)
-							max_precision = Precision(ps_samples[ii](0));
-
-					this->ChangePrecision(max_precision);
-
-					// for(unsigned ii = 0; ii < this->EndgameSettings().num_sample_points;++ii)
-					// 	if(Precision(ps_samples[ii](0)) < max_precision)
-					// 		for(unsigned jj = 0; jj < this->GetSystem().NumVariables();++jj)
-					// 			ps_samples[ii](jj).precision(max_precision);
-
-
-			 		//Conversion to S-plane.
-					std::deque<CT> s_times;
-					std::deque< Vec<CT> > s_derivatives;
-
-
-
-					for(unsigned ii = 0; ii < ps_samples.size(); ++ii)
+					for (unsigned ii=0; ii<ps_samples.size(); ++ii)
 					{
-						s_derivatives.push_back(pseg_derivatives[ii]*(RT(this->CycleNumber())*pow(ps_times[ii],(RT(this->CycleNumber()) - RT(1))/this->CycleNumber())));
-						s_times.push_back(pow(ps_times[ii],RT(1)/RT(this->CycleNumber())));
-
 						auto refine_code = this->RefineSample(ps_samples[ii],ps_samples[ii],ps_times[ii]);
 						if (refine_code != SuccessCode:: Success)
 							return refine_code;
 					}
 
-					result = bertini::tracking::endgame::HermiteInterpolateAndSolve(time_t0, this->EndgameSettings().num_sample_points, s_times, ps_samples, s_derivatives);
+					//Checking to make sure all samples are of the same precision.
+					auto new_precision = EnsureAtUniformPrecision(ps_times, ps_samples);
+					this->GetSystem().precision(new_precision);
+
+					auto num_sample_points = this->EndgameSettings().num_sample_points;
+					//Compute dx_dt for each sample.
+					SampCont<CT> pseg_derivatives;
+					for(unsigned ii = 0; ii < num_sample_points; ++ii)
+					{	
+						// the inverse() call uses LU look at Eigen documentation on inverse in Eigen/LU.
+						pseg_derivatives.push_back(
+						                           -(this->GetSystem().Jacobian(ps_samples[ii],ps_times[ii]).inverse())*this->GetSystem().TimeDerivative(ps_samples[ii],ps_times[ii])
+						                           );
+					}
+
+			 		//Conversion to S-plane.
+					TimeCont<CT> s_times(num_sample_points);
+					SampCont<CT> s_derivatives(num_sample_points);
+					auto c = static_cast<RT>(this->CycleNumber());
+					for(unsigned ii = 0; ii < num_sample_points; ++ii)
+					{
+						s_derivatives[ii] = pseg_derivatives[ii]*
+						                        (c*pow(ps_times[ii],(c-1)/c));
+						s_times[ii] =  pow(ps_times[ii], 1/c);
+					}
+
+					result = HermiteInterpolateAndSolve(time_t0, num_sample_points, 
+                                                        s_times, ps_samples, s_derivatives);
 					return SuccessCode::Success;
 				}//end ComputePSEGApproximationOfXAtT0
 

@@ -88,7 +88,7 @@ namespace bertini{
 
 		//does not a thing, because cannot.
 		inline
-		unsigned EnsureAtUniformPrecision(SampCont<dbl> & derivatives, TimeCont<dbl> & times)
+		unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & derivatives)
 		{
 			return DoublePrecision();
 		}
