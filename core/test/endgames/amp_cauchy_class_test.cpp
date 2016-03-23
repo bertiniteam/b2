@@ -702,12 +702,10 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 
 
 
-	mpfr time(1);
-	Vec<mpfr> sample(1);
-
-
-	time = mpfr("0.1");
+	mpfr time("0.1");
 	cauchy_times.push_back(time);
+
+	Vec<mpfr> sample(1);
 	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
 	cauchy_samples.push_back(sample);
 
@@ -1136,17 +1134,10 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 
 	my_endgame.CycleNumber(2);
 
-	// for(int i = 0; i < my_endgame.GetCauchySamples<mpfr>().size(); ++i){
-	// 	std::cout << my_endgame.GetCauchySamples<mpfr>()[i] << '\n';
-	// }
-
 	Vec<mpfr> first_cauchy_approx;
 	auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<mpfr>(first_cauchy_approx);
 
-	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
-
 	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
-
 }// end compute_cauchy_approximation_cycle_num_greater_than_1
 
 BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1)
@@ -1198,8 +1189,6 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1)
 
 	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,sample);
 
-	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
-
 	BOOST_CHECK((my_endgame.GetCauchySamples<mpfr>().back() - my_endgame.GetCauchySamples<mpfr>().front()).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	BOOST_CHECK(my_endgame.GetCauchySamples<mpfr>().size() == 4);
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
@@ -1232,7 +1221,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 	config::Newton newton_preferences;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
+                mpfr_float("1e-6"),
                 mpfr_float("1e5"),
                 stepping_preferences,
                 newton_preferences);
@@ -1240,14 +1229,9 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 	tracker.AMPSetup(AMP);
 
 
+	auto time = mpfr("0.1");
 
-
-	mpfr time(1);
 	Vec<mpfr> sample(1);
-
-
-	time = mpfr("0.1");
-
 	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
 
 
@@ -1261,7 +1245,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 
 }// end find_cauchy_samples_cycle_num_greater_than_1
 
-BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_1)
+BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 {
 	/*
 		Full blown test to see if we can actually find the non singular point at the origin. 
@@ -1296,29 +1280,28 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_1)
 	tracker.AMPSetup(AMP);
 
 
+	
+	
 
-	mpfr time(1);
+
+	auto time = mpfr(".1");
+
 	Vec<mpfr> sample(1);
-	Vec<mpfr> x_origin(1);
-
-
-	time = mpfr(".1");
-
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
-	x_origin << mpfr(1,0);
+
+	Vec<mpfr> solution(1);
+	solution << mpfr(1,0);
 
 	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
 	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
 
-	 // std::cout << "first cauchy approx is " << my_endgame.FinalApproximation<mpfr>() << '\n';
-
-	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
+	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - solution).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 1);
 
-}// end cauchy_endgame_test_cycle_num_1
+}// end full_test_cycle_num_1
 
-BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
+BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 {
 	/*
 		Full blown test to see if we can actually find the singular point at the origin. 
@@ -1353,17 +1336,12 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	
 	tracker.AMPSetup(AMP);
 
+	auto time = mpfr("0.1");
 
-
-
-	mpfr time(1);
 	Vec<mpfr> sample(1);
-	Vec<mpfr> x_origin(1);
+	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01");
 
-
-	time = mpfr("0.1");
-
-	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
+	Vec<mpfr> x_origin(1); 
 	x_origin << mpfr(1,0);
 
 	
@@ -1371,12 +1349,12 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 
 	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
 
-	// std::cout << "first cauchy approx is " << my_endgame.FinalApproximation<mpfr>() << '\n';
+
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
-}// end cauchy_endgame_test_cycle_num_greater_than_1
+}// end full_test_cycle_num_greater_than_1
 
 
 BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision_16)
