@@ -158,6 +158,7 @@ namespace bertini{
 
 				stepping_config_ = stepping;
 				newton_config_ = newton;
+				current_stepsize_ = stepping_config_.initial_step_size;
 			}
 
 
