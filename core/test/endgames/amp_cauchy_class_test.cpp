@@ -60,20 +60,21 @@ extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 BOOST_AUTO_TEST_SUITE(amp_cauchy_endgame)
 
 using namespace bertini::tracking;
+using namespace bertini::tracking::endgame;
 
-BOOST_AUTO_TEST_CASE(circle_track_d_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(circle_track_d)
 {
 	/*
-		In this test we take a univarite polynomial with one solution and ensure that our CircleTrack function returns to the same position. 
+		In this test we take a univariate polynomial with one solution and ensure that our CircleTrack function returns to the same position. 
 		This is tested by checking that our deque of cauchy_samples has the front and end with the same value roughly.
 	*/
 	mpfr_float::default_precision(16);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
-	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
+	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction((x - mpfr(1))*(1-t) + (x + mpfr(1))*t);
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -87,7 +88,7 @@ BOOST_AUTO_TEST_CASE(circle_track_d_for_cauchy_class_test)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -95,8 +96,8 @@ BOOST_AUTO_TEST_CASE(circle_track_d_for_cauchy_class_test)
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> cauchy_samples; //samples are space values that may be a vector of complex numbers.
 
 
 	mpfr time(1);
@@ -114,12 +115,12 @@ BOOST_AUTO_TEST_CASE(circle_track_d_for_cauchy_class_test)
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<mpfr>().back() - sample).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 
-} // end circle_track_d_for_cauchy_class_test
+} // end circle_track_d
 
-BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1)
 {
 	/*
-		In this test we take a univarite polynomial with one solution of multiplicity 2. We need to ensure that our CircleTrack function 
+		In this test we take a univariate polynomial with one solution of multiplicity 2. We need to ensure that our CircleTrack function 
 		returns to the same position after two calls. The first call should land us on the second path, and the second call should land us back 
 		where we started. This is tested by checking that our deque of cauchy_samples has the front and end with the same value roughly.
 	*/
@@ -129,7 +130,7 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_t
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -143,7 +144,7 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_t
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -151,8 +152,8 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_t
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> cauchy_samples; //samples are space values that may be a vector of complex numbers.
 
 
 
@@ -183,13 +184,13 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_t
 
 	BOOST_CHECK((second_track_sample - sample).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 	
-} // end circle_track_mp_cycle_num_greater_than_1_for_cauchy_class_test
+} // end circle_track_mp_cycle_num_greater_than_1
 
 
 BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 {
 	/*
-		In this test we take a univarite polynomial with one solution of multiplicity. For our first power series approximation we need to 
+		In this test we take a univariate polynomial with one solution of multiplicity. For our first power series approximation we need to 
 		make sure that we have a stablization of the cycle number. This is achieved by computing an approximation for C over K which is described 
 		on page 53 of the Berini Book, Numerically Solving Polynomials Systems with Bertini. 
 		This test case is ensuring no calculations are greatly altered, so our test condition is to check against a computed value that has been already known. 
@@ -199,7 +200,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
-	sys.AddFunction(pow(x - 1,3));  //f(x) = (x-1)^3
+	sys.AddFunction(pow(x-1,3));  //f(x) = (x-1)^3
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -211,7 +212,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -219,15 +220,15 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
 	
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
 	// Vec<mpfr> derivative(1);
 
-	time = mpfr(.1); // x = .1
+	time = mpfr(".1"); // x = .1
 	pseg_times.push_back(time);
 	sample << mpfr("-0.729"); // f(.1) = -0.729
 	pseg_samples.push_back(sample);
@@ -284,7 +285,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 {
 	/*
-		In this test we take a univarite polynomial with one solution of multiplicity. For our first power series approximation we need to 
+		In this test we take a univariate polynomial with one solution of multiplicity. For our first power series approximation we need to 
 		make sure that we have a stablization of the cycle number. This is achieved by computing an approximation for C over K which is described 
 		on page 53 of the Berini Book, Numerically Solving Polynomials Systems with Bertini. 
 		This test case is ensuring no calculations are greatly altered, so our test condition is to check against a computed value that has been already known. 
@@ -294,7 +295,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
-	sys.AddFunction(pow(x - 1,3));  //f(x) = (x-1)^3
+	sys.AddFunction(pow(x-1,3));  //f(x) = (x-1)^3
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -306,7 +307,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -314,15 +315,15 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
 	
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
 	// Vec<mpfr> derivative(1);
 
-	time = mpfr(.1); // x = .1
+	time = mpfr(".1"); // x = .1
 	pseg_times.push_back(time);
 	sample << mpfr("-0.729"); // f(.1) = -0.729
 	pseg_samples.push_back(sample);
@@ -390,7 +391,7 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t");
-	sys.AddFunction( pow(x - 1,3)*(1-t) + (pow(x,3) + 1)*t);
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -402,7 +403,7 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -410,8 +411,8 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
 	std::deque<mpfr_float> c_over_k_array;
 
 	mpfr time(1);
@@ -501,7 +502,7 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t");
-	sys.AddFunction( pow(x - 1,3)*(1-t) + (pow(x,3) + 1)*t);
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -513,7 +514,7 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -521,11 +522,11 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
 	std::deque<mpfr_float> c_over_k_array;
 
-	mpfr time(1);
+	mpfr time;
 	Vec<mpfr> sample(1);
 	// Vec<mpfr> derivative(1);
 
@@ -594,15 +595,13 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 
 	c_over_k_array.push_back(third_c_over_k);
 
-	auto stabilized = my_endgame.CheckForCOverKStabilization(c_over_k_array);
-
-	BOOST_CHECK(stabilized == true);
+	BOOST_CHECK(my_endgame.CheckForCOverKStabilization(c_over_k_array) == true);
 
 } // end check agreement function mp for cauchy 
 
 
 
-BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 {
 	/*
 		In this test case we have a solution we are trying to find with multiplicity 1. If we call CircleTrack we should have a closed loop. 
@@ -612,9 +611,9 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
-	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
+	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction((x - 1)*(1-t) + (x + 1)*t);
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -628,7 +627,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -636,8 +635,8 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> cauchy_samples; //samples are space values that may be a vector of complex numbers.
 
 
 	mpfr time(1);
@@ -657,32 +656,16 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1_cauchy_class_test)
 
 
 	auto tracking_success =  my_endgame.CircleTrack(time,sample);
-
-	// std::cout << "first sample is " << cauchy_samples.front() << '\n';
-	// std::cout << "last sample is " << cauchy_samples.back() << '\n';
-
-	// for(int ii = 0; ii < my_endgame.GetCauchySamples<mpfr>().size(); ii++)
-	// {
-	// 	std::cout << "samples at i is " << my_endgame.GetCauchySamples<mpfr>()[ii] << '\n';
-	// }
-
-	//auto closed_loop_tolerance = my_endgame.FindToleranceForClosedLoop(time,sample);
-
-	// std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
-
-	auto check_closed_loop = my_endgame.CheckClosedLoop<mpfr>();
-
-	BOOST_CHECK(check_closed_loop == true);
+	BOOST_CHECK(my_endgame.CheckClosedLoop<mpfr>() == true);
 
 } // end check closed loop if cycle num is 1 for cauchy class test
 
-BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 {
 	/*
 		In this test case we have a solution we are trying to find with multiplicity 2. If we call CircleTrack we should not have a closed loop. 
 		
 		This test case is checking to make sure our CheckClosedLoop function returns that we have not closed.
-
 	*/
 
 	mpfr_float::default_precision(30);
@@ -691,7 +674,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 
 	VariableGroup vars{x};
@@ -706,7 +689,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -714,8 +697,8 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> cauchy_samples; //samples are space values that may be a vector of complex numbers.
 
 
 
@@ -735,25 +718,15 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1_cauchy_class
 	my_endgame.SetCauchyTimes(cauchy_times);
 
 	auto tracking_success =  my_endgame.CircleTrack(time,sample);
+	BOOST_CHECK(my_endgame.CheckClosedLoop<mpfr>() == false);
 
-	// for(int ii = 0; ii < my_endgame.GetCauchySamples<mpfr>().size(); ii++)
-	// {
-	// 	std::cout << "samples at i is " << my_endgame.GetCauchySamples<mpfr>()[ii] << '\n';
-	// }
-
-
-	//auto closed_loop_tolerance = my_endgame.FindToleranceForClosedLoop(time,sample);
-
-	// std::cout << "closed_loop_tolerance is " << closed_loop_tolerance << '\n';
-
-	auto check_closed_loop = my_endgame.CheckClosedLoop<mpfr>();
-
-	BOOST_CHECK(check_closed_loop == false);
+	tracking_success =  my_endgame.CircleTrack(my_endgame.GetCauchyTimes<mpfr>().back(),my_endgame.GetCauchySamples<mpfr>().back());
+	BOOST_CHECK(my_endgame.CheckClosedLoop<mpfr>() == true);
 	
 } // end check closed loop if cycle num is greater than 1 for cauchy class test
 
 
-BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 {
 	
 	//  After we have stabilized our estimation of c over k, we can start to perform cauchy loops to see if the minimum and maximum norms
@@ -767,9 +740,9 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
-	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
+	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction((x - mpfr(1))*(1-t) + (x + mpfr(1))*t);
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -785,7 +758,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -793,43 +766,25 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_for_cauchy_class_test)
 	
 	tracker.AMPSetup(AMP);
 
-	// std::cout << "tracker made " << '\n';
-
-	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> cauchy_samples; //samples are space values that may be a vector of complex numbers.
 
 
-	mpfr time(1);
+	mpfr time(".1");
 	Vec<mpfr> sample(1);
 
-
-	time = mpfr(".1");
 	cauchy_times.push_back(time);
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
 	cauchy_samples.push_back(sample);
 
-		// std::cout << "sample made " << '\n';
-
 	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
 
-		// std::cout << "endgame made " << '\n';
-
 	auto tracking_success =  my_endgame.CircleTrack(time,sample);
-
-		// std::cout << "circle track done " << tracking_success << '\n';
-
-	auto comparison_of_cauchy_ratios = my_endgame.RatioEGOperatingZoneTest<mpfr>();
-
-		// std::cout << "comparison made  made " << comparison_of_cauchy_ratios << '\n';
-
-	//std::cout << "comparison is " << comparison_of_cauchy_ratios << '\n';
-
-
-	BOOST_CHECK(comparison_of_cauchy_ratios == true);
+	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<mpfr>() == true);
 
 } // end compare cauchy ratios for cauchy class test
 
-BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 {
 	/*
 		After we have stabilized our estimation of c over k, we can start to perform cauchy loops to see if the minimum and maximum norms
@@ -843,7 +798,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1_for_cauchy_c
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -857,7 +812,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1_for_cauchy_c
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -865,36 +820,27 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1_for_cauchy_c
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> cauchy_samples; //samples are space values that may be a vector of complex numbers.
 
 
 
-	mpfr time(1);
+	mpfr time("0.1");
 	Vec<mpfr> sample(1);
 
-
-	time = mpfr("0.1");
 	cauchy_times.push_back(time);
 	sample << mpfr("9.000000000000001e-01", "4.358898943540673e-01"); // 
 	cauchy_samples.push_back(sample);
 
 
 	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
-
 	auto tracking_success =  my_endgame.CircleTrack(time,sample);
-
-	auto comparison_of_cauchy_ratios = my_endgame.RatioEGOperatingZoneTest<mpfr>();
-
-	//std::cout << "comparison is " << comparison_of_cauchy_ratios << '\n';
-
-
-	BOOST_CHECK(comparison_of_cauchy_ratios == true);
+	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<mpfr>() == true);
 
 } // end compare cauchy ratios for cycle num greater than 1 cauchy class test
 
 
-BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 {
 	/*
 		In the cauchy endgame we want to compute cauchy loops and make sure that we have that the max and min norms of the samples around the 
@@ -905,9 +851,9 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
-	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
+	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction((x - mpfr(1))*(1-t) + (x + mpfr(1))*t);
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -921,7 +867,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -929,14 +875,12 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
 
-	mpfr time(1);
+	mpfr time("0.1");
 	Vec<mpfr> sample(1);
 
-
-	time = mpfr(".1");
 	pseg_times.push_back(time);
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
 	pseg_samples.push_back(sample);
@@ -948,19 +892,12 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_for_cauchy_class_test)
 
 	auto success_of_pre_cauchy_loops =  my_endgame.InitialCauchyLoops<mpfr>();
 
-	// for(int ii = 0; ii < my_endgame.GetCauchySamples<mpfr>().size(); ii++)
-	// {
-	// std::cout << "samples at i is " << my_endgame.GetCauchySamples<mpfr>()[ii] << '\n';
- // 	}
-
-	// std::cout << "success code is " << success_of_pre_cauchy_loops << '\n';
-
 	BOOST_CHECK(success_of_pre_cauchy_loops == SuccessCode::Success);
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
-}//end pre_cauchy_loops_for_cauchy_class_test
+}//end pre_cauchy_loops
 
-BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 {
 	/*
 		In the cauchy endgame we want to compute cauchy loops and make sure that we have that the max and min norms of the samples around the 
@@ -973,7 +910,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -987,7 +924,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -995,8 +932,8 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
 
 
 
@@ -1015,14 +952,11 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_
 	my_endgame.SetPSEGSamples(pseg_samples);
 	my_endgame.SetPSEGTimes(pseg_times);
 
-	auto success_of_pre_cauchy_loops =  my_endgame.InitialCauchyLoops<mpfr>();
-
-	BOOST_CHECK(success_of_pre_cauchy_loops == SuccessCode::Success);
+	BOOST_CHECK(my_endgame.InitialCauchyLoops<mpfr>() == SuccessCode::Success);
 	BOOST_CHECK(my_endgame.CycleNumber() == 2);
+}// end pre_cauchy_loops_cycle_num_greater_than_1
 
-}// end pre_cauchy_loops_cycle_num_greater_than_1_for_cauchy_class_test
-
-BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 {
 	/*
 		The function tested is ComputeFirstApproximation. This function is the culmination of tracking samples until our estimation of 
@@ -1038,7 +972,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
 	// Define homotopy system
-	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	auto AMP = config::AMPConfigFrom(sys);
 
@@ -1047,7 +981,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1058,19 +992,11 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
 	mpfr origin = mpfr(0,0);
 	Vec<mpfr> x_origin(1);
 	x_origin << mpfr(1,0);
-	//std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	//std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-
 
 	Vec<mpfr> first_approx(1);
-	mpfr time(1);
+	mpfr time("0.1");
 	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
-
-	time = mpfr(".1"); // x = .1
-	// times.push_back(time);
 	sample << mpfr("0.5","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
-	// samples.push_back(sample);
 
 
 	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
@@ -1082,9 +1008,9 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_for_cauchy_class_test)
 	BOOST_CHECK((first_approx - x_origin).norm() < 1e-2);
 	BOOST_CHECK(my_endgame.CycleNumber() == 3);
 
-}// end first_approximation_using_pseg_for_cauchy_class_test
+}// end first_approximation_using_pseg
 
-BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 {
 	/*
 		This test case uses all the sample points collected by CircleTrack around a non-singular point to compute an extrapolant using the 
@@ -1095,9 +1021,9 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_t
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
-	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
+	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction((x - mpfr(1))*(1-t) + (x + mpfr(1))*t);
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -1111,7 +1037,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_t
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1119,15 +1045,14 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_t
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> cauchy_samples; //samples are space values that may be a vector of complex numbers.
 
 
-	mpfr time(1);
+	mpfr time("0.1");
 	Vec<mpfr> sample(1);
 	Vec<mpfr> x_origin(1);
 
-	time = mpfr(".1");
 	cauchy_times.push_back(time);
 	sample << mpfr("7.999999999999999e-01", "2.168404344971009e-19"); // 
 	cauchy_samples.push_back(sample);
@@ -1140,18 +1065,16 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1_for_cauchy_class_t
 
 	auto first_track_success =  my_endgame.CircleTrack(time,sample);
 
-	my_endgame.CycleNumber(1);
+	my_endgame.CycleNumber(1); // manually set cycle number to 1 for this test
 
 	Vec<mpfr> first_cauchy_approx;
 	auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<mpfr>(first_cauchy_approx);
 
-	// std::cout << "first cauchy approx is " << first_cauchy_approx << '\n';
-
 	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 
-}// end compute_cauchy_approximation_cycle_num_1_for_cauchy_class_test
+}// end compute_cauchy_approximation_cycle_num_1
 
-BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 {
 
 	/*
@@ -1165,7 +1088,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -1179,7 +1102,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1187,8 +1110,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 	
 	tracker.AMPSetup(AMP);
 
-	std::deque<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > cauchy_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> cauchy_times; //times are not vectors they are just complex numbers.
+	SampCont<mpfr> cauchy_samples; //samples are space values that may be a vector of complex numbers.
 
 
 
@@ -1224,9 +1147,9 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1_for_c
 
 	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < my_endgame.Tolerances().track_tolerance_during_endgame);
 
-}// end compute_cauchy_approximation_cycle_num_greater_than_1_for_cauchy_class_test
+}// end compute_cauchy_approximation_cycle_num_greater_than_1
 
-BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1)
 {
 	/*
 		To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples. 
@@ -1236,9 +1159,9 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
-	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
+	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction((x - 1)*(1-t) + (x + 1)*t);
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -1252,7 +1175,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1281,9 +1204,9 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1_for_cauchy_class_test)
 	BOOST_CHECK(my_endgame.GetCauchySamples<mpfr>().size() == 4);
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
-}// end find_cauchy_samples_cycle_num_1_for_cauchy_class_test
+}// end find_cauchy_samples_cycle_num_1
 
-BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 {
 	/*
 		To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples. 
@@ -1294,7 +1217,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_cla
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -1308,7 +1231,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_cla
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1336,7 +1259,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_cla
 	BOOST_CHECK_EQUAL(my_endgame.GetCauchySamples<mpfr>().size(), 7);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 
-}// end find_cauchy_samples_cycle_num_greater_than_1_for_cauchy_class_test
+}// end find_cauchy_samples_cycle_num_greater_than_1
 
 BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_1)
 {
@@ -1348,9 +1271,9 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_1)
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
-	Var t = std::make_shared<Variable>("t"); //f(x) = (x-1)^3 + t*0, need t*0 for derivative calculation. 
+	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction((x - mpfr(1))*(1-t) + (x + mpfr(1))*t);
+	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -1364,7 +1287,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_1)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1406,7 +1329,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -1422,7 +1345,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1)
 	newton_preferences.max_num_newton_iterations = 2;
 	newton_preferences.min_num_newton_iterations = 1;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1467,7 +1390,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t"); 
 
-	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
@@ -1483,7 +1406,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision
 	newton_preferences.max_num_newton_iterations = 2;
 	newton_preferences.min_num_newton_iterations = 1;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1542,7 +1465,7 @@ BOOST_AUTO_TEST_CASE(cauchy_d_for_cauchy_class_multiple_variables)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1598,7 +1521,7 @@ BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-5"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1628,7 +1551,7 @@ BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
 }// end cauchy_mp_for_cauchy_class_multiple_variables
 
 
-BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
+BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
 	// Griewank Osborne is a very classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values 
 	// at t = 0.1. 
@@ -1670,7 +1593,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_cauchy_class_test)
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
                 mpfr_float("1e-6"),
                 mpfr_float("1e5"),
                 stepping_preferences,
@@ -1805,7 +1728,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	auto tracker = AMPTracker(final_system);
 	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(config::Predictor::HeunEuler,
 	              	mpfr_float("1e-5"), mpfr_float("1e5"),
 					stepping_preferences, newton_preferences);
 
@@ -1835,6 +1758,10 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	correct << mpfr(1,0),mpfr(1,0);
 
 	endgame::CauchyEndgame<AMPTracker> my_endgame(tracker);
+
+	tracker.Setup(config::Predictor::HeunEuler,
+	              	mpfr_float("1e-6"), mpfr_float("1e5"),
+					stepping_preferences, newton_preferences);
 
 
 	std::vector<Vec<mpfr> > endgame_solutions;

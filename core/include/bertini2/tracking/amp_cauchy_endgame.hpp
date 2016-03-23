@@ -328,7 +328,7 @@ namespace bertini
 				\brief Getter for the deque holding time values for the power series approximation of the Cauchy endgame.
 				*/
 				template<typename CT>
-				TimeCont<CT> GetPSEGTimes() {return std::get<TimeCont<CT> >(pseg_times_);}
+				TimeCont<CT>& GetPSEGTimes() {return std::get<TimeCont<CT> >(pseg_times_);}
 
 				/**
 				\brief Setter for the deque holding space values for the power series approximation of the Cauchy endgame. 
@@ -340,7 +340,7 @@ namespace bertini
 				\brief Getter for the deque holding space values for the power series approximation of the Cauchy endgame. 
 				*/
 				template<typename CT>
-				SampCont<CT> GetPSEGSamples() {return std::get<SampCont<CT> >(pseg_samples_);}
+				SampCont<CT>& GetPSEGSamples() {return std::get<SampCont<CT> >(pseg_samples_);}
 
 				/**
 				\brief Setter for the deque holding space values for the Cauchy endgame. 
@@ -352,7 +352,7 @@ namespace bertini
 				\brief Getter for the deque holding space values for the Cauchy endgame. 
 				*/
 				template<typename CT>
-				SampCont<CT> GetCauchySamples() {return std::get<SampCont<CT> >(cauchy_samples_);}
+				SampCont<CT>& GetCauchySamples() {return std::get<SampCont<CT> >(cauchy_samples_);}
 
 				/**
 				\brief Setter for the deque holding time values for the Cauchy endgame. 
@@ -364,7 +364,7 @@ namespace bertini
 				\brief Getter for the deque holding time values for the Cauchy endgame. 
 				*/
 				template<typename CT>
-				TimeCont<CT> GetCauchyTimes() {return std::get<TimeCont<CT> >(cauchy_times_);}
+				TimeCont<CT>& GetCauchyTimes() {return std::get<TimeCont<CT> >(cauchy_times_);}
 	
 				
 				/**
