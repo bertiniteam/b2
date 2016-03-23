@@ -1332,7 +1332,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 
 	my_endgame.PSEG(current_time,current_space);
 
-	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-10);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp test case for power series class
 
@@ -1518,7 +1518,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	
 
 	mpfr t_start(1), t_endgame_boundary(0.1);
-	std::vector<Vec<mpfr> > solutions;
 	std::vector<Vec<mpfr> > homogenized_solutions;
 	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
@@ -1533,7 +1532,6 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
 
 		homogenized_solutions.push_back(result);
-		solutions.push_back(final_system.DehomogenizePoint(result));
 	}
 
 	Vec<mpfr> correct(2);

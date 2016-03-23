@@ -84,26 +84,42 @@ namespace bertini{
 			template<typename CT>		
 				Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives)
 			{
-				assert((times.size() == num_sample_points) && "must have correct number of sample times");
-				assert((samples.size() == num_sample_points) && "must have correct number of sample points");
-				assert((derivatives.size() == num_sample_points) && "must have correct number of derivatives");
+				assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
+				assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
+				assert((derivatives.size() >= num_sample_points) && "must have sufficient number of derivatives");
 
-				assert((samples.size() == times.size()) && "must have same number of times and samples");
-				assert((derivatives.size() == times.size()) && "must have same number of derivatives and times");
-				assert((samples.size() == derivatives.size()) && "must have same number of samples and derivatives");
-
+				auto num_provided_samples = samples.size();
+				auto num_provided_times = times.size();
+				auto num_provided_derivs = derivatives.size();
 
 				Mat< Vec<CT> > space_differences(2*num_sample_points,2*num_sample_points);
 				Vec<CT> time_differences(2*num_sample_points);
+				// std::cout << "\nhermite interpolating using " << num_sample_points << " samples\n";
+
+				// std::cout << "\ntimes\n";
+				// for (const auto& q : times)
+				// 	std::cout << q << '\n';
+
+				// std::cout << "\nsamples\n";
+				// for (const auto& q : samples)
+				// 	std::cout << q << '\n';
+
+				// std::cout << "\nderivatives\n";
+				// for (const auto& q : derivatives)
+				// 	std::cout << q << '\n';
+
 
 				for(unsigned int ii=0; ii<num_sample_points; ++ii)
 				{ 
-					auto ind = num_sample_points-1-ii;
-					space_differences(2*ii,0) = samples[ind];		/*  F[2*i][0]    = samples[i];    */
-     				space_differences(2*ii+1,0) = samples[ind]; 		/*  F[2*i+1][0]  = samples[i];    */
-      				space_differences(2*ii+1,1) = derivatives[ind];	/*  F[2*i+1][1]  = derivatives[i]; */
-     				time_differences(2*ii) = times[ind];				/*  z[2*i]       = times[i];       */
-     				time_differences(2*ii+1) =  times[ind];			/*  z[2*i+1]     = times[i];       */
+					// std::cout << times[num_provided_times-1-ii] << std::endl;
+					// std::cout << samples[num_provided_samples-1-ii] << std::endl;
+					// std::cout << derivatives[num_provided_derivs-1-ii] << std::endl;
+					// std::cout << std::endl;
+					space_differences(2*ii,0)   = samples[    num_provided_samples-1-ii];		/*  F[2*i][0]    = samples[i];    */
+     				space_differences(2*ii+1,0) = samples[    num_provided_samples-1-ii]; 		/*  F[2*i+1][0]  = samples[i];    */
+      				space_differences(2*ii+1,1) = derivatives[num_provided_derivs -1-ii];	/*  F[2*i+1][1]  = derivatives[i]; */
+     				time_differences(2*ii)      = times[      num_provided_times  -1-ii];				/*  z[2*i]       = times[i];       */
+     				time_differences(2*ii+1)    = times[      num_provided_times  -1-ii];			/*  z[2*i+1]     = times[i];       */
 				}
 
 				//Add first round of finite differences to fill out rest of matrix. 
@@ -283,8 +299,6 @@ namespace bertini{
 						if (tracking_success!=SuccessCode::Success)
 							return tracking_success;
 					}
-
-					assert(samples.size()==times.size() && "samples and times must be of same size here");
 
 					return SuccessCode::Success;
 				}

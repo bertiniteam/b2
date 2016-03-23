@@ -1367,7 +1367,7 @@ namespace bertini{
 				if (new_precision==current_precision_) // no op
 					return SuccessCode::Success;
 
-				BOOST_LOG_TRIVIAL(severity_level::debug) << "changing precision to " << new_precision;
+				BOOST_LOG_TRIVIAL(severity_level::debug) << "changing precision from " << current_precision_ << " to " << new_precision;
 
 				bool upsampling_needed = new_precision > current_precision_;
 				// reset the counter for estimating the condition number.  

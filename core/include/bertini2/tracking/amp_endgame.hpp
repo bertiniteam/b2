@@ -50,43 +50,94 @@ namespace bertini{
 		namespace endgame {
 			
 
+		inline
+		void SetPrecision(SampCont<mpfr> & samples, unsigned prec)
+		{
+			for (auto& s : samples)
+				for (unsigned ii=0; ii<s.size(); ii++)
+					s(ii).precision(prec);
+		}
+
+		inline
+		void SetPrecision(TimeCont<mpfr> & times, unsigned prec)
+		{
+			for (auto& t : times)
+				t.precision(prec);
+		}
+
+		inline
+		unsigned MaxPrecision(SampCont<mpfr> const& samples)
+		{
+			unsigned max_precision = 0;
+			for (auto& s : samples)
+				if(Precision(s(0)) > max_precision)
+					max_precision = Precision(s(0));
+			return max_precision;
+		}
+
+		inline
+		unsigned MaxPrecision(TimeCont<mpfr> const& times)
+		{
+			unsigned max_precision = 0;
+			for (auto& t : times)
+				if(Precision(t) > max_precision)
+					max_precision = Precision(t);
+			return max_precision;
+		}
+
 
 		//does not a thing, because cannot.
 		inline
-		SuccessCode EnsureAtUniformPrecision(SampCont<dbl> & samples, TimeCont<dbl> & times)
+		unsigned EnsureAtUniformPrecision(SampCont<dbl> & derivatives, TimeCont<dbl> & times)
 		{
-			return SuccessCode::Success;
+			return DoublePrecision();
 		}
 
 
 		//changes precision of mpfr to highest needed precision for the samples.
 		inline
-		SuccessCode EnsureAtUniformPrecision(SampCont<mpfr> & samples, TimeCont<mpfr> & times)
+		unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples)
 		{
-			unsigned max_precision = 0; 
-
-			for (auto& sample : samples)
-				if(Precision(sample(0)) > max_precision)
-					max_precision = Precision(sample(0));
+			unsigned max_precision = max(
+			                             mpfr_float::default_precision(),
+			                             MaxPrecision(samples)
+			                             ); 
 
 			if (max_precision != mpfr_float::default_precision())
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "changing precision from " << max_precision << " to " << mpfr_float::default_precision() << std::endl;
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
 			
 			mpfr_float::default_precision(max_precision);
 
-			for (auto& sample : samples)
-				if(Precision(sample(0)) < max_precision)
-					for(unsigned jj = 0; jj < sample.size();++jj)
-						sample(jj).precision(max_precision);
-		
-			for (auto& t : times)
-				t.precision(max_precision);
+			SetPrecision(times, max_precision);
+			SetPrecision(samples, max_precision);
 
-
-			return SuccessCode::Success;
+			return max_precision;
 		}
 
 
+		//changes precision of mpfr to highest needed precision for the samples.
+		inline
+		unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples, SampCont<mpfr> & derivatives)
+		{
+			unsigned max_precision = max(
+			                             mpfr_float::default_precision(),
+			                             MaxPrecision(samples),
+			                             MaxPrecision(derivatives)
+			                             ); 
+
+			if (max_precision != mpfr_float::default_precision())
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
+			
+			mpfr_float::default_precision(max_precision);
+
+			SetPrecision(times, max_precision);
+			SetPrecision(samples, max_precision);
+			SetPrecision(derivatives, max_precision);
+
+			return max_precision;
+		}
+
+		
 		/**
 		\class Endgame
 
@@ -222,6 +273,7 @@ namespace bertini{
 				virtual void MultipleToMultipleImpl(unsigned new_precision) const = 0;
 				virtual void DoubleToMultipleImpl(unsigned new_precision) const = 0;
 				virtual void MultipleToDoubleImpl() const = 0;
+
 
 
 
