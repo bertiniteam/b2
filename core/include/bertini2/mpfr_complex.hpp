@@ -358,21 +358,21 @@ namespace bertini {
 		Constuct the number 0.
 		*/
 		inline static complex zero(){
-			return complex("0.0","0.0");
+			return complex(0,0);
 		}
 		
 		/**
 		Constuct the number 1.
 		*/
 		inline static complex one(){
-			return complex("1.0","0.0");
+			return complex(1,0);
 		}
 		
 		/**
 		Constuct the number 2.
 		*/
 		inline static complex two(){
-			return complex("2.0","0.0");
+			return complex(2,0);
 		}
 		
 		/**
@@ -380,7 +380,7 @@ namespace bertini {
 		*/
 		inline static complex i()
 		{
-			return complex("0.0","1.0");
+			return complex(0,1);
 		}
 		
 		/**
@@ -388,7 +388,7 @@ namespace bertini {
 		*/
 		inline static complex half()
 		{
-			return complex("0.5","0.0");
+			return complex("0.5","0");
 		}
 		
 		/**
@@ -396,7 +396,7 @@ namespace bertini {
 		*/
 		inline static complex minus_one()
 		{
-			return complex("-1.0","0.0");
+			return complex(-1,0);
 		}
 		
 		
@@ -405,14 +405,14 @@ namespace bertini {
 		 */
 		inline static complex rand()
 		{
-			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 			returnme /= sqrt( returnme.abs());
 			return returnme;
 		}
 		
 		inline static complex RandomUnit()
 		{
-			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 			returnme /= returnme.abs();
 			return returnme;
 		}
@@ -421,7 +421,7 @@ namespace bertini {
 		 */
 		inline static complex RandomReal()
 		{
-			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 			returnme /= sqrt( returnme.abs());
 			return returnme;
 		}
@@ -746,7 +746,7 @@ namespace bertini {
 					// did not find a comma
 					else{
 						z.real(gotten.substr(1,gotten.size()-2));
-						z.imag("0.0");
+						z.imag(0);
 						return in;
 					}
 					
@@ -754,7 +754,7 @@ namespace bertini {
 			}
 			else{
 				z.real(gotten);
-				z.imag("0.0");
+				z.imag(0);
 				return in;
 			}
 		}
@@ -1159,7 +1159,7 @@ namespace bertini {
 	 */
 	inline complex square(const complex & z)
 	{
-		return complex(z.real()*z.real() - z.imag()*z.imag(), mpfr_float("2.0")*z.real()*z.imag());
+		return complex(z.real()*z.real() - z.imag()*z.imag(), mpfr_float(2)*z.real()*z.imag());
 	}
 	
 	
@@ -1175,8 +1175,8 @@ namespace bertini {
 	inline complex cube(const complex & z)
 	{
 		//		return complex(x^3 - 3*x*y^2, 3*x^2*y - y^3); // this deliberately left in for the equation.
-		return complex(pow(z.real(),3) - mpfr_float("3.0")*z.real()*pow(z.imag(),2),
-					   mpfr_float("3.0")*pow(z.real(),2)*z.imag() - pow(z.imag(),3));
+		return complex(pow(z.real(),3) - 3*z.real()*pow(z.imag(),2),
+					   3*pow(z.real(),2)*z.imag() - pow(z.imag(),3));
 		
 	}
 	
@@ -1193,7 +1193,7 @@ namespace bertini {
 			return pow(inverse(z), -power);
 		}
 		else if (power==0)
-			return complex("1.0","0.0");
+			return complex(1,0);
 		else if(power==1)
 			return z;
 		else if(power==2)
@@ -1203,7 +1203,7 @@ namespace bertini {
 		else
 		{
 			unsigned int p(power);
-			complex result("1.0","0.0"), z_to_the_current_power_of_two = z;
+			complex result(1,0), z_to_the_current_power_of_two = z;
 			// have copy of p in memory, can freely modify it.
 			do {
 				if ( (p & 1) == 1 ) { // get the lowest bit of the number
@@ -1250,7 +1250,7 @@ namespace bertini {
 	 */
 	inline complex sin(const complex & z)
 	{
-		return (exp(complex::i()*z) - exp(-complex::i()*z)) / complex::i() / mpfr_float("2.0");
+		return (exp(complex::i()*z) - exp(-complex::i()*z)) / complex::i() / 2;
 	}
 	
 	/**
@@ -1258,7 +1258,7 @@ namespace bertini {
 	 */
 	inline complex cos(const complex & z)
 	{
-		return (exp(complex::i()*z) + exp(-complex::i()*z))  / mpfr_float("2.0");
+		return (exp(complex::i()*z) + exp(-complex::i()*z))  / 2;
 	}
 	
 	/**
@@ -1275,7 +1275,7 @@ namespace bertini {
 	 */
 	inline complex sinh(const complex & z)
 	{
-		return (exp(z) - exp(-z)) / mpfr_float("2.0");
+		return (exp(z) - exp(-z)) / 2;
 	}
 	
 	/**
@@ -1283,7 +1283,7 @@ namespace bertini {
 	 */
 	inline complex cosh(const complex & z)
 	{
-		return (exp(z) + exp(-z))  / mpfr_float("2.0");
+		return (exp(z) + exp(-z))  / 2;
 	}
 	
 	/**
@@ -1330,7 +1330,7 @@ namespace bertini {
 	 */
 	inline complex asin(const complex & z)
 	{
-		return (-complex::i()) * log( complex::i()*z + sqrt( mpfr_float("1.0") - pow(z,2)) );
+		return (-complex::i()) * log( complex::i()*z + sqrt( 1 - pow(z,2)) );
 	}
 	
 	
@@ -1339,7 +1339,7 @@ namespace bertini {
 	 */
 	inline complex acos(const complex & z)
 	{
-		return -complex::i() * log( z + complex::i()*sqrt( mpfr_float("1.0") - pow(z,2) ) );
+		return -complex::i() * log( z + complex::i()*sqrt( 1 - pow(z,2) ) );
 	}
 	
 	
@@ -1350,7 +1350,7 @@ namespace bertini {
 	 */
 	inline complex atan(const complex & z)
 	{
-		return complex::i()/mpfr_float("2.0") * log( (complex::i() + z) / (complex::i() - z) );
+		return complex::i()/2 * log( (complex::i() + z) / (complex::i() - z) );
 	}
 	
 	
@@ -1361,7 +1361,7 @@ namespace bertini {
 	 */
 	inline complex asinh(const complex & z)
 	{
-		return log( z + sqrt( square(z)+mpfr_float("1.0") )  );
+		return log( z + sqrt( square(z)+1 )  );
 	}
 	
 	/**
@@ -1369,7 +1369,7 @@ namespace bertini {
 	 */
 	inline complex acosh(const complex & z)
 	{
-		return log(  z + sqrt( square(z)-mpfr_float("1.0") ) );
+		return log(  z + sqrt( square(z)-1 ) );
 	}
 	
 	/**
@@ -1377,7 +1377,7 @@ namespace bertini {
 	 */
 	inline complex atanh(const complex & z)
 	{
-		return mpfr_float("0.5") * log( (mpfr_float("1.0")+z)/(mpfr_float("1.0")-z) );
+		return mpfr_float("0.5") * log( (1+z)/(1-z) );
 	}
 	
 	
