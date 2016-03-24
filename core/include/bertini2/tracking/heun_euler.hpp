@@ -114,9 +114,9 @@ namespace bertini{
 
 				Vec<ComplexType> delta_x_2 = LU.solve(-S.TimeDerivative(second_sample_point, second_time)); 
 
-				auto delta_x = (delta_x_1+delta_x_2)/2;
+				auto delta_x = (delta_x_1+delta_x_2)/RealType(2);
 
-				auto Y = (delta_x_1 - delta_x_2)/2;
+				auto Y = (delta_x_1 - delta_x_2)/RealType(2);
 
 				error_estimate = Y.norm();
 
