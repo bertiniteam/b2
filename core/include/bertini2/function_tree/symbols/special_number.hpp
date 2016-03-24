@@ -131,12 +131,12 @@ namespace node{
 			
 		private:
 			// Return value of constant
-			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return acos(-1.0);
 			}
 
-			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return mpfr(acos(mpfr_float(-1)));
 			}
@@ -231,12 +231,12 @@ namespace node{
 
 		private:
 			// Return value of constant
-			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return dbl(exp(1.0f),0.0);
 			}
 
-			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return mpfr(exp(mpfr_float(1)));
 			}

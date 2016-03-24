@@ -153,7 +153,7 @@ namespace bertini {
 
 			// the Reset() function call traverses the entire tree, resetting everything.
 			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			for (auto iter : functions_) 
+			for (const auto& iter : functions_) 
 				iter->Reset();
 
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
@@ -966,7 +966,7 @@ namespace bertini {
         	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
         	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
 
-    		for (auto iter : time_order_of_variable_groups_)
+    		for (auto& iter : time_order_of_variable_groups_)
     		{
     			switch (iter){
     				case VariableGroupType::Affine:

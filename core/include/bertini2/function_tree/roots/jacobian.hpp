@@ -45,6 +45,8 @@ namespace node{
 		 */
 		class Jacobian : public virtual Function
 		{
+			friend detail::FreshEvalSelector<dbl>;
+			friend detail::FreshEvalSelector<mpfr>;
 		public:
 				
 				
@@ -64,15 +66,13 @@ namespace node{
 				 the Jacobian is reevaluated.
 				 */
 				template<typename T>
-				T Eval(std::shared_ptr<Variable> diff_variable = nullptr) const = delete;
+				T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const = delete;
 				
 				
 				// Evaluate the node.  If flag false, just return value, if flag true
 				//  run the specific FreshEval of the node, then set flag to false.
-				//
-				// Template type is type of value you want returned.
 				template<typename T>
-				T EvalJ(std::shared_ptr<Variable> diff_variable) const
+				T EvalJ(std::shared_ptr<Variable> const& diff_variable) const
 				{
 						auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
 
@@ -80,11 +80,11 @@ namespace node{
 							return val_pair.first;
 						else
 						{
-								current_diff_variable_ = diff_variable;
-								Reset();
-								std::get< std::pair<T,bool> >(current_value_).first  = FreshEval(T(), diff_variable);
-								std::get< std::pair<T,bool> >(current_value_).second = true;
-								return std::get< std::pair<T,bool> >(current_value_).first;
+							current_diff_variable_ = diff_variable;
+							Reset();
+							std::get< std::pair<T,bool> >(current_value_).first  = detail::FreshEvalSelector<T>::Run(*this,diff_variable);
+							std::get< std::pair<T,bool> >(current_value_).second = true;
+							return std::get< std::pair<T,bool> >(current_value_).first;
 						}						
 				}
 				

@@ -144,7 +144,7 @@ namespace node{
 		
 	protected:
 		// This should never be called for a Differential.  Only for Jacobians.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			if(differential_variable_ == diff_variable)
 			{
@@ -156,7 +156,7 @@ namespace node{
 			}
 		}
 
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			if(differential_variable_ == diff_variable)
 			{

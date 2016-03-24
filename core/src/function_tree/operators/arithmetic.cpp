@@ -247,7 +247,7 @@ namespace bertini{
 	
 
 	
-	dbl SumOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const
+	dbl SumOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		dbl retval{0};
 		for(int ii = 0; ii < children_.size(); ++ii)
@@ -265,7 +265,7 @@ namespace bertini{
 		return retval;
 	}
 	
-	mpfr SumOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const
+	mpfr SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		mpfr retval{0};
 		for(int ii = 0; ii < children_.size(); ++ii)
@@ -319,12 +319,12 @@ namespace bertini{
 		return std::make_shared<NegateOperator>(child_->Differentiate());
 	}
 	
-	dbl NegateOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const
+	dbl NegateOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return -(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr NegateOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const
+	mpfr NegateOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return -child_->Eval<mpfr>(diff_variable);
 	}
@@ -533,7 +533,7 @@ namespace bertini{
 		return true;
 	}
 
-	dbl MultOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const
+	dbl MultOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		dbl retval{1};
 		for(int ii = 0; ii < children_.size(); ++ii)
@@ -551,7 +551,7 @@ namespace bertini{
 		return retval;
 	}
 	
-	mpfr MultOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const
+	mpfr MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		mpfr retval{1};
 		for(int ii = 0; ii < children_.size(); ++ii)
@@ -713,12 +713,12 @@ namespace bertini{
 		return false;
 	}
 	
-	dbl PowerOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const
+	dbl PowerOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return std::pow( base_->Eval<dbl>(diff_variable), exponent_->Eval<dbl>());
 	}
 	
-	mpfr PowerOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const
+	mpfr PowerOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return pow( base_->Eval<mpfr>(diff_variable), exponent_->Eval<mpfr>());
 	}
@@ -829,12 +829,12 @@ namespace bertini{
 	}
 	
 
-	dbl SqrtOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const
+	dbl SqrtOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return sqrt(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr SqrtOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const
+	mpfr SqrtOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return sqrt(child_->Eval<mpfr>(diff_variable));
 	}
@@ -882,12 +882,12 @@ namespace bertini{
 		}
 	}
 	
-	dbl ExpOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const
+	dbl ExpOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return exp(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr ExpOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const
+	mpfr ExpOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return exp(child_->Eval<mpfr>(diff_variable));
 	}
@@ -931,12 +931,12 @@ namespace bertini{
 		}
 	}
 	
-	dbl LogOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const
+	dbl LogOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return log(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr LogOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const
+	mpfr LogOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return log(child_->Eval<mpfr>(diff_variable));
 	}
