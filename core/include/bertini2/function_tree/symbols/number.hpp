@@ -54,7 +54,7 @@ namespace node{
 
 		void Reset() const override
 		{
-			// nothing to reset here
+			ResetStoredValues();
 		}
 
 
