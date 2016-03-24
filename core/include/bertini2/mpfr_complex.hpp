@@ -127,17 +127,22 @@ namespace bertini {
 		explicit
 		complex(double re) : real_(re), imag_(0){}
 		
-
+		explicit
 		complex(int re) : real_(re), imag_(0){}
 
+		explicit
 		complex(int re, int im) : real_(re), imag_(im){}
 
+		explicit
 		complex(unsigned int re) : real_(re), imag_(0){}
 
+		explicit
 		complex(unsigned int re, unsigned int im) : real_(re), imag_(im){}
 
+		explicit
 		complex(mpz_int const& re) : real_(re), imag_(0){}
 
+		explicit
 		complex(mpz_int const& re, mpz_int const& im) : real_(re), imag_(im){}
 
 		explicit
@@ -148,12 +153,14 @@ namespace bertini {
 		/**
 		 Single-parameter for constructing a real-valued complex from a single high-precision number
 		 */
+		
 		complex(const mpfr_float & re) : real_(re), imag_(0){}
 		
 		
 		/**
 		 Single-parameter for constructing a real-valued complex from a convertible single string
 		 */
+		explicit
 		complex(const std::string & re) : real_(re), imag_(0){}
 		
 		
@@ -191,6 +198,7 @@ namespace bertini {
 		/**
 		 Two-parameter constructor for building a complex from two strings.
 		 */
+		explicit
 		complex(const std::string & re, const std::string & im) : real_(re), imag_(im)
 		{}
 		
@@ -198,6 +206,7 @@ namespace bertini {
 		/**
 		 Mixed two-parameter constructor for building a complex from two strings.
 		 */
+		 explicit
 		complex(const mpfr_float & re, const std::string & im) : real_(re), imag_(im)
 		{}
 		
@@ -205,6 +214,7 @@ namespace bertini {
 		/**
 		 Mixed two-parameter constructor for building a complex from two strings.
 		 */
+		 explicit
 		complex(const std::string & re, const mpfr_float & im) : real_(re), imag_(im)
 		{}
 		
@@ -428,7 +438,6 @@ namespace bertini {
 		//////////////
 		
 		
-		
 		/**
 		 Complex addition
 		 */
@@ -439,7 +448,23 @@ namespace bertini {
 			return *this;
 		}
 		
-		
+		complex& operator+=(const mpz_int & rhs)
+		{
+			real_+=rhs;
+			return *this;
+		}
+
+		/**
+		 Complex addition, by an integral type.
+		 */
+		template<typename Int, typename = typename std::enable_if<std::is_integral<Int>::value >::type>
+		complex& operator+=(const Int & rhs)
+		{
+			real_ += rhs;
+			return *this;
+		}
+
+
 		/**
 		 Complex subtraction
 		 */
@@ -450,7 +475,27 @@ namespace bertini {
 			return *this;
 		}
 		
-		
+		/**
+		 Complex subtraction
+		 */
+		complex& operator-=(const mpz_int & rhs)
+		{
+			real_-=rhs;
+			return *this;
+		}
+
+		/**
+		 Complex subtraction, by an integral type.
+		 */
+		template<typename Int, typename = typename std::enable_if<std::is_integral<Int>::value >::type>
+		complex& operator-=(const Int & rhs)
+		{
+			real_ -= rhs;
+			return *this;
+		}
+
+
+
 		/**
 		 Complex multiplication.  uses a single temporary variable
 		 
@@ -464,7 +509,20 @@ namespace bertini {
 			return *this;
 		}
 		
-		
+
+		/**
+		 Complex multiplication, by an integral type.
+		 */
+		template<typename Int, typename = typename std::enable_if<std::is_integral<Int>::value >::type>
+		complex& operator*=(const Int & rhs)
+		{
+			real_ *= rhs;
+			imag_ *= rhs;
+			return *this;
+		}
+
+
+
 		/**
 		 Complex division.  implemented using two temporary variables
 		 */
@@ -480,7 +538,7 @@ namespace bertini {
 		
 		
 		/**
-		 Complex division, by a real mpfr_float.  implemented using two temporary variables
+		 Complex division, by a real mpfr_float.
 		 */
 		complex& operator/=(const mpfr_float & rhs)
 		{
@@ -490,7 +548,17 @@ namespace bertini {
 			return *this;
 		}
 		
-		
+
+		/**
+		 Complex division, by an integral type.
+		 */
+		template<typename Int, typename = typename std::enable_if<std::is_integral<Int>::value >::type>
+		complex& operator/=(const Int & rhs)
+		{
+			real_ /= rhs;
+			imag_ /= rhs;
+			return *this;
+		}
 		
 		/**
 		 Complex negation
@@ -712,9 +780,6 @@ namespace bertini {
 			return std::complex<double>(double(real_), double(imag_));
 		}
 		
-		///////
-		//TODO: write MPI methods, for sending, receiving, broadcasting, etc.  this will require becoming familiar with Boost.MPI
-		
 	}; // end declaration of the bertini::complex number class
 	
 	
@@ -776,18 +841,21 @@ namespace bertini {
 	/**
 	 Complex-real addition.
 	 */
-	inline complex operator+(complex lhs, int rhs)
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator+(complex lhs, T const& rhs)
 	{
-		lhs.real(lhs.real()+rhs);
+		lhs += rhs;
 		return lhs;
 	}
 	
 	/**
 	 Real-complex addition.
 	 */
-	inline complex operator+(int lhs, complex rhs)
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator+(T const& lhs, complex rhs)
 	{
-		return rhs+lhs;
+		rhs += lhs;
+		return rhs;
 	}
 	
 	
@@ -806,7 +874,7 @@ namespace bertini {
 	 */
 	inline complex operator-(complex lhs, const mpfr_float & rhs)
 	{
-		lhs.real(lhs.real()-rhs);
+		lhs -= rhs;
 		return lhs;
 	}
 	
@@ -815,9 +883,8 @@ namespace bertini {
 	 */
 	inline complex operator-(const mpfr_float & lhs, complex rhs)
 	{
-		rhs.real(lhs - rhs.real());
-		rhs.imag(-rhs.imag());
-		return rhs;
+		rhs -= lhs;
+		return -rhs;
 	}
 	
 	/**
@@ -825,7 +892,7 @@ namespace bertini {
 	 */
 	inline complex operator-(complex lhs, const mpz_int & rhs)
 	{
-		lhs.real(lhs.real()-rhs);
+		lhs -= rhs;
 		return lhs;
 	}
 	
@@ -834,28 +901,28 @@ namespace bertini {
 	 */
 	inline complex operator-(const mpz_int & lhs, complex rhs)
 	{
-		rhs.real(lhs - rhs.real());
-		rhs.imag(-rhs.imag());
-		return rhs;
+		rhs -= lhs;
+		return -rhs;
 	}
 
 	/**
 	 Complex-real subtraction
 	 */
-	inline complex operator-(complex lhs, int rhs)
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator-(complex lhs, T rhs)
 	{
-		lhs.real(lhs.real()-rhs);
+		lhs -= rhs;
 		return lhs;
 	}
 	
 	/**
 	 Real-complex subtraction
 	 */
-	inline complex operator-(int lhs, complex rhs)
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator-(T lhs, complex rhs)
 	{
-		rhs.real(lhs - rhs.real());
-		rhs.imag(-rhs.imag());
-		return rhs;
+		rhs -= lhs;
+		return -rhs;
 	}
 	
 
@@ -909,19 +976,21 @@ namespace bertini {
 	/**
 	 Complex-real multiplication
 	 */
-	inline complex operator*(complex lhs, int rhs)
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator*(complex lhs, T const& rhs)
 	{
-		lhs.real(lhs.real()*rhs);
-		lhs.imag(lhs.imag()*rhs);
+		lhs *= rhs;
 		return lhs;
 	}
 	
 	/**
 	 Real-complex multiplication
 	 */
-	inline complex operator*(int lhs, complex rhs)
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator*(T const& lhs, complex rhs)
 	{
-		return rhs*lhs; // it commutes!
+		rhs *= lhs;
+		return rhs; // it commutes!
 	}
 
 
@@ -949,8 +1018,7 @@ namespace bertini {
 	 */
 	inline complex operator/(complex lhs, const mpfr_float & rhs)
 	{
-		lhs.real(lhs.real()/rhs);
-		lhs.imag(lhs.imag()/rhs);
+		lhs /= rhs;
 		return lhs;
 	}
 	
@@ -981,19 +1049,20 @@ namespace bertini {
 	/**
 	 Integer-complex division
 	 */
-	inline complex operator/(int lhs, const complex & rhs)
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator/(T const& lhs, const complex & rhs)
 	{
-		mpfr_float d = rhs.abs2();
+		auto d = rhs.abs2();
 		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
 	}
 	
 	/**
 	 Complex-integer division
 	 */
-	inline complex operator/(complex lhs, int rhs)
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator/(complex lhs, T const& rhs)
 	{
-		lhs.real(lhs.real()/rhs);
-		lhs.imag(lhs.imag()/rhs);
+		lhs/=rhs;
 		return lhs;
 	}
 
