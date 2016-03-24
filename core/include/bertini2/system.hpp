@@ -235,7 +235,7 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian() const
 		{
-			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+			const auto& vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
 
 			if (!is_differentiated_)
 				Differentiate();
@@ -706,7 +706,7 @@ namespace bertini {
         /**
 		 Get the variables in the problem.
 		*/
-		VariableGroup Variables() const;
+		const VariableGroup& Variables() const;
 
 		/**
 		\brief Get an affine variable group the class has defined.
