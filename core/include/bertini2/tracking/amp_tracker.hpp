@@ -778,9 +778,9 @@ namespace bertini{
 				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * stepping_config_.step_size_success_factor), stepping_config_.max_step_size);
 
 
-				unsigned max_precision = current_precision_;
+				
 				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexType, RealType>();
-
+				unsigned max_precision = max(min_precision,current_precision_);
 
 				if (num_successful_steps_since_stepsize_increase_ < stepping_config_.consecutive_successful_steps_before_stepsize_increase)
 					max_stepsize = current_stepsize_; // disallow stepsize changing 
