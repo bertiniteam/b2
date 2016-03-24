@@ -16,18 +16,20 @@
 
 //  powerseries_test.cpp
 //
-//  copyright 2015
+//  copyright 2015, 2015
+//
 //  Tim Hodges
 //  Colorado State University
 //  Department of Mathematics
-//  Fall 2015
+//
+//  Daniel Brake
+//  University of Notre Dame
+//  ACMS
+
+
 #include <iostream>
-#include <typeinfo>
 #include <boost/test/unit_test.hpp>
-#include <boost/multiprecision/mpfr.hpp>
-#include "bertini2/limbo.hpp"
-#include "bertini2/mpfr_complex.hpp"
-#include <deque>
+
 #include "bertini2/tracking/amp_powerseries_endgame.hpp"
 #include "bertini2/start_system.hpp"
 
@@ -59,7 +61,7 @@ extern boost::multiprecision::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
-BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame_class_basics)
+BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame)
 
 using namespace bertini::tracking;
 
@@ -1519,7 +1521,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 
 	mpfr t_start(1), t_endgame_boundary(0.1);
 	std::vector<Vec<mpfr> > homogenized_solutions;
-	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
+	for (unsigned ii = 0; ii < 1; ++ii)
 	{
 		mpfr_float::default_precision(ambient_precision);
 		final_system.precision(ambient_precision);

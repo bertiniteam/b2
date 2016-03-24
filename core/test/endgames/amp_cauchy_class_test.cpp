@@ -1392,7 +1392,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision
 	
 	tracker.AMPSetup(AMP);
 
-
+	tracker.ReinitializeInitialStepSize(false);
 
 
 	mpfr time(1);
@@ -1614,11 +1614,12 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	unsigned num_paths_converging = 0;
 	for(auto s : griewank_homogenized_solutions) //current_space_values)
 	{
-		// std::cout << ".1 solution is " << final_griewank_osborn_system.DehomogenizePoint(s) << '\n';
-
+		std::cout << ".1 solution is " << final_griewank_osborn_system.DehomogenizePoint(s) << '\n';
+		mpfr_float::default_precision(30);
+		final_griewank_osborn_system.precision(Precision(s(0)));
 		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
 
-		// std::cout << "endgame solution is " << final_griewank_osborn_system.DehomogenizePoint(my_endgame.FinalApproximation<mpfr>()) << '\n';
+		std::cout << "endgame solution is " << final_griewank_osborn_system.DehomogenizePoint(my_endgame.FinalApproximation<mpfr>()) << '\n';
 
 		if(endgame_success == SuccessCode::Success)
 		{
@@ -1716,7 +1717,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	mpfr t_start(1), t_endgame_boundary(0.1);
 	std::vector<Vec<mpfr> > solutions;
 	std::vector<Vec<mpfr> > homogenized_solutions;
-	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
+	for (unsigned ii = 0; ii < 1; ++ii)
 	{
 		mpfr_float::default_precision(30);
 		final_system.precision(30);
@@ -1748,6 +1749,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	unsigned num_min_track_time_reached = 0;
 	for (auto s : homogenized_solutions)
 	{
+		mpfr_float::default_precision(30);
+		final_system.precision(Precision(s(0)));
 		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{

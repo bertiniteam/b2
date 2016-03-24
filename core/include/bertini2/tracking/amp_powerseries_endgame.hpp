@@ -435,11 +435,11 @@ namespace bertini{
 
 				for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 				{			
-					// std::cout << "testing cycle candidate " << candidate << std::endl;
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "testing cycle candidate " << candidate;
 
 					for(unsigned int ii=0; ii<num_used_points; ++ii)// using the last sample to predict to. 
 					{ 
-						s_times[ii] = pow(times[ii+offset],RT(1)/RT(candidate));
+						s_times[ii] = pow(times[ii+offset],1/static_cast<RT>(candidate));
 						s_derivatives[ii] = derivatives[ii+offset] * (candidate * pow(times[ii+offset], static_cast<RT>(candidate-1)/candidate));
 
 						// std::cout << s_times[ii] << " = pow(" << times[ii+offset] << ",1/" << candidate << ")\n\n";
@@ -452,7 +452,7 @@ namespace bertini{
 					                      num_used_points,s_times,samples,s_derivatives) // the input data
 					                 - 
 					                 most_recent_sample).norm();
-
+					BOOST_LOG_TRIVIAL(severity_level::trace) << curr_diff;
 					if (curr_diff < min_found_difference)
 					{
 						min_found_difference = curr_diff;
@@ -590,7 +590,13 @@ namespace bertini{
 				times.push_back(next_time);
 				samples.push_back(next_sample);
 
-				this->RefineSample(samples.back(), next_sample,  times.back());
+				auto refine_success = this->RefineSample(samples.back(), next_sample,  times.back());
+				if (refine_success != SuccessCode::Success)
+				{
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
+					return refine_success;
+				}
+
 
 		 		auto max_precision = EnsureAtUniformPrecision(times, samples, derivatives);
 				this->GetSystem().precision(max_precision);
