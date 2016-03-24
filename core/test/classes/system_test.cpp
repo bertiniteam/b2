@@ -447,18 +447,18 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 
 	Vec<mpfr> values(2);
 
-	values(0) = mpfr(2.0);
-	values(1) = mpfr(3.0);
+	values(0) = mpfr(2);
+	values(1) = mpfr(3);
 
 	Vec<mpfr> v = sys.Eval(values);
 
-	BOOST_CHECK_EQUAL(v(0), mpfr(36.0));
+	BOOST_CHECK_EQUAL(v(0), mpfr(36));
 
 
 	auto J = sys.Jacobian(values);
 
-	mpfr x1 = 2;
-	mpfr x2 = 3;
+	mpfr x1(2);
+	mpfr x2(3);
 	
 	BOOST_CHECK_EQUAL(J(0,0), mpfr(2.0)*x1*x2*x2);
 	BOOST_CHECK_EQUAL(J(0,1), x1*x1*mpfr(2.0)*x2);

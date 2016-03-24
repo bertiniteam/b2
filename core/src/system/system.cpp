@@ -671,7 +671,7 @@ namespace bertini
 
 
 
-	VariableGroup System::Variables() const
+	const VariableGroup& System::Variables() const
 	{
 		if (!have_ordering_){
 			ConstructOrdering();
