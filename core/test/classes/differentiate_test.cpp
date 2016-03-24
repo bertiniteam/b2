@@ -1183,15 +1183,13 @@ BOOST_AUTO_TEST_CASE(integer_power)
 	t->set_current_value(mpfr("0.779871","0.712645"));
 
 	auto J = j->EvalJ<mpfr>(x);
-	std::cout << J << "\n";
-	BOOST_CHECK(abs(J - mpfr("-2.12923","0.354137999999999999999999999997")) < threshold_clearance_mp);
+	BOOST_CHECK(abs(J - mpfr("-2.129232","0.354138")) < threshold_clearance_mp);
 
 
 	x->set_current_value(mpfr("0.900000000000000","0.435889894354067355223698198386"));
     t->set_current_value(mpfr("0.1"));
     j->Reset();
 	J = j->EvalJ<mpfr>(x);
-	std::cout << J << "\n";
 
 	BOOST_CHECK(abs( real(J) ) < threshold_clearance_mp);
 	BOOST_CHECK(abs( imag(J) - mpfr_float("0.871779788708134710447396396772")) < threshold_clearance_mp);
@@ -1222,14 +1220,14 @@ BOOST_AUTO_TEST_CASE(integer_power_system)
 	mpfr curr_t("0.779871","0.712645");
 
 	auto J = sys.Jacobian(curr_x,curr_t);
-std::cout << J << "\n";
-	BOOST_CHECK(abs(real(J(0,0)) - mpfr_float("-2.12923200000000001352873368887")) < threshold_clearance_mp);
-	BOOST_CHECK(abs(imag(J(0,0)) - mpfr_float("0.354137999999999841804765310371")) < threshold_clearance_mp);
+
+	BOOST_CHECK(abs(real(J(0,0)) - mpfr_float("-2.129232")) < threshold_clearance_mp);
+	BOOST_CHECK(abs(imag(J(0,0)) - mpfr_float("0.354138")) < threshold_clearance_mp);
 
 	curr_x << mpfr("0.900000000000000","0.435889894354067355223698198386");
 	curr_t = mpfr("0.1");
 	J = sys.Jacobian(curr_x,curr_t);
-std::cout << J << "\n";
+
 	BOOST_CHECK(abs( real(J(0,0)) ) < threshold_clearance_mp);
 	BOOST_CHECK(abs( imag(J(0,0)) - mpfr_float("0.871779788708134710447396396772")) < threshold_clearance_mp);
 }
