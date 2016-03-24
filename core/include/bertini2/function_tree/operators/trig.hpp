@@ -104,12 +104,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return sin(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return sin(child_->Eval<mpfr>(diff_variable));
 		}
@@ -156,12 +156,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return asin(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return asin(child_->Eval<mpfr>(diff_variable));
 		}
@@ -219,12 +219,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return cos(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return cos(child_->Eval<mpfr>(diff_variable));
 		}
@@ -275,12 +275,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return acos(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return acos(child_->Eval<mpfr>(diff_variable));
 		}
@@ -338,12 +338,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return tan(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return tan(child_->Eval<mpfr>(diff_variable));
 		}
@@ -394,12 +394,12 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for arctangent.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return atan(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return atan(child_->Eval<mpfr>(diff_variable));
 		}

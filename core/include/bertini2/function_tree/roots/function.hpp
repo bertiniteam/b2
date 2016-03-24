@@ -201,7 +201,7 @@ namespace node{
 		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return entry_node_->Eval<dbl>(diff_variable);
 		}
@@ -209,7 +209,7 @@ namespace node{
 		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return entry_node_->Eval<mpfr>(diff_variable);
 		}

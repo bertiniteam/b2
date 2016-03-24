@@ -176,12 +176,12 @@ namespace node{
 	private:
 
 		// Return value of constant
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return dbl(double(true_value_),0);
 		}
 
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return mpfr(true_value_,0);
 		}
@@ -247,12 +247,12 @@ namespace node{
 
 	private:
 		// Return value of constant
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return dbl(highest_precision_value_);
 		}
 
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return mpfr(highest_precision_value_);
 		}
@@ -341,12 +341,12 @@ namespace node{
 	private:
 
 		// Return value of constant
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) const override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return dbl(double(true_value_real_),double(true_value_imag_));
 		}
 
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) const override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
 		}
