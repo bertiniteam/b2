@@ -142,9 +142,9 @@ namespace bertini
 	{
 		size_t num_vars = 0;
 
-		for (auto iter : variable_groups_)
+		for (const auto& iter : variable_groups_)
 			num_vars += iter.size();
-		for (auto iter : hom_variable_groups_)
+		for (const auto& iter : hom_variable_groups_)
 			num_vars += iter.size();
 		num_vars += ungrouped_variables_.size();
 
@@ -202,47 +202,47 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
-		for (auto iter : functions_) {
+		for (const auto& iter : functions_) {
 			iter->precision(new_precision);
 		}
 
-		for (auto iter : subfunctions_) {
+		for (const auto& iter : subfunctions_) {
 			iter->precision(new_precision);
 		}
 
-		for (auto iter : explicit_parameters_) {
+		for (const auto& iter : explicit_parameters_) {
 			iter->precision(new_precision);
 		}
 
 
-		for (auto iter :implicit_parameters_) {
+		for (const auto& iter :implicit_parameters_) {
 			iter->precision(new_precision);
 		}
 
-		for (auto iter : constant_subfunctions_) {
+		for (const auto& iter : constant_subfunctions_) {
 			iter->precision(new_precision);
 		}
 
 		if (is_differentiated_)
-			for (auto iter : jacobian_)
+			for (const auto& iter : jacobian_)
 				iter->precision(new_precision);
 
 		if (have_path_variable_)
 			path_variable_->precision(new_precision);
 
 
-		for (auto iter : homogenizing_variables_)
+		for (const auto& iter : homogenizing_variables_)
 			iter->precision(new_precision);
 
-		for (auto iter : variable_groups_)
-			for (auto jter : iter)
+		for (const auto& iter : variable_groups_)
+			for (const auto& jter : iter)
 				jter->precision(new_precision);
 
-		for (auto iter : hom_variable_groups_)
-			for (auto jter : iter)
+		for (const auto& iter : hom_variable_groups_)
+			for (const auto& jter : iter)
 				jter->precision(new_precision);
 
-		for (auto iter : ungrouped_variables_)
+		for (const auto& iter : ungrouped_variables_)
 			iter->precision(new_precision);
 
 		if (new_precision>DoublePrecision())
@@ -284,9 +284,9 @@ namespace bertini
 		//    * not partially homogenized, in the sense that some groups have been homogenized, and others haven't
 		//    
 		//
-		for (auto curr_function : functions_)
+		for (const auto& curr_function : functions_)
 		{	
-			for (auto curr_var_gp : hom_variable_groups_)
+			for (const auto& curr_var_gp : hom_variable_groups_)
 			{
 				if (!curr_function->IsHomogeneous(curr_var_gp))
 					throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
@@ -316,14 +316,14 @@ namespace bertini
 				Var hom_var = homogenizing_variables_[group_counter];
 				VariableGroup temp_group = *curr_var_gp;
 				temp_group.push_front(hom_var);
-				for (auto curr_function : functions_)
+				for (const auto& curr_function : functions_)
 					curr_function->Homogenize(temp_group, hom_var);
 			}
 			else
 			{
 				Var hom_var = std::make_shared<bertini::node::Variable>(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
-				for (auto curr_function : functions_)
+				for (const auto& curr_function : functions_)
 					curr_function->Homogenize(*curr_var_gp, hom_var);
 			}
 		
@@ -347,10 +347,10 @@ namespace bertini
 		if (NumHomVariables()!=NumVariableGroups())
 			return false;
 
-		for (auto iter : functions_)
+		for (const auto& iter : functions_)
 		{
 			auto counter = 0;
-			for (auto vars : variable_groups_)
+			for (const auto& vars : variable_groups_)
 			{
 				auto tempvars = vars;
 				if (have_homvars)
@@ -361,7 +361,7 @@ namespace bertini
 					return false;
 			}
 
-			for (auto vars : hom_variable_groups_)
+			for (const auto& vars : hom_variable_groups_)
 				if (!iter->IsHomogeneous(vars))
 					return false;
 
@@ -380,10 +380,10 @@ namespace bertini
 			throw std::runtime_error("trying to check polynomiality on a partially-formed system.  mismatch between number of homogenizing variables, and number of variable groups");
 
 
-		for (auto iter : functions_)
+		for (const auto& iter : functions_)
 		{
 			auto counter = 0;
-			for (auto vars : variable_groups_)
+			for (const auto& vars : variable_groups_)
 			{
 				auto tempvars = vars;
 				if (have_homvars)
@@ -395,7 +395,7 @@ namespace bertini
 					return false;
 
 			}
-			for (auto vars : hom_variable_groups_)
+			for (const auto& vars : hom_variable_groups_)
 				if (!iter->IsPolynomial(vars))
 					return false;
 
@@ -463,7 +463,7 @@ namespace bertini
 		is_differentiated_ = false;
 		have_ordering_ = false;
 		is_patched_ = false;
-		for (auto iter : v)
+		for (const auto& iter : v)
 			time_order_of_variable_groups_.push_back( VariableGroupType::Ungrouped);
 	}
 
@@ -802,7 +802,7 @@ namespace bertini
 	std::vector<int> System::Degrees() const
 	{
 		std::vector<int> degs;
-		for (auto iter : functions_)
+		for (const auto& iter : functions_)
 			degs.push_back(iter->Degree());
 		return degs;
 	}
@@ -811,7 +811,7 @@ namespace bertini
 	std::vector<int> System::Degrees(VariableGroup const& vars) const
 	{
 		std::vector<int> degs;
-		for (auto iter : functions_)
+		for (const auto& iter : functions_)
 			degs.push_back(iter->Degree(vars));
 		return degs;
 		}
@@ -922,7 +922,7 @@ namespace bertini
 
 		out << s.NumVariableGroups() << " variable groups, containing these variables:\n";
 		auto counter = 0;
-		for (auto iter : s.variable_groups_)
+		for (const auto& iter : s.variable_groups_)
 		{
 			out << "group " << counter << ": "<< "\n";
 			for (auto jter : iter)
@@ -934,20 +934,20 @@ namespace bertini
 		}
 
 		out << s.NumHomVariables() << " homogenizing variables:\n";
-		for (auto iter : s.homogenizing_variables_)
+		for (const auto& iter : s.homogenizing_variables_)
 			out << (*iter) << " ";
 		out << "\n";
 
 
 		out << s.NumFunctions() << " functions:\n";
-		for (auto iter : s.functions_) 
+		for (const auto& iter : s.functions_) 
 			out << (iter)->name() << " = " << *iter << "\n";
 		out << "\n";
 
 
 		if (s.NumParameters()) {
 			out << s.NumParameters() << " explicit parameters:\n";
-			for (auto iter : s.explicit_parameters_)
+			for (const auto& iter : s.explicit_parameters_)
 				out << (iter)->name() << " = " << *iter << "\n";
 			out << "\n";
 		}
@@ -955,7 +955,7 @@ namespace bertini
 
 		if (s.NumConstants()) {
 			out << s.NumConstants() << " constants:\n";
-			for (auto iter : s.constant_subfunctions_)
+			for (const auto& iter : s.constant_subfunctions_)
 				out << (iter)->name() << " = " << *iter << "\n";
 			out << "\n";
 		}
@@ -965,7 +965,7 @@ namespace bertini
 
 		if (s.is_differentiated_)
 		{
-			for (auto iter : s.jacobian_) {
+			for (const auto& iter : s.jacobian_) {
 				out << (iter)->name() << " = " << *iter << "\n";
 			}
 			out << "\n";

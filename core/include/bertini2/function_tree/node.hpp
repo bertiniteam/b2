@@ -69,7 +69,32 @@ enum class VariableGroupType
 
 namespace node{
 
+namespace detail{
+	template<typename T>
+	struct FreshEvalSelector
+	{};
 
+	template<>
+	struct FreshEvalSelector<dbl>
+	{
+		
+		template<typename N>
+		static dbl Run(N const& n, std::shared_ptr<Variable> const& diff_variable)
+		{
+			return n.FreshEval_d(diff_variable);
+		}
+	};
+
+	template<>
+	struct FreshEvalSelector<mpfr>
+	{
+		template<typename N>
+		static mpfr Run(N const& n, std::shared_ptr<Variable> const& diff_variable)
+		{
+			return n.FreshEval_mp(diff_variable);
+		}
+	};
+}
 /**
 An interface for all nodes in a function tree, and for a function object as well.  Almost all
  methods that will be called on a node must be declared in this class.  The main evaluation method is
@@ -81,6 +106,8 @@ An interface for all nodes in a function tree, and for a function object as well
  */
 class Node
 {
+	friend detail::FreshEvalSelector<dbl>;
+	friend detail::FreshEvalSelector<mpfr>;
 public:
 	
 	virtual ~Node() = default;
@@ -92,16 +119,13 @@ public:
 	/**
 	 Tells code to run a fresh eval on node next time.
 	*/
-	virtual void Reset()
-	{
-		ResetStoredValues();
-	};
+	virtual void Reset() const = 0;
 	
 	///////// END PUBLIC PURE METHODS /////////////////
 	
 	
-	
-   
+
+	public:
 	/**
 	 Evaluate the node.  If flag false, just return value, if flag true
 	 run the specific FreshEval of the node, then set flag to false.
@@ -112,13 +136,12 @@ public:
 	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
 	 */
 	template<typename T>
-	T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
+	T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const 
 	{
 		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
 		if(!val_pair.second)
 		{
-			T input{};
-			val_pair.first = FreshEval(input, diff_variable);
+			val_pair.first = detail::FreshEvalSelector<T>::Run(*this,diff_variable);
 			val_pair.second = true;
 		}
  
@@ -143,7 +166,7 @@ public:
 
 	\return The Jacobian for the node.
 	*/
-	virtual std::shared_ptr<Node> Differentiate() = 0;
+	virtual std::shared_ptr<Node> Differentiate() const = 0;
 
 
 
@@ -200,7 +223,7 @@ public:
 	 
 	 \param prec the number of digits to change precision to.
 	 */
-	virtual void precision(unsigned int prec) = 0;
+	virtual void precision(unsigned int prec) const = 0;
 
 	///////// PUBLIC PURE METHODS /////////////////
 
@@ -234,7 +257,7 @@ protected:
 	//Stores the current value of the node in all required types
 	//We must hard code in all types that we want here.
 	//TODO: Initialize this to some default value, second = false
-	std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value_;
+	mutable std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value_;
 	
 	
 	
@@ -247,14 +270,14 @@ protected:
 
 	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
 	*/
-	virtual dbl FreshEval(dbl, std::shared_ptr<Variable>) = 0;
+	virtual dbl FreshEval_d(std::shared_ptr<Variable> const&) const = 0;
 
 	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
 
 	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
 	*/
-	virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable>) = 0;
+	virtual mpfr FreshEval_mp(std::shared_ptr<Variable> const&) const = 0;
 	
 	
 	
@@ -264,13 +287,20 @@ protected:
 	/**
 	Set the stored values for the Node to indicate a fresh eval on the next pass.  This is so that Nodes which are referred to more than once, are only evaluated once.  The first evaluation is fresh, and then the indicator for fresh/stored is set to stored.  Subsequent evaluation calls simply return the stored number.
 	*/
-	void ResetStoredValues()
+	void ResetStoredValues() const
 	{
 		std::get< std::pair<dbl,bool> >(current_value_).second = false;
 		std::get< std::pair<mpfr,bool> >(current_value_).second = false;
 	}
 
+	Node()
+	{
+		std::get<std::pair<dbl,bool> >(current_value_).second = false;
+		std::get<std::pair<mpfr,bool> >(current_value_).second = false;
+	}
 private:
+	friend std::ostream& operator<<(std::ostream & out, const Node& N);
+
 	friend class boost::serialization::access;
 
 	template <typename Archive>

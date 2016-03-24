@@ -131,7 +131,7 @@ namespace node{
 		/**
 		 Return SumOperator whose children are derivatives of children_
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		/**
@@ -173,14 +173,14 @@ namespace node{
 		 Specific implementation of FreshEval for add and subtract.
 		 If child_sign_ = true, then add, else subtract
 		 */
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
 		/**
 		 Specific implementation of FreshEval for add and subtract.
 		 If child_sign_ = true, then add, else subtract
 		 */
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 	private:
 		// Stores the sign of the particular term.  There is a one-one
@@ -239,7 +239,7 @@ namespace node{
 		/**
 		 Returns negative of derivative of child.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
@@ -259,9 +259,9 @@ namespace node{
 	protected:
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 
 	private:
@@ -357,7 +357,7 @@ namespace node{
 		/**
 		 Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -387,9 +387,9 @@ namespace node{
 		
 		// Specific implementation of FreshEval for mult and divide.
 		//  If child_mult_ = true, then multiply, else divide
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
 		
@@ -431,7 +431,7 @@ namespace node{
 	 
 	 \see IntegerPowerOperator
 	 */
-	class PowerOperator : public virtual BinaryOperator
+	class PowerOperator : public virtual Operator
 	{
 		
 	public:
@@ -454,7 +454,7 @@ namespace node{
 		}
 		
 		
-		void Reset() override;
+		void Reset() const override;
 		
 		
 		
@@ -465,7 +465,7 @@ namespace node{
 		/**
 		 Differentiates with the power rule.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -499,7 +499,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -512,9 +512,9 @@ namespace node{
 
 	protected:
 		
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 	private:
 				
@@ -531,7 +531,7 @@ namespace node{
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
-			ar & boost::serialization::base_object<BinaryOperator>(*this);
+			ar & boost::serialization::base_object<Operator>(*this);
 			ar & base_;
 			ar & exponent_;
 		}
@@ -593,7 +593,7 @@ namespace node{
 		/**
 		 Differentiates a number.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		/**
@@ -631,12 +631,12 @@ namespace node{
 	protected:
 		
 		
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return pow(child_->Eval<dbl>(diff_variable), exponent_);
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return pow(child_->Eval<mpfr>(diff_variable),exponent_);
 		}
@@ -698,7 +698,7 @@ namespace node{
 		/**
 		 Differentiates the square root function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -715,9 +715,9 @@ namespace node{
 	protected:
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 
 	private:
@@ -764,7 +764,7 @@ namespace node{
 		/**
 		 Differentiates the exponential function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -781,9 +781,9 @@ namespace node{
 	protected:
 		
 		// Specific implementation of FreshEval for exponentiate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 	private:
 		ExpOperator() = default;
@@ -817,7 +817,7 @@ namespace node{
 		/**
 		 Differentiates the exponential function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -834,9 +834,9 @@ namespace node{
 	protected:
 		
 		// Specific implementation of FreshEval for exponentiate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 	private:
 		LogOperator() = default;

@@ -40,7 +40,7 @@ namespace node {
 
 	This class is an interface for all non-operators.
 	*/
-	class Symbol : public Node
+	class Symbol : public virtual Node
 	{
 		
 	public:
@@ -68,7 +68,7 @@ namespace node {
 	
 	Symbols which have names are named symbols.
 	*/
-	class NamedSymbol : public Symbol
+	class NamedSymbol : public virtual Symbol
 	{
 		std::string name_;
 	public:

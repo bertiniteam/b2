@@ -158,6 +158,7 @@ namespace bertini{
 
 				stepping_config_ = stepping;
 				newton_config_ = newton;
+				current_stepsize_ = stepping_config_.initial_step_size;
 			}
 
 
@@ -191,7 +192,10 @@ namespace bertini{
 
 				SuccessCode initial_refinement_code = InitialRefinement();
 				if (initial_refinement_code!=SuccessCode::Success)
+				{
+					PostTrackCleanup();
 					return initial_refinement_code;
+				}
 
 
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "starting while loop";
@@ -272,7 +276,7 @@ namespace bertini{
 			*/
 			virtual
 			SuccessCode Refine(Vec<mpfr> & new_space,
-								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const = 0;
+								Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance, unsigned max_iterations) const = 0;
 
 			/**
 			\brief Change tracker to use a predictor
@@ -325,6 +329,17 @@ namespace bertini{
 				current_stepsize_ = new_stepsize;
 			}
 
+
+			/**
+			\brief Switch resetting of initial step size to that of the stepping settings.
+
+			By default, initial step size is retrieved from the stepping settings at the start of each path track.  To turn this off, and re-use the previous step size from the previously tracked path, turn off by calling this function with false.
+			*/
+			void ReinitializeInitialStepSize(bool should_reinitialize_stepsize)
+			{
+				reinitialize_stepsize_ = should_reinitialize_stepsize;
+			}
+			
 			virtual ~Tracker() = default;
 
 		private:
@@ -374,15 +389,6 @@ namespace bertini{
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const = 0;
 
 
-			/**
-			\brief Switch resetting of initial step size to that of the stepping settings.
-
-			By default, initial step size is retrieved from the stepping settings at the start of each path track.  To turn this off, and re-use the previous step size from the previously tracked path, turn off by calling this function with false.
-			*/
-			void ReinitializeInitialStepSize(bool should_reinitialize_stepsize)
-			{
-				reinitialize_stepsize_ = should_reinitialize_stepsize;
-			}
 
 		protected:
 
