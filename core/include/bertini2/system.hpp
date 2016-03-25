@@ -896,7 +896,7 @@ namespace bertini {
 		
 		\throws std::runtime_error, if the patches are not compatible.  The patches must be either the same, absent, or present in one system.  They propagate to the resulting system.
 		*/
-		System operator+=(System const& rhs);
+		System& operator+=(System const& rhs);
 
 		/**
 		\brief Add two systems together.
@@ -912,7 +912,7 @@ namespace bertini {
 
 		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		System operator*=(Nd const& N);
+		System& operator*=(Nd const& N);
 
 		/**
 		\brief Multiply a system by an arbitrary node.  
