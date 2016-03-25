@@ -80,10 +80,18 @@ namespace bertini {
 
 			if (s.IsPatched())
 				CopyPatches(s);
+
+			gamma_ = std::make_shared<node::Rational>(node::Rational::Rand());
+			// *this *= static_cast<std::shared_ptr<node::Node> >(gamma_);
 			// boost::multiprecision::mpfr_float::default_precision(prev_prec);
 		}// total degree constructor
 
 		
+		TotalDegree& TotalDegree::operator*=(Nd const& n)
+		{
+			*this *= n;
+			return *this;
+		}
 		
 		
 
@@ -141,6 +149,12 @@ namespace bertini {
 			return start_point;
 		}
 
+		inline
+		TotalDegree operator*(TotalDegree td, std::shared_ptr<node::Node> const& n)
+		{
+			td *= n;
+			return td;
+		}
 
 	} // namespace start_system
 } //namespace bertini
