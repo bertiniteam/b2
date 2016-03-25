@@ -92,7 +92,7 @@ namespace bertini{
 				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 					return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 
-				auto delta_x_1 = LU.solve(-S.TimeDerivative(current_space, current_time)); 
+				Vec<ComplexType> delta_x_1 = LU.solve(-S.TimeDerivative(current_space, current_time)); 
 
 				norm_J = dh_dx.norm();
 				norm_J_inverse = LU.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
@@ -112,7 +112,7 @@ namespace bertini{
 				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 					return SuccessCode::MatrixSolveFailure;
 
-				auto delta_x_2 = LU.solve(-S.TimeDerivative(second_sample_point, second_time)); 
+				Vec<ComplexType> delta_x_2 = LU.solve(-S.TimeDerivative(second_sample_point, second_time)); 
 
 				auto delta_x = (delta_x_1+delta_x_2)/RealType(2);
 
@@ -135,6 +135,8 @@ namespace bertini{
 					size_proportion = pow(RealType(10), log10(error_estimate) - log10(abs(delta_t))); 
 				}
 
+				next_space = current_space + delta_x * delta_t;
+				
 				return SuccessCode::Success;
 			}
 
