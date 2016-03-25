@@ -131,7 +131,10 @@ namespace bertini
 			*/
 			mpz_int NumStartPoints() const override;
 
+			TotalDegree& operator*=(Nd const& n);
 
+			TotalDegree& operator+=(System const& sys) = delete;
+			
 		private:
 
 			/**

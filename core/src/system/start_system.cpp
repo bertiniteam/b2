@@ -84,6 +84,11 @@ namespace bertini {
 		}// total degree constructor
 
 		
+		TotalDegree& TotalDegree::operator*=(Nd const& n)
+		{
+			*this *= n;
+			return *this;
+		}
 		
 		
 
@@ -141,6 +146,12 @@ namespace bertini {
 			return start_point;
 		}
 
+		inline
+		TotalDegree operator*(TotalDegree td, std::shared_ptr<node::Node> const& n)
+		{
+			td *= n;
+			return td;
+		}
 
 	} // namespace start_system
 } //namespace bertini
