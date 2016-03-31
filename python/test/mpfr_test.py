@@ -1,4 +1,4 @@
-from libpybertini import *
+from pybertini import *
 import unittest
 import pdb
 

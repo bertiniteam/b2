@@ -25,7 +25,7 @@ include_HEADERS =
 lib_LTLIBRARIES =
 EXTRA_LTLIBRARIES =
 lib_LIBRARIES =
-
+pyexec_LTLIBRARIES =
 
 #see https://www.gnu.org/software/automake/manual/html_node/Suffixes.html
 SUFFIXES = .cpp .hpp

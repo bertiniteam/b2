@@ -50,8 +50,8 @@ AC_PROG_MKDIR_P
 #fire up libtool
 LT_INIT
 
-
-
+#query python's install location.
+AM_PATH_PYTHON
 
 
 #this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs

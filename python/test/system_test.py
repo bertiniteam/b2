@@ -1,6 +1,6 @@
 __author__ = 'jcollins'
 
-from libpybertini import *
+from pybertini import *
 import unittest
 import numpy as np
 import pdb

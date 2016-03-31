@@ -1,4 +1,4 @@
-from libpybertini import *
+from pybertini import *
 import numpy as np;
 import unittest
 
