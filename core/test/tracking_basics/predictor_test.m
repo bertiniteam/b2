@@ -3,14 +3,39 @@ function predictor_test()
 %% Test parameters
 digits(30);  %Precision used
 
-zn = vpa([4.641588833612776e-1; 7.416198487095662e-1]); % Point in space at time t=t_n
-tn = 0.7; dt = -.01; tnp1 = tn + dt; %Starting time t_n, and time step dt
+
+
 
 
 
 
 
 %% Homotopy system
+% Circle cuts Line example
+% zn = vpa([2.3 + i*.2; 1.1 + i*1.87]); % Point in space at time t=t_n
+% tn = 0.9; dt = -.1; tnp1 = tn + dt; %Starting time t_n, and time step dt
+% 
+% num_vars = 2;  % number of variables
+% z = sym('z',[num_vars,1]);
+% syms t
+% 
+% %%%%%%%%%%%%%%%%%%%% polynomials that make up the homotopy%%%%%%%%%%%%%%%%%%%
+% 
+% H(1) = t*(z(1)^3-1) + (1-t)*(z(1)^3+2);
+% H(2) = t*(z(2)^2-1) + (1-t)*(z(2)^2+.5);
+% 
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+%Monodromy Example
+zn = vpa([4.641588833612776e-1; 7.416198487095662e-1]); % Point in space at time t=t_n
+tn = 0.7; dt = -.01; tnp1 = tn + dt; %Starting time t_n, and time step dt
+
 num_vars = 2;  % number of variables
 z = sym('z',[num_vars,1]);
 syms t
@@ -21,6 +46,16 @@ H(1) = t*(z(1)^3-1) + (1-t)*(z(1)^3+2);
 H(2) = t*(z(2)^2-1) + (1-t)*(z(2)^2+.5);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
 
 %\frac{dH}{dt}
 dHt = diff(H,t);
