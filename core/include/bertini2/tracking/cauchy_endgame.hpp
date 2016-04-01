@@ -405,9 +405,9 @@ namespace bertini
 				CauchyEndgame(TrackerType const& tracker, config::Tolerances new_tolerances_settings) : endgame_tracker_(tracker)  //constructor specifying the system. Member initialization list used to initialize tracker of TrackerType
 				{// Order of settings is in alphebetical order Cauchy Endgame Security Tolerances
 					SetToleranceSettings(new_tolerances_settings);
-
-					min_closed_loop_tolerance_ = std::max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
-					max_closed_loop_tolerance_ = std::max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					using std::max;
+					min_closed_loop_tolerance_ = max(mpfr_float(1e-10),endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
+					max_closed_loop_tolerance_ = max(endgame_tolerances_.newton_during_endgame,endgame_tolerances_.final_tolerance_times_final_tolerance_multiplier);
 				} 
 
 				~CauchyEndgame() {};
@@ -449,9 +449,10 @@ namespace bertini
 
 					if(endgame_settings_.num_sample_points < 3) // need to make sure we won't track right through the origin.
 					{
+						//stringstream run time error
 						std::cout << "ERROR: The number of sample points " << endgame_settings_.num_sample_points << " for circle tracking must be >= 3!" << '\n';
 					}	
-
+					//deleted?
 					if(starting_time.norm() <= 0) // error checking on radius of circle to track around. 
 					{
 						std::cout << "ERROR: The radius of the circle " << starting_time << " needs to be positive! " << '\n';
@@ -463,6 +464,7 @@ namespace bertini
 					}
 
 					auto consecutive_success = 0; 
+					//not 1.0 use Realtype from numtraits
 					auto next_angle_to_stop_at = mpfr_float(2 * M_PI * (1.0 / (endgame_settings_.num_sample_points) - 1));
 					auto absolute_value_of_distance_left = (next_angle_to_stop_at - current_angle) * starting_time;
 
@@ -477,9 +479,9 @@ namespace bertini
 						next_time = ComplexType(mpfr_float(starting_time.abs() * cos(next_angle_to_stop_at)),mpfr_float( starting_time.abs() * sin(next_angle_to_stop_at)));	
 
 
-						while((next_angle_to_stop_at - current_angle).norm() > endgame_tolerances_.track_tolerance_during_endgame)
+						while( norm(next_angle_to_stop_at - current_angle) > endgame_tolerances_.track_tolerance_during_endgame )
 						{//while our angles are not the same. 	
-							if ((next_angle_to_stop_at - current_angle).norm() > endgame_tolerances_.track_tolerance_during_endgame)
+							if ( norm(next_angle_to_stop_at - current_angle) > endgame_tolerances_.track_tolerance_during_endgame )
 							{
 								SuccessCode tracking_success = endgame_tracker_.TrackPath(next_sample,current_time,next_time,current_sample);	
 
@@ -1152,7 +1154,7 @@ namespace bertini
 				\tparam ComplexType The complex number type.
 				*/
 				template<typename ComplexType>
-				Vec<ComplexType> ComputeCauchyApproximationOfXAtT0(std::deque< Vec<ComplexType> > cauchy_samples)
+				Vec<ComplexType> ComputeCauchyApproximationOfXAtT0()
 				{
 					// std::cout << "Cauchy approx " << '\n';
 					endgame_tracker_.Refine(cauchy_samples_[0],cauchy_samples_[0],cauchy_times_[0],endgame_tolerances_.track_tolerance_during_endgame);
@@ -1296,7 +1298,7 @@ namespace bertini
 					if(endgame_success == SuccessCode::Success)
 					{
 						//Compute a cauchy approximation.
-						latest_approx = ComputeCauchyApproximationOfXAtT0(cauchy_samples_);
+						latest_approx = ComputeCauchyApproximationOfXAtT0<ComplexType>();
 						Vec<ComplexType> dehom_of_latest_approx = endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx);
 
 						if(endgame_security_.level <= 0)
@@ -1348,7 +1350,7 @@ namespace bertini
 											return SuccessCode::GoingToInfinity;
 										}
 
-										latest_approx = ComputeCauchyApproximationOfXAtT0(cauchy_samples_);
+										latest_approx = ComputeCauchyApproximationOfXAtT0<ComplexType>();
 										if(endgame_security_.level <= 0)
 										{
 									 		Vec<ComplexType> dehom_of_latest_approx = endgame_tracker_.GetSystem().DehomogenizePoint(latest_approx);
