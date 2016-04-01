@@ -4,29 +4,23 @@ Makefile.in
 
 # http://www.gnu.org/software/autoconf
 
-/autom4te.cache
-/aclocal.m4
-/compile
-/configure
-/depcomp
-/install-sh
-/missing
-/stamp-h1
-
-*.sublime-workspace
+autom4te.cache
+aclocal.m4
+compile
+configure
+depcomp
+install-sh
+missing
+stamp-h1
 
 config.*
 
 libtool
 Makefile
 
-*.sublime-workspace
-
-bertini2
 b2_class_test
-b2_classic_compatibility_test
-b2_timing_test
 test_tree_interactive
+
 
 m4/libtool.m4
 m4/ltoptions.m4
@@ -38,27 +32,17 @@ serialization_test*
 
 /config
 
-# Python folders
-/python/test/.idea
-/.deps/*
-
-# Python files
-*.pyc
-
-
-
+.DS_Store
 *.dirstamp
 *.deps
 
 *~
 
-.DS_Store
 
 # Compiled Object files
 *.slo
 *.lo
 *.o
-*.o-*
 *.obj
 
 # Precompiled Headers
@@ -83,4 +67,9 @@ serialization_test*
 *.exe
 *.out
 *.app
-python/autom4te.cache
+
+
+# Python folder
+%src
+*.pyc
+.idea
