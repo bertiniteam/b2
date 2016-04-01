@@ -23,7 +23,7 @@
 //  Spring, Summer 2015
 
 
-#include "bertini2/function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/arithmetic.hpp"
 
 
 
@@ -84,7 +84,7 @@ namespace bertini{
 			
 		}
 		
-		return ret_sum;
+			return ret_sum;
 	}
 	
 	
@@ -404,7 +404,7 @@ namespace bertini{
 				if(jj != ii)
 					term_ii->AddChild(children_[jj],children_mult_or_div_[jj]);
 			}
-
+			
 			// and then either 1. multiply it against the current derivative, or 2. invoke the quotient rule.
 			if (is_it_a_number)
 				if (is_it_a_number->Eval<dbl>()==dbl(1.0))
@@ -756,11 +756,11 @@ namespace bertini{
 	{
 		
 		if (exponent_==0)
-			return std::make_shared<Float>(0.0);
-		else if (exponent_==1.0)
+			return std::make_shared<Integer>(0);
+		else if (exponent_==1)
 			return child_->Differentiate();
 		else if (exponent_==2){
-			auto M = std::make_shared<MultOperator>(std::make_shared<Float>(2.0), child_);
+			auto M = std::make_shared<MultOperator>(std::make_shared<Integer>(2), child_);
 			M->AddChild(child_->Differentiate());
 			return M;
 		}
@@ -810,9 +810,9 @@ namespace bertini{
 	
 	std::shared_ptr<Node> SqrtOperator::Differentiate()
 	{
-		auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, std::make_shared<Rational>(-1,2)));
+		auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, std::make_shared<Rational>(mpq_rational(-1,2),0)));
 		ret_mult->AddChild(child_->Differentiate());
-		ret_mult->AddChild(std::make_shared<Rational>(1,2));
+		ret_mult->AddChild(std::make_shared<Rational>(mpq_rational(1,2),0));
 		return ret_mult;
 	}
 	

@@ -18,10 +18,17 @@
 //
 // operator.hpp:  Declares the class Operator.
 
-#ifndef operator_h
-#define operator_h
+/**
+\file operator.hpp
 
-#include "bertini2/function_tree/node.hpp"
+\brief Provides the abstract Operator Node type.
+
+*/
+
+#ifndef BERTINI_OPERATOR_HPP
+#define BERTINI_OPERATOR_HPP
+
+#include "function_tree/node.hpp"
 
 #include <vector>
 

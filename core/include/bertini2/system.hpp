@@ -22,19 +22,32 @@
 // system.hpp:  provides the bertini::system class.
 
 
-#ifndef BERTINI_SYSTEM_H
-#define BERTINI_SYSTEM_H
+/**
+\file system.hpp 
 
-#include "bertini2/mpfr_complex.hpp"
+\brief Provides the bertini::system class.
+*/
+
+#ifndef BERTINI_SYSTEM_HPP
+#define BERTINI_SYSTEM_HPP
+
+#include "mpfr_complex.hpp"
+#include "mpfr_extensions.hpp"
+#include "eigen_extensions.hpp"
 
 #include <vector>
-#include "bertini2/function_tree.hpp"
+#include "function_tree.hpp"
+
+#include "patch.hpp"
+
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/number.hpp>
 
 #include <assert.h>
 
-#include <Eigen/Dense>
+
+
+#include <boost/type_index.hpp>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -43,10 +56,13 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
 
+#include "limbo.hpp"
+#include <Eigen/Dense>
 
 namespace bertini {
 
 	
+
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
 	
@@ -55,13 +71,8 @@ namespace bertini {
 	 Other System types are derived from this, but this class is not abstract.
 	 */
 	class System{
-		
-
+	
 	public:
-
-		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-
 		// a few local using statements to reduce typing etc.
 		using Fn = std::shared_ptr<node::Function>;
 		using Var = std::shared_ptr<node::Variable>;
@@ -69,64 +80,122 @@ namespace bertini {
 		using Jac = std::shared_ptr<node::Jacobian>;
 		
 		/**
-		The default constructor for a system
+		\brief The default constructor for a system.
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false)
+		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(mpfr_float::default_precision()), is_patched_(false)
 		{}
 
+		/** 
+		\brief The copy operator, creates a system from a string using the Bertini parser for Bertini classic syntax.
+		*/
+		System(std::string const& input);
+		
+		/** 
+		\brief The copy operator
+		*/
+		System(System const& other);
+
+		/** 
+		\brief The move copy operator
+		*/
+		System(System && other) : System()
+		{
+			swap(*this, other);
+		}
+
+		/** 
+		\brief The assignment operator
+		*/
+		System& operator=(System other);
+
+		/**
+		\brief The move assignment operator
+		*/
+		System& operator=(System && other) = default;
+
+		/**
+		The free swap function for systems.
+		*/
+		friend void swap(System & a, System & b);
 
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
 
 		\param new_precision The new precision, in digits, to work in.  This only affects the mpfr types, not double.  To use low-precision (doubles), use that number type in the templated functions.
 		*/
-		void precision(unsigned new_precision);
+		void precision(unsigned new_precision) const;
 
+		/**
+		\brief Get the current precision of a system.
+		*/
+		unsigned precision() const
+		{
+			return precision_;
+		}
 
 		/**
 		 \brief Compute and internally store the symbolic Jacobian of the system.
 		*/
-		void Differentiate();
+		void Differentiate() const;
+
 
 		/**
-		Evaluate the system, provided the system has no path variable defined.
+		\brief Evaluate the system using the previously set variable (and time) values.  
+
+		It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
+
+		\return The function values of the system
+		*/ 
+		template<typename T>
+		Vec<T> Eval() const
+		{
+
+
+			// the Reset() function call traverses the entire tree, resetting everything.
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			for (auto iter : functions_) 
+				iter->Reset();
+
+			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
+
+			unsigned counter(0);
+			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+				function_values(counter) = (*iter)->Eval<T>();
+			}
+
+			if (IsPatched())
+				patch_.Eval(function_values,std::get<Vec<T> >(current_variable_values_));// .segment(NumFunctions(),NumTotalVariableGroups())
+
+			return function_values;
+		}
+
+
+		/**
+		\brief Evaluate the system, provided the system has no path variable defined.
+
+		Causes the current variable values to be set in the system.  Resets the function tree's stored numbers.  
+
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values)
+		Vec<T> Eval(const Vec<T> & variable_values) const
 		{
 
 			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+			{
+				std::stringstream ss;
+				ss << "trying to evaluate system, but number of input variables (" << variable_values.size() << ") doesn't match number of system variables (" << NumVariables() << ").";
+				throw std::runtime_error(ss.str());
+			}
 			if (have_path_variable_)
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 
-
-			// this function call traverses the entire tree, resetting everything.
-			//
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			//
-			// we need to work to correct this.
-			for (auto iter : functions_) {
-				iter->Reset();
-			}
-
 			SetVariables(variable_values);
 
-
-			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
-
-			{ // for scoping of the counter.
-				auto counter = 0;
-				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-					value(counter) = (*iter)->Eval<T>();
-				}
-			}
-
-			return value;
+			return Eval<T>();
 		}
 
 
@@ -139,9 +208,11 @@ namespace bertini {
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
+
+		 \todo The Eval() function for systems has the unfortunate side effect of resetting constant functions.  Modify the System class so that only certain parts of the tree get reset.
 		 */
 		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value)
+		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
 
 			if (variable_values.size()!=NumVariables())
@@ -149,32 +220,35 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
 
-
-			// this function call traverses the entire tree, resetting everything.
-			//
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			//
-			// we need to work to correct this.
-			for (auto iter : functions_) {
-				iter->Reset();
-			}
-
 			SetVariables(variable_values);
 			SetPathVariable(path_variable_value);
 
-
-			Vec<T> value(NumFunctions()); // create vector with correct number of entries.
-
-			{ // for scoping of the counter.
-				auto counter = 0;
-				for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-					value(counter) = (*iter)->Eval<T>();
-				}
-			}
-
-			return value;
+			return Eval<T>();
 		}
 
+
+		/**
+		Evaluate the Jacobian matrix of the system, using the previous space and time values.
+
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		*/
+		template<typename T>
+		Mat<T> Jacobian() const
+		{
+			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+
+			if (!is_differentiated_)
+				Differentiate();
+
+			Mat<T> J(NumTotalFunctions(), NumVariables());
+			for (int ii = 0; ii < NumFunctions(); ++ii)
+				for (int jj = 0; jj < NumVariables(); ++jj)
+					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+			if (IsPatched())
+				patch_.Jacobian(J,std::get<Vec<T> >(current_variable_values_));
+
+			return J;
+		}
 
 		/**
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
@@ -185,7 +259,7 @@ namespace bertini {
 		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values)
+		Mat<T> Jacobian(const Vec<T> & variable_values) const
 		{
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
@@ -193,21 +267,9 @@ namespace bertini {
 			if (have_path_variable_)
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 
-
-			if (!is_differentiated_)
-				Differentiate();
-
-
 			SetVariables(variable_values);
 
-			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
-
-			Mat<T> J(NumFunctions(), NumVariables());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-				for (int jj = 0; jj < NumVariables(); ++jj)
-					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
-
-			return J;
+			return Jacobian<T>();
 		}
 
 
@@ -223,7 +285,7 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value)
+		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
@@ -231,6 +293,26 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 
+			SetVariables(variable_values);
+			SetPathVariable(path_variable_value);
+
+			return Jacobian<T>();
+		}
+
+		
+		/**
+		\brief Compute the time-derivative is a system. 
+		
+		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
+
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\throws std::runtime error if the system does not have a path variable defined.
+		*/
+		template<typename T>
+		Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value) const
+		{
+			if (!HavePathVariable())
+				throw std::runtime_error("computing time derivative of system with no path variable defined");
 
 			if (!is_differentiated_)
 				Differentiate();
@@ -238,17 +320,17 @@ namespace bertini {
 			SetVariables(variable_values);
 			SetPathVariable(path_variable_value);
 
-			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+			Vec<T> ds_dt(NumTotalFunctions());
 			
-			Mat<T> J(NumFunctions(), NumVariables());
 			for (int ii = 0; ii < NumFunctions(); ++ii)
-				for (int jj = 0; jj < NumVariables(); ++jj)
-					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);		
 
-			return J;
+			if (IsPatched())
+				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
+					ds_dt(ii+NumFunctions()) = T(0);
 
+			return ds_dt;
 		}
-
 	
 		/**
 		Homogenize the system, adding new homogenizing variables for each VariableGroup defined for the system.
@@ -282,21 +364,45 @@ namespace bertini {
 
 
 		/**
-		 Get the number of functions in this system
+		 Get the number of functions in this system, excluding patches.
 		 */
 		size_t NumFunctions() const;
 
 		/**
-		 Get the number of variables in this system
+		Get the number of patches in this system.
+		*/
+		size_t NumPatches() const
+		{
+			return patch_.NumVariableGroups();
+		}
+
+		/**
+		Get the total number of functions, including patches
+		*/
+		size_t NumTotalFunctions() const;
+
+		/**
+		 Get the total number of variables in this system, including homogenizing variables.
 		 */
 		size_t NumVariables() const;
+
+		/**
+		 Get the number of variables in this system, NOT including homogenizing variables.
+		*/
+		size_t NumNaturalVariables() const;
 
 		/**
 		 Get the number of *homogenizing* variables in this system
 		 */
 		size_t NumHomVariables() const;
+
 		/**
-		 Get the number of variable groups in the system
+		Get the total number of variable groups in the system, including both affine and homogenous.  Ignores the ungrouped variables, because they are not in any group.
+		*/
+		size_t NumTotalVariableGroups() const;
+
+		/**
+		 Get the number of affine variable groups in the system
 		*/
 		 size_t NumVariableGroups() const;
 
@@ -343,7 +449,11 @@ namespace bertini {
 
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 \throws std::runtime_error if the number of variables doesn't match.
-		 The ordering of the variables matters.  The standard ordering is 1) variable groups, with homogenizing variable first. 2) homogeneous variable groups. 3) ungrouped variables.
+
+		 The ordering of the variables matters.  
+
+		 * The AffHomUng ordering is 1) variable groups, with homogenizing variable first. 2) homogeneous variable groups. 3) ungrouped variables.
+		 * The FIFO ordering uses the order in which the variable groups were added.
 
 		 The path variable is not considered a variable for this operation.  It is set separately.
 		 
@@ -353,9 +463,15 @@ namespace bertini {
 		 \see Variables
 		 */
 		template<typename T>
-		void SetVariables(const Vec<T> & new_values)
+		void SetVariables(const Vec<T> & new_values) const
 		{
-			assert(new_values.size()== NumVariables());
+			if (new_values.size()!= NumVariables())
+				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
+
+			#ifndef BERTINI_DISABLE_ASSERTS
+			if (Precision(new_values(0))!=DoublePrecision())
+				assert(Precision(new_values(0)) == precision() && "precision of input point in SetVariables must match the precision of the system.");
+			#endif
 
 			auto vars = Variables();
 
@@ -364,6 +480,8 @@ namespace bertini {
 			for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
 				(*iter)->set_current_value(new_values(counter));
 			}
+
+			std::get<Vec<T> >(current_variable_values_) = new_values;
 		}
 
 
@@ -377,7 +495,7 @@ namespace bertini {
 		 \param new_value The new updated values for the path variable.
 		 */
 		template<typename T>
-		void SetPathVariable(T new_value)
+		void SetPathVariable(T new_value) const
 		{
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
@@ -391,11 +509,11 @@ namespace bertini {
 
 		/**
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
-		 
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 \param new_values The new updated values for the implicit parameters.
 		 */
 		template<typename T>
-		void SetImplicitParameters(Vec<T> new_values)
+		void SetImplicitParameters(Vec<T> new_values) const
 		{
 			if (new_values.size()!= implicit_parameters_.size())
 				throw std::runtime_error("trying to set implicit parameter values, but there is a size mismatch");
@@ -570,30 +688,67 @@ namespace bertini {
 
 
 
+        /**
+		 Order the variables, by the order in which the groups were added.
 
+		 This function returns the variables in First In First Out (FIFO) ordering.
 
-
-		/**
-		 Get the variables in the problem.
-
-		 This function returns the variables in standard ordering.
-
-		 1) variable groups first, lead by their respective homogenizing variable, if defined.
-		 2) hom_variable_groups second.
-		 3) ungrouped variables
-
-		 The order in which variables and their groups are added to a system impacts this ordering.  Bertini will ensure internal consistency.  It is up to the user to make sure the ordering is what they want for any post-processing or interpretations of results.
+		 Homogenizing variables precede affine variable groups, so that groups always are grouped together.
 
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
+        */
+        VariableGroup VariableOrdering() const;
+
+
+        /**
+		 Get the variables in the problem.
 		*/
 		VariableGroup Variables() const;
 
+		/**
+		\brief Get an affine variable group the class has defined.
+
+		It is up to you to ensure this group exists.
+		*/
+		VariableGroup const& AffineVariableGroup(size_t index) const
+		{
+			return variable_groups_[index];
+		}
+		/**
+		\brief Get the sizes of the variable groups, according to the current ordering
+		*/
+		std::vector<unsigned> VariableGroupSizes() const
+		{
+			return VariableGroupSizesFIFO();
+		}
+
+        /**
+		\brief Dehomogenize a point, using the variable grouping / structure of the system.
+		
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+
+		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
+        */
+        template<typename T>
+	    Vec<T> DehomogenizePoint(Vec<T> const& x) const
+	        {
+
+	        	if (x.size()!=NumVariables())
+	        		throw std::runtime_error("dehomogenizing point with incorrect number of coordinates");
+
+	        	if (!have_ordering_)
+	    			ConstructOrdering();
+
+	    		return DehomogenizePointFIFO(x);
+	        }
 
 
 
 		/////////////// TESTING ////////////////////
 		/**
-		 Get a function by its index.  This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
+		 Get a function by its index.  
+
+		 This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
 		*/
 		auto Function(unsigned index) const
 		{
@@ -611,27 +766,32 @@ namespace bertini {
 		}
 
 
+
 		/**
-		 Get the homogeneous variable groups in the problem.
+		Compute an estimate of an upper bound of the absolute values of the coefficients in the system.
+		
+		\param num_evaluations The number of times to compute this estimate.  Default is 1.
+		\returns An upper bound on the absolute values of the coefficients.
 		*/
-		auto HomVariableGroups() const
-		{
-			return hom_variable_groups_;
-		}
-		/////////////// TESTING ////////////////////
+        mpfr_float CoefficientBound(unsigned num_evaluations=1) const;
 
 
+        /**
+         \brief Compute an upper bound on the degree of the system.  
 
+         This number will be wrong if the system is non-polynomial, because degree for non-polynomial systems is not defined.
+         */
+        int DegreeBound() const;
 
 		/**
-		 Get the degrees of the functions in the system, with respect to all variables.
+		 \brief Get the degrees of the functions in the system, with respect to all variables.
 
 		 \return A vector containing the degrees of the functions.  Negative numbers indicate the function is non-polynomial.
 		*/
 		 std::vector<int> Degrees() const;
 
 		 /**
-		 Get the degrees of the functions in the system, with respect to a group of variables.
+		 \brief Get the degrees of the functions in the system, with respect to a group of variables.
 
 		 \return A vector containing the degrees of the functions.  Negative numbers indicate the function is non-polynomial.
 		 \param vars A group of variables with respect to which you wish to compute degrees.  Needs not be a group with respect to the system.
@@ -639,30 +799,84 @@ namespace bertini {
 		 std::vector<int> Degrees(VariableGroup const& vars) const;
 
 		/**
-		 Sort the functions so they are in DEcreasing order by degree
+		 \brief Sort the functions so they are in DEcreasing order by degree
 		*/
 		void ReorderFunctionsByDegreeDecreasing();
 
 
 		/**
-		 Sort the functions so they are in INcreasing order by degree
+		 \brief Sort the functions so they are in INcreasing order by degree
 		*/
 		void ReorderFunctionsByDegreeIncreasing();
 
+
+
+
+
+		/////////////
+		//
+		//  Functions regarding patches.
+		//
+		//////////////
+
+
+
+
+
 		/**
-		 Overloaded operator for printing to an arbirtary out stream.
+		\brief Let the system patch itself by the selected variable ordering, using the current variable groups.  
+
+		Homogeneous variable groups and affine variable groups will be supplied a patch equation.  Ungrouped variables will not.
+
+		\todo Add example code for how to use this function.
+		*/
+		void AutoPatch()
+		{
+			AutoPatchFIFO();
+		}
+
+		/**
+		\brief Copy the patches from another system into this one.
+		*/
+		void CopyPatches(System const& other);
+
+
+		/**
+		\brief Query whether a system is patched.
+		*/
+		bool IsPatched() const
+		{
+			return is_patched_;
+		}
+
+
+		template <typename T>
+		Vec<T> RescalePointToFitPatch(Vec<T> const& x) const
+		{
+			return patch_.RescalePoint(x);
+		}
+
+
+		template<typename T>
+		void RescalePointToFitPatchInPlace(Vec<T> & x) const
+		{
+			patch_.RescalePointToFitInPlace(x);
+		}
+		/**
+		 \brief Overloaded operator for printing to an arbirtary out stream.
 		 */
 		friend std::ostream& operator <<(std::ostream& out, const System & s);
 
 
 		/**
-		 Clear the entire structure of variables in a system.  Reconstructing it is up to you.
+		 \brief Clear the entire structure of variables in a system.  Reconstructing it is up to you.
 		*/
 		void ClearVariables();
 
 
 		/**
-		 Copy the entire structure of variables from within one system to another.
+		 \brief Copy the entire structure of variables from within one system to another.
+
 		  This copies everything -- ungrouped variables, variable groups, homogenizing variables, the path variable, the ordering of the variables.
 
 		  \param other Another system from which to copy the variable structure.  
@@ -673,36 +887,128 @@ namespace bertini {
 		
 
 		/**
-		Add two systems together.
+		\brief Add two systems together.
 
 		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
-
+		
+		\throws std::runtime_error, if the patches are not compatible.  The patches must be either the same, absent, or present in one system.  They propagate to the resulting system.
 		*/
 		System operator+=(System const& rhs);
 
 		/**
-		Add two systems together.
+		\brief Add two systems together.
 
 		\throws std::runtime_error, if the systems are not of compatible size -- either in number of functions, or variables.  Does not check the structure of the variables, just the numbers.
-		
+
+		\see The += operator for System also.
 		*/
-		friend System operator+(System lhs, System const& rhs);
+		friend const System operator+(System lhs, System const& rhs);
 
 		/**
-		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		\brief Multiply a system by an arbitrary node.  
+
+		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
 		System operator*=(Nd const& N);
 
 		/**
-		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		\brief Multiply a system by an arbitrary node.  
+
+		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		friend System operator*(System s, Nd const&  N);
+		friend const System operator*(System s, Nd const&  N);
 
 		/**
-		Multiply a system by an arbitrary node.  Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
+		\brief Multiply a system by an arbitrary node.  
+
+		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		friend System operator*(Nd const&  N, System const& s);
+		friend const System operator*(Nd const&  N, System const& s);
 	private:
+
+		/**
+		\brief Get the sizes according to the FIFO ordering.
+		*/
+		std::vector<unsigned> VariableGroupSizesFIFO() const;
+
+
+		/**
+		\brief Set up patches automatically for a system using the FIFO ordering.
+		*/
+		void AutoPatchFIFO();
+
+
+
+		/**
+		\brief Dehomogenize a point according to the FIFO variable ordering.
+	
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+
+		\see FIFOVariableOrdering
+		*/
+		template<typename T>
+	    Vec<T> DehomogenizePointFIFO(Vec<T> const& x) const
+        {
+        	#ifndef BERTINI_DISABLE_ASSERTS
+        	assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
+        	#endif
+
+        	bool is_homogenized = homogenizing_variables_.size()!=0;
+        	Vec<T> x_dehomogenized(NumNaturalVariables());
+
+        	unsigned affine_group_counter = 0;
+        	unsigned hom_group_counter = 0;
+        	unsigned ungrouped_variable_counter = 0;
+
+        	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
+        	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
+
+    		for (auto iter : time_order_of_variable_groups_)
+    		{
+    			switch (iter){
+    				case VariableGroupType::Affine:
+    				{
+    					if (is_homogenized)
+    					{
+	    					auto h = x(hom_index++);
+	    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+	    						x_dehomogenized(dehom_index++) = x(hom_index++) / h;
+	    					affine_group_counter++;
+	    				}
+	    				else
+	    				{
+	    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+	    						x_dehomogenized(dehom_index++) = x(hom_index++);
+	    				}
+    					break;
+    				}
+    				case VariableGroupType::Homogeneous:
+    				{
+    					for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
+    						x_dehomogenized(dehom_index++) = x(hom_index++);
+    					break;
+    				}
+    				case VariableGroupType::Ungrouped:
+    				{
+    					x_dehomogenized(dehom_index++) = x(hom_index++);
+    					ungrouped_variable_counter++;
+    					break;
+    				}
+    				default:
+    				{
+    					throw std::runtime_error("unacceptable VariableGroupType in FIFOVariableOrdering");
+    				}
+    			}
+    		}
+
+    		return x_dehomogenized;
+        }
+
+	    /**
+		 Puts together the ordering of variables, and stores it internally.
+	    */
+	    void ConstructOrdering() const;
+
 
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
 		std::vector< VariableGroup > variable_groups_; ///< Affine variable groups.  When system is homogenized, will have a corresponding homogenizing variable.
@@ -721,25 +1027,40 @@ namespace bertini {
 		std::vector< Fn > subfunctions_; ///< Any declared subfunctions for the system.  Can use these to ensure that complicated repeated structures are only created and evaluated once.
 		std::vector< Fn > functions_; ///< The system's functions.
 		
-		
-		std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
-		bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
+		class Patch patch_; ///< Patch on the variable groups.  Assumed to be in the same order as the time_order_of_variable_groups_ if the system uses FIFO ordering, or in same order as the AffHomUng variable groups if that is set.
+		bool is_patched_;	///< Indicator of whether the system has been patched.
+
+		mutable std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
+		mutable bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
 
 
-		unsigned precision_; ///< the current working precision of the system 
+		std::vector< VariableGroupType > time_order_of_variable_groups_;
+
+		mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_variable_values_;
+
+		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
+		mutable bool have_ordering_;
+
+		mutable unsigned precision_; ///< the current working precision of the system 
 
 
 		friend class boost::serialization::access;
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
+
 			ar & ungrouped_variables_;
 			ar & variable_groups_;
 			ar & hom_variable_groups_;
 			ar & homogenizing_variables_;
-			
+
+			ar & time_order_of_variable_groups_;
+
 			ar & have_path_variable_;
-			ar & path_variable_;
+			ar & path_variable_;			
+
+			ar & variable_ordering_;
+			ar & have_ordering_;
 
 			ar & implicit_parameters_;
 			ar & explicit_parameters_;
@@ -750,6 +1071,10 @@ namespace bertini {
 
 			ar & is_differentiated_;
 			ar & jacobian_;
+
+			ar & precision_;
+			ar & is_patched_;
+			ar & patch_;
 		}
 
 	};

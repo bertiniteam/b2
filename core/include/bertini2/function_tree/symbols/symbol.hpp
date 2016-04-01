@@ -18,11 +18,18 @@
 //
 // symbol.hpp:  Declares the class Symbol.
 
-#ifndef b2Test_Symbol_h
-#define b2Test_Symbol_h
+/**
+\file symbol.hpp
+
+\brief Defines the abstract Symbol and NamedSymbol classes,
+
+*/
+
+#ifndef BERTINI_FUNCTION_TREE_SYMBOL_HPP
+#define BERTINI_FUNCTION_TREE_SYMBOL_HPP
 
 
-#include "bertini2/function_tree/node.hpp"
+#include "function_tree/node.hpp"
 
 
 

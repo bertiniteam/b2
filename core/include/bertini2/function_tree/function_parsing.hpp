@@ -23,8 +23,15 @@
 // from qi::grammar, or they all contain a struct the inherits from grammar.  Right now
 // VariableParser does the second, and Function Parser does the first.
 
-#ifndef b2Test_grammar_h
-#define b2Test_grammar_h
+
+/**
+\file function_parsing.hpp
+
+\brief Provides a Boost.Spirit::Qi parser for function expressions.
+*/
+
+#ifndef BERTINI_FUNCTION_PARSING_HPP
+#define BERTINI_FUNCTION_PARSING_HPP
 
 #define BOOST_RESULT_OF_USE_DECLTYPE
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
@@ -41,14 +48,14 @@
 #include <cmath>
 
 
-#include "bertini2/function_tree/node.hpp"
-#include "bertini2/function_tree/roots/function.hpp"
+#include "function_tree/node.hpp"
+#include "function_tree/roots/function.hpp"
 
-#include "bertini2/function_tree/operators/arithmetic.hpp"
-#include "bertini2/function_tree/operators/trig.hpp"
+#include "function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/trig.hpp"
 
-#include "bertini2/function_tree/symbols/number.hpp"
-#include "bertini2/function_tree/symbols/variable.hpp"
+#include "function_tree/symbols/number.hpp"
+#include "function_tree/symbols/variable.hpp"
 
 
 
@@ -57,24 +64,30 @@
 //http://boost-spirit.com/home/articles/qi-example/tracking-the-input-position-while-parsing/
 
 
-// this solution for *lazy* make shared comes from the SO forum, user sehe.
-// https://stackoverflow.com/questions/21516201/how-to-create-boost-phoenix-make-shared
-//    post found using google search terms `phoenix construct shared_ptr`
+
 namespace {
+	// this solution for *lazy* make shared comes from the SO forum, asked by polytheme, answered by user sehe.
+	// https://stackoverflow.com/questions/21516201/how-to-create-boost-phoenix-make-shared
+	//    post found using google search terms `phoenix construct shared_ptr`
+	// the code has been adapted slightly to fit the naming conventions of this project.
 	template <typename T>
-	struct make_shared_f
+	struct MakeSharedFunctor
 	{
-		template <typename... A> struct result
-		{ typedef std::shared_ptr<T> type; };
+		template <typename... A> 
+		struct result
+		{ 
+			typedef std::shared_ptr<T> type; 
+		};
 
 		template <typename... A>
-		typename result<A...>::type operator()(A&&... a) const {
+		typename result<A...>::type operator()(A&&... a) const 
+		{
 			return std::make_shared<T>(std::forward<A>(a)...);
 		}
 	};
 
 	template <typename T>
-	using make_shared_ = boost::phoenix::function<make_shared_f<T> >;
+	using make_shared_ = boost::phoenix::function<MakeSharedFunctor<T> >;
 }
 
 
@@ -91,6 +104,9 @@ namespace {
 
 // http://www.boost.org/doc/libs/1_58_0/libs/phoenix/doc/html/phoenix/modules/function/adapting_functions.html
 
+//
+// form is as follows:
+//
 //BOOST_PHOENIX_ADAPT_FUNCTION(
 //							 RETURN_TYPE
 //							 , LAZY_FUNCTION
@@ -130,6 +146,8 @@ namespace bertini {
 	\todo Improve error detection and reporting for the FunctionParser.
 
 	\brief A Qi grammar parser for parsing text into function trees.
+
+	This parser could not have been written without the generous help of SO user sehe.
 	*/
 	template<typename Iterator>
 	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>

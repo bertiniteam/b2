@@ -23,7 +23,7 @@
 //  Spring, Summer 2015
 
 
-#include "bertini2/function_tree/operators/trig.hpp"
+#include "function_tree/operators/trig.hpp"
 
 
 namespace bertini {
