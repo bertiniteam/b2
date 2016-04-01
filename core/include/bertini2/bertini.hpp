@@ -21,26 +21,34 @@
 //
 // bertini.hpp:  main header file for Bertini2.0
 
+/**
+\file bertini.hpp 
 
+\brief The main file for including the entirety of Bertini's header files.
+*/
 
 #ifndef BERTINI_HPP
 #define BERTINI_HPP
 
 #include "config.h"
 
-#include <Eigen/Dense>
-#include <Eigen/LU>
-#include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/random.hpp>
+
 
 
 #include <complex>
-#include "bertini2/mpfr_complex.hpp"
+#include "mpfr_extensions.hpp"
+#include "mpfr_complex.hpp"
 
-#include "bertini2/function_tree.hpp"
+#include "function_tree.hpp"
 
-#include "bertini2/system.hpp"
-#include "bertini2/system_parsing.hpp"
+#include "system.hpp"
+#include "system_parsing.hpp"
+
+#include "classic.hpp"
+
+#include <Eigen/Dense>
+#include <Eigen/LU>
+
 
 #endif
 

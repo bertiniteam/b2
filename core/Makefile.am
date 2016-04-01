@@ -37,6 +37,10 @@ lib_LIBRARIES =
 noinst_LIBRARIES =
 noinst_LTLIBRARIES =
 
+TESTS =
+
+######  end deliberately blank items
+
 #see https://www.gnu.org/software/automake/manual/html_node/Suffixes.html
 SUFFIXES = .cpp .hpp
 
@@ -52,14 +56,14 @@ rootinclude_HEADERS = include/bertini2/config.h
 
 # include this one first, as it defines some useful groups of files which are used later
 # in other files.
+
 include src/bertini/Makemodule.am
-
 include src/function_tree/Makemodule.am
-
 include src/basics/Makemodule.am
-
 include src/system/Makemodule.am
 
 include test/classes/Makemodule.am
-
-
+include test/tracking_basics/Makemodule.am
+include test/classic/Makemodule.am
+include test/settings/Makemodule.am
+include test/timing/Makemodule.am

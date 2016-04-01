@@ -1,0 +1,29 @@
+{
+	"folders":
+	[
+		{
+			"path": ".",
+			"file_exclude_patterns": ["serialization_test*",
+										"Makefile",
+										"Makefile.in",
+										"*.la",
+										"libtool",
+										"stamp-h1",
+										".dirstamp",
+										"*.lo",
+										"*~",
+										"aclocal.m4",
+										"ltoptions.m4",
+										"ltsugar.m4",
+										"ltversion.m4",
+										"lt~obsolete.m4",
+										"libtool.m4",],
+			"folder_exclude_patterns": [
+				".deps",
+				".libs",
+				"autom4te.cache",
+				"generated_documentation"]
+		}
+	],
+
+}

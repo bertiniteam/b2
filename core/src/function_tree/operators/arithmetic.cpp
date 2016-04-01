@@ -23,7 +23,7 @@
 //  Spring, Summer 2015
 
 
-#include "bertini2/function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/arithmetic.hpp"
 
 
 
@@ -60,7 +60,7 @@ namespace bertini{
 		target << ")";
 	}
 	
-	std::shared_ptr<Node> SumOperator::Differentiate()
+	std::shared_ptr<Node> SumOperator::Differentiate() const
 	{
 		unsigned int counter = 0;
 		std::shared_ptr<Node> ret_sum = Zero();
@@ -84,7 +84,7 @@ namespace bertini{
 			
 		}
 		
-		return ret_sum;
+			return ret_sum;
 	}
 	
 	
@@ -247,7 +247,7 @@ namespace bertini{
 	
 
 	
-	dbl SumOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+	dbl SumOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		dbl retval{0};
 		for(int ii = 0; ii < children_.size(); ++ii)
@@ -265,7 +265,7 @@ namespace bertini{
 		return retval;
 	}
 	
-	mpfr SumOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+	mpfr SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		mpfr retval{0};
 		for(int ii = 0; ii < children_.size(); ++ii)
@@ -314,17 +314,17 @@ namespace bertini{
 		target << ")";
 	}
 	
-	std::shared_ptr<Node> NegateOperator::Differentiate()
+	std::shared_ptr<Node> NegateOperator::Differentiate() const
 	{
 		return std::make_shared<NegateOperator>(child_->Differentiate());
 	}
 	
-	dbl NegateOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+	dbl NegateOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return -(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr NegateOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+	mpfr NegateOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return -child_->Eval<mpfr>(diff_variable);
 	}
@@ -379,7 +379,7 @@ namespace bertini{
 	}
 	
 	
-	std::shared_ptr<Node> MultOperator::Differentiate()
+	std::shared_ptr<Node> MultOperator::Differentiate() const
 	{
 		std::shared_ptr<Node> ret_sum = node::Zero();
 		
@@ -404,7 +404,7 @@ namespace bertini{
 				if(jj != ii)
 					term_ii->AddChild(children_[jj],children_mult_or_div_[jj]);
 			}
-
+			
 			// and then either 1. multiply it against the current derivative, or 2. invoke the quotient rule.
 			if (is_it_a_number)
 				if (is_it_a_number->Eval<dbl>()==dbl(1.0))
@@ -533,7 +533,7 @@ namespace bertini{
 		return true;
 	}
 
-	dbl MultOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+	dbl MultOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		dbl retval{1};
 		for(int ii = 0; ii < children_.size(); ++ii)
@@ -551,7 +551,7 @@ namespace bertini{
 		return retval;
 	}
 	
-	mpfr MultOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+	mpfr MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		mpfr retval{1};
 		for(int ii = 0; ii < children_.size(); ++ii)
@@ -576,7 +576,7 @@ namespace bertini{
 	//
 	/////////////////
 	
-	void PowerOperator::Reset()
+	void PowerOperator::Reset() const
 	{
 		Node::ResetStoredValues();
 		base_->Reset();
@@ -589,7 +589,7 @@ namespace bertini{
 	}
 	
 	
-	std::shared_ptr<Node> PowerOperator::Differentiate()
+	std::shared_ptr<Node> PowerOperator::Differentiate() const
 	{
 		
 		auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, std::make_shared<Float>("1.0"),false);
@@ -713,12 +713,12 @@ namespace bertini{
 		return false;
 	}
 	
-	dbl PowerOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+	dbl PowerOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return std::pow( base_->Eval<dbl>(diff_variable), exponent_->Eval<dbl>());
 	}
 	
-	mpfr PowerOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+	mpfr PowerOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return pow( base_->Eval<mpfr>(diff_variable), exponent_->Eval<mpfr>());
 	}
@@ -752,15 +752,15 @@ namespace bertini{
 	}
 	
 	
-	std::shared_ptr<Node> IntegerPowerOperator::Differentiate()
+	std::shared_ptr<Node> IntegerPowerOperator::Differentiate() const
 	{
 		
 		if (exponent_==0)
-			return std::make_shared<Float>(0.0);
-		else if (exponent_==1.0)
+			return std::make_shared<Integer>(0);
+		else if (exponent_==1)
 			return child_->Differentiate();
 		else if (exponent_==2){
-			auto M = std::make_shared<MultOperator>(std::make_shared<Float>(2.0), child_);
+			auto M = std::make_shared<MultOperator>(std::make_shared<Integer>(2), child_);
 			M->AddChild(child_->Differentiate());
 			return M;
 		}
@@ -808,11 +808,11 @@ namespace bertini{
 	
 	
 	
-	std::shared_ptr<Node> SqrtOperator::Differentiate()
+	std::shared_ptr<Node> SqrtOperator::Differentiate() const
 	{
-		auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, std::make_shared<Rational>(-1,2)));
+		auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, std::make_shared<Rational>(mpq_rational(-1,2),0)));
 		ret_mult->AddChild(child_->Differentiate());
-		ret_mult->AddChild(std::make_shared<Rational>(1,2));
+		ret_mult->AddChild(std::make_shared<Rational>(mpq_rational(1,2),0));
 		return ret_mult;
 	}
 	
@@ -829,12 +829,12 @@ namespace bertini{
 	}
 	
 
-	dbl SqrtOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+	dbl SqrtOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return sqrt(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr SqrtOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+	mpfr SqrtOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return sqrt(child_->Eval<mpfr>(diff_variable));
 	}
@@ -865,7 +865,7 @@ namespace bertini{
 		target << ")";
 	}
 	
-	std::shared_ptr<Node> ExpOperator::Differentiate()
+	std::shared_ptr<Node> ExpOperator::Differentiate() const
 	{
 		return exp(child_)*child_->Differentiate();
 	}
@@ -882,12 +882,12 @@ namespace bertini{
 		}
 	}
 	
-	dbl ExpOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+	dbl ExpOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return exp(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr ExpOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+	mpfr ExpOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return exp(child_->Eval<mpfr>(diff_variable));
 	}
@@ -914,7 +914,7 @@ namespace bertini{
 		target << ")";
 	}
 	
-	std::shared_ptr<Node> LogOperator::Differentiate()
+	std::shared_ptr<Node> LogOperator::Differentiate() const
 	{
 		return std::make_shared<MultOperator>(child_,false,child_->Differentiate(),true);
 	}
@@ -931,12 +931,12 @@ namespace bertini{
 		}
 	}
 	
-	dbl LogOperator::FreshEval(dbl, std::shared_ptr<Variable> diff_variable)
+	dbl LogOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return log(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr LogOperator::FreshEval(mpfr, std::shared_ptr<Variable> diff_variable)
+	mpfr LogOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
 		return log(child_->Eval<mpfr>(diff_variable));
 	}

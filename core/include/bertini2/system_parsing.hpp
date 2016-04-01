@@ -18,7 +18,11 @@
 //
 // system_parsing.hpp:  This file contains the parser to parse systems from Bertini Classic input files.
 
+/**
+\file system_parsing.hpp
 
+\brief Contains the parser to parse systems from Bertini Classic-style input files.
+*/
 
 #ifndef BERTINI_SYSTEM_PARSING_HPP
 #define BERTINI_SYSTEM_PARSING_HPP
@@ -44,9 +48,12 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
+
+#include <boost/spirit/include/support_istream_iterator.hpp>
+
+
 #include <iostream>
 #include <string>
-
 
 
 
@@ -94,13 +101,16 @@ namespace bertini {
 	\endcode
 
 	\brief Qi Parser object for parsing text into the System class.  
+
+	This parser could not have been written without the help of SO user sehe.
 	*/
 	template<typename Iterator, typename Skipper = ascii::space_type>
 	struct SystemParser : qi::grammar<Iterator, System(), Skipper>
 	{
 		
 		
-		SystemParser() :	function_parser_(&encountered_symbols_), /*initialize here with address of encountered_symbols*/
+		SystemParser() :	function_parser_(&encountered_symbols_), 
+		/*initialize here with address of encountered_symbols*/
 							SystemParser::base_type(root_rule_)
 		{
 			namespace phx = boost::phoenix;
@@ -389,8 +399,26 @@ namespace bertini {
 		}
 	};
 	
-	
-	
+	inline
+	System::System(std::string const& input)
+	{
+		System sys;
+
+		SystemParser<std::string::const_iterator> S;
+
+		std::string::const_iterator iter = input.begin();
+		std::string::const_iterator end = input.end();
+
+		bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
+
+		if (!s || iter!=end)
+		{
+			throw std::runtime_error("unable to correctly parse string in construction of system");
+		}
+
+		using std::swap;
+		swap(sys,*this);
+	}
 	
 }
 

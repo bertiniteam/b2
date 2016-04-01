@@ -18,16 +18,21 @@
 //
 // special_number.hpp:  Declares the class SpecialNumber.
 
+/**
+\file special_number.hpp
+
+\brief Provides the special numbers \f$\pi\f$, \f$e\f$, 1, 2, 0, as Nodes
+
+*/
+
+#ifndef BERTINI_FUNCTION_TREE_SPECIAL_NUMBER_HPP
+#define BERTINI_FUNCTION_TREE_SPECIAL_NUMBER_HPP
 
 
-#ifndef b2Test_SpecialNumber_h
-#define b2Test_SpecialNumber_h
+#include "function_tree/symbols/symbol.hpp"
 
-
-#include "bertini2/function_tree/symbols/symbol.hpp"
-
-#include "bertini2/function_tree/operators/arithmetic.hpp"
-#include "bertini2/function_tree/operators/trig.hpp"
+#include "function_tree/operators/arithmetic.hpp"
+#include "function_tree/operators/trig.hpp"
 
 #include <cmath>
 
@@ -46,7 +51,7 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public NamedSymbol
+		class Pi : public virtual NamedSymbol
 		{
 		public:
 			Pi() : NamedSymbol("pi")
@@ -55,15 +60,18 @@ namespace node{
 			virtual ~Pi() = default;
 
 
-
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+			}
 
 
 			/**
 			 Differentiates a number.  Should this return the special number Zero?
 			 */
-			std::shared_ptr<Node> Differentiate() override
+			std::shared_ptr<Node> Differentiate() const override
 			{
-				return std::make_shared<Float>(0.0);
+				return std::make_shared<Integer>(0);
 			}
 
 			/**
@@ -112,7 +120,7 @@ namespace node{
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) override
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);
@@ -123,14 +131,14 @@ namespace node{
 			
 		private:
 			// Return value of constant
-			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return acos(-1.0);
 			}
 
-			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
+				return mpfr(acos(mpfr_float(-1)));
 			}
 
 			friend class boost::serialization::access;
@@ -148,7 +156,7 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public NamedSymbol
+		class E : public virtual NamedSymbol
 		{
 		public:
 			E() : NamedSymbol("e")
@@ -157,14 +165,17 @@ namespace node{
 			virtual ~E() = default;
 
 
-
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+			}
 
 			/**
 			 Differentiates a number.  Should this return the special number Zero?
 			 */
-			std::shared_ptr<Node> Differentiate() override
+			std::shared_ptr<Node> Differentiate() const override
 			{
-				return std::make_shared<Float>(0.0);
+				return std::make_shared<Integer>(0);
 			}
 
 			/**
@@ -212,7 +223,7 @@ namespace node{
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) override
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);
@@ -220,14 +231,14 @@ namespace node{
 
 		private:
 			// Return value of constant
-			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return dbl(exp(1.0f),0.0);
 			}
 
-			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
+				return mpfr(exp(mpfr_float(1)));
 			}
 
 			friend class boost::serialization::access;

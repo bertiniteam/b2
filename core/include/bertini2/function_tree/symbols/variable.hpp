@@ -19,12 +19,17 @@
 // variable.hpp:  Declares the class Variable.
 
 
+/**
+\file variable.hpp
 
-#ifndef b2Test_Variable_h
-#define b2Test_Variable_h
+\brief Provides the Variable Node class.
 
-#include "bertini2/function_tree/symbols/symbol.hpp"
-#include "bertini2/function_tree/symbols/differential.hpp"
+*/
+#ifndef BERTINI_FUNCTION_TREE_VARIABLE_HPP
+#define BERTINI_FUNCTION_TREE_VARIABLE_HPP
+
+#include "function_tree/symbols/symbol.hpp"
+#include "function_tree/symbols/differential.hpp"
 
 
 
@@ -67,16 +72,19 @@ namespace node{
 		
 		
 		/**
-		 Differentiates a variable.  Still needs to be implemented.
+		 Differentiates a variable.  
 		 */
-		std::shared_ptr<Node> Differentiate() override
+		std::shared_ptr<Node> Differentiate() const override
 		{
 			return std::make_shared<Differential>(shared_from_this(), name());
 		}
 		
 		
 
-		
+		void Reset() const override
+		{
+			Node::ResetStoredValues();
+		}
 
 
 		/**
@@ -144,7 +152,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -153,12 +161,12 @@ namespace node{
 	protected:
 		
 		// Return current value of the variable.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return std::get< std::pair<dbl,bool> >(current_value_).first;
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return std::get< std::pair<mpfr,bool> >(current_value_).first;
 		}

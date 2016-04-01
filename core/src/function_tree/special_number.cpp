@@ -23,7 +23,7 @@
 //  Spring, Summer 2015
 
 
-#include "bertini2/function_tree/symbols/special_number.hpp"
+#include "function_tree/symbols/special_number.hpp"
 
 
 
@@ -42,7 +42,7 @@ namespace node{
 
 	std::shared_ptr<Node> I()
 	{
-		return std::make_shared<Float>("0.0","1.0");
+		return std::make_shared<Float>(0,1);
 	}
 
 
