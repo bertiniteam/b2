@@ -1079,7 +1079,51 @@ namespace Eigen {
 	
 	
 	
-	
+	namespace internal {
+		template<>
+		struct abs2_impl<bertini::complex>
+		{
+			static inline mpfr_float run(const bertini::complex& x)
+			{
+				return real(x)*real(x) + imag(x)*imag(x);
+			}
+		};
+		
+		
+		template<> inline bertini::complex random<bertini::complex>()
+		{
+			return bertini::complex::rand();
+		}
+		
+		template<> inline bertini::complex random<bertini::complex>(const bertini::complex& a, const bertini::complex& b)
+		{
+			return a + (b-a) * random<bertini::complex>();
+		}
+		
+		template<>
+		struct conj_helper<bertini::complex, bertini::complex, false, true>
+		{
+			typedef bertini::complex Scalar;
+			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
+			{ return c + pmul(x,y); }
+			
+			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
+			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::imag(x)*numext::real(y) - numext::real(x)*numext::imag(y)); }
+		};
+		
+		template<>
+		struct conj_helper<bertini::complex, bertini::complex, true, false>
+		{
+			typedef bertini::complex Scalar;
+			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
+			{ return c + pmul(x,y); }
+			
+			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
+			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::real(x)*numext::imag(y) - numext::imag(x)*numext::real(y)); }
+		};
+		
+	} // re: namespace internal
+
 	
 	
 }

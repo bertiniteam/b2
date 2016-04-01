@@ -50,8 +50,8 @@ AC_PROG_MKDIR_P
 #fire up libtool
 LT_INIT
 
-
-
+#query python's install location.
+AM_PATH_PYTHON
 
 
 #this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs
@@ -85,9 +85,7 @@ AC_SEARCH_LIBS([cos], [m], [], [
   ])
 
 # look for a header file in Eigen, and croak if fail to find.
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to find Eigen 3  (eigen3/Eigen/Dense)]),[])
-AC_LANG_POP([C++])
+AX_EIGEN
 
 
 AX_BOOST_BASE([1.55],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.55, but it was not found in your system])])
