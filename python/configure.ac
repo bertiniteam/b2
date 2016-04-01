@@ -3,8 +3,8 @@
 
 
 
-#we're building pybertini, version 2.0.0, and the corresponding email is dan brake's
-AC_INIT([pybertini], [0.0.1.2015.09.19.dev], [danielthebrake@gmail.com],[pybertini], [http://github.com/bertiniteam/b2])
+#we're building pybertini, version 1.0.alpha0, and the corresponding email is dan brake's
+AC_INIT([pybertini], [1.0.alpha0], [danielthebrake@gmail.com],[pybertini], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
