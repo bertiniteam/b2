@@ -671,7 +671,7 @@ namespace bertini
 
 
 
-	VariableGroup System::Variables() const
+	const VariableGroup& System::Variables() const
 	{
 		if (!have_ordering_){
 			ConstructOrdering();
@@ -1000,7 +1000,7 @@ namespace bertini
 	///////////////////
 
 
-	System System::operator+=(System const& rhs)
+	System& System::operator+=(System const& rhs)
 	{
 		if (this->NumFunctions()!=rhs.NumFunctions())
 			throw std::runtime_error("cannot add two Systems with differing numbers of functions");
@@ -1039,7 +1039,7 @@ namespace bertini
 	}
 
 
-	System System::operator*=(std::shared_ptr<node::Node> const& N)
+	System& System::operator*=(std::shared_ptr<node::Node> const& N)
 	{
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
 		{
