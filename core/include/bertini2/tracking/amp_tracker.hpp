@@ -387,15 +387,40 @@ namespace bertini{
 				else
 					MultipleToMultiple(start_point(0).precision(), start_point);
 				
-				ChangePrecision<upsample_refine_off>(start_point(0).precision());
-
 				ResetCounters();
 
-				SuccessCode initial_refinement_code = InitialRefinement();
-				if (initial_refinement_code!=SuccessCode::Success)
-					return initial_refinement_code;
+				ChangePrecision<upsample_refine_off>(start_point(0).precision());
 
-				return SuccessCode::Success;
+				return InitialRefinement();
+			}
+
+
+			SuccessCode TrackerLoopInitialization(dbl const& start_time,
+			                               dbl const& end_time,
+										   Vec<dbl> const& start_point) const
+			{
+				NotifyObservers(Initializing<AMPTracker,dbl>(*this,start_time, end_time, start_point));
+
+				// set up the master current time and the current step size
+				current_time_.precision(Precision(start_point(0)));
+				current_time_ = mpfr(start_time);
+
+				if (preserve_precision_)
+					initial_precision_ = Precision(start_point(0));
+
+				
+				ResetCounters();
+
+				current_stepsize_.precision(Precision(start_point(0)));
+				if (reinitialize_stepsize_)
+					SetStepSize(min(double(stepping_config_.initial_step_size),abs(start_time-end_time)/stepping_config_.min_num_steps));
+
+				// populate the current space value with the start point, in appropriate precision
+				
+				DoubleToDouble( start_point);
+				ChangePrecision<upsample_refine_off>(DoublePrecision());
+
+				return InitialRefinement();
 			}
 
 
@@ -478,8 +503,6 @@ namespace bertini{
 			*/
 			void CopyFinalSolution(Vec<mpfr> & solution_at_endtime) const override
 			{
-				if (preserve_precision_)
-					ChangePrecision(initial_precision_);
 
 				// the current precision is the precision of the output solution point.
 				if (current_precision_==DoublePrecision())
@@ -502,7 +525,25 @@ namespace bertini{
 			}
 
 
+			void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const
+			{
+				if (preserve_precision_)
+					ChangePrecision(initial_precision_);
 
+				// the current precision is the precision of the output solution point.
+				if (current_precision_==DoublePrecision())
+				{
+					solution_at_endtime = std::get<Vec<dbl> >(current_space_);
+				}
+				else
+				{
+					unsigned num_vars = tracked_system_.NumVariables();
+					solution_at_endtime.resize(num_vars);
+					for (unsigned ii=0; ii<num_vars; ii++)
+						solution_at_endtime(ii) = dbl(std::get<Vec<mpfr> >(current_space_)(ii));
+
+				}
+			}
 
 			/**
 			\brief Run an iteration of the tracker loop.
@@ -572,6 +613,7 @@ namespace bertini{
 					AMPCriterionError<ComplexType, RealType>();
 					return predictor_code;
 				}
+
 
 				NotifyObservers(SuccessfulPredict<AMPTracker, ComplexType>(*this, predicted_space));
 
@@ -1067,6 +1109,33 @@ namespace bertini{
 
 
 			/**
+			\brief Run Newton's method from the currently stored time and space value, in current precision.
+
+			This overwrites the value of the current space, if successful, with the refined value.
+
+			\return Whether the refinement was successful.
+			*/
+			SuccessCode Refine() const
+			{
+				SuccessCode code;
+				if (current_precision_==DoublePrecision())
+				{
+					code = RefineImpl<dbl,double>(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_));
+					if (code == SuccessCode::Success)
+						std::get<Vec<dbl> >(current_space_) = std::get<Vec<dbl> >(temporary_space_);
+				}
+				else
+				{
+					code = RefineImpl<mpfr,mpfr_float>(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_);
+					if (code == SuccessCode::Success)
+						std::get<Vec<mpfr> >(current_space_) = std::get<Vec<mpfr> >(temporary_space_);
+				}
+				return code;
+			}
+
+
+
+			/**
 			\brief Run Newton's method from a start point with a current time.  
 
 			Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
@@ -1081,18 +1150,28 @@ namespace bertini{
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space,
+			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
+				RealType& norm_J = std::get<RealType>(norm_J_);
+				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
+				RealType& norm_delta_z = std::get<RealType>(norm_delta_z_);
+				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
+
+
 				return bertini::tracking::Correct(new_space,
+				                                  norm_delta_z,
+												norm_J,
+												norm_J_inverse,
+												condition_number_estimate,
 							   tracked_system_,
 							   start_point,
 							   current_time, 
-							   tracking_tolerance_,
+							   RealType(tracking_tolerance_),
 							   newton_config_.min_num_newton_iterations,
 							   newton_config_.max_num_newton_iterations,
 							   AMP_config_);
@@ -1115,25 +1194,34 @@ namespace bertini{
 			\param start_point The base point for running Newton's method.
 			\param current_time The current time value.
 			\param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
-
+			\param max_iterations The maximum allowable number of iterations to perform.
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space,
+			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time,
-								RealType const& tolerance) const
+								RealType const& tolerance, unsigned max_iterations) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
+				RealType& norm_J = std::get<RealType>(norm_J_);
+				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
+				RealType& norm_delta_z = std::get<RealType>(norm_delta_z_);
+				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
+
 				return bertini::tracking::Correct(new_space,
+							   norm_delta_z,
+								norm_J,
+								norm_J_inverse,
+								condition_number_estimate,
 							   tracked_system_,
 							   start_point,
 							   current_time, 
 							   tolerance,
-							   newton_config_.min_num_newton_iterations,
-							   newton_config_.max_num_newton_iterations,
+							   1,
+							   max_iterations,
 							   AMP_config_);
 			}
 
@@ -1147,37 +1235,7 @@ namespace bertini{
 
 
 
-			/////////////////
-			//
-			//  Functions for refining a current space value
-			//
-			///////////////////////
 
-
-			/**
-			\brief Run Newton's method from the currently stored time and space value, in current precision.
-
-			This overwrites the value of the current space, if successful, with the refined value.
-
-			\return Whether the refinement was successful.
-			*/
-			SuccessCode Refine() const
-			{
-				SuccessCode code;
-				if (current_precision_==DoublePrecision())
-				{
-					code = Refine(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_),double(tracking_tolerance_));
-					if (code == SuccessCode::Success)
-						std::get<Vec<dbl> >(current_space_) = std::get<Vec<dbl> >(temporary_space_);
-				}
-				else
-				{
-					code = Refine(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_, tracking_tolerance_);
-					if (code == SuccessCode::Success)
-						std::get<Vec<mpfr> >(current_space_) = std::get<Vec<mpfr> >(temporary_space_);
-				}
-				return code;
-			}
 
 
 			/////////////////
@@ -1186,7 +1244,7 @@ namespace bertini{
 			//
 			///////////////////////
 
-
+		public:
 			/**
 			Change precision of tracker to next_precision.  Converts the internal temporaries, and adjusts precision of system. Then refines if necessary.
 
@@ -1240,6 +1298,38 @@ namespace bertini{
 
 
 
+			private:
+			
+			/**
+			\brief Converts from double to double
+
+			Copies a multiple-precision into the double storage vector, and changes precision of the time and delta_t.
+
+			\param source_point The point into which to copy to the internally stored current space point.
+			*/
+			void DoubleToDouble(Vec<dbl> const& source_point) const
+			{	
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				#endif
+
+				current_precision_ = DoublePrecision();
+				mpfr_float::default_precision(DoublePrecision());
+
+				tracked_system_.precision(16);
+
+				std::get<Vec<dbl> >(current_space_) = source_point;
+			}
+
+			/**
+			\brief Converts from multiple to double
+
+			Changes the precision of the internal temporaries to double precision
+			*/
+			void DoubleToDouble() const
+			{
+				DoubleToDouble(std::get<Vec<dbl> >(current_space_));
+			}
 			
 
 
@@ -1255,7 +1345,7 @@ namespace bertini{
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				#endif
-
+				previous_precision_ = current_precision_;
 				current_precision_ = DoublePrecision();
 				mpfr_float::default_precision(DoublePrecision());
 
@@ -1298,7 +1388,7 @@ namespace bertini{
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
-
+				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
@@ -1349,7 +1439,7 @@ namespace bertini{
 				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
-
+				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
@@ -1463,6 +1553,7 @@ namespace bertini{
 			/////////////
 			bool preserve_precision_ = true; ///< Whether the tracker should change back to the initial precision after tracking paths.
 
+			mutable unsigned previous_precision_; ///< The previous precision of the tracker.
 			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
 			mutable unsigned next_precision_; ///< The next precision
 			mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
@@ -1473,8 +1564,16 @@ namespace bertini{
 
 		public:
 			// functions offered for observers.
+			template<typename RT>
+			RT CondNum() const { return std::get<RT>(condition_number_estimate_);}
 
-			unsigned CurrentPrecision() const override
+			template<typename RT>
+			RT NormJ() const { return std::get<RT>(norm_J_);}
+
+			template<typename RT>
+			RT NormJInv() const { return std::get<RT>(norm_J_inverse_);}
+
+unsigned CurrentPrecision() const override
 			{
 				return current_precision_;
 			}

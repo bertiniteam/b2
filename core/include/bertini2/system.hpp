@@ -153,7 +153,7 @@ namespace bertini {
 
 			// the Reset() function call traverses the entire tree, resetting everything.
 			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			for (auto iter : functions_) 
+			for (const auto& iter : functions_) 
 				iter->Reset();
 
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
@@ -235,10 +235,13 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian() const
 		{
-			auto vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+			const auto& vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
 
 			if (!is_differentiated_)
 				Differentiate();
+			else
+				for (const auto& iter : jacobian_) 
+					iter->Reset();
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
 			for (int ii = 0; ii < NumFunctions(); ++ii)
@@ -703,7 +706,7 @@ namespace bertini {
         /**
 		 Get the variables in the problem.
 		*/
-		VariableGroup Variables() const;
+		const VariableGroup& Variables() const;
 
 		/**
 		\brief Get an affine variable group the class has defined.
@@ -893,7 +896,7 @@ namespace bertini {
 		
 		\throws std::runtime_error, if the patches are not compatible.  The patches must be either the same, absent, or present in one system.  They propagate to the resulting system.
 		*/
-		System operator+=(System const& rhs);
+		System& operator+=(System const& rhs);
 
 		/**
 		\brief Add two systems together.
@@ -909,7 +912,7 @@ namespace bertini {
 
 		Can be used for defining a coupling of a target and start system through a path variable.  Does not affect path variable declaration, or anything else.  It is up to you to ensure the system depends on this node properly.
 		*/
-		System operator*=(Nd const& N);
+		System& operator*=(Nd const& N);
 
 		/**
 		\brief Multiply a system by an arbitrary node.  
@@ -963,7 +966,7 @@ namespace bertini {
         	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
         	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
 
-    		for (auto iter : time_order_of_variable_groups_)
+    		for (auto& iter : time_order_of_variable_groups_)
     		{
     			switch (iter){
     				case VariableGroupType::Affine:

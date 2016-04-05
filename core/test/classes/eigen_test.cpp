@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		using data_type = bertini::mpfr;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
-		A << 2, 1, 1, 2;
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
 		
 		// this is commented out because et_on breaks this with eigen 3.2.7.  this issue is fixed with upcoming eigen release.  hence, we need to control et_on/et_off with a compile-time option and requirements on the version of eigen used.
 		Eigen::JacobiSVD<Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic>> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);

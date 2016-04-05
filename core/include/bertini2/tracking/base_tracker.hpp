@@ -168,6 +168,7 @@ namespace bertini{
 
 				stepping_config_ = stepping;
 				newton_config_ = newton;
+				current_stepsize_ = stepping_config_.initial_step_size;
 			}
 
 
@@ -360,6 +361,17 @@ namespace bertini{
 				current_stepsize_ = new_stepsize;
 			}
 
+
+			/**
+			\brief Switch resetting of initial step size to that of the stepping settings.
+
+			By default, initial step size is retrieved from the stepping settings at the start of each path track.  To turn this off, and re-use the previous step size from the previously tracked path, turn off by calling this function with false.
+			*/
+			void ReinitializeInitialStepSize(bool should_reinitialize_stepsize)
+			{
+				reinitialize_stepsize_ = should_reinitialize_stepsize;
+			}
+			
 			virtual ~Tracker() = default;
 
 		private:
@@ -403,15 +415,6 @@ namespace bertini{
 			void CopyFinalSolution(Vec<CT> & solution_at_endtime) const = 0;
 
 
-			/**
-			\brief Switch resetting of initial step size to that of the stepping settings.
-
-			By default, initial step size is retrieved from the stepping settings at the start of each path track.  To turn this off, and re-use the previous step size from the previously tracked path, turn off by calling this function with false.
-			*/
-			void ReinitializeInitialStepSize(bool should_reinitialize_stepsize)
-			{
-				reinitialize_stepsize_ = should_reinitialize_stepsize;
-			}
 
 		protected:
 

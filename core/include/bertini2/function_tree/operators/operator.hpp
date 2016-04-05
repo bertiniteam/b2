@@ -79,7 +79,7 @@ namespace node{
 		virtual ~UnaryOperator() = default;
 		
 		
-		void Reset() override
+		void Reset() const override
 		{
 			Node::ResetStoredValues();
 			child_->Reset();
@@ -95,7 +95,7 @@ namespace node{
 		
 		
 		//Return the only child for the unary operator
-		std::shared_ptr<Node> first_child()
+		std::shared_ptr<Node> first_child() const
 		{
 			return child_;
 		}
@@ -177,7 +177,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -202,34 +202,7 @@ namespace node{
 	};
 	
 	
-	/**
-	\brief An interface for all binary Operator types.
 
-	This class is an interface for all binary operators.
-	Children of the operator are stored in a vector.
-	*/
-	class BinaryOperator : public virtual Operator
-	{
-	public:
-		
-		
-		virtual void Reset() = 0; // override
-		
-		
-		
-	protected:
-		
-		virtual void print(std::ostream & target) const = 0;
-		BinaryOperator(){}
-
-	private:
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
-			ar & boost::serialization::base_object<Operator>(*this);
-		}
-	};
 	
 	/**
 	\brief Abstract interface for n-ary Operator types.
@@ -238,14 +211,14 @@ namespace node{
 	Children of the operator are stored in a vector and methods to add and access children are available
 	in this interface.
 	*/
-	class NaryOperator : public virtual Node, public virtual Operator
+	class NaryOperator : public virtual Operator
 	{
 	public:
 		
 		virtual ~NaryOperator() = default;
 		
 		
-		void Reset() override
+		void Reset() const override
 		{
 			Node::ResetStoredValues();
 			for (auto ii:children_)
@@ -264,12 +237,12 @@ namespace node{
 		
 		
 		
-		size_t children_size()
+		size_t children_size() const
 		{
 			return children_.size();
 		}
 		
-		std::shared_ptr<Node> first_child()
+		std::shared_ptr<Node> first_child() const
 		{
 			return children_[0];
 		}
@@ -282,7 +255,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
