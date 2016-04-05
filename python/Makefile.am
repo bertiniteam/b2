@@ -8,7 +8,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/minieigen/src
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -25,7 +25,7 @@ include_HEADERS =
 lib_LTLIBRARIES =
 EXTRA_LTLIBRARIES =
 lib_LIBRARIES =
-
+pyexec_LTLIBRARIES =
 
 #see https://www.gnu.org/software/automake/manual/html_node/Suffixes.html
 SUFFIXES = .cpp .hpp
