@@ -31,8 +31,8 @@
 #ifndef BERTINI_DETAIL_VISITABLE_HPP
 #define BERTINI_DETAIL_VISITABLE_HPP
 
-#include "detail/visitor.hpp"
-#include "detail/events.hpp"
+#include "bertini2/detail/visitor.hpp"
+#include "bertini2/detail/events.hpp"
 
 namespace bertini{
 

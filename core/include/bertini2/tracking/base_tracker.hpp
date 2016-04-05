@@ -34,10 +34,10 @@
 #define BERTINI_BASE_TRACKER_HPP
 
 #include <algorithm>
-#include "tracking/step.hpp"
-#include "limbo.hpp"
-#include "logging.hpp"
-#include "detail/visitable.hpp"
+#include "bertini2/tracking/step.hpp"
+#include "bertini2/limbo.hpp"
+#include "bertini2/logging.hpp"
+#include "bertini2/detail/visitable.hpp"
 #include "bertini2/tracking/events.hpp"
 
 namespace bertini{

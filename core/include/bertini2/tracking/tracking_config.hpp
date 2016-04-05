@@ -30,10 +30,10 @@
 
 \brief Configs and settings for tracking.
 */
-#include "mpfr_extensions.hpp"
-#include "eigen_extensions.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
-#include "system.hpp"
+#include "bertini2/system.hpp"
 
 namespace bertini
 {

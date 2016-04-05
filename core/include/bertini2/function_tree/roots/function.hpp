@@ -30,7 +30,7 @@
 #define BERTINI_FUNCTION_NODE_HPP
 
 
-#include "function_tree/symbols/symbol.hpp"
+#include "bertini2/function_tree/symbols/symbol.hpp"
 
 
 

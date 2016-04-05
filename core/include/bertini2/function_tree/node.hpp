@@ -37,7 +37,7 @@
 
 #include <boost/type_index.hpp>
 
-#include "num_traits.hpp"
+#include "bertini2/num_traits.hpp"
 
 
 #include <boost/archive/text_oarchive.hpp>

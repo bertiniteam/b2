@@ -30,7 +30,7 @@
 
 #pragma once
 #include "bertini2/detail/events.hpp"
-#include "limbo.hpp"
+#include "bertini2/limbo.hpp"
 
 namespace bertini {
 

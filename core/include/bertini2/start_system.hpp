@@ -32,8 +32,8 @@
 #ifndef BERTINI_START_SYSTEM_HPP
 #define BERTINI_START_SYSTEM_HPP
 
-#include "system.hpp"
-#include "limbo.hpp"
+#include "bertini2/system.hpp"
+#include "bertini2/limbo.hpp"
 
 
 namespace bertini 

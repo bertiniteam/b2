@@ -35,7 +35,7 @@
 
 #include <boost/multiprecision/gmp.hpp>
 #include <iostream>
-#include "tracking/amp_endgame.hpp"
+#include "bertini2/tracking/amp_endgame.hpp"
 #include <cstdio>
 #include <typeinfo> 
 #include <deque>

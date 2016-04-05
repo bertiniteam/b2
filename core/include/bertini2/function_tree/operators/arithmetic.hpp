@@ -31,9 +31,9 @@
 #include <vector>
 #include <string>
 
-#include "function_tree/node.hpp"
+#include "bertini2/function_tree/node.hpp"
 
-#include "function_tree/operators/operator.hpp"
+#include "bertini2/function_tree/operators/operator.hpp"
 
 
 

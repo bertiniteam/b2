@@ -28,8 +28,8 @@
 #ifndef BERTINI_FUNCTION_TREE_VARIABLE_HPP
 #define BERTINI_FUNCTION_TREE_VARIABLE_HPP
 
-#include "function_tree/symbols/symbol.hpp"
-#include "function_tree/symbols/differential.hpp"
+#include "bertini2/function_tree/symbols/symbol.hpp"
+#include "bertini2/function_tree/symbols/differential.hpp"
 
 
 

@@ -48,14 +48,14 @@
 #include <cmath>
 
 
-#include "function_tree/node.hpp"
-#include "function_tree/roots/function.hpp"
+#include "bertini2/function_tree/node.hpp"
+#include "bertini2/function_tree/roots/function.hpp"
 
-#include "function_tree/operators/arithmetic.hpp"
-#include "function_tree/operators/trig.hpp"
+#include "bertini2/function_tree/operators/arithmetic.hpp"
+#include "bertini2/function_tree/operators/trig.hpp"
 
-#include "function_tree/symbols/number.hpp"
-#include "function_tree/symbols/variable.hpp"
+#include "bertini2/function_tree/symbols/number.hpp"
+#include "bertini2/function_tree/symbols/variable.hpp"
 
 
 

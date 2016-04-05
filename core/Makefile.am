@@ -61,6 +61,8 @@ include src/bertini/Makemodule.am
 include src/function_tree/Makemodule.am
 include src/basics/Makemodule.am
 include src/system/Makemodule.am
+include src/tracking/Makemodule.am
+
 
 include test/classes/Makemodule.am
 include test/tracking_basics/Makemodule.am

@@ -31,7 +31,7 @@
 #ifndef BERTINI_TRACKING_HPP
 #define BERTINI_TRACKING_HPP
 
-#include "tracking/tracker.hpp"
+#include "bertini2/tracking/tracker.hpp"
 
 #endif
 

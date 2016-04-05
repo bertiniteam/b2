@@ -30,8 +30,8 @@
 #define BERTINI_JACOBIAN_NODE_HPP
 
 
-#include "function_tree/node.hpp"
-#include "function_tree/symbols/variable.hpp"
+#include "bertini2/function_tree/node.hpp"
+#include "bertini2/function_tree/symbols/variable.hpp"
 
 
 

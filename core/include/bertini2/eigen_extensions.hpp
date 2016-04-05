@@ -32,7 +32,7 @@
 #define BERTINI_EIGEN_EXTENSIONS_HPP
 
 
-#include "num_traits.hpp"
+#include "bertini2/num_traits.hpp"
 
 
 #include <boost/serialization/complex.hpp>

@@ -31,9 +31,9 @@
 #ifndef BERTINI_MPFR_COMPLEX_HPP
 #define BERTINI_MPFR_COMPLEX_HPP
 
-#include "config.h"
+#include "bertini2/config.h"
 
-#include "mpfr_extensions.hpp"
+#include "bertini2/mpfr_extensions.hpp"
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>

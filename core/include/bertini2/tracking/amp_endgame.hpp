@@ -34,14 +34,14 @@
 
 
 #include <typeinfo>
-#include "tracking.hpp"
-#include "system.hpp"
+#include "bertini2/tracking.hpp"
+#include "bertini2/system.hpp"
 #include <boost/multiprecision/gmp.hpp>
 #include <iostream>
-#include "limbo.hpp"
+#include "bertini2/limbo.hpp"
 #include <boost/multiprecision/mpfr.hpp>
-#include "mpfr_complex.hpp"
-#include "tracking/base_endgame.hpp"
+#include "bertini2/mpfr_complex.hpp"
+#include "bertini2/tracking/base_endgame.hpp"
 
 namespace bertini{ 
 

@@ -31,7 +31,7 @@
 #ifndef BERTINI_PREDICT_HPP
 #define BERTINI_PREDICT_HPP
 
-#include "tracking/ode_predictors.hpp"
+#include "bertini2/tracking/ode_predictors.hpp"
 
 namespace bertini{
 	namespace tracking{

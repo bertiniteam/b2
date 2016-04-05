@@ -29,7 +29,7 @@
 #define BERTINI_FUNCTION_TREE_SYMBOL_HPP
 
 
-#include "function_tree/node.hpp"
+#include "bertini2/function_tree/node.hpp"
 
 
 
