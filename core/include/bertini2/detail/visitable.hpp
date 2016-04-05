@@ -36,23 +36,26 @@
 
 namespace bertini{
 
+	namespace policy{
+		/**
+		Defines the default behaviour when an unknown visitor is encountered during visitation.  
 
-	/**
-	Defines the default behaviour when an unknown visitor is encountered during visitation.  
-
-	Assumes the return type is default constructible.
-	*/
-	template<class VisitedT, typename RetT>
-	struct DefaultConstruct
-	{
-		static RetT OnUnknownVisitor(VisitedT&, VisitorBase&)
+		Assumes the return type is default constructible.
+		*/
+		template<class VisitedT, typename RetT>
+		struct DefaultConstruct
 		{
-			return RetT();
-		}
-	};
+			static RetT OnUnknownVisitor(VisitedT&, VisitorBase&)
+			{
+				return RetT();
+			}
+		};
 
-	template<class VisitedT, typename RetT>
-	using DefaultCatchAll = DefaultConstruct<VisitedT, RetT>;
+		template<class VisitedT, typename RetT>
+		using DefaultCatchAll = DefaultConstruct<VisitedT, RetT>;
+	}
+
+	
 
 
 	/**
@@ -60,7 +63,7 @@ namespace bertini{
 
 	Implemented based on Alexandrescu, 2001, and Hythem Sidky's SAPHRON package, with his permission.
 	*/
-	template< typename RetT = void, template<class,class> class CatchAll = DefaultCatchAll>
+	template< typename RetT = void, template<class,class> class CatchAll = policy::DefaultCatchAll>
 	class VisitableBase
 	{
 	public:
@@ -88,7 +91,7 @@ namespace bertini{
 		{ return AcceptBase(*this, guest); }
 
 
-	template<typename RetT = void, template<class,class> class CatchAll = DefaultCatchAll>
+	template<typename RetT = void, template<class,class> class CatchAll = policy::DefaultCatchAll>
 	class Observable : public VisitableBase<RetT, CatchAll>
 	{	
 	public:

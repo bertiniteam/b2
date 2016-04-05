@@ -103,7 +103,11 @@ namespace bertini
 			MinStepSizeReached,
 			Failure,
 			SingularStartPoint,
-			ExternallyTerminated
+			ExternallyTerminated,
+			MinTrackTimeReached,
+			SecurityMaxNormReached,
+			CycleNumTooHigh,
+
 		};
 
 		
@@ -133,12 +137,14 @@ namespace bertini
 			template<typename T>
 			struct Tolerances
 			{	
-				T newton_before_endgame = T(1)/T(100,000);
-				T newton_during_endgame = T(1)/T(1,000,000);
+				T newton_before_endgame = T(1)/T(100000);
+				T newton_during_endgame = T(1)/T(1000000);
 
-				T final_tolerance = T(1)/T(100,000,000,000);
+				T final_tolerance = T(1)/T(100000000000);
+				T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
-				T path_truncation_threshold = T(100,000);
+				T path_truncation_threshold = T(100000);
+				T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
 			};
 
 
@@ -183,33 +189,35 @@ namespace bertini
 			struct Security
 			{
 				int level = 0;
-				T max_norm = T(100,000);
+				T max_norm = T(100000);
 			};
 
-
-
-
-
-
-
-
-
-			struct EndGame
+			template<typename T>
+			struct Endgame
 			{
-				mpfr_float SampleFactor = mpfr_float("0.5");
-				unsigned max_cycle_number = 6;
+				unsigned num_sample_points = 3;
+				T min_track_time = T(1e-100); //nbrh radius in Bertini book.
+				T sample_factor = T(1)/T(2);
+				unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 			};
 
 
 			struct PowerSeries
 			{
-				
+				unsigned max_cycle_number = 6;
+				unsigned cycle_number_amplification = 5;
 			};
 
+			template<typename T>
 			struct Cauchy
 			{
-				mpfr_float cutoff_cycle_time;
-				mpfr_float cutoff_ratio_time;
+				T cycle_cutoff_time = T(1)/T(100000000);
+				T ratio_cutoff_time = T(1)/T(100000000000000);
+				T minimum_for_c_over_k_stabilization = T(3)/T(4);
+				unsigned int num_needed_for_stabilization = 3;
+				T maximum_cauchy_ratio = T(1)/T(2);
+				unsigned int fail_safe_maximum_cycle_number = 250; //max number of loops before giving up. 
+
 			};
 
 
@@ -226,12 +234,12 @@ namespace bertini
 
 
 
-
+			template<typename T>
 			struct PostProcessing{
-				mpfr_float real_threshold;
-				mpfr_float endpoint_finite_threshold;
-				mpfr_float final_tol_multiplier;
-				mpfr_float final_tol_times_mult;
+				T real_threshold;
+				T endpoint_finite_threshold;
+				T final_tol_multiplier;
+				T final_tol_times_mult;
 			};
 
 
@@ -242,15 +250,15 @@ namespace bertini
 
 
 
-
+			template<typename T>
 			struct Regeneration
 			{
 				bool remove_infinite_endpoints;
 				bool higher_dimension_check;
 
-				mpfr_float newton_before_endgame;
-				mpfr_float newton_during_endgame;
-				mpfr_float final_tolerance;
+				T newton_before_endgame;
+				T newton_during_endgame;
+				T final_tolerance;
 			};
 
 			

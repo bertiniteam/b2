@@ -294,6 +294,7 @@ namespace bertini{
 		*/
 		class AMPTracker : public Tracker<AMPTracker>
 		{
+			friend class Tracker<AMPTracker>;
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
@@ -370,22 +371,24 @@ namespace bertini{
 
 				NotifyObservers(Initializing<AMPTracker,mpfr>(*this,start_time, end_time, start_point));
 
+				initial_precision_ = Precision(start_point(0));
+				mpfr_float::default_precision(initial_precision_);
 				// set up the master current time and the current step size
-				current_time_.precision(Precision(start_point(0)));
+				current_time_.precision(initial_precision_);
 				current_time_ = start_time;
 
-				if (preserve_precision_)
-					initial_precision_ = Precision(start_point(0));
 
-				current_stepsize_.precision(Precision(start_point(0)));
+				current_stepsize_.precision(initial_precision_);
 				if (reinitialize_stepsize_)
 					SetStepSize(min(stepping_config_.initial_step_size,abs(start_time-end_time)/stepping_config_.min_num_steps));
 
 				// populate the current space value with the start point, in appropriate precision
-				if (start_point(0).precision()==DoublePrecision())
+				if (initial_precision_==DoublePrecision())
 					MultipleToDouble( start_point);
 				else
-					MultipleToMultiple(start_point(0).precision(), start_point);
+					MultipleToMultiple(initial_precision_, start_point);
+				
+				ChangePrecision<upsample_refine_off>(initial_precision_);
 				
 				ResetCounters();
 
@@ -395,38 +398,34 @@ namespace bertini{
 			}
 
 
-			SuccessCode TrackerLoopInitialization(dbl const& start_time,
-			                               dbl const& end_time,
-										   Vec<dbl> const& start_point) const
-			{
-				NotifyObservers(Initializing<AMPTracker,dbl>(*this,start_time, end_time, start_point));
+			// SuccessCode TrackerLoopInitialization(dbl const& start_time,
+			//                                dbl const& end_time,
+			// 							   Vec<dbl> const& start_point) const override
+			// {
+			// 	NotifyObservers(Initializing<AMPTracker,dbl>(*this,start_time, end_time, start_point));
 
-				// set up the master current time and the current step size
-				current_time_.precision(Precision(start_point(0)));
-				current_time_ = mpfr(start_time);
+			// 	// set up the master current time and the current step size
+			// 	initial_precision_ = Precision(DoublePrecision());
+			// 	mpfr_float::default_precision(initial_precision_);
+			// 	current_time_.precision(initial_precision_);
+			// 	current_time_ = mpfr(start_time);
 
-				if (preserve_precision_)
-					initial_precision_ = Precision(start_point(0));
+			// 	current_stepsize_.precision(initial_precision_);
+			// 	if (reinitialize_stepsize_)
+			// 		SetStepSize(min(double(stepping_config_.initial_step_size),abs(start_time-end_time)/stepping_config_.min_num_steps));
 
+			// 	// populate the current space value with the start point, in appropriate precision
 				
-				ResetCounters();
-
-				current_stepsize_.precision(Precision(start_point(0)));
-				if (reinitialize_stepsize_)
-					SetStepSize(min(double(stepping_config_.initial_step_size),abs(start_time-end_time)/stepping_config_.min_num_steps));
-
-				// populate the current space value with the start point, in appropriate precision
-				
-				DoubleToDouble( start_point);
-				ChangePrecision<upsample_refine_off>(DoublePrecision());
-
-				return InitialRefinement();
-			}
+			// 	DoubleToDouble( start_point);
+			// 	ChangePrecision<upsample_refine_off>(DoublePrecision());
+			// 	ResetCounters();
+			// 	return InitialRefinement();
+			// }
 
 
 			void ResetCounters() const override
 			{
-				Tracker::ResetCounters();
+				Tracker::ResetCountersBase();
 				num_precision_decreases_ = 0;
 				num_successful_steps_since_stepsize_increase_ = 0;
 				num_successful_steps_since_precision_decrease_ = 0;
@@ -441,7 +440,7 @@ namespace bertini{
 			*/
 			SuccessCode InitialRefinement() const
 			{
-				SuccessCode initial_refinement_code = Refine();
+				SuccessCode initial_refinement_code = RefineStoredPoint();
 				if (initial_refinement_code!=SuccessCode::Success)
 				{
 					do {
@@ -525,25 +524,25 @@ namespace bertini{
 			}
 
 
-			void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const
-			{
-				if (preserve_precision_)
-					ChangePrecision(initial_precision_);
+			// void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const override
+			// {
+			// 	if (preserve_precision_)
+			// 		ChangePrecision(initial_precision_);
 
-				// the current precision is the precision of the output solution point.
-				if (current_precision_==DoublePrecision())
-				{
-					solution_at_endtime = std::get<Vec<dbl> >(current_space_);
-				}
-				else
-				{
-					unsigned num_vars = tracked_system_.NumVariables();
-					solution_at_endtime.resize(num_vars);
-					for (unsigned ii=0; ii<num_vars; ii++)
-						solution_at_endtime(ii) = dbl(std::get<Vec<mpfr> >(current_space_)(ii));
+			// 	// the current precision is the precision of the output solution point.
+			// 	if (current_precision_==DoublePrecision())
+			// 	{
+			// 		solution_at_endtime = std::get<Vec<dbl> >(current_space_);
+			// 	}
+			// 	else
+			// 	{
+			// 		unsigned num_vars = tracked_system_.NumVariables();
+			// 		solution_at_endtime.resize(num_vars);
+			// 		for (unsigned ii=0; ii<num_vars; ii++)
+			// 			solution_at_endtime(ii) = dbl(std::get<Vec<mpfr> >(current_space_)(ii));
 
-				}
-			}
+			// 	}
+			// }
 
 			/**
 			\brief Run an iteration of the tracker loop.
@@ -699,9 +698,8 @@ namespace bertini{
 				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * stepping_config_.step_size_success_factor), stepping_config_.max_step_size);
 
 
-				unsigned max_precision = current_precision_;
 				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexType, RealType>();
-
+				unsigned max_precision = max(min_precision,current_precision_);
 
 				if (num_successful_steps_since_stepsize_increase_ < stepping_config_.consecutive_successful_steps_before_stepsize_increase)
 					max_stepsize = current_stepsize_; // disallow stepsize changing 
@@ -1115,7 +1113,7 @@ namespace bertini{
 
 			\return Whether the refinement was successful.
 			*/
-			SuccessCode Refine() const
+			SuccessCode RefineStoredPoint() const
 			{
 				SuccessCode code;
 				if (current_precision_==DoublePrecision())
@@ -1289,7 +1287,7 @@ namespace bertini{
 
 
 				if (refine_if_necessary && upsampling_needed)
-					return Refine();
+					return RefineStoredPoint();
 				else
 					return SuccessCode::Success;
 			}
@@ -1551,7 +1549,7 @@ namespace bertini{
 			////////////
 			// state variables
 			/////////////
-			bool preserve_precision_ = true; ///< Whether the tracker should change back to the initial precision after tracking paths.
+			bool preserve_precision_ = false; ///< Whether the tracker should change back to the initial precision after tracking paths.
 
 			mutable unsigned previous_precision_; ///< The previous precision of the tracker.
 			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.

@@ -278,7 +278,7 @@ namespace bertini{
 			inline
 			config::Predictor DefaultPredictor()
 			{
-				return config::Predictor::Euler;
+				return config::Predictor::HeunEuler;
 			}
 
 

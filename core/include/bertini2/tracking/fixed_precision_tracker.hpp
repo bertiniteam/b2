@@ -78,7 +78,7 @@ namespace bertini{
 			
 			void ResetCounters() const override
 			{
-				Base::ResetCounters();
+				Base::ResetCountersBase();
 
 				this->num_successful_steps_since_stepsize_increase_ = 0;
 				// initialize to the frequency so guaranteed to compute it the first try 	
@@ -368,7 +368,7 @@ namespace bertini{
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space,
+			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
@@ -401,13 +401,14 @@ namespace bertini{
 			\param start_point The base point for running Newton's method.
 			\param current_time The current time value.
 			\param tolerance The tolerance for convergence.  This is a tolerance on \f$\Delta x\f$, not on function residuals.
+			\param max_iterations The maximum number of permitted Newton iterations.  
 
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
 			template <typename ComplexType, typename RealType>
-			SuccessCode Refine(Vec<ComplexType> & new_space,
+			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time,
-								RealType const& tolerance) const
+								RealType const& tolerance, unsigned max_iterations) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
@@ -418,8 +419,8 @@ namespace bertini{
 							   start_point,
 							   current_time, 
 							   tolerance,
-							   this->newton_config_.min_num_newton_iterations,
-							   this->newton_config_.max_num_newton_iterations);
+							   1,
+							   max_iterations);
 			}
 
 

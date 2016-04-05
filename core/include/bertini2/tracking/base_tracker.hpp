@@ -172,6 +172,8 @@ namespace bertini{
 			}
 
 
+
+
 			/**
 			\brief Track a start point through time, from a start time to a target time.
 
@@ -183,6 +185,7 @@ namespace bertini{
 			
 			The is the fundamental method for the tracker.  First, you create and set up the tracker, telling it what system you will solve, and the settings to use.  Then, you actually do the tracking.
 			*/
+			template<typename CT>
 			SuccessCode TrackPath(Vec<CT> & solution_at_endtime,
 									CT const& start_time, CT const& endtime,
 									Vec<CT> const& start_point
@@ -195,7 +198,10 @@ namespace bertini{
 				
 				SuccessCode initialization_code = TrackerLoopInitialization(start_time, endtime, start_point);
 				if (initialization_code!=SuccessCode::Success)
+				{
+					PostTrackCleanup();
 					return initialization_code;
+				}
 
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
 				while (current_time_!=endtime)
@@ -237,39 +243,7 @@ namespace bertini{
 			}
 
 
-			/**
-			\brief Refine a point given in multiprecision.
-			
-			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, the tracking tolerance, precision, etc.  YOU must ensure that the input point has the correct precision.
 
-			\return The SuccessCode indicating whether the refinement completed.  
-
-			\param new_space The result of refinement.
-			\param start_point The seed for Newton's method for refinement.
-			\param current_time The current time value for refinement.
-			*/
-			// virtual
-			// SuccessCode Refine(Vec<mpfr> & new_space,
-			// 					Vec<mpfr> const& start_point, mpfr const& current_time) const = 0;
-
-
-
-
-			// *
-			// \brief Refine a point given in multiprecision.
-			
-			// Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
-
-			// \return The SuccessCode indicating whether the refinement completed.  
-
-			// \param new_space The result of refinement.
-			// \param start_point The seed for Newton's method for refinement.
-			// \param current_time The current time value for refinement.
-			// \param tolerance The tolerance to which to refine.
-			
-			// virtual
-			// SuccessCode Refine(Vec<mpfr> & new_space,
-			// 					Vec<mpfr> const& start_point, mpfr const& current_time, mpfr_float const& tolerance) const = 0;
 
 			/**
 			\brief Refine a point to tolerance implicitly internally set.
@@ -278,14 +252,14 @@ namespace bertini{
 
 			\return The SuccessCode indicating whether the refinement completed.  
 
-			\param new_space The result of refinement.
+			\param[out] new_space The result of refinement.
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			*/
 			SuccessCode Refine(Vec<CT> & new_space,
 								Vec<CT> const& start_point, CT const& current_time) const
 			{
-				return D::template Refine<CT, BaseRealType>(new_space, start_point, current_time);
+				return this->AsDerived().template RefineImpl<CT, BaseRealType>(new_space, start_point, current_time);
 			}
 
 
@@ -294,19 +268,20 @@ namespace bertini{
 			/**
 			\brief Refine a point to a given tolerance.
 			
-			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance, which you feed in here.  YOU must ensure that the input point has the correct precision.
+			Runs Newton's method using the current settings for tracking, including the min and max number of iterations allowed, precision, etc, EXCEPT for the tracking tolerance and max number of iterations, which you feed in here.  YOU must ensure that the input point has the correct precision.
 
 			\return The SuccessCode indicating whether the refinement completed.  
 
-			\param new_space The result of refinement.
+			\param[out] new_space The result of refinement.
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			\param tolerance The tolerance to which to refine.
+			\param max_iterations The maximum number of iterations to use to refine.
 			*/
 			SuccessCode Refine(Vec<CT> & new_space,
-								Vec<CT> const& start_point, CT const& current_time, RT const& tolerance) const
+								Vec<CT> const& start_point, CT const& current_time, RT const& tolerance, unsigned max_iterations) const
 			{
-				return D::template Refine<CT,RT>(new_space, start_point, current_time, tolerance);
+				return this->AsDerived().template RefineImpl<CT,RT>(new_space, start_point, current_time, tolerance, max_iterations);
 			}
 
 
@@ -374,9 +349,18 @@ namespace bertini{
 			
 			virtual ~Tracker() = default;
 
+			auto TrackingTolerance() const
+			{
+				return tracking_tolerance_;
+			}
+
 		private:
 
-			
+			// convert the base tracker into the derived type.
+			const D& AsDerived() const
+			{
+				return static_cast<const D&>(*this);
+			}
 
 			/**
 			\brief Set up initialization of the internals for tracking a path.
@@ -387,7 +371,6 @@ namespace bertini{
 			*/
 			virtual
 			SuccessCode TrackerLoopInitialization(CT const& start_time, CT const& end_time, Vec<CT> const& start_point) const = 0;
-
 			
 
 			/**
@@ -414,6 +397,8 @@ namespace bertini{
 			virtual
 			void CopyFinalSolution(Vec<CT> & solution_at_endtime) const = 0;
 
+			// virtual
+			// void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const = 0;
 
 
 		protected:
@@ -446,7 +431,12 @@ namespace bertini{
 			Your custom tracker type should almost certainly call this function.
 			*/
 			virtual
-			void ResetCounters() const
+			void ResetCounters() const = 0;
+
+
+
+
+			void ResetCountersBase() const
 			{
 				// reset a bunch of counters to 0.
 				num_consecutive_successful_steps_ = 0;
