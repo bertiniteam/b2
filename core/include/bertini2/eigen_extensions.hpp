@@ -162,6 +162,129 @@ namespace Eigen {
 			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::real(x)*numext::imag(y) - numext::imag(x)*numext::real(y)); }
 		};
 
+		// see https://forum.kde.org/viewtopic.php?f=74&t=111176
+
+		//int
+		template<> 
+		struct scalar_product_traits<int,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, int> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		//long
+		template<> 
+		struct scalar_product_traits<long,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, long> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		//long long
+		template<> 
+		struct scalar_product_traits<long long,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, long long> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+
+		//mpfr_float
+		template<> 
+		struct scalar_product_traits<bertini::mpfr_float,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, bertini::mpfr_float> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		//mpz_int
+		template<> 
+		struct scalar_product_traits<bertini::mpz_int,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, bertini::mpz_int> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+		// template<> 
+		// struct scalar_product_traits<long,bertini::complex> 
+		// {
+	 //    	enum { Defined = 1 };
+	 //    	typedef bertini::complex ReturnType;
+		// };
+
+		// template<> 
+		// struct scalar_product_traits<bertini::complex, long> 
+		// {
+	 //    	enum { Defined = 1 };
+	 //    	typedef bertini::complex ReturnType;
+		// };
+
+		// template<> 
+		// struct scalar_product_traits<bertini::mpz_int,bertini::complex> 
+		// {
+	 //    	enum { Defined = 1 };
+	 //    	typedef bertini::complex ReturnType;
+		// };
+
+		// template<> 
+		// struct scalar_product_traits<bertini::complex, bertini::mpz_int> 
+		// {
+	 //    	enum { Defined = 1 };
+	 //    	typedef bertini::complex ReturnType;
+		// };
+
+		// now provide unary ops definitions using the above templates
+
+		// template<typename Derived>
+		// CwiseUnaryOp<internal::scalar_multiple2_op<int,bertini::complex>, const Derived>
+		// operator*(int& lhs, const DenseBase<Derived>& rhs) 
+		// {
+		// 	return CwiseUnaryOp<internal::scalar_multiple2_op<int,bertini::complex>, const Derived>
+		// 		(internal::scalar_multiple2_op<bertini::complex,int>(lhs), rhs.derived());
+		// }
+
+		// template<typename Derived>
+		// CwiseUnaryOp<internal::scalar_multiple2_op<bertini::complex,int>, const Derived>
+		// operator*(const DenseBase<Derived>& lhs,int& rhs) {
+		//   return CwiseUnaryOp<internal::scalar_multiple2_op<bertini::complex,int>, const Derived>(
+		//       internal::scalar_multiple2_op<bertini::complex,int>(rhs), lhs.derived());
+		// }
+
+
 	} // re: namespace internal
 } // re: namespace Eigen
 
