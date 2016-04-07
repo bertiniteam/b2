@@ -127,19 +127,13 @@ namespace bertini {
 		explicit
 		complex(double re) : real_(re), imag_(0){}
 		
-		explicit
-		complex(int re) : real_(re), imag_(0){}
+		template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+		complex(T re) : real_(re), imag_(0){}
 
+		template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
 		explicit
-		complex(int re, int im) : real_(re), imag_(im){}
+		complex(T re, T im) : real_(re), imag_(im){}
 
-		explicit
-		complex(unsigned int re) : real_(re), imag_(0){}
-
-		explicit
-		complex(unsigned int re, unsigned int im) : real_(re), imag_(im){}
-
-		explicit
 		complex(mpz_int const& re) : real_(re), imag_(0){}
 
 		explicit

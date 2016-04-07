@@ -39,10 +39,8 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <Eigen/Dense>
-#include <Eigen/LU>
-#include <Eigen/SVD>
-// reopen the Eigen namespace to inject this struct.
+#include <Eigen/Core>
+
 namespace Eigen {
 	
 	using mpfr_float = bertini::mpfr_float;
@@ -84,15 +82,6 @@ namespace Eigen {
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
 	};
 
-}
-
-
-
-
-
-// reopen the Eigen namespace to inject this struct.
-namespace Eigen {
-	
 	
 	
 	/**
@@ -277,17 +266,17 @@ namespace Eigen {
 		// 		(internal::scalar_multiple2_op<bertini::complex,int>(lhs), rhs.derived());
 		// }
 
-		// template<typename Derived>
-		// CwiseUnaryOp<internal::scalar_multiple2_op<bertini::complex,int>, const Derived>
-		// operator*(const DenseBase<Derived>& lhs,int& rhs) {
-		//   return CwiseUnaryOp<internal::scalar_multiple2_op<bertini::complex,int>, const Derived>(
-		//       internal::scalar_multiple2_op<bertini::complex,int>(rhs), lhs.derived());
-		// }
+		
 
 
 	} // re: namespace internal
 } // re: namespace Eigen
 
+
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <Eigen/Eigenvalues>
+#include <Eigen/SVD>
 #include <Eigen/Dense>
 
 namespace bertini {

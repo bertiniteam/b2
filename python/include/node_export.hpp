@@ -96,18 +96,18 @@ namespace bertini{
 
 			// Addition operators
 			Nodeptr(*addNodeNode)(Nodeptr, const Nodeptr&) = &operator+;
-			Nodeptr(*addNodeDouble)(Nodeptr, double) = &operator+;
-			Nodeptr(*addNodeDbl)(Nodeptr, dbl) = &operator+;
-			Nodeptr(*addNodeMpfr)(Nodeptr, mpfr) = &operator+;
+			// Nodeptr(*addNodeDouble)(Nodeptr, double) = &operator+;
+			// Nodeptr(*addNodeDbl)(Nodeptr, dbl) = &operator+;
+			Nodeptr(*addNodeMpfr)(Nodeptr, const mpfr&) = &operator+;
 			Nodeptr(*addNodeInt)(Nodeptr, int) = &operator+;
 			static Nodeptr iaddNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
 				return lhs += rhs;
 			}
-			static Nodeptr iaddNodeDouble(Nodeptr  lhs, double rhs)
-			{
-				return lhs += rhs;
-			}
+			// static Nodeptr iaddNodeDouble(Nodeptr  lhs, double rhs)
+			// {
+			// 	return lhs += rhs;
+			// }
 			static SumOperator iaddSumNode(SumOperator  lhs, const Nodeptr & rhs)
 			{
 				return lhs += rhs;
@@ -115,18 +115,18 @@ namespace bertini{
 			
 			// Subtraction operators
 			Nodeptr(*subNodeNode)(Nodeptr, const Nodeptr&) = &operator-;
-			Nodeptr(*subNodeDouble)(Nodeptr, double) = &operator-;
-			Nodeptr(*subNodeDbl)(Nodeptr, dbl) = &operator-;
+			// Nodeptr(*subNodeDouble)(Nodeptr, double) = &operator-;
+			// Nodeptr(*subNodeDbl)(Nodeptr, dbl) = &operator-;
 			Nodeptr(*subNodeMpfr)(Nodeptr, mpfr) = &operator-;
 			Nodeptr(*subNodeInt)(Nodeptr, int) = &operator-;
 			static Nodeptr isubNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
 				return lhs -= rhs;
 			}
-			static Nodeptr isubNodeDouble(Nodeptr  lhs, double rhs)
-			{
-				return lhs -= rhs;
-			}
+			// static Nodeptr isubNodeDouble(Nodeptr  lhs, double rhs)
+			// {
+			// 	return lhs -= rhs;
+			// }
 			static SumOperator isubSumNode(SumOperator  lhs, const Nodeptr & rhs)
 			{
 				return lhs -= rhs;
@@ -141,40 +141,40 @@ namespace bertini{
 			
 			// Multiplication operators
 			Nodeptr(*multNodeNode)(Nodeptr, const Nodeptr&) = &operator*;
-			Nodeptr(*multNodeDouble)(Nodeptr, double) = &operator*;
-			Nodeptr(*multNodeDbl)(Nodeptr, dbl) = &operator*;
+			// Nodeptr(*multNodeDouble)(Nodeptr, double) = &operator*;
+			// Nodeptr(*multNodeDbl)(Nodeptr, dbl) = &operator*;
 			Nodeptr(*multNodeMpfr)(Nodeptr, mpfr) = &operator*;
 			Nodeptr(*multNodeInt)(Nodeptr, int) = &operator*;
 			static Nodeptr imultNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
 				return lhs *= rhs;
 			}
-			static Nodeptr imultNodeDouble(Nodeptr  lhs, double rhs)
-			{
-				return lhs *= rhs;
-			}
+			// static Nodeptr imultNodeDouble(Nodeptr  lhs, double rhs)
+			// {
+			// 	return lhs *= rhs;
+			// }
 			Nodeptr(*imultMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &operator*=;
 			
 			// Division operators
 			Nodeptr(*divNodeNode)(Nodeptr, const Nodeptr&) = &operator/;
-			Nodeptr(*divNodeDouble)(Nodeptr, double) = &operator/;
-			Nodeptr(*divNodeDbl)(Nodeptr, dbl) = &operator/;
+			// Nodeptr(*divNodeDouble)(Nodeptr, double) = &operator/;
+			// Nodeptr(*divNodeDbl)(Nodeptr, dbl) = &operator/;
 			Nodeptr(*divNodeMpfr)(Nodeptr, mpfr) = &operator/;
 			Nodeptr(*divNodeInt)(Nodeptr, int) = &operator/;
 			static Nodeptr idivNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
 				return lhs /= rhs;
 			}
-			static Nodeptr idivNodeDouble(Nodeptr  lhs, double rhs)
-			{
-				return lhs /= rhs;
-			}
+			// static Nodeptr idivNodeDouble(Nodeptr  lhs, double rhs)
+			// {
+			// 	return lhs /= rhs;
+			// }
 			Nodeptr(*idivMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &operator/=;
 			
 			// Power operators
 			Nodeptr(*powNodeNode)(const Nodeptr &, const Nodeptr&) = &pow;
-			Nodeptr(*powNodeDouble)(const Nodeptr&, double) = &pow;
-			Nodeptr(*powNodeDbl)(const Nodeptr&, dbl) = &pow;
+			// Nodeptr(*powNodeDouble)(const Nodeptr&, double) = &pow;
+			// Nodeptr(*powNodeDbl)(const Nodeptr&, dbl) = &pow;
 			Nodeptr(*powNodeMpfr)(const Nodeptr&, mpfr) = &pow;
 			Nodeptr(*powNodeInt)( Nodeptr const&, int) = &pow;
 			
