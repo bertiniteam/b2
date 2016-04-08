@@ -276,7 +276,7 @@ namespace bertini{
 					c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
 					a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
 					b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
-					bstar_ = Vec<RealType>(s_); b_ << RealType(1), RealType(0);
+					bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
 					p_ = 1;
 				}
 
@@ -301,7 +301,7 @@ namespace bertini{
 						for(int jj = 0; jj < ii; ++jj)
 						{
 							temp += a_(ii,jj)*K_.col(jj);
-							std::cout << "(" << ii << "," << jj << ") = " << a_(ii,jj) << std::endl;
+							
 						}
 						
 						if(EvalRHS(S, current_space + delta_t*temp, current_time + c_(ii)*delta_t, K_, ii) != SuccessCode::Success)
@@ -310,12 +310,13 @@ namespace bertini{
 						}
 					}
 					
+					
 					temp.setZero();
 					for(int ii = 0; ii < s_; ++ii)
 					{
 						temp += b_(ii)*K_.col(ii);
 					}
-					
+										
 					next_space = current_space + delta_t*temp;
 					
 					
@@ -324,7 +325,7 @@ namespace bertini{
 
 				
 				
-				static SuccessCode SetErrorEstimate(RealType & error_estimate, RealType const& delta_t)
+				static SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
 				{
 					int numFuncs = K_.cols();
 					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
@@ -336,6 +337,8 @@ namespace bertini{
 					err *= delta_t;
 					
 					error_estimate = err.norm();
+					
+					return SuccessCode::Success;
 				};
 				
 				
@@ -348,16 +351,20 @@ namespace bertini{
 					
 					norm_J = dh_dx_.norm();
 					norm_J_inverse = temp_soln.norm();
+					
+					return SuccessCode::Success;
 				};
 				
 				
 				
-				static SuccessCode SetSizeProportion(RealType & size_proportion, RealType const& delta_t)
+				static SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t)
 				{
 					RealType err_est;
-					SetErrorEstimate(err_est);
+					SetErrorEstimate(err_est, delta_t);
 					
-					size_proportion = err_est/(std::pow(delta_t, p_+1));
+					size_proportion = err_est/(std::pow(abs(delta_t), p_+1));
+					
+					return SuccessCode::Success;
 				};
 				
 				
