@@ -330,10 +330,12 @@ namespace bertini{
 					int numFuncs = K_.cols();
 					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
 					
+					err.setZero();
 					for(int ii = 0; ii < s_; ++ii)
 					{
 						err += (b_(ii) - bstar_(ii))*K_.col(ii);
 					}
+					
 					err *= delta_t;
 					
 					error_estimate = err.norm();
