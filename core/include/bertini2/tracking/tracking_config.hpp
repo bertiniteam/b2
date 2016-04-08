@@ -69,6 +69,7 @@ namespace bertini
 
 			enum class Predictor
 			{
+				None,
 				Euler,
 				HeunEuler
 			};

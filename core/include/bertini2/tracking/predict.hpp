@@ -294,6 +294,10 @@ namespace bertini{
 						return 1;
 					case (config::Predictor::HeunEuler):
 						return 1;
+					default:
+					{
+						throw std::runtime_error("incompatible predictor choice in Order");
+					}
 				}
 			}
 			
@@ -306,6 +310,10 @@ namespace bertini{
 						return false;
 					case (config::Predictor::HeunEuler):
 						return true;
+					default:
+					{
+						throw std::runtime_error("incompatible predictor choice in HasErrorEstimate");
+					}
 				}
 			}
 
