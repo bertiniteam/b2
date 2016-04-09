@@ -56,6 +56,31 @@ namespace bertini{
 			
 			
 			
+			/**
+			 /class ExplicitPredictors
+			 
+			 \brief A static class which stores all the explicit ODE predictor methods.
+			 
+			 ## Purpose
+			 Stores all the information needed to implement the predictor method
+				- Butcher Table
+				- Number of Stages
+				- Order of the method.  
+			 
+			 Also stores information computed during implementation of the method.
+			 
+			 
+			 ## Use
+			 Each predictor method is a static method of this class, therefore all that is required to run the predictor is to call the correct method:
+			 
+			 \code
+			 ExplicitPredictors<Complex,Real>::Euler( ... )
+			 \endcode
+			 
+			 
+			 
+			 */
+			
 			template <typename ComplexType, typename RealType>
 			class ExplicitPredictors
 			{
@@ -66,101 +91,24 @@ namespace bertini{
 				
 				
 				
-				/*
-				Butcher Table for Forward Euler
-				c|    a
-				0| 0
-				-------
-				 | 1  b
+				
+				/**
+				 \brief Perform a generic predictor step.
 				 
+				 \param next_space The computed prediction.
+				 \param method An enum class selecting the predictor method to use.
+				 \param S The system being solved.
+				 \param current_space The current space variable vector.
+				 \param current_time The current time.
+				 \param delta_t The size of the time step.
+				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
+				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
+				 \param prec_type The operating precision type.
+				 \param tracking_tolerance How tightly to track the path.
 				 */
 				
-				
-				/*
-				 Euler method
-				 
-				 To call: ExplicitPredictors::Euler( ... )
-				 */
-				static SuccessCode Euler(Vec<ComplexType> & next_space,
-									System const& S,
-									Vec<ComplexType> const& current_space, ComplexType current_time,
-									ComplexType const& delta_t,
-									RealType & condition_number_estimate,
-									unsigned & num_steps_since_last_condition_number_computation,
-									unsigned frequency_of_CN_estimation,
-									RealType const& tracking_tolerance)
-				{
-					if(predictor_ != Predictor::Euler)
-					{
-						EulerSetup();
-						predictor_ = Predictor::Euler;
-					}
-					
-					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
-					return FullStep(next_space, S, current_space, current_time, delta_t);
-				}
-				
-				
-				
-				
-				/* 
-				 Euler with norms and size_proportion being calculated
-				 
-				 To call: ExplicitPredictors<Complex, Real>::Euler( ... )
-				 */
-				static SuccessCode Euler(Vec<ComplexType> & next_space,
-								  RealType & size_proportion,
-								  RealType & norm_J,
-								  RealType & norm_J_inverse,
-								  System const& S,
-								  Vec<ComplexType> const& current_space, ComplexType current_time,
-								  ComplexType const& delta_t,
-								  RealType & condition_number_estimate,
-								  unsigned & num_steps_since_last_condition_number_computation,
-								  unsigned frequency_of_CN_estimation,
-								  RealType const& tracking_tolerance,
-								  config::AdaptiveMultiplePrecisionConfig const& AMP_config)
-				{
-					auto success_code = ExplicitPredictors<ComplexType, RealType>::Euler(next_space,
-											  S,
-											  current_space, current_time,
-											  delta_t,
-											  condition_number_estimate,
-											  num_steps_since_last_condition_number_computation,
-											  frequency_of_CN_estimation,
-											  tracking_tolerance);
-					
-					SetNorms(norm_J, norm_J_inverse, S.NumVariables());
-					size_proportion = K_.cols(0).array().abs().maxCoeff();
-					
-					return success_code;
-				}
-				
-				
-				
-				
-
-				
-				
-				
-				/*
-				 Butcher Table for Heun
-				 c|     a
-				 0| 0 0
-				 1| 1 0
-				 -------
-				  | .5 .5  b
-				  | 1  0   bstar
-				 
-				 */
-				
-				
-				/*
-				 Heun method
-				 
-				 To call: ExplicitPredictors::HeunEuler( ... )
-				 */
-				static SuccessCode HeunEuler(Vec<ComplexType> & next_space,
+				static SuccessCode ExplicitPredict(Vec<ComplexType> & next_space, Predictor method,
 										 System const& S,
 										 Vec<ComplexType> const& current_space, ComplexType current_time,
 										 ComplexType const& delta_t,
@@ -169,116 +117,219 @@ namespace bertini{
 										 unsigned frequency_of_CN_estimation,
 										 RealType const& tracking_tolerance)
 				{
-					if(predictor_ != Predictor::HeunEuler)
+					if(predictor_ != method)
 					{
-						HeunSetup();
-						predictor_ = Predictor::HeunEuler;
+						MethodSetup(method);
+						predictor_ = Predictor::Euler;
 					}
 					
 					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
 					return FullStep(next_space, S, current_space, current_time, delta_t);
+					
 				}
 				
+
 				
 				
 				
-				/*
-				 Heun with norms and size_proportion being calculated
+				
+				
+				
+				
+				
+				/**
+				 \brief Perform a generic predictor step and return size_proportion and condition number information
 				 
-				 To call: ExplicitPredictors::HeunEuler( ... )
+				 \param next_space The computed prediction.
+				 \param method An enum class selecting the predictor method to use.
+				 \param size_proportion $a$ in AMP2 paper.
+				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
+				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
+				 \param S The system being solved.
+				 \param current_space The current space variable vector.
+				 \param current_time The current time.
+				 \param delta_t The size of the time step.
+				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
+				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
+				 \param prec_type The operating precision type.
+				 \param tracking_tolerance How tightly to track the path.
+				 \param AMP_config The settings for adaptive multiple precision.
 				 */
-				static SuccessCode HeunEuler(Vec<ComplexType> & next_space,
-								  RealType & size_proportion,
-								  RealType & norm_J,
-								  RealType & norm_J_inverse,
-								  System const& S,
-								  Vec<ComplexType> const& current_space, ComplexType current_time,
-								  ComplexType const& delta_t,
-								  RealType & condition_number_estimate,
-								  unsigned & num_steps_since_last_condition_number_computation,
-								  unsigned frequency_of_CN_estimation,
-								  RealType const& tracking_tolerance,
-								  config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+				
+				static SuccessCode ExplicitPredict(Vec<ComplexType> & next_space,
+												   Predictor method,
+												   RealType & size_proportion,
+												   RealType & norm_J,
+												   RealType & norm_J_inverse,
+												   System const& S,
+												   Vec<ComplexType> const& current_space, ComplexType current_time,
+												   ComplexType const& delta_t,
+												   RealType & condition_number_estimate,
+												   unsigned & num_steps_since_last_condition_number_computation,
+												   unsigned frequency_of_CN_estimation,
+												   RealType const& tracking_tolerance,
+												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					auto success_code = HeunEuler(next_space,
-											  S,
-											  current_space, current_time,
-											  delta_t,
-											  condition_number_estimate,
-											  num_steps_since_last_condition_number_computation,
-											  frequency_of_CN_estimation,
-											  tracking_tolerance);
+					auto success_code = ExplicitPredict(next_space, method, S, current_space, current_time, delta_t,
+									condition_number_estimate, num_steps_since_last_condition_number_computation,
+														frequency_of_CN_estimation, tracking_tolerance);
+
 					
-					SetNorms(norm_J, norm_J_inverse, S.NumVariables());
-					SetSizeProportion(size_proportion, delta_t);
+					// Calculate condition number and updated if needed
+					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
+					Vec<ComplexType> temp_soln = LU_.solve(randy);
 					
+					norm_J = dh_dx_.norm();
+					norm_J_inverse = temp_soln.norm();
+					
+					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
+					{
+						condition_number_estimate = norm_J * norm_J_inverse;
+						num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
+					}
+					else // no need to compute the condition number
+						num_steps_since_last_condition_number_computation++;
+
+					
+					// Set size_proportion
+					switch(method)
+					{
+						case Predictor::Euler:
+						{
+							size_proportion = K_.col(0).array().abs().maxCoeff();
+							break;
+						}
+						default:
+						{
+							SetSizeProportion(size_proportion, delta_t);
+						}
+							
+					}
+					
+					
+					
+					//AMP Criteria
+					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+						return SuccessCode::HigherPrecisionNecessary;
+					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+						return SuccessCode::HigherPrecisionNecessary;
+
+				
 					return success_code;
 				}
+
 				
 				
-				/*
-				 Heun with error estimate, norms and size_proportion being calculated
+
+				
+				
+				
+				
+				
+				
+				/**
+				 \brief Perform a generic predictor step and return error estimate, size_proportion and condition number information
 				 
-				 To call: ExplicitPredictors::HeunEuler( ... )
+				 \param next_space The computed prediction.
+				 \param method An enum class selecting the predictor method to use.
+				 \param error_estimate Estimate of the error from an embedded method.
+				 \param size_proportion $a$ in AMP2 paper.
+				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
+				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
+				 \param S The system being solved.
+				 \param current_space The current space variable vector.
+				 \param current_time The current time.
+				 \param delta_t The size of the time step.
+				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
+				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
+				 \param prec_type The operating precision type.
+				 \param tracking_tolerance How tightly to track the path.
+				 \param AMP_config The settings for adaptive multiple precision.
 				 */
-				static SuccessCode HeunEuler(Vec<ComplexType> & next_space,
-								 RealType & error_estimate,
-								 RealType & size_proportion,
-								 RealType & norm_J,
-								 RealType & norm_J_inverse,
-								 System const& S,
-								 Vec<ComplexType> const& current_space, ComplexType current_time,
-								 ComplexType const& delta_t,
-								 RealType & condition_number_estimate,
-								 unsigned & num_steps_since_last_condition_number_computation,
-								 unsigned frequency_of_CN_estimation,
-								 RealType const& tracking_tolerance,
-								 config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+				
+				static SuccessCode ExplicitPredict(Vec<ComplexType> & next_space,
+												   Predictor method,
+												   RealType & error_estimate,
+												   RealType & size_proportion,
+												   RealType & norm_J,
+												   RealType & norm_J_inverse,
+												   System const& S,
+												   Vec<ComplexType> const& current_space, ComplexType current_time,
+												   ComplexType const& delta_t,
+												   RealType & condition_number_estimate,
+												   unsigned & num_steps_since_last_condition_number_computation,
+												   unsigned frequency_of_CN_estimation,
+												   RealType const& tracking_tolerance,
+												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					auto success_code = HeunEuler(next_space, size_proportion, norm_J, norm_J_inverse, S,
-											 current_space, current_time, delta_t, condition_number_estimate,
-											 num_steps_since_last_condition_number_computation,
-											 frequency_of_CN_estimation, tracking_tolerance, AMP_config);
+					auto success_code = ExplicitPredict(next_space, method, size_proportion, norm_J, norm_J_inverse,
+									S, current_space, current_time, delta_t,
+									condition_number_estimate, num_steps_since_last_condition_number_computation,
+														frequency_of_CN_estimation, tracking_tolerance, AMP_config);
 					
 					SetErrorEstimate(error_estimate, delta_t);
 					
+					
 					return success_code;
 				}
 
-
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
 			private:
 				
 				// This is a static class, no instances should be created.
 				ExplicitPredictors() = default;
 				
 				
-				/** 
-				 Setup Butcher table and order for Euler's method
-				 */
-				static void EulerSetup()
+				
+				
+				static void MethodSetup(Predictor method)
 				{
-					s_ = 1;
-					c_ = Vec<RealType>(s_); c_(0) = 0;
-					a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
-					b_ = Vec<RealType>(s_); b_(0) = 1;
-					p_ = 1;
+					switch(method)
+					{
+						case Predictor::Euler:
+						{
+							s_ = 1;
+							c_ = Vec<RealType>(s_); c_(0) = 0;
+							a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
+							b_ = Vec<RealType>(s_); b_(0) = 1;
+							p_ = 1;
+							break;
+						}
+						case Predictor::HeunEuler:
+						{
+							s_ = 2;
+							c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
+							a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
+							b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
+							bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
+							p_ = 1;
+							break;
+						}
+					}
 				}
-
 				
 				
 				
-				/** 
-				 Setup Butcher table and order for Heun's method
-				 */
-				static void HeunSetup()
-				{
-					s_ = 2;
-					c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
-					a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
-					b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
-					bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
-					p_ = 1;
-				}
 
 				
 				
@@ -325,6 +376,10 @@ namespace bertini{
 
 				
 				
+				
+				
+				
+				
 				static SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
 				{
 					int numFuncs = K_.cols();
@@ -346,16 +401,6 @@ namespace bertini{
 				
 
 				
-				static SuccessCode SetNorms(RealType & norm_J,RealType & norm_J_inverse, int NumVariables)
-				{
-					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(NumVariables);
-					Vec<ComplexType> temp_soln = LU_.solve(randy);
-					
-					norm_J = dh_dx_.norm();
-					norm_J_inverse = temp_soln.norm();
-					
-					return SuccessCode::Success;
-				};
 				
 				
 				
@@ -368,6 +413,8 @@ namespace bertini{
 					
 					return SuccessCode::Success;
 				};
+				
+				
 				
 				
 				
