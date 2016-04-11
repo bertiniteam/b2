@@ -127,10 +127,6 @@ namespace bertini{
 			class_<UnaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<UnaryOperator> >("UnaryOperator", no_init)
 			.def(UnaryOpVisitor<UnaryOperator>())
 			;
-			
-			// BinaryOperator class
-			class_<BinaryOperator, boost::noncopyable, bases<Operator>, std::shared_ptr<BinaryOperator> >("BinaryOperator", no_init)
-			;
 
 			// NaryOperator class
 			class_<NaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<NaryOperator> >("NaryOperator", no_init)
@@ -156,7 +152,7 @@ namespace bertini{
 			;
 			
 			// PowerOperator class
-			class_<PowerOperator, bases<BinaryOperator>, std::shared_ptr<PowerOperator> >("PowerOperator", init<const Nodeptr&, const Nodeptr &>() )
+			class_<PowerOperator, bases<Operator>, std::shared_ptr<PowerOperator> >("PowerOperator", init<const Nodeptr&, const Nodeptr &>() )
 			
 			.def(PowerOpVisitor<PowerOperator>())
 			;
