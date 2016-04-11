@@ -57,7 +57,7 @@ namespace bertini{
 			
 			
 			/**
-			 /class ExplicitPredictors
+			 /class ExplicitRKPredictors
 			 
 			 \brief A static class which stores all the explicit ODE predictor methods.
 			 
@@ -74,7 +74,7 @@ namespace bertini{
 			 Each predictor method is a static method of this class, therefore all that is required to run the predictor is to call the correct method:
 			 
 			 \code
-			 ExplicitPredictors<Complex,Real>::Euler( ... )
+			 ExplicitRKPredictors<Complex,Real>::Euler( ... )
 			 \endcode
 			 
 			 
@@ -82,7 +82,7 @@ namespace bertini{
 			 */
 			
 			template <typename ComplexType, typename RealType>
-			class ExplicitPredictors
+			class ExplicitRKPredictors
 			{
 			public:
 				
@@ -108,7 +108,7 @@ namespace bertini{
 				 \param tracking_tolerance How tightly to track the path.
 				 */
 				
-				static SuccessCode ExplicitPredict(Vec<ComplexType> & next_space, Predictor method,
+				static SuccessCode Predict(Vec<ComplexType> & next_space, Predictor method,
 										 System const& S,
 										 Vec<ComplexType> const& current_space, ComplexType current_time,
 										 ComplexType const& delta_t,
@@ -157,7 +157,7 @@ namespace bertini{
 				 \param AMP_config The settings for adaptive multiple precision.
 				 */
 				
-				static SuccessCode ExplicitPredict(Vec<ComplexType> & next_space,
+				static SuccessCode Predict(Vec<ComplexType> & next_space,
 												   Predictor method,
 												   RealType & size_proportion,
 												   RealType & norm_J,
@@ -171,7 +171,7 @@ namespace bertini{
 												   RealType const& tracking_tolerance,
 												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					auto success_code = ExplicitPredict(next_space, method, S, current_space, current_time, delta_t,
+					auto success_code = Predict(next_space, method, S, current_space, current_time, delta_t,
 									condition_number_estimate, num_steps_since_last_condition_number_computation,
 														frequency_of_CN_estimation, tracking_tolerance);
 
@@ -249,7 +249,7 @@ namespace bertini{
 				 \param AMP_config The settings for adaptive multiple precision.
 				 */
 				
-				static SuccessCode ExplicitPredict(Vec<ComplexType> & next_space,
+				static SuccessCode Predict(Vec<ComplexType> & next_space,
 												   Predictor method,
 												   RealType & error_estimate,
 												   RealType & size_proportion,
@@ -264,7 +264,7 @@ namespace bertini{
 												   RealType const& tracking_tolerance,
 												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					auto success_code = ExplicitPredict(next_space, method, size_proportion, norm_J, norm_J_inverse,
+					auto success_code = Predict(next_space, method, size_proportion, norm_J, norm_J_inverse,
 									S, current_space, current_time, delta_t,
 									condition_number_estimate, num_steps_since_last_condition_number_computation,
 														frequency_of_CN_estimation, tracking_tolerance, AMP_config);
@@ -297,7 +297,7 @@ namespace bertini{
 			private:
 				
 				// This is a static class, no instances should be created.
-				ExplicitPredictors() = default;
+				ExplicitRKPredictors() = default;
 				
 				
 				
@@ -313,6 +313,7 @@ namespace bertini{
 							a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
 							b_ = Vec<RealType>(s_); b_(0) = 1;
 							p_ = 1;
+							errorEstFlag_ = false;
 							break;
 						}
 						case Predictor::HeunEuler:
@@ -323,7 +324,12 @@ namespace bertini{
 							b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
 							bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
 							p_ = 1;
+							errorEstFlag_ = true;
 							break;
+						}
+						default:
+						{
+							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
 						}
 					}
 				}
@@ -382,7 +388,7 @@ namespace bertini{
 				
 				static SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
 				{
-					int numFuncs = K_.cols();
+					auto numFuncs = K_.cols();
 					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
 					
 					err.setZero();
@@ -473,32 +479,35 @@ namespace bertini{
 				static Vec<RealType> bstar_;
 				static Mat<RealType> a_;
 				static int p_;
+				static bool errorEstFlag_;
 				
 				static Mat<ComplexType> K_;
 			};
 			template<typename Complex, typename Real>
-			config::Predictor ExplicitPredictors<Complex,Real>::predictor_ = Predictor::None;
+			config::Predictor ExplicitRKPredictors<Complex,Real>::predictor_ = Predictor::None;
 			
 			
 			template<typename Complex, typename Real>
-			int ExplicitPredictors<Complex,Real>::s_;
+			int ExplicitRKPredictors<Complex,Real>::s_;
 			template<typename Complex, typename Real>
-			Vec<Real> ExplicitPredictors<Complex,Real>::c_;
+			Vec<Real> ExplicitRKPredictors<Complex,Real>::c_;
 			template<typename Complex, typename Real>
-			Vec<Real> ExplicitPredictors<Complex,Real>::b_;
+			Vec<Real> ExplicitRKPredictors<Complex,Real>::b_;
 			template<typename Complex, typename Real>
-			Vec<Real> ExplicitPredictors<Complex,Real>::bstar_;
+			Vec<Real> ExplicitRKPredictors<Complex,Real>::bstar_;
 			template<typename Complex, typename Real>
-			Mat<Real> ExplicitPredictors<Complex,Real>::a_;
+			Mat<Real> ExplicitRKPredictors<Complex,Real>::a_;
 			template<typename Complex, typename Real>
-			int ExplicitPredictors<Complex,Real>::p_;
+			int ExplicitRKPredictors<Complex,Real>::p_;
+			template<typename Complex, typename Real>
+			bool ExplicitRKPredictors<Complex,Real>::errorEstFlag_;
 			
 			template<typename Complex, typename Real>
-			Mat<Complex> ExplicitPredictors<Complex,Real>::K_;
+			Mat<Complex> ExplicitRKPredictors<Complex,Real>::K_;
 			template<typename Complex, typename Real>
-			Mat<Complex> ExplicitPredictors<Complex,Real>::dh_dx_;
+			Mat<Complex> ExplicitRKPredictors<Complex,Real>::dh_dx_;
 			template<typename Complex, typename Real>
-			Eigen::PartialPivLU<Mat<Complex>> ExplicitPredictors<Complex,Real>::LU_;
+			Eigen::PartialPivLU<Mat<Complex>> ExplicitRKPredictors<Complex,Real>::LU_;
 			
 			
 			
