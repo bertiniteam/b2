@@ -233,17 +233,17 @@ namespace bertini{
 
 		void ExportMpfr()
 		{
-			class_<boost::multiprecision::mpz_int>("mpfr_int", init<>())
+			class_<mpz_int>("mpfr_int", init<>())
 			.def(init<int>())
-			.def(init<boost::multiprecision::mpz_int>())
-			.def(MPFRIntVisitor<boost::multiprecision::mpz_int>())
+			.def(init<mpz_int>())
+			.def(MPFRIntVisitor<mpz_int>())
 			;
 
-			class_<boost::multiprecision::mpq_rational>("mpfr_rational", init<>())
+			class_<mpq_rational>("mpfr_rational", init<>())
 			.def(init<int, int>())
-			.def(init<boost::multiprecision::mpz_int,boost::multiprecision::mpz_int>())
-			.def(init<boost::multiprecision::mpq_rational>())
-			.def(MPFRRationalVisitor<boost::multiprecision::mpq_rational>())
+			.def(init<mpz_int,mpz_int>())
+			.def(init<mpq_rational>())
+			.def(MPFRRationalVisitor<mpq_rational>())
 			;
 
 			class_<bmp>("mpfr_float", init<>())
