@@ -15,8 +15,8 @@ class DiffTest(unittest.TestCase):
         self.z.set_current_value(complex(-6.48, -.731))
         self.p = Variable('p')
         self.p.set_current_value(complex(-.321, -.72))
-        self.a = Float(complex(3.12, .612))
-        self.b = Float(complex(-.823, 2.62))
+        self.a = Float("3.12", ".612")
+        self.b = Float("-.823", "2.62")
         self.tol_d = float(1e-14);
 
         self.x.set_current_value(mpfr_complex("-2.43",".21" ))

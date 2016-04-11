@@ -102,6 +102,7 @@ namespace bertini{
 			// Float class
 			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", init< bmp, bmp >())
 			.def(init<mpfr>())
+			.def(init< std::string>())
 			.def(init< std::string, std::string >())
 			;
 			
