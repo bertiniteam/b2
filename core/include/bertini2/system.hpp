@@ -761,14 +761,20 @@ namespace bertini {
 		
 
 		/**
-		 Get the variable groups in the problem.
+		 Get the affine variable groups in the problem.
 		*/
 		auto VariableGroups() const
 		{
 			return variable_groups_;
 		}
 
-
+		/**
+		 Get the homogeneous (projective) variable groups in the problem.
+		*/
+		auto HomVariableGroups() const
+		{
+			return hom_variable_groups_;
+		}
 
 		/**
 		Compute an estimate of an upper bound of the absolute values of the coefficients in the system.
