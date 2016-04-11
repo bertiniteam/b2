@@ -68,26 +68,34 @@ namespace bertini{
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 
-			switch (predictor_choice)
-			{
-				case config::Predictor::Euler:
-				{
-					return predict::Euler(next_space,
-									sys,
-									current_space, current_time, 
-									delta_t,
-									condition_number_estimate,
-									num_steps_since_last_condition_number_computation, 
-									frequency_of_CN_estimation, 
-									tracking_tolerance);
-					break;
-				}
-
-				default:
-				{
-					throw std::runtime_error("incompatible predictor choice in Predict");
-				}
-			}
+			return predict::ExplicitRKPredictors<ComplexType, RealType>::Predict(next_space, predictor_choice,
+										sys,
+										current_space, current_time,
+										delta_t,
+										condition_number_estimate,
+										num_steps_since_last_condition_number_computation,
+										frequency_of_CN_estimation,
+										tracking_tolerance);
+//			switch (predictor_choice)
+//			{
+//				case config::Predictor::Euler:
+//				{
+//					return predict::Euler(next_space,
+//									sys,
+//									current_space, current_time, 
+//									delta_t,
+//									condition_number_estimate,
+//									num_steps_since_last_condition_number_computation, 
+//									frequency_of_CN_estimation, 
+//									tracking_tolerance);
+//					break;
+//				}
+//
+//				default:
+//				{
+//					throw std::runtime_error("incompatible predictor choice in Predict");
+//				}
+//			}
 
 			return SuccessCode::Failure;
 		}
@@ -125,30 +133,42 @@ namespace bertini{
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 
-			switch (predictor_choice)
-			{
-				case config::Predictor::Euler:
-				{
-					return predict::Euler(next_space,
+			return predict::ExplicitRKPredictors<ComplexType, RealType>::Predict(next_space, predictor_choice,
 										  size_proportion,
 										  norm_J,
 										  norm_J_inverse,
-										sys,
-										current_space, current_time, 
-										delta_t,
-										condition_number_estimate,
-										num_steps_since_last_condition_number_computation, 
-										frequency_of_CN_estimation, 
-										tracking_tolerance,
-										AMP_config);
-					break;
-				}
-
-				default:
-				{
-					throw std::runtime_error("incompatible predictor choice in Predict with norms returned, but no error estimate");
-				}
-			}
+												sys,
+												current_space, current_time,
+												delta_t,
+												condition_number_estimate,
+												num_steps_since_last_condition_number_computation,
+												frequency_of_CN_estimation,
+												tracking_tolerance,
+												AMP_config);
+//			switch (predictor_choice)
+//			{
+//				case config::Predictor::Euler:
+//				{
+//					return predict::Euler(next_space,
+//										  size_proportion,
+//										  norm_J,
+//										  norm_J_inverse,
+//										sys,
+//										current_space, current_time, 
+//										delta_t,
+//										condition_number_estimate,
+//										num_steps_since_last_condition_number_computation, 
+//										frequency_of_CN_estimation, 
+//										tracking_tolerance,
+//										AMP_config);
+//					break;
+//				}
+//
+//				default:
+//				{
+//					throw std::runtime_error("incompatible predictor choice in Predict with norms returned, but no error estimate");
+//				}
+//			}
 
 			return SuccessCode::Failure;
 		}
@@ -182,31 +202,44 @@ namespace bertini{
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 
-			switch (predictor_choice)
-			{
-				case config::Predictor::HeunEuler:
-				{
-					return predict::HeunEuler(next_space,
-												error_estimate,
-												size_proportion,
-												norm_J,
-												norm_J_inverse,
-												sys,
-												current_space, current_time, 
-												delta_t,
-												condition_number_estimate,
-												num_steps_since_last_condition_number_computation, 
-												frequency_of_CN_estimation, 
-												tracking_tolerance,
-												AMP_config);
-					break;
-				}
-
-				default:
-				{
-					throw std::runtime_error("incompatible predictor choice in Predict, with return of error estimate");
-				}
-			}
+			return predict::ExplicitRKPredictors<ComplexType, RealType>::Predict(next_space, predictor_choice,
+										 error_estimate,
+										 size_proportion,
+										 norm_J,
+										 norm_J_inverse,
+										 sys,
+										 current_space, current_time,
+										 delta_t,
+										 condition_number_estimate,
+										 num_steps_since_last_condition_number_computation,
+										 frequency_of_CN_estimation,
+										 tracking_tolerance,
+										 AMP_config);
+//			switch (predictor_choice)
+//			{
+//				case config::Predictor::HeunEuler:
+//				{
+//					return predict::HeunEuler(next_space,
+//												error_estimate,
+//												size_proportion,
+//												norm_J,
+//												norm_J_inverse,
+//												sys,
+//												current_space, current_time, 
+//												delta_t,
+//												condition_number_estimate,
+//												num_steps_since_last_condition_number_computation, 
+//												frequency_of_CN_estimation, 
+//												tracking_tolerance,
+//												AMP_config);
+//					break;
+//				}
+//
+//				default:
+//				{
+//					throw std::runtime_error("incompatible predictor choice in Predict, with return of error estimate");
+//				}
+//			}
 
 			return SuccessCode::Failure;
 		}
@@ -267,58 +300,6 @@ namespace bertini{
 		
 
 
-		namespace predict{
-
-
-			/**
-			\brief Get the Bertini2 default predictor.  
-
-			Currently set to Euler, though this will change in future versions.
-			*/
-			inline
-			config::Predictor DefaultPredictor()
-			{
-				return config::Predictor::Euler;
-			}
-
-
-			/**
-			The lowest order of the predictor.  The order of the error estimate is this plus one.
-			*/
-			inline
-			unsigned Order(config::Predictor predictor_choice)
-			{
-				switch (predictor_choice)
-				{
-					case (config::Predictor::Euler):
-						return 1;
-					case (config::Predictor::HeunEuler):
-						return 1;
-					default:
-					{
-						throw std::runtime_error("incompatible predictor choice in Order");
-					}
-				}
-			}
-			
-
-			inline bool HasErrorEstimate(config::Predictor predictor_choice)
-			{
-				switch (predictor_choice)
-				{
-					case (config::Predictor::Euler):
-						return false;
-					case (config::Predictor::HeunEuler):
-						return true;
-					default:
-					{
-						throw std::runtime_error("incompatible predictor choice in HasErrorEstimate");
-					}
-				}
-			}
-
-
-		} // re: namespace predict
 
 		
 

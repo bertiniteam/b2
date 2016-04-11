@@ -51,6 +51,52 @@ namespace bertini{
 			
 			using Predictor = config::Predictor;
 			
+			/**
+			 \brief Get the Bertini2 default predictor.
+			 
+			 Currently set to Euler, though this will change in future versions.
+			 */
+			inline
+			config::Predictor DefaultPredictor()
+			{
+				return config::Predictor::Euler;
+			}
+			
+			
+			/**
+			 The lowest order of the predictor.  The order of the error estimate is this plus one.
+			 */
+			inline
+			unsigned Order(config::Predictor predictor_choice)
+			{
+				switch (predictor_choice)
+				{
+					case (config::Predictor::Euler):
+						return 1;
+					case (config::Predictor::HeunEuler):
+						return 1;
+					default:
+					{
+						throw std::runtime_error("incompatible predictor choice in Order");
+					}
+				}
+			}
+			
+			
+			inline bool HasErrorEstimate(config::Predictor predictor_choice)
+			{
+				switch (predictor_choice)
+				{
+					case (config::Predictor::Euler):
+						return false;
+					case (config::Predictor::HeunEuler):
+						return true;
+					default:
+					{
+						throw std::runtime_error("incompatible predictor choice in HasErrorEstimate");
+					}
+				}
+			}
 			
 			
 			
@@ -117,6 +163,7 @@ namespace bertini{
 										 unsigned frequency_of_CN_estimation,
 										 RealType const& tracking_tolerance)
 				{
+					// Set up all variables to define the particular method
 					if(predictor_ != method)
 					{
 						MethodSetup(method);
@@ -173,12 +220,8 @@ namespace bertini{
 				{
 					
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
-					if(predictor_ != method)
-					{
-						MethodSetup(method);
-						predictor_ = method;
-					}
-					if(!errorEstFlag_)
+					
+					if(!HasErrorEstimate(method))
 					{
 						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
 					}
@@ -269,12 +312,8 @@ namespace bertini{
 												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
-					if(predictor_ != method)
-					{
-						MethodSetup(method);
-						predictor_ = method;
-					}
-					if(!errorEstFlag_)
+					
+					if(!HasErrorEstimate(method))
 					{
 						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
 					}
@@ -324,6 +363,7 @@ namespace bertini{
 				
 				static void MethodSetup(Predictor method)
 				{
+					p_ = Order(method);
 					switch(method)
 					{
 						case Predictor::Euler:
@@ -332,8 +372,6 @@ namespace bertini{
 							c_ = Vec<RealType>(s_); c_(0) = 0;
 							a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
 							b_ = Vec<RealType>(s_); b_(0) = 1;
-							p_ = 1;
-							errorEstFlag_ = false;
 							break;
 						}
 						case Predictor::HeunEuler:
@@ -343,8 +381,6 @@ namespace bertini{
 							a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
 							b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
 							bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
-							p_ = 1;
-							errorEstFlag_ = true;
 							break;
 						}
 						default:
@@ -499,7 +535,6 @@ namespace bertini{
 				static Vec<RealType> bstar_;
 				static Mat<RealType> a_;
 				static int p_;
-				static bool errorEstFlag_;
 				
 				static Mat<ComplexType> K_;
 			};
@@ -519,8 +554,6 @@ namespace bertini{
 			Mat<Real> ExplicitRKPredictors<Complex,Real>::a_;
 			template<typename Complex, typename Real>
 			int ExplicitRKPredictors<Complex,Real>::p_;
-			template<typename Complex, typename Real>
-			bool ExplicitRKPredictors<Complex,Real>::errorEstFlag_;
 			
 			template<typename Complex, typename Real>
 			Mat<Complex> ExplicitRKPredictors<Complex,Real>::K_;
@@ -540,45 +573,6 @@ namespace bertini{
 			
 			
 			
-//			template <typename ComplexType, typename RealType>
-//			class EulerPred : public Predictor<ComplexType, RealType>
-//			{
-//				using Predictor<ComplexType, RealType>::s_;
-//				using Predictor<ComplexType, RealType>::c_;
-//				using Predictor<ComplexType, RealType>::b_;
-//				using Predictor<ComplexType, RealType>::bstar_;
-//				using Predictor<ComplexType, RealType>::a_;
-//				using Predictor<ComplexType, RealType>::K_;
-//				
-////				using Predictor<ComplexType, RealType>::EvalRHS;
-////				using Predictor<ComplexType, RealType>::ErrorEstimate;
-////				using Predictor<ComplexType, RealType>::NormAndSize;
-//				using Predictor<ComplexType, RealType>::FullStep;
-//				
-//			public:
-//				EulerPred()
-//				{
-//					s_ = 1;
-//					
-//				}
-//				
-//				
-//				
-//				SuccessCode Predict(Vec<ComplexType> & next_space,
-//									System const& S,
-//									Vec<ComplexType> const& current_space, ComplexType current_time,
-//									ComplexType const& delta_t,
-//									RealType & condition_number_estimate,
-//									unsigned & num_steps_since_last_condition_number_computation,
-//									unsigned frequency_of_CN_estimation,
-//									RealType const& tracking_tolerance)
-//				{
-//					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
-//					return FullStep(next_space, S, current_space, current_time, delta_t);
-//				}
-//				
-//				
-//			};
 
 			
 			

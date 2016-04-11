@@ -33,5 +33,6 @@
 
 #include "tracking/euler.hpp"
 #include "tracking/heun_euler.hpp"
+#include "tracking/explicit_predictors.hpp"
 
 #endif
