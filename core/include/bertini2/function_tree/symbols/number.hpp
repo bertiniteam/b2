@@ -140,10 +140,11 @@ namespace node{
 	{
 	public:
 		
-
+		explicit
 		Integer(int val) : true_value_(val)
 		{}
 
+		explicit
 		Integer(mpz_int val) : true_value_(val)
 		{}
 
@@ -151,6 +152,8 @@ namespace node{
 		Integer(std::string const& val) : true_value_(val)
 		{}
 
+
+		Integer(Integer const&) = default;
 
 		~Integer() = default;
 		
@@ -211,16 +214,19 @@ namespace node{
 	{
 	public:
 
-
+		explicit
 		Float(mpfr const& val) : highest_precision_value_(val)
 		{}
 
+		explicit
 		Float(mpfr_float const& rval, mpfr_float const& ival = 0) : highest_precision_value_(rval,ival)
 		{}
 
+		explicit
 		Float(std::string const& val) : highest_precision_value_(val)
 		{}
 
+		explicit
 		Float(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
 		{}
 
@@ -285,27 +291,27 @@ namespace node{
 		using mpq_rational = bertini::mpq_rational;
 
 		
-
+		explicit
 		Rational(int val) : true_value_real_(val), true_value_imag_(0)
 		{}
 
-
+		explicit
 		Rational(int val_real_numerator, int val_real_denomenator,
 				 int val_imag_numerator, int val_imag_denomenator) 
 					:
 					 true_value_real_(val_real_numerator,val_real_denomenator), true_value_imag_(val_imag_numerator,val_imag_denomenator)
 		{}
 
+		explicit
 		Rational(std::string val) : true_value_real_(val), true_value_imag_(0)
 		{}
 
+		explicit
 		Rational(std::string val_real, std::string val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
 		{}
 
-		Rational(mpq_rational const& val_real) : true_value_real_(val_real), true_value_imag_(0)
-		{}
-
-		Rational(mpq_rational const& val_real, mpq_rational const& val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
+		explicit
+		Rational(mpq_rational const& val_real, mpq_rational const& val_imag = 0) : true_value_real_(val_real), true_value_imag_(val_imag)
 		{}
 
 		Rational(int, int) = delete;
