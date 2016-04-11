@@ -100,10 +100,8 @@ namespace bertini{
 			;
 			
 			// Float class
-			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", init< double, double >())
-			.def(init<dbl>())
+			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", init< bmp, bmp >())
 			.def(init<mpfr>())
-			.def(init< bmp, bmp >())
 			.def(init< std::string, std::string >())
 			;
 			
@@ -127,7 +125,6 @@ namespace bertini{
 			
 			// Rational class
 			class_<Rational, bases<Number>, std::shared_ptr<Rational> >("Rational", init< int >())
-			.def(init<int, int>())
 			.def(init<int, int, int, int>())
 			.def(init<std::string>())
 			.def(init<std::string, std::string>())
