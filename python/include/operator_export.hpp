@@ -29,8 +29,8 @@
 
 
 
-#ifndef Xcode_b2_operator_visitors_hpp
-#define Xcode_b2_operator_visitors_hpp
+#ifndef BERTINI_PYTHON_OPERATOR_EXPORT_HPP
+#define BERTINI_PYTHON_OPERATOR_EXPORT_HPP
 
 #include <bertini2/function_tree/operators/operator.hpp>
 #include <bertini2/function_tree/operators/arithmetic.hpp>

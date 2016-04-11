@@ -29,8 +29,8 @@
 
 
 
-#ifndef Xcode_b2_parser_export_hpp
-#define Xcode_b2_parser_export_hpp
+#ifndef BERTINI_PYTHON_PARSER_EXPORT_HPP
+#define BERTINI_PYTHON_PARSER_EXPORT_HPP
 #include <boost/spirit/include/qi.hpp>
 
 

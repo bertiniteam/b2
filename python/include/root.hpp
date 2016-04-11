@@ -19,8 +19,8 @@
 //
 //  python/root.hpp:  the header file for the python interface for root classes.
 
-#ifndef Python_b2_roots_hpp
-#define Python_b2_roots_hpp
+#ifndef BERTINI_PYTHON_ROOT_HPP
+#define BERTINI_PYTHON_ROOT_HPP
 
 #include "function_tree.hpp"
 

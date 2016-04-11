@@ -29,8 +29,8 @@
 
 
 
-#ifndef Xcode_b2_symbol_visitors_hpp
-#define Xcode_b2_symbol_visitors_hpp
+#ifndef BERTINI_PYTHON_SYMBOLS_EXPORT_HPP
+#define BERTINI_PYTHON_SYMBOLS_EXPORT_HPP
 #include <bertini2/function_tree/symbols/symbol.hpp>
 #include <bertini2/function_tree/symbols/number.hpp>
 #include <bertini2/function_tree/symbols/special_number.hpp>

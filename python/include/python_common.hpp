@@ -21,8 +21,8 @@
 //  python/python_common.hpp:  A common header file for all python exposure files
 
 
-#ifndef Xcode_b2_python_common_hpp
-#define Xcode_b2_python_common_hpp
+#ifndef BERTINI_PYTHON_COMMON_HPP
+#define BERTINI_PYTHON_COMMON_HPP
 
 #include <boost/python.hpp>
 

@@ -26,8 +26,8 @@
 //
 //  python/node_export.hpp:  Header file for exposing Node class to python.
 
-#ifndef Xcode_b2_node_visitors_hpp
-#define Xcode_b2_node_visitors_hpp
+#ifndef BERTINI_PYTHON_NODE_EXPORT_HPP
+#define BERTINI_PYTHON_NODE_EXPORT_HPP
 
 #include <bertini2/function_tree.hpp>
 #include <bertini2/function_tree/node.hpp>

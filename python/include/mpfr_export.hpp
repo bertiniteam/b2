@@ -20,8 +20,8 @@
 //
 //  python/mpfr_export.hpp:  Header file for exposing all multiprecision data types, those from boost and bertini::complex.
 
-#ifndef Xcode_b2_mpfr_export_hpp
-#define Xcode_b2_mpfr_export_hpp
+#ifndef BERTINI_PYTHON_MPFR_EXPORT_HPP
+#define BERTINI_PYTHON_MPFR_EXPORT_HPP
 
 #include "python_common.hpp"
 

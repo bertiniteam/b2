@@ -29,8 +29,8 @@
 
 
 
-#ifndef Xcode_b2_system_export_hpp
-#define Xcode_b2_system_export_hpp
+#ifndef BERTINI_PYTHON_SYSTEM_EXPORT_HPP
+#define BERTINI_PYTHON_SYSTEM_EXPORT_HPP
 #include <bertini2/system.hpp>
 #include <bertini2/start_system.hpp>
 
