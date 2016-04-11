@@ -84,7 +84,7 @@ namespace bertini{
 		void NodeVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("reset", &NodeBaseT::Reset, &NodeWrap::default_Reset)
+			.def("reset", &NodeBaseT::Reset)
 			.def("precision", &NodeBaseT::precision )
 			.def("degree", &Deg0 )
 			.def("degree", Deg1)
