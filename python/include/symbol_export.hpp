@@ -46,11 +46,10 @@ namespace bertini{
 	namespace python{
 		
 		using namespace bertini::node;
-		using mpz_int = boost::multiprecision::mpz_int;
-		using mpq_rational = boost::multiprecision::mpq_rational;
+
 
 		
-		
+		// the main function for exporting symbols into python.
 		void ExportSymbols();
 
 		
