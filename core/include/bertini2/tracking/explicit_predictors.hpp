@@ -120,7 +120,7 @@ namespace bertini{
 					if(predictor_ != method)
 					{
 						MethodSetup(method);
-						predictor_ = Predictor::Euler;
+						predictor_ = method;
 					}
 					
 					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
@@ -171,6 +171,22 @@ namespace bertini{
 												   RealType const& tracking_tolerance,
 												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
+					
+					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
+					if(predictor_ != method)
+					{
+						MethodSetup(method);
+						predictor_ = method;
+					}
+					if(!errorEstFlag_)
+					{
+						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
+					}
+					
+					
+					
+					
+					
 					auto success_code = Predict(next_space, method, S, current_space, current_time, delta_t,
 									condition_number_estimate, num_steps_since_last_condition_number_computation,
 														frequency_of_CN_estimation, tracking_tolerance);
@@ -193,19 +209,7 @@ namespace bertini{
 
 					
 					// Set size_proportion
-					switch(method)
-					{
-						case Predictor::Euler:
-						{
-							size_proportion = K_.col(0).array().abs().maxCoeff();
-							break;
-						}
-						default:
-						{
-							SetSizeProportion(size_proportion, delta_t);
-						}
-							
-					}
+					SetSizeProportion(size_proportion, delta_t);
 					
 					
 					
@@ -264,6 +268,20 @@ namespace bertini{
 												   RealType const& tracking_tolerance,
 												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
+					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
+					if(predictor_ != method)
+					{
+						MethodSetup(method);
+						predictor_ = method;
+					}
+					if(!errorEstFlag_)
+					{
+						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
+					}
+
+					
+					
+					
 					auto success_code = Predict(next_space, method, size_proportion, norm_J, norm_J_inverse,
 									S, current_space, current_time, delta_t,
 									condition_number_estimate, num_steps_since_last_condition_number_computation,
@@ -271,6 +289,8 @@ namespace bertini{
 					
 					SetErrorEstimate(error_estimate, delta_t);
 					
+					
+//					std::cout << K_.col(0).norm() << std::endl;
 					
 					return success_code;
 				}
