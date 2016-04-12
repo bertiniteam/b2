@@ -775,6 +775,10 @@ namespace bertini {
 			return std::complex<double>(double(real_), double(imag_));
 		}
 		
+		friend void rand(bertini::complex & a, unsigned num_digits);
+		friend void RandomReal(bertini::complex & a, unsigned num_digits);
+		friend void RandomComplex(bertini::complex & a, unsigned num_digits);
+		friend void RandomUnit(bertini::complex & a, unsigned num_digits);
 	}; // end declaration of the bertini::complex number class
 	
 	
