@@ -139,8 +139,47 @@ namespace bertini {
 		void Differentiate() const;
 
 
+		
 		/**
-		\brief Evaluate the system using the previously set variable (and time) values.  
+		 \brief Evaluate the system using the previously set variable (and time) values, in place.
+		 
+		 It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
+		 
+		 \return The function values of the system
+		 */ 
+		template<typename T>
+		void Eval(RefVec function_values) const
+		{
+			
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(function_values.size()>=NumVariableGroups() && "function values must be of length at least as long as the number of variable groups");
+			#endif
+			
+			// the Reset() function call traverses the entire tree, resetting everything.
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			for (const auto& iter : functions_)
+				iter->Reset();
+			
+			
+			unsigned counter(0);
+			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+				function_values(counter) = (*iter)->Eval<T>();
+			}
+			
+			if (IsPatched())
+				patch_.Eval(function_values,std::get<Vec<T> >(current_variable_values_));// .segment(NumFunctions(),NumTotalVariableGroups())
+			
+			return function_values;
+		}
+
+		
+		
+		
+		
+		
+		
+		/**
+		\brief Evaluate the system using the previously set variable (and time) values, creating vector of function values.
 
 		It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
 
@@ -151,20 +190,8 @@ namespace bertini {
 		{
 
 
-			// the Reset() function call traverses the entire tree, resetting everything.
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			for (const auto& iter : functions_) 
-				iter->Reset();
-
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
-
-			unsigned counter(0);
-			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-				function_values(counter) = (*iter)->Eval<T>();
-			}
-
-			if (IsPatched())
-				patch_.Eval(function_values,std::get<Vec<T> >(current_variable_values_));// .segment(NumFunctions(),NumTotalVariableGroups())
+			Eval(function_values);
 
 			return function_values;
 		}
