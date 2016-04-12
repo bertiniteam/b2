@@ -1062,7 +1062,28 @@ namespace bertini
 
 
 	
+	System Concatenate(System sys1, System const& sys2)
+	{
+		// first we will deal with the variable structure
+		if (sys1.NumVariables()!=sys2.NumVariables())
+			throw std::runtime_error("concatenating systems with differing numbers of variables");
 
+		if (sys1.VariableOrdering() != sys2.VariableOrdering())
+			throw std::runtime_error("concatenating systems with differing variable orderings");
+
+		if (sys1.IsPatched() && sys2.IsPatched())
+			if (sys1.GetPatch()!=sys2.GetPatch())
+				throw std::runtime_error("concatenating systems with incompatible patches");
+
+		if (sys2.IsPatched() && !sys1.IsPatched())
+			sys1.CopyPatches(sys1);
+		// the other cases are automatically covered.  sys1 already patched, or neither patched.
+
+		for (unsigned ii(0); ii<sys2.NumFunctions(); ++ii)
+			sys1.AddFunction(sys2.Function(ii));
+
+		return sys1;
+	}
 
 
 

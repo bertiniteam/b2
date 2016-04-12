@@ -1393,6 +1393,42 @@ namespace bertini {
 		return num.isnan();
 	}
 
+	inline 
+	void RandomReal(bertini::complex & a, unsigned num_digits)
+	{
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		a.imag_ = 0;
+	}
+
+	inline 
+	void rand(bertini::complex & a, unsigned num_digits)
+	{
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		RandomMp(a.imag_,num_digits);
+	}
+
+	inline 
+	void RandomComplex(bertini::complex & a, unsigned num_digits)
+	{
+		rand(a,num_digits);
+	}
+
+
+	inline 
+	void RandomUnit(bertini::complex & a, unsigned num_digits)
+	{
+		auto prev_precision = mpfr_float::default_precision();
+
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		RandomMp(a.imag_,num_digits);
+		a /= abs(a);
+
+		mpfr_float::default_precision(prev_precision);
+	}
+
 	using mpfr = bertini::complex;
 } // re: namespace bertini
 

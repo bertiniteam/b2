@@ -70,3 +70,4 @@ include test/classic/Makemodule.am
 include test/settings/Makemodule.am
 include test/timing/Makemodule.am
 include test/endgames/Makemodule.am
+include test/pools/Makemodule.am

@@ -72,6 +72,37 @@ BOOST_AUTO_TEST_CASE(make_random_mpfr_float_100)
 	mpfr_float s(ur(gen));
 }
 
+
+BOOST_AUTO_TEST_CASE(RandomMP_default_precision_50)
+{
+	using namespace bertini;
+	mpfr_float::default_precision(50);
+	auto a = RandomMp(mpfr_float(-1),mpfr_float(1));
+	BOOST_CHECK_EQUAL(a.precision(), mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(50, mpfr_float::default_precision());
+}
+
+BOOST_AUTO_TEST_CASE(RandomMP_default_precision_100)
+{
+	using namespace bertini;
+	mpfr_float::default_precision(100);
+	auto a = RandomMp(mpfr_float(-1),mpfr_float(1));
+	BOOST_CHECK_EQUAL(a.precision(), mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(100, mpfr_float::default_precision());
+}
+
+BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
+{
+	using namespace bertini;
+	mpfr_float::default_precision(100);
+	mpfr_float a;
+
+	RandomMp(a,500);
+
+	BOOST_CHECK_EQUAL(a.precision(), 500);
+	BOOST_CHECK_EQUAL(100, mpfr_float::default_precision());
+}
+
 BOOST_AUTO_TEST_CASE(max_et_on)
 {
 	mpfr a(1), b(2), c(4);

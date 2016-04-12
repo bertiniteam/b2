@@ -25,6 +25,7 @@ settings_test
 tracking_basics_test
 b2_classic_compatibility_test
 endgames_test
+pool_test
 
 m4/libtool.m4
 m4/ltoptions.m4
