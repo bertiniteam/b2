@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //number.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -12,6 +12,20 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with number.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
 //
@@ -30,7 +44,7 @@
 #define BERTINI_NODE_NUMBER_HPP
 
 
-#include "function_tree/symbols/symbol.hpp"
+#include "bertini2/function_tree/symbols/symbol.hpp"
 
 
 
@@ -140,10 +154,11 @@ namespace node{
 	{
 	public:
 		
-
+		explicit
 		Integer(int val) : true_value_(val)
 		{}
 
+		explicit
 		Integer(mpz_int val) : true_value_(val)
 		{}
 
@@ -151,6 +166,8 @@ namespace node{
 		Integer(std::string const& val) : true_value_(val)
 		{}
 
+
+		Integer(Integer const&) = default;
 
 		~Integer() = default;
 		
@@ -211,16 +228,19 @@ namespace node{
 	{
 	public:
 
-
+		explicit
 		Float(mpfr const& val) : highest_precision_value_(val)
 		{}
 
+		explicit
 		Float(mpfr_float const& rval, mpfr_float const& ival = 0) : highest_precision_value_(rval,ival)
 		{}
 
+		explicit
 		Float(std::string const& val) : highest_precision_value_(val)
 		{}
 
+		explicit
 		Float(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
 		{}
 
@@ -285,27 +305,27 @@ namespace node{
 		using mpq_rational = bertini::mpq_rational;
 
 		
-
+		explicit
 		Rational(int val) : true_value_real_(val), true_value_imag_(0)
 		{}
 
-
+		explicit
 		Rational(int val_real_numerator, int val_real_denomenator,
 				 int val_imag_numerator, int val_imag_denomenator) 
 					:
 					 true_value_real_(val_real_numerator,val_real_denomenator), true_value_imag_(val_imag_numerator,val_imag_denomenator)
 		{}
 
+		explicit
 		Rational(std::string val) : true_value_real_(val), true_value_imag_(0)
 		{}
 
+		explicit
 		Rational(std::string val_real, std::string val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
 		{}
 
-		Rational(mpq_rational const& val_real) : true_value_real_(val_real), true_value_imag_(0)
-		{}
-
-		Rational(mpq_rational const& val_real, mpq_rational const& val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
+		explicit
+		Rational(mpq_rational const& val_real, mpq_rational const& val_imag = 0) : true_value_real_(val_real), true_value_imag_(val_imag)
 		{}
 
 		Rational(int, int) = delete;

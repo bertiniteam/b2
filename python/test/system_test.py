@@ -1,3 +1,32 @@
+# This file is part of Bertini 2.
+# 
+# python/test/system_test.py is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# python/test/system_test.py is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with python/test/system_test.py.  If not, see <http://www.gnu.org/licenses/>.
+# 
+#  Copyright(C) 2016 by Bertini2 Development Team
+# 
+#  See <http://www.gnu.org/licenses/> for a copy of the license, 
+#  as well as COPYING.  Bertini2 is provided with permitted 
+#  additional terms in the b2/licenses/ directory.
+
+#  individual authors of this file include:
+# 
+#   James Collins
+#   West Texas A&M University
+#   Spring 2016
+# 
+
+
 __author__ = 'jcollins'
 
 from pybertini import *
@@ -12,7 +41,7 @@ class SystemTest(unittest.TestCase):
         self.x = Variable("x");
         self.y = Variable("y");
         self.z = Variable("z");
-        self.a = Float(4.897, 1.23)
+        self.a = Float("4.897", "1.23")
 
         self.f = Function(self.x*self.y);
         self.g = Function(pow(self.x,2)*self.y - self.a*self.z*self.x);
@@ -163,7 +192,7 @@ class SystemTest(unittest.TestCase):
         sys = parse_system('function f1, f2; variable_group x,y,z; f1 = x+2; f2 = y*y;')
 
         z = Variable("z");
-        sys *= Float(2);
+        sys *= Integer(2);
 
         vals = VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
         sysEval = sys.eval(vals);

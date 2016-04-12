@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //bertini.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,13 +13,12 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
-//
-// bertini.hpp:  main header file for Bertini2.0
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
 
 /**
 \file bertini.hpp 
@@ -30,21 +29,21 @@
 #ifndef BERTINI_HPP
 #define BERTINI_HPP
 
-#include "config.h"
+#include "bertini2/config.h"
 
 
 
 
 #include <complex>
-#include "mpfr_extensions.hpp"
-#include "mpfr_complex.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/mpfr_complex.hpp"
 
-#include "function_tree.hpp"
+#include "bertini2/function_tree.hpp"
 
-#include "system.hpp"
-#include "system_parsing.hpp"
+#include "bertini2/system.hpp"
+#include "bertini2/system_parsing.hpp"
 
-#include "classic.hpp"
+#include "bertini2/classic.hpp"
 
 #include <Eigen/Dense>
 #include <Eigen/LU>

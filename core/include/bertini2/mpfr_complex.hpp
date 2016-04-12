@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //mpfr_complex.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,13 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with mpfr_complex.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//
-// mpfr_complex.hpp:  Declares the class bertini::complex.
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 /**
 \file mpfr_complex 
@@ -31,9 +32,9 @@
 #ifndef BERTINI_MPFR_COMPLEX_HPP
 #define BERTINI_MPFR_COMPLEX_HPP
 
-#include "config.h"
+#include "bertini2/config.h"
 
-#include "mpfr_extensions.hpp"
+#include "bertini2/mpfr_extensions.hpp"
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -127,19 +128,13 @@ namespace bertini {
 		explicit
 		complex(double re) : real_(re), imag_(0){}
 		
-		explicit
-		complex(int re) : real_(re), imag_(0){}
+		template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+		complex(T re) : real_(re), imag_(0){}
 
+		template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
 		explicit
-		complex(int re, int im) : real_(re), imag_(im){}
+		complex(T re, T im) : real_(re), imag_(im){}
 
-		explicit
-		complex(unsigned int re) : real_(re), imag_(0){}
-
-		explicit
-		complex(unsigned int re, unsigned int im) : real_(re), imag_(im){}
-
-		explicit
 		complex(mpz_int const& re) : real_(re), imag_(0){}
 
 		explicit
@@ -1397,6 +1392,42 @@ namespace bertini {
 	bool isnan(bertini::complex const& num)
 	{
 		return num.isnan();
+	}
+
+	inline 
+	void RandomReal(bertini::complex & a, unsigned num_digits)
+	{
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		a.imag_ = 0;
+	}
+
+	inline 
+	void rand(bertini::complex & a, unsigned num_digits)
+	{
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		RandomMp(a.imag_,num_digits);
+	}
+
+	inline 
+	void RandomComplex(bertini::complex & a, unsigned num_digits)
+	{
+		rand(a,num_digits);
+	}
+
+
+	inline 
+	void RandomUnit(bertini::complex & a, unsigned num_digits)
+	{
+		auto prev_precision = mpfr_float::default_precision();
+
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		RandomMp(a.imag_,num_digits);
+		a /= abs(a);
+
+		mpfr_float::default_precision(prev_precision);
 	}
 
 	using mpfr = bertini::complex;

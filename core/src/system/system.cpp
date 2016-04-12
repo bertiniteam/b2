@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //system.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with system.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-//  system.cpp
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 
 #include "system.hpp"
@@ -1062,7 +1062,28 @@ namespace bertini
 
 
 	
+	System Concatenate(System sys1, System const& sys2)
+	{
+		// first we will deal with the variable structure
+		if (sys1.NumVariables()!=sys2.NumVariables())
+			throw std::runtime_error("concatenating systems with differing numbers of variables");
 
+		if (sys1.VariableOrdering() != sys2.VariableOrdering())
+			throw std::runtime_error("concatenating systems with differing variable orderings");
+
+		if (sys1.IsPatched() && sys2.IsPatched())
+			if (sys1.GetPatch()!=sys2.GetPatch())
+				throw std::runtime_error("concatenating systems with incompatible patches");
+
+		if (sys2.IsPatched() && !sys1.IsPatched())
+			sys1.CopyPatches(sys1);
+		// the other cases are automatically covered.  sys1 already patched, or neither patched.
+
+		for (unsigned ii(0); ii<sys2.NumFunctions(); ++ii)
+			sys1.AddFunction(sys2.Function(ii));
+
+		return sys1;
+	}
 
 
 

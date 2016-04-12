@@ -4,10 +4,16 @@
 basics_header_files = \
 	include/bertini2/limbo.hpp \
 	include/bertini2/mpfr_complex.hpp \
-	include/bertini2/mpfr_extensions.hpp 
+	include/bertini2/mpfr_extensions.hpp \
+	include/bertini2/num_traits.hpp \
+	include/bertini2/classic.hpp \
+	include/bertini2/eigen_extensions.hpp \
+	include/bertini2/enable_permuted_arguments.hpp \
+	include/bertini2/patch.hpp
 
 basics_source_files = \
-	src/basics/limbo.cpp
+	src/basics/limbo.cpp \
+	src/basics/mpfr_extensions.cpp
 
 
 basics = $(basics_header_files) $(basics_source_files)

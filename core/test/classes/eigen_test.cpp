@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //eigen_test.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,10 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with eigen_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 
 
@@ -335,6 +339,160 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		Eigen::JacobiSVD<Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic>> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 		
 		
+	}
+
+
+	// scalar multiplication with various types
+
+	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_mpfr)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		data_type a(1);
+		// this is commented out because et_on breaks this with eigen 3.2.7.  this issue is fixed with upcoming eigen release.  hence, we need to control et_on/et_off with a compile-time option and requirements on the version of eigen used.
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
+		B = A*a;
+	}
+
+
+	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_int)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		data_type q(1);
+		int a(1);
+
+		auto b = a*q;
+
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		
+
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
+		B = A*a;
+	}
+
+
+	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_long)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		data_type q(1);
+		long a(1);
+
+		auto b = a*q;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		
+
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
+		B = A*a;
+	}
+
+	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_mpz_int)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		data_type q(1);
+		bertini::mpz_int a(1);
+
+		auto b = a*q;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		
+
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
+		B = A*a;
+	}
+
+
+
+	// self multiplication
+
+
+	BOOST_AUTO_TEST_CASE(self_multiplication_dbl_int)
+	{
+		
+		using data_type = bertini::dbl;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		int a(1);
+
+		A*=a;
+	}
+
+
+	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_mpfr)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		data_type a(1);
+
+		A*=a;
+	}
+
+
+	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_int)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		data_type q(1);
+		int a(1);
+
+		auto b = a*q;
+
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		A*=a;
+	}
+
+
+	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_long)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		data_type q(1);
+		long a(1);
+
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		A*=a;
+	}
+
+	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_mpz_int)
+	{
+		
+		using data_type = bertini::mpfr;
+		
+		data_type q(1);
+		bertini::mpz_int a(1);
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		
+		A*=a;
 	}
 BOOST_AUTO_TEST_SUITE_END()
 
