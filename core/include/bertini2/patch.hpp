@@ -267,7 +267,7 @@ namespace bertini {
 
 		*/
 		template<typename T>
-		void Eval(Vec<T> & function_values, Vec<T> const& x) const
+		void Eval(RefVec<T> & function_values, Vec<T> const& x) const
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(function_values.size()>=NumVariableGroups() && "function values must be of length at least as long as the number of variable groups");
