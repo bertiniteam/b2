@@ -29,8 +29,8 @@
  \brief Contains a base class for all ODE predictors.
  */
 
-#ifndef Xcode_b2_predictor_utility_hpp
-#define Xcode_b2_predictor_utility_hpp
+#ifndef BERTINI_EXPLICIT_PREDICTORS_HPP
+#define BERTINI_EXPLICIT_PREDICTORS_HPP
 
 #include "tracking/amp_criteria.hpp"
 #include "tracking/tracking_config.hpp"
@@ -376,6 +376,7 @@ namespace bertini{
 						}
 						case Predictor::HeunEuler:
 						{
+							mpq_rational half = mpq_rational(1,2);
 							s_ = 2;
 							c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
 							a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
@@ -471,7 +472,8 @@ namespace bertini{
 					RealType err_est;
 					SetErrorEstimate(err_est, delta_t);
 					
-					size_proportion = err_est/(std::pow(abs(delta_t), p_+1));
+					using std::pow;
+					size_proportion = err_est/(pow(abs(delta_t), p_+1));
 					
 					return SuccessCode::Success;
 				};

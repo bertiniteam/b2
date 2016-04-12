@@ -70,8 +70,15 @@ namespace bertini
 			enum class Predictor
 			{
 				None,
+				Constant,
 				Euler,
-				HeunEuler
+				HeunEuler,
+				RK4,
+				RKNorsett34,
+				RKF45,
+				RKCashKarp45,
+				RKDormandPrince56,
+				RKVerner67
 			};
 
 			enum class PrecisionType
