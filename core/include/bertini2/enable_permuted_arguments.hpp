@@ -1,3 +1,5 @@
+//This file is part of Bertini 2.
+//
 //enable_permuted_arguments.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
@@ -9,11 +11,20 @@
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with predict.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with enable_permuted_arguments.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
 
-//  enable_permuted_arguments.hpp
-
+// individual authors of this file include:
+// daniel brake, university of notre dame
+// additionally, this file contains code
+// based on and refined from SO post 
+// https://stackoverflow.com/questions/19329297/constructor-permutations-for-passing-parameters-in-arbitrary-order
+// by user Daniel Frey.
 
 /**
 \file enable_permuted_arguments.hpp
