@@ -19,8 +19,8 @@
 //
 //  python/system.hpp:  the header file for the python interface for System classes.
 
-#ifndef Python_b2_system_hpp
-#define Python_b2_system_hpp
+#ifndef BERTINI_PYTHON_SYSTEM_HPP
+#define BERTINI_PYTHON_SYSTEM_HPP
 
 #include "function_tree.hpp"
 

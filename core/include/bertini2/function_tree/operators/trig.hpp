@@ -28,8 +28,8 @@
 #ifndef BERTINI_TRIGONOMETRIC_OPERATOR_HPP
 #define BERTINI_TRIGONOMETRIC_OPERATOR_HPP
 
-#include "function_tree/operators/operator.hpp"
-#include "function_tree/operators/arithmetic.hpp"
+#include "bertini2/function_tree/operators/operator.hpp"
+#include "bertini2/function_tree/operators/arithmetic.hpp"
 
 
 

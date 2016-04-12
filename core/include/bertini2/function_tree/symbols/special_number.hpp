@@ -29,10 +29,10 @@
 #define BERTINI_FUNCTION_TREE_SPECIAL_NUMBER_HPP
 
 
-#include "function_tree/symbols/symbol.hpp"
+#include "bertini2/function_tree/symbols/symbol.hpp"
 
-#include "function_tree/operators/arithmetic.hpp"
-#include "function_tree/operators/trig.hpp"
+#include "bertini2/function_tree/operators/arithmetic.hpp"
+#include "bertini2/function_tree/operators/trig.hpp"
 
 #include <cmath>
 

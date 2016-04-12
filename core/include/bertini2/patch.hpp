@@ -31,11 +31,11 @@
 #ifndef BERTINI_PATCH_HPP
 #define BERTINI_PATCH_HPP
 
-#include "mpfr_complex.hpp"
+#include "bertini2/mpfr_complex.hpp"
 
-#include "mpfr_extensions.hpp"
-#include "num_traits.hpp"
-#include "eigen_extensions.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/num_traits.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
 #include <vector>
 

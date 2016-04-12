@@ -22,8 +22,8 @@
 //  python/node.hpp:  the header file for the python interface for Node class.
 
 
-#ifndef Python_b2_node_hpp
-#define Python_b2_node_hpp
+#ifndef BERTINI_PYTHON_NODE_HPP
+#define BERTINI_PYTHON_NODE_HPP
 
 #include "function_tree.hpp"
 

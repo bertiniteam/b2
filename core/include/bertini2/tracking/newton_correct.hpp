@@ -33,15 +33,14 @@
 #define BERTINI_NEWTON_CORRECT_HPP
 
 
-#include "tracking/amp_criteria.hpp"
-#include "tracking/tracking_config.hpp"
-#include "system.hpp"
+#include "bertini2/tracking/amp_criteria.hpp"
+#include "bertini2/tracking/tracking_config.hpp"
+#include "bertini2/system.hpp"
 
 namespace bertini{
 	namespace tracking{
 		namespace correct{
 
-			using PrecisionType = config::PrecisionType;
 			
 
 			/**

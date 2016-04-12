@@ -36,8 +36,8 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #include <random>
 #include <complex>
 #include <cmath>
-#include "mpfr_complex.hpp"
-#include "mpfr_extensions.hpp"
+#include "bertini2/mpfr_complex.hpp"
+#include "bertini2/mpfr_extensions.hpp"
 
 
 
@@ -66,6 +66,12 @@ namespace bertini
 		inline static unsigned NumFuzzyDigits()
 		{
 			return 14;
+		}
+
+		inline
+		static unsigned TolToDigits(double tol)
+		{
+			return ceil(-log10(tol));
 		}
 	};
 
@@ -195,6 +201,13 @@ namespace bertini {
 		inline static unsigned NumFuzzyDigits()
 		{
 			return mpfr_float::default_precision()-3;
+		}
+
+		inline
+		static unsigned TolToDigits(mpfr_float tol)
+		{
+			auto b = ceil(-log10(tol));
+			return b.convert_to<unsigned int>();
 		}
 	};	
 

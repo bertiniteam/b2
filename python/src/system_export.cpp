@@ -38,7 +38,7 @@ namespace bertini{
 		
 		struct StartSystemWrap : start_system::StartSystem, wrapper<start_system::StartSystem>
 		{
-			size_t NumStartPoints() const {return this->get_override("NumStartPoints")(); }
+			mpz_int NumStartPoints() const {return this->get_override("NumStartPoints")(); }
 		}; // re: StartSystemWrap
 
 		
@@ -50,16 +50,24 @@ namespace bertini{
 		void SystemVisitor<SystemBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("precision", &SystemBaseT::precision)
+			.def("precision", get_prec_)
+			.def("precision", set_prec_)
 			.def("differentiate", &SystemBaseT::Differentiate)
-			.def("eval", return_Eval1_ptr<dbl>() )
-			.def("eval", return_Eval1_ptr<mpfr>() )
-			.def("eval", return_Eval2_ptr<dbl>() )
-			.def("eval", return_Eval2_ptr<mpfr>() )
-			.def("jacobian", return_Jac1_ptr<dbl>() )
-			.def("jacobian", return_Jac1_ptr<mpfr>() )
-			.def("jacobian", return_Jac2_ptr<dbl>() )
-			.def("jacobian", return_Jac2_ptr<mpfr>() )
+
+			.def("eval", return_Eval0_ptr<dbl>() ,"evaluate the system in double precision, using already-set variable values.")
+			.def("eval", return_Eval0_ptr<mpfr>() ,"evaluate the system in multiple precision, using already-set variable values.")
+			.def("eval", return_Eval1_ptr<dbl>() ,"evaluate the system in double precision, using space variable values passed into this function.")
+			.def("eval", return_Eval1_ptr<mpfr>() ,"evaluate the system in multiple precision, using space variable values passed into this function.")
+			.def("eval", return_Eval2_ptr<dbl>() ,"evaluate the system in double precision using space and time values passed into this function")
+			.def("eval", return_Eval2_ptr<mpfr>() ,"evaluate the system in multiple precision using space and time values passed into this function")
+			
+			.def("jacobian", return_Jac0_ptr<dbl>() ,"evaluate the jacobian of the system, using already-set time and space value.")
+			.def("jacobian", return_Jac0_ptr<mpfr>() ,"evaluate the jacobian of the system, using already-set time and space value.")
+			.def("jacobian", return_Jac1_ptr<dbl>() ,"evaluate the jacobian of the system, using space values you pass in to this function")
+			.def("jacobian", return_Jac1_ptr<mpfr>() ,"evaluate the jacobian of the system, using space values you pass in to this function")
+			.def("jacobian", return_Jac2_ptr<dbl>() , "evaluate the jacobian of the system, using time and space values passed into this function")
+			.def("jacobian", return_Jac2_ptr<mpfr>() , "evaluate the jacobian of the system, using time and space values passed into this function")
+
 			.def("homogenize", &SystemBaseT::Homogenize)
 			.def("is_homogenous", &SystemBaseT::IsHomogeneous)
 			.def("is_polynomial", &SystemBaseT::IsPolynomial)

@@ -31,7 +31,7 @@
 #define BERTINI_CLASSIC_HPP
 
 
-#include "classic/parsing.hpp"
+#include "bertini2/classic/parsing.hpp"
 
 
 

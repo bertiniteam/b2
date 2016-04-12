@@ -23,16 +23,21 @@
 
 
 
-#ifndef Xcode_b2_minieigen_export_hpp
-#define Xcode_b2_minieigen_export_hpp
+#ifndef BERTINI_PYTHON_MINIEIGEN_EXPORT_HPP
+#define BERTINI_PYTHON_MINIEIGEN_EXPORT_HPP
 
 #include <bertini2/function_tree.hpp>
-
-#include "common.hpp"
-#include "converters.hpp"
-#include "visitors.hpp"
+#include <bertini2/eigen_extensions.hpp>
 
 #include "python_common.hpp"
+
+#include "minieigen/src/common.hpp"
+#include "minieigen/src/converters.hpp"
+#include "minieigen/src/visitors.hpp"
+
+
+
+
 
 namespace bertini{
 	namespace python{

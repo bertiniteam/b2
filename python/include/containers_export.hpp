@@ -20,8 +20,8 @@
 //
 //  python/containers_export.hpp:  Exports all needed containers from Bertini 2.0 to python.
 
-#ifndef Xcode_b2_export_containers_hpp
-#define Xcode_b2_export_containers_hpp
+#ifndef BERTINI_PYTHON_CONTAINERS_EXPORT_HPP
+#define BERTINI_PYTHON_CONTAINERS_EXPORT_HPP
 
 
 #include <bertini2/function_tree.hpp>

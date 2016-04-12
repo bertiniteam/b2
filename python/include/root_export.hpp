@@ -29,8 +29,8 @@
 
 
 
-#ifndef Xcode_b2_root_export_hpp
-#define Xcode_b2_root_export_hpp
+#ifndef BERTINI_PYTHON_ROOT_EXPORT_HPP
+#define BERTINI_PYTHON_ROOT_EXPORT_HPP
 #include <bertini2/function_tree/roots/function.hpp>
 #include <bertini2/function_tree/roots/jacobian.hpp>
 

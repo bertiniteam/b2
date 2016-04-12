@@ -34,11 +34,11 @@
 #define BERTINI_HEUN_EULER_PREDICT_HPP
 
 
-#include "tracking/amp_criteria.hpp"
-#include "tracking/tracking_config.hpp"
+#include "bertini2/tracking/amp_criteria.hpp"
+#include "bertini2/tracking/tracking_config.hpp"
 
-#include "system.hpp"
-#include "mpfr_extensions.hpp"
+#include "bertini2/system.hpp"
+#include "bertini2/mpfr_extensions.hpp"
 #include <Eigen/LU>
 
 #include <boost/type_index.hpp>

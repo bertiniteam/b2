@@ -32,7 +32,7 @@
 #ifndef BERTINI_CORRECT_HPP
 #define BERTINI_CORRECT_HPP
 
-#include "tracking/newton_correct.hpp"
+#include "bertini2/tracking/newton_correct.hpp"
 
 namespace bertini{
 	namespace tracking{

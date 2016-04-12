@@ -31,7 +31,7 @@
 #ifndef BERTINI_ODE_PREDICTORS_HPP
 #define BERTINI_ODE_PREDICTORS_HPP
 
-#include "tracking/euler.hpp"
-#include "tracking/heun_euler.hpp"
+#include "bertini2/tracking/euler.hpp"
+#include "bertini2/tracking/heun_euler.hpp"
 
 #endif

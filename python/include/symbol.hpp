@@ -19,8 +19,8 @@
 //
 //  python/symbol.hpp:  the header file for the python interface for symbol classes.
 
-#ifndef Python_b2_symbol_hpp
-#define Python_b2_symbol_hpp
+#ifndef BERTINI_PYTHON_SYMBOL_HPP
+#define BERTINI_PYTHON_SYMBOL_HPP
 
 #include "function_tree.hpp"
 

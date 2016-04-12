@@ -12,7 +12,7 @@ class SystemTest(unittest.TestCase):
         self.x = Variable("x");
         self.y = Variable("y");
         self.z = Variable("z");
-        self.a = Float(4.897, 1.23)
+        self.a = Float("4.897", "1.23")
 
         self.f = Function(self.x*self.y);
         self.g = Function(pow(self.x,2)*self.y - self.a*self.z*self.x);
@@ -163,7 +163,7 @@ class SystemTest(unittest.TestCase):
         sys = parse_system('function f1, f2; variable_group x,y,z; f1 = x+2; f2 = y*y;')
 
         z = Variable("z");
-        sys *= Float(2);
+        sys *= Integer(2);
 
         vals = VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
         sysEval = sys.eval(vals);

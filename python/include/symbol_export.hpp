@@ -29,8 +29,8 @@
 
 
 
-#ifndef Xcode_b2_symbol_visitors_hpp
-#define Xcode_b2_symbol_visitors_hpp
+#ifndef BERTINI_PYTHON_SYMBOLS_EXPORT_HPP
+#define BERTINI_PYTHON_SYMBOLS_EXPORT_HPP
 #include <bertini2/function_tree/symbols/symbol.hpp>
 #include <bertini2/function_tree/symbols/number.hpp>
 #include <bertini2/function_tree/symbols/special_number.hpp>
@@ -46,11 +46,10 @@ namespace bertini{
 	namespace python{
 		
 		using namespace bertini::node;
-		using mpz_int = boost::multiprecision::mpz_int;
-		using mpq_rational = boost::multiprecision::mpq_rational;
+
 
 		
-		
+		// the main function for exporting symbols into python.
 		void ExportSymbols();
 
 		

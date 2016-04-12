@@ -20,8 +20,8 @@
 //
 //  python/mpfr_export.hpp:  Header file for exposing all multiprecision data types, those from boost and bertini::complex.
 
-#ifndef Xcode_b2_mpfr_export_hpp
-#define Xcode_b2_mpfr_export_hpp
+#ifndef BERTINI_PYTHON_MPFR_EXPORT_HPP
+#define BERTINI_PYTHON_MPFR_EXPORT_HPP
 
 #include "python_common.hpp"
 
@@ -148,7 +148,7 @@ namespace bertini{
 			static MPFRBaseT __mul_int(const MPFRBaseT& a, const int& b){ return a*b; };
 			static MPFRBaseT __imul_int(MPFRBaseT& a, const int& b){ a*=b; return a; };
 			static MPFRBaseT __rmul_int(const MPFRBaseT& b, const int& a){ return a*b; };
-			static MPFRBaseT __pow__(const MPFRBaseT& a, const int& b){ return pow(a,b); };
+			static MPFRBaseT __pow__(const MPFRBaseT& a, const int& b){using std::pow; return pow(a,b); };
 			
 			static std::string __repr__(const object& obj)
 			{

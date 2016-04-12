@@ -19,8 +19,8 @@
 //
 //  python/operator.hpp:  the header file for the python interface for operator classes.
 
-#ifndef Python_b2_operator_hpp
-#define Python_b2_operator_hpp
+#ifndef BERTINI_PYTHON_OPERATOR_HPP
+#define BERTINI_PYTHON_OPERATOR_HPP
 
 
 #include "function_tree.hpp"

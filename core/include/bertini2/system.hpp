@@ -31,14 +31,14 @@
 #ifndef BERTINI_SYSTEM_HPP
 #define BERTINI_SYSTEM_HPP
 
-#include "mpfr_complex.hpp"
-#include "mpfr_extensions.hpp"
-#include "eigen_extensions.hpp"
+#include "bertini2/mpfr_complex.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
 #include <vector>
-#include "function_tree.hpp"
+#include "bertini2/function_tree.hpp"
 
-#include "patch.hpp"
+#include "bertini2/patch.hpp"
 
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/number.hpp>
@@ -56,7 +56,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
 
-#include "limbo.hpp"
+#include "bertini2/limbo.hpp"
 #include <Eigen/Dense>
 
 namespace bertini {
@@ -761,14 +761,20 @@ namespace bertini {
 		
 
 		/**
-		 Get the variable groups in the problem.
+		 Get the affine variable groups in the problem.
 		*/
 		auto VariableGroups() const
 		{
 			return variable_groups_;
 		}
 
-
+		/**
+		 Get the homogeneous (projective) variable groups in the problem.
+		*/
+		auto HomVariableGroups() const
+		{
+			return hom_variable_groups_;
+		}
 
 		/**
 		Compute an estimate of an upper bound of the absolute values of the coefficients in the system.

@@ -30,21 +30,21 @@
 #ifndef BERTINI_HPP
 #define BERTINI_HPP
 
-#include "config.h"
+#include "bertini2/config.h"
 
 
 
 
 #include <complex>
-#include "mpfr_extensions.hpp"
-#include "mpfr_complex.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/mpfr_complex.hpp"
 
-#include "function_tree.hpp"
+#include "bertini2/function_tree.hpp"
 
-#include "system.hpp"
-#include "system_parsing.hpp"
+#include "bertini2/system.hpp"
+#include "bertini2/system_parsing.hpp"
 
-#include "classic.hpp"
+#include "bertini2/classic.hpp"
 
 #include <Eigen/Dense>
 #include <Eigen/LU>
