@@ -283,10 +283,10 @@ namespace bertini {
 
 	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
-	template<typename NumType> using RefVec = Eigen::Ref< Vec<NumType> >;
-	template<typename NumType> using RefMat = Eigen::Ref< Mat<NumType> >;
-	template<typename NumType> using constRefVec = Eigen::Ref< const Vec<NumType> >;
-	template<typename NumType> using constRefMat = Eigen::Ref< const Mat<NumType> >;
+	template<typename NumType> using RefVec = Eigen::MatrixBase< Vec<NumType> >;
+	template<typename NumType> using RefMat = Eigen::MatrixBase< Mat<NumType> >;
+	template<typename NumType> using constRefVec = Eigen::MatrixBase< Vec<NumType> >;
+	template<typename NumType> using constRefMat = Eigen::MatrixBase< Mat<NumType> >;
 
 
 	

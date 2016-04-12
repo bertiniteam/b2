@@ -267,7 +267,7 @@ namespace bertini {
 
 		*/
 		template<typename T>
-		void Eval(Vec<T> & function_values, Vec<T> const& x) const
+		void Eval(RefVec<T> & function_values, RefVec<T> const& x) const
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(function_values.size()>=NumVariableGroups() && "function values must be of length at least as long as the number of variable groups");
@@ -300,7 +300,7 @@ namespace bertini {
 		\param x The current space point at which to evaluate.
 		*/
 		template<typename T>
-		Vec<T> Eval(Vec<T> const& x) const
+		Vec<T> Eval(RefVec<T> const& x) const
 		{
 			Vec<T> function_values = Vec<T>::Zero(NumVariableGroups());
 			Eval(function_values, x);
@@ -318,7 +318,7 @@ namespace bertini {
 
 		*/
 		template<typename T>
-		void Jacobian(Mat<T> & jacobian, Vec<T> const& x) const
+		void Jacobian(RefMat<T> & jacobian, RefVec<T> const& x) const
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(jacobian.rows()>=NumVariableGroups() && "input jacobian must have at least as many rows as variable groups");
@@ -345,7 +345,7 @@ namespace bertini {
 		\return Jacobian matrix, of size (NumVariableGroups x NumVariables).
 		*/
 		template<typename T>
-		Mat<T> Jacobian(Vec<T> const& x) const
+		Mat<T> Jacobian(RefVec<T> const& x) const
 		{
 			Mat<T> jacobian = Mat<T>::Zero(NumVariableGroups(), NumVariables());
 			Jacobian(jacobian, x);
