@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //mpfr_extensions.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -11,16 +11,16 @@
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with .  If not, see <http://www.gnu.org/licenses/>.
+//along with mpfr_extensions.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  This file contains extensions to types provided by Boost.Multiprecision.
-//
-//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 /**
 \file mpfr_extensions.cpp 

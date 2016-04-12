@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //visitor.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,14 +13,16 @@
 //You should have received a copy of the GNU General Public License
 //along with visitor.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-//  visitor.hpp
+// Copyright(C) 2016 by Bertini2 Development Team
 //
-//  copyright 2016
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring 2016
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// Daniel Brake
+// University of Notre Dame
+//
 
 /**
 \file visitor.hpp
