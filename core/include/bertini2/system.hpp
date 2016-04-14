@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //system.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with system.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
-//
-// system.hpp:  provides the bertini::system class.
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
 
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 /**
 \file system.hpp 
@@ -31,14 +31,14 @@
 #ifndef BERTINI_SYSTEM_HPP
 #define BERTINI_SYSTEM_HPP
 
-#include "mpfr_complex.hpp"
-#include "mpfr_extensions.hpp"
-#include "eigen_extensions.hpp"
+#include "bertini2/mpfr_complex.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
 #include <vector>
-#include "function_tree.hpp"
+#include "bertini2/function_tree.hpp"
 
-#include "patch.hpp"
+#include "bertini2/patch.hpp"
 
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/number.hpp>
@@ -56,7 +56,7 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
 
-#include "limbo.hpp"
+#include "bertini2/limbo.hpp"
 #include <Eigen/Dense>
 
 namespace bertini {
@@ -761,14 +761,20 @@ namespace bertini {
 		
 
 		/**
-		 Get the variable groups in the problem.
+		 Get the affine variable groups in the problem.
 		*/
 		auto VariableGroups() const
 		{
 			return variable_groups_;
 		}
 
-
+		/**
+		 Get the homogeneous (projective) variable groups in the problem.
+		*/
+		auto HomVariableGroups() const
+		{
+			return hom_variable_groups_;
+		}
 
 		/**
 		Compute an estimate of an upper bound of the absolute values of the coefficients in the system.
@@ -843,6 +849,11 @@ namespace bertini {
 		*/
 		void CopyPatches(System const& other);
 
+
+		Patch GetPatch() const
+		{
+			return patch_;
+		}
 
 		/**
 		\brief Query whether a system is patched.
@@ -1083,8 +1094,19 @@ namespace bertini {
 	};
 
 
+	/**
+	\brief Contcatenate two compatible systems.
 
+	Two systems are compatible for concatenation if they have the same variable structure, and if they have the same patch (if patched).
 
+	\param sys1 The top system.
+	\param sys2 The bottom system.
+
+	If both patched both must have same patch.  If not both are patched, then the patch will propagate to the returned system. 
+
+	If the two patches have differing variable orderings, the call to Concatenate will throw.
+	*/
+	System Concatenate(System sys1, System const& sys2);
 	
 
 

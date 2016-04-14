@@ -1,0 +1,12 @@
+#this is src/tracking/Makemodule.am
+
+tracking_header_files = \
+	include/bertini2/tracking.hpp
+
+
+tracking = $(tracking_header_files)
+
+
+
+rootinclude_HEADERS += \
+	include/bertini2/tracking.hpp

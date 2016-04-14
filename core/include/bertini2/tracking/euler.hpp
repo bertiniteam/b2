@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //euler.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,14 +13,15 @@
 //You should have received a copy of the GNU General Public License
 //along with euler.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-//  euler.hpp
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Summer 2015
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
+
 
 /**
 \file euler.hpp 
@@ -30,11 +31,11 @@
 #ifndef BERTINI_EULER_PREDICT_HPP
 #define BERTINI_EULER_PREDICT_HPP
 
-#include "tracking/amp_criteria.hpp"
-#include "tracking/tracking_config.hpp"
+#include "bertini2/tracking/amp_criteria.hpp"
+#include "bertini2/tracking/tracking_config.hpp"
 
-#include "system.hpp"
-#include "mpfr_extensions.hpp"
+#include "bertini2/system.hpp"
+#include "bertini2/mpfr_extensions.hpp"
 #include <Eigen/LU>
 
 #include <boost/type_index.hpp>

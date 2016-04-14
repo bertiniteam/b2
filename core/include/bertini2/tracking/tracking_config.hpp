@@ -1,26 +1,27 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-//tracking_config.hpp is free software: you can redistribute it and/or modify
+//tracking/tracking_config.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//tracking_config.hpp is distributed in the hope that it will be useful,
+//tracking/tracking_config.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with tracking_config.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with tracking/tracking_config.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
 
-//  tracking_config.hpp
-//
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Summer 2015
+// individual authors of this file include:
+// daniel brake, university of notre dame
+// Tim Hodges, Colorado State University
 
 #ifndef BERTINI_TRACKING_CONFIG_HPP
 #define BERTINI_TRACKING_CONFIG_HPP
@@ -30,18 +31,63 @@
 
 \brief Configs and settings for tracking.
 */
-#include "mpfr_extensions.hpp"
-#include "eigen_extensions.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
-#include "system.hpp"
+#include "bertini2/system.hpp"
 
 namespace bertini
 {
 	namespace tracking{
 
 		
+		template<class T>
+		struct TrackerTraits
+		{};
 
 
+		
+		template<class D>
+		class FixedPrecisionTracker;
+		class MultiplePrecisionTracker;
+		class DoublePrecisionTracker;
+
+		template<>
+		struct TrackerTraits<DoublePrecisionTracker>
+		{
+			using BaseComplexType = dbl;
+			using BaseRealType = double;
+			using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
+		};
+
+
+		template<>
+		struct TrackerTraits<MultiplePrecisionTracker>
+		{
+			using BaseComplexType = mpfr;
+			using BaseRealType = mpfr_float;
+			using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
+		};
+
+		class AMPTracker;
+		template<>
+		struct TrackerTraits<AMPTracker>
+		{
+			using BaseComplexType = mpfr;
+			using BaseRealType = mpfr_float;
+			using EventEmitterType = AMPTracker;
+		};
+
+
+		
+
+		template<class D>
+		struct TrackerTraits<FixedPrecisionTracker<D> >
+		{
+			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
+			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+			using EventEmitterType = typename TrackerTraits<D>::EventEmitterType;
+		};
 
 
 		enum class SuccessCode
@@ -57,7 +103,12 @@ namespace bertini
 			MaxPrecisionReached,
 			MinStepSizeReached,
 			Failure,
-			SingularStartPoint
+			SingularStartPoint,
+			ExternallyTerminated,
+			MinTrackTimeReached,
+			SecurityMaxNormReached,
+			CycleNumTooHigh,
+
 		};
 
 		
@@ -92,26 +143,29 @@ namespace bertini
 
 
 
-
-
+			template<typename T>
 			struct Tolerances
-			{
-				mpfr_float newton_before_endgame = mpfr_float("1e-5");
-				mpfr_float newton_during_endgame = mpfr_float("1e-6");;
+			{	
+				T newton_before_endgame = T(1)/T(100000);
+				T newton_during_endgame = T(1)/T(1000000);
 
-				mpfr_float final_tolerance = mpfr_float("1e-11");
+				T final_tolerance = T(1)/T(100000000000);
+				T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
-				mpfr_float path_truncation_threshold = mpfr_float("1e5");
+				T path_truncation_threshold = T(100000);
+				T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
 			};
 
+
+			template<typename T>
 			struct Stepping
 			{
-				mpfr_float initial_step_size = mpfr_float("0.1");
-				mpfr_float max_step_size = mpfr_float("0.1");
-				mpfr_float min_step_size = mpfr_float("1e-100");
+				T initial_step_size = T(1)/T(10);
+				T max_step_size = T(1)/T(10);
+				T min_step_size = T(1e-100);
 
-				mpfr_float step_size_success_factor = mpfr_float("2.0");
-				mpfr_float step_size_fail_factor = mpfr_float("0.5");
+				T step_size_success_factor = T(2);
+				T step_size_fail_factor = T(1)/T(2);
 
 				unsigned consecutive_successful_steps_before_stepsize_increase = 5;
 
@@ -119,9 +173,10 @@ namespace bertini
 				unsigned max_num_steps = 1e5;
 
 				unsigned frequency_of_CN_estimation = 1;
-				
 			};
 
+
+			
 			struct Newton
 			{
 				unsigned max_num_newton_iterations = 2;
@@ -139,37 +194,39 @@ namespace bertini
 				mpfr_float ratio_tolerance;
 			};
 
-
+			template<typename T>
 			struct Security
 			{
 				int level = 0;
-				mpfr_float max_norm = mpfr_float("1e5");
+				T max_norm = T(100000);
 			};
 
-
-
-
-
-
-
-
-
-			struct EndGame
+			template<typename T>
+			struct Endgame
 			{
-				mpfr_float SampleFactor = mpfr_float("0.5");
-				unsigned max_cycle_number = 6;
+				unsigned num_sample_points = 3;
+				T min_track_time = T(1e-100); //nbrh radius in Bertini book.
+				T sample_factor = T(1)/T(2);
+				unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 			};
 
 
 			struct PowerSeries
 			{
-				
+				unsigned max_cycle_number = 6;
+				unsigned cycle_number_amplification = 5;
 			};
 
+			template<typename T>
 			struct Cauchy
 			{
-				mpfr_float cutoff_cycle_time;
-				mpfr_float cutoff_ratio_time;
+				T cycle_cutoff_time = T(1)/T(100000000);
+				T ratio_cutoff_time = T(1)/T(100000000000000);
+				T minimum_for_c_over_k_stabilization = T(3)/T(4);
+				unsigned int num_needed_for_stabilization = 3;
+				T maximum_cauchy_ratio = T(1)/T(2);
+				unsigned int fail_safe_maximum_cycle_number = 250; //max number of loops before giving up. 
+
 			};
 
 
@@ -186,12 +243,12 @@ namespace bertini
 
 
 
-
+			template<typename T>
 			struct PostProcessing{
-				mpfr_float real_threshold;
-				mpfr_float endpoint_finite_threshold;
-				mpfr_float final_tol_multiplier;
-				mpfr_float final_tol_times_mult;
+				T real_threshold;
+				T endpoint_finite_threshold;
+				T final_tol_multiplier;
+				T final_tol_times_mult;
 			};
 
 
@@ -202,15 +259,15 @@ namespace bertini
 
 
 
-
+			template<typename T>
 			struct Regeneration
 			{
 				bool remove_infinite_endpoints;
 				bool higher_dimension_check;
 
-				mpfr_float newton_before_endgame;
-				mpfr_float newton_during_endgame;
-				mpfr_float final_tolerance;
+				T newton_before_endgame;
+				T newton_during_endgame;
+				T final_tolerance;
 			};
 
 			
@@ -266,7 +323,7 @@ namespace bertini
 				unsigned consecutive_successful_steps_before_precision_decrease = 10;
 
 				unsigned max_num_precision_decreases = 10; ///< The maximum number of times precision can be lowered during tracking of a segment of path.
-				AdaptiveMultiplePrecisionConfig() : coefficient_bound("1000.0"), degree_bound("5.0"), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
+				AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
 				{}
 
 				/**
@@ -292,7 +349,7 @@ namespace bertini
 				*/
 				void SetPhiPsiFromBounds()
 				{
-					Phi = degree_bound*(degree_bound-mpfr_float("1.0"))*coefficient_bound;
+					Phi = degree_bound*(degree_bound-mpfr_float(1))*coefficient_bound;
 				    Psi = degree_bound*coefficient_bound;  //Psi from the AMP paper.
 				}
 
@@ -328,6 +385,7 @@ namespace bertini
 			\see AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom
 			*/
 			inline
+			static
 			AdaptiveMultiplePrecisionConfig AMPConfigFrom(System const& sys) 
 			{
 				AdaptiveMultiplePrecisionConfig AMP;				

@@ -1,3 +1,31 @@
+# This file is part of Bertini 2.
+# 
+# python/test/function_tree_test.py is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# python/test/function_tree_test.py is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with python/test/function_tree_test.py.  If not, see <http://www.gnu.org/licenses/>.
+# 
+#  Copyright(C) 2016 by Bertini2 Development Team
+# 
+#  See <http://www.gnu.org/licenses/> for a copy of the license, 
+#  as well as COPYING.  Bertini2 is provided with permitted 
+#  additional terms in the b2/licenses/ directory.
+
+#  individual authors of this file include:
+# 
+#   James Collins
+#   West Texas A&M University
+#   Spring 2016
+# 
+
 from pybertini import *
 import numpy as np;
 import unittest
@@ -22,8 +50,7 @@ class SymbolTest(unittest.TestCase):
     def test_Float_construct(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
         x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
-        x = Float(x_d)
-        x = Float(4.3, -9e-3)
+        x = Float("4.3", "-9e-3")
         x = Float(y_mp)
         x = Float(mpfr_float("9.3"), mpfr_float("-3"))
         x = Float("9.2", "-43.2e2")
@@ -32,7 +59,7 @@ class SymbolTest(unittest.TestCase):
     def test_Float_eval(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
         x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
-        x = Float(x_d); y = Float(y_mp); z = Float(z_d);
+        x = Float(x_mp); y = Float(y_mp); z = Float(z_mp);
 
         self.assertLessEqual(np.abs(x.evald().real/(-2.43)-1), tol_d)
         self.assertLessEqual(np.abs(x.evald().imag/(.21)-1), tol_d)
@@ -43,7 +70,7 @@ class SymbolTest(unittest.TestCase):
     def test_Float_funcs(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
         x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;
-        x = Float(x_d); y = Float(y_mp); z = Float(z_d);
+        x = Float(x_mp); y = Float(y_mp); z = Float(z_mp);
 
         self.assertEqual(x.degree(), 0)
         d = y.differentiate()
@@ -152,8 +179,8 @@ class OperatorTest(unittest.TestCase):
         self.z.set_current_value(complex(-6.48, -.731))
         self.p = Variable("p")
         self.p.set_current_value(complex(-.321, -.72))
-        self.a = Float(complex(3.12, .612))
-        self.b = Float(complex(-.823, 2.62))
+        self.a = Float(mpfr_complex("3.12", ".612"))
+        self.b = Float(mpfr_complex("-.823", "2.62"))
         self.tol_d = float(9e-14);
 
         self.x.set_current_value(mpfr_complex("-2.43",".21" ))
@@ -175,7 +202,7 @@ class OperatorTest(unittest.TestCase):
         self.assertLessEqual(abs(f.evalmp().real/mpfr_float("5.53")-1), tol_mp)
         self.assertLessEqual(abs(f.evalmp().imag/mpfr_float("-1.118")-1), tol_mp)
 
-        f = Function(x+3.87)
+        f = Function(x+Float("3.87"))
         self.assertLessEqual(np.abs(f.evald().real/(1.44)-1), tol_d)
         self.assertLessEqual(np.abs(f.evald().imag/(0.21)-1), tol_d)
 
@@ -200,7 +227,7 @@ class OperatorTest(unittest.TestCase):
         self.assertLessEqual(abs(f.evalmp().real/mpfr_float("5.53")-1), tol_mp)
         self.assertLessEqual(abs(f.evalmp().imag/mpfr_float("-1.118")-1), tol_mp)
 
-        f = Function(x); f += 3.87;
+        f = Function(x); f += Float("3.87");
         self.assertLessEqual(np.abs(f.evald().real/(1.44)-1), tol_d)
         self.assertLessEqual(np.abs(f.evald().imag/(0.21)-1), tol_d)
 
@@ -217,11 +244,11 @@ class OperatorTest(unittest.TestCase):
         self.assertLessEqual(abs(f.evalmp().real/mpfr_float("-10.39")-1), tol_mp)
         self.assertLessEqual(abs(f.evalmp().imag/mpfr_float("1.538")-1), tol_mp)
 
-        f = Function(y-3.87)
+        f = Function(y-Float("3.87"))
         self.assertLessEqual(np.abs(f.evald().real/(0.97)-1), tol_d)
         self.assertLessEqual(np.abs(f.evald().imag/(-1.94)-1), tol_d)
 
-        f = Function(y-complex(3.87,0))
+        f = Function(y-Float("3.87","0"))
         self.assertLessEqual(np.abs(f.evald().real / (0.97)-1), tol_d)
         self.assertLessEqual(np.abs(f.evald().imag / (-1.94)-1), tol_d)
 
@@ -244,7 +271,7 @@ class OperatorTest(unittest.TestCase):
         self.assertLessEqual(abs(f.evalmp().real / mpfr_float("-10.39")-1), tol_mp)
         self.assertLessEqual(abs(f.evalmp().imag / mpfr_float("1.538")-1), tol_mp)
 
-        f = Function(y); f -= 3.87;
+        f = Function(y); f -= Float("3.87");
         self.assertLessEqual(np.abs(f.evald().real / (0.97)-1), tol_d)
         self.assertLessEqual(np.abs(f.evald().imag / (-1.94)-1), tol_d)
 

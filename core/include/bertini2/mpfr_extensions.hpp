@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //mpfr_extensions.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -11,16 +11,16 @@
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with .  If not, see <http://www.gnu.org/licenses/>.
+//along with mpfr_extensions.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  This file contains extensions to types provided by Boost.Multiprecision.
-//
-//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 /**
 \file mpfr_extensions.hpp 
@@ -178,7 +178,7 @@ namespace bertini
 
 
 	/**
-	 a templated function for producing random numbers in the unit interval, of a given number of digits.
+	 Produce a random number with at length_in_digits non-zero digits.
 	 
 	 \tparam length_in_digits The length of the desired random number
 	 */
@@ -192,9 +192,27 @@ namespace bertini
    		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
    		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
 
-		return mpfr_float(ur(gen));
+		return ur(gen);
 	}
 	
+	/**
+	 a templated function for producing random numbers in the unit interval, of a given number of digits.
+	 
+	 \tparam length_in_digits The length of the desired random number
+	 */
+	template <unsigned int length_in_digits>
+	void RandomMp(mpfr_float & a)
+	{	
+
+		using namespace boost::multiprecision;
+   		using namespace boost::random;
+
+   		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
+   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
+
+		a = ur(gen);
+	}
+
 	/**
 	 a templated function for producing random numbers in a specified interval, of a given number of digits.
 	 
@@ -214,95 +232,24 @@ namespace bertini
 	/**
 	 \brief create a random number, at the current default precision
 	 */
-	inline
-	mpfr_float RandomMp()
-	{
-		auto num_digits = mpfr_float::default_precision() + 3;
-	
-		if (num_digits<=50)
-			return RandomMp<50>();
-		else if (num_digits<=100)
-			return RandomMp<100>();
-		else if (num_digits<=200)
-			return RandomMp<200>();
-		else if (num_digits<=400)
-			return RandomMp<400>();
-		else if (num_digits<=800)
-			return RandomMp<800>();
-		else if (num_digits<=1600)
-			return RandomMp<1600>();
-		else if (num_digits<=3200)
-			return RandomMp<3200>();
-		else if (num_digits<=6400)
-			return RandomMp<6400>();
-		else if (num_digits<=8000)
-			return RandomMp<8000>();
-		else if (num_digits<=10000)
-			return RandomMp<10000>();
-		else if (num_digits<=12000)
-			return RandomMp<12000>();
-		else if (num_digits<=14000)
-			return RandomMp<14000>();
-		else if (num_digits<=16000)
-			return RandomMp<16000>();
-		else if (num_digits<=18000)
-			return RandomMp<18000>();
-		else if (num_digits<=20000)
-			return RandomMp<20000>();
-		else if (num_digits<=40000)
-			return RandomMp<40000>();
-		else
-			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.  If you have a better solution to this problem, please write the authors of this software.");
-	}
+	mpfr_float RandomMp();
 
-	
 	/**
 	 \brief create a random number in a given interval, at the current default precision
 	*/
-	inline
-	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
-	{
-		auto num_digits = mpfr_float::default_precision() + 3;
-	 
-		if (num_digits<=50)
-			return RandomMp<50>(a,b);
-		else if (num_digits<=100)
-			return RandomMp<100>(a,b);
-		else if (num_digits<=200)
-			return RandomMp<200>(a,b);
-		else if (num_digits<=400)
-			return RandomMp<400>(a,b);
-		else if (num_digits<=800)
-			return RandomMp<800>(a,b);
-		else if (num_digits<=1600)
-			return RandomMp<1600>(a,b);
-		else if (num_digits<=3200)
-			return RandomMp<3200>(a,b);
-		else if (num_digits<=6400)
-			return RandomMp<6400>(a,b);
-		else if (num_digits<=8000)
-			return RandomMp<8000>(a,b);
-		else if (num_digits<=10000)
-			return RandomMp<10000>(a,b);
-		else if (num_digits<=12000)
-			return RandomMp<12000>(a,b);
-		else if (num_digits<=14000)
-			return RandomMp<14000>(a,b);
-		else if (num_digits<=16000)
-			return RandomMp<16000>(a,b);
-		else if (num_digits<=18000)
-			return RandomMp<18000>(a,b);
-		else if (num_digits<=20000)
-			return RandomMp<20000>(a,b);
-		else if (num_digits<=40000)
-			return RandomMp<40000>(a,b);
-		else
-			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.  If you have a better solution to this problem, please write the authors of this software.");
-	}
+	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b);
+
+
+
+	/**
+	 \brief Set an existing mpfr_float to a random number, to a given precision.  
+
+	 This function is how to get random numbers at a precision different from the current default.
+	 */
+	void RandomMp(mpfr_float & a, unsigned num_digits);
+
 	
-	
-	
-	
+
 	
 } // re: namespace bertini
 
