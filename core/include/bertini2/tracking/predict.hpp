@@ -67,8 +67,10 @@ namespace bertini{
 							   RealType const& tracking_tolerance)
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+			
+			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
 
-			return predict::ExplicitRKPredictors<ComplexType, RealType>::Predict(next_space, predictor_choice,
+			return predictor.Predict(next_space, predictor_choice,
 										sys,
 										current_space, current_time,
 										delta_t,
@@ -132,8 +134,10 @@ namespace bertini{
 							config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+			
+			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
 
-			return predict::ExplicitRKPredictors<ComplexType, RealType>::Predict(next_space, predictor_choice,
+			return predictor.Predict(next_space, predictor_choice,
 										  size_proportion,
 										  norm_J,
 										  norm_J_inverse,
@@ -201,8 +205,10 @@ namespace bertini{
 							config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+			
+			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
 
-			return predict::ExplicitRKPredictors<ComplexType, RealType>::Predict(next_space, predictor_choice,
+			return predictor.Predict(next_space, predictor_choice,
 										 error_estimate,
 										 size_proportion,
 										 norm_J,

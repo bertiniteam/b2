@@ -259,7 +259,7 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 			
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
-			Eval(function_values, variable_values);
+			EvalInPlace(function_values, variable_values);
 			return function_values;
 			
 		}
@@ -325,7 +325,7 @@ namespace bertini {
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
 
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
-			Eval(function_values, variable_values, path_variable_value);
+			EvalInPlace(function_values, variable_values, path_variable_value);
 			return function_values;
 		}
 		
@@ -433,7 +433,7 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
-			Jacobian(J,variable_values);
+			JacobianInPlace(J,variable_values);
 			return J;
 		}
 
@@ -491,7 +491,7 @@ namespace bertini {
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
-			Jacobian(J,variable_values, path_variable_value);
+			JacobianInPlace(J,variable_values, path_variable_value);
 			return J;
 		}
 

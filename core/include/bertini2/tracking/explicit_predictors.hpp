@@ -46,9 +46,7 @@ namespace bertini{
 	namespace tracking{
 		namespace predict{
 			
-			
-			using mpq_rational = bertini::mpq_rational;
-			
+						
 			using Predictor = config::Predictor;
 			
 			/**
@@ -59,7 +57,7 @@ namespace bertini{
 			inline
 			config::Predictor DefaultPredictor()
 			{
-				return config::Predictor::Euler;
+				return Predictor::Euler;
 			}
 			
 			
@@ -71,9 +69,9 @@ namespace bertini{
 			{
 				switch (predictor_choice)
 				{
-					case (config::Predictor::Euler):
+					case (Predictor::Euler):
 						return 1;
-					case (config::Predictor::HeunEuler):
+					case (Predictor::HeunEuler):
 						return 1;
 					default:
 					{
@@ -87,9 +85,9 @@ namespace bertini{
 			{
 				switch (predictor_choice)
 				{
-					case (config::Predictor::Euler):
+					case (Predictor::Euler):
 						return false;
-					case (config::Predictor::HeunEuler):
+					case (Predictor::HeunEuler):
 						return true;
 					default:
 					{
@@ -103,7 +101,7 @@ namespace bertini{
 			
 			
 			/**
-			 /class ExplicitRKPredictors
+			 /class ExplicitRKPredictor
 			 
 			 \brief A static class which stores all the explicit ODE predictor methods.
 			 
@@ -120,7 +118,8 @@ namespace bertini{
 			 Each predictor method is a static method of this class, therefore all that is required to run the predictor is to call the correct method:
 			 
 			 \code
-			 ExplicitRKPredictors<Complex,Real>::Euler( ... )
+			 ExplicitRKPredictors<Complex,Real> euler(config::Predictor::Euler)
+			 success_code = euler.Predict( ... )
 			 \endcode
 			 
 			 
@@ -128,9 +127,53 @@ namespace bertini{
 			 */
 			
 			template <typename ComplexType, typename RealType>
-			class ExplicitRKPredictors
+			class ExplicitRKPredictor
 			{
 			public:
+				
+				
+				
+				
+				/**
+				 \brief Constructor for a particular predictor method
+				 
+				 
+				 \param method The predictor method to be implemented.
+				 
+				 */
+				
+				
+				ExplicitRKPredictor(Predictor method)
+				{
+					predictor_ = method;
+					p_ = Order(method);
+					switch(method)
+					{
+						case Predictor::Euler:
+						{
+							s_ = 1;
+							c_ = Vec<RealType>(s_); c_(0) = 0;
+							a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
+							b_ = Vec<RealType>(s_); b_(0) = 1;
+							break;
+						}
+						case Predictor::HeunEuler:
+						{
+							mpq_rational half = mpq_rational(1,2);
+							s_ = 2;
+							c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
+							a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
+							b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
+							bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
+							break;
+						}
+						default:
+						{
+							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
+						}
+					}
+
+				}
 				
 				
 				
@@ -154,7 +197,7 @@ namespace bertini{
 				 \param tracking_tolerance How tightly to track the path.
 				 */
 				
-				static SuccessCode Predict(Vec<ComplexType> & next_space, Predictor method,
+				SuccessCode Predict(Vec<ComplexType> & next_space, Predictor method,
 										 System const& S,
 										 Vec<ComplexType> const& current_space, ComplexType current_time,
 										 ComplexType const& delta_t,
@@ -163,12 +206,6 @@ namespace bertini{
 										 unsigned frequency_of_CN_estimation,
 										 RealType const& tracking_tolerance)
 				{
-					// Set up all variables to define the particular method
-					if(predictor_ != method)
-					{
-						MethodSetup(method);
-						predictor_ = method;
-					}
 					
 					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
 					return FullStep(next_space, S, current_space, current_time, delta_t);
@@ -204,7 +241,7 @@ namespace bertini{
 				 \param AMP_config The settings for adaptive multiple precision.
 				 */
 				
-				static SuccessCode Predict(Vec<ComplexType> & next_space,
+				SuccessCode Predict(Vec<ComplexType> & next_space,
 												   Predictor method,
 												   RealType & size_proportion,
 												   RealType & norm_J,
@@ -218,16 +255,6 @@ namespace bertini{
 												   RealType const& tracking_tolerance,
 												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					
-					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
-					
-					if(!HasErrorEstimate(method))
-					{
-						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
-					}
-					
-					
-					
 					
 					
 					auto success_code = Predict(next_space, method, S, current_space, current_time, delta_t,
@@ -296,7 +323,7 @@ namespace bertini{
 				 \param AMP_config The settings for adaptive multiple precision.
 				 */
 				
-				static SuccessCode Predict(Vec<ComplexType> & next_space,
+				SuccessCode Predict(Vec<ComplexType> & next_space,
 												   Predictor method,
 												   RealType & error_estimate,
 												   RealType & size_proportion,
@@ -355,13 +382,12 @@ namespace bertini{
 				
 			private:
 				
-				// This is a static class, no instances should be created.
-				ExplicitRKPredictors() = default;
 				
 				
 				
 				
-				static void MethodSetup(Predictor method)
+				
+				void MethodSetup(Predictor method)
 				{
 					p_ = Order(method);
 					switch(method)
@@ -396,7 +422,7 @@ namespace bertini{
 
 				
 				
-				static SuccessCode FullStep(Vec<ComplexType> & next_space,
+				SuccessCode FullStep(Vec<ComplexType> & next_space,
 									System const& S,
 									Vec<ComplexType> const& current_space, ComplexType current_time,
 									 ComplexType const& delta_t)
@@ -443,7 +469,7 @@ namespace bertini{
 				
 				
 				
-				static SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
+				SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
 				{
 					auto numFuncs = K_.cols();
 					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
@@ -467,15 +493,23 @@ namespace bertini{
 				
 				
 				
-				static SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t)
+				SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t)
 				{
-					RealType err_est;
-					SetErrorEstimate(err_est, delta_t);
-					
-					using std::pow;
-					size_proportion = err_est/(pow(abs(delta_t), p_+1));
-					
-					return SuccessCode::Success;
+					if(HasErrorEstimate(predictor_))
+					{
+						RealType err_est;
+						SetErrorEstimate(err_est, delta_t);
+						
+						using std::pow;
+						size_proportion = err_est/(pow(abs(delta_t), p_+1));
+						
+						return SuccessCode::Success;
+					}
+					else
+					{
+						size_proportion = K_.array().abs().maxCoeff();
+						return SuccessCode::Success;
+					}
 				};
 				
 				
@@ -484,7 +518,7 @@ namespace bertini{
 				
 
 				
-				static SuccessCode EvalRHS(System const& S,
+				SuccessCode EvalRHS(System const& S,
 									 Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, int stage)
 				{
 					if(stage == 0)
@@ -524,46 +558,37 @@ namespace bertini{
 				
 				
 				// Data Members
-				static config::Predictor predictor_;
+				config::Predictor predictor_ = Predictor::None;
 				
 				
-				static Mat<ComplexType> dh_dx_;
-				static Eigen::PartialPivLU<Mat<ComplexType>> LU_;
+				Mat<ComplexType> dh_dx_;
+				Eigen::PartialPivLU<Mat<ComplexType>> LU_;
+				Mat<ComplexType> K_;
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods)
-				static int s_; // Number of stages
-				static Vec<RealType> c_;
-				static Vec<RealType> b_;
-				static Vec<RealType> bstar_;
-				static Mat<RealType> a_;
-				static int p_;
+				int s_; // Number of stages
+				Vec<RealType> c_;
+				Vec<RealType> b_;
+				Vec<RealType> bstar_;
+				Mat<RealType> a_;
+				int p_;
 				
-				static Mat<ComplexType> K_;
+				
+				
+				
+				
+				
+				// static const variables that store the Butcher table in mpq_rational form
+				static const mpq_rational cEulerPtr_[];
+				static const Vec<mpq_rational> cEuler_;
+				
+				
 			};
-			template<typename Complex, typename Real>
-			config::Predictor ExplicitRKPredictors<Complex,Real>::predictor_ = Predictor::None;
 			
-			
-			template<typename Complex, typename Real>
-			int ExplicitRKPredictors<Complex,Real>::s_;
-			template<typename Complex, typename Real>
-			Vec<Real> ExplicitRKPredictors<Complex,Real>::c_;
-			template<typename Complex, typename Real>
-			Vec<Real> ExplicitRKPredictors<Complex,Real>::b_;
-			template<typename Complex, typename Real>
-			Vec<Real> ExplicitRKPredictors<Complex,Real>::bstar_;
-			template<typename Complex, typename Real>
-			Mat<Real> ExplicitRKPredictors<Complex,Real>::a_;
-			template<typename Complex, typename Real>
-			int ExplicitRKPredictors<Complex,Real>::p_;
-			
-			template<typename Complex, typename Real>
-			Mat<Complex> ExplicitRKPredictors<Complex,Real>::K_;
-			template<typename Complex, typename Real>
-			Mat<Complex> ExplicitRKPredictors<Complex,Real>::dh_dx_;
-			template<typename Complex, typename Real>
-			Eigen::PartialPivLU<Mat<Complex>> ExplicitRKPredictors<Complex,Real>::LU_;
-			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::cEulerPtr_[] = {mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Vec<mpq_rational> ExplicitRKPredictor<CType, RType>::cEuler_(cEulerPtr_);
 			
 			
 			
