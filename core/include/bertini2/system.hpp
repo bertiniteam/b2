@@ -214,7 +214,7 @@ namespace bertini {
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
 		template<typename T>
-		void Eval(RefVec<T>& function_values, const RefVec<T>& variable_values) const
+		void EvalInPlace(RefVec<T>& function_values, const RefVec<T>& variable_values) const
 		{
 			
 			if (variable_values.size()!=NumVariables())
@@ -282,7 +282,7 @@ namespace bertini {
 		 \todo The Eval() function for systems has the unfortunate side effect of resetting constant functions.  Modify the System class so that only certain parts of the tree get reset.
 		 */
 		template<typename T>
-		void Eval(RefVec<T>& function_values, const RefVec<T>& variable_values, const T & path_variable_value) const
+		void EvalInPlace(RefVec<T>& function_values, const RefVec<T>& variable_values, const T & path_variable_value) const
 		{
 			
 			if (variable_values.size()!=NumVariables())
@@ -397,7 +397,7 @@ namespace bertini {
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
 		template<typename T>
-		void Jacobian(RefMat<T> &  J, const RefVec<T> &  variable_values) const
+		void JacobianInPlace(RefMat<T> &  J, const RefVec<T> &  variable_values) const
 		{
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
@@ -452,7 +452,7 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename T>
-		void Jacobian(RefMat<T> & J, const RefVec<T> & variable_values, const T & path_variable_value) const
+		void JacobianInPlace(RefMat<T> & J, const RefVec<T> & variable_values, const T & path_variable_value) const
 		{
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
