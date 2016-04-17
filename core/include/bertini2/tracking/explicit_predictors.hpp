@@ -73,6 +73,14 @@ namespace bertini{
 						return 1;
 					case (Predictor::HeunEuler):
 						return 1;
+					case (Predictor::RK4):
+						return 4;
+					case (Predictor::RKF45):
+						return 4;
+					case (Predictor::RKCashKarp45):
+						return 4;
+					case (Predictor::RKDormandPrince56):
+						return 5;
 					default:
 					{
 						throw std::runtime_error("incompatible predictor choice in Order");
@@ -88,6 +96,14 @@ namespace bertini{
 					case (Predictor::Euler):
 						return false;
 					case (Predictor::HeunEuler):
+						return true;
+					case (Predictor::RK4):
+						return false;
+					case (Predictor::RKF45):
+						return true;
+					case (Predictor::RKCashKarp45):
+						return true;
+					case (Predictor::RKDormandPrince56):
 						return true;
 					default:
 					{
@@ -152,21 +168,55 @@ namespace bertini{
 						case Predictor::Euler:
 						{
 							s_ = 1;
-							c_ = Vec<RealType>(s_); c_(0) = 0;
-							a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
-							b_ = Vec<RealType>(s_); b_(0) = 1;
+							c_ = Vec<RealType>(s_); c_(0) = static_cast<RealType>(cEuler_(0));
+							a_ = Mat<RealType>(s_,s_); a_(0,0) = static_cast<RealType>(aEuler_(0,0));
+							b_ = Vec<RealType>(s_); b_(0) = static_cast<RealType>(bEuler_(0));
 							break;
 						}
 						case Predictor::HeunEuler:
 						{
-							mpq_rational half = mpq_rational(1,2);
 							s_ = 2;
-							c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
-							a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
-							b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
-							bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
+							
+							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							
 							break;
 						}
+						case Predictor::RK4:
+						{
+							s_ = 4;
+							
+							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, cHeunEuler_);
+							
+							break;
+						}
+
+						case Predictor::RKF45:
+						{
+							s_ = 6;
+							
+							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							
+							break;
+						}
+
+						case Predictor::RKCashKarp45:
+						{
+							s_ = 6;
+							
+							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							
+							break;
+						}
+
+						case Predictor::RKDormandPrince56:
+						{
+							s_ = 8;
+							
+							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							
+							break;
+						}
+
 						default:
 						{
 							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
@@ -387,35 +437,35 @@ namespace bertini{
 				
 				
 				
-				void MethodSetup(Predictor method)
-				{
-					p_ = Order(method);
-					switch(method)
-					{
-						case Predictor::Euler:
-						{
-							s_ = 1;
-							c_ = Vec<RealType>(s_); c_(0) = 0;
-							a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
-							b_ = Vec<RealType>(s_); b_(0) = 1;
-							break;
-						}
-						case Predictor::HeunEuler:
-						{
-							mpq_rational half = mpq_rational(1,2);
-							s_ = 2;
-							c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
-							a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
-							b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
-							bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
-							break;
-						}
-						default:
-						{
-							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
-						}
-					}
-				}
+//				void MethodSetup(Predictor method)
+//				{
+//					p_ = Order(method);
+//					switch(method)
+//					{
+//						case Predictor::Euler:
+//						{
+//							s_ = 1;
+//							c_ = Vec<RealType>(s_); c_(0) = 0;
+//							a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
+//							b_ = Vec<RealType>(s_); b_(0) = 1;
+//							break;
+//						}
+//						case Predictor::HeunEuler:
+//						{
+//							mpq_rational half = mpq_rational(1,2);
+//							s_ = 2;
+//							c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
+//							a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
+//							b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
+//							bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
+//							break;
+//						}
+//						default:
+//						{
+//							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
+//						}
+//					}
+//				}
 				
 				
 				
@@ -477,7 +527,7 @@ namespace bertini{
 					err.setZero();
 					for(int ii = 0; ii < s_; ++ii)
 					{
-						err += (b_(ii) - bstar_(ii))*K_.col(ii);
+						err += (b_minus_bstar_(ii))*K_.col(ii);
 					}
 					
 					err *= delta_t;
@@ -550,6 +600,96 @@ namespace bertini{
 				
 				
 				
+				/**
+				 /brief Fills the local embedded butcher table variables a,b,bstar and c with the constant static values stored in the class.
+				 
+				 \param stages Number of stages.  Used to create correct size on variables
+				 \param a Matrix of the Butcher table
+				 \param b Weights in the Butcher table
+				 \param bstar Weights of embedded method in Butcher table
+				 \param c Time offsets in Butcher table
+				 
+				 */
+				
+				template<typename MatDerived, typename VecDerived>
+				void FillButcherTable(int stages, const Eigen::MatrixBase<MatDerived>& a,
+								 const Eigen::MatrixBase<VecDerived> & b,
+								 const Eigen::MatrixBase<VecDerived> & b_minus_bstar,
+								 const Eigen::MatrixBase<VecDerived> & c)
+				{
+					a_ = Mat<RealType>(stages, stages);
+					for(int ii = 0; ii < stages; ++ii)
+					{
+						for(int jj = 0; jj < s_; ++jj)
+						{
+							a_(ii,jj) = static_cast<RealType>(a(ii,jj));
+						}
+					}
+					
+					b_ = Vec<RealType>(stages);
+					for(int ii = 0; ii < stages; ++ii)
+					{
+						b_(ii) = static_cast<RealType>(b(ii));
+					}
+					
+					b_minus_bstar_ = Vec<RealType>(stages);
+					for(int ii = 0; ii < stages; ++ii)
+					{
+						b_minus_bstar_(ii) = static_cast<RealType>(b_minus_bstar(ii));
+					}
+
+					c_ = Vec<RealType>(stages);
+					for(int ii = 0; ii < stages; ++ii)
+					{
+						c_(ii) = static_cast<RealType>(c(ii));
+						
+					}
+
+				}
+				
+				
+
+				
+				
+				/**
+				 /brief Fills the local butcher table variables a,b and c with the constant static values stored in the class.
+				 
+				 \param stages Number of stages.  Used to create correct size on variables
+				 \param a Matrix of the Butcher table
+				 \param b Weights in the Butcher table
+				 \param c Time offsets in Butcher table
+				 
+				 */
+				
+				template<typename MatDerived, typename VecDerived>
+				void FillButcherTable(int stages, const Eigen::MatrixBase<MatDerived>& a,
+									  const Eigen::MatrixBase<VecDerived> & b,
+									  const Eigen::MatrixBase<VecDerived> & c)
+				{
+					a_ = Mat<RealType>(stages, stages);
+					for(int ii = 0; ii < stages; ++ii)
+					{
+						for(int jj = 0; jj < s_; ++jj)
+						{
+							a_(ii,jj) = static_cast<RealType>(a(ii,jj));
+						}
+					}
+					
+					b_ = Vec<RealType>(stages);
+					for(int ii = 0; ii < stages; ++ii)
+					{
+						b_(ii) = static_cast<RealType>(b(ii));
+					}
+					
+					c_ = Vec<RealType>(stages);
+					for(int ii = 0; ii < stages; ++ii)
+					{
+						c_(ii) = static_cast<RealType>(c(ii));
+						
+					}
+					
+				}
+
 				
 				
 				
@@ -569,7 +709,7 @@ namespace bertini{
 				int s_; // Number of stages
 				Vec<RealType> c_;
 				Vec<RealType> b_;
-				Vec<RealType> bstar_;
+				Vec<RealType> b_minus_bstar_;
 				Mat<RealType> a_;
 				int p_;
 				
@@ -579,23 +719,273 @@ namespace bertini{
 				
 				
 				// static const variables that store the Butcher table in mpq_rational form
+				// Euler
+				static const mpq_rational aEulerPtr_[];
+				static const Eigen::Matrix<mpq_rational,1,1> aEuler_;
+				static const mpq_rational bEulerPtr_[];
+				static const Eigen::Matrix<mpq_rational,1,1> bEuler_;
 				static const mpq_rational cEulerPtr_[];
-				static const Vec<mpq_rational> cEuler_;
+				static const Eigen::Matrix<mpq_rational,1,1> cEuler_;
+
+				// Heun-Euler
+				static const mpq_rational aHeunEulerPtr_[];
+				static const Eigen::Matrix<mpq_rational,2,2> aHeunEuler_;
+				static const mpq_rational bHeunEulerPtr_[];
+				static const Eigen::Matrix<mpq_rational,2,1> bHeunEuler_;
+				static const mpq_rational b_minus_bstarHeunEulerPtr_[];
+				static const Eigen::Matrix<mpq_rational,2,1> b_minus_bstarHeunEuler_;
+				static const mpq_rational cHeunEulerPtr_[];
+				static const Eigen::Matrix<mpq_rational,2,1> cHeunEuler_;
+
+				// RK4
+				static const mpq_rational aRK4Ptr_[];
+				static const Eigen::Matrix<mpq_rational,4,4> aRK4_;
+				static const mpq_rational bRK4Ptr_[];
+				static const Eigen::Matrix<mpq_rational,4,1> bRK4_;
+				static const mpq_rational cRK4Ptr_[];
+				static const Eigen::Matrix<mpq_rational,4,1> cRK4_;
+
+				// RKF45
+				static const mpq_rational aRKF45Ptr_[];
+				static const Eigen::Matrix<mpq_rational,6,6> aRKF45_;
+				static const mpq_rational bRKF45Ptr_[];
+				static const Eigen::Matrix<mpq_rational,6,1> bRKF45_;
+				static const mpq_rational b_minus_bstarRKF45Ptr_[];
+				static const Eigen::Matrix<mpq_rational,6,1> b_minus_bstarRKF45_;
+				static const mpq_rational cRKF45Ptr_[];
+				static const Eigen::Matrix<mpq_rational,6,1> cRKF45_;
 				
+				// RK Cash-Karp45
+				static const mpq_rational aRKCK45Ptr_[];
+				static const Eigen::Matrix<mpq_rational,6,6> aRKCK45_;
+				static const mpq_rational bRKCK45Ptr_[];
+				static const Eigen::Matrix<mpq_rational,6,1> bRKCK45_;
+				static const mpq_rational b_minus_bstarRKCK45Ptr_[];
+				static const Eigen::Matrix<mpq_rational,6,1> b_minus_bstarRKCK45_;
+				static const mpq_rational cRKCK45Ptr_[];
+				static const Eigen::Matrix<mpq_rational,6,1> cRKCK45_;
+
+				// RK Dormand-Prince45
+				static const mpq_rational aRKDP56Ptr_[];
+				static const Eigen::Matrix<mpq_rational,8,8> aRKDP56_;
+				static const mpq_rational bRKDP56Ptr_[];
+				static const Eigen::Matrix<mpq_rational,8,1> bRKDP56_;
+				static const mpq_rational b_minus_bstarRKDP56Ptr_[];
+				static const Eigen::Matrix<mpq_rational,8,1> b_minus_bstarRKDP56_;
+				static const mpq_rational cRKDP56Ptr_[];
+				static const Eigen::Matrix<mpq_rational,8,1> cRKDP56_;
+
+
 				
 			};
 			
+			// Ptr must be filled row first.
+			// i.e. aPtr[] = {a_11, a_21, a_12, a_22}
+			
+			/* Euler Butcher Table
+			  |
+			 0|0
+			 -----
+			  |1
+			*/
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::aEulerPtr_[] = {mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor<CType, RType>::aEuler_(aEulerPtr_);
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::bEulerPtr_[] = {mpq_rational(1,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor<CType, RType>::bEuler_(bEulerPtr_);
 			template<typename CType, typename RType>
 			const mpq_rational ExplicitRKPredictor<CType, RType>::cEulerPtr_[] = {mpq_rational(0,1)};
 			template<typename CType, typename RType>
-			const Vec<mpq_rational> ExplicitRKPredictor<CType, RType>::cEuler_(cEulerPtr_);
+			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor<CType, RType>::cEuler_(cEulerPtr_);
+			
+
+			
+			/* Heun-Euler Butcher Table
+			 0 |
+			 1 | 1
+			 -----------
+			   |1/2  1/2
+			   | 1    0
+			 */
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::aHeunEulerPtr_[] = {mpq_rational(0,1), mpq_rational(1,1),
+																					mpq_rational(0,1), mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,2,2> ExplicitRKPredictor<CType, RType>::aHeunEuler_(aHeunEulerPtr_);
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::bHeunEulerPtr_[] = {mpq_rational(1,2), mpq_rational(1,2)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor<CType, RType>::bHeunEuler_(bHeunEulerPtr_);
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarHeunEulerPtr_[] = {mpq_rational(-1,2), mpq_rational(1,2)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarHeunEuler_(b_minus_bstarHeunEulerPtr_);
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::cHeunEulerPtr_[] = {mpq_rational(0,1), mpq_rational(1,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor<CType, RType>::cHeunEuler_(cHeunEulerPtr_);
+
+			
+			
+			/* RK4 Butcher Table
+			 0   | 0   0  0  0
+			 1/2 | 1/2 0  0  0
+			 1/2 | 0  1/2 0  0
+			 1   | 0   0  1  0
+			 ------------------
+				 | 1/6 1/3 1/3 1/6
+			 */
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::aRK4Ptr_[] = {mpq_rational(0,1), mpq_rational(1,2),
+				mpq_rational(0,1), mpq_rational(0,1),
+			mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,2), mpq_rational(0,1),
+			mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,1),
+			mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,4,4> ExplicitRKPredictor<CType, RType>::aRK4_(aRK4Ptr_);
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::bRK4Ptr_[] = {mpq_rational(1,6), mpq_rational(1,3),
+			mpq_rational(1,3),mpq_rational(1,6)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,4,1> ExplicitRKPredictor<CType, RType>::bRK4_(bRK4Ptr_);
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::cRK4Ptr_[] = {mpq_rational(0,1), mpq_rational(1,2),
+			mpq_rational(1,2),mpq_rational(1,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,4,1> ExplicitRKPredictor<CType, RType>::cRK4_(cRK4Ptr_);
+
+
+			
+			
+			/* RKF45 Butcher Table
+			 https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods
+			 */
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::aRKF45Ptr_[] =
+			{mpq_rational(0,1), mpq_rational(1,4),mpq_rational(3,32), mpq_rational(1932,2197),mpq_rational(439,216),mpq_rational(-8,27),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(9,32), mpq_rational(-7200,2197),mpq_rational(-8,1),mpq_rational(2,1),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(7296,2197),mpq_rational(3680,513),mpq_rational(-3544,2565),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(-845,4104),mpq_rational(1859,4104),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-11,40),
+				
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,6,6> ExplicitRKPredictor<CType, RType>::aRKF45_(aRKF45Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::bRKF45Ptr_[] =
+			{mpq_rational(16,135), mpq_rational(0,1), mpq_rational(6656,12825), mpq_rational(28561,56430),mpq_rational(-9,50),mpq_rational(2,55)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::bRKF45_(bRKF45Ptr_);
+
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarRKF45Ptr_[] =
+			{mpq_rational(1,360), mpq_rational(0,1), mpq_rational(-128,4275), mpq_rational(-2197,75240),mpq_rational(1,50),mpq_rational(2,55)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarRKF45_(b_minus_bstarRKF45Ptr_);
+
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::cRKF45Ptr_[] =
+			{mpq_rational(0,1), mpq_rational(1,4), mpq_rational(3,8), mpq_rational(12,13),mpq_rational(1,1),mpq_rational(1,2)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::cRKF45_(cRKF45Ptr_);
+
+
+			
+			
+			/* RK Cash-Karp45 Butcher Table
+			 https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods
+			 */
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::aRKCK45Ptr_[] =
+			{mpq_rational(0,1), mpq_rational(1,5),mpq_rational(3,40), mpq_rational(3,10),mpq_rational(-11,54),mpq_rational(1631,55296),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(9,40), mpq_rational(-9,10),mpq_rational(5,2),mpq_rational(175,512),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(6,5),mpq_rational(-70,27),mpq_rational(575,13824),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(35,27),mpq_rational(44275,110592),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(253,4096),
+				
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,6,6> ExplicitRKPredictor<CType, RType>::aRKCK45_(aRKCK45Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::bRKCK45Ptr_[] =
+			{mpq_rational(37,378), mpq_rational(0,1), mpq_rational(250,621), mpq_rational(125,594),mpq_rational(0,1),mpq_rational(512,1771)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::bRKCK45_(bRKCK45Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarRKCK45Ptr_[] =
+			{mpq_rational(-277,64512), mpq_rational(0,1), mpq_rational(6925,370944), mpq_rational(-6925,202752),mpq_rational(-277,14336),mpq_rational(277,7084)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarRKCK45_(b_minus_bstarRKCK45Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::cRKCK45Ptr_[] =
+			{mpq_rational(0,1), mpq_rational(1,5), mpq_rational(3,10), mpq_rational(3,5),mpq_rational(1,1),mpq_rational(7,8)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::cRKCK45_(cRKCK45Ptr_);
+
 			
 			
 			
+			/* RK Dormand-Prince56 Butcher Table
+			 Prince and Dormand.  High order embedded Runge-Kutta formulae.  J. Comput. Appl. Math., 7(1):67-75, 1981
+			 */
 			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::aRKDP56Ptr_[] =
+			{mpq_rational(0,1), mpq_rational(1,10),mpq_rational(-2,81), mpq_rational(615,1372),mpq_rational(3243,5500),mpq_rational(-26492,37125),mpq_rational(5561,2376),mpq_rational(465467,266112),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(20,81), mpq_rational(-270,343),mpq_rational(-54,55),mpq_rational(72,55),mpq_rational(-35,11),mpq_rational(-2945,1232),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1053,1372),mpq_rational(50949,71500),mpq_rational(2808,23375),mpq_rational(-24117,31603),mpq_rational(-5610201,14158144),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(4998,17875),mpq_rational(-24206,37125),mpq_rational(899983,200772),mpq_rational(10513573,3212352),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(338,459),mpq_rational(-5225,1836),mpq_rational(-424325,205632),
+				
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(3925,4056),mpq_rational(376225,454272),
 			
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),
 			
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,8,8> ExplicitRKPredictor<CType, RType>::aRKDP56_(aRKDP56Ptr_);
 			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::bRKDP56Ptr_[] =
+			{mpq_rational(821,10800), mpq_rational(0,1), mpq_rational(19683,71825), mpq_rational(175273,912600),mpq_rational(395,3672),mpq_rational(785,2704),mpq_rational(3,50),mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor<CType, RType>::bRKDP56_(bRKDP56Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarRKDP56Ptr_[] =
+			{mpq_rational(13,2400), mpq_rational(0,1), mpq_rational(-19683,618800), mpq_rational(2401,31200),mpq_rational(-65,816),mpq_rational(15,416),mpq_rational(521,5600),mpq_rational(-1,10)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarRKDP56_(b_minus_bstarRKDP56Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::cRKDP56Ptr_[] =
+			{mpq_rational(0,1), mpq_rational(1,10), mpq_rational(2,9), mpq_rational(3,7),mpq_rational(3,5),mpq_rational(4,5),mpq_rational(1,1),mpq_rational(1,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor<CType, RType>::cRKDP56_(cRKDP56Ptr_);
 			
 			
 			
