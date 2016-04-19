@@ -93,6 +93,53 @@ namespace bertini
 		};
 
 
+
+		// some forward declarations
+		template<typename T>
+		class FixedPrecPSEG;
+
+		template<typename T>
+		class FixedPrecCauchyEG;
+
+		class AMPPowerSeriesEndgame;
+		class AMPCauchyEndgame;
+
+		// this struct facilitates lookup of required endgame type based on tracker type
+		template<typename TrackerT>
+		struct EndgameSelector
+		{ };
+
+		template<>
+		struct EndgameSelector<DoublePrecisionTracker>
+		{
+			using PSEG = FixedPrecPSEG<DoublePrecisionTracker>;
+			using CauchyEG = FixedPrecCauchyEG<DoublePrecisionTracker>;
+		};
+
+		template<>
+		struct EndgameSelector<MultiplePrecisionTracker>
+		{
+			using PSEG = FixedPrecPSEG<MultiplePrecisionTracker>;
+			using CauchyEG = FixedPrecCauchyEG<MultiplePrecisionTracker>;
+		};
+
+		template<class D>
+		struct EndgameSelector<FixedPrecisionTracker<D> >
+		{
+			using PSEG = typename EndgameSelector<D>::PSEG;
+			using CauchyEG = typename EndgameSelector<D>::CauchyEG;
+		};
+
+		template<>
+		struct EndgameSelector<AMPTracker>
+		{
+			using PSEG = AMPPowerSeriesEndgame<AMPTracker>;
+			using CauchyEG = AMPCauchyEndgame<AMPTracker>;
+		};
+
+
+
+
 		enum class SuccessCode
 		{
 			Success,

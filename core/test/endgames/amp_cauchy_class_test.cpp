@@ -37,7 +37,6 @@
 #include <boost/multiprecision/mpfr.hpp>
 #include "bertini2/limbo.hpp"
 #include "bertini2/mpfr_complex.hpp"
-#include <deque>
 #include "bertini2/tracking/amp_cauchy_endgame.hpp"
 #include "bertini2/start_system.hpp"
 
@@ -76,7 +75,7 @@ BOOST_AUTO_TEST_CASE(circle_track_d)
 {
 	/*
 		In this test we take a univariate polynomial with one solution and ensure that our CircleTrack function returns to the same position. 
-		This is tested by checking that our deque of cauchy_samples has the front and end with the same value roughly.
+		This is tested by checking that our cauchy_samples has the front and end with the same value roughly.
 	*/
 	mpfr_float::default_precision(16);
 
@@ -132,7 +131,7 @@ BOOST_AUTO_TEST_CASE(circle_track_mp_cycle_num_greater_than_1)
 	/*
 		In this test we take a univariate polynomial with one solution of multiplicity 2. We need to ensure that our CircleTrack function 
 		returns to the same position after two calls. The first call should land us on the second path, and the second call should land us back 
-		where we started. This is tested by checking that our deque of cauchy_samples has the front and end with the same value roughly.
+		where we started. This is tested by checking that cauchy_samples has the front and end with the same value roughly.
 	*/
 	mpfr_float::default_precision(30);
 
@@ -230,13 +229,12 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_dbl_for_cauchy_class)
 	
 	tracker.AMPSetup(AMP);
 
-	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times;
+	SampCont<mpfr> pseg_samples;
 	
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	pseg_times.push_back(time);
@@ -325,13 +323,12 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 	
 	tracker.AMPSetup(AMP);
 
-	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times;
+	SampCont<mpfr> pseg_samples;
 	
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	pseg_times.push_back(time);
@@ -360,11 +357,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 
 	auto first_c_over_k = my_endgame.ComputeCOverK<mpfr>();
 
-	// std::cout << "first c over k is " << first_c_over_k << '\n';
-	// std::cout << "first diff " << abs(first_c_over_k - mpfr_float("1.12917")) << '\n';
-	// std::cout << "Tol is " << my_endgame.GetTrackToleranceDuringEndgame() << '\n';
-
-	 BOOST_CHECK( abs(first_c_over_k - mpfr_float("1.12917")) < 1e-5 ); 
+	BOOST_CHECK( abs(first_c_over_k - mpfr_float("1.12917")) < 1e-5 ); 
 
 	//Setting up a new sample for approximation.
 	time = mpfr(".0125"); //.025/2 = .0125
@@ -381,8 +374,6 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 
 	auto second_c_over_k = my_endgame.ComputeCOverK<mpfr>();
 
-	// std::cout << "second_c_over_k is " << second_c_over_k << '\n';
-	// std::cout << "second diff is " << abs(second_c_over_k - mpfr_float("1.05888")) << '\n';
 	BOOST_CHECK( abs(second_c_over_k - mpfr_float("1.05888")) <  1e-5); 
 
 } // end compute c over k mp for cauchy class 
@@ -421,13 +412,12 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_dbl_for_cauchy_class)
 	
 	tracker.AMPSetup(AMP);
 
-	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
-	std::deque<mpfr_float> c_over_k_array;
+	TimeCont<mpfr> pseg_times; 
+	SampCont<mpfr> pseg_samples;
+	TimeCont<mpfr> c_over_k_array;
 
 	mpfr time(1);
 	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	pseg_times.push_back(time);
@@ -532,13 +522,12 @@ BOOST_AUTO_TEST_CASE(checking_agreement_function_mp_for_cauchy_class)
 	
 	tracker.AMPSetup(AMP);
 
-	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
-	std::deque<mpfr_float> c_over_k_array;
+	TimeCont<mpfr> pseg_times;
+	SampCont<mpfr> pseg_samples;
+	TimeCont<mpfr> c_over_k_array;
 
 	mpfr time;
 	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	pseg_times.push_back(time);
@@ -883,8 +872,8 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 	
 	tracker.AMPSetup(AMP);
 
-	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times;
+	SampCont<mpfr> pseg_samples;
 
 	mpfr time("0.1");
 	Vec<mpfr> sample(1);
@@ -940,8 +929,8 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 	
 	tracker.AMPSetup(AMP);
 
-	TimeCont<mpfr> pseg_times; //times are not vectors they are just complex numbers.
-	SampCont<mpfr> pseg_samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> pseg_times;
+	SampCont<mpfr> pseg_samples;
 
 
 
