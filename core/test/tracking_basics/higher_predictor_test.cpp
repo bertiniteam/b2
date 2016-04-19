@@ -1022,6 +1022,340 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////  RK Dormand Prince 56  /////////////////////
+
+BOOST_AUTO_TEST_CASE(circle_line_RKDP56_double)
+{
+	
+	// Starting point in spacetime step
+	Vec<dbl> current_space(2);
+	current_space << dbl(2.3,0.2), dbl(1.1, 1.87);
+	
+	// Starting time
+	dbl current_time(0.9);
+	// Time step
+	dbl delta_t(-0.1);
+	
+	
+	
+	
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	
+	VariableGroup vars{x,y};
+	
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	
+	// Define homotopy system
+	sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
+	
+	
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	
+	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+	AMP.coefficient_bound = 5;
+	
+	double norm_J, norm_J_inverse, size_proportion, error_est;
+	
+	Vec<dbl> predicted(2);
+	predicted << dbl(2.39189763095027864748166494355925,0.215711752936893239277981497324557),
+	dbl(0.524022748677715856115185568097945, 1.42873072156957928016044855615010);
+	double predicted_error = 6.79397491522542193110307157970405e-7;
+	
+	Vec<dbl> RKDP56_prediction_result;
+	dbl next_time;
+	
+	double tracking_tolerance(1e-5);
+	double condition_number_estimate;
+	unsigned num_steps_since_last_condition_number_computation = 1;
+	unsigned frequency_of_CN_estimation = 1;
+	
+	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::RKDormandPrince56,
+												   RKDP56_prediction_result,
+												   error_est,
+												   size_proportion,
+												   norm_J, norm_J_inverse,
+												   sys,
+												   current_space, current_time,
+												   delta_t,
+												   condition_number_estimate,
+												   num_steps_since_last_condition_number_computation,
+												   frequency_of_CN_estimation,
+												   tracking_tolerance,
+												   AMP);
+	
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(RKDP56_prediction_result.size(),2);
+	for (unsigned ii = 0; ii < RKDP56_prediction_result.size(); ++ii)
+	{
+		BOOST_CHECK(abs(RKDP56_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
+	}
+	BOOST_CHECK(fabs(error_est - predicted_error) < threshold_clearance_d);
+	
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp)
+{
+	bertini::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	
+	// Starting point in spacetime step
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
+	
+	// Starting time
+	mpfr current_time("0.9");
+	// Time step
+	mpfr delta_t("-0.1");
+	
+	
+	
+	
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	
+	VariableGroup vars{x,y};
+	
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	
+	// Define homotopy system
+	sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
+	
+	
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	
+	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+	AMP.coefficient_bound = 5;
+	
+	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	
+	Vec<mpfr> predicted(2);
+	predicted << mpfr("2.39189763095027864748166494355925","0.215711752936893239277981497324557"),
+	mpfr("0.524022748677715856115185568097945", "1.42873072156957928016044855615010");
+	mpfr_float predicted_error = mpfr_float("6.79397491522542193110307157970405e-7");
+	
+	Vec<mpfr> RKDP56_prediction_result;
+	mpfr next_time;
+	
+	mpfr_float tracking_tolerance("1e-5");
+	mpfr_float condition_number_estimate;
+	unsigned num_steps_since_last_condition_number_computation = 1;
+	unsigned frequency_of_CN_estimation = 1;
+	
+	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::RKDormandPrince56,
+												   RKDP56_prediction_result,
+												   error_est,
+												   size_proportion,
+												   norm_J, norm_J_inverse,
+												   sys,
+												   current_space, current_time,
+												   delta_t,
+												   condition_number_estimate,
+												   num_steps_since_last_condition_number_computation,
+												   frequency_of_CN_estimation,
+												   tracking_tolerance,
+												   AMP);
+	
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(RKDP56_prediction_result.size(),2);
+	for (unsigned ii = 0; ii < RKDP56_prediction_result.size(); ++ii)
+		BOOST_CHECK(abs(RKDP56_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
+	
+	BOOST_CHECK(abs(error_est - predicted_error) < threshold_clearance_mp);
+	
+}
+
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(monodromy_RKDP56_d)
+{
+	boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	
+	// Starting point in spacetime step
+	Vec<dbl> current_space(2);
+	current_space << dbl(0.464158883361277585510862309093), dbl(0.74161984870956629487113974408);
+	
+	// Starting time
+	dbl current_time(0.7);
+	// Time step
+	dbl delta_t(-0.01);
+	
+	
+	
+	
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
+	
+	VariableGroup vars{x,y};
+	
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	
+	// Define homotopy system
+	sys.AddFunction( t*(pow(x,3)-1) + (1-t)*(pow(x,3) + 2) );
+	sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + half) );
+	
+	
+	
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	
+	double norm_J, norm_J_inverse, size_proportion, error_est;
+	
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+	AMP.coefficient_bound = 2;
+	
+	
+	Vec<dbl> predicted(2);
+	predicted << dbl(0.412128532164122346459968880922735),
+	dbl(0.731436941916392989685864031055020);
+	double predicted_error = 3.85904197101299548102733617445410e-9;
+	
+	Vec<dbl> RKDP56_prediction_result;
+	double next_time;
+	
+	double tracking_tolerance(1e-5);
+	double condition_number_estimate;
+	unsigned num_steps_since_last_condition_number_computation = 1;
+	unsigned frequency_of_CN_estimation = 1;
+	
+	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::RKDormandPrince56,
+												   RKDP56_prediction_result,
+												   error_est,
+												   size_proportion,
+												   norm_J, norm_J_inverse,
+												   sys,
+												   current_space, current_time,
+												   delta_t,
+												   condition_number_estimate,
+												   num_steps_since_last_condition_number_computation,
+												   frequency_of_CN_estimation,
+												   tracking_tolerance,
+												   AMP);
+	
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(RKDP56_prediction_result.size(),2);
+	for (unsigned ii = 0; ii < RKDP56_prediction_result.size(); ++ii)
+	{
+		BOOST_CHECK(abs(RKDP56_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
+	}
+	
+	BOOST_CHECK(fabs(error_est - predicted_error) < threshold_clearance_d);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(monodromy_RKDP56_mp)
+{
+	boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	
+	// Starting point in spacetime step
+	Vec<mpfr> current_space(2);
+	current_space << mpfr("0.464158883361277585510862309093"), mpfr("0.74161984870956629487113974408");
+	
+	// Starting time
+	mpfr current_time("0.7");
+	// Time step
+	mpfr delta_t("-0.01");
+	
+	
+	
+	
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
+	
+	VariableGroup vars{x,y};
+	
+	sys.AddVariableGroup(vars);
+	sys.AddPathVariable(t);
+	
+	// Define homotopy system
+	sys.AddFunction( t*(pow(x,3)-1) + (1-t)*(pow(x,3) + 2) );
+	sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + half) );
+	
+	
+	
+	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	
+	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
+	AMP.coefficient_bound = 2;
+	
+	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	
+	
+	Vec<mpfr> predicted(2);
+	predicted << mpfr("0.412128532164122346459968880922735"),
+	mpfr("0.731436941916392989685864031055020");
+	mpfr_float predicted_error = mpfr_float("3.85904197101299548102733617445410e-9");
+	
+	Vec<mpfr> RKDP56_prediction_result;
+	mpfr next_time;
+	
+	mpfr_float tracking_tolerance("1e-5");
+	mpfr_float condition_number_estimate;
+	unsigned num_steps_since_last_condition_number_computation = 1;
+	unsigned frequency_of_CN_estimation = 1;
+	
+	auto success_code = bertini::tracking::Predict(bertini::tracking::config::Predictor::RKDormandPrince56,
+												   RKDP56_prediction_result,
+												   error_est,
+												   size_proportion,
+												   norm_J, norm_J_inverse,
+												   sys,
+												   current_space, current_time,
+												   delta_t,
+												   condition_number_estimate,
+												   num_steps_since_last_condition_number_computation,
+												   frequency_of_CN_estimation,
+												   tracking_tolerance,
+												   AMP);
+	
+	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(RKDP56_prediction_result.size(),2);
+	for (unsigned ii = 0; ii < RKDP56_prediction_result.size(); ++ii)
+	{
+		BOOST_CHECK(abs(RKDP56_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
+	}
+	
+	BOOST_CHECK(abs(error_est - predicted_error) < threshold_clearance_mp);
+	
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
