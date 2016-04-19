@@ -950,7 +950,7 @@ BOOST_AUTO_TEST_CASE(ref_test)
 	values(1) = dbl(3.0);
 	
 	Vec<dbl> v(2);
-	sys.Eval(v, values);
+	sys.EvalInPlace(v, values);
 	
 	BOOST_CHECK_EQUAL(v(0), 36.0);
 	
