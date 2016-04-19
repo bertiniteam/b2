@@ -120,12 +120,11 @@ namespace bertini
 
 			enum class Predictor
 			{
-				None,
 				Constant,
 				Euler,
-				Heun
-				HeunEuler,
+				Heun,
 				RK4,
+				HeunEuler,
 				RKNorsett34,
 				RKF45,
 				RKCashKarp45,

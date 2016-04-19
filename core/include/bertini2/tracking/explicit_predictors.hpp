@@ -702,7 +702,7 @@ namespace bertini{
 				
 				
 				// Data Members
-				config::Predictor predictor_ = Predictor::None;
+				config::Predictor predictor_;
 				
 				
 				Mat<ComplexType> dh_dx_;
