@@ -40,6 +40,9 @@ namespace bertini
 {
 	namespace tracking{
 
+		// aliases for the types used to contain space and time samples, for the endgames.
+		template<typename T> using SampCont = std::deque<Vec<T> >;
+		template<typename T> using TimeCont = std::deque<T>;
 		
 		template<class T>
 		struct TrackerTraits

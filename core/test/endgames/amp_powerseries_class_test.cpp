@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
-	Vec< mpfr > first_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	BOOST_CHECK( (first_approx(0) - mpfr("0.9999999767578209232082898114211261253459","0")).norm() < 1e-7); 
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	derivatives.push_back(derivative);
 
 
-	 Vec< mpfr > first_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	 Vec< mpfr > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	 Vec< mpfr > correct(1);
 	 correct << mpfr("1");
 
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	derivatives.pop_front();
 
 	//Compute the second approximation.
-	Vec< mpfr > second_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > second_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	// //Check to make sure we are doing better. 
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	derivatives.pop_front();
 
 
-	Vec< mpfr > third_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	BOOST_CHECK(abs(third_approx(0)-correct(0)) < abs(second_approx(0)-correct(0)));
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	derivatives.push_back(derivative);
 
 
-	 Vec< mpfr > first_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	 Vec< mpfr > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 	 Vec< mpfr > correct(1);
 	 correct << mpfr("1");
 
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	derivatives.pop_front();
 
 	//Compute the second approximation.
-	Vec< mpfr > second_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > second_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	// //Check to make sure we are doing better. 
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	samples.pop_front();
 	derivatives.pop_front();
 
-	Vec< mpfr > third_approx = endgame::HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< mpfr > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 	// //Make sure we are doing better at approximating. 
 	BOOST_CHECK(abs(third_approx(0)-correct(0)) < abs(second_approx(0)-correct(0)));

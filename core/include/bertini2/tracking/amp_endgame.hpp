@@ -140,31 +140,7 @@ namespace bertini{
 		}
 
 		
-		/**
-		\class Endgame
-
-		\brief Base endgame class for all endgames offered in Bertini2.
-	
-		\see PowerSeriesEndgame
-		\see CauchyEndgame
 		
-		## Using an endgame
-
-		Endgames in Bertini2 are the engine for finishing homotopy continuation where we may encounter singular solutions.
-		The path is implicitly described by the system being tracked.
-
-		## Purpose 
-
-		Since the Bertini Endgames have common functionality, and we want to be able to call arbitrary algorithms using and tracker type, we use inheritance. That is, there is common functionality in all endgames, such as
-
-		ComputeInitialSamples
-
-		Also, there are settings that will be kept at this level to not duplicate code. 
-			
-		## Creating a new endgame type
-
-		 To create a new endgame type, inherit from this class. 
-		*/
 			
 			template<class TrackerType>
 			class AMPEndgame : public EndgameBase<TrackerType>

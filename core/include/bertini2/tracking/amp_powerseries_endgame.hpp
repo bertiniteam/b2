@@ -566,7 +566,7 @@ namespace bertini{
 					s_derivatives[ii] = derivatives[ii+offset]*( c*pow(times[ii+offset],static_cast<RT>(c-1)/c ));
 				}
 
-				result = bertini::tracking::endgame::HermiteInterpolateAndSolve(pow(t0,static_cast<RT>(1)/c), num_sample_points, s_times, samples, s_derivatives);
+				result = HermiteInterpolateAndSolve(pow(t0,static_cast<RT>(1)/c), num_sample_points, s_times, samples, s_derivatives);
 				return SuccessCode::Success;
 			}//end ComputeApproximationOfXAtT0
 
