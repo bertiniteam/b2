@@ -311,6 +311,8 @@ namespace bertini{
 									condition_number_estimate, num_steps_since_last_condition_number_computation,
 														frequency_of_CN_estimation, tracking_tolerance);
 
+					if(success_code != SuccessCode::Success)
+						return success_code;
 					
 					// Calculate condition number and updated if needed
 					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
@@ -402,6 +404,9 @@ namespace bertini{
 									S, current_space, current_time, delta_t,
 									condition_number_estimate, num_steps_since_last_condition_number_computation,
 														frequency_of_CN_estimation, tracking_tolerance, AMP_config);
+					
+					if(success_code != SuccessCode::Success)
+						return success_code;
 					
 					SetErrorEstimate(error_estimate, delta_t);
 					
@@ -508,7 +513,6 @@ namespace bertini{
 					}
 										
 					next_space = current_space + delta_t*temp;
-					
 					
 					return SuccessCode::Success;
 				};
