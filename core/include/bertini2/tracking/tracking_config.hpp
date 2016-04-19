@@ -123,6 +123,7 @@ namespace bertini
 				None,
 				Constant,
 				Euler,
+				Heun
 				HeunEuler,
 				RK4,
 				RKNorsett34,

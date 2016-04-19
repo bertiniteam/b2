@@ -260,6 +260,7 @@ namespace bertini{
 					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
 					return FullStep(next_space, S, current_space, current_time, delta_t);
 					
+					
 				}
 				
 
@@ -411,7 +412,6 @@ namespace bertini{
 					SetErrorEstimate(error_estimate, delta_t);
 					
 					
-//					std::cout << K_.col(0).norm() << std::endl;
 					
 					return success_code;
 				}
@@ -525,7 +525,7 @@ namespace bertini{
 				
 				SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
 				{
-					auto numFuncs = K_.cols();
+					auto numFuncs = K_.rows();
 					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
 					
 					err.setZero();
