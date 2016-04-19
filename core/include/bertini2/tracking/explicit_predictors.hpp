@@ -185,7 +185,7 @@ namespace bertini{
 						{
 							s_ = 4;
 							
-							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, cHeunEuler_);
+							FillButcherTable(s_, aRK4_, bRK4_, cRK4_);
 							
 							break;
 						}
@@ -194,7 +194,7 @@ namespace bertini{
 						{
 							s_ = 6;
 							
-							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
 							
 							break;
 						}
@@ -203,7 +203,7 @@ namespace bertini{
 						{
 							s_ = 6;
 							
-							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
 							
 							break;
 						}
@@ -212,7 +212,7 @@ namespace bertini{
 						{
 							s_ = 8;
 							
-							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
 							
 							break;
 						}
