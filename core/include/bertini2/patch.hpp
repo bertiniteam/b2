@@ -273,9 +273,9 @@ namespace bertini {
 
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(function_values.size()>=NumVariableGroups() && "function values must be of length at least as long as the number of variable groups");
-			assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
-			 		&& "precision of input vector must match current working precision of patch during evaluation"
-			 	  );
+//			assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
+//			 		&& "precision of input vector must match current working precision of patch during evaluation"
+//			 	  );
 			#endif
 
 			// unpack from the tuple of working coefficients
