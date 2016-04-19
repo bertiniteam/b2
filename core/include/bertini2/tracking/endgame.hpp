@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//fixed_prec_endgame.hpp is free software: you can redistribute it and/or modify
+//tracking/endgame.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//fixed_prec_endgame.hpp is distributed in the hope that it will be useful,
+//tracking/endgame.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with fixed_prec_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with tracking/endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
@@ -21,36 +21,17 @@
 
 // individual authors of this file include:
 // daniel brake, university of notre dame
-// Tim Hodges, Colorado State University
 
 
+/**
+\file endgame.hpp
 
+\brief Contains the includes for all Endgame types.
+*/
 
 #pragma once
 
-/**
-\file fixed_prec_endgame.hpp
-
-\brief Contains the policy for fixed precision endgame types.
-*/
-
-
-namespace bertini{ namespace tracking { namespace endgame {
-
-template<typename TrackerT>
-class FixedPrecEndgamePolicyBase
-{
-	using BaseComplexType = typename TrackerTraits<TrackerT>::BaseComplexType;
-	using BaseRealType = typename TrackerTraits<TrackerT>::BaseRealType;
-
-	using BCT = BaseComplexType;
-	using BRT = BaseRealType;
-
-}; // re: fixed prec endgame policy
-
-
-}}} //re: namespaces
-
+#include "bertini2/tracking/amp_powerseries_endgame.hpp"
 
 
 

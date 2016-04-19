@@ -34,14 +34,16 @@
 \brief Contains the adaptive precision power series endgame type.
 */
 
+#include "bertini2/tracking/powerseries_endgame.hpp"
 #include "bertini2/tracking/amp_endgame.hpp"
-
 
 namespace bertini{ namespace tracking { namespace endgame {
 
-class AMPPowerSeriesEndgame : public PowerSeriesEndgame<AMPTracker,dbl,mpfr>, public AMPEndgame
+class AMPPowerSeriesEndgame : public PowerSeriesEndgame<AMPTracker,AMPPowerSeriesEndgame, dbl,mpfr>, 
+							  public AMPEndgamePolicyBase
 {
-
+	using TrackerType = AMPTracker;
+	using EGType = PowerSeriesEndgame<TrackerType, AMPPowerSeriesEndgame, dbl, mpfr>;
 protected:
 
 	void ChangeTemporariesPrecisionImpl(unsigned new_precision) const override
@@ -49,6 +51,18 @@ protected:
 
 	void MultipleToMultipleImpl(unsigned new_precision) const override
 	{
+		// first, change precision on the final approximation
+		const auto& source_point = std::get<Vec<mpfr> >(this->final_approximation_at_origin_);
+		auto& target_point = std::get<Vec<mpfr> >(this->final_approximation_at_origin_);
+		target_point.resize(source_point.size());
+
+		for (unsigned ii=0; ii<source_point.size(); ii++)
+		{
+			target_point(ii).precision(new_precision);
+			target_point(ii) = mpfr(source_point(ii));
+		}
+
+		// then change precision of the permanent temporaries
 		auto& times = std::get<TimeCont<mpfr> >(times_);
 		for (auto& t : times)
 			t.precision(new_precision);
@@ -61,6 +75,17 @@ protected:
 
 	void DoubleToMultipleImpl(unsigned new_precision) const override
 	{
+		const auto& source_point = std::get<Vec<dbl> >(this->final_approximation_at_origin_);
+		auto& target_point = std::get<Vec<mpfr> >(this->final_approximation_at_origin_);
+
+		target_point.resize(source_point.size());
+		for (unsigned ii=0; ii<source_point.size(); ii++)
+		{
+			target_point(ii).precision(new_precision);
+			target_point(ii) = mpfr(source_point(ii));
+		}
+
+
 		auto& times_m = std::get<TimeCont<mpfr> >(times_);
 		auto& times_d = std::get<TimeCont<dbl> >(times_);
 
@@ -88,6 +113,14 @@ protected:
 
 	void MultipleToDoubleImpl() const override
 	{
+		const auto& source_point = std::get<Vec<mpfr> >(this->final_approximation_at_origin_);
+		auto& target_point = std::get<Vec<dbl> >(this->final_approximation_at_origin_);
+		target_point.resize(source_point.size());
+
+		for (unsigned ii=0; ii<source_point.size(); ii++)
+			target_point(ii) = dbl(source_point(ii));
+
+
 		auto& times_m = std::get<TimeCont<mpfr> >(times_);
 		auto& times_d = std::get<TimeCont<dbl> >(times_);
 
@@ -112,8 +145,98 @@ protected:
 	}
 public:
 
+	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time)
+	{
+		using RT = mpfr_float;
+		using std::max;
+
+		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
+		                          	RT(this->Tolerances().final_tolerance)/100,
+		                          	this->EndgameSettings().max_num_newton_iterations);
+
+		
+		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
+		    refinement_success==SuccessCode::FailedToConverge)
+		{
+			auto prev_precision = this->Precision();
+			auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
+			mpfr_float::default_precision(temp_higher_prec);
+			this->GetTracker().ChangePrecision(temp_higher_prec);
+
+
+			auto next_sample_higher_prec = current_sample;
+			auto result_higher_prec = Vec<mpfr>(current_sample.size());
+			auto time_higher_precision = current_time;
+
+			assert(time_higher_precision.precision()==mpfr_float::default_precision());
+
+			refinement_success = this->GetTracker().Refine(result_higher_prec,
+			                                               next_sample_higher_prec,
+			                                               time_higher_precision,
+		                          							RT(this->Tolerances().final_tolerance)/100,
+		                          							this->EndgameSettings().max_num_newton_iterations);
+
+			mpfr_float::default_precision(prev_precision);
+			this->GetTracker().ChangePrecision(prev_precision);
+			result = result_higher_prec;
+			assert(result(0).precision()==mpfr_float::default_precision());
+		}
+
+		return refinement_success;
+	}
+
+	SuccessCode RefineSample(Vec<dbl> & result, Vec<dbl> const& current_sample, dbl const& current_time)
+	{
+		using RT = double;
+
+		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
+		                          	RT(this->Tolerances().final_tolerance)/100,
+		                          	this->EndgameSettings().max_num_newton_iterations);
+
+		
+		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
+		    refinement_success==SuccessCode::FailedToConverge)
+		{
+			auto prev_precision = this->Precision();
+			auto temp_higher_prec = LowestMultiplePrecision();
+			mpfr_float::default_precision(temp_higher_prec);
+			this->GetTracker().ChangePrecision(temp_higher_prec);
+
+
+			auto next_sample_higher_prec = Vec<mpfr>(current_sample.size());
+			for (int ii=0; ii<current_sample.size(); ++ii)
+				next_sample_higher_prec(ii) = mpfr(current_sample(ii));
+
+			auto result_higher_prec = Vec<mpfr>(current_sample.size());
+			mpfr time_higher_precision(current_time);
+
+			refinement_success = this->GetTracker().Refine(result_higher_prec,
+			                                               next_sample_higher_prec,
+			                                               time_higher_precision,
+		                          							RT(this->Tolerances().final_tolerance)/100,
+		                          							this->EndgameSettings().max_num_newton_iterations);
+
+
+			mpfr_float::default_precision(prev_precision);
+			this->GetTracker().ChangePrecision(prev_precision);
+			for (unsigned ii(0); ii<current_sample.size(); ++ii)
+				result(ii) = dbl(result_higher_prec(ii));
+		}
+
+		return refinement_success;
+	}
 	
-};
+	explicit AMPPowerSeriesEndgame(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&, const config::Tolerances<BRT>& >& settings )
+      : EGType(tr, settings)
+   	{}
+
+    template< typename... Ts >
+		AMPPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : AMPPowerSeriesEndgame(tr, Unpermute< config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
+		{}
+
+
+}; // re: AMPPowerSeriesEndgame
 
 } } } //namespaces
-#endif
+
+

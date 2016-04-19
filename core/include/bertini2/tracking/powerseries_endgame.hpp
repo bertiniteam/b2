@@ -26,6 +26,9 @@
 
 #pragma once
 
+#include "bertini2/tracking/base_endgame.hpp"
+
+
 namespace bertini{ namespace tracking { namespace endgame{
 
 /** 
@@ -111,15 +114,16 @@ File: test/endgames/powerseries_class_test.cpp
 */
 
 template<typename TrackerType, typename PSEGPrecisionPolicy, typename... UsedNumTs> 
-class PowerSeriesEndgame : public Endgame<TrackerType>, public PSEGPrecisionPolicy
+class PowerSeriesEndgame : public EndgameBase<TrackerType>
 {
+protected:
+
 	using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
 	using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
-private:
-
+				
 	/**
 	\brief State variable representing a computed upper bound on the cycle number.
 	*/
@@ -133,17 +137,17 @@ private:
 	/**
 	\brief Holds the time values for different space values used in the Power series endgame. 
 	*/	
-	mutable std::tuple< TimeCont<UsedNumTs...> > times_;
+	mutable std::tuple< TimeCont<UsedNumTs>... > times_;
 
 	/**
 	\brief Holds the space values used in the Power series endgame. 
 	*/			
-	mutable std::tuple< SampCont<UsedNumTs...> > samples_;
+	mutable std::tuple< SampCont<UsedNumTs>... > samples_;
 
 	/**
 	\brief Holds the derivatives at each space point. 
 	*/			
-	mutable std::tuple< SampCont<UsedNumTs...> > derivatives_;
+	mutable std::tuple< SampCont<UsedNumTs>... > derivatives_;
 
 public:
 

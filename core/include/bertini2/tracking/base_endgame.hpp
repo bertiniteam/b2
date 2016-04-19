@@ -50,6 +50,7 @@
 #include "bertini2/tracking/tracking_config.hpp"
 #include "bertini2/tracking/interpolation.hpp"
 
+#include "bertini2/logging.hpp"
 
 namespace bertini{ 
 
@@ -86,13 +87,14 @@ namespace bertini{
 			template<class TrackerType>
 			class EndgameBase
 			{
+			protected:
+
 				using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
 				using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
 
 				using BCT = BaseComplexType;
 				using BRT = BaseRealType;
 
-			protected:
 
 				// state variables
 				mutable std::tuple<Vec<dbl>, Vec<mpfr> > final_approximation_at_origin_; 

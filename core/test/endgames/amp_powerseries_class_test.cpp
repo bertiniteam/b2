@@ -61,6 +61,7 @@ extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame)
 
 using namespace bertini::tracking;
+using namespace bertini::tracking::endgame;
 
 BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 {
@@ -375,7 +376,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 
 	config::Endgame<mpfr_float> endgame_settings;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -474,7 +475,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,security_settings,tolerances);
+	AMPPowerSeriesEndgame my_endgame(tracker,security_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -585,7 +586,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	config::PowerSeries power_series_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_settings,tolerances);
+	AMPPowerSeriesEndgame my_endgame(tracker,power_series_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -671,7 +672,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	config::PowerSeries power_series_settings;
 	config::Security<mpfr_float> security_settings;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_settings,security_settings);
+	AMPPowerSeriesEndgame my_endgame(tracker,power_series_settings,security_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -751,7 +752,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	config::Endgame<mpfr_float> endgame_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,tolerances);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -859,7 +860,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	config::Endgame<mpfr_float> endgame_settings;
 	config::Security<mpfr_float> security_settings;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,security_settings);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -981,7 +982,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	config::Endgame<mpfr_float> endgame_settings;
 	config::PowerSeries power_series_settings;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,power_series_settings);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,power_series_settings);
 
 	my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
 
@@ -1073,7 +1074,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,power_series_settings,security_settings,tolerances);
+	AMPPowerSeriesEndgame my_endgame(tracker,power_series_settings,security_settings,tolerances);
 
 
 	my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
@@ -1136,7 +1137,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,security_settings,tolerances);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,security_settings,tolerances);
 	my_endgame.PSEG(current_time,current_space);
 
 
@@ -1191,7 +1192,7 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 	config::PowerSeries power_series_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,power_series_settings,tolerances);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,power_series_settings,tolerances);
 
 
 	my_endgame.PSEG(current_time,current_space);
@@ -1261,7 +1262,7 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,security_settings,tolerances);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,security_settings,tolerances);
 	my_endgame.PSEG(t_endgame_boundary,eg_boundary_point);
 
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),1);//my_endgame.
@@ -1327,7 +1328,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 	config::PowerSeries power_series_settings;
 	config::Security<mpfr_float> security_settings;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
 	my_endgame.PSEG(current_time,current_space);
 
@@ -1412,7 +1413,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker,endgame_settings,power_series_settings,security_settings,tolerances);
+	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,power_series_settings,security_settings,tolerances);
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
@@ -1540,7 +1541,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	              	mpfr_float("1e-6"), mpfr_float("1e5"),
 					stepping_settings, newton_settings);
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker);
+	AMPPowerSeriesEndgame my_endgame(tracker);
 
 
 	std::vector<Vec<mpfr> > endgame_solutions;
@@ -1622,7 +1623,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 	              	mpfr_float("1e-6"), mpfr_float("1e5"),
 					stepping_settings, newton_settings);
 
-	endgame::PowerSeriesEndgame<AMPTracker> my_endgame(tracker);
+	AMPPowerSeriesEndgame my_endgame(tracker);
 
 
 	auto endgame_success = my_endgame.PSEG(t_endgame_boundary,soln_at_EG_bdry);

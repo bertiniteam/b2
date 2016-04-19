@@ -93,7 +93,7 @@ namespace bertini
 		};
 
 
-
+		namespace endgame{
 		// some forward declarations
 		template<typename T>
 		class FixedPrecPSEG;
@@ -103,6 +103,7 @@ namespace bertini
 
 		class AMPPowerSeriesEndgame;
 		class AMPCauchyEndgame;
+		}
 
 		// this struct facilitates lookup of required endgame type based on tracker type
 		template<typename TrackerT>
@@ -112,15 +113,15 @@ namespace bertini
 		template<>
 		struct EndgameSelector<DoublePrecisionTracker>
 		{
-			using PSEG = FixedPrecPSEG<DoublePrecisionTracker>;
-			using CauchyEG = FixedPrecCauchyEG<DoublePrecisionTracker>;
+			using PSEG = endgame::FixedPrecPSEG<DoublePrecisionTracker>;
+			using CauchyEG = endgame::FixedPrecCauchyEG<DoublePrecisionTracker>;
 		};
 
 		template<>
 		struct EndgameSelector<MultiplePrecisionTracker>
 		{
-			using PSEG = FixedPrecPSEG<MultiplePrecisionTracker>;
-			using CauchyEG = FixedPrecCauchyEG<MultiplePrecisionTracker>;
+			using PSEG = endgame::FixedPrecPSEG<MultiplePrecisionTracker>;
+			using CauchyEG = endgame::FixedPrecCauchyEG<MultiplePrecisionTracker>;
 		};
 
 		template<class D>
@@ -133,8 +134,8 @@ namespace bertini
 		template<>
 		struct EndgameSelector<AMPTracker>
 		{
-			using PSEG = AMPPowerSeriesEndgame<AMPTracker>;
-			using CauchyEG = AMPCauchyEndgame<AMPTracker>;
+			using PSEG = endgame::AMPPowerSeriesEndgame;
+			using CauchyEG = endgame::AMPCauchyEndgame;
 		};
 
 

@@ -34,6 +34,9 @@
 \brief Contains the fixed precision power series endgame type.
 */
 
+#include "bertini2/tracking/powerseries_endgame.hpp"
+#include "bertini2/tracking/fixed_prec_endgame.hpp"
+
 
 namespace bertini{ namespace tracking { namespace endgame {
 
