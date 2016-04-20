@@ -113,9 +113,16 @@ Test suite driving this class: endgames_test.
 File: test/endgames/powerseries_class_test.cpp
 */
 
-template<typename TrackerType, typename PSEGPrecisionPolicy, typename... UsedNumTs> 
+template<typename TrackerType, typename FinalPSEG, typename... UsedNumTs> 
 class PowerSeriesEndgame : public EndgameBase<TrackerType>
 {
+
+	// convert the base tracker into the derived type.
+	const FinalPSEG& AsDerived() const
+	{
+		return static_cast<const FinalPSEG&>(*this);
+	}
+
 protected:
 
 	using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
@@ -201,9 +208,9 @@ public:
 
 	explicit PowerSeriesEndgame(TrackerType const& tr, 
 	                            const std::tuple< config::PowerSeries const&, 
-	                            					const config::Endgame<BRT>&, 
-	                            					const config::Security<BRT>&, 
-	                            					const config::Tolerances<BRT>& >& settings )
+            					const config::Endgame<BRT>&, 
+            					const config::Security<BRT>&, 
+            					const config::Tolerances<BRT>& >& settings )
       : EndgameBase<TrackerType>(tr, std::get<1>(settings), std::get<2>(settings), std::get<3>(settings) ), 
           power_series_settings_( std::get<0>(settings) )
    	{}
@@ -264,6 +271,7 @@ public:
 		  	upper_bound_on_cycle_number_ = 1;
 		else
 		{
+			using std::max;
 			//casting issues between auto and unsigned integer. TODO: Try to stream line this.
 			unsigned int upper_bound;
 			RT upper_bound_before_casting = round(floor(estimate + RT(.5))*power_series_settings_.cycle_number_amplification);
@@ -393,7 +401,7 @@ public:
 
 			assert((samples.size() == times.size()) && "must have same number of times and samples");
 
-		auto max_precision = EnsureAtUniformPrecision(times, samples);
+		auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
 		this->GetSystem().precision(max_precision);
 
 		//Compute dx_dt for each sample.
@@ -506,7 +514,7 @@ public:
 		times.push_back(next_time);
 		samples.push_back(next_sample);
 
-		auto refine_success = this->RefineSample(samples.back(), next_sample,  times.back());
+		auto refine_success = AsDerived().RefineSample(samples.back(), next_sample,  times.back());
 		if (refine_success != SuccessCode::Success)
 		{
 			BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
@@ -514,7 +522,7 @@ public:
 		}
 
 
- 		auto max_precision = EnsureAtUniformPrecision(times, samples, derivatives);
+ 		auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples, derivatives);
 		this->GetSystem().precision(max_precision);
 		derivatives.push_back(-(this->GetSystem().Jacobian(samples.back(),times.back()).inverse())*(this->GetSystem().TimeDerivative(samples.back(),times.back())));
 

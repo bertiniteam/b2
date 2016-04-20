@@ -39,6 +39,10 @@
 
 namespace bertini{ namespace tracking { namespace endgame {
 
+
+/**
+\brief The Adaptive Precision Power Series Endgame, in a class.
+*/
 class AMPPowerSeriesEndgame : public PowerSeriesEndgame<AMPTracker,AMPPowerSeriesEndgame, dbl,mpfr>, 
 							  public AMPEndgamePolicyBase
 {
@@ -145,10 +149,11 @@ protected:
 	}
 public:
 
-	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time)
+	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time) const
 	{
 		using RT = mpfr_float;
 		using std::max;
+		auto& TR = this->GetTracker();
 
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 		                          	RT(this->Tolerances().final_tolerance)/100,
@@ -185,7 +190,7 @@ public:
 		return refinement_success;
 	}
 
-	SuccessCode RefineSample(Vec<dbl> & result, Vec<dbl> const& current_sample, dbl const& current_time)
+	SuccessCode RefineSample(Vec<dbl> & result, Vec<dbl> const& current_sample, dbl const& current_time) const
 	{
 		using RT = double;
 
@@ -213,7 +218,7 @@ public:
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,
-		                          							RT(this->Tolerances().final_tolerance)/100,
+		                          							this->Tolerances().final_tolerance/100,
 		                          							this->EndgameSettings().max_num_newton_iterations);
 
 
@@ -226,12 +231,17 @@ public:
 		return refinement_success;
 	}
 	
-	explicit AMPPowerSeriesEndgame(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&, const config::Tolerances<BRT>& >& settings )
+	explicit AMPPowerSeriesEndgame(TrackerType const& tr, 
+	                               const std::tuple< const config::PowerSeries &,
+	                               					 const config::Endgame<BRT>&, 
+	                               				     const config::Security<BRT>&, 
+	                               				     const config::Tolerances<BRT>& 
+	                               				    > & settings )
       : EGType(tr, settings)
    	{}
 
     template< typename... Ts >
-		AMPPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : AMPPowerSeriesEndgame(tr, Unpermute< config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
+		AMPPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : AMPPowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
 		{}
 
 

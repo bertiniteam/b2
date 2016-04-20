@@ -142,8 +142,17 @@ It is expected that this will be derived from for the various AMP instantiations
 */
 class AMPEndgamePolicyBase
 {
-protected:
+
+public:
 	
+	template<typename... T>
+	static
+	unsigned EnsureAtUniformPrecision(T& ...args)
+	{
+		return bertini::tracking::endgame::EnsureAtUniformPrecision(args...);
+	}
+
+protected:
 	// required virtual implementations
 	virtual void ChangeTemporariesPrecisionImpl(unsigned new_precision) const = 0;
 	virtual void MultipleToMultipleImpl(unsigned new_precision) const = 0;

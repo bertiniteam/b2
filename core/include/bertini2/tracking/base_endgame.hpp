@@ -144,17 +144,17 @@ namespace bertini{
 
 				
 
-				const auto& EndgameSettings()
+				const auto& EndgameSettings() const
 				{
 					return endgame_settings_;
 				}
 
-				const auto& Tolerances()
+				const auto& Tolerances() const
 				{
 					return tolerances_;
 				}
 
-				const auto& SecuritySettings()
+				const auto& SecuritySettings() const
 				{
 					return security_;
 				}
@@ -184,12 +184,15 @@ namespace bertini{
 				/**
 				\brief Getter for the tracker used inside an instance of the endgame. 
 				*/
-				const TrackerType & GetTracker(){return tracker_;}
+				const TrackerType & GetTracker() const
+				{return tracker_;}
 
 				template<typename CT>
-				const Vec<CT>& FinalApproximation() const {return std::get<Vec<CT> >(final_approximation_at_origin_);}
+				const Vec<CT>& FinalApproximation() const 
+				{return std::get<Vec<CT> >(final_approximation_at_origin_);}
 
-				const System& GetSystem() const { return tracker_.GetSystem();}
+				const System& GetSystem() const 
+				{ return tracker_.GetSystem();}
 
 
 				/*
