@@ -68,7 +68,7 @@ namespace bertini{
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 			
-			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
+			predict::ExplicitRKPredictor predictor(predictor_choice);
 
 			return predictor.Predict(next_space,
 										sys,

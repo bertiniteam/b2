@@ -34,12 +34,14 @@
 #define BERTINI_BASE_TRACKER_HPP
 
 #include <algorithm>
-#include "bertini2/tracking/step.hpp"
+//#include "bertini2/tracking/step.hpp"
+
 #include "bertini2/limbo.hpp"
 #include "bertini2/logging.hpp"
 #include "bertini2/detail/visitable.hpp"
 #include "bertini2/tracking/events.hpp"
 #include "bertini2/tracking/ode_predictors.hpp"
+#include "bertini2/tracking/correct.hpp"
 
 namespace bertini{
 
@@ -140,7 +142,7 @@ namespace bertini{
 
 			Tracker(System const& sys) : tracked_system_(sys)
 			{
-				predictor_choice_ = std::make_unique< predict::ExplicitRKPredictor<CT,RT> >(predict::DefaultPredictor(), sys);
+				predictor_choice_ = std::make_unique< predict::ExplicitRKPredictor >(predict::DefaultPredictor());
 				Predictor(predict::DefaultPredictor());
 			}
 
@@ -306,7 +308,7 @@ namespace bertini{
 			*/
 			config::Predictor Predictor() const
 			{
-				return predictor_choice_.PredictorMethod();
+				return predictor_choice_->PredictorMethod();
 			}
 
 
@@ -509,7 +511,7 @@ namespace bertini{
 			
 			// configuration for tracking
 //			config::Predictor  predictor_choice_; ///< The predictor to use while tracking.
-			std::unique_ptr<predict::BasePredictor <CT,RT> > predictor_choice_;
+			std::unique_ptr<predict::ExplicitRKPredictor > predictor_choice_;
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
 			config::Stepping<RT> stepping_config_; ///< The stepping configuration.

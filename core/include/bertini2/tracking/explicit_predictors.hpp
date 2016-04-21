@@ -32,7 +32,14 @@
 #ifndef BERTINI_EXPLICIT_PREDICTORS_HPP
 #define BERTINI_EXPLICIT_PREDICTORS_HPP
 
-#include "tracking/base_predictor.hpp"
+#include "tracking/amp_criteria.hpp"
+#include "tracking/tracking_config.hpp"
+
+#include "system.hpp"
+#include "mpfr_extensions.hpp"
+#include <Eigen/LU>
+
+#include <boost/type_index.hpp>
 
 
 namespace bertini{
@@ -44,6 +51,73 @@ namespace bertini{
 			
 			
 			
+			
+			/**
+			 \brief Get the Bertini2 default predictor.
+			 
+			 Currently set to Euler, though this will change in future versions.
+			 */
+			inline
+			Predictor DefaultPredictor()
+			{
+				return Predictor::Euler;
+			}
+			
+			
+			/**
+			 The lowest order of the predictor.  The order of the error estimate is this plus one.
+			 */
+			inline
+			unsigned Order(Predictor predictor_choice)
+			{
+				switch (predictor_choice)
+				{
+					case (Predictor::Euler):
+						return 1;
+					case (Predictor::HeunEuler):
+						return 1;
+					case (Predictor::RK4):
+						return 4;
+					case (Predictor::RKF45):
+						return 4;
+					case (Predictor::RKCashKarp45):
+						return 4;
+					case (Predictor::RKDormandPrince56):
+						return 5;
+					case (Predictor::RKVerner67):
+						return 6;
+					default:
+					{
+						throw std::runtime_error("incompatible predictor choice in Order");
+					}
+				}
+			}
+			
+			
+			inline bool HasErrorEstimate(Predictor predictor_choice)
+			{
+				switch (predictor_choice)
+				{
+					case (Predictor::Euler):
+						return false;
+					case (Predictor::HeunEuler):
+						return true;
+					case (Predictor::RK4):
+						return false;
+					case (Predictor::RKF45):
+						return true;
+					case (Predictor::RKCashKarp45):
+						return true;
+					case (Predictor::RKDormandPrince56):
+						return true;
+					case (Predictor::RKVerner67):
+						return true;
+					default:
+					{
+						throw std::runtime_error("incompatible predictor choice in HasErrorEstimate");
+					}
+				}
+			}
 			
 			
 			
@@ -73,8 +147,7 @@ namespace bertini{
 			 
 			 */
 			
-			template <typename ComplexType, typename RealType>
-			class ExplicitRKPredictor : public BasePredictor<ComplexType, RealType>
+			class ExplicitRKPredictor
 			{
 			public:
 				/**
@@ -85,10 +158,8 @@ namespace bertini{
 				 
 				 */
 				
-				ExplicitRKPredictor(Predictor method, System S) : BasePredictor<ComplexType, RealType>(method)
+				ExplicitRKPredictor(Predictor method)
 				{
-					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
 					PredictorMethod(method);
 				}
 				
@@ -102,7 +173,7 @@ namespace bertini{
 				 
 				 */
 				
-				virtual void PredictorMethod(Predictor method) override
+				void PredictorMethod(Predictor method)
 				{
 					if(predictor_ != method)
 					{
@@ -113,16 +184,26 @@ namespace bertini{
 							case Predictor::Euler:
 							{
 								s_ = 1;
-								c_ = Vec<RealType>(s_); c_(0) = static_cast<RealType>(cEuler_(0));
-								a_ = Mat<RealType>(s_,s_); a_(0,0) = static_cast<RealType>(aEuler_(0,0));
-								b_ = Vec<RealType>(s_); b_(0) = static_cast<RealType>(bEuler_(0));
+								Mat<double>& arefd = std::get< Mat<double> >(a_);
+								Vec<double>& brefd = std::get< Vec<double> >(b_);
+								Vec<double>& crefd = std::get< Vec<double> >(c_);
+								crefd = Vec<double>(s_); crefd(0) = static_cast<double>(cEuler_(0));
+								arefd = Mat<double>(s_,s_); arefd(0,0) = static_cast<double>(aEuler_(0,0));
+								brefd = Vec<double>(s_); brefd(0) = static_cast<double>(bEuler_(0));
+								Mat<mpfr_float>& arefmp = std::get< Mat<mpfr_float> >(a_);
+								Vec<mpfr_float>& brefmp = std::get< Vec<mpfr_float> >(b_);
+								Vec<mpfr_float>& crefmp = std::get< Vec<mpfr_float> >(c_);
+								crefmp = Vec<mpfr_float>(s_); crefmp(0) = static_cast<mpfr_float>(cEuler_(0));
+								arefmp = Mat<mpfr_float>(s_,s_); arefmp(0,0) = static_cast<mpfr_float>(aEuler_(0,0));
+								brefmp = Vec<mpfr_float>(s_); brefmp(0) = static_cast<mpfr_float>(bEuler_(0));
 								break;
 							}
 							case Predictor::HeunEuler:
 							{
 								s_ = 2;
 								
-								FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+								FillButcherTable<double>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+								FillButcherTable<mpfr_float>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
 								
 								break;
 							}
@@ -130,7 +211,8 @@ namespace bertini{
 							{
 								s_ = 4;
 								
-								FillButcherTable(s_, aRK4_, bRK4_, cRK4_);
+								FillButcherTable<double>(s_, aRK4_, bRK4_, cRK4_);
+								FillButcherTable<mpfr_float>(s_, aRK4_, bRK4_, cRK4_);
 								
 								break;
 							}
@@ -139,7 +221,8 @@ namespace bertini{
 							{
 								s_ = 6;
 								
-								FillButcherTable(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+								FillButcherTable<double>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+								FillButcherTable<mpfr_float>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
 								
 								break;
 							}
@@ -148,7 +231,8 @@ namespace bertini{
 							{
 								s_ = 6;
 								
-								FillButcherTable(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+								FillButcherTable<double>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+								FillButcherTable<mpfr_float>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
 								
 								break;
 							}
@@ -157,7 +241,8 @@ namespace bertini{
 							{
 								s_ = 8;
 								
-								FillButcherTable(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+								FillButcherTable<double>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+								FillButcherTable<mpfr_float>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
 								
 								break;
 							}
@@ -166,7 +251,8 @@ namespace bertini{
 							{
 								s_ = 10;
 								
-								FillButcherTable(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+								FillButcherTable<double>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+								FillButcherTable<mpfr_float>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
 								
 								break;
 							}
@@ -176,12 +262,220 @@ namespace bertini{
 								throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
 							}
 						}
+						
+						std::get< Mat<dbl> >(K_) = Mat<dbl>(s_,s_);
+						std::get< Mat<mpfr> >(K_) = Mat<mpfr>(s_,s_);
 					}
-				};
+					
+					
+				}; // re: PredictorMethod
 				
 				
 				
 				
+				/**
+				 \brief Perform a generic predictor step.
+				 
+				 \param next_space The computed prediction.
+				 \param method An enum class selecting the predictor method to use.
+				 \param S The system being solved.
+				 \param current_space The current space variable vector.
+				 \param current_time The current time.
+				 \param delta_t The size of the time step.
+				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
+				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
+				 \param prec_type The operating precision type.
+				 \param tracking_tolerance How tightly to track the path.
+				 */
+				
+				template<typename ComplexType, typename RealType>
+				SuccessCode Predict(Vec<ComplexType> & next_space,
+									System const& S,
+									Vec<ComplexType> const& current_space, ComplexType current_time,
+									ComplexType const& delta_t,
+									RealType & condition_number_estimate,
+									unsigned & num_steps_since_last_condition_number_computation,
+									unsigned frequency_of_CN_estimation,
+									RealType const& tracking_tolerance)
+				{
+					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
+					return FullStep<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t);
+					
+					
+				}
+				
+				
+				
+				/**
+				 \brief Perform a generic predictor step and return size_proportion and condition number information
+				 
+				 \param next_space The computed prediction.
+				 \param method An enum class selecting the predictor method to use.
+				 \param size_proportion $a$ in AMP2 paper.
+				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
+				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
+				 \param S The system being solved.
+				 \param current_space The current space variable vector.
+				 \param current_time The current time.
+				 \param delta_t The size of the time step.
+				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
+				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
+				 \param prec_type The operating precision type.
+				 \param tracking_tolerance How tightly to track the path.
+				 \param AMP_config The settings for adaptive multiple precision.
+				 */
+				
+				template<typename ComplexType, typename RealType>
+				SuccessCode Predict(Vec<ComplexType> & next_space,
+									RealType & size_proportion,
+									RealType & norm_J,
+									RealType & norm_J_inverse,
+									System const& S,
+									Vec<ComplexType> const& current_space, ComplexType current_time,
+									ComplexType const& delta_t,
+									RealType & condition_number_estimate,
+									unsigned & num_steps_since_last_condition_number_computation,
+									unsigned frequency_of_CN_estimation,
+									RealType const& tracking_tolerance,
+									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+				{
+					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
+					
+					auto success_code = Predict<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t,
+																	   condition_number_estimate, num_steps_since_last_condition_number_computation,
+																	   frequency_of_CN_estimation, tracking_tolerance);
+					
+					if(success_code != SuccessCode::Success)
+						return success_code;
+					
+					// Calculate condition number and updated if needed
+					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_);
+					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_);
+					
+					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
+					Vec<ComplexType> temp_soln = LUref.solve(randy);
+					
+					norm_J = dhdxref.norm();
+					norm_J_inverse = temp_soln.norm();
+					
+					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
+					{
+						condition_number_estimate = norm_J * norm_J_inverse;
+						num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
+					}
+					else // no need to compute the condition number
+						num_steps_since_last_condition_number_computation++;
+					
+					
+					// Set size_proportion
+					SetSizeProportion<ComplexType,RealType>(size_proportion, delta_t);
+					
+					
+					
+					//AMP Criteria
+					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+						return SuccessCode::HigherPrecisionNecessary;
+					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+						return SuccessCode::HigherPrecisionNecessary;
+					
+					
+					return success_code;
+				}
+				
+				
+				/**
+				 \brief Perform a generic predictor step and return error estimate, size_proportion and condition number information
+				 
+				 \param next_space The computed prediction.
+				 \param method An enum class selecting the predictor method to use.
+				 \param error_estimate Estimate of the error from an embedded method.
+				 \param size_proportion $a$ in AMP2 paper.
+				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
+				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
+				 \param S The system being solved.
+				 \param current_space The current space variable vector.
+				 \param current_time The current time.
+				 \param delta_t The size of the time step.
+				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
+				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
+				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
+				 \param prec_type The operating precision type.
+				 \param tracking_tolerance How tightly to track the path.
+				 \param AMP_config The settings for adaptive multiple precision.
+				 */
+				
+				template<typename ComplexType, typename RealType>
+				SuccessCode Predict(Vec<ComplexType> & next_space,
+									RealType & error_estimate,
+									RealType & size_proportion,
+									RealType & norm_J,
+									RealType & norm_J_inverse,
+									System const& S,
+									Vec<ComplexType> const& current_space, ComplexType current_time,
+									ComplexType const& delta_t,
+									RealType & condition_number_estimate,
+									unsigned & num_steps_since_last_condition_number_computation,
+									unsigned frequency_of_CN_estimation,
+									RealType const& tracking_tolerance,
+									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+				{
+					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
+					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
+					
+					if(!predict::HasErrorEstimate(predictor_))
+					{
+						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
+					}
+					
+					
+					
+					
+					auto success_code = Predict<ComplexType,RealType>(next_space, size_proportion, norm_J, norm_J_inverse,
+																	  S, current_space, current_time, delta_t,
+																	  condition_number_estimate, num_steps_since_last_condition_number_computation,
+																	  frequency_of_CN_estimation, tracking_tolerance, AMP_config);
+					
+					if(success_code != SuccessCode::Success)
+						return success_code;
+					
+					SetErrorEstimate<ComplexType,RealType>(error_estimate, delta_t);
+					
+					
+					return success_code;
+				}
+				
+				
+				
+				
+				
+				
+				Predictor PredictorMethod()
+				{
+					return predictor_;
+				}
+				
+				
+				
+				
+				/**
+				 The lowest order of the predictor.  The order of the error estimate is this plus one.
+				 */
+				inline
+				unsigned Order()
+				{
+					return p_;
+				}
+				
+				
+				inline bool HasErrorEstimate()
+				{
+					return predict::HasErrorEstimate(predictor_);
+				}
 				
 				
 				
@@ -189,6 +483,11 @@ namespace bertini{
 				
 				
 			protected:
+				///////////////////////////
+				//
+				// Protected Methods
+				//
+				////////////////////
 				
 				
 				/**
@@ -203,43 +502,48 @@ namespace bertini{
 				 \return SuccessCode determining result of the computation
 				 */
 				
-				virtual SuccessCode FullStep(Vec<ComplexType> & next_space,
+				template<typename ComplexType, typename RealType>
+				SuccessCode FullStep(Vec<ComplexType> & next_space,
 									System const& S,
 									Vec<ComplexType> const& current_space, ComplexType current_time,
-									 ComplexType const& delta_t) override
+									 ComplexType const& delta_t)
 				{
-					K_.fill(ComplexType(0));
-					Vec<ComplexType> temp = Vec<ComplexType>(S.NumTotalFunctions());
+					Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
+					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
+					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
+					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
+					Kref.fill(ComplexType(0));
+//					Vec<ComplexType> temp = Vec<ComplexType>(S.NumTotalFunctions());
 					
-					
-					if(EvalRHS(S, current_space, current_time, K_, 0) != SuccessCode::Success)
+					// Use next_space as a temporary variable until the end
+					if(EvalRHS<ComplexType>(S, current_space, current_time, Kref, 0) != SuccessCode::Success)
 					{
 						return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 					}
 					
 					for(int ii = 1; ii < s_; ++ii)
 					{
-						temp.setZero();
+						next_space.setZero();
 						for(int jj = 0; jj < ii; ++jj)
 						{
-							temp += a_(ii,jj)*K_.col(jj);
+							next_space += aref(ii,jj)*Kref.col(jj);
 							
 						}
 						
-						if(EvalRHS(S, current_space + delta_t*temp, current_time + c_(ii)*delta_t, K_, ii) != SuccessCode::Success)
+						if(EvalRHS<ComplexType>(S, current_space + delta_t*next_space, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
 						{
 							return SuccessCode::MatrixSolveFailure;
 						}
 					}
 					
 					
-					temp.setZero();
+					next_space.setZero();
 					for(int ii = 0; ii < s_; ++ii)
 					{
-						temp += b_(ii)*K_.col(ii);
+						next_space += bref(ii)*Kref.col(ii);
 					}
 										
-					next_space = current_space + delta_t*temp;
+					next_space = current_space + delta_t*next_space;
 					
 					return SuccessCode::Success;
 				};
@@ -258,16 +562,20 @@ namespace bertini{
 				 
 				 */
 				
-				virtual SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t) override
+				template<typename ComplexType, typename RealType>
+				SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
 				{
-					auto numFuncs = K_.rows();
+					Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
+					Vec<RealType>& b_minus_bstar_ref = std::get< Vec<RealType> >(b_minus_bstar_);
+					
+					auto numFuncs = Kref.rows();
 					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
 					
 					std::cout.precision(30);
 					err.setZero();
 					for(int ii = 0; ii < s_; ++ii)
 					{
-						err += (b_minus_bstar_(ii))*K_.col(ii);
+						err += (b_minus_bstar_ref(ii))*Kref.col(ii);
 					}
 					
 					err *= delta_t;
@@ -292,12 +600,13 @@ namespace bertini{
 				 
 				 */
 				
-				virtual SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t) override
+				template<typename ComplexType, typename RealType>
+				SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t)
 				{
 					if(predict::HasErrorEstimate(predictor_))
 					{
 						RealType err_est;
-						SetErrorEstimate(err_est, delta_t);
+						SetErrorEstimate<ComplexType,RealType>(err_est, delta_t);
 						
 						using std::pow;
 						size_proportion = err_est/(pow(abs(delta_t), p_+1));
@@ -306,7 +615,9 @@ namespace bertini{
 					}
 					else
 					{
-						size_proportion = K_.array().abs().maxCoeff();
+						Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
+						using std::pow;
+						size_proportion = Kref.array().abs().maxCoeff()/(pow(abs(delta_t), p_));
 						return SuccessCode::Success;
 					}
 				};
@@ -325,18 +636,21 @@ namespace bertini{
 				 \return Success code of this computation
 				 */
 				
-				virtual SuccessCode EvalRHS(System const& S,
-									Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, int stage) override
+				template<typename ComplexType>
+				SuccessCode EvalRHS(System const& S,
+									Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, int stage) 
 				{
 					if(stage == 0)
 					{
-						dh_dx_ = S.Jacobian(space, time);
-						LU_ = dh_dx_.lu();
+						Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_);
+						Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_);
+						dhdxref = S.Jacobian(space, time);
+						LUref = dhdxref.lu();
 						
-						if (LUPartialPivotDecompositionSuccessful(LU_.matrixLU())!=MatrixSuccessCode::Success)
+						if (LUPartialPivotDecompositionSuccessful(LUref.matrixLU())!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 						
-						K.col(stage) = LU_.solve(-S.TimeDerivative(space, time));
+						K.col(stage) = LUref.solve(-S.TimeDerivative(space, time));
 						
 						return SuccessCode::Success;
 						
@@ -356,9 +670,20 @@ namespace bertini{
 				}
 				
 				
+			
+				
+				
+				
 				
 				
 			private:
+				///////////////////////////
+				//
+				// Private Methods
+				//
+				////////////////////
+
+				
 				
 				/**
 				 /brief Fills the local embedded butcher table variables a,b,bstar and c with the constant static values stored in the class.
@@ -371,37 +696,41 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename MatDerived, typename VecDerived>
-				void FillButcherTable(int stages, const Eigen::MatrixBase<MatDerived>& a,
-								 const Eigen::MatrixBase<VecDerived> & b,
-								 const Eigen::MatrixBase<VecDerived> & b_minus_bstar,
-								 const Eigen::MatrixBase<VecDerived> & c)
+				template<typename RealType>
+				void FillButcherTable(int stages, const Mat<mpq_rational>& a,
+								 const Mat<mpq_rational> & b,
+								 const Mat<mpq_rational> & b_minus_bstar,
+								 const Mat<mpq_rational> & c)
 				{
-					a_ = Mat<RealType>(stages, stages);
+					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
+					aref = Mat<RealType>(stages, stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						for(int jj = 0; jj < s_; ++jj)
 						{
-							a_(ii,jj) = static_cast<RealType>(a(ii,jj));
+							aref(ii,jj) = static_cast<RealType>(a(ii,jj));
 						}
 					}
 					
-					b_ = Vec<RealType>(stages);
+					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
+					bref = Vec<RealType>(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						b_(ii) = static_cast<RealType>(b(ii));
+						bref(ii) = static_cast<RealType>(b(ii));
 					}
 					
-					b_minus_bstar_ = Vec<RealType>(stages);
+					Vec<RealType>& b_minus_bstar_ref = std::get< Vec<RealType> >(b_minus_bstar_);
+					b_minus_bstar_ref = Vec<RealType>(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						b_minus_bstar_(ii) = static_cast<RealType>(b_minus_bstar(ii));
+						b_minus_bstar_ref(ii) = static_cast<RealType>(b_minus_bstar(ii));
 					}
 
-					c_ = Vec<RealType>(stages);
+					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
+					cref = Vec<RealType>(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						c_(ii) = static_cast<RealType>(c(ii));
+						cref(ii) = static_cast<RealType>(c(ii));
 						
 					}
 
@@ -421,30 +750,33 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename MatDerived, typename VecDerived>
-				void FillButcherTable(int stages, const Eigen::MatrixBase<MatDerived>& a,
-									  const Eigen::MatrixBase<VecDerived> & b,
-									  const Eigen::MatrixBase<VecDerived> & c)
+				template<typename RealType>
+				void FillButcherTable(int stages, const Mat<mpq_rational>& a,
+									  const Mat<mpq_rational> & b,
+									  const Mat<mpq_rational> & c)
 				{
-					a_ = Mat<RealType>(stages, stages);
+					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
+					aref = Mat<RealType>(stages, stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						for(int jj = 0; jj < s_; ++jj)
 						{
-							a_(ii,jj) = static_cast<RealType>(a(ii,jj));
+							aref(ii,jj) = static_cast<RealType>(a(ii,jj));
 						}
 					}
 					
-					b_ = Vec<RealType>(stages);
+					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
+					bref = Vec<RealType>(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						b_(ii) = static_cast<RealType>(b(ii));
+						bref(ii) = static_cast<RealType>(b(ii));
 					}
 					
-					c_ = Vec<RealType>(stages);
+					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
+					cref = Vec<RealType>(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						c_(ii) = static_cast<RealType>(c(ii));
+						cref(ii) = static_cast<RealType>(c(ii));
 						
 					}
 					
@@ -461,24 +793,25 @@ namespace bertini{
 				//
 				////////////////////
 				
+				std::tuple< Mat<dbl>, Mat<mpfr> > K_;
+				Predictor predictor_;
+				unsigned p_;
+				std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_;
+				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_;
 				
-				Mat<ComplexType> K_;
+				
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods)
-				int s_; // Number of stages
-				Vec<RealType> c_;
-				Vec<RealType> b_;
-				Vec<RealType> b_minus_bstar_;
-				Mat<RealType> a_;
-				int p_;
+				unsigned s_; // Number of stages
+				std::tuple< Mat<double>, Mat<mpfr_float> > a_;
+				std::tuple< Vec<double>, Vec<mpfr_float> > b_;
+				std::tuple< Vec<double>, Vec<mpfr_float> > b_minus_bstar_;
+				std::tuple< Vec<double>, Vec<mpfr_float> > c_;
 				
 				
 				
 				
-				// Inherited data members
-				using BasePredictor<ComplexType,RealType>::predictor_;
-				using BasePredictor<ComplexType,RealType>::LU_;
-				using BasePredictor<ComplexType,RealType>::dh_dx_;
+				
 				
 				
 				
@@ -563,18 +896,12 @@ namespace bertini{
 			  |1
 			*/
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::aEulerPtr_[] = {mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor<CType, RType>::aEuler_(aEulerPtr_);
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::bEulerPtr_[] = {mpq_rational(1,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor<CType, RType>::bEuler_(bEulerPtr_);
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::cEulerPtr_[] = {mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor<CType, RType>::cEuler_(cEulerPtr_);
+			const mpq_rational ExplicitRKPredictor::aEulerPtr_[] = {mpq_rational(0,1)};
+			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor::aEuler_(aEulerPtr_);
+			const mpq_rational ExplicitRKPredictor::bEulerPtr_[] = {mpq_rational(1,1)};
+			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor::bEuler_(bEulerPtr_);
+			const mpq_rational ExplicitRKPredictor::cEulerPtr_[] = {mpq_rational(0,1)};
+			const Eigen::Matrix<mpq_rational,1,1> ExplicitRKPredictor::cEuler_(cEulerPtr_);
 			
 
 			
@@ -586,23 +913,15 @@ namespace bertini{
 			   | 1    0
 			 */
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::aHeunEulerPtr_[] = {mpq_rational(0,1), mpq_rational(1,1),
+			const mpq_rational ExplicitRKPredictor::aHeunEulerPtr_[] = {mpq_rational(0,1), mpq_rational(1,1),
 																					mpq_rational(0,1), mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,2,2> ExplicitRKPredictor<CType, RType>::aHeunEuler_(aHeunEulerPtr_);
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::bHeunEulerPtr_[] = {mpq_rational(1,2), mpq_rational(1,2)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor<CType, RType>::bHeunEuler_(bHeunEulerPtr_);
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarHeunEulerPtr_[] = {mpq_rational(-1,2), mpq_rational(1,2)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarHeunEuler_(b_minus_bstarHeunEulerPtr_);
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::cHeunEulerPtr_[] = {mpq_rational(0,1), mpq_rational(1,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor<CType, RType>::cHeunEuler_(cHeunEulerPtr_);
+			const Eigen::Matrix<mpq_rational,2,2> ExplicitRKPredictor::aHeunEuler_(aHeunEulerPtr_);
+			const mpq_rational ExplicitRKPredictor::bHeunEulerPtr_[] = {mpq_rational(1,2), mpq_rational(1,2)};
+			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor::bHeunEuler_(bHeunEulerPtr_);
+			const mpq_rational ExplicitRKPredictor::b_minus_bstarHeunEulerPtr_[] = {mpq_rational(-1,2), mpq_rational(1,2)};
+			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor::b_minus_bstarHeunEuler_(b_minus_bstarHeunEulerPtr_);
+			const mpq_rational ExplicitRKPredictor::cHeunEulerPtr_[] = {mpq_rational(0,1), mpq_rational(1,1)};
+			const Eigen::Matrix<mpq_rational,2,1> ExplicitRKPredictor::cHeunEuler_(cHeunEulerPtr_);
 
 			
 			
@@ -615,24 +934,18 @@ namespace bertini{
 				 | 1/6 1/3 1/3 1/6
 			 */
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::aRK4Ptr_[] = {mpq_rational(0,1), mpq_rational(1,2),
+			const mpq_rational ExplicitRKPredictor::aRK4Ptr_[] = {mpq_rational(0,1), mpq_rational(1,2),
 				mpq_rational(0,1), mpq_rational(0,1),
 			mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,2), mpq_rational(0,1),
 			mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,1),
 			mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,4,4> ExplicitRKPredictor<CType, RType>::aRK4_(aRK4Ptr_);
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::bRK4Ptr_[] = {mpq_rational(1,6), mpq_rational(1,3),
+			const Eigen::Matrix<mpq_rational,4,4> ExplicitRKPredictor::aRK4_(aRK4Ptr_);
+			const mpq_rational ExplicitRKPredictor::bRK4Ptr_[] = {mpq_rational(1,6), mpq_rational(1,3),
 			mpq_rational(1,3),mpq_rational(1,6)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,4,1> ExplicitRKPredictor<CType, RType>::bRK4_(bRK4Ptr_);
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::cRK4Ptr_[] = {mpq_rational(0,1), mpq_rational(1,2),
+			const Eigen::Matrix<mpq_rational,4,1> ExplicitRKPredictor::bRK4_(bRK4Ptr_);
+			const mpq_rational ExplicitRKPredictor::cRK4Ptr_[] = {mpq_rational(0,1), mpq_rational(1,2),
 			mpq_rational(1,2),mpq_rational(1,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,4,1> ExplicitRKPredictor<CType, RType>::cRK4_(cRK4Ptr_);
+			const Eigen::Matrix<mpq_rational,4,1> ExplicitRKPredictor::cRK4_(cRK4Ptr_);
 
 
 			
@@ -641,8 +954,7 @@ namespace bertini{
 			 https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods
 			 */
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::aRKF45Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::aRKF45Ptr_[] =
 			{mpq_rational(0,1), mpq_rational(1,4),mpq_rational(3,32), mpq_rational(1932,2197),mpq_rational(439,216),mpq_rational(-8,27),
 				
 				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(9,32), mpq_rational(-7200,2197),mpq_rational(-8,1),mpq_rational(2,1),
@@ -654,26 +966,19 @@ namespace bertini{
 				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-11,40),
 				
 				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,6,6> ExplicitRKPredictor<CType, RType>::aRKF45_(aRKF45Ptr_);
+			const Eigen::Matrix<mpq_rational,6,6> ExplicitRKPredictor::aRKF45_(aRKF45Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::bRKF45Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::bRKF45Ptr_[] =
 			{mpq_rational(16,135), mpq_rational(0,1), mpq_rational(6656,12825), mpq_rational(28561,56430),mpq_rational(-9,50),mpq_rational(2,55)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::bRKF45_(bRKF45Ptr_);
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor::bRKF45_(bRKF45Ptr_);
 
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarRKF45Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::b_minus_bstarRKF45Ptr_[] =
 			{mpq_rational(1,360), mpq_rational(0,1), mpq_rational(-128,4275), mpq_rational(-2197,75240),mpq_rational(1,50),mpq_rational(2,55)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarRKF45_(b_minus_bstarRKF45Ptr_);
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor::b_minus_bstarRKF45_(b_minus_bstarRKF45Ptr_);
 
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::cRKF45Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::cRKF45Ptr_[] =
 			{mpq_rational(0,1), mpq_rational(1,4), mpq_rational(3,8), mpq_rational(12,13),mpq_rational(1,1),mpq_rational(1,2)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::cRKF45_(cRKF45Ptr_);
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor::cRKF45_(cRKF45Ptr_);
 
 
 			
@@ -682,8 +987,7 @@ namespace bertini{
 			 https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods
 			 */
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::aRKCK45Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::aRKCK45Ptr_[] =
 			{mpq_rational(0,1), mpq_rational(1,5),mpq_rational(3,40), mpq_rational(3,10),mpq_rational(-11,54),mpq_rational(1631,55296),
 				
 				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(9,40), mpq_rational(-9,10),mpq_rational(5,2),mpq_rational(175,512),
@@ -695,26 +999,19 @@ namespace bertini{
 				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(253,4096),
 				
 				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,6,6> ExplicitRKPredictor<CType, RType>::aRKCK45_(aRKCK45Ptr_);
+			const Eigen::Matrix<mpq_rational,6,6> ExplicitRKPredictor::aRKCK45_(aRKCK45Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::bRKCK45Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::bRKCK45Ptr_[] =
 			{mpq_rational(37,378), mpq_rational(0,1), mpq_rational(250,621), mpq_rational(125,594),mpq_rational(0,1),mpq_rational(512,1771)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::bRKCK45_(bRKCK45Ptr_);
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor::bRKCK45_(bRKCK45Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarRKCK45Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::b_minus_bstarRKCK45Ptr_[] =
 			{mpq_rational(-277,64512), mpq_rational(0,1), mpq_rational(6925,370944), mpq_rational(-6925,202752),mpq_rational(-277,14336),mpq_rational(277,7084)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarRKCK45_(b_minus_bstarRKCK45Ptr_);
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor::b_minus_bstarRKCK45_(b_minus_bstarRKCK45Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::cRKCK45Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::cRKCK45Ptr_[] =
 			{mpq_rational(0,1), mpq_rational(1,5), mpq_rational(3,10), mpq_rational(3,5),mpq_rational(1,1),mpq_rational(7,8)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor<CType, RType>::cRKCK45_(cRKCK45Ptr_);
+			const Eigen::Matrix<mpq_rational,6,1> ExplicitRKPredictor::cRKCK45_(cRKCK45Ptr_);
 
 			
 			
@@ -723,8 +1020,7 @@ namespace bertini{
 			 Prince and Dormand.  High order embedded Runge-Kutta formulae.  J. Comput. Appl. Math., 7(1):67-75, 1981
 			 */
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::aRKDP56Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::aRKDP56Ptr_[] =
 			{mpq_rational(0,1), mpq_rational(1,10),mpq_rational(-2,81), mpq_rational(615,1372),mpq_rational(3243,5500),mpq_rational(-26492,37125),mpq_rational(5561,2376),mpq_rational(465467,266112),
 				
 				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(20,81), mpq_rational(-270,343),mpq_rational(-54,55),mpq_rational(72,55),mpq_rational(-35,11),mpq_rational(-2945,1232),
@@ -740,26 +1036,19 @@ namespace bertini{
 				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),
 			
 				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,8,8> ExplicitRKPredictor<CType, RType>::aRKDP56_(aRKDP56Ptr_);
+			const Eigen::Matrix<mpq_rational,8,8> ExplicitRKPredictor::aRKDP56_(aRKDP56Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::bRKDP56Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::bRKDP56Ptr_[] =
 			{mpq_rational(821,10800), mpq_rational(0,1), mpq_rational(19683,71825), mpq_rational(175273,912600),mpq_rational(395,3672),mpq_rational(785,2704),mpq_rational(3,50),mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor<CType, RType>::bRKDP56_(bRKDP56Ptr_);
+			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor::bRKDP56_(bRKDP56Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarRKDP56Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::b_minus_bstarRKDP56Ptr_[] =
 			{mpq_rational(13,2400), mpq_rational(0,1), mpq_rational(-19683,618800), mpq_rational(2401,31200),mpq_rational(-65,816),mpq_rational(15,416),mpq_rational(521,5600),mpq_rational(-1,10)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarRKDP56_(b_minus_bstarRKDP56Ptr_);
+			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor::b_minus_bstarRKDP56_(b_minus_bstarRKDP56Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::cRKDP56Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::cRKDP56Ptr_[] =
 			{mpq_rational(0,1), mpq_rational(1,10), mpq_rational(2,9), mpq_rational(3,7),mpq_rational(3,5),mpq_rational(4,5),mpq_rational(1,1),mpq_rational(1,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor<CType, RType>::cRKDP56_(cRKDP56Ptr_);
+			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor::cRKDP56_(cRKDP56Ptr_);
 
 			
 			
@@ -769,8 +1058,7 @@ namespace bertini{
 			 J.T. Verner.  Explicit Runge-Kutta Methods with Estimates of the Local Truncation Error.  SIAM J. Num. Anal., 15(4):pp.772-790, 1978
 			 */
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::aRKV67Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::aRKV67Ptr_[] =
 			{mpq_rational(0,1), mpq_rational(1,12),mpq_rational(0,1), mpq_rational(1,16),mpq_rational(21,16),mpq_rational(1344688,250563),mpq_rational(-559,384),mpq_rational(-625,224),mpq_rational(-12253,99144),mpq_rational(30517,2512),
 				
 				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,6), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),
@@ -790,26 +1078,19 @@ namespace bertini{
 				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-12393,4396),
 			
 				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,10,10> ExplicitRKPredictor<CType, RType>::aRKV67_(aRKV67Ptr_);
+			const Eigen::Matrix<mpq_rational,10,10> ExplicitRKPredictor::aRKV67_(aRKV67Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::bRKV67Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::bRKV67Ptr_[] =
 			{mpq_rational(2881,40320), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1216,2961),mpq_rational(-2624,4095),mpq_rational(24137569,57482880),mpq_rational(-4,21),mpq_rational(0,1),mpq_rational(4131,3920),mpq_rational(-157,1260)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor<CType, RType>::bRKV67_(bRKV67Ptr_);
+			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor::bRKV67_(bRKV67Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarRKV67Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::b_minus_bstarRKV67Ptr_[] =
 			{mpq_rational(-17,2688), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(272,4935),mpq_rational(-272,273),mpq_rational(24137569,57482880),mpq_rational(-34,105),mpq_rational(-7,90),mpq_rational(4131,3920),mpq_rational(-157,1260)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarRKV67_(b_minus_bstarRKV67Ptr_);
+			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor::b_minus_bstarRKV67_(b_minus_bstarRKV67Ptr_);
 			
-			template<typename CType, typename RType>
-			const mpq_rational ExplicitRKPredictor<CType, RType>::cRKV67Ptr_[] =
+			const mpq_rational ExplicitRKPredictor::cRKV67Ptr_[] =
 			{mpq_rational(0,1), mpq_rational(1,12), mpq_rational(1,6), mpq_rational(1,4),mpq_rational(3,4),mpq_rational(16,17),mpq_rational(1,2),mpq_rational(1,1),mpq_rational(2,3),mpq_rational(1,1)};
-			template<typename CType, typename RType>
-			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor<CType, RType>::cRKV67_(cRKV67Ptr_);
+			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor::cRKV67_(cRKV67Ptr_);
 
 			
 			
