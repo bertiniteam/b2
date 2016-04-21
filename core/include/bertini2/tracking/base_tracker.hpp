@@ -506,7 +506,7 @@ namespace bertini{
 
 			
 			// configuration for tracking
-			config::Predictor predictor_choice_; ///< The predictor to use while tracking.
+			config::Predictor  predictor_choice_; ///< The predictor to use while tracking.
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
 			config::Stepping<RT> stepping_config_; ///< The stepping configuration.
