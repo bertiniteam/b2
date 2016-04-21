@@ -32,14 +32,7 @@
 #ifndef BERTINI_EXPLICIT_PREDICTORS_HPP
 #define BERTINI_EXPLICIT_PREDICTORS_HPP
 
-#include "tracking/amp_criteria.hpp"
-#include "tracking/tracking_config.hpp"
-
-#include "system.hpp"
-#include "mpfr_extensions.hpp"
-#include <Eigen/LU>
-
-#include <boost/type_index.hpp>
+#include "base_predictor.hpp"
 
 
 namespace bertini{
@@ -49,72 +42,6 @@ namespace bertini{
 						
 			using Predictor = config::Predictor;
 			
-			/**
-			 \brief Get the Bertini2 default predictor.
-			 
-			 Currently set to Euler, though this will change in future versions.
-			 */
-			inline
-			config::Predictor DefaultPredictor()
-			{
-				return Predictor::Euler;
-			}
-			
-			
-			/**
-			 The lowest order of the predictor.  The order of the error estimate is this plus one.
-			 */
-			inline
-			unsigned Order(Predictor predictor_choice)
-			{
-				switch (predictor_choice)
-				{
-					case (Predictor::Euler):
-						return 1;
-					case (Predictor::HeunEuler):
-						return 1;
-					case (Predictor::RK4):
-						return 4;
-					case (Predictor::RKF45):
-						return 4;
-					case (Predictor::RKCashKarp45):
-						return 4;
-					case (Predictor::RKDormandPrince56):
-						return 5;
-					case (Predictor::RKVerner67):
-						return 6;
-					default:
-					{
-						throw std::runtime_error("incompatible predictor choice in Order");
-					}
-				}
-			}
-			
-			
-			inline bool HasErrorEstimate(Predictor predictor_choice)
-			{
-				switch (predictor_choice)
-				{
-					case (Predictor::Euler):
-						return false;
-					case (Predictor::HeunEuler):
-						return true;
-					case (Predictor::RK4):
-						return false;
-					case (Predictor::RKF45):
-						return true;
-					case (Predictor::RKCashKarp45):
-						return true;
-					case (Predictor::RKDormandPrince56):
-						return true;
-					case (Predictor::RKVerner67):
-						return true;
-					default:
-					{
-						throw std::runtime_error("incompatible predictor choice in HasErrorEstimate");
-					}
-				}
-			}
 			
 			
 			
@@ -123,7 +50,7 @@ namespace bertini{
 			/**
 			 /class ExplicitRKPredictor
 			 
-			 \brief A static class which stores all the explicit ODE predictor methods.
+			 \brief A class which stores all the explicit single-step multi-stage ODE predictor methods.
 			 
 			 ## Purpose
 			 Stores all the information needed to implement the predictor method
@@ -135,7 +62,7 @@ namespace bertini{
 			 
 			 
 			 ## Use
-			 Each predictor method is a static method of this class, therefore all that is required to run the predictor is to call the correct method:
+			 Each predictor method is stored as a static Butcher table.  To perform a predict step, you must instantiate an object with a particular predictor method and call Predict:
 			 
 			 \code
 			 ExplicitRKPredictors<Complex,Real> euler(config::Predictor::Euler)
@@ -195,7 +122,6 @@ namespace bertini{
 										 RealType const& tracking_tolerance)
 				{
 					
-					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
 					return FullStep(next_space, S, current_space, current_time, delta_t);
 					
 					
@@ -485,6 +411,7 @@ namespace bertini{
 									Vec<ComplexType> const& current_space, ComplexType current_time,
 									 ComplexType const& delta_t)
 				{
+					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
 					Vec<ComplexType> temp = Vec<ComplexType>(S.NumTotalFunctions());
 					
 					
