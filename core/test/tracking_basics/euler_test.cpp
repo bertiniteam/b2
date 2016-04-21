@@ -37,6 +37,7 @@
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
+using Float = bertini::node::Float;
 
 using Var = std::shared_ptr<Variable>;
 

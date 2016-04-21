@@ -65,7 +65,7 @@ namespace bertini{
 			 The lowest order of the predictor.  The order of the error estimate is this plus one.
 			 */
 			inline
-			unsigned Order(config::Predictor predictor_choice)
+			unsigned Order(Predictor predictor_choice)
 			{
 				switch (predictor_choice)
 				{
@@ -81,6 +81,8 @@ namespace bertini{
 						return 4;
 					case (Predictor::RKDormandPrince56):
 						return 5;
+					case (Predictor::RKVerner67):
+						return 6;
 					default:
 					{
 						throw std::runtime_error("incompatible predictor choice in Order");
@@ -89,7 +91,7 @@ namespace bertini{
 			}
 			
 			
-			inline bool HasErrorEstimate(config::Predictor predictor_choice)
+			inline bool HasErrorEstimate(Predictor predictor_choice)
 			{
 				switch (predictor_choice)
 				{
@@ -104,6 +106,8 @@ namespace bertini{
 					case (Predictor::RKCashKarp45):
 						return true;
 					case (Predictor::RKDormandPrince56):
+						return true;
+					case (Predictor::RKVerner67):
 						return true;
 					default:
 					{
@@ -161,6 +165,7 @@ namespace bertini{
 				
 				ExplicitRKPredictor(Predictor method)
 				{
+					SetPredictorMethod(method);
 					predictor_ = method;
 					p_ = Order(method);
 					switch(method)
@@ -213,6 +218,15 @@ namespace bertini{
 							s_ = 8;
 							
 							FillButcherTable(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							
+							break;
+						}
+							
+						case Predictor::RKVerner67:
+						{
+							s_ = 10;
+							
+							FillButcherTable(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
 							
 							break;
 						}
@@ -412,7 +426,6 @@ namespace bertini{
 					SetErrorEstimate(error_estimate, delta_t);
 					
 					
-					
 					return success_code;
 				}
 
@@ -439,38 +452,81 @@ namespace bertini{
 				
 				
 				
+				void SetPredictorMethod(Predictor method)
+				{
+					predictor_ = method;
+					p_ = Order(method);
+					switch(method)
+					{
+						case Predictor::Euler:
+						{
+							s_ = 1;
+							c_ = Vec<RealType>(s_); c_(0) = static_cast<RealType>(cEuler_(0));
+							a_ = Mat<RealType>(s_,s_); a_(0,0) = static_cast<RealType>(aEuler_(0,0));
+							b_ = Vec<RealType>(s_); b_(0) = static_cast<RealType>(bEuler_(0));
+							break;
+						}
+						case Predictor::HeunEuler:
+						{
+							s_ = 2;
+							
+							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							
+							break;
+						}
+						case Predictor::RK4:
+						{
+							s_ = 4;
+							
+							FillButcherTable(s_, aRK4_, bRK4_, cRK4_);
+							
+							break;
+						}
+							
+						case Predictor::RKF45:
+						{
+							s_ = 6;
+							
+							FillButcherTable(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+							
+							break;
+						}
+							
+						case Predictor::RKCashKarp45:
+						{
+							s_ = 6;
+							
+							FillButcherTable(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+							
+							break;
+						}
+							
+						case Predictor::RKDormandPrince56:
+						{
+							s_ = 8;
+							
+							FillButcherTable(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							
+							break;
+						}
+							
+						case Predictor::RKVerner67:
+						{
+							s_ = 10;
+							
+							FillButcherTable(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+							
+							break;
+						}
+							
+						default:
+						{
+							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
+						}
+
+				}
 				
 				
-				
-//				void MethodSetup(Predictor method)
-//				{
-//					p_ = Order(method);
-//					switch(method)
-//					{
-//						case Predictor::Euler:
-//						{
-//							s_ = 1;
-//							c_ = Vec<RealType>(s_); c_(0) = 0;
-//							a_ = Mat<RealType>(s_,s_); a_(0,0) = 0;
-//							b_ = Vec<RealType>(s_); b_(0) = 1;
-//							break;
-//						}
-//						case Predictor::HeunEuler:
-//						{
-//							mpq_rational half = mpq_rational(1,2);
-//							s_ = 2;
-//							c_ = Vec<RealType>(s_); c_ << RealType(0), RealType(1);
-//							a_ = Mat<RealType>(s_, s_); a_ << RealType(0), RealType(0), RealType(1), RealType(0);
-//							b_ = Vec<RealType>(s_); b_ << RealType(.5), RealType(.5);
-//							bstar_ = Vec<RealType>(s_); bstar_ << RealType(1), RealType(0);
-//							break;
-//						}
-//						default:
-//						{
-//							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
-//						}
-//					}
-//				}
 				
 				
 				
@@ -528,6 +584,7 @@ namespace bertini{
 					auto numFuncs = K_.rows();
 					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
 					
+					std::cout.precision(30);
 					err.setZero();
 					for(int ii = 0; ii < s_; ++ii)
 					{
@@ -769,7 +826,7 @@ namespace bertini{
 				static const mpq_rational cRKCK45Ptr_[];
 				static const Eigen::Matrix<mpq_rational,6,1> cRKCK45_;
 
-				// RK Dormand-Prince45
+				// RK Dormand-Prince 56
 				static const mpq_rational aRKDP56Ptr_[];
 				static const Eigen::Matrix<mpq_rational,8,8> aRKDP56_;
 				static const mpq_rational bRKDP56Ptr_[];
@@ -778,6 +835,16 @@ namespace bertini{
 				static const Eigen::Matrix<mpq_rational,8,1> b_minus_bstarRKDP56_;
 				static const mpq_rational cRKDP56Ptr_[];
 				static const Eigen::Matrix<mpq_rational,8,1> cRKDP56_;
+
+				// RK Verner 67
+				static const mpq_rational aRKV67Ptr_[];
+				static const Eigen::Matrix<mpq_rational,10,10> aRKV67_;
+				static const mpq_rational bRKV67Ptr_[];
+				static const Eigen::Matrix<mpq_rational,10,1> bRKV67_;
+				static const mpq_rational b_minus_bstarRKV67Ptr_[];
+				static const Eigen::Matrix<mpq_rational,10,1> b_minus_bstarRKV67_;
+				static const mpq_rational cRKV67Ptr_[];
+				static const Eigen::Matrix<mpq_rational,10,1> cRKV67_;
 
 
 				
@@ -990,7 +1057,57 @@ namespace bertini{
 			{mpq_rational(0,1), mpq_rational(1,10), mpq_rational(2,9), mpq_rational(3,7),mpq_rational(3,5),mpq_rational(4,5),mpq_rational(1,1),mpq_rational(1,1)};
 			template<typename CType, typename RType>
 			const Eigen::Matrix<mpq_rational,8,1> ExplicitRKPredictor<CType, RType>::cRKDP56_(cRKDP56Ptr_);
+
 			
+			
+			
+			
+			/* RK Verner 67 Butcher Table
+			 J.T. Verner.  Explicit Runge-Kutta Methods with Estimates of the Local Truncation Error.  SIAM J. Num. Anal., 15(4):pp.772-790, 1978
+			 */
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::aRKV67Ptr_[] =
+			{mpq_rational(0,1), mpq_rational(1,12),mpq_rational(0,1), mpq_rational(1,16),mpq_rational(21,16),mpq_rational(1344688,250563),mpq_rational(-559,384),mpq_rational(-625,224),mpq_rational(-12253,99144),mpq_rational(30517,2512),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1,6), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(3,16),mpq_rational(-81,16),mpq_rational(-1709184,83521),mpq_rational(6,1),mpq_rational(12,1),mpq_rational(16,27),mpq_rational(-7296,157),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(9,2),mpq_rational(1365632,83521),mpq_rational(-204,47),mpq_rational(-456,47),mpq_rational(16,459),mpq_rational(268728,7379),
+				
+				mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-78208,250563),mpq_rational(14,39),mpq_rational(48,91),mpq_rational(29072,161109),mpq_rational(2472,2041),
+				
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-4913,78208),mpq_rational(14739,136864),mpq_rational(-2023,75816),mpq_rational(-3522621,10743824),
+				
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(6,7),mpq_rational(112,12393),mpq_rational(132,157),
+				
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),
+			
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(-12393,4396),
+			
+				mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1),mpq_rational(0,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,10,10> ExplicitRKPredictor<CType, RType>::aRKV67_(aRKV67Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::bRKV67Ptr_[] =
+			{mpq_rational(2881,40320), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(1216,2961),mpq_rational(-2624,4095),mpq_rational(24137569,57482880),mpq_rational(-4,21),mpq_rational(0,1),mpq_rational(4131,3920),mpq_rational(-157,1260)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor<CType, RType>::bRKV67_(bRKV67Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::b_minus_bstarRKV67Ptr_[] =
+			{mpq_rational(-17,2688), mpq_rational(0,1), mpq_rational(0,1), mpq_rational(272,4935),mpq_rational(-272,273),mpq_rational(24137569,57482880),mpq_rational(-34,105),mpq_rational(-7,90),mpq_rational(4131,3920),mpq_rational(-157,1260)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor<CType, RType>::b_minus_bstarRKV67_(b_minus_bstarRKV67Ptr_);
+			
+			template<typename CType, typename RType>
+			const mpq_rational ExplicitRKPredictor<CType, RType>::cRKV67Ptr_[] =
+			{mpq_rational(0,1), mpq_rational(1,12), mpq_rational(1,6), mpq_rational(1,4),mpq_rational(3,4),mpq_rational(16,17),mpq_rational(1,2),mpq_rational(1,1),mpq_rational(2,3),mpq_rational(1,1)};
+			template<typename CType, typename RType>
+			const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor<CType, RType>::cRKV67_(cRKV67Ptr_);
+
 			
 			
 			
