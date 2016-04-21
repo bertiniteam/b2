@@ -70,7 +70,7 @@ namespace bertini{
 			
 			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
 
-			return predictor.Predict(next_space, predictor_choice,
+			return predictor.Predict(next_space,
 										sys,
 										current_space, current_time,
 										delta_t,
@@ -137,7 +137,7 @@ namespace bertini{
 			
 			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
 
-			return predictor.Predict(next_space, predictor_choice,
+			return predictor.Predict(next_space,
 										  size_proportion,
 										  norm_J,
 										  norm_J_inverse,
@@ -208,7 +208,7 @@ namespace bertini{
 			
 			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
 
-			return predictor.Predict(next_space, predictor_choice,
+			return predictor.Predict(next_space,
 										 error_estimate,
 										 size_proportion,
 										 norm_J,

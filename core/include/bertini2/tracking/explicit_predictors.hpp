@@ -14,7 +14,7 @@
 //along with heun_euler.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-//  predictor.hpp
+//  base_predictor.hpp
 //
 //  copyright 2015
 //  James B. Collins
@@ -32,7 +32,7 @@
 #ifndef BERTINI_EXPLICIT_PREDICTORS_HPP
 #define BERTINI_EXPLICIT_PREDICTORS_HPP
 
-#include "base_predictor.hpp"
+#include "tracking/base_predictor.hpp"
 
 
 namespace bertini{
@@ -74,7 +74,7 @@ namespace bertini{
 			 */
 			
 			template <typename ComplexType, typename RealType>
-			class ExplicitRKPredictor
+			class ExplicitRKPredictor : public BasePredictor<ComplexType, RealType>
 			{
 			public:
 				/**
@@ -89,198 +89,6 @@ namespace bertini{
 				{
 					SetPredictorMethod(method);
 				}
-				
-				
-				
-				
-				
-				
-				
-				/**
-				 \brief Perform a generic predictor step.
-				 
-				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
-				 \param S The system being solved.
-				 \param current_space The current space variable vector.
-				 \param current_time The current time.
-				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
-				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
-				 \param tracking_tolerance How tightly to track the path.
-				 */
-				
-				SuccessCode Predict(Vec<ComplexType> & next_space, Predictor method,
-										 System const& S,
-										 Vec<ComplexType> const& current_space, ComplexType current_time,
-										 ComplexType const& delta_t,
-										 RealType & condition_number_estimate,
-										 unsigned & num_steps_since_last_condition_number_computation,
-										 unsigned frequency_of_CN_estimation,
-										 RealType const& tracking_tolerance)
-				{
-					
-					return FullStep(next_space, S, current_space, current_time, delta_t);
-					
-					
-				}
-				
-
-				
-				
-				
-				
-				
-				
-				
-				
-				/**
-				 \brief Perform a generic predictor step and return size_proportion and condition number information
-				 
-				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
-				 \param size_proportion $a$ in AMP2 paper.
-				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
-				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
-				 \param S The system being solved.
-				 \param current_space The current space variable vector.
-				 \param current_time The current time.
-				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
-				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
-				 \param tracking_tolerance How tightly to track the path.
-				 \param AMP_config The settings for adaptive multiple precision.
-				 */
-				
-				SuccessCode Predict(Vec<ComplexType> & next_space,
-												   Predictor method,
-												   RealType & size_proportion,
-												   RealType & norm_J,
-												   RealType & norm_J_inverse,
-												   System const& S,
-												   Vec<ComplexType> const& current_space, ComplexType current_time,
-												   ComplexType const& delta_t,
-												   RealType & condition_number_estimate,
-												   unsigned & num_steps_since_last_condition_number_computation,
-												   unsigned frequency_of_CN_estimation,
-												   RealType const& tracking_tolerance,
-												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
-				{
-					
-					
-					auto success_code = Predict(next_space, method, S, current_space, current_time, delta_t,
-									condition_number_estimate, num_steps_since_last_condition_number_computation,
-														frequency_of_CN_estimation, tracking_tolerance);
-
-					if(success_code != SuccessCode::Success)
-						return success_code;
-					
-					// Calculate condition number and updated if needed
-					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
-					Vec<ComplexType> temp_soln = LU_.solve(randy);
-					
-					norm_J = dh_dx_.norm();
-					norm_J_inverse = temp_soln.norm();
-					
-					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
-					{
-						condition_number_estimate = norm_J * norm_J_inverse;
-						num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
-					}
-					else // no need to compute the condition number
-						num_steps_since_last_condition_number_computation++;
-
-					
-					// Set size_proportion
-					SetSizeProportion(size_proportion, delta_t);
-					
-					
-					
-					//AMP Criteria
-					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
-						return SuccessCode::HigherPrecisionNecessary;
-					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
-						return SuccessCode::HigherPrecisionNecessary;
-
-				
-					return success_code;
-				}
-
-				
-				
-
-				
-				
-				
-				
-				
-				
-				/**
-				 \brief Perform a generic predictor step and return error estimate, size_proportion and condition number information
-				 
-				 \param next_space The computed prediction.
-				 \param method An enum class selecting the predictor method to use.
-				 \param error_estimate Estimate of the error from an embedded method.
-				 \param size_proportion $a$ in AMP2 paper.
-				 \param norm_J The computed estimate of the norm of the Jacobian matrix.
-				 \param norm_J_inverse The computed estimate of the norm of the inverse of the Jacobian matrix.
-				 \param S The system being solved.
-				 \param current_space The current space variable vector.
-				 \param current_time The current time.
-				 \param delta_t The size of the time step.
-				 \param condition_number_estimate The computed estimate of the condition number of the Jacobian.
-				 \param num_steps_since_last_condition_number_computation.  Updated in this function.
-				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
-				 \param prec_type The operating precision type.
-				 \param tracking_tolerance How tightly to track the path.
-				 \param AMP_config The settings for adaptive multiple precision.
-				 */
-				
-				SuccessCode Predict(Vec<ComplexType> & next_space,
-												   Predictor method,
-												   RealType & error_estimate,
-												   RealType & size_proportion,
-												   RealType & norm_J,
-												   RealType & norm_J_inverse,
-												   System const& S,
-												   Vec<ComplexType> const& current_space, ComplexType current_time,
-												   ComplexType const& delta_t,
-												   RealType & condition_number_estimate,
-												   unsigned & num_steps_since_last_condition_number_computation,
-												   unsigned frequency_of_CN_estimation,
-												   RealType const& tracking_tolerance,
-												   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
-				{
-					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
-					
-					if(!predict::HasErrorEstimate(method))
-					{
-						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
-					}
-
-					
-					
-					
-					auto success_code = Predict(next_space, method, size_proportion, norm_J, norm_J_inverse,
-									S, current_space, current_time, delta_t,
-									condition_number_estimate, num_steps_since_last_condition_number_computation,
-														frequency_of_CN_estimation, tracking_tolerance, AMP_config);
-					
-					if(success_code != SuccessCode::Success)
-						return success_code;
-					
-					SetErrorEstimate(error_estimate, delta_t);
-					
-					
-					return success_code;
-				}
-
-				
-				
 				
 				
 				
@@ -391,7 +199,7 @@ namespace bertini{
 				
 				
 				
-			private:
+			protected:
 				
 				
 				/**
@@ -406,10 +214,10 @@ namespace bertini{
 				 \return SuccessCode determining result of the computation
 				 */
 				
-				SuccessCode FullStep(Vec<ComplexType> & next_space,
+				virtual SuccessCode FullStep(Vec<ComplexType> & next_space,
 									System const& S,
 									Vec<ComplexType> const& current_space, ComplexType current_time,
-									 ComplexType const& delta_t)
+									 ComplexType const& delta_t) override
 				{
 					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
 					Vec<ComplexType> temp = Vec<ComplexType>(S.NumTotalFunctions());
@@ -461,7 +269,7 @@ namespace bertini{
 				 
 				 */
 				
-				SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
+				virtual SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t) override
 				{
 					auto numFuncs = K_.rows();
 					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
@@ -495,7 +303,7 @@ namespace bertini{
 				 
 				 */
 				
-				SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t)
+				virtual SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t) override
 				{
 					if(predict::HasErrorEstimate(predictor_))
 					{
@@ -516,10 +324,7 @@ namespace bertini{
 				
 				
 				
-				
-				
-				
-				/** 
+				/**
 				 \brief Evaluates the RHS of the Davidenko differential equation at a particular time and space
 				 
 				 \param S The homotopy system
@@ -531,8 +336,8 @@ namespace bertini{
 				 \return Success code of this computation
 				 */
 				
-				SuccessCode EvalRHS(System const& S,
-									 Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, int stage)
+				virtual SuccessCode EvalRHS(System const& S,
+									Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, int stage) override
 				{
 					if(stage == 0)
 					{
@@ -545,7 +350,7 @@ namespace bertini{
 						K.col(stage) = LU_.solve(-S.TimeDerivative(space, time));
 						
 						return SuccessCode::Success;
-
+						
 					}
 					else
 					{
@@ -562,6 +367,9 @@ namespace bertini{
 				}
 				
 				
+				
+				
+			private:
 				
 				/**
 				 /brief Fills the local embedded butcher table variables a,b,bstar and c with the constant static values stored in the class.
@@ -658,14 +466,13 @@ namespace bertini{
 				
 				
 				
+				///////////////////////////
+				//
+				// Private Data Members
+				//
+				////////////////////
 				
 				
-				// Data Members
-				config::Predictor predictor_;
-				
-				
-				Mat<ComplexType> dh_dx_;
-				Eigen::PartialPivLU<Mat<ComplexType>> LU_;
 				Mat<ComplexType> K_;
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods)
@@ -678,6 +485,11 @@ namespace bertini{
 				
 				
 				
+				
+				// Inherited data members
+				using BasePredictor<ComplexType,RealType>::predictor_;
+				using BasePredictor<ComplexType,RealType>::LU_;
+				using BasePredictor<ComplexType,RealType>::dh_dx_;
 				
 				
 				
