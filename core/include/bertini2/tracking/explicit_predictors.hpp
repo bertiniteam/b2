@@ -150,10 +150,6 @@ namespace bertini{
 			class ExplicitRKPredictor
 			{
 			public:
-				
-				
-				
-				
 				/**
 				 \brief Constructor for a particular predictor method
 				 
@@ -162,81 +158,9 @@ namespace bertini{
 				 
 				 */
 				
-				
 				ExplicitRKPredictor(Predictor method)
 				{
 					SetPredictorMethod(method);
-					predictor_ = method;
-					p_ = Order(method);
-					switch(method)
-					{
-						case Predictor::Euler:
-						{
-							s_ = 1;
-							c_ = Vec<RealType>(s_); c_(0) = static_cast<RealType>(cEuler_(0));
-							a_ = Mat<RealType>(s_,s_); a_(0,0) = static_cast<RealType>(aEuler_(0,0));
-							b_ = Vec<RealType>(s_); b_(0) = static_cast<RealType>(bEuler_(0));
-							break;
-						}
-						case Predictor::HeunEuler:
-						{
-							s_ = 2;
-							
-							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
-							
-							break;
-						}
-						case Predictor::RK4:
-						{
-							s_ = 4;
-							
-							FillButcherTable(s_, aRK4_, bRK4_, cRK4_);
-							
-							break;
-						}
-
-						case Predictor::RKF45:
-						{
-							s_ = 6;
-							
-							FillButcherTable(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
-							
-							break;
-						}
-
-						case Predictor::RKCashKarp45:
-						{
-							s_ = 6;
-							
-							FillButcherTable(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
-							
-							break;
-						}
-
-						case Predictor::RKDormandPrince56:
-						{
-							s_ = 8;
-							
-							FillButcherTable(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
-							
-							break;
-						}
-							
-						case Predictor::RKVerner67:
-						{
-							s_ = 10;
-							
-							FillButcherTable(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
-							
-							break;
-						}
-
-						default:
-						{
-							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
-						}
-					}
-
 				}
 				
 				
@@ -407,7 +331,7 @@ namespace bertini{
 				{
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
 					
-					if(!HasErrorEstimate(method))
+					if(!predict::HasErrorEstimate(method))
 					{
 						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
 					}
@@ -435,27 +359,18 @@ namespace bertini{
 				
 				
 				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-			private:
-				
+				/**
+				 /brief Sets the local variables to correspond to a particular predictor method
+				 
+				 \param method Enum class that determines the predictor method
+				 
+				 */
 				
 				
 				void SetPredictorMethod(Predictor method)
 				{
 					predictor_ = method;
-					p_ = Order(method);
+					p_ = predict::Order(method);
 					switch(method)
 					{
 						case Predictor::Euler:
@@ -523,15 +438,47 @@ namespace bertini{
 						{
 							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
 						}
-
+							
+					}
+				};
+				
+				
+				
+				/**
+				 The lowest order of the predictor.  The order of the error estimate is this plus one.
+				 */
+				inline
+				unsigned Order()
+				{
+					return predict::Order(predictor_);
+				}
+				
+				
+				inline bool HasErrorEstimate()
+				{
+					return predict::HasErrorEstimate(predictor_);
 				}
 				
 				
 				
 				
 				
-
 				
+				
+			private:
+				
+				
+				/**
+				 \brief Performs a full prediction step from current_time to current_time + delta_t
+				 
+				 \param next_space The computed prediction space
+				 \param S The homotopy system
+				 \param current_space The current space values
+				 \param current_time The current time values
+				 \param delta_t The time step
+				 
+				 \return SuccessCode determining result of the computation
+				 */
 				
 				SuccessCode FullStep(Vec<ComplexType> & next_space,
 									System const& S,
@@ -577,7 +524,15 @@ namespace bertini{
 				
 				
 				
-				
+				/**
+				 \brief Computes the error estimate of this prediction step.
+				 
+				 \param error_estimate Computed error estimate
+				 \param delta_t The time step
+				 
+				 \return Success code or the computation
+				 
+				 */
 				
 				SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
 				{
@@ -603,10 +558,19 @@ namespace bertini{
 				
 				
 				
+				/**
+				 \brief Compute the size proportion variable for AMP computation
+				 
+				 \param size_proportion Computed size proportion
+				 \param delta_t The time step
+				 
+				 \return Success code of the computation
+				 
+				 */
 				
 				SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t)
 				{
-					if(HasErrorEstimate(predictor_))
+					if(predict::HasErrorEstimate(predictor_))
 					{
 						RealType err_est;
 						SetErrorEstimate(err_est, delta_t);
@@ -627,7 +591,18 @@ namespace bertini{
 				
 				
 				
-
+				
+				/** 
+				 \brief Evaluates the RHS of the Davidenko differential equation at a particular time and space
+				 
+				 \param S The homotopy system
+				 \param space The space variable used to evaluate RHS
+				 \param time The time variable used to evaluate RHS
+				 \param K Matrix of stage variables
+				 \param stage Which stage variable(column of K) should be filled by this computation
+				 
+				 \return Success code of this computation
+				 */
 				
 				SuccessCode EvalRHS(System const& S,
 									 Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, int stage)
