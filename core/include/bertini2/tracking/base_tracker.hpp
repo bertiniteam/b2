@@ -39,6 +39,7 @@
 #include "bertini2/logging.hpp"
 #include "bertini2/detail/visitable.hpp"
 #include "bertini2/tracking/events.hpp"
+#include "bertini2/tracking/ode_predictors.hpp"
 
 namespace bertini{
 
@@ -139,6 +140,7 @@ namespace bertini{
 
 			Tracker(System const& sys) : tracked_system_(sys)
 			{
+				predictor_choice_ = std::make_unique< predict::ExplicitRKPredictor<CT,RT> >(predict::DefaultPredictor(), sys);
 				Predictor(predict::DefaultPredictor());
 			}
 
@@ -294,8 +296,8 @@ namespace bertini{
 			*/
 			void Predictor(config::Predictor new_predictor_choice)
 			{
-				predictor_choice_ = new_predictor_choice;
-				predictor_order_ = predict::Order(predictor_choice_);
+				predictor_choice_->PredictorMethod(new_predictor_choice);
+				predictor_order_ = predictor_choice_->Order();
 			}
 
 
@@ -304,7 +306,7 @@ namespace bertini{
 			*/
 			config::Predictor Predictor() const
 			{
-				return predictor_choice_;
+				return predictor_choice_.PredictorMethod();
 			}
 
 
@@ -506,7 +508,8 @@ namespace bertini{
 
 			
 			// configuration for tracking
-			config::Predictor  predictor_choice_; ///< The predictor to use while tracking.
+//			config::Predictor  predictor_choice_; ///< The predictor to use while tracking.
+			std::unique_ptr<predict::BasePredictor <CT,RT> > predictor_choice_;
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
 			config::Stepping<RT> stepping_config_; ///< The stepping configuration.

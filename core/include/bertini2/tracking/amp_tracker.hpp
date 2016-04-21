@@ -41,6 +41,13 @@ namespace bertini{
 
 	namespace tracking{
 
+		template<typename T>
+		class TD;
+
+		
+		
+		
+		
 		using namespace bertini::tracking::config;
 		using std::max;
 		using std::min;
@@ -1018,6 +1025,13 @@ namespace bertini{
 								Vec<ComplexType> const& current_space, 
 								ComplexType const& current_time, ComplexType const& delta_t) const
 			{
+				
+				
+				TD<ComplexType> ctType;
+				TD<RealType> rtType;
+				
+				
+				
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
@@ -1028,9 +1042,8 @@ namespace bertini{
 				RealType& error_estimate = std::get<RealType>(error_estimate_);
 				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
-				if (predict::HasErrorEstimate(predictor_choice_))
-					return ::bertini::tracking::Predict(predictor_choice_,
-									predicted_space,
+				if (predictor_choice_->HasErrorEstimate())
+					return predictor_choice_->Predict(predicted_space,
 									error_estimate,
 									size_proportion,
 									norm_J,
@@ -1044,8 +1057,7 @@ namespace bertini{
 									RealType(tracking_tolerance_),
 									AMP_config_);
 				else
-					return ::bertini::tracking::Predict(predictor_choice_,
-									predicted_space,
+					return predictor_choice_->Predict(predicted_space,
 									size_proportion,
 									norm_J,
 									norm_J_inverse,

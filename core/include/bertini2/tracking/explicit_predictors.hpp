@@ -85,9 +85,11 @@ namespace bertini{
 				 
 				 */
 				
-				ExplicitRKPredictor(Predictor method)
+				ExplicitRKPredictor(Predictor method, System S) : BasePredictor<ComplexType, RealType>(method)
 				{
-					SetPredictorMethod(method);
+					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
+					PredictorMethod(method);
 				}
 				
 				
@@ -100,98 +102,85 @@ namespace bertini{
 				 
 				 */
 				
-				
-				void SetPredictorMethod(Predictor method)
+				virtual void PredictorMethod(Predictor method) override
 				{
-					predictor_ = method;
-					p_ = predict::Order(method);
-					switch(method)
+					if(predictor_ != method)
 					{
-						case Predictor::Euler:
+						predictor_ = method;
+						p_ = predict::Order(method);
+						switch(method)
 						{
-							s_ = 1;
-							c_ = Vec<RealType>(s_); c_(0) = static_cast<RealType>(cEuler_(0));
-							a_ = Mat<RealType>(s_,s_); a_(0,0) = static_cast<RealType>(aEuler_(0,0));
-							b_ = Vec<RealType>(s_); b_(0) = static_cast<RealType>(bEuler_(0));
-							break;
+							case Predictor::Euler:
+							{
+								s_ = 1;
+								c_ = Vec<RealType>(s_); c_(0) = static_cast<RealType>(cEuler_(0));
+								a_ = Mat<RealType>(s_,s_); a_(0,0) = static_cast<RealType>(aEuler_(0,0));
+								b_ = Vec<RealType>(s_); b_(0) = static_cast<RealType>(bEuler_(0));
+								break;
+							}
+							case Predictor::HeunEuler:
+							{
+								s_ = 2;
+								
+								FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+								
+								break;
+							}
+							case Predictor::RK4:
+							{
+								s_ = 4;
+								
+								FillButcherTable(s_, aRK4_, bRK4_, cRK4_);
+								
+								break;
+							}
+								
+							case Predictor::RKF45:
+							{
+								s_ = 6;
+								
+								FillButcherTable(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+								
+								break;
+							}
+								
+							case Predictor::RKCashKarp45:
+							{
+								s_ = 6;
+								
+								FillButcherTable(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+								
+								break;
+							}
+								
+							case Predictor::RKDormandPrince56:
+							{
+								s_ = 8;
+								
+								FillButcherTable(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+								
+								break;
+							}
+								
+							case Predictor::RKVerner67:
+							{
+								s_ = 10;
+								
+								FillButcherTable(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+								
+								break;
+							}
+								
+							default:
+							{
+								throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
+							}
 						}
-						case Predictor::HeunEuler:
-						{
-							s_ = 2;
-							
-							FillButcherTable(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
-							
-							break;
-						}
-						case Predictor::RK4:
-						{
-							s_ = 4;
-							
-							FillButcherTable(s_, aRK4_, bRK4_, cRK4_);
-							
-							break;
-						}
-							
-						case Predictor::RKF45:
-						{
-							s_ = 6;
-							
-							FillButcherTable(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
-							
-							break;
-						}
-							
-						case Predictor::RKCashKarp45:
-						{
-							s_ = 6;
-							
-							FillButcherTable(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
-							
-							break;
-						}
-							
-						case Predictor::RKDormandPrince56:
-						{
-							s_ = 8;
-							
-							FillButcherTable(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
-							
-							break;
-						}
-							
-						case Predictor::RKVerner67:
-						{
-							s_ = 10;
-							
-							FillButcherTable(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
-							
-							break;
-						}
-							
-						default:
-						{
-							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
-						}
-							
 					}
 				};
 				
 				
 				
-				/**
-				 The lowest order of the predictor.  The order of the error estimate is this plus one.
-				 */
-				inline
-				unsigned Order()
-				{
-					return predict::Order(predictor_);
-				}
-				
-				
-				inline bool HasErrorEstimate()
-				{
-					return predict::HasErrorEstimate(predictor_);
-				}
 				
 				
 				
@@ -219,7 +208,7 @@ namespace bertini{
 									Vec<ComplexType> const& current_space, ComplexType current_time,
 									 ComplexType const& delta_t) override
 				{
-					K_ = Mat<ComplexType>(S.NumTotalFunctions(), s_);
+					K_.fill(ComplexType(0));
 					Vec<ComplexType> temp = Vec<ComplexType>(S.NumTotalFunctions());
 					
 					
