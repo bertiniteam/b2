@@ -184,7 +184,7 @@ namespace bertini{
 				
 				void PredictorMethod(Predictor method)
 				{
-					if(predictor_ != method || first_time)
+					if(predictor_ != method)
 					{
 						predictor_ = method;
 						p_ = predict::Order(method);
@@ -667,7 +667,7 @@ namespace bertini{
 				
 				template<typename ComplexType>
 				SuccessCode EvalRHS(System const& S,
-									Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, int stage) 
+									Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, unsigned stage)
 				{
 					if(stage == 0)
 					{
