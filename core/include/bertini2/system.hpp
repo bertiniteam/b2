@@ -31,23 +31,9 @@
 #ifndef BERTINI_SYSTEM_HPP
 #define BERTINI_SYSTEM_HPP
 
-#include "bertini2/mpfr_complex.hpp"
-#include "bertini2/mpfr_extensions.hpp"
-#include "bertini2/eigen_extensions.hpp"
-
-#include <vector>
-#include "bertini2/function_tree.hpp"
-
-#include "bertini2/patch.hpp"
-
-#include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/number.hpp>
-
 #include <assert.h>
+#include <vector>
 
-
-
-#include <boost/type_index.hpp>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -55,9 +41,20 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
+#include <boost/type_index.hpp>
+
+#include "bertini2/mpfr_complex.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/eigen_extensions.hpp"
+
+
+#include "bertini2/function_tree.hpp"
+#include "bertini2/patch.hpp"
 
 #include "bertini2/limbo.hpp"
-#include <Eigen/Dense>
+
+
+
 
 namespace bertini {
 
