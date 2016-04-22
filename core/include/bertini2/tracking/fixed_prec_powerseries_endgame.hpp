@@ -40,13 +40,16 @@
 
 namespace bertini{ namespace tracking { namespace endgame {
 
-template<typename TrackerType, typename std::enable_if<TrackerTraits<TrackerType>::IsFixedPrec>::value>
-class FixedPrecPowerSeriesEndgame : public PowerSeriesEndgame<TrackerType,FixedPrecPowerSeriesEndgame<TrackerType>, dbl,mpfr>, 
-							  public FixedPrecEndgamePolicyBase
+template<typename TrackerType, typename Enable>
+class FixedPrecPowerSeriesEndgame : 
+		public PowerSeriesEndgame<TrackerType,
+								  FixedPrecPowerSeriesEndgame<TrackerType, typename std::enable_if<TrackerTraits<TrackerType>::IsFixedPrec>::type>, 
+								  typename TrackerTraits<TrackerType>::BaseComplexType>, 
+		public FixedPrecEndgamePolicyBase<TrackerType>
 {
 	using EGType = PowerSeriesEndgame<TrackerType, FixedPrecPowerSeriesEndgame, typename TrackerType::BaseComplexType>;
 	using BRT = typename TrackerTraits<TrackerType>::BaseRealType;
-protected:
+public:
 	
 	template<typename CT>
 	SuccessCode RefineSample(Vec<CT> & result, Vec<CT> const& current_sample, CT const& current_time) const
@@ -58,6 +61,8 @@ protected:
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 		                          	this->Tolerances().final_tolerance/100,
 		                          	this->EndgameSettings().max_num_newton_iterations);
+
+		return SuccessCode::Success;
 	}
 
 public:

@@ -37,101 +37,11 @@
 #include "bertini2/limbo.hpp"
 #include "bertini2/tracking/tracking_config.hpp"
 #include "bertini2/tracking/amp_tracker.hpp"
+#include "bertini2/tracking/adaptive_precision_utilities.hpp"
+
+
 
 namespace bertini{ namespace tracking { namespace endgame {
-			
-
-inline
-void SetPrecision(SampCont<mpfr> & samples, unsigned prec)
-{
-	for (auto& s : samples)
-		for (unsigned ii=0; ii<s.size(); ii++)
-			s(ii).precision(prec);
-}
-
-inline
-void SetPrecision(TimeCont<mpfr> & times, unsigned prec)
-{
-	for (auto& t : times)
-		t.precision(prec);
-}
-
-inline
-unsigned MaxPrecision(SampCont<mpfr> const& samples)
-{
-	unsigned max_precision = 0;
-	for (auto& s : samples)
-		if(Precision(s(0)) > max_precision)
-			max_precision = Precision(s(0));
-	return max_precision;
-}
-
-inline
-unsigned MaxPrecision(TimeCont<mpfr> const& times)
-{
-	unsigned max_precision = 0;
-	for (auto& t : times)
-		if(Precision(t) > max_precision)
-			max_precision = Precision(t);
-	return max_precision;
-}
-
-
-//does not a thing, because cannot.
-inline
-unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & derivatives)
-{
-	return DoublePrecision();
-}
-
-
-//changes precision of mpfr to highest needed precision for the samples.
-inline
-unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples)
-{
-	using std::max;
-	unsigned max_precision = max(
-	                             mpfr_float::default_precision(),
-	                             MaxPrecision(samples)
-	                             ); 
-
-	if (max_precision != mpfr_float::default_precision())
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
-	
-	mpfr_float::default_precision(max_precision);
-
-	SetPrecision(times, max_precision);
-	SetPrecision(samples, max_precision);
-
-	return max_precision;
-}
-
-
-//changes precision of mpfr to highest needed precision for the samples.
-inline
-unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples, SampCont<mpfr> & derivatives)
-{
-	unsigned max_precision = max(
-	                             mpfr_float::default_precision(),
-	                             MaxPrecision(samples),
-	                             MaxPrecision(derivatives)
-	                             ); 
-
-	if (max_precision != mpfr_float::default_precision())
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
-	
-	mpfr_float::default_precision(max_precision);
-
-	SetPrecision(times, max_precision);
-	SetPrecision(samples, max_precision);
-	SetPrecision(derivatives, max_precision);
-
-	return max_precision;
-}
-
-
-
-
 
 
 
@@ -149,7 +59,8 @@ public:
 	static
 	unsigned EnsureAtUniformPrecision(T& ...args)
 	{
-		return bertini::tracking::endgame::EnsureAtUniformPrecision(args...);
+		using namespace bertini::tracking::endgame::adaptive;
+		return EnsureAtUniformPrecision(args...);
 	}
 
 protected:

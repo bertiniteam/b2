@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
 	Vec< BCT > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
-	BOOST_CHECK( (first_approx(0) - ComplexFromString("0.9999999767578209232082898114211261253459","0")).norm() < 1e-7); 
+	BOOST_CHECK( norm(first_approx(0) - ComplexFromString("0.9999999767578209232082898114211261253459","0")) < 1e-7); 
 	// answer was found using matlab for a check. difference is diff is 2.32422e-08
 
 }//end basic hermite test case mp against matlab
@@ -830,13 +830,13 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 
 	BCT start_time(1);
 	Vec<BCT> start_point(1); start_point << BCT(1);
-	BCT t_endgame_boundary("0.1");
+	auto t_endgame_boundary = ComplexFromString("0.1");
 	
 	Vec<BCT> eg_boundary_point;
 	auto init_success = tracker.TrackPath(eg_boundary_point, start_time, t_endgame_boundary, start_point);
 
 	BOOST_CHECK(init_success==SuccessCode::Success);
-	BOOST_CHECK(abs(eg_boundary_point(0) - 1)< 1e-5);
+	BOOST_CHECK(abs(eg_boundary_point(0) - BRT(1))< 1e-5);
 
 	Vec<BCT> correct_root(1);
 	correct_root << BCT(1);
@@ -1195,7 +1195,8 @@ BOOST_AUTO_TEST_CASE(parabola)
 	tracker.PrecisionSetup(precision_config);
 	
 
-	BCT t_start(1), t_endgame_boundary("0.1");
+	BCT t_start(1);
+	auto t_endgame_boundary = ComplexFromString("0.1");
 
 	Vec<BCT> soln_at_EG_bdry;
 

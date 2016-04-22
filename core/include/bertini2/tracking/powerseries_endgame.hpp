@@ -31,6 +31,12 @@
 
 namespace bertini{ namespace tracking { namespace endgame{
 
+inline
+dbl operator*(unsigned i, dbl z)
+{
+	z*=i;
+	return z;
+}
 /** 
 \class PowerSeriesEndgame
 
@@ -238,6 +244,7 @@ public:
 	unsigned ComputeBoundOnCycleNumber()
 	{ 
 		using RT = typename Eigen::NumTraits<CT>::Real;
+		using std::log; using std::abs;
 
 		const auto& samples = std::get<SampCont<CT> >(samples_);
 		assert(samples.size()>=3 && "must have at least three sample points to estimate the cycle number");
@@ -362,7 +369,7 @@ public:
 			BOOST_LOG_TRIVIAL(severity_level::trace) << "testing cycle candidate " << candidate;
 
 			for(unsigned int ii=0; ii<num_used_points; ++ii)// using the last sample to predict to. 
-			{ 
+			{   using std::pow;
 				s_times[ii] = pow(times[ii+offset],1/static_cast<RT>(candidate));
 				s_derivatives[ii] = derivatives[ii+offset] * (candidate * pow(times[ii+offset], static_cast<RT>(candidate-1)/candidate));
 
@@ -498,7 +505,7 @@ public:
 			Vec<CT> next_sample;
 		auto next_time = times.back() * this->EndgameSettings().sample_factor; //setting up next time value.
 
-  		if (next_time.abs() < this->EndgameSettings().min_track_time)
+  		if (abs(next_time) < this->EndgameSettings().min_track_time)
   		{
   			BOOST_LOG_TRIVIAL(severity_level::trace) << "Current time norm is less than min track time." << '\n';
 

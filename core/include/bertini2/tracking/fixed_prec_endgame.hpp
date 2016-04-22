@@ -34,6 +34,8 @@
 \brief Contains the policy for fixed precision endgame types.
 */
 
+#include "bertini2/tracking/fixed_precision_tracker.hpp"
+#include "bertini2/tracking/fixed_precision_utilities.hpp"
 
 namespace bertini{ namespace tracking { namespace endgame {
 
@@ -48,15 +50,7 @@ class FixedPrecEndgamePolicyBase
 
 protected:
 
-	template<typename... T>
-	static
-	unsigned EnsureAtUniformPrecision(T& ...args)
-	{
-		return bertini::tracking::endgame::EnsureAtUniformPrecision(args...);
-	}
-
-	auto Precision() const
-	{ return precision_; }
+	const unsigned precision_;
 
 
 	bool PrecisionSanityCheck() const
@@ -64,10 +58,28 @@ protected:
 		return true;
 	}
 
-	SuccessCode ChangePrecision(unsigned new_precision) const
+	SuccessCode ChangePrecision(unsigned) const
 	{
 		return SuccessCode::Success;
 	}
+
+public:
+
+	auto Precision() const
+	{ return precision_; }
+
+
+	template<typename... T>
+	static
+	unsigned EnsureAtUniformPrecision(T& ...args)
+	{
+		using namespace bertini::tracking::endgame::fixed;
+		return EnsureAtUniformPrecision(args...);
+	}
+
+
+	FixedPrecEndgamePolicyBase() : precision_(NumTraits<BRT>::NumDigits())
+	{}
 }; // re: fixed prec endgame policy
 
 

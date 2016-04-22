@@ -80,7 +80,7 @@ namespace bertini
 			using BaseComplexType = dbl;
 			using BaseRealType = double;
 			using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
-			using PrecisionConfig = config::FixedPrecisionConfig<dbl>;
+			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
 			enum {
 				IsFixedPrec = 1,
 				IsAdaptivePrec = 0
@@ -94,7 +94,7 @@ namespace bertini
 			using BaseComplexType = mpfr;
 			using BaseRealType = mpfr_float;
 			using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
-			using PrecisionConfig = config::FixedPrecisionConfig<mpfr>;
+			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
 
 			enum {
 				IsFixedPrec = 1,
@@ -137,10 +137,10 @@ namespace bertini
 
 		namespace endgame{
 		// some forward declarations
-		template<typename T>
-		class FixedPrecPSEG;
+		template<typename Tracker, typename Enable = void>
+		class FixedPrecPowerSeriesEndgame;
 
-		template<typename T>
+		template<typename Tracker, typename Enable = void>
 		class FixedPrecCauchyEG;
 
 		class AMPPowerSeriesEndgame;
@@ -155,14 +155,14 @@ namespace bertini
 		template<>
 		struct EndgameSelector<DoublePrecisionTracker>
 		{
-			using PSEG = endgame::FixedPrecPSEG<DoublePrecisionTracker>;
+			using PSEG = endgame::FixedPrecPowerSeriesEndgame<DoublePrecisionTracker>;
 			using CauchyEG = endgame::FixedPrecCauchyEG<DoublePrecisionTracker>;
 		};
 
 		template<>
 		struct EndgameSelector<MultiplePrecisionTracker>
 		{
-			using PSEG = endgame::FixedPrecPSEG<MultiplePrecisionTracker>;
+			using PSEG = endgame::FixedPrecPowerSeriesEndgame<MultiplePrecisionTracker>;
 			using CauchyEG = endgame::FixedPrecCauchyEG<MultiplePrecisionTracker>;
 		};
 

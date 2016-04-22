@@ -99,6 +99,12 @@ namespace bertini
 		{
 			return boost::lexical_cast<std::complex<double>>(s);
 		}
+
+		inline static 
+		std::complex<double> FromString(std::string const& s, std::string const& t)
+		{
+			return std::complex<double>(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
+		}
 	};
 
 	/**

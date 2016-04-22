@@ -76,7 +76,14 @@ namespace bertini{
 
 			FixedPrecisionTracker(System const& sys) : Base(sys){}
 
-			
+			/**
+			\brief An additional no-op call, provided for conformity of interface with AMP tracker in generic code.
+			*/
+			void PrecisionSetup(config::FixedPrecisionConfig<RT> const&)
+			{ }
+
+
+
 			void ResetCounters() const override
 			{
 				Base::ResetCountersBase();
