@@ -150,6 +150,14 @@ namespace bertini{
 			class ExplicitRKPredictor
 			{
 			public:
+				
+				
+				ExplicitRKPredictor(const System& S)
+				{
+					numTotalFunctions = S.NumTotalFunctions();
+					PredictorMethod(DefaultPredictor());
+				}
+				
 				/**
 				 \brief Constructor for a particular predictor method
 				 
@@ -158,8 +166,9 @@ namespace bertini{
 				 
 				 */
 				
-				ExplicitRKPredictor(Predictor method)
+				ExplicitRKPredictor(Predictor method, const System& S)
 				{
+					numTotalFunctions = S.NumTotalFunctions();
 					PredictorMethod(method);
 				}
 				
@@ -175,7 +184,7 @@ namespace bertini{
 				
 				void PredictorMethod(Predictor method)
 				{
-					if(predictor_ != method)
+					if(predictor_ != method || first_time)
 					{
 						predictor_ = method;
 						p_ = predict::Order(method);
@@ -196,6 +205,7 @@ namespace bertini{
 								crefmp = Vec<mpfr_float>(s_); crefmp(0) = static_cast<mpfr_float>(cEuler_(0));
 								arefmp = Mat<mpfr_float>(s_,s_); arefmp(0,0) = static_cast<mpfr_float>(aEuler_(0,0));
 								brefmp = Vec<mpfr_float>(s_); brefmp(0) = static_cast<mpfr_float>(bEuler_(0));
+								
 								break;
 							}
 							case Predictor::HeunEuler:
@@ -263,12 +273,32 @@ namespace bertini{
 							}
 						}
 						
-						std::get< Mat<dbl> >(K_) = Mat<dbl>(s_,s_);
-						std::get< Mat<mpfr> >(K_) = Mat<mpfr>(s_,s_);
+						std::get< Mat<dbl> >(K_) = Mat<dbl>(numTotalFunctions, s_);
+						std::get< Mat<mpfr> >(K_) = Mat<mpfr>(numTotalFunctions, s_);
+						
 					}
 					
 					
 				}; // re: PredictorMethod
+				
+				
+				
+				
+				
+				/**
+				 \brief Change the system(number of total functions) that the predictor uses.
+				 
+				 \param S New system
+				 
+				 */
+				void PredictorSystem(const System& S)
+				{
+					numTotalFunctions = S.NumTotalFunctions();
+					std::get< Mat<dbl> >(K_) = Mat<dbl>(numTotalFunctions, s_);
+					std::get< Mat<mpfr> >(K_) = Mat<mpfr>(numTotalFunctions, s_);
+				}
+				
+				
 				
 				
 				
@@ -300,7 +330,7 @@ namespace bertini{
 									RealType const& tracking_tolerance)
 				{
 					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-
+					
 					return FullStep<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t);
 					
 					
@@ -513,9 +543,8 @@ namespace bertini{
 					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
 					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
 					Kref.fill(ComplexType(0));
-//					Vec<ComplexType> temp = Vec<ComplexType>(S.NumTotalFunctions());
+					Vec<ComplexType> temp = Vec<ComplexType>(S.NumTotalFunctions());
 					
-					// Use next_space as a temporary variable until the end
 					if(EvalRHS<ComplexType>(S, current_space, current_time, Kref, 0) != SuccessCode::Success)
 					{
 						return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
@@ -523,27 +552,27 @@ namespace bertini{
 					
 					for(int ii = 1; ii < s_; ++ii)
 					{
-						next_space.setZero();
+						temp.setZero();
 						for(int jj = 0; jj < ii; ++jj)
 						{
-							next_space += aref(ii,jj)*Kref.col(jj);
+							temp += aref(ii,jj)*Kref.col(jj);
 							
 						}
 						
-						if(EvalRHS<ComplexType>(S, current_space + delta_t*next_space, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
+						if(EvalRHS<ComplexType>(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
 						{
 							return SuccessCode::MatrixSolveFailure;
 						}
 					}
 					
 					
-					next_space.setZero();
+					temp.setZero();
 					for(int ii = 0; ii < s_; ++ii)
 					{
-						next_space += bref(ii)*Kref.col(ii);
+						temp += bref(ii)*Kref.col(ii);
 					}
 										
-					next_space = current_space + delta_t*next_space;
+					next_space = current_space + delta_t*temp;
 					
 					return SuccessCode::Success;
 				};
@@ -793,6 +822,7 @@ namespace bertini{
 				//
 				////////////////////
 				
+				unsigned numTotalFunctions;
 				std::tuple< Mat<dbl>, Mat<mpfr> > K_;
 				Predictor predictor_;
 				unsigned p_;

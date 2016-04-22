@@ -142,7 +142,7 @@ namespace bertini{
 
 			Tracker(System const& sys) : tracked_system_(sys)
 			{
-				predictor_choice_ = std::make_unique< predict::ExplicitRKPredictor >(predict::DefaultPredictor());
+				predictor_choice_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), sys);
 				Predictor(predict::DefaultPredictor());
 			}
 
@@ -511,7 +511,7 @@ namespace bertini{
 			
 			// configuration for tracking
 //			config::Predictor  predictor_choice_; ///< The predictor to use while tracking.
-			std::unique_ptr<predict::ExplicitRKPredictor > predictor_choice_;
+			std::shared_ptr<predict::ExplicitRKPredictor > predictor_choice_;
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
 			config::Stepping<RT> stepping_config_; ///< The stepping configuration.
