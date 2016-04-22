@@ -29,7 +29,7 @@
 
 #include "bertini2/tracking/amp_powerseries_endgame.hpp"
 #include "bertini2/start_system.hpp"
-
+#include "bertini2/num_traits.hpp"
 
 
 using System = bertini::System;
@@ -61,9 +61,19 @@ using namespace bertini::tracking;
 using namespace bertini::tracking::endgame;
 
 using TrackerType = AMPTracker; // select a tracker type
-
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
+
+
+
+
 using PrecisionConfig = TrackerTraits<TrackerType>::PrecisionConfig;
+
+using BRT = TrackerTraits<TrackerType>::BaseRealType;
+using BCT = TrackerTraits<TrackerType>::BaseComplexType;
+
+template<typename ...T>
+BCT NumFromStr(T... s)
+{return bertini::NumTraits<BCT>::FromString(s...);}
 
 /**
 This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
@@ -77,40 +87,40 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
 
 
 
-	mpfr target_time(0,0); //our target time is the origin.
+	BCT target_time(0,0); //our target time is the origin.
 	unsigned int num_samples = 3;
 
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples, derivatives;
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples, derivatives;
 
-	mpfr time;
-	Vec<mpfr> sample(1), derivative(1);
+	BCT time;
+	Vec<BCT> sample(1), derivative(1);
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr("1.00000001"); // f(.1) = 1.00000001
+	sample << NumFromStr("1.00000001"); // f(.1) = 1.00000001
 	samples.push_back(sample);
-	derivative << mpfr("8e-7"); //f'(.1) = 8e-7
+	derivative << NumFromStr("8e-7"); //f'(.1) = 8e-7
 	derivatives.push_back(derivative);
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr("1.0000000000390625"); //f(.05) = 1.0000000000390625
+	sample << NumFromStr("1.0000000000390625"); //f(.05) = 1.0000000000390625
 	samples.push_back(sample);
-	derivative << mpfr("6.25e-9"); //f'(.05) = 6.25e-9
+	derivative << NumFromStr("6.25e-9"); //f'(.05) = 6.25e-9
 	derivatives.push_back(derivative);
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr("1.000000000000152587890625"); // f(.025) = 1.000000000000152587890625
+	sample << NumFromStr("1.000000000000152587890625"); // f(.025) = 1.000000000000152587890625
 	samples.push_back(sample);
-	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
+	derivative << NumFromStr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
-	Vec< mpfr > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< BCT > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
-	BOOST_CHECK( (first_approx(0) - mpfr("0.9999999767578209232082898114211261253459","0")).norm() < 1e-7); 
+	BOOST_CHECK( (first_approx(0) - NumFromStr("0.9999999767578209232082898114211261253459","0")).norm() < 1e-7); 
 	// answer was found using matlab for a check. difference is diff is 2.32422e-08
 
 }//end basic hermite test case mp against matlab
@@ -134,48 +144,48 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_for_powerseries_class)
 
 	*/	mpfr_float::default_precision(30);
 
-	mpfr target_time(0,0);
+	BCT target_time(0,0);
 	unsigned int num_samples = 3;
 
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples, derivatives;
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples, derivatives;
 
-	mpfr time;
-	Vec<mpfr> sample(1), derivative(1);
+	BCT time;
+	Vec<BCT> sample(1), derivative(1);
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr("1.00000001"); // f(.1) = 1.00000001
+	sample << NumFromStr("1.00000001"); // f(.1) = 1.00000001
 	samples.push_back(sample);
-	derivative << mpfr("8e-7"); //f'(.1) = 8e-7
+	derivative << NumFromStr("8e-7"); //f'(.1) = 8e-7
 	derivatives.push_back(derivative);
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr("1.0000000000390625"); //f(.05) = 1.0000000000390625
+	sample << NumFromStr("1.0000000000390625"); //f(.05) = 1.0000000000390625
 	samples.push_back(sample);
-	derivative << mpfr("6.25e-9"); //f'(.05) = 6.25e-9
+	derivative << NumFromStr("6.25e-9"); //f'(.05) = 6.25e-9
 	derivatives.push_back(derivative);
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr("1.000000000000152587890625"); // f(.025) = 1.000000000000152587890625
+	sample << NumFromStr("1.000000000000152587890625"); // f(.025) = 1.000000000000152587890625
 	samples.push_back(sample);
-	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
+	derivative << NumFromStr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
 
-	 Vec< mpfr > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
-	 Vec< mpfr > correct(1);
-	 correct << mpfr("1");
+	 Vec< BCT > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	 Vec< BCT > correct(1);
+	 correct << NumFromStr("1");
 
 
 	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
+	time = NumFromStr(".0125"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("1.00000000000000059604644775390625"); // f(.0125) = 1.00000000000000059604644775390625
+	sample << NumFromStr("1.00000000000000059604644775390625"); // f(.0125) = 1.00000000000000059604644775390625
 	samples.push_back(sample);
-	derivative << mpfr("3.814697265625e-13"); //f'(.0125) = 3.814697265625e-13
+	derivative << NumFromStr("3.814697265625e-13"); //f'(.0125) = 3.814697265625e-13
 	derivatives.push_back(derivative);
 
 	//Get rid of earliest sample. 
@@ -184,18 +194,18 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_for_powerseries_class)
 	derivatives.pop_front();
 
 	//Compute the second approximation.
-	Vec< mpfr > second_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< BCT > second_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	// //Check to make sure we are doing better. 
 	BOOST_CHECK(abs(second_approx(0)-correct(0)) < abs(first_approx(0)-correct(0)));
 
 	//Setting up new sample for use in approximation.
-	time = mpfr("0.00625"); //.0125/2 = 0.00625
+	time = NumFromStr("0.00625"); //.0125/2 = 0.00625
 	times.push_back(time);
-	sample << mpfr("1.0000000000000000023283064365386962890625"); // f(.00625) = 1.0000000000000000023283064365386962890625
+	sample << NumFromStr("1.0000000000000000023283064365386962890625"); // f(.00625) = 1.0000000000000000023283064365386962890625
 	samples.push_back(sample);
-	derivative << mpfr("2.98023223876953125000000000000000e-15"); //f'(.00625) = 2.98023223876953125000000000000000×e-15
+	derivative << NumFromStr("2.98023223876953125000000000000000e-15"); //f'(.00625) = 2.98023223876953125000000000000000×e-15
 	derivatives.push_back(derivative);
 
 	times.pop_front();
@@ -203,7 +213,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_for_powerseries_class)
 	derivatives.pop_front();
 
 
-	Vec< mpfr > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< BCT > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	BOOST_CHECK(abs(third_approx(0)-correct(0)) < abs(second_approx(0)-correct(0)));
@@ -232,48 +242,48 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 
 
 
-	mpfr target_time(0,0);
+	BCT target_time(0,0);
 	unsigned int num_samples = 3;
 
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples, derivatives;
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples, derivatives;
 
-	mpfr time;
-	Vec<mpfr> sample(1), derivative(1);
+	BCT time;
+	Vec<BCT> sample(1), derivative(1);
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr("1.00000001"); // f(.1) = 1.00000001
+	sample << NumFromStr("1.00000001"); // f(.1) = 1.00000001
 	samples.push_back(sample);
-	derivative << mpfr("8e-7"); //f'(.1) = 8e-7
+	derivative << NumFromStr("8e-7"); //f'(.1) = 8e-7
 	derivatives.push_back(derivative);
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr("1.0000000000390625"); //f(.05) = 1.0000000000390625
+	sample << NumFromStr("1.0000000000390625"); //f(.05) = 1.0000000000390625
 	samples.push_back(sample);
-	derivative << mpfr("6.25e-9"); //f'(.05) = 6.25e-9
+	derivative << NumFromStr("6.25e-9"); //f'(.05) = 6.25e-9
 	derivatives.push_back(derivative);
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr("1.000000000000152587890625"); // f(.025) = 1.000000000000152587890625
+	sample << NumFromStr("1.000000000000152587890625"); // f(.025) = 1.000000000000152587890625
 	samples.push_back(sample);
-	derivative << mpfr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
+	derivative << NumFromStr("4.8828125e-11"); //f'(.025) = 4.8828125e-11
 	derivatives.push_back(derivative);
 
 
-	 Vec< mpfr > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
-	 Vec< mpfr > correct(1);
-	 correct << mpfr("1");
+	 Vec< BCT > first_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	 Vec< BCT > correct(1);
+	 correct << NumFromStr("1");
 
 
 	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
+	time = NumFromStr(".0125"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("1.00000000000000059604644775390625"); // f(.0125) = 1.00000000000000059604644775390625
+	sample << NumFromStr("1.00000000000000059604644775390625"); // f(.0125) = 1.00000000000000059604644775390625
 	samples.push_back(sample);
-	derivative << mpfr("3.814697265625e-13"); //f'(.0125) = 3.814697265625e-13
+	derivative << NumFromStr("3.814697265625e-13"); //f'(.0125) = 3.814697265625e-13
 	derivatives.push_back(derivative);
 
 	//Get rid of earliest sample. 
@@ -282,25 +292,25 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	derivatives.pop_front();
 
 	//Compute the second approximation.
-	Vec< mpfr > second_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< BCT > second_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 
 	// //Check to make sure we are doing better. 
 	BOOST_CHECK(abs(second_approx(0)-correct(0)) < abs(first_approx(0)-correct(0)));
 
 	//Setting up new sample for use in approximation.
-	time = mpfr("0.00625"); //.0125/2 = 0.00625
+	time = NumFromStr("0.00625"); //.0125/2 = 0.00625
 	times.push_back(time);
-	sample << mpfr("1.0000000000000000023283064365386962890625"); // f(.00625) = 1.0000000000000000023283064365386962890625
+	sample << NumFromStr("1.0000000000000000023283064365386962890625"); // f(.00625) = 1.0000000000000000023283064365386962890625
 	samples.push_back(sample);
-	derivative << mpfr("2.98023223876953125000000000000000e-15"); //f'(.00625) = 2.98023223876953125000000000000000×e-15
+	derivative << NumFromStr("2.98023223876953125000000000000000e-15"); //f'(.00625) = 2.98023223876953125000000000000000×e-15
 	derivatives.push_back(derivative);
 
 	times.pop_front();
 	samples.pop_front();
 	derivatives.pop_front();
 
-	Vec< mpfr > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	Vec< BCT > third_approx = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
 
 	// //Make sure we are doing better at approximating. 
 	BOOST_CHECK(abs(third_approx(0)-correct(0)) < abs(second_approx(0)-correct(0)));
@@ -333,47 +343,47 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_for_powerseries_class)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
+                BRT("1e-5"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples, derivatives;
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples, derivatives;
 
-	mpfr time;
-	Vec<mpfr> sample(1), derivative(1);
+	BCT time;
+	Vec<BCT> sample(1), derivative(1);
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr("-0.729"); // f(.1) = -0.729
+	sample << NumFromStr("-0.729"); // f(.1) = -0.729
 	samples.push_back(sample);
 
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr("-0.857375"); //f(.05) = -0.857375
+	sample << NumFromStr("-0.857375"); //f(.05) = -0.857375
 	samples.push_back(sample);
 
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
+	sample << NumFromStr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
 
-	config::Endgame<mpfr_float> endgame_settings;
+	config::Endgame<BRT> endgame_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeBoundOnCycleNumber<mpfr>();
+	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
@@ -381,9 +391,9 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_for_powerseries_class)
 	auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
 
 	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
+	time = NumFromStr(".0125"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
+	sample << NumFromStr("-0.962966796875"); // f(.0125) = -0.962966796875
 	samples.push_back(sample);
 
 
@@ -394,7 +404,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeBoundOnCycleNumber<mpfr>();
+	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
@@ -428,50 +438,50 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
+                BRT("1e-5"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples; 
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples; 
 
 
-	mpfr time;
-	Vec<mpfr> sample(1), derivative(1);
+	BCT time;
+	Vec<BCT> sample(1), derivative(1);
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr("-0.729"); // f(.1) = -0.729
+	sample << NumFromStr("-0.729"); // f(.1) = -0.729
 	samples.push_back(sample);
 
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr("-0.857375"); //f(.05) = -0.857375
+	sample << NumFromStr("-0.857375"); //f(.05) = -0.857375
 	samples.push_back(sample);
 
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
+	sample << NumFromStr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
 
 
-	config::Security<mpfr_float> security_settings;
-	config::Tolerances<mpfr_float> tolerances;
+	config::Security<BRT> security_settings;
+	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,security_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeBoundOnCycleNumber<mpfr>();
+	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
@@ -479,9 +489,9 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	auto first_upper_bound = my_endgame.UpperBoundOnCycleNumber();
 
 	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
+	time = NumFromStr(".0125"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
+	sample << NumFromStr("-0.962966796875"); // f(.0125) = -0.962966796875
 	samples.push_back(sample);
 
 
@@ -493,7 +503,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeBoundOnCycleNumber<mpfr>();
+	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
 	BOOST_CHECK(my_endgame.UpperBoundOnCycleNumber() == 6); // max_cycle_num implemented max(5,6) = 6
@@ -529,59 +539,59 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_for_powerseries_class)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
+                BRT("1e-5"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples; 
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples; 
 
 
-	mpfr time(1);
-	Vec<mpfr> sample(1);
+	BCT time(1);
+	Vec<BCT> sample(1);
 
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr("-0.729"); // f(.1) = -0.729
+	sample << NumFromStr("-0.729"); // f(.1) = -0.729
 	samples.push_back(sample);
 
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr("-0.857375"); //f(.05) = -0.857375
+	sample << NumFromStr("-0.857375"); //f(.05) = -0.857375
 	samples.push_back(sample);
 
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
+	sample << NumFromStr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
 
 
 
 	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
+	time = NumFromStr(".0125"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
+	sample << NumFromStr("-0.962966796875"); // f(.0125) = -0.962966796875
 	samples.push_back(sample);
 
 
 	config::PowerSeries power_series_settings;
-	config::Tolerances<mpfr_float> tolerances;
+	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,power_series_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.ComputeCycleNumber<mpfr>();
+	my_endgame.ComputeCycleNumber<BCT>();
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
@@ -616,59 +626,59 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
+                BRT("1e-5"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples; 
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples; 
 
 
-	mpfr time;
-	Vec<mpfr> sample(1);
+	BCT time;
+	Vec<BCT> sample(1);
 
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr("-0.729"); // f(.1) = -0.729
+	sample << NumFromStr("-0.729"); // f(.1) = -0.729
 	samples.push_back(sample);
 
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr("-0.857375"); //f(.05) = -0.857375
+	sample << NumFromStr("-0.857375"); //f(.05) = -0.857375
 	samples.push_back(sample);
 
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr("-0.926859375"); // f(.025) = -0.926859375
+	sample << NumFromStr("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
 
 
 	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
+	time = NumFromStr(".0125"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("-0.962966796875"); // f(.0125) = -0.962966796875
+	sample << NumFromStr("-0.962966796875"); // f(.0125) = -0.962966796875
 	samples.push_back(sample);
 
 
 	config::PowerSeries power_series_settings;
-	config::Security<mpfr_float> security_settings;
+	config::Security<BRT> security_settings;
 
 	TestedEGType my_endgame(tracker,power_series_settings,security_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
 
-	auto derivatives = my_endgame.ComputeCycleNumber<mpfr>();
+	auto derivatives = my_endgame.ComputeCycleNumber<BCT>();
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
@@ -695,64 +705,64 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_for_powerseries_class)
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
 	// Define homotopy system
-	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
+	sys.AddFunction( pow(x - 1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	auto precision_config = PrecisionConfig(sys);
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
+                BRT("1e-5"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	mpfr origin = mpfr(0,0);
-	Vec<mpfr> x_origin(1);
-	x_origin << mpfr(1,0);
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples; 
+	auto origin = BCT(0,0);
+	Vec<BCT> x_origin(1);
+	x_origin << BCT(1);
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples; 
 
 
 
-	mpfr time;
-	Vec<mpfr> sample(1);
-	// Vec<mpfr> derivative(1);
+	BCT time;
+	Vec<BCT> sample(1);
+	// Vec<BCT> derivative(1);
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr("0.50000000000000007812610562824908678293817200689660e0", "0.90818521453245102009102405377246269374768541575725e-16"); // f(.1) = 0.50000000000000007812610562824908678293817200689660e0 0.90818521453245102009102405377246269374768541575725e-16 from bertini classic
+	sample << NumFromStr("0.50000000000000007812610562824908678293817200689660e0", "0.90818521453245102009102405377246269374768541575725e-16"); // f(.1) = 0.50000000000000007812610562824908678293817200689660e0 0.90818521453245102009102405377246269374768541575725e-16 from bertini classic
 	samples.push_back(sample);
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr("0.60000000000000000073301140774132693211475245208482e0", "0.85317043225116681251211164764202768939258706233715e-18"); //f(.05) = 0.60000000000000000073301140774132693211475245208482e0 0.85317043225116681251211164764202768939258706233715e-18 from bertini classic.
+	sample << NumFromStr("0.60000000000000000073301140774132693211475245208482e0", "0.85317043225116681251211164764202768939258706233715e-18"); //f(.05) = 0.60000000000000000073301140774132693211475245208482e0 0.85317043225116681251211164764202768939258706233715e-18 from bertini classic.
 	samples.push_back(sample);
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr("0.67729059415987117534436422700325955211292174181447e0", "0.38712848412230230944976856052769427012481164605204e-16"); // f(.025) = 0.67729059415987117534436422700325955211292174181447e0 0.38712848412230230944976856052769427012481164605204e-16 from bertini classic
+	sample << NumFromStr("0.67729059415987117534436422700325955211292174181447e0", "0.38712848412230230944976856052769427012481164605204e-16"); // f(.025) = 0.67729059415987117534436422700325955211292174181447e0 0.38712848412230230944976856052769427012481164605204e-16 from bertini classic
 	samples.push_back(sample);
 
-	config::Endgame<mpfr_float> endgame_settings;
-	config::Tolerances<mpfr_float> tolerances;
+	config::Endgame<BRT> endgame_settings;
+	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,endgame_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	Vec<mpfr> first_approx;
+	Vec<BCT> first_approx;
 	auto code = my_endgame.ComputeApproximationOfXAtT0(first_approx, origin);
 	BOOST_CHECK(code==SuccessCode::Success);
 	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
+	time = NumFromStr(".0125"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("0.73905643972939615063207159129047946977060596291527e0", "0.44983246338361191567539019211879692583079653921201e-18"); // f(.0125) = 0.73905643972939615063207159129047946977060596291527e0 0.44983246338361191567539019211879692583079653921201e-18
+	sample << NumFromStr("0.73905643972939615063207159129047946977060596291527e0", "0.44983246338361191567539019211879692583079653921201e-18"); // f(.0125) = 0.73905643972939615063207159129047946977060596291527e0 0.44983246338361191567539019211879692583079653921201e-18
 	samples.push_back(sample);
 
 	//Get rid of earliest sample. 
@@ -762,13 +772,13 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	Vec<mpfr> second_approx;
+	Vec<BCT> second_approx;
 	code = my_endgame.ComputeApproximationOfXAtT0(second_approx,origin);
 	BOOST_CHECK(code==SuccessCode::Success);
 	//Setting up a new sample for approximation.
-	time = mpfr(".00625"); //.025/2 = .0125
+	time = NumFromStr(".00625"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("0.78910678115791459147153183840413839746566925123387e0", "0.22640341504967423865456128414532605156908222616485e-16"); // f(.00625) = 0.78910678115791459147153183840413839746566925123387e0 0.22640341504967423865456128414532605156908222616485e-16
+	sample << NumFromStr("0.78910678115791459147153183840413839746566925123387e0", "0.22640341504967423865456128414532605156908222616485e-16"); // f(.00625) = 0.78910678115791459147153183840413839746566925123387e0 0.22640341504967423865456128414532605156908222616485e-16
 	samples.push_back(sample);
 
 	//Get rid of earliest sample. 
@@ -778,7 +788,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	Vec<mpfr> third_approx;
+	Vec<BCT> third_approx;
 	code = my_endgame.ComputeApproximationOfXAtT0(third_approx, origin);
 	BOOST_CHECK(code==SuccessCode::Success);
 	BOOST_CHECK((third_approx - x_origin).norm() < (second_approx - x_origin).norm());
@@ -805,62 +815,62 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
 	// Define homotopy system
-	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
 	auto precision_config = PrecisionConfig(sys);
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
+                BRT("1e-5"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	mpfr origin = mpfr(0,0);
-	Vec<mpfr> x_origin(1);
-	x_origin << mpfr(1,0);
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples; 
+	auto origin = BCT(0,0);
+	Vec<BCT> x_origin(1);
+	x_origin << BCT(1);
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples; 
 
 
-	mpfr time(1);
-	Vec<mpfr> sample(1);
+	BCT time(1);
+	Vec<BCT> sample(1);
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	times.push_back(time);
-	sample << mpfr(".500000000000000","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
+	sample << NumFromStr(".500000000000000","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
 	samples.push_back(sample);
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	times.push_back(time);
-	sample << mpfr(".6000000000000000","0"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
+	sample << NumFromStr(".6000000000000000","0"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
 	samples.push_back(sample);
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	times.push_back(time);
-	sample << mpfr(".6772905941598711", "0"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
+	sample << NumFromStr(".6772905941598711", "0"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
 	samples.push_back(sample);
 
-	config::Endgame<mpfr_float> endgame_settings;
-	config::Security<mpfr_float> security_settings;
+	config::Endgame<BRT> endgame_settings;
+	config::Security<BRT> security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
 
-	Vec<mpfr> first_approx;
+	Vec<BCT> first_approx;
 	auto code = my_endgame.ComputeApproximationOfXAtT0(first_approx, origin);
 	//Setting up a new sample for approximation.
-	time = mpfr(".0125"); //.025/2 = .0125
+	time = NumFromStr(".0125"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr(".7390564397293962", "0"); // f(.0125) = 7.390564397293962e-01 4.641740550953566e-19
+	sample << NumFromStr(".7390564397293962", "0"); // f(.0125) = 7.390564397293962e-01 4.641740550953566e-19
 	samples.push_back(sample);
 
 	//Get rid of earliest sample. 
@@ -870,12 +880,12 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	Vec<mpfr> second_approx;
+	Vec<BCT> second_approx;
 	code = my_endgame.ComputeApproximationOfXAtT0(second_approx, origin);
 
-	time = mpfr(".00625"); //.025/2 = .0125
+	time = NumFromStr(".00625"); //.025/2 = .0125
 	times.push_back(time);
-	sample << mpfr("0.78910678115791459147153183840413839746566925123387e0", "0.22640341504967423865456128414532605156908222616485e-16"); // f(.00625) = 0.78910678115791459147153183840413839746566925123387e0 0.22640341504967423865456128414532605156908222616485e-16
+	sample << NumFromStr("0.78910678115791459147153183840413839746566925123387e0", "0.22640341504967423865456128414532605156908222616485e-16"); // f(.00625) = 0.78910678115791459147153183840413839746566925123387e0 0.22640341504967423865456128414532605156908222616485e-16
 	samples.push_back(sample);
 
 	//Get rid of earliest sample. 
@@ -885,7 +895,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	Vec<mpfr> third_approx;
+	Vec<BCT> third_approx;
 	code = my_endgame.ComputeApproximationOfXAtT0(third_approx, origin);
 
 
@@ -921,51 +931,51 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_for_powerseries_class)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
+                BRT("1e-5"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	mpfr sample_factor = mpfr(".5");
-	mpfr origin = mpfr("0");
-	Vec<mpfr> x_origin(1);
-	x_origin << mpfr(1,0);
-	TimeCont<mpfr> correct_times; 
-	SampCont<mpfr> correct_samples;
+	BCT sample_factor = NumFromStr(".5");
+	BCT origin = BCT(0);
+	Vec<BCT> x_origin(1);
+	x_origin << BCT(1);
+	TimeCont<BCT> correct_times; 
+	SampCont<BCT> correct_samples;
 
-	TimeCont<mpfr> times; 
-	std::deque<Vec<mpfr> > samples;
-	mpfr time(1);
-	Vec<mpfr> sample(1);
+	TimeCont<BCT> times; 
+	std::deque<Vec<BCT> > samples;
+	BCT time(1);
+	Vec<BCT> sample(1);
 
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	correct_times.push_back(time);
-	sample << mpfr("5.000000000000001e-01", "9.084258952712920e-17"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
+	sample << NumFromStr("5.000000000000001e-01", "9.084258952712920e-17"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
 	correct_samples.push_back(sample);
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	correct_times.push_back(time);
-	sample << mpfr("6.000000000000000e-01", "8.165397611531455e-19"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
+	sample << NumFromStr("6.000000000000000e-01", "8.165397611531455e-19"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
 	correct_samples.push_back(sample);
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	correct_times.push_back(time);
-	sample << mpfr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
+	sample << NumFromStr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
 	correct_samples.push_back(sample);
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(".1");
-	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
+	BCT current_time(1);
+	Vec<BCT> current_space(1);
+	current_time = NumFromStr(".1");
+	current_space << NumFromStr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	config::Endgame<mpfr_float> endgame_settings;
+	config::Endgame<BRT> endgame_settings;
 	config::PowerSeries power_series_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings);
@@ -1012,54 +1022,54 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-5"),
-                mpfr_float("1e5"),
+                BRT("1e-5"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	mpfr sample_factor = mpfr(".5");
-	mpfr origin = mpfr("0");
-	Vec<mpfr> x_origin(1);
-	x_origin << mpfr(1,0);
-	TimeCont<mpfr> correct_times; 
-	SampCont<mpfr> correct_samples;
+	BCT sample_factor = NumFromStr(".5");
+	BCT origin = BCT(0);
+	Vec<BCT> x_origin(1);
+	x_origin << BCT(1);
+	TimeCont<BCT> correct_times; 
+	SampCont<BCT> correct_samples;
 
-	TimeCont<mpfr> times; 
-	SampCont<mpfr> samples;
-	mpfr time(1);
-	Vec<mpfr> sample(1);
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples;
+	BCT time(1);
+	Vec<BCT> sample(1);
 
-	time = mpfr(".1"); // x = .1
+	time = NumFromStr(".1"); // x = .1
 	correct_times.push_back(time);
-	sample << mpfr("5.000000000000001e-01", "9.084258952712920e-17"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
+	sample << NumFromStr("5.000000000000001e-01", "9.084258952712920e-17"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
 	correct_samples.push_back(sample);
 
-	time = mpfr(".05"); // x = .1/2 = .05
+	time = NumFromStr(".05"); // x = .1/2 = .05
 	correct_times.push_back(time);
-	sample << mpfr("6.000000000000000e-01", "8.165397611531455e-19"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
+	sample << NumFromStr("6.000000000000000e-01", "8.165397611531455e-19"); //f(.05) = 6.000000000000000e-01 8.165397611531455e-19 from bertini classic.
 	correct_samples.push_back(sample);
 
-	time = mpfr(".025"); // x = .05/2 = .025
+	time = NumFromStr(".025"); // x = .05/2 = .025
 	correct_times.push_back(time);
-	sample << mpfr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
+	sample << NumFromStr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
 	correct_samples.push_back(sample);
 
 	unsigned int num_samples = 3; 
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(".1");
-	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
+	BCT current_time(1);
+	Vec<BCT> current_space(1);
+	current_time = NumFromStr(".1");
+	current_space << NumFromStr("5.000000000000001e-01", "9.084258952712920e-17");
 
 	config::PowerSeries power_series_settings;
-	config::Security<mpfr_float> security_settings;
-	config::Tolerances<mpfr_float> tolerances;
+	config::Security<BRT> security_settings;
+	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,power_series_settings,security_settings,tolerances);
 
@@ -1099,35 +1109,35 @@ BOOST_AUTO_TEST_CASE(pseg_for_powerseries_class)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-6"),
-                mpfr_float("1e5"),
+                BRT("1e-6"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(".1");
-	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
+	BCT current_time(1);
+	Vec<BCT> current_space(1);
+	current_time = NumFromStr(".1");
+	current_space << NumFromStr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	Vec<mpfr> correct(1);
-	correct << mpfr(1,0);
+	Vec<BCT> correct(1);
+	correct << BCT(1);
 
-	config::Endgame<mpfr_float> endgame_settings;
-	config::Security<mpfr_float> security_settings;
-	config::Tolerances<mpfr_float> tolerances;
+	config::Endgame<BRT> endgame_settings;
+	config::Security<BRT> security_settings;
+	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
 	my_endgame.PSEG(current_time,current_space);
 
 
-	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp for power series class 
 
@@ -1155,35 +1165,35 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-6"),
-                mpfr_float("1e5"),
+                BRT("1e-6"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(1);
-	current_time = mpfr(".1");
-	current_space << mpfr("5.000000000000001e-01", "9.084258952712920e-17");
+	BCT current_time(1);
+	Vec<BCT> current_space(1);
+	current_time = NumFromStr(".1");
+	current_space << NumFromStr("5.000000000000001e-01", "9.084258952712920e-17");
 
-	Vec<mpfr> correct(1);
-	correct << mpfr(1,0);
+	Vec<BCT> correct(1);
+	correct << BCT(1);
 
-	config::Endgame<mpfr_float> endgame_settings;
+	config::Endgame<BRT> endgame_settings;
 	config::PowerSeries power_series_settings;
-	config::Tolerances<mpfr_float> tolerances;
+	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,tolerances);
 
 
 	my_endgame.PSEG(current_time,current_space);
 
-	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
 	
 }//end pseg dbl for power series class
 
@@ -1218,40 +1228,40 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-6"),
-                mpfr_float("1e5"),
+                BRT("1e-6"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
 
-	mpfr start_time(1);
-	Vec<mpfr> start_point(1); start_point << mpfr(1);
-	mpfr t_endgame_boundary("0.1");
+	BCT start_time(1);
+	Vec<BCT> start_point(1); start_point << BCT(1);
+	BCT t_endgame_boundary("0.1");
 	
-	Vec<mpfr> eg_boundary_point;
+	Vec<BCT> eg_boundary_point;
 	auto init_success = tracker.TrackPath(eg_boundary_point, start_time, t_endgame_boundary, start_point);
 
 	BOOST_CHECK(init_success==SuccessCode::Success);
 	BOOST_CHECK(abs(eg_boundary_point(0) - 1)< 1e-5);
 
-	Vec<mpfr> correct_root(1);
-	correct_root << mpfr(1,0);
+	Vec<BCT> correct_root(1);
+	correct_root << BCT(1);
 
-	config::Endgame<mpfr_float> endgame_settings;
-	config::Security<mpfr_float> security_settings;
-	config::Tolerances<mpfr_float> tolerances;
+	config::Endgame<BRT> endgame_settings;
+	config::Security<BRT> security_settings;
+	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
 	my_endgame.PSEG(t_endgame_boundary,eg_boundary_point);
 
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),1);//my_endgame.
-	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct_root).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct_root).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp for power series class 
 
@@ -1288,35 +1298,35 @@ BOOST_AUTO_TEST_CASE(pseg_for_powerseries_class_multiple_variables)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-6"),
-                mpfr_float("1e5"),
+                BRT("1e-6"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
 
-	mpfr current_time(1);
-	Vec<mpfr> current_space(2);
-	current_time = mpfr(".1");
-	current_space <<  mpfr("5.000000000000001e-01", "9.084258952712920e-17") ,mpfr("9.000000000000001e-01","4.358898943540673e-01");
+	BCT current_time(1);
+	Vec<BCT> current_space(2);
+	current_time = NumFromStr(".1");
+	current_space <<  NumFromStr("5.000000000000001e-01", "9.084258952712920e-17") ,NumFromStr("9.000000000000001e-01","4.358898943540673e-01");
 
-	Vec<mpfr> correct(2);
-	correct << mpfr(1,0),mpfr(1,0);
+	Vec<BCT> correct(2);
+	correct << BCT(1),BCT(1);
 
-	config::Endgame<mpfr_float> endgame_settings;
+	config::Endgame<BRT> endgame_settings;
 	config::PowerSeries power_series_settings;
-	config::Security<mpfr_float> security_settings;
+	config::Security<BRT> security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
 	my_endgame.PSEG(current_time,current_space);
 
-	BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-10);//my_endgame.GetTrackToleranceDuringEndgame());
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-10);//my_endgame.GetTrackToleranceDuringEndgame());
 
 }//end pseg mp test case for power series class
 
@@ -1342,43 +1352,43 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
-	sys.AddFunction(((mpfr("29")/mpfr("16"))*pow(x,3)-2*x*y)*(1-t) + (pow(x,3) - 1)*t);
+	sys.AddFunction(((NumFromStr("29")/NumFromStr("16"))*pow(x,3)-2*x*y)*(1-t) + (pow(x,3) - 1)*t);
 	sys.AddFunction((y - pow(x,2))*(1-t) + (pow(y,2) - 1)*t);
 
 	auto precision_config = PrecisionConfig(sys);
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(config::Predictor::HeunEuler,
-                mpfr_float("1e-6"),
-                mpfr_float("1e5"),
+                BRT("1e-6"),
+                BRT("1e5"),
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
 
-	mpfr endgame_time(1);
-	Vec<mpfr> current_space_1(2);
-	Vec<mpfr> current_space_2(2);
-	Vec<mpfr> current_space_3(2);
-	Vec<mpfr> current_space_4(2);
-	Vec<mpfr> current_space_5(2);
-	Vec<mpfr> current_space_6(2);
+	BCT endgame_time(1);
+	Vec<BCT> current_space_1(2);
+	Vec<BCT> current_space_2(2);
+	Vec<BCT> current_space_3(2);
+	Vec<BCT> current_space_4(2);
+	Vec<BCT> current_space_5(2);
+	Vec<BCT> current_space_6(2);
 
-	endgame_time = mpfr(".1");
+	endgame_time = NumFromStr(".1");
 
-	current_space_1 <<  mpfr("1.028694756284462e-01", "-9.661822229074768e-01"), mpfr("-8.937287306314232e-01", "-2.480445481975048e-01");
-	current_space_2 <<  mpfr("-5.219899550566304e-01", "-2.212788871407134e-17"), mpfr("3.684968541245056e-01", "2.471980953266950e-17");
-	current_space_3 <<  mpfr("1.028694756284466e-01", "9.661822229074761e-01"), mpfr("-8.937287306314221e-01", "2.480445481975040e-01");
-	current_space_4 <<  mpfr("6.098408897464429e-03", "1.058791184067875e-21"), mpfr("-9.109808533477256e+00", "-2.374402757743255e-17");
-	current_space_5 <<  mpfr("1.220071827679809e+00", "7.657177843178875e-19"), mpfr("1.386185299689565e+00", "2.852806966352484e-18");
-	current_space_6 <<  mpfr("-9.099192327775354e-01", "2.114194236346734e-17"), mpfr("8.573852849693505e-01", "-2.164338586824188e-17");
+	current_space_1 <<  NumFromStr("1.028694756284462e-01", "-9.661822229074768e-01"), NumFromStr("-8.937287306314232e-01", "-2.480445481975048e-01");
+	current_space_2 <<  NumFromStr("-5.219899550566304e-01", "-2.212788871407134e-17"), NumFromStr("3.684968541245056e-01", "2.471980953266950e-17");
+	current_space_3 <<  NumFromStr("1.028694756284466e-01", "9.661822229074761e-01"), NumFromStr("-8.937287306314221e-01", "2.480445481975040e-01");
+	current_space_4 <<  NumFromStr("6.098408897464429e-03", "1.058791184067875e-21"), NumFromStr("-9.109808533477256e+00", "-2.374402757743255e-17");
+	current_space_5 <<  NumFromStr("1.220071827679809e+00", "7.657177843178875e-19"), NumFromStr("1.386185299689565e+00", "2.852806966352484e-18");
+	current_space_6 <<  NumFromStr("-9.099192327775354e-01", "2.114194236346734e-17"), NumFromStr("8.573852849693505e-01", "-2.164338586824188e-17");
 
-	std::vector<Vec<mpfr> > current_space_values;
+	std::vector<Vec<BCT> > current_space_values;
 
 	current_space_values.push_back(current_space_1);
 	current_space_values.push_back(current_space_2);
@@ -1388,13 +1398,13 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	current_space_values.push_back(current_space_6);
 
 
-	Vec<mpfr> correct(2);
-	correct << mpfr(0,0),mpfr(0,0);
+	Vec<BCT> correct(2);
+	correct << BCT(0),BCT(0);
 
-	config::Endgame<mpfr_float> endgame_settings;
+	config::Endgame<BRT> endgame_settings;
 	config::PowerSeries power_series_settings;
-	config::Security<mpfr_float> security_settings;
-	config::Tolerances<mpfr_float> tolerances;
+	config::Security<BRT> security_settings;
+	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings,tolerances);
 
@@ -1405,7 +1415,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 		mpfr_float::default_precision(30);
 		SuccessCode endgame_success = my_endgame.PSEG(endgame_time,s);
 		if(endgame_success == SuccessCode::Success){
-			BOOST_CHECK((my_endgame.FinalApproximation<mpfr>() - correct).norm() < 1e-11);// my_endgame.GetTrackToleranceDuringEndgame());
+			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);// my_endgame.GetTrackToleranceDuringEndgame());
 			num_paths_converging++;
 		}
 		if(endgame_success == SuccessCode::SecurityMaxNormReached){
@@ -1491,24 +1501,24 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 
 
 	auto tracker = TrackerType(final_system);
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 	tracker.Setup(config::Predictor::HeunEuler,
-	              	mpfr_float("1e-5"), mpfr_float("1e5"),
+	              	BRT("1e-5"), BRT("1e5"),
 					stepping_settings, newton_settings);
 
 	tracker.PrecisionSetup(precision_config);
 	
 
-	mpfr t_start(1), t_endgame_boundary(0.1);
-	std::vector<Vec<mpfr> > homogenized_solutions;
+	BCT t_start(1), t_endgame_boundary(0.1);
+	std::vector<Vec<BCT> > homogenized_solutions;
 	for (unsigned ii = 0; ii < 1; ++ii)
 	{
 		mpfr_float::default_precision(ambient_precision);
 		final_system.precision(ambient_precision);
-		auto start_point = TD.StartPoint<mpfr>(ii);
+		auto start_point = TD.StartPoint<BCT>(ii);
 
-		Vec<mpfr> result;
+		Vec<BCT> result;
 		SuccessCode tracking_success;
 
 		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
@@ -1517,17 +1527,17 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 		homogenized_solutions.push_back(result);
 	}
 
-	Vec<mpfr> correct(2);
-	correct << mpfr(1,0),mpfr(1,0);
+	Vec<BCT> correct(2);
+	correct << BCT(1),BCT(1);
 
 	tracker.Setup(config::Predictor::HeunEuler,
-	              	mpfr_float("1e-6"), mpfr_float("1e5"),
+	              	BRT("1e-6"), BRT("1e5"),
 					stepping_settings, newton_settings);
 
 	TestedEGType my_endgame(tracker);
 
 
-	std::vector<Vec<mpfr> > endgame_solutions;
+	std::vector<Vec<BCT> > endgame_solutions;
 
 	unsigned num_successful_occurences = 0;
 	unsigned num_min_track_time_reached = 0;
@@ -1573,37 +1583,37 @@ BOOST_AUTO_TEST_CASE(parabola)
 
 	sys.AddFunction(pow(x,2) - t);
 	sys.AddPathVariable(t);
-	Vec<mpfr> start_point(1);
-	start_point << mpfr(1);
+	Vec<BCT> start_point(1);
+	start_point << BCT(1);
 
 	auto precision_config = PrecisionConfig(sys);
 
 
 
 	auto tracker = TrackerType(sys);
-	config::Stepping<mpfr_float> stepping_settings;
+	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 	tracker.Setup(config::Predictor::HeunEuler,
-	              	mpfr_float("1e-5"), mpfr_float("1e5"),
+	              	BRT("1e-5"), BRT("1e5"),
 					stepping_settings, newton_settings);
 
 	tracker.PrecisionSetup(precision_config);
 	
 
-	mpfr t_start(1), t_endgame_boundary("0.1");
+	BCT t_start(1), t_endgame_boundary("0.1");
 
-	Vec<mpfr> soln_at_EG_bdry;
+	Vec<BCT> soln_at_EG_bdry;
 
 	auto tracking_success = tracker.TrackPath(soln_at_EG_bdry,t_start,t_endgame_boundary,start_point);
 	BOOST_CHECK(tracking_success==SuccessCode::Success);
 
 
 
-	Vec<mpfr> correct_eg_soln(1);
-	correct_eg_soln << mpfr(0,0);
+	Vec<BCT> correct_eg_soln(1);
+	correct_eg_soln << BCT(0);
 
 	tracker.Setup(config::Predictor::HeunEuler,
-	              	mpfr_float("1e-6"), mpfr_float("1e5"),
+	              	BRT("1e-6"), BRT("1e5"),
 					stepping_settings, newton_settings);
 
 	TestedEGType my_endgame(tracker);
@@ -1611,7 +1621,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 
 	auto endgame_success = my_endgame.PSEG(t_endgame_boundary,soln_at_EG_bdry);
 
-	auto endgame_solution = my_endgame.FinalApproximation<mpfr>();
+	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
 	BOOST_CHECK(abs(endgame_solution(0) - correct_eg_soln(0)) < 1e-11);
 }
 

@@ -73,6 +73,12 @@ namespace bertini
 		{
 			return ceil(-log10(tol));
 		}
+
+		inline static 
+		double FromString(std::string const& s)
+		{
+			return boost::lexical_cast<double>(s);
+		}
 	};
 
 
@@ -86,6 +92,12 @@ namespace bertini
 		inline static unsigned NumFuzzyDigits()
 		{
 			return 14;
+		}
+
+		inline static 
+		std::complex<double> FromString(std::string const& s)
+		{
+			return boost::lexical_cast<std::complex<double>>(s);
 		}
 	};
 
@@ -209,6 +221,12 @@ namespace bertini {
 			auto b = ceil(-log10(tol));
 			return b.convert_to<unsigned int>();
 		}
+
+		inline static 
+		mpfr_float FromString(std::string const& s)
+		{
+			return mpfr_float(s);
+		}
 	};	
 
 
@@ -218,6 +236,18 @@ namespace bertini {
 		inline static unsigned NumDigits()
 		{
 			return mpfr_float::default_precision();
+		}
+
+		inline static 
+		bertini::complex FromString(std::string const& s)
+		{
+			return bertini::complex(s);
+		}
+
+		inline static 
+		bertini::complex FromString(std::string const& s, std::string const& t)
+		{
+			return bertini::complex(s,t);
 		}
 	};
 }
