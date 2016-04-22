@@ -46,6 +46,28 @@ class FixedPrecEndgamePolicyBase
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
 
+protected:
+
+	template<typename... T>
+	static
+	unsigned EnsureAtUniformPrecision(T& ...args)
+	{
+		return bertini::tracking::endgame::EnsureAtUniformPrecision(args...);
+	}
+
+	auto Precision() const
+	{ return precision_; }
+
+
+	bool PrecisionSanityCheck() const
+	{
+		return true;
+	}
+
+	SuccessCode ChangePrecision(unsigned new_precision) const
+	{
+		return SuccessCode::Success;
+	}
 }; // re: fixed prec endgame policy
 
 

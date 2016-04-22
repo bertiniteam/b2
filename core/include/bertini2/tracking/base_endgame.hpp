@@ -228,7 +228,10 @@ namespace bertini{
 				*/	
 				template<typename CT>
 				SuccessCode ComputeInitialSamples(const CT & start_time,const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
-				{	using RT = typename Eigen::NumTraits<CT>::Real;
+				{	
+					using RT = typename Eigen::NumTraits<CT>::Real;
+					assert(endgame_settings_.num_sample_points>0 && "number of sample points must be positive");
+					
 					samples.resize(endgame_settings_.num_sample_points);
 					times.resize(endgame_settings_.num_sample_points);
 

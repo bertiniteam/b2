@@ -41,11 +41,8 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 
-// using dbl = std::complex<double>;
-// using mpfr = bertini::complex;
-// using mpfr_float = boost::multiprecision::mpfr_float;
 
-using dbl = std::complex<double>;
+using dbl = bertini::dbl;
 using mpfr = bertini::complex;
 using mpfr_float = bertini::mpfr_float;
 
@@ -63,13 +60,19 @@ BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame)
 using namespace bertini::tracking;
 using namespace bertini::tracking::endgame;
 
-BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
+using TrackerType = AMPTracker; // select a tracker type
+
+using TestedEGType = EndgameSelector<TrackerType>::PSEG;
+using PrecisionConfig = TrackerTraits<TrackerType>::PrecisionConfig;
+
+/**
+This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
+The test case will construct 3 samples with derivative,time, and space values for the function x^8 + 1.
+After the three samples have been constructed there will be a hermite interpolation. 
+We check this against the tracking tolerance for the endgame. 
+*/
+BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
 {
-	/*This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
-	The test case will construct 3 samples with derivative,time, and space values for the function x^8 + 1.
-	After the three samples have been constructed there will be a hermite interpolation. 
-	We check this against the tracking tolerance for the endgame. 
-	*/
 	mpfr_float::default_precision(30);
 
 
@@ -77,13 +80,11 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 	mpfr target_time(0,0); //our target time is the origin.
 	unsigned int num_samples = 3;
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples, derivatives;
 
 	mpfr time;
-	Vec<mpfr> sample(1);
-	Vec<mpfr> derivative(1);
+	Vec<mpfr> sample(1), derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	times.push_back(time);
@@ -115,7 +116,7 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab_mp )
 }//end basic hermite test case mp against matlab
 
 
-BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
+BOOST_AUTO_TEST_CASE(hermite_test_case_for_powerseries_class)
 {
 	/*This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
 
@@ -131,19 +132,16 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_mp_for_powerseries_class)
 	We then check to make sure our approximations are getting better by checking the distance from the correct answer and the 
 	various approximations made. 
 
-	*/
-	mpfr_float::default_precision(30);
+	*/	mpfr_float::default_precision(30);
 
 	mpfr target_time(0,0);
 	unsigned int num_samples = 3;
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples, derivatives;
 
 	mpfr time;
-	Vec<mpfr> sample(1);
-	Vec<mpfr> derivative(1);
+	Vec<mpfr> sample(1), derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	times.push_back(time);
@@ -237,13 +235,11 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 	mpfr target_time(0,0);
 	unsigned int num_samples = 3;
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples, derivatives;
 
 	mpfr time;
-	Vec<mpfr> sample(1);
-	Vec<mpfr> derivative(1);
+	Vec<mpfr> sample(1), derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	times.push_back(time);
@@ -311,7 +307,7 @@ BOOST_AUTO_TEST_CASE(hermite_test_case_dbl_for_powerseries_class)
 
 }//end hermite test case dbl
 
-BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
+BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_for_powerseries_class)
 {
 	/* In the power series endgame there is a bound on that is calculated that will be used as a higher
 	bound for the exhaustive search of the best cycle number. 
@@ -324,19 +320,18 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 
 	This is because the path will not look cubic globally. 
 	*/
-	
-	mpfr_float::default_precision(30);
+		mpfr_float::default_precision(30);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
-	sys.AddFunction(pow(x - 1,3));  //f(x) = (x-1)^3
+	sys.AddFunction(pow(x-1,3));  //f(x) = (x-1)^3
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -347,15 +342,13 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
-	std::deque< Vec<mpfr> > derivatives; //derivatives are also a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples, derivatives;
 
 	mpfr time;
-	Vec<mpfr> sample(1);
-	Vec<mpfr> derivative(1);
+	Vec<mpfr> sample(1), derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	times.push_back(time);
@@ -376,7 +369,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_mp_for_powerseries_class)
 
 	config::Endgame<mpfr_float> endgame_settings;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings);
+	TestedEGType my_endgame(tracker,endgame_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -426,14 +419,14 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
-	sys.AddFunction(pow(x - 1,3));  //f(x) = (x-1)^3
+	sys.AddFunction(pow(x-1,3));  //f(x) = (x-1)^3
 
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); 
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -444,15 +437,14 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples; 
 
 
 	mpfr time;
-	Vec<mpfr> sample(1);
-	Vec<mpfr> derivative(1);
+	Vec<mpfr> sample(1), derivative(1);
 
 	time = mpfr(".1"); // x = .1
 	times.push_back(time);
@@ -475,7 +467,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,security_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -509,7 +501,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num_dbl_for_powerseries_class)
 } // end compute bound on cycle number dbl
 
 
-BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
+BOOST_AUTO_TEST_CASE(compute_cycle_number_test_for_powerseries_class)
 {
 	/*
 	Once we have an upper bound for the exhaustive search on the correct cycle number, see above test cases. 
@@ -521,8 +513,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 
 	The best approximation determines which proposed cycle number we will use to run a Hermite interpolation with the n samples to 
 	approximate at the origin.
-	*/
-	mpfr_float::default_precision(30);
+	*/	mpfr_float::default_precision(30);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -534,9 +525,9 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	sys.AddPathVariable(t);
 
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -547,10 +538,10 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples; 
 
 
 	mpfr time(1);
@@ -586,7 +577,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_mp_for_powerseries_class)
 	config::PowerSeries power_series_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,power_series_settings,tolerances);
+	TestedEGType my_endgame(tracker,power_series_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -621,9 +612,9 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -634,10 +625,10 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples; 
 
 
 	mpfr time;
@@ -672,7 +663,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 	config::PowerSeries power_series_settings;
 	config::Security<mpfr_float> security_settings;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,power_series_settings,security_settings);
+	TestedEGType my_endgame(tracker,power_series_settings,security_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -683,7 +674,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number_test_dbl_for_powerseries_class)
 
 } // end compute cycle number mp
 
-BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
+BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_for_powerseries_class)
 {
 	
 	/*
@@ -695,7 +686,6 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	
 	Do this till we have three approximations. Check to see if the third approximation is better than second. 
 	*/
-
 	mpfr_float::default_precision(30);
 
 
@@ -707,9 +697,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	// Define homotopy system
 	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -720,13 +710,13 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 	mpfr origin = mpfr(0,0);
 	Vec<mpfr> x_origin(1);
 	x_origin << mpfr(1,0);
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples; 
 
 
 
@@ -752,7 +742,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_mp_for_powerseries_class)
 	config::Endgame<mpfr_float> endgame_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,tolerances);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -817,9 +807,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	// Define homotopy system
 	sys.AddFunction( pow(x - mpfr(1),3)*(1-t) + (pow(x,3) + mpfr(1))*t);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -830,13 +820,13 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 	mpfr origin = mpfr(0,0);
 	Vec<mpfr> x_origin(1);
 	x_origin << mpfr(1,0);
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples; //samples are space values that may be a vector of complex numbers.
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples; 
 
 
 	mpfr time(1);
@@ -860,7 +850,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 	config::Endgame<mpfr_float> endgame_settings;
 	config::Security<mpfr_float> security_settings;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,security_settings);
+	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -903,34 +893,33 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0_dbl_for_powerseries_class)
 
 } // end compute approximation of x at t0 mp
 
-BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
+
+
+/**
+Given a time value (usually 0.1) and a vector representing values for all other variables the first step in the power series 
+endgame is to get some initial samples to make the first hermite interpolation. 
+
+For this reason there exists a ComputeInitialSamples function. 
+
+This test case checks the computed samples vs. samples computed by hand with Matlab to see that they are within the 
+track tolerance during the endgame. 
+
+*/
+BOOST_AUTO_TEST_CASE(compute_initial_samples_for_powerseries_class)
 {
-	/*
-	Given a time value (usually 0.1) and a vector representing values for all other variables the first step in the power series 
-	endgame is to get some initial samples to make the first hermite interpolation. 
-
-	For this reason there exists a ComputeInitialSamples function. 
-
-	This test case checks the computed samples vs. samples computed by hand with Matlab to see that they are within the 
-	track tolerance during the endgame. 
-
-	*/
 	mpfr_float::default_precision(30);
-
-
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
 	VariableGroup vars{x};
-	sys.AddVariableGroup(vars);
-	sys.AddPathVariable(t);
+	sys.AddVariableGroup(vars); sys.AddPathVariable(t);
 	// Define homotopy system
-	sys.AddFunction( pow(x - 1,3)*(1-t) + (pow(x,3) + 1)*t);
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -941,17 +930,16 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 	mpfr sample_factor = mpfr(".5");
 	mpfr origin = mpfr("0");
 	Vec<mpfr> x_origin(1);
 	x_origin << mpfr(1,0);
-	std::deque<mpfr> correct_times; //times are not vectors they are just complex numbers, these are the correct times from bertini
-	std::deque< Vec<mpfr> > correct_samples; //samples are space values that may be a vector of complex numbers, correct space values 
-											// from bertini.
+	TimeCont<mpfr> correct_times; 
+	SampCont<mpfr> correct_samples;
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
+	TimeCont<mpfr> times; 
 	std::deque<Vec<mpfr> > samples;
 	mpfr time(1);
 	Vec<mpfr> sample(1);
@@ -972,8 +960,6 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	sample << mpfr("6.772905941598711e-01", "3.869924129415447e-17"); // f(.025) = 6.772905941598711e-01 3.869924129415447e-17 from bertini classic
 	correct_samples.push_back(sample);
 
-	unsigned int num_samples = 3; 
-
 	mpfr current_time(1);
 	Vec<mpfr> current_space(1);
 	current_time = mpfr(".1");
@@ -982,14 +968,16 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_mp_for_powerseries_class)
 	config::Endgame<mpfr_float> endgame_settings;
 	config::PowerSeries power_series_settings;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,power_series_settings);
+	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings);
 
-	my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
+	auto tracking_success = my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
 
+	BOOST_REQUIRE(tracking_success==SuccessCode::Success);
 	
 
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
+		BOOST_CHECK_EQUAL(samples[ii].size(),1);
 		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < my_endgame.Tolerances().newton_during_endgame);
 	}
 
@@ -1020,9 +1008,9 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -1033,18 +1021,17 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 	mpfr sample_factor = mpfr(".5");
 	mpfr origin = mpfr("0");
 	Vec<mpfr> x_origin(1);
 	x_origin << mpfr(1,0);
-	std::deque<mpfr> correct_times; //times are not vectors they are just complex numbers, these are the correct times from bertini
-	std::deque< Vec<mpfr> > correct_samples; //samples are space values that may be a vector of complex numbers, correct space values 
-											// from bertini.
+	TimeCont<mpfr> correct_times; 
+	SampCont<mpfr> correct_samples;
 
-	std::deque<mpfr> times; //times are not vectors they are just complex numbers.
-	std::deque< Vec<mpfr> > samples;
+	TimeCont<mpfr> times; 
+	SampCont<mpfr> samples;
 	mpfr time(1);
 	Vec<mpfr> sample(1);
 
@@ -1074,12 +1061,12 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,power_series_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,power_series_settings,security_settings,tolerances);
 
 
-	my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
+	auto tracking_success = my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
 
-
+	BOOST_REQUIRE(tracking_success==SuccessCode::Success);
 
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
@@ -1088,7 +1075,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_dbl_for_powerseries_class)
 
 }//end compute initial samples dbl
 
-BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
+BOOST_AUTO_TEST_CASE(pseg_for_powerseries_class)
 {
 	/*
 	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
@@ -1097,7 +1084,6 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
 	the endgame. 
 	*/
-
 	mpfr_float::default_precision(30);
 
 	bertini::System sys;
@@ -1109,9 +1095,9 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -1122,7 +1108,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 
 	mpfr current_time(1);
@@ -1137,7 +1123,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
 	my_endgame.PSEG(current_time,current_space);
 
 
@@ -1165,9 +1151,9 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 
 	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -1178,7 +1164,7 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 	mpfr current_time(1);
 	Vec<mpfr> current_space(1);
@@ -1192,7 +1178,7 @@ BOOST_AUTO_TEST_CASE(pseg_dbl_for_powerseries_class)
 	config::PowerSeries power_series_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,power_series_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,tolerances);
 
 
 	my_endgame.PSEG(current_time,current_space);
@@ -1215,7 +1201,6 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 	This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
 	the endgame. 
 	*/
-
 	mpfr_float::default_precision(30);
 
 	System sys;
@@ -1229,9 +1214,9 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -1242,7 +1227,7 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 
 	mpfr start_time(1);
@@ -1262,7 +1247,7 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
 	my_endgame.PSEG(t_endgame_boundary,eg_boundary_point);
 
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),1);//my_endgame.
@@ -1277,7 +1262,7 @@ BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 
 
 
-BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
+BOOST_AUTO_TEST_CASE(pseg_for_powerseries_class_multiple_variables)
 {
 	/*
 	The function that runs the power series endgame is called PSEG. PSEG takes an endgame_time value and and endgame_space value that is
@@ -1286,7 +1271,6 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 	In this test we do multiple variables decoupled, that has a high multiplicity (5) solution. 
 
 	*/
-
 	mpfr_float::default_precision(30);
 
 
@@ -1300,9 +1284,9 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 	sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
 	sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -1313,7 +1297,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 
 	mpfr current_time(1);
@@ -1328,7 +1312,7 @@ BOOST_AUTO_TEST_CASE(pseg_mp_for_powerseries_class_multiple_variables)
 	config::PowerSeries power_series_settings;
 	config::Security<mpfr_float> security_settings;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
+	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
 	my_endgame.PSEG(current_time,current_space);
 
@@ -1350,7 +1334,6 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	// This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
 	// the endgame. 
 	
-
 	mpfr_float::default_precision(30);
 
 	bertini::System sys;
@@ -1362,9 +1345,9 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	sys.AddFunction(((mpfr("29")/mpfr("16"))*pow(x,3)-2*x*y)*(1-t) + (pow(x,3) - 1)*t);
 	sys.AddFunction((y - pow(x,2))*(1-t) + (pow(y,2) - 1)*t);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
-	AMPTracker tracker(sys);
+	TrackerType tracker(sys);
 	
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
@@ -1375,7 +1358,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
                 stepping_settings,
                 newton_settings);
 	
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 
 
 	mpfr endgame_time(1);
@@ -1413,7 +1396,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne_for_powerseries_class_griewank_osborne)
 	config::Security<mpfr_float> security_settings;
 	config::Tolerances<mpfr_float> tolerances;
 
-	AMPPowerSeriesEndgame my_endgame(tracker,endgame_settings,power_series_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings,tolerances);
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
@@ -1503,18 +1486,18 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	auto final_system = (1-t)*sys + t*TD;
 	final_system.AddPathVariable(t);
 
-	auto AMP = config::AMPConfigFrom(final_system);
+	auto precision_config = PrecisionConfig(final_system);
 
 
 
-	auto tracker = AMPTracker(final_system);
+	auto tracker = TrackerType(final_system);
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
 	tracker.Setup(config::Predictor::HeunEuler,
 	              	mpfr_float("1e-5"), mpfr_float("1e5"),
 					stepping_settings, newton_settings);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 	
 
 	mpfr t_start(1), t_endgame_boundary(0.1);
@@ -1541,7 +1524,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
 	              	mpfr_float("1e-6"), mpfr_float("1e5"),
 					stepping_settings, newton_settings);
 
-	AMPPowerSeriesEndgame my_endgame(tracker);
+	TestedEGType my_endgame(tracker);
 
 
 	std::vector<Vec<mpfr> > endgame_solutions;
@@ -1593,18 +1576,18 @@ BOOST_AUTO_TEST_CASE(parabola)
 	Vec<mpfr> start_point(1);
 	start_point << mpfr(1);
 
-	auto AMP = config::AMPConfigFrom(sys);
+	auto precision_config = PrecisionConfig(sys);
 
 
 
-	auto tracker = AMPTracker(sys);
+	auto tracker = TrackerType(sys);
 	config::Stepping<mpfr_float> stepping_settings;
 	config::Newton newton_settings;
 	tracker.Setup(config::Predictor::HeunEuler,
 	              	mpfr_float("1e-5"), mpfr_float("1e5"),
 					stepping_settings, newton_settings);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(precision_config);
 	
 
 	mpfr t_start(1), t_endgame_boundary("0.1");
@@ -1623,7 +1606,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 	              	mpfr_float("1e-6"), mpfr_float("1e5"),
 					stepping_settings, newton_settings);
 
-	AMPPowerSeriesEndgame my_endgame(tracker);
+	TestedEGType my_endgame(tracker);
 
 
 	auto endgame_success = my_endgame.PSEG(t_endgame_boundary,soln_at_EG_bdry);
