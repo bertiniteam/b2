@@ -914,7 +914,7 @@ namespace bertini{
 
 
 				
-			};
+			}; //re: ExplicitRKPredictor class
 			
 			// Ptr must be filled row first.
 			// i.e. aPtr[] = {a_11, a_21, a_12, a_22}
