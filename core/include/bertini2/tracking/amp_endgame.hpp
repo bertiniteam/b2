@@ -59,8 +59,7 @@ public:
 	static
 	unsigned EnsureAtUniformPrecision(T& ...args)
 	{
-		using namespace bertini::tracking::endgame::adaptive;
-		return EnsureAtUniformPrecision(args...);
+		return bertini::tracking::endgame::adaptive::EnsureAtUniformPrecision(args...);
 	}
 
 protected:
