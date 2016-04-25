@@ -48,3 +48,96 @@ using TestedEGType = EndgameSelector<TrackerType>::PSEG;
 #include "test/endgames/generic_pseg_test.hpp"
 
 BOOST_AUTO_TEST_SUITE_END()
+
+
+
+
+
+
+
+
+BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame_AMPspecific_tests)
+
+using namespace bertini::tracking;
+using namespace bertini::tracking::endgame;
+
+using TrackerType = AMPTracker; // select a tracker type
+using TestedEGType = EndgameSelector<TrackerType>::PSEG;
+
+using namespace bertini;
+BOOST_AUTO_TEST_CASE(ensure_uniform_precision_16_30_40)
+{
+	TimeCont<mpfr> times;
+	SampCont<mpfr> samples;
+
+	mpfr_float::default_precision(16);
+	times.emplace_back(RandomUnit<mpfr>());
+
+	mpfr_float::default_precision(30);
+	times.emplace_back(RandomUnit<mpfr>());
+
+	mpfr_float::default_precision(40);
+	times.emplace_back(RandomUnit<mpfr>());
+
+
+
+	mpfr_float::default_precision(16);
+	samples.emplace_back(RandomOfUnits<mpfr>(4));
+
+	mpfr_float::default_precision(30);
+	samples.emplace_back(RandomOfUnits<mpfr>(4));
+
+	mpfr_float::default_precision(40);
+	samples.emplace_back(RandomOfUnits<mpfr>(4));
+
+
+	auto max_precision = TestedEGType::EnsureAtUniformPrecision(times, samples);
+
+	BOOST_CHECK_EQUAL(max_precision,40);
+
+	for (const auto& t : times)
+		BOOST_CHECK_EQUAL(Precision(t),40);
+
+	for (const auto& s : samples)
+		BOOST_CHECK_EQUAL(Precision(s(0)),40);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(ensure_uniform_precision_all_uniform_to_start)
+{
+	TimeCont<mpfr> times;
+	SampCont<mpfr> samples;
+
+	mpfr_float::default_precision(30);
+	times.emplace_back(RandomUnit<mpfr>());
+
+	mpfr_float::default_precision(30);
+	times.emplace_back(RandomUnit<mpfr>());
+
+	mpfr_float::default_precision(30);
+	times.emplace_back(RandomUnit<mpfr>());
+
+
+
+	mpfr_float::default_precision(30);
+	samples.emplace_back(RandomOfUnits<mpfr>(4));
+
+	mpfr_float::default_precision(30);
+	samples.emplace_back(RandomOfUnits<mpfr>(4));
+
+	mpfr_float::default_precision(30);
+	samples.emplace_back(RandomOfUnits<mpfr>(4));
+
+
+	auto max_precision = TestedEGType::EnsureAtUniformPrecision(times, samples);
+
+	BOOST_CHECK_EQUAL(max_precision,30);
+
+	for (const auto& t : times)
+		BOOST_CHECK_EQUAL(Precision(t),30);
+
+	for (const auto& s : samples)
+		BOOST_CHECK_EQUAL(Precision(s(0)),30);
+}
+BOOST_AUTO_TEST_SUITE_END()
