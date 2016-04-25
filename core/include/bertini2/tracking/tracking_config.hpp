@@ -156,28 +156,28 @@ namespace bertini
 		struct EndgameSelector<DoublePrecisionTracker>
 		{
 			using PSEG = endgame::FixedPrecPowerSeriesEndgame<DoublePrecisionTracker>;
-			using CauchyEG = endgame::FixedPrecCauchyEG<DoublePrecisionTracker>;
+			using Cauchy = endgame::FixedPrecCauchyEG<DoublePrecisionTracker>;
 		};
 
 		template<>
 		struct EndgameSelector<MultiplePrecisionTracker>
 		{
 			using PSEG = endgame::FixedPrecPowerSeriesEndgame<MultiplePrecisionTracker>;
-			using CauchyEG = endgame::FixedPrecCauchyEG<MultiplePrecisionTracker>;
+			using Cauchy = endgame::FixedPrecCauchyEG<MultiplePrecisionTracker>;
 		};
 
 		template<class D>
 		struct EndgameSelector<FixedPrecisionTracker<D> >
 		{
 			using PSEG = typename EndgameSelector<D>::PSEG;
-			using CauchyEG = typename EndgameSelector<D>::CauchyEG;
+			using Cauchy = typename EndgameSelector<D>::Cauchy;
 		};
 
 		template<>
 		struct EndgameSelector<AMPTracker>
 		{
 			using PSEG = endgame::AMPPowerSeriesEndgame;
-			using CauchyEG = endgame::AMPCauchyEndgame;
+			using Cauchy = endgame::AMPCauchyEndgame;
 		};
 
 

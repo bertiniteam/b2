@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//generic_pseg_test.cpp is free software: you can redistribute it and/or modify
+//generic_pseg_test.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//generic_pseg_test.cpp is distributed in the hope that it will be useful,
+//generic_pseg_test.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with generic_pseg_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with generic_pseg_test.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015, 2016 by Bertini2 Development Team
 //

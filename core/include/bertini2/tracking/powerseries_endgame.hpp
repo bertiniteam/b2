@@ -123,7 +123,7 @@ template<typename TrackerType, typename FinalPSEG, typename... UsedNumTs>
 class PowerSeriesEndgame : public EndgameBase<TrackerType>
 {
 
-	// convert the base tracker into the derived type.
+	// convert the base endgame into the derived type.
 	const FinalPSEG& AsDerived() const
 	{
 		return static_cast<const FinalPSEG&>(*this);
