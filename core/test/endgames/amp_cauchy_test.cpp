@@ -39,7 +39,7 @@
 
 #include "bertini2/tracking/amp_cauchy_endgame.hpp"
 
-
+#include "bertini2/tracking/observers.hpp"
 
 
 BOOST_AUTO_TEST_SUITE(amp_cauchy_endgame_generic_tests)

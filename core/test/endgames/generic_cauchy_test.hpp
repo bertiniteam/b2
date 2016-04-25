@@ -217,13 +217,12 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 /**
 	In this test we take a univariate polynomial with one solution of multiplicity. For our first power series approximation we need to 
 	make sure that we have a stablization of the cycle number. This is achieved by computing an approximation for C over K which is described 
-	on page 53 of the Berini Book, Numerically Solving Polynomials Systems with Bertini. 
+	on page 53 of the Berini Book, Numerically Solving Polynomials Systems with Bertini \cite bertinibook.
+
 	This test case is ensuring no calculations are greatly altered, so our test condition is to check against a computed value that has been already known. 
 */
 BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 {
-		
-	
 	mpfr_float::default_precision(30);
 
 	bertini::System sys;
@@ -311,7 +310,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 
 /**
 	After we have computed C over K approximations we have to make sure that we lie within some agreed terms. This means our agreements need
-	to be with some ratio of eachother. (Minimum is usually .75), and we need to agree so many times (usually 3). This test case checks for this. 
+	to be with some ratio of each other. (Minimum is usually .75), and we need to agree so many times (usually 3). This test case checks for this. 
 	
 */	
 BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
@@ -345,7 +344,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 	SampCont<BCT> pseg_samples;
 	TimeCont<BCT> c_over_k_array;
 
-	mpfr time;
+	BCT time;
 	Vec<BCT> sample(1);
 
 	time = ComplexFromString(".1"); // x = .1
@@ -828,6 +827,9 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 	Vec<BCT> sample(1);
 	sample << ComplexFromString("0.5","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
 
+	GoryDetailLogger<TrackerType> tons_of_detail;
+
+	tracker.AddObserver(&tons_of_detail);
 
 	TestedEGType my_endgame(tracker);
 

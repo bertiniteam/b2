@@ -809,14 +809,15 @@ public:
 		for (unsigned ii=0; ii<ps_samples.size(); ++ii)
 		{
 			auto refine_code = AsDerived().RefineSample(ps_samples[ii],ps_samples[ii],ps_times[ii]);
-			if (refine_code != SuccessCode:: Success)
+			if (refine_code != SuccessCode::Success)
 				return refine_code;
 		}
 
 		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
-			//Checking to make sure all samples are of the same precision.
+			//Ensure all samples are of the same precision.
 			auto new_precision = AsDerived().EnsureAtUniformPrecision(ps_times, ps_samples);
+			std::cout << "setting system precision from " << this->GetSystem().precision() << " to " << new_precision << std::endl;
 			this->GetSystem().precision(new_precision);
 		}
 
@@ -826,6 +827,7 @@ public:
 		for(unsigned ii = 0; ii < num_sample_points; ++ii)
 		{	
 			// the inverse() call uses LU look at Eigen documentation on inverse in Eigen/LU.
+			std::cout << this->GetSystem().precision() << " " << Precision(ps_samples[ii](0)) << " " << Precision(ps_times[ii]) << std::endl;
 			pseg_derivatives.push_back(
 			                           -(this->GetSystem().Jacobian(ps_samples[ii],ps_times[ii]).inverse())*this->GetSystem().TimeDerivative(ps_samples[ii],ps_times[ii])
 			                           );

@@ -51,7 +51,7 @@ inline
 unsigned MaxPrecision(SampCont<mpfr> const& samples)
 {
 	unsigned max_precision = 0;
-	for (auto& s : samples)
+	for (const auto& s : samples)
 		if(Precision(s(0)) > max_precision)
 			max_precision = Precision(s(0));
 	return max_precision;
@@ -61,14 +61,20 @@ inline
 unsigned MaxPrecision(TimeCont<mpfr> const& times)
 {
 	unsigned max_precision = 0;
-	for (auto& t : times)
+	for (const auto& t : times)
 		if(Precision(t) > max_precision)
 			max_precision = Precision(t);
 	return max_precision;
 }
 
 
-//does not a thing, because cannot.
+/**
+\brief Does not a thing, because cannot.
+
+Cannot change precision of fixed precision hardware doubles.
+
+\return The precision, which is now uniform.
+*/
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & derivatives)
 {
@@ -76,7 +82,11 @@ unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & derivat
 }
 
 
-//changes precision of mpfr to highest needed precision for the samples.
+/**
+\brief Changes precision of mpfr to highest needed precision for the samples.
+
+\return The precision, which is now uniform.
+*/
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples)
 {
@@ -87,8 +97,8 @@ unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & sampl
 	                             ); 
 
 	if (max_precision != mpfr_float::default_precision())
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
-	
+		std::cout << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
+	//BOOST_LOG_TRIVIAL(severity_level::trace)
 	mpfr_float::default_precision(max_precision);
 
 	SetPrecision(times, max_precision);
