@@ -152,7 +152,7 @@ namespace bertini{
 			public:
 				
 				
-				ExplicitRKPredictor(const System& S)
+				ExplicitRKPredictor(const System& S) : s_(1)
 				{
 					numTotalFunctions = S.NumTotalFunctions();
 					PredictorMethod(DefaultPredictor());
@@ -166,7 +166,7 @@ namespace bertini{
 				 
 				 */
 				
-				ExplicitRKPredictor(Predictor method, const System& S)
+				ExplicitRKPredictor(Predictor method, const System& S) : s_(1)
 				{
 					numTotalFunctions = S.NumTotalFunctions();
 					PredictorMethod(method);
@@ -184,98 +184,95 @@ namespace bertini{
 				
 				void PredictorMethod(Predictor method)
 				{
-					if(predictor_ != method)
+					predictor_ = method;
+					p_ = predict::Order(method);
+					switch(method)
 					{
-						predictor_ = method;
-						p_ = predict::Order(method);
-						switch(method)
+						case Predictor::Euler:
 						{
-							case Predictor::Euler:
-							{
-								s_ = 1;
-								Mat<double>& arefd = std::get< Mat<double> >(a_);
-								Vec<double>& brefd = std::get< Vec<double> >(b_);
-								Vec<double>& crefd = std::get< Vec<double> >(c_);
-								crefd = Vec<double>(s_); crefd(0) = static_cast<double>(cEuler_(0));
-								arefd = Mat<double>(s_,s_); arefd(0,0) = static_cast<double>(aEuler_(0,0));
-								brefd = Vec<double>(s_); brefd(0) = static_cast<double>(bEuler_(0));
-								Mat<mpfr_float>& arefmp = std::get< Mat<mpfr_float> >(a_);
-								Vec<mpfr_float>& brefmp = std::get< Vec<mpfr_float> >(b_);
-								Vec<mpfr_float>& crefmp = std::get< Vec<mpfr_float> >(c_);
-								crefmp = Vec<mpfr_float>(s_); crefmp(0) = static_cast<mpfr_float>(cEuler_(0));
-								arefmp = Mat<mpfr_float>(s_,s_); arefmp(0,0) = static_cast<mpfr_float>(aEuler_(0,0));
-								brefmp = Vec<mpfr_float>(s_); brefmp(0) = static_cast<mpfr_float>(bEuler_(0));
-								
-								break;
-							}
-							case Predictor::HeunEuler:
-							{
-								s_ = 2;
-								
-								FillButcherTable<double>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
-								FillButcherTable<mpfr_float>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
-								
-								break;
-							}
-							case Predictor::RK4:
-							{
-								s_ = 4;
-								
-								FillButcherTable<double>(s_, aRK4_, bRK4_, cRK4_);
-								FillButcherTable<mpfr_float>(s_, aRK4_, bRK4_, cRK4_);
-								
-								break;
-							}
-								
-							case Predictor::RKF45:
-							{
-								s_ = 6;
-								
-								FillButcherTable<double>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
-								FillButcherTable<mpfr_float>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
-								
-								break;
-							}
-								
-							case Predictor::RKCashKarp45:
-							{
-								s_ = 6;
-								
-								FillButcherTable<double>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
-								FillButcherTable<mpfr_float>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
-								
-								break;
-							}
-								
-							case Predictor::RKDormandPrince56:
-							{
-								s_ = 8;
-								
-								FillButcherTable<double>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
-								FillButcherTable<mpfr_float>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
-								
-								break;
-							}
-								
-							case Predictor::RKVerner67:
-							{
-								s_ = 10;
-								
-								FillButcherTable<double>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
-								FillButcherTable<mpfr_float>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
-								
-								break;
-							}
-								
-							default:
-							{
-								throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
-							}
+							s_ = 1;
+							Mat<double>& arefd = std::get< Mat<double> >(a_);
+							Vec<double>& brefd = std::get< Vec<double> >(b_);
+							Vec<double>& crefd = std::get< Vec<double> >(c_);
+							crefd.resize(s_); crefd(0) = static_cast<double>(cEuler_(0));
+							arefd.resize(s_,s_); arefd(0,0) = static_cast<double>(aEuler_(0,0));
+							brefd.resize(s_); brefd(0) = static_cast<double>(bEuler_(0));
+							Mat<mpfr_float>& arefmp = std::get< Mat<mpfr_float> >(a_);
+							Vec<mpfr_float>& brefmp = std::get< Vec<mpfr_float> >(b_);
+							Vec<mpfr_float>& crefmp = std::get< Vec<mpfr_float> >(c_);
+							crefmp.resize(s_); crefmp(0) = static_cast<mpfr_float>(cEuler_(0));
+							arefmp.resize(s_,s_); arefmp(0,0) = static_cast<mpfr_float>(aEuler_(0,0));
+							brefmp.resize(s_); brefmp(0) = static_cast<mpfr_float>(bEuler_(0));
+							
+							break;
 						}
-						
+						case Predictor::HeunEuler:
+						{
+							s_ = 2;
+							
+							FillButcherTable<double>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							FillButcherTable<mpfr_float>(s_, aHeunEuler_, bHeunEuler_, b_minus_bstarHeunEuler_, cHeunEuler_);
+							
+							break;
+						}
+						case Predictor::RK4:
+						{
+							s_ = 4;
+							
+							FillButcherTable<double>(s_, aRK4_, bRK4_, cRK4_);
+							FillButcherTable<mpfr_float>(s_, aRK4_, bRK4_, cRK4_);
+							
+							break;
+						}
+							
+						case Predictor::RKF45:
+						{
+							s_ = 6;
+							
+							FillButcherTable<double>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+							FillButcherTable<mpfr_float>(s_, aRKF45_, bRKF45_, b_minus_bstarRKF45_, cRKF45_);
+							
+							break;
+						}
+							
+						case Predictor::RKCashKarp45:
+						{
+							s_ = 6;
+							
+							FillButcherTable<double>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+							FillButcherTable<mpfr_float>(s_, aRKCK45_, bRKCK45_, b_minus_bstarRKCK45_, cRKCK45_);
+							
+							break;
+						}
+							
+						case Predictor::RKDormandPrince56:
+						{
+							s_ = 8;
+							
+							FillButcherTable<double>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							FillButcherTable<mpfr_float>(s_, aRKDP56_, bRKDP56_, b_minus_bstarRKDP56_, cRKDP56_);
+							
+							break;
+						}
+							
+						case Predictor::RKVerner67:
+						{
+							s_ = 10;
+							
+							FillButcherTable<double>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+							FillButcherTable<mpfr_float>(s_, aRKV67_, bRKV67_, b_minus_bstarRKV67_, cRKV67_);
+							
+							break;
+						}
+							
+						default:
+						{
+							throw std::runtime_error("incompatible predictor choice in ExplicitPredict");
+						}
 					}
-					std::get< Mat<dbl> >(K_) = Mat<dbl>(numTotalFunctions, s_);
-					std::get< Mat<mpfr> >(K_) = Mat<mpfr>(numTotalFunctions, s_);
+						
+					std::get< Mat<dbl> >(K_).resize(numTotalFunctions, s_);
+					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions, s_);
 
 					
 					
@@ -294,8 +291,8 @@ namespace bertini{
 				void PredictorSystem(const System& S)
 				{
 					numTotalFunctions = S.NumTotalFunctions();
-					std::get< Mat<dbl> >(K_) = Mat<dbl>(numTotalFunctions, s_);
-					std::get< Mat<mpfr> >(K_) = Mat<mpfr>(numTotalFunctions, s_);
+					std::get< Mat<dbl> >(K_).resize(numTotalFunctions, s_);
+					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions, s_);
 				}
 				
 				
@@ -734,7 +731,7 @@ namespace bertini{
 								 const Mat<mpq_rational> & c)
 				{
 					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
-					aref = Mat<RealType>(stages, stages);
+					aref.resize(stages, stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						for(int jj = 0; jj < s_; ++jj)
@@ -744,21 +741,21 @@ namespace bertini{
 					}
 					
 					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
-					bref = Vec<RealType>(stages);
+					bref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						bref(ii) = static_cast<RealType>(b(ii));
 					}
 					
 					Vec<RealType>& b_minus_bstar_ref = std::get< Vec<RealType> >(b_minus_bstar_);
-					b_minus_bstar_ref = Vec<RealType>(stages);
+					b_minus_bstar_ref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						b_minus_bstar_ref(ii) = static_cast<RealType>(b_minus_bstar(ii));
 					}
 
 					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
-					cref = Vec<RealType>(stages);
+					cref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						cref(ii) = static_cast<RealType>(c(ii));
@@ -787,7 +784,7 @@ namespace bertini{
 									  const Mat<mpq_rational> & c)
 				{
 					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
-					aref = Mat<RealType>(stages, stages);
+					aref.resize(stages, stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						for(int jj = 0; jj < s_; ++jj)
@@ -797,14 +794,14 @@ namespace bertini{
 					}
 					
 					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
-					bref = Vec<RealType>(stages);
+					bref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						bref(ii) = static_cast<RealType>(b(ii));
 					}
 					
 					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
-					cref = Vec<RealType>(stages);
+					cref.resize(stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
 						cref(ii) = static_cast<RealType>(c(ii));
