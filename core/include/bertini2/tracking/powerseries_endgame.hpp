@@ -408,8 +408,11 @@ public:
 
 			assert((samples.size() == times.size()) && "must have same number of times and samples");
 
-		auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
-		this->GetSystem().precision(max_precision);
+		if (TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
+		{
+			auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
+			this->GetSystem().precision(max_precision);
+		}
 
 		//Compute dx_dt for each sample.
 		derivatives.clear(); derivatives.resize(samples.size());

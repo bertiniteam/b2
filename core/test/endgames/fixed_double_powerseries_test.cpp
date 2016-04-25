@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//amp_powerseries_test.cpp is free software: you can redistribute it and/or modify
+//fixed_double_powerseries_test.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//amp_powerseries_test.cpp is distributed in the hope that it will be useful,
+//fixed_double_powerseries_test.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with amp_powerseries_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with fixed_double_powerseries_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
@@ -50,16 +50,4 @@ using TestedEGType = EndgameSelector<TrackerType>::PSEG;
 BOOST_AUTO_TEST_SUITE_END()
 
 
-BOOST_AUTO_TEST_SUITE(fixed_multiple_powerseries_endgame_generic_tests)
-
-using namespace bertini::tracking;
-using namespace bertini::tracking::endgame;
-
-using TrackerType = MultiplePrecisionTracker; // select a tracker type
-using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-
-
-#include "test/endgames/generic_pseg_test.hpp"
-
-BOOST_AUTO_TEST_SUITE_END()
 

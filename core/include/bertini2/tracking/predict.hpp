@@ -83,7 +83,18 @@ namespace bertini{
 									tracking_tolerance);
 					break;
 				}
-
+				case config::Predictor::HeunEuler:
+				{
+					return predict::HeunEuler(next_space,
+									sys,
+									current_space, current_time, 
+									delta_t,
+									condition_number_estimate,
+									num_steps_since_last_condition_number_computation, 
+									frequency_of_CN_estimation, 
+									tracking_tolerance);
+					break;
+				}
 				default:
 				{
 					throw std::runtime_error("incompatible predictor choice in Predict");

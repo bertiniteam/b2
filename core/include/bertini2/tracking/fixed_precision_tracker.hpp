@@ -459,7 +459,7 @@ namespace bertini{
 
 
 			/**
-			\brief Construct an Adaptive Precision tracker, associating to it a System.
+			\brief Construct a tracker, associating to it a System.
 			*/
 			DoublePrecisionTracker(class System const& sys) : FixedPrecisionTracker<DoublePrecisionTracker>(sys)
 			{	}
@@ -526,7 +526,13 @@ namespace bertini{
 					throw std::runtime_error("erroneously creating a fixed multiple precision tracker with differing precision from current default");
 			}
 
+			/**
+			\brief Construct a tracker, associating to it a System.
+			*/
+			MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys)
+			{	}
 
+			
 			MultiplePrecisionTracker() = delete;
 
 			virtual ~MultiplePrecisionTracker() = default;
