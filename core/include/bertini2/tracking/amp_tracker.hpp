@@ -1450,6 +1450,7 @@ namespace bertini{
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
+				predictor_choice_->ChangePrecision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
 					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
