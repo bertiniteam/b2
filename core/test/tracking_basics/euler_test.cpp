@@ -702,6 +702,126 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
 	}
+	
+	
+	
+	
+	BOOST_AUTO_TEST_CASE(circle_line_euler_change_precision)
+	{
+		bertini::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		
+		// Starting point in spacetime step
+		Vec<mpfr> current_space(2);
+		current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
+		
+		// Starting time
+		mpfr current_time("0.9");
+		// Time step
+		mpfr delta_t("-0.1");
+		
+		
+		
+		
+		bertini::System sys;
+		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		
+		VariableGroup vars{x,y};
+		
+		sys.AddVariableGroup(vars);
+		sys.AddPathVariable(t);
+		
+		// Define homotopy system
+		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
+		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
+		
+		
+		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		
+		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+		AMP.coefficient_bound = 5;
+		
+		mpfr_float norm_J, norm_J_inverse, size_proportion;
+		
+		Vec<mpfr> predicted(2);
+		predicted << mpfr("2.40310963516214640018253210912048","0.187706567388887830930493342816564"),
+		mpfr("0.370984337833979085688209698697074", "1.30889906180158745272421523674049");
+		
+		Vec<mpfr> euler_prediction_result;
+		mpfr next_time;
+		
+		mpfr_float tracking_tolerance("1e-5");
+		mpfr_float condition_number_estimate;
+		unsigned num_steps_since_last_condition_number_computation = 1;
+		unsigned frequency_of_CN_estimation = 1;
+		
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		
+		auto success_code = predictor->Predict(euler_prediction_result,
+											   size_proportion,
+											   norm_J, norm_J_inverse,
+											   sys,
+											   current_space, current_time,
+											   delta_t,
+											   condition_number_estimate,
+											   num_steps_since_last_condition_number_computation,
+											   frequency_of_CN_estimation,
+											   tracking_tolerance,
+											   AMP);
+		
+		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
+		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
+			BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
+		
+		
+		
+		
+		bertini::mpfr_float::default_precision(50);
+		
+		// Starting point in spacetime step
+		current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
+		
+		// Starting time
+		current_time = mpfr("0.9");
+		// Time step
+		delta_t = mpfr("-0.1");
+		
+		
+		
+		
+		sys.precision(50);
+		
+		AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		
+		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
+		AMP.coefficient_bound = 5;
+		
+		
+		predicted << mpfr("2.4031096351621464001825321091204810500227008230702","0.18770656738888783093049334281656388282191769240875"),
+		mpfr("0.37098433783397908568820969869707413571104273956141", "1.3088990618015874527242152367404908738825831867988");
+		
+		
+		
+		predictor->ChangePrecision(50);
+		success_code = predictor->Predict(euler_prediction_result,
+										  size_proportion,
+										  norm_J, norm_J_inverse,
+										  sys,
+										  current_space, current_time,
+										  delta_t,
+										  condition_number_estimate,
+										  num_steps_since_last_condition_number_computation,
+										  frequency_of_CN_estimation,
+										  tracking_tolerance,
+										  AMP);
+		
+		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
+		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
+			BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < 1e-47);
+		
+	}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

@@ -168,10 +168,12 @@ namespace bertini{
 
 			\return The value of the right hand side of the inequality from Criterion C.
 			*/
-			template<typename ComplexType ,typename RealType>
-			RealType CriterionCRHS(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename RealType, typename Derived>
+			RealType CriterionCRHS(RealType const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
+				using ComplexType = typename Derived::Scalar;
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
 				return CriterionCRHS(norm_J_inverse, z.norm(), tracking_tolerance, AMP_config);
 			}
 
@@ -189,10 +191,12 @@ namespace bertini{
 			\param z The current space point. 
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
-			template<typename ComplexType ,typename RealType>
-			bool CriterionC(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename RealType, typename Derived>
+			bool CriterionC(RealType const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
+				using ComplexType = typename Derived::Scalar;
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
 				return NumTraits<RealType>::NumDigits() > CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config);
 			}
 		}

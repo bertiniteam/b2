@@ -346,7 +346,7 @@ namespace bertini {
 		{
 			typedef typename Derived::Scalar T;
 
-			if(J.rows() < NumFunctions() || J.cols() != NumVariables())
+			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
 			{
 				throw std::runtime_error("trying to evaluate jacobian of system in place, but input J doesn't have right number of columns or rows");
 			}

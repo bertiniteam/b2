@@ -152,9 +152,12 @@ namespace bertini{
 			public:
 				
 				
-				ExplicitRKPredictor(const System& S) : s_(1)
+				ExplicitRKPredictor(const System& S)
 				{
-					numTotalFunctions = S.NumTotalFunctions();
+					numTotalFunctions_ = S.NumTotalFunctions();
+					numVariables_ = S.NumVariables();
+					std::get< Mat<dbl> >(dh_dx_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr> >(dh_dx_).resize(numTotalFunctions_, numVariables_);
 					PredictorMethod(DefaultPredictor());
 				}
 				
@@ -166,9 +169,12 @@ namespace bertini{
 				 
 				 */
 				
-				ExplicitRKPredictor(Predictor method, const System& S) : s_(1)
+				ExplicitRKPredictor(Predictor method, const System& S)
 				{
-					numTotalFunctions = S.NumTotalFunctions();
+					numTotalFunctions_ = S.NumTotalFunctions();
+					numVariables_ = S.NumVariables();
+					std::get< Mat<dbl> >(dh_dx_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr> >(dh_dx_).resize(numTotalFunctions_, numVariables_);
 					PredictorMethod(method);
 				}
 				
@@ -271,8 +277,8 @@ namespace bertini{
 						}
 					}
 						
-					std::get< Mat<dbl> >(K_).resize(numTotalFunctions, s_);
-					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions, s_);
+					std::get< Mat<dbl> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions_, s_);
 
 					
 					
@@ -290,12 +296,43 @@ namespace bertini{
 				 */
 				void PredictorSystem(const System& S)
 				{
-					numTotalFunctions = S.NumTotalFunctions();
-					std::get< Mat<dbl> >(K_).resize(numTotalFunctions, s_);
-					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions, s_);
+					numTotalFunctions_ = S.NumTotalFunctions();
+					std::get< Mat<dbl> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions_, s_);
 				}
 				
 				
+				
+				
+				
+				
+				/** 
+				 /brief Change the precision of the predictor variables and reassign the Butcher table variables.
+				 
+				 \param new_precision The new precision.
+				 
+				 */
+				void ChangePrecision(unsigned new_precision)
+				{
+					for(int ii = 0; ii < numTotalFunctions_; ++ii)
+					{
+						for(int jj = 0; jj < s_; ++jj)
+						{
+							std::get< Mat<mpfr> >(K_)(ii,jj).precision(new_precision);
+						}
+					}
+					
+					for(int ii = 0; ii < numTotalFunctions_; ++ii)
+					{
+						for(int jj = 0; jj < numVariables_; ++jj)
+						{
+							std::get< Mat<mpfr> >(dh_dx_)(ii,jj).precision(new_precision);
+						}
+					}
+
+					
+					PredictorMethod(predictor_);
+				}
 				
 				
 				
@@ -316,10 +353,10 @@ namespace bertini{
 				 \param tracking_tolerance How tightly to track the path.
 				 */
 				
-				template<typename ComplexType, typename RealType>
+				template<typename ComplexType, typename RealType, typename Derived>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									System const& S,
-									Vec<ComplexType> const& current_space, ComplexType current_time,
+									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									RealType & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
@@ -327,8 +364,8 @@ namespace bertini{
 									RealType const& tracking_tolerance)
 				{
 					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-//					std::get< Mat<dbl> >(K_) = Mat<dbl>(S.NumTotalFunctions(), s_);
-//					std::get< Mat<mpfr> >(K_) = Mat<mpfr>(S.NumTotalFunctions(), s_);
+					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
+
 					
 					return FullStep<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t);
 					
@@ -357,13 +394,13 @@ namespace bertini{
 				 \param AMP_config The settings for adaptive multiple precision.
 				 */
 				
-				template<typename ComplexType, typename RealType>
+				template<typename ComplexType, typename RealType, typename Derived>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									RealType & size_proportion,
 									RealType & norm_J,
 									RealType & norm_J_inverse,
 									System const& S,
-									Vec<ComplexType> const& current_space, ComplexType current_time,
+									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									RealType & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
@@ -372,6 +409,7 @@ namespace bertini{
 									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					
 					auto success_code = Predict<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t,
@@ -437,14 +475,14 @@ namespace bertini{
 				 \param AMP_config The settings for adaptive multiple precision.
 				 */
 				
-				template<typename ComplexType, typename RealType>
+				template<typename ComplexType, typename RealType, typename Derived>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									RealType & error_estimate,
 									RealType & size_proportion,
 									RealType & norm_J,
 									RealType & norm_J_inverse,
 									System const& S,
-									Vec<ComplexType> const& current_space, ComplexType current_time,
+									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									RealType & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
@@ -453,6 +491,7 @@ namespace bertini{
 									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
 					
@@ -531,20 +570,22 @@ namespace bertini{
 				 \return SuccessCode determining result of the computation
 				 */
 				
-				template<typename ComplexType, typename RealType>
-				SuccessCode FullStep(Vec<ComplexType> & next_space,
+				template<typename ComplexType, typename RealType, typename Derived>
+				SuccessCode FullStep(Vec<typename Derived::Scalar> & next_space,
 									System const& S,
-									Vec<ComplexType> const& current_space, ComplexType current_time,
+									 Eigen::MatrixBase<Derived> const& current_space, ComplexType const& current_time,
 									 ComplexType const& delta_t)
 				{
+					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
+					
 					Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
 					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
 					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
 					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
 					Kref.fill(ComplexType(0));
-					Vec<ComplexType> temp = Vec<ComplexType>(S.NumTotalFunctions());
+					Vec<ComplexType> temp(S.NumTotalFunctions());
 					
-					if(EvalRHS<ComplexType>(S, current_space, current_time, Kref, 0) != SuccessCode::Success)
+					if(EvalRHS(S, current_space, current_time, Kref, 0) != SuccessCode::Success)
 					{
 						return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 					}
@@ -558,7 +599,7 @@ namespace bertini{
 							
 						}
 						
-						if(EvalRHS<ComplexType>(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
+						if(EvalRHS(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
 						{
 							return SuccessCode::MatrixSolveFailure;
 						}
@@ -597,9 +638,8 @@ namespace bertini{
 					Vec<RealType>& b_minus_bstar_ref = std::get< Vec<RealType> >(b_minus_bstar_);
 					
 					auto numFuncs = Kref.rows();
-					Vec<ComplexType> err = Vec<ComplexType>(numFuncs);
+					Vec<ComplexType> err(numFuncs);
 					
-					std::cout.precision(30);
 					err.setZero();
 					for(int ii = 0; ii < s_; ++ii)
 					{
@@ -664,15 +704,17 @@ namespace bertini{
 				 \return Success code of this computation
 				 */
 				
-				template<typename ComplexType>
+				template< typename Derived, typename ComplexType>
 				SuccessCode EvalRHS(System const& S,
-									Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, unsigned stage)
+									const Eigen::MatrixBase<Derived>& space, const ComplexType& time, Mat<ComplexType> & K, unsigned stage)
 				{
+					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
+
 					if(stage == 0)
 					{
 						Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_);
 						Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_);
-						dhdxref = S.Jacobian(space, time);
+						S.JacobianInPlace(dhdxref,space, time);
 						LUref = dhdxref.lu();
 						
 						if (LUPartialPivotDecompositionSuccessful(LUref.matrixLU())!=MatrixSuccessCode::Success)
@@ -685,8 +727,7 @@ namespace bertini{
 					}
 					else
 					{
-						auto dh_dx = S.Jacobian(space, time);
-						auto LU = dh_dx.lu();
+						auto LU = S.Jacobian(space, time).lu();
 						
 						if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
@@ -821,7 +862,8 @@ namespace bertini{
 				//
 				////////////////////
 				
-				unsigned numTotalFunctions;
+				unsigned numTotalFunctions_;
+				unsigned numVariables_;
 				std::tuple< Mat<dbl>, Mat<mpfr> > K_;
 				Predictor predictor_;
 				unsigned p_;

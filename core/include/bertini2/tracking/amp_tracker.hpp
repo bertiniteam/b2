@@ -1017,9 +1017,9 @@ namespace bertini{
 			\tparam ComplexType The complex number type.
 			\tparam RealType The real number type.
 			*/
-			template<typename ComplexType, typename RealType>
+			template<typename ComplexType, typename RealType, typename Derived>
 			SuccessCode Predict(Vec<ComplexType> & predicted_space, 
-								Vec<ComplexType> const& current_space, 
+								const Eigen::MatrixBase<Derived>& current_space,
 								ComplexType const& current_time, ComplexType const& delta_t) const
 			{
 				
@@ -1029,6 +1029,7 @@ namespace bertini{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
+				static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
@@ -1397,6 +1398,7 @@ namespace bertini{
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
+				predictor_choice_->ChangePrecision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
 					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
