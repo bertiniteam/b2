@@ -362,7 +362,6 @@ public:
 		TimeCont<CT> s_times(num_used_points);
 		SampCont<CT> s_derivatives(num_used_points);
 
-		// std::cout << offset << " " << num_used_points << "\n";
 
 		for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 		{			
@@ -372,10 +371,6 @@ public:
 			{   using std::pow;
 				s_times[ii] = pow(times[ii+offset],1/static_cast<RT>(candidate));
 				s_derivatives[ii] = derivatives[ii+offset] * (candidate * pow(times[ii+offset], static_cast<RT>(candidate-1)/candidate));
-
-				// std::cout << s_times[ii] << " = pow(" << times[ii+offset] << ",1/" << candidate << ")\n\n";
-				// std::cout << s_derivatives[ii] << "  <--->  " << derivatives[ii+offset] << "\n\n";
-				// std::cout << samples[ii+offset] << "\n\n";
 			}
 
 			auto curr_diff = (HermiteInterpolateAndSolve(
