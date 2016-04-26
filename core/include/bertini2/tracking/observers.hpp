@@ -93,16 +93,7 @@ namespace bertini {
 
 			virtual void Visit(TrackerT const& t) override
 			{
-				if (t.CurrentPrecision()==DoublePrecision())
-				{
-					Vec<mpfr> temp(t.NumVariables());
-					for (unsigned ii=0; ii<t.NumVariables(); ++ii)
-						temp(ii) = mpfr(t.template CurrentPoint<dbl>()(ii));
-					
-					path_.push_back(temp);
-				}
-				else
-					path_.push_back(t.template CurrentPoint<mpfr>());
+				path_.push_back(t.CurrentPoint());
 			}
 
 		public:
@@ -149,11 +140,8 @@ namespace bertini {
 					BOOST_LOG_TRIVIAL(severity_level::trace) 
 						<< "t = " << t.CurrentTime() 
 						<< "\ncurrent stepsize: " << t.CurrentStepsize() 
-						<< "\ndelta_t = " << t.DeltaT() << "\ncurrent x = ";
-						if (t.CurrentPrecision()==DoublePrecision())
-						    BOOST_LOG_TRIVIAL(severity_level::trace) << t.template CurrentPoint<dbl>();
-					    else
-						    BOOST_LOG_TRIVIAL(severity_level::trace) << t.template CurrentPoint<mpfr>();
+						<< "\ndelta_t = " << t.DeltaT() << "\ncurrent x = "
+						<< t.CurrentPoint();
 				}
 
 

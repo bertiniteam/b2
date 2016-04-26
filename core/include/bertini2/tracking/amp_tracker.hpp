@@ -293,13 +293,13 @@ namespace bertini{
 		* Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
 
 		*/
-		class AMPTracker : public Tracker<AMPTracker>
+		class AMPTracker : public Tracker<AMPTracker, dbl, mpfr>
 		{
-			friend class Tracker<AMPTracker>;
+			friend class Tracker<AMPTracker, dbl, mpfr>;
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
-			typedef Tracker<AMPTracker> Base;
+			typedef Tracker<AMPTracker, dbl, mpfr> Base;
 			typedef typename TrackerTraits<AMPTracker>::EventEmitterType EmitterType;
 
 			enum UpsampleRefinementOption
@@ -344,6 +344,21 @@ namespace bertini{
 			virtual ~AMPTracker() = default;
 
 
+			Vec<mpfr> CurrentPoint() const override
+			{
+				if (this->CurrentPrecision()==DoublePrecision())
+				{
+					const auto& curr_vector = std::get<Vec<dbl>>(this->current_space_);
+					Vec<mpfr> returnme(NumVariables());
+					for (unsigned ii = 0; ii < NumVariables(); ++ii)
+					{
+						returnme(ii) = mpfr(curr_vector(ii));
+					}
+					return returnme;
+				}
+				else
+					return std::get<Vec<mpfr>>(this->current_space_);
+			}
 
 
 		private:
