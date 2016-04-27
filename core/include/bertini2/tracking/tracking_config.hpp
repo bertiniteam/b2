@@ -141,7 +141,7 @@ namespace bertini
 		class FixedPrecPowerSeriesEndgame;
 
 		template<typename Tracker, typename Enable = void>
-		class FixedPrecCauchyEG;
+		class FixedPrecCauchyEndgame;
 
 		class AMPPowerSeriesEndgame;
 		class AMPCauchyEndgame;
@@ -156,14 +156,14 @@ namespace bertini
 		struct EndgameSelector<DoublePrecisionTracker>
 		{
 			using PSEG = endgame::FixedPrecPowerSeriesEndgame<DoublePrecisionTracker>;
-			using Cauchy = endgame::FixedPrecCauchyEG<DoublePrecisionTracker>;
+			using Cauchy = endgame::FixedPrecCauchyEndgame<DoublePrecisionTracker>;
 		};
 
 		template<>
 		struct EndgameSelector<MultiplePrecisionTracker>
 		{
 			using PSEG = endgame::FixedPrecPowerSeriesEndgame<MultiplePrecisionTracker>;
-			using Cauchy = endgame::FixedPrecCauchyEG<MultiplePrecisionTracker>;
+			using Cauchy = endgame::FixedPrecCauchyEndgame<MultiplePrecisionTracker>;
 		};
 
 		template<class D>

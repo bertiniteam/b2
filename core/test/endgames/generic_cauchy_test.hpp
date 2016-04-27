@@ -31,8 +31,7 @@ This file in intended for inclusion into another test file, which declares Track
 
 
 
-
-#pragma once
+// there is deliberately a missing #pragma once here, because want to allow inclusion in multiple suites in same file.
 
 
 using System = bertini::System;
@@ -51,17 +50,10 @@ using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
 
-
+using bertini::Precision;
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
-
-extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
-
-
 
 
 using PrecisionConfig = TrackerTraits<TrackerType>::PrecisionConfig;
@@ -92,7 +84,7 @@ using namespace bertini::tracking::endgame;
 BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 {
 	
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -153,7 +145,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 {
 	
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -223,7 +215,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -281,6 +273,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 
 	auto first_c_over_k = my_endgame.ComputeCOverK<BCT>();
 
+	using std::abs;
 	BOOST_CHECK( abs(first_c_over_k - RealFromString("1.12917")) < 1e-5 ); 
 
 	//Setting up a new sample for approximation.
@@ -315,7 +308,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 */	
 BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -425,7 +418,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 */
 BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -487,7 +480,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 	*/
 BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -556,7 +549,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -615,7 +608,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 {
 	
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -671,7 +664,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 {
 	
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -731,7 +724,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 */
 BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -792,7 +785,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 
 	bertini::System sys;
@@ -850,7 +843,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 */
 BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -915,7 +908,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 */
 BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -981,7 +974,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1038,7 +1031,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1)
 */
 BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1092,7 +1085,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1150,7 +1143,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 */
 BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1197,7 +1190,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).norm() < my_endgame.Tolerances().newton_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
-	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
+	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),ambient_precision);
 }// end full_test_cycle_num_greater_than_1
 
 
@@ -1207,9 +1200,9 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 /*
 	Full blown test to see if we can actually find the singular point at the origin. 
 */
-BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision_16)
+BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 {
-	mpfr_float::default_precision(16);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1260,7 +1253,6 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).norm() < my_endgame.Tolerances().newton_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
-	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),bertini::DoublePrecision());
 }// end cauchy_endgame_test_cycle_num_greater_than_1
 
 
@@ -1269,9 +1261,9 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base_precision
 /**
 	Full blown test to see if we can actually find the non singular point at the origin. This example has multiple variables. 
 */
-BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
+BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
@@ -1298,7 +1290,7 @@ BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
 	tracker.PrecisionSetup(precision_config);
 
 
-	mpfr current_time(1);
+	BCT current_time(1);
 	Vec<BCT> current_space(2);
 	current_time = ComplexFromString(".1");
 	current_space <<  ComplexFromString("5.000000000000001e-01", "9.084258952712920e-17") ,ComplexFromString("9.000000000000001e-01","4.358898943540673e-01");
@@ -1316,21 +1308,26 @@ BOOST_AUTO_TEST_CASE(cauchy_mp_for_cauchy_class_multiple_variables)
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < my_endgame.Tolerances().newton_during_endgame);
 
-}// end cauchy_mp_for_cauchy_class_multiple_variables
+}// end cauchy_multiple_variables
 
 
+
+
+/**
+Griewank Osborne is a classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values 
+at t = 0.1. 
+
+Three of these paths will converge to origin and three will diverge to infinity triggering a SecurityMaxNorm issue. 
+
+This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
+the endgame. 
+*/
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
-	// Griewank Osborne is a very classic example. Here we allow x and y to mix. There are six paths to be tracked and we know there values 
-	// at t = 0.1. 
-
-	// Three of these paths will converge to origin and three will diverge to infinity triggering a SecurityMaxNorm issue. 
-
-	// This test will check to see if the answer that we converge on compared to the correct answer are withing the track tolerance during 
-	// the endgame. 
+	
 	
 
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System griewank_osborn_sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
@@ -1375,8 +1372,8 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	std::vector<Vec<BCT> > griewank_homogenized_solutions;
 	for (unsigned ii = 0; ii < griewank_TD.NumStartPoints(); ++ii)
 	{
-		mpfr_float::default_precision(30);
-		final_griewank_osborn_system.precision(30);
+		mpfr_float::default_precision(ambient_precision);
+		final_griewank_osborn_system.precision(ambient_precision);
 		auto start_point = griewank_TD.StartPoint<BCT>(ii);
 
 		Vec<BCT> result;
@@ -1405,7 +1402,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	for(auto s : griewank_homogenized_solutions) //current_space_values)
 	{
 		std::cout << ".1 solution is " << final_griewank_osborn_system.DehomogenizePoint(s) << '\n';
-		mpfr_float::default_precision(30);
+		mpfr_float::default_precision(ambient_precision);
 		final_griewank_osborn_system.precision(Precision(s(0)));
 		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
 
@@ -1460,7 +1457,7 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	Var x = std::make_shared<Variable>("x");
 	Var y = std::make_shared<Variable>("y");
@@ -1509,8 +1506,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	std::vector<Vec<BCT> > homogenized_solutions;
 	for (unsigned ii = 0; ii < num_paths_to_track; ++ii)
 	{
-		mpfr_float::default_precision(30);
-		final_system.precision(30);
+		mpfr_float::default_precision(ambient_precision);
+		final_system.precision(ambient_precision);
 		auto start_point = TD.StartPoint<BCT>(ii);
 
 		Vec<BCT> result;
@@ -1539,7 +1536,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
 	unsigned num_min_track_time_reached = 0;
 	for (auto s : homogenized_solutions)
 	{
-		mpfr_float::default_precision(30);
+		mpfr_float::default_precision(ambient_precision);
 		final_system.precision(Precision(s(0)));
 		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
