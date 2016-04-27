@@ -36,7 +36,7 @@
 
 
 
-BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame_generic_tests)
+BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame_generic_tests_ambient_precision_16)
 
 using namespace bertini::tracking;
 using namespace bertini::tracking::endgame;
@@ -44,12 +44,43 @@ using namespace bertini::tracking::endgame;
 using TrackerType = AMPTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
 
-
+unsigned ambient_precision = 16;
 #include "test/endgames/generic_pseg_test.hpp"
 
 BOOST_AUTO_TEST_SUITE_END()
 
 
+
+
+BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame_generic_tests_ambient_precision_30)
+
+using namespace bertini::tracking;
+using namespace bertini::tracking::endgame;
+
+using TrackerType = AMPTracker; // select a tracker type
+using TestedEGType = EndgameSelector<TrackerType>::PSEG;
+
+unsigned ambient_precision = 30;
+#include "test/endgames/generic_pseg_test.hpp"
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+
+
+
+BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame_generic_tests_ambient_precision_50)
+
+using namespace bertini::tracking;
+using namespace bertini::tracking::endgame;
+
+using TrackerType = AMPTracker; // select a tracker type
+using TestedEGType = EndgameSelector<TrackerType>::PSEG;
+
+unsigned ambient_precision = 50;
+#include "test/endgames/generic_pseg_test.hpp"
+
+BOOST_AUTO_TEST_SUITE_END()
 
 
 

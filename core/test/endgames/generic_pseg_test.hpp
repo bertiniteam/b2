@@ -30,7 +30,7 @@ This file in intended for inclusion into another file, which declares TrackerTyp
 */
 
 
-#pragma once
+// there is deliberately a missing #pragma once here, because want to allow inclusion in multiple suites in same file.
 
 
 using System = bertini::System;
@@ -54,13 +54,6 @@ using mpq_rational = bertini::mpq_rational;
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
-extern double threshold_clearance_d;
-extern boost::multiprecision::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
-
-
-
 
 using PrecisionConfig = TrackerTraits<TrackerType>::PrecisionConfig;
 
@@ -83,7 +76,7 @@ We check this against the tracking tolerance for the endgame.
 */
 BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 
 
@@ -150,7 +143,7 @@ various approximations made.
 */
 BOOST_AUTO_TEST_CASE(hermite_interpolation)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	BCT target_time(0,0);
 	unsigned int num_samples = 3;
@@ -246,7 +239,7 @@ This is because the path will not look cubic globally.
 */
 BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -347,7 +340,7 @@ approximate at the origin.
 */	
 BOOST_AUTO_TEST_CASE(compute_cycle_number)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -435,7 +428,7 @@ Do this till we have three approximations. Check to see if the third approximati
 */
 BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 
 	bertini::System sys;
@@ -550,7 +543,7 @@ track tolerance during the endgame.
 */
 BOOST_AUTO_TEST_CASE(compute_initial_samples)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
@@ -733,7 +726,7 @@ the endgame.
 */
 BOOST_AUTO_TEST_CASE(pseg)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
@@ -799,7 +792,7 @@ the endgame.
 BOOST_AUTO_TEST_CASE(cycle_num_2_example)
 {
 	
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -867,7 +860,7 @@ In this test we do multiple variables decoupled, that has a high multiplicity (5
 */
 BOOST_AUTO_TEST_CASE(pseg_multiple_variables)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 
 	bertini::System sys;
@@ -958,7 +951,7 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
-	mpfr_float::default_precision(30);
+	mpfr_float::default_precision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
@@ -1026,7 +1019,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	unsigned num_paths_converging = 0;
 	for (const auto& s : current_space_values)
 	{
-		mpfr_float::default_precision(30);
+		mpfr_float::default_precision(ambient_precision);
 		SuccessCode endgame_success = my_endgame.PSEG(endgame_time,s);
 		if(endgame_success == SuccessCode::Success){
 			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);// my_endgame.GetTrackToleranceDuringEndgame());
@@ -1050,9 +1043,8 @@ In this example we take a decoupled system, homogenize and patch it. Track to en
 values we have. 
 
 */
-BOOST_AUTO_TEST_CASE(total_degree_start_system_powerseries_class_used_with_AMP)
+BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
-	unsigned ambient_precision = 16;
 	using namespace bertini::tracking;
 	mpfr_float::default_precision(ambient_precision);
 
@@ -1162,8 +1154,6 @@ values we have.
 */
 BOOST_AUTO_TEST_CASE(parabola)
 {
-	
-	unsigned ambient_precision = 30;
 	using namespace bertini::tracking;
 	mpfr_float::default_precision(ambient_precision);
 
@@ -1216,9 +1206,11 @@ BOOST_AUTO_TEST_CASE(parabola)
 
 
 	auto endgame_success = my_endgame.PSEG(t_endgame_boundary,soln_at_EG_bdry);
+	BOOST_CHECK(endgame_success==SuccessCode::Success);
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
-	BOOST_CHECK(abs(endgame_solution(0) - correct_eg_soln(0)) < 1e-11);
+
+	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-11) );
 }
 
 

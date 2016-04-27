@@ -508,19 +508,14 @@ namespace bertini{
 			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 
 			BERTINI_DEFAULT_VISITABLE()
-			/**
-			\brief Construct a Multiple Precision tracker, associating to it a System.
-			*/
-			MultiplePrecisionTracker(class System const& sys, unsigned p) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(p)
-			{	
-				if (p!=mpfr_float::default_precision())
-					throw std::runtime_error("erroneously creating a fixed multiple precision tracker with differing precision from current default");
-			}
+
 
 			/**
 			\brief Construct a tracker, associating to it a System.
+
+			The precision of the tracker will be whatever the current default is.  The tracker cannot change its precision, and will require the default precision to be this precision whenever tracking is started.  That is, the precision is fixed.
 			*/
-			MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys)
+			MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(mpfr_float::default_precision())
 			{	}
 
 			
@@ -550,13 +545,25 @@ namespace bertini{
 			{
 
 				if (start_point(0).precision()!=mpfr_float::default_precision())
-					throw std::runtime_error("start point for fixed multiple precision tracker has differing precision from default, tracking cannot start");
+				{
+					std::stringstream err_msg;
+					err_msg << "start point for fixed multiple precision tracker has differing precision from default (" << start_point(0).precision() << "!=" << mpfr_float::default_precision() << "), tracking cannot start";
+					throw std::runtime_error(err_msg.str());
+				}
 
 				if (start_point(0).precision()!=CurrentPrecision())
-					throw std::runtime_error("start point for fixed multiple precision tracker has differing precision from tracker's precision, tracking cannot start");
+				{
+					std::stringstream err_msg;
+					err_msg << "start point for fixed multiple precision tracker has differing precision from tracker's precision (" << start_point(0).precision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					throw std::runtime_error(err_msg.str());
+				}
 
 				if (mpfr_float::default_precision()!=CurrentPrecision())
-					throw std::runtime_error("current default precision differs from tracker's precision, tracking cannot start");
+				{
+					std::stringstream err_msg;
+					err_msg << "current default precision differs from tracker's precision (" << mpfr_float::default_precision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					throw std::runtime_error(err_msg.str());
+				}
 
 
 				this->NotifyObservers(Initializing<EmitterType,BaseComplexType>(*this,start_time, end_time, start_point));

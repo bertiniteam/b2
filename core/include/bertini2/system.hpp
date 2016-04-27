@@ -25,7 +25,7 @@
 /**
 \file system.hpp 
 
-\brief Provides the bertini::system class.
+\brief Provides the bertini::System class.
 */
 
 #ifndef BERTINI_SYSTEM_HPP
@@ -320,16 +320,16 @@ namespace bertini {
 			SetVariables(variable_values);
 			SetPathVariable(path_variable_value);
 
-			Vec<T> ds_dt(NumTotalFunctions());
+			Vec<T> dh_dt(NumTotalFunctions());
 			
 			for (int ii = 0; ii < NumFunctions(); ++ii)
-				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);		
+				dh_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);		
 
 			if (IsPatched())
 				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
-					ds_dt(ii+NumFunctions()) = T(0);
+					dh_dt(ii+NumFunctions()) = T(0);
 
-			return ds_dt;
+			return dh_dt;
 		}
 	
 		/**
@@ -469,8 +469,8 @@ namespace bertini {
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 
 			#ifndef BERTINI_DISABLE_ASSERTS
-			if (Precision(new_values(0))!=DoublePrecision())
-				assert(Precision(new_values(0)) == precision() && "precision of input point in SetVariables must match the precision of the system.");
+				if (!std::is_same<T,dbl>::value)
+				assert(Precision(new_values(0)) == this->precision() && "precision of input point in SetVariables must match the precision of the system.");
 			#endif
 
 			auto vars = Variables();
@@ -495,7 +495,7 @@ namespace bertini {
 		 \param new_value The new updated values for the path variable.
 		 */
 		template<typename T>
-		void SetPathVariable(T new_value) const
+		void SetPathVariable(T const& new_value) const
 		{
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");

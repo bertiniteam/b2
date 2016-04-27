@@ -69,54 +69,32 @@ unsigned MaxPrecision(TimeCont<mpfr> const& times)
 
 //does not a thing, because cannot.
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & derivatives)
+unsigned EnsureAtUniformPrecision(TimeCont<dbl> const & times, SampCont<dbl> const & derivatives)
 {
 	return DoublePrecision();
 }
 
-
-//changes precision of mpfr to highest needed precision for the samples.
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples)
+unsigned EnsureAtUniformPrecision(TimeCont<dbl> const & times, SampCont<dbl> const & samples, SampCont<dbl> const & derivatives)
 {
-	using std::max;
-	unsigned max_precision = max(
-	                             mpfr_float::default_precision(),
-	                             MaxPrecision(samples)
-	                             ); 
-
-	if (max_precision != mpfr_float::default_precision())
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
-	
-	mpfr_float::default_precision(max_precision);
-
-	SetPrecision(times, max_precision);
-	SetPrecision(samples, max_precision);
-
-	return max_precision;
+	return DoublePrecision(); 
 }
 
 
 //changes precision of mpfr to highest needed precision for the samples.
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples, SampCont<mpfr> & derivatives)
+unsigned EnsureAtUniformPrecision(TimeCont<mpfr> const & times, SampCont<mpfr> const & samples)
 {
-	unsigned max_precision = max(
-	                             mpfr_float::default_precision(),
-	                             MaxPrecision(samples),
-	                             MaxPrecision(derivatives)
-	                             ); 
+	return MaxPrecision(samples);
+}
 
-	if (max_precision != mpfr_float::default_precision())
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
-	
-	mpfr_float::default_precision(max_precision);
 
-	SetPrecision(times, max_precision);
-	SetPrecision(samples, max_precision);
-	SetPrecision(derivatives, max_precision);
-
-	return max_precision;
+//returns max precision of all samples.
+inline
+unsigned EnsureAtUniformPrecision(TimeCont<mpfr> const & times, SampCont<mpfr> const & samples, SampCont<mpfr> const & derivatives)
+{
+	return max(MaxPrecision(samples),
+	           MaxPrecision(derivatives)); 
 }
 
 

@@ -263,11 +263,12 @@ namespace bertini{
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			*/
-			template<typename C, typename R, typename std::enable_if<IsTemplateParameter<C,NeededTypes...>::value>::type>
+			template<typename C>
 			SuccessCode Refine(Vec<C> & new_space,
 								Vec<C> const& start_point, C const& current_time) const
 			{
-				return this->AsDerived().template RefineImpl<C,typename Eigen::NumTraits<C>::Real>(new_space, start_point, current_time);
+				static_assert(IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
+				return this->AsDerived().RefineImpl(new_space, start_point, current_time);
 			}
 
 
@@ -286,14 +287,16 @@ namespace bertini{
 			\param tolerance The tolerance to which to refine.
 			\param max_iterations The maximum number of iterations to use to refine.
 			*/
-			template<typename C, typename R, typename std::enable_if<IsTemplateParameter<C,NeededTypes...>::value>::type>
+			template<typename C, typename R>
 			SuccessCode Refine(Vec<C> & new_space,
 								Vec<C> const& start_point, C const& current_time, R const& tolerance, unsigned max_iterations) const
 			{
 				static_assert(std::is_same<	typename Eigen::NumTraits<R>::Real, 
 			              				typename Eigen::NumTraits<C>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
-				return this->AsDerived().template RefineImpl<C,R>(new_space, start_point, current_time, tolerance, max_iterations);
+				static_assert(IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
+
+				return this->AsDerived().RefineImpl(new_space, start_point, current_time, tolerance, max_iterations);
 			}
 
 
