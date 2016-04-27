@@ -156,8 +156,12 @@ namespace bertini{
 				{
 					numTotalFunctions_ = S.NumTotalFunctions();
 					numVariables_ = S.NumVariables();
-					std::get< Mat<dbl> >(dh_dx_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr> >(dh_dx_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Vec<dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<mpfr> >(dh_dt_temp_).resize(numTotalFunctions_);
 					PredictorMethod(DefaultPredictor());
 				}
 				
@@ -173,8 +177,12 @@ namespace bertini{
 				{
 					numTotalFunctions_ = S.NumTotalFunctions();
 					numVariables_ = S.NumVariables();
-					std::get< Mat<dbl> >(dh_dx_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr> >(dh_dx_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Vec<dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<mpfr> >(dh_dt_temp_).resize(numTotalFunctions_);
 					PredictorMethod(method);
 				}
 				
@@ -297,8 +305,15 @@ namespace bertini{
 				void PredictorSystem(const System& S)
 				{
 					numTotalFunctions_ = S.NumTotalFunctions();
+					numVariables_ = S.NumVariables();
 					std::get< Mat<dbl> >(K_).resize(numTotalFunctions_, s_);
 					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Vec<dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<mpfr> >(dh_dt_temp_).resize(numTotalFunctions_);
 				}
 				
 				
@@ -324,9 +339,11 @@ namespace bertini{
 					
 					for(int ii = 0; ii < numTotalFunctions_; ++ii)
 					{
+						std::get< Vec<mpfr> >(dh_dt_temp_)(ii).precision(new_precision);
 						for(int jj = 0; jj < numVariables_; ++jj)
 						{
-							std::get< Mat<mpfr> >(dh_dx_)(ii,jj).precision(new_precision);
+							std::get< Mat<mpfr> >(dh_dx_0_)(ii,jj).precision(new_precision);
+							std::get< Mat<mpfr> >(dh_dx_temp_)(ii,jj).precision(new_precision);
 						}
 					}
 
@@ -420,8 +437,8 @@ namespace bertini{
 						return success_code;
 					
 					// Calculate condition number and updated if needed
-					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_);
-					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_);
+					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_0_);
+					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
 					
 					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
 					Vec<ComplexType> temp_soln = LUref.solve(randy);
@@ -712,27 +729,33 @@ namespace bertini{
 
 					if(stage == 0)
 					{
-						Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_);
-						Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_);
+						Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_0_);
+						Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
 						S.JacobianInPlace(dhdxref,space, time);
 						LUref = dhdxref.lu();
 						
 						if (LUPartialPivotDecompositionSuccessful(LUref.matrixLU())!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 						
-						K.col(stage) = LUref.solve(-S.TimeDerivative(space, time));
+						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
+						S.TimeDerivativeInPlace(dhdtref, space, time);
+						K.col(stage) = LUref.solve(-dhdtref);
 						
 						return SuccessCode::Success;
 						
 					}
 					else
 					{
-						auto LU = S.Jacobian(space, time).lu();
+						Mat<ComplexType>& dhdxtempref = std::get< Mat<ComplexType> >(dh_dx_temp_);
+						S.JacobianInPlace(dhdxtempref,space, time);
+						auto LU = dhdxtempref.lu();
 						
 						if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 						
-						K.col(stage) = LU.solve(-S.TimeDerivative(space, time));
+						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
+						S.TimeDerivativeInPlace(dhdtref, space, time);
+						K.col(stage) = LU.solve(-dhdtref);
 						
 						return SuccessCode::Success;
 					}
@@ -862,13 +885,15 @@ namespace bertini{
 				//
 				////////////////////
 				
-				unsigned numTotalFunctions_;
-				unsigned numVariables_;
-				std::tuple< Mat<dbl>, Mat<mpfr> > K_;
-				Predictor predictor_;
-				unsigned p_;
-				std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_;
-				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_;
+				unsigned numTotalFunctions_; // Number of total functions for the current system
+				unsigned numVariables_;  // Number of variables for the current system
+				std::tuple< Mat<dbl>, Mat<mpfr> > K_;  // All the stage variables.  Each column represents a different stage.
+				Predictor predictor_;  // Method for prediction
+				unsigned p_;  //Order of the prediction method
+				std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
+				std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_temp_;  // Temporary jacobian for all other stages
+				std::tuple< Vec<dbl>, Vec<mpfr> > dh_dt_temp_;  // Temporary time derivative used for all stages
+				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_0_;  // LU from the intial stage used for AMP testing
 				
 				
 				
