@@ -972,7 +972,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 /**
 	To actually use the Cauchy integral formula we must track around the origin and collect samples. This is done by ComputeCauchySamples. 
 */
-BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_1)
+BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 {
 	mpfr_float::default_precision(ambient_precision);
 
@@ -1247,7 +1247,6 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 
 	
 	TestedEGType my_endgame(tracker);
-	std::cout.precision(8);
 	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
@@ -1401,21 +1400,16 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	unsigned num_paths_converging = 0;
 	for(auto s : griewank_homogenized_solutions) //current_space_values)
 	{
-		std::cout << ".1 solution is " << final_griewank_osborn_system.DehomogenizePoint(s) << '\n';
 		mpfr_float::default_precision(ambient_precision);
 		final_griewank_osborn_system.precision(Precision(s(0)));
 		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
 
-		std::cout << "endgame solution is " << final_griewank_osborn_system.DehomogenizePoint(my_endgame.FinalApproximation<BCT>()) << '\n';
-
 		if(endgame_success == SuccessCode::Success)
 		{
-			// std::cout << "CONVERGED" <<'\n';
 			num_paths_converging++;
 		}
 		if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
 		{
-			// std::cout << "DIVERGED" << '\n';
 			num_paths_diverging++;
 		}
 	}
@@ -1455,7 +1449,7 @@ has six solutions at t = .1:
 0.989757601991599268196007422024 -0.577621205306094375358982164819
 0.689232658290901310861758919599 -0.207914822575714712814276165999
 */
-BOOST_AUTO_TEST_CASE(total_degree_start_system_cauchy_class_used_with_AMP)
+BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
 	mpfr_float::default_precision(ambient_precision);
 
