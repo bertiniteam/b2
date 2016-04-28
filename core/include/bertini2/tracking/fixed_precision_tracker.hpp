@@ -342,7 +342,7 @@ namespace bertini{
 				RealType& condition_number_estimate = std::get<RealType>(this->condition_number_estimate_);
 
 
-				return bertini::tracking::Correct(corrected_space,
+				return this->corrector_->Correct(corrected_space,
 												this->tracked_system_,
 												current_space,
 												current_time, 
@@ -375,7 +375,7 @@ namespace bertini{
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				return bertini::tracking::Correct(new_space,
+				return this->corrector_->Correct(new_space,
 							   this->tracked_system_,
 							   start_point,
 							   current_time, 
@@ -414,7 +414,7 @@ namespace bertini{
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				return bertini::tracking::Correct(new_space,
+				return this->corrector_->Correct(new_space,
 							   this->tracked_system_,
 							   start_point,
 							   current_time, 

@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-	auto success_code = corrector->NewtonLoop(newton_correction_result,
+	auto success_code = corrector->Correct(newton_correction_result,
 											  sys,
 											  current_space,
 											  current_time,
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 2;
 		unsigned min_num_newton_iterations = 2;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 2;
 		unsigned min_num_newton_iterations = 2;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -541,7 +541,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -600,7 +600,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -714,7 +714,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<mpfr> newton_correction_result;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
@@ -766,7 +766,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
-		auto success_code = corrector->NewtonLoop(newton_correction_result,
+		auto success_code = corrector->Correct(newton_correction_result,
 												  sys,
 												  current_space,
 												  current_time,
