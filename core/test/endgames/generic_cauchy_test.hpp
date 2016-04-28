@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -803,7 +803,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -863,7 +863,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -928,7 +928,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -994,7 +994,7 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -1051,7 +1051,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-6"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -1105,7 +1105,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -1165,7 +1165,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 	newton_preferences.max_num_newton_iterations = 2;
 	newton_preferences.min_num_newton_iterations = 1;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -1224,7 +1224,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 	newton_preferences.max_num_newton_iterations = 2;
 	newton_preferences.min_num_newton_iterations = 1;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -1280,7 +1280,7 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -1357,7 +1357,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-6"),
                 RealFromString("1e5"),
                 stepping_preferences,
@@ -1488,7 +1488,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	auto tracker = TrackerType(final_system);
 	config::Stepping<BRT> stepping_preferences;
 	config::Newton newton_preferences;
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
 	              	RealFromString("1e-5"), RealFromString("1e5"),
 					stepping_preferences, newton_preferences);
 
@@ -1519,7 +1519,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	TestedEGType my_endgame(tracker);
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
 	              	RealFromString("1e-6"), RealFromString("1e5"),
 					stepping_preferences, newton_preferences);
 

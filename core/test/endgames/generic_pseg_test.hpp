@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_settings,
@@ -359,7 +359,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_settings,
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_settings,
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-5"),
                 RealFromString("1e5"),
                 stepping_settings,
@@ -655,7 +655,7 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-6"),
                 RealFromString("1e5"),
                 stepping_settings,
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-6"),
                 RealFromString("1e5"),
                 stepping_settings,
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-6"),
                 RealFromString("1e5"),
                 stepping_settings,
@@ -880,7 +880,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
                 RealFromString("1e-6"),
                 RealFromString("1e5"),
                 stepping_settings,
@@ -997,7 +997,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	auto tracker = TrackerType(final_system);
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
 	              	RealFromString("1e-5"), RealFromString("1e5"),
 					stepping_settings, newton_settings);
 
@@ -1024,7 +1024,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	Vec<BCT> correct(2);
 	correct << BCT(1),BCT(1);
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
 	              	RealFromString("1e-6"), RealFromString("1e5"),
 					stepping_settings, newton_settings);
 
@@ -1088,7 +1088,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 	auto tracker = TrackerType(sys);
 	config::Stepping<BRT> stepping_settings;
 	config::Newton newton_settings;
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
 	              	RealFromString("1e-5"), RealFromString("1e5"),
 					stepping_settings, newton_settings);
 
@@ -1108,7 +1108,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 	Vec<BCT> correct_eg_soln(1);
 	correct_eg_soln << BCT(0);
 
-	tracker.Setup(config::Predictor::HeunEuler,
+	tracker.Setup(TestedPredictor,
 	              	RealFromString("1e-6"), RealFromString("1e5"),
 					stepping_settings, newton_settings);
 

@@ -43,7 +43,7 @@ using namespace bertini::tracking::endgame;
 
 using TrackerType = AMPTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-
+auto TestedPredictor = config::Predictor::HeunEuler;
 unsigned ambient_precision = 16;
 #include "test/endgames/generic_pseg_test.hpp"
 
@@ -59,7 +59,7 @@ using namespace bertini::tracking::endgame;
 
 using TrackerType = AMPTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-
+auto TestedPredictor = config::Predictor::HeunEuler;
 unsigned ambient_precision = 30;
 #include "test/endgames/generic_pseg_test.hpp"
 
@@ -76,7 +76,7 @@ using namespace bertini::tracking::endgame;
 
 using TrackerType = AMPTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-
+auto TestedPredictor = config::Predictor::HeunEuler;
 unsigned ambient_precision = 50;
 #include "test/endgames/generic_pseg_test.hpp"
 

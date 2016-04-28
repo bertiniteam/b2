@@ -47,7 +47,7 @@ using namespace bertini::tracking::endgame;
 
 using TrackerType = MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
-
+auto TestedPredictor = config::Predictor::HeunEuler;
 unsigned ambient_precision = bertini::DoublePrecision();
 
 #include "test/endgames/generic_cauchy_test.hpp"
@@ -64,7 +64,7 @@ using namespace bertini::tracking::endgame;
 
 using TrackerType = MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
-
+auto TestedPredictor = config::Predictor::HeunEuler;
 unsigned ambient_precision = 30;
 
 #include "test/endgames/generic_cauchy_test.hpp"
@@ -81,7 +81,7 @@ using namespace bertini::tracking::endgame;
 
 using TrackerType = MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
-
+auto TestedPredictor = config::Predictor::HeunEuler;
 unsigned ambient_precision = 50;
 
 #include "test/endgames/generic_cauchy_test.hpp"
