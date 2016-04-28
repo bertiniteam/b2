@@ -49,7 +49,6 @@ namespace bertini{
 
 		namespace predict{
 
-			using PrecisionType = config::PrecisionType;
 			/**
 			Perform an euler-prediction step
 	

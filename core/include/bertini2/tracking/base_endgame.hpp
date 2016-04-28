@@ -31,20 +31,26 @@
 /**
 \file base_endgame.hpp
 
-\brief Contains parent class, Endgame, the parent class for all endgames.
+\brief Contains base class, EndgameBase.
 */
 
-
-#include <typeinfo>
-#include "bertini2/tracking.hpp"
-#include "bertini2/system.hpp"
-#include <boost/multiprecision/gmp.hpp>
 #include <iostream>
-#include "bertini2/limbo.hpp"
+#include <typeinfo>
+
+#include <boost/multiprecision/gmp.hpp>
 #include <boost/multiprecision/mpfr.hpp>
+
 #include "bertini2/mpfr_complex.hpp"
+#include "bertini2/limbo.hpp"
+
+#include "bertini2/system.hpp"
 
 #include "bertini2/enable_permuted_arguments.hpp"
+
+#include "bertini2/tracking/tracking_config.hpp"
+#include "bertini2/tracking/interpolation.hpp"
+
+#include "bertini2/logging.hpp"
 
 namespace bertini{ 
 
@@ -52,122 +58,43 @@ namespace bertini{
 
 		namespace endgame {
 
-			template<typename T> using SampCont = std::deque<Vec<T> >;
-			template<typename T> using TimeCont = std::deque<T>;
-
-
-
-			/*
-			Input: 
-					target_time is the time value that we wish to interpolate at.
-					samples are space values that correspond to the time values in times. 
-				 	derivatives are the dx_dt or dx_ds values at the (time,sample) values.
-
-			Output: 
-					Since we have a target_time the function returns the corrsponding space value at that time. 
-
-			Details: 
-					We compare our approximations to the tracked value to come up with the cycle number. 
-					Also, we use the Hermite interpolation to interpolate at the origin. Once two interpolants are withing FinalTol we 
-					say we have converged. 
-			*/
-
+			
 			/**
-			\brief
+			\class Endgame
 
-			\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
-			\param endgame_time The time value at which we start the endgame. 
-			\param x_endgame The current space point at endgame_time.
-			\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
-			\param samples a deque that will hold all the samples corresponding to the time values in times. 
+			\brief Base endgame class for all endgames offered in Bertini2.
+			
+			\see PowerSeriesEndgame
+			\see CauchyEndgame
+			
+			## Using an endgame
 
-			\tparam CT The complex number type.
-			*/			
-			template<typename CT>		
-				Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives)
-			{
-				assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
-				assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
-				assert((derivatives.size() >= num_sample_points) && "must have sufficient number of derivatives");
+			Endgames in Bertini2 are the engine for finishing homotopy continuation where we may encounter singular solutions.
+			The path is implicitly described by the system being tracked.
 
-				auto num_provided_samples = samples.size();
-				auto num_provided_times = times.size();
-				auto num_provided_derivs = derivatives.size();
+			## Purpose 
 
-				Mat< Vec<CT> > space_differences(2*num_sample_points,2*num_sample_points);
-				Vec<CT> time_differences(2*num_sample_points);
-				// std::cout << "\nhermite interpolating using " << num_sample_points << " samples\n";
+			Since the Bertini Endgames have common functionality, and we want to be able to call arbitrary algorithms using and tracker type, we use inheritance. That is, there is common functionality in all endgames, such as
 
-				// std::cout << "\ntimes\n";
-				// for (const auto& q : times)
-				// 	std::cout << q << '\n';
+			ComputeInitialSamples
 
-				// std::cout << "\nsamples\n";
-				// for (const auto& q : samples)
-				// 	std::cout << q << '\n';
-
-				// std::cout << "\nderivatives\n";
-				// for (const auto& q : derivatives)
-				// 	std::cout << q << '\n';
-
-
-				for(unsigned int ii=0; ii<num_sample_points; ++ii)
-				{ 
-					// std::cout << times[num_provided_times-1-ii] << std::endl;
-					// std::cout << samples[num_provided_samples-1-ii] << std::endl;
-					// std::cout << derivatives[num_provided_derivs-1-ii] << std::endl;
-					// std::cout << std::endl;
-					space_differences(2*ii,0)   = samples[    num_provided_samples-1-ii];		/*  F[2*i][0]    = samples[i];    */
-     				space_differences(2*ii+1,0) = samples[    num_provided_samples-1-ii]; 		/*  F[2*i+1][0]  = samples[i];    */
-      				space_differences(2*ii+1,1) = derivatives[num_provided_derivs -1-ii];	/*  F[2*i+1][1]  = derivatives[i]; */
-     				time_differences(2*ii)      = times[      num_provided_times  -1-ii];				/*  z[2*i]       = times[i];       */
-     				time_differences(2*ii+1)    = times[      num_provided_times  -1-ii];			/*  z[2*i+1]     = times[i];       */
-				}
-
-				//Add first round of finite differences to fill out rest of matrix. 
-				for(unsigned int ii=1; ii< num_sample_points; ++ii)
-				{
-					space_differences(2*ii,1) = (space_differences(2*ii,0) - space_differences(2*ii-1,0)) / (time_differences(2*ii) - time_differences(2*ii-1));
+			Also, there are settings that will be kept at this level to not duplicate code. 
 				
-				}
+			## Creating a new endgame type
 
-				//Filling out finite difference matrix to get the diagonal for hermite interpolation polyonomial.
-				for(unsigned int ii=2; ii < 2*num_sample_points; ++ii)
-				{
-					for(unsigned int jj=2; jj <=ii; ++jj)
-					{
-						space_differences(ii,jj) = 
-							(space_differences(ii,jj-1) - space_differences(ii-1,jj-1)) 
-								/ 
-							(time_differences(ii) - time_differences(ii-jj));						
-					}
-				}
-
-				 auto Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
-				 //Start of Result from Hermite polynomial, this is using the diagonal of the 
-				 //finite difference matrix.
-
-				for (unsigned ii=num_sample_points-1; ii >= 1; --ii)
-				{
-					Result = ((Result*(target_time - time_differences(ii)) + space_differences(2*ii, 2*ii)) * (target_time - time_differences(ii-1)) + space_differences(2*ii-1, 2*ii-1)).eval();  
-				}
-				//This builds the hermite polynomial from the highest term down. 
-				//As we multiply the previous result we will construct the highest term down to the last term.
-				Result = (Result * (target_time - time_differences(0)) + space_differences(0,0)).eval(); // Last term in hermite polynomial.
-				return Result;
-			}
-
-
+			 To create a new endgame type, inherit from this class. 
+			*/
 			template<class TrackerType>
 			class EndgameBase
 			{
+			protected:
+
 				using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
 				using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
 
 				using BCT = BaseComplexType;
 				using BRT = BaseRealType;
 
-			protected:
 
 				// state variables
 				mutable std::tuple<Vec<dbl>, Vec<mpfr> > final_approximation_at_origin_; 
@@ -179,10 +106,12 @@ namespace bertini{
 				using the endgame. 
 				*/
 				config::Endgame<BRT> endgame_settings_;
+
 				/**
 				\brief There are tolerances that are specific to the endgame. These settings are stored inside of this data member. 
 				*/
 				config::Tolerances<BRT> tolerances_;
+
 				/**
 				During the endgame we may be checking that we are not computing when we have detected divergent paths or other undesirable behavior. The setttings for these checks are 
 				in this data member. 
@@ -190,7 +119,7 @@ namespace bertini{
 				config::Security<BRT> security_;
 
 				/**
-				\brief A tracker tha must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values in the Cauchy endgame. 
+				\brief A tracker tha must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
 				*/
 				const TrackerType& tracker_;
 
@@ -215,17 +144,17 @@ namespace bertini{
 
 				
 
-				const auto& EndgameSettings()
+				const auto& EndgameSettings() const
 				{
 					return endgame_settings_;
 				}
 
-				const auto& Tolerances()
+				const auto& Tolerances() const
 				{
 					return tolerances_;
 				}
 
-				const auto& SecuritySettings()
+				const auto& SecuritySettings() const
 				{
 					return security_;
 				}
@@ -253,33 +182,40 @@ namespace bertini{
 
 
 				/**
-				\brief Getter for the tracker used inside of an instance of the endgame. 
+				\brief Getter for the tracker used inside an instance of the endgame. 
 				*/
-				const TrackerType & GetTracker(){return tracker_;}
+				const TrackerType & GetTracker() const
+				{return tracker_;}
 
 				template<typename CT>
-				const Vec<CT>& FinalApproximation() const {return std::get<Vec<CT> >(final_approximation_at_origin_);}
+				const Vec<CT>& FinalApproximation() const 
+				{return std::get<Vec<CT> >(final_approximation_at_origin_);}
 
-				const System& GetSystem() const { return tracker_.GetSystem();}
+				const System& GetSystem() const 
+				{ return tracker_.GetSystem();}
+
+
 				/*
-				Input:  endgame_tracker_: a template parameter for the endgame created. This tracker will be used to compute our samples. 
-						endgame_time: is the time when we start the endgame process usually this is .1
-						x_endgame: is the space value at endgame_time
+				\brief Populates time and space samples so that we are ready to start the endgame. 
+
+				## Input
+
+				  	start_time: is the time when we start the endgame process usually this is .1
+						x_endgame: is the space value at start_time
 						times: a deque of time values. These values will be templated to be CT 
 						samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of CT. 
 
-				Output: Since times and samples are sent in by reference there is no output value.
+				## Output
+
+					SuccessCode indicating whether tracking to all samples was successful.
 
 
-				Details:
+				## Details
+
 					The first sample will be (x_endgame) and the first time is start_time.
-					From there we do a geometric progression using the sample factor which by default is 1/2.
-					The next_time = start_time * sample_factor.
-					We can track then to the next_time and that construct the next_sample. This is done for Power Series Endgame and the Cauchy endgame.
-				*/
-				/**
-				\brief Whether we are using the PowerSeriesEndgame or the CauchyEndgame we need to have an initial set of samples to start the endgame. This function populates two deques 
-				so that we are ready to start the endgame. 
+					From there we do a geometric progression using the sample factor (which by default is 1/2).
+					Hence, next_time = start_time * sample_factor.
+					We track then to the next_time and construct the next_sample.
 
 				\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
 				\param start_time The time value at which we start the endgame. 
@@ -292,13 +228,17 @@ namespace bertini{
 				*/	
 				template<typename CT>
 				SuccessCode ComputeInitialSamples(const CT & start_time,const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
-				{	using RT = typename Eigen::NumTraits<CT>::Real;
+				{	
+					using RT = typename Eigen::NumTraits<CT>::Real;
+					assert(endgame_settings_.num_sample_points>0 && "number of sample points must be positive");
+					
 					samples.resize(endgame_settings_.num_sample_points);
 					times.resize(endgame_settings_.num_sample_points);
 
 					samples[0] = x_endgame;
 					times[0] = start_time;
 
+					//start at 1, because the input point is the 0th element.
 					for(int ii=1; ii < endgame_settings_.num_sample_points; ++ii)
 					{ 
 						times[ii] = times[ii-1] * RT(endgame_settings_.sample_factor);	

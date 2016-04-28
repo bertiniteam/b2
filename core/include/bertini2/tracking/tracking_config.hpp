@@ -40,17 +40,39 @@ namespace bertini
 {
 	namespace tracking{
 
+		// aliases for the types used to contain space and time samples, for the endgames.
+		template<typename T> using SampCont = std::deque<Vec<T> >;
+		template<typename T> using TimeCont = std::deque<T>;
 		
+		
+		enum class PrecisionType
+		{
+			Fixed,
+			Adaptive
+		};
+
+		// forward declarations
+		template<class D>
+		class FixedPrecisionTracker;
+		class MultiplePrecisionTracker;
+		class DoublePrecisionTracker;
+
+		namespace config{
+			template<typename T>
+			struct FixedPrecisionConfig;
+			struct AdaptiveMultiplePrecisionConfig;
+		}
+		// end forward declarations
+
+
+
+
+		// now for the TrackerTraits structs, which enable lookup of correct settings objects and types, etc.
 		template<class T>
 		struct TrackerTraits
 		{};
 
 
-		
-		template<class D>
-		class FixedPrecisionTracker;
-		class MultiplePrecisionTracker;
-		class DoublePrecisionTracker;
 
 		template<>
 		struct TrackerTraits<DoublePrecisionTracker>
@@ -58,6 +80,11 @@ namespace bertini
 			using BaseComplexType = dbl;
 			using BaseRealType = double;
 			using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
+			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
+			enum {
+				IsFixedPrec = 1,
+				IsAdaptivePrec = 0
+			};
 		};
 
 
@@ -67,6 +94,12 @@ namespace bertini
 			using BaseComplexType = mpfr;
 			using BaseRealType = mpfr_float;
 			using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
+			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
+
+			enum {
+				IsFixedPrec = 1,
+				IsAdaptivePrec = 0
+			};
 		};
 
 		class AMPTracker;
@@ -76,6 +109,12 @@ namespace bertini
 			using BaseComplexType = mpfr;
 			using BaseRealType = mpfr_float;
 			using EventEmitterType = AMPTracker;
+			using PrecisionConfig = config::AdaptiveMultiplePrecisionConfig;
+
+			enum {
+				IsFixedPrec = 0,
+				IsAdaptivePrec = 1
+			};
 		};
 
 
@@ -87,7 +126,61 @@ namespace bertini
 			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
 			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
 			using EventEmitterType = typename TrackerTraits<D>::EventEmitterType;
+			using PrecisionConfig = typename TrackerTraits<D>::PrecisionConfig;
+
+			enum {
+				IsFixedPrec = 1,
+				IsAdaptivePrec = 0
+			};
 		};
+
+
+		namespace endgame{
+		// some forward declarations
+		template<typename Tracker, typename Enable = void>
+		class FixedPrecPowerSeriesEndgame;
+
+		template<typename Tracker, typename Enable = void>
+		class FixedPrecCauchyEndgame;
+
+		class AMPPowerSeriesEndgame;
+		class AMPCauchyEndgame;
+		}
+
+		// this struct facilitates lookup of required endgame type based on tracker type
+		template<typename TrackerT>
+		struct EndgameSelector
+		{ };
+
+		template<>
+		struct EndgameSelector<DoublePrecisionTracker>
+		{
+			using PSEG = endgame::FixedPrecPowerSeriesEndgame<DoublePrecisionTracker>;
+			using Cauchy = endgame::FixedPrecCauchyEndgame<DoublePrecisionTracker>;
+		};
+
+		template<>
+		struct EndgameSelector<MultiplePrecisionTracker>
+		{
+			using PSEG = endgame::FixedPrecPowerSeriesEndgame<MultiplePrecisionTracker>;
+			using Cauchy = endgame::FixedPrecCauchyEndgame<MultiplePrecisionTracker>;
+		};
+
+		template<class D>
+		struct EndgameSelector<FixedPrecisionTracker<D> >
+		{
+			using PSEG = typename EndgameSelector<D>::PSEG;
+			using Cauchy = typename EndgameSelector<D>::Cauchy;
+		};
+
+		template<>
+		struct EndgameSelector<AMPTracker>
+		{
+			using PSEG = endgame::AMPPowerSeriesEndgame;
+			using Cauchy = endgame::AMPCauchyEndgame;
+		};
+
+
 
 
 		enum class SuccessCode
@@ -124,15 +217,7 @@ namespace bertini
 				HeunEuler
 			};
 
-			enum class PrecisionType
-			{
-				Double,
-				FixedMultiple,
-				Adaptive
-			};
-
-
-
+			
 
 
 			template<typename T>
@@ -267,6 +352,23 @@ namespace bertini
 
 
 
+			template<typename ComplexType>
+			struct FixedPrecisionConfig
+			{
+				/**
+				\brief Construct a ready-to-go set of fixed precision settings from a system.
+				*/
+				FixedPrecisionConfig(System const& sys) 
+				{ }
+			};
+
+			template<typename ComplexType>
+			inline
+			std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig<ComplexType> const& fpc)
+			{
+				return out;
+			}
+
 
 			/**
 			Holds the program parameters with respect to Adaptive Multiple Precision.
@@ -289,8 +391,6 @@ namespace bertini
 			Criterion C:
 			\f$ P > \sigma_2 + \tau + \log_{10}(||J^{-1}|| \Psi + ||z||)  \f$
 
-	
-			
 			*/
 			struct AdaptiveMultiplePrecisionConfig
 			{
@@ -308,15 +408,14 @@ namespace bertini
 				// Error in function evaluation, divided by the precision-dependent unit roundoff error.
 				// rename to function_eval_error_bound
 
-				int safety_digits_1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
-				int safety_digits_2; ///< User-chosen setting for the number of safety digits used during Criterion C.
+				int safety_digits_1 = 1; ///< User-chosen setting for the number of safety digits used during Criteria A & B.
+				int safety_digits_2 = 1; ///< User-chosen setting for the number of safety digits used during Criterion C.
 				unsigned int maximum_precision = 300; ///< User-chosed setting for the maximum allowable precision.  Paths will die if their precision is requested to be set higher than this threshold.
 				
 				unsigned consecutive_successful_steps_before_precision_decrease = 10;
 
 				unsigned max_num_precision_decreases = 10; ///< The maximum number of times precision can be lowered during tracking of a segment of path.
-				AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
-				{}
+				
 
 				/**
 				 \brief Set epsilon, degree bound, and coefficient bound from system.
@@ -350,7 +449,15 @@ namespace bertini
 					SetBoundsAndEpsilonFrom(sys);
 					SetPhiPsiFromBounds();
 				}
-			};
+
+				AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
+				{}
+
+				AdaptiveMultiplePrecisionConfig(System const& sys) : AdaptiveMultiplePrecisionConfig()
+				{
+					SetAMPConfigFrom(sys);
+				}
+			}; // re: AdaptiveMultiplePrecisionConfig
 
 			inline
 			std::ostream& operator<<(std::ostream & out, AdaptiveMultiplePrecisionConfig const& AMP)
@@ -384,9 +491,10 @@ namespace bertini
 				AMP.SetAMPConfigFrom(sys);
 			    return AMP;
 			}
-		}
-	}
-}
+
+		} //re: namespace config
+	} // re: namespace tracking 
+} // re: namespace bertini
 
 
 #endif

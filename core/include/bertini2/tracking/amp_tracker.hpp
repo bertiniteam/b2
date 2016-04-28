@@ -210,7 +210,7 @@ namespace bertini{
 
 		1. Create a system, and instantiate some settings.
 		2. Create an AMPTracker, associating it to the system you are going to solve or track on.
-		3. Run AMPTracker::Setup and AMPTracker::AMPSetup, getting the settings in line for tracking.
+		3. Run AMPTracker::Setup and AMPTracker::PrecisionSetup, getting the settings in line for tracking.
 		4. Repeatedly, or as needed, call the AMPTracker::TrackPath function, feeding it a start point, and start and end times.  The initial precision is that of the start point.  
 
 		Working precision and stepsize are adjusted automatically to get around nearby singularities to the path.  If the endpoint is singular, this may very well fail, as prediction and correction get more and more difficult with proximity to singularities.  
@@ -265,7 +265,7 @@ namespace bertini{
 						stepping_preferences,
 						newton_preferences);
 
-		tracker.AMPSetup(AMP);
+		tracker.PrecisionSetup(AMP);
 	
 		//  4. Create a start and end time.  These are complex numbers.
 		mpfr t_start("1.0");
@@ -293,13 +293,13 @@ namespace bertini{
 		* Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
 
 		*/
-		class AMPTracker : public Tracker<AMPTracker>
+		class AMPTracker : public Tracker<AMPTracker, dbl, mpfr>
 		{
-			friend class Tracker<AMPTracker>;
+			friend class Tracker<AMPTracker, dbl, mpfr>;
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
-			typedef Tracker<AMPTracker> Base;
+			typedef Tracker<AMPTracker, dbl, mpfr> Base;
 			typedef typename TrackerTraits<AMPTracker>::EventEmitterType EmitterType;
 
 			enum UpsampleRefinementOption
@@ -323,7 +323,7 @@ namespace bertini{
 			/**
 			\brief Special additional setup call for the AMPTracker, selecting the config for adaptive precision.
 			*/
-			void AMPSetup(config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+			void PrecisionSetup(config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				AMP_config_ = AMP_config;
 			}
@@ -344,6 +344,21 @@ namespace bertini{
 			virtual ~AMPTracker() = default;
 
 
+			Vec<mpfr> CurrentPoint() const override
+			{
+				if (this->CurrentPrecision()==DoublePrecision())
+				{
+					const auto& curr_vector = std::get<Vec<dbl>>(this->current_space_);
+					Vec<mpfr> returnme(NumVariables());
+					for (unsigned ii = 0; ii < NumVariables(); ++ii)
+					{
+						returnme(ii) = mpfr(curr_vector(ii));
+					}
+					return returnme;
+				}
+				else
+					return std::get<Vec<mpfr>>(this->current_space_);
+			}
 
 
 		private:

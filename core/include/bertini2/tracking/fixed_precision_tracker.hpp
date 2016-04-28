@@ -57,7 +57,7 @@ namespace bertini{
 		\brief Functor-like class for tracking paths on a system
 		*/
 		template<class DerivedT>
-		class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<DerivedT> >
+		class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<DerivedT>, typename TrackerTraits<DerivedT>::BaseComplexType>
 		{	
 		public:
 
@@ -70,13 +70,25 @@ namespace bertini{
 			virtual ~FixedPrecisionTracker() = default;
 
 			typedef FixedPrecisionTracker<DerivedT> EmitterType;
-			typedef Tracker<FixedPrecisionTracker<DerivedT> > Base;
+			typedef Tracker<FixedPrecisionTracker<DerivedT>, BaseComplexType> Base;
 
 
 
 			FixedPrecisionTracker(System const& sys) : Base(sys){}
 
-			
+			/**
+			\brief An additional no-op call, provided for conformity of interface with AMP tracker in generic code.
+			*/
+			void PrecisionSetup(config::FixedPrecisionConfig<RT> const&)
+			{ }
+
+
+			Vec<CT> CurrentPoint() const override
+			{
+				return std::get<Vec<CT>>(this->current_space_);
+			}
+
+
 			void ResetCounters() const override
 			{
 				Base::ResetCountersBase();
@@ -160,7 +172,7 @@ namespace bertini{
 				CT current_time = CT(this->current_time_);
 				CT delta_t = CT(this->delta_t_);
 
-				SuccessCode predictor_code = Predict<CT, RT>(predicted_space, current_space, current_time, delta_t);
+				SuccessCode predictor_code = Predict(predicted_space, current_space, current_time, delta_t);
 
 				if (predictor_code!=SuccessCode::Success)
 				{
@@ -179,7 +191,7 @@ namespace bertini{
 
 				CT tentative_next_time = current_time + delta_t;
 
-				SuccessCode corrector_code = Correct<CT, RT>(tentative_next_space,
+				SuccessCode corrector_code = Correct(tentative_next_space,
 													 predicted_space,
 													 tentative_next_time);
 
@@ -280,24 +292,20 @@ namespace bertini{
 			\param current_space The current space point.
 			\param current_time The current time value.
 			\param delta_t The time differential for this step.  Allowed to be complex.
-
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
 			*/
-			template<typename ComplexType, typename RealType>
-			SuccessCode Predict(Vec<ComplexType> & predicted_space, 
-								Vec<ComplexType> const& current_space, 
-								ComplexType const& current_time, ComplexType const& delta_t) const
+			SuccessCode Predict(Vec<CT> & predicted_space, 
+								Vec<CT> const& current_space, 
+								CT const& current_time, CT const& delta_t) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<CT>::Real, 
+			              				typename Eigen::NumTraits<CT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				RealType& norm_J = std::get<RealType>(this->norm_J_);
-				RealType& norm_J_inverse = std::get<RealType>(this->norm_J_inverse_);
-				RealType& size_proportion = std::get<RealType>(this->size_proportion_);
-				RealType& error_estimate = std::get<RealType>(this->error_estimate_);
-				RealType& condition_number_estimate = std::get<RealType>(this->condition_number_estimate_);
+				RT& norm_J = std::get<RT>(this->norm_J_);
+				RT& norm_J_inverse = std::get<RT>(this->norm_J_inverse_);
+				RT& size_proportion = std::get<RT>(this->size_proportion_);
+				RT& error_estimate = std::get<RT>(this->error_estimate_);
+				RT& condition_number_estimate = std::get<RT>(this->condition_number_estimate_);
 
 				return ::bertini::tracking::Predict(
 			                this->predictor_choice_,
@@ -308,7 +316,7 @@ namespace bertini{
 							condition_number_estimate,
 							this->num_steps_since_last_condition_number_computation_,
 							this->frequency_of_CN_estimation_,
-							RealType(this->tracking_tolerance_));
+							RT(this->tracking_tolerance_));
 			}
 
 
@@ -318,36 +326,32 @@ namespace bertini{
 
 			Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
-
 			\param corrected_space[out] The spatial result of the correction loop.
 			\param current_space The start point in space for running the corrector loop.
 			\param current_time The current time value.
 
 			\return A SuccessCode indicating whether the loop was successful in converging in the max number of allowable newton steps, to the current path tolerance.
 			*/
-			template<typename ComplexType, typename RealType>
-			SuccessCode Correct(Vec<ComplexType> & corrected_space, 
-								Vec<ComplexType> const& current_space, 
-								ComplexType const& current_time) const
+			SuccessCode Correct(Vec<CT> & corrected_space, 
+								Vec<CT> const& current_space, 
+								CT const& current_time) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<RT>::Real, 
+			              				typename Eigen::NumTraits<CT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
 
-				RealType& norm_J = std::get<RealType>(this->norm_J_);
-				RealType& norm_J_inverse = std::get<RealType>(this->norm_J_inverse_);
-				RealType& norm_delta_z = std::get<RealType>(this->norm_delta_z_);
-				RealType& condition_number_estimate = std::get<RealType>(this->condition_number_estimate_);
+				RT& norm_J = std::get<RT>(this->norm_J_);
+				RT& norm_J_inverse = std::get<RT>(this->norm_J_inverse_);
+				RT& norm_delta_z = std::get<RT>(this->norm_delta_z_);
+				RT& condition_number_estimate = std::get<RT>(this->condition_number_estimate_);
 
 
 				return bertini::tracking::Correct(corrected_space,
 												this->tracked_system_,
 												current_space,
 												current_time, 
-												RealType(this->tracking_tolerance_),
+												RT(this->tracking_tolerance_),
 												this->newton_config_.min_num_newton_iterations,
 												this->newton_config_.max_num_newton_iterations);
 			}
@@ -359,8 +363,6 @@ namespace bertini{
 
 			Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
 
 			\param[out] new_space The result of running the refinement.
 			\param start_point The base point for running Newton's method.
@@ -368,12 +370,11 @@ namespace bertini{
 
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
-			template <typename ComplexType, typename RealType>
-			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
-								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
+			SuccessCode RefineImpl(Vec<CT> & new_space,
+								Vec<CT> const& start_point, CT const& current_time) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<RT>::Real, 
+			              				typename Eigen::NumTraits<CT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
 				return bertini::tracking::Correct(new_space,
@@ -395,8 +396,6 @@ namespace bertini{
 
 			Returns new space point by reference, as new_space.  Operates at current precision.
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
 
 			\param[out] new_space The result of running the refinement.
 			\param start_point The base point for running Newton's method.
@@ -406,13 +405,12 @@ namespace bertini{
 
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
-			template <typename ComplexType, typename RealType>
-			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
-								Vec<ComplexType> const& start_point, ComplexType const& current_time,
-								RealType const& tolerance, unsigned max_iterations) const
+			SuccessCode RefineImpl(Vec<CT> & new_space,
+								Vec<CT> const& start_point, CT const& current_time,
+								RT const& tolerance, unsigned max_iterations) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<RT>::Real, 
+			              				typename Eigen::NumTraits<CT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
 				return bertini::tracking::Correct(new_space,
@@ -452,7 +450,7 @@ namespace bertini{
 
 
 			/**
-			\brief Construct an Adaptive Precision tracker, associating to it a System.
+			\brief Construct a tracker, associating to it a System.
 			*/
 			DoublePrecisionTracker(class System const& sys) : FixedPrecisionTracker<DoublePrecisionTracker>(sys)
 			{	}
@@ -510,16 +508,17 @@ namespace bertini{
 			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 
 			BERTINI_DEFAULT_VISITABLE()
+
+
 			/**
-			\brief Construct a Multiple Precision tracker, associating to it a System.
+			\brief Construct a tracker, associating to it a System.
+
+			The precision of the tracker will be whatever the current default is.  The tracker cannot change its precision, and will require the default precision to be this precision whenever tracking is started.  That is, the precision is fixed.
 			*/
-			MultiplePrecisionTracker(class System const& sys, unsigned p) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(p)
-			{	
-				if (p!=mpfr_float::default_precision())
-					throw std::runtime_error("erroneously creating a fixed multiple precision tracker with differing precision from current default");
-			}
+			MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(mpfr_float::default_precision())
+			{	}
 
-
+			
 			MultiplePrecisionTracker() = delete;
 
 			virtual ~MultiplePrecisionTracker() = default;
@@ -546,13 +545,25 @@ namespace bertini{
 			{
 
 				if (start_point(0).precision()!=mpfr_float::default_precision())
-					throw std::runtime_error("start point for fixed multiple precision tracker has differing precision from default, tracking cannot start");
+				{
+					std::stringstream err_msg;
+					err_msg << "start point for fixed multiple precision tracker has differing precision from default (" << start_point(0).precision() << "!=" << mpfr_float::default_precision() << "), tracking cannot start";
+					throw std::runtime_error(err_msg.str());
+				}
 
 				if (start_point(0).precision()!=CurrentPrecision())
-					throw std::runtime_error("start point for fixed multiple precision tracker has differing precision from tracker's precision, tracking cannot start");
+				{
+					std::stringstream err_msg;
+					err_msg << "start point for fixed multiple precision tracker has differing precision from tracker's precision (" << start_point(0).precision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					throw std::runtime_error(err_msg.str());
+				}
 
 				if (mpfr_float::default_precision()!=CurrentPrecision())
-					throw std::runtime_error("current default precision differs from tracker's precision, tracking cannot start");
+				{
+					std::stringstream err_msg;
+					err_msg << "current default precision differs from tracker's precision (" << mpfr_float::default_precision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					throw std::runtime_error(err_msg.str());
+				}
 
 
 				this->NotifyObservers(Initializing<EmitterType,BaseComplexType>(*this,start_time, end_time, start_point));

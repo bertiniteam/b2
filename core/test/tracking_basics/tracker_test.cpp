@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_linear)
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 	
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_quadratic)
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(-1);
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_decic)
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(-2);
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_tracking_DOES_SOMETHING_PREDICTABLE_from_near_t
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -642,7 +642,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 					newton_preferences);
 	tracker.PrecisionPreservation(true);
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -719,7 +719,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 					newton_preferences);
 	tracker.PrecisionPreservation(true);
 	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -788,7 +788,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	              	mpfr_float("1e-5"), mpfr_float("1e5"),
 					stepping_preferences, newton_preferences);
 	
-	tracker.AMPSetup(bertini::tracking::config::AMPConfigFrom(final_system));
+	tracker.PrecisionSetup(bertini::tracking::config::AMPConfigFrom(final_system));
 	tracker.PrecisionPreservation(true);
 	mpfr t_start(1), t_end(0);
 	std::vector<Vec<mpfr> > solutions;
@@ -890,7 +890,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 					stepping_preferences, newton_preferences);
 	
 	auto AMP = bertini::tracking::config::AMPConfigFrom(final_system);
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 	tracker.PrecisionPreservation(true);
 	auto solutions = track_total_degree(tracker, TD);
 

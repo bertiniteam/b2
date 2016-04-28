@@ -42,6 +42,17 @@
 
 namespace bertini{
 
+	template <typename...>
+	struct IsTemplateParameter {
+	    static constexpr bool value = false;
+	};
+
+	template <typename F, typename S, typename... T>
+	struct IsTemplateParameter<F, S, T...> {
+	    static constexpr bool value =
+	        std::is_same<F, S>::value || IsTemplateParameter<F, T...>::value;
+	};
+
 	namespace tracking{
 
 		/**
@@ -125,7 +136,7 @@ namespace bertini{
 
 
 		*/
-		template<class D>
+		template<class D, typename... NeededTypes>
 		class Tracker : public Observable<>
 		{
 
@@ -150,19 +161,16 @@ namespace bertini{
 
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
-			// template<typename R = RT, typename std::enable_if<std::is_same<R, double>::value>::type >
-
-			template<typename R = RT>
 			void Setup(config::Predictor new_predictor_choice,
-			           R const& tracking_tolerance,
-						R const& path_truncation_threshold,
-						config::Stepping<R> const& stepping,
+			           RT const& tracking_tolerance,
+						RT const& path_truncation_threshold,
+						config::Stepping<RT> const& stepping,
 						config::Newton const& newton)
 			{
 				Predictor(new_predictor_choice);
 				
 				tracking_tolerance_ = tracking_tolerance;
-				digits_tracking_tolerance_ = NumTraits<R>::TolToDigits(tracking_tolerance);
+				digits_tracking_tolerance_ = NumTraits<RT>::TolToDigits(tracking_tolerance);
 
 				path_truncation_threshold_ = path_truncation_threshold;
 
@@ -185,7 +193,6 @@ namespace bertini{
 			
 			The is the fundamental method for the tracker.  First, you create and set up the tracker, telling it what system you will solve, and the settings to use.  Then, you actually do the tracking.
 			*/
-			template<typename CT>
 			SuccessCode TrackPath(Vec<CT> & solution_at_endtime,
 									CT const& start_time, CT const& endtime,
 									Vec<CT> const& start_point
@@ -256,10 +263,12 @@ namespace bertini{
 			\param start_point The seed for Newton's method for refinement.
 			\param current_time The current time value for refinement.
 			*/
-			SuccessCode Refine(Vec<CT> & new_space,
-								Vec<CT> const& start_point, CT const& current_time) const
+			template<typename C>
+			SuccessCode Refine(Vec<C> & new_space,
+								Vec<C> const& start_point, C const& current_time) const
 			{
-				return this->AsDerived().template RefineImpl<CT, BaseRealType>(new_space, start_point, current_time);
+				static_assert(IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
+				return this->AsDerived().RefineImpl(new_space, start_point, current_time);
 			}
 
 
@@ -278,10 +287,16 @@ namespace bertini{
 			\param tolerance The tolerance to which to refine.
 			\param max_iterations The maximum number of iterations to use to refine.
 			*/
-			SuccessCode Refine(Vec<CT> & new_space,
-								Vec<CT> const& start_point, CT const& current_time, RT const& tolerance, unsigned max_iterations) const
+			template<typename C, typename R>
+			SuccessCode Refine(Vec<C> & new_space,
+								Vec<C> const& start_point, C const& current_time, R const& tolerance, unsigned max_iterations) const
 			{
-				return this->AsDerived().template RefineImpl<CT,RT>(new_space, start_point, current_time, tolerance, max_iterations);
+				static_assert(std::is_same<	typename Eigen::NumTraits<R>::Real, 
+			              				typename Eigen::NumTraits<C>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
+				static_assert(IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
+
+				return this->AsDerived().RefineImpl(new_space, start_point, current_time, tolerance, max_iterations);
 			}
 
 
@@ -536,17 +551,17 @@ namespace bertini{
 			mutable unsigned num_successful_steps_since_stepsize_increase_; ///< How many successful steps have been taken since increased stepsize.
 			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
 
-			mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_space_; ///< The current space value. 
-			mutable std::tuple< Vec<dbl>, Vec<mpfr> > tentative_space_; ///< After correction, the tentative next space value
-			mutable std::tuple< Vec<dbl>, Vec<mpfr> > temporary_space_; ///< After prediction, the tentative next space value.
+			mutable std::tuple< Vec<NeededTypes>...> current_space_; ///< The current space value. 
+			mutable std::tuple< Vec<NeededTypes>...> tentative_space_; ///< After correction, the tentative next space value
+			mutable std::tuple< Vec<NeededTypes>...> temporary_space_; ///< After prediction, the tentative next space value.
 
 
-			mutable std::tuple< double, mpfr_float > condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
-			mutable std::tuple< double, mpfr_float > error_estimate_; ///< An estimate on the error of a step.
-			mutable std::tuple< double, mpfr_float > norm_J_; ///< An estimate on the norm of the Jacobian
-			mutable std::tuple< double, mpfr_float > norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
-			mutable std::tuple< double, mpfr_float > norm_delta_z_; ///< The norm of the change in space resulting from a step.
-			mutable std::tuple< double, mpfr_float > size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
+			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
+			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > error_estimate_; ///< An estimate on the error of a step.
+			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > norm_J_; ///< An estimate on the norm of the Jacobian
+			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
+			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > norm_delta_z_; ///< The norm of the change in space resulting from a step.
+			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
 
 
 
@@ -573,11 +588,8 @@ namespace bertini{
 			}
 
 
-			template<typename T>
-			Vec<T> CurrentPoint() const
-			{
-				return std::get<Vec<T> >(current_space_);
-			}
+			virtual Vec<CT> CurrentPoint() const = 0;
+
 
 			virtual unsigned CurrentPrecision() const = 0;
 		};

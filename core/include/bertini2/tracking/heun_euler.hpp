@@ -51,22 +51,55 @@ namespace bertini{
 
 
 
-			// struct HeunEuler{
+			template <typename ComplexType, typename RealType>
+			SuccessCode HeunEuler(Vec<ComplexType> & next_space,
+				               System const& S,
+				               Vec<ComplexType> const& current_space, ComplexType current_time, 
+				               ComplexType const& delta_t,
+				               RealType & condition_number_estimate,
+				               unsigned & num_steps_since_last_condition_number_computation, 
+				               unsigned frequency_of_CN_estimation, 
+				               RealType const& tracking_tolerance)
+			{
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
+			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+			              				"underlying complex type and the type for comparisons must match");
 
-			// 	template <typename ComplexType, typename RealType>
-			// 	SuccessCode operator(Vec<ComplexType> & next_space,
-			// 		                  RealType & error_estimate,
-			// 		                  RealType & size_proportion,
-			// 		                  RealType & norm_J,
-			// 		                  RealType & norm_J_inverse,
-			// 		               System const& S,
-			// 		               Vec<ComplexType> const& current_space, ComplexType current_time, 
-			// 		               ComplexType const& delta_t,
-			// 		               RealType & condition_number_estimate,
-			// 		               unsigned & num_steps_since_last_condition_number_computation, 
-			// 		               unsigned frequency_of_CN_estimation, 
-			// 		               RealType const& tracking_tolerance,
-			// 		               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+				Mat<ComplexType> dh_dx = S.Jacobian(current_space, current_time);
+				auto LU = dh_dx.lu(); // we keep the LU here because need to estimate the condition number of J^-1
+				
+				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
+					return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
+
+				Vec<ComplexType> delta_x_1 = LU.solve(-S.TimeDerivative(current_space, current_time)); 
+
+				auto norm_J = dh_dx.norm();
+				auto norm_J_inverse = LU.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
+
+				condition_number_estimate = norm_J*norm_J_inverse;
+
+
+
+
+
+
+				Vec<ComplexType> second_sample_point = current_space + delta_x_1*delta_t;
+				ComplexType second_time = current_time + delta_t;
+
+				LU = S.Jacobian(second_sample_point, second_time).lu(); // we keep the LU here because need to estimate the condition number of J^-1
+				
+				if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
+					return SuccessCode::MatrixSolveFailure;
+
+				Vec<ComplexType> delta_x_2 = LU.solve(-S.TimeDerivative(second_sample_point, second_time)); 
+
+				auto delta_x = (delta_x_1+delta_x_2)/RealType(2);
+
+				next_space = current_space + delta_x * delta_t;
+				
+				return SuccessCode::Success;
+			}
+
 
 			template <typename ComplexType, typename RealType>
 			SuccessCode HeunEuler(Vec<ComplexType> & next_space,
