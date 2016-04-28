@@ -139,7 +139,7 @@ namespace bertini{
 			 Each predictor method is stored as a static Butcher table.  To perform a predict step, you must instantiate an object with a particular predictor method and call Predict:
 			 
 			 \code
-			 ExplicitRKPredictors<Complex,Real> euler(config::Predictor::Euler)
+			 ExplicitRKPredictors<Complex,Real> euler(config::Predictor::Euler, sys)
 			 success_code = euler.Predict( ... )
 			 \endcode
 			 

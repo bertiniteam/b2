@@ -1098,6 +1098,18 @@ namespace bertini{
 				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
 
+				return corrector_->Correct(corrected_space,
+									norm_delta_z,
+									norm_J,
+									norm_J_inverse,
+									condition_number_estimate,
+									tracked_system_,
+									current_space,
+									current_time,
+									RealType(tracking_tolerance_),
+									newton_config_.min_num_newton_iterations,
+									newton_config_.max_num_newton_iterations,
+									AMP_config_);
 				return bertini::tracking::Correct(corrected_space,
 												norm_delta_z,
 												norm_J,

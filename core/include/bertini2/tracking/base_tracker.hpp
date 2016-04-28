@@ -36,7 +36,7 @@
 #include <algorithm>
 //#include "bertini2/tracking/step.hpp"
 #include "bertini2/tracking/ode_predictors.hpp"
-#include "bertini2/tracking/correct.hpp"
+#include "bertini2/tracking/newton_corrector.hpp"
 #include "bertini2/limbo.hpp"
 #include "bertini2/logging.hpp"
 #include "bertini2/detail/visitable.hpp"
@@ -144,6 +144,7 @@ namespace bertini{
 			Tracker(System const& sys) : tracked_system_(sys)
 			{
 				predictor_choice_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), sys);
+				corrector_ = std::make_shared< correct::NewtonCorrector >(sys);
 				Predictor(predict::DefaultPredictor());
 			}
 
@@ -165,6 +166,7 @@ namespace bertini{
 						config::Newton const& newton)
 			{
 				Predictor(new_predictor_choice);
+				corrector_->Settings(newton);
 				
 				tracking_tolerance_ = tracking_tolerance;
 				digits_tracking_tolerance_ = NumTraits<R>::TolToDigits(tracking_tolerance);
@@ -511,11 +513,11 @@ namespace bertini{
 
 			
 			// configuration for tracking
-//			config::Predictor  predictor_choice_; ///< The predictor to use while tracking.
-			std::shared_ptr<predict::ExplicitRKPredictor > predictor_choice_;
+			std::shared_ptr<predict::ExplicitRKPredictor > predictor_choice_; // The predictor to use while tracking
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
 			config::Stepping<RT> stepping_config_; ///< The stepping configuration.
+			std::shared_ptr<correct::NewtonCorrector> corrector_;
 			config::Newton newton_config_; ///< The newton configuration.
 
 
