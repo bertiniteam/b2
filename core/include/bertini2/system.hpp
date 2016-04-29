@@ -136,24 +136,34 @@ namespace bertini {
 		void Differentiate() const;
 
 
+		
+		
+
+
 		/**
-		\brief Evaluate the system using the previously set variable (and time) values.  
+		 \brief Evaluate the system using the previously set variable (and time) values, in place.
 
 		It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
 
 		\return The function values of the system
 		*/ 
-		template<typename T>
-		Vec<T> Eval() const
+		template<typename Derived>
+		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values) const
 		{
+			typedef typename Derived::Scalar T;
 
+			if(function_values.size() < NumFunctions())
+			{
+				std::stringstream ss;
+				ss << "trying to evaluate system in place, but number of input functions (" << function_values.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
+				throw std::runtime_error(ss.str());
+			}
 
 			// the Reset() function call traverses the entire tree, resetting everything.
 			// TODO: it has the unfortunate side effect of resetting constant functions, too.
 			for (const auto& iter : functions_) 
 				iter->Reset();
 
-			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
 
 			unsigned counter(0);
 			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
@@ -161,12 +171,67 @@ namespace bertini {
 			}
 
 			if (IsPatched())
-				patch_.Eval(function_values,std::get<Vec<T> >(current_variable_values_));// .segment(NumFunctions(),NumTotalVariableGroups())
+				patch_.EvalInPlace(function_values,
+									std::get<Vec<T> >(current_variable_values_));
+									// .segment(NumFunctions(),NumTotalVariableGroups())
+			
+		}
+		
+		
+		
+		
+		
+		/**
+		 \brief Evaluate the system using the previously set variable (and time) values, creating vector of function values.
+		 
+		 It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
+		 
+		 \return The function values of the system
+		 */
+		template<typename T>
+		Vec<T> Eval() const
+		{
+			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
+			EvalInPlace(function_values);
 
 			return function_values;
 		}
 
 
+		
+
+		/**
+		 \brief Evaluate the system, provided the system has no path variable defined, in place.
+		 
+		 Causes the current variable values to be set in the system.  Resets the function tree's stored numbers.
+		 
+		 
+		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \param variable_values The values of the variables, for the evaluation.
+		 */
+		template<typename Derived, typename OtherDerived>
+		void EvalInPlace(Eigen::MatrixBase<Derived>& function_values, const Eigen::MatrixBase<OtherDerived>& variable_values) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar,typename OtherDerived::Scalar>::value,"scalar types must match");
+
+			if (variable_values.size()!=NumVariables())
+			{
+				std::stringstream ss;
+				ss << "trying to evaluate system, but number of input variables (" << variable_values.size() << ") doesn't match number of system variables (" << NumVariables() << ").";
+				throw std::runtime_error(ss.str());
+			}
+			if (have_path_variable_)
+				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
+			
+			SetVariables(variable_values.eval());
+			
+			EvalInPlace(function_values);
+		}
+		
+		
+		
+		
 		/**
 		\brief Evaluate the system, provided the system has no path variable defined.
 
@@ -177,9 +242,10 @@ namespace bertini {
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		\param variable_values The values of the variables, for the evaluation.
 		*/
-		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values) const
+		template<typename Derived>
+		typename Derived::PlainObject Eval(const Eigen::MatrixBase<Derived>& variable_values) const
 		{
+			typedef typename Derived::Scalar T;
 
 			if (variable_values.size()!=NumVariables())
 			{
@@ -190,10 +256,51 @@ namespace bertini {
 			if (have_path_variable_)
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 
-			SetVariables(variable_values);
+			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
+			EvalInPlace(function_values, variable_values);
+			return function_values;
 
-			return Eval<T>();
 		}
+
+
+
+		
+		
+
+		
+		/**
+		 Evaluate the system, provided a path variable is defined for the system, in place.
+
+		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 
+		 \param variable_values The values of the variables, for the evaluation.
+		 \param path_variable_value The current value of the path variable.
+
+		 \todo The Eval() function for systems has the unfortunate side effect of resetting constant functions.  Modify the System class so that only certain parts of the tree get reset.
+		 */
+		template<typename Derived, typename OtherDerived, typename T>
+		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values, const Eigen::MatrixBase<OtherDerived>& variable_values, const T & path_variable_value) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
+
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
+
+			SetVariables(variable_values.eval());//TODO: remove this eval
+			SetPathVariable(path_variable_value);
+
+			EvalInPlace(function_values);
+		}
+
+		
+		
+		
+		
+
 
 
 
@@ -208,8 +315,8 @@ namespace bertini {
 
 		 \todo The Eval() function for systems has the unfortunate side effect of resetting constant functions.  Modify the System class so that only certain parts of the tree get reset.
 		 */
-		template<typename T>
-		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value) const
+		template<typename Derived, typename T>
+		Vec<T> Eval(const Eigen::MatrixBase<Derived>& variable_values, const T & path_variable_value) const
 		{
 
 			if (variable_values.size()!=NumVariables())
@@ -217,11 +324,52 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
 
-			SetVariables(variable_values);
-			SetPathVariable(path_variable_value);
-
-			return Eval<T>();
+			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
+			EvalInPlace(function_values, variable_values, path_variable_value);
+			return function_values;
 		}
+
+
+		
+		
+		
+		/**
+		 Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
+
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		*/
+		template<typename Derived>
+		void JacobianInPlace(Eigen::MatrixBase<Derived> & J) const
+		{
+			typedef typename Derived::Scalar T;
+
+			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
+		{
+				throw std::runtime_error("trying to evaluate jacobian of system in place, but input J doesn't have right number of columns or rows");
+			}
+			
+			
+			const auto& vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+
+			if (!is_differentiated_)
+				Differentiate();
+			else
+				for (const auto& iter : jacobian_) 
+					iter->Reset();
+
+			for (int ii = 0; ii < NumFunctions(); ++ii)
+				for (int jj = 0; jj < NumVariables(); ++jj)
+					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+			if (IsPatched())
+				patch_.JacobianInPlace(J,std::get<Vec<T> >(current_variable_values_));
+			
+		}
+
+		
+		
+		
+		
+		
 
 
 		/**
@@ -232,24 +380,45 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian() const
 		{
-			const auto& vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
-
-			if (!is_differentiated_)
-				Differentiate();
-			else
-				for (const auto& iter : jacobian_) 
-					iter->Reset();
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-				for (int jj = 0; jj < NumVariables(); ++jj)
-					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
-			if (IsPatched())
-				patch_.Jacobian(J,std::get<Vec<T> >(current_variable_values_));
+			JacobianInPlace(J);
 
 			return J;
 		}
 
+		
+
+		
+		/**
+		 Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
+		 
+		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 
+		 \param variable_values The values of the variables, for the evaluation.
+		 */
+		template<typename Derived, typename T>
+		void JacobianInPlace(Eigen::MatrixBase<Derived> & J, const Vec<T> &  variable_values) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must match");
+
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+			
+			if (have_path_variable_)
+				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
+			
+			SetVariables(variable_values);
+			
+			JacobianInPlace(J);
+		}
+
+		
+
+		
+		
+		
 		/**
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 
@@ -267,10 +436,45 @@ namespace bertini {
 			if (have_path_variable_)
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 
-			SetVariables(variable_values);
-
-			return Jacobian<T>();
+			Mat<T> J(NumTotalFunctions(), NumVariables());
+			JacobianInPlace(J,variable_values);
+			return J;
 		}
+
+
+		
+		
+		/**
+		 Evaluate the Jacobian of the system, provided a path variable is defined for the system, in place.
+		 
+		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
+		 \return The Jacobian matrix.
+		 
+		 \param variable_values The values of the variables, for the evaluation.
+		 \param path_variable_value The current value of the path variable.
+
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 */
+		template<typename Derived, typename OtherDerived, typename T>
+		void JacobianInPlace(Eigen::MatrixBase<Derived> & J, const Eigen::MatrixBase<OtherDerived> & variable_values, const T & path_variable_value) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
+
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+			
+			if (!have_path_variable_)
+				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
+			
+			SetVariables(variable_values.eval()); // TODO: remove this eval
+			SetPathVariable(path_variable_value);
+
+			JacobianInPlace(J);
+		}
+
+		
+		
 
 
 		/**
@@ -284,20 +488,23 @@ namespace bertini {
 
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
-		template<typename T>
-		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value) const
+		template<typename Derived, typename T>
+		Mat<T> Jacobian(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
 		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 
-			SetVariables(variable_values);
-			SetPathVariable(path_variable_value);
-
-			return Jacobian<T>();
+			Mat<T> J(NumTotalFunctions(), NumVariables());
+			JacobianInPlace(J,variable_values, path_variable_value);
+			return J;
 		}
+
+
 
 		
 		/**
@@ -308,28 +515,64 @@ namespace bertini {
 		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
-		template<typename T>
-		Vec<T> TimeDerivative(const Vec<T> & variable_values, const T & path_variable_value) const
+		template<typename Derived, typename OtherDerived, typename T>
+		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
+		                    const Eigen::MatrixBase<OtherDerived> & variable_values, 
+		                    const T & path_variable_value) const
 		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
+
+			if(ds_dt.size() < NumFunctions())
+		{
+				std::stringstream ss;
+				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
+				throw std::runtime_error(ss.str());
+			}
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
 
 			if (!is_differentiated_)
 				Differentiate();
 
-			SetVariables(variable_values);
+			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
 
-			Vec<T> dh_dt(NumTotalFunctions());
 			
 			for (int ii = 0; ii < NumFunctions(); ++ii)
-				dh_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);		
+				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);
 
 			if (IsPatched())
 				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
-					dh_dt(ii+NumFunctions()) = T(0);
+					ds_dt(ii+NumFunctions()) = T(0);
+			
+		}
 
-			return dh_dt;
+		
+		
+		
+		
+		
+		/**
+		\brief Compute the time-derivative is a system. 
+		
+		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
+
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\throws std::runtime error if the system does not have a path variable defined.
+		*/
+		template<typename Derived, typename T>
+		Vec<T> TimeDerivative(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+
+			if (!HavePathVariable())
+				throw std::runtime_error("computing time derivative of system with no path variable defined");
+
+
+			Vec<T> ds_dt(NumTotalFunctions());
+			TimeDerivativeInPlace(ds_dt, variable_values, path_variable_value);
+			return ds_dt;
 		}
 	
 		/**

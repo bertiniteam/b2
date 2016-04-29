@@ -11,6 +11,7 @@ bertini2_sources = \
 	$(basics) \
 	$(function_tree) \
 	$(system) \
+	$(tracking) \
 	include/bertini2/bertini.hpp
 
 

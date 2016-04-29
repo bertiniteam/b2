@@ -307,9 +307,8 @@ namespace bertini{
 				RT& error_estimate = std::get<RT>(this->error_estimate_);
 				RT& condition_number_estimate = std::get<RT>(this->condition_number_estimate_);
 
-				return ::bertini::tracking::Predict(
-			                this->predictor_choice_,
-							predicted_space,
+				return this->predictor_->template Predict<ComplexType,RealType>(
+			                predicted_space,
 							this->tracked_system_,
 							current_space, current_time,
 							delta_t,
@@ -347,7 +346,7 @@ namespace bertini{
 				RT& condition_number_estimate = std::get<RT>(this->condition_number_estimate_);
 
 
-				return bertini::tracking::Correct(corrected_space,
+				return this->corrector_->Correct(corrected_space,
 												this->tracked_system_,
 												current_space,
 												current_time, 
@@ -377,7 +376,7 @@ namespace bertini{
 			              				typename Eigen::NumTraits<CT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				return bertini::tracking::Correct(new_space,
+				return this->corrector_->Correct(new_space,
 							   this->tracked_system_,
 							   start_point,
 							   current_time, 
@@ -413,7 +412,7 @@ namespace bertini{
 			              				typename Eigen::NumTraits<CT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				return bertini::tracking::Correct(new_space,
+				return this->corrector_->Correct(new_space,
 							   this->tracked_system_,
 							   start_point,
 							   current_time, 
