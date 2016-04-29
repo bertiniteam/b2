@@ -302,7 +302,7 @@ namespace bertini{
 				 \param S New system
 				 
 				 */
-				void PredictorSystem(const System& S)
+				void ChangeSystem(const System& S)
 				{
 					numTotalFunctions_ = S.NumTotalFunctions();
 					numVariables_ = S.NumVariables();

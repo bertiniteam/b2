@@ -143,7 +143,7 @@ namespace bertini{
 
 			Tracker(System const& sys) : tracked_system_(sys)
 			{
-				predictor_choice_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), sys);
+				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), sys);
 				corrector_ = std::make_shared< correct::NewtonCorrector >(sys);
 				Predictor(predict::DefaultPredictor());
 			}
@@ -301,8 +301,8 @@ namespace bertini{
 			*/
 			void Predictor(config::Predictor new_predictor_choice)
 			{
-				predictor_choice_->PredictorMethod(new_predictor_choice);
-				predictor_order_ = predictor_choice_->Order();
+				predictor_->PredictorMethod(new_predictor_choice);
+				predictor_order_ = predictor_->Order();
 			}
 
 
@@ -311,7 +311,7 @@ namespace bertini{
 			*/
 			config::Predictor Predictor() const
 			{
-				return predictor_choice_->PredictorMethod();
+				return predictor_->PredictorMethod();
 			}
 
 
@@ -513,7 +513,7 @@ namespace bertini{
 
 			
 			// configuration for tracking
-			std::shared_ptr<predict::ExplicitRKPredictor > predictor_choice_; // The predictor to use while tracking
+			std::shared_ptr<predict::ExplicitRKPredictor > predictor_; // The predictor to use while tracking
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
 			config::Stepping<RT> stepping_config_; ///< The stepping configuration.

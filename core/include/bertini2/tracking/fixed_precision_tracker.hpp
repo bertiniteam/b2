@@ -299,7 +299,7 @@ namespace bertini{
 				RealType& error_estimate = std::get<RealType>(this->error_estimate_);
 				RealType& condition_number_estimate = std::get<RealType>(this->condition_number_estimate_);
 
-				return this->predictor_choice_->template Predict<ComplexType,RealType>(
+				return this->predictor_->template Predict<ComplexType,RealType>(
 			                predicted_space,
 							this->tracked_system_,
 							current_space, current_time,

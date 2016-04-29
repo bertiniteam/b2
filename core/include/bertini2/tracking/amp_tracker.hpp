@@ -1037,8 +1037,8 @@ namespace bertini{
 				RealType& error_estimate = std::get<RealType>(error_estimate_);
 				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
-				if (predictor_choice_->HasErrorEstimate())
-					return predictor_choice_->Predict<ComplexType,RealType>(predicted_space,
+				if (predictor_->HasErrorEstimate())
+					return predictor_->Predict<ComplexType,RealType>(predicted_space,
 									error_estimate,
 									size_proportion,
 									norm_J,
@@ -1052,7 +1052,7 @@ namespace bertini{
 									RealType(tracking_tolerance_),
 									AMP_config_);
 				else
-					return predictor_choice_->Predict<ComplexType,RealType>(predicted_space,
+					return predictor_->Predict<ComplexType,RealType>(predicted_space,
 									size_proportion,
 									norm_J,
 									norm_J_inverse,
@@ -1398,7 +1398,8 @@ namespace bertini{
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
-				predictor_choice_->ChangePrecision(new_precision);
+				predictor_->ChangePrecision(new_precision);
+				corrector_->ChangePrecision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
 					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
@@ -1450,7 +1451,8 @@ namespace bertini{
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
-				predictor_choice_->ChangePrecision(new_precision);
+				predictor_->ChangePrecision(new_precision);
+				corrector_->ChangePrecision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
 					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
