@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 	sys.AddVariableGroup(v);
 
 
-	bertini::tracking::MultiplePrecisionTracker tracker(sys,100);
+	bertini::tracking::MultiplePrecisionTracker tracker(sys);
 
 
 	config::Stepping<mpfr_float> stepping_preferences;
@@ -154,68 +154,6 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 
 
 
-BOOST_AUTO_TEST_CASE(making_tracker_different_precision_throws)
-{
-	mpfr_float::default_precision(100);
-	using namespace bertini::tracking;
-
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
-
-	System sys;
-
-	BOOST_CHECK_THROW(bertini::tracking::MultiplePrecisionTracker tracker(sys,50), std::runtime_error);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(running_tracker_different_prec_input_default_throws)
-{
-	mpfr_float::default_precision(100);
-	using namespace bertini::tracking;
-
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
-
-	System sys;
-
-	VariableGroup v{y};
-
-	sys.AddFunction(y-t);
-	sys.AddPathVariable(t);
-	sys.AddVariableGroup(v);
-
-
-	bertini::tracking::MultiplePrecisionTracker tracker(sys,100);
-
-
-	config::Stepping<mpfr_float> stepping_preferences;
-	config::Newton newton_preferences;
-
-
-	tracker.Setup(config::Predictor::Euler,
-	              mpfr_float("1e-5"),
-					mpfr_float("1e5"),
-					stepping_preferences,
-					newton_preferences);
-
-	mpfr_float::default_precision(50);
-	// !!! change precision to different from that of the tracker.  fixed precision cannot change precision, so this should cause problems, namely a throw
-
-	mpfr t_start(1);
-	mpfr t_end(0);
-	
-	Vec<mpfr> y_start(1);
-	y_start << mpfr(1);
-
-	Vec<mpfr> y_end;
-
-	BOOST_CHECK_THROW(
-	tracker.TrackPath(y_end,
-	                  t_start, t_end, y_start),
-					std::runtime_error);
-
-}
 
 
 

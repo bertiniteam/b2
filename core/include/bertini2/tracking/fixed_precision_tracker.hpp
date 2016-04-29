@@ -307,7 +307,7 @@ namespace bertini{
 				RT& error_estimate = std::get<RT>(this->error_estimate_);
 				RT& condition_number_estimate = std::get<RT>(this->condition_number_estimate_);
 
-				return this->predictor_->template Predict<ComplexType,RealType>(
+				return this->predictor_->Predict(
 			                predicted_space,
 							this->tracked_system_,
 							current_space, current_time,
