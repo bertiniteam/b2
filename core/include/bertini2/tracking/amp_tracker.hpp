@@ -41,6 +41,10 @@ namespace bertini{
 
 	namespace tracking{
 
+		
+		
+		
+		
 		using namespace bertini::tracking::config;
 		using std::max;
 		using std::min;
@@ -1028,14 +1032,19 @@ namespace bertini{
 			\tparam ComplexType The complex number type.
 			\tparam RealType The real number type.
 			*/
-			template<typename ComplexType, typename RealType>
+			template<typename ComplexType, typename RealType, typename Derived>
 			SuccessCode Predict(Vec<ComplexType> & predicted_space, 
-								Vec<ComplexType> const& current_space, 
+								const Eigen::MatrixBase<Derived>& current_space,
 								ComplexType const& current_time, ComplexType const& delta_t) const
 			{
+				
+								
+				
+				
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
+				static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
@@ -1043,9 +1052,8 @@ namespace bertini{
 				RealType& error_estimate = std::get<RealType>(error_estimate_);
 				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
-				if (predict::HasErrorEstimate(predictor_choice_))
-					return ::bertini::tracking::Predict(predictor_choice_,
-									predicted_space,
+				if (predictor_->HasErrorEstimate())
+					return predictor_->Predict<ComplexType,RealType>(predicted_space,
 									error_estimate,
 									size_proportion,
 									norm_J,
@@ -1059,8 +1067,7 @@ namespace bertini{
 									RealType(tracking_tolerance_),
 									AMP_config_);
 				else
-					return ::bertini::tracking::Predict(predictor_choice_,
-									predicted_space,
+					return predictor_->Predict<ComplexType,RealType>(predicted_space,
 									size_proportion,
 									norm_J,
 									norm_J_inverse,
@@ -1106,18 +1113,18 @@ namespace bertini{
 				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
 
-				return bertini::tracking::Correct(corrected_space,
-												norm_delta_z,
-												norm_J,
-												norm_J_inverse,
-												condition_number_estimate,
-												tracked_system_,
-												current_space,
-												current_time, 
-												RealType(tracking_tolerance_),
-												newton_config_.min_num_newton_iterations,
-												newton_config_.max_num_newton_iterations,
-												AMP_config_);
+				return corrector_->Correct(corrected_space,
+									norm_delta_z,
+									norm_J,
+									norm_J_inverse,
+									condition_number_estimate,
+									tracked_system_,
+									current_space,
+									current_time,
+									RealType(tracking_tolerance_),
+									newton_config_.min_num_newton_iterations,
+									newton_config_.max_num_newton_iterations,
+									AMP_config_);
 			}
 
 
@@ -1177,18 +1184,18 @@ namespace bertini{
 				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
 
-				return bertini::tracking::Correct(new_space,
-				                                  norm_delta_z,
-												norm_J,
-												norm_J_inverse,
-												condition_number_estimate,
-							   tracked_system_,
-							   start_point,
-							   current_time, 
-							   RealType(tracking_tolerance_),
-							   newton_config_.min_num_newton_iterations,
-							   newton_config_.max_num_newton_iterations,
-							   AMP_config_);
+				return corrector_->Correct(new_space,
+										   norm_delta_z,
+										   norm_J,
+										   norm_J_inverse,
+										   condition_number_estimate,
+										   tracked_system_,
+										   start_point,
+										   current_time,
+										   RealType(tracking_tolerance_),
+										   newton_config_.min_num_newton_iterations,
+										   newton_config_.max_num_newton_iterations,
+										   AMP_config_);
 			}
 
 
@@ -1225,7 +1232,7 @@ namespace bertini{
 				RealType& norm_delta_z = std::get<RealType>(norm_delta_z_);
 				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
-				return bertini::tracking::Correct(new_space,
+				return corrector_->Correct(new_space,
 							   norm_delta_z,
 								norm_J,
 								norm_J_inverse,
@@ -1406,6 +1413,8 @@ namespace bertini{
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
+				predictor_->ChangePrecision(new_precision);
+				corrector_->ChangePrecision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
 					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
@@ -1457,6 +1466,8 @@ namespace bertini{
 				current_precision_ = new_precision;
 				mpfr_float::default_precision(new_precision);
 				tracked_system_.precision(new_precision);
+				predictor_->ChangePrecision(new_precision);
+				corrector_->ChangePrecision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
 					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());

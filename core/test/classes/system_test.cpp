@@ -933,6 +933,39 @@ BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 }
 
 
+BOOST_AUTO_TEST_CASE(ref_test)
+{
+	
+	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
+	
+	bertini::System sys;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	bertini::SystemParser<std::string::const_iterator> S;
+	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	
+	Vec<dbl> values(2);
+	
+	values(0) = dbl(2.0);
+	values(1) = dbl(3.0);
+	
+	Vec<dbl> v(2);
+	sys.EvalInPlace(v, values);
+	
+	BOOST_CHECK_EQUAL(v(0), 36.0);
+	
+	
+	auto J = sys.Jacobian(values);
+	
+	double x1 = 2;
+	double x2 = 3;
+	
+	BOOST_CHECK_EQUAL(J(0,0), 2*x1*x2*x2);
+	BOOST_CHECK_EQUAL(J(0,1), x1*x1*2*x2);
+}
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

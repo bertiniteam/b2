@@ -77,3 +77,10 @@ serialization_test*
 *.exe
 *.out
 *.app
+
+
+
+
+
+# Maple files
+test/tracking_basics/*.bak

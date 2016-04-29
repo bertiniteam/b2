@@ -3,8 +3,10 @@
 tracking_header_files = \
 	include/bertini2/tracking.hpp
 
+tracking_source_files = \
+	src/tracking/explicit_predictors.cpp
 
-tracking = $(tracking_header_files)
+tracking = $(tracking_header_files) $(tracking_source_files)
 
 
 

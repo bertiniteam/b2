@@ -34,10 +34,14 @@
 #define BERTINI_BASE_TRACKER_HPP
 
 #include <algorithm>
-#include "bertini2/tracking/step.hpp"
+//#include "bertini2/tracking/step.hpp"
+#include "bertini2/tracking/ode_predictors.hpp"
+#include "bertini2/tracking/newton_corrector.hpp"
 #include "bertini2/limbo.hpp"
 #include "bertini2/logging.hpp"
 #include "bertini2/detail/visitable.hpp"
+
+// Must be at the end of the include list
 #include "bertini2/tracking/events.hpp"
 
 namespace bertini{
@@ -150,6 +154,8 @@ namespace bertini{
 
 			Tracker(System const& sys) : tracked_system_(sys)
 			{
+				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), sys);
+				corrector_ = std::make_shared< correct::NewtonCorrector >(sys);
 				Predictor(predict::DefaultPredictor());
 			}
 
@@ -168,6 +174,7 @@ namespace bertini{
 						config::Newton const& newton)
 			{
 				Predictor(new_predictor_choice);
+				corrector_->Settings(newton);
 				
 				tracking_tolerance_ = tracking_tolerance;
 				digits_tracking_tolerance_ = NumTraits<RT>::TolToDigits(tracking_tolerance);
@@ -309,8 +316,8 @@ namespace bertini{
 			*/
 			void Predictor(config::Predictor new_predictor_choice)
 			{
-				predictor_choice_ = new_predictor_choice;
-				predictor_order_ = predict::Order(predictor_choice_);
+				predictor_->PredictorMethod(new_predictor_choice);
+				predictor_order_ = predictor_->Order();
 			}
 
 
@@ -319,7 +326,7 @@ namespace bertini{
 			*/
 			config::Predictor Predictor() const
 			{
-				return predictor_choice_;
+				return predictor_->PredictorMethod();
 			}
 
 
@@ -521,10 +528,11 @@ namespace bertini{
 
 			
 			// configuration for tracking
-			config::Predictor predictor_choice_; ///< The predictor to use while tracking.
+			std::shared_ptr<predict::ExplicitRKPredictor > predictor_; // The predictor to use while tracking
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
 			config::Stepping<RT> stepping_config_; ///< The stepping configuration.
+			std::shared_ptr<correct::NewtonCorrector> corrector_;
 			config::Newton newton_config_; ///< The newton configuration.
 
 

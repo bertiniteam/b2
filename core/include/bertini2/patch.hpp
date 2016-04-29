@@ -266,14 +266,16 @@ namespace bertini {
 		http://eigen.tuxfamily.org/dox/group__TutorialBlockOperations.html
 
 		*/
-		template<typename T>
-		void Eval(Vec<T> & function_values, Vec<T> const& x) const
+		template<typename Derived, typename T>
+		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values, Vec<T> const& x) const
 		{
+			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
+
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(function_values.size()>=NumVariableGroups() && "function values must be of length at least as long as the number of variable groups");
-			assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
-			 		&& "precision of input vector must match current working precision of patch during evaluation"
-			 	  );
+//			assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
+//			 		&& "precision of input vector must match current working precision of patch during evaluation"
+//			 	  );
 			#endif
 
 			// unpack from the tuple of working coefficients
@@ -303,7 +305,7 @@ namespace bertini {
 		Vec<T> Eval(Vec<T> const& x) const
 		{
 			Vec<T> function_values = Vec<T>::Zero(NumVariableGroups());
-			Eval(function_values, x);
+			EvalInPlace(function_values, x);
 			return function_values;
 		}
 
@@ -317,9 +319,12 @@ namespace bertini {
 		http://eigen.tuxfamily.org/dox/group__TutorialBlockOperations.html
 
 		*/
-		template<typename T>
-		void Jacobian(Mat<T> & jacobian, Vec<T> const& x) const
+		template<typename Derived, typename T>
+		void JacobianInPlace(Eigen::MatrixBase<Derived> & jacobian, Vec<T> const& x) const
 		{
+			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
+
+
 			#ifndef BERTINI_DISABLE_ASSERTS
 			assert(jacobian.rows()>=NumVariableGroups() && "input jacobian must have at least as many rows as variable groups");
 			assert(jacobian.cols()==NumVariables() && "input jacobian must have as many columns as the patch has variables");
@@ -348,7 +353,7 @@ namespace bertini {
 		Mat<T> Jacobian(Vec<T> const& x) const
 		{
 			Mat<T> jacobian = Mat<T>::Zero(NumVariableGroups(), NumVariables());
-			Jacobian(jacobian, x);
+			JacobianInPlace(jacobian, x);
 			return jacobian;
 		}
 
