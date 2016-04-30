@@ -716,7 +716,7 @@ namespace bertini {
 				assert(Precision(new_values(0)) == this->precision() && "precision of input point in SetVariables must match the precision of the system.");
 			#endif
 
-			auto vars = Variables();
+			const auto& vars = Variables();
 
 			auto counter = 0;
 
