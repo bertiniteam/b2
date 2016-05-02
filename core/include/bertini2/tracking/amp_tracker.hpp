@@ -400,7 +400,10 @@ namespace bertini{
 
 				current_stepsize_.precision(initial_precision_);
 				if (reinitialize_stepsize_)
-					SetStepSize(min(stepping_config_.initial_step_size,abs(start_time-end_time)/stepping_config_.min_num_steps));
+				{
+					mpfr_float segment_length = abs(start_time-end_time)/stepping_config_.min_num_steps;
+					SetStepSize(min(stepping_config_.initial_step_size,segment_length));
+				}
 
 				// populate the current space value with the start point, in appropriate precision
 				if (initial_precision_==DoublePrecision())
@@ -1226,11 +1229,13 @@ namespace bertini{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
+				
+				using R = typename Eigen::NumTraits<ComplexType>::Real;
 
-				RealType& norm_J = std::get<RealType>(norm_J_);
-				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
-				RealType& norm_delta_z = std::get<RealType>(norm_delta_z_);
-				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
+				R& norm_J = std::get<R>(norm_J_);
+				R& norm_J_inverse = std::get<R>(norm_J_inverse_);
+				R& norm_delta_z = std::get<R>(norm_delta_z_);
+				R& condition_number_estimate = std::get<R>(condition_number_estimate_);
 
 				return corrector_->Correct(new_space,
 							   norm_delta_z,

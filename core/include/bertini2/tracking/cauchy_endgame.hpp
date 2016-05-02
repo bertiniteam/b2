@@ -404,8 +404,8 @@ public:
 
 	\param c_over_k_array A deque of computed values for c/k.
 	*/
-	template<typename RT>
-	bool CheckForCOverKStabilization(TimeCont<RT> const& c_over_k_array)
+	template<typename CT>
+	bool CheckForCOverKStabilization(TimeCont<CT> const& c_over_k_array)
 	{	
 		using std::abs;
 
@@ -415,7 +415,7 @@ public:
 			auto a = abs(c_over_k_array[ii-1]);
 			auto b = abs(c_over_k_array[ii]);
 
-			auto divide = a;
+			typename Eigen::NumTraits<CT>::Real divide = a;
 
 			if(a < b)
 				divide = a/b;
