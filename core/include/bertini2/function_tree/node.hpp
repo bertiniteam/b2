@@ -95,6 +95,14 @@ namespace detail{
 		{
 			return n.FreshEval_d(diff_variable);
 		}
+		
+		
+		template<typename N>
+		static void RunInPlace(dbl& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
+		{
+			n.FreshEvalInPlace_d(evaluation_value, diff_variable);
+		}
+
 	};
 
 	template<>
@@ -105,6 +113,14 @@ namespace detail{
 		{
 			return n.FreshEval_mp(diff_variable);
 		}
+		
+		
+		template<typename N>
+		static void RunInPlace(mpfr& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
+		{
+			n.FreshEvalInPlace_mp(evaluation_value, diff_variable);
+		}
+
 	};
 }
 /**
@@ -161,6 +177,28 @@ public:
 		return val_pair.first;
 	}
 	
+
+	/**
+	 Evaluate the node in place.  If flag false, just return value, if flag true
+	 run the specific FreshEval of the node, then set flag to false.
+	 
+	 Template type is type of value you want returned.
+	 
+	 \return The value of the node.
+	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
+	 */
+	template<typename T>
+	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const
+	{
+		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+		if(!val_pair.second)
+		{
+			detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this,diff_variable);
+			val_pair.second = true;
+		}
+		
+		
+	}
 
 	
 	
@@ -285,11 +323,27 @@ protected:
 	virtual dbl FreshEval_d(std::shared_ptr<Variable> const&) const = 0;
 
 	/**
+	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
+	 
+	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
+	 */
+	virtual void FreshEvalInPlace_d(dbl& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
+
+	
+	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
 
 	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
 	*/
 	virtual mpfr FreshEval_mp(std::shared_ptr<Variable> const&) const = 0;
+	
+	/**
+	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
+	 
+	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
+	 */
+	virtual void FreshEvalInPlace_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
+
 	
 	
 	
