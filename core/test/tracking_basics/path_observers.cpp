@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 					stepping_preferences,
 					newton_preferences);
 
-	tracker.AMPSetup(AMP);
+	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
 	mpfr t_end(0);

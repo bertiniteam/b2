@@ -56,7 +56,7 @@ namespace bertini {
 				               ComplexType const& delta_t,
 				               RealType & condition_number_estimate,
 				               unsigned & num_steps_since_last_condition_number_computation, 
-				               unsigned frequency_of_CN_estimation, config::PrecisionType prec_type, 
+				               unsigned frequency_of_CN_estimation, PrecisionType prec_type, 
 				               RealType const& tracking_tolerance,
 				               RealType const& path_truncation_threshold,
 				               unsigned min_num_newton_iterations,

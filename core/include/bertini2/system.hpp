@@ -25,29 +25,15 @@
 /**
 \file system.hpp 
 
-\brief Provides the bertini::system class.
+\brief Provides the bertini::System class.
 */
 
 #ifndef BERTINI_SYSTEM_HPP
 #define BERTINI_SYSTEM_HPP
 
-#include "bertini2/mpfr_complex.hpp"
-#include "bertini2/mpfr_extensions.hpp"
-#include "bertini2/eigen_extensions.hpp"
-
-#include <vector>
-#include "bertini2/function_tree.hpp"
-
-#include "bertini2/patch.hpp"
-
-#include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/number.hpp>
-
 #include <assert.h>
+#include <vector>
 
-
-
-#include <boost/type_index.hpp>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -55,9 +41,20 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/deque.hpp>
+#include <boost/type_index.hpp>
+
+#include "bertini2/mpfr_complex.hpp"
+#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/eigen_extensions.hpp"
+
+
+#include "bertini2/function_tree.hpp"
+#include "bertini2/patch.hpp"
 
 #include "bertini2/limbo.hpp"
-#include <Eigen/Dense>
+
+
+
 
 namespace bertini {
 
@@ -141,38 +138,38 @@ namespace bertini {
 
 		
 		
-		
-		
+
+
 		/**
 		 \brief Evaluate the system using the previously set variable (and time) values, in place.
-		 
-		 It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
-		 
-		 \return The function values of the system
-		 */ 
+
+		It is up to YOU to ensure that the system's variables (and path variable) has been set prior to this function call.
+
+		\return The function values of the system
+		*/ 
 		template<typename Derived>
 		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values) const
 		{
 			typedef typename Derived::Scalar T;
-			
+
 			if(function_values.size() < NumFunctions())
 			{
 				std::stringstream ss;
 				ss << "trying to evaluate system in place, but number of input functions (" << function_values.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
 				throw std::runtime_error(ss.str());
 			}
-			
+
 			// the Reset() function call traverses the entire tree, resetting everything.
 			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			for (const auto& iter : functions_)
+			for (const auto& iter : functions_) 
 				iter->Reset();
-			
-			
+
+
 			unsigned counter(0);
 			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
 				function_values(counter) = (*iter)->Eval<T>();
 			}
-			
+
 			if (IsPatched())
 				patch_.EvalInPlace(function_values,
 									std::get<Vec<T> >(current_variable_values_));
@@ -196,11 +193,11 @@ namespace bertini {
 		{
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
 			EvalInPlace(function_values);
-			
+
 			return function_values;
 		}
 
-		
+
 		
 
 		/**
@@ -236,15 +233,15 @@ namespace bertini {
 		
 		
 		/**
-		 \brief Evaluate the system, provided the system has no path variable defined.
-		 
-		 Causes the current variable values to be set in the system.  Resets the function tree's stored numbers.
-		 
-		 
-		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
-		 \param variable_values The values of the variables, for the evaluation.
-		 */
+		\brief Evaluate the system, provided the system has no path variable defined.
+
+		Causes the current variable values to be set in the system.  Resets the function tree's stored numbers.  
+
+
+		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\param variable_values The values of the variables, for the evaluation.
+		*/
 		template<typename Derived>
 		typename Derived::PlainObject Eval(const Eigen::MatrixBase<Derived>& variable_values) const
 		{
@@ -258,28 +255,28 @@ namespace bertini {
 			}
 			if (have_path_variable_)
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
-			
+
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
 			EvalInPlace(function_values, variable_values);
 			return function_values;
-			
-		}
-		
 
-		
+		}
+
+
+
 		
 		
 
 		
 		/**
 		 Evaluate the system, provided a path variable is defined for the system, in place.
-		 
+
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
-		 
+
 		 \todo The Eval() function for systems has the unfortunate side effect of resetting constant functions.  Modify the System class so that only certain parts of the tree get reset.
 		 */
 		template<typename Derived, typename OtherDerived, typename T>
@@ -292,10 +289,10 @@ namespace bertini {
 				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
-			
+
 			SetVariables(variable_values.eval());//TODO: remove this eval
 			SetPathVariable(path_variable_value);
-			
+
 			EvalInPlace(function_values);
 		}
 
@@ -331,35 +328,35 @@ namespace bertini {
 			EvalInPlace(function_values, variable_values, path_variable_value);
 			return function_values;
 		}
-		
-		
+
+
 		
 		
 		
 		/**
 		 Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
-		 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
-		 */
+
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		*/
 		template<typename Derived>
 		void JacobianInPlace(Eigen::MatrixBase<Derived> & J) const
 		{
 			typedef typename Derived::Scalar T;
 
 			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
-			{
+		{
 				throw std::runtime_error("trying to evaluate jacobian of system in place, but input J doesn't have right number of columns or rows");
 			}
 			
 			
 			const auto& vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
-			
+
 			if (!is_differentiated_)
 				Differentiate();
 			else
-				for (const auto& iter : jacobian_)
+				for (const auto& iter : jacobian_) 
 					iter->Reset();
-			
+
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 				for (int jj = 0; jj < NumVariables(); ++jj)
 					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
@@ -418,7 +415,7 @@ namespace bertini {
 		}
 
 		
-		
+
 		
 		
 		
@@ -455,7 +452,7 @@ namespace bertini {
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
-		 
+
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		 */
 		template<typename Derived, typename OtherDerived, typename T>
@@ -472,14 +469,14 @@ namespace bertini {
 			
 			SetVariables(variable_values.eval()); // TODO: remove this eval
 			SetPathVariable(path_variable_value);
-			
+
 			JacobianInPlace(J);
 		}
 
 		
 		
-		
-		
+
+
 		/**
 		 Evaluate the Jacobian of the system, provided a path variable is defined for the system.
 
@@ -507,17 +504,17 @@ namespace bertini {
 			return J;
 		}
 
-		
-		
 
+
+		
 		/**
-		 \brief Compute the time-derivative is a system.
-		 
-		 If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
-		 
-		 \tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
-		 \throws std::runtime error if the system does not have a path variable defined.
-		 */
+		\brief Compute the time-derivative is a system. 
+		
+		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
+
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\throws std::runtime error if the system does not have a path variable defined.
+		*/
 		template<typename Derived, typename OtherDerived, typename T>
 		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
 		                    const Eigen::MatrixBase<OtherDerived> & variable_values, 
@@ -527,24 +524,24 @@ namespace bertini {
 			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			if(ds_dt.size() < NumFunctions())
-			{
+		{
 				std::stringstream ss;
 				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
 				throw std::runtime_error(ss.str());
 			}
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
-			
+
 			if (!is_differentiated_)
 				Differentiate();
-			
+
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
-			
+
 			
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);
-			
+
 			if (IsPatched())
 				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
 					ds_dt(ii+NumFunctions()) = T(0);
@@ -575,8 +572,6 @@ namespace bertini {
 
 			Vec<T> ds_dt(NumTotalFunctions());
 			TimeDerivativeInPlace(ds_dt, variable_values, path_variable_value);
-			
-
 			return ds_dt;
 		}
 	
@@ -717,11 +712,11 @@ namespace bertini {
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 
 			#ifndef BERTINI_DISABLE_ASSERTS
-			if (Precision(new_values(0))!=DoublePrecision())
-				assert(Precision(new_values(0)) == precision() && "precision of input point in SetVariables must match the precision of the system.");
+				if (!std::is_same<T,dbl>::value)
+				assert(Precision(new_values(0)) == this->precision() && "precision of input point in SetVariables must match the precision of the system.");
 			#endif
 
-			auto vars = Variables();
+			const auto& vars = Variables();
 
 			auto counter = 0;
 
@@ -743,7 +738,7 @@ namespace bertini {
 		 \param new_value The new updated values for the path variable.
 		 */
 		template<typename T>
-		void SetPathVariable(T new_value) const
+		void SetPathVariable(T const& new_value) const
 		{
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");

@@ -22,7 +22,6 @@ Makefile
 
 *.sublime-workspace
 
-bertini2
 b2_class_test
 b2_classic_compatibility_test
 b2_timing_test
