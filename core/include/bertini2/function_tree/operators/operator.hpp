@@ -283,6 +283,7 @@ namespace node{
 		
 		
 	protected:
+		
 		//Stores all children for this operator node.
 		//This is an NaryOperator and can have any number of children.
 		std::vector< std::shared_ptr<Node> > children_;

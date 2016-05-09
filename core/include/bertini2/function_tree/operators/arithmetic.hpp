@@ -289,7 +289,7 @@ namespace node{
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		mpfr FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 	private:
@@ -419,7 +419,7 @@ namespace node{
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		mpfr FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
 		
@@ -554,6 +554,7 @@ namespace node{
 		
 		std::shared_ptr<Node> base_;
 		std::shared_ptr<Node> exponent_;
+		
 
 
 	private:
@@ -670,7 +671,8 @@ namespace node{
 
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return pow(child_->EvalInPlace<dbl>(evaluation_value, diff_variable), exponent_);
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = pow(evaluation_value, exponent_);
 		}
 
 		
@@ -679,9 +681,10 @@ namespace node{
 			return pow(child_->Eval<mpfr>(diff_variable),exponent_);
 		}
 
-		mpfr FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return pow(child_->EvalInPlace<mpfr>(evaluation_value, diff_variable),exponent_);
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = pow(evaluation_value, exponent_);
 		}
 
 	private:

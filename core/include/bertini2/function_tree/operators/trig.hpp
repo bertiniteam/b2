@@ -131,12 +131,14 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return sin(child_->EvalInPlace<mpfr>(evaluation_value, diff_variable));
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = sin(evaluation_value);
 		}
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return sin(child_->EvalInPlace<dbl>(evaluation_value, diff_variable));
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = sin(evaluation_value);
 		}
 
 		
@@ -195,12 +197,14 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return asin(child_->EvalInPlace<mpfr>(evaluation_value, diff_variable));
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = asin(evaluation_value);
 		}
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return asin(child_->EvalInPlace<dbl>(evaluation_value, diff_variable));
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = asin(evaluation_value);
 		}
 
 	private:
@@ -269,12 +273,14 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return cos(child_->EvalInPlace<mpfr>(evaluation_value, diff_variable));
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = cos(evaluation_value);
 		}
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return cos(child_->EvalInPlace<dbl>(evaluation_value, diff_variable));
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = cos(evaluation_value);
 		}
 
 		
@@ -338,12 +344,14 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return acos(child_->EvalInPlace<mpfr>(evaluation_value, diff_variable));
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = acos(evaluation_value);
 		}
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return acos(child_->EvalInPlace<dbl>(evaluation_value, diff_variable));
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = acos(evaluation_value);
 		}
 
 		
@@ -413,12 +421,14 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return tan(child_->EvalInPlace<mpfr>(evaluation_value, diff_variable));
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = tan(evaluation_value);
 		}
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return tan(child_->EvalInPlace<dbl>(evaluation_value, diff_variable));
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = tan(evaluation_value);
 		}
 
 		
@@ -481,12 +491,14 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return atan(child_->EvalInPlace<mpfr>(evaluation_value, diff_variable));
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = atan(evaluation_value);
 		}
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return atan(child_->EvalInPlace<dbl>(evaluation_value, diff_variable));
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = atan(evaluation_value);
 		}
 
 		
