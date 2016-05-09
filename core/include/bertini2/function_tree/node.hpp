@@ -100,7 +100,7 @@ namespace detail{
 		template<typename N>
 		static void RunInPlace(dbl& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
 		{
-			n.FreshEvalInPlace_d(evaluation_value, diff_variable);
+			n.FreshEval_d(evaluation_value, diff_variable);
 		}
 
 	};
@@ -118,7 +118,7 @@ namespace detail{
 		template<typename N>
 		static void RunInPlace(mpfr& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
 		{
-			n.FreshEvalInPlace_mp(evaluation_value, diff_variable);
+			n.FreshEval_mp(evaluation_value, diff_variable);
 		}
 
 	};
@@ -323,11 +323,11 @@ protected:
 	virtual dbl FreshEval_d(std::shared_ptr<Variable> const&) const = 0;
 
 	/**
-	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
+	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper EvalInPlace<>() call from Node, if so required (by resetting, etc).
 	 
 	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
 	 */
-	virtual void FreshEvalInPlace_d(dbl& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
+	virtual void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
 
 	
 	/**
@@ -342,7 +342,7 @@ protected:
 	 
 	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
 	 */
-	virtual void FreshEvalInPlace_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
+	virtual void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
 
 	
 	
