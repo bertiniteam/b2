@@ -197,6 +197,8 @@ public:
 			val_pair.second = true;
 		}
 		
+		eval_value = val_pair.first;
+		
 		
 	}
 

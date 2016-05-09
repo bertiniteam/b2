@@ -187,6 +187,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
 	dbl exact_dbl = xnum_dbl+ynum_dbl+anum_dbl;
 	mpfr exact_mpfr = xnum_mpfr+ynum_mpfr+anum_mpfr;
 	
+	dbl temp_d;
+	mpfr temp_mp;
+	
 	std::shared_ptr<Node> N = x+y+a;
 	
 	BOOST_CHECK_EQUAL(N->Degree(),1);
@@ -226,10 +229,12 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
 	BOOST_CHECK_EQUAL(N->Degree(x),1);
 	BOOST_CHECK_EQUAL(N->Degree(y),1);
 
-	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag()) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+	N->EvalInPlace<dbl>(temp_d);
+	N->EvalInPlace<mpfr>(temp_mp);
+	BOOST_CHECK(fabs(temp_d.real() / exact_dbl.real() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_d.imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_mp.real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(temp_mp.imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
 	
 	
 	N = x+a+y;
@@ -271,6 +276,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
 	dbl exact_dbl = xnum_dbl-ynum_dbl-anum_dbl;
 	mpfr exact_mpfr = xnum_mpfr-ynum_mpfr-anum_mpfr;
 	
+	dbl temp_d;
+	mpfr temp_mp;
+	
 	std::shared_ptr<Node> N = x-y-a;
 	BOOST_CHECK_EQUAL(N->Degree(),1);
 	BOOST_CHECK_EQUAL(N->Degree(x),1);
@@ -278,10 +286,12 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
 
 	BOOST_CHECK(N->IsPolynomial());
 
-	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+	N->EvalInPlace<dbl>(temp_d);
+	N->EvalInPlace<mpfr>(temp_mp);
+	BOOST_CHECK(fabs(temp_d.real() / exact_dbl.real() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_d.imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_mp.real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(temp_mp.imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
 	
 	N = x-a-y;
 	BOOST_CHECK_EQUAL(N->Degree(),1);
@@ -299,10 +309,12 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
 	BOOST_CHECK_EQUAL(N->Degree(x),1);
 	BOOST_CHECK_EQUAL(N->Degree(y),1);
 
-	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+	N->EvalInPlace<dbl>(temp_d);
+	N->EvalInPlace<mpfr>(temp_mp);
+	BOOST_CHECK(fabs(temp_d.real() / exact_dbl.real() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_d.imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_mp.real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(temp_mp.imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
 
 
 	N = -a+x-y;
@@ -358,17 +370,22 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_times_number){
 	mpfr exact_mpfr = xnum_mpfr*ynum_mpfr*anum_mpfr;
 	
 	
+	dbl temp_d;
+	mpfr temp_mp;
+	
 	std::shared_ptr<Node> N = x*y*a;
 	BOOST_CHECK_EQUAL(N->Degree(),2);
 	BOOST_CHECK_EQUAL(N->Degree(x),1);
 	BOOST_CHECK_EQUAL(N->Degree(y),1);
-
+	
 	BOOST_CHECK(N->IsPolynomial());
-
-	BOOST_CHECK(fabs(N->Eval<dbl>().real() / exact_dbl.real() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<dbl>().imag() / exact_dbl.imag() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().real() / exact_mpfr.real() -1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+	
+	N->EvalInPlace<dbl>(temp_d);
+	N->EvalInPlace<mpfr>(temp_mp);
+	BOOST_CHECK(fabs(temp_d.real() / exact_dbl.real() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_d.imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_mp.real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(temp_mp.imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
 	
 	N = a*x*y;
 	BOOST_CHECK_EQUAL(N->Degree(),2);
@@ -521,6 +538,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
 	dbl exact_dbl = pow(xnum_dbl+ynum_dbl+anum_dbl,pnum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr+ynum_mpfr+anum_mpfr,pnum_mpfr);
 	
+	dbl temp_d;
+	mpfr temp_mp;
+	
 	std::shared_ptr<Node> N = pow(x+y+a,p);
 	BOOST_CHECK_EQUAL(N->Degree(),-1);
 	BOOST_CHECK_EQUAL(N->Degree(x),-1);
@@ -532,6 +552,14 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
 	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+	
+	N->EvalInPlace<dbl>(temp_d);
+	N->EvalInPlace<mpfr>(temp_mp);
+	BOOST_CHECK(fabs(temp_d.real() / exact_dbl.real() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_d.imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_mp.real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(temp_mp.imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+
 }
 
 
@@ -584,6 +612,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
 	dbl exact_dbl = pow(xnum_dbl*ynum_dbl*anum_dbl,pnum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr*ynum_mpfr*anum_mpfr,pnum_mpfr);
 	
+	dbl temp_d;
+	mpfr temp_mp;
+	
 	std::shared_ptr<Node> N = pow(x*y*a,p);
 	BOOST_CHECK_EQUAL(N->Degree(),-1);
 	BOOST_CHECK_EQUAL(N->Degree(x),-1);
@@ -604,10 +635,12 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
 	exact_dbl = pow(xnum_dbl,pnum_dbl)*pow(ynum_dbl,pnum_dbl)*pow(anum_dbl,pnum_dbl);
 	exact_mpfr = pow(xnum_mpfr,pnum_mpfr)*pow(ynum_mpfr,pnum_mpfr)*pow(anum_mpfr,pnum_mpfr);
 
-	BOOST_CHECK(fabs(N->Eval<dbl>().real() / exact_dbl.real() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<dbl>().imag() / exact_dbl.imag() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().real() / exact_mpfr.real() -1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+	N->EvalInPlace<dbl>(temp_d);
+	N->EvalInPlace<mpfr>(temp_mp);
+	BOOST_CHECK(fabs(temp_d.real() / exact_dbl.real() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_d.imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_mp.real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(temp_mp.imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
 	
 }
 
@@ -1389,6 +1422,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
 	dbl exact_dbl = sin(anum_dbl);
 	mpfr exact_mpfr = sin(anum_mpfr);
 	
+	dbl temp_d;
+	mpfr temp_mp;
+	
 	std::shared_ptr<Node> N = sin(a);
 	
 	BOOST_CHECK_EQUAL(N->Degree(),0);
@@ -1399,6 +1435,14 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
 	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+	
+	N->EvalInPlace<dbl>(temp_d);
+	N->EvalInPlace<mpfr>(temp_mp);
+	BOOST_CHECK(fabs(temp_d.real() / exact_dbl.real() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_d.imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_mp.real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(temp_mp.imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+
 }
 
 
@@ -1454,6 +1498,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
 	dbl exact_dbl = exp(anum_dbl);
 	mpfr exact_mpfr = exp(anum_mpfr);
 	
+	dbl temp_d;
+	mpfr temp_mp;
+	
 	std::shared_ptr<Node> N = exp(a);
 	
 	BOOST_CHECK_EQUAL(N->Degree(),0);
@@ -1464,6 +1511,14 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
 	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
+	
+	N->EvalInPlace<dbl>(temp_d);
+	N->EvalInPlace<mpfr>(temp_mp);
+	BOOST_CHECK(fabs(temp_d.real() / exact_dbl.real() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_d.imag() / exact_dbl.imag() -1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(temp_mp.real() / exact_mpfr.real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(temp_mp.imag() / exact_mpfr.imag() -1) < threshold_clearance_mp);
+
 }
 
 
