@@ -167,7 +167,7 @@ namespace bertini {
 
 			unsigned counter(0);
 			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-				function_values(counter) = (*iter)->Eval<T>();
+				(*iter)->EvalInPlace<T>(function_values(counter));
 			}
 
 			if (IsPatched())
@@ -359,7 +359,8 @@ namespace bertini {
 
 			for (int ii = 0; ii < NumFunctions(); ++ii)
 				for (int jj = 0; jj < NumVariables(); ++jj)
-					J(ii,jj) = jacobian_[ii]->EvalJ<T>(vars[jj]);
+					jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
+				
 			if (IsPatched())
 				patch_.JacobianInPlace(J,std::get<Vec<T> >(current_variable_values_));
 			
