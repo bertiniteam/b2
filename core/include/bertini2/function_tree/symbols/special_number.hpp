@@ -149,11 +149,23 @@ namespace node{
 			{
 				return acos(-1.0);
 			}
+			
+			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				evaluation_value = acos(-1.0);
+			}
+
 
 			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return mpfr(acos(mpfr_float(-1)));
 			}
+			
+			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				evaluation_value = mpfr(acos(mpfr_float(-1)));
+			}
+
 
 			friend class boost::serialization::access;
 
@@ -249,11 +261,23 @@ namespace node{
 			{
 				return dbl(exp(1.0f),0.0);
 			}
+			
+			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				evaluation_value = dbl(exp(1.0f),0.0);
+			}
+
 
 			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return mpfr(exp(mpfr_float(1)));
 			}
+			
+			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				evaluation_value = mpfr(exp(mpfr_float(1)));
+			}
+
 
 			friend class boost::serialization::access;
 

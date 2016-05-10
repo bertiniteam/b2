@@ -169,6 +169,19 @@ namespace node{
 				return 0.0;
 			}
 		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			if(differential_variable_ == diff_variable)
+			{
+				evaluation_value = 1.0;
+			}
+			else
+			{
+				evaluation_value = 0.0;
+			}
+		}
+
 
 		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
@@ -181,6 +194,19 @@ namespace node{
 				return mpfr(0);
 			}
 		}
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			if(differential_variable_ == diff_variable)
+			{
+				evaluation_value = bertini::complex::one();
+			}
+			else
+			{
+				evaluation_value = bertini::complex::zero();
+			}
+		}
+
 
 
 	private:

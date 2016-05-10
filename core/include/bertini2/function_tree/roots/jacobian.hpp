@@ -90,19 +90,38 @@ namespace node{
 				{
 						auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
 
-						if(diff_variable == current_diff_variable_ && std::get< std::pair<T,bool> >(current_value_).second)
+						if(diff_variable == current_diff_variable_ && val_pair.second)
 							return val_pair.first;
 						else
 						{
 							current_diff_variable_ = diff_variable;
 							Reset();
-							std::get< std::pair<T,bool> >(current_value_).first  = detail::FreshEvalSelector<T>::Run(*this,diff_variable);
-							std::get< std::pair<T,bool> >(current_value_).second = true;
-							return std::get< std::pair<T,bool> >(current_value_).first;
+							detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this, diff_variable);
+							val_pair.second = true;
+							return val_pair.first;
 						}						
 				}
 				
 
+
+				// Evaluate the node.  If flag false, just return value, if flag true
+				//  run the specific FreshEval of the node, then set flag to false.
+				template<typename T>
+				void EvalJInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const
+				{
+						auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+
+						if(diff_variable == current_diff_variable_ && val_pair.second)
+							eval_value = val_pair.first;
+						else
+						{
+							current_diff_variable_ = diff_variable;
+							Reset();
+							detail::FreshEvalSelector<T>::RunInPlace(val_pair.first,*this,diff_variable);
+							val_pair.second = true;
+							eval_value = val_pair.first;
+						}						
+				}
 
 
 				/**

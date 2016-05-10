@@ -128,6 +128,20 @@ namespace node{
 			return sin(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = sin(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = sin(evaluation_value);
+		}
+
+		
 	private:
 		SinOperator() = default;
 		friend class boost::serialization::access;
@@ -179,7 +193,20 @@ namespace node{
 		{
 			return asin(child_->Eval<mpfr>(diff_variable));
 		}
+
 		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = asin(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = asin(evaluation_value);
+		}
+
 	private:
 		ArcSinOperator() = default;
 		friend class boost::serialization::access;
@@ -243,6 +270,21 @@ namespace node{
 			return cos(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = cos(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = cos(evaluation_value);
+		}
+
+		
+		
 	private:
 		CosOperator() = default;
 		friend class boost::serialization::access;
@@ -298,6 +340,20 @@ namespace node{
 		{
 			return acos(child_->Eval<mpfr>(diff_variable));
 		}
+		
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = acos(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = acos(evaluation_value);
+		}
+
 		
 	private:
 		ArcCosOperator() = default;
@@ -362,6 +418,20 @@ namespace node{
 			return tan(child_->Eval<mpfr>(diff_variable));
 		}
 		
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = tan(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = tan(evaluation_value);
+		}
+
+		
 	private:
 		TanOperator() = default;
 		friend class boost::serialization::access;
@@ -417,6 +487,20 @@ namespace node{
 		{
 			return atan(child_->Eval<mpfr>(diff_variable));
 		}
+		
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = atan(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = atan(evaluation_value);
+		}
+
 		
 	private:
 		ArcTanOperator() = default;

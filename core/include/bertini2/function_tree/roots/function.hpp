@@ -221,12 +221,30 @@ namespace node{
 		}
 		
 		/**
+		 Calls FreshEval in place on the entry node to the tree.
+		 */
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			entry_node_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+		}
+
+		
+		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
 		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return entry_node_->Eval<mpfr>(diff_variable);
 		}
+		
+		/**
+		 Calls FreshEval in place on the entry node to the tree.
+		 */
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			entry_node_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		}
+
 
 		
 		

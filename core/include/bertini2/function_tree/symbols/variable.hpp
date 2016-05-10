@@ -180,10 +180,22 @@ namespace node{
 			return std::get< std::pair<dbl,bool> >(current_value_).first;
 		}
 		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			evaluation_value = std::get< std::pair<dbl,bool> >(current_value_).first;
+		}
+
+		
 		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return std::get< std::pair<mpfr,bool> >(current_value_).first;
 		}
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			evaluation_value = std::get< std::pair<mpfr,bool> >(current_value_).first;
+		}
+
 		Variable() = default;
 	private:
 		

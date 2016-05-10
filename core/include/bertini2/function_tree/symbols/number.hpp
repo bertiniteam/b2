@@ -197,11 +197,23 @@ namespace node{
 		{
 			return dbl(double(true_value_),0);
 		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			evaluation_value = dbl(double(true_value_),0);
+		}
+
 
 		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return mpfr(true_value_,0);
 		}
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			evaluation_value = mpfr(true_value_,0);
+		}
+
 
 		mpz_int true_value_;
 
@@ -271,11 +283,23 @@ namespace node{
 		{
 			return dbl(highest_precision_value_);
 		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			evaluation_value = dbl(highest_precision_value_);
+		}
+
 
 		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return mpfr(highest_precision_value_);
 		}
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			evaluation_value = mpfr(highest_precision_value_);
+		}
+
 
 		mpfr highest_precision_value_;
 
@@ -365,11 +389,23 @@ namespace node{
 		{
 			return dbl(double(true_value_real_),double(true_value_imag_));
 		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			evaluation_value = dbl(double(true_value_real_),double(true_value_imag_));
+		}
+
 
 		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
 		}
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			evaluation_value = mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
+		}
+
 
 		mpq_rational true_value_real_, true_value_imag_;
 		Rational() = default;
