@@ -191,7 +191,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) const override
+		void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -273,11 +273,11 @@ namespace node{
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
+			
+			this->PrecisionChangeSpecific(prec);
 
 			for (auto iter : children_)
-			{
 				iter->precision(prec);
-			}
 		}
 
 		
@@ -289,6 +289,11 @@ namespace node{
 		std::vector< std::shared_ptr<Node> > children_;
 		NaryOperator(){}
 	private:
+
+		virtual void PrecisionChangeSpecific(unsigned prec) const
+		{}
+
+
 		friend class boost::serialization::access;
 		
 		template <typename Archive>

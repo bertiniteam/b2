@@ -337,8 +337,17 @@ namespace bertini {
 		
 		
 		
+		void SetZero()
+		{
+			real_ = 0;
+			imag_ = 0;
+		}
 		
-		
+		void SetOne()
+		{
+			real_ = 1;
+			imag_ = 0;
+		}
 		
 		////////
 		//
