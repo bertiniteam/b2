@@ -54,12 +54,12 @@ rootinclude_HEADERS = include/bertini2/config.h
 ###  now include the Makemodule files from the subdirectories.  they will add on to the variables which are set above
 ##################################
 
-# include this one first, as it defines some useful groups of files which are used later
+# include the bertini Makemodule first, as it defines some useful groups of files which are used later
 # in other files.
 
 include src/bertini/Makemodule.am
-include src/function_tree/Makemodule.am
 include src/basics/Makemodule.am
+include src/function_tree/Makemodule.am
 include src/system/Makemodule.am
 include src/tracking/Makemodule.am
 
