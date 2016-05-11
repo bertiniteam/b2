@@ -804,7 +804,7 @@ namespace bertini {
 		friend complex operator/(const mpfr_float & lhs, const complex & rhs);
 		friend complex operator/(const mpz_int & lhs, const complex & rhs);
 
-		template<typename T, typename>
+		template<typename T, typename std::enable_if<std::is_integral<T>::value >::type>
 		friend complex operator/(T const& lhs, const complex & rhs);
 
 		friend complex inverse(const complex & z);
@@ -1082,7 +1082,7 @@ namespace bertini {
 	/**
 	 Integer-complex division
 	 */
-	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	template<typename T, typename>
 	inline complex operator/(T const& lhs, const complex & rhs)
 	{
 		complex::temp_[5].precision(mpfr_float::default_precision());
