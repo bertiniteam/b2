@@ -571,7 +571,7 @@ namespace bertini{
 				this->current_time_ = start_time;
 				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(this->stepping_config_.initial_step_size,abs(start_time-end_time)/this->stepping_config_.min_num_steps));
+					this->SetStepSize(min(this->stepping_config_.initial_step_size,mpfr_float(abs(start_time-end_time)/this->stepping_config_.min_num_steps)));
 
 				ResetCounters();
 

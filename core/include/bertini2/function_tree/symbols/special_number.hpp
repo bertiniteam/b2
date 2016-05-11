@@ -158,7 +158,7 @@ namespace node{
 
 			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				return mpfr(acos(mpfr_float(-1)));
+				return mpfr(mpfr_float(acos(mpfr_float(-1))));
 			}
 			
 			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
@@ -270,7 +270,7 @@ namespace node{
 
 			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				return mpfr(exp(mpfr_float(1)));
+				return mpfr(mpfr_float(exp(mpfr_float(1))));
 			}
 			
 			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
