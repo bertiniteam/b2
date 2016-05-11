@@ -65,7 +65,12 @@ namespace bertini {
 		// The real and imaginary parts of the complex number
 		mpfr_float real_, imag_;
 		
-		
+		#ifdef USE_THREAD_LOCAL
+			static thread_local mpfr_float temp_[8];
+		#else
+			static mpfr_float temp_[8];
+		#endif
+
 		// Let the boost serialization library have access to the private members of this class.
 		friend class boost::serialization::access;
 		
@@ -507,9 +512,11 @@ namespace bertini {
 		 */
 		complex& operator*=(const complex & rhs)
 		{
-			mpfr_float a = real_*rhs.real_ - imag_*rhs.imag_; // cache the real part of the result
+			temp_[0].precision(mpfr_float::default_precision());
+
+			temp_[0] = real_*rhs.real_ - imag_*rhs.imag_; // cache the real part of the result
 			imag_ = real_*rhs.imag_ + imag_*rhs.real_;
-			real_ = a;
+			real_ = temp_[0];
 			return *this;
 		}
 		
@@ -532,10 +539,13 @@ namespace bertini {
 		 */
 		complex& operator/=(const complex & rhs)
 		{
-			mpfr_float d = rhs.abs2();
-			mpfr_float a = real_*rhs.real_ + imag_*rhs.imag_; // cache the numerator of the real part of the result
-			imag_ = (imag_*rhs.real_ - real_*rhs.imag_)/d;
-			real_ = a/d;
+			temp_[1].precision(mpfr_float::default_precision());
+			temp_[2].precision(mpfr_float::default_precision());
+
+			temp_[1] = rhs.abs2(); // cache the denomenator...
+			temp_[2] = real_*rhs.real_ + imag_*rhs.imag_; // cache the numerator of the real part of the result
+			imag_ = (imag_*rhs.real_ - real_*rhs.imag_)/temp_[1];
+			real_ = temp_[2]/temp_[1];
 			
 			return *this;
 		}
@@ -788,6 +798,18 @@ namespace bertini {
 		friend void RandomReal(bertini::complex & a, unsigned num_digits);
 		friend void RandomComplex(bertini::complex & a, unsigned num_digits);
 		friend void RandomUnit(bertini::complex & a, unsigned num_digits);
+
+
+
+		friend complex operator/(const mpfr_float & lhs, const complex & rhs);
+		friend complex operator/(const mpz_int & lhs, const complex & rhs);
+
+		template<typename T, typename>
+		friend complex operator/(T const& lhs, const complex & rhs);
+
+		friend complex inverse(const complex & z);
+
+		friend complex exp(const complex & z);
 	}; // end declaration of the bertini::complex number class
 	
 	
@@ -1017,8 +1039,10 @@ namespace bertini {
 	 */
 	inline complex operator/(const mpfr_float & lhs, const complex & rhs)
 	{
-		mpfr_float d = rhs.abs2();
-		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
+
+		complex::temp_[3].precision(mpfr_float::default_precision());
+		complex::temp_[3] = rhs.abs2();
+		return complex(lhs*rhs.real()/complex::temp_[3], -lhs*rhs.imag()/complex::temp_[3]);
 	}
 
 	/**
@@ -1039,8 +1063,9 @@ namespace bertini {
 	 */
 	inline complex operator/(const mpz_int & lhs, const complex & rhs)
 	{
-		mpfr_float d = rhs.abs2();
-		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
+		complex::temp_[4].precision(mpfr_float::default_precision());
+		complex::temp_[4] = rhs.abs2();
+		return complex(lhs*rhs.real()/complex::temp_[4], -lhs*rhs.imag()/complex::temp_[4]);
 	}
 	
 	/**
@@ -1060,8 +1085,9 @@ namespace bertini {
 	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
 	inline complex operator/(T const& lhs, const complex & rhs)
 	{
-		auto d = rhs.abs2();
-		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
+		complex::temp_[5].precision(mpfr_float::default_precision());
+		complex::temp_[5] = rhs.abs2();
+		return complex(lhs*rhs.real()/complex::temp_[5], -lhs*rhs.imag()/complex::temp_[5]);
 	}
 	
 	/**
@@ -1153,9 +1179,10 @@ namespace bertini {
 	 */
 	inline complex inverse(const complex & z)
 	{
-		mpfr_float d = z.abs2();
+		complex::temp_[6].precision(mpfr_float::default_precision());
+		complex::temp_[6] = z.abs2();
 		
-		return complex(z.real()/d, -z.imag()/d);
+		return complex(z.real()/complex::temp_[6], -z.imag()/complex::temp_[6]);
 	}
 	
 	
@@ -1249,8 +1276,9 @@ namespace bertini {
 	 */
 	inline complex exp(const complex & z)
 	{
-		mpfr_float exp_of_x = exp(real(z));
-		return complex(exp_of_x * cos(imag(z)), exp_of_x * sin(imag(z)));
+		complex::temp_[7].precision(mpfr_float::default_precision());
+		complex::temp_[7] = exp(real(z));
+		return complex(complex::temp_[7] * cos(imag(z)), complex::temp_[7] * sin(imag(z)));
 	}
 	
 	/**
@@ -1385,7 +1413,7 @@ namespace bertini {
 	 */
 	inline complex atanh(const complex & z)
 	{
-		return mpfr_float("0.5") * log( (1+z)/(1-z) );
+		return log( (1+z)/(1-z) )/2;
 	}
 	
 	
