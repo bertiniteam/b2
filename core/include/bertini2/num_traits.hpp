@@ -224,7 +224,7 @@ namespace bertini {
 		inline
 		static unsigned TolToDigits(mpfr_float tol)
 		{
-			auto b = ceil(-log10(tol));
+			mpfr_float b = ceil(-log10(tol));
 			return b.convert_to<unsigned int>();
 		}
 

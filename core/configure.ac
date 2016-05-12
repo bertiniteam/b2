@@ -52,6 +52,18 @@ LT_INIT
 
 
 
+#AC_ARG_ENABLE(option-name, help-string, action-if-present, action-if-not-present)
+# get whether the user wants to disable the use of thread_local for multithreading.
+
+AC_ARG_ENABLE([thread_local],
+    AS_HELP_STRING([--disable-thread_local], [Disable thread_local storage for fast complex multiple-precision arithmetic, and other places.  OSX and Apple do NOT implement this keyword.  Since this keyword provides the thread-safety mechanism for complex arithmetic, disabling thread_local threatens thread safety.  Disable at your own risk, and do not use in multithreaded environment.  Write Apple a letter asking them to enable this C++ standard language feature, please, and offer your services helping Bertini2 be thread safe on a Mac using Apple's Clang.]))
+
+AS_IF([test "x$enable_thread_local" != "xno"],[
+	AC_DEFINE([USE_THREAD_LOCAL], [1],[Define if thread_local keyword should be used.  ])
+]
+  
+)
+
 
 
 #this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs

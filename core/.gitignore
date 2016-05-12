@@ -27,6 +27,8 @@ b2_classic_compatibility_test
 endgames_test
 pool_test
 
+cachegrind.out.*
+
 m4/libtool.m4
 m4/ltoptions.m4
 m4/ltsugar.m4

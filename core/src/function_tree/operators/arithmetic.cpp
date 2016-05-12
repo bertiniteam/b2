@@ -250,37 +250,25 @@ namespace bertini{
 		
 		dbl SumOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 		{
-			dbl retval{0};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_sign_[ii])
-				{
-					retval += children_[ii]->Eval<dbl>(diff_variable);
-				}
-				else
-				{
-					retval -= children_[ii]->Eval<dbl>(diff_variable);
-				}
-			}
-			
+			dbl retval;
+			this->FreshEval_d(retval, diff_variable);
 			return retval;
 		}
 			
 		void SumOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 		{
 			evaluation_value = dbl(0);
-			dbl temp_d;
 			for(int ii = 0; ii < children_.size(); ++ii)
 			{
 				if(children_sign_[ii])
 				{
-					children_[ii]->EvalInPlace<dbl>(temp_d, diff_variable);
-					evaluation_value += temp_d;
+					children_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
+					evaluation_value += temp_d_;
 				}
 				else
 				{
-					children_[ii]->EvalInPlace<dbl>(temp_d, diff_variable);
-					evaluation_value -= temp_d;
+					children_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
+					evaluation_value -= temp_d_;
 				}
 			}
 			
@@ -291,37 +279,25 @@ namespace bertini{
 		
 		mpfr SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 		{
-			mpfr retval{0};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_sign_[ii])
-				{
-					retval += children_[ii]->Eval<mpfr>(diff_variable);
-				}
-				else
-				{
-					retval -= children_[ii]->Eval<mpfr>(diff_variable);
-				}
-			}
-			
+			mpfr retval;
+			this->FreshEval_mp(retval, diff_variable);
 			return retval;
 		}
 
 		void SumOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 		{
-			evaluation_value = bertini::complex::zero();
-			mpfr temp_mp;
+			evaluation_value.SetZero();
 			for(int ii = 0; ii < children_.size(); ++ii)
 			{
 				if(children_sign_[ii])
 				{
-					children_[ii]->EvalInPlace<mpfr>(temp_mp, diff_variable);
-					evaluation_value += temp_mp;
+					children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+					evaluation_value += temp_mp_;
 				}
 				else
 				{
-					children_[ii]->EvalInPlace<mpfr>(temp_mp, diff_variable);
-					evaluation_value -= temp_mp;
+					children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+					evaluation_value -= temp_mp_;
 				}
 			}
 			
@@ -592,37 +568,25 @@ namespace bertini{
 
 		dbl MultOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 		{
-			dbl retval{1};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_mult_or_div_[ii])
-				{
-					retval *= children_[ii]->Eval<dbl>(diff_variable);
-				}
-				else
-				{
-					retval /= children_[ii]->Eval<dbl>(diff_variable);
-				}
-			}
-			
+			dbl retval;
+			this->FreshEval_d(retval, diff_variable);
 			return retval;
 		}
 		
 		void MultOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 		{
 			evaluation_value = dbl(1);
-			dbl temp_d;
 			for(int ii = 0; ii < children_.size(); ++ii)
 			{
 				if(children_mult_or_div_[ii])
 				{
-					children_[ii]->EvalInPlace<dbl>(temp_d, diff_variable);
-					evaluation_value *= temp_d;
+					children_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
+					evaluation_value *= temp_d_;
 				}
 				else
 				{
-					children_[ii]->EvalInPlace<dbl>(temp_d, diff_variable);
-					evaluation_value /= temp_d;
+					children_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
+					evaluation_value /= temp_d_;
 				}
 			}
 			
@@ -631,37 +595,25 @@ namespace bertini{
 		
 		mpfr MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 		{
-			mpfr retval{1};
-			for(int ii = 0; ii < children_.size(); ++ii)
-			{
-				if(children_mult_or_div_[ii])
-				{
-					retval *= children_[ii]->Eval<mpfr>(diff_variable);
-				}
-				else
-				{
-					retval /= children_[ii]->Eval<mpfr>(diff_variable);
-				}
-			}
-			
+			mpfr retval;
+			this->FreshEval_mp(retval, diff_variable);
 			return retval;
 		}
 		
 		void MultOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 		{
-			evaluation_value = bertini::complex::one();
-			mpfr temp_mp;
+			evaluation_value.SetOne();
 			for(int ii = 0; ii < children_.size(); ++ii)
 			{
 				if(children_mult_or_div_[ii])
 				{
-					children_[ii]->EvalInPlace<mpfr>(temp_mp, diff_variable);
-					evaluation_value *= temp_mp;
+					children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+					evaluation_value *= temp_mp_;
 				}
 				else
 				{
-					children_[ii]->EvalInPlace<mpfr>(temp_mp, diff_variable);
-					evaluation_value /= temp_mp;
+					children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+					evaluation_value /= temp_mp_;
 				}
 			}
 			

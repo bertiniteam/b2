@@ -617,10 +617,10 @@ public:
 		while (approx_error > this->Tolerances().final_tolerance)
 		{
 	  		auto advance_code = AdvanceTime<CT>();
-	  		if (extrapolation_code!=SuccessCode::Success)
+	  		if (advance_code!=SuccessCode::Success)
 	 		{
-	 			BOOST_LOG_TRIVIAL(severity_level::trace) << "unable to advance time, code " << int(extrapolation_code);
-	 			return extrapolation_code;
+	 			BOOST_LOG_TRIVIAL(severity_level::trace) << "unable to advance time, code " << int(advance_code);
+	 			return advance_code;
 	 		}
 
 	 		extrapolation_code = ComputeApproximationOfXAtT0(latest_approx, origin);
@@ -639,7 +639,7 @@ public:
 	 		}
 
 	 		approx_error = (latest_approx - prev_approx).norm();
-	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutitve approximation error:\n" << approx_error << '\n';
+	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
 
 	 		prev_approx = latest_approx;
 	 		if(this->SecuritySettings().level <= 0)

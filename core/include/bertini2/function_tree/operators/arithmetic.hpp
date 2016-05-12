@@ -227,6 +227,15 @@ namespace node{
 			ar & boost::serialization::base_object<NaryOperator>(*this);
 			ar & children_sign_;
 		}
+
+
+		void PrecisionChangeSpecific(unsigned prec) const override
+		{
+			temp_mp_.precision(prec);
+		}
+
+		mutable mpfr temp_mp_;
+		mutable dbl temp_d_;
 	};
 	
 	
@@ -447,6 +456,14 @@ namespace node{
 			ar & boost::serialization::base_object<NaryOperator>(*this);
 			ar & children_mult_or_div_;
 		}
+
+		void PrecisionChangeSpecific(unsigned prec) const override
+		{
+			temp_mp_.precision(prec);
+		}
+
+		mutable mpfr temp_mp_;
+		mutable dbl temp_d_;
 	};
 	
 	

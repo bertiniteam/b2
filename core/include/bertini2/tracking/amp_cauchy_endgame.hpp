@@ -190,9 +190,9 @@ public:
 		using RT = mpfr_float;
 		using std::max;
 		auto& TR = this->GetTracker();
-
+		RT refinement_tolerance = RT(this->Tolerances().final_tolerance)/100;
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-		                          	RT(this->Tolerances().final_tolerance)/100,
+		                          	refinement_tolerance,
 		                          	this->EndgameSettings().max_num_newton_iterations);
 
 		
@@ -210,11 +210,11 @@ public:
 			auto time_higher_precision = current_time;
 
 			assert(time_higher_precision.precision()==mpfr_float::default_precision());
-
+			RT refinement_tolerance = RT(this->Tolerances().final_tolerance)/100;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,
-		                          							RT(this->Tolerances().final_tolerance)/100,
+		                          							refinement_tolerance,
 		                          							this->EndgameSettings().max_num_newton_iterations);
 
 			mpfr_float::default_precision(prev_precision);
@@ -251,10 +251,11 @@ public:
 			auto result_higher_prec = Vec<mpfr>(current_sample.size());
 			mpfr time_higher_precision(current_time);
 
+			mpfr_float refinement_tolerance = this->Tolerances().final_tolerance/100;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,
-		                          							this->Tolerances().final_tolerance/100,
+		                          							refinement_tolerance,
 		                          							this->EndgameSettings().max_num_newton_iterations);
 
 
