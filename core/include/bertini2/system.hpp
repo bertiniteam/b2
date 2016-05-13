@@ -262,7 +262,11 @@ namespace bertini {
 
 		}
 
-
+		template<typename T>
+		Vec<T> Eval(const Vec<T> & variable_values) const
+		{
+			return Eval(variable_values);
+		}
 
 		
 		
@@ -330,6 +334,11 @@ namespace bertini {
 		}
 
 
+		template<typename T>
+		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value) const
+		{
+			return Eval(variable_values, path_variable_value);
+		}
 		
 		
 		
@@ -506,6 +515,19 @@ namespace bertini {
 		}
 
 
+		template<typename T>
+		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value) const
+		{
+			if (variable_values.size()!=NumVariables())
+				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
+
+			if (have_path_variable_)
+				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
+
+			Mat<T> J(NumTotalFunctions(), NumVariables());
+			JacobianInPlace(J,variable_values,path_variable_value);
+			return J;
+		}
 
 		
 		/**
