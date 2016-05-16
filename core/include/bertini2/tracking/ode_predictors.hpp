@@ -31,6 +31,6 @@
 #ifndef BERTINI_ODE_PREDICTORS_HPP
 #define BERTINI_ODE_PREDICTORS_HPP
 
-#include "tracking/explicit_predictors.hpp"
+#include "bertini2/tracking/explicit_predictors.hpp"
 
 #endif
