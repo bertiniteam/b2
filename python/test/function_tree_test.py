@@ -460,3 +460,11 @@ class OperatorTest(unittest.TestCase):
         vars.append(h);
         self.assertTrue(f.is_homogeneous(vars))
 
+
+
+
+
+if __name__ == '__main__':
+    unittest.main();
+
+
