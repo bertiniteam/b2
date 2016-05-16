@@ -52,7 +52,7 @@ class MPFRFloat(unittest.TestCase):
         self.assertLessEqual(abs((y/3) - mpfr_float("-1.2866666666666666666666666666666667")), tol)
         self.assertLessEqual(abs((3/y) - mpfr_float("-.77720207253886010362694300518134714")), tol)
         self.assertLessEqual(abs((x**3) - mpfr_float("75.686967")), tol)
-
+        #
         result = mpfr_float(x);
         result += 8;
         self.assertLessEqual(abs(result - mpfr_float("12.23")), tol)
@@ -65,7 +65,7 @@ class MPFRFloat(unittest.TestCase):
         result = mpfr_float(y);
         result /= 3;
         self.assertLessEqual(abs(result - mpfr_float("-1.2866666666666666666666666666666667")), tol)
-
+        #
         self.assertLessEqual(abs((-z) - mpfr_float("-1.1495")), tol)
 
     def test_arith_mpfr(self):
@@ -76,7 +76,7 @@ class MPFRFloat(unittest.TestCase):
         self.assertLessEqual(abs((y/x) - mpfr_float("-.91252955082742316784869976359338061")), tol)
         self.assertLessEqual(abs((x**y) - mpfr_float("0.0038223124228935822000384505727705508")), tol)
         self.assertLessEqual(abs((-z) - mpfr_float("-1.1495")), tol)
-
+        #
         result = mpfr_float(x);
         result += y;
         self.assertLessEqual(abs(result - mpfr_float("0.37")), tol)
@@ -96,15 +96,15 @@ class MPFRFloat(unittest.TestCase):
         self.assertLessEqual(abs((exp(x)) - mpfr_float("68.717232173846461408252914213396109")), tol)
         self.assertLessEqual(abs((log(z)) - mpfr_float("0.13932706522109918666170810230684295")), tol)
         self.assertLessEqual(abs((sqrt(z)) - mpfr_float("1.0721473779289860297522254519889560")), tol)
-
+        #
         self.assertLessEqual(abs((sin(x)) - mpfr_float("-.88588921129660245121088859729926237")), tol)
         self.assertLessEqual(abs((cos(y)) - mpfr_float("-.75285494656729525719980460936483635")), tol)
         self.assertLessEqual(abs((tan(z)) - mpfr_float("2.2315038042849919118711153687209483")), tol)
-
+        #
         self.assertLessEqual(abs((asin(p)) - mpfr_float("0.34691689752716170922069696210451452")), tol)
         self.assertLessEqual(abs((acos(p)) - mpfr_float("1.2238794292677349100106247295352369")), tol)
         self.assertLessEqual(abs((atan(z)) - mpfr_float("0.85483739856328448882289109284144652")), tol)
-
+        #
         self.assertLessEqual(abs((sinh(x)) - mpfr_float("34.351339891649022639414777866662100")), tol)
         self.assertLessEqual(abs((cosh(y)) - mpfr_float("23.743209684188284295743755381842167")), tol)
         self.assertLessEqual(abs((tanh(z)) - mpfr_float("0.81758837109637920976170104688035086")), tol)
@@ -175,9 +175,9 @@ class MPFRComplex(unittest.TestCase):
         res = mpfr_complex(x**a)
         self.assertLessEqual(abs(res.real - mpfr_float("-16.054376621961088182387920766649714821973863952")), tol)
         self.assertLessEqual(abs(res.imag - mpfr_float("-1.7411284591111236754359685247799914985638458821")), tol)
-
-
-
+        #
+        #
+        #
         res = mpfr_complex(x);
         res += a;
         self.assertLessEqual(abs(res.real - mpfr_float("0.69")), tol)
@@ -194,11 +194,11 @@ class MPFRComplex(unittest.TestCase):
         res /= b;
         self.assertLessEqual(abs(res.real - mpfr_float("-.81756756756756756756756756756756756756756756757")), tol)
         self.assertLessEqual(abs(res.imag - mpfr_float(".3277027027027027027027027027027027027027027027")), tol)
-
+        #
         res = mpfr_complex(x**4);
         self.assertLessEqual(abs(res.real - mpfr_float("33.30735228")), tol)
         self.assertLessEqual(abs(res.imag - mpfr_float("-11.96306496")), tol)
-
+        #
         res = mpfr_complex(-z);
         self.assertLessEqual(abs(res.real - mpfr_float("6.48")), tol)
         self.assertLessEqual(abs(res.imag - mpfr_float(".731")), tol)
@@ -207,7 +207,7 @@ class MPFRComplex(unittest.TestCase):
 
     def test_arith_mp_complex(self):
         x = self.x; y = self.y; z = self.z; p = self.p; tol = self.tol;
-
+        #
         res = mpfr_complex(x+y)
         self.assertLessEqual(abs(res.real - mpfr_float("2.41")), tol)
         self.assertLessEqual(abs(res.imag - mpfr_float("-1.73")), tol)
@@ -235,9 +235,9 @@ class MPFRComplex(unittest.TestCase):
         res = mpfr_complex(y**z)
         self.assertLessEqual(abs(res.real - mpfr_float("0.0000051612634484879218649489640888954160904291899461")), tol)
         self.assertLessEqual(abs(res.imag - mpfr_float("0.16242051733741136410199105656393042124100116889e-4")), tol)
-
-
-
+        #
+        #
+        #
         res = mpfr_complex(x);
         res += y;
         self.assertLessEqual(abs(res.real - mpfr_float("2.41")), tol)
@@ -258,7 +258,7 @@ class MPFRComplex(unittest.TestCase):
 
     def test_trancendentals(self):
         x = self.x; y = self.y; z = self.z; p = self.p; tol = self.tol;
-
+        #
         res = exp(x)
         self.assertLessEqual(abs(res.real - mpfr_float("0.086102743899954532232498058731947255067424332219")), tol)
         self.assertLessEqual(abs(res.imag - mpfr_float("0.018352149302889219131202317785160051395400089327")), tol)
@@ -308,7 +308,7 @@ class MPFRComplex(unittest.TestCase):
 
     def test_misc_funcs(self):
         x = self.x; y = self.y; z = self.z; p = self.p; tol = self.tol;
-
+        #
         res = norm(x)
         self.assertLessEqual(abs(res - mpfr_float("5.949")), tol)
         res = abs2(x)
