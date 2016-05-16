@@ -168,7 +168,8 @@ namespace bertini{
 			class_<NodeWrap, boost::noncopyable, Nodeptr >("Node", no_init)
 			.def(NodeVisitor<Node>())
 			;
-			
+
+			register_ptr_to_python<std::shared_ptr<Node> >();
 		};
 		
 		
