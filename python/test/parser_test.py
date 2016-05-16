@@ -56,3 +56,8 @@ class ParserTest(unittest.TestCase):
         #
         sys.differentiate()
         sysJac = sys.jacobian(vals)
+
+
+if __name__ == '__main__':
+    unittest.main();
+

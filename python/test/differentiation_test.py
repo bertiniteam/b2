@@ -158,3 +158,10 @@ class DiffTest(unittest.TestCase):
         #
         self.assertLessEqual(abs(df.evalmp(z).real / mpfr_float("-2.1642907643013779167501866500194314960002972412e-14")-1), tol_mp)
         self.assertLessEqual(abs(df.evalmp(z).imag / mpfr_float("2.1105887207247540399884720817624768568595288922e-14")-1), tol_mp)
+
+
+if __name__ == '__main__':
+    unittest.main();
+
+
+    

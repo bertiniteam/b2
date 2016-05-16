@@ -335,3 +335,8 @@ class MPFRComplex(unittest.TestCase):
         self.assertLessEqual(abs(t.imag - mpfr_float("0.028838165251841866149715852522538399390278791818")), tol)
         default_precision(30);
         tol = mpfr_float("1e-27");
+
+
+
+if __name__ == '__main__':
+    unittest.main();
