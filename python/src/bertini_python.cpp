@@ -56,6 +56,8 @@ namespace bertini
 			ExportSystem();
 			
 			ExportParsers();
+
+			ExportTrackers();
 		}
 	
 	}

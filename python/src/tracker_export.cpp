@@ -38,8 +38,61 @@ namespace bertini{
 		void TrackerVisitor<TrackerT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("Setup", &TrackerT::Setup)
-			.def("TrackPath", &TrackerT::TrackPath);
+			.def("setup", &TrackerT::Setup)
+			.def("track_path", &TrackerT::TrackPath)
+			.def("get_system",&TrackerT::GetSystem,return_internal_reference<>())
+			.def("predictor",get_predictor_,"Query the current predictor method used by the tracker.")
+			.def("predictor",set_predictor_,"Set the predictor method used by the tracker.");
 		}
+
+
+		void ExportTrackers()
+		{	
+			using namespace bertini::tracking::config;
+
+			enum_<Predictor>("Predictor")
+	        .value("Constant", Predictor::Constant)
+	        .value("Euler", Predictor::Euler)
+	        .value("Heun", Predictor::Heun)
+	        .value("RK4", Predictor::RK4)
+	        .value("HeunEuler", Predictor::HeunEuler)
+	        .value("RKNorsett34", Predictor::RKNorsett34)
+	        .value("RKF45", Predictor::RKF45)
+	        .value("RKCashKarp45", Predictor::RKCashKarp45)
+	        .value("RKDormandPrince56", Predictor::RKDormandPrince56)
+	        .value("RKVerner67", Predictor::RKVerner67)
+	        .export_values()
+	        ;
+
+
+			ExportAMPTracker();
+			ExportFixedTrackers();
+		}
+
+		void ExportAMPTracker()
+		{
+			class_<AMPTracker, std::shared_ptr<AMPTracker> >("AMPTracker", init<const System&>())
+			.def(TrackerVisitor<AMPTracker>())
+			;
+		}
+
+		void ExportFixedTrackers()
+		{
+			ExportFixedDoubleTracker();
+			ExportFixedMultipleTracker();
+		}
+
+		void ExportFixedDoubleTracker()
+		{
+
+		}
+
+		void ExportFixedMultipleTracker()
+		{
+
+		}
+
+
+
 }} // namespaces
 
