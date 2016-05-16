@@ -8,10 +8,12 @@ bertini_python_header_files = $(includedir)/bertini_python.hpp \
 				$(includedir)/symbol_export.hpp \
 				$(includedir)/operator_export.hpp \
 				$(includedir)/root_export.hpp \
-				$(includedir)/system_export.hpp
+				$(includedir)/system_export.hpp \
+				$(includedir)/tracker.hpp
 
 
 bertini_python_source_files = src/bertini_python.cpp \
+				src/tracker_export.cpp \
 				src/mpfr_export.cpp \
 				src/node_export.cpp \
 				src/symbol_export.cpp \
