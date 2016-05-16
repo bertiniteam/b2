@@ -39,7 +39,7 @@ namespace bertini{
 
 
 		using namespace bertini::tracking;
-		
+
 		/**
 		 Abstract Tracker class
 		 */
@@ -56,6 +56,11 @@ namespace bertini{
 
 			using CT = typename TrackerTraits<TrackerT>::BaseComplexType;
 			using RT = typename TrackerTraits<TrackerT>::BaseRealType;
+
+
+			// resolve overloads for getting and setting predictor method.
+			void (TrackerT::*set_predictor_)(config::Predictor)= &TrackerT::Predictor;
+			config::Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::Predictor;
 
 
 		};// TrackerVisitor class
