@@ -41,9 +41,6 @@ class TrackerTest(unittest.TestCase):
         self.y = Variable("y");
         self.t = Variable("t");
         #
-        self.f = Function(self.x*self.y);
-        self.g = Function(pow(self.x,2)*self.y - self.a*self.z*self.x);
-        #
         self.sys = System();
         #
         self.vars = VariableGroup();
@@ -54,21 +51,28 @@ class TrackerTest(unittest.TestCase):
         self.sys.add_variable_group(self.vars);
         #
         self.sys.add_path_variable(self.t);
-        self.sys.add_function(pow(x,2) + (1-t)*x - 1);
-        self.sys.add_function(pow(y,2) + (1-t)*x*y - 2);
+        self.sys.add_function(pow(self.x,2) + (1-self.t)*self.x - 1);
+        self.sys.add_function(pow(self.y,2) + (1-self.t)*self.x*self.y - 2);
         #
-        self.start_time = mpfr(1);
-        self.end_time = mpfr(0);
+        self.start_time = mpfr_complex(1);
+        self.end_time = mpfr_complex(0);
         #
-        self.start_point = VectorXmp(2);
-        self.start_point[0] = mpfr(1);
-        self.start_point[1] = sqrt(mpfr(2));
+        self.start_point = VectorXmp(mpfr_complex(1),sqrt(mpfr_complex(2)));
         #
         #
-        self.end_point = VectorXmp();
+        # self.end_point = VectorXmp();
         #
         self.tracker = AMPTracker(self.sys);
         #
         #
         #BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
         #BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
+
+    def test_something(self):
+        s = self.sys;
+        self.assertLessEqual(1,2);
+
+if __name__ == '__main__':
+    unittest.main();
+
+
