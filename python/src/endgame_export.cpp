@@ -33,22 +33,143 @@
 namespace bertini{
 	namespace python{
 
+
+		template<typename EndgameT>
+		template<class PyClass>
+		void EndgameVisitor<EndgameT>::visit(PyClass& cl) const
+		{
+			using TrackerT = typename EndgameT::TrackerType;
+			using BCT = typename TrackerTraits<TrackerT>::BaseComplexType;
+
+			cl
+			.def("cycle_number", get_cycle_number_)
+
+			.def("get_endgame_settings",&EndgameT::EndgameSettings,return_internal_reference<>())
+			.def("get_security_settings",&EndgameT::SecuritySettings,return_internal_reference<>())
+			.def("get_tolerances",&EndgameT::Tolerances, return_internal_reference<>())
+
+			.def("set_endgame_settings",&EndgameT::SetEndgameSettings)
+			.def("set_security_settings",&EndgameT::SetSecuritySettings)
+			.def("set_tolerances",&EndgameT::SetToleranceSettings,"Set the tracking tolerances")
+
+			.def("get_tracker", &EndgameT::GetTracker, return_internal_reference<>(),"Get the tracker used in this endgame.  This is the same tracker as you feed the endgame object when you make it.")
+			.def("get_system",  &EndgameT::GetSystem,  return_internal_reference<>(),"Get the tracked system")
+
+			.def("final_approximation", &EndgameT::template FinalApproximation<BCT>, return_internal_reference<>(),"Get the current approximation of the root")
+			.def("run", &EndgameT::template Run<BCT>,"Run the endgame, from start point and start time, to t=0")
+			;
+		}
+
+
+		template<typename EndgameT>
+		template<class PyClass>
+		void CauchyVisitor<EndgameT>::visit(PyClass& cl) const
+		{
+			using TrackerT = typename EndgameT::TrackerType;
+
+			cl
+			.def(init<TrackerT const&, config::Cauchy<RT> const&>())
+			.def(init<TrackerT const&, config::Endgame<RT> const&>())
+			.def(init<TrackerT const&, config::Security<RT> const&>())
+			.def(init<TrackerT const&, config::Tolerances<RT> const&>());
+
+		}
+
+ 
+		template<typename EndgameT>
+		template<class PyClass>
+		void PowerSeriesVisitor<EndgameT>::visit(PyClass& cl) const
+		{
+			using TrackerT = typename EndgameT::TrackerType;
+
+			cl
+			.def(init<TrackerT const&, config::PowerSeries const&>())
+			.def(init<TrackerT const&, config::Endgame<RT> const&>())
+			.def(init<TrackerT const&, config::Security<RT> const&>())
+			.def(init<TrackerT const&, config::Tolerances<RT> const&>());
+		}
+
+
+
 		void ExportEndgames()
 		{
-			ExportPSEG();
-			ExportCauchyEG();
+			ExportAMPPSEG();
+			ExportFDPSEG();
+			ExportFMPSEG();
+
+			ExportAMPCauchyEG();
+			ExportFDCauchyEG();
+			ExportFMCauchyEG();
 		}
 
-
-		void ExportCauchyEG()
+		void ExportAMPPSEG()
 		{
-			
+			using TrackerT = AMPTracker;
+			using EGT = typename EndgameSelector<TrackerT>::PSEG;
+
+			class_<EGT>("AMPPSEG",init<TrackerT const&>())
+			.def(EndgameVisitor<EGT>())
+			.def(PowerSeriesVisitor<EGT>());
 		}
 
-		void ExportPSEG()
+
+		void ExportFMPSEG()
 		{
-			
+			using TrackerT = MultiplePrecisionTracker;
+			using EGT = typename EndgameSelector<TrackerT>::PSEG;
+
+			class_<EGT>("FixedMultiplePSEG",init<TrackerT const&>())
+			.def(EndgameVisitor<EGT>())
+			.def(PowerSeriesVisitor<EGT>());
 		}
 
-		
+
+		void ExportFDPSEG()
+		{
+			using TrackerT = DoublePrecisionTracker;
+			using EGT = typename EndgameSelector<TrackerT>::PSEG;
+
+			class_<EGT>("FixedDoublePSEG",init<TrackerT const&>())
+			.def(EndgameVisitor<EGT>())
+			.def(PowerSeriesVisitor<EGT>());
+		}
+
+
+
+
+
+		void ExportFDCauchyEG()
+		{
+			using TrackerT = DoublePrecisionTracker;
+			using EGT = typename EndgameSelector<TrackerT>::Cauchy;
+
+			class_<EGT>("FDCauchyEG", init<TrackerT const&>())
+			.def(EndgameVisitor<EGT>())
+			.def(CauchyVisitor<EGT>())
+			;
+		}
+
+		void ExportFMCauchyEG()
+		{
+			using TrackerT = MultiplePrecisionTracker;
+			using EGT = typename EndgameSelector<TrackerT>::Cauchy;
+
+			class_<EGT>("FMCauchyEG", init<TrackerT const&>())
+			.def(EndgameVisitor<EGT>())
+			.def(CauchyVisitor<EGT>())
+			;
+		}
+
+
+		void ExportAMPCauchyEG()
+		{
+			using TrackerT = AMPTracker;
+			using EGT = typename EndgameSelector<TrackerT>::Cauchy;
+
+			class_<EGT>("AMPCauchyEG", init<TrackerT const&>())
+			.def(EndgameVisitor<EGT>())
+			.def(CauchyVisitor<EGT>())
+			;
+		}
+
 }} // re: namespaces
