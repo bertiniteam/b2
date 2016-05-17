@@ -420,7 +420,7 @@ namespace bertini {
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 			
-			if (have_path_variable_)
+			if (HavePathVariable())
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 			
 			SetVariables(variable_values);
@@ -447,7 +447,7 @@ namespace bertini {
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
-			if (have_path_variable_)
+			if (HavePathVariable())
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
@@ -478,7 +478,7 @@ namespace bertini {
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 			
-			if (!have_path_variable_)
+			if (!HavePathVariable())
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 			
 			SetVariables(variable_values.eval()); // TODO: remove this eval
@@ -510,7 +510,7 @@ namespace bertini {
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
-			if (!have_path_variable_)
+			if (!HavePathVariable())
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
@@ -525,7 +525,7 @@ namespace bertini {
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
-			if (have_path_variable_)
+			if (!HavePathVariable())
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
