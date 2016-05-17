@@ -175,6 +175,10 @@ namespace bertini{
 			.def_readwrite("max_num_newton_iterations", &Newton::max_num_newton_iterations)
 			.def_readwrite("min_num_newton_iterations", &Newton::min_num_newton_iterations)
 			;
+			
+			
+			class_<FixedPrecisionConfig<dbl>, std::shared_ptr<FixedPrecisionConfig<dbl>> >("FixedPrecisionConfig", init<System const&>());
+			class_<FixedPrecisionConfig<mpfr>, std::shared_ptr<FixedPrecisionConfig<mpfr>> >("FixedPrecisionConfig", init<System const&>());
 
 
 			

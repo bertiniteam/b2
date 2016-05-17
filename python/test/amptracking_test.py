@@ -79,39 +79,42 @@ class AMPTrackingTest(unittest.TestCase):
         tracker.track_path(y_end, t_start, t_end, y_start);
 
         self.assertEqual(y_end.rows(), 1)
-        self.assertLessEqual(abs(y_end[0].real-mpfr_complex(0).real), mpfr_float("1e-5"))
-        self.assertLessEqual(abs(y_end[0].imag-mpfr_complex(0).imag), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
 
 
 
 
-    def test_add_systems(self):
-        x = self.x;  y = self.y;
-        s1 = System(); s2 = System();
-        #
+    def test_tracker_quad(self):
+        x = self.x;  y = self.y; t = self.t;
+        s = System();
+
         vars = VariableGroup();
-        vars.append(x); vars.append(y);
-        #
-        s1.add_variable_group(vars)
-        s1.add_function(y+1)
-        s1.add_function(x*y)
-        #
-        s2.add_variable_group(vars)
-        s2.add_function(-y-1)
-        s2.add_function(-x*y)
-        #
-        s1 += s2;
-        values = VectorXd((2,3))
-        v = s1.eval(values)
-        #
-        self.assertEqual(v[0], 0.0)
-        self.assertEqual(v[1], 0.0)
-        #
-        deg = s1.degrees()
-        self.assertEqual(len(deg),2)
-        #
-        self.assertEqual(deg[0], 1)
-        self.assertEqual(deg[1], 2)
+        vars.append(y);
+        s.add_function(y-t**2);
+        s.add_path_variable(t);
+        s.add_variable_group(vars);
+
+        ampconfig = amp_config_from(s);
+
+        tracker = AMPTracker(s);
+
+        stepping_pref = Stepping_mp();
+        newton_pref = Newton();
+
+        tracker.setup(Predictor.Euler, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.precision_setup(ampconfig);
+
+        t_start = mpfr_complex(1)
+        t_end = mpfr_complex(-1)
+
+        y_start = VectorXmp([mpfr_complex(1)]);
+
+        y_end = VectorXmp();
+
+        tracker.track_path(y_end, t_start, t_end, y_start);
+
+        self.assertEqual(y_end.rows(), 1)
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(1)), mpfr_float("1e-5"))
 
 
 
