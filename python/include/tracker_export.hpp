@@ -67,22 +67,6 @@ namespace bertini{
 			void (TrackerT::*set_predictor_)(config::Predictor)= &TrackerT::Predictor;
 			config::Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::Predictor;
 			
-			// resolve overloads for refining a point.
-			template <typename T>
-			using Refine3_ptr = SuccessCode (TrackerT::*)(Vec<T>&, Vec<T> const&, T const&) const;
-			template <typename T>
-			static Refine3_ptr<T> return_Refine3_ptr()
-			{
-				return &TrackerT::template Refine<T>;
-			};
-			
-			template <typename ComplexT, typename RealT>
-			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, RealT const&, unsigned) const;
-			template <typename ComplexT, typename RealT>
-			static Refine4_ptr<ComplexT, RealT> return_Refine4_ptr()
-			{
-				return &TrackerT::template Refine<ComplexT, RealT>;
-			};
 
 
 
@@ -103,12 +87,104 @@ namespace bertini{
 			template<class PyClass>
 			void visit(PyClass& cl) const;
 			
+			
+		private:
+			// resolve overloads for refining a point.
+			template <typename T>
+			using Refine3_ptr = SuccessCode (TrackerT::*)(Vec<T>&, Vec<T> const&, T const&) const;
+			template <typename T>
+			static Refine3_ptr<T> return_Refine3_ptr()
+			{
+				return &TrackerT::template Refine<T>;
+			};
+			
+			template <typename ComplexT, typename RealT>
+			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, RealT const&, unsigned) const;
+			template <typename ComplexT, typename RealT>
+			static Refine4_ptr<ComplexT, RealT> return_Refine4_ptr()
+			{
+				return &TrackerT::template Refine<ComplexT, RealT>;
+			};
+
+			
 		};// AMPTrackerVisitor class
+
+		
+		/**
+		  Fixed Double Tracker class
+		 */
+		template<typename TrackerT>
+		class FixedDoubleTrackerVisitor: public def_visitor<FixedDoubleTrackerVisitor<TrackerT> >
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+			
+		private:
+			// resolve overloads for refining a point.
+			template <typename T>
+			using Refine3_ptr = SuccessCode (TrackerT::*)(Vec<T>&, Vec<T> const&, T const&) const;
+			template <typename T>
+			static Refine3_ptr<T> return_Refine3_ptr()
+			{
+				return &TrackerT::template Refine<T>;
+			};
+			
+			template <typename ComplexT, typename RealT>
+			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, RealT const&, unsigned) const;
+			template <typename ComplexT, typename RealT>
+			static Refine4_ptr<ComplexT, RealT> return_Refine4_ptr()
+			{
+				return &TrackerT::template Refine<ComplexT, RealT>;
+			};
+
+			
+		};// FixedDoubleTrackerVisitor class
+
+		
+		/**
+		 Fixed Multiple Tracker class
+		 */
+		template<typename TrackerT>
+		class FixedMultipleTrackerVisitor: public def_visitor<FixedMultipleTrackerVisitor<TrackerT> >
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+			
+		private:
+			// resolve overloads for refining a point.
+			template <typename T>
+			using Refine3_ptr = SuccessCode (TrackerT::*)(Vec<T>&, Vec<T> const&, T const&) const;
+			template <typename T>
+			static Refine3_ptr<T> return_Refine3_ptr()
+			{
+				return &TrackerT::template Refine<T>;
+			};
+			
+			template <typename ComplexT, typename RealT>
+			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, RealT const&, unsigned) const;
+			template <typename ComplexT, typename RealT>
+			static Refine4_ptr<ComplexT, RealT> return_Refine4_ptr()
+			{
+				return &TrackerT::template Refine<ComplexT, RealT>;
+			};
+			
+			
+		};// FixedMultipleTrackerVisitor class
+
+		
 
 		
 		
 		/**
-		 AMP Tracker class
+		 Stepping struct
 		 */
 		template<typename T>
 		class SteppingVisitor: public def_visitor<SteppingVisitor<T> >
@@ -124,21 +200,6 @@ namespace bertini{
 
 
 		
-//		/**
-//		 TrackerTrait struct
-//		 */
-//		template<typename TrackerT>
-//		class TrackerTraitVisitor: public def_visitor<TrackerTraitVisitor<TrackerT> >
-//		{
-//			friend class def_visitor_access;
-//			
-//		public:
-//			template<class PyClass>
-//			void visit(PyClass& cl) const;
-//			
-//			
-//			
-//		};// TrackerTraitVisitor class
 
 		
 		

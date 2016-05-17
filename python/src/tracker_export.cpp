@@ -44,10 +44,6 @@ namespace bertini{
 			.def("predictor",get_predictor_,"Query the current predictor method used by the tracker.")
 			.def("predictor",set_predictor_,"Set the predictor method used by the tracker.")
 			.def("set_stepsize", &TrackerT::SetStepSize)
-//			.def("refine", return_Refine3_ptr<dbl>)
-//			.def("refine", return_Refine3_ptr<mpfr>)
-			.def("refine", return_Refine4_ptr<dbl, double>)
-			.def("refine", return_Refine4_ptr<mpfr, mpfr_float>)
 			.def("reinitialize_initial_step_size", &TrackerT::ReinitializeInitialStepSize)
 			.def("num_total_steps_taken", &TrackerT::NumTotalStepsTaken)
 			.def("tracking_tolerance", &TrackerT::TrackingTolerance)
@@ -65,6 +61,39 @@ namespace bertini{
 			.def("current_point", &TrackerT::CurrentPoint)
 //			.def("change_precision", &TrackerT::ChangePrecision)
 			.def("current_precision", &TrackerT::CurrentPrecision)
+//			.def("refine", return_Refine3_ptr<dbl>)
+//			.def("refine", return_Refine3_ptr<mpfr>)
+			.def("refine", return_Refine4_ptr<dbl, double>)
+			.def("refine", return_Refine4_ptr<mpfr, mpfr_float>)
+			;
+		}
+
+		
+		
+		template<typename TrackerT>
+		template<class PyClass>
+		void FixedDoubleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
+		{
+			cl
+			.def("current_point", &TrackerT::CurrentPoint)
+			.def("current_precision", &TrackerT::CurrentPrecision)
+			.def("tracker_loop_initialization", &TrackerT::TrackerLoopInitialization)
+			//			.def("refine", return_Refine3_ptr<dbl>)
+			.def("refine", return_Refine4_ptr<dbl, double>)
+			;
+		}
+
+		
+		template<typename TrackerT>
+		template<class PyClass>
+		void FixedMultipleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
+		{
+			cl
+			.def("current_point", &TrackerT::CurrentPoint)
+			.def("current_precision", &TrackerT::CurrentPrecision)
+			.def("tracker_loop_initialization", &TrackerT::TrackerLoopInitialization)
+			//			.def("refine", return_Refine3_ptr<mpfr>)
+			.def("refine", return_Refine4_ptr<mpfr, mpfr_float>)
 			;
 		}
 
@@ -114,11 +143,18 @@ namespace bertini{
 
 		void ExportFixedDoubleTracker()
 		{
-
+			class_<DoublePrecisionTracker, std::shared_ptr<DoublePrecisionTracker> >("DoublePrecisionTracker", init<const System&>())
+			.def(TrackerVisitor<DoublePrecisionTracker>())
+			.def(FixedDoubleTrackerVisitor<DoublePrecisionTracker>())
+			;
 		}
 
 		void ExportFixedMultipleTracker()
 		{
+			class_<MultiplePrecisionTracker, std::shared_ptr<MultiplePrecisionTracker> >("MultiplePrecisionTracker", init<const System&>())
+			.def(TrackerVisitor<MultiplePrecisionTracker>())
+			.def(FixedMultipleTrackerVisitor<MultiplePrecisionTracker>())
+			;
 
 		}
 		

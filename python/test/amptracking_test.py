@@ -118,6 +118,67 @@ class AMPTrackingTest(unittest.TestCase):
 
 
 
+    def test_tracker_sqrt(self):
+        x = self.x;  y = self.y; t = self.t;
+        s = System();
+
+        vars = VariableGroup();
+        vars.append(y); vars.append(x);
+        s.add_function(x-t);
+        s.add_function(y**2 - x)
+        s.add_path_variable(t);
+        s.add_variable_group(vars);
+
+        ampconfig = amp_config_from(s);
+
+        tracker = AMPTracker(s);
+
+        stepping_pref = Stepping_mp();
+        newton_pref = Newton();
+
+        tracker.setup(Predictor.Euler, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.precision_setup(ampconfig);
+
+        t_start = mpfr_complex(1)
+        t_end = mpfr_complex(0)
+
+        y_start = VectorXmp([mpfr_complex(1), mpfr_complex(1)]);
+
+        y_end = VectorXmp();
+
+        tracker.track_path(y_end, t_start, t_end, y_start);
+
+        self.assertEqual(y_end.rows(), 2)
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+
+        y_start = VectorXmp([mpfr_complex(1), mpfr_complex(-1)]);
+
+        tracker.track_path(y_end, t_start, t_end, y_start);
+
+        self.assertEqual(y_end.rows(), 2)
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+
+
+        y_start = VectorXmp([mpfr_complex(-1), mpfr_complex(-1)]);
+
+        tracker.track_path(y_end, t_start, t_end, y_start);
+
+        self.assertEqual(y_end.rows(), 2)
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+
+
+        y_start = VectorXmp([mpfr_complex(-1), mpfr_complex(0,1)]);
+
+        tracker.track_path(y_end, t_start, t_end, y_start);
+
+        self.assertEqual(y_end.rows(), 2)
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+
+
 if __name__ == '__main__':
     unittest.main();
 
