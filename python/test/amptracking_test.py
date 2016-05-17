@@ -50,6 +50,7 @@ class AMPTrackingTest(unittest.TestCase):
 
 
     def test_tracker_linear(self):
+        default_precision(30);
         x = self.x;  y = self.y; t = self.t;
         s = System();
 
@@ -85,6 +86,7 @@ class AMPTrackingTest(unittest.TestCase):
 
 
     def test_tracker_quad(self):
+        default_precision(30);
         x = self.x;  y = self.y; t = self.t;
         s = System();
 
@@ -119,6 +121,7 @@ class AMPTrackingTest(unittest.TestCase):
 
 
     def test_tracker_sqrt(self):
+        default_precision(30);
         x = self.x;  y = self.y; t = self.t;
         s = System();
 
@@ -146,8 +149,9 @@ class AMPTrackingTest(unittest.TestCase):
 
         y_end = VectorXmp();
 
-        tracker.track_path(y_end, t_start, t_end, y_start);
+        track_success = tracker.track_path(y_end, t_start, t_end, y_start);
 
+        self.assertTrue(track_success == SuccessCode.Success)
         self.assertEqual(y_end.rows(), 2)
         self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
         self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
@@ -172,11 +176,49 @@ class AMPTrackingTest(unittest.TestCase):
 
         y_start = VectorXmp([mpfr_complex(-1), mpfr_complex(0,1)]);
 
-        tracker.track_path(y_end, t_start, t_end, y_start);
+        track_success = tracker.track_path(y_end, t_start, t_end, y_start);
 
+
+        self.assertTrue(track_success == SuccessCode.Success)
         self.assertEqual(y_end.rows(), 2)
         self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
         self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+
+
+    def test_tracker_singular_start(self):
+        default_precision(30);
+        x = self.x;  y = self.y; t = self.t;
+        s = System();
+
+        vars = VariableGroup();
+        vars.append(y); vars.append(x);
+        s.add_function(x**2 + (1-t)*x);
+        s.add_function(y**2 + (1-t)*y)
+        s.add_path_variable(t);
+        s.add_variable_group(vars);
+
+        ampconfig = amp_config_from(s);
+
+        tracker = AMPTracker(s);
+
+        stepping_pref = Stepping_mp();
+        newton_pref = Newton();
+
+        tracker.setup(Predictor.Euler, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.precision_setup(ampconfig);
+
+        t_start = mpfr_complex(1)
+        t_end = mpfr_complex(0)
+
+        y_start = VectorXmp([mpfr_complex(0), mpfr_complex(0)]);
+
+        y_end = VectorXmp();
+
+        track_success = tracker.track_path(y_end, t_start, t_end, y_start);
+
+        self.assertTrue(track_success == SuccessCode.SingularStartPoint)
+        self.assertEqual(y_end.rows(), 0)
+
 
 
 if __name__ == '__main__':
