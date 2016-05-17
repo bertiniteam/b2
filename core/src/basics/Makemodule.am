@@ -16,7 +16,7 @@ basics_header_files = \
 
 basics_source_files = \
 	src/basics/mpfr_extensions.cpp \
-	src/basics/mpfr_complex.cpp\
+	src/basics/mpfr_complex.cpp \
 	src/basics/limbo.cpp
 	
 
