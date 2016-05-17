@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//bertini_python.hpp is free software: you can redistribute it and/or modify
+//python/endgame_export.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//bertini_python.hpp is distributed in the hope that it will be useful,
+//python/endgame_export.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with python/endgame_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2016 by Bertini2 Development Team
 //
@@ -21,26 +21,34 @@
 
 // individual authors of this file include:
 //
-//  James Collins
-//  West Texas A&M University
-//  Spring 2016
+//  Daniel Brake
+//  University of Notre Dame
+//  Summer 2016
 //
 //
-//  python/bertini_python.hpp:  the main header file for the python interface for bertini.
+//  python/endgame_export.cpp:  source file for exposing endgames to python.
 
-#ifndef BERTINI_PYTHON_HPP
-#define BERTINI_PYTHON_HPP
-
-#include "python_common.hpp"
-#include "containers_export.hpp"
-#include "mpfr_export.hpp"
-#include "minieigen_export.hpp"
-#include "function_tree.hpp"
-#include "system_export.hpp"
-#include "parser_export.hpp"
-#include "tracker.hpp"
 #include "endgame_export.hpp"
 
-#endif
+namespace bertini{
+	namespace python{
+
+		void ExportEndgames()
+		{
+			ExportPSEG();
+			ExportCauchyEG();
+		}
 
 
+		void ExportCauchyEG()
+		{
+			
+		}
+
+		void ExportPSEG()
+		{
+			
+		}
+
+		
+}} // re: namespaces
