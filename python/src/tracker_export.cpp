@@ -28,7 +28,7 @@
 //
 //  python/tracker_export.cpp:  source file for exposing trackers to python.
 
-#include "tracker.hpp"
+#include "tracker_export.hpp"
 
 namespace bertini{
 	namespace python{
@@ -46,6 +46,9 @@ namespace bertini{
 			.def("set_stepsize", &TrackerT::SetStepSize)
 		}
 
+		
+
+		
 
 		void ExportTrackers()
 		{	
@@ -91,6 +94,47 @@ namespace bertini{
 		void ExportFixedMultipleTracker()
 		{
 
+		}
+		
+		
+		
+		void ExportConfigSettings()
+		{
+			using namespace bertini::tracking::config;
+			
+			enum_<Predictor>("Predictor")
+			.value("Constant", Predictor::Constant)
+			.value("Euler", Predictor::Euler)
+			.value("Heun", Predictor::Heun)
+			.value("RK4", Predictor::RK4)
+			.value("HeunEuler", Predictor::HeunEuler)
+			.value("RKNorsett34", Predictor::RKNorsett34)
+			.value("RKF45", Predictor::RKF45)
+			.value("RKCashKarp45", Predictor::RKCashKarp45)
+			.value("RKDormandPrince56", Predictor::RKDormandPrince56)
+			.value("RKVerner67", Predictor::RKVerner67)
+			.export_values()
+			;
+
+			enum_<SuccessCode>("SuccessCode")
+			.value("Success", SuccessCode::Success)
+			.value("HigherPrecisionNecessary", SuccessCode::HigherPrecisionNecessary)
+			.value("ReduceStepSize", SuccessCode::ReduceStepSize)
+			.value("GoingToInfinity", SuccessCode::GoingToInfinity)
+			.value("FailedToConverge", SuccessCode::FailedToConverge)
+			.value("MatrixSolveFailure", SuccessCode::MatrixSolveFailure)
+			.value("MatrixSolveFailureFirstPartOfPrediction", SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
+			.value("MaxNumStepsTaken", SuccessCode::MaxNumStepsTaken)
+			.value("MaxPrecisionReached", SuccessCode::MaxPrecisionReached)
+			.value("MinStepSizeReached", SuccessCode::MinStepSizeReached)
+			.value("Failure", SuccessCode::Failure)
+			.value("SingularStartPoint", SuccessCode::SingularStartPoint)
+			.value("ExternallyTerminated", SuccessCode::ExternallyTerminated)
+			.value("MinTrackTimeReached", SuccessCode::MinTrackTimeReached)
+			.value("SecurityMaxNormReached", SuccessCode::SecurityMaxNormReached)
+			.value("CycleNumTooHigh", SuccessCode::CycleNumTooHigh)
+			.export_values()
+			;
 		}
 
 

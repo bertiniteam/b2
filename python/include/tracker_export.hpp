@@ -71,12 +71,33 @@ namespace bertini{
 		};// TrackerVisitor class
 
 
+		
+//		/**
+//		 TrackerTrait struct
+//		 */
+//		template<typename TrackerT>
+//		class TrackerTraitVisitor: public def_visitor<TrackerTraitVisitor<TrackerT> >
+//		{
+//			friend class def_visitor_access;
+//			
+//		public:
+//			template<class PyClass>
+//			void visit(PyClass& cl) const;
+//			
+//			
+//			
+//		};// TrackerTraitVisitor class
+
+		
+		
 		// now prototypes for expose functions defined in the .cpp files for the python bindings.
 		void ExportTrackers();
 		void ExportAMPTracker();
 		void ExportFixedTrackers();
 		void ExportFixedDoubleTracker();
 		void ExportFixedMultipleTracker();
+		
+		void ExportConfigSettings();
 
 }}// re: namespaces
 
