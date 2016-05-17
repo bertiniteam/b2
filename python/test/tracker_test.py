@@ -57,7 +57,7 @@ class TrackerTest(unittest.TestCase):
         self.start_time = mpfr_complex(1);
         self.end_time = mpfr_complex(0);
         #
-        self.start_point = VectorXmp(mpfr_complex(1),sqrt(mpfr_complex(2)));
+        self.start_point = VectorXmp((mpfr_complex(1),sqrt(mpfr_complex(2))));
         #
         #
         # self.end_point = VectorXmp();
