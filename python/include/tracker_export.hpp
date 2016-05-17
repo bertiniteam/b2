@@ -25,6 +25,11 @@
 //  University of Notre Dame
 //  Summer 2016
 //
+//  James Collins
+//  West Texas A&M University
+//  Summer 2016
+//
+//
 //
 //  python/tracker.hpp:  Header file for exposing trackers to python.
 

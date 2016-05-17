@@ -43,6 +43,7 @@ namespace bertini{
 			.def("get_system",&TrackerT::GetSystem,return_internal_reference<>())
 			.def("predictor",get_predictor_,"Query the current predictor method used by the tracker.")
 			.def("predictor",set_predictor_,"Set the predictor method used by the tracker.");
+			.def("set_stepsize", &TrackerT::SetStepSize)
 		}
 
 
