@@ -69,6 +69,25 @@ namespace bertini{
 		}
 
 
+		template<typename T>
+		template<class PyClass>
+		void SteppingVisitor<T>::visit(PyClass& cl) const
+		{
+			cl
+			.def_readwrite("initial_step_size", &Stepping<T>::initial_step_size)
+			.def_readwrite("max_step_size", &Stepping<T>::max_step_size)
+			.def_readwrite("min_step_size", &Stepping<T>::min_step_size)
+			.def_readwrite("step_size_success_factor", &Stepping<T>::step_size_success_factor)
+			.def_readwrite("step_size_fail_factor", &Stepping<T>::step_size_fail_factor)
+			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &Stepping<T>::consecutive_successful_steps_before_stepsize_increase)
+			.def_readwrite("min_num_steps", &Stepping<T>::min_num_steps)
+			.def_readwrite("max_num_steps", &Stepping<T>::max_num_steps)
+			.def_readwrite("frequency_of_CN_estimation", &Stepping<T>::frequency_of_CN_estimation)
+			.def_readwrite("initial_step_size", &Stepping<T>::initial_step_size)
+			.def_readwrite("initial_step_size", &Stepping<T>::initial_step_size)
+			;
+		}
+
 		
 
 		void ExportTrackers()
@@ -141,6 +160,22 @@ namespace bertini{
 			.value("CycleNumTooHigh", SuccessCode::CycleNumTooHigh)
 			.export_values()
 			;
+			
+			
+			class_<Stepping<double>, std::shared_ptr<Stepping<double>> >("Stepping_d", init<>())
+			.def(SteppingVisitor<double>())
+			;
+			
+			class_<Stepping<mpfr_float>, std::shared_ptr<Stepping<mpfr_float>> >("Stepping_mp", init<>())
+			.def(SteppingVisitor<mpfr_float>())
+			;
+			
+			class_<Newton, std::shared_ptr<Newton> >("Newton", init<>())
+			.def_readwrite("max_num_newton_iterations", &Newton::max_num_newton_iterations)
+			.def_readwrite("min_num_newton_iterations", &Newton::min_num_newton_iterations)
+			;
+
+
 			
 			
 			class_<AdaptiveMultiplePrecisionConfig, std::shared_ptr<AdaptiveMultiplePrecisionConfig> >("AMPConfig", init<>())

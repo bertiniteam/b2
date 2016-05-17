@@ -105,6 +105,22 @@ namespace bertini{
 			
 		};// AMPTrackerVisitor class
 
+		
+		
+		/**
+		 AMP Tracker class
+		 */
+		template<typename T>
+		class SteppingVisitor: public def_visitor<SteppingVisitor<T> >
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+		};// SteppingVisitor class
+
 
 
 		
