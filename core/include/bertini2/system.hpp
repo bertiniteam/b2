@@ -339,7 +339,9 @@ namespace bertini {
 		template<typename T>
 		Vec<T> Eval(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
-			return Eval(variable_values, path_variable_value);
+			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
+			EvalInPlace(function_values, variable_values, path_variable_value);
+			return function_values;
 		}
 		
 		
