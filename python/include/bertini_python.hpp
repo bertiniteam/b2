@@ -39,6 +39,7 @@
 #include "system_export.hpp"
 #include "parser_export.hpp"
 #include "tracker.hpp"
+#include "endgame_export.hpp"
 
 #endif
 
