@@ -66,9 +66,45 @@ namespace bertini{
 			// resolve overloads for getting and setting predictor method.
 			void (TrackerT::*set_predictor_)(config::Predictor)= &TrackerT::Predictor;
 			config::Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::Predictor;
+			
+			// resolve overloads for refining a point.
+			template <typename T>
+			using Refine3_ptr = SuccessCode (TrackerT::*)(Vec<T>&, Vec<T> const&, T const&) const;
+			template <typename T>
+			static Refine3_ptr<T> return_Refine3_ptr()
+			{
+				return &TrackerT::template Refine<T>;
+			};
+			
+			template <typename ComplexT, typename RealT>
+			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, RealT const&, unsigned) const;
+			template <typename ComplexT, typename RealT>
+			static Refine4_ptr<ComplexT, RealT> return_Refine4_ptr()
+			{
+				return &TrackerT::template Refine<ComplexT, RealT>;
+			};
+
+
+
 
 
 		};// TrackerVisitor class
+		
+		
+		/**
+		 AMP Tracker class
+		 */
+		template<typename TrackerT>
+		class AMPTrackerVisitor: public def_visitor<AMPTrackerVisitor<TrackerT> >
+		{
+			friend class def_visitor_access;
+			
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+		};// AMPTrackerVisitor class
+
 
 
 		

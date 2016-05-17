@@ -42,32 +42,38 @@ namespace bertini{
 			.def("track_path", &TrackerT::TrackPath)
 			.def("get_system",&TrackerT::GetSystem,return_internal_reference<>())
 			.def("predictor",get_predictor_,"Query the current predictor method used by the tracker.")
-			.def("predictor",set_predictor_,"Set the predictor method used by the tracker.");
+			.def("predictor",set_predictor_,"Set the predictor method used by the tracker.")
 			.def("set_stepsize", &TrackerT::SetStepSize)
+//			.def("refine", return_Refine3_ptr<dbl>)
+//			.def("refine", return_Refine3_ptr<mpfr>)
+			.def("refine", return_Refine4_ptr<dbl, double>)
+			.def("refine", return_Refine4_ptr<mpfr, mpfr_float>)
+			.def("reinitialize_initial_step_size", &TrackerT::ReinitializeInitialStepSize)
+			.def("num_total_steps_taken", &TrackerT::NumTotalStepsTaken)
+			.def("tracking_tolerance", &TrackerT::TrackingTolerance)
+			;
 		}
 
-		
+
+		template<typename TrackerT>
+		template<class PyClass>
+		void AMPTrackerVisitor<TrackerT>::visit(PyClass& cl) const
+		{
+			cl
+			.def("precision_setup", &TrackerT::PrecisionSetup)
+			.def("precision_preservation", &TrackerT::PrecisionPreservation)
+			.def("current_point", &TrackerT::CurrentPoint)
+			.def("change_precision", &TrackerT::ChangePrecision)
+			.def("current_precision", &TrackerT::CurrentPrecision)
+			;
+		}
+
 
 		
 
 		void ExportTrackers()
 		{	
-			using namespace bertini::tracking::config;
-
-			enum_<Predictor>("Predictor")
-	        .value("Constant", Predictor::Constant)
-	        .value("Euler", Predictor::Euler)
-	        .value("Heun", Predictor::Heun)
-	        .value("RK4", Predictor::RK4)
-	        .value("HeunEuler", Predictor::HeunEuler)
-	        .value("RKNorsett34", Predictor::RKNorsett34)
-	        .value("RKF45", Predictor::RKF45)
-	        .value("RKCashKarp45", Predictor::RKCashKarp45)
-	        .value("RKDormandPrince56", Predictor::RKDormandPrince56)
-	        .value("RKVerner67", Predictor::RKVerner67)
-	        .export_values()
-	        ;
-
+			ExportConfigSettings();
 
 			ExportAMPTracker();
 			ExportFixedTrackers();
@@ -135,6 +141,15 @@ namespace bertini{
 			.value("CycleNumTooHigh", SuccessCode::CycleNumTooHigh)
 			.export_values()
 			;
+			
+			
+			class_<AMPConfig, std::shared_ptr<AMPConfig> >("AMPConfig", init<>())
+			.init<System const&>()
+			.def("set_amp_config_from", &AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom)
+			.def("", &AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom))
+			;
+			
+			
 		}
 
 
