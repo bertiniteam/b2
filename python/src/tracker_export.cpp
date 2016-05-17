@@ -143,11 +143,25 @@ namespace bertini{
 			;
 			
 			
-			class_<AMPConfig, std::shared_ptr<AMPConfig> >("AMPConfig", init<>())
-			.init<System const&>()
+			class_<AdaptiveMultiplePrecisionConfig, std::shared_ptr<AdaptiveMultiplePrecisionConfig> >("AMPConfig", init<>())
+			.def(init<System const&>())
 			.def("set_amp_config_from", &AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom)
-			.def("", &AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom))
+			.def("set_phi_psi_from_bounds", &AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds)
+			.def("set_bounds_and_epsilon_from", &AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom)
+			.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
+			.def_readwrite("degree_bound", &AdaptiveMultiplePrecisionConfig::degree_bound)
+			.def_readwrite("epsilon", &AdaptiveMultiplePrecisionConfig::epsilon)
+			.def_readwrite("phi", &AdaptiveMultiplePrecisionConfig::Phi)
+			.def_readwrite("psi", &AdaptiveMultiplePrecisionConfig::Psi)
+			.def_readwrite("safety_digits_1", &AdaptiveMultiplePrecisionConfig::safety_digits_1)
+			.def_readwrite("safety_digits_2", &AdaptiveMultiplePrecisionConfig::safety_digits_2)
+			.def_readwrite("maximum_precision", &AdaptiveMultiplePrecisionConfig::maximum_precision)
+			.def_readwrite("consecutive_successful_steps_before_precision_decrease", &AdaptiveMultiplePrecisionConfig::consecutive_successful_steps_before_precision_decrease)
+			.def_readwrite("max_num_precision_decreases", &AdaptiveMultiplePrecisionConfig::max_num_precision_decreases)
+			.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
 			;
+			
+			def("amp_config_from", &AMPConfigFrom);
 			
 			
 		}
