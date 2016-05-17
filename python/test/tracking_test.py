@@ -27,6 +27,7 @@
 # 
 
 import amptracking_test
+import unittest
 
 
 
@@ -41,7 +42,7 @@ import amptracking_test
 
 
 if __name__ == '__main__':
-    mods = (amptracking_test)
+    mods = (amptracking_test,0)
     suite = unittest.TestSuite();
     for tests in mods:
         thissuite = unittest.TestLoader().loadTestsFromModule(tests);

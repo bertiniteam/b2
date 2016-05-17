@@ -27,7 +27,7 @@
 # 
 
 
-__author__ = 'jcollins'
+__author__ = 'James Collins'
 
 from pybertini import *
 import unittest
@@ -61,7 +61,28 @@ class AMPTrackingTest(unittest.TestCase):
 
         ampconfig = amp_config_from(s);
 
-        
+        tracker = AMPTracker(s);
+
+        stepping_pref = Stepping_mp();
+        newton_pref = Newton();
+
+        tracker.setup(Predictor.Euler, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.precision_setup(ampconfig);
+
+        t_start = mpfr_complex(1)
+        t_end = mpfr_complex(0)
+
+        y_start = VectorXmp([mpfr_complex(1)]);
+
+        y_end = VectorXmp();
+
+        tracker.track_path(y_end, t_start, t_end, y_start);
+
+        self.assertEqual(y_end.rows(), 1)
+        self.assertLessEqual(abs(y_end[0].real-mpfr_complex(0).real), mpfr_float("1e-5"))
+        self.assertLessEqual(abs(y_end[0].imag-mpfr_complex(0).imag), mpfr_float("1e-5"))
+
+
 
 
     def test_add_systems(self):

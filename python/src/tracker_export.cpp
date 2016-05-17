@@ -63,7 +63,7 @@ namespace bertini{
 			.def("precision_setup", &TrackerT::PrecisionSetup)
 			.def("precision_preservation", &TrackerT::PrecisionPreservation)
 			.def("current_point", &TrackerT::CurrentPoint)
-			.def("change_precision", &TrackerT::ChangePrecision)
+//			.def("change_precision", &TrackerT::ChangePrecision)
 			.def("current_precision", &TrackerT::CurrentPrecision)
 			;
 		}
@@ -102,6 +102,7 @@ namespace bertini{
 		{
 			class_<AMPTracker, std::shared_ptr<AMPTracker> >("AMPTracker", init<const System&>())
 			.def(TrackerVisitor<AMPTracker>())
+			.def(AMPTrackerVisitor<AMPTracker>())
 			;
 		}
 
