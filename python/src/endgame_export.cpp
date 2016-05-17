@@ -91,8 +91,41 @@ namespace bertini{
 
 
 
+
+		void ExportEndgameSettings()
+		{
+
+			class_<config::Tolerances<double>>("Tolerances_d",init<>())
+			.def(TolerancesVisitor<double>());
+
+			class_<config::Tolerances<mpfr_float>>("Tolerances_mp",init<>())
+			.def(TolerancesVisitor<mpfr_float>());
+
+			class_<config::Security<double>>("Security_d",init<>())
+			.def(SecurityVisitor<double>());
+
+			class_<config::Security<mpfr_float>>("Security_mp",init<>())
+			.def(SecurityVisitor<mpfr_float>());
+
+			class_<config::PowerSeries>("PowerSeriesConfig",init<>())
+			.def(PowerSeriesConfigVisitor());
+
+
+			class_<config::Cauchy<double>>("CauchyConfig_d",init<>())
+			.def(CauchyConfigVisitor<double>());
+
+			class_<config::Cauchy<mpfr_float>>("CauchyConfig_mp",init<>())
+			.def(CauchyConfigVisitor<mpfr_float>());
+
+			
+		}
+
 		void ExportEndgames()
 		{
+			ExportEndgameSettings();
+
+
+
 			ExportAMPPSEG();
 			ExportFDPSEG();
 			ExportFMPSEG();

@@ -109,6 +109,116 @@ namespace bertini{
 
 		};// CauchyVisitor class
 
+
+
+
+
+		template<typename NumT>
+		class TolerancesVisitor: public def_visitor<TolerancesVisitor<NumT> >
+		{
+			friend class def_visitor_access;
+
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const
+			{
+				cl
+				.def_readwrite("newton_before_endgame", &Tolerances<NumT>::newton_before_endgame)
+				.def_readwrite("newton_during_endgame", &Tolerances<NumT>::newton_during_endgame)
+				.def_readwrite("final_tolerance", &Tolerances<NumT>::final_tolerance)
+				.def_readwrite("final_tolerance_multiplier", &Tolerances<NumT>::final_tolerance_multiplier)
+				.def_readwrite("path_truncation_threshold", &Tolerances<NumT>::path_truncation_threshold)
+				.def_readwrite("final_tolerance_times_final_tolerance_multiplier", &Tolerances<NumT>::final_tolerance_times_final_tolerance_multiplier)
+				;
+			}
+
+		};
+
+
+
+		template<typename NumT>
+		class SecurityVisitor: public def_visitor<SecurityVisitor<NumT> >
+		{
+			friend class def_visitor_access;
+
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const
+			{
+				cl
+				.def_readwrite("level", &Security<NumT>::level,"Turns on or off truncation of paths going to infinity during the endgame.  0 is off, 1 is on.")
+				.def_readwrite("max_norm", &Security<NumT>::max_norm,"If on, the norm of which to truncate a path.")
+				;
+			}
+
+		};
+
+
+
+
+		template<typename NumT>
+		class EndgameConfigVisitor: public def_visitor<EndgameConfigVisitor<NumT> >
+		{
+			friend class def_visitor_access;
+
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const
+			{
+				cl
+				.def_readwrite("num_sample_points", &config::Endgame<NumT>::num_sample_points,"The number of points to use for extrapolant calculation.  In the Power Series Endgame, the is the number of geometrically spaces points on the path.  For Cauchy, this is the number of points on each circle tracked around the target time value.")
+				.def_readwrite("min_track_time", &config::Endgame<NumT>::min_track_time,"The minimum distance from the target time to track to.  Decreasing this may help failing runs succeed, or maybe not, because you are, after all, tracking toward a singularity.")
+				.def_readwrite("sample_factor", &config::Endgame<NumT>::sample_factor,"The factor by which to space the geometrically spaced `distance' between sample points, or sample circles for Cauchy.")
+				.def_readwrite("max_num_newton_iterations", &config::Endgame<NumT>::max_num_newton_iterations,"the maximum number of newton iterations to be taken during sample point sharpening.  Increasing this can help speed convergence, at the risk of path jumping.")
+				;
+			}
+
+		};
+
+
+		class PowerSeriesConfigVisitor: public def_visitor<PowerSeriesConfigVisitor>
+		{
+			friend class def_visitor_access;
+
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const
+			{
+				cl
+				.def_readwrite("max_cycle_number", &config::PowerSeries::max_cycle_number,"The maximum cycle number to consider, when calculating the cycle number which best fits the path being tracked.")
+				.def_readwrite("cycle_number_amplification", &config::PowerSeries::cycle_number_amplification,"The maximum number allowable iterations during endgames, for points used to approximate the final solution.")
+				;
+			}
+
+		};
+
+
+
+
+
+		template<typename NumT>
+		class CauchyConfigVisitor: public def_visitor<CauchyConfigVisitor<NumT> >
+		{
+			friend class def_visitor_access;
+
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const
+			{
+				cl
+				.def_readwrite("cycle_cutoff_time", &config::Cauchy<NumT>::cycle_cutoff_time)
+				.def_readwrite("ratio_cutoff_time", &config::Cauchy<NumT>::ratio_cutoff_time)
+				.def_readwrite("minimum_for_c_over_k_stabilization", &config::Cauchy<NumT>::minimum_for_c_over_k_stabilization)
+				.def_readwrite("maximum_cauchy_ratio", &config::Cauchy<NumT>::maximum_cauchy_ratio)
+				.def_readwrite("fail_safe_maximum_cycle_number", &config::Cauchy<NumT>::fail_safe_maximum_cycle_number, "max number of loops before giving up." )
+				;
+			}
+
+		};
+
+
+
+
 		// now prototypes for expose functions defined in the .cpp files for the python bindings.
 
 		/**
