@@ -62,7 +62,7 @@ class EndgameTest(unittest.TestCase):
         #
         # self.end_point = VectorXmp();
         #
-        self.tracker = AMPTracker(self.sys);
+        self.amp_tracker = AMPTracker(self.sys);
         #
         #
         #BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
@@ -71,6 +71,10 @@ class EndgameTest(unittest.TestCase):
     def test_something(self):
         s = self.sys;
         self.assertLessEqual(1,2);
+
+
+    def test_pseg_d(self):
+
 
 if __name__ == '__main__':
     unittest.main();
