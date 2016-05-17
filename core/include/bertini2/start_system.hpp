@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //start_system.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with start_system.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-//  start_system.hpp
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 /**
 \file start_system.hpp 
@@ -32,8 +32,8 @@
 #ifndef BERTINI_START_SYSTEM_HPP
 #define BERTINI_START_SYSTEM_HPP
 
-#include "system.hpp"
-#include "limbo.hpp"
+#include "bertini2/system.hpp"
+#include "bertini2/limbo.hpp"
 
 
 namespace bertini 
@@ -131,7 +131,10 @@ namespace bertini
 			*/
 			mpz_int NumStartPoints() const override;
 
+			TotalDegree& operator*=(Nd const& n);
 
+			TotalDegree& operator+=(System const& sys) = delete;
+			
 		private:
 
 			/**
@@ -148,6 +151,7 @@ namespace bertini
 			*/
 			Vec<mpfr> GenerateStartPoint(mpfr,mpz_int index) const override;
 
+			std::shared_ptr<node::Rational> gamma_; ///< the gamma from the gamma trick.
 			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<mpz_int> degrees_; ///< stores the degrees of the functions.
 

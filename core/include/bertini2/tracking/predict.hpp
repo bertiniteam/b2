@@ -1,26 +1,27 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-//predict.hpp is free software: you can redistribute it and/or modify
+//tracking/predict.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//predict.hpp is distributed in the hope that it will be useful,
+//tracking/predict.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with predict.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with tracking/predict.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-//  predict.hpp
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Summer 2015
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 /**
 \file predict.hpp 
@@ -31,7 +32,7 @@
 #ifndef BERTINI_PREDICT_HPP
 #define BERTINI_PREDICT_HPP
 
-#include "tracking/ode_predictors.hpp"
+#include "bertini2/tracking/ode_predictors.hpp"
 
 namespace bertini{
 	namespace tracking{
@@ -67,12 +68,10 @@ namespace bertini{
 							   RealType const& tracking_tolerance)
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+			
+			predict::ExplicitRKPredictor predictor(predictor_choice);
 
-			switch (predictor_choice)
-			{
-				case config::Predictor::Euler:
-				{
-					return predict::Euler(next_space,
+			return predictor.Predict(next_space,
 									sys,
 									current_space, current_time, 
 									delta_t,
@@ -80,16 +79,6 @@ namespace bertini{
 									num_steps_since_last_condition_number_computation, 
 									frequency_of_CN_estimation, 
 									tracking_tolerance);
-					break;
-				}
-
-				default:
-				{
-					throw std::runtime_error("incompatible predictor choice in Predict");
-				}
-			}
-
-			return SuccessCode::Failure;
 		}
 
 
@@ -124,12 +113,10 @@ namespace bertini{
 							config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+			
+			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
 
-			switch (predictor_choice)
-			{
-				case config::Predictor::Euler:
-				{
-					return predict::Euler(next_space,
+			return predictor.Predict(next_space,
 										  size_proportion,
 										  norm_J,
 										  norm_J_inverse,
@@ -141,16 +128,6 @@ namespace bertini{
 										frequency_of_CN_estimation, 
 										tracking_tolerance,
 										AMP_config);
-					break;
-				}
-
-				default:
-				{
-					throw std::runtime_error("incompatible predictor choice in Predict with norms returned, but no error estimate");
-				}
-			}
-
-			return SuccessCode::Failure;
 		}
 
 
@@ -182,11 +159,9 @@ namespace bertini{
 		{
 			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 
-			switch (predictor_choice)
-			{
-				case config::Predictor::HeunEuler:
-				{
-					return predict::HeunEuler(next_space,
+			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
+
+			return predictor.Predict(next_space,
 												error_estimate,
 												size_proportion,
 												norm_J,
@@ -199,16 +174,6 @@ namespace bertini{
 												frequency_of_CN_estimation, 
 												tracking_tolerance,
 												AMP_config);
-					break;
-				}
-
-				default:
-				{
-					throw std::runtime_error("incompatible predictor choice in Predict, with return of error estimate");
-				}
-			}
-
-			return SuccessCode::Failure;
 		}
 
 
@@ -267,50 +232,6 @@ namespace bertini{
 		
 
 
-		namespace predict{
-
-
-			/**
-			\brief Get the Bertini2 default predictor.  
-
-			Currently set to Euler, though this will change in future versions.
-			*/
-			inline
-			config::Predictor DefaultPredictor()
-			{
-				return config::Predictor::Euler;
-			}
-
-
-			/**
-			The lowest order of the predictor.  The order of the error estimate is this plus one.
-			*/
-			inline
-			unsigned Order(config::Predictor predictor_choice)
-			{
-				switch (predictor_choice)
-				{
-					case (config::Predictor::Euler):
-						return 1;
-					case (config::Predictor::HeunEuler):
-						return 1;
-				}
-			}
-			
-
-			inline bool HasErrorEstimate(config::Predictor predictor_choice)
-			{
-				switch (predictor_choice)
-				{
-					case (config::Predictor::Euler):
-						return false;
-					case (config::Predictor::HeunEuler):
-						return true;
-				}
-			}
-
-
-		} // re: namespace predict
 
 		
 

@@ -1,0 +1,15 @@
+#this is src/detail/Makemodule.am
+
+detail_header_files = \
+	include/bertini2/detail/events.hpp \
+	include/bertini2/detail/pool.hpp \
+	include/bertini2/detail/visitable.hpp \
+	include/bertini2/detail/visitor.hpp
+
+detail = $(detail_header_files)
+
+
+detail_includedir = $(includedir)/bertini2/detail
+
+detail_include_HEADERS = \
+	$(detail_header_files)

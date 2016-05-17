@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //operator.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -12,6 +12,20 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with operator.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
 //
@@ -28,7 +42,7 @@
 #ifndef BERTINI_OPERATOR_HPP
 #define BERTINI_OPERATOR_HPP
 
-#include "function_tree/node.hpp"
+#include "bertini2/function_tree/node.hpp"
 
 #include <vector>
 
@@ -79,7 +93,7 @@ namespace node{
 		virtual ~UnaryOperator() = default;
 		
 		
-		void Reset() override
+		void Reset() const override
 		{
 			Node::ResetStoredValues();
 			child_->Reset();
@@ -95,7 +109,7 @@ namespace node{
 		
 		
 		//Return the only child for the unary operator
-		std::shared_ptr<Node> first_child()
+		std::shared_ptr<Node> first_child() const
 		{
 			return child_;
 		}
@@ -177,7 +191,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -202,34 +216,7 @@ namespace node{
 	};
 	
 	
-	/**
-	\brief An interface for all binary Operator types.
 
-	This class is an interface for all binary operators.
-	Children of the operator are stored in a vector.
-	*/
-	class BinaryOperator : public virtual Operator
-	{
-	public:
-		
-		
-		virtual void Reset() = 0; // override
-		
-		
-		
-	protected:
-		
-		virtual void print(std::ostream & target) const = 0;
-		BinaryOperator(){}
-
-	private:
-		friend class boost::serialization::access;
-		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
-			ar & boost::serialization::base_object<Operator>(*this);
-		}
-	};
 	
 	/**
 	\brief Abstract interface for n-ary Operator types.
@@ -238,14 +225,14 @@ namespace node{
 	Children of the operator are stored in a vector and methods to add and access children are available
 	in this interface.
 	*/
-	class NaryOperator : public virtual Node, public virtual Operator
+	class NaryOperator : public virtual Operator
 	{
 	public:
 		
 		virtual ~NaryOperator() = default;
 		
 		
-		void Reset() override
+		void Reset() const override
 		{
 			Node::ResetStoredValues();
 			for (auto ii:children_)
@@ -264,12 +251,12 @@ namespace node{
 		
 		
 		
-		size_t children_size()
+		size_t children_size() const
 		{
 			return children_.size();
 		}
 		
-		std::shared_ptr<Node> first_child()
+		std::shared_ptr<Node> first_child() const
 		{
 			return children_[0];
 		}
@@ -282,25 +269,31 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
+			
+			this->PrecisionChangeSpecific(prec);
 
 			for (auto iter : children_)
-			{
 				iter->precision(prec);
-			}
 		}
 
 		
 		
 	protected:
+		
 		//Stores all children for this operator node.
 		//This is an NaryOperator and can have any number of children.
 		std::vector< std::shared_ptr<Node> > children_;
 		NaryOperator(){}
 	private:
+
+		virtual void PrecisionChangeSpecific(unsigned prec) const
+		{}
+
+
 		friend class boost::serialization::access;
 		
 		template <typename Archive>

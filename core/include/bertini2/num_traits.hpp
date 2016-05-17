@@ -1,26 +1,26 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-//mpfr_extensions.hpp is free software: you can redistribute it and/or modify
+//num_traits.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//mpfr_extensions.hpp is distributed in the hope that it will be useful,
+//num_traits.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with .  If not, see <http://www.gnu.org/licenses/>.
+//along with num_traits.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  This file contains the bertini::NumTraits struct, which extends the Eigen NumTraits struct
-//
-//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 /**
 \file num_traits.hpp 
@@ -36,8 +36,8 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #include <random>
 #include <complex>
 #include <cmath>
-#include "mpfr_complex.hpp"
-#include "mpfr_extensions.hpp"
+#include "bertini2/mpfr_complex.hpp"
+#include "bertini2/mpfr_extensions.hpp"
 
 
 
@@ -67,6 +67,18 @@ namespace bertini
 		{
 			return 14;
 		}
+
+		inline
+		static unsigned TolToDigits(double tol)
+		{
+			return ceil(-log10(tol));
+		}
+
+		inline static 
+		double FromString(std::string const& s)
+		{
+			return boost::lexical_cast<double>(s);
+		}
 	};
 
 
@@ -80,6 +92,18 @@ namespace bertini
 		inline static unsigned NumFuzzyDigits()
 		{
 			return 14;
+		}
+
+		inline static 
+		std::complex<double> FromString(std::string const& s)
+		{
+			return boost::lexical_cast<std::complex<double>>(s);
+		}
+
+		inline static 
+		std::complex<double> FromString(std::string const& s, std::string const& t)
+		{
+			return std::complex<double>(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
 		}
 	};
 
@@ -196,6 +220,19 @@ namespace bertini {
 		{
 			return mpfr_float::default_precision()-3;
 		}
+
+		inline
+		static unsigned TolToDigits(mpfr_float tol)
+		{
+			mpfr_float b = ceil(-log10(tol));
+			return b.convert_to<unsigned int>();
+		}
+
+		inline static 
+		mpfr_float FromString(std::string const& s)
+		{
+			return mpfr_float(s);
+		}
 	};	
 
 
@@ -205,6 +242,18 @@ namespace bertini {
 		inline static unsigned NumDigits()
 		{
 			return mpfr_float::default_precision();
+		}
+
+		inline static 
+		bertini::complex FromString(std::string const& s)
+		{
+			return bertini::complex(s);
+		}
+
+		inline static 
+		bertini::complex FromString(std::string const& s, std::string const& t)
+		{
+			return bertini::complex(s,t);
 		}
 	};
 }

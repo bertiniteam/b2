@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //start_system.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,15 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with start_system.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-//  start_system.cpp
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
 
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 #include "start_system.hpp"
 
@@ -80,10 +79,18 @@ namespace bertini {
 
 			if (s.IsPatched())
 				CopyPatches(s);
+
+			gamma_ = std::make_shared<node::Rational>(node::Rational::Rand());
+			// *this *= static_cast<std::shared_ptr<node::Node> >(gamma_);
 			// boost::multiprecision::mpfr_float::default_precision(prev_prec);
 		}// total degree constructor
 
 		
+		TotalDegree& TotalDegree::operator*=(Nd const& n)
+		{
+			*this *= n;
+			return *this;
+		}
 		
 		
 
@@ -141,6 +148,12 @@ namespace bertini {
 			return start_point;
 		}
 
+		inline
+		TotalDegree operator*(TotalDegree td, std::shared_ptr<node::Node> const& n)
+		{
+			td *= n;
+			return td;
+		}
 
 	} // namespace start_system
 } //namespace bertini

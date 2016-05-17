@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //eigen_extensions.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -11,16 +11,16 @@
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with .  If not, see <http://www.gnu.org/licenses/>.
+//along with eigen_extensions.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Fall 2015
+// Copyright(C) 2016 by Bertini2 Development Team
 //
-//  This file contains extensions to types provided by Eigen.
-//
-//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 /**
 \file eigen_extensions.hpp 
@@ -32,17 +32,15 @@
 #define BERTINI_EIGEN_EXTENSIONS_HPP
 
 
-#include "num_traits.hpp"
+#include "bertini2/num_traits.hpp"
 
 
 #include <boost/serialization/complex.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <Eigen/Dense>
-#include <Eigen/LU>
-#include <Eigen/SVD>
-// reopen the Eigen namespace to inject this struct.
+#include <Eigen/Core>
+
 namespace Eigen {
 	
 	using mpfr_float = bertini::mpfr_float;
@@ -84,17 +82,52 @@ namespace Eigen {
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
 	};
 
-}
-
-
-
-
-
-// reopen the Eigen namespace to inject this struct.
-namespace Eigen {
 	
 	
-	
+
+	template<typename Expr> 
+	struct NumTraits<
+		boost::multiprecision::detail::expression<Expr,
+      	boost::multiprecision::number<boost::multiprecision::backends::mpfr_float_backend<0, boost::multiprecision::allocate_dynamic>,
+      	boost::multiprecision::expression_template_option::et_on>, int, void, void>
+      		> : NumTraits<mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	{
+		
+		typedef mpfr_float Real;
+		typedef mpfr_float NonInteger;
+		typedef mpfr_float Nested;
+		enum {
+			IsComplex = 0,
+			IsInteger = 0,
+			IsSigned = 1,
+			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
+			ReadCost = 20,
+			AddCost = 30,
+			MulCost = 40
+		};
+		
+		
+		inline static Real highest() {
+			
+			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//mpfr_float::default_precision());
+		}
+		
+		inline static Real lowest() {
+			return -highest();
+		}
+		
+		inline static Real dummy_precision()
+		{
+			return pow( mpfr_float(10),-int(mpfr_float::default_precision()-3));
+		}
+		
+		inline static Real epsilon()
+		{
+			return pow(mpfr_float(10),-int(mpfr_float::default_precision()));
+		}
+		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
+	};
+
 	/**
 	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
 
@@ -162,16 +195,138 @@ namespace Eigen {
 			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::real(x)*numext::imag(y) - numext::imag(x)*numext::real(y)); }
 		};
 
+		// see https://forum.kde.org/viewtopic.php?f=74&t=111176
+
+		//int
+		template<> 
+		struct scalar_product_traits<int,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, int> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		//long
+		template<> 
+		struct scalar_product_traits<long,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, long> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		//long long
+		template<> 
+		struct scalar_product_traits<long long,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, long long> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+
+		//mpfr_float
+		template<> 
+		struct scalar_product_traits<bertini::mpfr_float,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, bertini::mpfr_float> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		//mpz_int
+		template<> 
+		struct scalar_product_traits<bertini::mpz_int,bertini::complex> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+
+		template<> 
+		struct scalar_product_traits<bertini::complex, bertini::mpz_int> 
+		{
+	    	enum { Defined = 1 };
+	    	typedef bertini::complex ReturnType;
+		};
+		// template<> 
+		// struct scalar_product_traits<long,bertini::complex> 
+		// {
+	 //    	enum { Defined = 1 };
+	 //    	typedef bertini::complex ReturnType;
+		// };
+
+		// template<> 
+		// struct scalar_product_traits<bertini::complex, long> 
+		// {
+	 //    	enum { Defined = 1 };
+	 //    	typedef bertini::complex ReturnType;
+		// };
+
+		// template<> 
+		// struct scalar_product_traits<bertini::mpz_int,bertini::complex> 
+		// {
+	 //    	enum { Defined = 1 };
+	 //    	typedef bertini::complex ReturnType;
+		// };
+
+		// template<> 
+		// struct scalar_product_traits<bertini::complex, bertini::mpz_int> 
+		// {
+	 //    	enum { Defined = 1 };
+	 //    	typedef bertini::complex ReturnType;
+		// };
+
+		// now provide unary ops definitions using the above templates
+
+		// template<typename Derived>
+		// CwiseUnaryOp<internal::scalar_multiple2_op<int,bertini::complex>, const Derived>
+		// operator*(int& lhs, const DenseBase<Derived>& rhs) 
+		// {
+		// 	return CwiseUnaryOp<internal::scalar_multiple2_op<int,bertini::complex>, const Derived>
+		// 		(internal::scalar_multiple2_op<bertini::complex,int>(lhs), rhs.derived());
+		// }
+
+		
+
+
 	} // re: namespace internal
 } // re: namespace Eigen
 
+
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <Eigen/Eigenvalues>
+#include <Eigen/SVD>
 #include <Eigen/Dense>
 
 namespace bertini {
 
 	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
-
 
 	
 	/**

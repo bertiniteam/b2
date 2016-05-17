@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //symbol.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -12,6 +12,20 @@
 //
 //You should have received a copy of the GNU General Public License
 //along with symbol.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
 //
@@ -29,7 +43,7 @@
 #define BERTINI_FUNCTION_TREE_SYMBOL_HPP
 
 
-#include "function_tree/node.hpp"
+#include "bertini2/function_tree/node.hpp"
 
 
 
@@ -40,7 +54,7 @@ namespace node {
 
 	This class is an interface for all non-operators.
 	*/
-	class Symbol : public Node
+	class Symbol : public virtual Node
 	{
 		
 	public:
@@ -68,7 +82,7 @@ namespace node {
 	
 	Symbols which have names are named symbols.
 	*/
-	class NamedSymbol : public Symbol
+	class NamedSymbol : public virtual Symbol
 	{
 		std::string name_;
 	public:

@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //amp_criteria.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,14 +13,15 @@
 //You should have received a copy of the GNU General Public License
 //along with amp_criteria.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-//  amp_criteria.hpp
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Summer 2015
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
+
 
 #ifndef BERTINI_AMP_CRITERIA_HPP
 #define BERTINI_AMP_CRITERIA_HPP
@@ -32,7 +33,7 @@
 
 */
 
-#include "tracking/tracking_config.hpp"
+#include "bertini2/tracking/tracking_config.hpp"
 
 namespace bertini{
 	namespace tracking{
@@ -167,10 +168,12 @@ namespace bertini{
 
 			\return The value of the right hand side of the inequality from Criterion C.
 			*/
-			template<typename ComplexType ,typename RealType>
-			RealType CriterionCRHS(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename RealType, typename Derived>
+			RealType CriterionCRHS(RealType const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
+				using ComplexType = typename Derived::Scalar;
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
 				return CriterionCRHS(norm_J_inverse, z.norm(), tracking_tolerance, AMP_config);
 			}
 
@@ -188,10 +191,12 @@ namespace bertini{
 			\param z The current space point. 
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
-			template<typename ComplexType ,typename RealType>
-			bool CriterionC(RealType const& norm_J_inverse, Vec<ComplexType> const& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename RealType, typename Derived>
+			bool CriterionC(RealType const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
+				using ComplexType = typename Derived::Scalar;
 				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
+
 				return NumTraits<RealType>::NumDigits() > CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config);
 			}
 		}

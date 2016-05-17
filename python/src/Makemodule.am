@@ -1,26 +1,55 @@
 #this is src/python/Makemodule.am
 
 
-bertini_python_header_files =
+bertini_python_header_files = $(includedir)/bertini_python.hpp \
+				$(includedir)/function_tree.hpp \
+				$(includedir)/mpfr_export.hpp \
+				$(includedir)/node_export.hpp \
+				$(includedir)/symbol_export.hpp \
+				$(includedir)/operator_export.hpp \
+				$(includedir)/root_export.hpp \
+				$(includedir)/system_export.hpp \
+				$(includedir)/tracker.hpp
 
-bertini_python_source_files =
+
+bertini_python_source_files = src/bertini_python.cpp \
+				src/tracker_export.cpp \
+				src/mpfr_export.cpp \
+				src/node_export.cpp \
+				src/symbol_export.cpp \
+				src/operator_export.cpp \
+				src/root_export.cpp \
+				src/system_export.cpp \
+				minieigen/src/expose-converters.cpp \
+				minieigen/src/double-conversion/bignum-dtoa.cc \
+				minieigen/src/double-conversion/bignum.cc \
+				minieigen/src/double-conversion/cached-powers.cc \
+				minieigen/src/double-conversion/diy-fp.cc \
+				minieigen/src/double-conversion/double-conversion.cc \
+				minieigen/src/double-conversion/fast-dtoa.cc \
+				minieigen/src/double-conversion/fixed-dtoa.cc \
+				minieigen/src/double-conversion/strtod.cc 
+
 
 bertini_python = \
 	$(bertini_python_header_files) \
 	$(bertini_python_source_files)
 
 
-lib_LTLIBRARIES += libpybertini.la
+pyexec_LTLIBRARIES += pybertini.la 
+# we are building a PYTHON library.  
+# so this is explicitly NOT lib_LTLIBRARIES
 
-libpybertini_ladir = $(includedir)/libpybertini_la
+pybertini_ladir = $(DESTDIR)/$(bindir)
+pybertini_la_HEADERS =
+pybertini_la_SOURCES = $(bertini_python_header_files) $(bertini_python_source_files)
 
-libpybertini_la_HEADERS =
-libpybertini_la_SOURCES = $(bertini_python_header_files) $(bertini_python_source_files)
+
+pybertini_la_LIBADD = $(BOOST_LDFLAGS) $(PYTHON_LDFLAGS) $(PYTHON_EXTRA_LIBS) -l$(BOOST_PYTHON_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB)
+
+pybertini_la_LDFLAGS =  -module -avoid-version -shared
+#the above -module is so that the .so file is generated.  it also allows to not use the 'lib' prefix.
+
+pybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS)
 
 
-libpybertini_la_LIBADD = $(BOOST_LDFLAGS) $(PYTHON_LDFLAGS) $(PYTHON_EXTRA_LIBS) -l$(BOOST_PYTHON_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB)
-
-libpybertini_la_LDFLAGS =  -module -rpath '$(libdir)'
-#the above -module is so that the .so file is generated.  otherwise, on mac, it may just be the mac format dynamic library.
-
-libpybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS)
