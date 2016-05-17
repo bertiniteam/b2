@@ -38,8 +38,7 @@
 #include "function_tree.hpp"
 #include "system_export.hpp"
 #include "parser_export.hpp"
-#include "tracker.hpp"
-#include "endgame_export.hpp"
+#include "tracker_export.hpp"
 
 #endif
 

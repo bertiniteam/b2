@@ -13,7 +13,6 @@ tracking_include_HEADERS = \
 	include/bertini2/tracking/base_predictor.hpp \
 	include/bertini2/tracking/base_tracker.hpp \
 	include/bertini2/tracking/cauchy_endgame.hpp \
-	include/bertini2/tracking/correct.hpp \
 	include/bertini2/tracking/endgame.hpp \
 	include/bertini2/tracking/events.hpp \
 	include/bertini2/tracking/explicit_predictors.hpp \
