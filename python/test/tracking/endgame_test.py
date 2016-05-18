@@ -44,42 +44,87 @@ import pdb
 
 class EndgameTest(unittest.TestCase):
     def setUp(self):
-        self.toldbl = 1e-15;
-        self.x = Variable("x");
-        self.y = Variable("y");
-        self.t = Variable("t");
-        #
-        self.sys = System();
-        #
-        self.vars = VariableGroup();
-        #
-        self.vars.append(self.x);
-        self.vars.append(self.y);
-        #
-        self.sys.add_variable_group(self.vars);
-        #
-        self.sys.add_path_variable(self.t);
-        self.sys.add_function(pow(self.x,2) + (1-self.t)*self.x - 1);
-        self.sys.add_function(pow(self.y,2) + (1-self.t)*self.x*self.y - 2);
-        #
-        self.start_time = mpfr_complex(1);
-        self.end_time = mpfr_complex(0);
-        #
-        self.start_point = VectorXmp((mpfr_complex(1),sqrt(mpfr_complex(2))));
-        #
-        #
-        # self.end_point = VectorXmp();
-        #
-        self.amp_tracker = AMPTracker(self.sys);
-        #
-        #
-        #BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
-        #BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
+        self.ambient_precision = 50;
 
-    def test_something(self):
-        s = self.sys;
-        self.assertLessEqual(1,2);
+    def test_using_total_degree_ss(self):
+        default_precision(self.ambient_precision);
 
+        x = Variable("x");
+        y = Variable("y");
+        t = Variable("t");
+        #
+        sys = System();
+        #
+        var_grp = VariableGroup();
+        var_grp.append(x);
+        var_grp.append(y);
+
+        sys.add_variable_group(var_grp);
+
+        sys.add_function((x-1)**3)
+        sys.add_function((y-1)**2)
+
+        sys.homogenize();
+        sys.auto_patch();
+
+        self.assertEqual(sys.is_patched(), 1)
+        self.assertEqual(sys.is_homogeneous(), 1)
+
+        td = TotalDegree(sys);
+
+        self.assertEqual(td.is_patched(), 1)
+        self.assertEqual(td.is_homogeneous(), 1)
+
+        gamma = Rational.rand();
+
+
+        final_system = (1-t)*sys + gamma*t*td;
+        final_system.add_path_variable(t);
+
+        print(final_system)
+        prec_config = AMPConfig(final_system);
+
+        stepping_pref = Stepping_mp();
+        newton_pref = Newton();
+
+
+
+        tracker = AMPTracker(final_system);
+
+        tracker.setup(Predictor.RK4, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.precision_setup(prec_config);
+
+        num_paths_to_track = 6;
+
+        t_start = mpfr_complex(1);
+        t_endgame_boundary = mpfr_complex("0.1");
+        t_final = mpfr_complex(0);
+
+        bdry_points = [VectorXmp() for i in range(num_paths_to_track)]
+        for i in range(num_paths_to_track):
+            default_precision(self.ambient_precision);
+            final_system.precision(self.ambient_precision);
+            start_point = td.start_pointmp(mpfr_int(i));
+
+            bdry_pt = VectorXmp();
+            track_success_code = tracker.track_path(bdry_pt,t_start, t_endgame_boundary, start_point);
+            bdry_points[i] = bdry_pt;
+
+            self.assertEqual(track_success_code, SuccessCode.Success)
+
+        
+        tracker.setup(Predictor.HeunEuler, mpfr_float("1e-6"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        my_endgame = AMPCauchyEG(tracker);
+
+
+        final_homogenized_solutions = [VectorXmp() for i in range(num_paths_to_track)]
+        for i in range(num_paths_to_track):
+            default_precision(self.ambient_precision);
+            final_system.precision(bdry_points[i][0].precision());
+            track_success_code = my_endgame.run(t_endgame_boundary,bdry_points[i]);
+            final_homogenized_solutions[i] = my_endgame.final_approximation();
+            print(final_system.dehomogenize_point(final_homogenized_solutions[i]));
+            self.assertEqual(track_success_code, SuccessCode.Success)
 
 
 if __name__ == '__main__':
