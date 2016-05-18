@@ -66,6 +66,8 @@ namespace bertini{
 		
 		void ExportRoots()
 		{
+			scope s1 = class_<PyBertiniNamespace<defined_namespace::function_tree::Root>>("root");
+
 			// Function class
 			class_<Function, bases<NamedSymbol>, std::shared_ptr<Function> >("Function", init<std::string>())
 			.def(init<const Nodeptr&>() )

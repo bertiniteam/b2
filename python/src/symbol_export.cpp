@@ -89,7 +89,8 @@ namespace bertini{
 		
 		void ExportSymbols()
 		{
-			
+			scope s1 = class_<PyBertiniNamespace<defined_namespace::function_tree::Symbol>>("symbol");
+
 			// Symbol class
 			class_<Symbol, boost::noncopyable, bases<Node>, std::shared_ptr<Symbol> >("Symbol", no_init)
 			;

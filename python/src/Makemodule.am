@@ -2,7 +2,7 @@
 
 
 bertini_python_header_files = $(includedir)/bertini_python.hpp \
-				$(includedir)/function_tree.hpp \
+				$(includedir)/function_tree_export.hpp \
 				$(includedir)/mpfr_export.hpp \
 				$(includedir)/node_export.hpp \
 				$(includedir)/symbol_export.hpp \

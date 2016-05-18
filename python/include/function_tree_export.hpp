@@ -47,6 +47,10 @@ namespace bertini{
 		using namespace bertini::node;
 		using Node = Node;
 		using Nodeptr = std::shared_ptr<Node>;
+
+
+		
+
 		void SetupFunctionTree()
 		{
 			// Tell Python that pointers to derived Nodes can be used as Node pointers when passed to methods

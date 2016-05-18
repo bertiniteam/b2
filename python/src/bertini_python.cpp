@@ -48,10 +48,15 @@ namespace bertini
 			ExportMinieigen();
 		
 			SetupFunctionTree();
-			ExportNode();
-			ExportSymbols();
-			ExportOperators();
-			ExportRoots();
+
+			{
+				scope s0 = class_<PyBertiniNamespace<defined_namespace::FunctionTree>>("function_tree");
+
+				ExportNode();
+				ExportSymbols();
+				ExportOperators();
+				ExportRoots();
+			}
 			
 			ExportSystem();
 			
