@@ -30,6 +30,12 @@
 __author__ = 'James Collins'
 
 from pybertini import *
+from pybertini.function_tree.symbol import *
+from pybertini.function_tree.root import *
+from pybertini.function_tree import *
+from pybertini.tracking import *
+from pybertini.tracking.config import *
+
 import unittest
 import numpy as np
 import pdb

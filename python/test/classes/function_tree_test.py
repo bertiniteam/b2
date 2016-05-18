@@ -28,6 +28,8 @@
 
 from pybertini import *
 from pybertini.function_tree.symbol import *
+from pybertini.function_tree.root import *
+from pybertini.function_tree import *
 import numpy as np;
 import unittest
 
