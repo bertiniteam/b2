@@ -56,13 +56,11 @@
 #include <bertini2/mpfr_extensions.hpp>
 #include <bertini2/eigen_extensions.hpp>
 
+#include "namespaces.hpp"
+
+
 using namespace boost::python;
 typedef bertini::mpfr_float bmp;
-
-
-template<typename T>
-struct PyBertiniNamespace
-{};
 
 
 #endif

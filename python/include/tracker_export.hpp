@@ -42,15 +42,6 @@
 namespace bertini{
 	namespace python{
 
-		namespace TrackingNamespace
-		{
-			class Tracking{};
-			class Config{};
-			class Predictor{};
-			class SuccessCode{};
-		}
-
-
 
 		using namespace bertini::tracking;
 
@@ -209,7 +200,26 @@ namespace bertini{
 
 
 		
+		template<typename NumT>
+		class TolerancesVisitor: public def_visitor<TolerancesVisitor<NumT> >
+		{
+			friend class def_visitor_access;
 
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const
+			{
+				cl
+				.def_readwrite("newton_before_endgame", &Tolerances<NumT>::newton_before_endgame)
+				.def_readwrite("newton_during_endgame", &Tolerances<NumT>::newton_during_endgame)
+				.def_readwrite("final_tolerance", &Tolerances<NumT>::final_tolerance)
+				.def_readwrite("final_tolerance_multiplier", &Tolerances<NumT>::final_tolerance_multiplier)
+				.def_readwrite("path_truncation_threshold", &Tolerances<NumT>::path_truncation_threshold)
+				.def_readwrite("final_tolerance_times_final_tolerance_multiplier", &Tolerances<NumT>::final_tolerance_times_final_tolerance_multiplier)
+				;
+			}
+
+		};
 		
 		
 		// now prototypes for expose functions defined in the .cpp files for the python bindings.

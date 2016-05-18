@@ -122,6 +122,8 @@ namespace bertini{
 
 		void ExportOperators()
 		{
+			scope s1 = class_<PyBertiniNamespace<defined_namespace::function_tree::Operator>>("operator");
+
 			// Operator class
 			class_<Operator, boost::noncopyable, bases<Node>, std::shared_ptr<Operator> >("Operator", no_init)
 			;

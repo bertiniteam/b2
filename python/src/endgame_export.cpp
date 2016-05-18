@@ -94,13 +94,7 @@ namespace bertini{
 
 		void ExportEndgameSettings()
 		{
-			scope s1 = class_<PyBertiniNamespace<EndgameNamespace::Config>>("config");
-
-			class_<config::Tolerances<double>>("Tolerances_d",init<>())
-			.def(TolerancesVisitor<double>());
-
-			class_<config::Tolerances<mpfr_float>>("Tolerances_mp",init<>())
-			.def(TolerancesVisitor<mpfr_float>());
+			scope s1 = class_<PyBertiniNamespace<defined_namespace::endgame::Config>>("config");
 
 			class_<config::Security<double>>("Security_d",init<>())
 			.def(SecurityVisitor<double>());
@@ -123,11 +117,9 @@ namespace bertini{
 
 		void ExportEndgames()
 		{
-			scope s1 = class_<PyBertiniNamespace<EndgameNamespace::Endgame>>("endgame");
+			scope s1 = class_<PyBertiniNamespace<defined_namespace::Endgame>>("endgame");
 
 			ExportEndgameSettings();
-
-
 
 			ExportAMPPSEG();
 			ExportFDPSEG();
