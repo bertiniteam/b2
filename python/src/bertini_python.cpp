@@ -41,6 +41,9 @@ namespace bertini
 
 		BOOST_PYTHON_MODULE(pybertini) // this name must match the name of the generated .so file.
 		{
+			object package = scope();
+		    package.attr("__path__") = "pybertini";
+
 			ExportContainers();
 			
 			ExportMpfr();
@@ -50,14 +53,20 @@ namespace bertini
 			SetupFunctionTree();
 
 			{
-				scope s0 = class_<PyBertiniNamespace<defined_namespace::FunctionTree>>("function_tree");
+				scope current_scope;
+				std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+				new_submodule_name.append(".function_tree");
+				object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+				current_scope.attr("function_tree") = new_submodule;
+
+				scope new_submodule_scope = new_submodule;
 
 				ExportNode();
 				ExportSymbols();
 				ExportOperators();
 				ExportRoots();
 			}
-			
+
 			ExportSystem();
 			
 			ExportParsers();

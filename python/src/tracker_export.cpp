@@ -120,8 +120,14 @@ namespace bertini{
 
 		void ExportTrackers()
 		{	
-			scope s0 = class_<PyBertiniNamespace<defined_namespace::Tracking>>("tracking");
+			scope current_scope;
+			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+			new_submodule_name.append(".tracking");
+			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+			current_scope.attr("tracking") = new_submodule;
 
+			scope new_submodule_scope = new_submodule;
+			
 			ExportConfigSettings();
 			ExportAMPTracker();
 			ExportFixedTrackers();
@@ -197,8 +203,14 @@ namespace bertini{
 				;
 			
 			{ // enter a scope for config types
-				
-				scope s3 = class_<PyBertiniNamespace<defined_namespace::tracking::Config>>("config");
+				scope current_scope;
+				std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+				new_submodule_name.append(".config");
+				object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+				current_scope.attr("config") = new_submodule;
+
+				scope new_submodule_scope = new_submodule;
+
 
 				class_<config::Tolerances<double>>("Tolerances_d",init<>())
 					.def(TolerancesVisitor<double>());
@@ -244,7 +256,7 @@ namespace bertini{
 					.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
 					;
 				
-				def("amp_config_from", &AMPConfigFrom);
+				def("amp_config_from", &AMPConfigFrom, "make an AMPConfig from a System with generated settings for system-specific things, and default settings otherwise (such as safety digits).");
 			}
 			
 		}
