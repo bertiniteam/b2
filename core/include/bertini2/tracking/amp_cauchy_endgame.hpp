@@ -34,8 +34,8 @@
 */
 
 
-#include "tracking/cauchy_endgame.hpp"
-#include "tracking/amp_endgame.hpp"
+#include "bertini2/tracking/cauchy_endgame.hpp"
+#include "bertini2/tracking/amp_endgame.hpp"
 
 
 
@@ -47,8 +47,7 @@ namespace bertini {  namespace tracking  { namespace endgame  {
 class AMPCauchyEndgame : public CauchyEndgame<AMPTracker,AMPCauchyEndgame, dbl,mpfr>, 
 							  public AMPEndgamePolicyBase
 {
-	using TrackerType = AMPTracker;
-	using EGType = CauchyEndgame<TrackerType, AMPCauchyEndgame, dbl, mpfr>;
+	
 protected:
 
 
@@ -184,7 +183,9 @@ protected:
 	}
 
 public:
-
+	using TrackerType = AMPTracker;
+	using EGType = CauchyEndgame<TrackerType, AMPCauchyEndgame, dbl, mpfr>;
+	
 	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time) const
 	{
 		using RT = mpfr_float;

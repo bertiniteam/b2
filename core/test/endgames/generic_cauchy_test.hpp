@@ -1128,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 
 	TestedEGType my_endgame(tracker);
 
-	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
+	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - solution).norm() < my_endgame.Tolerances().newton_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 1);
@@ -1184,7 +1184,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 	
 	TestedEGType my_endgame(tracker);
 
-	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
+	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
@@ -1247,7 +1247,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 
 	
 	TestedEGType my_endgame(tracker);
-	auto cauchy_endgame_success = my_endgame.CauchyEG(time,sample);
+	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).norm() < my_endgame.Tolerances().newton_during_endgame);
@@ -1303,7 +1303,7 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
-	my_endgame.CauchyEG(current_time,current_space);
+	my_endgame.Run(current_time,current_space);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < my_endgame.Tolerances().newton_during_endgame);
 
@@ -1402,7 +1402,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	{
 		mpfr_float::default_precision(ambient_precision);
 		final_griewank_osborn_system.precision(Precision(s(0)));
-		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
+		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 
 		if(endgame_success == SuccessCode::Success)
 		{
@@ -1532,7 +1532,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	{
 		mpfr_float::default_precision(ambient_precision);
 		final_system.precision(Precision(s(0)));
-		SuccessCode endgame_success = my_endgame.CauchyEG(t_endgame_boundary,s);
+		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{
 			if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation<BCT>())-correct).norm() < my_endgame.Tolerances().newton_during_endgame)

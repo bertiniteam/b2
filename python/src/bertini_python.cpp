@@ -58,6 +58,8 @@ namespace bertini
 			ExportParsers();
 
 			ExportTrackers();
+
+			ExportEndgames();
 		}
 	
 	}

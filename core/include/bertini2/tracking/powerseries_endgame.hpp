@@ -549,7 +549,7 @@ public:
 	*/
 
 	/**
-	\brief This function runs the Power Series endgame. 
+	\brief Primary function running the Power Series endgame. 
 
 	Tracking forward with the number of sample points, this function will make approximations using Hermite interpolation. This process will continue until two consecutive
 	approximations are withing final tolerance of each other. 
@@ -560,7 +560,7 @@ public:
 	\tparam CT The complex number type.
 	*/		
 	template<typename CT>
-	SuccessCode PSEG(const CT & start_time, const Vec<CT> & start_point)
+	SuccessCode Run(const CT & start_time, const Vec<CT> & start_point)
 	{
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{

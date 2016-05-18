@@ -46,8 +46,7 @@ namespace bertini{ namespace tracking { namespace endgame {
 class AMPPowerSeriesEndgame : public PowerSeriesEndgame<AMPTracker,AMPPowerSeriesEndgame, dbl,mpfr>, 
 							  public AMPEndgamePolicyBase
 {
-	using TrackerType = AMPTracker;
-	using EGType = PowerSeriesEndgame<TrackerType, AMPPowerSeriesEndgame, dbl, mpfr>;
+	
 protected:
 
 	void ChangeTemporariesPrecisionImpl(unsigned new_precision) const override
@@ -148,7 +147,9 @@ protected:
 		}
 	}
 public:
-
+	using TrackerType = AMPTracker;
+	using EGType = PowerSeriesEndgame<TrackerType, AMPPowerSeriesEndgame, dbl, mpfr>;
+	
 	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time) const
 	{
 		using RT = mpfr_float;

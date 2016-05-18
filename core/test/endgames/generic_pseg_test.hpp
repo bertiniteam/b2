@@ -677,7 +677,7 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
-	my_endgame.PSEG(current_time,current_space);
+	my_endgame.Run(current_time,current_space);
 
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
@@ -750,7 +750,7 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 	config::Tolerances<BRT> tolerances;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
-	my_endgame.PSEG(t_endgame_boundary,eg_boundary_point);
+	my_endgame.Run(t_endgame_boundary,eg_boundary_point);
 
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),1);//my_endgame.
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct_root).norm() < 1e-11);//my_endgame.GetTrackToleranceDuringEndgame());
@@ -813,7 +813,7 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
-	my_endgame.PSEG(current_time,current_space);
+	my_endgame.Run(current_time,current_space);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-10);//my_endgame.GetTrackToleranceDuringEndgame());
 
@@ -931,7 +931,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	for (const auto& s : current_space_values)
 	{
 		mpfr_float::default_precision(ambient_precision);
-		SuccessCode endgame_success = my_endgame.PSEG(endgame_time,s);
+		SuccessCode endgame_success = my_endgame.Run(endgame_time,s);
 		if(endgame_success == SuccessCode::Success){
 			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);// my_endgame.GetTrackToleranceDuringEndgame());
 			num_paths_converging++;
@@ -1037,7 +1037,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	unsigned num_min_track_time_reached = 0;
 	for (auto const& s : homogenized_solutions)
 	{
-		SuccessCode endgame_success = my_endgame.PSEG(t_endgame_boundary,s);
+		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{
 				num_successful_occurences++;
@@ -1115,7 +1115,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 	TestedEGType my_endgame(tracker);
 
 
-	auto endgame_success = my_endgame.PSEG(t_endgame_boundary,soln_at_EG_bdry);
+	auto endgame_success = my_endgame.Run(t_endgame_boundary,soln_at_EG_bdry);
 	BOOST_CHECK(endgame_success==SuccessCode::Success);
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();

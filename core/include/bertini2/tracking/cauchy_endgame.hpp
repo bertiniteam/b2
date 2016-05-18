@@ -884,7 +884,7 @@ public:
 	*/
 
 	/**
-	\brief Function that runs the Cauchy endgame.
+	\brief Primary function that runs the Cauchy endgame.
 	To begin, this function will compute a first approximation using the power series endgame notion. This approximation is made after a heuristic on the stabilization of 
 	the cyle number is made, and after the maximum and minimum norms of tracked space values around the origin are withing a certain tolerance. 			
 	\param[out] start_time The time value at which we start the endgame. 
@@ -892,7 +892,7 @@ public:
 	\tparam CT The complex number type.
 	*/
 	template<typename CT>
-	SuccessCode CauchyEG(CT start_time, Vec<CT> start_point)
+	SuccessCode Run(CT start_time, Vec<CT> start_point)
 	{	
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{
