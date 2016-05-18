@@ -60,7 +60,9 @@ using namespace boost::python;
 typedef bertini::mpfr_float bmp;
 
 
-
+template<typename T>
+struct PyBertiniNamespace
+{};
 
 
 #endif

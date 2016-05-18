@@ -41,6 +41,11 @@
 namespace bertini{
 	namespace python{
 
+		namespace EndgameNamespace
+		{
+			class Endgame{};
+			class Config{};
+		}
 
 		using namespace bertini::tracking;
 

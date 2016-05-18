@@ -94,6 +94,7 @@ namespace bertini{
 
 		void ExportEndgameSettings()
 		{
+			scope s1 = class_<PyBertiniNamespace<EndgameNamespace::Config>>("config");
 
 			class_<config::Tolerances<double>>("Tolerances_d",init<>())
 			.def(TolerancesVisitor<double>());
@@ -122,6 +123,8 @@ namespace bertini{
 
 		void ExportEndgames()
 		{
+			scope s1 = class_<PyBertiniNamespace<EndgameNamespace::Endgame>>("endgame");
+
 			ExportEndgameSettings();
 
 

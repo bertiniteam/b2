@@ -120,8 +120,9 @@ namespace bertini{
 
 		void ExportTrackers()
 		{	
-			ExportConfigSettings();
+			scope s0 = class_<PyBertiniNamespace<TrackingNamespace::Tracking>>("tracking");
 
+			ExportConfigSettings();
 			ExportAMPTracker();
 			ExportFixedTrackers();
 		}
@@ -162,7 +163,7 @@ namespace bertini{
 		void ExportConfigSettings()
 		{
 			using namespace bertini::tracking::config;
-			
+
 			enum_<Predictor>("Predictor")
 			.value("Constant", Predictor::Constant)
 			.value("Euler", Predictor::Euler)
@@ -174,7 +175,6 @@ namespace bertini{
 			.value("RKCashKarp45", Predictor::RKCashKarp45)
 			.value("RKDormandPrince56", Predictor::RKDormandPrince56)
 			.value("RKVerner67", Predictor::RKVerner67)
-			.export_values()
 			;
 
 			enum_<SuccessCode>("SuccessCode")
@@ -194,50 +194,51 @@ namespace bertini{
 			.value("MinTrackTimeReached", SuccessCode::MinTrackTimeReached)
 			.value("SecurityMaxNormReached", SuccessCode::SecurityMaxNormReached)
 			.value("CycleNumTooHigh", SuccessCode::CycleNumTooHigh)
-			.export_values()
 			;
 			
-			
-			class_<Stepping<double>, std::shared_ptr<Stepping<double>> >("Stepping_d", init<>())
-			.def(SteppingVisitor<double>())
-			;
-			
-			class_<Stepping<mpfr_float>, std::shared_ptr<Stepping<mpfr_float>> >("Stepping_mp", init<>())
-			.def(SteppingVisitor<mpfr_float>())
-			;
-			
-			class_<Newton, std::shared_ptr<Newton> >("Newton", init<>())
-			.def_readwrite("max_num_newton_iterations", &Newton::max_num_newton_iterations)
-			.def_readwrite("min_num_newton_iterations", &Newton::min_num_newton_iterations)
-			;
-			
-			
-			class_<FixedPrecisionConfig<dbl>, std::shared_ptr<FixedPrecisionConfig<dbl>> >("FixedPrecisionConfig", init<System const&>());
-			class_<FixedPrecisionConfig<mpfr>, std::shared_ptr<FixedPrecisionConfig<mpfr>> >("FixedPrecisionConfig", init<System const&>());
+			{
+				scope s3 = class_<PyBertiniNamespace<TrackingNamespace::Config>>("config");
+
+				class_<Stepping<double>, std::shared_ptr<Stepping<double>> >("Stepping_d", init<>())
+				.def(SteppingVisitor<double>())
+				;
+				
+				class_<Stepping<mpfr_float>, std::shared_ptr<Stepping<mpfr_float>> >("Stepping_mp", init<>())
+				.def(SteppingVisitor<mpfr_float>())
+				;
+				
+				class_<Newton, std::shared_ptr<Newton> >("Newton", init<>())
+				.def_readwrite("max_num_newton_iterations", &Newton::max_num_newton_iterations)
+				.def_readwrite("min_num_newton_iterations", &Newton::min_num_newton_iterations)
+				;
+				
+				
+				class_<FixedPrecisionConfig<dbl>, std::shared_ptr<FixedPrecisionConfig<dbl>> >("FixedPrecisionConfig", init<System const&>());
+				class_<FixedPrecisionConfig<mpfr>, std::shared_ptr<FixedPrecisionConfig<mpfr>> >("FixedPrecisionConfig", init<System const&>());
 
 
-			
-			
-			class_<AdaptiveMultiplePrecisionConfig, std::shared_ptr<AdaptiveMultiplePrecisionConfig> >("AMPConfig", init<>())
-			.def(init<System const&>())
-			.def("set_amp_config_from", &AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom)
-			.def("set_phi_psi_from_bounds", &AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds)
-			.def("set_bounds_and_epsilon_from", &AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom)
-			.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
-			.def_readwrite("degree_bound", &AdaptiveMultiplePrecisionConfig::degree_bound)
-			.def_readwrite("epsilon", &AdaptiveMultiplePrecisionConfig::epsilon)
-			.def_readwrite("phi", &AdaptiveMultiplePrecisionConfig::Phi)
-			.def_readwrite("psi", &AdaptiveMultiplePrecisionConfig::Psi)
-			.def_readwrite("safety_digits_1", &AdaptiveMultiplePrecisionConfig::safety_digits_1)
-			.def_readwrite("safety_digits_2", &AdaptiveMultiplePrecisionConfig::safety_digits_2)
-			.def_readwrite("maximum_precision", &AdaptiveMultiplePrecisionConfig::maximum_precision)
-			.def_readwrite("consecutive_successful_steps_before_precision_decrease", &AdaptiveMultiplePrecisionConfig::consecutive_successful_steps_before_precision_decrease)
-			.def_readwrite("max_num_precision_decreases", &AdaptiveMultiplePrecisionConfig::max_num_precision_decreases)
-			.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
-			;
-			
-			def("amp_config_from", &AMPConfigFrom);
-			
+				
+				
+				class_<AdaptiveMultiplePrecisionConfig, std::shared_ptr<AdaptiveMultiplePrecisionConfig> >("AMPConfig", init<>())
+				.def(init<System const&>())
+				.def("set_amp_config_from", &AdaptiveMultiplePrecisionConfig::SetAMPConfigFrom)
+				.def("set_phi_psi_from_bounds", &AdaptiveMultiplePrecisionConfig::SetPhiPsiFromBounds)
+				.def("set_bounds_and_epsilon_from", &AdaptiveMultiplePrecisionConfig::SetBoundsAndEpsilonFrom)
+				.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
+				.def_readwrite("degree_bound", &AdaptiveMultiplePrecisionConfig::degree_bound)
+				.def_readwrite("epsilon", &AdaptiveMultiplePrecisionConfig::epsilon)
+				.def_readwrite("phi", &AdaptiveMultiplePrecisionConfig::Phi)
+				.def_readwrite("psi", &AdaptiveMultiplePrecisionConfig::Psi)
+				.def_readwrite("safety_digits_1", &AdaptiveMultiplePrecisionConfig::safety_digits_1)
+				.def_readwrite("safety_digits_2", &AdaptiveMultiplePrecisionConfig::safety_digits_2)
+				.def_readwrite("maximum_precision", &AdaptiveMultiplePrecisionConfig::maximum_precision)
+				.def_readwrite("consecutive_successful_steps_before_precision_decrease", &AdaptiveMultiplePrecisionConfig::consecutive_successful_steps_before_precision_decrease)
+				.def_readwrite("max_num_precision_decreases", &AdaptiveMultiplePrecisionConfig::max_num_precision_decreases)
+				.def_readwrite("coefficient_bound", &AdaptiveMultiplePrecisionConfig::coefficient_bound)
+				;
+				
+				def("amp_config_from", &AMPConfigFrom);
+			}
 			
 		}
 

@@ -42,6 +42,15 @@
 namespace bertini{
 	namespace python{
 
+		namespace TrackingNamespace
+		{
+			class Tracking{};
+			class Config{};
+			class Predictor{};
+			class SuccessCode{};
+		}
+
+
 
 		using namespace bertini::tracking;
 
