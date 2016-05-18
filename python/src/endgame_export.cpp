@@ -94,7 +94,13 @@ namespace bertini{
 
 		void ExportEndgameSettings()
 		{
-			scope s1 = class_<PyBertiniNamespace<defined_namespace::endgame::Config>>("config");
+			scope current_scope;
+			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+			new_submodule_name.append(".config");
+			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+			current_scope.attr("config") = new_submodule;
+
+			scope new_submodule_scope = new_submodule;
 
 			class_<config::Security<double>>("Security_d",init<>())
 			.def(SecurityVisitor<double>());
@@ -117,7 +123,13 @@ namespace bertini{
 
 		void ExportEndgames()
 		{
-			scope s1 = class_<PyBertiniNamespace<defined_namespace::Endgame>>("endgame");
+			scope current_scope;
+			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+			new_submodule_name.append(".endgame");
+			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+			current_scope.attr("endgame") = new_submodule;
+
+			scope new_submodule_scope = new_submodule;
 
 			ExportEndgameSettings();
 

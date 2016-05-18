@@ -27,6 +27,7 @@
 # 
 
 from pybertini import *
+from pybertini.function_tree.symbol import *
 import numpy as np;
 import unittest
 
