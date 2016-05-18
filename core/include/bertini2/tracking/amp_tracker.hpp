@@ -1144,13 +1144,13 @@ namespace bertini{
 				SuccessCode code;
 				if (current_precision_==DoublePrecision())
 				{
-					code = RefineImpl<dbl,double>(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_));
+					code = RefineImpl<dbl>(std::get<Vec<dbl> >(temporary_space_),std::get<Vec<dbl> >(current_space_), dbl(current_time_));
 					if (code == SuccessCode::Success)
 						std::get<Vec<dbl> >(current_space_) = std::get<Vec<dbl> >(temporary_space_);
 				}
 				else
 				{
-					code = RefineImpl<mpfr,mpfr_float>(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_);
+					code = RefineImpl<mpfr>(std::get<Vec<mpfr> >(temporary_space_),std::get<Vec<mpfr> >(current_space_), current_time_);
 					if (code == SuccessCode::Success)
 						std::get<Vec<mpfr> >(current_space_) = std::get<Vec<mpfr> >(temporary_space_);
 				}
@@ -1173,10 +1173,12 @@ namespace bertini{
 
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
-			template <typename ComplexType, typename RealType>
+			template <typename ComplexType>
 			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
 			{
+				using RealType = typename Eigen::NumTraits<ComplexType>::Real;
+				
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
