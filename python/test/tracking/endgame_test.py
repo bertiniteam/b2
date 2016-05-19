@@ -94,7 +94,7 @@ class EndgameTest(unittest.TestCase):
         tracker.setup(Predictor.RK4, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
         tracker.precision_setup(prec_config);
 
-        num_paths_to_track = 6;
+        num_paths_to_track = td.num_start_points;
 
         t_start = mpfr_complex(1);
         t_endgame_boundary = mpfr_complex("0.1");
@@ -112,6 +112,7 @@ class EndgameTest(unittest.TestCase):
 
             self.assertEqual(track_success_code, SuccessCode.Success)
 
+
         
         tracker.setup(Predictor.HeunEuler, mpfr_float("1e-6"), mpfr_float("1e5"), stepping_pref, newton_pref);
         my_endgame = AMPCauchyEG(tracker);
@@ -119,7 +120,7 @@ class EndgameTest(unittest.TestCase):
 
         final_homogenized_solutions = [VectorXmp() for i in range(num_paths_to_track)]
         for i in range(num_paths_to_track):
-            default_precision(self.ambient_precision);
+            default_precision(bdry_points[i][0].precision());
             final_system.precision(bdry_points[i][0].precision());
             track_success_code = my_endgame.run(t_endgame_boundary,bdry_points[i]);
             final_homogenized_solutions[i] = my_endgame.final_approximation();
