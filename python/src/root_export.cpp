@@ -66,6 +66,14 @@ namespace bertini{
 		
 		void ExportRoots()
 		{
+			scope current_scope;
+			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+			new_submodule_name.append(".root");
+			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+			current_scope.attr("root") = new_submodule;
+
+			scope new_submodule_scope = new_submodule;
+
 			// Function class
 			class_<Function, bases<NamedSymbol>, std::shared_ptr<Function> >("Function", init<std::string>())
 			.def(init<const Nodeptr&>() )

@@ -11,8 +11,7 @@ basics_header_files = \
 	include/bertini2/enable_permuted_arguments.hpp \
 	include/bertini2/patch.hpp \
 	include/bertini2/slice.hpp \
-	include/bertini2/logging.hpp \
-	include/bertini2/config.h
+	include/bertini2/logging.hpp
 
 basics_source_files = \
 	src/basics/mpfr_extensions.cpp \

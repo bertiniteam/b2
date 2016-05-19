@@ -164,8 +164,8 @@ namespace bertini{
 		
 		
 		void ExportNode()
-		{
-			class_<NodeWrap, boost::noncopyable, Nodeptr >("Node", no_init)
+		{			
+			class_<NodeWrap, boost::noncopyable, Nodeptr >("AbstractNode", no_init)
 			.def(NodeVisitor<Node>())
 			;
 

@@ -61,7 +61,7 @@ AC_ARG_ENABLE([thread_local],
 AS_IF([test "x$enable_thread_local" != "xno"],[
 	AC_DEFINE([USE_THREAD_LOCAL], [1],[Define if thread_local keyword should be used.  ])
 ]
-  
+
 )
 
 
@@ -99,7 +99,7 @@ AC_SEARCH_LIBS([cos], [m], [], [
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
 
-AX_BOOST_BASE([1.55],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.55, but it was not found in your system])])
+AX_BOOST_BASE([1.56],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.56 (serialization of std::shared_ptr<T> appears in 1.56), but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
@@ -120,10 +120,3 @@ AM_CONFIG_HEADER(include/bertini2/config.h)
 
 #wrap it up.
 AC_OUTPUT
-
-
-
-
-
-
-

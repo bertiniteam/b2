@@ -35,10 +35,11 @@
 #include "containers_export.hpp"
 #include "mpfr_export.hpp"
 #include "minieigen_export.hpp"
-#include "function_tree.hpp"
+#include "function_tree_export.hpp"
 #include "system_export.hpp"
 #include "parser_export.hpp"
 #include "tracker_export.hpp"
+#include "endgame_export.hpp"
 
 #endif
 

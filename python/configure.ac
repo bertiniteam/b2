@@ -54,24 +54,13 @@ LT_INIT
 AM_PATH_PYTHON
 
 
-#this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs
-LX_FIND_MPI
-
-# print a notice about the presence of MPI on the machine.
-AS_IF([test "$have_CXX_mpi" = "yes"],
-	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
-	AC_MSG_NOTICE([it appears you do not have mpi installed])
-	)
-
-
-
 # the form of the following commands --
 # AC_SEARCH_LIBS(function, libraries-list, action-if-found, action-if-not-found, extra-libraries)
 
-# find mpfr
-AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
-	AC_MSG_ERROR([unable to find mpfr])
-])
+#find the math library
+AC_SEARCH_LIBS([cos], [m], [], [
+  AC_MSG_ERROR([unable to find the cos() function])
+  ])
 
 #find gmp
 AC_SEARCH_LIBS([__gmpz_init],[gmp], [],[
@@ -79,10 +68,11 @@ AC_SEARCH_LIBS([__gmpz_init],[gmp], [],[
 ])
 
 
-#find the math library
-AC_SEARCH_LIBS([cos], [m], [], [
-  AC_MSG_ERROR([unable to find the cos() function])
-  ])
+# find mpfr
+AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
+	AC_MSG_ERROR([unable to find mpfr])
+])
+
 
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN

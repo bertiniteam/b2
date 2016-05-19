@@ -26,32 +26,15 @@
 #   Spring 2016
 # 
 
-import mpfr_test
-import function_tree_test
-import differentiation_test
-import system_test
-import parser_test
-import tracker_test
+import amptracking_test
+import endgame_test
 import unittest
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-if __name__ == '__main__':
-    mods = (mpfr_test,function_tree_test, differentiation_test, system_test, parser_test, tracker_test)
-    suite = unittest.TestSuite();
-    for tests in mods:
-        thissuite = unittest.TestLoader().loadTestsFromModule(tests);
-        suite.addTests(thissuite)
-    #
-    unittest.TextTestRunner(verbosity=2).run(suite)
+mods = (amptracking_test,endgame_test)
+suite = unittest.TestSuite();
+for tests in mods:
+    thissuite = unittest.TestLoader().loadTestsFromModule(tests);
+    suite.addTests(thissuite)
+#
+unittest.TextTestRunner(verbosity=2).run(suite)

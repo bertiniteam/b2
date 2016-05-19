@@ -1178,11 +1178,10 @@ namespace bertini{
 								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
 			{
 				using RealType = typename Eigen::NumTraits<ComplexType>::Real;
+				
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
-				
-				
 
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
