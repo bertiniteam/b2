@@ -1,29 +1,29 @@
 # This file is part of Bertini 2.
-# 
+#
 # python/test/endgame_test.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # python/test/endgame_test.py is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with python/test/endgame_test.py.  If not, see <http://www.gnu.org/licenses/>.
-# 
+#
 #  Copyright(C) 2016 by Bertini2 Development Team
-# 
-#  See <http://www.gnu.org/licenses/> for a copy of the license, 
-#  as well as COPYING.  Bertini2 is provided with permitted 
+#
+#  See <http://www.gnu.org/licenses/> for a copy of the license,
+#  as well as COPYING.  Bertini2 is provided with permitted
 #  additional terms in the b2/licenses/ directory.
 
 #  individual authors of this file include:
-# 
+#
 #   Daniel Brake
 #   University of Notre Dame
-# 
+#
 
 
 __author__ = 'ofloveandhate'
@@ -94,14 +94,15 @@ class EndgameTest(unittest.TestCase):
         tracker.setup(Predictor.RK4, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
         tracker.precision_setup(prec_config);
 
-        num_paths_to_track = td.num_start_points;
+        num_paths_to_track = td.num_start_points();
+        n = int(str(num_paths_to_track));
 
         t_start = mpfr_complex(1);
         t_endgame_boundary = mpfr_complex("0.1");
         t_final = mpfr_complex(0);
 
-        bdry_points = [VectorXmp() for i in range(num_paths_to_track)]
-        for i in range(num_paths_to_track):
+        bdry_points = [VectorXmp() for i in range(n)]
+        for i in range(n):
             default_precision(self.ambient_precision);
             final_system.precision(self.ambient_precision);
             start_point = td.start_pointmp(mpfr_int(i));
@@ -113,13 +114,13 @@ class EndgameTest(unittest.TestCase):
             self.assertEqual(track_success_code, SuccessCode.Success)
 
 
-        
+
         tracker.setup(Predictor.HeunEuler, mpfr_float("1e-6"), mpfr_float("1e5"), stepping_pref, newton_pref);
         my_endgame = AMPCauchyEG(tracker);
 
 
-        final_homogenized_solutions = [VectorXmp() for i in range(num_paths_to_track)]
-        for i in range(num_paths_to_track):
+        final_homogenized_solutions = [VectorXmp() for i in range(n)]
+        for i in range(n):
             default_precision(bdry_points[i][0].precision());
             final_system.precision(bdry_points[i][0].precision());
             track_success_code = my_endgame.run(t_endgame_boundary,bdry_points[i]);
@@ -130,5 +131,3 @@ class EndgameTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main();
-
-
