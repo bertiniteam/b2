@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //special_number.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,15 +13,34 @@
 //You should have received a copy of the GNU General Public License
 //along with special_number.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
+//
 //  Created by Collins, James B. on 4/30/15.
 //
 //
 // special_number.hpp:  Declares the class SpecialNumber.
 
+/**
+\file special_number.hpp
 
+\brief Provides the special numbers \f$\pi\f$, \f$e\f$, 1, 2, 0, as Nodes
 
-#ifndef b2Test_SpecialNumber_h
-#define b2Test_SpecialNumber_h
+*/
+
+#ifndef BERTINI_FUNCTION_TREE_SPECIAL_NUMBER_HPP
+#define BERTINI_FUNCTION_TREE_SPECIAL_NUMBER_HPP
 
 
 #include "bertini2/function_tree/symbols/symbol.hpp"
@@ -46,7 +65,7 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public NamedSymbol
+		class Pi : public virtual NamedSymbol
 		{
 		public:
 			Pi() : NamedSymbol("pi")
@@ -55,15 +74,18 @@ namespace node{
 			virtual ~Pi() = default;
 
 
-
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+			}
 
 
 			/**
 			 Differentiates a number.  Should this return the special number Zero?
 			 */
-			std::shared_ptr<Node> Differentiate() override
+			std::shared_ptr<Node> Differentiate() const override
 			{
-				return std::make_shared<Float>(0.0);
+				return std::make_shared<Integer>(0);
 			}
 
 			/**
@@ -112,7 +134,7 @@ namespace node{
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) override
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);
@@ -123,15 +145,27 @@ namespace node{
 			
 		private:
 			// Return value of constant
-			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return acos(-1.0);
 			}
-
-			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+			
+			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				return mpfr(acos(boost::multiprecision::mpfr_float("-1.0")),0.0);
+				evaluation_value = acos(-1.0);
 			}
+
+
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				return mpfr(mpfr_float(acos(mpfr_float(-1))));
+			}
+			
+			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				evaluation_value = mpfr(mpfr_float(acos(mpfr_float(-1))));
+			}
+
 
 			friend class boost::serialization::access;
 
@@ -148,7 +182,7 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public NamedSymbol
+		class E : public virtual NamedSymbol
 		{
 		public:
 			E() : NamedSymbol("e")
@@ -157,14 +191,17 @@ namespace node{
 			virtual ~E() = default;
 
 
-
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+			}
 
 			/**
 			 Differentiates a number.  Should this return the special number Zero?
 			 */
-			std::shared_ptr<Node> Differentiate() override
+			std::shared_ptr<Node> Differentiate() const override
 			{
-				return std::make_shared<Float>(0.0);
+				return std::make_shared<Integer>(0);
 			}
 
 			/**
@@ -212,7 +249,7 @@ namespace node{
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) override
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);
@@ -220,15 +257,27 @@ namespace node{
 
 		private:
 			// Return value of constant
-			dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				return dbl(exp(1.0f),0.0);
 			}
-
-			mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+			
+			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				return mpfr(exp(boost::multiprecision::mpfr_float("1.0")),0.0);
+				evaluation_value = dbl(exp(1.0f),0.0);
 			}
+
+
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				return mpfr(mpfr_float(exp(mpfr_float(1))));
+			}
+			
+			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				evaluation_value = mpfr(mpfr_float(exp(mpfr_float(1))));
+			}
+
 
 			friend class boost::serialization::access;
 

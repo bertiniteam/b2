@@ -1,27 +1,30 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-// python/function_tree.hpp is free software: you can redistribute it and/or modify
-//it under the terms of the GNU General Public License as published by
-//the Free Software Foundation, either version 3 of the License, or
-//(at your option) any later version.
-//This file is part of Bertini 2.0.
-//
-// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//python/operator_export.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//python/operator_export.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with python/operator_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
 //
 //  James Collins
 //  West Texas A&M University
 //  Spring 2016
+//
 //
 //
 //  python/operator_export.cpp:  Source file for exposing operator nodes to python.
@@ -119,6 +122,14 @@ namespace bertini{
 
 		void ExportOperators()
 		{
+			scope current_scope;
+			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+			new_submodule_name.append(".operator");
+			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+			current_scope.attr("operator") = new_submodule;
+
+			scope new_submodule_scope = new_submodule;
+
 			// Operator class
 			class_<Operator, boost::noncopyable, bases<Node>, std::shared_ptr<Operator> >("Operator", no_init)
 			;
@@ -126,10 +137,6 @@ namespace bertini{
 			// UnaryOperator class
 			class_<UnaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<UnaryOperator> >("UnaryOperator", no_init)
 			.def(UnaryOpVisitor<UnaryOperator>())
-			;
-			
-			// BinaryOperator class
-			class_<BinaryOperator, boost::noncopyable, bases<Operator>, std::shared_ptr<BinaryOperator> >("BinaryOperator", no_init)
 			;
 
 			// NaryOperator class
@@ -156,7 +163,7 @@ namespace bertini{
 			;
 			
 			// PowerOperator class
-			class_<PowerOperator, bases<BinaryOperator>, std::shared_ptr<PowerOperator> >("PowerOperator", init<const Nodeptr&, const Nodeptr &>() )
+			class_<PowerOperator, bases<Operator>, std::shared_ptr<PowerOperator> >("PowerOperator", init<const Nodeptr&, const Nodeptr &>() )
 			
 			.def(PowerOpVisitor<PowerOperator>())
 			;

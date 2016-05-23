@@ -1,20 +1,26 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-//function_tree_test.cpp is free software: you can redistribute it and/or modify
+//differentiate_test.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//function_tree_test.cpp is distributed in the hope that it will be useful,
+//differentiate_test.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with function_tree_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with differentiate_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
 
-//  function_tree_test.cpp
+// individual authors of this file include:
+// daniel brake, university of notre dame
 //
 //  Created by Collins, James B. on 4/30/15.
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
@@ -31,9 +37,9 @@
 #include <cmath>
 #include <vector>
 
-#include "bertini.hpp"
-#include "function_tree.hpp"
-
+#include "bertini2/function_tree.hpp"
+#include "bertini2/system.hpp"
+#include "bertini2/system_parsing.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/test/unit_test.hpp>
@@ -41,73 +47,47 @@
 #include <Eigen/Dense>
 
 
-
+using dbl = std::complex<double>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
-
 using Function = bertini::node::Function;
 using Jacobian = bertini::node::Jacobian;
 
 
+using dbl = bertini::dbl;
+using mpfr = bertini::mpfr;
 
-
-
-
-unsigned DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS = 30;
-
-
-// double threshold_clearance_d = 1e-10;
-// double threshold_clearance_mp = 1e-25;
-
-
+extern double relaxed_threshold_clearance_d;
 extern double threshold_clearance_d;
-extern double threshold_clearance_mp;
-// these have been commented out, and we will use the ones defined in function_tree_test.
-// std::string xstr_real = "3.1";
-// std::string xstr_imag = "0.3";
-// std::string ystr_real = "8.8";
-// std::string ystr_imag = "1.4";
-// std::string astr_real = "3.4";
-// std::string astr_imag = "5.6";
-// std::string bstr_real = "-0.2";
-// std::string bstr_imag = "-2.1";
-std::string zstr_real = "0.8";
-std::string zstr_imag = "-1.7";
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
+
 extern std::string xstr_real;
 extern std::string xstr_imag;
-
 extern std::string ystr_real;
 extern std::string ystr_imag;
 extern std::string astr_real;
 extern std::string astr_imag;
 extern std::string bstr_real;
 extern std::string bstr_imag;
-// extern std::string zstr_real;
-// extern std::string zstr_imag;
-
-
+extern std::string pstr_real;
+extern std::string pstr_imag;
+extern std::string zstr_real;
+extern std::string zstr_imag;
 
 extern dbl xnum_dbl;
 extern dbl ynum_dbl;
+extern dbl znum_dbl;
 extern dbl anum_dbl;
 extern dbl bnum_dbl;
-
-// dbl xnum_dbl(std::stod(xstr_real), std::stod(xstr_imag));
-// dbl ynum_dbl(std::stod(ystr_real), std::stod(ystr_imag));
-// dbl anum_dbl(std::stod(astr_real), std::stod(astr_imag));
-// dbl bnum_dbl(std::stod(bstr_real), std::stod(bstr_imag));
-dbl znum_dbl(std::stod(zstr_real), std::stod(zstr_imag));
+extern dbl pnum_dbl;
 
 extern mpfr xnum_mpfr;
 extern mpfr ynum_mpfr;
+extern mpfr znum_mpfr;
 extern mpfr anum_mpfr;
 extern mpfr bnum_mpfr;
-
-// mpfr xnum_mpfr(xstr_real, xstr_imag);
-// mpfr ynum_mpfr(ystr_real, ystr_imag);
-// mpfr anum_mpfr(astr_real, astr_imag);
-// mpfr bnum_mpfr(bstr_real, bstr_imag);
-mpfr znum_mpfr(zstr_real, zstr_imag);
+extern mpfr pnum_mpfr;
 
 Eigen::Matrix<dbl, 3, 1> var_dbl;
 Eigen::Matrix<mpfr, 3, 1> var_mpfr;
@@ -146,8 +126,8 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
 
 
 BOOST_AUTO_TEST_CASE(diff_3xyz){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = 3*x*y*z;";
 
@@ -197,12 +177,27 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
 	BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).imag() / exact_dbl[2].imag() -1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() / exact_mpfr[2].real() -1) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() / exact_mpfr[2].imag() -1) < threshold_clearance_mp);
+
+	var_mpfr << bertini::complex::rand(),bertini::complex::rand(),bertini::complex::rand();
+	sys.SetVariables<mpfr>(var_mpfr);
+	exact_mpfr[0] = 3*var_mpfr(1)*var_mpfr(2);
+	exact_mpfr[1] = 3*var_mpfr(0)*var_mpfr(2);
+	exact_mpfr[2] = 3*var_mpfr(0)*var_mpfr(1);
+
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).real() / exact_mpfr[0].real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).imag() / exact_mpfr[0].imag() -1) < threshold_clearance_mp);
+
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).real() / exact_mpfr[1].real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).imag() / exact_mpfr[1].imag() -1) < threshold_clearance_mp);
+
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() / exact_mpfr[2].real() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() / exact_mpfr[2].imag() -1) < threshold_clearance_mp);
 }
 
 
 BOOST_AUTO_TEST_CASE(diff_constant){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = 4.5 + i*8.2;";
 
@@ -248,8 +243,8 @@ BOOST_AUTO_TEST_CASE(diff_constant){
 
 
 BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = x-y+z-4.5+i*7.3;";
 
@@ -302,8 +297,8 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
 
 
 BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = (x^2)*(y^3);";
 
@@ -383,8 +378,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
 
 
 BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = (x^2)/(y^3);";
 
@@ -437,8 +432,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
 
 
 BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = (x^2)*(x+3);";
 
@@ -489,8 +484,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
 }
 
 BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = y/(y+1);";
 
@@ -543,8 +538,8 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
 
 
 BOOST_AUTO_TEST_CASE(diff_sin_x){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = sin(x);";
 
@@ -595,8 +590,8 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
 
 
 BOOST_AUTO_TEST_CASE(diff_cos_y){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = cos(y);";
 
@@ -648,8 +643,8 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
 
 
 BOOST_AUTO_TEST_CASE(diff_tan_z){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = tan(z);";
 
@@ -695,8 +690,8 @@ BOOST_AUTO_TEST_CASE(diff_tan_z){
 
 
 BOOST_AUTO_TEST_CASE(diff_exp_x){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = exp(x);";
 
@@ -744,8 +739,8 @@ BOOST_AUTO_TEST_CASE(diff_exp_x){
 
 
 BOOST_AUTO_TEST_CASE(diff_log_x){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = log(x^2+y);";
 
@@ -793,8 +788,8 @@ BOOST_AUTO_TEST_CASE(diff_log_x){
 
 
 BOOST_AUTO_TEST_CASE(diff_sqrt_y){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = sqrt(y);";
 
@@ -844,8 +839,8 @@ BOOST_AUTO_TEST_CASE(diff_sqrt_y){
 
 /////////// Chain Rule ///////////////////
 BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = (z+3)^3;";
 
@@ -898,8 +893,8 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
 
 
 BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = x^2+y^2+z^2;";
 
@@ -957,8 +952,8 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
 
 
 BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = sin(x*y);";
 
@@ -1010,8 +1005,8 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
 
 
 BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = cos(x^2);";
 
@@ -1061,8 +1056,8 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
 
 
 BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	boost::multiprecision::mpfr_float::default_precision(DIFFERENTIATE_TREE_TEST_MPFR_DEFAULT_DIGITS);
+	using mpfr_float = bertini::mpfr_float;
+    bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x,y,z; f = tan(x/z);";
 
@@ -1175,7 +1170,72 @@ BOOST_AUTO_TEST_CASE(arctangent_differentiate)
 }
 
 
+BOOST_AUTO_TEST_CASE(integer_power)
+{
+	using mpfr =bertini::complex;
+	using mpfr_float = bertini::mpfr_float;
+
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	bertini::Var x = std::make_shared<Variable>("x");
+	bertini::Var t = std::make_shared<Variable>("t"); 
+
+	auto f = pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t;
+	std::shared_ptr<Jacobian> j = std::make_shared<Jacobian>(f->Differentiate());
 
 
+	x->set_current_value(mpfr("-0.844487","-0.535576"));
+	t->set_current_value(mpfr("0.779871","0.712645"));
+
+	auto J = j->EvalJ<mpfr>(x);
+	BOOST_CHECK(abs(J - mpfr("-2.129232","0.354138")) < threshold_clearance_mp);
+
+
+	x->set_current_value(mpfr("0.900000000000000","0.435889894354067355223698198386"));
+    t->set_current_value(mpfr("0.1"));
+    j->Reset();
+	J = j->EvalJ<mpfr>(x);
+
+	BOOST_CHECK(abs( real(J) ) < threshold_clearance_mp);
+	BOOST_CHECK(abs( imag(J) - mpfr_float("0.871779788708134710447396396772")) < threshold_clearance_mp);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(integer_power_system)
+{
+	using mpfr =bertini::complex;
+	using mpfr_float = bertini::mpfr_float;
+	using System = bertini::System;
+
+	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	System sys;
+	bertini::Var x = std::make_shared<Variable>("x");
+	bertini::Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
+
+	sys.AddVariableGroup(bertini::VariableGroup({x})); 
+	sys.AddPathVariable(t);
+
+	bertini::Vec<mpfr> curr_x(1);
+	curr_x << mpfr("-0.844487","-0.535576");
+	mpfr curr_t("0.779871","0.712645");
+
+	auto J = sys.Jacobian(curr_x,curr_t);
+
+	BOOST_CHECK(abs(real(J(0,0)) - mpfr_float("-2.129232")) < threshold_clearance_mp);
+	BOOST_CHECK(abs(imag(J(0,0)) - mpfr_float("0.354138")) < threshold_clearance_mp);
+
+	curr_x << mpfr("0.900000000000000","0.435889894354067355223698198386");
+	curr_t = mpfr("0.1");
+	J = sys.Jacobian(curr_x,curr_t);
+
+	BOOST_CHECK(abs( real(J(0,0)) ) < threshold_clearance_mp);
+	BOOST_CHECK(abs( imag(J(0,0)) - mpfr_float("0.871779788708134710447396396772")) < threshold_clearance_mp);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,0 +1,54 @@
+                              Bertini(TM) version 2
+      Authors: D.J. Bates, D.A. Brake, J.D. Hauenstein, A.J. Sommese, C.W. Wampler
+                                http://bertini.nd.edu
+                                 Copyright(C) 2016
+
+                                      *NOTICE*
+
+This program is free software in that it is free to download (as source code or as a binary) and free to use on the computer(s) to which it was downloaded.  You may redistribute it and/or modify it under the terms of the GNU General Public License version 3 as published by the Free Software Foundation (<http://www.gnu.org/licenses/>) with the additional terms and conditions listed below which are permitted under this license.
+
+The following software modules shipped with Bertini have their own copyright: the 
+GNU Multiple Precision Library (GMP) and the GNU MPFR Library (MPFR).  This license covers those parts of Bertini's source code written by the Authors and Developers, excluding these particular modules.  Copyrights and licenses for these modules have been included in the directory LICENSES. 
+
+
+
+                                ADDITIONAL TERMS AND CONDITIONS 
+
+  7. Additional Terms.
+
+    All specified reasonable legal notices or author attributions in the program and source code must be preserved.
+
+    Misrepresenting the origin of the source code in this program or modified versions is prohibited.  Any modified versions of the source code in this program must be marked in a reasonable way as to demonstrate that it is different from the original version.  This includes providing a detailed list of the modifications.
+
+    The Authors limit the use of the name Bertini(TM) to the original version and, without written consent of all living Authors or their successors, prohibit the use of this name for any other program. Moreover, without written consent of all living Authors or their successors, the Authors decline to grant rights under trademark law for the use of the name Bertini(TM).
+
+    All programs dependent on this software must indemnify the Authors of this program against any contractual assumptions of liability to the recipient.
+
+                     END OF TERMS AND CONDITIONS
+
+
+In addition to the stated license, we ask that any publications which made use of any version of Bertini, directly or indirectly via a covered work, include an appropriate citation to Bertini, as described on the website http://bertini.nd.edu/policy.html, or any future Bertini page created by the Authors and/or Development Team.
+
+Acknowledgements
+================
+
+Current members of Bertini2 Development Team:
+-- Dan Bates, Colorado State University
+-- Daniel Brake, University of Notre Dame
+-- Jeb Collins, West Teaxs A&M University
+-- Jonathan Hauenstein, University of Notre Dame
+-- Tim Hodges, Colorado State University
+-- Alan Liddell, Jr., University of Notre Dame
+-- Francesco Pancaldi, University of Notre Dame
+-- Hythem Sidkey, University of Notre Dame
+-- Andrew Sommese, University of Notre Dame
+-- Charles Wampler, General Motors Research and Development
+
+The Authors and Development Team would like to express our gratitude for the financial support of the National Science Foundation.  
+
+Any opinions, findings, and conclusions or recommendations expressed in this material are those of the Authors and do not necessarily reflect those of the National Science Foundation.
+
+
+
+
+

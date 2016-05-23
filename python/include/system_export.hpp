@@ -1,23 +1,25 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-// python/function_tree.hpp is free software: you can redistribute it and/or modify
-//it under the terms of the GNU General Public License as published by
-//the Free Software Foundation, either version 3 of the License, or
-//(at your option) any later version.
-//This file is part of Bertini 2.0.
-//
-// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//python/system_export.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//python/system_export.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with python/system_export.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
 //
 //  James Collins
 //  West Texas A&M University
@@ -29,8 +31,8 @@
 
 
 
-#ifndef Xcode_b2_system_export_hpp
-#define Xcode_b2_system_export_hpp
+#ifndef BERTINI_PYTHON_SYSTEM_EXPORT_HPP
+#define BERTINI_PYTHON_SYSTEM_EXPORT_HPP
 #include <bertini2/system.hpp>
 #include <bertini2/start_system.hpp>
 
@@ -76,6 +78,11 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 			
 		private:
+
+			// precision functions
+			void (bertini::System::*set_prec_)(unsigned) const = &bertini::System::precision;
+			unsigned (bertini::System::*get_prec_)(void) const = &bertini::System::precision;
+
 			void (bertini::System::*sysAddFunc1)(std::shared_ptr<node::Function> const&) = &bertini::System::AddFunction;
 			void (bertini::System::*sysAddFunc2)(std::shared_ptr<node::Node> const&) = &bertini::System::AddFunction;
 			
@@ -88,7 +95,15 @@ namespace bertini{
 			
 			// Eval functions
 			template <typename T>
-			using Eval1_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&);
+			using Eval0_ptr = Vec<T> (SystemBaseT::*)() const;
+			template <typename T>
+			static Eval0_ptr<T> return_Eval0_ptr()
+			{
+				return &SystemBaseT::template Eval<T>;
+			};
+
+			template <typename T>
+			using Eval1_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&) const;
 			template <typename T>
 			static Eval1_ptr<T> return_Eval1_ptr()
 			{
@@ -96,7 +111,7 @@ namespace bertini{
 			};
 			
 			template <typename T>
-			using Eval2_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&, const T &);
+			using Eval2_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&, const T &) const;
 			template <typename T>
 			static Eval2_ptr<T> return_Eval2_ptr()
 			{
@@ -106,7 +121,15 @@ namespace bertini{
 			
 			// Jacobian Eval functions
 			template <typename T>
-			using Jac1_ptr = Mat<T> (SystemBaseT::*)(const Vec<T>&);
+			using Jac0_ptr = Mat<T> (SystemBaseT::*)() const;
+			template <typename T>
+			static Jac0_ptr<T> return_Jac0_ptr()
+			{
+				return &SystemBaseT::template Jacobian<T>;
+			};
+
+			template <typename T>
+			using Jac1_ptr = Mat<T> (SystemBaseT::*)(const Vec<T>&) const;
 			template <typename T>
 			static Jac1_ptr<T> return_Jac1_ptr()
 			{
@@ -114,7 +137,7 @@ namespace bertini{
 			};
 			
 			template <typename T>
-			using Jac2_ptr = Mat<T> (SystemBaseT::*)(const Vec<T>&, const T &);
+			using Jac2_ptr = Mat<T> (SystemBaseT::*)(const Vec<T>&, const T &) const;
 			template <typename T>
 			static Jac2_ptr<T> return_Jac2_ptr()
 			{
@@ -144,7 +167,7 @@ namespace bertini{
 			
 		private:
 			template <typename T>
-			using GenStart_ptr = Vec<T> (SystemBaseT::*)(size_t) const;
+			using GenStart_ptr = Vec<T> (SystemBaseT::*)(mpz_int) const;
 			template <typename T>
 			static GenStart_ptr<T> return_GenStart_ptr()
 			{

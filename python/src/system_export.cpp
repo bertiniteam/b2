@@ -1,27 +1,30 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-// python/function_tree.hpp is free software: you can redistribute it and/or modify
-//it under the terms of the GNU General Public License as published by
-//the Free Software Foundation, either version 3 of the License, or
-//(at your option) any later version.
-//This file is part of Bertini 2.0.
-//
-// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//python/system_export.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//python/system_export.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with python/system_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
 //
 //  James Collins
 //  West Texas A&M University
 //  Spring 2016
+//
 //
 //
 //  python/system_export.cpp:  Source file for exposing systems to python, including start systems.
@@ -38,7 +41,7 @@ namespace bertini{
 		
 		struct StartSystemWrap : start_system::StartSystem, wrapper<start_system::StartSystem>
 		{
-			size_t NumStartPoints() const {return this->get_override("NumStartPoints")(); }
+			mpz_int NumStartPoints() const {return this->get_override("NumStartPoints")(); }
 		}; // re: StartSystemWrap
 
 		
@@ -50,18 +53,26 @@ namespace bertini{
 		void SystemVisitor<SystemBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("precision", &SystemBaseT::precision)
+			.def("precision", get_prec_)
+			.def("precision", set_prec_)
 			.def("differentiate", &SystemBaseT::Differentiate)
-			.def("eval", return_Eval1_ptr<dbl>() )
-			.def("eval", return_Eval1_ptr<mpfr>() )
-			.def("eval", return_Eval2_ptr<dbl>() )
-			.def("eval", return_Eval2_ptr<mpfr>() )
-			.def("jacobian", return_Jac1_ptr<dbl>() )
-			.def("jacobian", return_Jac1_ptr<mpfr>() )
-			.def("jacobian", return_Jac2_ptr<dbl>() )
-			.def("jacobian", return_Jac2_ptr<mpfr>() )
+
+			.def("eval", return_Eval0_ptr<dbl>() ,"evaluate the system in double precision, using already-set variable values.")
+			.def("eval", return_Eval0_ptr<mpfr>() ,"evaluate the system in multiple precision, using already-set variable values.")
+			.def("eval", return_Eval1_ptr<dbl>() ,"evaluate the system in double precision, using space variable values passed into this function.")
+			.def("eval", return_Eval1_ptr<mpfr>() ,"evaluate the system in multiple precision, using space variable values passed into this function.")
+			.def("eval", return_Eval2_ptr<dbl>() ,"evaluate the system in double precision using space and time values passed into this function")
+			.def("eval", return_Eval2_ptr<mpfr>() ,"evaluate the system in multiple precision using space and time values passed into this function")
+			
+			.def("jacobian", return_Jac0_ptr<dbl>() ,"evaluate the jacobian of the system, using already-set time and space value.")
+			.def("jacobian", return_Jac0_ptr<mpfr>() ,"evaluate the jacobian of the system, using already-set time and space value.")
+			.def("jacobian", return_Jac1_ptr<dbl>() ,"evaluate the jacobian of the system, using space values you pass in to this function")
+			.def("jacobian", return_Jac1_ptr<mpfr>() ,"evaluate the jacobian of the system, using space values you pass in to this function")
+			.def("jacobian", return_Jac2_ptr<dbl>() , "evaluate the jacobian of the system, using time and space values passed into this function")
+			.def("jacobian", return_Jac2_ptr<mpfr>() , "evaluate the jacobian of the system, using time and space values passed into this function")
+
 			.def("homogenize", &SystemBaseT::Homogenize)
-			.def("is_homogenous", &SystemBaseT::IsHomogeneous)
+			.def("is_homogeneous", &SystemBaseT::IsHomogeneous)
 			.def("is_polynomial", &SystemBaseT::IsPolynomial)
 			
 			.def("num_functions", &SystemBaseT::NumFunctions)
@@ -109,7 +120,21 @@ namespace bertini{
 			.def("clear_variables", &SystemBaseT::ClearVariables)
 			.def("copy_variable_structure", &SystemBaseT::CopyVariableStructure)
 			
-			
+			.def("auto_patch",&SystemBaseT::AutoPatch,"Apply a patch to the system, given its current variable group structure.")
+			.def("copy_patches",&SystemBaseT::CopyPatches,"Copy the patch from another system into this one.")
+			.def("get_patch",&SystemBaseT::GetPatch,"Get the patch from the system.")
+			.def("is_patched",&SystemBaseT::IsPatched,"Check whether the system is patched.")
+
+			.def("rescale_point_to_fit_patch",&SystemBaseT::template RescalePointToFitPatch<dbl>,"Return a rescaled version of the input point, which fits the patch for the system.")
+			.def("rescale_point_to_fit_patch",&SystemBaseT::template RescalePointToFitPatch<mpfr>,"Return a rescaled version of the input point, which fits the patch for the system.")
+
+			.def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<dbl>,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
+
+			.def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<mpfr>,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
+
+			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<dbl>)
+			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<mpfr>)
+
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))
 			.def(self += self)

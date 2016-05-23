@@ -1,23 +1,25 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-// python/function_tree.hpp is free software: you can redistribute it and/or modify
-//it under the terms of the GNU General Public License as published by
-//the Free Software Foundation, either version 3 of the License, or
-//(at your option) any later version.
-//This file is part of Bertini 2.0.
-//
-// python/bertini_python.hpp is free software: you can redistribute it and/or modify
+//python/operator_export.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-// python/bertini_python.hpp is distributed in the hope that it will be useful,
+//python/operator_export.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with  python/bertini_python.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with python/operator_export.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
 //
 //  James Collins
 //  West Texas A&M University
@@ -29,8 +31,8 @@
 
 
 
-#ifndef Xcode_b2_operator_visitors_hpp
-#define Xcode_b2_operator_visitors_hpp
+#ifndef BERTINI_PYTHON_OPERATOR_EXPORT_HPP
+#define BERTINI_PYTHON_OPERATOR_EXPORT_HPP
 
 #include <bertini2/function_tree/operators/operator.hpp>
 #include <bertini2/function_tree/operators/arithmetic.hpp>

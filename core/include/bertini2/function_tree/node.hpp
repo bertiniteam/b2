@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //node.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,14 +13,32 @@
 //You should have received a copy of the GNU General Public License
 //along with node.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
+//
 //  Created by Collins, James B. on 4/30/15.
-//
-//
-// node.hpp:  Declares the class Node.
 
 
-#ifndef __b2Test__Node__
-#define __b2Test__Node__
+/**
+\file node.hpp
+
+\brief Defines the abstract Node base class.
+
+*/
+
+#ifndef BERTINI_NODE_BASE_HPP
+#define BERTINI_NODE_BASE_HPP
 
 
 
@@ -31,10 +49,8 @@
 
 #include <boost/type_index.hpp>
 
-#include <complex>
-#include "bertini2/mpfr_complex.hpp"
-using dbl = std::complex<double>;
-using mpfr = bertini::complex;
+#include "bertini2/num_traits.hpp"
+
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -55,8 +71,58 @@ namespace bertini {
 
 using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
 
+enum class VariableGroupType
+{
+	Homogeneous,
+	Affine,
+	Ungrouped
+};
+
+
 namespace node{
 
+namespace detail{
+	template<typename T>
+	struct FreshEvalSelector
+	{};
+
+	template<>
+	struct FreshEvalSelector<dbl>
+	{
+		
+		template<typename N>
+		static dbl Run(N const& n, std::shared_ptr<Variable> const& diff_variable)
+		{
+			return n.FreshEval_d(diff_variable);
+		}
+		
+		
+		template<typename N>
+		static void RunInPlace(dbl& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
+		{
+			n.FreshEval_d(evaluation_value, diff_variable);
+		}
+
+	};
+
+	template<>
+	struct FreshEvalSelector<mpfr>
+	{
+		template<typename N>
+		static mpfr Run(N const& n, std::shared_ptr<Variable> const& diff_variable)
+		{
+			return n.FreshEval_mp(diff_variable);
+		}
+		
+		
+		template<typename N>
+		static void RunInPlace(mpfr& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
+		{
+			n.FreshEval_mp(evaluation_value, diff_variable);
+		}
+
+	};
+}
 /**
 An interface for all nodes in a function tree, and for a function object as well.  Almost all
  methods that will be called on a node must be declared in this class.  The main evaluation method is
@@ -68,6 +134,8 @@ An interface for all nodes in a function tree, and for a function object as well
  */
 class Node
 {
+	friend detail::FreshEvalSelector<dbl>;
+	friend detail::FreshEvalSelector<mpfr>;
 public:
 	
 	virtual ~Node() = default;
@@ -79,16 +147,13 @@ public:
 	/**
 	 Tells code to run a fresh eval on node next time.
 	*/
-	virtual void Reset()
-	{
-		ResetStoredValues();
-	};
+	virtual void Reset() const = 0;
 	
 	///////// END PUBLIC PURE METHODS /////////////////
 	
 	
-	
-   
+
+	public:
 	/**
 	 Evaluate the node.  If flag false, just return value, if flag true
 	 run the specific FreshEval of the node, then set flag to false.
@@ -99,13 +164,12 @@ public:
 	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
 	 */
 	template<typename T>
-	T Eval(std::shared_ptr<Variable> diff_variable = nullptr)
+	T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const 
 	{
 		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
 		if(!val_pair.second)
 		{
-			T input{};
-			val_pair.first = FreshEval(input, diff_variable);
+			val_pair.first = detail::FreshEvalSelector<T>::Run(*this,diff_variable);
 			val_pair.second = true;
 		}
  
@@ -113,6 +177,30 @@ public:
 		return val_pair.first;
 	}
 	
+
+	/**
+	 Evaluate the node in place.  If flag false, just return value, if flag true
+	 run the specific FreshEval of the node, then set flag to false.
+	 
+	 Template type is type of value you want returned.
+	 
+	 \return The value of the node.
+	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
+	 */
+	template<typename T>
+	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const
+	{
+		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+		if(!val_pair.second)
+		{
+			detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this,diff_variable);
+			val_pair.second = true;
+		}
+		
+		eval_value = val_pair.first;
+		
+		
+	}
 
 	
 	
@@ -130,7 +218,7 @@ public:
 
 	\return The Jacobian for the node.
 	*/
-	virtual std::shared_ptr<Node> Differentiate() = 0;
+	virtual std::shared_ptr<Node> Differentiate() const = 0;
 
 
 
@@ -187,7 +275,7 @@ public:
 	 
 	 \param prec the number of digits to change precision to.
 	 */
-	virtual void precision(unsigned int prec) = 0;
+	virtual void precision(unsigned int prec) const = 0;
 
 	///////// PUBLIC PURE METHODS /////////////////
 
@@ -221,7 +309,7 @@ protected:
 	//Stores the current value of the node in all required types
 	//We must hard code in all types that we want here.
 	//TODO: Initialize this to some default value, second = false
-	std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value_;
+	mutable std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value_;
 	
 	
 	
@@ -234,14 +322,30 @@ protected:
 
 	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
 	*/
-	virtual dbl FreshEval(dbl, std::shared_ptr<Variable>) = 0;
+	virtual dbl FreshEval_d(std::shared_ptr<Variable> const&) const = 0;
 
+	/**
+	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper EvalInPlace<>() call from Node, if so required (by resetting, etc).
+	 
+	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
+	 */
+	virtual void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
+
+	
 	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
 
 	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
 	*/
-	virtual mpfr FreshEval(mpfr, std::shared_ptr<Variable>) = 0;
+	virtual mpfr FreshEval_mp(std::shared_ptr<Variable> const&) const = 0;
+	
+	/**
+	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
+	 
+	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
+	 */
+	virtual void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
+
 	
 	
 	
@@ -251,13 +355,20 @@ protected:
 	/**
 	Set the stored values for the Node to indicate a fresh eval on the next pass.  This is so that Nodes which are referred to more than once, are only evaluated once.  The first evaluation is fresh, and then the indicator for fresh/stored is set to stored.  Subsequent evaluation calls simply return the stored number.
 	*/
-	void ResetStoredValues()
+	void ResetStoredValues() const
 	{
 		std::get< std::pair<dbl,bool> >(current_value_).second = false;
 		std::get< std::pair<mpfr,bool> >(current_value_).second = false;
 	}
 
+	Node()
+	{
+		std::get<std::pair<dbl,bool> >(current_value_).second = false;
+		std::get<std::pair<mpfr,bool> >(current_value_).second = false;
+	}
 private:
+	friend std::ostream& operator<<(std::ostream & out, const Node& N);
+
 	friend class boost::serialization::access;
 
 	template <typename Archive>
@@ -285,7 +396,7 @@ private:
 
 
 #endif 
-/* defined(__b2Test__Node__) */
+/* defined(BERTINI_NODE_BASE_HPP) */
 
 
 

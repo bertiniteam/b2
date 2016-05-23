@@ -1,0 +1,39 @@
+#this is core/test/endgames/Makemodule.am
+
+EXTRA_PROGRAMS += endgames_test
+
+TESTS += endgames_test
+
+endgames_test_source_files = \
+	test/endgames/generic_cauchy_test.hpp \
+	test/endgames/fixed_double_cauchy_test.cpp \
+	test/endgames/fixed_multiple_cauchy_test.cpp \
+	test/endgames/amp_cauchy_test.cpp \
+	test/endgames/generic_pseg_test.hpp \
+	test/endgames/fixed_double_powerseries_test.cpp \
+	test/endgames/fixed_multiple_powerseries_test.cpp \
+	test/endgames/amp_powerseries_test.cpp \
+	test/endgames/endgames_test.cpp 
+
+	
+	
+	
+	
+
+
+
+	
+
+
+
+
+
+endgames_test_SOURCES = \
+	$(endgames_test_source_files)
+
+
+
+endgames_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
+
+endgames_test_CXXFLAGS = $(BOOST_CPPFLAGS)
+

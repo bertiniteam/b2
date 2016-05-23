@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //homogenization_test.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,6 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with homogenization_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 //  homogenization_test.cpp
 //
@@ -27,13 +35,12 @@
 
 
 
-#include "system.hpp"
-#include "system_parsing.hpp"
+#include "bertini2/system.hpp"
+#include "bertini2/system_parsing.hpp"
 
-
+using mpfr_float = bertini::mpfr_float;
 using Var = std::shared_ptr<bertini::node::Variable>;
 using Float = std::shared_ptr<bertini::node::Float>;
-
 using VariableGroup = bertini::VariableGroup;
 
 BOOST_AUTO_TEST_SUITE(homogenization)
@@ -449,7 +456,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 	Var y = std::make_shared<bertini::node::Variable>("y");
 
 	auto a = pow(x,3) / 2;
-	auto b = pow(x,2) * 4.12331 * pow(x,1);
+	auto b = pow(x,2) * mpfr_float("4.12331") * pow(x,1);
 	
 	auto f1 = a+b;
 	BOOST_CHECK(f1->IsHomogeneous());
@@ -468,7 +475,7 @@ BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 	Var y = std::make_shared<bertini::node::Variable>("y");
 
 	auto a = pow(x,3) / 2;
-	auto b = pow(x,2) * 4.12331;
+	auto b = pow(x,2) * mpfr_float("4.12331");
 	
 	auto f1 = a+b;
 	BOOST_CHECK(!f1->IsHomogeneous());
