@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //start_system.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,15 +13,24 @@
 //You should have received a copy of the GNU General Public License
 //along with start_system.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-//  start_system.hpp
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
 
+// individual authors of this file include:
+// daniel brake, university of notre dame
+
+/**
+\file start_system.hpp 
+
+\brief Defines start system types.
+*/
+
+
+#ifndef BERTINI_START_SYSTEM_HPP
+#define BERTINI_START_SYSTEM_HPP
 
 #include "bertini2/system.hpp"
 #include "bertini2/limbo.hpp"
@@ -31,10 +40,6 @@ namespace bertini
 {
 	namespace start_system{
 
-		
-		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
-		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-			
 		/**
 		\brief Abstract base class for other start systems.
 
@@ -48,17 +53,19 @@ namespace bertini
 		public:
 			
 
-			virtual size_t NumStartPoints() const = 0;
+			virtual mpz_int NumStartPoints() const = 0;
 
 			template<typename T>
-			Vec<T> StartPoint(size_t index) const
+			Vec<T> StartPoint(mpz_int index) const
 			{
 				return GenerateStartPoint(T(),index);
 			}
 
+			virtual ~StartSystem() = default;
+			
 		private:
-			virtual Vec<dbl> GenerateStartPoint(dbl,size_t index) const = 0;
-			virtual Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const = 0;
+			virtual Vec<dbl> GenerateStartPoint(dbl,mpz_int index) const = 0;
+			virtual Vec<mpfr> GenerateStartPoint(mpfr,mpz_int index) const = 0;
 
 			friend class boost::serialization::access;
 
@@ -83,7 +90,7 @@ namespace bertini
 
 		Note that the corresponding target system MUST be square -- have the same number of functions and variables.  The start system cannot be constructed otherwise, particularly because it is written to throw at the moment if not square.
 
-		The start points are accesses by index (size_t), instead of being generated all at once.
+		The start points are accesses by index (mpz_int), instead of being generated all at once.
 		*/
 		class TotalDegree : public StartSystem
 		{
@@ -122,9 +129,12 @@ namespace bertini
 			/**
 			Get the number of start points for this total degree start system.  This is the Bezout bound for the target system.  Provided here for your convenience.
 			*/
-			size_t NumStartPoints() const override;
+			mpz_int NumStartPoints() const override;
 
+			TotalDegree& operator*=(Nd const& n);
 
+			TotalDegree& operator+=(System const& sys) = delete;
+			
 		private:
 
 			/**
@@ -132,17 +142,18 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<dbl> GenerateStartPoint(dbl,size_t index) const override;
+			Vec<dbl> GenerateStartPoint(dbl,mpz_int index) const override;
 
 			/**
 			Get the ith start point, in current default precision.
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr> GenerateStartPoint(mpfr,size_t index) const override;
+			Vec<mpfr> GenerateStartPoint(mpfr,mpz_int index) const override;
 
+			std::shared_ptr<node::Rational> gamma_; ///< the gamma from the gamma trick.
 			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
-			std::vector<size_t> degrees_; ///< stores the degrees of the functions.
+			std::vector<mpz_int> degrees_; ///< stores the degrees of the functions.
 
 
 			friend class boost::serialization::access;
@@ -157,3 +168,8 @@ namespace bertini
 		};
 	}
 }
+
+
+#endif
+
+

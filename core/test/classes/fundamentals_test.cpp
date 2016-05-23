@@ -1,40 +1,113 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-//fundamentals.cpp is free software: you can redistribute it and/or modify
+//fundamentals_test.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//fundamentals.cpp is distributed in the hope that it will be useful,
+//fundamentals_test.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with fundamentals.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with fundamentals_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
 
-//  fundamentals.cpp
-//
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// individual authors of this file include:
+// daniel brake, university of notre dame
 
 
 #include <boost/test/unit_test.hpp>
 #include <boost/multiprecision/mpfr.hpp>
+#include <boost/multiprecision/random.hpp>
 #include <iostream>
 
-#include "limbo.hpp"
+#include "bertini2/limbo.hpp"
+#include "bertini2/num_traits.hpp"
 
+#include <boost/random.hpp>
 
-
-using mpfr = boost::multiprecision::mpfr_float;
+using mpfr = bertini::mpfr_float;
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
+
+BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
+{	
+	using mpfr_50 = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<50>, boost::multiprecision::et_off>;
+
+	using namespace boost::multiprecision;
+	using namespace boost::random;
+	mpfr_float::default_precision(50);
+	uniform_real_distribution<mpfr_50> ur(0,1);
+	independent_bits_engine<mt19937, 50L*1000L/301L, mpz_int> gen;
+
+	auto c = ur(gen);
+
+	mpfr_float r(c);
+	mpfr_float s(ur(gen));
+}
+
+
+BOOST_AUTO_TEST_CASE(make_random_mpfr_float_100)
+{	
+	using mpfr_100 = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<100>, boost::multiprecision::et_off>;
+
+	using namespace boost::multiprecision;
+	using namespace boost::random;
+	mpfr_float::default_precision(100);
+	uniform_real_distribution<mpfr_100> ur(0,1);
+	independent_bits_engine<mt19937, 100L*1000L/301L, mpz_int> gen;
+
+	auto c = ur(gen);
+
+	mpfr_float r(c);
+	mpfr_float s(ur(gen));
+}
+
+
+BOOST_AUTO_TEST_CASE(RandomMP_default_precision_50)
+{
+	using namespace bertini;
+	mpfr_float::default_precision(50);
+	auto a = RandomMp(mpfr_float(-1),mpfr_float(1));
+	BOOST_CHECK_EQUAL(a.precision(), mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(50, mpfr_float::default_precision());
+}
+
+BOOST_AUTO_TEST_CASE(RandomMP_default_precision_100)
+{
+	using namespace bertini;
+	mpfr_float::default_precision(100);
+	auto a = RandomMp(mpfr_float(-1),mpfr_float(1));
+	BOOST_CHECK_EQUAL(a.precision(), mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(100, mpfr_float::default_precision());
+}
+
+BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
+{
+	using namespace bertini;
+	mpfr_float::default_precision(100);
+	mpfr_float a;
+
+	RandomMp(a,500);
+
+	BOOST_CHECK_EQUAL(a.precision(), 500);
+	BOOST_CHECK_EQUAL(100, mpfr_float::default_precision());
+}
+
+BOOST_AUTO_TEST_CASE(max_et_on)
+{
+	mpfr a(1), b(2), c(4);
+	// auto d = max(a,b*b+c);
+
+}
 
 BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 {
@@ -141,6 +214,19 @@ BOOST_AUTO_TEST_CASE(index_and_subscript_generation_out_of_range)
 	BOOST_CHECK_THROW(bertini::IndexToSubscript(120ul,dimensions),std::out_of_range);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(precision_of_double_is_16)
+{
+	double a(1.23124);
+	BOOST_CHECK_EQUAL(bertini::Precision(a), 16);
+}
+
+BOOST_AUTO_TEST_CASE(precision_of_complex_double_is_16)
+{
+	std::complex<double> a(1.23124, -0.12345679);
+	BOOST_CHECK_EQUAL(bertini::Precision(a), 16);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()

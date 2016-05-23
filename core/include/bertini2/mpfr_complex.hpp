@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //mpfr_complex.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,44 +13,39 @@
 //You should have received a copy of the GNU General Public License
 //along with mpfr_complex.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//
-// mpfr_complex.hpp:  Declares the class bertini::complex.
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
+
+/**
+\file mpfr_complex 
+
+\brief The main multiprecision complex number type.
+*/
 
 
-#ifndef MPFR_COMPLEX_HPP
-#define MPFR_COMPLEX_HPP
+#ifndef BERTINI_MPFR_COMPLEX_HPP
+#define BERTINI_MPFR_COMPLEX_HPP
 
-#include "config.h"
-
+#include "bertini2/config.h"
 
 #include "bertini2/mpfr_extensions.hpp"
-
-#include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/random.hpp>
-
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <Eigen/Core>
-
 #include <string>
 #include <assert.h>
 
 
-
-
-
-
 namespace bertini {
-	using boost::multiprecision::mpfr_float;
-	
+
 	/**
 	\brief Custom multiple precision complex class.
 	
@@ -60,7 +55,7 @@ namespace bertini {
 	This class currently uses Boost.Multiprecision -- namely, the mpfr_float type for variable precision.
 	This class is serializable using Boost.Serialize.
 	
-	The precision of a newly-made bertini::complex is whatever current default is, set by boost::multiprecision::mpfr_float::default_precision(...).
+	The precision of a newly-made bertini::complex is whatever current default is, set by mpfr_float::default_precision(...).
 
 	\todo{Implement MPI send/receive commands using Boost.MPI or alternative.}
 	*/
@@ -70,7 +65,12 @@ namespace bertini {
 		// The real and imaginary parts of the complex number
 		mpfr_float real_, imag_;
 		
-		
+		#ifdef USE_THREAD_LOCAL
+			static thread_local mpfr_float temp_[8];
+		#else
+			static mpfr_float temp_[8];
+		#endif
+
 		// Let the boost serialization library have access to the private members of this class.
 		friend class boost::serialization::access;
 		
@@ -80,7 +80,10 @@ namespace bertini {
 		template<class Archive>
 		void save(Archive & ar, const unsigned int version) const
 		{
-			assert(real_.precision()==imag_.precision());
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(real_.precision()==imag_.precision() && "real and imaginary parts at different precision at save time for Boost serialization of bertini::complex");
+			#endif
+
 			// note, version is always the latest when saving
 			unsigned int temp_precision = real_.precision();
 			ar & temp_precision;
@@ -127,18 +130,38 @@ namespace bertini {
 		/**
 		 Single-parameter for constructing a real-valued complex from a single real double number
 		 */
-		complex(double re) : real_(re), imag_("0.0"){}
+		explicit
+		complex(double re) : real_(re), imag_(0){}
 		
+		template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+		complex(T re) : real_(re), imag_(0){}
+
+		template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+		explicit
+		complex(T re, T im) : real_(re), imag_(im){}
+
+		complex(mpz_int const& re) : real_(re), imag_(0){}
+
+		explicit
+		complex(mpz_int const& re, mpz_int const& im) : real_(re), imag_(im){}
+
+		explicit
+		complex(mpq_rational const& re) : real_(re), imag_(0){}
+
+		explicit
+		complex(mpq_rational const& re, mpq_rational const& im) : real_(re), imag_(im){}
 		/**
 		 Single-parameter for constructing a real-valued complex from a single high-precision number
 		 */
-		complex(const mpfr_float & re) : real_(re), imag_("0.0"){}
+		
+		complex(const mpfr_float & re) : real_(re), imag_(0){}
 		
 		
 		/**
 		 Single-parameter for constructing a real-valued complex from a convertible single string
 		 */
-		complex(const std::string & re) : real_(re), imag_("0.0"){}
+		explicit
+		complex(const std::string & re) : real_(re), imag_(0){}
 		
 		
 		
@@ -159,6 +182,14 @@ namespace bertini {
 		/**
 		 Two-parameter constructor for building a complex from two low precision numbers
 		 */
+		 explicit
+		complex(std::complex<double> z) : real_(z.real()), imag_(z.imag())
+		{}
+
+		/**
+		 Two-parameter constructor for building a complex from two low precision numbers
+		 */
+		 explicit
 		complex(double re, double im) : real_(re), imag_(im)
 		{}
 		
@@ -167,6 +198,7 @@ namespace bertini {
 		/**
 		 Two-parameter constructor for building a complex from two strings.
 		 */
+		explicit
 		complex(const std::string & re, const std::string & im) : real_(re), imag_(im)
 		{}
 		
@@ -174,6 +206,7 @@ namespace bertini {
 		/**
 		 Mixed two-parameter constructor for building a complex from two strings.
 		 */
+		 explicit
 		complex(const mpfr_float & re, const std::string & im) : real_(re), imag_(im)
 		{}
 		
@@ -181,6 +214,7 @@ namespace bertini {
 		/**
 		 Mixed two-parameter constructor for building a complex from two strings.
 		 */
+		 explicit
 		complex(const std::string & re, const mpfr_float & im) : real_(re), imag_(im)
 		{}
 		
@@ -265,6 +299,38 @@ namespace bertini {
 		void imag(const mpfr_float & new_imag){imag_ = new_imag;}
 		
 		/**
+		 Set the value of the real part of the complex number
+		 */
+		void real(int new_real){real_ = new_real;}
+		
+		/**
+		 Set the value of the imaginary part of the complex number
+		 */
+		void imag(int new_imag){imag_ = new_imag;}
+
+		/**
+		 Set the value of the real part of the complex number
+		 */
+		void real(mpz_int new_real){real_ = new_real;}
+		
+		/**
+		 Set the value of the imaginary part of the complex number
+		 */
+		void imag(mpz_int new_imag){imag_ = new_imag;}
+		
+		/**
+		 Set the value of the real part of the complex number
+		 */
+		void real(mpq_rational new_real){real_ = new_real;}
+		
+		/**
+		 Set the value of the imaginary part of the complex number
+		 */
+		void imag(mpq_rational new_imag){imag_ = new_imag;}
+
+		
+
+		/**	
 		 Set the value of the real part of the complex number, from a double-quoted string.
 		 */
 		void real(const std::string & new_real){real_ = mpfr_float(new_real);}
@@ -276,8 +342,17 @@ namespace bertini {
 		
 		
 		
+		void SetZero()
+		{
+			real_ = 0;
+			imag_ = 0;
+		}
 		
-		
+		void SetOne()
+		{
+			real_ = 1;
+			imag_ = 0;
+		}
 		
 		////////
 		//
@@ -292,21 +367,21 @@ namespace bertini {
 		Constuct the number 0.
 		*/
 		inline static complex zero(){
-			return complex("0.0","0.0");
+			return complex(0,0);
 		}
 		
 		/**
 		Constuct the number 1.
 		*/
 		inline static complex one(){
-			return complex("1.0","0.0");
+			return complex(1,0);
 		}
 		
 		/**
 		Constuct the number 2.
 		*/
 		inline static complex two(){
-			return complex("2.0","0.0");
+			return complex(2,0);
 		}
 		
 		/**
@@ -314,7 +389,7 @@ namespace bertini {
 		*/
 		inline static complex i()
 		{
-			return complex("0.0","1.0");
+			return complex(0,1);
 		}
 		
 		/**
@@ -322,7 +397,7 @@ namespace bertini {
 		*/
 		inline static complex half()
 		{
-			return complex("0.5","0.0");
+			return complex("0.5","0");
 		}
 		
 		/**
@@ -330,7 +405,7 @@ namespace bertini {
 		*/
 		inline static complex minus_one()
 		{
-			return complex("-1.0","0.0");
+			return complex(-1,0);
 		}
 		
 		
@@ -339,11 +414,26 @@ namespace bertini {
 		 */
 		inline static complex rand()
 		{
-			complex returnme( RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")), RandomMp(mpfr_float("-1.0"),mpfr_float("1.0")) );
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 			returnme /= sqrt( returnme.abs());
 			return returnme;
 		}
 		
+		inline static complex RandomUnit()
+		{
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
+			returnme /= returnme.abs();
+			return returnme;
+		}
+		/**
+		 Produce a random real number \f$\in [-1,\,1]\f$, to current default precision. 
+		 */
+		inline static complex RandomReal()
+		{
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
+			returnme /= sqrt( returnme.abs());
+			return returnme;
+		}
 		
 		
 		
@@ -357,7 +447,6 @@ namespace bertini {
 		//////////////
 		
 		
-		
 		/**
 		 Complex addition
 		 */
@@ -368,7 +457,23 @@ namespace bertini {
 			return *this;
 		}
 		
-		
+		complex& operator+=(const mpz_int & rhs)
+		{
+			real_+=rhs;
+			return *this;
+		}
+
+		/**
+		 Complex addition, by an integral type.
+		 */
+		template<typename Int, typename = typename std::enable_if<std::is_integral<Int>::value >::type>
+		complex& operator+=(const Int & rhs)
+		{
+			real_ += rhs;
+			return *this;
+		}
+
+
 		/**
 		 Complex subtraction
 		 */
@@ -379,7 +484,27 @@ namespace bertini {
 			return *this;
 		}
 		
-		
+		/**
+		 Complex subtraction
+		 */
+		complex& operator-=(const mpz_int & rhs)
+		{
+			real_-=rhs;
+			return *this;
+		}
+
+		/**
+		 Complex subtraction, by an integral type.
+		 */
+		template<typename Int, typename = typename std::enable_if<std::is_integral<Int>::value >::type>
+		complex& operator-=(const Int & rhs)
+		{
+			real_ -= rhs;
+			return *this;
+		}
+
+
+
 		/**
 		 Complex multiplication.  uses a single temporary variable
 		 
@@ -387,29 +512,47 @@ namespace bertini {
 		 */
 		complex& operator*=(const complex & rhs)
 		{
-			mpfr_float a = real_*rhs.real_ - imag_*rhs.imag_; // cache the real part of the result
+			temp_[0].precision(mpfr_float::default_precision());
+
+			temp_[0] = real_*rhs.real_ - imag_*rhs.imag_; // cache the real part of the result
 			imag_ = real_*rhs.imag_ + imag_*rhs.real_;
-			real_ = a;
+			real_ = temp_[0];
 			return *this;
 		}
 		
-		
+
+		/**
+		 Complex multiplication, by an integral type.
+		 */
+		template<typename Int, typename = typename std::enable_if<std::is_integral<Int>::value >::type>
+		complex& operator*=(const Int & rhs)
+		{
+			real_ *= rhs;
+			imag_ *= rhs;
+			return *this;
+		}
+
+
+
 		/**
 		 Complex division.  implemented using two temporary variables
 		 */
 		complex& operator/=(const complex & rhs)
 		{
-			mpfr_float d = rhs.abs2();
-			mpfr_float a = real_*rhs.real_ + imag_*rhs.imag_; // cache the numerator of the real part of the result
-			imag_ = (imag_*rhs.real_ - real_*rhs.imag_)/d;
-			real_ = a/d;
+			temp_[1].precision(mpfr_float::default_precision());
+			temp_[2].precision(mpfr_float::default_precision());
+
+			temp_[1] = rhs.abs2(); // cache the denomenator...
+			temp_[2] = real_*rhs.real_ + imag_*rhs.imag_; // cache the numerator of the real part of the result
+			imag_ = (imag_*rhs.real_ - real_*rhs.imag_)/temp_[1];
+			real_ = temp_[2]/temp_[1];
 			
 			return *this;
 		}
 		
 		
 		/**
-		 Complex division, by a real mpfr_float.  implemented using two temporary variables
+		 Complex division, by a real mpfr_float.
 		 */
 		complex& operator/=(const mpfr_float & rhs)
 		{
@@ -419,7 +562,17 @@ namespace bertini {
 			return *this;
 		}
 		
-		
+
+		/**
+		 Complex division, by an integral type.
+		 */
+		template<typename Int, typename = typename std::enable_if<std::is_integral<Int>::value >::type>
+		complex& operator/=(const Int & rhs)
+		{
+			real_ /= rhs;
+			imag_ /= rhs;
+			return *this;
+		}
 		
 		/**
 		 Complex negation
@@ -444,7 +597,7 @@ namespace bertini {
 		 */
 		mpfr_float abs2() const
 		{
-			return pow(real(),2)+pow(imag(),2);
+			return real()*real()+imag()*imag();
 		}
 		
 		/**
@@ -486,9 +639,35 @@ namespace bertini {
 		
 		
 		
+		/**
+		\brief Is \f$z\f$ a NaN?
+		*/
+		bool isnan() const
+		{
+			using boost::math::isnan;
+			if (isnan(real()) || isnan(imag()))
+				return true;
+			else
+				return false;
+		}
 		
-		
-		
+		/**
+		\brief Is \f$z\f$ \f$\infty\f$?
+		*/
+		bool isinf() const
+		{
+			using boost::math::isinf;
+			using boost::math::isnan;
+			if ( (!isnan(real()) && !isnan(imag()))
+			    &&
+			     ( isinf(real()) ||  isinf(imag()))
+			   )
+				return true;
+			else
+				return false;
+		}
+
+
 		/**
 		 Change the precision of this high-precision complex number.
 		 
@@ -508,8 +687,10 @@ namespace bertini {
 		 */
 		unsigned int precision() const
 		{
-			assert(real_.precision()==imag_.precision());
-			
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(real_.precision()==imag_.precision() && "real and imaginary parts at different precision when querying precision.  somehow they got out of sync.");
+			#endif
+
 			return real_.precision();
 		}
 		
@@ -579,7 +760,7 @@ namespace bertini {
 					// did not find a comma
 					else{
 						z.real(gotten.substr(1,gotten.size()-2));
-						z.imag("0.0");
+						z.imag(0);
 						return in;
 					}
 					
@@ -587,7 +768,7 @@ namespace bertini {
 			}
 			else{
 				z.real(gotten);
-				z.imag("0.0");
+				z.imag(0);
 				return in;
 			}
 		}
@@ -600,6 +781,11 @@ namespace bertini {
 			return (this->real()==rhs.real()) && (this->imag()==rhs.imag());
 		}
 
+		bool operator!=(complex const& rhs) const
+		{
+			return !(*this==rhs);
+		}
+
 		/**
 		When explicitly asked, you can convert a bertini::complex into a std::complex<double>.  But only explicitly.  This conversion is narrowing, and should be avoided.
 		*/
@@ -608,9 +794,22 @@ namespace bertini {
 			return std::complex<double>(double(real_), double(imag_));
 		}
 		
-		///////
-		//TODO: write MPI methods, for sending, receiving, broadcasting, etc.  this will require becoming familiar with Boost.MPI
-		
+		friend void rand(bertini::complex & a, unsigned num_digits);
+		friend void RandomReal(bertini::complex & a, unsigned num_digits);
+		friend void RandomComplex(bertini::complex & a, unsigned num_digits);
+		friend void RandomUnit(bertini::complex & a, unsigned num_digits);
+
+
+
+		friend complex operator/(const mpfr_float & lhs, const complex & rhs);
+		friend complex operator/(const mpz_int & lhs, const complex & rhs);
+
+		template<typename T, typename std::enable_if<std::is_integral<T>::value >::type>
+		friend complex operator/(T const& lhs, const complex & rhs);
+
+		friend complex inverse(const complex & z);
+
+		friend complex exp(const complex & z);
 	}; // end declaration of the bertini::complex number class
 	
 	
@@ -651,7 +850,43 @@ namespace bertini {
 	{
 		return rhs+lhs;
 	}
+
+	/**
+	 Complex-real addition.
+	 */
+	inline complex operator+(complex lhs, const mpz_int & rhs)
+	{
+		lhs.real(lhs.real()+rhs);
+		return lhs;
+	}
 	
+	/**
+	 Real-complex addition.
+	 */
+	inline complex operator+(const mpz_int & lhs, complex rhs)
+	{
+		return rhs+lhs;
+	}
+	
+	/**
+	 Complex-real addition.
+	 */
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator+(complex lhs, T const& rhs)
+	{
+		lhs += rhs;
+		return lhs;
+	}
+	
+	/**
+	 Real-complex addition.
+	 */
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator+(T const& lhs, complex rhs)
+	{
+		rhs += lhs;
+		return rhs;
+	}
 	
 	
 	
@@ -669,7 +904,7 @@ namespace bertini {
 	 */
 	inline complex operator-(complex lhs, const mpfr_float & rhs)
 	{
-		lhs.real(lhs.real()-rhs);
+		lhs -= rhs;
 		return lhs;
 	}
 	
@@ -678,13 +913,50 @@ namespace bertini {
 	 */
 	inline complex operator-(const mpfr_float & lhs, complex rhs)
 	{
-		rhs.real(lhs - rhs.real());
-		rhs.imag(-rhs.imag());
-		return rhs;
+		rhs -= lhs;
+		return -rhs;
 	}
 	
+	/**
+	 Complex-real subtraction
+	 */
+	inline complex operator-(complex lhs, const mpz_int & rhs)
+	{
+		lhs -= rhs;
+		return lhs;
+	}
 	
+	/**
+	 Real-complex subtraction
+	 */
+	inline complex operator-(const mpz_int & lhs, complex rhs)
+	{
+		rhs -= lhs;
+		return -rhs;
+	}
+
+	/**
+	 Complex-real subtraction
+	 */
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator-(complex lhs, T rhs)
+	{
+		lhs -= rhs;
+		return lhs;
+	}
 	
+	/**
+	 Real-complex subtraction
+	 */
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator-(T lhs, complex rhs)
+	{
+		rhs -= lhs;
+		return -rhs;
+	}
+	
+
+
 	
 	/**
 	 Complex-complex multiplication
@@ -712,9 +984,47 @@ namespace bertini {
 		return rhs*lhs; // it commutes!
 	}
 	
+	/**
+	 Complex-real multiplication
+	 */
+	inline complex operator*(complex lhs, const mpz_int & rhs)
+	{
+		lhs.real(lhs.real()*rhs);
+		lhs.imag(lhs.imag()*rhs);
+		return lhs;
+	}
+	
+	/**
+	 Real-complex multiplication
+	 */
+	inline complex operator*(const mpz_int & lhs, complex rhs)
+	{
+		return rhs*lhs; // it commutes!
+	}
 	
 	
+	/**
+	 Complex-real multiplication
+	 */
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator*(complex lhs, T const& rhs)
+	{
+		lhs *= rhs;
+		return lhs;
+	}
 	
+	/**
+	 Real-complex multiplication
+	 */
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator*(T const& lhs, complex rhs)
+	{
+		rhs *= lhs;
+		return rhs; // it commutes!
+	}
+
+
+
 	
 	/**
 	 Complex-complex division
@@ -725,24 +1035,81 @@ namespace bertini {
 	}
 	
 	/**
+	 Real-complex division
+	 */
+	inline complex operator/(const mpfr_float & lhs, const complex & rhs)
+	{
+
+		complex::temp_[3].precision(mpfr_float::default_precision());
+		complex::temp_[3] = rhs.abs2();
+		return complex(lhs*rhs.real()/complex::temp_[3], -lhs*rhs.imag()/complex::temp_[3]);
+	}
+
+	/**
 	 Complex-real division
 	 */
 	inline complex operator/(complex lhs, const mpfr_float & rhs)
+	{
+		lhs /= rhs;
+		return lhs;
+	}
+	
+	
+
+
+
+	/**
+	 Integer-complex division
+	 */
+	inline complex operator/(const mpz_int & lhs, const complex & rhs)
+	{
+		complex::temp_[4].precision(mpfr_float::default_precision());
+		complex::temp_[4] = rhs.abs2();
+		return complex(lhs*rhs.real()/complex::temp_[4], -lhs*rhs.imag()/complex::temp_[4]);
+	}
+	
+	/**
+	 Complex-integer division
+	 */
+	inline complex operator/(complex lhs, const mpz_int & rhs)
 	{
 		lhs.real(lhs.real()/rhs);
 		lhs.imag(lhs.imag()/rhs);
 		return lhs;
 	}
 	
+
 	/**
-	 Real-complex division
+	 Integer-complex division
 	 */
-	inline complex operator/(const mpfr_float & lhs, const complex & rhs)
+	template<typename T, typename>
+	inline complex operator/(T const& lhs, const complex & rhs)
 	{
-		mpfr_float d = rhs.abs2();
-		return complex(lhs*rhs.real()/d, -lhs*rhs.imag()/d);
+		complex::temp_[5].precision(mpfr_float::default_precision());
+		complex::temp_[5] = rhs.abs2();
+		return complex(lhs*rhs.real()/complex::temp_[5], -lhs*rhs.imag()/complex::temp_[5]);
 	}
 	
+	/**
+	 Complex-integer division
+	 */
+	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
+	inline complex operator/(complex lhs, T const& rhs)
+	{
+		lhs/=rhs;
+		return lhs;
+	}
+
+
+	
+
+
+
+
+
+
+
+
 	/**
 	 Get the real part of a complex number
 	 */
@@ -768,7 +1135,16 @@ namespace bertini {
 		return z.conj();
 	}
 	
-	
+	/**
+	 \brief The C++ norm of complex number.
+
+	 Mathematically we think of this as the square of the absolute value.
+	*/	
+	inline mpfr_float norm(const complex & z)
+	{
+		return z.norm();
+	}
+
 	
 	/**
 	 Compute the square of the absolute value of a complex number
@@ -803,9 +1179,10 @@ namespace bertini {
 	 */
 	inline complex inverse(const complex & z)
 	{
-		mpfr_float d = z.abs2();
+		complex::temp_[6].precision(mpfr_float::default_precision());
+		complex::temp_[6] = z.abs2();
 		
-		return complex(z.real()/d, -z.imag()/d);
+		return complex(z.real()/complex::temp_[6], -z.imag()/complex::temp_[6]);
 	}
 	
 	
@@ -817,7 +1194,7 @@ namespace bertini {
 	 */
 	inline complex square(const complex & z)
 	{
-		return complex(z.real()*z.real() - z.imag()*z.imag(), mpfr_float("2.0")*z.real()*z.imag());
+		return complex(z.real()*z.real() - z.imag()*z.imag(), mpfr_float(2)*z.real()*z.imag());
 	}
 	
 	
@@ -833,8 +1210,8 @@ namespace bertini {
 	inline complex cube(const complex & z)
 	{
 		//		return complex(x^3 - 3*x*y^2, 3*x^2*y - y^3); // this deliberately left in for the equation.
-		return complex(pow(z.real(),3) - mpfr_float("3.0")*z.real()*pow(z.imag(),2),
-					   mpfr_float("3.0")*pow(z.real(),2)*z.imag() - pow(z.imag(),3));
+		return complex(pow(z.real(),3) - 3*z.real()*pow(z.imag(),2),
+					   3*pow(z.real(),2)*z.imag() - pow(z.imag(),3));
 		
 	}
 	
@@ -851,7 +1228,7 @@ namespace bertini {
 			return pow(inverse(z), -power);
 		}
 		else if (power==0)
-			return complex("1.0","0.0");
+			return complex(1,0);
 		else if(power==1)
 			return z;
 		else if(power==2)
@@ -861,7 +1238,7 @@ namespace bertini {
 		else
 		{
 			unsigned int p(power);
-			complex result("1.0","0.0"), z_to_the_current_power_of_two = z;
+			complex result(1,0), z_to_the_current_power_of_two = z;
 			// have copy of p in memory, can freely modify it.
 			do {
 				if ( (p & 1) == 1 ) { // get the lowest bit of the number
@@ -899,8 +1276,9 @@ namespace bertini {
 	 */
 	inline complex exp(const complex & z)
 	{
-		mpfr_float exp_of_x = exp(real(z));
-		return complex(exp_of_x * cos(imag(z)), exp_of_x * sin(imag(z)));
+		complex::temp_[7].precision(mpfr_float::default_precision());
+		complex::temp_[7] = exp(real(z));
+		return complex(complex::temp_[7] * cos(imag(z)), complex::temp_[7] * sin(imag(z)));
 	}
 	
 	/**
@@ -908,7 +1286,7 @@ namespace bertini {
 	 */
 	inline complex sin(const complex & z)
 	{
-		return (exp(complex::i()*z) - exp(-complex::i()*z)) / complex::i() / mpfr_float("2.0");
+		return (exp(complex::i()*z) - exp(-complex::i()*z)) / complex::i() / 2;
 	}
 	
 	/**
@@ -916,7 +1294,7 @@ namespace bertini {
 	 */
 	inline complex cos(const complex & z)
 	{
-		return (exp(complex::i()*z) + exp(-complex::i()*z))  / mpfr_float("2.0");
+		return (exp(complex::i()*z) + exp(-complex::i()*z))  / 2;
 	}
 	
 	/**
@@ -933,7 +1311,7 @@ namespace bertini {
 	 */
 	inline complex sinh(const complex & z)
 	{
-		return (exp(z) - exp(-z)) / mpfr_float("2.0");
+		return (exp(z) - exp(-z)) / 2;
 	}
 	
 	/**
@@ -941,7 +1319,7 @@ namespace bertini {
 	 */
 	inline complex cosh(const complex & z)
 	{
-		return (exp(z) + exp(-z))  / mpfr_float("2.0");
+		return (exp(z) + exp(-z))  / 2;
 	}
 	
 	/**
@@ -988,7 +1366,7 @@ namespace bertini {
 	 */
 	inline complex asin(const complex & z)
 	{
-		return (-complex::i()) * log( complex::i()*z + sqrt( mpfr_float("1.0") - pow(z,2)) );
+		return (-complex::i()) * log( complex::i()*z + sqrt( 1 - pow(z,2)) );
 	}
 	
 	
@@ -997,7 +1375,7 @@ namespace bertini {
 	 */
 	inline complex acos(const complex & z)
 	{
-		return -complex::i() * log( z + complex::i()*sqrt( mpfr_float("1.0") - pow(z,2) ) );
+		return -complex::i() * log( z + complex::i()*sqrt( 1 - pow(z,2) ) );
 	}
 	
 	
@@ -1008,7 +1386,7 @@ namespace bertini {
 	 */
 	inline complex atan(const complex & z)
 	{
-		return complex::i()/mpfr_float("2.0") * log( (complex::i() + z) / (complex::i() - z) );
+		return complex::i()/2 * log( (complex::i() + z) / (complex::i() - z) );
 	}
 	
 	
@@ -1019,7 +1397,7 @@ namespace bertini {
 	 */
 	inline complex asinh(const complex & z)
 	{
-		return log( z + sqrt( square(z)+mpfr_float("1.0") )  );
+		return log( z + sqrt( square(z)+1 )  );
 	}
 	
 	/**
@@ -1027,7 +1405,7 @@ namespace bertini {
 	 */
 	inline complex acosh(const complex & z)
 	{
-		return log(  z + sqrt( square(z)-mpfr_float("1.0") ) );
+		return log(  z + sqrt( square(z)-1 ) );
 	}
 	
 	/**
@@ -1035,98 +1413,72 @@ namespace bertini {
 	 */
 	inline complex atanh(const complex & z)
 	{
-		return mpfr_float("0.5") * log( (mpfr_float("1.0")+z)/(mpfr_float("1.0")-z) );
+		return log( (1+z)/(1-z) )/2;
 	}
 	
 	
 	
-	
-	
-} // re: namespace
+	/** 
+	\brief Get the precision of a number.
 
-
-
-
-
-
-// reopen the Eigen namespace to inject this struct.
-namespace Eigen {
-	
-	using boost::multiprecision::mpfr_float;
-	using namespace boost::multiprecision;
-	
-	
-	/**
-	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
-	 */
-	template<> struct NumTraits<bertini::complex> : NumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	For bertini::complex, this calls the precision member method for bertini::complex.
+	*/
+	inline
+	unsigned Precision(bertini::complex const& num)
 	{
-		typedef boost::multiprecision::mpfr_float Real;
-		typedef boost::multiprecision::mpfr_float NonInteger;
-		typedef bertini::complex Nested;// Nested;
-		enum {
-			IsComplex = 1,
-			IsInteger = 0,
-			IsSigned = 1,
-			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
-			ReadCost = 2 * NumTraits<Real>::ReadCost,
-			AddCost = 2 * NumTraits<Real>::AddCost,
-			MulCost = 4 * NumTraits<Real>::MulCost + 2 * NumTraits<Real>::AddCost
-		};
-		
-	};
-	
-	
-	
-	
-	namespace internal {
-		template<>
-		struct abs2_impl<bertini::complex>
-		{
-			static inline mpfr_float run(const bertini::complex& x)
-			{
-				return real(x)*real(x) + imag(x)*imag(x);
-			}
-		};
-		
-		
-		template<> inline bertini::complex random<bertini::complex>()
-		{
-			return bertini::complex::rand();
-		}
-		
-		template<> inline bertini::complex random<bertini::complex>(const bertini::complex& a, const bertini::complex& b)
-		{
-			return a + (b-a) * random<bertini::complex>();
-		}
-		
-		template<>
-		struct conj_helper<bertini::complex, bertini::complex, false, true>
-		{
-			typedef bertini::complex Scalar;
-			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
-			{ return c + pmul(x,y); }
-			
-			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
-			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::imag(x)*numext::real(y) - numext::real(x)*numext::imag(y)); }
-		};
-		
-		template<>
-		struct conj_helper<bertini::complex, bertini::complex, true, false>
-		{
-			typedef bertini::complex Scalar;
-			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
-			{ return c + pmul(x,y); }
-			
-			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
-			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::real(x)*numext::imag(y) - numext::imag(x)*numext::real(y)); }
-		};
-		
-	} // re: namespace internal
+		return num.precision();
+	}
 
-	
-	
-}
+	inline 
+	bool isnan(bertini::complex const& num)
+	{
+		return num.isnan();
+	}
+
+	inline 
+	void RandomReal(bertini::complex & a, unsigned num_digits)
+	{
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		a.imag_ = 0;
+	}
+
+	inline 
+	void rand(bertini::complex & a, unsigned num_digits)
+	{
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		RandomMp(a.imag_,num_digits);
+	}
+
+	inline 
+	void RandomComplex(bertini::complex & a, unsigned num_digits)
+	{
+		rand(a,num_digits);
+	}
+
+
+	inline 
+	void RandomUnit(bertini::complex & a, unsigned num_digits)
+	{
+		auto prev_precision = mpfr_float::default_precision();
+
+		a.precision(num_digits);
+		RandomMp(a.real_,num_digits);
+		RandomMp(a.imag_,num_digits);
+		a /= abs(a);
+
+		mpfr_float::default_precision(prev_precision);
+	}
+
+	using mpfr = bertini::complex;
+} // re: namespace bertini
+
+
+
+
+
+
 
 
 
