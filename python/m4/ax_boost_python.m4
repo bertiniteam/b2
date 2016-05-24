@@ -53,7 +53,7 @@
 #   modified version of the Autoconf Macro, you may extend this special
 #   exception to the GPL to apply to your modified version as well.
 
-#serial 20
+#serial 21
 
 AC_DEFUN([AX_BOOST_PYTHON],
 [AC_REQUIRE([AX_PYTHON_DEVEL])dnl
@@ -65,9 +65,19 @@ ax_boost_python_save_LIBS="$LIBS"
 if test "x$PYTHON_CPPFLAGS" != "x"; then
   CPPFLAGS="$PYTHON_CPPFLAGS $CPPFLAGS"
 fi
+
+# Versions of AX_PYTHON_DEVEL() before serial 18 provided PYTHON_LDFLAGS
+# instead of PYTHON_LIBS, so this is just here for compatibility.
 if test "x$PYTHON_LDFLAGS" != "x"; then
   LDFLAGS="$PYTHON_LDFLAGS $LDFLAGS"
 fi
+
+# Note: Only versions of AX_PYTHON_DEVEL() since serial 18 provide PYTHON_LIBS
+# instead of PYTHON_LDFLAGS.
+if test "x$PYTHON_LIBS" != "x"; then
+  LIBS="$PYTHON_LIBS $LIBS"
+fi
+
 if test "x$BOOST_CPPFLAGS" != "x"; then
   CPPFLAGS="$BOOST_CPPFLAGS $CPPFLAGS"
 fi
@@ -93,13 +103,13 @@ if test "$ac_cv_boost_python" = "yes"; then
   for ax_lib in $ax_python_lib $ax_boost_python_lib `ls $BOOSTLIBDIR/libboost_python*.so* $BOOSTLIBDIR/libboost_python*.dylib* $BOOSTLIBDIR/libboost_python*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_python.*\)\.so.*$;\1;' -e 's;^lib\(boost_python.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_python.*\)\.a.*$;\1;' ` boost_python boost_python3; do
     AS_VAR_PUSHDEF([ax_Lib], [ax_cv_lib_$ax_lib''_BOOST_PYTHON_MODULE])dnl
     AC_CACHE_CHECK([whether $ax_lib is the correct library], [ax_Lib],
-    [LIBS="-l$ax_lib $ax_boost_python_save_LIBS"
+    [LIBS="-l$ax_lib $ax_boost_python_save_LIBS $PYTHON_LIBS"
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <boost/python/module.hpp>
 BOOST_PYTHON_MODULE(test) { throw "Boost::Python test."; }]], [])],
         [AS_VAR_SET([ax_Lib], [yes])],
         [AS_VAR_SET([ax_Lib], [no])])])
-    AS_VAR_IF([ax_Lib], [yes], [BOOST_PYTHON_LIB=$ax_lib break], [])
+    AS_VAR_IF([ax_Lib], [yes], [BOOST_PYTHON_LIB=-l$ax_lib break], [])
     AS_VAR_POPDEF([ax_Lib])dnl
   done
   AC_SUBST(BOOST_PYTHON_LIB)

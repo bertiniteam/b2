@@ -72,7 +72,7 @@ namespace bertini{
 			.def("jacobian", return_Jac2_ptr<mpfr>() , "evaluate the jacobian of the system, using time and space values passed into this function")
 
 			.def("homogenize", &SystemBaseT::Homogenize)
-			.def("is_homogenous", &SystemBaseT::IsHomogeneous)
+			.def("is_homogeneous", &SystemBaseT::IsHomogeneous)
 			.def("is_polynomial", &SystemBaseT::IsPolynomial)
 			
 			.def("num_functions", &SystemBaseT::NumFunctions)
@@ -120,7 +120,21 @@ namespace bertini{
 			.def("clear_variables", &SystemBaseT::ClearVariables)
 			.def("copy_variable_structure", &SystemBaseT::CopyVariableStructure)
 			
-			
+			.def("auto_patch",&SystemBaseT::AutoPatch,"Apply a patch to the system, given its current variable group structure.")
+			.def("copy_patches",&SystemBaseT::CopyPatches,"Copy the patch from another system into this one.")
+			.def("get_patch",&SystemBaseT::GetPatch,"Get the patch from the system.")
+			.def("is_patched",&SystemBaseT::IsPatched,"Check whether the system is patched.")
+
+			.def("rescale_point_to_fit_patch",&SystemBaseT::template RescalePointToFitPatch<dbl>,"Return a rescaled version of the input point, which fits the patch for the system.")
+			.def("rescale_point_to_fit_patch",&SystemBaseT::template RescalePointToFitPatch<mpfr>,"Return a rescaled version of the input point, which fits the patch for the system.")
+
+			.def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<dbl>,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
+
+			.def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<mpfr>,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
+
+			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<dbl>)
+			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<mpfr>)
+
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))
 			.def(self += self)
