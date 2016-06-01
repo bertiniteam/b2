@@ -49,14 +49,15 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 
 namespace bertini{
 
-	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>;
-
+#ifdef BMP_EXPRESSION_TEMPLATES
+	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>; 
 	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_on>;
-
 	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_on>;
-
-	// using mpz_int = boost::multiprecision::mpz_int;
-	// using mpq_rational = boost::multiprecision::mpq_rational;
+#else
+	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off>; 
+	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_off>;
+	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_off>;
+#endif
 }
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
@@ -144,9 +145,17 @@ BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_int)
 // if you wish to use et_on with Boost.Multiprecision with Eigen 3.2.x or earlier, you must apply a patch to Boost.MP related to bug 11149, and use the following non-standard lines.
 // https://svn.boost.org/trac/boost/ticket/11149
 
-// namespace std{ using boost::multiprecision::min; using
-//  boost::multiprecision::max;
-// }
+#define EIGEN_DEVICE_FUNC // to make Eigen 3.3 happy... ugh, this is likely to break CUDA usage with Bertini2, if that ever happens.
+#include <Eigen/src/Core/util/Macros.h>
+
+#ifdef BMP_EXPRESSION_TEMPLATES
+	#if (!EIGEN_VERSION_AT_LEAST(3,2,92)) // version of 3.3-beta1 is 3,2,92.
+		namespace std{ 
+using boost::multiprecision::min; //error receiver: please see https://svn.boost.org/trac/boost/ticket/11149 for information about these using statements in std namespace.  
+using boost::multiprecision::max; //3 options: ./configure --disable-expression_templates, use Boost 1.61, or patch earlier Boost versions to resolve this.
+		}
+	#endif
+#endif
 
 namespace bertini
 {
