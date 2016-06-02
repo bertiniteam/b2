@@ -373,7 +373,7 @@ public:
 				s_derivatives[ii] = derivatives[ii+offset] * (candidate * pow(times[ii+offset], static_cast<RT>(candidate-1)/candidate));
 			}
 
-			auto curr_diff = (HermiteInterpolateAndSolve(
+			RT curr_diff = (HermiteInterpolateAndSolve(
 			                      pow(most_recent_time,static_cast<RT>(1)/candidate), // the target time
 			                      num_used_points,s_times,samples,s_derivatives) // the input data
 			                 - 
