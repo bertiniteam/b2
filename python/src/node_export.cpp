@@ -25,6 +25,8 @@
 //  West Texas A&M University
 //  Spring 2016
 //
+//  Daniel Brake
+//  University of Notre Dame
 //
 //  python/node_export.cpp:  Source file for exposing Node class to python.
 
@@ -32,8 +34,6 @@
 
 
 #include "node_export.hpp"
-
-//#include <bertini2/function_tree/node.hpp>
 
 
 namespace bertini{
@@ -168,8 +168,6 @@ namespace bertini{
 			class_<NodeWrap, boost::noncopyable, Nodeptr >("AbstractNode", no_init)
 			.def(NodeVisitor<Node>())
 			;
-
-			register_ptr_to_python<std::shared_ptr<Node> >();
 		};
 		
 		

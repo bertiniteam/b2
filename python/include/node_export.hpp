@@ -43,7 +43,6 @@ namespace bertini{
 
 		using namespace bertini::node;
 
-		using Node = Node;
 		using Nodeptr = std::shared_ptr<Node>;
 
 		void ExportNode();
