@@ -497,11 +497,11 @@ public:
 	SuccessCode AdvanceTime()
 	{
 		auto& samples = std::get<SampCont<CT> >(samples_);
-			auto& times   = std::get<TimeCont<CT> >(times_);
-			auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		auto& times   = std::get<TimeCont<CT> >(times_);
+		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 
-			Vec<CT> next_sample;
-		auto next_time = times.back() * this->EndgameSettings().sample_factor; //setting up next time value.
+		Vec<CT> next_sample;
+		CT next_time = times.back() * this->EndgameSettings().sample_factor; //setting up next time value.
 
   		if (abs(next_time) < this->EndgameSettings().min_track_time)
   		{
