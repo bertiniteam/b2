@@ -41,7 +41,7 @@
 #define BERTINI_NODE_BASE_HPP
 
 
-
+#include "bertini2/config.h"
 
 #include <iostream>
 #include <string>

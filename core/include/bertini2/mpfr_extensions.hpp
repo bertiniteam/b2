@@ -33,6 +33,7 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #ifndef BERTINI_MPFR_EXTENSIONS_HPP
 #define BERTINI_MPFR_EXTENSIONS_HPP
 
+#include "bertini2/config.h"
 
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
