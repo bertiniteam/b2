@@ -59,20 +59,16 @@ AC_ARG_ENABLE([thread_local],
 
 AS_IF([test "x$enable_thread_local" != "xno"],[
 	AC_DEFINE([USE_THREAD_LOCAL], [1],[Define if thread_local keyword should be used.  ])
-]
-
-)
+])
 
 
+AC_ARG_ENABLE([expression_templates],
+    AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates for Boost.Multiprecision.  Versions of Boost.Multiprecision prior to 1.61 are missing min/max for expressions of real numbers, and some operations in Eigen prior to 3.3 (3.2.92) fail to compile.  If you are using Boost prior to 1.61, either patch according to https://github.com/boostorg/multiprecision/commit/f57bd6b31a64787425ec891bd2ceb536c9036f72 or turn expression templates off using this argument.]))
 
-#this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs
-LX_FIND_MPI
+AS_IF([test "x$enable_expression_templates" != "xno"],[
+	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision.])
+])
 
-# print a notice about the presence of MPI on the machine.
-AS_IF([test "$have_CXX_mpi" = "yes"],
-	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
-	AC_MSG_NOTICE([it appears you do not have mpi installed])
-	)
 
 
 

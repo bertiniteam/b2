@@ -373,7 +373,7 @@ public:
 				s_derivatives[ii] = derivatives[ii+offset] * (candidate * pow(times[ii+offset], static_cast<RT>(candidate-1)/candidate));
 			}
 
-			auto curr_diff = (HermiteInterpolateAndSolve(
+			RT curr_diff = (HermiteInterpolateAndSolve(
 			                      pow(most_recent_time,static_cast<RT>(1)/candidate), // the target time
 			                      num_used_points,s_times,samples,s_derivatives) // the input data
 			                 - 
@@ -497,11 +497,11 @@ public:
 	SuccessCode AdvanceTime()
 	{
 		auto& samples = std::get<SampCont<CT> >(samples_);
-			auto& times   = std::get<TimeCont<CT> >(times_);
-			auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		auto& times   = std::get<TimeCont<CT> >(times_);
+		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 
-			Vec<CT> next_sample;
-		auto next_time = times.back() * this->EndgameSettings().sample_factor; //setting up next time value.
+		Vec<CT> next_sample;
+		CT next_time = times.back() * this->EndgameSettings().sample_factor; //setting up next time value.
 
   		if (abs(next_time) < this->EndgameSettings().min_track_time)
   		{

@@ -66,7 +66,7 @@ namespace bertini {
 		mpfr_float real_, imag_;
 		
 		#ifdef USE_THREAD_LOCAL
-			static thread_local mpfr_float temp_[8];
+			static thread_local mpfr_float temp_[8]; //OSX clang does NOT implement this. Use ./configure --disable-thread_local.  Also, send Apple a letter telling them to implement this keyword.
 		#else
 			static mpfr_float temp_[8];
 		#endif
