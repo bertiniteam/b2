@@ -71,15 +71,15 @@ namespace bertini {
 	};
 
 
-	#define ADD_BERTINI_EVENT_TYPE(event_name,event_subtype) \
+	#define ADD_BERTINI_EVENT_TYPE(event_name,event_parenttype) \
 	template<class ObservedT> \
-	class event_name : public event_subtype<ObservedT> \
+	class event_name : public event_parenttype<ObservedT> \
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS \
 	public: \
-		event_name(const ObservedT & obs) : event_subtype<ObservedT>(obs){} \
+		event_name(const ObservedT & obs) : event_parenttype<ObservedT>(obs){} \
 		virtual ~event_name() = default; \
 		event_name() = delete; \
-	};
+	}
 } //re: namespace bertini
 
 #endif
