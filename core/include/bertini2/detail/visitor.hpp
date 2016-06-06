@@ -36,7 +36,6 @@
 #include <tuple>
 #include <utility>
 
-#include <boost/fusion/include/std_tuple.hpp>
 #include <boost/fusion/adapted/std_tuple.hpp>
 
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
