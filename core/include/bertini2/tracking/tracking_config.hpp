@@ -147,7 +147,18 @@ namespace bertini
 		class AMPCauchyEndgame;
 		}
 
-		// this struct facilitates lookup of required endgame type based on tracker type
+		/**
+		\brief Facilitates lookup of required endgame type based on tracker type
+		
+		Your current choices are PSEG or Cauchy.
+	
+		To get the Power Series Endgame for Adaptive Precision Tracker, use the following example code:
+		\code
+		using EGT = EndgameSelector<AMPTracker>::PSEG
+		\endcode
+
+		\tparam TrackerT The type of tracker you want to use.
+		*/
 		template<typename TrackerT>
 		struct EndgameSelector
 		{ };

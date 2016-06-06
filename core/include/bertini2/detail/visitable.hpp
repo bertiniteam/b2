@@ -39,7 +39,10 @@
 namespace bertini{
 
 	namespace policy{
+
 		/**
+		\brief A policy for what to do when a visited type is encoutered by a visitor it doesn't know.
+
 		Defines the default behaviour when an unknown visitor is encountered during visitation.  
 
 		Assumes the return type is default constructible.
@@ -53,6 +56,9 @@ namespace bertini{
 			}
 		};
 
+		/**
+		The default policy for what to do when a visitable is visited by an unknown visitor.
+		*/
 		template<class VisitedT, typename RetT>
 		using DefaultCatchAll = DefaultConstruct<VisitedT, RetT>;
 	}
@@ -61,9 +67,11 @@ namespace bertini{
 
 
 	/**
-	The base class for visitable types.  
+	\brief The base class for visitable types.  
 
 	Implemented based on Alexandrescu, 2001, and Hythem Sidky's SAPHRON package, with his permission.
+
+	\see BERTINI_DEFAULT_VISITABLE
 	*/
 	template< typename RetT = void, template<class,class> class CatchAll = policy::DefaultCatchAll>
 	class VisitableBase
@@ -74,6 +82,17 @@ namespace bertini{
 		virtual ReturnType Accept(VisitorBase&) = 0; // the implementation will either be provided by a macro, or by hand, for each class which is visitable.
 
 	protected:
+
+		/**
+		\brief Abstract method for how to accept a visitor.  
+
+		This function simply Forwards to the Visit method of the visitor, if the visitor's type is known.  If known, invokes the behaviour defined by the CatchAll template parameter.
+
+		\tparam T The type of the visited object.  Should be inferred by the compiler.
+
+		\param visited The visited visitable object.
+		\param guest The visiting object.
+		*/
 		template<typename T>
 		static
 		ReturnType AcceptBase(T& visited, VisitorBase& guest)
@@ -86,13 +105,22 @@ namespace bertini{
 	};
 
 	
-	/** provide a macro for classes which want default Accept implementation, having nothing fancy to do when accepting.
+	/** 
+	\brief macro for classes which want default Accept implementation, having nothing fancy to do when accepting.
 	*/
 	#define BERTINI_DEFAULT_VISITABLE() \
 		virtual ReturnType Accept(VisitorBase& guest) override \
 		{ return AcceptBase(*this, guest); }
 
 
+	/**
+	\brief An abstract observable type, maintaining a list of observers, who can be notified in case of Events.
+	
+	Some known observable types are Tracker and Endgame.
+
+	\tparam RetT The return type of the Visit method of the observer or visitor.  Default is `void`.
+	\tparam CatchAll The policy to be invoked when the visited type doesn't know the visitor.  Default is the DefaultCatchAll.
+	*/
 	template<typename RetT = void, template<class,class> class CatchAll = policy::DefaultCatchAll>
 	class Observable : public VisitableBase<RetT, CatchAll>
 	{	
@@ -101,7 +129,9 @@ namespace bertini{
 		virtual ~Observable() = default;
 
 
-
+		/**
+		\brief Add an observer, to observe this observable.
+		*/
 		void AddObserver(AnyObserver* new_observer)
 		{
 			current_watchers_.push_back(new_observer);
@@ -109,7 +139,13 @@ namespace bertini{
 
 	protected:
 
+		/**
+		\brief Sends an Event (more particularly, AnyEvent) to all watching observers of this object.
 
+		This function could potentially be improved by filtering on the observer's desired event types, if known at compile time.  This could potentially be a performance bottleneck (hopefully not!) since filtering can use `dynamic_cast`ing.  One hopes this cost is overwhelmed by things like linear algebra and system evaluation.
+
+		\param e The event to emit.  Its type should be derived from AnyEvent.
+		*/
 		void NotifyObservers(AnyEvent const& e) const
 		{
 
