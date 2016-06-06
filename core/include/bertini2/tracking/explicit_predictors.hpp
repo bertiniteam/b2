@@ -24,7 +24,7 @@
 
 
 /**
- \file predictor.hpp
+ \file explicit_predictors.hpp
  
  \brief Contains a base class for all ODE predictors.
  */
@@ -56,6 +56,8 @@ namespace bertini{
 			 \brief Get the Bertini2 default predictor.
 			 
 			 Currently set to Euler, though this will change in future versions.
+
+			 \return The default predictor method to use.
 			 */
 			inline
 			Predictor DefaultPredictor()
@@ -65,7 +67,12 @@ namespace bertini{
 			
 			
 			/**
-			 The lowest order of the predictor.  The order of the error estimate is this plus one.
+			\brief The order of the predictor.  
+			
+			The order of the error estimate is this plus one.
+
+			 \return The order of the predictor method.
+			 \param predictor_choice The predictor method to query.
 			 */
 			inline
 			unsigned Order(Predictor predictor_choice)
@@ -93,7 +100,12 @@ namespace bertini{
 				}
 			}
 			
-			
+			/**
+			\brief Ask whether a predictor method provides an error estimate.
+
+			\return Yes or no, does it or does it not.
+			\param predictor_choice The predictor method to query.
+			*/
 			inline bool HasErrorEstimate(Predictor predictor_choice)
 			{
 				switch (predictor_choice)
@@ -122,7 +134,7 @@ namespace bertini{
 			
 			
 			/**
-			 /class ExplicitRKPredictor
+			 \class ExplicitRKPredictor
 			 
 			 \brief A class which stores all the explicit single-step multi-stage ODE predictor methods.
 			 
@@ -142,16 +154,16 @@ namespace bertini{
 			 ExplicitRKPredictors<Complex,Real> euler(config::Predictor::Euler, sys)
 			 success_code = euler.Predict( ... )
 			 \endcode
-			 
-			 
-			 
 			 */
-			
 			class ExplicitRKPredictor
 			{
 			public:
 				
-				
+				/**
+				\brief Construct a predictor to work on a system.
+
+				\param S the system the predictor will be predicting on.
+				*/
 				ExplicitRKPredictor(const System& S)
 				{
 					numTotalFunctions_ = S.NumTotalFunctions();
@@ -168,11 +180,9 @@ namespace bertini{
 				/**
 				 \brief Constructor for a particular predictor method
 				 
-				 
 				 \param method The predictor method to be implemented.
-				 
+				 \param S the system to be predicting on.
 				 */
-				
 				ExplicitRKPredictor(Predictor method, const System& S)
 				{
 					numTotalFunctions_ = S.NumTotalFunctions();
@@ -193,9 +203,7 @@ namespace bertini{
 				 /brief Sets the local variables to correspond to a particular predictor method
 				 
 				 \param method Enum class that determines the predictor method
-				 
 				 */
-				
 				void PredictorMethod(Predictor method)
 				{
 					predictor_ = method;
@@ -297,10 +305,9 @@ namespace bertini{
 				
 				
 				/**
-				 \brief Change the system(number of total functions) that the predictor uses.
+				 \brief Change the system (number of total functions) that the predictor uses.
 				 
-				 \param S New system
-				 
+				 \param S New system to switch to.
 				 */
 				void ChangeSystem(const System& S)
 				{
@@ -330,12 +337,9 @@ namespace bertini{
 				void ChangePrecision(unsigned new_precision)
 				{
 					for(int ii = 0; ii < numTotalFunctions_; ++ii)
-					{
 						for(int jj = 0; jj < s_; ++jj)
-						{
 							std::get< Mat<mpfr> >(K_)(ii,jj).precision(new_precision);
-						}
-					}
+
 					
 					for(int ii = 0; ii < numTotalFunctions_; ++ii)
 					{
@@ -368,6 +372,8 @@ namespace bertini{
 				 \param frequency_of_CN_estimation How many steps to take between condition number estimates.
 				 \param prec_type The operating precision type.
 				 \param tracking_tolerance How tightly to track the path.
+
+				 \return SuccessCode indicating how the prediction went.
 				 */
 				
 				template<typename ComplexType, typename RealType, typename Derived>
@@ -383,10 +389,7 @@ namespace bertini{
 					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
-					
 					return FullStep<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t);
-					
-					
 				}
 				
 				
@@ -409,6 +412,8 @@ namespace bertini{
 				 \param prec_type The operating precision type.
 				 \param tracking_tolerance How tightly to track the path.
 				 \param AMP_config The settings for adaptive multiple precision.
+
+				 \return SuccessCode indicating how the prediction went.
 				 */
 				
 				template<typename ComplexType, typename RealType, typename Derived>
@@ -490,6 +495,8 @@ namespace bertini{
 				 \param prec_type The operating precision type.
 				 \param tracking_tolerance How tightly to track the path.
 				 \param AMP_config The settings for adaptive multiple precision.
+
+				 \return SuccessCode indicating how the prediction went.
 				 */
 				
 				template<typename ComplexType, typename RealType, typename Derived>
@@ -538,7 +545,11 @@ namespace bertini{
 				
 				
 				
-				
+				/**
+				\brief Get the currently used prediction method.
+
+				\return The current method.
+				*/
 				Predictor PredictorMethod()
 				{
 					return predictor_;
@@ -548,7 +559,11 @@ namespace bertini{
 				
 				
 				/**
-				 The lowest order of the predictor.  The order of the error estimate is this plus one.
+				\brief Get the order of the currently used prediction method.
+
+				This is the lowest order of the predictor.  The order of the error estimate is this plus one.
+
+				\return The aforementioned order.
 				 */
 				inline
 				unsigned Order()
@@ -556,7 +571,11 @@ namespace bertini{
 					return p_;
 				}
 				
-				
+				/**
+				\brief Get whether the current prediction method provides an error estimate.
+
+				\return Yes or no.
+				*/
 				inline bool HasErrorEstimate()
 				{
 					return predict::HasErrorEstimate(predictor_);

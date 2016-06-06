@@ -1,30 +1,63 @@
-As a user, skip to step 2.  as a developer, to compile this project, you need to
+This README contains brief instructions for how to build the core of Bertini2.  For more extensive instructions, visit the wiki for the GitHub repo: https://github.com/bertiniteam/b2/wiki
 
-1) Regenerate the configure script, and some other m4 macros, etc, so that the build system is complete.  This requires the autotools, modern versions.  The command for this is
-
-autoreconf -vfi
-
-The -vfi flags are for (v)erbose, (f)orce, and (i)nstall.  If this step fails, you almost certainly have outdated autotools software, most namely automake, autoconf, and libtool.  Update your tools as necessary.
-
-On Linux machines, you may have to run the command
-
-libttoolize
-
-in order to get autoreconf to work.
-
---------------
-
-As a user, or maintainer, engage in the standard build process for any software built using the autotools.
-
-2) ./configure (with your options)
-
-3) make
-
-Then, if you want to, you can run the test programs.  So far, there is one: b2_class_test.  It is built using the Boost.UnitTest library, and can produce a variety of output files, and be run in a variety of modes.  These options are not documented here.
+If you struggle, find errors, or have comments, please let the dev team know.  We want this process to be as painless as possible!  Contact information can be found on the wiki.
 
 -------------
 
-notes:
+BUILDING THE CORE OF BERTINI2 
+
+-------------
+
+Before getting started, please note that these instructions are for Linux and Mac only.  Windows build instructions are yet to come.  If you want to help write those instructions (and indeed create the process), please let the devteam know!
+
+-------------
+
+Prerequisites:
+
+- Compiler capable of compiling C++ code using C++14 features.
+- Eigen 3.2.x or later.
+- Boost 1.56 or later.  To take advantage of expression templates for multiprecision real numbers (an important optimization), Boost versions prior to 1.61 must be patched.  See https://github.com/boostorg/multiprecision/commit/f57bd6b31a64787425ec891bd2ceb536c9036f72  If you do not wish to patch Boost, and are using a version prior to 1.61, please disable expression templates when configuring.  If you don't, you'll see a pair of errors, and comments basically saying this same message.  The configure flag is --disable-expression_templates.
+- Plenty of RAM.  Since there are many templates in play in Bertini2, Eigen, and Boost, compilation is slower than Bertini1, and takes a lot of memory.  GCC (g++) tends to use around 1 GB per thread when compiling the core, Clang perhaps 250MB.  Plan your use of parallel make accordingly, and consider getting a cup of coffee while compiling.  Enjoy!
+
+-------------
+
+Steps to compile:
+
+-------------
+
+1) Generate the ./configure script, and some other m4 macros, etc, so that the build system is complete.  This requires the autotools, modern versions.  The command for this is
+
+		autoreconf -vfi
+
+The -vfi flags are for (v)erbose, (f)orce, and (i)nstall.  If this step fails, you almost certainly have outdated autotools software, most namely automake, autoconf, and libtool.  Update your tools as necessary.
+
+Important note: on Linux machines, you typically have to run the command
+
+		libtoolize
+
+in order to get autoreconf to work.  
+
+--------------
+
+2) Engage in the standard build process for any software built using the autotools.
+
+		./configure (with your options)
+
+		make (consider using multiple threads [-j #] if you have enough memory)
+
+Then, if you want to, you can run the test programs.  
+
+		make check  (again consider running in parallel)
+
+The test programs are built using the Boost.UnitTest library, and can produce a variety of output files, and be run in a variety of modes.  These options are not documented here.  Rather, if you ask for --help on them, they will tell you more.
+
+Finally, you probably want to install the core, particularly if you intend to build the Python bindings (b2/python).
+
+		[sudo] make install
+
+-------------
+
+Notes for developers:
 
 If you add files to the project, or wish to add a compiled program, etc, you modify the b2/core/Makefile.am, and a b2/core/path/to/Makemodule.am file, or possibly create a Makemodule.am file at the correct location.  If you need help with this, please contact Daniel Brake danielthebrake@gmail.com
 

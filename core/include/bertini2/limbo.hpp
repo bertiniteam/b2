@@ -43,6 +43,8 @@ extern "C" {
 	\brief Check for presence of the Bertini 2 library.
 
 	This function's sole purpose is for checking for the presence of the Bertini 2 library.
+
+	\return The character 'y'.
 	*/
 	char HaveBertini2();
 }
@@ -57,9 +59,18 @@ extern "C" {
 
 namespace bertini{
 
-	// https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
-	// asked by user Adi, answered by James Adkison.  This code was provided CC-BY-SA 3.
-	// this code does NOT work for streaming enum classes to Boost.Log streams.
+	/**
+	\brief Method for printing class enums to streams.
+
+	This was adapted from https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
+	asked by user Adi, answered by James Adkison.  This code was provided CC-BY-SA 3.
+
+	This code does NOT work for streaming enum classes to Boost.Log streams.
+
+	\param stream The stream to print to.
+	\param e The enum value to print
+	\return The stream you are writing to.
+	*/
 	template<typename T>
 	std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
 	{
@@ -67,7 +78,9 @@ namespace bertini{
 	}
 
 	/**
-	Convert a zero-based index to a zero-based subscript vector.  Throws if the index is out-of-range based on the dimensions.
+	\brief Convert a zero-based index to a zero-based subscript vector.  
+
+	Throws `std::out_of_range` if the index is out-of-range based on the dimensions.
 
 	This goes from front to back, top to bottom.  So 
 
@@ -108,26 +121,51 @@ namespace bertini{
 	  }
 
 	  
+	  /**
+	  \brief Three-argument form of `max`.
 
+	  \param a Input one
+	  \param b Input two
+	  \param c Input three
+	  */
 	  template <typename T>
 	  T max(T const& a, T const& b, T const& c)
 	  {
 	  	using std::max;
-	  	return max(a,max(b,c));
+	  	return max(max(a,b),c);
 	  }
 
+	  /**
+	  \brief Four-argument form of `max`.
+
+	  \param a Input one
+	  \param b Input two
+	  \param c Input three
+	  \param d Input four
+	  */
 	  template <typename T>
 	  T max(T const& a, T const& b, T const& c, T const& d)
 	  {
 	  	using std::max;
-	  	return max(a,bertini::max(b,c,d));
+	  	using bertini::max;
+	  	return max(max(a,b,c),d);
 	  }
 
+	  /**
+	  \brief Five-argument form of `max`.
+
+	  \param a Input one
+	  \param b Input two
+	  \param c Input three
+	  \param d Input four
+	  \param e Input five
+	  */
 	  template <typename T>
 	  T max(T const& a, T const& b, T const& c, T const& d, T const& e)
 	  {
 	  	using std::max;
-	  	return max(a,bertini::max(b,c,d,e));
+	  	using bertini::max;
+	  	return max(max(a,b,c,d),e);
 	  }
 } // re: namespace bertini
 
