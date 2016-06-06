@@ -23,6 +23,11 @@
 // daniel brake, university of notre dame
 // Tim Hodges, Colorado State University
 
+/**
+\file tracking/adaptive_precision_utilities.hpp 
+
+\brief Functions for dealing with precisions of objects, particularly in the context of adaptive precision.
+*/
 
 #pragma once
 
@@ -32,6 +37,12 @@
 namespace bertini{ namespace tracking { namespace endgame {
 namespace adaptive{
 
+/**
+\brief Sets the precision of each space sample to be of input precision.
+
+\param samples The samples of which to change precision.
+\param prec The new precision the samples should have.
+*/
 inline
 void SetPrecision(SampCont<mpfr> & samples, unsigned prec)
 {
@@ -40,6 +51,12 @@ void SetPrecision(SampCont<mpfr> & samples, unsigned prec)
 			s(ii).precision(prec);
 }
 
+/**
+\brief Sets the precision of each time sample to be of input precision.
+
+\param times The times of which to change precision.
+\param prec The new precision the times should have.
+*/
 inline
 void SetPrecision(TimeCont<mpfr> & times, unsigned prec)
 {
@@ -47,6 +64,11 @@ void SetPrecision(TimeCont<mpfr> & times, unsigned prec)
 		t.precision(prec);
 }
 
+/**
+\brief Get the maximum precision among an input set of space samples.  
+
+This is computed based on the first coordinate.  Length-zero samples will cause either an assert or a throw.
+*/
 inline
 unsigned MaxPrecision(SampCont<mpfr> const& samples)
 {

@@ -44,22 +44,50 @@
 #include <boost/type_index.hpp>
 namespace bertini {
 
+	/**
+	\brief Strawman Event type, enabling polymorphism.
 
+	This class is abstract, and should never actually be created.
+	*/
 	class AnyEvent
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		virtual ~AnyEvent() = default;
 	};
 
+	/**
+	\brief For emission of events from observables.
+	
+	An observable object probably wants to emit events to notify observers that things are happening.  The observers filter the events, at this time by dynamic casting (slow, I know, but it works for now.  Premature optimization, etc.)  A better method than dynamic casting would be to filter based on a union of bits or something.  If you, the reader, want to help make this better, please contact a developer!
+
+	Say I am an observable object, and I want to emit an event.  Events attach the type of object emitting them, and in fact (a refence to) the emitter itself.  So if my type is `T`, I would do something like `NotifyObservers(Event<T>(*this))`.  Then an Observer can filter based on a heirarchy of event types, etc.  
+
+	\tparam ObsT The Observed type.  When emitting an event, you pass in the type of object emitting the event, and the object itself.  Then the observer can `Get` the emitting object, and do (const) stuff to it.
+
+	\see Observable, Observable::NotifyObservers, ADD_BERTINI_EVENT_TYPE, AMPPathAccumulator, AnyEvent
+	*/
 	template<class ObsT>
 	class Event : public AnyEvent
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
+
+		/**
+		\brief Constructor for an event.  
+
+		\param obs The observable emitting the event to observers.  Passed by const reference, this permits arbitrary `const` function calls by the observer.
+		*/
 		Event(ObsT const& obs) : current_observable_(obs)
 		{}
 
 		virtual ~Event() = default;
 
+		/**
+		\brief Get the emitting object, by `const` reference.
+
+		\return The observable who emitted the event.  This permits calls of arbitrary const functions, particularly getters.
+
+		\see AMPPathAccumulator for simple example of filtering using `dynamic_cast`s
+		*/
 		ObsT const& Get() const
 		{return current_observable_;}
 
@@ -70,7 +98,12 @@ namespace bertini {
 		
 	};
 
+	/**
+	\brief Defines a new event type in a hierarchy
 
+	\param event_name The name of the new Event type you are making.
+	\param event_subtype The name of the parent Event type in the heirarchy.
+	*/
 	#define ADD_BERTINI_EVENT_TYPE(event_name,event_parenttype) \
 	template<class ObservedT> \
 	class event_name : public event_parenttype<ObservedT> \
