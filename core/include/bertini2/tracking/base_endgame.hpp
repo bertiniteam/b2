@@ -60,7 +60,7 @@ namespace bertini{
 
 			
 			/**
-			\class Endgame
+			\class EndgameBase
 
 			\brief Base endgame class for all endgames offered in Bertini2.
 			

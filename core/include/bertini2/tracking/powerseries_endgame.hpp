@@ -230,7 +230,7 @@ public:
 
 
 	/**
-	\brief Computes an upper bound on the cycle number. Consult page 53 of \cite{bertinibook}.
+	\brief Computes an upper bound on the cycle number. Consult page 53 of \cite bertinibook.
 
 	Input: No input, all data needed is class data members.
 

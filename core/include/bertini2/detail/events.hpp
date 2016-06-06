@@ -102,17 +102,16 @@ namespace bertini {
 	\brief Defines a new event type in a hierarchy
 
 	\param event_name The name of the new Event type you are making.
-	\param event_subtype The name of the parent Event type in the heirarchy.
+	\param event_parenttype The name of the parent Event type in the heirarchy.
 	*/
-	#define ADD_BERTINI_EVENT_TYPE(event_name,event_parenttype) \
-	template<class ObservedT> \
+	#define ADD_BERTINI_EVENT_TYPE(event_name,event_parenttype) template<class ObservedT> \
 	class event_name : public event_parenttype<ObservedT> \
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS \
 	public: \
 		event_name(const ObservedT & obs) : event_parenttype<ObservedT>(obs){} \
 		virtual ~event_name() = default; \
-		event_name() = delete; \
-	}
+		event_name() = delete; }
+	
 } //re: namespace bertini
 
 #endif

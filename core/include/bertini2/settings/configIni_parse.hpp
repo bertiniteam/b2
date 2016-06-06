@@ -25,7 +25,7 @@
 //  Spring, Summer 2015
 
 /**
- \file configIni_parser.hpp Converts configuration settings into ini format
+ \file configIni_parse.hpp Converts configuration settings into ini format
  */
 
 
