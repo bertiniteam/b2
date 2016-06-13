@@ -494,6 +494,31 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		A*=a;
 	}
+
+	BOOST_AUTO_TEST_CASE(change_precision_mpfr_float)
+	{
+		using bertini::Precision;
+		using data_type = bertini::mpfr_float;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+		Precision(A,100);
+		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+	}
+
+	BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex)
+	{
+		using bertini::Precision;
+		using data_type = bertini::mpfr;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+		Precision(A,100);
+		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+	}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 	

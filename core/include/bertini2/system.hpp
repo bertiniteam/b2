@@ -738,12 +738,15 @@ namespace bertini {
 			if (new_values.size()!= NumVariables())
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 
+			const auto& vars = Variables();
+
 			#ifndef BERTINI_DISABLE_ASSERTS
 				if (!std::is_same<T,dbl>::value)
 				assert(Precision(new_values(0)) == this->precision() && "precision of input point in SetVariables must match the precision of the system.");
-			#endif
 
-			const auto& vars = Variables();
+				if (!std::is_same<T,dbl>::value)
+				assert(vars[0]->node::NamedSymbol::precision() == this->precision() && "precision of variables in SetVariables must match the precision of the system.");
+			#endif
 
 			auto counter = 0;
 

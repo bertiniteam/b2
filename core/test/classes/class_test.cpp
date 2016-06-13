@@ -50,7 +50,7 @@ using mpfr = bertini::complex;
 double relaxed_threshold_clearance_d = 1e-14;
 double threshold_clearance_d = 1e-15;
 
-unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS = 30;
+unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS = 50;
 bertini::mpfr_float threshold_clearance_mp("1e-27");
 
 std::string xstr_real = "3.1";

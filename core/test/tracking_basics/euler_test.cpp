@@ -104,7 +104,6 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	dbl(0.370984337833979085688209698697074, 1.30889906180158745272421523674049);
 	
 	Vec<dbl> euler_prediction_result;
-	dbl next_time;
 	
 	double tracking_tolerance(1e-5);
 	double condition_number_estimate;
@@ -174,7 +173,6 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		mpfr("0.370984337833979085688209698697074", "1.30889906180158745272421523674049");
 		
 		Vec<mpfr> euler_prediction_result;
-		mpfr next_time;
 		
 		mpfr_float tracking_tolerance("1e-5");
 		mpfr_float condition_number_estimate;
@@ -248,7 +246,6 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		dbl(0.731506850772617663577442383933525);
 		
 		Vec<dbl> euler_prediction_result;
-		double next_time;
 		
 		double tracking_tolerance(1e-5);
 		double condition_number_estimate;
@@ -317,7 +314,6 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		mpfr("0.731506850772617663577442383934");
 		
 		Vec<mpfr> euler_prediction_result;
-		mpfr next_time;
 		
 		mpfr_float tracking_tolerance("1e-5");
 		mpfr_float condition_number_estimate;
@@ -747,7 +743,6 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		mpfr("0.370984337833979085688209698697074", "1.30889906180158745272421523674049");
 		
 		Vec<mpfr> euler_prediction_result;
-		mpfr next_time;
 		
 		mpfr_float tracking_tolerance("1e-5");
 		mpfr_float condition_number_estimate;
@@ -777,7 +772,13 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		
 		bertini::mpfr_float::default_precision(50);
-		
+		Precision(Eigen::Ref<Vec<mpfr>>(current_space),50); assert(current_space(0).precision()==50);
+		current_time.precision(50);
+		delta_t.precision(50);
+		sys.precision(50);assert(sys.precision()==50);
+		Precision(Eigen::Ref<Vec<mpfr>>(predicted),50); assert(predicted(0).precision()==50);
+		Precision(Eigen::Ref<Vec<mpfr>>(euler_prediction_result),50);  assert(euler_prediction_result(0).precision()==50);
+
 		// Starting point in spacetime step
 		current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
 		
@@ -789,7 +790,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		
 		
-		sys.precision(50);
+		
 		
 		AMP = bertini::tracking::config::AMPConfigFrom(sys);
 		
@@ -818,7 +819,10 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
+		{
+			std::cout << abs(euler_prediction_result(ii)-predicted(ii)) << "\n";
 			BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < 1e-47);
+		}
 		
 	}
 

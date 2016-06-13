@@ -233,10 +233,8 @@ namespace bertini {
 		/**
 		 The move constructor
 		 */
-		complex(complex&& other) : complex()// initialize via default constructor, C++11 only
-		{
-			swap(*this, other);
-		}
+		complex(complex&& other) : real_(std::move(other.real_)), imag_(std::move(other.imag_))
+		{}
 		
 		
 		
@@ -260,14 +258,18 @@ namespace bertini {
 		/**
 		 Assignment operator
 		 */
-		complex& operator=(complex other)
-		{
-			swap(*this, other);
+		complex& operator=(complex const& other)
+		{	
+			if (this != &other)
+		    {
+				real_ = other.real_;
+				imag_ = other.imag_;
+			}
 			return *this;
 		}
 		
 		
-		
+		complex& operator=(complex && other) = default;
 		
 		
 		
@@ -281,12 +283,12 @@ namespace bertini {
 		/**
 		 Get the value of the real part of the complex number
 		 */
-		inline mpfr_float real() const {return real_;}
+		inline const mpfr_float& real() const {return real_;}
 		
 		/**
 		 Get the value of the imaginary part of the complex number
 		 */
-		inline mpfr_float imag() const {return imag_;}
+		inline const mpfr_float& imag() const {return imag_;}
 		
 		/**
 		 Set the value of the real part of the complex number
@@ -936,7 +938,7 @@ namespace bertini {
 	}
 
 	/**
-	 Complex-real subtraction
+	 Complex-integer subtraction
 	 */
 	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
 	inline complex operator-(complex lhs, T rhs)
@@ -946,7 +948,7 @@ namespace bertini {
 	}
 	
 	/**
-	 Real-complex subtraction
+	 Integer-complex subtraction
 	 */
 	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
 	inline complex operator-(T lhs, complex rhs)
@@ -985,7 +987,7 @@ namespace bertini {
 	}
 	
 	/**
-	 Complex-real multiplication
+	 Complex-integer multiplication
 	 */
 	inline complex operator*(complex lhs, const mpz_int & rhs)
 	{
@@ -995,7 +997,7 @@ namespace bertini {
 	}
 	
 	/**
-	 Real-complex multiplication
+	 Integer-complex multiplication
 	 */
 	inline complex operator*(const mpz_int & lhs, complex rhs)
 	{
@@ -1004,7 +1006,7 @@ namespace bertini {
 	
 	
 	/**
-	 Complex-real multiplication
+	 Complex-integer multiplication
 	 */
 	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
 	inline complex operator*(complex lhs, T const& rhs)
@@ -1014,7 +1016,7 @@ namespace bertini {
 	}
 	
 	/**
-	 Real-complex multiplication
+	 Integer-complex multiplication
 	 */
 	template<typename T, typename = typename std::enable_if<std::is_integral<T>::value >::type>
 	inline complex operator*(T const& lhs, complex rhs)
@@ -1113,7 +1115,7 @@ namespace bertini {
 	/**
 	 Get the real part of a complex number
 	 */
-	inline mpfr_float real(const complex & z)
+	inline const mpfr_float& real(const complex & z)
 	{
 		return z.real();
 	}
@@ -1121,7 +1123,7 @@ namespace bertini {
 	/**
 	 Get the imaginary part of a complex number
 	 */
-	inline mpfr_float imag(const complex & z)
+	inline const mpfr_float& imag(const complex & z)
 	{
 		return z.imag();
 	}
