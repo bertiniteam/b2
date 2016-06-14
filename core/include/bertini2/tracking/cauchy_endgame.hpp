@@ -36,6 +36,7 @@ namespace bertini{ namespace tracking { namespace endgame{
 /** 
 \class CauchyEndgame
 \brief Class used to finish tracking paths during Homotopy Continuation.
+
 ## Explanation
 The bertini::CauchyEngame class enables us to finish tracking on possibly singular paths on an arbitrary square homotopy.  
 The intended usage is to:
@@ -44,52 +45,119 @@ The intended usage is to:
 3. Create a CauchyEndgame, associating it to the system you are going to solve or track on.
 4. For each path being tracked send the CauchyEndgame the time value and other variable values at that time. 
 5. The CauchyEndgame, if successful, will store the target systems solution at $t = 0$.
+
+
+
 ## Example Usage
 Below we demonstrate a basic usage of the CauchyEndgame class to find the singularity at $t = 0$. 
 The pattern is as described above: create an instance of the class, feeding it the system to be used, and the endgame boundary time and other variable values at the endgame boundary. 
 \code{.cpp}
-mpfr_float::default_precision(30); // set initial precision.  This is not strictly necessary.
 using namespace bertini::tracking;
-// 1. Create the system
-System sys;
+using RealT = TrackerTraits<TrackerType>::BaseRealType; // Real types
+using ComplexT = TrackerTraits<TrackerType>::BaseComplexType; Complex types
+
+// 1. Define the polynomial system that we wish to solve. 
+System target_sys;
 Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
+
 VariableGroup vars{x,y};
-sys.AddVariableGroup(vars); 
-sys.AddPathVariable(t);
-// Define homotopy system
-sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
-sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
-//2. Setup a tracker. 
-bertini::tracking::AMPTracker tracker(sys);
-bertini::tracking::config::Stepping stepping_preferences;
-bertini::tracking::config::Newton newton_preferences;
-tracker.Setup(bertini::tracking::config::Predictor::Euler,
-    mpfr_float("1e-5"),
-    mpfr_float("1e5"),
-    stepping_preferences,
-    newton_preferences);
-tracker.AMPSetup(AMP);
-// We make the assumption that we have tracked to t = 0.1 (value at t = 0.1 known from Bertini 1.5)
-mpfr current_time(1);
-Vec<mpfr> current_space(2);
-current_time = mpfr(".1");
-current_space <<  mpfr("5.000000000000001e-01", "9.084258952712920e-17") ,mpfr("9.000000000000001e-01","4.358898943540673e-01");
-//  3. (Optional) configure settings for specific endgame. 
-bertini::tracking::config::Endgame endgame_settings;
-bertini::tracking::config::Cauchy cauchy_settings;
-bertini::tracking::config::Security endgame_security_settings;
-//4. Create the CauchyEngame object, by sending in the tracker and any other settings. Notice the endgame is templated by the tracker. 
-bertini::tracking::endgame::CauchyEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,cauchy_settings,endgame_settings,endgame_security_settings);
-//Calling the CauchyEG member function actually runs the endgame. 
-My_Endgame.CauchyEG(current_time,current_space);
-//Access solution at t = 0, using the .get_final_approximation_at_origin() member function. 
-auto Answer  = My_Endgame.get_final_approximation_at_origin();
+target_sys.AddVariableGroup(vars); 
+
+target_sys.AddFunction((pow(x-1,3));
+target_sys.AddFunction((pow(y-1,2));
+
+// 1b. Homogenize and patch the polynomial system to work over projective space. 
+sys.Homogenize();
+sys.AutoPatch();
+
+// 2. Create a start system, for us we will use a total degree start system.
+auto TD_start_sys = bertini::start_system::TotalDegree(target_sys);
+
+// 2b. Creating homotopy between the start system and system we wish to solve. 
+auto my_homotopy = (1-t)*target_sys + t*TD_start_sys*Rational::Rand(); //the random number is our gamma for a random path between t = 1 and t = 0.
+my_homotopy.AddPathVariable(t);
+
+//Sets up configuration settings for our particular system.
+auto precision_config = PrecisionConfig(my_homotopy);
+
+
+// 3. Creating a tracker. For us this is an AMPTracker. 
+AMPTracker tracker(my_homotopy);
+
+//Tracker setup of settings. 
+config::Stepping<RealT> stepping_preferences;
+stepping_preferences.initial_step_size = RealT(1)/RealT(5);// change a stepping preference
+config::Newton newton_preferences;
+tracker.Setup(TestedPredictor,
+            RealFromString("1e-6"),
+            RealFromString("1e5"),
+            stepping_preferences,
+            newton_preferences);
+tracker.PrecisionSetup(precision_config);
+
+//We start at t = 1, and will stop at t = 0.1 before starting the endgames. 
+ComplexT t_start(1), t_endgame_boundary(0.1);
+
+//This will hold our solutions at t = 0.1 
+std::vector<Vec<ComplexT> > my_homotopy_solutions_at_endgame_boundary;
+
+// result holds the value we track to at 0.1, and tracking success will report if we are unsucessful.
+Vec<ComplexT> result;
+
+//4. Track all points to 0.1
+for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
+{
+    mpfr_float::default_precision(ambient_precision);
+    my_homotopy.precision(ambient_precision); // making sure our precision is all set up 
+    auto start_point = TD_start_sys.StartPoint<ComplexT>(ii);
+
+    tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
+
+    my_homotopy_solutions_at_endgame_boundary.push_back(result);
+}
+
+
+//Settings for the endgames. 
+
+config::Tolerances<RealT> tolerances;
+tolerances.final_tolerance_multiplier = RealT(100);
+
+config::Cauchy<RealT> cauchy_settings;
+cauchy_settings.fail_safe_maximum_cycle_number = 6;
+
+
+// 5. Create a cauchy endgame, and use them to get the soutions at t = 0. 
+EndgameSelector<TrackerType>::Cauchy my_cauchy_endgame(tracker,cauchy_settings,tolerances);
+
+
+std::vector<Vec<ComplexT> > my_homotopy_solutions; 
+
+std::vector<Vec<ComplexT> > my_homotopy_divergent_paths; 
+
+for(auto s : my_homotopy_solutions_at_endgame_boundary) 
+{
+    SuccessCode endgame_success = my_cauchy_endgame.Run(t_endgame_boundary,s);
+
+    if(endgame_success == SuccessCode::Success)
+    {
+        my_homotopy_solutions.push_back(my_homotopy.DehomogenizePoint(my_endgame.FinalApproximation<ComplexT>()));
+    }
+    else
+    {
+        my_homotopy_divergent_paths.push_back(my_homotopy.DehomogenizePoint(my_endgame.FinalApproximation<ComplexT>()));
+    }
+}
 \endcode
+
+
 If this documentation is insufficient, please contact the authors with suggestions, or get involved!  Pull requests welcomed.
+
 ## Testing
 Test suite driving this class: endgames_test.
-File: test/endgames/cauchy_class_test.cpp
-Functionality tested: All member functions of the CauchyEndgame have been tested in variable precision. There is also, test running different systems to find singular solutions at t = 0.
+File: test/endgames/generic_cauchy_test.hpp
+File: test/endgames/amp_cauchy_test.cpp
+File: test/endgames/fixed_double_cauchy_test.cpp
+FIle: test/endgames/fixed_multiple_cauchy_test.cpp
 */	
 template<typename TrackerType, typename FinalEGT, typename... UsedNumTs> 
 class CauchyEndgame : public EndgameBase<TrackerType>
@@ -138,12 +206,6 @@ protected:
 	
 
 public:
-
-
-	// // some getters
-	// const std::deque< Vec<mpfr> >& CauchySamples() const {return cauchy_samples_;}
-	// const std::deque<mpfr>& CauchyTimes() const {return cauchy_times_;}
-
 	/**
 	\brief Function that clears all samples and times from data members for the Cauchy endgame
 	*/
@@ -233,22 +295,23 @@ public:
 	~CauchyEndgame() {};
 
 
-	/*
-	Input: 
-		A starting time and starting sample space to start tracking. 
-	Output: A successcode to see if we have successfully tracked around the origin or if we have encountered an error. 
-	Details:
-		This function uses the number of sample points to track in a polygonal path around the origin. 
-		This function should be called the number of times it takes to loop around the origin and get back the original 
-		point we started with. In essence this function will help determine the cycle number. A deque of cauchy_samples and cauchy_times is populated in this function. 
-	*/
-	/**
-	\brief A function that will track around the origin once. 
-	\param[out] starting_time The time value at which we start trackin around the origin. 
-	\param starting_sample The current variable values at staring_time.
-	\tparam CT The complex number type.
-	*/
 
+	/**
+		\brief Function to track around the origin 
+
+		## Input: 
+				starting_time: time value that we start from to track around the origin
+				starting_sample: an approximate solution of the homotopy at t = starting_time
+
+		## Output:
+				SuccessCode: This reports back if we were successful in advancing time. 
+				
+
+		##Details:
+				\tparam CT The complex number type.
+				Depeding on the number of samples points, we make a polgon around the origin with that many vertices. This function should be called the same number of times  
+				as paths converging to the solution we are approximating. 
+	*/
 	template<typename CT> 
 	SuccessCode CircleTrack(CT const& starting_time, Vec<CT> const& starting_sample)
 	{	
@@ -316,20 +379,22 @@ public:
 	}//end CircleTrack
 
 
-	
-	/*
-	Input: 
-		All input is available through class data members. 
-	Output: An mpfr_float that is an estimate on the c/k ratio shown in the book under Cauchy Endgame.
-	Details:
-		Using the formula for the cycle test outline in the Bertini Book pg. 53, we can compute an estimate for c/k.
-		This estimate is used to help find stabilization of the cycle number. 
-	*/
-
 	/**
-	\brief A function that uses the assumption of being in the endgame operating zone to compute an approximation of the ratio c over k. 
-	When the cycle number stabilizes we will see that the different approximations of c over k will stabilize. 
-	Returns the computed value of c over k. 
+		\brief A function that uses the assumption of being in the endgame operating zone to compute an approximation of the ratio c over k. 
+			When the cycle number stabilizes we will see that the different approximations of c over k will stabilize. 
+			Returns the computed value of c over k. 
+
+
+		## Input: 
+				None: all data needed are class data members.
+
+		## Output:
+				estimate: The approximation of the ratio of the two numbers C and K heuristically signifying we are in the cauchy endgame operating zone. 
+				
+
+		##Details:
+				\tparam CT The complex number type.
+				Consult page 53 of \cite bertinibook, for the reasoning behind this heuristic.
 	*/
 	template<typename CT>
 	auto ComputeCOverK() -> typename Eigen::NumTraits<CT>::Real
@@ -359,16 +424,21 @@ public:
 
 	}//end ComputeCOverK
 
-	/*
-	Input: An array of c/k estimates. If we have stabilization than these estimates will be withing some treshold. 
-	Output: Boolean of true or false. 
-	Details: We consider the ratio of consecutive c/k estimates. If we are less than the minimum needed for stabilization we return false.
-	Otherwise, we return true. 
-	*/
 
 	/**
-	\brief Function to determine if ratios of c/k estimates are withing a user defined threshold. 			
-	\param c_over_k_array A deque of computed values for c/k.
+		\brief Function to determine if ratios of c/k estimates are withing a user defined threshold. 		
+
+
+		## Input: 
+				c_over_k_array: A container holding all previous computed C over K ratios. The stabilization of these ratios is key to the convergence of the cauchy endgame. 
+
+		## Output:
+				true: if we have stabilized and can proceed with the endgame. 
+				false: if our ratios are not withing tolerances set by the user or by default. 
+
+		##Details:
+				\tparam CT The complex number type.
+				
 	*/
 	template<typename CT>
 	bool CheckForCOverKStabilization(TimeCont<CT> const& c_over_k_array)
@@ -446,16 +516,20 @@ public:
 	*/
 
 
-	/*
-	Input: No input, tolerance used is tracking tolerance during endgame. 
-		
-	Output: A boolean declaring if we have closed the loop or not. 
-	Details: Take a point used to start CircleTrack along with last point tracked to in CircleTrack. We see if the difference between the two points
-	is less than the tracking tolerance during endgame. If so, we declare these points to be the same. 	
-	*/
 
 	/**
-	\brief Function that determines if we have closed a loop after calling CircleTrack().
+		\brief Function that determines if we have closed a loop after calling CircleTrack().		
+
+
+		## Input: 
+				None: all data needed are class data members
+
+		## Output:
+				true: if we have closed the loop
+				false: if we have not closed the loop
+
+		##Details:
+				\tparam CT The complex number type
 	*/
 	template<typename CT>
 	bool CheckClosedLoop()
@@ -480,17 +554,26 @@ public:
 
 	}//end CheckClosedLoop
 
-	/*
-	Input: No input, all data needed are class data members. 
-	Output: Boolean declaring if our ratios are close enough or not. 
-	Details: Finds minimum and maximum norms from tracking around the origin. Then we check against the user defined setting minimum_c_over_k_for_stabilization to see if 
-	we have good ratios or not. 
 		 
-	*/
+
 
 	/**
-	\brief After we have used CircleTrack and have successfully closed the loop using CheckClosedLoop we need to check the maximum and minimum norms of the samples collected. 
-	If the ratio of the maximum and minimum norm are within the threshold maximum_cauchy_ratio, and the difference is greater than final tolerance than we are successful. 
+		\brief 	After we have used CircleTrack and have successfully closed the loop using CheckClosedLoop we need to check the maximum and minimum norms of the samples collected. 
+				If the ratio of the maximum and minimum norm are within the threshold maximum_cauchy_ratio, and the difference is greater than final tolerance than we are successful. 
+
+
+		## Input: 
+			None: all data needed are class data members
+
+		## Output:
+			true: If we are within the ratio cutoff time, or have a ratio within the thresholds.
+			false: otherwise
+ 
+
+		##Details:
+				\tparam CT The complex number type.
+				It is important to know if we are within the endgame operating zone. This function allows us to have a check that 
+				heuristcially will tell us if we are. 
 	*/
 	template<typename CT>
 	bool RatioEGOperatingZoneTest()
@@ -541,11 +624,23 @@ public:
 			 using RatioEGOperatingZoneTest. Then attempts to see if we have closed our loop, otherwise it continues the process outlined.
 	*/
 
+
+
 	/**
-	\brief This function tracks into origin while computing loops around the origin. The function is checking to make sure we have reached a time the ratio of the 
-	maximum and minimum norms are withing some tolerance. When this is the case we return success. If this does not happen we will return an error depending on the error 
-	encountered. 
-	*/		 
+		\brief This function tracks into origin while computing loops around the origin. The function is checking to make sure we have reached a time when the ratio of the 
+		maximum and minimum norms are withing some tolerance. When this is the case we return success. If this does not happen we will return an error depending on the error 
+		encountered. 	
+
+		## Input: 
+			None: all data needed are class data members
+
+		## Output:
+			initial_cauchy_loop_success: This variable returns any error code we have encountered or success if we have sucessfully 
+			tracked to an appropriate time. 
+
+		##Details:
+				\tparam CT The complex number type.
+	*/
 	template<typename CT>
 	SuccessCode InitialCauchyLoops()
 	{	
@@ -560,7 +655,7 @@ public:
 
 		auto fail_safe_max_cycle_number = max(cauchy_settings_.fail_safe_maximum_cycle_number,this->CycleNumber());
 
-		auto return_value = SuccessCode::Success;
+		auto initial_cauchy_loop_success = SuccessCode::Success;
 
 		while (continue_loop)
 		{	
@@ -588,13 +683,13 @@ public:
 				{
 					if (CheckClosedLoop<CT>())
 					{//error is small enough, exit the loop with success. 
-						return_value = SuccessCode::Success;
+						initial_cauchy_loop_success = SuccessCode::Success;
 						continue_loop = false;
 						break;
 					}
 					else if(this->CycleNumber() > fail_safe_max_cycle_number)
 					{// too many iterations
-						return_value = SuccessCode::CycleNumTooHigh;
+						initial_cauchy_loop_success = SuccessCode::CycleNumTooHigh;
 						continue_loop = false;
 						break;
 					}
@@ -608,7 +703,7 @@ public:
 						return tracking_success;
 				}
 
-				if(return_value == SuccessCode::CycleNumTooHigh)
+				if(initial_cauchy_loop_success == SuccessCode::CycleNumTooHigh)
 				{//see if we should continue to the next sample point
 					if(abs(cau_times.back()) < this->EndgameSettings().min_track_time)
 						continue_loop = false;
@@ -618,7 +713,6 @@ public:
 			}//end if (RatioEGOperatingZoneTest())
 			else 
 			{
-				//find the time for the next sample point
 				next_time = ps_times.back() * RT(this->EndgameSettings().sample_factor);
 
 				SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
@@ -633,29 +727,33 @@ public:
 			}
 		} //end while(continue_loop)
 
-		return return_value;
+		return initial_cauchy_loop_success;
 	}//end InitialCauchyLoops
 
 
-	/*
-	Input: Time and sample at the endgame boundary (usually 0.1). Along with address of time and sample for the approximation computed. 
-	Output: SuccessCode deeming if we were successful. 
-	Details: This function is in charge of finding the very first approximation of the origin. It does this by first computing some initial samples 
-			 like what is done in the Power Series Endgame. We continue to track forward in this manner until we have stabilization of the cycle number being approximated. 
-			 This prevents the unnecessary circle tracking if we are possibly not in the endgame operating zone. 
-			 Once we have stabilization we then perform InitialCauchyLoops while get the accurate cycle number, and check the norms of the samples and make sure we are ready 
-			 to approximate. When ready we call ComputePSEGApproximationOfXAtT0. This function will use a hermtie interpolater to get an approximation of the value at the origin. 
-	*/
 	/**
-	\brief The Cauchy endgame will first find an initial approximation using the notion of the power series endgame. This function computes this approximation and returns a
+		\brief 	The Cauchy endgame will first find an initial approximation using the notion of the power series endgame. This function computes this approximation and returns a
 	SuccessCode to let us know if an error was encountered. 
-	\param[out] start_time The time value at which we start the endgame. 
-	\param start_point The current space point at start_time.
-	\param approximation_time the time at which we want to compute an approximation, usually the origin. 
-	\param approximation The space value at approximation_time that we are computing. 
-	\tparam CT The complex number type.
-	*/
 
+		## Input: 
+				start_time: time value for which we start to make a power series approximation
+				start_point: approximate solution to our homotopy H at the start_time
+				approximation_time: time at which we are trying to find the solution, usually t = 0
+				approximation approximate solution to our homotopy H at the approxmation_time
+
+
+		## Output:
+			SuccessCode reporting if any errors had occurred. All data collected is stored in class data members. 
+
+
+		##Details:
+				\tparam CT The complex number type.
+				This function is in charge of finding the very first approximation of the origin. It does this by first computing some initial samples 
+							 like what is done in the Power Series Endgame. We continue to track forward in this manner until we have stabilization of the cycle number being approximated. 
+							 This prevents the unnecessary circle tracking if we are possibly not in the endgame operating zone. 
+							 Once we have stabilization we then perform InitialCauchyLoops while getting the accurate cycle number, and check the norms of the samples and make sure we are ready 
+							 to approximate. When ready we call ComputePSEGApproximationOfXAtT0. This function will use a hermtie interpolater to get an approximation of the value at the origin. 
+	*/
 	template<typename CT>
 	SuccessCode InitialPowerSeriesApproximation(CT const& start_time, Vec<CT> const& start_point, CT & approximation_time, Vec<CT> & approximation)
 	{	
@@ -724,19 +822,22 @@ public:
 
 	}//end InitialPowerSeriesApproximation
 
-	/*
-	Input: time_t0 is the time value that we wish to interpolate at.
-	Output: A new sample point that was found by interpolation to time_t0.
-	Details: This function handles computing an approximation at the origin. 
-		We compute the derivatives at the different times and samples. We then make sure all samples are to the same precision before refining them to final tolerance. 
-		By InitialCauchyLoops we know what the cycle number is sow we convert derivatives and times to the s-plane where s = t^(1/(cyle number).
-		We use the converted times and derivatives along with the samples to do a Hermite interpolation which is found in base_endgame.hpp.
-	*/
-
 	/**
-	\brief This function takes the pseg_samples_ and pseg_times that have been collected and uses them to compute a Hermite interpolation to the time value time_t0. 
-	\param[out] time_t0 is the time value that the power series approximation will interpolate to. 
-	\tparam CT The complex number type.
+		\brief 	This function takes the pseg_samples_ and pseg_times that have been collected and uses them to compute a Hermite interpolation to the time value time_t0. 
+
+		## Input: 
+				result: This vector holds the approxmation that we end up calculating
+				time_t0: The time value at which we are trying to approximate, usually t = 0
+
+		## Output:
+				SuccessCode deeming if we were successful or if we encountered an error. 
+
+		##Details:
+				\tparam CT The complex number type. 
+				This function handles computing an approximation at the origin. 
+						We compute the derivatives at the different times and samples. We then make sure all samples are to the same precision before refining them to final tolerance. 
+						By InitialCauchyLoops we know what the cycle number is so we convert derivatives and times to the s-plane where s = t^(1/(cyle number).
+						We use the converted times and derivatives along with the samples to do a Hermite interpolation which is found in base_endgame.hpp.
 	*/
 	template<typename CT>
 	SuccessCode ComputePSEGApproximationAtT0(Vec<CT>& result, const CT time_t0)
@@ -787,16 +888,19 @@ public:
 		return SuccessCode::Success;
 	}//end ComputePSEGApproximationOfXAtT0
 
-	/*
-	Input: A deque of the cauchy samples needed to compute an approximation using the Cauchy Integral Formula. 
-	Output: The approximation computed by using the samples collected from CircleTrack to sum and divide by the total number used to track back to the starting position. 
-	Details: We can compute the Cauchy Integral Formula in this particular instance by computing the mean of the samples we have collected around the origin. 
-	*/
 
 	/**
-	\brief Function that computes the mean of the samples that were collected while tracking around the origin. This value is the approximation of the value at the origin. 
-	\param[out] Deque of cauchy_samples, used to help template the function with CT.
-	\tparam CT The complex number type.
+		\brief Function that computes the mean of the samples that were collected while tracking around the origin. This value is the approximation of the value at the origin. 
+		
+		## Input: 
+			result: This vector, passed by reference, holds the approximation that we calculate. 
+
+		## Output:
+			SuccessCode deeming if we were suceessful, or if we encountered an error. 
+
+		##Details:
+				\tparam CT The complex number type. 
+				We can compute the Cauchy Integral Formula in this particular instance by computing the mean of the samples we have collected around the origin. 
 	*/
 	template<typename CT>
 	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<CT>& result)
@@ -825,19 +929,22 @@ public:
 
 	}
 
-
-	/*
-	Input: A time and sample value to start at for circle tracking around the origin. 
-	Output: A SuccessCode deeming if we were successful or not. 
-	Details: This function populates the deque cauchy_samples and cauchy_times. These are data members of the class and are not passed in. This function will continue to 
-	call CircleTrack until we have closed the loop. 
-	*/
-
 	/**
-	\brief Function that will utilize CircleTrack and CheckClosedLoop to collect all samples while tracking around the origin till we close the loop. 
-	\param[out] starting_time The time value at which we start finding cauchy samples 
-	\param starting_sample The current space point at starting_time, this will also be the first cauchy sample. 
-	\tparam CT The complex number type.
+		\brief Function that will utilize CircleTrack and CheckClosedLoop to collect all samples while tracking around the origin till we close the loop. 
+
+		## Input: 
+			starting_time: the time value at which we start finding cauchy samples 
+			starting_sample: yhe current space point at starting_time, this will also be the first cauchy sample
+
+
+		## Output: 
+			SuccessCode deeming if we were able to collect all samples around the origin, or if we encounted an error at some point. 
+			
+		##Details:
+				\tparam CT The complex number type. 
+				This function populates the deque cauchy_samples and cauchy_times. These are data members of the class and are not passed in. This function will continue to 
+				call CircleTrack until we have closed the loop. 
+
 	*/
 	template<typename CT>
 	SuccessCode ComputeCauchySamples(CT const& starting_time, Vec<CT> const& starting_sample)
@@ -873,23 +980,26 @@ public:
 	}//end ComputeCauchySamples
 	
 
-	/*
-	Input: A time and sample to start the cauchy endgame.
-	Output: SuccessCode deeming if we were successful or not.
-	Details: This function runs the entire Cauchy Endgame. We first take our endgame boundary time value and sample to find a first approximation of the origin. This is done by
-	using the idea for the power series endgame. We check for stabilization of the cycle number, and check to see when the ratios of the maximum and minimum norm of samples collected
-	by CircleTrack are withing a tolerance. When both of these conditions are met we do a Hermite interpolation. 
-	At this point we can start tracking in to the origin while using CircleTrack to compute samples and calculating their mean to get an approximation of the origin using the Cauchy
-	Integral Formula. 
-	*/
 
 	/**
-	\brief Primary function that runs the Cauchy endgame.
-	To begin, this function will compute a first approximation using the power series endgame notion. This approximation is made after a heuristic on the stabilization of 
-	the cyle number is made, and after the maximum and minimum norms of tracked space values around the origin are withing a certain tolerance. 			
-	\param[out] start_time The time value at which we start the endgame. 
-	\param start_point The current space point at start_time.
-	\tparam CT The complex number type.
+		\brief Primary function that runs the Cauchy endgame.
+			   To begin, this function will compute a first approximation using the power series endgame notion. This approximation is made after a heuristic on the stabilization of 
+			   the cyle number is made, and after the maximum and minimum norms of tracked space values around the origin are withing a certain tolerance. 	
+
+		## Input: 
+			start_time: the time value at which we start the endgame
+			start_point: an approximate solution to our homotopy H at start_time
+
+		## Output: 
+			SuccessCode: reporting if we were successful in the endgame or if we encountered an error
+
+		##Details:
+				\tparam CT The complex number type. 
+				This function runs the entire Cauchy Endgame. We first take our endgame boundary time value and sample to find a first approximation of the origin. This is done by
+					using the idea for the power series endgame. We check for stabilization of the cycle number, and check to see when the ratios of the maximum and minimum norm of samples collected
+					by CircleTrack are withing a tolerance. When both of these conditions are met we do a Hermite interpolation. 
+					At this point we can start tracking in to the origin while using CircleTrack to compute samples and calculating their mean to get an approximation of the origin using the Cauchy
+					Integral Formula. 
 	*/
 	template<typename CT>
 	SuccessCode Run(CT start_time, Vec<CT> start_point)

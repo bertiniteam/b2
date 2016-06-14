@@ -50,10 +50,10 @@ The bertini::PowerSeriesEndgame class enables us to finish tracking on possibly 
 The intended usage is to:
 
 1. Create a system, tracker, and instantiate some settings.
-2. Using the tracker created track to the engame boundary. 
-3. Create a PowerSeriesEndgame, associating it to the system you are going to solve or track on.
-4. For each path being tracked send the PowerSeriesEndgame the time value and other variable values at that time. 
-5. The PowerSeriesEndgame, if successful, will store the target systems solution at t = 0.
+2. Using the tracker created track to the engame boundary, by default this is t = 0.1. 
+3. Create a PowerSeriesEndgame, associating it to the tracker you wish to use. The tracker knows the system being solved.
+4. For each path being tracked send the PowerSeriesEndgame the time value and other variable values that it should use to start the endgame. 
+5. The PowerSeriesEndgame, if successful, will store the homotopy solutions at t = 0.
 
 ## Example Usage
 
@@ -62,52 +62,103 @@ Below we demonstrate a basic usage of the PowerSeriesEndgame class to find the s
 The pattern is as described above: create an instance of the class, feeding it the system to be used, and the endgame boundary time and other variable values at the endgame boundary. 
 
 \code{.cpp}
-mpfr_float::default_precision(30); // set initial precision.  This is not strictly necessary.
 using namespace bertini::tracking;
+using RealT = TrackerTraits<TrackerType>::BaseRealType; // Real types
+using ComplexT = TrackerTraits<TrackerType>::BaseComplexType; Complex types
 
-// 1. Create the system
-System sys;
+// 1. Define the polynomial system that we wish to solve. 
+System target_sys;
 Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
+
 VariableGroup vars{x,y};
-sys.AddVariableGroup(vars); 
-sys.AddPathVariable(t);
-// Define homotopy system
-sys.AddFunction((pow(x-1,3))*(1-t) + (pow(x,3) + 1)*t);
-sys.AddFunction((pow(y-1,2))*(1-t) + (pow(y,2) + 1)*t);
+target_sys.AddVariableGroup(vars); 
 
-//2. Setup a tracker. 
-bertini::tracking::AMPTracker tracker(sys);
+target_sys.AddFunction((pow(x-1,3));
+target_sys.AddFunction((pow(y-1,2));
 
-bertini::tracking::config::Stepping stepping_preferences;
-bertini::tracking::config::Newton newton_preferences;
+// 1b. Homogenize and patch the polynomial system to work over projective space. 
+sys.Homogenize();
+sys.AutoPatch();
 
-tracker.Setup(bertini::tracking::config::Predictor::Euler,
-        mpfr_float("1e-5"),
-        mpfr_float("1e5"),
-        stepping_preferences,
-        newton_preferences);
+// 2. Create a start system, for us we will use a total degree start system.
+auto TD_start_sys = bertini::start_system::TotalDegree(target_sys);
 
-tracker.AMPSetup(AMP);
+// 2b. Creating homotopy between the start system and system we wish to solve. 
+auto my_homotopy = (1-t)*target_sys + t*TD_start_sys*Rational::Rand(); //the random number is our gamma for a random path between t = 1 and t = 0.
+my_homotopy.AddPathVariable(t);
 
-// We make the assumption that we have tracked to t = 0.1 (value at t = 0.1 known from Bertini 1.5)
-mpfr current_time(1);
-Vec<mpfr> current_space(2);
-current_time = mpfr(".1");
-current_space <<  mpfr("5.000000000000001e-01", "9.084258952712920e-17") ,mpfr("9.000000000000001e-01","4.358898943540673e-01");
+//Sets up configuration settings for our particular system.
+auto precision_config = PrecisionConfig(my_homotopy);
 
-//  3. (Optional) configure settings for specific endgame. 
-bertini::tracking::config::Endgame endgame_settings;
-bertini::tracking::config::PowerSeries power_series_settings;
-bertini::tracking::config::Security endgame_security_settings;
 
-//4. Create the PowerSeriesEngame object, by sending in the tracker and any other settings. Notice the endgame is templated by the tracker. 
-bertini::tracking::endgame::PowerSeriesEndgame<bertini::tracking::AMPTracker> My_Endgame(tracker,power_series_settings,endgame_settings,endgame_security_settings);
+// 3. Creating a tracker. For us this is an AMPTracker. 
+AMPTracker tracker(my_homotopy);
 
-//Calling the PSEG member function actually runs the endgame. 
-My_Endgame.PSEG(current_time,current_space);
+//Tracker setup of settings. 
+config::Stepping<RealT> stepping_preferences;
+stepping_preferences.initial_step_size = RealT(1)/RealT(5);// change a stepping preference
+config::Newton newton_preferences;
+tracker.Setup(TestedPredictor,
+            RealFromString("1e-6"),
+            RealFromString("1e5"),
+            stepping_preferences,
+            newton_preferences);
+tracker.PrecisionSetup(precision_config);
 
-//Access solution at t = 0, using the .get_final_approximation_at_origin() member function. 
-auto Answer  = My_Endgame.get_final_approximation_at_origin();
+//We start at t = 1, and will stop at t = 0.1 before starting the endgames. 
+ComplexT t_start(1), t_endgame_boundary(0.1);
+
+//This will hold our solutions at t = 0.1 
+std::vector<Vec<ComplexT> > my_homotopy_solutions_at_endgame_boundary;
+
+// result holds the value we track to at 0.1, and tracking success will report if we are unsucessful.
+Vec<ComplexT> result;
+
+//4. Track all points to 0.1
+for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
+{
+    mpfr_float::default_precision(ambient_precision);
+    my_homotopy.precision(ambient_precision); // making sure our precision is all set up 
+    auto start_point = TD_start_sys.StartPoint<ComplexT>(ii);
+
+    tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
+
+    my_homotopy_solutions_at_endgame_boundary.push_back(result);
+}
+
+
+//Settings for the endgames. 
+
+config::Tolerances<RealT> tolerances;
+tolerances.final_tolerance_multiplier = RealT(100);
+
+config::PowerSeries power_series_settings;
+power_series_settings.max_cycle_number = 4;
+
+
+// 5. Create a power series endgame, and use them to get the soutions at t = 0. 
+EndgameSelector<TrackerType>::PSEG my_pseg_endgame(tracker,power_series_settings,tolerances);
+
+
+std::vector<Vec<ComplexT> > my_homotopy_solutions; 
+
+std::vector<Vec<ComplexT> > my_homotopy_divergent_paths; 
+
+for(auto s : my_homotopy_solutions_at_endgame_boundary) 
+{
+    SuccessCode endgame_success = my_pseg_endgame.Run(t_endgame_boundary,s);
+
+    if(endgame_success == SuccessCode::Success)
+    {
+        my_homotopy_solutions.push_back(my_homotopy.DehomogenizePoint(my_endgame.FinalApproximation<ComplexT>()));
+    }
+    else
+    {
+        my_homotopy_divergent_paths.push_back(my_homotopy.DehomogenizePoint(my_endgame.FinalApproximation<ComplexT>()));
+    }
+}
+
+
 \endcode
 
 If this documentation is insufficient, please contact the authors with suggestions, or get involved!  Pull requests welcomed.
@@ -116,7 +167,10 @@ If this documentation is insufficient, please contact the authors with suggestio
 
 Test suite driving this class: endgames_test.
 
-File: test/endgames/powerseries_class_test.cpp
+File: test/endgames/generic_pseg_test.hpp
+File: test/endgames/amp_powerseries_test.cpp
+File: test/endgames/fixed_double_powerseries_test.cpp
+FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 */
 
 template<typename TrackerType, typename FinalPSEG, typename... UsedNumTs> 
@@ -232,13 +286,14 @@ public:
 	/**
 	\brief Computes an upper bound on the cycle number. Consult page 53 of \cite bertinibook.
 
-	Input: No input, all data needed is class data members.
+	## Input: 
+			None: all data needed are class data members.
 
-	Output: The upper bound on the cycle number.
+	## Output:
+			upper_bound_on_cycle_number_: Used for an exhaustive search for the best cycle number for approimating the path to t = 0.
 
-	Details:
-			Using the formula for the cycle test outline in the Bertini Book pg. 53, we can compute an upper bound
-			on the cycle number. This upper bound is used for an exhaustive search in ComputeCycleNumber for the actual cycle number. 
+	##Details:
+			\tparam CT The complex number type.
 	*/
 	template<typename CT>
 	unsigned ComputeBoundOnCycleNumber()
@@ -290,33 +345,23 @@ public:
 	}//end ComputeBoundOnCycleNumber
 
 
+
+
 	/**
+		\brief This function computes the cycle number using an exhaustive search up the upper bound computed by the above function BoundOnCyleNumber. 
 
-	\brief This function computes the cycle number using an exhaustive search up the upper bound computed by the above function BoundOnCyleNumber. 
+		## Input: 
+				None: all data needed are class data members.
 
-	Input:	 
-	    	current_time is the time value that we wish to interpolate at and compare against the hermite value for each possible cycle number.
-	    	x_current_time is the corresponding space value at current_time.
-	    	upper_bound_on_cycle_number is the largest possible cycle number we will use to compute dx_ds and s = t^(1/c).
+		## Output:
+				cycle_number_: Used to create a hermite interpolation to t = 0. 
 
-			samples are space values that correspond to the time values in times. 
-			derivatives are the dx_dt or dx_ds values at the (time,sample) values.
-			num_sample_points is the size of samples, times, derivatives, this is also the amount of information used in Hermite Interpolation.
+		##Details:
+				\tparam CT The complex number type.
+				This is done by an exhaustive search from 1 to upper_bound_on_cycle_number. There is a conversion to the s-space from t-space in this function. 
+				As a by-product the derivatives at each of the samples is returned for further use. 
+	*/
 
-	Output: 
-			A set of derivatives for the samples and times given. The cycle number is stored in the endgame settings defined in tracking_config.hpp
-
-	Details: 
-			This is done by an exhaustive search from 1 to upper_bound_on_cycle_number. There is a conversion to the s-space from t-space in this function. 
-
-
-	As a by-product the derivatives at each of the samples is returned for further use. 
-
-	\param[out] time is the last time inside of the times_ deque.
-	\param x_at_time is the last sample inside of the samples_ deque. 
-
-	\tparam CT The complex number type.
-	*/		
 	template<typename CT>
 	unsigned ComputeCycleNumber()
 	{
@@ -342,7 +387,7 @@ public:
 		
 		const Vec<CT> most_recent_sample = samples.back();  // take a copy of the vector
 		samples.pop_back();// again, this should be replaced by something that doesn't need a copy of the samples
-		const CT most_recent_time        = times.back();
+		const CT most_recent_time = times.back();
 
 		//Now we actually compute the Cycle Number
 
@@ -391,8 +436,18 @@ public:
 		return this->cycle_number_;
 	}//end ComputeCycleNumber
 
+
 	/**
-	\brief Set the values of derivatives in the internal data.
+		\brief Compute a set of derivatives using internal data to the endgame.
+
+		## Input: 
+				None: all data needed are class data members.
+
+		## Output:
+				None: Derivatives are members of this class.
+
+		##Details:
+				\tparam CT The complex number type.
 	*/
 	template<typename CT>
 	void ComputeDerivatives()
@@ -417,35 +472,25 @@ public:
 		 	derivatives[ii] = -(this->GetSystem().Jacobian(samples[ii],times[ii]).inverse())*(this->GetSystem().TimeDerivative(samples[ii],times[ii]));
 		}
 	}
-
-
-	/*
-	Input: time_t0 is the time value that we wish to interpolate at.
-
-
-	Output: A new sample point that was found by interpolation to time_t0.
-
-	Details: This function handles computing an approximation at the origin. First all samples are brought to the same precision. After this we refine all samples 
-		to final tolerance to aid in better approximations. 
-		We compute the cycle number best for the approximation, and convert derivatives and times to the s-plane where s = t^(1/c).
-		We use the converted times and derivatives along with the samples to do a Hermite interpolation which is found in base_endgame.hpp.
-
-	*/
-
 	/**
-	\brief This function computes an approximation of the space value at the time time_t0. 
+		\brief This function computes an approximation of the space value at the time time_t0. 
 
-	This function will compute the cycle number and then dialate the time and derivatives accordingly. After dialation this function will 
-	call a Hermite interpolater to interpolate to the time that we were passed in. 
+		## Input: 
+				result: Passed by reference this holds the value of the approximation we compute
+				t0: This is the time value for which we wish to compute an approximation at. 
 
-	\param[out] t0 is the time value corresponding to the space value we are trying to approximate.
+		## Output:
+				SuccessCode: This reports back if we were successful in making an approximation.
 
-	\tparam CT The complex number type.
+		##Details:
+				\tparam CT The complex number type.
+				This function handles computing an approximation at the origin. 
+				We compute the cycle number best for the approximation, and convert derivatives and times to the s-plane where s = t^(1/c).
+				We use the converted times and derivatives along with the samples to do a Hermite interpolation.
 	*/
 	template<typename CT>
 	SuccessCode ComputeApproximationOfXAtT0(Vec<CT>& result, const CT & t0)
 	{	
-		// std::cout << "in ComputeApproximationOfXAtT0\n\n";
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
 		const auto& samples = std::get<SampCont<CT> >(samples_);
@@ -467,7 +512,6 @@ public:
 
 			ComputeCycleNumber<CT>();
 		auto c = this->CycleNumber();
-		// std::cout << "cycle number is " << c << std::endl;
 		// Conversion to S-plane.
 
 		
@@ -480,10 +524,6 @@ public:
 			if (c==0)
 				throw std::runtime_error("cycle number is 0 while computing approximation of root at target time");
 
-			// std::cout << "time "<<times[ii+offset]<<"\n";
-			// std::cout << "space "<<samples[ii+offset]<<"\n";
-			// std::cout << "derivative "<<derivatives[ii+offset]<<"\n";
-
 			s_times[ii] = pow(times[ii+offset],static_cast<RT>(1)/c);
 			s_derivatives[ii] = derivatives[ii+offset]*( c*pow(times[ii+offset],static_cast<RT>(c-1)/c ));
 		}
@@ -493,6 +533,22 @@ public:
 	}//end ComputeApproximationOfXAtT0
 
 
+
+	/**
+		\brief The samples used in the power series endgame are collected by advancing time to t = 0, by multiplying the current time by the sample factor. 
+
+		## Input: 
+				None: all data needed are class data members.
+
+		## Output:
+				SuccessCode: This reports back if we were successful in advancing time. 
+
+		##Details:
+				\tparam CT The complex number type.
+				This function computes the next time value for the power series endgame. After computing this time value, 
+				it will track to it and compute the derivative at this time value for further appoximations to be made during the
+				endgame.
+	*/
 	template<typename CT>
 	SuccessCode AdvanceTime()
 	{
@@ -537,28 +593,22 @@ public:
  		return SuccessCode::Success;
 	}
 
-	/*
-	Input: start_time is the endgame boundary default set to .1 and start_point is the space value we are given at start_time
-
-
-	Output: SuccessCode if we were successful or if we have encountered an error. 
-
-	Details: 
-			Using successive hermite interpolations with a geometric progression of time values, we attempt to find the value 
-			of the homotopy at time t = 0.
-	*/
 
 	/**
-	\brief Primary function running the Power Series endgame. 
+		\brief Primary function running the Power Series endgame. 
 
-	Tracking forward with the number of sample points, this function will make approximations using Hermite interpolation. This process will continue until two consecutive
-	approximations are withing final tolerance of each other. 
+		## Input: 
+				start_time: This is the time value for which the endgame begins, by default this is t = 0.1
+				start_point: An approximate solution of the homotopy at t = start_time
 
-	\param[out] start_time The time value at which we start the endgame. 
-	\param endgame_sample The current space point at start_time.
+		## Output:
+				SuccessCode: This reports back if we were successful in advancing time. 
 
-	\tparam CT The complex number type.
-	*/		
+		##Details:
+				\tparam CT The complex number type.
+				Tracking forward with the number of sample points, this function will make approximations using Hermite interpolation. This process will continue until two consecutive
+				approximations are withing final tolerance of each other. 
+	*/
 	template<typename CT>
 	SuccessCode Run(const CT & start_time, const Vec<CT> & start_point)
 	{
