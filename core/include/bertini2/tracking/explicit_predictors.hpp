@@ -340,7 +340,14 @@ namespace bertini{
 				}
 				
 				
-				
+				/**
+				\brief get the current precision of the predictor
+				*/
+				unsigned precision() const
+				{
+					return current_precision_;
+				}
+
 				/** 
 				 /brief Change the precision of the predictor variables and reassign the Butcher table variables.
 				 
@@ -349,18 +356,18 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					Eigen::Ref<Mat<mpfr>> K(std::get< Mat<mpfr> >(K_));
-					Precision<mpfr>(K,new_precision);  assert(K(0,0).precision()==new_precision);
+					Precision(std::get< Mat<mpfr> >(K_),new_precision);
 
-					Eigen::Ref<Vec<mpfr>> dhdttemp {std::get< Vec<mpfr> >(dh_dt_temp_)}; Precision(dhdttemp,new_precision);
-					Eigen::Ref<Mat<mpfr>> dhdx0 {std::get< Mat<mpfr> >(dh_dx_0_)};  Precision(dhdx0,new_precision);
-					Eigen::Ref<Mat<mpfr>> dhdxtemp {std::get< Mat<mpfr> >(dh_dx_temp_)}; Precision(dhdxtemp,new_precision);
+					Precision(std::get< Vec<mpfr> >(dh_dt_temp_),new_precision);
+					Precision(std::get< Mat<mpfr> >(dh_dx_0_),new_precision);
+					Precision(std::get< Mat<mpfr> >(dh_dx_temp_),new_precision);
 
-					Eigen::Ref<Mat<mpfr_float>> a {std::get< Mat<mpfr_float> >(a_)}; Precision(a,new_precision);
-					Eigen::Ref<Vec<mpfr_float>> b {std::get< Vec<mpfr_float> >(b_)}; Precision(b,new_precision);
-					Eigen::Ref<Vec<mpfr_float>> bstar {std::get< Vec<mpfr_float> >(b_minus_bstar_)}; Precision(bstar,new_precision);
-					Eigen::Ref<Vec<mpfr_float>> c {std::get< Vec<mpfr_float> >(c_)}; Precision(c,new_precision);
-					
+					Precision(std::get< Mat<mpfr_float> >(a_),new_precision);
+					Precision(std::get< Vec<mpfr_float> >(b_),new_precision);
+					Precision(std::get< Vec<mpfr_float> >(b_minus_bstar_),new_precision);
+					Precision(std::get< Vec<mpfr_float> >(c_),new_precision);
+
+
 					PredictorMethod(predictor_);
 
 					LU_mp_.clear();
@@ -374,7 +381,7 @@ namespace bertini{
 				{
 					assert(current_precision_==mpfr_float::default_precision());
 
-					const Eigen::Ref<const Vec<mpfr>> dhdttemp(std::get< Vec<mpfr> >(dh_dt_temp_));
+					Vec<mpfr>& dhdttemp = std::get< Vec<mpfr> >(dh_dt_temp_);
 					Mat<mpfr>& dhdx0 = std::get< Mat<mpfr> >(dh_dx_0_); 
 					Mat<mpfr>& dhdxtemp = std::get< Mat<mpfr> >(dh_dx_temp_); 
 
@@ -825,6 +832,8 @@ namespace bertini{
 						if (!std::is_same<ComplexType,dbl>::value)
 						{
 							assert(Precision(dhdxref)==current_precision_);
+							if (Precision(LUref.matrixLU())!=current_precision_)
+								std::cout << Precision(LUref.matrixLU())<< " " << mpfr_float::default_precision() << " " << current_precision_ << '\n';
 							assert(Precision(LUref.matrixLU())==current_precision_);
 						}
 

@@ -85,15 +85,21 @@ namespace bertini{
 					{
 						std::get< Vec<mpfr> >(f_temp_)(ii).precision(new_precision);
 						std::get< Vec<mpfr> >(step_temp_)(ii).precision(new_precision);
+
 						for(int jj = 0; jj < numVariables_; ++jj)
-						{
 							std::get< Mat<mpfr> >(J_temp_)(ii,jj).precision(new_precision);
-						}
-					}					
+					}	
+
+					std::get< Eigen::PartialPivLU<Mat<mpfr>> >(LU_) = Eigen::PartialPivLU<Mat<mpfr>>(numTotalFunctions_);
+
+					current_precision_ = new_precision;				
 				}
 
 
-				
+				unsigned precision() const
+				{
+					return current_precision_;
+				}
 				
 				/**
 				 \brief Change the system(number of total functions) that the predictor uses.
@@ -382,6 +388,8 @@ namespace bertini{
 				
 				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_; // The LU factorization from the Newton iterates
 				
+				unsigned current_precision_;
+
 				config::Newton newton_config_; // Hold the settings of the Newton iteration
 
 				

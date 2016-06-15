@@ -1431,6 +1431,11 @@ namespace bertini {
 		return num.precision();
 	}
 
+	inline void Precision(bertini::complex & num, unsigned prec)
+	{
+		num.precision(prec);
+	}
+
 	inline 
 	bool isnan(bertini::complex const& num)
 	{

@@ -1551,6 +1551,7 @@ namespace bertini{
 
 					return tracked_system_.precision() == current_precision_
 							&&
+							predictor_->precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(current_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(tentative_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(temporary_space_)(0).precision() == current_precision_ &&
@@ -1605,7 +1606,7 @@ namespace bertini{
 			template<typename RT>
 			RT NormJInv() const { return std::get<RT>(norm_J_inverse_);}
 
-unsigned CurrentPrecision() const override
+			unsigned CurrentPrecision() const override
 			{
 				return current_precision_;
 			}

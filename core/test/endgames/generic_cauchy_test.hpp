@@ -1395,10 +1395,12 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings,tolerances);
 
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
-	for(auto s : griewank_homogenized_solutions) //current_space_values)
+	for (auto& s : griewank_homogenized_solutions) //current_space_values)
 	{
 		mpfr_float::default_precision(ambient_precision);
 		final_griewank_osborn_system.precision(Precision(s(0)));

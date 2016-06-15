@@ -513,6 +513,13 @@ public:
 			return true;
 		}
 
+		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+		{
+			//Ensure all samples are of the same precision.
+			auto new_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
+			this->GetSystem().precision(new_precision);
+		}
+
 		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),RT(this->Tolerances().final_tolerance),this->EndgameSettings().max_num_newton_iterations);
 		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),RT(this->Tolerances().final_tolerance),this->EndgameSettings().max_num_newton_iterations);
 
@@ -806,19 +813,21 @@ public:
 		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
 		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
 
-		for (unsigned ii=0; ii<ps_samples.size(); ++ii)
-		{
-			auto refine_code = AsDerived().RefineSample(ps_samples[ii],ps_samples[ii],ps_times[ii]);
-			if (refine_code != SuccessCode::Success)
-				return refine_code;
-		}
-
 		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
 			//Ensure all samples are of the same precision.
 			auto new_precision = AsDerived().EnsureAtUniformPrecision(ps_times, ps_samples);
 			this->GetSystem().precision(new_precision);
 		}
+
+
+		for (unsigned ii=0; ii<ps_samples.size(); ++ii)
+		{
+			auto refine_code = AsDerived().RefineSample(ps_samples[ii],ps_samples[ii],ps_times[ii]);
+			if (refine_code != SuccessCode::Success)
+				return refine_code;
+		}
+		
 
 		auto num_sample_points = this->EndgameSettings().num_sample_points;
 		//Compute dx_dt for each sample.
@@ -876,6 +885,13 @@ public:
 		}
 
 		result = Vec<CT>::Zero(this->GetSystem().NumVariables());//= (cau_samples[0]+cau_samples.back())/2; 
+
+		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+		{
+			//Ensure all samples are of the same precision.
+			auto new_precision = AsDerived().EnsureAtUniformPrecision(cau_times, cau_samples);
+			this->GetSystem().precision(new_precision);
+		}
 
 		for(unsigned int ii = 0; ii < this->CycleNumber() * this->EndgameSettings().num_sample_points; ++ii)
 		{

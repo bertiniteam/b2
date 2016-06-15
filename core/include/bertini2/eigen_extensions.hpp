@@ -334,21 +334,29 @@ namespace bertini {
 		return Precision(v(0));
 	}
 
-	template<typename T>
-	unsigned Precision(const Eigen::Ref<const Vec<T>> v)
+	template<typename Derived>
+	void Precision(Eigen::MatrixBase<Derived> & v, unsigned prec)
 	{
-		return Precision(v(0));
+		for (int ii=0; ii<v.rows(); ++ii)
+			for (int jj=0; jj<v.cols(); ++jj)
+				v(ii,jj).precision(prec);
 	}
 
-	template<typename T>
-	void Precision(Eigen::Ref<Vec<T>> v, unsigned prec)
-	{
-		for (unsigned ii=0; ii<v.size(); ++ii)
-		{
-			v(ii).precision(prec);
-			assert(Precision(v(ii))==prec);
-		}
-	}
+	// template<typename T>
+	// unsigned Precision(const Eigen::Ref<const Vec<T>> v)
+	// {
+	// 	return Precision(v(0));
+	// }
+
+	// template<typename T>
+	// void Precision(Eigen::Ref<Vec<T>> v, unsigned prec)
+	// {
+	// 	for (unsigned ii=0; ii<v.size(); ++ii)
+	// 	{
+	// 		v(ii).precision(prec);
+	// 		assert(Precision(v(ii))==prec);
+	// 	}
+	// }
 
 	// template<typename T>
 	// unsigned Precision(const Eigen::Ref<const Vec<T>> & v)
@@ -369,25 +377,25 @@ namespace bertini {
 
 
 
-	template< typename T>
-	unsigned Precision(Mat<T> const & v)
-	{
-		return Precision(v(0,0));
-	}
+	// template< typename T>
+	// unsigned Precision(Mat<T> const & v)
+	// {
+	// 	return Precision(v(0,0));
+	// }
 
-	template< typename T>
-	unsigned Precision(const Eigen::Ref<const Mat<T>> v)
-	{
-		return Precision(v(0,0));
-	}
+	// template< typename T>
+	// unsigned Precision(const Eigen::Ref<const Mat<T>> v)
+	// {
+	// 	return Precision(v(0,0));
+	// }
 
-	template<typename T>
-	void Precision(Eigen::Ref<Mat<T>> v, unsigned prec)
-	{
-		for (unsigned ii=0; ii<v.rows(); ++ii)
-			for (unsigned jj=0; jj<v.cols(); ++jj)
-				v(ii,jj).precision(prec);
-	}
+	// template<typename T>
+	// void Precision(Eigen::Ref<Mat<T>> v, unsigned prec)
+	// {
+	// 	for (unsigned ii=0; ii<v.rows(); ++ii)
+	// 		for (unsigned jj=0; jj<v.cols(); ++jj)
+	// 			v(ii,jj).precision(prec);
+	// }
 
 	// template<typename T>
 	// unsigned Precision(const Eigen::Ref<const Mat<T>> & v)

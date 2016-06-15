@@ -164,15 +164,17 @@ public:
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
+			using bertini::Precision;
+
 			auto prev_precision = this->Precision();
 			auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
 			mpfr_float::default_precision(temp_higher_prec);
 			this->GetTracker().ChangePrecision(temp_higher_prec);
 
 
-			auto next_sample_higher_prec = current_sample;
+			auto next_sample_higher_prec = current_sample;  Precision(next_sample_higher_prec, temp_higher_prec);
 			auto result_higher_prec = Vec<mpfr>(current_sample.size());
-			auto time_higher_precision = current_time;
+			auto time_higher_precision = current_time; Precision(time_higher_precision, temp_higher_prec);
 
 			assert(time_higher_precision.precision()==mpfr_float::default_precision());
 			RT refinement_tolerance = this->Tolerances().final_tolerance/100;
@@ -185,6 +187,7 @@ public:
 			mpfr_float::default_precision(prev_precision);
 			this->GetTracker().ChangePrecision(prev_precision);
 			result = result_higher_prec;
+			Precision(result,prev_precision);
 			assert(result(0).precision()==mpfr_float::default_precision());
 		}
 
