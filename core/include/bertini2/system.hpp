@@ -357,12 +357,11 @@ namespace bertini {
 			typedef typename Derived::Scalar T;
 
 			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
-		{
+			{
 				throw std::runtime_error("trying to evaluate jacobian of system in place, but input J doesn't have right number of columns or rows");
 			}
 			
-			
-			const auto& vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+			const auto& vars = Variables();
 
 			if (!is_differentiated_)
 				Differentiate();

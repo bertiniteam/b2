@@ -349,8 +349,6 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					std::cout << "ODE predictor changing precision, from " << current_precision_ << " to " << new_precision << std::endl;
-					{
 					Eigen::Ref<Mat<mpfr>> K(std::get< Mat<mpfr> >(K_));
 					Precision<mpfr>(K,new_precision);  assert(K(0,0).precision()==new_precision);
 
@@ -366,7 +364,7 @@ namespace bertini{
 					PredictorMethod(predictor_);
 
 					LU_mp_.clear();
-					}
+
 					current_precision_ = new_precision;
 
 					PrecisionSanityCheck();
@@ -374,10 +372,9 @@ namespace bertini{
 				
 				void PrecisionSanityCheck() const
 				{
-					std::cout << "precision sanity check\n";
 					assert(current_precision_==mpfr_float::default_precision());
 
-					Vec<mpfr>& dhdttemp = std::get< Vec<mpfr> >(dh_dt_temp_);
+					const Eigen::Ref<const Vec<mpfr>> dhdttemp(std::get< Vec<mpfr> >(dh_dt_temp_));
 					Mat<mpfr>& dhdx0 = std::get< Mat<mpfr> >(dh_dx_0_); 
 					Mat<mpfr>& dhdxtemp = std::get< Mat<mpfr> >(dh_dx_temp_); 
 
@@ -805,26 +802,30 @@ namespace bertini{
 				{
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
-					PrecisionSanityCheck();
+					if (std::is_same<typename Derived::Scalar, mpfr>::value)
+						PrecisionSanityCheck();
 
 					if(stage == 0)
 					{
 						Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
 						Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
-						S.JacobianInPlace(dhdxref,space, time);
-						LUref = dhdxref.lu();
 
 						if (!std::is_same<ComplexType,dbl>::value)
 						{
-							std::cout << Precision(LUref.matrixLU()(0,0)) << " " << mpfr_float::default_precision() << " " << current_precision_ << '\n';
-
-							assert(Precision(dhdxref(0))==current_precision_);
-							assert(Precision(space(0))==current_precision_);
-							assert(Precision(time)==current_precision_);
-
 							assert(mpfr_float::default_precision()==current_precision_);
-							assert(Precision(LUref.matrixLU()(0,0))==current_precision_);
-							assert(Precision(LUref.matrixLU()(0,0))==mpfr_float::default_precision());
+
+							assert(Precision(space)==current_precision_);
+							assert(Precision(time)==current_precision_);
+							assert(Precision(dhdxref)==current_precision_);
+							assert(Precision(K)==current_precision_);
+						}
+
+						S.JacobianInPlace(dhdxref, space, time);
+						LUref = dhdxref.lu();
+						if (!std::is_same<ComplexType,dbl>::value)
+						{
+							assert(Precision(dhdxref)==current_precision_);
+							assert(Precision(LUref.matrixLU())==current_precision_);
 						}
 
 						if (LUPartialPivotDecompositionSuccessful(LUref.matrixLU())!=MatrixSuccessCode::Success)

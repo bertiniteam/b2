@@ -962,9 +962,12 @@ namespace bertini
 
 		if (s.path_variable_)
 			out << "path variable defined.  named " << s.path_variable_->name() << "\n";
+		else 
+			out << "not path variable defined\n";
 
 		if (s.is_differentiated_)
 		{
+			out << "system is differentiated; jacobian:\n";
 			for (const auto& iter : s.jacobian_) {
 				out << (iter)->name() << " = " << *iter << "\n";
 			}

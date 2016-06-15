@@ -328,8 +328,14 @@ namespace bertini {
 	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
+	template<typename Derived>
+	unsigned Precision(Eigen::MatrixBase<Derived> const & v)
+	{
+		return Precision(v(0));
+	}
+
 	template<typename T>
-	unsigned Precision(Vec<T>  const & v)
+	unsigned Precision(const Eigen::Ref<const Vec<T>> v)
 	{
 		return Precision(v(0));
 	}
@@ -365,6 +371,12 @@ namespace bertini {
 
 	template< typename T>
 	unsigned Precision(Mat<T> const & v)
+	{
+		return Precision(v(0,0));
+	}
+
+	template< typename T>
+	unsigned Precision(const Eigen::Ref<const Mat<T>> v)
 	{
 		return Precision(v(0,0));
 	}

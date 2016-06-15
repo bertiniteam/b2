@@ -431,7 +431,7 @@ namespace bertini {
 		{
 			out << p.NumVariableGroups() << " variable groups being patched\n";
 			unsigned counter(0);
-			for (auto c : p.coefficients_highest_precision_)
+			for (auto& c : p.coefficients_highest_precision_)
 			{
 				out << "patch " << counter++ << " has " << c.size() << " coefficients:\n";
 				out << c << "\n";
