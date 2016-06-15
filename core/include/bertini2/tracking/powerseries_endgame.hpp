@@ -396,7 +396,7 @@ public:
 		//exhaustive search for the best cycle number. 
 		
 
-
+		//if there are less samples than num_sample_points return samples.size() otherwise return num_sample_points.
 		unsigned num_used_points = samples.size() < this->EndgameSettings().num_sample_points 
 									?
 								   samples.size() : this->EndgameSettings().num_sample_points ;
