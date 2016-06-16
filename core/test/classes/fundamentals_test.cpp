@@ -35,7 +35,10 @@
 
 using mpfr = bertini::mpfr_float;
 
+using bertini::DefaultPrecision;
+
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
+
 
 
 BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
@@ -111,11 +114,11 @@ BOOST_AUTO_TEST_CASE(max_et_on)
 
 BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 {
-	mpfr::default_precision(50);
+	DefaultPrecision(50);
 
 	mpfr x("0.01234567890123456789012345678901234567890123456789");
 
-	mpfr::default_precision(30);
+	DefaultPrecision(30);
 	mpfr y = pow(x,2);
 
 	BOOST_CHECK_EQUAL(y.precision(), 30);
@@ -128,7 +131,7 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 
 
 
-	mpfr::default_precision(70);
+	DefaultPrecision(70);
 
 	z = x;
 

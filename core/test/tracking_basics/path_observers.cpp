@@ -53,7 +53,7 @@ extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
-
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(AMP_tracker_basics)
 

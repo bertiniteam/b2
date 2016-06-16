@@ -94,7 +94,7 @@ Eigen::Matrix<mpfr, 3, 1> var_mpfr;
 
 
 
-
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(differentiate)
 

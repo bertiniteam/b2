@@ -50,6 +50,7 @@ extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(system_class)
 

@@ -58,7 +58,7 @@ extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
-
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(higher_predict_tracking_basics)
 
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RK4_mp)
 
 BOOST_AUTO_TEST_CASE(monodromy_RK4_d)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<dbl> current_space(2);
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RK4_d)
 
 BOOST_AUTO_TEST_CASE(monodromy_RK4_mp)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<mpfr> current_space(2);
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKF45_mp)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKF45_d)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<dbl> current_space(2);
@@ -619,7 +619,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_d)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKF45_mp)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<mpfr> current_space(2);
@@ -890,7 +890,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKCK45_mp)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKCK45_d)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<dbl> current_space(2);
@@ -969,7 +969,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_d)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<mpfr> current_space(2);
@@ -1051,7 +1051,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<mpfr> current_space(2);
@@ -1130,7 +1130,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	
 	
 	
-	boost::multiprecision::DefaultPrecision(50);
+	DefaultPrecision(50);
 	
 	// Starting point in spacetime step
 	current_space << mpfr("0.464158883361277585510862309093"), mpfr("0.74161984870956629487113974408");
@@ -1500,7 +1500,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp_change_precision)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKDP56_d)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<dbl> current_space(2);
@@ -1579,7 +1579,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_d)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKDP56_mp)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<mpfr> current_space(2);
@@ -1837,7 +1837,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKV67_mp)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKV67_d)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<dbl> current_space(2);
@@ -1916,7 +1916,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_d)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKV67_mp)
 {
-	boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
 	Vec<mpfr> current_space(2);

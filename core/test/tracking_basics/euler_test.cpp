@@ -58,7 +58,7 @@ extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
-
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(euler_predict_tracking_basics)
 
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	
 	BOOST_AUTO_TEST_CASE(monodromy_euler_d)
 	{
-		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<dbl> current_space(2);
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	
 	BOOST_AUTO_TEST_CASE(monodromy_euler_mp)
 	{
-		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	{
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
 		
-		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_a_is_false_mp)
 	{
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
-		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
@@ -642,7 +642,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	{
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
 		
-		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
 		current_space << mpfr("1.0"), mpfr("-4.0");
