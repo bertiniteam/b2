@@ -79,7 +79,7 @@ namespace bertini {
 		/**
 		\brief The default constructor for a system.
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(mpfr_float::default_precision()), is_patched_(false)
+		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(DefaultPrecision()), is_patched_(false)
 		{}
 
 		/** 

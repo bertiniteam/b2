@@ -236,7 +236,7 @@ namespace bertini{
 		The pattern is as described above: create an instance of the class, feeding it the system to be tracked, and some configuration.  Then, use the tracker to track paths of the system.
 
 		\code{.cpp}
-		mpfr_float::default_precision(30); // set initial precision.  This is not strictly necessary.
+		DefaultPrecision(30); // set initial precision.  This is not strictly necessary.
 
 		using namespace bertini::tracking;
 
@@ -316,7 +316,7 @@ namespace bertini{
 			/**
 			\brief Construct an Adaptive Precision tracker, associating to it a System.
 			*/
-			AMPTracker(class System const& sys) : Tracker(sys), current_precision_(mpfr_float::default_precision())
+			AMPTracker(class System const& sys) : Tracker(sys), current_precision_(DefaultPrecision())
 			{	
 				AMP_config_ = config::AMPConfigFrom(sys);
 			}
@@ -392,7 +392,7 @@ namespace bertini{
 				NotifyObservers(Initializing<AMPTracker,mpfr>(*this,start_time, end_time, start_point));
 
 				initial_precision_ = Precision(start_point(0));
-				mpfr_float::default_precision(initial_precision_);
+				DefaultPrecision(initial_precision_);
 				// set up the master current time and the current step size
 				current_time_.precision(initial_precision_);
 				current_time_ = start_time;
@@ -429,7 +429,7 @@ namespace bertini{
 
 			// 	// set up the master current time and the current step size
 			// 	initial_precision_ = Precision(DoublePrecision());
-			// 	mpfr_float::default_precision(initial_precision_);
+			// 	DefaultPrecision(initial_precision_);
 			// 	current_time_.precision(initial_precision_);
 			// 	current_time_ = mpfr(start_time);
 
@@ -1342,7 +1342,7 @@ namespace bertini{
 				#endif
 
 				current_precision_ = DoublePrecision();
-				mpfr_float::default_precision(DoublePrecision());
+				DefaultPrecision(DoublePrecision());
 
 				tracked_system_.precision(16);
 
@@ -1375,7 +1375,7 @@ namespace bertini{
 				#endif
 				previous_precision_ = current_precision_;
 				current_precision_ = DoublePrecision();
-				mpfr_float::default_precision(DoublePrecision());
+				DefaultPrecision(DoublePrecision());
 
 				tracked_system_.precision(16);
 
@@ -1418,7 +1418,7 @@ namespace bertini{
 				#endif
 				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
-				mpfr_float::default_precision(new_precision);
+				DefaultPrecision(new_precision);
 				tracked_system_.precision(new_precision);
 				predictor_->ChangePrecision(new_precision);
 				corrector_->ChangePrecision(new_precision);
@@ -1471,7 +1471,7 @@ namespace bertini{
 				#endif
 				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
-				mpfr_float::default_precision(new_precision);
+				DefaultPrecision(new_precision);
 				tracked_system_.precision(new_precision);
 				predictor_->ChangePrecision(new_precision);
 				corrector_->ChangePrecision(new_precision);
@@ -1547,7 +1547,7 @@ namespace bertini{
 				}
 				else
 				{
-					assert(mpfr_float::default_precision()==current_precision_ && "current precision differs from the default precision");
+					assert(DefaultPrecision()==current_precision_ && "current precision differs from the default precision");
 
 					return tracked_system_.precision() == current_precision_
 							&&

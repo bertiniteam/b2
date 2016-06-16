@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	{
 		
 		unsigned int size = 10;
-		bertini::mpfr_float::default_precision(16);
+		bertini::DefaultPrecision(16);
 		
 		srand(2);  rand();
 		
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	{
 		
 		unsigned int size = 10;
-		bertini::mpfr_float::default_precision(100);
+		bertini::DefaultPrecision(100);
 		
 		srand(2);  rand();
 		
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	BOOST_AUTO_TEST_CASE(small_value_multiprecision)
 	{
 
-		bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
 

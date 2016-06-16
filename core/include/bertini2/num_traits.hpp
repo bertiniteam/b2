@@ -213,12 +213,12 @@ namespace bertini {
 	{
 		inline static unsigned NumDigits()
 		{
-			return mpfr_float::default_precision();
+			return DefaultPrecision();
 		}
 
 		inline static unsigned NumFuzzyDigits()
 		{
-			return mpfr_float::default_precision()-3;
+			return DefaultPrecision()-3;
 		}
 
 		inline
@@ -241,7 +241,7 @@ namespace bertini {
 	{
 		inline static unsigned NumDigits()
 		{
-			return mpfr_float::default_precision();
+			return DefaultPrecision();
 		}
 
 		inline static 

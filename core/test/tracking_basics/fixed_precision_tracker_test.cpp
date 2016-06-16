@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_SUITE(fixed_precision_tracker_basics)
 
 BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 {
-	mpfr_float::default_precision(100);
+	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
 	Var y = std::make_shared<Variable>("y");
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 	
 BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 {
-	mpfr_float::default_precision(100);
+	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
 	Var y = std::make_shared<Variable>("y");

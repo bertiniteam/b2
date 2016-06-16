@@ -514,7 +514,7 @@ namespace bertini{
 
 			The precision of the tracker will be whatever the current default is.  The tracker cannot change its precision, and will require the default precision to be this precision whenever tracking is started.  That is, the precision is fixed.
 			*/
-			MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(mpfr_float::default_precision())
+			MultiplePrecisionTracker(class System const& sys) : FixedPrecisionTracker<MultiplePrecisionTracker>(sys), precision_(DefaultPrecision())
 			{	}
 
 			
@@ -543,10 +543,10 @@ namespace bertini{
 										   Vec<BaseComplexType> const& start_point) const override
 			{
 
-				if (start_point(0).precision()!=mpfr_float::default_precision())
+				if (start_point(0).precision()!=DefaultPrecision())
 				{
 					std::stringstream err_msg;
-					err_msg << "start point for fixed multiple precision tracker has differing precision from default (" << start_point(0).precision() << "!=" << mpfr_float::default_precision() << "), tracking cannot start";
+					err_msg << "start point for fixed multiple precision tracker has differing precision from default (" << start_point(0).precision() << "!=" << DefaultPrecision() << "), tracking cannot start";
 					throw std::runtime_error(err_msg.str());
 				}
 
@@ -557,10 +557,10 @@ namespace bertini{
 					throw std::runtime_error(err_msg.str());
 				}
 
-				if (mpfr_float::default_precision()!=CurrentPrecision())
+				if (DefaultPrecision()!=CurrentPrecision())
 				{
 					std::stringstream err_msg;
-					err_msg << "current default precision differs from tracker's precision (" << mpfr_float::default_precision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					err_msg << "current default precision differs from tracker's precision (" << DefaultPrecision() << "!=" << CurrentPrecision() << "), tracking cannot start";
 					throw std::runtime_error(err_msg.str());
 				}
 
@@ -581,7 +581,7 @@ namespace bertini{
 			bool PrecisionSanityCheck() const
 			{	
 				return tracked_system_.precision() == precision_ &&
-						mpfr_float::default_precision()==precision_ && 
+						DefaultPrecision()==precision_ && 
 						std::get<Vec<mpfr> >(current_space_)(0).precision() == precision_ &&
 						std::get<Vec<mpfr> >(tentative_space_)(0).precision() == precision_ &&
 						std::get<Vec<mpfr> >(temporary_space_)(0).precision() == precision_ &&

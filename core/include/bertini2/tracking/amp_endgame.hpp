@@ -101,7 +101,7 @@ protected:
 	*/
 	void MultipleToMultiple(unsigned new_precision) const
 	{
-		mpfr_float::default_precision(new_precision);
+		DefaultPrecision(new_precision);
 		precision_ = new_precision;
 
 		ChangeTemporariesPrecision(new_precision);
@@ -118,7 +118,7 @@ protected:
 	*/
 	void DoubleToMultiple(unsigned new_precision) const
 	{
-		mpfr_float::default_precision(new_precision);
+		DefaultPrecision(new_precision);
 		precision_ = new_precision;
 		
 		ChangeTemporariesPrecision(new_precision);
@@ -135,7 +135,7 @@ protected:
 	*/
 	void MultipleToDouble() const
 	{
-		mpfr_float::default_precision(DoublePrecision());
+		DefaultPrecision(DoublePrecision());
 		precision_ = DoublePrecision();
 
 		ChangeTemporariesPrecision(DoublePrecision());
@@ -176,7 +176,7 @@ public:
 		return SuccessCode::Success;
 	}
 
-	AMPEndgamePolicyBase() : precision_(mpfr_float::default_precision())
+	AMPEndgamePolicyBase() : precision_(DefaultPrecision())
 	{}
 
 	virtual ~AMPEndgamePolicyBase() = default;

@@ -55,7 +55,7 @@ namespace bertini {
 	This class currently uses Boost.Multiprecision -- namely, the mpfr_float type for variable precision.
 	This class is serializable using Boost.Serialize.
 	
-	The precision of a newly-made bertini::complex is whatever current default is, set by mpfr_float::default_precision(...).
+	The precision of a newly-made bertini::complex is whatever current default is, set by DefaultPrecision(...).
 
 	\todo{Implement MPI send/receive commands using Boost.MPI or alternative.}
 	*/
@@ -514,7 +514,7 @@ namespace bertini {
 		 */
 		complex& operator*=(const complex & rhs)
 		{
-			temp_[0].precision(mpfr_float::default_precision());
+			temp_[0].precision(DefaultPrecision());
 
 			temp_[0] = real_*rhs.real_ - imag_*rhs.imag_; // cache the real part of the result
 			imag_ = real_*rhs.imag_ + imag_*rhs.real_;
@@ -541,8 +541,8 @@ namespace bertini {
 		 */
 		complex& operator/=(const complex & rhs)
 		{
-			temp_[1].precision(mpfr_float::default_precision());
-			temp_[2].precision(mpfr_float::default_precision());
+			temp_[1].precision(DefaultPrecision());
+			temp_[2].precision(DefaultPrecision());
 
 			temp_[1] = rhs.abs2(); // cache the denomenator...
 			temp_[2] = real_*rhs.real_ + imag_*rhs.imag_; // cache the numerator of the real part of the result
@@ -1042,7 +1042,7 @@ namespace bertini {
 	inline complex operator/(const mpfr_float & lhs, const complex & rhs)
 	{
 
-		complex::temp_[3].precision(mpfr_float::default_precision());
+		complex::temp_[3].precision(DefaultPrecision());
 		complex::temp_[3] = rhs.abs2();
 		return complex(lhs*rhs.real()/complex::temp_[3], -lhs*rhs.imag()/complex::temp_[3]);
 	}
@@ -1065,7 +1065,7 @@ namespace bertini {
 	 */
 	inline complex operator/(const mpz_int & lhs, const complex & rhs)
 	{
-		complex::temp_[4].precision(mpfr_float::default_precision());
+		complex::temp_[4].precision(DefaultPrecision());
 		complex::temp_[4] = rhs.abs2();
 		return complex(lhs*rhs.real()/complex::temp_[4], -lhs*rhs.imag()/complex::temp_[4]);
 	}
@@ -1087,7 +1087,7 @@ namespace bertini {
 	template<typename T, typename>
 	inline complex operator/(T const& lhs, const complex & rhs)
 	{
-		complex::temp_[5].precision(mpfr_float::default_precision());
+		complex::temp_[5].precision(DefaultPrecision());
 		complex::temp_[5] = rhs.abs2();
 		return complex(lhs*rhs.real()/complex::temp_[5], -lhs*rhs.imag()/complex::temp_[5]);
 	}
@@ -1181,7 +1181,7 @@ namespace bertini {
 	 */
 	inline complex inverse(const complex & z)
 	{
-		complex::temp_[6].precision(mpfr_float::default_precision());
+		complex::temp_[6].precision(DefaultPrecision());
 		complex::temp_[6] = z.abs2();
 		
 		return complex(z.real()/complex::temp_[6], -z.imag()/complex::temp_[6]);
@@ -1278,7 +1278,7 @@ namespace bertini {
 	 */
 	inline complex exp(const complex & z)
 	{
-		complex::temp_[7].precision(mpfr_float::default_precision());
+		complex::temp_[7].precision(DefaultPrecision());
 		complex::temp_[7] = exp(real(z));
 		return complex(complex::temp_[7] * cos(imag(z)), complex::temp_[7] * sin(imag(z)));
 	}
@@ -1468,14 +1468,14 @@ namespace bertini {
 	inline 
 	void RandomUnit(bertini::complex & a, unsigned num_digits)
 	{
-		auto prev_precision = mpfr_float::default_precision();
+		auto prev_precision = DefaultPrecision();
 
 		a.precision(num_digits);
 		RandomMp(a.real_,num_digits);
 		RandomMp(a.imag_,num_digits);
 		a /= abs(a);
 
-		mpfr_float::default_precision(prev_precision);
+		DefaultPrecision(prev_precision);
 	}
 
 	using mpfr = bertini::complex;

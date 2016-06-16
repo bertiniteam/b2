@@ -168,7 +168,7 @@ public:
 
 			auto prev_precision = this->Precision();
 			auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
-			mpfr_float::default_precision(temp_higher_prec);
+			DefaultPrecision(temp_higher_prec);
 			this->GetTracker().ChangePrecision(temp_higher_prec);
 
 
@@ -176,7 +176,7 @@ public:
 			auto result_higher_prec = Vec<mpfr>(current_sample.size());
 			auto time_higher_precision = current_time; Precision(time_higher_precision, temp_higher_prec);
 
-			assert(time_higher_precision.precision()==mpfr_float::default_precision());
+			assert(time_higher_precision.precision()==DefaultPrecision());
 			RT refinement_tolerance = this->Tolerances().final_tolerance/100;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
@@ -184,11 +184,11 @@ public:
 		                          							refinement_tolerance,
 		                          							this->EndgameSettings().max_num_newton_iterations);
 
-			mpfr_float::default_precision(prev_precision);
+			DefaultPrecision(prev_precision);
 			this->GetTracker().ChangePrecision(prev_precision);
 			result = result_higher_prec;
 			Precision(result,prev_precision);
-			assert(result(0).precision()==mpfr_float::default_precision());
+			assert(result(0).precision()==DefaultPrecision());
 		}
 
 		return refinement_success;
@@ -208,7 +208,7 @@ public:
 		{
 			auto prev_precision = this->Precision();
 			auto temp_higher_prec = LowestMultiplePrecision();
-			mpfr_float::default_precision(temp_higher_prec);
+			DefaultPrecision(temp_higher_prec);
 			this->GetTracker().ChangePrecision(temp_higher_prec);
 
 
@@ -226,7 +226,7 @@ public:
 		                          							this->EndgameSettings().max_num_newton_iterations);
 
 
-			mpfr_float::default_precision(prev_precision);
+			DefaultPrecision(prev_precision);
 			this->GetTracker().ChangePrecision(prev_precision);
 			for (unsigned ii(0); ii<current_sample.size(); ++ii)
 				result(ii) = dbl(result_higher_prec(ii));

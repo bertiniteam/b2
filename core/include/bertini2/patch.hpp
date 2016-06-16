@@ -92,7 +92,7 @@ namespace bertini {
 
 		Makes an empty patch.
 		*/
-		Patch() : precision_(mpfr_float::default_precision())
+		Patch() : precision_(DefaultPrecision())
 		{}
 
 
@@ -102,7 +102,7 @@ namespace bertini {
 		Patch(Patch const& other)
 		{	
 			variable_group_sizes_ = other.variable_group_sizes_;
-			precision_ = mpfr_float::default_precision();
+			precision_ = DefaultPrecision();
 
 			// a little shorthand unpacking the tuple
 			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(this->coefficients_working_);
@@ -144,7 +144,7 @@ namespace bertini {
 
 		\param sizes The sizes of the variable groups, including homogenizing variables if present.
 		*/
-		Patch(std::vector<unsigned> const& sizes) : variable_group_sizes_(sizes), coefficients_highest_precision_(sizes.size()), precision_(mpfr_float::default_precision())
+		Patch(std::vector<unsigned> const& sizes) : variable_group_sizes_(sizes), coefficients_highest_precision_(sizes.size()), precision_(DefaultPrecision())
 		{
 			using bertini::RandomComplex;
 
@@ -234,20 +234,18 @@ namespace bertini {
 		*/
 		void Precision(unsigned new_precision) const
 		{
-			if (new_precision > DoublePrecision())
-			{
-				std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(coefficients_working_);
+			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(coefficients_working_);
 
-				for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
+			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
+			{
+				for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
 				{
-					for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
-					{
-						coefficients_mpfr[ii](jj).precision(new_precision);
-						if (new_precision>precision_)
-							coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
-					}
+					coefficients_mpfr[ii](jj).precision(new_precision);
+					if (new_precision>precision_)
+						coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
 				}
 			}
+			
 			precision_ = new_precision;
 		}
 

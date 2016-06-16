@@ -59,6 +59,16 @@ namespace bertini{
 	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_off>;
 	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_off>;
 #endif
+
+	inline auto DefaultPrecision()
+	{
+		return mpfr_float::default_precision();
+	}
+
+	inline void DefaultPrecision(unsigned prec)
+	{
+		mpfr_float::default_precision(prec);
+	}
 }
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision

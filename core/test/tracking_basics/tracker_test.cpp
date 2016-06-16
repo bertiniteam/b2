@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
+	BOOST_CHECK_EQUAL(DefaultPrecision(),30);
 	BOOST_CHECK(tracking_success==SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),100);
+	BOOST_CHECK_EQUAL(DefaultPrecision(),100);
 	BOOST_CHECK(tracking_success==SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
@@ -732,7 +732,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 	                  t_start, t_end, start_point);
 
 	BOOST_CHECK(tracking_success!=SuccessCode::Success);
-	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
+	BOOST_CHECK_EQUAL(DefaultPrecision(),30);
 }
 
 
@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 		Vec<mpfr> result;
 		SuccessCode tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
-		BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
+		BOOST_CHECK_EQUAL(DefaultPrecision(),30);
 		solutions.push_back(final_system.DehomogenizePoint(result));
 	}
 
@@ -830,7 +830,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 
 std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& tracker, bertini::start_system::TotalDegree const& TD)
 {
-	auto initial_precision = mpfr_float::default_precision();
+	auto initial_precision = DefaultPrecision();
 	using namespace bertini::tracking;
 	mpfr t_start(1), t_end(0);
 	std::vector<Vec<mpfr> > solutions;
@@ -894,7 +894,7 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 	tracker.PrecisionPreservation(true);
 	auto solutions = track_total_degree(tracker, TD);
 
-	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),30);
+	BOOST_CHECK_EQUAL(DefaultPrecision(),30);
 	Vec<mpfr> solution_1(2);
 	solution_1 << mpfr("-0.61803398874989484820458683","0"), mpfr("1.6180339887498948482045868","0");
 

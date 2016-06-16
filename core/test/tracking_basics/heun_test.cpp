@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	
 	BOOST_AUTO_TEST_CASE(circle_line_heun_mp)
 	{
-		bertini::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	
 	BOOST_AUTO_TEST_CASE(monodromy_heun_d)
 	{
-		boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<dbl> current_space(2);
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	
 	BOOST_AUTO_TEST_CASE(monodromy_heun_mp)
 	{
-		boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	{
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
 		
-		boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_a_is_false_mp)
 	{
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
-		boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
@@ -699,7 +699,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	{
 		// Circle line homotopy has singular point at (x,y) = (1,-4) and t = .75
 		
-		boost::multiprecision::mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		boost::multiprecision::DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
 		current_space << mpfr("1.0"), mpfr("-4.0");

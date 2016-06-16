@@ -57,7 +57,7 @@ Below we demonstrate a basic usage of the CauchyEndgame class to find the singul
 The pattern is as described above: create an instance of the class, feeding it the system to be used, and the endgame boundary time and other variable values at the endgame boundary. 
 
 \code{.cpp}
-mpfr_float::default_precision(30); // set initial precision.  This is not strictly necessary.
+DefaultPrecision(30); // set initial precision.  This is not strictly necessary.
 using namespace bertini::tracking;
 
 // 1. Create the system

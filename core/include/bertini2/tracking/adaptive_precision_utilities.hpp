@@ -131,14 +131,14 @@ unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & sampl
 {
 	using std::max;
 	unsigned max_precision = max(
-	                             mpfr_float::default_precision(),
+	                             DefaultPrecision(),
 	                             MaxPrecision(samples)
 	                             ); 
 
-	if (max_precision != mpfr_float::default_precision())
-		std::cout << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
+	if (max_precision != DefaultPrecision())
+		std::cout << "EG changing default precision from " << DefaultPrecision() << " to " << max_precision << std::endl;
 	//BOOST_LOG_TRIVIAL(severity_level::trace)
-	mpfr_float::default_precision(max_precision);
+	DefaultPrecision(max_precision);
 
 	SetPrecision(times, max_precision);
 	SetPrecision(samples, max_precision);
@@ -162,15 +162,15 @@ inline
 unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples, SampCont<mpfr> & derivatives)
 {
 	unsigned max_precision = max(
-	                             mpfr_float::default_precision(),
+	                             DefaultPrecision(),
 	                             MaxPrecision(samples),
 	                             MaxPrecision(derivatives)
 	                             ); 
 
-	if (max_precision != mpfr_float::default_precision())
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << mpfr_float::default_precision() << " to " << max_precision << std::endl;
+	if (max_precision != DefaultPrecision())
+		BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << DefaultPrecision() << " to " << max_precision << std::endl;
 	
-	mpfr_float::default_precision(max_precision);
+	DefaultPrecision(max_precision);
 
 	SetPrecision(times, max_precision);
 	SetPrecision(samples, max_precision);

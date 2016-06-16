@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec16)
 
 BOOST_AUTO_TEST_CASE(patch_eval_two_variable_groups_prec30)
 {
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	std::vector<unsigned> s{2,3};
 
 	Patch p(s);
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(patch_eval_two_variable_groups_prec30)
 
 BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec30)
 {
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 
 	std::vector<unsigned> s{2,3};
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(patch_jacobian_two_variable_groups_prec30)
 
 BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec16)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::vector<unsigned> s{2,3};
 
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec16)
 
 BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec_default_mpfr)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::vector<unsigned> s{2,3};
 
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(patch_rescale_and_evaluate_prec_default_mpfr)
 
 BOOST_AUTO_TEST_CASE(patch_equality_checks)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::vector<unsigned> s1{2,3};
 	std::vector<unsigned> s2{3,4};

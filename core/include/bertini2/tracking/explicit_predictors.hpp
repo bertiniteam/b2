@@ -191,7 +191,7 @@ namespace bertini{
 
 				\param S the system the predictor will be predicting on.
 				*/
-				ExplicitRKPredictor(const System& S) : current_precision_(mpfr_float::default_precision()), s_(0)
+				ExplicitRKPredictor(const System& S) : current_precision_(DefaultPrecision()), s_(0)
 				{
 					ChangeSystem(S);
 					PredictorMethod(DefaultPredictor());
@@ -203,7 +203,7 @@ namespace bertini{
 				 \param method The predictor method to be implemented.
 				 \param S the system to be predicting on.
 				 */
-				ExplicitRKPredictor(Predictor method, const System& S) : current_precision_(mpfr_float::default_precision()), s_(0)
+				ExplicitRKPredictor(Predictor method, const System& S) : current_precision_(DefaultPrecision()), s_(0)
 				{
 					ChangeSystem(S);
 					PredictorMethod(method);
@@ -367,10 +367,7 @@ namespace bertini{
 					Precision(std::get< Vec<mpfr_float> >(b_minus_bstar_),new_precision);
 					Precision(std::get< Vec<mpfr_float> >(c_),new_precision);
 
-
 					PredictorMethod(predictor_);
-
-					LU_mp_.clear();
 
 					current_precision_ = new_precision;
 
@@ -379,7 +376,7 @@ namespace bertini{
 				
 				void PrecisionSanityCheck() const
 				{
-					assert(current_precision_==mpfr_float::default_precision());
+					assert(current_precision_==DefaultPrecision());
 
 					Vec<mpfr>& dhdttemp = std::get< Vec<mpfr> >(dh_dt_temp_);
 					Mat<mpfr>& dhdx0 = std::get< Mat<mpfr> >(dh_dx_0_); 
@@ -653,7 +650,7 @@ namespace bertini{
 
 				Eigen::PartialPivLU<Mat<mpfr>>& GetLU_mp()
 				{
-					assert(current_precision_==mpfr_float::default_precision());
+					assert(current_precision_==DefaultPrecision());
 					return LU_mp_[current_precision_];
 				}
 
@@ -819,7 +816,7 @@ namespace bertini{
 
 						if (!std::is_same<ComplexType,dbl>::value)
 						{
-							assert(mpfr_float::default_precision()==current_precision_);
+							assert(DefaultPrecision()==current_precision_);
 
 							assert(Precision(space)==current_precision_);
 							assert(Precision(time)==current_precision_);
@@ -833,7 +830,10 @@ namespace bertini{
 						{
 							assert(Precision(dhdxref)==current_precision_);
 							if (Precision(LUref.matrixLU())!=current_precision_)
-								std::cout << Precision(LUref.matrixLU())<< " " << mpfr_float::default_precision() << " " << current_precision_ << '\n';
+							{
+								std::cout << Precision(LUref.matrixLU())<< " " << DefaultPrecision() << " " << current_precision_ << '\n';
+								std::cout << LUref.matrixLU() << std::endl;
+							}
 							assert(Precision(LUref.matrixLU())==current_precision_);
 						}
 

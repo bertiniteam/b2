@@ -62,7 +62,7 @@ Below we demonstrate a basic usage of the PowerSeriesEndgame class to find the s
 The pattern is as described above: create an instance of the class, feeding it the system to be used, and the endgame boundary time and other variable values at the endgame boundary. 
 
 \code{.cpp}
-mpfr_float::default_precision(30); // set initial precision.  This is not strictly necessary.
+DefaultPrecision(30); // set initial precision.  This is not strictly necessary.
 using namespace bertini::tracking;
 
 // 1. Create the system
@@ -511,7 +511,7 @@ public:
   		}
 
 
-  		BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking to t = " << next_time << ", default precision: " << mpfr_float::default_precision() << "\n";
+  		BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking to t = " << next_time << ", default precision: " << DefaultPrecision() << "\n";
 		SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,times.back(),next_time,samples.back());
 		if (tracking_success != SuccessCode::Success)
 			return tracking_success;
@@ -569,10 +569,10 @@ public:
 			throw std::runtime_error(err_msg.str());
 		}
 
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << mpfr_float::default_precision() << "\n\n";
+		BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << DefaultPrecision() << "\n\n";
 		BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point(0)) << "\n\n";
 
-		mpfr_float::default_precision(Precision(start_point(0)));
+		DefaultPrecision(Precision(start_point(0)));
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		//Set up for the endgame.
