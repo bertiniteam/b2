@@ -146,6 +146,7 @@ namespace bertini {
 		*/
 		Patch(std::vector<unsigned> const& sizes) : variable_group_sizes_(sizes), coefficients_highest_precision_(sizes.size()), precision_(DefaultPrecision())
 		{
+			using bertini::Precision;
 			using bertini::RandomComplex;
 
 			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(coefficients_working_);
@@ -159,6 +160,7 @@ namespace bertini {
 			{
 				coefficients_highest_precision_[ii].resize(sizes[ii]);
 				coefficients_dbl[ii].resize(sizes[ii]);
+
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 				{
 					RandomComplex(coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
@@ -166,6 +168,9 @@ namespace bertini {
 				}
 
 				coefficients_mpfr[ii] = coefficients_highest_precision_[ii]; // copy into current default precision
+				Precision(coefficients_mpfr[ii],precision_);
+
+				assert(Precision(coefficients_mpfr[ii](0))==precision_);
 			}
 		}
 
@@ -185,6 +190,7 @@ namespace bertini {
 		static Patch RandomReal(std::vector<unsigned> const& sizes)
 		{	
 			using bertini::RandomReal;
+			using bertini::Precision;
 
 			Patch p;
 
@@ -198,14 +204,17 @@ namespace bertini {
 			p.coefficients_highest_precision_.resize(sizes.size());
 			coefficients_mpfr.resize(sizes.size());
 			coefficients_dbl.resize(sizes.size());
-
+			
 			for (size_t ii=0; ii<sizes.size(); ++ii)
 			{
 				p.coefficients_highest_precision_[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 					RandomReal(p.coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
 
-				coefficients_mpfr[ii] = p.coefficients_highest_precision_[ii];
+				coefficients_mpfr[ii] = p.coefficients_highest_precision_[ii]; 
+				Precision(coefficients_mpfr[ii],DefaultPrecision());
+				assert(Precision(coefficients_mpfr[ii](0))==DefaultPrecision());
+
 				coefficients_dbl[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 					coefficients_dbl[ii](jj) = dbl(p.coefficients_highest_precision_[ii](jj));
@@ -234,15 +243,22 @@ namespace bertini {
 		*/
 		void Precision(unsigned new_precision) const
 		{
+			using bertini::Precision;
 			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(coefficients_working_);
 
 			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
 			{
 				for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
 				{
-					coefficients_mpfr[ii](jj).precision(new_precision);
 					if (new_precision>precision_)
+					{
 						coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
+						coefficients_mpfr[ii](jj).precision(new_precision);
+					}
+					else
+						coefficients_mpfr[ii](jj).precision(new_precision);
+
+					assert(Precision(coefficients_mpfr[ii](jj))==new_precision);
 				}
 			}
 			
