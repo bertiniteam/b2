@@ -828,6 +828,13 @@ public:
 				return refine_code;
 		}
 		
+		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+		{
+			//Ensure all samples are of the same precision.
+			auto new_precision = AsDerived().EnsureAtUniformPrecision(ps_times, ps_samples);
+			this->GetSystem().precision(new_precision);
+		}
+		
 
 		auto num_sample_points = this->EndgameSettings().num_sample_points;
 		//Compute dx_dt for each sample.
