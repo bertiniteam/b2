@@ -46,7 +46,7 @@ namespace bertini{
 			public:
 				
 				
-				NewtonCorrector(const System& S)
+				NewtonCorrector(const System& S) : current_precision_(DefaultPrecision())
 				{
 					ChangeSystem(S);
 				}

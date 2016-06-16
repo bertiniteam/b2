@@ -453,7 +453,7 @@ namespace bertini{
 				num_successful_steps_since_stepsize_increase_ = 0;
 				num_successful_steps_since_precision_decrease_ = 0;
 				// initialize to the frequency so guaranteed to compute it the first try 	
-				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
+				num_steps_since_last_condition_number_computation_ = this->stepping_config_.frequency_of_CN_estimation;
 			}
 
 			/** 
@@ -1066,7 +1066,7 @@ namespace bertini{
 									delta_t,
 									condition_number_estimate,
 									num_steps_since_last_condition_number_computation_, 
-									frequency_of_CN_estimation_, 
+									stepping_config_.frequency_of_CN_estimation, 
 									RealType(tracking_tolerance_),
 									AMP_config_);
 				else
@@ -1079,7 +1079,7 @@ namespace bertini{
 									delta_t,
 									condition_number_estimate,
 									num_steps_since_last_condition_number_computation_, 
-									frequency_of_CN_estimation_, 
+									stepping_config_.frequency_of_CN_estimation, 
 									RealType(tracking_tolerance_),
 									AMP_config_);
 			}
@@ -1292,7 +1292,7 @@ namespace bertini{
 
 				bool upsampling_needed = new_precision > current_precision_;
 				// reset the counter for estimating the condition number.  
-				num_steps_since_last_condition_number_computation_ = frequency_of_CN_estimation_;
+				num_steps_since_last_condition_number_computation_ = this->stepping_config_.frequency_of_CN_estimation;
 
 				if (new_precision==DoublePrecision() && current_precision_>DoublePrecision())
 				{

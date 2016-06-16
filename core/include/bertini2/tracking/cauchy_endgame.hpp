@@ -945,7 +945,7 @@ public:
 
 			if(tracking_success != SuccessCode::Success)
 			{
-				std::cout << "Cauchy loop fail tracking\n\n";
+				std::cout << "Cauchy loop fail tracking "<< int(tracking_success) <<"\n\n";
 				return tracking_success;
 			}
 			else if(CheckClosedLoop<CT>())

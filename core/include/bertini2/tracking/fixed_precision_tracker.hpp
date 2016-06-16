@@ -95,7 +95,7 @@ namespace bertini{
 
 				this->num_successful_steps_since_stepsize_increase_ = 0;
 				// initialize to the frequency so guaranteed to compute it the first try 	
-				this->num_steps_since_last_condition_number_computation_ = this->frequency_of_CN_estimation_;
+				this->num_steps_since_last_condition_number_computation_ = this->stepping_config_.frequency_of_CN_estimation;
 			}
 
 
@@ -314,7 +314,7 @@ namespace bertini{
 							delta_t,
 							condition_number_estimate,
 							this->num_steps_since_last_condition_number_computation_,
-							this->frequency_of_CN_estimation_,
+							this->stepping_config_.frequency_of_CN_estimation,
 							RT(this->tracking_tolerance_));
 			}
 

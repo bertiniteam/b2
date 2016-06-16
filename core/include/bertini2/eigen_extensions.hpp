@@ -335,7 +335,15 @@ namespace bertini {
 	template<typename Derived>
 	unsigned Precision(Eigen::MatrixBase<Derived> const & v)
 	{
-		return Precision(v(0));
+		auto a = Precision(v(0,0));
+		for (int ii=0; ii<v.rows(); ++ii)
+			for (int jj=0; jj<v.cols(); ++jj)
+			{
+				auto b = Precision(v(ii,jj));
+				assert (a==b);
+				a = b;
+			}
+		return a;
 	}
 
 	template<typename Derived>
