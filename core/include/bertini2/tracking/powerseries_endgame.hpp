@@ -216,6 +216,11 @@ protected:
 	*/			
 	mutable std::tuple< SampCont<UsedNumTs>... > derivatives_;
 
+	/**
+	\brief Random vector used in computing an upper bound on the cycle number. 
+	*/
+	mutable Vec<BCT> rand_vector;
+
 public:
 
 	auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
@@ -258,6 +263,13 @@ public:
 	*/	
 	template<typename CT>
 	auto GetSamples() const {return std::get<SampCont<CT> >(samples_);}
+
+	/**
+	\brief Function to set the times used for the Power Series endgame.
+	// */	
+	template<typename CT>
+	void SetRandVec(Vec<CT> sample) {rand_vector = Vec<CT>::Random(sample.size());}
+
 
 
 	/**
@@ -308,7 +320,7 @@ public:
 		const Vec<CT> & sample1 = samples[num_samples-2];
 		const Vec<CT> & sample2 = samples[num_samples-1]; // most recent sample.  oldest samples at front of the container
 
-		Vec<CT> rand_vector = Vec<CT>::Random(sample0.size()); // todo: eliminate this temporary vector, make permanent.
+		// Vec<BCT> rand_vector = Vec<CT>::Random(sample0.size()); // todo: eliminate this temporary vector, make permanent.
 		
 		if (sample2==sample1 || sample1==sample0)
 		{
@@ -632,12 +644,14 @@ public:
 			auto& times   = std::get<TimeCont<CT> >(times_);
 			auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 			Vec<CT>& final_approx = std::get<Vec<CT> >(this->final_approximation_at_origin_);
+			SetRandVec(start_point);
 
 	 	RT approx_error(1);  //setting up the error of successive approximations. 
 	 	
 	 	CT origin(0);
 
 		auto initial_sample_success = this->ComputeInitialSamples(start_time, start_point, times, samples);
+
 		if (initial_sample_success!=SuccessCode::Success)
 		{
 			BOOST_LOG_TRIVIAL(severity_level::trace) << "initial sample gathering failed, code " << int(initial_sample_success) << std::endl;
