@@ -208,7 +208,7 @@ namespace bertini{
 				if (start_point.size()!=tracked_system_.NumVariables())
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
-				using std::abs;
+				
 				
 				SuccessCode initialization_code = TrackerLoopInitialization(start_time, endtime, start_point);
 				if (initialization_code!=SuccessCode::Success)
@@ -218,7 +218,7 @@ namespace bertini{
 				}
 
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
-				while (current_time_!=endtime)
+				while (!IsSymmRelDiffSmall(current_time_,endtime, Eigen::NumTraits<CT>::epsilon()))
 				{	
 					SuccessCode pre_iteration_code = PreIterationCheck();
 					if (pre_iteration_code!=SuccessCode::Success)
@@ -227,7 +227,7 @@ namespace bertini{
 						return pre_iteration_code;
 					}
 
-
+					using std::abs;
 					// compute the next delta_t
 					if (abs(endtime-current_time_) < abs(current_stepsize_))
 						delta_t_ = endtime-current_time_;

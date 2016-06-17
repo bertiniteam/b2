@@ -442,6 +442,21 @@ namespace bertini {
 	} 
 
 	/**
+	\brief Check whether two values are very close to each other.
+	
+	\e The tolerance for being close
+	See \url http://www.boost.org/doc/libs/1_34_0/libs/test/doc/components/test_tools/floating_point_comparison.html, for example.
+	*/
+	template<typename T>
+	inline
+	bool IsSymmRelDiffSmall(T const& a, T const& b, typename Eigen::NumTraits<T>::Real const& e)
+	{
+		using std::abs;
+		typename Eigen::NumTraits<T>::Real c = abs(a-b);
+		return (c/abs(a) <= e) || (c/abs(b) <= e) ;
+	}
+
+	/**
 	 Test two numbers for having large ratio.
 	
 	 The basis for comparison is Eigen's fuzzy precision, Eigen::NumTraits<T>::dummy_precision();
