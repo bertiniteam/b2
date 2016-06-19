@@ -218,7 +218,7 @@ namespace bertini{
 				}
 
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
-				while (!IsSymmRelDiffSmall(current_time_,endtime, Eigen::NumTraits<CT>::epsilon()))
+				while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<CT>::epsilon()))
 				{	
 					SuccessCode pre_iteration_code = PreIterationCheck();
 					if (pre_iteration_code!=SuccessCode::Success)
@@ -229,10 +229,10 @@ namespace bertini{
 
 					using std::abs;
 					// compute the next delta_t
-					if (abs(endtime-current_time_) < abs(current_stepsize_))
-						delta_t_ = endtime-current_time_;
+					if (abs(endtime_-current_time_) < abs(current_stepsize_))
+						delta_t_ = endtime_-current_time_;
 					else
-						delta_t_ = current_stepsize_ * (endtime - current_time_)/abs(endtime - current_time_);
+						delta_t_ = current_stepsize_ * (endtime_ - current_time_)/abs(endtime_ - current_time_);
 
 
 					step_success_code_ = TrackerIteration();
@@ -542,7 +542,7 @@ namespace bertini{
 			RT tracking_tolerance_; ///< The tracking tolerance.
 			RT path_truncation_threshold_; ///< The threshold for path truncation.
 
-
+			mutable CT endtime_; ///< The time we are tracking to.
 			mutable CT current_time_; ///< The current time.
 			mutable CT delta_t_; ///< The current delta_t.
 			mutable RT current_stepsize_; ///< The current stepsize.

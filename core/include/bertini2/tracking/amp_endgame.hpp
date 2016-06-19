@@ -59,7 +59,35 @@ public:
 	static
 	unsigned EnsureAtUniformPrecision(T& ...args)
 	{
-		return bertini::tracking::endgame::adaptive::EnsureAtUniformPrecision(args...);
+		return adaptive::EnsureAtUniformPrecision(args...);
+	}
+
+	static
+	void EnsureAtPrecision(double & obj, unsigned prec)
+	{
+		if (prec!=DoublePrecision())
+			throw std::runtime_error("attempting to adjust precision of double to non-double precision");
+	}
+
+	static
+	void EnsureAtPrecision(std::complex<double> & obj, unsigned prec)
+	{
+		if (prec!=DoublePrecision())
+			throw std::runtime_error("attempting to adjust precision of std::complex<double> to non-double precision");
+	}
+
+	static
+	void EnsureAtPrecision(mpfr_float & obj, unsigned prec)
+	{
+		using bertini::Precision;
+		Precision(obj,prec);
+	}
+
+	static
+	void EnsureAtPrecision(mpfr & obj, unsigned prec)
+	{
+		using bertini::Precision;
+		Precision(obj,prec);
 	}
 
 protected:

@@ -81,14 +81,9 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					for(int ii = 0; ii < numTotalFunctions_; ++ii)
-					{
-						std::get< Vec<mpfr> >(f_temp_)(ii).precision(new_precision);
-						std::get< Vec<mpfr> >(step_temp_)(ii).precision(new_precision);
-
-						for(int jj = 0; jj < numVariables_; ++jj)
-							std::get< Mat<mpfr> >(J_temp_)(ii,jj).precision(new_precision);
-					}	
+					Precision(std::get< Vec<mpfr> >(f_temp_), new_precision);
+					Precision(std::get< Vec<mpfr> >(step_temp_), new_precision);
+					Precision(std::get< Mat<mpfr> >(J_temp_), new_precision);
 
 					std::get< Eigen::PartialPivLU<Mat<mpfr>> >(LU_) = Eigen::PartialPivLU<Mat<mpfr>>(numTotalFunctions_);
 

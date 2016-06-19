@@ -349,79 +349,14 @@ namespace bertini {
 	template<typename Derived>
 	void Precision(Eigen::MatrixBase<Derived> & v, unsigned prec)
 	{
+		using bertini::Precision;
+		
 		for (int ii=0; ii<v.rows(); ++ii)
 			for (int jj=0; jj<v.cols(); ++jj)
-				v(ii,jj).precision(prec);
+				Precision(v(ii,jj),prec);
 	}
 
-	// template<typename T>
-	// unsigned Precision(const Eigen::Ref<const Vec<T>> v)
-	// {
-	// 	return Precision(v(0));
-	// }
-
-	// template<typename T>
-	// void Precision(Eigen::Ref<Vec<T>> v, unsigned prec)
-	// {
-	// 	for (unsigned ii=0; ii<v.size(); ++ii)
-	// 	{
-	// 		v(ii).precision(prec);
-	// 		assert(Precision(v(ii))==prec);
-	// 	}
-	// }
-
-	// template<typename T>
-	// unsigned Precision(const Eigen::Ref<const Vec<T>> & v)
-	// {
-	// 	return Precision(v(0));
-	// }
-
-	// template<typename T>
-	// void Precision(Eigen::Ref<Vec<T>> v, unsigned prec)
-	// {
-	// 	for (unsigned ii=0; ii<v.size(); ++ii)
-	// 			v(ii).precision(prec);
-	// }
-
-
-
-
-
-
-
-	// template< typename T>
-	// unsigned Precision(Mat<T> const & v)
-	// {
-	// 	return Precision(v(0,0));
-	// }
-
-	// template< typename T>
-	// unsigned Precision(const Eigen::Ref<const Mat<T>> v)
-	// {
-	// 	return Precision(v(0,0));
-	// }
-
-	// template<typename T>
-	// void Precision(Eigen::Ref<Mat<T>> v, unsigned prec)
-	// {
-	// 	for (unsigned ii=0; ii<v.rows(); ++ii)
-	// 		for (unsigned jj=0; jj<v.cols(); ++jj)
-	// 			v(ii,jj).precision(prec);
-	// }
-
-	// template<typename T>
-	// unsigned Precision(const Eigen::Ref<const Mat<T>> & v)
-	// {
-	// 	return Precision(v(0,0));
-	// }
-
-	// template<typename T>
-	// void Precision(Eigen::Ref<Mat<T>> v, unsigned prec)
-	// {
-	// 	for (unsigned ii=0; ii<v.rows(); ++ii)
-	// 		for (unsigned jj=0; jj<v.cols(); ++jj)
-	// 			v(ii,jj).precision(prec);
-	// }
+	
 
 	/**
 	 Test a numbers being very small.
@@ -452,6 +387,9 @@ namespace bertini {
 	bool IsSymmRelDiffSmall(T const& a, T const& b, typename Eigen::NumTraits<T>::Real const& e)
 	{
 		using std::abs;
+		if (a==b)
+			return true;
+
 		typename Eigen::NumTraits<T>::Real c = abs(a-b);
 		return (c/abs(a) <= e) || (c/abs(b) <= e) ;
 	}

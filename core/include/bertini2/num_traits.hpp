@@ -107,28 +107,6 @@ namespace bertini
 		}
 	};
 
-	/**
-	\brief Get the precision of a number.
-
-	For doubles, this is trivially 16.
-	*/
-	inline
-	unsigned Precision(const double num)
-	{
-		return 16;
-	}
-
-	/**
-	\brief Get the precision of a number.
-
-	For complex doubles, this is trivially 16.
-	*/
-	inline
-	unsigned Precision(const std::complex<double> num)
-	{
-		return 16;
-	}
-
 
 	inline
 	unsigned PrecisionIncrement()
@@ -154,6 +132,55 @@ namespace bertini
 		return 1000;
 	}
 	
+	/**
+	\brief Get the precision of a number.
+
+	For doubles, this is trivially 16.
+	*/
+	inline
+	unsigned Precision(const double num)
+	{
+		return 16;
+	}
+
+	/**
+	For complex doubles, throw if the requested precision is not DoublePrecision.
+	*/
+	inline
+	void Precision(const double num, unsigned prec)
+	{
+		if (prec!=DoublePrecision())
+		{
+			std::stringstream err_msg;
+			err_msg << "trying to change precision of a double to " << prec;
+			throw std::runtime_error(err_msg.str());
+		}
+	}
+
+	/**
+	\brief Get the precision of a number.
+
+	For complex doubles, this is trivially 16.
+	*/
+	inline
+	unsigned Precision(const std::complex<double> num)
+	{
+		return 16;
+	}
+
+	/**
+	For complex doubles, throw if the requested precision is not DoublePrecision.
+	*/
+	inline
+	void Precision(const std::complex<double> & num, unsigned prec)
+	{
+		if (prec!=DoublePrecision())
+		{
+			std::stringstream err_msg;
+			err_msg << "trying to change precision of a double to " << prec;
+			throw std::runtime_error(err_msg.str());
+		}
+	}
 
 	inline
 	std::complex<double> rand_complex()
@@ -196,17 +223,6 @@ namespace bertini
 
 namespace bertini {
 
-	/** 
-	\brief Get the precision of a number.
-
-	For mpfr_floats, this calls the precision member method for mpfr_float.
-	*/
-	inline
-	unsigned Precision(mpfr_float const& num)
-	{
-		return num.precision();
-	}
-	
 	
 	
 	template <> struct NumTraits<mpfr_float> 

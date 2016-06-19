@@ -483,6 +483,7 @@ namespace bertini{
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;
+				this->endtime_ = end_time;
 				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
 					this->SetStepSize(min(this->stepping_config_.initial_step_size,abs(start_time-end_time)/this->stepping_config_.min_num_steps));
@@ -569,6 +570,7 @@ namespace bertini{
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;
+				this->endtime_ = end_time;
 				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
 					this->SetStepSize(min(this->stepping_config_.initial_step_size,mpfr_float(abs(start_time-end_time)/this->stepping_config_.min_num_steps)));
@@ -590,7 +592,8 @@ namespace bertini{
 						std::get<mpfr_float>(error_estimate_).precision() == precision_ &&
 						std::get<mpfr_float>(norm_J_).precision() == precision_ &&
 						std::get<mpfr_float>(norm_J_inverse_).precision() == precision_ &&
-						std::get<mpfr_float>(size_proportion_).precision() == precision_
+						std::get<mpfr_float>(size_proportion_).precision() == precision_ && 
+						Precision(this->endtime_)==precision_
 						        ;				
 			}
 		private:

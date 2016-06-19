@@ -397,6 +397,11 @@ namespace bertini{
 				current_time_.precision(initial_precision_);
 				current_time_ = start_time;
 
+				endtime_highest_precision_.precision(initial_precision_);
+				endtime_highest_precision_ = end_time;
+
+				endtime_.precision(initial_precision_);
+				endtime_ = end_time;
 
 				current_stepsize_.precision(initial_precision_);
 				if (reinitialize_stepsize_)
@@ -1183,6 +1188,11 @@ namespace bertini{
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
+				auto target_precision = Precision(current_time);
+				assert(Precision(start_point)==target_precision);
+				ChangePrecision(target_precision);
+				Precision(new_space,target_precision);
+				
 				RealType& norm_J = std::get<RealType>(norm_J_);
 				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
 				RealType& norm_delta_z = std::get<RealType>(norm_delta_z_);
@@ -1231,7 +1241,11 @@ namespace bertini{
 				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
 			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
-				
+				auto target_precision = Precision(current_time);
+				assert(Precision(start_point)==target_precision);
+				ChangePrecision(target_precision);
+				Precision(new_space,target_precision);
+
 				using R = typename Eigen::NumTraits<ComplexType>::Real;
 
 				R& norm_J = std::get<R>(norm_J_);
@@ -1377,13 +1391,15 @@ namespace bertini{
 				current_precision_ = DoublePrecision();
 				DefaultPrecision(DoublePrecision());
 
-				tracked_system_.precision(16);
+				tracked_system_.precision(DoublePrecision());
 
 				if (std::get<Vec<dbl> >(current_space_).size()!=source_point.size())
 					std::get<Vec<dbl> >(current_space_).resize(source_point.size());
 
 				for (unsigned ii=0; ii<source_point.size(); ii++)
 					std::get<Vec<dbl> >(current_space_)(ii) = dbl(source_point(ii));
+
+				endtime_.precision(DoublePrecision());
 			}
 
 			/**
@@ -1422,6 +1438,11 @@ namespace bertini{
 				tracked_system_.precision(new_precision);
 				predictor_->ChangePrecision(new_precision);
 				corrector_->ChangePrecision(new_precision);
+
+				endtime_ = endtime_highest_precision_;
+				endtime_.precision(new_precision);
+
+				current_time_.precision(new_precision);
 
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
 					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
@@ -1476,6 +1497,11 @@ namespace bertini{
 				predictor_->ChangePrecision(new_precision);
 				corrector_->ChangePrecision(new_precision);
 
+				endtime_ = endtime_highest_precision_;
+				endtime_.precision(new_precision);
+
+				current_time_.precision(new_precision);
+
 				if (std::get<Vec<mpfr> >(current_space_).size()!=source_point.size())
 					std::get<Vec<mpfr> >(current_space_).resize(source_point.size());
 
@@ -1506,7 +1532,7 @@ namespace bertini{
 			/**
 			\brief Change precision of all temporary internal state variables.
 
-			This excludes those which canot be re-written without copying -- the current space point most notably.
+			This excludes those which cannot be re-written without copying -- the current space point most notably.
 
 			\brief new_precision The new precision to adjust to.
 			*/
@@ -1549,8 +1575,7 @@ namespace bertini{
 				{
 					assert(DefaultPrecision()==current_precision_ && "current precision differs from the default precision");
 
-					return tracked_system_.precision() == current_precision_
-							&&
+					return tracked_system_.precision() == current_precision_ &&
 							predictor_->precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(current_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(tentative_space_)(0).precision() == current_precision_ &&
@@ -1560,7 +1585,9 @@ namespace bertini{
 							std::get<mpfr_float>(error_estimate_).precision() == current_precision_ &&
 							std::get<mpfr_float>(norm_J_).precision() == current_precision_ &&
 							std::get<mpfr_float>(norm_J_inverse_).precision() == current_precision_ &&
-							std::get<mpfr_float>(size_proportion_).precision() == current_precision_
+							std::get<mpfr_float>(size_proportion_).precision() == current_precision_ &&
+							Precision(endtime_) == current_precision_ && 
+							Precision(current_time_) == current_precision_
 							        ;
 				}
 				
@@ -1592,6 +1619,8 @@ namespace bertini{
 			mutable unsigned num_precision_decreases_; ///< The number of times precision has decreased this track.
 			mutable unsigned initial_precision_; ///< The precision at the start of tracking.
 			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
+
+			mutable mpfr endtime_highest_precision_;
 
 			config::AdaptiveMultiplePrecisionConfig AMP_config_; ///< The Adaptive Multiple Precision settings.
 

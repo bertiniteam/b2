@@ -739,12 +739,12 @@ namespace bertini {
 
 			const auto& vars = Variables();
 
-			#ifndef BERTINI_DISABLE_ASSERTS
-				if (!std::is_same<T,dbl>::value)
-				assert(Precision(new_values(0)) == this->precision() && "precision of input point in SetVariables must match the precision of the system.");
+			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+				if (!std::is_same<T,dbl>::value && (Precision(new_values) != this->precision()))
+					throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
 
-				if (!std::is_same<T,dbl>::value)
-				assert(vars[0]->node::NamedSymbol::precision() == this->precision() && "precision of variables in SetVariables must match the precision of the system.");
+				if (!std::is_same<T,dbl>::value && (vars[0]->node::NamedSymbol::precision() != this->precision()) )
+					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
 			#endif
 
 			auto counter = 0;

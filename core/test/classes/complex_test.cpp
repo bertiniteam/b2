@@ -539,7 +539,34 @@ BOOST_AUTO_TEST_CASE(complex_serialization)
 
 
 
+BOOST_AUTO_TEST_CASE(complex_precision_predictable)
+{
+	DefaultPrecision(30);
+	bertini::complex a(1,2);
+	BOOST_CHECK_EQUAL(Precision(a),30);
 
+	DefaultPrecision(50);
+	bertini::complex b(3,4);
+	BOOST_CHECK_EQUAL(Precision(b),50);
+
+	DefaultPrecision(70);
+	bertini::complex c(5,6);
+	BOOST_CHECK_EQUAL(Precision(c),70);
+
+	a = b;
+	BOOST_CHECK_EQUAL(Precision(a),50);
+
+	a = b+c;
+	BOOST_CHECK_EQUAL(Precision(a),70);
+
+
+	DefaultPrecision(90);
+	a = b+c;
+	BOOST_CHECK_EQUAL(Precision(a),90);
+
+	a = b;
+	BOOST_CHECK_EQUAL(Precision(a),50);
+}
 
 
 

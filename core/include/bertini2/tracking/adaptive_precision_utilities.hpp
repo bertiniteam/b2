@@ -129,21 +129,18 @@ unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & derivat
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples)
 {
-	using std::max;
-	unsigned max_precision = max(
-	                             DefaultPrecision(),
-	                             MaxPrecision(samples)
-	                             ); 
+	auto def_prec = DefaultPrecision();
+	if (std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}))
+	{
+		auto max_precision = max(MaxPrecision(samples), MaxPrecision(times));
 
-	if (max_precision != DefaultPrecision())
-		std::cout << "EG changing default precision from " << DefaultPrecision() << " to " << max_precision << std::endl;
-	//BOOST_LOG_TRIVIAL(severity_level::trace)
-	DefaultPrecision(max_precision);
-
-	SetPrecision(times, max_precision);
-	SetPrecision(samples, max_precision);
-
-	return max_precision;
+		DefaultPrecision(max_precision);
+		SetPrecision(times, max_precision);
+		SetPrecision(samples, max_precision);
+		return max_precision;
+	}
+	return def_prec;
+	
 }
 
 
@@ -161,23 +158,21 @@ This function does NOT do any refinement, it merely changes the precision of def
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples, SampCont<mpfr> & derivatives)
 {
-	unsigned max_precision = max(
-	                             DefaultPrecision(),
-	                             MaxPrecision(samples),
-	                             MaxPrecision(derivatives)
-	                             ); 
+	auto def_prec = DefaultPrecision();
+	if (std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}) 
+	    || 
+	    std::any_of(begin(derivatives),end(derivatives),[=](auto const& p){return Precision(p)!=def_prec;}))
+	{
+		auto max_precision = max(MaxPrecision(samples),MaxPrecision(times),MaxPrecision(derivatives));
 
-	if (max_precision != DefaultPrecision())
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "EG changing default precision from " << DefaultPrecision() << " to " << max_precision << std::endl;
-	
-	DefaultPrecision(max_precision);
-
-	SetPrecision(times, max_precision);
-	SetPrecision(samples, max_precision);
-	SetPrecision(derivatives, max_precision);
-
-	return max_precision;
+		SetPrecision(times, max_precision);
+		SetPrecision(samples, max_precision);
+		SetPrecision(derivatives, max_precision);
+		return max_precision;
+	}
+	return def_prec;
 }
+
 
 
 }}}} // re: namespaces

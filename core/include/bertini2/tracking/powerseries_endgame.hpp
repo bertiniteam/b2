@@ -120,7 +120,7 @@ File: test/endgames/powerseries_class_test.cpp
 */
 
 template<typename TrackerType, typename FinalPSEG, typename... UsedNumTs> 
-class PowerSeriesEndgame : public EndgameBase<TrackerType>
+class PowerSeriesEndgame : public EndgameBase<TrackerType, FinalPSEG>
 {
 
 	// convert the base endgame into the derived type.
@@ -217,7 +217,7 @@ public:
             					const config::Endgame<BRT>&, 
             					const config::Security<BRT>&, 
             					const config::Tolerances<BRT>& >& settings )
-      : EndgameBase<TrackerType>(tr, std::get<1>(settings), std::get<2>(settings), std::get<3>(settings) ), 
+      : EndgameBase<TrackerType, FinalPSEG>(tr, std::get<1>(settings), std::get<2>(settings), std::get<3>(settings) ), 
           power_series_settings_( std::get<0>(settings) )
    	{}
 
@@ -398,10 +398,10 @@ public:
 	void ComputeDerivatives()
 	{
 		auto& samples = std::get<SampCont<CT> >(samples_);
-			auto& times   = std::get<TimeCont<CT> >(times_);
-			auto& derivatives = std::get<SampCont<CT> >(derivatives_);
+		auto& times   = std::get<TimeCont<CT> >(times_);
+		auto& derivatives = std::get<SampCont<CT> >(derivatives_);
 
-			assert((samples.size() == times.size()) && "must have same number of times and samples");
+		assert((samples.size() == times.size()) && "must have same number of times and samples");
 
 		if (TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
 		{
@@ -445,18 +445,17 @@ public:
 	template<typename CT>
 	SuccessCode ComputeApproximationOfXAtT0(Vec<CT>& result, const CT & t0)
 	{	
-		// std::cout << "in ComputeApproximationOfXAtT0\n\n";
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
 		const auto& samples = std::get<SampCont<CT> >(samples_);
-			const auto& times   = std::get<TimeCont<CT> >(times_);
-			const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		const auto& times   = std::get<TimeCont<CT> >(times_);
+		const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 
-			auto num_sample_points = this->EndgameSettings().num_sample_points;
+		auto num_sample_points = this->EndgameSettings().num_sample_points;
 
-			assert(samples.size()==times.size() && "must have same number of samples in times and spaces");
+		assert(samples.size()==times.size() && "must have same number of samples in times and spaces");
 
-			if (derivatives.empty())
+		if (derivatives.empty())
 			ComputeDerivatives<CT>();
 		else
 			assert((samples.size() == derivatives.size()) && "must have same number of samples and derivatives");
@@ -467,7 +466,6 @@ public:
 
 			ComputeCycleNumber<CT>();
 		auto c = this->CycleNumber();
-		// std::cout << "cycle number is " << c << std::endl;
 		// Conversion to S-plane.
 
 		
@@ -479,10 +477,6 @@ public:
 		for(unsigned ii = 0; ii < num_sample_points; ++ii){
 			if (c==0)
 				throw std::runtime_error("cycle number is 0 while computing approximation of root at target time");
-
-			// std::cout << "time "<<times[ii+offset]<<"\n";
-			// std::cout << "space "<<samples[ii+offset]<<"\n";
-			// std::cout << "derivative "<<derivatives[ii+offset]<<"\n";
 
 			s_times[ii] = pow(times[ii+offset],static_cast<RT>(1)/c);
 			s_derivatives[ii] = derivatives[ii+offset]*( c*pow(times[ii+offset],static_cast<RT>(c-1)/c ));
@@ -516,6 +510,8 @@ public:
 		if (tracking_success != SuccessCode::Success)
 			return tracking_success;
 
+		AsDerived().EnsureAtPrecision(next_time,Precision(next_sample));
+		
 		times.push_back(next_time);
 		samples.push_back(next_sample);
 
@@ -529,11 +525,9 @@ public:
 
  		auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples, derivatives);
 		this->GetSystem().precision(max_precision);
+
 		derivatives.push_back(-(this->GetSystem().Jacobian(samples.back(),times.back()).inverse())*(this->GetSystem().TimeDerivative(samples.back(),times.back())));
 
- 		assert(samples.size()==times.size() && "samples and times must be of same size");
-		assert(samples.size()==derivatives.size() && "samples and derivatives must be of same size");
- 		// std::cout << "have " << samples.size() << " samples" << std::endl;
  		return SuccessCode::Success;
 	}
 

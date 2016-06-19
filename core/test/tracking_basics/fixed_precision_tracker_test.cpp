@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_SUITE(fixed_precision_tracker_basics)
 
 BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 {
+	using bertini::operator<<;
 	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
@@ -94,8 +95,12 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 
 	Vec<dbl> y_end;
 
-	tracker.TrackPath(y_end,
-	                  t_start, t_end, y_start);
+	auto obs = GoryDetailLogger<DoublePrecisionTracker>();
+		tracker.AddObserver(&obs);
+
+	auto code = tracker.TrackPath(y_end, t_start, t_end, y_start);
+	BOOST_CHECK(code==SuccessCode::Success);
+	std::cout << code << '\n';
 
 	BOOST_CHECK_EQUAL(y_end.size(),1);
 	BOOST_CHECK(abs(y_end(0)-dbl(0)) < 1e-5);
