@@ -71,6 +71,14 @@ AS_IF([test "x$enable_expression_templates" != "xno"],[
 ])
 
 
+AC_ARG_ENABLE([copy_and_swap],
+    AS_HELP_STRING([--enable-copy_and_swap], [Enable the use of copy-and-swap for exception safety of the library.]),
+    [],
+    [enable_copy_and_swap=no])
+
+AS_IF([test "x$enable_copy_and_swap" != "xno"],[
+	AC_DEFINE([BERTINI_ENABLE_COPY_AND_SWAP], [1],[Enable copy-and-swap idiom in fundamental types, for exception safety.])
+])
 
 
 # the form of the following commands --

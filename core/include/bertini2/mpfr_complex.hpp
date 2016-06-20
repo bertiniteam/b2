@@ -258,8 +258,16 @@ namespace bertini {
 		/**
 		 Assignment operator
 		 */
+#if BERTINI_ENABLE_COPY_AND_SWAP
+		complex& operator=(complex other)
+		{	
+			swap(*this,other);
+			return *this;
+		}
+#else
 		complex& operator=(complex const& other)
 		{	
+
 			if (this != &other)
 		    {
 				real_ = other.real_;
@@ -267,9 +275,11 @@ namespace bertini {
 			}
 			return *this;
 		}
-		
-		
+
 		complex& operator=(complex && other) = default;
+#endif
+		
+		
 		
 		
 		
