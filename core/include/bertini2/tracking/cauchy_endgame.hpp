@@ -325,7 +325,7 @@ public:
 			auto tracking_success = this->GetTracker().TrackPath(next_sample, current_time, next_time, current_sample);	
 			if (tracking_success != SuccessCode::Success)
 			{
-				std::cout << "tracker fail in circle track, radius " << radius << ", type " << tracking_success << std::endl;
+				std::cout << "tracker fail in circle track, radius " << radius << ", type " << int(tracking_success) << std::endl;
 				return tracking_success;
 			}
 
@@ -334,7 +334,7 @@ public:
 			auto refinement_success = AsDerived().RefineSample(next_sample, next_sample, next_time);
 			if (refinement_success != SuccessCode::Success)
 			{
-				std::cout << "refinement fail in circle track, type " << refinement_success << std::endl;
+				std::cout << "refinement fail in circle track, type " << int(refinement_success) << std::endl;
 				return refinement_success;
 			}
 
