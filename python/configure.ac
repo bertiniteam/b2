@@ -1,9 +1,4 @@
-
-
-
-
-
-#we're building pybertini, version 1.0.alpha2, and the corresponding email is dan brake's
+#we're building pybertini, version 1.0.alpha2, and the corresponding email is daniel brake's
 AC_INIT([pybertini], [1.0.alpha2], [danielthebrake@gmail.com],[pybertini], [http://github.com/bertiniteam/b2])
 
 
@@ -13,6 +8,9 @@ AC_PREREQ([2.68])
 
 #
 AC_CONFIG_AUX_DIR([config])
+
+#ensure that minieigen got cloned...  i wish git recursed by default, but it doesn't.
+AC_CHECK_FILE([./minieigen/src/common.hpp],[],[AC_MSG_ERROR([it appears you didn't recurse when cloning b2, so you don't have minieigen in this directory.  to get it, simply run `git submodule update --init'.])])
 
 # turn on the keeping of produced objects in their folders.  this is for non-recursive make
 # and autotools
@@ -78,7 +76,7 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
 AX_EIGEN
 
 
-AX_BOOST_BASE([1.55],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.55, but it was not found in your system])])
+AX_BOOST_BASE([1.56],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.56, but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
