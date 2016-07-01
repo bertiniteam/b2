@@ -49,7 +49,7 @@ using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
 
-
+using bertini::DefaultPrecision;
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
@@ -76,7 +76,7 @@ We check this against the tracking tolerance for the endgame.
 */
 BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 
 
@@ -143,8 +143,7 @@ various approximations made.
 */
 BOOST_AUTO_TEST_CASE(hermite_interpolation)
 {
-
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	BCT target_time(0,0);
 	unsigned int num_samples = 3;
@@ -241,7 +240,7 @@ This is because the path will not look cubic globally.
 */
 BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -343,7 +342,7 @@ approximate at the origin.
 */	
 BOOST_AUTO_TEST_CASE(compute_cycle_number)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -432,8 +431,7 @@ Do this till we have three approximations. Check to see if the third approximati
 */
 BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 {
-	Eigen::IOFormat HeavyFmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 
 	bertini::System sys;
@@ -537,8 +535,8 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 	// BOOST_CHECK((approx_1 - first_approx).norm() < 1e-11);
 	// std::cout << "(approx_1 - first_approx).norm() " << (approx_1 - first_approx).norm()  << '\n';
-
 	// BOOST_CHECK((approx_2 - second_approx).norm() < 1e-11);
+
 	// std::cout << "(approx_2 - second_approx).norm() " << (approx_2 - second_approx).norm()  << '\n';
 	// BOOST_CHECK((approx_3 - third_approx).norm() < 1e-11);
 	// std::cout << "(approx_3 - third_approx).norm() " << (approx_3 - third_approx).norm()  << '\n';
@@ -564,7 +562,7 @@ track tolerance during the endgame.
 */
 BOOST_AUTO_TEST_CASE(compute_initial_samples)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
@@ -655,7 +653,7 @@ the endgame.
 */
 BOOST_AUTO_TEST_CASE(pseg_full_run)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
@@ -721,7 +719,7 @@ the endgame.
 BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 {
 	
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -789,7 +787,7 @@ In this test we do multiple variables decoupled, that has a high multiplicity (5
 */
 BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 
 	bertini::System sys;
@@ -880,7 +878,7 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(griewank_osborne)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
@@ -948,7 +946,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	unsigned num_paths_converging = 0;
 	for (const auto& s : current_space_values)
 	{
-		mpfr_float::default_precision(ambient_precision);
+		DefaultPrecision(ambient_precision);
 		SuccessCode endgame_success = my_endgame.Run(endgame_time,s);
 		if(endgame_success == SuccessCode::Success){
 			BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);// my_endgame.GetTrackToleranceDuringEndgame());
@@ -979,7 +977,7 @@ values we have.
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
 	using namespace bertini::tracking;
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	Var x = std::make_shared<Variable>("x");
 	Var y = std::make_shared<Variable>("y");
@@ -1031,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	std::vector<Vec<BCT> > homogenized_solutions;
 	for (unsigned ii = 0; ii < num_paths_to_run; ++ii)
 	{
-		mpfr_float::default_precision(ambient_precision);
+		DefaultPrecision(ambient_precision);
 		final_system.precision(ambient_precision);
 		auto start_point = TD.StartPoint<BCT>(ii);
 
@@ -1088,7 +1086,7 @@ values we have.
 BOOST_AUTO_TEST_CASE(parabola)
 {
 	using namespace bertini::tracking;
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	Var x = std::make_shared<Variable>("x");
 	Var t = std::make_shared<Variable>("t");
@@ -1142,10 +1140,8 @@ BOOST_AUTO_TEST_CASE(parabola)
 	BOOST_CHECK(endgame_success==SuccessCode::Success);
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
-	// std::cout << "endgame_solution is " << endgame_solution(0) << '\n';
-	// std::cout << "correct_eg_solution is " << endgame_solution(0) << '\n';
-	// std::cout << "abs of diff is " << abs(endgame_solution(0)-correct_eg_soln(0)) << '\n';
-	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-10) );
+
+	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-11) );
 }
 
 

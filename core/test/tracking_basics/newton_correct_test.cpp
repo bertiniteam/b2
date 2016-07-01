@@ -53,6 +53,7 @@ extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(newton_correct_tracking_basics)
 
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_mp)
 	{
-		mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
 		current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
@@ -246,7 +247,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	BOOST_AUTO_TEST_CASE(circle_line_two_corrector_steps_mp)
 	{
-		mpfr_float::default_precision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
+		DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		// Starting point in spacetime step
 		Vec<mpfr> current_space(2);
 		current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
