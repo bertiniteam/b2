@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 
 	This test case is ensuring no calculations are greatly altered, so our test condition is to check against a computed value that has been already known. 
 */
-BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
+BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
 {
 	mpfr_float::default_precision(ambient_precision);
 
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 
 	BOOST_CHECK( abs(second_c_over_k - RealFromString("1.05888")) <  1e-5); 
 
-} // end compute c over k mp for cauchy class 
+} // end compute c over k for cauchy class 
 
 
 
@@ -774,6 +774,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 
 	BOOST_CHECK(my_endgame.InitialCauchyLoops<BCT>() == SuccessCode::Success);
 	BOOST_CHECK(my_endgame.CycleNumber() == 2);
+	
 }// end pre_cauchy_loops_cycle_num_greater_than_1
 
 
