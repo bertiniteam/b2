@@ -208,7 +208,7 @@ namespace bertini{
 				if (start_point.size()!=tracked_system_.NumVariables())
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
-				using std::abs;
+				
 				
 				SuccessCode initialization_code = TrackerLoopInitialization(start_time, endtime, start_point);
 				if (initialization_code!=SuccessCode::Success)
@@ -218,7 +218,7 @@ namespace bertini{
 				}
 
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
-				while (current_time_!=endtime)
+				while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<CT>::epsilon()))
 				{	
 					SuccessCode pre_iteration_code = PreIterationCheck();
 					if (pre_iteration_code!=SuccessCode::Success)
@@ -227,12 +227,12 @@ namespace bertini{
 						return pre_iteration_code;
 					}
 
-
+					using std::abs;
 					// compute the next delta_t
-					if (abs(endtime-current_time_) < abs(current_stepsize_))
-						delta_t_ = endtime-current_time_;
+					if (abs(endtime_-current_time_) < abs(current_stepsize_))
+						delta_t_ = endtime_-current_time_;
 					else
-						delta_t_ = current_stepsize_ * (endtime - current_time_)/abs(endtime - current_time_);
+						delta_t_ = current_stepsize_ * (endtime_ - current_time_)/abs(endtime_ - current_time_);
 
 
 					step_success_code_ = TrackerIteration();
@@ -542,7 +542,7 @@ namespace bertini{
 			RT tracking_tolerance_; ///< The tracking tolerance.
 			RT path_truncation_threshold_; ///< The threshold for path truncation.
 
-
+			mutable CT endtime_; ///< The time we are tracking to.
 			mutable CT current_time_; ///< The current time.
 			mutable CT delta_t_; ///< The current delta_t.
 			mutable RT current_stepsize_; ///< The current stepsize.
@@ -554,7 +554,6 @@ namespace bertini{
 
 
 
-			unsigned frequency_of_CN_estimation_; ///< How frequently the condition number should be re-estimated.
 			mutable unsigned num_steps_since_last_condition_number_computation_; ///< How many steps have passed since the most recent condition number estimate.
 			mutable unsigned num_successful_steps_since_stepsize_increase_; ///< How many successful steps have been taken since increased stepsize.
 			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.

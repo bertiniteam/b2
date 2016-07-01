@@ -35,7 +35,10 @@
 
 using mpfr = bertini::mpfr_float;
 
+using bertini::DefaultPrecision;
+
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
+
 
 
 BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
@@ -44,7 +47,7 @@ BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
 
 	using namespace boost::multiprecision;
 	using namespace boost::random;
-	mpfr_float::default_precision(50);
+	DefaultPrecision(50);
 	uniform_real_distribution<mpfr_50> ur(0,1);
 	independent_bits_engine<mt19937, 50L*1000L/301L, mpz_int> gen;
 
@@ -61,7 +64,7 @@ BOOST_AUTO_TEST_CASE(make_random_mpfr_float_100)
 
 	using namespace boost::multiprecision;
 	using namespace boost::random;
-	mpfr_float::default_precision(100);
+	DefaultPrecision(100);
 	uniform_real_distribution<mpfr_100> ur(0,1);
 	independent_bits_engine<mt19937, 100L*1000L/301L, mpz_int> gen;
 
@@ -75,31 +78,31 @@ BOOST_AUTO_TEST_CASE(make_random_mpfr_float_100)
 BOOST_AUTO_TEST_CASE(RandomMP_default_precision_50)
 {
 	using namespace bertini;
-	mpfr_float::default_precision(50);
+	DefaultPrecision(50);
 	auto a = RandomMp(mpfr_float(-1),mpfr_float(1));
-	BOOST_CHECK_EQUAL(a.precision(), mpfr_float::default_precision());
-	BOOST_CHECK_EQUAL(50, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(a.precision(), DefaultPrecision());
+	BOOST_CHECK_EQUAL(50, DefaultPrecision());
 }
 
 BOOST_AUTO_TEST_CASE(RandomMP_default_precision_100)
 {
 	using namespace bertini;
-	mpfr_float::default_precision(100);
+	DefaultPrecision(100);
 	auto a = RandomMp(mpfr_float(-1),mpfr_float(1));
-	BOOST_CHECK_EQUAL(a.precision(), mpfr_float::default_precision());
-	BOOST_CHECK_EQUAL(100, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(a.precision(), DefaultPrecision());
+	BOOST_CHECK_EQUAL(100, DefaultPrecision());
 }
 
 BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
 {
 	using namespace bertini;
-	mpfr_float::default_precision(100);
+	DefaultPrecision(100);
 	mpfr_float a;
 
 	RandomMp(a,500);
 
 	BOOST_CHECK_EQUAL(a.precision(), 500);
-	BOOST_CHECK_EQUAL(100, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(100, DefaultPrecision());
 }
 
 BOOST_AUTO_TEST_CASE(max_et_on)
@@ -111,11 +114,11 @@ BOOST_AUTO_TEST_CASE(max_et_on)
 
 BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 {
-	mpfr::default_precision(50);
+	DefaultPrecision(50);
 
 	mpfr x("0.01234567890123456789012345678901234567890123456789");
 
-	mpfr::default_precision(30);
+	DefaultPrecision(30);
 	mpfr y = pow(x,2);
 
 	BOOST_CHECK_EQUAL(y.precision(), 30);
@@ -128,7 +131,7 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 
 
 
-	mpfr::default_precision(70);
+	DefaultPrecision(70);
 
 	z = x;
 

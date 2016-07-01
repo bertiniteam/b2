@@ -245,12 +245,8 @@ namespace bertini
 		for (const auto& iter : ungrouped_variables_)
 			iter->precision(new_precision);
 
-		if (new_precision>DoublePrecision())
-		{
-			Vec<mpfr>& vars_in_mpfr = std::get<Vec<mpfr> >(current_variable_values_);
-			for (unsigned ii=0; ii<vars_in_mpfr.size(); ii++)
-				vars_in_mpfr(ii).precision(new_precision);
-		}	
+		using bertini::Precision;
+		Precision(std::get<Vec<mpfr> >(current_variable_values_),new_precision);
 
 		if (IsPatched())
 			patch_.Precision(new_precision);
@@ -962,9 +958,12 @@ namespace bertini
 
 		if (s.path_variable_)
 			out << "path variable defined.  named " << s.path_variable_->name() << "\n";
+		else 
+			out << "not path variable defined\n";
 
 		if (s.is_differentiated_)
 		{
+			out << "system is differentiated; jacobian:\n";
 			for (const auto& iter : s.jacobian_) {
 				out << (iter)->name() << " = " << *iter << "\n";
 			}

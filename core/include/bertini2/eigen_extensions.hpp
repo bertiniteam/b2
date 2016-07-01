@@ -63,7 +63,7 @@ namespace Eigen {
 		
 		inline static Real highest() {
 			
-			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//mpfr_float::default_precision());
+			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//DefaultPrecision());
 		}
 		
 		inline static Real lowest() {
@@ -72,12 +72,14 @@ namespace Eigen {
 		
 		inline static Real dummy_precision()
 		{
-			return pow( mpfr_float(10),-int(mpfr_float::default_precision()-3));
+			using bertini::DefaultPrecision;
+			return pow( mpfr_float(10),-int(DefaultPrecision()-3));
 		}
 		
 		inline static Real epsilon()
 		{
-			return pow(mpfr_float(10),-int(mpfr_float::default_precision()));
+			using bertini::DefaultPrecision;
+			return pow(mpfr_float(10),-int(DefaultPrecision()));
 		}
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
 	};
@@ -109,7 +111,7 @@ namespace Eigen {
 		
 		inline static Real highest() {
 			
-			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//mpfr_float::default_precision());
+			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//DefaultPrecision());
 		}
 		
 		inline static Real lowest() {
@@ -118,12 +120,14 @@ namespace Eigen {
 		
 		inline static Real dummy_precision()
 		{
-			return pow( mpfr_float(10),-int(mpfr_float::default_precision()-3));
+			using bertini::DefaultPrecision;
+			return pow( mpfr_float(10),-int(DefaultPrecision()-3));
 		}
 		
 		inline static Real epsilon()
 		{
-			return pow(mpfr_float(10),-int(mpfr_float::default_precision()));
+			using bertini::DefaultPrecision;
+			return pow(mpfr_float(10),-int(DefaultPrecision()));
 		}
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
 	};
@@ -328,7 +332,32 @@ namespace bertini {
 	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
+	template<typename Derived>
+	unsigned Precision(Eigen::MatrixBase<Derived> const & v)
+	{
+		auto a = Precision(v(0,0));
+		for (int ii=0; ii<v.rows(); ++ii)
+			for (int jj=0; jj<v.cols(); ++jj)
+			{
+				auto b = Precision(v(ii,jj));
+				assert (a==b);
+				a = b;
+			}
+		return a;
+	}
+
+	template<typename Derived>
+	void Precision(Eigen::MatrixBase<Derived> & v, unsigned prec)
+	{
+		using bertini::Precision;
+		
+		for (int ii=0; ii<v.rows(); ++ii)
+			for (int jj=0; jj<v.cols(); ++jj)
+				Precision(v(ii,jj),prec);
+	}
+
 	
+
 	/**
 	 Test a numbers being very small.
 
@@ -346,6 +375,24 @@ namespace bertini {
 		using std::abs;
 		return abs(testme) <= Eigen::NumTraits<T>::epsilon()*100;
 	} 
+
+	/**
+	\brief Check whether two values are very close to each other.
+	
+	\e The tolerance for being close
+	See \url http://www.boost.org/doc/libs/1_34_0/libs/test/doc/components/test_tools/floating_point_comparison.html, for example.
+	*/
+	template<typename T>
+	inline
+	bool IsSymmRelDiffSmall(T const& a, T const& b, typename Eigen::NumTraits<T>::Real const& e)
+	{
+		using std::abs;
+		if (a==b)
+			return true;
+
+		typename Eigen::NumTraits<T>::Real c = abs(a-b);
+		return (c/abs(a) <= e) || (c/abs(b) <= e) ;
+	}
 
 	/**
 	 Test two numbers for having large ratio.

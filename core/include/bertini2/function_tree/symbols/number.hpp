@@ -211,7 +211,7 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			evaluation_value = mpfr(true_value_,0);
+			evaluation_value = true_value_;
 		}
 
 
@@ -301,14 +301,14 @@ namespace node{
 		}
 
 
-		mpfr highest_precision_value_;
+		const mpfr highest_precision_value_;
 
 		friend class boost::serialization::access;
 		Float() = default;
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
-			ar & highest_precision_value_;
+			ar & const_cast<mpfr &>(highest_precision_value_);
 		}
 	};
 
@@ -407,15 +407,15 @@ namespace node{
 		}
 
 
-		mpq_rational true_value_real_, true_value_imag_;
+		const mpq_rational true_value_real_, true_value_imag_;
 		Rational() = default;
 		friend class boost::serialization::access;
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
-			ar & true_value_real_;
-			ar & true_value_imag_;
+			ar & const_cast<mpq_rational &>(true_value_real_);
+			ar & const_cast<mpq_rational &>(true_value_imag_);
 		}
 	};
 

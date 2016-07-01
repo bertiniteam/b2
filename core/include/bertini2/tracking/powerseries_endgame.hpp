@@ -101,8 +101,8 @@ config::Newton newton_preferences;
 tracker.Setup(TestedPredictor,
             RealFromString("1e-6"),
             RealFromString("1e5"),
-            stepping_preferences,
-            newton_preferences);
+        stepping_preferences,
+        newton_preferences);
 tracker.PrecisionSetup(precision_config);
 
 //We start at t = 1, and will stop at t = 0.1 before starting the endgames. 
@@ -174,7 +174,7 @@ FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 */
 
 template<typename TrackerType, typename FinalPSEG, typename... UsedNumTs> 
-class PowerSeriesEndgame : public EndgameBase<TrackerType>
+class PowerSeriesEndgame : public EndgameBase<TrackerType, FinalPSEG>
 {
 
 	// convert the base endgame into the derived type.
@@ -283,7 +283,7 @@ public:
             					const config::Endgame<BRT>&, 
             					const config::Security<BRT>&, 
             					const config::Tolerances<BRT>& >& settings )
-      : EndgameBase<TrackerType>(tr, std::get<1>(settings), std::get<2>(settings), std::get<3>(settings) ), 
+      : EndgameBase<TrackerType, FinalPSEG>(tr, std::get<1>(settings), std::get<2>(settings), std::get<3>(settings) ), 
           power_series_settings_( std::get<0>(settings) )
    	{}
 
@@ -360,7 +360,7 @@ public:
 
 
 	/**
-		\brief This function computes the cycle number using an exhaustive search up the upper bound computed by the above function BoundOnCyleNumber. 
+	\brief This function computes the cycle number using an exhaustive search up the upper bound computed by the above function BoundOnCyleNumber. 
 
 		## Input: 
 				None: all data needed are class data members.
@@ -370,8 +370,8 @@ public:
 
 		##Details:
 				\tparam CT The complex number type.
-				This is done by an exhaustive search from 1 to upper_bound_on_cycle_number. There is a conversion to the s-space from t-space in this function. 
-				As a by-product the derivatives at each of the samples is returned for further use. 
+			This is done by an exhaustive search from 1 to upper_bound_on_cycle_number. There is a conversion to the s-space from t-space in this function. 
+	As a by-product the derivatives at each of the samples is returned for further use. 
 	*/
 
 	template<typename CT>
@@ -406,9 +406,9 @@ public:
 		//num_used_points is (num_sample_points-1)
 		//because we are using the most current sample to do an 
 		//exhaustive search for the best cycle number. 
+		//if there are less samples than num_sample_points return samples.size() otherwise return num_sample_points.
 		
 
-		//if there are less samples than num_sample_points return samples.size() otherwise return num_sample_points.
 		unsigned num_used_points = samples.size() < this->EndgameSettings().num_sample_points 
 									?
 								   samples.size() : this->EndgameSettings().num_sample_points ;
@@ -465,10 +465,10 @@ public:
 	void ComputeDerivatives()
 	{
 		auto& samples = std::get<SampCont<CT> >(samples_);
-			auto& times   = std::get<TimeCont<CT> >(times_);
-			auto& derivatives = std::get<SampCont<CT> >(derivatives_);
+		auto& times   = std::get<TimeCont<CT> >(times_);
+		auto& derivatives = std::get<SampCont<CT> >(derivatives_);
 
-			assert((samples.size() == times.size()) && "must have same number of times and samples");
+		assert((samples.size() == times.size()) && "must have same number of times and samples");
 
 		if (TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
 		{
@@ -485,7 +485,7 @@ public:
 		}
 	}
 	/**
-		\brief This function computes an approximation of the space value at the time time_t0. 
+	\brief This function computes an approximation of the space value at the time time_t0. 
 
 		## Input: 
 				result: Passed by reference this holds the value of the approximation we compute
@@ -495,7 +495,7 @@ public:
 				SuccessCode: This reports back if we were successful in making an approximation.
 
 		##Details:
-				\tparam CT The complex number type.
+	\tparam CT The complex number type.
 				This function handles computing an approximation at the origin. 
 				We compute the cycle number best for the approximation, and convert derivatives and times to the s-plane where s = t^(1/c).
 				We use the converted times and derivatives along with the samples to do a Hermite interpolation.
@@ -506,14 +506,14 @@ public:
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
 		const auto& samples = std::get<SampCont<CT> >(samples_);
-			const auto& times   = std::get<TimeCont<CT> >(times_);
-			const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		const auto& times   = std::get<TimeCont<CT> >(times_);
+		const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 
-			auto num_sample_points = this->EndgameSettings().num_sample_points;
+		auto num_sample_points = this->EndgameSettings().num_sample_points;
 
-			assert(samples.size()==times.size() && "must have same number of samples in times and spaces");
+		assert(samples.size()==times.size() && "must have same number of samples in times and spaces");
 
-			if (derivatives.empty())
+		if (derivatives.empty())
 			ComputeDerivatives<CT>();
 		else
 			assert((samples.size() == derivatives.size()) && "must have same number of samples and derivatives");
@@ -579,11 +579,13 @@ public:
   		}
 
 
-  		BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking to t = " << next_time << ", default precision: " << mpfr_float::default_precision() << "\n";
+  		BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking to t = " << next_time << ", default precision: " << DefaultPrecision() << "\n";
 		SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,times.back(),next_time,samples.back());
 		if (tracking_success != SuccessCode::Success)
 			return tracking_success;
 
+		AsDerived().EnsureAtPrecision(next_time,Precision(next_sample));
+		
 		times.push_back(next_time);
 		samples.push_back(next_sample);
 
@@ -597,17 +599,15 @@ public:
 
  		auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples, derivatives);
 		this->GetSystem().precision(max_precision);
+
 		derivatives.push_back(-(this->GetSystem().Jacobian(samples.back(),times.back()).inverse())*(this->GetSystem().TimeDerivative(samples.back(),times.back())));
 
- 		assert(samples.size()==times.size() && "samples and times must be of same size");
-		assert(samples.size()==derivatives.size() && "samples and derivatives must be of same size");
- 		// std::cout << "have " << samples.size() << " samples" << std::endl;
  		return SuccessCode::Success;
 	}
 
 
 	/**
-		\brief Primary function running the Power Series endgame. 
+	\brief Primary function running the Power Series endgame. 
 
 		## Input: 
 				start_time: This is the time value for which the endgame begins, by default this is t = 0.1
@@ -617,10 +617,10 @@ public:
 				SuccessCode: This reports back if we were successful in advancing time. 
 
 		##Details:
-				\tparam CT The complex number type.
+	\tparam CT The complex number type.
 				Tracking forward with the number of sample points, this function will make approximations using Hermite interpolation. This process will continue until two consecutive
 				approximations are withing final tolerance of each other. 
-	*/
+	*/		
 	template<typename CT>
 	SuccessCode Run(const CT & start_time, const Vec<CT> & start_point)
 	{
@@ -631,10 +631,10 @@ public:
 			throw std::runtime_error(err_msg.str());
 		}
 
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << mpfr_float::default_precision() << "\n\n";
+		BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << DefaultPrecision() << "\n\n";
 		BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point(0)) << "\n\n";
 
-		mpfr_float::default_precision(Precision(start_point(0)));
+		DefaultPrecision(Precision(start_point(0)));
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		//Set up for the endgame.

@@ -36,6 +36,7 @@ extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(complex_multiprecision_class)
 
@@ -53,7 +54,7 @@ BOOST_AUTO_TEST_CASE(complex_create_two_input_constructor)
 
 BOOST_AUTO_TEST_CASE(complex_addition)
 {
-	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::complex z("0.1","1.2");
 	bertini::complex v("0.2","1.3");
@@ -66,7 +67,7 @@ BOOST_AUTO_TEST_CASE(complex_addition)
 
 BOOST_AUTO_TEST_CASE(complex_subtraction)
 {
-	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::complex z("0.1","1.2");
 	bertini::complex v("0.2","1.3");
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(complex_subtraction)
 
 BOOST_AUTO_TEST_CASE(complex_negation)
 {
-	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::complex z("0.1","1.2");
 
@@ -91,7 +92,7 @@ BOOST_AUTO_TEST_CASE(complex_negation)
 
 BOOST_AUTO_TEST_CASE(complex_multiplication)
 {
-	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	bertini::complex z("0.1000","1.2000");
 	bertini::complex v("0.2000","1.3000");
 	bertini::complex r = z*v;
@@ -104,7 +105,7 @@ BOOST_AUTO_TEST_CASE(complex_multiplication)
 
 BOOST_AUTO_TEST_CASE(complex_division)
 {
-	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	bertini::complex z("1.5","2.25");
 	bertini::complex v("-3.1","5.1");
 	bertini::complex r = z/v;
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE(complex_division)
 BOOST_AUTO_TEST_CASE(complex_inverse)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = inverse(z);
@@ -140,7 +141,7 @@ BOOST_AUTO_TEST_CASE(complex_inverse)
 BOOST_AUTO_TEST_CASE(complex_sqrt)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = sqrt(z);
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(complex_sqrt)
 BOOST_AUTO_TEST_CASE(complex_log)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = log(z);
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(complex_log)
 BOOST_AUTO_TEST_CASE(complex_exponential)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25"), v("-3.1", "5.1");
 	bertini::complex w = pow(z,v);
@@ -197,7 +198,7 @@ BOOST_AUTO_TEST_CASE(complex_exponential)
 BOOST_AUTO_TEST_CASE(complex_sin)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = sin(z);
@@ -212,7 +213,7 @@ BOOST_AUTO_TEST_CASE(complex_sin)
 BOOST_AUTO_TEST_CASE(complex_cos)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = cos(z);
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE(complex_cos)
 BOOST_AUTO_TEST_CASE(complex_tan)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = tan(z);
@@ -256,7 +257,7 @@ BOOST_AUTO_TEST_CASE(complex_tan)
 BOOST_AUTO_TEST_CASE(complex_sinh)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = sinh(z);
@@ -271,7 +272,7 @@ BOOST_AUTO_TEST_CASE(complex_sinh)
 BOOST_AUTO_TEST_CASE(complex_cosh)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = cosh(z);
@@ -288,7 +289,7 @@ BOOST_AUTO_TEST_CASE(complex_cosh)
 BOOST_AUTO_TEST_CASE(complex_tanh)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = tanh(z);
@@ -313,7 +314,7 @@ BOOST_AUTO_TEST_CASE(complex_tanh)
 BOOST_AUTO_TEST_CASE(complex_asin)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = asin(z);
@@ -328,7 +329,7 @@ BOOST_AUTO_TEST_CASE(complex_asin)
 BOOST_AUTO_TEST_CASE(complex_acos)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = acos(z);
@@ -344,7 +345,7 @@ BOOST_AUTO_TEST_CASE(complex_acos)
 BOOST_AUTO_TEST_CASE(complex_atan)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = atan(z);
@@ -365,7 +366,7 @@ BOOST_AUTO_TEST_CASE(complex_atan)
 BOOST_AUTO_TEST_CASE(complex_asinh)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = asinh(z);
@@ -380,7 +381,7 @@ BOOST_AUTO_TEST_CASE(complex_asinh)
 BOOST_AUTO_TEST_CASE(complex_acosh)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = acosh(z);
@@ -396,7 +397,7 @@ BOOST_AUTO_TEST_CASE(complex_acosh)
 BOOST_AUTO_TEST_CASE(complex_atanh)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.5", "2.25");
 	bertini::complex w = atanh(z);
@@ -418,7 +419,7 @@ BOOST_AUTO_TEST_CASE(complex_atanh)
 BOOST_AUTO_TEST_CASE(complex_absolute_value)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	BOOST_CHECK_EQUAL(abs(bertini::complex("1.0","1.0")), sqrt(mpfr_float("2.0")));
 	
@@ -452,7 +453,7 @@ BOOST_AUTO_TEST_CASE(complex_eleventh_power)
 BOOST_AUTO_TEST_CASE(complex_conjugation)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("2.0", sqrt(mpfr_float("2.0")));
 	bertini::complex w = conj(z);
@@ -469,7 +470,7 @@ BOOST_AUTO_TEST_CASE(complex_conjugation)
 BOOST_AUTO_TEST_CASE(complex_argument)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::complex z("1.0","1.0");
 	
@@ -483,7 +484,7 @@ BOOST_AUTO_TEST_CASE(complex_argument)
 BOOST_AUTO_TEST_CASE(complex_make_random_50)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);  
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);  
 	
 	bertini::complex z = bertini::complex::rand();
 
@@ -494,7 +495,7 @@ BOOST_AUTO_TEST_CASE(complex_make_random_50)
 BOOST_AUTO_TEST_CASE(complex_make_random_100)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(100);  
+	DefaultPrecision(100);  
 	bertini::complex z = bertini::complex::rand();
 
 
@@ -505,7 +506,7 @@ BOOST_AUTO_TEST_CASE(complex_make_random_100)
 BOOST_AUTO_TEST_CASE(complex_serialization)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
 	bertini::complex z("1.23456", acos(mpfr_float("-1")));
@@ -538,7 +539,34 @@ BOOST_AUTO_TEST_CASE(complex_serialization)
 
 
 
+BOOST_AUTO_TEST_CASE(complex_precision_predictable)
+{
+	DefaultPrecision(30);
+	bertini::complex a(1,2);
+	BOOST_CHECK_EQUAL(Precision(a),30);
 
+	DefaultPrecision(50);
+	bertini::complex b(3,4);
+	BOOST_CHECK_EQUAL(Precision(b),50);
+
+	DefaultPrecision(70);
+	bertini::complex c(5,6);
+	BOOST_CHECK_EQUAL(Precision(c),70);
+
+	a = b;
+	BOOST_CHECK_EQUAL(Precision(a),50);
+
+	a = b+c;
+	BOOST_CHECK_EQUAL(Precision(a),70);
+
+
+	DefaultPrecision(90);
+	a = b+c;
+	BOOST_CHECK_EQUAL(Precision(a),90);
+
+	a = b;
+	BOOST_CHECK_EQUAL(Precision(a),50);
+}
 
 
 
@@ -587,14 +615,14 @@ BOOST_AUTO_TEST_CASE(complex_get_from_stream_no_parens)
 
 BOOST_AUTO_TEST_CASE(precision_of_mpfr_is_16)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	bertini::complex a("1.23124");
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
 }
 
 BOOST_AUTO_TEST_CASE(precision_of_mpfr_complex_is_16)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	bertini::complex a("1.23124","-0.6789124678912394");
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
 }
@@ -602,53 +630,53 @@ BOOST_AUTO_TEST_CASE(precision_of_mpfr_complex_is_16)
 
 BOOST_AUTO_TEST_CASE(precision_random_real_default)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	auto a = bertini::complex::RandomReal();
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
-	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, DefaultPrecision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_real_highest)
 {	using namespace bertini;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	bertini::complex a;
 	RandomReal(a,1000);
 	BOOST_CHECK_EQUAL(bertini::Precision(a), 1000);
-	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, DefaultPrecision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_unit_default)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	auto a = bertini::complex::RandomUnit();
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
-	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, DefaultPrecision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_unit_highest)
 {	using namespace bertini;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	bertini::complex a;
 	bertini::RandomUnit(a,1000);
 	BOOST_CHECK_EQUAL(bertini::Precision(a), 1000);
-	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, DefaultPrecision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_default)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	auto a = bertini::complex::rand();
 	BOOST_CHECK_EQUAL(bertini::Precision(a), CLASS_TEST_MPFR_DEFAULT_DIGITS);
-	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, DefaultPrecision());
 }
 
 BOOST_AUTO_TEST_CASE(precision_random_highest)
 {	using namespace bertini;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	bertini::complex a;
 	bertini::rand(a,1000);
 	BOOST_CHECK_EQUAL(Precision(a), 1000);
-	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, mpfr_float::default_precision());
+	BOOST_CHECK_EQUAL(CLASS_TEST_MPFR_DEFAULT_DIGITS, DefaultPrecision());
 }
 
 
@@ -666,7 +694,7 @@ BOOST_AUTO_TEST_SUITE(complex_eigen_compatibility)
 
 BOOST_AUTO_TEST_CASE(mpfr_complex_eigen_norm_of_vector)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	Eigen::Matrix<bertini::complex, Eigen::Dynamic, Eigen::Dynamic> A(1,3);
 	A << bertini::complex("1.0","1.0"), bertini::complex("1.0","1.0"), bertini::complex("1.0","1.0");
@@ -678,7 +706,7 @@ BOOST_AUTO_TEST_CASE(mpfr_complex_eigen_norm_of_vector)
 
 BOOST_AUTO_TEST_CASE(mpfr_complex_eigen_negative_of_vector)
 {
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	Eigen::Matrix<bertini::complex, Eigen::Dynamic, Eigen::Dynamic> A(1,3);
 	A << bertini::complex("1.0","1.0"), bertini::complex("1.0","1.0"), bertini::complex("1.0","1.0");
@@ -700,7 +728,7 @@ BOOST_AUTO_TEST_SUITE(miscellaneous_complex_tests_out_of_place)
 BOOST_AUTO_TEST_CASE(mpfr_float_serialization)
 {
 	
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
 	mpfr_float q = acos( mpfr_float("-1.0") );
@@ -732,7 +760,7 @@ BOOST_AUTO_TEST_CASE(mpfr_float_serialization)
 BOOST_AUTO_TEST_CASE(mpfr_float_serialization2)
 {
 	using mpfr_float = bertini::mpfr_float;
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
 	mpfr_float q = acos( mpfr_float("-1.0") );
@@ -747,7 +775,7 @@ BOOST_AUTO_TEST_CASE(mpfr_float_serialization2)
 		oa << q;
 	}
 	
-	mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS*2);
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS*2);
 
 	mpfr_float w;
 	{

@@ -43,6 +43,8 @@ BOOST_AUTO_TEST_SUITE(linear_slicing)
 using namespace bertini;
 using Var = std::shared_ptr<bertini::node::Variable>;
 
+using bertini::DefaultPrecision;
+
 BOOST_AUTO_TEST_CASE(slice_basic_complex)
 {
 	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");

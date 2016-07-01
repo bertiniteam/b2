@@ -197,8 +197,8 @@ namespace bertini {
 					for (unsigned jj(0); jj<mindim; ++jj)
 						gen(s.coefficients_highest_precision_(ii,jj), MaxPrecisionAllowed());
 
-				auto prev_precision = mpfr_float::default_precision();
-				mpfr_float::default_precision(MaxPrecisionAllowed());
+				auto prev_precision = DefaultPrecision();
+				DefaultPrecision(MaxPrecisionAllowed());
 
 				auto QR_factorization = Eigen::HouseholderQR<Mat<mpfr> >(s.coefficients_highest_precision_);
 				s.coefficients_highest_precision_ = QR_factorization.householderQ()*Mat<mpfr>::Identity(maxdim, mindim);
@@ -206,7 +206,7 @@ namespace bertini {
 				if (need_transpose)
 					s.coefficients_highest_precision_.transposeInPlace();
 
-				mpfr_float::default_precision(prev_precision);
+				DefaultPrecision(prev_precision);
 			}
 			else
 			{
@@ -249,7 +249,7 @@ namespace bertini {
 
 
 		// the constructor for linear slices.  private because want to use the static public methods to construct them.
-		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : sliced_vars_(v), precision_(mpfr_float::default_precision()), num_dims_sliced_(dim), coefficients_highest_precision_(dim, v.size()), is_homogeneous_(homogeneous), constants_highest_precision_(dim)
+		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : sliced_vars_(v), precision_(DefaultPrecision()), num_dims_sliced_(dim), coefficients_highest_precision_(dim, v.size()), is_homogeneous_(homogeneous), constants_highest_precision_(dim)
 		{ 
 			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
 			std::get<Mat<mpfr> >(coefficients_working_).resize(Dimension(), NumVariables());
