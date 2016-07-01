@@ -93,9 +93,12 @@ namespace node{
 		void print(std::ostream & target) const override
 		{
 			if (entry_node_)
+			{
+				NamedSymbol::print(target);
 				entry_node_->print(target);
+			}
 			else
-				target << "emptyfunction";
+				target << "impossibly emptyfunction";
 		}
 		
 		
@@ -207,7 +210,13 @@ namespace node{
 		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
+			if (val_pair.first.precision()==prec)
+				return;
+			else{
+				val_pair.first.precision(prec);
+				entry_node_->precision(prec);
+			}
+			
 		}
 		
 	protected:

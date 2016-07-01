@@ -152,10 +152,15 @@ public:
 	
 	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time) const
 	{
+		using bertini::Precision;
+		assert(Precision(current_time)==Precision(current_sample) && "precision of sample and time must match");
+
 		using RT = mpfr_float;
 		using std::max;
 		auto& TR = this->GetTracker();
-		RT refinement_tolerance = this->Tolerances().final_tolerance/100;
+		TR.ChangePrecision(Precision(current_time));
+
+		RT refinement_tolerance = static_cast<RT>(this->Tolerances().final_tolerance)/100;
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 		                          	refinement_tolerance,
 		                          	this->EndgameSettings().max_num_newton_iterations);
@@ -164,28 +169,35 @@ public:
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
-			auto prev_precision = this->Precision();
+			using bertini::Precision;
+
+			auto prev_precision = DefaultPrecision();
 			auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
-			mpfr_float::default_precision(temp_higher_prec);
+			DefaultPrecision(temp_higher_prec);
 			this->GetTracker().ChangePrecision(temp_higher_prec);
 
 
 			auto next_sample_higher_prec = current_sample;
-			auto result_higher_prec = Vec<mpfr>(current_sample.size());
-			auto time_higher_precision = current_time;
+			Precision(next_sample_higher_prec, temp_higher_prec);
 
-			assert(time_higher_precision.precision()==mpfr_float::default_precision());
-			RT refinement_tolerance = this->Tolerances().final_tolerance/100;
+			auto result_higher_prec = Vec<mpfr>(current_sample.size());
+
+			auto time_higher_precision = current_time;
+			Precision(time_higher_precision,temp_higher_prec);
+
+			assert(time_higher_precision.precision()==DefaultPrecision());
+			RT refinement_tolerance = static_cast<RT>(this->Tolerances().final_tolerance)/100;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,
 		                          							refinement_tolerance,
 		                          							this->EndgameSettings().max_num_newton_iterations);
 
-			mpfr_float::default_precision(prev_precision);
+			DefaultPrecision(prev_precision);
 			this->GetTracker().ChangePrecision(prev_precision);
 			result = result_higher_prec;
-			assert(result(0).precision()==mpfr_float::default_precision());
+			Precision(result, prev_precision);
+			assert(result(0).precision()==DefaultPrecision());
 		}
 
 		return refinement_success;
@@ -196,16 +208,16 @@ public:
 		using RT = double;
 
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-		                          	RT(this->Tolerances().final_tolerance)/100,
+		                          	static_cast<RT>(this->Tolerances().final_tolerance)/100,
 		                          	this->EndgameSettings().max_num_newton_iterations);
 
 		
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
-			auto prev_precision = this->Precision();
+			auto prev_precision = DoublePrecision();
 			auto temp_higher_prec = LowestMultiplePrecision();
-			mpfr_float::default_precision(temp_higher_prec);
+			DefaultPrecision(temp_higher_prec);
 			this->GetTracker().ChangePrecision(temp_higher_prec);
 
 
@@ -215,6 +227,7 @@ public:
 
 			auto result_higher_prec = Vec<mpfr>(current_sample.size());
 			mpfr time_higher_precision(current_time);
+
 			mpfr_float refinement_tolerance = this->Tolerances().final_tolerance/100;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
@@ -223,7 +236,7 @@ public:
 		                          							this->EndgameSettings().max_num_newton_iterations);
 
 
-			mpfr_float::default_precision(prev_precision);
+			DefaultPrecision(prev_precision);
 			this->GetTracker().ChangePrecision(prev_precision);
 			for (unsigned ii(0); ii<current_sample.size(); ++ii)
 				result(ii) = dbl(result_higher_prec(ii));
