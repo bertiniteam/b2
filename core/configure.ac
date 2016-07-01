@@ -40,7 +40,6 @@ AC_ENABLE_SHARED
 #enable the creation of static libraries
 AC_ENABLE_STATIC
 
-
 #find the linker
 AC_PROG_LN_S
 

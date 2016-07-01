@@ -23,7 +23,7 @@
 // daniel brake, university of notre dame
 
 /**
-\file mpfr_complex 
+\file mpfr_complex.hpp
 
 \brief The main multiprecision complex number type.
 */

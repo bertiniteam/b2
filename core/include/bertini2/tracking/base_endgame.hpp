@@ -60,7 +60,7 @@ namespace bertini{
 
 			
 			/**
-			\class Endgame
+			\class EndgameBase
 
 			\brief Base endgame class for all endgames offered in Bertini2.
 			
@@ -195,12 +195,12 @@ namespace bertini{
 				{ return tracker_.GetSystem();}
 
 
-				/*
+				/**
 				\brief Populates time and space samples so that we are ready to start the endgame. 
 
 				## Input
 
-				  	start_time: is the time when we start the endgame process usually this is .1
+				  		start_time: is the time when we start the endgame process usually this is .1
 						x_endgame: is the space value at start_time
 						times: a deque of time values. These values will be templated to be CT 
 						samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of CT. 
@@ -217,14 +217,12 @@ namespace bertini{
 					Hence, next_time = start_time * sample_factor.
 					We track then to the next_time and construct the next_sample.
 
-				\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
 				\param start_time The time value at which we start the endgame. 
 				\param x_endgame The current space point at start_time.
 				\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 				\param samples a deque that will hold all the samples corresponding to the time values in times. 
 
 				\tparam CT The complex number type.
-				\tparam TrackerType The tracker type. 
 				*/	
 				template<typename CT>
 				SuccessCode ComputeInitialSamples(const CT & start_time,const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
