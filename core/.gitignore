@@ -18,6 +18,7 @@ config.*
 libtool
 Makefile
 
+bertini
 b2_timing_test
 b2_class_test
 test_tree_interactive

@@ -3,6 +3,7 @@
 #
 #  THE primary Makemodule.am file for the computational core of Bertini2
 #
+#  provides source and dependency information for both the library and command-line executable.
 
 
 lib_LTLIBRARIES += libbertini2.la
@@ -25,3 +26,19 @@ libbertini2_la_LIBADD = \
 	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) 
 
 
+
+
+
+
+bin_PROGRAMS += bertini
+
+bertini_SOURCES = \
+	src/bertini/bertini.cpp \
+	include/bertini2/blackbox/main_mode_switch.hpp src/blackbox/main_mode_switch.cpp \
+	include/bertini2/blackbox/argc_argv.hpp src/blackbox/argc_argv.cpp \
+	include/bertini2/parallel.hpp \
+	include/bertini2/parallel/initialize_finalize.hpp src/parallel/initialize_finalize.cpp
+
+bertini_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
+
+bertini_CXXFLAGS = $(BOOST_CPPFLAGS)
