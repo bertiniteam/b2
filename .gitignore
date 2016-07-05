@@ -15,17 +15,10 @@ Makefile.in
 
 *.sublime-workspace
 
-config.*
-
 libtool
 Makefile
 
 *.sublime-workspace
-
-b2_class_test
-b2_classic_compatibility_test
-b2_timing_test
-test_tree_interactive
 
 m4/libtool.m4
 m4/ltoptions.m4
@@ -33,7 +26,6 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/lt~obsolete.m4
 
-serialization_test*
 
 /config
 
