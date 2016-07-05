@@ -83,6 +83,12 @@ std::string SourceURL()
 }
 
 inline
+std::string WikiURL()
+{
+	return "https://github.com/bertiniteam/b2/wiki";
+}
+
+inline
 std::string Version()
 {
 	return PACKAGE_VERSION;
@@ -113,8 +119,9 @@ std::string SplashScreen()
 	ss << "  The Bertini Trademark is owned by\n" << Owners() << "\n\n";
 	ss << "  The code is primarily authored by\n" << Authors() << "\n\n";
 	ss << "  Source available online at\n" << SourceURL() << "\n\n";
+	ss << "  Wiki online at\n" << WikiURL() << "\n\n";
 	ss << "  This is version\n" << Version() << "\n";
-	ss << "  This program is Free/Libre Open Source Software, please contribute!\n\n";
+	ss << "  This program is GPL Free/Libre Open Source Software, please contribute!\n\n";
 	return ss.str();
 }
 
