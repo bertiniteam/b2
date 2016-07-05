@@ -113,10 +113,6 @@ namespace bertini{
 				*/
 				config::Endgame<BRT> endgame_settings_;
 
-				/**
-				\brief There are tolerances that are specific to the endgame. These settings are stored inside of this data member. 
-				*/
-				config::Tolerances<BRT> tolerances_;
 
 				/**
 				During the endgame we may be checking that we are not computing when we have detected divergent paths or other undesirable behavior. The setttings for these checks are 
@@ -132,15 +128,14 @@ namespace bertini{
 			public:
 
 
-				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&, const config::Tolerances<BRT>& >& settings )
+				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&>& settings )
 			      : tracker_(tr),
 			      	endgame_settings_( std::get<0>(settings) ),
-			        security_( std::get<1>(settings) ),
-			        tolerances_( std::get<2>(settings) )
+			        security_( std::get<1>(settings) )
 			   	{}
 
 			    template< typename... Ts >
-   				EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Unpermute< config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
+   				EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Unpermute< config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
    				{}
 
 
@@ -155,9 +150,10 @@ namespace bertini{
 					return endgame_settings_;
 				}
 
-				const auto& Tolerances() const
+				inline
+				const auto& FinalTolerance() const
 				{
-					return tolerances_;
+					return endgame_settings_.final_tolerance;
 				}
 
 				const auto& SecuritySettings() const
@@ -168,7 +164,7 @@ namespace bertini{
 
 
 				/**
-				\brief Setter for the general settings in tracking_conifg.hpp under Endgame.
+				\brief Setter for the general settings.
 				*/
 				void SetEndgameSettings(config::Endgame<BRT> new_endgame_settings){endgame_settings_ = new_endgame_settings;}
 
@@ -176,15 +172,15 @@ namespace bertini{
 				
 
 				/**
-				\brief Setter for the security settings in tracking_conifg.hpp under Security.
+				\brief Setter for the security settings.
 				*/
 				void SetSecuritySettings(config::Security<BRT> new_endgame_security_settings){ security_ = new_endgame_security_settings;}
 
 
 				/**
-				\brief Setter for the tolerance settings in tracking_conifg.hpp under Tolerances.
+				\brief Setter for the final tolerance.
 				*/
-				void SetToleranceSettings(config::Tolerances<BRT> new_tolerances_settings){tolerances_ = new_tolerances_settings;}
+				void SetFinalTolerance(BRT const& ft){endgame_settings_.final_tolerance = ft;}
 
 
 				/**

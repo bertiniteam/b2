@@ -196,7 +196,7 @@ public:
 		auto& TR = this->GetTracker();
 		TR.ChangePrecision(Precision(current_time));
 
-		RT refinement_tolerance = static_cast<RT>(this->Tolerances().final_tolerance)/100;
+		RT refinement_tolerance = static_cast<RT>(this->FinalTolerance())/100;
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 		                          	refinement_tolerance,
 		                          	this->EndgameSettings().max_num_newton_iterations);
@@ -222,7 +222,7 @@ public:
 			Precision(time_higher_precision,temp_higher_prec);
 
 			assert(time_higher_precision.precision()==DefaultPrecision());
-			RT refinement_tolerance = static_cast<RT>(this->Tolerances().final_tolerance)/100;
+			RT refinement_tolerance = static_cast<RT>(this->FinalTolerance())/100;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,
@@ -244,7 +244,7 @@ public:
 		using RT = double;
 
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-		                          	static_cast<RT>(this->Tolerances().final_tolerance)/100,
+		                          	static_cast<RT>(this->FinalTolerance())/100,
 		                          	this->EndgameSettings().max_num_newton_iterations);
 
 		
@@ -264,7 +264,7 @@ public:
 			auto result_higher_prec = Vec<mpfr>(current_sample.size());
 			mpfr time_higher_precision(current_time);
 
-			mpfr_float refinement_tolerance = this->Tolerances().final_tolerance/100;
+			mpfr_float refinement_tolerance = this->FinalTolerance()/100;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,
@@ -286,14 +286,13 @@ public:
 	explicit AMPCauchyEndgame(TrackerType const& tr, 
 	                               const std::tuple< const config::Cauchy<BRT> &,
 	                               					 const config::Endgame<BRT>&, 
-	                               				     const config::Security<BRT>&, 
-	                               				     const config::Tolerances<BRT>& 
+	                               				     const config::Security<BRT>&
 	                               				    > & settings )
       : EGType(tr, settings)
    	{}
 
     template< typename... Ts >
-	AMPCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : AMPCauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
+	AMPCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : AMPCauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
 	{}
 };// AMPCauchyEndgame
 

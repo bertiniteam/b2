@@ -176,8 +176,7 @@ namespace bertini{
 				Predictor(new_predictor_choice);
 				corrector_->Settings(newton);
 				
-				tracking_tolerance_ = tracking_tolerance;
-				digits_tracking_tolerance_ = NumTraits<RT>::TolToDigits(tracking_tolerance);
+				SetTrackingTolerance(tracking_tolerance);
 
 				path_truncation_threshold_ = path_truncation_threshold;
 
@@ -186,8 +185,21 @@ namespace bertini{
 				current_stepsize_ = stepping_config_.initial_step_size;
 			}
 
+			/**
+			\brief Set how tightly to track the path.
 
+			Smaller values tracks the path more tightly, at the expense of higher computational time.
 
+			\param tracking_tolerance The new value.  Newton iterations are performed until the step length is less than this number, or the max number of iterations has been reached, in which case the overall predict-correct step is viewed as a failure, and the step is undone.  This number must be positive.
+			*/
+			void SetTrackingTolerance(RT const& tracking_tolerance)
+			{
+				if (tracking_tolerance <= 0)
+					throw std::runtime_error("tracking tolerance must be positive");
+
+				tracking_tolerance_ = tracking_tolerance;
+				digits_tracking_tolerance_ = NumTraits<RT>::TolToDigits(tracking_tolerance);
+			}
 
 			/**
 			\brief Track a start point through time, from a start time to a target time.

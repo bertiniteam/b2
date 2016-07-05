@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 
 	auto first_track_success =  my_endgame.CircleTrack(time,sample);
 
-	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - sample).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - sample).norm() < 1e-5);
 
 }
 
@@ -199,13 +199,13 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 
 	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
-	BOOST_CHECK((first_track_sample - sample).norm() > my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((first_track_sample - sample).norm() > 1e-5);
 
 	tracking_success =  my_endgame.CircleTrack(time,first_track_sample);
 
 	const auto& second_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
-	BOOST_CHECK((second_track_sample - sample).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((second_track_sample - sample).norm() < 1e-5);
 	
 } // end circle_track_mp_cycle_num_greater_than_1
 
@@ -270,9 +270,8 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
 
 
 	config::Security<BRT> security_settings;
-	config::Tolerances<BRT> endgame_settings;
 
-	TestedEGType my_endgame(tracker,security_settings,endgame_settings);
+	TestedEGType my_endgame(tracker,security_settings);
 	my_endgame.SetPSEGTimes(pseg_times);
 	my_endgame.SetPSEGSamples(pseg_samples);
 
@@ -364,9 +363,8 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 
 
 	config::Security<BRT> security_settings;
-	config::Tolerances<BRT> endgame_settings;
 
-	TestedEGType my_endgame(tracker,security_settings,endgame_settings);
+	TestedEGType my_endgame(tracker,security_settings);
 	my_endgame.SetPSEGTimes(pseg_times);
 	my_endgame.SetPSEGSamples(pseg_samples);
 
@@ -907,7 +905,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 	Vec<BCT> first_cauchy_approx;
 	auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
 
-	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < 1e-5);
 
 }// end compute_cauchy_approximation_cycle_num_1
 
@@ -976,7 +974,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 	Vec<BCT> first_cauchy_approx;
 	auto code = my_endgame.ComputeCauchyApproximationOfXAtT0<BCT>(first_cauchy_approx);
 
-	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((first_cauchy_approx - x_origin).norm() < 1e-5);
 }// end compute_cauchy_approximation_cycle_num_greater_than_1
 
 
@@ -1028,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 
 	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,sample);
 
-	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).norm() < 1e-5);
 	BOOST_CHECK(my_endgame.GetCauchySamples<BCT>().size() == 4);
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
@@ -1081,7 +1079,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 
 	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,sample);
 
-	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).norm() < 1e-6);
 	BOOST_CHECK_EQUAL(my_endgame.GetCauchySamples<BCT>().size(), 7);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 
@@ -1141,7 +1139,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - solution).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - solution).norm() < 1e-5);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 1);
 
 }// end full_test_cycle_num_1
@@ -1199,7 +1197,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).norm() < 1e-5);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 }// end full_test_cycle_num_greater_than_1
 
@@ -1260,7 +1258,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).norm() < 1e-5);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
 }// end cauchy_endgame_test_cycle_num_greater_than_1
 
@@ -1315,7 +1313,7 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 
 	my_endgame.Run(current_time,current_space);
 
-	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < my_endgame.Tolerances().newton_during_endgame);
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);
 
 }// end cauchy_multiple_variables
 
@@ -1401,9 +1399,8 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	config::Endgame<BRT> endgame_settings;
 	config::Cauchy<BRT> cauchy_settings;
 	config::Security<BRT> security_settings;
-	config::Tolerances<BRT> tolerances;
 
-	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
 	GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
@@ -1549,7 +1546,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{
-			if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation<BCT>())-correct).norm() < my_endgame.Tolerances().newton_during_endgame)
+			if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation<BCT>())-correct).norm() < 1e-11)
 			{
 				num_successful_occurences++;
 			}
