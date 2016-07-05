@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//tracking/endgame.hpp is free software: you can redistribute it and/or modify
+//endgames_test.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//tracking/endgame.hpp is distributed in the hope that it will be useful,
+//nag_algorithms_test.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with tracking/endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with nag_algorithms_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
@@ -21,22 +21,29 @@
 
 // individual authors of this file include:
 // daniel brake, university of notre dame
-
-
-/**
-\file endgame.hpp
-
-\brief Contains the includes for all Endgame types.
-*/
-
-#pragma once
-
-#include "bertini2/tracking/fixed_prec_endgame.hpp"
-#include "bertini2/tracking/fixed_prec_cauchy_endgame.hpp"
-
-#include "bertini2/tracking/amp_powerseries_endgame.hpp"
-#include "bertini2/tracking/amp_cauchy_endgame.hpp"
+//
+//
+//  nag_algorithms_test.cpp:  main source file for the algorithm testing executable for Bertini2
 
 
 
+
+#define BOOST_ALL_DYN_LINK 1
+
+//this #define MUST appear before #include <boost/test/unit_test.hpp>
+#define BOOST_TEST_MODULE "Bertini 2 NAG Algorithm Testing"
+#include <boost/test/unit_test.hpp>
+#include "bertini2/logging.hpp"
+
+
+using sec_level = boost::log::trivial::severity_level;
+
+using LoggingInit = bertini::LoggingInit;
+
+
+BOOST_GLOBAL_FIXTURE( LoggingInit );
+
+
+
+// deliberately left blank.  link other files with this one.
 

@@ -29,6 +29,10 @@
 
 #pragma once
 
+#include "bertini2/num_traits.hpp"
+#include "bertini2/nag_algorithms/config.hpp"
+#include "bertini2/detail/visitable.hpp"
+#include "bertini2/tracking.hpp"
 
 namespace bertini {
 
@@ -37,13 +41,14 @@ namespace bertini {
 		template<typename TrackerType, typename EndgameType, typename StartSystemType>
 		struct ZeroDim : public Observable<>
 		{
+			BERTINI_DEFAULT_VISITABLE();
 
-			using BaseComplexType = TrackerTraits<TrackerType>::BaseComplexType;
-			using BaseRealType    = TrackerTraits<TrackerType>::BaseRealType;
+			using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+			using BaseRealType    = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 			
-			using PrecisionConfig = TrackerTraits<TrackerType>::PrecisionConfig;
+			using PrecisionConfig = typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-			ZeroDim(System const& sys) : target_system_(sys)
+			ZeroDim(System const& sys) : target_system_(sys), tracker_(sys), endgame_(tracker_)
 			{
 				ConsistencyCheck();
 			}
@@ -76,8 +81,8 @@ namespace bertini {
 
 			void DefaultSetup()
 			{
-				using ComplexFromString = NumTraits<BCT>::FromString;
-				using RealFromString = NumTraits<BRT>::FromString;
+				using Variable = node::Variable;
+				using Var = std::shared_ptr<Variable>;
 
 				target_system_.Homogenize(); // work over projective coordinates
 				target_system_.AutoPatch(); // then patch if needed
@@ -87,54 +92,59 @@ namespace bertini {
 
 				Var t = std::make_shared<Variable>("zero_dim_path_variable"); 
 
-				homotopy_ = (1-t)*target_system_ + std::make_shared<Node>(node::Rational::Rand())*t*start_system_;
+				homotopy_ = (1-t)*target_system_ + std::make_shared<node::Rational>(node::Rational::Rand())*t*start_system_;
 				homotopy_.AddPathVariable(t);
 
+				auto tolerances = algorithm::config::Tolerances<BaseRealType>();
 
 				tracker_ = TrackerType(homotopy_);
 
-				tracker_.Setup(DefaultPredictor(),
-				              	endgame_.tolerances_.newton_before_endgame, RealFromString("1e5"),
-								config::Stepping<BRT>(), config::Newton());
+				tracker_.Setup(tracking::predict::DefaultPredictor(),
+				              	tolerances.newton_before_endgame, NumTraits<BaseRealType>::FromString("1e5"),
+								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
 
 				tracker_.PrecisionSetup(PrecisionConfig(homotopy_));
 				
 				
-				t_start_ = static_cast<BCT>(1)
-				t_endgame_boundary_ = ComplexFromString("0.1");
+				t_start_ = static_cast<BaseComplexType>(1);
+				t_endgame_boundary_ = NumTraits<BaseComplexType>::FromString("0.1");
+				t_end_ = static_cast<BaseComplexType>(0);
+
+				ambient_precision_ = DoublePrecision();
 			}
 
 			void Solve()
 			{
+				using SuccessCode = tracking::SuccessCode;
+
+
 				auto num_paths_to_track = start_system_.NumStartPoints();
-				std::vector<Vec<BCT> > solutions_at_endgame_boundary;
+				std::vector<Vec<BaseComplexType> > solutions_at_endgame_boundary;
 				for (decltype(num_paths_to_track) ii = 0; ii < num_paths_to_track; ++ii)
 				{
-					DefaultPrecision(ambient_precision);
-					homotopy_.precision(ambient_precision);
-					auto start_point = start_system_.StartPoint<BCT>(ii);
+					DefaultPrecision(ambient_precision_);
+					homotopy_.precision(ambient_precision_);
+					auto start_point = start_system_.template StartPoint<BaseComplexType>(ii);
 
-					Vec<BCT> result;
-					SuccessCode tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
+					Vec<BaseComplexType> result;
+					SuccessCode tracking_success = tracker_.TrackPath(result,t_start_,t_endgame_boundary_,start_point);
 
 					solutions_at_endgame_boundary.push_back(result);
 				}
 
 				MidPathCheck(solutions_at_endgame_boundary);
 
-				tracker.Setup(TestedPredictor,
-				              	RealFromString("1e-6"), RealFromString("1e5"),
-								stepping_preferences, newton_preferences);
+				tracker_.SetTrackingTolerance(NumTraits<BaseRealType>::FromString("1e-6"));
 
 
-				std::vector<Vec<BCT> > endgame_solutions;
+				std::vector<Vec<BaseComplexType> > endgame_solutions;
 				for (const auto& s : solutions_at_endgame_boundary)
 				{
 					DefaultPrecision(Precision(s));
 					homotopy_.precision(Precision(s));
-					SuccessCode endgame_success = endgame_.Run(t_endgame_boundary,s);
+					SuccessCode endgame_success = endgame_.Run(t_endgame_boundary_,s);
 
-					endgame_solutions.push_back(endgame_.FinalApproximation<BCT>())
+					endgame_solutions.push_back(endgame_.template FinalApproximation<BaseComplexType>());
 
 					if(endgame_success == SuccessCode::Success)
 					{
@@ -154,18 +164,28 @@ namespace bertini {
 
 			}
 
-		
+			template <typename T>
+			void MidPathCheck(T const& s)
+			{
 
-			PostProcessing<BaseRealType> post_processing_;
+			}
+
+
+			
+			config::PostProcessing<BaseRealType> post_processing_;
 
 			PrecisionConfig precision_config_;
 			TrackerType tracker_;
 			EndgameType endgame_;
 
-			const System& target_system_;
+			System target_system_;
 			StartSystemType start_system_;
 			System homotopy_;
-		}
+
+			BaseComplexType t_start_, t_endgame_boundary_, t_end_;
+
+			unsigned ambient_precision_ = DoublePrecision();
+		}; // struct ZeroDim
 
 
 	} // algo

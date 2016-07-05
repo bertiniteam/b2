@@ -322,7 +322,9 @@ namespace bertini{
 			}
 
 
-			
+			AMPTracker(AMPTracker const&) = default;
+
+			AMPTracker& operator=(AMPTracker const&) = default;
 
 			/**
 			\brief Special additional setup call for the AMPTracker, selecting the config for adaptive precision.
