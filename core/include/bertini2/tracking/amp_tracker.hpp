@@ -320,11 +320,7 @@ namespace bertini{
 			{	
 				AMP_config_ = config::AMPConfigFrom(sys);
 			}
-
-
-			AMPTracker(AMPTracker const&) = default;
-
-			AMPTracker& operator=(AMPTracker const&) = default;
+			
 
 			/**
 			\brief Special additional setup call for the AMPTracker, selecting the config for adaptive precision.
@@ -536,14 +532,14 @@ namespace bertini{
 				// the current precision is the precision of the output solution point.
 				if (current_precision_==DoublePrecision())
 				{
-					unsigned num_vars = tracked_system_.NumVariables();
+					unsigned num_vars = GetSystem().NumVariables();
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
 						solution_at_endtime(ii) = mpfr(std::get<Vec<dbl> >(current_space_)(ii));
 				}
 				else
 				{
-					unsigned num_vars = tracked_system_.NumVariables();
+					unsigned num_vars = GetSystem().NumVariables();
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
 					{
@@ -566,7 +562,7 @@ namespace bertini{
 			// 	}
 			// 	else
 			// 	{
-			// 		unsigned num_vars = tracked_system_.NumVariables();
+			// 		unsigned num_vars = GetSystem().NumVariables();
 			// 		solution_at_endtime.resize(num_vars);
 			// 		for (unsigned ii=0; ii<num_vars; ii++)
 			// 			solution_at_endtime(ii) = dbl(std::get<Vec<mpfr> >(current_space_)(ii));
@@ -1354,13 +1350,13 @@ namespace bertini{
 			void DoubleToDouble(Vec<dbl> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				#endif
 
 				current_precision_ = DoublePrecision();
 				DefaultPrecision(DoublePrecision());
 
-				tracked_system_.precision(16);
+				GetSystem().precision(16);
 
 				std::get<Vec<dbl> >(current_space_) = source_point;
 			}
@@ -1387,13 +1383,13 @@ namespace bertini{
 			void MultipleToDouble(Vec<mpfr> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				#endif
 				previous_precision_ = current_precision_;
 				current_precision_ = DoublePrecision();
 				DefaultPrecision(DoublePrecision());
 
-				tracked_system_.precision(DoublePrecision());
+				GetSystem().precision(DoublePrecision());
 
 				if (std::get<Vec<dbl> >(current_space_).size()!=source_point.size())
 					std::get<Vec<dbl> >(current_space_).resize(source_point.size());
@@ -1431,13 +1427,13 @@ namespace bertini{
 			void DoubleToMultiple(unsigned new_precision, Vec<dbl> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
 				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
 				DefaultPrecision(new_precision);
-				tracked_system_.precision(new_precision);
+				GetSystem().precision(new_precision);
 				predictor_->ChangePrecision(new_precision);
 				corrector_->ChangePrecision(new_precision);
 
@@ -1489,13 +1485,13 @@ namespace bertini{
 			void MultipleToMultiple(unsigned new_precision, Vec<mpfr> const& source_point) const
 			{	
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(source_point.size() == tracked_system_.NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
+				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
 				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
 				DefaultPrecision(new_precision);
-				tracked_system_.precision(new_precision);
+				GetSystem().precision(new_precision);
 				predictor_->ChangePrecision(new_precision);
 				corrector_->ChangePrecision(new_precision);
 
@@ -1540,7 +1536,7 @@ namespace bertini{
 			*/
 			void AdjustTemporariesPrecision(unsigned new_precision) const
 			{
-				unsigned num_vars = tracked_system_.NumVariables();
+				unsigned num_vars = GetSystem().NumVariables();
 
 				//  the current_space value is adjusted in the appropriate ChangePrecision function
 				std::get<Vec<mpfr> >(tentative_space_).resize(num_vars);
@@ -1577,7 +1573,7 @@ namespace bertini{
 				{
 					assert(DefaultPrecision()==current_precision_ && "current precision differs from the default precision");
 
-					return tracked_system_.precision() == current_precision_ &&
+					return GetSystem().precision() == current_precision_ &&
 							predictor_->precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(current_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(tentative_space_)(0).precision() == current_precision_ &&

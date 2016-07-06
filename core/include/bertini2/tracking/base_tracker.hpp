@@ -152,10 +152,10 @@ namespace bertini{
 
 		public:
 
-			Tracker(System const& sys) : tracked_system_(sys)
+			Tracker(System const& sys) : tracked_system_(std::ref(sys))
 			{
-				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), sys);
-				corrector_ = std::make_shared< correct::NewtonCorrector >(sys);
+				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), tracked_system_);
+				corrector_ = std::make_shared< correct::NewtonCorrector >(tracked_system_);
 				Predictor(predict::DefaultPredictor());
 			}
 
@@ -217,7 +217,7 @@ namespace bertini{
 									Vec<CT> const& start_point
 									) const
 			{	
-				if (start_point.size()!=tracked_system_.NumVariables())
+				if (start_point.size()!=GetSystem().NumVariables())
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
 				
@@ -345,9 +345,9 @@ namespace bertini{
 			/**
 			\brief get a const reference to the system.
 			*/
-			const class System& GetSystem() const
+			const System& GetSystem() const
 			{
-				return tracked_system_;
+				return tracked_system_.get();
 			}
 
 			/**
@@ -444,7 +444,7 @@ namespace bertini{
 			template <typename ComplexType>
 			SuccessCode CheckGoingToInfinity() const
 			{
-				if (tracked_system_.DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
+				if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
 					return SuccessCode::GoingToInfinity;
 				else
 					return SuccessCode::Success;
@@ -526,7 +526,7 @@ namespace bertini{
 			void OnInfiniteTruncation() const = 0;
 
 
-			const class System& tracked_system_; ///< Reference to the system being tracked.
+			std::reference_wrapper<const System> tracked_system_; ///< Reference to the system being tracked.
 
 			bool infinite_path_truncation_ = true; /// Whether should check if the path is going to infinity while tracking.  On by default.
 			bool reinitialize_stepsize_ = true; ///< Whether should re-initialize the stepsize with each call to Trackpath.  On by default.
@@ -588,7 +588,7 @@ namespace bertini{
 			public: 
 			unsigned NumVariables() const
 			{
-				return tracked_system_.NumVariables();
+				return GetSystem().NumVariables();
 			}
 
 			auto CurrentTime() const

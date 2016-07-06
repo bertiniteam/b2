@@ -33,6 +33,8 @@
 #include "bertini2/nag_algorithms/config.hpp"
 #include "bertini2/detail/visitable.hpp"
 #include "bertini2/tracking.hpp"
+#include "bertini2/nag_algorithms/midpath_check.hpp"
+#include "bertini2/tracking/observers.hpp"
 
 namespace bertini {
 
@@ -48,14 +50,7 @@ namespace bertini {
 			
 			using PrecisionConfig = typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-			ZeroDim(System const& sys) : target_system_(sys), tracker_(sys), endgame_(tracker_)
-			{
-				ConsistencyCheck();
-			}
-
-			ZeroDim(TrackerType const& t, 
-			              EndgameType const& e,
-			              System const& s) : target_system_(s), tracker_(t), endgame_(e)
+			ZeroDim(System const& sys) : target_system_(sys), tracker_(target_system_), endgame_(tracker_)
 			{
 				ConsistencyCheck();
 			}
@@ -88,9 +83,8 @@ namespace bertini {
 				target_system_.AutoPatch(); // then patch if needed
 
 				start_system_ = StartSystemType(target_system_); // make the start system from the target system.
-				start_system_.Homogenize(); //ensure this is homogeneous, too.
 
-				Var t = std::make_shared<Variable>("zero_dim_path_variable"); 
+				Var t = std::make_shared<Variable>("ZERO_DIM_PATH_VARIABLE"); 
 
 				homotopy_ = (1-t)*target_system_ + std::make_shared<node::Rational>(node::Rational::Rand())*t*start_system_;
 				homotopy_.AddPathVariable(t);
@@ -117,22 +111,35 @@ namespace bertini {
 			{
 				using SuccessCode = tracking::SuccessCode;
 
+				tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+				tracker_.AddObserver(&tons_of_detail);
 
 				auto num_paths_to_track = start_system_.NumStartPoints();
-				std::vector<Vec<BaseComplexType> > solutions_at_endgame_boundary;
+				std::vector< std::tuple<Vec<BaseComplexType>, SuccessCode>> solutions_at_endgame_boundary;
 				for (decltype(num_paths_to_track) ii = 0; ii < num_paths_to_track; ++ii)
 				{
 					DefaultPrecision(ambient_precision_);
 					homotopy_.precision(ambient_precision_);
+
 					auto start_point = start_system_.template StartPoint<BaseComplexType>(ii);
 
 					Vec<BaseComplexType> result;
 					SuccessCode tracking_success = tracker_.TrackPath(result,t_start_,t_endgame_boundary_,start_point);
 
-					solutions_at_endgame_boundary.push_back(result);
+					solutions_at_endgame_boundary.push_back(std::make_tuple(result, tracking_success));
 				}
 
-				MidPathCheck(solutions_at_endgame_boundary);
+				auto midcheck = Midpath::Check(solutions_at_endgame_boundary);
+				// insert code here to retrack the crossed paths.
+				unsigned num_resolve_attempts = 0;
+				while (!midcheck.Passed() && num_resolve_attempts < max_num_crossed_path_resolve_attempts)
+				{
+					MidpathResolve(midcheck, solutions_at_endgame_boundary);
+
+					midcheck = Midpath::Check(solutions_at_endgame_boundary);
+
+					num_resolve_attempts++;
+				}
 
 				tracker_.SetTrackingTolerance(NumTraits<BaseRealType>::FromString("1e-6"));
 
@@ -140,13 +147,14 @@ namespace bertini {
 				std::vector<Vec<BaseComplexType> > endgame_solutions;
 				for (const auto& s : solutions_at_endgame_boundary)
 				{
-					DefaultPrecision(Precision(s));
-					homotopy_.precision(Precision(s));
-					SuccessCode endgame_success = endgame_.Run(t_endgame_boundary_,s);
+					const auto& bdry_point = std::get<0>(s);
+					DefaultPrecision(Precision(bdry_point));
+					homotopy_.precision(Precision(bdry_point));
+					SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary_),bdry_point);
 
 					endgame_solutions.push_back(endgame_.template FinalApproximation<BaseComplexType>());
 
-					if(endgame_success == SuccessCode::Success)
+					if(endgame_success != SuccessCode::Success)
 					{
 
 					}
@@ -158,14 +166,15 @@ namespace bertini {
 
 		private:
 
-
-			void PostProcessing()
+			template<typename T>
+			void MidpathResolve(Midpath::Data const&, 
+			                    T const& solutions_at_endgame_boundary)
 			{
 
 			}
 
-			template <typename T>
-			void MidPathCheck(T const& s)
+
+			void PostProcessing()
 			{
 
 			}
@@ -175,16 +184,22 @@ namespace bertini {
 			config::PostProcessing<BaseRealType> post_processing_;
 
 			PrecisionConfig precision_config_;
-			TrackerType tracker_;
-			EndgameType endgame_;
+			
 
 			System target_system_;
 			StartSystemType start_system_;
 			System homotopy_;
 
+			TrackerType tracker_;
+			EndgameType endgame_;
+
 			BaseComplexType t_start_, t_endgame_boundary_, t_end_;
 
 			unsigned ambient_precision_ = DoublePrecision();
+
+
+			// move to a config struct
+			unsigned max_num_crossed_path_resolve_attempts = 0; // bertini1 did not have this setting
 		}; // struct ZeroDim
 
 

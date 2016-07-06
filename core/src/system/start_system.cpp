@@ -64,8 +64,7 @@ namespace bertini {
 
 			random_values_.resize(s.NumFunctions());
 
-			// auto prev_prec = boost::multiprecision::DefaultPrecision();
-			// boost::multiprecision::DefaultPrecision(4000);
+
 			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
 				random_values_[ii] = std::make_shared<node::Rational>(node::Rational::Rand());
 
@@ -74,6 +73,7 @@ namespace bertini {
 
 			for (auto iter = v.begin(); iter!=v.end(); iter++)
 				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[iter-v.begin()]); 
+			
 			if (s.IsHomogeneous())
 				Homogenize();
 
@@ -82,7 +82,6 @@ namespace bertini {
 
 			gamma_ = std::make_shared<node::Rational>(node::Rational::Rand());
 			// *this *= static_cast<std::shared_ptr<node::Node> >(gamma_);
-			// boost::multiprecision::DefaultPrecision(prev_prec);
 		}// total degree constructor
 
 		

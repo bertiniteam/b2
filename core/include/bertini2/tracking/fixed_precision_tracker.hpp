@@ -140,7 +140,7 @@ namespace bertini{
 
 				// the current precision is the precision of the output solution point.
 
-				unsigned num_vars = this->tracked_system_.NumVariables();
+				unsigned num_vars = this->GetSystem().NumVariables();
 				solution_at_endtime.resize(num_vars);
 				for (unsigned ii=0; ii<num_vars; ii++)
 				{
@@ -582,7 +582,7 @@ namespace bertini{
 
 			bool PrecisionSanityCheck() const
 			{	
-				return tracked_system_.precision() == precision_ &&
+				return GetSystem().precision() == precision_ &&
 						DefaultPrecision()==precision_ && 
 						std::get<Vec<mpfr> >(current_space_)(0).precision() == precision_ &&
 						std::get<Vec<mpfr> >(tentative_space_)(0).precision() == precision_ &&

@@ -29,6 +29,7 @@ tracking_basics_test
 b2_classic_compatibility_test
 endgames_test
 pool_test
+nag_algorithms_test
 
 cachegrind.out.*
 

@@ -123,13 +123,13 @@ namespace bertini{
 				/**
 				\brief A tracker tha must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
 				*/
-				const TrackerType& tracker_;
+				std::reference_wrapper<const TrackerType> tracker_;
 
 			public:
 
 
 				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&>& settings )
-			      : tracker_(tr),
+			      : tracker_(std::ref(tr)),
 			      	endgame_settings_( std::get<0>(settings) ),
 			        security_( std::get<1>(settings) )
 			   	{}
@@ -187,14 +187,14 @@ namespace bertini{
 				\brief Getter for the tracker used inside an instance of the endgame. 
 				*/
 				const TrackerType & GetTracker() const
-				{return tracker_;}
+				{return tracker_.get();}
 
 				template<typename CT>
 				const Vec<CT>& FinalApproximation() const 
 				{return std::get<Vec<CT> >(final_approximation_at_origin_);}
 
 				const System& GetSystem() const 
-				{ return tracker_.GetSystem();}
+				{ return GetTracker().GetSystem();}
 
 
 				/**
@@ -251,7 +251,7 @@ namespace bertini{
 						times.emplace_back(times[ii-1] * RT(endgame_settings_.sample_factor));
 						samples.emplace_back(Vec<CT>(num_vars));
 
-						auto tracking_success = tracker_.TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
+						auto tracking_success = GetTracker().TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
 						AsDerived().EnsureAtPrecision(times[ii],Precision(samples[ii]));
 
 						if (tracking_success!=SuccessCode::Success)

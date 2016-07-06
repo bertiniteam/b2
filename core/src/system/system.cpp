@@ -298,7 +298,10 @@ namespace bertini
 			throw std::runtime_error("size mismatch on number of homogenizing variables and number of variable groups");
 
 		if (!already_had_homvars)
+		{
+			have_ordering_ = false;
 			homogenizing_variables_.resize(NumVariableGroups());
+		}
 
 
 		auto group_counter = 0;
@@ -307,7 +310,6 @@ namespace bertini
 			std::stringstream converter;
 			converter << "HOM_VAR_" << group_counter;
 
-			
 			if (already_had_homvars){
 				Var hom_var = homogenizing_variables_[group_counter];
 				VariableGroup temp_group = *curr_var_gp;
@@ -322,8 +324,6 @@ namespace bertini
 				for (const auto& curr_function : functions_)
 					curr_function->Homogenize(*curr_var_gp, hom_var);
 			}
-		
-			
 
 			group_counter++;
 		}
