@@ -224,6 +224,7 @@ namespace bertini{
 					We track then to the next_time and construct the next_sample.
 
 				\param start_time The time value at which we start the endgame. 
+				\param target_time The time value that we are trying to find a solution to. 
 				\param x_endgame The current space point at start_time.
 				\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 				\param samples a deque that will hold all the samples corresponding to the time values in times. 
@@ -231,7 +232,7 @@ namespace bertini{
 				\tparam CT The complex number type.
 				*/	
 				template<typename CT>
-				SuccessCode ComputeInitialSamples(const CT & start_time,const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
+				SuccessCode ComputeInitialSamples(const CT & start_time,const CT & target_time, const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
 				{	
 					using RT = typename Eigen::NumTraits<CT>::Real;
 					assert(endgame_settings_.num_sample_points>0 && "number of sample points must be positive");
@@ -252,8 +253,8 @@ namespace bertini{
 					//start at 1, because the input point is the 0th element.
 					for(int ii=1; ii < endgame_settings_.num_sample_points; ++ii)
 					{ 
-						times.emplace_back(times[ii-1] * RT(endgame_settings_.sample_factor));
-						samples.emplace_back(Vec<CT>(num_vars));
+						times.emplace_back((times[ii-1] + target_time) * RT(endgame_settings_.sample_factor)); // next time is a point between the previous time and target time.
+						samples.emplace_back(Vec<CT>(num_vars));											   // sample_factor gives us some point between the two, usually the midpoint.		
 
 						auto tracking_success = tracker_.TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
 						AsDerived().EnsureAtPrecision(times[ii],Precision(samples[ii]));
