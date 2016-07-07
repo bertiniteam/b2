@@ -34,7 +34,7 @@
 #include "bertini2/detail/visitable.hpp"
 #include "bertini2/tracking.hpp"
 #include "bertini2/nag_algorithms/midpath_check.hpp"
-#include "bertini2/tracking/observers.hpp"
+
 
 namespace bertini {
 
@@ -99,12 +99,11 @@ namespace bertini {
 
 				tracker_.PrecisionSetup(PrecisionConfig(homotopy_));
 				
-				
+				initial_ambient_precision_ = DoublePrecision();
+
 				t_start_ = static_cast<BaseComplexType>(1);
 				t_endgame_boundary_ = NumTraits<BaseComplexType>::FromString("0.1");
-				t_end_ = static_cast<BaseComplexType>(0);
-
-				ambient_precision_ = DoublePrecision();
+				t_end_ = static_cast<BaseComplexType>(0);	
 			}
 
 			void Solve()
@@ -118,8 +117,7 @@ namespace bertini {
 				std::vector< std::tuple<Vec<BaseComplexType>, SuccessCode>> solutions_at_endgame_boundary;
 				for (decltype(num_paths_to_track) ii = 0; ii < num_paths_to_track; ++ii)
 				{
-					DefaultPrecision(ambient_precision_);
-					homotopy_.precision(ambient_precision_);
+					DefaultPrecision(initial_ambient_precision_);
 
 					auto start_point = start_system_.template StartPoint<BaseComplexType>(ii);
 
@@ -149,15 +147,10 @@ namespace bertini {
 				{
 					const auto& bdry_point = std::get<0>(s);
 					DefaultPrecision(Precision(bdry_point));
-					homotopy_.precision(Precision(bdry_point));
+
 					SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary_),bdry_point);
 
 					endgame_solutions.push_back(endgame_.template FinalApproximation<BaseComplexType>());
-
-					if(endgame_success != SuccessCode::Success)
-					{
-
-					}
 				}
 
 				PostProcessing();
@@ -195,11 +188,11 @@ namespace bertini {
 
 			BaseComplexType t_start_, t_endgame_boundary_, t_end_;
 
-			unsigned ambient_precision_ = DoublePrecision();
+			unsigned initial_ambient_precision_ = DoublePrecision();
 
 
 			// move to a config struct
-			unsigned max_num_crossed_path_resolve_attempts = 0; // bertini1 did not have this setting
+			unsigned max_num_crossed_path_resolve_attempts = 1; // bertini1 did not have this setting
 		}; // struct ZeroDim
 
 
