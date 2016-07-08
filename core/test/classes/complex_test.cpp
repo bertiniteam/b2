@@ -30,7 +30,7 @@
 
 using mpfr_float = bertini::mpfr_float;
 #include "eigen_extensions.hpp"
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
