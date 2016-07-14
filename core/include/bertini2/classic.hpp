@@ -32,7 +32,7 @@
 #define BERTINI_CLASSIC_HPP
 
 
-#include "bertini2/classic/parsing.hpp"
+#include "bertini2/classic/split_parsing.hpp"
 
 
 
