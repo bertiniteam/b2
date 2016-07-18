@@ -35,6 +35,8 @@
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/include/adapted.hpp>
 
+
+
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 
 
@@ -105,17 +107,23 @@ namespace bertini
 					using boost::spirit::lexeme;
 					using boost::spirit::as_string;
 					using boost::spirit::ascii::no_case;
+					
+					precisiontype_.add("0", PrecisionType::Fixed);
+					precisiontype_.add("1", PrecisionType::Adaptive);
+					precisiontype_.add("2", PrecisionType::Adaptive);
+
+
 	
 					
-					root_rule_.name("ConfigMPType_root_rule");
+					root_rule_.name("ConfigPrecisionType_root_rule");
 					
-					root_rule_ = config_name_;
+					root_rule_ = -(omit[config_name_] > precisiontype_ > ';');
 
 					config_name_.name("precisiontype_");
-					config_name_ = no_case[*(char_ - "mptype") >> "mptype"];
+					config_name_ = no_case[lexeme[*(char_ - "mptype:")] >> "mptype:"];
 
 					
-					
+
 					
 					using phx::val;
 					using phx::construct;
@@ -129,6 +137,13 @@ namespace bertini
 					 construct<std::string>(_3,_2)<<
 					 std::endl
 					 );
+					
+//					debug(root_rule_);
+					//
+					//
+					//
+					//					debug(config_name_);
+
 	
 				}
 				
@@ -136,7 +151,17 @@ namespace bertini
 			private:
 				qi::rule<Iterator, PrecisionType(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, ascii::space_type, std::string()> config_name_;
+				
+				qi::symbols<char,PrecisionType> precisiontype_;
 
+
+//				struct precisiontype : qi::symbols<unsigned, std::string>
+//				{
+//					precisiontype()
+//					{
+//						add(1,"h");
+//					}
+//				}precisiontype_;
 			};
 			
 			
