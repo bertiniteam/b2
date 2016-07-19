@@ -50,6 +50,10 @@ namespace bertini
 			Fixed,
 			Adaptive
 		};
+		
+
+		
+
 
 		// forward declarations
 		template<class D>
