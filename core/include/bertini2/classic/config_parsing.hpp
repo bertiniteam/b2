@@ -88,7 +88,7 @@ namespace bertini
 			 
 			 */
 			template<typename Iterator, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigPrecisionTypeParser : qi::grammar<Iterator, int(), Skipper>
+			struct ConfigPrecisionTypeParser : qi::grammar<Iterator, PrecisionType(), Skipper>
 			{
 				
 				ConfigPrecisionTypeParser() : ConfigPrecisionTypeParser::base_type(root_rule_, "ConfigPrecisionType")
@@ -111,21 +111,15 @@ namespace bertini
 					precisiontype_.add("1", PrecisionType::Adaptive);
 					precisiontype_.add("2", PrecisionType::Adaptive);
 					
-					test_.add("0", 0);
-					test_.add("2", 2);
-					test_.add("3", 0);
-					test_.add("1", 1);
-					test_.add("4", 1);
-
 
 	
 					
 					root_rule_.name("ConfigPrecisionType_root_rule");
 					
-					root_rule_ = config_name_[_val = _1] | no_setting_[_val = 0];
+					root_rule_ = config_name_[_val = _1] | no_setting_[_val = PrecisionType::Adaptive];
 
 					config_name_.name("precisiontype_");
-					config_name_ = *(mychar_ - no_case["mptype:"]) >> no_case["mptype:"] >> test_[_val = _1] >> ';';
+					config_name_ = *(mychar_ - no_case["mptype:"]) >> no_case["mptype:"] >> precisiontype_[_val = _1] >> ';';
 					
 					no_setting_.name("no_setting_");
 					no_setting_ = *(mychar_ - no_case["mptype:"]);
@@ -137,25 +131,25 @@ namespace bertini
 					mychar_ = qi::alnum | qi::punct;
 					
 					
-					debug(root_rule_);
-					debug(config_name_);
-					debug(no_setting_);
-					debug(no_decl_);
-					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (config_name_) )
+//					debug(root_rule_);
+//					debug(config_name_);
+//					debug(no_setting_);
+//					debug(no_decl_);
+//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (config_name_) )
 
 					
 					using phx::val;
 					using phx::construct;
 					using namespace qi::labels;
-//					qi::on_error<qi::fail>
-//					( root_rule_ ,
-//					 std::cout<<
-//					 val("config/input split parser could not complete parsing. Expecting ")<<
-//					 _4<<
-//					 val(" here: ")<<
-//					 construct<std::string>(_3,_2)<<
-//					 std::endl
-//					 );
+					qi::on_error<qi::fail>
+					( root_rule_ ,
+					 std::cout<<
+					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 _4<<
+					 val(" here: ")<<
+					 construct<std::string>(_3,_2)<<
+					 std::endl
+					 );
 					
 
 	
@@ -163,11 +157,10 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, int(), ascii::space_type > root_rule_, config_name_;
+				qi::rule<Iterator, PrecisionType(), ascii::space_type > root_rule_, config_name_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, mychar_;
 				
 				qi::symbols<char,PrecisionType> precisiontype_;
-				qi::symbols<char,int> test_;
 
 
 			};
