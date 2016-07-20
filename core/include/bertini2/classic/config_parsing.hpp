@@ -116,7 +116,7 @@ namespace bertini
 					
 					root_rule_.name("ConfigPrecisionType_root_rule");
 					
-					root_rule_ = config_name_[_val = _1] | no_setting_[_val = PrecisionType::Adaptive];
+					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = PrecisionType::Adaptive];
 
 					config_name_.name("precisiontype_");
 					config_name_ = *(mychar_ - no_case["mptype:"]) >> no_case["mptype:"] >> precisiontype_[_val = _1] >> ';';
@@ -125,10 +125,11 @@ namespace bertini
 					no_setting_ = *(mychar_ - no_case["mptype:"]);
 
 					no_decl_.name("no_decl_");
-					no_decl_ = *(mychar_);
+					no_decl_ = *(char_);
 					
 					mychar_.name("mychar_");
 					mychar_ = qi::alnum | qi::punct;
+					mychar_ = char_;
 					
 					
 //					debug(root_rule_);
@@ -232,7 +233,7 @@ namespace bertini
 					
 					root_rule_.name("ConfigPredictor_root_rule");
 					
-					root_rule_ = config_name_[_val = _1] | no_setting_[_val = config::Predictor::RKF45];
+					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = config::Predictor::RKF45];
 					
 					config_name_.name("predictor_");
 					config_name_ = *(mychar_ - no_case[setting_name]) >> no_case[setting_name] >> predictor_[_val = _1] >> ';';
@@ -342,24 +343,24 @@ namespace bertini
 					
 					root_rule_.name("ConfigSecurity_root_rule");
 					
-					root_rule_ = security_level_[phx::bind( [this](config::Security<double> & S, int l)
+					root_rule_ = ((security_level_[phx::bind( [this](config::Security<double> & S, int l)
 																	  {
 																		  S.level = l;
-																		  std::cout << "Hello";
 																	  }, _val, _1 )]
 					^ security_max_norm_[phx::bind( [this](config::Security<double> & S, double norm)
 												   {
 													   S.max_norm = norm;
-												   }, _val, _1 )];
+												   }, _val, _1 )])
+					>> -no_setting_) | no_setting_;
 					
 					security_level_.name("security_level_");
-					security_level_ = *(mychar_ - no_case[level_name]) >> no_case[level_name] >> qi::int_[_val = _1] >> ';';
+					security_level_ = *(char_ - no_case[level_name] - no_case[maxnorm_name]) >> no_case[level_name] >> qi::int_[_val = _1] >> ';';
 					
 					security_max_norm_.name("security_max_norm_");
-					security_max_norm_ = *(mychar_ - no_case[level_name]) >> no_case[level_name] >> qi::double_[_val = _1] >> ';';
+					security_max_norm_ = *(char_ - no_case[maxnorm_name] - no_case[level_name]) >> no_case[maxnorm_name] >> qi::double_[_val = _1] >> ';';
 
 					no_setting_.name("no_setting_");
-					no_setting_ = *(mychar_ - no_case[level_name]);
+					no_setting_ = *(char_ - no_case[level_name] - no_case[maxnorm_name]);
 					
 					no_decl_.name("no_decl_");
 					no_decl_ = *(mychar_);
@@ -368,7 +369,8 @@ namespace bertini
 					mychar_ = qi::alnum | qi::punct;
 					
 					
-					//					debug(root_rule_);
+//					debug(security_level_);
+//										debug(security_max_norm_);
 					//					debug(config_name_);
 					//					debug(no_setting_);
 					//					debug(no_decl_);
