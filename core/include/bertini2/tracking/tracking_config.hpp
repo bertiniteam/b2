@@ -261,16 +261,16 @@ namespace bertini
 			struct Stepping
 			{
 				T initial_step_size = T(1)/T(10);
-				T max_step_size = T(1)/T(10); //E.4.6
+				T max_step_size = T(1)/T(10); //MaxStepSize
 				T min_step_size = T(1e-100);
 
-				T step_size_success_factor = T(2); //E.4.12
-				T step_size_fail_factor = T(1)/T(2); //E.4.11
+				T step_size_success_factor = T(2); //StepSuccessFactor
+				T step_size_fail_factor = T(1)/T(2); //StepFailFactor
 
-				unsigned consecutive_successful_steps_before_stepsize_increase = 5; //E.4.10
+				unsigned consecutive_successful_steps_before_stepsize_increase = 5; //StepsForIncrease
 
 				unsigned min_num_steps = 1;
-				unsigned max_num_steps = 1e5; //E.4.9
+				unsigned max_num_steps = 1e5; //MaxNumberSteps
 
 				unsigned frequency_of_CN_estimation = 1;
 			};
@@ -279,7 +279,7 @@ namespace bertini
 			
 			struct Newton
 			{
-				unsigned max_num_newton_iterations = 2; //E.4.4
+				unsigned max_num_newton_iterations = 2; //MaxNewtonIts
 				unsigned min_num_newton_iterations = 1;
 			};
 
@@ -288,40 +288,40 @@ namespace bertini
 			struct RenameMe
 			{
 				
-				unsigned sharpendigits; //E.7.7
+				unsigned sharpendigits; //SharpenDigits
 
-				mpfr_float function_residual_tolerance; //E.7.2?
-				mpfr_float ratio_tolerance; //E.7.3
+				mpfr_float function_residual_tolerance; //FunctionTolerance??
+				mpfr_float ratio_tolerance; //RatioTolerance
 			};
 
 			template<typename T>
 			struct Security
 			{
-				int level = 0; //E.6.1
-				T max_norm = T(100000); //E.6.2 wrong default value
+				int level = 0; //SecurityLevel
+				T max_norm = T(100000); //SecurityMaxNorm wrong default value
 			};
 
 			template<typename T>
 			struct Endgame
 			{
-				unsigned num_sample_points = 3; //E.5.4 wrong default value
-				T min_track_time = T(1e-100); //nbrh radius in Bertini book. E.5.7
-				T sample_factor = T(1)/T(2); //E.5.3
+				unsigned num_sample_points = 3; //NumSamplePoints default = 2
+				T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
+				T sample_factor = T(1)/T(2); //SampleFactor
 				unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 			};
 
 
 			struct PowerSeries
 			{
-				unsigned max_cycle_number = 6; //E.5.8
+				unsigned max_cycle_number = 6; //MaxCycleNum
 				unsigned cycle_number_amplification = 5;
 			};
 
 			template<typename T>
 			struct Cauchy
 			{
-				T cycle_cutoff_time = T(1)/T(100000000); //E.5.9
-				T ratio_cutoff_time = T(1)/T(100000000000000); //E.5.10
+				T cycle_cutoff_time = T(1)/T(100000000); //CycleTimeCutoff
+				T ratio_cutoff_time = T(1)/T(100000000000000); //RatioTimeCutoff
 				T minimum_for_c_over_k_stabilization = T(3)/T(4);
 				unsigned int num_needed_for_stabilization = 3;
 				T maximum_cauchy_ratio = T(1)/T(2);
