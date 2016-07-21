@@ -45,7 +45,7 @@ namespace bertini
 		template<typename T> using TimeCont = std::deque<T>;
 		
 		
-		enum class PrecisionType
+		enum class PrecisionType //E.2.1
 		{
 			Fixed,
 			Adaptive
@@ -215,7 +215,7 @@ namespace bertini
 		*/
 		namespace config{
 
-			enum class Predictor
+			enum class Predictor //E.4.3
 			{
 				Constant,
 				Euler,
@@ -235,13 +235,13 @@ namespace bertini
 			template<typename T>
 			struct Tolerances
 			{	
-				T newton_before_endgame = T(1)/T(100000);
-				T newton_during_endgame = T(1)/T(1000000);
+				T newton_before_endgame = T(1)/T(100000); //E.4.1
+				T newton_during_endgame = T(1)/T(1000000); //E.4.2
 
-				T final_tolerance = T(1)/T(100000000000);
+				T final_tolerance = T(1)/T(100000000000); //E.5.1
 				T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
-				T path_truncation_threshold = T(100000);
+				T path_truncation_threshold = T(100000); //E.4.13
 				T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
 			};
 
@@ -250,16 +250,16 @@ namespace bertini
 			struct Stepping
 			{
 				T initial_step_size = T(1)/T(10);
-				T max_step_size = T(1)/T(10);
+				T max_step_size = T(1)/T(10); //E.4.6
 				T min_step_size = T(1e-100);
 
-				T step_size_success_factor = T(2);
-				T step_size_fail_factor = T(1)/T(2);
+				T step_size_success_factor = T(2); //E.4.12
+				T step_size_fail_factor = T(1)/T(2); //E.4.11
 
-				unsigned consecutive_successful_steps_before_stepsize_increase = 5;
+				unsigned consecutive_successful_steps_before_stepsize_increase = 5; //E.4.10
 
 				unsigned min_num_steps = 1;
-				unsigned max_num_steps = 1e5;
+				unsigned max_num_steps = 1e5; //E.4.9
 
 				unsigned frequency_of_CN_estimation = 1;
 			};
@@ -268,7 +268,7 @@ namespace bertini
 			
 			struct Newton
 			{
-				unsigned max_num_newton_iterations = 2;
+				unsigned max_num_newton_iterations = 2; //E.4.4
 				unsigned min_num_newton_iterations = 1;
 			};
 
@@ -277,40 +277,40 @@ namespace bertini
 			struct RenameMe
 			{
 				
-				unsigned sharpendigits;
+				unsigned sharpendigits; //E.7.7
 
-				mpfr_float function_residual_tolerance;
-				mpfr_float ratio_tolerance;
+				mpfr_float function_residual_tolerance; //E.7.2?
+				mpfr_float ratio_tolerance; //E.7.3
 			};
 
 			template<typename T>
 			struct Security
 			{
-				int level = 0;
-				T max_norm = T(100000);
+				int level = 0; //E.6.1
+				T max_norm = T(100000); //E.6.2 wrong default value
 			};
 
 			template<typename T>
 			struct Endgame
 			{
-				unsigned num_sample_points = 3;
-				T min_track_time = T(1e-100); //nbrh radius in Bertini book.
-				T sample_factor = T(1)/T(2);
+				unsigned num_sample_points = 3; //E.5.4 wrong default value
+				T min_track_time = T(1e-100); //nbrh radius in Bertini book. E.5.7
+				T sample_factor = T(1)/T(2); //E.5.3
 				unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 			};
 
 
 			struct PowerSeries
 			{
-				unsigned max_cycle_number = 6;
+				unsigned max_cycle_number = 6; //E.5.8
 				unsigned cycle_number_amplification = 5;
 			};
 
 			template<typename T>
 			struct Cauchy
 			{
-				T cycle_cutoff_time = T(1)/T(100000000);
-				T ratio_cutoff_time = T(1)/T(100000000000000);
+				T cycle_cutoff_time = T(1)/T(100000000); //E.5.9
+				T ratio_cutoff_time = T(1)/T(100000000000000); //E.5.10
 				T minimum_for_c_over_k_stabilization = T(3)/T(4);
 				unsigned int num_needed_for_stabilization = 3;
 				T maximum_cauchy_ratio = T(1)/T(2);
@@ -321,9 +321,9 @@ namespace bertini
 
 			struct TrackBack
 			{
-				unsigned minimum_cycle;
-				bool junk_removal_test;
-				unsigned max_depth_LDT;
+				unsigned minimum_cycle; //MinCycleTrackback, default = 4
+				bool junk_removal_test; //JunkRemovalTest, default = 1
+				unsigned max_depth_LDT; //MaxLDTDepth, default = 3
 			};
 
 
@@ -335,8 +335,8 @@ namespace bertini
 			template<typename T>
 			struct PostProcessing{
 				T real_threshold;
-				T endpoint_finite_threshold;
-				T final_tol_multiplier;
+				T endpoint_finite_threshold; //EndpointFiniteThreshold, default = 10^5
+				T final_tol_multiplier; //TargetTolMultiplier???
 				T final_tol_times_mult;
 			};
 
@@ -351,12 +351,12 @@ namespace bertini
 			template<typename T>
 			struct Regeneration
 			{
-				bool remove_infinite_endpoints;
-				bool higher_dimension_check;
+				bool remove_infinite_endpoints; //RegenRemoveInf, default = true
+				bool higher_dimension_check; //RegenHigherDimTest, default = true
 
-				T newton_before_endgame;
-				T newton_during_endgame;
-				T final_tolerance;
+				T newton_before_endgame; //SliceTolBeforeEG???
+				T newton_during_endgame; //SliceTolDuringEG???
+				T final_tolerance; //SliceFinalTol???
 			};
 
 			
