@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	{
 		
 		unsigned int size = 10;
-		bertini::mpfr_float::default_precision(16);
+		bertini::DefaultPrecision(16);
 		
 		srand(2);  rand();
 		
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	{
 		
 		unsigned int size = 10;
-		bertini::mpfr_float::default_precision(100);
+		bertini::DefaultPrecision(100);
 		
 		srand(2);  rand();
 		
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 	BOOST_AUTO_TEST_CASE(small_value_multiprecision)
 	{
 
-		bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
 
@@ -494,6 +494,31 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		A*=a;
 	}
+
+	BOOST_AUTO_TEST_CASE(change_precision_mpfr_float)
+	{
+		using bertini::Precision;
+		using data_type = bertini::mpfr_float;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+		Precision(A,100);
+		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+	}
+
+	BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex)
+	{
+		using bertini::Precision;
+		using data_type = bertini::mpfr;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+		Precision(A,100);
+		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+	}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 	

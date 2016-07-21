@@ -329,9 +329,9 @@ namespace bertini{
 				return ss.str();
 			}
 
-			mpfr_float (MPFRBaseT::*getreal)() const = &MPFRBaseT::real;
+			const mpfr_float& (MPFRBaseT::*getreal)() const = &MPFRBaseT::real;
 			void (MPFRBaseT::*setreal)(const mpfr_float&) = &MPFRBaseT::real;
-			mpfr_float (MPFRBaseT::*getimag)() const = &MPFRBaseT::imag;
+			const mpfr_float& (MPFRBaseT::*getimag)() const = &MPFRBaseT::imag;
 			void (MPFRBaseT::*setimag)(const mpfr_float&) = &MPFRBaseT::imag;
 			
 			void set_real(MPFRBaseT &c, mpfr_float const& r) { c.real(r);}

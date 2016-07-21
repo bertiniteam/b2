@@ -70,7 +70,7 @@ BRT RealFromString(T... s)
 {return bertini::NumTraits<BRT>::FromString(s...);}
 
 
-
+using bertini::DefaultPrecision;
 
 
 
@@ -84,7 +84,7 @@ using namespace bertini::tracking::endgame;
 BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 {
 	
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -112,20 +112,23 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 	
 	tracker.PrecisionSetup(precision_config);
 
-	TimeCont<BCT> cauchy_times; 
-	SampCont<BCT> cauchy_samples; 
 
-
-	BCT time(1);
-	Vec<BCT> sample(1);
-
-
-	time = ComplexFromString("0.1");
-	cauchy_times.push_back(time);
-	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
-	cauchy_samples.push_back(sample);
+	
 
 	TestedEGType my_endgame(tracker);
+
+	SampCont<BCT>& cauchy_samples = my_endgame.GetCauchySamples<BCT>();
+	TimeCont<BCT>& cauchy_times = my_endgame.GetCauchyTimes<BCT>();
+
+
+
+	cauchy_times.push_back(ComplexFromString("0.1"));
+	cauchy_samples.push_back(Vec<BCT>(1));
+
+	const auto& time = cauchy_times.back();
+	const auto& sample = cauchy_samples.back();
+
+	cauchy_samples.back() << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
 	auto first_track_success =  my_endgame.CircleTrack(time,sample);
 
@@ -145,7 +148,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 {
 	
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -189,16 +192,18 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 
 	TestedEGType my_endgame(tracker);
 
-
+	my_endgame.SetCauchySamples(cauchy_samples);
+	my_endgame.SetCauchyTimes(cauchy_times);
+	
 	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 
-	auto first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
 	BOOST_CHECK((first_track_sample - sample).norm() > my_endgame.Tolerances().newton_during_endgame);
 
 	tracking_success =  my_endgame.CircleTrack(time,first_track_sample);
 
-	auto second_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+	const auto& second_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
 	BOOST_CHECK((second_track_sample - sample).norm() < my_endgame.Tolerances().newton_during_endgame);
 	
@@ -213,9 +218,9 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 
 	This test case is ensuring no calculations are greatly altered, so our test condition is to check against a computed value that has been already known. 
 */
-BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
+BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -293,7 +298,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 
 	BOOST_CHECK( abs(second_c_over_k - RealFromString("1.05888")) <  1e-5); 
 
-} // end compute c over k mp for cauchy class 
+} // end compute c over k for cauchy class 
 
 
 
@@ -308,7 +313,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_mp_for_cauchy_class)
 */	
 BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -418,7 +423,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 */
 BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -480,7 +485,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 	*/
 BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -549,7 +554,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -591,6 +596,8 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 	cauchy_samples.push_back(sample);
 
 	TestedEGType my_endgame(tracker);
+	my_endgame.SetCauchyTimes(cauchy_times);
+	my_endgame.SetCauchySamples(cauchy_samples);
 
 	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>() == true);
@@ -608,7 +615,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 {
 	
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -648,8 +655,11 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
 	cauchy_samples.push_back(sample);
 
-
 	TestedEGType my_endgame(tracker);
+
+	my_endgame.SetCauchyTimes(cauchy_times);
+	my_endgame.SetCauchySamples(cauchy_samples);
+	
 	auto tracking_success =  my_endgame.CircleTrack(time,sample);
 	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>() == true);
 
@@ -664,7 +674,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 {
 	
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -724,7 +734,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 */
 BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -774,6 +784,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 
 	BOOST_CHECK(my_endgame.InitialCauchyLoops<BCT>() == SuccessCode::Success);
 	BOOST_CHECK(my_endgame.CycleNumber() == 2);
+	
 }// end pre_cauchy_loops_cycle_num_greater_than_1
 
 
@@ -785,7 +796,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 
 	bertini::System sys;
@@ -843,7 +854,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 */
 BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -908,7 +919,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 */
 BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -974,7 +985,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1031,7 +1042,7 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 */
 BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1085,7 +1096,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1143,7 +1154,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 */
 BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1190,7 +1201,6 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).norm() < my_endgame.Tolerances().newton_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
-	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),ambient_precision);
 }// end full_test_cycle_num_greater_than_1
 
 
@@ -1202,7 +1212,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 */
 BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	System sys;
 	Var x = std::make_shared<Variable>("x");
@@ -1262,7 +1272,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 */
 BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
@@ -1326,7 +1336,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	
 	
 
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	bertini::System griewank_osborn_sys;
 	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
@@ -1371,7 +1381,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	std::vector<Vec<BCT> > griewank_homogenized_solutions;
 	for (unsigned ii = 0; ii < griewank_TD.NumStartPoints(); ++ii)
 	{
-		mpfr_float::default_precision(ambient_precision);
+		DefaultPrecision(ambient_precision);
 		final_griewank_osborn_system.precision(ambient_precision);
 		auto start_point = griewank_TD.StartPoint<BCT>(ii);
 
@@ -1395,14 +1405,18 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings,tolerances);
 
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
-	for(auto s : griewank_homogenized_solutions) //current_space_values)
+	for (auto& s : griewank_homogenized_solutions) //current_space_values)
 	{
-		mpfr_float::default_precision(ambient_precision);
-		final_griewank_osborn_system.precision(Precision(s(0)));
-		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
+		auto init_prec = Precision(s(0));
+		DefaultPrecision(init_prec);
+		final_griewank_osborn_system.precision(init_prec);
+
+		SuccessCode endgame_success = my_endgame.Run(BCT(t_endgame_boundary),s);
 
 		if(endgame_success == SuccessCode::Success)
 		{
@@ -1451,7 +1465,7 @@ has six solutions at t = .1:
 */
 BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
-	mpfr_float::default_precision(ambient_precision);
+	DefaultPrecision(ambient_precision);
 
 	Var x = std::make_shared<Variable>("x");
 	Var y = std::make_shared<Variable>("y");
@@ -1500,7 +1514,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	std::vector<Vec<BCT> > homogenized_solutions;
 	for (unsigned ii = 0; ii < num_paths_to_track; ++ii)
 	{
-		mpfr_float::default_precision(ambient_precision);
+		DefaultPrecision(ambient_precision);
 		final_system.precision(ambient_precision);
 		auto start_point = TD.StartPoint<BCT>(ii);
 
@@ -1530,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	unsigned num_min_track_time_reached = 0;
 	for (auto s : homogenized_solutions)
 	{
-		mpfr_float::default_precision(ambient_precision);
+		DefaultPrecision(ambient_precision);
 		final_system.precision(Precision(s(0)));
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)

@@ -24,7 +24,7 @@
 
 
 /**
- \file predictor.hpp
+ \file base_predictor.hpp
  
  \brief Contains a base class for all ODE predictors.
  */

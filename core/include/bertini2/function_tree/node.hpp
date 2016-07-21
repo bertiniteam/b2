@@ -277,6 +277,10 @@ public:
 	 */
 	virtual void precision(unsigned int prec) const = 0;
 
+	unsigned precision() const
+	{
+		return std::get<std::pair<mpfr,bool> >(current_value_).first.precision();
+	}
 	///////// PUBLIC PURE METHODS /////////////////
 
 	/**

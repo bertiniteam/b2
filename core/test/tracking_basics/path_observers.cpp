@@ -53,7 +53,7 @@ extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
 
-
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(AMP_tracker_basics)
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_SUITE(AMP_tracker_basics)
 
 BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 {
-	mpfr_float::default_precision(16);
+	DefaultPrecision(16);
 	using namespace bertini::tracking;
 
 	Var x = std::make_shared<Variable>("x");
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 
 BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 {
-	mpfr_float::default_precision(16);
+	DefaultPrecision(16);
 	using namespace bertini::tracking;
 
 	Var x = std::make_shared<Variable>("x");
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 
 BOOST_AUTO_TEST_CASE(union_of_observers)
 {
-	mpfr_float::default_precision(16);
+	DefaultPrecision(16);
 	using namespace bertini::tracking;
 
 	Var x = std::make_shared<Variable>("x");

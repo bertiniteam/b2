@@ -199,11 +199,11 @@ namespace node{
 		{
 			if(differential_variable_ == diff_variable)
 			{
-				evaluation_value = bertini::complex::one();
+				evaluation_value.SetOne();
 			}
 			else
 			{
-				evaluation_value = bertini::complex::zero();
+				evaluation_value.SetZero();
 			}
 		}
 

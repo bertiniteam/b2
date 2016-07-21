@@ -101,24 +101,24 @@ BOOST_AUTO_TEST_CASE(ensure_uniform_precision_16_30_40)
 	TimeCont<mpfr> times;
 	SampCont<mpfr> samples;
 
-	mpfr_float::default_precision(16);
+	DefaultPrecision(16);
 	times.emplace_back(RandomUnit<mpfr>());
 
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	times.emplace_back(RandomUnit<mpfr>());
 
-	mpfr_float::default_precision(40);
+	DefaultPrecision(40);
 	times.emplace_back(RandomUnit<mpfr>());
 
 
 
-	mpfr_float::default_precision(16);
+	DefaultPrecision(16);
 	samples.emplace_back(RandomOfUnits<mpfr>(4));
 
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	samples.emplace_back(RandomOfUnits<mpfr>(4));
 
-	mpfr_float::default_precision(40);
+	DefaultPrecision(40);
 	samples.emplace_back(RandomOfUnits<mpfr>(4));
 
 
@@ -140,24 +140,24 @@ BOOST_AUTO_TEST_CASE(ensure_uniform_precision_all_uniform_to_start)
 	TimeCont<mpfr> times;
 	SampCont<mpfr> samples;
 
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	times.emplace_back(RandomUnit<mpfr>());
 
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	times.emplace_back(RandomUnit<mpfr>());
 
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	times.emplace_back(RandomUnit<mpfr>());
 
 
 
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	samples.emplace_back(RandomOfUnits<mpfr>(4));
 
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	samples.emplace_back(RandomOfUnits<mpfr>(4));
 
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 	samples.emplace_back(RandomOfUnits<mpfr>(4));
 
 
