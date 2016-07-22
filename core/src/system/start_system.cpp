@@ -138,8 +138,11 @@ namespace bertini {
 				offset = 1;
 			}
 
+			auto two_i = mpfr(0,2);
+			auto one = mpfr(1);
+
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( acos( mpfr_float(-1) ) * mpfr(0,2) * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), mpfr_float(1) / degrees_[ii]);
+				start_point(ii+offset) = exp( acos( mpfr_float(-1) ) * two_i * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), one / degrees_[ii]);
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
