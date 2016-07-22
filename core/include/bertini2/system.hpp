@@ -1378,7 +1378,13 @@ namespace bertini {
 	System Concatenate(System sys1, System const& sys2);
 	
 
-
+	/**
+	\brief Do a deep clone of the system.  This includes the entire structure, variables, etc.  everything.
+	*/
+	System Clone(System const& sys) const
+	{
+		
+	}
 
 
 }

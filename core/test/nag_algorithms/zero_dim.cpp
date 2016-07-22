@@ -40,11 +40,13 @@ BOOST_AUTO_TEST_CASE(first)
 
 	auto sys = system::Precon::GriewankOsborn();
 
-	auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, start_system::TotalDegree>(sys);
+	auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
 
 	zd.DefaultSetup();
 
 	zd.Solve();
+
+	std::cout << sys << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

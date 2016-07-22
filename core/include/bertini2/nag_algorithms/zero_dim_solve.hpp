@@ -40,7 +40,7 @@ namespace bertini {
 
 	namespace algorithm {
 
-		template<typename TrackerType, typename EndgameType, typename StartSystemType>
+		template<typename TrackerType, typename EndgameType, typename SystemType, typename StartSystemType>
 		struct ZeroDim : public Observable<>
 		{
 			BERTINI_DEFAULT_VISITABLE();
@@ -50,7 +50,7 @@ namespace bertini {
 			
 			using PrecisionConfig = typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-			ZeroDim(System const& sys) : target_system_(sys), tracker_(target_system_), endgame_(tracker_)
+			ZeroDim(System const& sys) : target_system_(Clone(sys)), tracker_(target_system_), endgame_(tracker_)
 			{
 				ConsistencyCheck();
 			}
@@ -60,7 +60,7 @@ namespace bertini {
 			/**
 			\brief Check to ensure that target system is valid for solving.
 			*/
-			void ConsistencyCheck()
+			void ConsistencyCheck() const
 			{
 				if (target_system_.HavePathVariable())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- has path variable, use user homotopy instead.");
@@ -104,9 +104,11 @@ namespace bertini {
 				t_start_ = static_cast<BaseComplexType>(1);
 				t_endgame_boundary_ = NumTraits<BaseComplexType>::FromString("0.1");
 				t_end_ = static_cast<BaseComplexType>(0);	
+
+				setup_complete_ = true;
 			}
 
-			void Solve()
+			void Solve() const
 			{
 				using SuccessCode = tracking::SuccessCode;
 
@@ -114,7 +116,7 @@ namespace bertini {
 				tracker_.AddObserver(&tons_of_detail);
 
 				auto num_paths_to_track = start_system_.NumStartPoints();
-				std::vector< std::tuple<Vec<BaseComplexType>, SuccessCode>> solutions_at_endgame_boundary;
+				std::vector< std::tuple<Vec<BaseComplexType>, SuccessCode, BaseRealType>> solutions_at_endgame_boundary;
 				for (decltype(num_paths_to_track) ii = 0; ii < num_paths_to_track; ++ii)
 				{
 					DefaultPrecision(initial_ambient_precision_);
@@ -124,28 +126,30 @@ namespace bertini {
 					Vec<BaseComplexType> result;
 					SuccessCode tracking_success = tracker_.TrackPath(result,t_start_,t_endgame_boundary_,start_point);
 
-					solutions_at_endgame_boundary.push_back(std::make_tuple(result, tracking_success));
+					solutions_at_endgame_boundary.push_back(std::make_tuple(result, tracking_success, tracker_.CurrentStepsize()));
 				}
 
 				auto midcheck = Midpath::Check(solutions_at_endgame_boundary);
-				// insert code here to retrack the crossed paths.
+				
+				
 				unsigned num_resolve_attempts = 0;
 				while (!midcheck.Passed() && num_resolve_attempts < max_num_crossed_path_resolve_attempts)
 				{
 					MidpathResolve(midcheck, solutions_at_endgame_boundary);
-
 					midcheck = Midpath::Check(solutions_at_endgame_boundary);
-
 					num_resolve_attempts++;
 				}
 
-				tracker_.SetTrackingTolerance(NumTraits<BaseRealType>::FromString("1e-6"));
-
 
 				std::vector<Vec<BaseComplexType> > endgame_solutions;
+
+				tracker_.SetTrackingTolerance(NumTraits<BaseRealType>::FromString("1e-6"));
 				for (const auto& s : solutions_at_endgame_boundary)
 				{
 					const auto& bdry_point = std::get<0>(s);
+					tracker_.SetStepSize(std::get<2>(s));
+					tracker_.ReinitializeInitialStepSize(false);
+
 					DefaultPrecision(Precision(bdry_point));
 
 					SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary_),bdry_point);
@@ -153,7 +157,9 @@ namespace bertini {
 					endgame_solutions.push_back(endgame_.template FinalApproximation<BaseComplexType>());
 				}
 
-				PostProcessing();
+				PostProcess();
+
+				Output();
 			}
 
 
@@ -163,16 +169,20 @@ namespace bertini {
 			void MidpathResolve(Midpath::Data const&, 
 			                    T const& solutions_at_endgame_boundary)
 			{
-
+				// insert code here to retrack the crossed paths.
 			}
 
 
-			void PostProcessing()
+			void PostProcess()
+			{
+				
+			}
+
+
+			void Output()
 			{
 
 			}
-
-
 			
 			config::PostProcessing<BaseRealType> post_processing_;
 
@@ -188,6 +198,7 @@ namespace bertini {
 
 			BaseComplexType t_start_, t_endgame_boundary_, t_end_;
 
+			bool setup_complete_ = false;
 			unsigned initial_ambient_precision_ = DoublePrecision();
 
 
