@@ -155,7 +155,14 @@ namespace bertini {
 		 */
 		
 		complex(const mpfr_float & re) : real_(re), imag_(0){}
-		
+
+		template<typename T, typename S, typename R, 
+		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+		complex(boost::multiprecision::detail::expression<T,S,R> const& other)
+		{
+			real_ = other;
+			imag_ = 0;
+		}
 		
 		/**
 		 Single-parameter for constructing a real-valued complex from a convertible single string
@@ -279,6 +286,29 @@ namespace bertini {
 		complex& operator=(complex && other) = default;
 #endif
 		
+		template<typename T, typename S, typename R, 
+		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+		complex& operator=(boost::multiprecision::detail::expression<T,S,R> const& other)
+		{
+			real_ = other;
+			imag_ = 0;
+			return *this;
+		}
+
+
+		complex& operator=(mpfr_float const& other)
+		{
+			real_ = other;
+			imag_ = 0;
+			return *this;
+		}
+
+		complex& operator=(mpz_int const& other)
+		{
+			real_ = other;
+			imag_ = 0;
+			return *this;
+		}
 		
 		
 		
@@ -442,6 +472,7 @@ namespace bertini {
 		 */
 		inline static complex RandomReal()
 		{
+			using std::sqrt;
 			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 			returnme /= sqrt( returnme.abs());
 			return returnme;
@@ -544,6 +575,14 @@ namespace bertini {
 			return *this;
 		}
 
+		template<typename T, typename S, typename R, 
+		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+		complex& operator*=(const boost::multiprecision::detail::expression<T,S,R> & rhs)
+		{
+			real_ *= rhs;
+			imag_ *= rhs;
+			return *this;
+		}
 
 
 		/**
@@ -562,7 +601,16 @@ namespace bertini {
 			return *this;
 		}
 		
-		
+		template<typename T, typename S, typename R, 
+		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+		complex& operator/=(const boost::multiprecision::detail::expression<T,S,R> & rhs)
+		{
+			real_ /= rhs;
+			imag_ /= rhs;
+			
+			return *this;
+		}
+
 		/**
 		 Complex division, by a real mpfr_float.
 		 */
@@ -1035,8 +1083,21 @@ namespace bertini {
 		return rhs; // it commutes!
 	}
 
+	template<typename T, typename S, typename R, 
+		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+	inline complex operator*(complex lhs, const boost::multiprecision::detail::expression<T,S,R> & rhs)
+	{
+		lhs*=rhs;
+		return lhs;
+	}
 
-
+	template<typename T, typename S, typename R, 
+		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+	inline complex operator*(const boost::multiprecision::detail::expression<T,S,R> & lhs, complex rhs)
+	{
+		rhs*=lhs;
+		return rhs;
+	}
 	
 	/**
 	 Complex-complex division
@@ -1370,7 +1431,12 @@ namespace bertini {
 		return exp(c * log(z));
 	}
 
-
+	template<typename T, typename S, typename R, 
+		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+	inline complex pow(const complex & z, const boost::multiprecision::detail::expression<T,S,R> & c)
+	{
+		return exp(c * log(z));
+	}
 
 	
 	/**
