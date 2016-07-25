@@ -1769,8 +1769,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_pi){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
+	using std::atan;
 	dbl exact_dbl(4*atan(1.0),0);
-	mpfr exact_mpfr(mpfr_float("4.0")*atan(mpfr_float("1.0")));
+	mpfr exact_mpfr = mpfr_float("4.0")*atan(mpfr_float("1.0"));
 	
 	auto N = bertini::node::Pi();
 	BOOST_CHECK_EQUAL(N->Degree(),0);
@@ -1790,7 +1791,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_e){
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	dbl exact_dbl(exp(1.0),0);
-	mpfr exact_mpfr(exp(mpfr_float("1.0")));
+	mpfr exact_mpfr = exp(mpfr_float("1.0"));
 	
 	auto N = bertini::node::E();
 	BOOST_CHECK_EQUAL(N->Degree(),0);
