@@ -1085,7 +1085,73 @@ namespace bertini
 	}
 
 
+	System Clone(System const& sys)
+	{
 
+//////////////////  attempt 1.  generates a npos == null problem of some sort.  i couldn't figure it out.
+
+
+		// namespace io = boost::iostreams;
+		// using buffer_type = std::vector<char>;
+		// buffer_type buffer;
+
+		// io::stream<io::back_insert_device<buffer_type> > output_stream(buffer);
+		// boost::archive::binary_oarchive oa(output_stream);
+
+		// oa << sys;
+		// output_stream.flush();
+
+		
+
+		// io::basic_array_source<char> source(&buffer[0],buffer.size());
+		// io::stream<io::basic_array_source <char> > input_stream(source);
+		// boost::archive::binary_iarchive ia(input_stream);
+
+		// System sys_clone;
+		// ia >> sys_clone;
+
+		// return sys_clone;
+
+
+
+///////////////////////  attempt2  generates crashes.  :(
+		// std::string serial_str;
+		// {
+		// 	boost::iostreams::back_insert_device<std::string> inserter(serial_str);
+		// 	boost::iostreams::stream<boost::iostreams::back_insert_device<std::string> > s(inserter);
+		// 	boost::archive::binary_oarchive oa(s);
+
+		// 	oa << sys;
+
+		// 	// don't forget to flush the stream to finish writing into the buffer
+		// 	s.flush();
+		// }
+		
+		// boost::iostreams::basic_array_source<char> device(serial_str.data(), serial_str.size());
+		// boost::iostreams::stream<boost::iostreams::basic_array_source<char> > t(device);
+		// boost::archive::binary_iarchive ia(t);
+		// System sys_clone;
+		// ia >> sys_clone;
+
+
+
+
+///////////////////// attempt3.  works.  why the others generate problems with the binary archive baffles me.
+
+		std::stringstream ss;
+		{
+			boost::archive::text_oarchive oa(ss);
+			oa << sys;
+		}
+
+		System sys_clone;
+		{
+			boost::archive::text_iarchive ia(ss);
+			ia >> sys_clone;
+		}
+
+		return sys_clone;
+	}
 
 
 }

@@ -54,7 +54,11 @@
 #include "bertini2/limbo.hpp"
 
 
-
+#include <boost/archive/binary_oarchive.hpp>
+	#include <boost/archive/binary_iarchive.hpp>
+	#include <boost/iostreams/stream_buffer.hpp>
+	#include <boost/iostreams/stream.hpp>
+	#include <boost/iostreams/device/back_inserter.hpp>
 
 namespace bertini {
 
@@ -1378,13 +1382,11 @@ namespace bertini {
 	System Concatenate(System sys1, System const& sys2);
 	
 
+
 	/**
 	\brief Do a deep clone of the system.  This includes the entire structure, variables, etc.  everything.
 	*/
-	System Clone(System const& sys) const
-	{
-		
-	}
+	System Clone(System const& sys);
 
 
 }

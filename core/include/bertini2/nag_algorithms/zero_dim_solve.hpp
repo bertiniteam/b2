@@ -108,12 +108,9 @@ namespace bertini {
 				setup_complete_ = true;
 			}
 
-			void Solve() const
+			void Solve()
 			{
 				using SuccessCode = tracking::SuccessCode;
-
-				tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-				tracker_.AddObserver(&tons_of_detail);
 
 				auto num_paths_to_track = start_system_.NumStartPoints();
 				std::vector< std::tuple<Vec<BaseComplexType>, SuccessCode, BaseRealType>> solutions_at_endgame_boundary;
@@ -157,9 +154,14 @@ namespace bertini {
 					endgame_solutions.push_back(endgame_.template FinalApproximation<BaseComplexType>());
 				}
 
-				PostProcess();
 
-				Output();
+				PostProcess();
+			}
+
+
+			void Output() const
+			{
+
 			}
 
 
@@ -179,16 +181,13 @@ namespace bertini {
 			}
 
 
-			void Output()
-			{
-
-			}
+			
 			
 			config::PostProcessing<BaseRealType> post_processing_;
 
 			PrecisionConfig precision_config_;
 			
-
+			// do not permute the order of these declarations
 			System target_system_;
 			StartSystemType start_system_;
 			System homotopy_;
@@ -202,7 +201,7 @@ namespace bertini {
 			unsigned initial_ambient_precision_ = DoublePrecision();
 
 
-			// move to a config struct
+			// TODO: move to a config struct
 			unsigned max_num_crossed_path_resolve_attempts = 1; // bertini1 did not have this setting
 		}; // struct ZeroDim
 
