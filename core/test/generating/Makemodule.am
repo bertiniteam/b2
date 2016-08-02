@@ -1,0 +1,23 @@
+#this is core/test/generating/Makemodule.am
+
+EXTRA_PROGRAMS += generating_test
+
+TESTS += generating_test
+
+generating_test_source_files = \
+	test/generating/mpfr_float.cpp \
+	test/generating/double.cpp \
+	test/generating/std_complex.cpp \
+	test/generating/generating_test.cpp 
+
+
+
+generating_test_SOURCES = \
+	$(generating_test_source_files)
+
+
+
+generating_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
+
+generating_test_CXXFLAGS = $(BOOST_CPPFLAGS)
+
