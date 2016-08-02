@@ -73,7 +73,7 @@ std::string LicenseInfo()
 	"\n"
 	"Boost is available under the Boost License 1.0.\nPlease see http://www.boost.org/users/license.html.\nA copy of the BPL has been included in b2/licenses.\n";
 
-return ss.str();
+	return ss.str();
 }
 
 inline 
@@ -106,7 +106,7 @@ inline
 std::string Authors()
 {
 	std::stringstream ss;
-	ss << "D.A. Brake, J. Collins, T. Hodges";
+	ss << "D. Brake, J. Collins, T. Hodges";
 	return ss.str();
 }
 
@@ -121,7 +121,7 @@ std::string SplashScreen()
 	ss << "  Source available online at\n" << SourceURL() << "\n\n";
 	ss << "  Wiki online at\n" << WikiURL() << "\n\n";
 	ss << "  This is version\n" << Version() << "\n";
-	ss << "  This program is GPL Free/Libre Open Source Software, please contribute!\n\n";
+	ss << "  Bertini2 is GPL3 Free/Libre Open Source Software, please contribute!\n\n";
 	return ss.str();
 }
 
