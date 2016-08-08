@@ -45,6 +45,7 @@ using NewtonCorrector = bertini::tracking::correct::NewtonCorrector;
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
 using mpfr_float = bertini::mpfr_float;
+using mpq_rational = bertini::mpq_rational;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -332,7 +333,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddVariableGroup(vars);
 		sys.AddPathVariable(t);
 		
-		sys.AddFunction(mpfr_float(29)/mpfr_float(16)*pow(x,3) - 2*x*y + t);
+		sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 		sys.AddFunction(y - pow(x,2));
 		
 		
@@ -390,7 +391,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddVariableGroup(vars);
 		sys.AddPathVariable(t);
 		
-		sys.AddFunction(mpfr_float(29)/mpfr_float(16)*pow(x,3) - 2*x*y + t);
+		sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 		sys.AddFunction(y - pow(x,2));
 		
 		
@@ -450,7 +451,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddVariableGroup(vars);
 		sys.AddPathVariable(t);
 		
-		sys.AddFunction(mpfr_float(29)/mpfr_float(16)*pow(x,3) - 2*x*y + t);
+		sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 		sys.AddFunction(y - pow(x,2));
 		
 		
@@ -515,7 +516,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddVariableGroup(vars);
 		sys.AddPathVariable(t);
 		
-		sys.AddFunction(mpfr_float(29)/mpfr_float(16)*pow(x,3) - 2*x*y + t);
+		sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 		sys.AddFunction(y - pow(x,2));
 		
 		
@@ -696,7 +697,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddVariableGroup(vars);
 		sys.AddPathVariable(t);
 		
-		sys.AddFunction(mpfr_float(29)/mpfr_float(16)*pow(x,3) - 2*x*y + t);
+		sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 		sys.AddFunction(y - pow(x,2));
 		
 		
@@ -751,7 +752,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddVariableGroup(vars);
 		sys.AddPathVariable(t);
 		
-		sys.AddFunction(mpfr_float(29)/mpfr_float(16)*pow(x,3) - 2*x*y + t);
+		sys.AddFunction(mpq_rational(29,16)*pow(x,3) - 2*x*y + t);
 		sys.AddFunction(y - pow(x,2));
 		
 		
