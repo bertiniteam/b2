@@ -49,6 +49,7 @@
 
 #include <boost/spirit/include/support_istream_iterator.hpp>
 
+#include <bertini2/function_tree/function_parsing.hpp>
 #include <bertini2/Tracking/tracking_config.hpp>
 
 
@@ -65,110 +66,34 @@ namespace bertini
 			using namespace bertini::tracking;
 			
 			
-			
-			// Struct that holds the rules for parsing mpfr numbers
-			// Use: Include this struct with the rest of your rules.
-			template<typename Iterator>
-			struct MPParserRules
-			{
-				MPParserRules()
-				{
-					namespace phx = boost::phoenix;
-					using qi::_1;
-					using qi::_2;
-					using qi::_3;
-					using qi::_4;
-					using qi::_val;
-					using qi::eps;
-					using qi::lit;
-					using qi::char_;
-					using qi::omit;
-					using boost::spirit::lexeme;
-					using boost::spirit::as_string;
-					using boost::spirit::ascii::no_case;
+			/**
+			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
+			 
+			 To use this parser, construct an object of its type, then use it to parse.
+			 
+			 \code
+			 System sys;
+			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
+			 
+			 std::string::const_iterator iter = str.begin();
+			 std::string::const_iterator end = str.end();
+			 
+			 
+			 config::SettingType structure;
+			 bertini::ConfigSettingsParser<std::string::const_iterator, structure> S;
+			 
+			 
+			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
+			 
+			 \endcode
+			 
+			 \brief Qi Parser object for parsing config file to determine MPType setting.
+			 
+			 */
+			template<typename Iterator, typename Structure, typename T = double, typename Skipper = ascii::space_type> //boost::spirit::unused_type
+			struct ConfigSettingParser : qi::grammar<Iterator, Structure(), Skipper>
+			{ };
 
-					number_string_.name("number_");
-					number_string_ =
-					long_number_string_
-					|
-					integer_string_;
-					
-					integer_string_.name("integer_string_");
-					integer_string_ = eps[_val = std::string()] >>
-					number_with_no_point_ [_val += _1]
-					>> -exponent_notation_ [_val += _1];
-					
-					
-					long_number_string_.name("long_number_string_");
-					long_number_string_ = eps[_val = std::string()] >>
-					(
-					 // 1. Read possible numbers before decimal, with possible negative
-					 (number_with_digits_after_point_ [_val += _1]
-					 |
-					 number_with_digits_before_point_ [_val += _1] )
-					 >>   // reminder -- the - before the exponent_notation here means optional
-					 -exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
-					 );
-					
-					
-					
-					number_with_digits_after_point_.name("number_with_digits_after_point_");
-					number_with_digits_after_point_ = eps[_val = std::string()]
-					>>
-					*(qi::char_(L'0',L'9')[_val += _1])
-					>>
-					qi::lit('.')[_val += "."] // find a decimal point
-					>>
-					+(qi::char_(L'0',L'9')[_val += _1]) // find at least one digit after the point
-					;
-					
-					
-					
-					
-					
-					number_with_digits_before_point_.name("number_with_digits_before_point_");
-					number_with_digits_before_point_ = eps[_val = std::string()]
-					>>
-					+(qi::char_(L'0',L'9')[_val += _1])
-					>>
-					qi::lit('.')[_val += "."] // find a decimal point
-					>>
-					*(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
-					;
-					
-					
-					number_with_no_point_.name("number_with_no_point_");
-					number_with_no_point_ = eps[_val = std::string()]
-					>>
-					+(qi::char_(L'0',L'9')[_val += _1])
-					;
-					
-					
-					
-					
-					exponent_notation_.name("exponent_notation_");
-					exponent_notation_ = eps[_val = std::string()]
-					>> ( // start what the rule actually does
-						(
-						 qi::lit('e')[_val += "e"] // get an opening 'e'
-						 |
-						 qi::lit('E')[_val += "e"] // get an opening 'e'
-						 )
-						>>
-						-(qi::lit('-')[_val += "-"]) // then an optional minus sign
-						>>
-						+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
-						); // finish the rule off
-
-				}
-				
-				
-				
-				// these rules all produce strings which are fed into numbers.
-				qi::rule<Iterator, std::string()> number_string_, integer_string_, long_number_string_, number_with_digits_before_point_,
-						number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
-
-			}; //re: MPParserRules
 			
 			
 			
@@ -195,11 +120,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine MPType setting.
 			 
 			 */
-			template<typename Iterator, typename Structure = PrecisionType, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigPrecisionTypeParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, PrecisionType, T, Skipper> : qi::grammar<Iterator, PrecisionType(), Skipper>
 			{
 				
-				ConfigPrecisionTypeParser() : ConfigPrecisionTypeParser::base_type(root_rule_, "ConfigPrecisionType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigPrecisionType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -224,7 +149,7 @@ namespace bertini
 					
 					root_rule_.name("ConfigPrecisionType_root_rule");
 					
-					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = Structure::Adaptive];
+					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = PrecisionType::Adaptive];
 
 					config_name_.name("precisiontype_");
 					config_name_ = *(char_ - no_case["mptype:"]) >> no_case["mptype:"] >> precisiontype_[_val = _1] >> ';';
@@ -262,7 +187,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), ascii::space_type > root_rule_, config_name_;
+				qi::rule<Iterator, PrecisionType(), ascii::space_type > root_rule_, config_name_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_;
 				
 				qi::symbols<char,PrecisionType> precisiontype_;
@@ -300,11 +225,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine the tracking predictor from ODEPredictor.
 			 
 			 */
-			template<typename Iterator, typename Structure = config::Predictor, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigPredictorParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Predictor, T, Skipper> : qi::grammar<Iterator, config::Predictor(), Skipper>
 			{
 				
-				ConfigPredictorParser() : ConfigPredictorParser::base_type(root_rule_, "ConfigPredictor")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigPredictorType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -320,16 +245,16 @@ namespace bertini
 					using boost::spirit::as_string;
 					using boost::spirit::ascii::no_case;
 					
-					predictor_.add("-1", Structure::Constant);
-					predictor_.add("0", Structure::Euler);
-					predictor_.add("1", Structure::Heun);
-					predictor_.add("2", Structure::RK4);
-					predictor_.add("3", Structure::Heun);
-					predictor_.add("4", Structure::RKNorsett34);
-					predictor_.add("5", Structure::RKF45);
-					predictor_.add("6", Structure::RKCashKarp45);
-					predictor_.add("7", Structure::RKDormandPrince56);
-					predictor_.add("8", Structure::RKVerner67);
+					predictor_.add("-1", config::Predictor::Constant);
+					predictor_.add("0", config::Predictor::Euler);
+					predictor_.add("1", config::Predictor::Heun);
+					predictor_.add("2", config::Predictor::RK4);
+					predictor_.add("3", config::Predictor::Heun);
+					predictor_.add("4", config::Predictor::RKNorsett34);
+					predictor_.add("5", config::Predictor::RKF45);
+					predictor_.add("6", config::Predictor::RKCashKarp45);
+					predictor_.add("7", config::Predictor::RKDormandPrince56);
+					predictor_.add("8", config::Predictor::RKVerner67);
 
 					
 					std::string setting_name = "odepredictor:";
@@ -337,7 +262,7 @@ namespace bertini
 					
 					root_rule_.name("ConfigPredictor_root_rule");
 					
-					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = Structure::RKF45];
+					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = config::Predictor::RKF45];
 					
 					config_name_.name("predictor_");
 					config_name_ = *(char_ - no_case[setting_name]) >> no_case[setting_name] >> predictor_[_val = _1] >> ';';
@@ -375,7 +300,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), ascii::space_type > root_rule_, config_name_;
+				qi::rule<Iterator, config::Predictor(), ascii::space_type > root_rule_, config_name_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_;
 				
 				qi::symbols<char,config::Predictor> predictor_;
@@ -413,14 +338,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine the security settings.
 			 
 			 */
-			template<typename Iterator, typename T, typename Structure = config::Security<T>, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigSecurityParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Security<T>, T, Skipper> : qi::grammar<Iterator, config::Security<T>(), Skipper>
 			{
 				
-				
-				
-				
-				ConfigSecurityParser() : ConfigSecurityParser::base_type(root_rule_, "ConfigSecurity")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigSecurityType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -444,11 +366,11 @@ namespace bertini
 					
 					root_rule_.name("ConfigSecurity_root_rule");
 					
-					root_rule_ = ((security_level_[phx::bind( [this](Structure & S, int l)
+					root_rule_ = ((security_level_[phx::bind( [this](config::Security<T> & S, int l)
 																	  {
 																		  S.level = l;
 																	  }, _val, _1 )]
-					^ security_max_norm_[phx::bind( [this](Structure & S, T norm)
+					^ security_max_norm_[phx::bind( [this](config::Security<T> & S, T norm)
 												   {
 													   S.max_norm = norm;
 												   }, _val, _1 )])
@@ -500,7 +422,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, config::Security<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, int(), ascii::space_type > security_level_;
 				qi::rule<Iterator, T(), ascii::space_type > security_max_norm_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
@@ -536,14 +458,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine the tolerance settings.
 			 
 			 */
-			template<typename Iterator, typename T, typename Structure = config::Tolerances<T>, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigToleranceParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Tolerances<T>, T, Skipper> : qi::grammar<Iterator, config::Tolerances<T>(), Skipper>
 			{
 				
-				
-				
-				
-				ConfigToleranceParser() : ConfigToleranceParser::base_type(root_rule_, "ConfigTolerance")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigTolerancesType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -569,19 +488,19 @@ namespace bertini
 					
 					root_rule_.name("ConfigTolerances_root_rule");
 					
-					root_rule_ = ((newton_before_endgame_[phx::bind( [this](Structure & S, T l)
+					root_rule_ = ((newton_before_endgame_[phx::bind( [this](config::Tolerances<T> & S, T l)
 															 {
 																 S.newton_before_endgame = l;
 															 }, _val, _1 )]
-								   ^ newton_during_endgame_[phx::bind( [this](Structure & S, T num)
+								   ^ newton_during_endgame_[phx::bind( [this](config::Tolerances<T> & S, T num)
 																  {
 																	  S.newton_during_endgame = num;
 																  }, _val, _1 )]
-								  ^ final_tol_[phx::bind( [this](Structure & S, T num)
+								  ^ final_tol_[phx::bind( [this](config::Tolerances<T> & S, T num)
 																  {
 																	  S.final_tolerance = num;
 																  }, _val, _1 )]
-									^ path_trunc_threshold_[phx::bind( [this](Structure & S, T num)
+									^ path_trunc_threshold_[phx::bind( [this](config::Tolerances<T> & S, T num)
 																	   {
 																		   S.path_truncation_threshold = num;
 																	   }, _val, _1 )])
@@ -659,7 +578,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, config::Tolerances<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > newton_before_endgame_, newton_during_endgame_,
 					final_tol_, path_trunc_threshold_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
@@ -698,14 +617,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine the stepping settings.
 			 
 			 */
-			template<typename Iterator, typename T, typename Structure = config::Stepping<T>, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigSteppingParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Stepping<T>, T, Skipper> : qi::grammar<Iterator, config::Stepping<T>(), Skipper>
 			{
 				
-				
-				
-				
-				ConfigSteppingParser() : ConfigSteppingParser::base_type(root_rule_, "ConfigStepping")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigSteppingType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -732,23 +648,23 @@ namespace bertini
 					
 					root_rule_.name("ConfigStepping_root_rule");
 					
-					root_rule_ = ((max_step_size_[phx::bind( [this](Structure & S, T num)
+					root_rule_ = ((max_step_size_[phx::bind( [this](config::Stepping<T> & S, T num)
 																	{
 																		S.max_step_size = num;
 																	}, _val, _1 )]
-								   ^ stepsize_success_[phx::bind( [this](Structure & S, T num)
+								   ^ stepsize_success_[phx::bind( [this](config::Stepping<T> & S, T num)
 																	  {
 																		  S.step_size_success_factor = num;
 																	  }, _val, _1 )]
-								   ^ stepsize_fail_[phx::bind( [this](Structure & S, T num)
+								   ^ stepsize_fail_[phx::bind( [this](config::Stepping<T> & S, T num)
 														  {
 															  S.step_size_fail_factor = num;
 														  }, _val, _1 )]
-								   ^ steps_increase_[phx::bind( [this](Structure & S, unsigned num)
+								   ^ steps_increase_[phx::bind( [this](config::Stepping<T> & S, unsigned num)
 																	 {
 																		 S.consecutive_successful_steps_before_stepsize_increase = num;
 																	 }, _val, _1 )]
-								  ^ max_num_steps_[phx::bind( [this](Structure & S, unsigned num)
+								  ^ max_num_steps_[phx::bind( [this](config::Stepping<T> & S, unsigned num)
 																	{
 																		S.max_num_steps = num;
 																	}, _val, _1 )])
@@ -825,7 +741,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, config::Stepping<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > max_step_size_, stepsize_success_,
 						stepsize_fail_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > steps_increase_, max_num_steps_;
@@ -863,14 +779,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine the Newton settings.
 			 
 			 */
-			template<typename Iterator, typename Structure = config::Newton, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigNewtonParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Newton, T, Skipper> : qi::grammar<Iterator, config::Newton(), Skipper>
 			{
 				
-				
-				
-				
-				ConfigNewtonParser() : ConfigNewtonParser::base_type(root_rule_, "ConfigNewton")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigNewtonType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -893,7 +806,7 @@ namespace bertini
 					
 					root_rule_.name("ConfigNewton_root_rule");
 					
-					root_rule_ = (max_its_[phx::bind( [this](Structure & S, unsigned num)
+					root_rule_ = (max_its_[phx::bind( [this](config::Newton & S, unsigned num)
 															{
 																S.max_num_newton_iterations = num;
 															}, _val, _1 )]
@@ -947,7 +860,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), Skipper> root_rule_;
+				qi::rule<Iterator, config::Newton(), Skipper> root_rule_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > max_its_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 			}; //re: NewtonParser
@@ -978,14 +891,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine the endgame settings.
 			 
 			 */
-			template<typename Iterator, typename T, typename Structure = config::Endgame<T>, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigEndgameParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Endgame<T>, T, Skipper> : qi::grammar<Iterator, config::Endgame<T>(), Skipper>
 			{
 				
-				
-				
-				
-				ConfigEndgameParser() : ConfigEndgameParser::base_type(root_rule_, "ConfigEndgame")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigEndgameType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -1010,15 +920,15 @@ namespace bertini
 					
 					root_rule_.name("ConfigEndgame_root_rule");
 					
-					root_rule_ = ((sample_factor_[phx::bind( [this](Structure & S, T num)
+					root_rule_ = ((sample_factor_[phx::bind( [this](config::Endgame<T> & S, T num)
 															{
 																S.sample_factor = num;
 															}, _val, _1 )]
-								   ^ min_track_[phx::bind( [this](Structure & S, T num)
+								   ^ min_track_[phx::bind( [this](config::Endgame<T> & S, T num)
 																 {
 																	 S.min_track_time = num;
 																 }, _val, _1 )]
-								   ^ num_sample_[phx::bind( [this](Structure & S, unsigned num)
+								   ^ num_sample_[phx::bind( [this](config::Endgame<T> & S, unsigned num)
 															  {
 																  S.num_sample_points = num;
 															  }, _val, _1 )])
@@ -1080,7 +990,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, config::Endgame<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > sample_factor_, min_track_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > num_sample_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
@@ -1114,14 +1024,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine the power series settings.
 			 
 			 */
-			template<typename Iterator, typename Structure = config::PowerSeries, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigPowerSeriesParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::PowerSeries, T, Skipper> : qi::grammar<Iterator, config::PowerSeries(), Skipper>
 			{
 				
-				
-				
-				
-				ConfigPowerSeriesParser() : ConfigPowerSeriesParser::base_type(root_rule_, "ConfigPowerSeries")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigPowerSeriesType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -1144,7 +1051,7 @@ namespace bertini
 					
 					root_rule_.name("ConfigPowerSeries_root_rule");
 					
-					root_rule_ = (max_cycle_[phx::bind( [this](Structure & S, unsigned num)
+					root_rule_ = (max_cycle_[phx::bind( [this](config::PowerSeries & S, unsigned num)
 													 {
 														 S.max_cycle_number = num;
 													 }, _val, _1 )]
@@ -1198,7 +1105,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), Skipper> root_rule_;
+				qi::rule<Iterator, config::PowerSeries(), Skipper> root_rule_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > max_cycle_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 			}; //re: PowerSeriesParser
@@ -1230,14 +1137,11 @@ namespace bertini
 			 \brief Qi Parser object for parsing config file to determine the Cauchy settings.
 			 
 			 */
-			template<typename Iterator, typename T, typename Structure = config::Cauchy<T>, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct ConfigCauchyParser : qi::grammar<Iterator, Structure(), Skipper>
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Cauchy<T>, T, Skipper> : qi::grammar<Iterator, config::Cauchy<T>(), Skipper>
 			{
 				
-				
-				
-				
-				ConfigCauchyParser() : ConfigCauchyParser::base_type(root_rule_, "ConfigCauchy")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigCauchyType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -1261,11 +1165,11 @@ namespace bertini
 					
 					root_rule_.name("ConfigCauchy_root_rule");
 					
-					root_rule_ = ((cycle_cutoff_[phx::bind( [this](Structure & S, T num)
+					root_rule_ = ((cycle_cutoff_[phx::bind( [this](config::Cauchy<T> & S, T num)
 															 {
 																 S.cycle_cutoff_time = num;
 															 }, _val, _1 )]
-								   ^ ratio_cutoff_[phx::bind( [this](Structure & S, T num)
+								   ^ ratio_cutoff_[phx::bind( [this](config::Cauchy<T> & S, T num)
 																  {
 																	  S.ratio_cutoff_time = num;
 																  }, _val, _1 )])
@@ -1321,7 +1225,7 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, Structure(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, config::Cauchy<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > cycle_cutoff_, ratio_cutoff_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 				MPParserRules<Iterator> mpfr_rules;
