@@ -25,6 +25,8 @@
 
 
 #include "bertini2/io/generators.hpp"
+#include "bertini2/io/parsers.hpp"
+
 #include <boost/test/unit_test.hpp>
 
 
@@ -35,11 +37,54 @@ BOOST_AUTO_TEST_SUITE(mpfr_float_generating)
 
 BOOST_AUTO_TEST_SUITE(round_trip)
 
+
+
 BOOST_AUTO_TEST_CASE(zero)
 {	
 	bertini::DefaultPrecision(30);
 	mpfr_float z(0);
 
+
+	std::string result;
+    std::back_insert_iterator<std::string> sink(result);
+
+    BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
+
+    mpfr_float rt;
+    BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK_EQUAL(rt,z);
+}
+
+BOOST_AUTO_TEST_CASE(one)
+{	
+	bertini::DefaultPrecision(30);
+	mpfr_float z(1);
+
+
+	std::string result;
+    std::back_insert_iterator<std::string> sink(result);
+
+    BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
+
+    mpfr_float rt;
+    BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK_EQUAL(rt,z);
+}
+
+BOOST_AUTO_TEST_CASE(sqrt_2)
+{   
+    bertini::DefaultPrecision(30);
+    mpfr_float z = sqrt(mpfr_float(2));
+
+
+    std::string result;
+    std::back_insert_iterator<std::string> sink(result);
+
+    BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
+
+    mpfr_float rt;
+    BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
+    BOOST_CHECK_EQUAL(rt,z);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

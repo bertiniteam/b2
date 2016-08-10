@@ -29,6 +29,12 @@
 #pragma once
 
 
+#include "bertini2/mpfr_complex.hpp"
+
+#include <boost/math/special_functions/modf.hpp> 
+
+BOOST_MATH_STD_USING
+
 #include <boost/fusion/adapted.hpp>
 #include <boost/fusion/include/adapted.hpp>
 
@@ -42,8 +48,6 @@
 
 
 #include <boost/spirit/include/support_istream_iterator.hpp>
-
-#include "bertini2/mpfr_complex.hpp"
 
 
 
@@ -69,7 +73,7 @@ namespace bertini{
 		namespace karma = boost::spirit::karma;
 
 		template <typename Num>
-		struct BertiniNumPolicy : karma::real_policies<Num>
+		struct BertiniNumPolicy : public karma::real_policies<Num>
 		{
 		    // we want the numbers always to be in scientific format
 		    static int floatfield(Num n) { return std::ios_base::scientific; }
@@ -79,15 +83,8 @@ namespace bertini{
 		      }
 		};
 
-
-		template<typename Num>
-		using FullPrec = boost::spirit::karma::real_generator<Num, BertiniNumPolicy<Num> >;
-
-		FullPrec<double> const full_prec = FullPrec<double>();
-
-
-
-		struct BertiniMPFRPolicy : BertiniNumPolicy<mpfr_float>
+		template<>
+		struct BertiniNumPolicy<mpfr_float>  : public karma::real_policies<mpfr_float>
 		{
 		    // we want the numbers always to be in scientific format
 		    static int floatfield(mpfr_float n) { return std::ios_base::scientific; }
@@ -97,7 +94,35 @@ namespace bertini{
 		      }
 		};
 
+
+
+		template<typename Num>
+		using FullPrec = boost::spirit::karma::real_generator<Num, BertiniNumPolicy<Num> >;
+
+		FullPrec<double> const full_prec_d = FullPrec<double>();
+		FullPrec<mpfr_float> const full_prec_mp = FullPrec<mpfr_float>();
+
+
 		struct Classic{
+
+			template <typename OutputIterator>
+			static bool generate(OutputIterator sink, double const& c)
+			{
+	            using boost::spirit::karma::omit;
+	            using boost::spirit::karma::generate;
+
+	            return generate(sink,
+
+	                //  Begin grammar
+	                (
+	                   full_prec_d << " " << full_prec_d
+	                ),
+	                //  End grammar
+
+	                c, 0     //  Data to output
+	                );
+			}
+
 
 			template <typename OutputIterator>
 			static bool generate(OutputIterator sink, std::complex<double> const& c)
@@ -109,8 +134,71 @@ namespace bertini{
 
 	                //  Begin grammar
 	                (
-	                   !full_prec(0.0) <<  full_prec << " " << full_prec
-	                |   omit[full_prec] << full_prec
+	                   full_prec_d << " " << full_prec_d
+	                ),
+	                //  End grammar
+
+	                c.real(), c.imag()     //  Data to output
+	                );
+			}
+
+
+
+			template <typename OutputIterator>
+			static bool generate(OutputIterator sink, mpfr_float const& c)
+			{
+	            using boost::spirit::karma::omit;
+	            using boost::spirit::karma::generate;
+
+	            return generate(sink,
+
+	                //  Begin grammar
+	                (
+	                   boost::spirit::karma::string
+	                ),
+	                //  End grammar
+
+	                c.str()     //  Data to output
+	                );
+			}
+
+
+			template <typename OutputIterator>
+			static bool generate(OutputIterator sink, mpfr const& c)
+			{
+	            using boost::spirit::karma::omit;
+	            using boost::spirit::karma::generate;
+
+	            return generate(sink,
+
+	                //  Begin grammar
+	                (
+	                   boost::spirit::karma::string << " " << boost::spirit::karma::string
+	                ),
+	                //  End grammar
+
+	                c.real().str(), c.imag().str()     //  Data to output
+	                );
+			}
+
+		};
+
+
+
+		struct CPlusPlus{
+
+			template <typename OutputIterator>
+			static bool generate(OutputIterator sink, std::complex<double> const& c)
+			{
+	            using boost::spirit::karma::omit;
+	            using boost::spirit::karma::generate;
+
+	            return generate(sink,
+
+	                //  Begin grammar
+	                (
+	                   !full_prec_d(0.0) << '(' << full_prec_d << ", " << full_prec_d << ')'
+	                |   omit[full_prec_d] << full_prec_d
 	                ),
 	                //  End grammar
 
@@ -118,6 +206,8 @@ namespace bertini{
 	                );
 			}
 		};
+
+
 
 	}
 }

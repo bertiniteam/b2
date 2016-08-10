@@ -106,8 +106,111 @@ namespace bertini{
 		        c = std::complex<double>(rN, iN);
 		        return r;
 		    }
+
+
+		    template <typename Iterator>
+		    static bool parse(Iterator first, Iterator last, mpfr_float& c)
+		    {
+		        using boost::spirit::qi::double_;
+		        using boost::spirit::qi::_1;
+		        using boost::spirit::qi::phrase_parse;
+		        using boost::spirit::ascii::space;
+		        using boost::phoenix::ref;
+
+		        mpfr_float rN {0};
+		        bool r = phrase_parse(first, last,
+		            (
+		                double_[ref(rN) = _1]
+		            ),
+		            space);
+
+		        if (!r || first != last) // fail if we did not get a full match
+		            return false;
+
+		        c = rN;
+		        return r;
+		    }
+
+		    template <typename Iterator>
+		    static bool parse(Iterator first, Iterator last, mpfr& c)
+		    {
+		        using boost::spirit::qi::string;
+		        using boost::spirit::qi::_1;
+		        using boost::spirit::qi::phrase_parse;
+		        using boost::spirit::ascii::space;
+		        using boost::phoenix::ref;
+
+		        std::string rN {}, iN {};
+		        bool r = phrase_parse(first, last,
+		            (
+		                string[boost::phoenix::ref(rN) = _1] >> string[boost::phoenix::ref(iN) = _1] 
+		            ),
+		            space);
+
+		        if (!r || first != last) // fail if we did not get a full match
+		            return false;
+
+		        c = mpfr(rN, iN);
+		        return r;
+		    }
+
 		};
 
+
+
+		struct CPlusPlus{
+
+			template <typename Iterator>
+		    static bool parse(Iterator first, Iterator last, double& c)
+		    {
+		        using boost::spirit::qi::double_;
+		        using boost::spirit::qi::_1;
+		        using boost::spirit::qi::phrase_parse;
+		        using boost::spirit::ascii::space;
+		        using boost::phoenix::ref;
+
+		        double rN = 0.0;
+		        bool r = phrase_parse(first, last,
+		            (
+		                double_[ref(rN) = _1]
+		            ),
+		            space);
+
+		        if (!r || first != last) // fail if we did not get a full match
+		            return false;
+
+		        c = rN;
+		        return r;
+		    }
+
+
+			template <typename Iterator>
+		    static bool parse(Iterator first, Iterator last, std::complex<double>& c)
+		    {
+		        using boost::spirit::qi::double_;
+		        using boost::spirit::qi::_1;
+		        using boost::spirit::qi::phrase_parse;
+		        using boost::spirit::ascii::space;
+		        using boost::phoenix::ref;
+
+		        double rN = 0.0;
+		        double iN = 0.0;
+		        bool r = phrase_parse(first, last,
+		            (
+		                    '(' >> double_[ref(rN) = _1]
+		                        >> -(',' >> double_[ref(iN) = _1]) >> ')'
+		                |   double_[ref(rN) = _1]
+		            ),
+		            space);
+
+		        if (!r || first != last) // fail if we did not get a full match
+		            return false;
+		        c = std::complex<double>(rN, iN);
+		        return r;
+		    }
+		};
+
+		
 	}
 }
 
