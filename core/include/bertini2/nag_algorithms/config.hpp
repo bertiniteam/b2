@@ -40,7 +40,7 @@ struct Tolerances
 	T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
 	T path_truncation_threshold = T(100000);
-	T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
+	// T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
 };
 
 template<typename T>
@@ -50,8 +50,9 @@ struct Sharpening
 	
 	std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
 
-	T function_residual_tolerance; ///<
-	T ratio_tolerance; ///<
+	T function_residual_tolerance = Eigen::NumTraits<T>::dummy_precision(); ///< A polynomial (or any function, really) evaluated at a point is considered to be 0 if the magnitude is smaller than this value.  See also RatioTolerance
+
+	T ratio_tolerance = T(99)/T(100); ///<  A computed value is considered to be zero if the ratio of two different approximations is smaller than this value.  See also FunctionTolerance
 };
 
 template<typename T>
@@ -69,13 +70,20 @@ struct Regeneration
 
 template<typename T>
 struct PostProcessing{
-	T real_threshold; ///< threshold on the imaginary part of a solution being 0.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.
+	T real_threshold = T(1)/T(100000000); ///< threshold on the imaginary part of a solution being 0.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.
 
-	T endpoint_finite_threshold;  ///< The threshold on norm of endpoints being considered infinite.  There is another setting in Tolerances, `path_truncation_threshold`, which tells the path tracker to die if exceeded.  Another related setting is in Security, `max_norm` -- the endgame dies if the norm of the computed approximation exceeds this twice.
+	T endpoint_finite_threshold = T(1)/T(100000);  ///< The threshold on norm of endpoints being considered infinite.  There is another setting in Tolerances, `path_truncation_threshold`, which tells the path tracker to die if exceeded.  Another related setting is in Security, `max_norm` -- the endgame dies if the norm of the computed approximation exceeds this twice.
 
-	T final_tol_multiplier; ///< A mystery
-	T final_tol_times_mult; ///< Another mystery
+	T final_tol_multiplier{10}; ///< Multiply this value by FinalTol to yield the tolerance used to numerically determine if two endpoints should be considered the same point.
 };
+
+
+struct ZeroDim
+{
+	unsigned max_num_crossed_path_resolve_attempts = 1; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
+};
+
+
 		}
 	}
 }
