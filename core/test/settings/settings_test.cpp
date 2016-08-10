@@ -37,129 +37,592 @@
 #include <cmath>
 
 #include "bertini2/bertini.hpp"
-#include "bertini2/settings/configIni_parse.hpp"
+#include "bertini2/function_tree.hpp"
+#include <bertini2/classic/split_parsing.hpp>
+#include <bertini2/classic/config_parsing.hpp>
+
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/multiprecision/mpfr.hpp>
-#include <boost/program_options.hpp>
-#include <boost/bind.hpp>
 
 using mpfr = bertini::mpfr;
+using mpfr_float = bertini::mpfr_float;
 
-using namespace boost::program_options;
-int tracktype_id;
-void SetTrackType(int type)
-{
-    tracktype_id = type;
-}
 
 
 
 BOOST_AUTO_TEST_SUITE(config_settings)
 
-
-BOOST_AUTO_TEST_CASE(parse_store_set_settings)
+BOOST_AUTO_TEST_CASE(read_mptype)
 {
-    std::stringstream configfile("TrackType = 3  \n MPType=2\n Precision  =40");
-    
-    options_description options{"test settings"};
-    options_description track_type{"Track Type Settings"};
-    options_description MP{"Multiple Precision Settings"};
-    
-    track_type.add_options()
-    ("TrackType", value<int>()->default_value(0)->notifier(&SetTrackType), "Defines the type of tracking that Bertini will perform");
-    
-    mpfr z;
-    MP.add_options()
-    ("MPType", value<int>()->default_value(2), "Defines the type of multiple precision used by Bertini")
-    ("Precision", value<int>()->default_value(96)->notifier(boost::bind(&mpfr::precision,&z, _1)), "The precision to use in calculations");
-    
-    options.add(track_type);
-    options.add(MP);
-    
-    variables_map vm;
-    store(parse_config_file(configfile, options), vm);
-    notify(vm);
-
-    BOOST_CHECK(tracktype_id==3);
-    BOOST_CHECK(vm["MPType"].as<int>() == 2);
-    BOOST_CHECK_EQUAL(z.precision(),40);
-
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n MPType: 0; \n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	PrecisionType type;
+	parsing::ConfigSettingParser<std::string::const_iterator, PrecisionType> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, type);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(type == PrecisionType::Fixed);
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n  \n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	
+	
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, type);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(type == PrecisionType::Adaptive);
 }
 
 
-BOOST_AUTO_TEST_CASE(parsing_to_ini)
-{
-    std::string test_string = "tracktype :1; \n MPType:-1;";
-    
-    bertini::settings::parsing::ConfigToIni<std::string::const_iterator> parser;
-    std::string::const_iterator iter = test_string.begin();
-    std::string::const_iterator end = test_string.end();
-    
-    std::string str_out;
-    phrase_parse(iter, end, parser, boost::spirit::ascii::space, str_out);
-    BOOST_CHECK(str_out.find("tracktype =1")!=std::string::npos);
-    BOOST_CHECK(str_out.find("mptype=-1")!=std::string::npos);
 
+BOOST_AUTO_TEST_CASE(read_predictor)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n MPType: 0; \n  ODEPredictor: 4; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::Predictor predictor;
+	parsing::ConfigSettingParser<std::string::const_iterator, config::Predictor> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, predictor);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(predictor == config::Predictor::RKNorsett34);
+	
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n MPType: 0; \n  ODEPredictor: -1; end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	
+	
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, predictor);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(predictor == config::Predictor::Constant);
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n MPType: 0;  end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	
+	
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, predictor);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(predictor == config::Predictor::RKF45);
+	
+	
 }
 
 
-BOOST_AUTO_TEST_CASE(full_config_to_vm)
+
+BOOST_AUTO_TEST_CASE(read_security_d)
 {
-    std::string test_string = "%Title of file\n CONFIG \n TrackType: 3;  %comment about setting\n %  More full comments\n %Another line of comments\n PRECISION:40 \n  %commentsetting: 4; \n  %%%%%%%%%%%%%%%%%END of Settings%%%%%%%%%%%%%%\n END; \n stuff %more comments\n INPUT\n %Beginning comments\n variable_group x,y; %variables\n % Parameters \n parameter t; \n function f\n %Polynomials \n f = x^2 + y;\n %End of INput\n END; stuff end";
-    
-    bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> split_parser;
-    bertini::classic::parsing::CommentStripper<std::string::const_iterator> comment_parser;
-    bertini::settings::parsing::ConfigToIni<std::string::const_iterator> config_ini_parser;
-    bertini::classic::SplitInputFile config_and_input;
-    std::string::const_iterator iter = test_string.begin();
-    std::string::const_iterator end = test_string.end();
-    phrase_parse(iter, end, split_parser, boost::spirit::ascii::space, config_and_input);
-    auto config = config_and_input.Config();
-    auto input = config_and_input.Input();
-    
-    std::string test_out = "";
-    iter = config.begin();
-    end = config.end();
-    phrase_parse(iter, end, comment_parser, boost::spirit::ascii::space, test_out);
-    config_and_input.SetConfig(test_out);
-    config = config_and_input.Config();
-    
-    test_out = "";
-    iter = config.begin();
-    end = config.end();
-    phrase_parse(iter, end, config_ini_parser, boost::spirit::ascii::space, test_out);
-    config_and_input.SetConfig(test_out);
-//    std::string rest(iter,end);
-//    std::cout << "rest = " << test_out << std::endl;
-    
-    std::stringstream configfile(config_and_input.Config());
-    
-    options_description options{"test settings"};
-    options_description track_type{"Track Type Settings"};
-    options_description MP{"Multiple Precision Settings"};
-    
-    track_type.add_options()
-    ("tracktype", value<int>()->default_value(0)->notifier(&SetTrackType), "Defines the type of tracking that Bertini will perform");
-    
-    mpfr z;
-    MP.add_options()
-    ("mptype", value<int>()->default_value(2), "Defines the type of multiple precision used by Bertini")
-    ("precision", value<int>()->default_value(96)->notifier(boost::bind(&mpfr::precision,&z, _1)), "The precision to use in calculations");
-    
-    options.add(track_type);
-    options.add(MP);
-    
-    variables_map vm;
-    store(parse_config_file(configfile, options), vm);
-    notify(vm);
-    
-    BOOST_CHECK(tracktype_id==3);
-    BOOST_CHECK(vm["mptype"].as<int>() == 2);
-    BOOST_CHECK_EQUAL(z.precision(),40);
-    
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	using T = double;
+	
+	double tol = 1e-16;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: 2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::Security<T> security;
+	parsing::ConfigSettingParser<std::string::const_iterator, config::Security<T>, T> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 1);
+	BOOST_CHECK(fabs(security.max_norm - 2.34) < tol);
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n  SecurityMaxNorm: 2.34;\n SecurityLevel: 1;end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 1);
+	BOOST_CHECK(fabs(security.max_norm - 2.34) < tol);
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n  SecurityMaxNorm: 2.34;\n ;end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	
+	security = config::Security<double>();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 0);
+	BOOST_CHECK(fabs(security.max_norm - 2.34) < tol);
+	
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n  SecurityLevel: 1;end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	security = config::Security<double>();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 1);
+	BOOST_CHECK(security.max_norm == 100000);
+	
+	inputfile = parsing::ParseInputFile("Config \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	security = config::Security<double>();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 0);
+	BOOST_CHECK(security.max_norm == 100000);
+	
 }
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(read_security_mp)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	bertini::mpfr_float::default_precision(30);
+	
+	using T = bertini::mpfr_float;
+	
+	T tol = 1e-27;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: 2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::Security<T> security;
+	parsing::ConfigSettingParser<std::string::const_iterator, config::Security<T>, T> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 1);
+	BOOST_CHECK(fabs(security.max_norm - mpfr_float("2.34")) < tol);
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n  SecurityMaxNorm: 2.34;\n SecurityLevel: 1;end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 1);
+	BOOST_CHECK(fabs(security.max_norm - mpfr_float("2.34")) < tol);
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n  SecurityMaxNorm: 2.34;\n ;end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	
+	security = config::Security<T>();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 0);
+	BOOST_CHECK(fabs(security.max_norm - mpfr_float("2.34")) < tol);
+	
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n  SecurityLevel: 1;end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	security = config::Security<T>();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 1);
+	BOOST_CHECK(fabs(security.max_norm - mpfr_float("100000")) < tol);
+	
+	inputfile = parsing::ParseInputFile("Config \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	security = config::Security<T>();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.level == 0);
+	BOOST_CHECK(abs(security.max_norm - mpfr_float("100000")) < tol);
+	
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(read_tolerance_mp)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	using T = mpfr_float;
+	bertini::mpfr_float::default_precision(30);
+	
+	
+	double tol = 1e-27;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   FinalTol: 1.845e-7;\n TrackTolDuringEG: 234e-4; % the predictor type\n TrackTolBeforeEG: 7.32e3; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::Tolerances<T> security;
+	parsing::ConfigSettingParser<std::string::const_iterator, config::Tolerances<T>, T> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(abs(security.newton_before_endgame - mpfr_float("7.32e3")) < tol);
+	BOOST_CHECK(abs(security.newton_during_endgame - mpfr_float("234e-4")) < tol);
+	BOOST_CHECK(abs(security.final_tolerance - mpfr_float("1.845e-7")) < tol);
+	BOOST_CHECK(abs(security.path_truncation_threshold - mpfr_float("100000")) < tol);
+	
+	
+}
+
+
+
+BOOST_AUTO_TEST_CASE(read_stepping_d)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	using T = double;
+	
+	
+	double tol = 1e-15;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n StepSuccessFactor: 4.2;  FinalTol: 1.845e-7;\n MaxNumberSteps: 234; % the predictor type\nMaxStepSize: 1e-2; StepsForIncrease: 7;\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::Stepping<T> structure;
+	parsing::ConfigSettingParser<std::string::const_iterator,config::Stepping<T>, T> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(fabs(structure.max_step_size - 1e-2) < tol);
+	BOOST_CHECK(fabs(structure.step_size_success_factor - 4.2) < tol);
+	BOOST_CHECK(fabs(structure.step_size_fail_factor - 0.5) < tol);
+	BOOST_CHECK(structure.consecutive_successful_steps_before_stepsize_increase == 7);
+	BOOST_CHECK(structure.max_num_steps == 234);
+	
+	
+}
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(read_newton_d)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	using T = double;
+	
+	
+	double tol = 1e-15;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n MaxNewtonIts: 5; \n heLlo: 9 \n StepSuccessFactor: 4.2;   end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::Newton structure;
+	parsing::ConfigSettingParser<std::string::const_iterator,config::Newton> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(structure.max_num_newton_iterations == 5);
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n  \n heLlo: 9 \n StepSuccessFactor: 4.2;  \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	structure = config::Newton();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(structure.max_num_newton_iterations == 2);
+	
+}
+
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(read_endgame_mp)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	using T = mpfr_float;
+	bertini::mpfr_float::default_precision(30);
+	
+	
+	double tol = 1e-27;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   NumSamplePoints: 34;\n TrackTolDuringEG: 234e-4; % the predictor type\n NbhdRadius: 4.3e-7; \n SampleFactor: 8e-3;\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::Endgame<T> security;
+	parsing::ConfigSettingParser<std::string::const_iterator,config::Endgame<T>, T> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(security.num_sample_points == 34);
+	BOOST_CHECK(abs(security.min_track_time - mpfr_float("4.3e-7")) < tol);
+	BOOST_CHECK(abs(security.sample_factor - mpfr_float("8e-3")) < tol);
+	
+	
+}
+
+
+
+
+
+BOOST_AUTO_TEST_CASE(read_powerseries_d)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	using T = double;
+	
+	
+	double tol = 1e-15;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n MaxNewtonIts: 5; \n heLlo: 9 \n MaxCycleNum: 4; StepSuccessFactor: 4.2;   end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::PowerSeries structure;
+	parsing::ConfigSettingParser<std::string::const_iterator,config::PowerSeries> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(structure.max_cycle_number == 4);
+	
+	
+	inputfile = parsing::ParseInputFile("Config \n  \n heLlo: 9 \n StepSuccessFactor: 4.2;  \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	structure = config::PowerSeries();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(structure.max_cycle_number == 6);
+	
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(read_cauchy_d)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	using T = double;
+	
+	
+	double tol = 1e-15;
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n StepSuccessFactor: 4.2;  CycleTimeCutoff: 5.76e2;\n MaxNumberSteps: 234; % the predictor type \n RAtioTimeCutoff: 1e-12; StepsForIncrease: 7;\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	config::Cauchy<T> structure;
+	parsing::ConfigSettingParser<std::string::const_iterator,config::Cauchy<T>, T> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(fabs(structure.cycle_cutoff_time - 5.76e2) < tol);
+	BOOST_CHECK(fabs(structure.ratio_cutoff_time / 1e-12 - 1) < tol);
+	
+	
+}
+
+
+BOOST_AUTO_TEST_CASE(all_config_settings_d)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	double tol = 1e-15;
+
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n ODEPredictor: 7; \n MPType: 0; \n MaxNewtonIts: 7;  FinalTol: 1.845e-7;\n SampleFactor: 0.647; \n NumSamplePoints: 7;\n\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	auto sets = parsing::GetConfigSettings<double, config::Predictor, config::Newton, config::Tolerances<double>, config::Endgame<double>, config::Stepping<double>>(configStr);
+	
+	config::Stepping<double> steps = std::get<config::Stepping<double>>(sets);
+	config::Predictor pred = std::get<config::Predictor>(sets);
+	config::Newton newt = std::get<config::Newton>(sets);
+	config::Tolerances<double> tols = std::get<config::Tolerances<double>>(sets);
+	config::Endgame<double> end = std::get<config::Endgame<double>>(sets);
+	
+	BOOST_CHECK(pred == config::Predictor::RKDormandPrince56);
+	BOOST_CHECK(fabs(steps.max_step_size - 0.1) < tol);
+	BOOST_CHECK(newt.max_num_newton_iterations == 7);
+	BOOST_CHECK(newt.min_num_newton_iterations == 1);
+	BOOST_CHECK(fabs(tols.final_tolerance - 1.845e-7) < tol);
+	BOOST_CHECK(fabs(tols.final_tolerance_multiplier - 10) < tol);
+	BOOST_CHECK(fabs(end.sample_factor - 0.647) < tol);
+	BOOST_CHECK(end.num_sample_points == 7);
+	BOOST_CHECK(fabs(end.min_track_time - 1e-100) < tol);
+}
+
+
 
 
 

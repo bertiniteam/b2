@@ -37,7 +37,6 @@
 
 
 //#define BOOST_SPIRIT_DEBUG
-#define BOOST_SPIRIT_DEBUG_PRINT_SOME 50
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 
 
@@ -1265,6 +1264,10 @@ namespace bertini
 			
 			
 			/**
+			 This idea comes from:
+			    http://stackoverflow.com/questions/10014713/build-tuple-using-variadic-templates
+			 
+			 
 			 \brief Reads in a comment stripped, config portion of a Bertini classic input file.  Parses the config settings and returns the structures passed into the template parameters with the relevant config settings.
 			 
 			 \param config_str The string containing the comment stripped config portion of the Bertini classic input file.
