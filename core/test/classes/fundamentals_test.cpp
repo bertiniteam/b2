@@ -152,7 +152,12 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	BOOST_CHECK_EQUAL(y.precision(), 70);
 }
 
-
+BOOST_AUTO_TEST_CASE(precision_mpfr_constructed_from_string)
+{
+	DefaultPrecision(30);
+	mpfr x("0.01234567890123456789012345678901234567890123456789");
+	BOOST_CHECK_EQUAL(x.precision(),30);
+}
 
 	
 BOOST_AUTO_TEST_CASE(index_and_subscript_generation1)
