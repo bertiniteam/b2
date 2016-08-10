@@ -1234,6 +1234,52 @@ namespace bertini
 				
 			}; //re: CauchyParser
 
+			
+			
+			
+			/**
+			 \brief Helper function to fill a single configuration struct from a config input file.
+			 
+			 \param config_str The comment stripped configuration string from a Bertini classic input file.
+			 
+			 \tparam Structure The config structure type
+			 \tparam RT Real number type
+			 
+			 \returns The config struct filled with data from the input file.
+			*/
+			
+			template<typename Structure, typename RT>
+			Structure FillConfigStruct(std::string config_str)
+			{
+				std::string::const_iterator iter = config_str.begin();
+				std::string::const_iterator end = config_str.end();
+				Structure settings;
+				parsing::ConfigSettingParser<std::string::const_iterator, Structure, RT> parser;
+				// TODO: error handling if parsing goes wrong
+				bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, settings);
+				
+				return settings;
+			}
+			
+			
+			
+			
+			/**
+			 \brief Reads in a comment stripped, config portion of a Bertini classic input file.  Parses the config settings and returns the structures passed into the template parameters with the relevant config settings.
+			 
+			 \param config_str The string containing the comment stripped config portion of the Bertini classic input file.
+			 
+			 \tparam Structs A configuration structure to be filled by the parser
+			 \tparam RT Real number type
+			 
+			 \return A tuple containing all the required config structures.
+			*/
+			template<typename RT, typename... Structs>
+			std::tuple<Structs...> GetConfigSettings(std::string config_str)
+			{
+				return std::make_tuple<Structs...>(FillConfigStruct<Structs,RT>(config_str)...);
+			}
+			
 
 		} // re: namespace parsing
 		
