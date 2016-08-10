@@ -137,6 +137,14 @@ namespace bertini{
 			current_watchers_.push_back(new_observer);
 		}
 
+		/**
+		\brief Remove an observer from this observable.
+		*/
+		void RemoveObserver(AnyObserver* observer)
+		{
+			current_watchers_.erase(std::remove(current_watchers_.begin(), current_watchers_.end(), observer), current_watchers_.end());
+		}
+
 	protected:
 
 		/**
