@@ -65,6 +65,10 @@ if test "x$want_eigen" = "xyes"; then
                 EIGEN_CPPFLAGS="-I$ac_eigen_path_tmp/include/eigen3"
                 found_eigen_dir=yes;
                 break;
+            elif test -d "$ac_eigen_path_tmp/include/Eigen"; then
+                EIGEN_CPPFLAGS="-I$ac_eigen_path_tmp/include"
+                found_eigen_dir=yes;
+                break;
             fi
         done
     fi
