@@ -160,11 +160,6 @@ namespace bertini
 					no_decl_ = *(char_);
 					
 					
-//					debug(root_rule_);
-//					debug(config_name_);
-//					debug(no_setting_);
-//					debug(no_decl_);
-//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (config_name_) )
 
 					
 					using phx::val;
@@ -273,11 +268,6 @@ namespace bertini
 					no_decl_ = *(char_);
 					
 					
-					//					debug(root_rule_);
-					//					debug(config_name_);
-					//					debug(no_setting_);
-					//					debug(no_decl_);
-					//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (config_name_) )
 					
 					
 					using phx::val;
@@ -394,12 +384,6 @@ namespace bertini
 					no_decl_ = *(char_);
 					
 					
-//					debug(security_level_);
-//										debug(security_max_norm_);
-					//					debug(config_name_);
-					//					debug(no_setting_);
-					//					debug(no_decl_);
-					//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (config_name_) )
 					
 					
 					using phx::val;
@@ -546,16 +530,6 @@ namespace bertini
 					
 					
 					
-//					debug(no_setting_);
-//					debug(newton_before_endgame_);
-//					debug(newton_during_endgame_);
-//					debug(final_tol_);
-//					debug(path_trunc_threshold_);
-//					debug(mpfr_rules.long_number_string_);
-//					debug(mpfr_rules.number_with_digits_after_point_);
-//					debug(mpfr_rules.number_with_digits_before_point_);
-//					debug(mpfr_rules.exponent_notation_);
-//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (final_tol_) )
 					
 					
 					using phx::val;
@@ -709,16 +683,6 @@ namespace bertini
 					
 					
 					
-					//					debug(no_setting_);
-					//					debug(newton_before_endgame_);
-					//					debug(newton_during_endgame_);
-					//					debug(final_tol_);
-					//					debug(path_trunc_threshold_);
-					//					debug(mpfr_rules.long_number_string_);
-					//					debug(mpfr_rules.number_with_digits_after_point_);
-					//					debug(mpfr_rules.number_with_digits_before_point_);
-					//					debug(mpfr_rules.exponent_notation_);
-					//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (final_tol_) )
 					
 					
 					using phx::val;
@@ -828,16 +792,6 @@ namespace bertini
 					
 					
 					
-//										debug(no_setting_);
-//										debug(max_its_);
-					//					debug(newton_during_endgame_);
-					//					debug(final_tol_);
-					//					debug(path_trunc_threshold_);
-					//					debug(mpfr_rules.long_number_string_);
-					//					debug(mpfr_rules.number_with_digits_after_point_);
-					//					debug(mpfr_rules.number_with_digits_before_point_);
-					//					debug(mpfr_rules.exponent_notation_);
-					//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (final_tol_) )
 					
 					
 					using phx::val;
@@ -964,10 +918,6 @@ namespace bertini
 					
 					
 					
-					//					debug(no_setting_);
-					//					debug(newton_before_endgame_);
-					//					debug(newton_during_endgame_);
-					//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (final_tol_) )
 					
 					
 					using phx::val;
@@ -1073,16 +1023,6 @@ namespace bertini
 					
 					
 					
-					//										debug(no_setting_);
-					//										debug(max_its_);
-					//					debug(newton_during_endgame_);
-					//					debug(final_tol_);
-					//					debug(path_trunc_threshold_);
-					//					debug(mpfr_rules.long_number_string_);
-					//					debug(mpfr_rules.number_with_digits_after_point_);
-					//					debug(mpfr_rules.number_with_digits_before_point_);
-					//					debug(mpfr_rules.exponent_notation_);
-					//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (final_tol_) )
 					
 					
 					using phx::val;
@@ -1197,12 +1137,6 @@ namespace bertini
 					no_decl_ = *(char_);
 					
 					
-//										debug(cycle_cutoff_);
-//										debug(ratio_cutoff_);
-					//					debug(config_name_);
-					//					debug(no_setting_);
-					//					debug(no_decl_);
-					//					BOOST_SPIRIT_DEBUG_NODES((root_rule_) (config_name_) )
 					
 					
 					using phx::val;
@@ -1237,9 +1171,9 @@ namespace bertini
 			
 			
 			/**
-			 \brief Helper function to fill a single configuration struct from a config input file.
+			 \brief Helper function to fill a single configuration struct by parsing a config input file.
 			 
-			 \param config_str The comment stripped configuration string from a Bertini classic input file.
+			 \param config_str The comment-stripped configuration string from a Bertini classic input file.
 			 
 			 \tparam Structure The config structure type
 			 \tparam RT Real number type
@@ -1264,16 +1198,16 @@ namespace bertini
 			
 			
 			/**
-			 This idea comes from:
+			 This idea for filling a tuple with variadic templates comes from:
 			    http://stackoverflow.com/questions/10014713/build-tuple-using-variadic-templates
 			 
 			 
-			 \brief Reads in a comment stripped, config portion of a Bertini classic input file.  Parses the config settings and returns the structures passed into the template parameters with the relevant config settings.
+			 \brief Reads in a comment-stripped, config portion of a Bertini classic input file.  Parses the config settings and returns the structures passed into the template parameters with the relevant config settings.
 			 
-			 \param config_str The string containing the comment stripped config portion of the Bertini classic input file.
+			 \param config_str The string containing the comment-stripped config portion of the Bertini classic input file.
 			 
-			 \tparam Structs A configuration structure to be filled by the parser
 			 \tparam RT Real number type
+			 \tparam Structs A configuration structure to be filled by the parser
 			 
 			 \return A tuple containing all the required config structures.
 			*/

@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(read_security_d)
 	using T = double;
 	
 	double tol = 1e-16;
-	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: 2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: -2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
 	std::string configStr = inputfile.Config();
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(read_security_d)
 	
 	BOOST_CHECK(parsed && iter == end);
 	BOOST_CHECK(security.level == 1);
-	BOOST_CHECK(fabs(security.max_norm - 2.34) < tol);
+	BOOST_CHECK(fabs(security.max_norm - (-2.34)) < tol);
 	
 	
 	inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n  SecurityMaxNorm: 2.34;\n SecurityLevel: 1;end;  \n iNpUt % \n  \n variable x; \n ENd;");
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(read_tolerance_mp)
 	
 	
 	double tol = 1e-27;
-	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   FinalTol: 1.845e-7;\n TrackTolDuringEG: 234e-4; % the predictor type\n TrackTolBeforeEG: 7.32e3; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   FinalTol: -.845e-7;\n TrackTolDuringEG: 234e-4; % the predictor type\n TrackTolBeforeEG: 7.32e3; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
 	std::string configStr = inputfile.Config();
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(read_tolerance_mp)
 	BOOST_CHECK(parsed && iter == end);
 	BOOST_CHECK(abs(security.newton_before_endgame - mpfr_float("7.32e3")) < tol);
 	BOOST_CHECK(abs(security.newton_during_endgame - mpfr_float("234e-4")) < tol);
-	BOOST_CHECK(abs(security.final_tolerance - mpfr_float("1.845e-7")) < tol);
+	BOOST_CHECK(abs(security.final_tolerance - mpfr_float("-.845e-7")) < tol);
 	BOOST_CHECK(abs(security.path_truncation_threshold - mpfr_float("100000")) < tol);
 	
 	
@@ -592,12 +592,46 @@ BOOST_AUTO_TEST_CASE(read_cauchy_d)
 }
 
 
+BOOST_AUTO_TEST_CASE(all_config_settings_mp)
+{
+	using namespace bertini::classic;
+	using namespace bertini::tracking;
+	bertini::mpfr_float::default_precision(30);
+	
+	
+	double tol = 1e-27;
+
+	SplitInputFile inputfile = parsing::ParseInputFile("Config \n ODEPredictor: 7; \n MPType: 0; \n MaxNewtonIts: 7;  FinalTol: 1.845e-7;\n SampleFactor: 0.647; \n NumSamplePoints: 7;\n\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	auto sets = parsing::GetConfigSettings<mpfr_float, config::Predictor, config::Newton, config::Tolerances<mpfr_float>, config::Endgame<mpfr_float>, config::Stepping<mpfr_float>>(configStr);
+	
+	config::Stepping<mpfr_float> steps = std::get<config::Stepping<mpfr_float>>(sets);
+	config::Predictor pred = std::get<config::Predictor>(sets);
+	config::Newton newt = std::get<config::Newton>(sets);
+	config::Tolerances<mpfr_float> tols = std::get<config::Tolerances<mpfr_float>>(sets);
+	config::Endgame<mpfr_float> end = std::get<config::Endgame<mpfr_float>>(sets);
+	
+	BOOST_CHECK(pred == config::Predictor::RKDormandPrince56);
+	BOOST_CHECK(abs(steps.max_step_size - mpfr_float("0.1")) < tol);
+	BOOST_CHECK(newt.max_num_newton_iterations == 7);
+	BOOST_CHECK(newt.min_num_newton_iterations == 1);
+	BOOST_CHECK(abs(tols.final_tolerance - mpfr_float("1.845e-7")) < tol);
+	BOOST_CHECK(abs(tols.final_tolerance_multiplier - mpfr_float("10")) < tol);
+	BOOST_CHECK(abs(end.sample_factor - mpfr_float("0.647")) < tol);
+	BOOST_CHECK(end.num_sample_points == 7);
+	BOOST_CHECK(abs(end.min_track_time - mpfr_float("1e-100")) < tol);
+}
+
+
 BOOST_AUTO_TEST_CASE(all_config_settings_d)
 {
 	using namespace bertini::classic;
 	using namespace bertini::tracking;
 	double tol = 1e-15;
-
+	
 	SplitInputFile inputfile = parsing::ParseInputFile("Config \n ODEPredictor: 7; \n MPType: 0; \n MaxNewtonIts: 7;  FinalTol: 1.845e-7;\n SampleFactor: 0.647; \n NumSamplePoints: 7;\n\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
@@ -621,8 +655,6 @@ BOOST_AUTO_TEST_CASE(all_config_settings_d)
 	BOOST_CHECK(end.num_sample_points == 7);
 	BOOST_CHECK(fabs(end.min_track_time - 1e-100) < tol);
 }
-
-
 
 
 
