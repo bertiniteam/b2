@@ -36,7 +36,7 @@ namespace bertini {
 
 	mpfr_float RandomMp()
 	{
-		auto num_digits = mpfr_float::default_precision();
+		auto num_digits = DefaultPrecision();
 
 		if (num_digits<=50)
 			return RandomMp<50>();
@@ -79,7 +79,7 @@ namespace bertini {
 
 	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
 	{
-		auto num_digits = mpfr_float::default_precision();
+		auto num_digits = DefaultPrecision();
 
 		if (num_digits<=50)
 			return RandomMp<50>(a,b);

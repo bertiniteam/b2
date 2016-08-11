@@ -59,7 +59,35 @@ public:
 	static
 	unsigned EnsureAtUniformPrecision(T& ...args)
 	{
-		return bertini::tracking::endgame::adaptive::EnsureAtUniformPrecision(args...);
+		return adaptive::EnsureAtUniformPrecision(args...);
+	}
+
+	static
+	void EnsureAtPrecision(double & obj, unsigned prec)
+	{
+		if (prec!=DoublePrecision())
+			throw std::runtime_error("attempting to adjust precision of double to non-double precision");
+	}
+
+	static
+	void EnsureAtPrecision(std::complex<double> & obj, unsigned prec)
+	{
+		if (prec!=DoublePrecision())
+			throw std::runtime_error("attempting to adjust precision of std::complex<double> to non-double precision");
+	}
+
+	static
+	void EnsureAtPrecision(mpfr_float & obj, unsigned prec)
+	{
+		using bertini::Precision;
+		Precision(obj,prec);
+	}
+
+	static
+	void EnsureAtPrecision(mpfr & obj, unsigned prec)
+	{
+		using bertini::Precision;
+		Precision(obj,prec);
 	}
 
 protected:
@@ -101,7 +129,7 @@ protected:
 	*/
 	void MultipleToMultiple(unsigned new_precision) const
 	{
-		mpfr_float::default_precision(new_precision);
+		DefaultPrecision(new_precision);
 		precision_ = new_precision;
 
 		ChangeTemporariesPrecision(new_precision);
@@ -118,7 +146,7 @@ protected:
 	*/
 	void DoubleToMultiple(unsigned new_precision) const
 	{
-		mpfr_float::default_precision(new_precision);
+		DefaultPrecision(new_precision);
 		precision_ = new_precision;
 		
 		ChangeTemporariesPrecision(new_precision);
@@ -135,7 +163,7 @@ protected:
 	*/
 	void MultipleToDouble() const
 	{
-		mpfr_float::default_precision(DoublePrecision());
+		DefaultPrecision(DoublePrecision());
 		precision_ = DoublePrecision();
 
 		ChangeTemporariesPrecision(DoublePrecision());
@@ -176,7 +204,7 @@ public:
 		return SuccessCode::Success;
 	}
 
-	AMPEndgamePolicyBase() : precision_(mpfr_float::default_precision())
+	AMPEndgamePolicyBase() : precision_(DefaultPrecision())
 	{}
 
 	virtual ~AMPEndgamePolicyBase() = default;

@@ -76,7 +76,7 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
 AX_EIGEN
 
 
-AX_BOOST_BASE([1.56],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.56, but it was not found in your system])])
+AX_BOOST_BASE([1.58],, [AC_MSG_ERROR([PyBertini needs Boost at least 1.58, but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO

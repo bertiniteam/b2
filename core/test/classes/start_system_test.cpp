@@ -50,6 +50,7 @@ extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(system_class)
 
@@ -293,7 +294,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 			BOOST_CHECK(abs(function_values(jj)) < relaxed_threshold_clearance_d);
 	}
 
-	bertini::mpfr_float::default_precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	for (mpz_int ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
@@ -384,7 +385,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_coefficient_bound_degree_bound)
 
 	Take note that in this example we have two successes while the other hit a min track time. This is accounted for. 
 	*/
-	mpfr_float::default_precision(30);
+	DefaultPrecision(30);
 
 	Var x = std::make_shared<Variable>("x");
 	Var y = std::make_shared<Variable>("y");

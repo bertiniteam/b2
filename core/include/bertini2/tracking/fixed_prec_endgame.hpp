@@ -76,6 +76,19 @@ public:
 		return bertini::tracking::endgame::fixed::EnsureAtUniformPrecision(args...);
 	}
 
+	template<typename T>
+	static
+	void EnsureAtPrecision(T const & obj, unsigned prec)
+	{
+		using bertini::Precision;
+		if (Precision(obj)!=prec)
+		{
+			std::stringstream err_msg;
+			err_msg << "ensuring precision of object failed; precision is " << Precision(obj) << " and required precision is " << prec;
+			throw std::runtime_error(err_msg.str());
+		}
+	}
+
 
 	FixedPrecEndgamePolicyBase() : precision_(NumTraits<BRT>::NumDigits())
 	{}

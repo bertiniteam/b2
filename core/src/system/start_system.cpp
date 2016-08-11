@@ -64,8 +64,8 @@ namespace bertini {
 
 			random_values_.resize(s.NumFunctions());
 
-			// auto prev_prec = boost::multiprecision::mpfr_float::default_precision();
-			// boost::multiprecision::mpfr_float::default_precision(4000);
+			// auto prev_prec = boost::multiprecision::DefaultPrecision();
+			// boost::multiprecision::DefaultPrecision(4000);
 			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
 				random_values_[ii] = std::make_shared<node::Rational>(node::Rational::Rand());
 
@@ -82,7 +82,7 @@ namespace bertini {
 
 			gamma_ = std::make_shared<node::Rational>(node::Rational::Rand());
 			// *this *= static_cast<std::shared_ptr<node::Node> >(gamma_);
-			// boost::multiprecision::mpfr_float::default_precision(prev_prec);
+			// boost::multiprecision::DefaultPrecision(prev_prec);
 		}// total degree constructor
 
 		
@@ -138,8 +138,11 @@ namespace bertini {
 				offset = 1;
 			}
 
+			auto two_i = mpfr(0,2);
+			auto one = mpfr(1);
+
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( acos( mpfr_float(-1) ) * mpfr(0,2) * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), mpfr_float(1) / degrees_[ii]);
+				start_point(ii+offset) = exp( acos( mpfr_float(-1) ) * two_i * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), one / degrees_[ii]);
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);

@@ -79,7 +79,7 @@ namespace bertini {
 		/**
 		\brief The default constructor for a system.
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(mpfr_float::default_precision()), is_patched_(false)
+		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(DefaultPrecision()), is_patched_(false)
 		{}
 
 		/** 
@@ -357,12 +357,11 @@ namespace bertini {
 			typedef typename Derived::Scalar T;
 
 			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
-		{
+			{
 				throw std::runtime_error("trying to evaluate jacobian of system in place, but input J doesn't have right number of columns or rows");
 			}
 			
-			
-			const auto& vars = Variables(); //TODO: replace this with something that peeks directly into the variables without this copy.
+			const auto& vars = Variables();
 
 			if (!is_differentiated_)
 				Differentiate();
@@ -738,12 +737,15 @@ namespace bertini {
 			if (new_values.size()!= NumVariables())
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 
-			#ifndef BERTINI_DISABLE_ASSERTS
-				if (!std::is_same<T,dbl>::value)
-				assert(Precision(new_values(0)) == this->precision() && "precision of input point in SetVariables must match the precision of the system.");
-			#endif
-
 			const auto& vars = Variables();
+
+			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+				if (!std::is_same<T,dbl>::value && (Precision(new_values) != this->precision()))
+					throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
+
+				if (!std::is_same<T,dbl>::value && (vars[0]->node::NamedSymbol::precision() != this->precision()) )
+					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
+			#endif
 
 			auto counter = 0;
 

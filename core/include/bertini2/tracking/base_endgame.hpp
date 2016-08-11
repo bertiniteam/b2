@@ -60,7 +60,7 @@ namespace bertini{
 
 			
 			/**
-			\class Endgame
+			\class EndgameBase
 
 			\brief Base endgame class for all endgames offered in Bertini2.
 			
@@ -84,10 +84,16 @@ namespace bertini{
 
 			 To create a new endgame type, inherit from this class. 
 			*/
-			template<class TrackerType>
+			template<class TrackerType, class FinalEGT>
 			class EndgameBase
 			{
 			protected:
+
+				// convert the base endgame into the derived type.
+				const FinalEGT& AsDerived() const
+				{
+					return static_cast<const FinalEGT&>(*this);
+				}
 
 				using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
 				using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
@@ -195,12 +201,12 @@ namespace bertini{
 				{ return tracker_.GetSystem();}
 
 
-				/*
+				/**
 				\brief Populates time and space samples so that we are ready to start the endgame. 
 
 				## Input
 
-				  	start_time: is the time when we start the endgame process usually this is .1
+				  		start_time: is the time when we start the endgame process usually this is .1
 						x_endgame: is the space value at start_time
 						times: a deque of time values. These values will be templated to be CT 
 						samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of CT. 
@@ -217,32 +223,41 @@ namespace bertini{
 					Hence, next_time = start_time * sample_factor.
 					We track then to the next_time and construct the next_sample.
 
-				\param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
 				\param start_time The time value at which we start the endgame. 
 				\param x_endgame The current space point at start_time.
 				\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 				\param samples a deque that will hold all the samples corresponding to the time values in times. 
 
 				\tparam CT The complex number type.
-				\tparam TrackerType The tracker type. 
 				*/	
 				template<typename CT>
 				SuccessCode ComputeInitialSamples(const CT & start_time,const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
 				{	
 					using RT = typename Eigen::NumTraits<CT>::Real;
 					assert(endgame_settings_.num_sample_points>0 && "number of sample points must be positive");
-					
-					samples.resize(endgame_settings_.num_sample_points);
-					times.resize(endgame_settings_.num_sample_points);
 
-					samples[0] = x_endgame;
-					times[0] = start_time;
+					if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						assert(Precision(start_time)==Precision(x_endgame) && "Computing initial samples requires input time and space with uniform precision");
+						DefaultPrecision();
+					}
 
+					samples.clear();
+					times.clear();
+
+					samples.push_back(x_endgame);
+					times.push_back(start_time);
+
+					auto num_vars = GetSystem().NumVariables();
 					//start at 1, because the input point is the 0th element.
 					for(int ii=1; ii < endgame_settings_.num_sample_points; ++ii)
 					{ 
-						times[ii] = times[ii-1] * RT(endgame_settings_.sample_factor);	
+						times.emplace_back(times[ii-1] * RT(endgame_settings_.sample_factor));
+						samples.emplace_back(Vec<CT>(num_vars));
+
 						auto tracking_success = tracker_.TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
+						AsDerived().EnsureAtPrecision(times[ii],Precision(samples[ii]));
+
 						if (tracking_success!=SuccessCode::Success)
 							return tracking_success;
 					}

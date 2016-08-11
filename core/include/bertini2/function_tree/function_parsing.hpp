@@ -152,7 +152,110 @@ namespace bertini {
 	namespace qi = ::boost::spirit::qi;
 	namespace ascii = ::boost::spirit::ascii;
 
-
+	
+	// Struct that holds the rules for parsing mpfr numbers
+	// Use: Include this struct with the rest of your rules.
+	template<typename Iterator>
+	struct MPParserRules
+	{
+		MPParserRules()
+		{
+			namespace phx = boost::phoenix;
+			using qi::_1;
+			using qi::_2;
+			using qi::_3;
+			using qi::_4;
+			using qi::_val;
+			using qi::eps;
+			using qi::lit;
+			using qi::char_;
+			using qi::omit;
+			using boost::spirit::lexeme;
+			using boost::spirit::as_string;
+			using boost::spirit::ascii::no_case;
+			
+			number_string_.name("number_");
+			number_string_ =
+			long_number_string_
+			|
+			integer_string_;
+			
+			integer_string_.name("integer_string_");
+			integer_string_ = eps[_val = std::string()] >>
+			number_with_no_point_ [_val += _1]
+			>> -exponent_notation_ [_val += _1];
+			
+			
+			long_number_string_.name("long_number_string_");
+			long_number_string_ = eps[_val = std::string()] >>
+			(
+			 // 1. Read possible numbers before decimal, with possible negative
+			 (number_with_digits_after_point_ [_val += _1]
+			  |
+			  number_with_digits_before_point_ [_val += _1] )
+			 >>   // reminder -- the - before the exponent_notation here means optional
+			 -exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
+			 );
+			
+			
+			
+			number_with_digits_after_point_.name("number_with_digits_after_point_");
+			number_with_digits_after_point_ = eps[_val = std::string()]
+			>>
+			*(qi::char_(L'0',L'9')[_val += _1])
+			>>
+			qi::lit('.')[_val += "."] // find a decimal point
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1]) // find at least one digit after the point
+			;
+			
+			
+			
+			
+			
+			number_with_digits_before_point_.name("number_with_digits_before_point_");
+			number_with_digits_before_point_ = eps[_val = std::string()]
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1])
+			>>
+			qi::lit('.')[_val += "."] // find a decimal point
+			>>
+			*(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
+			;
+			
+			
+			number_with_no_point_.name("number_with_no_point_");
+			number_with_no_point_ = eps[_val = std::string()]
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1])
+			;
+			
+			
+			
+			
+			exponent_notation_.name("exponent_notation_");
+			exponent_notation_ = eps[_val = std::string()]
+			>> ( // start what the rule actually does
+				(
+				 qi::lit('e')[_val += "e"] // get an opening 'e'
+				 |
+				 qi::lit('E')[_val += "e"] // get an opening 'e'
+				 )
+				>>
+				-(qi::lit('-')[_val += "-"]) // then an optional minus sign
+				>>
+				+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
+				); // finish the rule off
+			
+		}
+		
+		
+		
+		// these rules all produce strings which are fed into numbers.
+		qi::rule<Iterator, std::string()> number_string_, integer_string_, long_number_string_, number_with_digits_before_point_,
+		number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+		
+	}; //re: MPParserRules
 
 
 	/**
@@ -260,78 +363,13 @@ namespace bertini {
 
 			number_.name("number_");
 			number_ =
-				long_number_string_ [ _val = make_shared_<Float>()(_1) ]
+				mpfr_rules_.long_number_string_ [ _val = make_shared_<Float>()(_1) ]
 				|
-				integer_string_ [ _val = make_shared_<Integer>()(_1) ];
+				mpfr_rules_.integer_string_ [ _val = make_shared_<Integer>()(_1) ];
 
 
 
 
-			integer_string_.name("integer_string_");
-			integer_string_ = eps[_val = std::string()] >>
-			 number_with_no_point_ [_val += _1];
-
-
-			long_number_string_.name("long_number_string_");
-			long_number_string_ = eps[_val = std::string()] >>
-			(
-			 // 1. Read possible numbers before decimal, with possible negative
-			 number_with_digits_after_point_ [_val += _1]
-			 |
-			 number_with_digits_before_point_ [_val += _1]
-			 >>   // reminder -- the - before the exponent_notation here means optional
-			 - exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
-			 );
-
-			
-
-			number_with_digits_after_point_.name("number_with_digits_after_point_");
-			number_with_digits_after_point_ = eps[_val = std::string()]
-			>>
-			*(qi::char_(L'0',L'9')[_val += _1])
-			>>
-			qi::lit('.')[_val += "."] // find a decimal point
-			>>
-			+(qi::char_(L'0',L'9')[_val += _1]) // find at least one digit after the point
-			;
-
-
-
-
-
-			number_with_digits_before_point_.name("number_with_digits_before_point_");
-			number_with_digits_before_point_ = eps[_val = std::string()]
-			>>
-			+(qi::char_(L'0',L'9')[_val += _1])
-			>>
-			qi::lit('.')[_val += "."] // find a decimal point
-			>>
-			*(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
-			;
-
-
-			number_with_no_point_.name("number_with_no_point_");
-			number_with_no_point_ = eps[_val = std::string()]
-			>>
-			+(qi::char_(L'0',L'9')[_val += _1])
-			;
-
-
-
-
-			exponent_notation_.name("exponent_notation_");
-			exponent_notation_ = eps[_val = std::string()]
-			>> ( // start what the rule actually does
-				(
-				 qi::lit('e')[_val += "e"] // get an opening 'e'
-				 |
-				 qi::lit('E')[_val += "e"] // get an opening 'e'
-				 )
-				>>
-				-(qi::lit('-')[_val += "-"]) // then an optional minus sign
-				>>
-				+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
-			 ); // finish the rule off
 
 
 
@@ -389,9 +427,8 @@ namespace bertini {
 
 		// the number_ rule wants to find strings from the various other number_ rules, and produces a Number node
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
-
-		// these rules all produce strings which are fed into numbers.
-		qi::rule<Iterator, std::string()> integer_string_, long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+		
+		MPParserRules<Iterator> mpfr_rules_;
 	};
 
 
