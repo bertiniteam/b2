@@ -550,7 +550,7 @@ public:
 		\brief The samples used in the power series endgame are collected by advancing time to t = 0, by multiplying the current time by the sample factor. 
 
 		## Input: 
-				None: all data needed are class data members.
+				target_time: This is the time we are trying to approximate, default is t = 0.
 
 		## Output:
 				SuccessCode: This reports back if we were successful in advancing time. 
@@ -562,16 +562,16 @@ public:
 				endgame.
 	*/
 	template<typename CT>
-	SuccessCode AdvanceTime()
+	SuccessCode AdvanceTime(const CT & target_time)
 	{
 		auto& samples = std::get<SampCont<CT> >(samples_);
 		auto& times   = std::get<TimeCont<CT> >(times_);
 		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 
 		Vec<CT> next_sample;
-		CT next_time = times.back() * this->EndgameSettings().sample_factor; //setting up next time value.
-
-  		if (abs(next_time) < this->EndgameSettings().min_track_time)
+		CT next_time = (times.back() + target_time) * this->EndgameSettings().sample_factor; //setting up next time value using the midpoint formula, sample_factor will give us some 
+																							 // point between the two. 
+  		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time) // generalized for target_time not equal to 0.
   		{
   			BOOST_LOG_TRIVIAL(severity_level::trace) << "Current time norm is less than min track time." << '\n';
 
@@ -612,6 +612,7 @@ public:
 		## Input: 
 				start_time: This is the time value for which the endgame begins, by default this is t = 0.1
 				start_point: An approximate solution of the homotopy at t = start_time
+				target_time: The time value that we are wishing to approximate to. This is default set to t = 0. 
 
 		## Output:
 				SuccessCode: This reports back if we were successful in advancing time. 
@@ -622,7 +623,7 @@ public:
 				approximations are withing final tolerance of each other. 
 	*/		
 	template<typename CT>
-	SuccessCode Run(const CT & start_time, const Vec<CT> & start_point)
+	SuccessCode Run(const CT & start_time, const Vec<CT> & start_point, CT const& target_time = static_cast<CT>(0))
 	{
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{
@@ -648,9 +649,8 @@ public:
 
 	 	RT approx_error(1);  //setting up the error of successive approximations. 
 	 	
-	 	CT origin(0);
 
-		auto initial_sample_success = this->ComputeInitialSamples(start_time, start_point, times, samples);
+		auto initial_sample_success = this->ComputeInitialSamples(start_time, target_time, start_point, times, samples);
 
 		if (initial_sample_success!=SuccessCode::Success)
 		{
@@ -661,7 +661,7 @@ public:
 		ComputeDerivatives<CT>();
 
 	 	Vec<CT> prev_approx;
-	 	auto extrapolation_code = ComputeApproximationOfXAtT0(prev_approx, origin);
+	 	auto extrapolation_code = ComputeApproximationOfXAtT0(prev_approx, target_time);
 	 	final_approx = prev_approx;
 
 	 	if (extrapolation_code != SuccessCode::Success)
@@ -680,17 +680,17 @@ public:
 
 		while (approx_error > this->Tolerances().final_tolerance)
 		{
-	  		auto advance_code = AdvanceTime<CT>();
+	  		auto advance_code = AdvanceTime<CT>(target_time);
 	  		if (advance_code!=SuccessCode::Success)
 	 		{
 	 			BOOST_LOG_TRIVIAL(severity_level::trace) << "unable to advance time, code " << int(advance_code);
 	 			return advance_code;
 	 		}
 
-	 		extrapolation_code = ComputeApproximationOfXAtT0(latest_approx, origin);
+	 		extrapolation_code = ComputeApproximationOfXAtT0(latest_approx, target_time);
 	 		if (extrapolation_code!=SuccessCode::Success)
 	 		{
-	 			BOOST_LOG_TRIVIAL(severity_level::trace) << "failed to compute the approximation at " << origin << "\n\n";
+	 			BOOST_LOG_TRIVIAL(severity_level::trace) << "failed to compute the approximation at " << target_time << "\n\n";
 	 			return extrapolation_code;
 	 		}
 	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "latest approximation:\n" << latest_approx << '\n';
