@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //trig.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,17 +13,18 @@
 //You should have received a copy of the GNU General Public License
 //along with trig.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-
-//  trig.cpp
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
+// Jeb Collins, West Texas A&M
 
 
-#include "bertini2/function_tree/operators/trig.hpp"
+#include "function_tree/operators/trig.hpp"
 
 
 namespace bertini {
@@ -53,7 +54,7 @@ namespace node{
 
 
 
-	std::shared_ptr<Node> SinOperator::Differentiate()
+	std::shared_ptr<Node> SinOperator::Differentiate() const
 	{
 		return cos(child_) * child_->Differentiate();
 	}
@@ -69,7 +70,7 @@ namespace node{
 	}
 
 
-	std::shared_ptr<Node> ArcSinOperator::Differentiate()
+	std::shared_ptr<Node> ArcSinOperator::Differentiate() const
 	{
 		return child_->Differentiate()/sqrt(1-pow(child_,2));
 	}
@@ -84,7 +85,7 @@ namespace node{
 		target << ")";
 	}
 	
-	std::shared_ptr<Node> CosOperator::Differentiate()
+	std::shared_ptr<Node> CosOperator::Differentiate() const
 	{
 		return -sin(child_) * child_->Differentiate();
 	}
@@ -106,7 +107,7 @@ namespace node{
 
 
 
-	std::shared_ptr<Node> ArcCosOperator::Differentiate()
+	std::shared_ptr<Node> ArcCosOperator::Differentiate() const
 	{
 		return -child_->Differentiate()/sqrt(1-pow(child_,2));
 	}
@@ -125,7 +126,7 @@ namespace node{
 	}
 
 
-	std::shared_ptr<Node> TanOperator::Differentiate()
+	std::shared_ptr<Node> TanOperator::Differentiate() const
 	{
 		return child_->Differentiate() /  pow(cos(child_),2);
 	}
@@ -144,7 +145,7 @@ namespace node{
 		
 
 
-	std::shared_ptr<Node> ArcTanOperator::Differentiate()
+	std::shared_ptr<Node> ArcTanOperator::Differentiate() const
 	{
 		return child_->Differentiate() / (1 + pow(child_,2));
 	}

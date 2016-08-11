@@ -1,21 +1,36 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
-//function_parsing.hpp is free software: you can redistribute it and/or modify
+//node.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//function_parsing.hpp is distributed in the hope that it will be useful,
+//node.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with function_parsing.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with node.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
-//
-//
+
+
+
 // function_parsing.hpp:  This file contains all the grammars used to parse an input file.
 //          Variable, Function
 //
@@ -23,8 +38,15 @@
 // from qi::grammar, or they all contain a struct the inherits from grammar.  Right now
 // VariableParser does the second, and Function Parser does the first.
 
-#ifndef b2Test_grammar_h
-#define b2Test_grammar_h
+
+/**
+\file function_parsing.hpp
+
+\brief Provides a Boost.Spirit::Qi parser for function expressions.
+*/
+
+#ifndef BERTINI_FUNCTION_PARSING_HPP
+#define BERTINI_FUNCTION_PARSING_HPP
 
 #define BOOST_RESULT_OF_USE_DECLTYPE
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
@@ -57,24 +79,30 @@
 //http://boost-spirit.com/home/articles/qi-example/tracking-the-input-position-while-parsing/
 
 
-// this solution for *lazy* make shared comes from the SO forum, user sehe.
-// https://stackoverflow.com/questions/21516201/how-to-create-boost-phoenix-make-shared
-//    post found using google search terms `phoenix construct shared_ptr`
+
 namespace {
+	// this solution for *lazy* make shared comes from the SO forum, asked by polytheme, answered by user sehe.
+	// https://stackoverflow.com/questions/21516201/how-to-create-boost-phoenix-make-shared
+	//    post found using google search terms `phoenix construct shared_ptr`
+	// the code has been adapted slightly to fit the naming conventions of this project.
 	template <typename T>
-	struct make_shared_f
+	struct MakeSharedFunctor
 	{
-		template <typename... A> struct result
-		{ typedef std::shared_ptr<T> type; };
+		template <typename... A> 
+		struct result
+		{ 
+			typedef std::shared_ptr<T> type; 
+		};
 
 		template <typename... A>
-		typename result<A...>::type operator()(A&&... a) const {
+		typename result<A...>::type operator()(A&&... a) const 
+		{
 			return std::make_shared<T>(std::forward<A>(a)...);
 		}
 	};
 
 	template <typename T>
-	using make_shared_ = boost::phoenix::function<make_shared_f<T> >;
+	using make_shared_ = boost::phoenix::function<MakeSharedFunctor<T> >;
 }
 
 
@@ -91,6 +119,9 @@ namespace {
 
 // http://www.boost.org/doc/libs/1_58_0/libs/phoenix/doc/html/phoenix/modules/function/adapting_functions.html
 
+//
+// form is as follows:
+//
 //BOOST_PHOENIX_ADAPT_FUNCTION(
 //							 RETURN_TYPE
 //							 , LAZY_FUNCTION
@@ -121,7 +152,110 @@ namespace bertini {
 	namespace qi = ::boost::spirit::qi;
 	namespace ascii = ::boost::spirit::ascii;
 
-
+	
+	// Struct that holds the rules for parsing mpfr numbers
+	// Use: Include this struct with the rest of your rules.
+	template<typename Iterator>
+	struct MPParserRules
+	{
+		MPParserRules()
+		{
+			namespace phx = boost::phoenix;
+			using qi::_1;
+			using qi::_2;
+			using qi::_3;
+			using qi::_4;
+			using qi::_val;
+			using qi::eps;
+			using qi::lit;
+			using qi::char_;
+			using qi::omit;
+			using boost::spirit::lexeme;
+			using boost::spirit::as_string;
+			using boost::spirit::ascii::no_case;
+			
+			number_string_.name("number_");
+			number_string_ =
+			long_number_string_
+			|
+			integer_string_;
+			
+			integer_string_.name("integer_string_");
+			integer_string_ = eps[_val = std::string()] >>
+			number_with_no_point_ [_val += _1]
+			>> -exponent_notation_ [_val += _1];
+			
+			
+			long_number_string_.name("long_number_string_");
+			long_number_string_ = eps[_val = std::string()] >>
+			(
+			 // 1. Read possible numbers before decimal, with possible negative
+			 (number_with_digits_after_point_ [_val += _1]
+			  |
+			  number_with_digits_before_point_ [_val += _1] )
+			 >>   // reminder -- the - before the exponent_notation here means optional
+			 -exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
+			 );
+			
+			
+			
+			number_with_digits_after_point_.name("number_with_digits_after_point_");
+			number_with_digits_after_point_ = eps[_val = std::string()]
+			>>
+			*(qi::char_(L'0',L'9')[_val += _1])
+			>>
+			qi::lit('.')[_val += "."] // find a decimal point
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1]) // find at least one digit after the point
+			;
+			
+			
+			
+			
+			
+			number_with_digits_before_point_.name("number_with_digits_before_point_");
+			number_with_digits_before_point_ = eps[_val = std::string()]
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1])
+			>>
+			qi::lit('.')[_val += "."] // find a decimal point
+			>>
+			*(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
+			;
+			
+			
+			number_with_no_point_.name("number_with_no_point_");
+			number_with_no_point_ = eps[_val = std::string()]
+			>>
+			+(qi::char_(L'0',L'9')[_val += _1])
+			;
+			
+			
+			
+			
+			exponent_notation_.name("exponent_notation_");
+			exponent_notation_ = eps[_val = std::string()]
+			>> ( // start what the rule actually does
+				(
+				 qi::lit('e')[_val += "e"] // get an opening 'e'
+				 |
+				 qi::lit('E')[_val += "e"] // get an opening 'e'
+				 )
+				>>
+				-(qi::lit('-')[_val += "-"]) // then an optional minus sign
+				>>
+				+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
+				); // finish the rule off
+			
+		}
+		
+		
+		
+		// these rules all produce strings which are fed into numbers.
+		qi::rule<Iterator, std::string()> number_string_, integer_string_, long_number_string_, number_with_digits_before_point_,
+		number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+		
+	}; //re: MPParserRules
 
 
 	/**
@@ -130,6 +264,8 @@ namespace bertini {
 	\todo Improve error detection and reporting for the FunctionParser.
 
 	\brief A Qi grammar parser for parsing text into function trees.
+
+	This parser could not have been written without the generous help of SO user sehe.
 	*/
 	template<typename Iterator>
 	struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
@@ -227,78 +363,13 @@ namespace bertini {
 
 			number_.name("number_");
 			number_ =
-				long_number_string_ [ _val = make_shared_<Float>()(_1) ]
+				mpfr_rules_.long_number_string_ [ _val = make_shared_<Float>()(_1) ]
 				|
-				integer_string_ [ _val = make_shared_<Integer>()(_1) ];
+				mpfr_rules_.integer_string_ [ _val = make_shared_<Integer>()(_1) ];
 
 
 
 
-			integer_string_.name("integer_string_");
-			integer_string_ = eps[_val = std::string()] >>
-			 number_with_no_point_ [_val += _1];
-
-
-			long_number_string_.name("long_number_string_");
-			long_number_string_ = eps[_val = std::string()] >>
-			(
-			 // 1. Read possible numbers before decimal, with possible negative
-			 number_with_digits_after_point_ [_val += _1]
-			 |
-			 number_with_digits_before_point_ [_val += _1]
-			 >>   // reminder -- the - before the exponent_notation here means optional
-			 - exponent_notation_ [_val+=_1]// Possible scientific notation, with possible negative in exponent.
-			 );
-
-			
-
-			number_with_digits_after_point_.name("number_with_digits_after_point_");
-			number_with_digits_after_point_ = eps[_val = std::string()]
-			>>
-			*(qi::char_(L'0',L'9')[_val += _1])
-			>>
-			qi::lit('.')[_val += "."] // find a decimal point
-			>>
-			+(qi::char_(L'0',L'9')[_val += _1]) // find at least one digit after the point
-			;
-
-
-
-
-
-			number_with_digits_before_point_.name("number_with_digits_before_point_");
-			number_with_digits_before_point_ = eps[_val = std::string()]
-			>>
-			+(qi::char_(L'0',L'9')[_val += _1])
-			>>
-			qi::lit('.')[_val += "."] // find a decimal point
-			>>
-			*(qi::char_(L'0',L'9')[_val += _1]) // find any number of digits after the point
-			;
-
-
-			number_with_no_point_.name("number_with_no_point_");
-			number_with_no_point_ = eps[_val = std::string()]
-			>>
-			+(qi::char_(L'0',L'9')[_val += _1])
-			;
-
-
-
-
-			exponent_notation_.name("exponent_notation_");
-			exponent_notation_ = eps[_val = std::string()]
-			>> ( // start what the rule actually does
-				(
-				 qi::lit('e')[_val += "e"] // get an opening 'e'
-				 |
-				 qi::lit('E')[_val += "e"] // get an opening 'e'
-				 )
-				>>
-				-(qi::lit('-')[_val += "-"]) // then an optional minus sign
-				>>
-				+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
-			 ); // finish the rule off
 
 
 
@@ -356,9 +427,8 @@ namespace bertini {
 
 		// the number_ rule wants to find strings from the various other number_ rules, and produces a Number node
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
-
-		// these rules all produce strings which are fed into numbers.
-		qi::rule<Iterator, std::string()> integer_string_, long_number_string_, number_with_digits_before_point_, number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+		
+		MPParserRules<Iterator> mpfr_rules_;
 	};
 
 

@@ -3,8 +3,8 @@
 
 
 
-#we're building b2, version 2.0.1, and the corresponding email is dan brake's
-AC_INIT([b2], [2.0.1], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
+#we're building b2, version 2.0-alpha5, and the corresponding email is dan brake's
+AC_INIT([b2], [2.0-alpha5], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -40,7 +40,6 @@ AC_ENABLE_SHARED
 #enable the creation of static libraries
 AC_ENABLE_STATIC
 
-
 #find the linker
 AC_PROG_LN_S
 
@@ -52,17 +51,33 @@ LT_INIT
 
 
 
+#AC_ARG_ENABLE(option-name, help-string, action-if-present, action-if-not-present)
+# get whether the user wants to disable the use of thread_local for multithreading.
+
+AC_ARG_ENABLE([thread_local],
+    AS_HELP_STRING([--disable-thread_local], [Disable thread_local storage for fast complex multiple-precision arithmetic, and other places.  OSX and Apple do NOT implement this keyword.  Since this keyword provides the thread-safety mechanism for complex arithmetic, disabling thread_local threatens thread safety.  Disable at your own risk, and do not use in multithreaded environment.  Write Apple a letter asking them to enable this C++ standard language feature, please, and offer your services helping Bertini2 be thread safe on a Mac using Apple's Clang.]))
+
+AS_IF([test "x$enable_thread_local" != "xno"],[
+	AC_DEFINE([USE_THREAD_LOCAL], [1],[Define if thread_local keyword should be used.  ])
+])
 
 
-#this calls a file in the m4/ directory, which sets up the MPI wrapper stuffs
-LX_FIND_MPI
+AC_ARG_ENABLE([expression_templates],
+    AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates for Boost.Multiprecision.  Versions of Boost.Multiprecision prior to 1.61 are missing min/max for expressions of real numbers, and some operations in Eigen prior to 3.3 (3.2.92) fail to compile.  If you are using Boost prior to 1.61, either patch according to https://github.com/boostorg/multiprecision/commit/f57bd6b31a64787425ec891bd2ceb536c9036f72 or turn expression templates off using this argument.]))
 
-# print a notice about the presence of MPI on the machine.
-AS_IF([test "$have_CXX_mpi" = "yes"],
-	AC_MSG_NOTICE([mpi c++ appears to work correctly]),
-	AC_MSG_NOTICE([it appears you do not have mpi installed])
-	)
+AS_IF([test "x$enable_expression_templates" != "xno"],[
+	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision.])
+])
 
+
+AC_ARG_ENABLE([copy_and_swap],
+    AS_HELP_STRING([--enable-copy_and_swap], [Enable the use of copy-and-swap for exception safety of the library.]),
+    [],
+    [enable_copy_and_swap=no])
+
+AS_IF([test "x$enable_copy_and_swap" != "xno"],[
+	AC_DEFINE([BERTINI_ENABLE_COPY_AND_SWAP], [1],[Enable copy-and-swap idiom in fundamental types, for exception safety.])
+])
 
 
 # the form of the following commands --
@@ -85,12 +100,9 @@ AC_SEARCH_LIBS([cos], [m], [], [
   ])
 
 # look for a header file in Eigen, and croak if fail to find.
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([eigen3/Eigen/Dense],[],AC_MSG_ERROR([unable to find Eigen 3  (eigen3/Eigen/Dense)]),[])
-AC_LANG_POP([C++])
+AX_EIGEN
 
-
-AX_BOOST_BASE([1.55],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.55, but it was not found in your system])])
+AX_BOOST_BASE([1.58],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.58 but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
@@ -98,8 +110,10 @@ AX_BOOST_REGEX
 AX_BOOST_TIMER
 AX_BOOST_UNIT_TEST_FRAMEWORK
 AX_BOOST_SERIALIZATION
-
-
+AX_BOOST_PROGRAM_OPTIONS
+AX_BOOST_LOG
+AX_BOOST_LOG_SETUP
+AX_BOOST_THREAD
 
 
 
@@ -109,10 +123,3 @@ AM_CONFIG_HEADER(include/bertini2/config.h)
 
 #wrap it up.
 AC_OUTPUT
-
-
-
-
-
-
-

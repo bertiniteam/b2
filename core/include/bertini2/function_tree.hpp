@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //function_tree.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,18 +13,25 @@
 //You should have received a copy of the GNU General Public License
 //along with function_tree.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  This file collects the various header files which define the Bertini2  
-//  function tree node types, which are scattered through about 10 files.
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
+// jeb collins, west texas a&m
+
+/**
+\file function_tree.hpp 
+
+\brief Collects the various header files which define the Bertini2 function tree node types.
+*/
 
 
-
-#ifndef BERTINI2_FUNCTION_TREE_H_
-#define BERTINI2_FUNCTION_TREE_H_
+#ifndef BERTINI_FUNCTION_TREE_HPP
+#define BERTINI_FUNCTION_TREE_HPP
 
 #include "bertini2/function_tree/node.hpp"
 

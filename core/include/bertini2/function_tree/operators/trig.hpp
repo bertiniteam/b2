@@ -1,26 +1,46 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //trig.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//negate_operator.hpp is distributed in the hope that it will be useful,
+//trig.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with negate_operator.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with trig.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
 //
 //  Created by daniel brake
 //
 //
 // trig.hpp:  Declares the trigonometric operator classes.
 
+/**
+\file trig.hpp
 
-#ifndef trig_operator_hpp
-#define trig_operator_hpp
+\brief Provides the abstract TrigOperator, and the concrete types such as SinOperator.
+
+*/
+
+#ifndef BERTINI_TRIGONOMETRIC_OPERATOR_HPP
+#define BERTINI_TRIGONOMETRIC_OPERATOR_HPP
 
 #include "bertini2/function_tree/operators/operator.hpp"
 #include "bertini2/function_tree/operators/arithmetic.hpp"
@@ -38,7 +58,7 @@ namespace node{
 	{
 	public:
 
-		TrigOperator(){}
+		
 		TrigOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 
@@ -50,7 +70,8 @@ namespace node{
 		 For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
 		 */
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
-
+	protected:
+		TrigOperator(){}
 	private:
 		friend class boost::serialization::access;
 
@@ -72,11 +93,9 @@ namespace node{
 	This class represents the sine function.  FreshEval method
 	is defined for sine and takes the sine of the child node.
 	*/
-	class SinOperator : public  virtual TrigOperator
+	class SinOperator : public virtual TrigOperator
 	{
 	public:
-		
-		SinOperator(){}
 		
 		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -90,7 +109,7 @@ namespace node{
 		/**
 		 Differentiates the sine function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		virtual ~SinOperator() = default;
@@ -99,18 +118,32 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return sin(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return sin(child_->Eval<mpfr>(diff_variable));
 		}
 		
-	private:
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = sin(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = sin(evaluation_value);
+		}
 
+		
+	private:
+		SinOperator() = default;
 		friend class boost::serialization::access;
 
 		template <typename Archive>
@@ -130,7 +163,7 @@ namespace node{
 	{
 	public:
 		
-		ArcSinOperator(){}
+		
 		
 		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -142,7 +175,7 @@ namespace node{
 		/**
 		 Differentiates the sine function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		virtual ~ArcSinOperator() = default;
@@ -151,18 +184,31 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return asin(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return asin(child_->Eval<mpfr>(diff_variable));
 		}
-		
-	private:
 
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = asin(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = asin(evaluation_value);
+		}
+
+	private:
+		ArcSinOperator() = default;
 		friend class boost::serialization::access;
 		
 
@@ -189,7 +235,7 @@ namespace node{
 	{
 	public:
 		
-		CosOperator(){}
+		
 		
 		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -205,7 +251,7 @@ namespace node{
 		/**
 		 Differentiates the cosine function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		virtual ~CosOperator() = default;
@@ -214,18 +260,33 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return cos(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return cos(child_->Eval<mpfr>(diff_variable));
 		}
 		
-	private:
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = cos(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = cos(evaluation_value);
+		}
 
+		
+		
+	private:
+		CosOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -245,7 +306,7 @@ namespace node{
 	{
 	public:
 		
-		ArcCosOperator(){}
+		
 		
 		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -260,7 +321,7 @@ namespace node{
 		/**
 		 Differentiates the cosine function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 
 
@@ -270,18 +331,32 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return acos(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return acos(child_->Eval<mpfr>(diff_variable));
 		}
 		
-	private:
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = acos(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = acos(evaluation_value);
+		}
 
+		
+	private:
+		ArcCosOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -309,7 +384,7 @@ namespace node{
 	{
 	public:
 		
-		TanOperator(){}
+		
 		
 		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -323,7 +398,7 @@ namespace node{
 		/**
 		 Differentiates the tangent function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -333,18 +408,32 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return tan(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return tan(child_->Eval<mpfr>(diff_variable));
 		}
 		
-	private:
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = tan(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = tan(evaluation_value);
+		}
 
+		
+	private:
+		TanOperator() = default;
 		friend class boost::serialization::access;
 		
 
@@ -365,7 +454,7 @@ namespace node{
 	{
 	public:
 		
-		ArcTanOperator(){}
+		
 		
 		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -379,7 +468,7 @@ namespace node{
 		/**
 		 Differentiates the tangent function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -389,18 +478,32 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for arctangent.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return atan(child_->Eval<dbl>(diff_variable));
 		}
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return atan(child_->Eval<mpfr>(diff_variable));
 		}
 		
-	private:
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = atan(evaluation_value);
+		}
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = atan(evaluation_value);
+		}
 
+		
+	private:
+		ArcTanOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>

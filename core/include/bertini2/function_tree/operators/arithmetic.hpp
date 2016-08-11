@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //arithmetic.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -6,20 +6,41 @@
 //(at your option) any later version.
 //
 //arithmetic.hpp is distributed in the hope that it will be useful,
-//but WITHOUT ANY WARRANTY; without even the implied wrhsanty of
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
 //along with arithmetic.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
+//
 //  Created by Collins, James B. on 4/30/15.
 //
 //
 // arithmetic.hpp:  Declares the arithmetic nodes for bertini2.
 
-#ifndef operator_arithmetic_hpp
-#define operator_arithmetic_hpp
+/**
+\file arithmetic.hpp
+
+\brief Provides the artithmetic Node types, such as Sum and Power
+
+*/
+
+#ifndef BERTINI_OPERATOR_ARITHMETIC_HPP
+#define BERTINI_OPERATOR_ARITHMETIC_HPP
 
 #include <vector>
 #include <string>
@@ -31,6 +52,7 @@
 
 
 #include "bertini2/function_tree/symbols/number.hpp"
+#include "bertini2/function_tree/symbols/special_number.hpp"
 #include "bertini2/function_tree/symbols/variable.hpp"
 #include "bertini2/function_tree/symbols/differential.hpp"
 
@@ -59,7 +81,10 @@ namespace node{
 		
 		
 		
-		SumOperator(){}
+		SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
+		{
+			AddChild(s, add_or_sub);
+		}
 		
 		SumOperator(const std::shared_ptr<Node> & left, const std::shared_ptr<Node> & right)
 		{
@@ -120,7 +145,7 @@ namespace node{
 		/**
 		 Return SumOperator whose children are derivatives of children_
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		/**
@@ -162,15 +187,27 @@ namespace node{
 		 Specific implementation of FreshEval for add and subtract.
 		 If child_sign_ = true, then add, else subtract
 		 */
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
+
+		/**
+		 Specific implementation of FreshEval in place for add and subtract.
+		 If child_sign_ = true, then add, else subtract
+		 */
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
 		
 		/**
 		 Specific implementation of FreshEval for add and subtract.
 		 If child_sign_ = true, then add, else subtract
 		 */
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+
+		/**
+		 Specific implementation of FreshEval for add and subtract.
+		 If child_sign_ = true, then add, else subtract
+		 */
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
 	private:
 		// Stores the sign of the particular term.  There is a one-one
 		// correspondence between elements of children_sign_ and children_.  This
@@ -181,6 +218,8 @@ namespace node{
 		
 	private:
 
+		SumOperator() = default;
+
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -188,6 +227,15 @@ namespace node{
 			ar & boost::serialization::base_object<NaryOperator>(*this);
 			ar & children_sign_;
 		}
+
+
+		void PrecisionChangeSpecific(unsigned prec) const override
+		{
+			temp_mp_.precision(prec);
+		}
+
+		mutable mpfr temp_mp_;
+		mutable dbl temp_d_;
 	};
 	
 	
@@ -212,8 +260,6 @@ namespace node{
 	{
 	public:
 		
-		NegateOperator(){}
-		
 		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
@@ -228,7 +274,7 @@ namespace node{
 		/**
 		 Returns negative of derivative of child.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
@@ -248,12 +294,16 @@ namespace node{
 	protected:
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
 
 	private:
+
+		NegateOperator() = default;
 
 		friend class boost::serialization::access;
 		
@@ -288,9 +338,16 @@ namespace node{
 	class MultOperator : public virtual NaryOperator
 	{
 	public:
-		//
+
+		/**
+		 single-node instantiation.  
 		
-		MultOperator(){}
+		 if evaluated, would return simply the value of s.
+		 */
+		MultOperator(std::shared_ptr<Node> const& s)
+		{
+			AddChild(s);
+		}
 		
 		MultOperator(std::shared_ptr<Node> const& left, std::shared_ptr<Node> const& right)
 		{
@@ -337,7 +394,7 @@ namespace node{
 		/**
 		 Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -367,16 +424,21 @@ namespace node{
 		
 		// Specific implementation of FreshEval for mult and divide.
 		//  If child_mult_ = true, then multiply, else divide
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
 		
 		
 		
 		
 		
 	private:
+		
+		MultOperator() = default;
+
 		// Stores the mult/div of a factor.  There is a one-one
 		// correspondence between elements of children_sign_ and children_.  This
 		// is enforced by the AddChild method, redefined in MultOperator.
@@ -394,6 +456,14 @@ namespace node{
 			ar & boost::serialization::base_object<NaryOperator>(*this);
 			ar & children_mult_or_div_;
 		}
+
+		void PrecisionChangeSpecific(unsigned prec) const override
+		{
+			temp_mp_.precision(prec);
+		}
+
+		mutable mpfr temp_mp_;
+		mutable dbl temp_d_;
 	};
 	
 	
@@ -408,12 +478,11 @@ namespace node{
 	 
 	 \see IntegerPowerOperator
 	 */
-	class PowerOperator : public virtual BinaryOperator
+	class PowerOperator : public virtual Operator
 	{
 		
 	public:
 		
-		PowerOperator(){}
 		
 		PowerOperator(const std::shared_ptr<Node> & new_base, const std::shared_ptr<Node> & new_exponent) : base_(new_base), exponent_(new_exponent)
 		{
@@ -432,7 +501,7 @@ namespace node{
 		}
 		
 		
-		void Reset() override;
+		void Reset() const override;
 		
 		
 		
@@ -443,7 +512,7 @@ namespace node{
 		/**
 		 Differentiates with the power rule.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -477,7 +546,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -490,14 +559,19 @@ namespace node{
 
 	protected:
 		
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_d(dbl& evaulation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr& evaulation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
 	private:
+				
+		PowerOperator() = default;
 		
 		std::shared_ptr<Node> base_;
 		std::shared_ptr<Node> exponent_;
+		
 
 
 	private:
@@ -507,7 +581,7 @@ namespace node{
 
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
-			ar & boost::serialization::base_object<BinaryOperator>(*this);
+			ar & boost::serialization::base_object<Operator>(*this);
 			ar & base_;
 			ar & exponent_;
 		}
@@ -569,7 +643,7 @@ namespace node{
 		/**
 		 Differentiates a number.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		/**
@@ -603,27 +677,39 @@ namespace node{
 		{}
 		
 		
-		IntegerPowerOperator(){}
 		
 	protected:
 		
 		
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return pow(child_->Eval<dbl>(diff_variable), exponent_);
 		}
+
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			evaluation_value = pow(evaluation_value, exponent_);
+		}
+
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return pow(child_->Eval<mpfr>(diff_variable),exponent_);
 		}
-		
+
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			evaluation_value = pow(evaluation_value, exponent_);
+		}
+
 	private:
 		
+		IntegerPowerOperator() = default;
+
+
 		int exponent_ = 1; ///< Exponent for the exponenetial operator
-
-
-	private:
 
 		friend class boost::serialization::access;
 		
@@ -664,8 +750,6 @@ namespace node{
 	{
 	public:
 		
-		SqrtOperator(){}
-		
 		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
@@ -677,7 +761,7 @@ namespace node{
 		/**
 		 Differentiates the square root function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -694,12 +778,16 @@ namespace node{
 	protected:
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
 
 	private:
+
+		SqrtOperator() = default;
 
 		friend class boost::serialization::access;
 		
@@ -729,8 +817,6 @@ namespace node{
 	{
 	public:
 		
-		ExpOperator(){}
-		
 		ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 	 
@@ -743,7 +829,7 @@ namespace node{
 		/**
 		 Differentiates the exponential function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -760,12 +846,14 @@ namespace node{
 	protected:
 		
 		// Specific implementation of FreshEval for exponentiate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
-		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
-		
-	private:
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+
+	private:
+		ExpOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -784,8 +872,6 @@ namespace node{
 	{
 	public:
 		
-		LogOperator(){}
-		
 		LogOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 	 
@@ -798,7 +884,7 @@ namespace node{
 		/**
 		 Differentiates the exponential function.
 		 */
-		std::shared_ptr<Node> Differentiate() override;
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 		
@@ -815,12 +901,14 @@ namespace node{
 	protected:
 		
 		// Specific implementation of FreshEval for exponentiate.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override;
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override;
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 	private:
-
+		LogOperator() = default;
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -854,13 +942,11 @@ namespace node{
 		return std::make_shared<IntegerPowerOperator>(base,power);
 	}
 
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p)
-	{
-		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
-	}
+	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p) = delete;
 	
+	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, dbl p) = delete;
 
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, dbl p)
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr_float p)
 	{
 		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
 	}
@@ -870,6 +956,10 @@ namespace node{
 		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
 	}
 
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpq_rational const& p)
+	{
+		return std::make_shared<PowerOperator>(N,std::make_shared<Rational>(p,0));
+	}
 
 
 
@@ -893,26 +983,11 @@ namespace node{
 	
 	inline std::shared_ptr<Node>& operator+=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
-		
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(rhs);
-		
+		std::shared_ptr<Node> temp = std::make_shared<SumOperator>(lhs,rhs);		
 		lhs.swap(temp);
 		return lhs;
 	}
-	
-	inline std::shared_ptr<Node>& operator+=(std::shared_ptr<Node> & lhs, double rhs)
-	{
-		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
 		
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Float>(rhs));
-		
-		lhs.swap(temp);
-		return lhs;
-	}
-	
 	
 	
 	
@@ -922,33 +997,22 @@ namespace node{
 		return std::make_shared<SumOperator>(lhs,rhs);
 	}
 	
-	
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, double rhs)
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
+	{
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
+	}
+
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr const& rhs)
 	{
 		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
 	}
 	
-	inline std::shared_ptr<Node> operator+(double lhs,  std::shared_ptr<Node> rhs)
-	{
-		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
-	}
-	
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, dbl rhs)
-	{
-		return std::make_shared<SumOperator>(lhs, std::make_shared<Float>(rhs));
-	}
-	
-	inline std::shared_ptr<Node> operator+(dbl lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator+(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr rhs)
-	{
-		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
-	}
-	
-	inline std::shared_ptr<Node> operator+(mpfr lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator+(mpfr const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
 	}
@@ -963,7 +1027,25 @@ namespace node{
 		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), rhs);
 	}
 
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpz_int const& rhs)
+	{
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Integer>(rhs));
+	}
 	
+	inline std::shared_ptr<Node> operator+(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), rhs);
+	}
+
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
+	{
+		return std::make_shared<SumOperator>(lhs,std::make_shared<Rational>(rhs,0));
+	}
+	
+	inline std::shared_ptr<Node> operator+(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Rational>(lhs,0), rhs);
+	}
 	
 	
 	
@@ -976,48 +1058,23 @@ namespace node{
 	
 	inline std::shared_ptr<Node>& operator-=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
-		
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(rhs,false);
-		
+		std::shared_ptr<Node> temp = std::make_shared<SumOperator>(lhs,true,rhs,false);
 		lhs.swap(temp);
 		return lhs;
 	}
-	
-	inline std::shared_ptr<Node>& operator-=(std::shared_ptr<Node> & lhs, double rhs)
-	{
-		std::shared_ptr<Node> temp = std::make_shared<SumOperator>();
 		
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<SumOperator>(temp)->AddChild(std::make_shared<Float>(rhs),false);
-		
-		lhs.swap(temp);
-		return lhs;
-	}
 	
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
 		return std::make_shared<SumOperator>(lhs,true,rhs,false);
 	}
 	
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, double rhs)
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_float rhs)
 	{
 		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
 	
-	inline std::shared_ptr<Node> operator-(double lhs,  std::shared_ptr<Node> rhs)
-	{
-		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
-	}
-	
-	
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, dbl rhs)
-	{
-		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
-	}
-	
-	inline std::shared_ptr<Node> operator-(dbl lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator-(mpfr_float lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
@@ -1042,8 +1099,25 @@ namespace node{
 		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
 	}
 
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpz_int const& rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Integer>(rhs), false);
+	}
+	
+	inline std::shared_ptr<Node> operator-(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
+	}
 
-
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
+	{
+		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Rational>(rhs,0), false);
+	}
+	
+	inline std::shared_ptr<Node> operator-(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<SumOperator>(std::make_shared<Rational>(lhs,0), true, rhs, false);
+	}
 
 
 	
@@ -1057,37 +1131,9 @@ namespace node{
 	}
 	
 	
-	inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, double rhs)
-	{
-		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
-		
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Float>(rhs));
-		
-		lhs.swap(temp);
-		return lhs;
-	}
-	
-	
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, double rhs)
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_float rhs)
 	{
 		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
-	}
-	
-	inline std::shared_ptr<Node> operator*(double lhs,  std::shared_ptr<Node> rhs)
-	{
-		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
-	}
-	
-
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, dbl rhs)
-	{
-		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
-	}
-	
-	inline std::shared_ptr<Node> operator*(dbl lhs,  std::shared_ptr<Node> rhs)
-	{
-		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr rhs)
@@ -1095,6 +1141,11 @@ namespace node{
 		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
 	}
 	
+	inline std::shared_ptr<Node> operator*(mpfr_float lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
+	}
+
 	inline std::shared_ptr<Node> operator*(mpfr lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
@@ -1110,8 +1161,28 @@ namespace node{
 		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), rhs);
 	}
 	
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpz_int const& rhs)
+	{
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Integer>(rhs));
+	}
 	
+	inline std::shared_ptr<Node> operator*(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), rhs);
+	}
 	
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
+	{
+		return std::make_shared<MultOperator>(lhs,std::make_shared<Rational>(rhs,0));
+	}
+	
+	inline std::shared_ptr<Node> operator*(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Rational>(lhs,0), rhs);
+	}
+
+
+	// this function provides an optimization for combining two power operators with the same base.
 	inline std::shared_ptr<Node>& operator*=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
 		
@@ -1133,9 +1204,7 @@ namespace node{
 			}
 		}
 
-		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(rhs);
+		std::shared_ptr<Node> temp = std::make_shared<MultOperator>(lhs,rhs);
 		lhs.swap(temp);
 		return lhs;
 
@@ -1173,11 +1242,7 @@ namespace node{
 		// }
 
 
-		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
-		
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(rhs,false);
-		
+		std::shared_ptr<Node> temp = std::make_shared<MultOperator>(lhs,true,rhs,false);
 		lhs.swap(temp);
 		return lhs;
 	}
@@ -1188,16 +1253,6 @@ namespace node{
 		return lhs;
 	}
 	
-	inline std::shared_ptr<Node>& operator/=(std::shared_ptr<Node> & lhs, double rhs)
-	{
-		std::shared_ptr<Node> temp = std::make_shared<MultOperator>();
-		
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(lhs);
-		std::dynamic_pointer_cast<MultOperator>(temp)->AddChild(std::make_shared<Float>(rhs),false);
-		
-		lhs.swap(temp);
-		return lhs;
-	}
 	
 	
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
@@ -1205,28 +1260,9 @@ namespace node{
 		return lhs/=rhs;
 	}
 	
-
-
-
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, double rhs)
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr_float rhs)
 	{
 		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
-	}
-	
-	inline std::shared_ptr<Node> operator/(double lhs,  std::shared_ptr<Node> rhs)
-	{
-		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
-	}
-	
-
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, dbl rhs)
-	{
-		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
-	}
-	
-	inline std::shared_ptr<Node> operator/(dbl lhs,  std::shared_ptr<Node> rhs)
-	{
-		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr rhs)
@@ -1234,6 +1270,11 @@ namespace node{
 		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
 	
+	inline std::shared_ptr<Node> operator/(mpfr_float lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
+	}
+
 	inline std::shared_ptr<Node> operator/(mpfr lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
@@ -1249,9 +1290,25 @@ namespace node{
 		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
 	}
 
-
-
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpz_int const& rhs)
+	{
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Integer>(rhs), false);
+	}
 	
+	inline std::shared_ptr<Node> operator/(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Integer>(lhs), true, rhs, false);
+	}
+
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
+	{
+		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Rational>(rhs,0), false);
+	}
+	
+	inline std::shared_ptr<Node> operator/(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
+	{
+		return std::make_shared<MultOperator>(std::make_shared<Rational>(lhs,0), true, rhs, false);
+	}
 
 
 

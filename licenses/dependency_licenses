@@ -1,0 +1,56 @@
+Bertini 2 depends on the following software and libraries:
+
+==
+Eigen
+--
+Eigen is available from http://eigen.tuxfamily.org/index.php?title=Main_Page
+
+Eigen's license as of April 12, 2016 is MPL2, with some LGPL scattered in.  For more information, please consult
+http://eigen.tuxfamily.org/index.php?title=FAQ#Licensing
+
+The Mozilla Public License 2.0 has been included at b2/licenses/
+
+==
+GMP
+--
+The GNU Multiple Precision Library is available from https://gmplib.org/.
+
+Since version 6, GMP is distributed under the dual licenses, GNU LGPL v3 and GNU GPL v2.
+
+The GNU LGPL license has been included in Bertini 2 at b2/licenses/
+
+==
+MPFR
+--
+The GNU MPFR library is available from http://www.mpfr.org/.
+
+MPFR is free. It is distributed under the GNU Lesser General Public License (GNU Lesser GPL), version 3 or later (2.1 or later for MPFR versions until 2.4.x).
+
+==
+Boost
+--
+The Boost C++ libraries are available from http://www.boost.org/.
+
+Boost is available under the Boost License 1.0.  Please see http://www.boost.org/users/license.html.  A copy of the BPL has been included in b2/licenses.
+
+==
+Python
+--
+Python is available from https://www.python.org/.
+
+Python versions 2 and 3 carry differing licenses.  Please see
+https://www.python.org/download/releases/2.7/license/
+and
+https://docs.python.org/3/license.html
+
+Copies of the Python licenses have not been included in Bertini 2 at this time.
+
+==
+Minieigen
+--
+Minieigen is available at 
+https://launchpad.net/minieigen/
+and
+https://github.com/eudoxos/minieigen
+
+It is released under LGPL 3, included in Bertini 2 as b2/licenses.

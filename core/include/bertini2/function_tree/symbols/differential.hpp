@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //differential.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,15 +13,34 @@
 //You should have received a copy of the GNU General Public License
 //along with differential.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
+//
 //  Created by Collins, James B. on 4/30/15.
 //
 //
 // differential.hpp:  Declares the class SpecialNumber.
 
+/**
+\file differential.hpp
 
+\brief Provides the differential Node class.
 
-#ifndef b2Test_Differential_h
-#define b2Test_Differential_h
+*/
+
+#ifndef BERTINI_NODE_DIFFERENTIAL_HPP
+#define BERTINI_NODE_DIFFERENTIAL_HPP
 
 #include <memory>
 #include "bertini2/function_tree/node.hpp"
@@ -43,23 +62,24 @@ namespace node{
 	class Differential : public virtual NamedSymbol
 	{
 	public:
-		Differential(){};
+		
 
 
 		/**
 		 Input shared_ptr to a Variable.
 		 */
-		Differential(std::shared_ptr<Variable> diff_variable, std::string var_name)
+		Differential(std::shared_ptr<const Variable> diff_variable, std::string var_name) : NamedSymbol('d'+ var_name), differential_variable_(diff_variable)
 		{
-			differential_variable_ = diff_variable;
-			name("d" + var_name);
 		}
 
 
+		void Reset() const override
+		{
+			Node::ResetStoredValues();
+		}
 
 
-
-		std::shared_ptr<Variable> GetVariable() const 
+		auto GetVariable() const 
 		{
 			return differential_variable_;
 		}
@@ -75,9 +95,9 @@ namespace node{
 		/**
 		 Differentiates a number.  Should this return the special number Zero?
 		 */
-		std::shared_ptr<Node> Differentiate() override
+		std::shared_ptr<Node> Differentiate() const override
 		{
-			return std::make_shared<Float>(0.0);
+			return std::make_shared<Integer>(0);
 		}
 
 
@@ -129,7 +149,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 			val_pair.first.precision(prec);
@@ -138,7 +158,7 @@ namespace node{
 		
 	protected:
 		// This should never be called for a Differential.  Only for Jacobians.
-		dbl FreshEval(dbl, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			if(differential_variable_ == diff_variable)
 			{
@@ -149,30 +169,69 @@ namespace node{
 				return 0.0;
 			}
 		}
-
-		mpfr FreshEval(mpfr, std::shared_ptr<Variable> diff_variable) override
+		
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			if(differential_variable_ == diff_variable)
 			{
-				return mpfr("1.0");
+				evaluation_value = 1.0;
 			}
 			else
 			{
-				return mpfr("0.0");
+				evaluation_value = 0.0;
 			}
 		}
 
 
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			if(differential_variable_ == diff_variable)
+			{
+				return mpfr(1);
+			}
+			else
+			{
+				return mpfr(0);
+			}
+		}
+		
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			if(differential_variable_ == diff_variable)
+			{
+				evaluation_value.SetOne();
+			}
+			else
+			{
+				evaluation_value.SetZero();
+			}
+		}
+
+
+
 	private:
-		std::shared_ptr<Variable> differential_variable_;
+		Differential() = default;
+		std::shared_ptr<const Variable> differential_variable_;
+
 
 		friend class boost::serialization::access;
 		
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		template<class Archive>
+		void save(Archive & ar, const unsigned int version) const
+		{
 			ar & boost::serialization::base_object<NamedSymbol>(*this);
 			ar & differential_variable_;
+			// ar & const_cast<std::shared_ptr<const Variable> >(differential_variable_);
 		}
+		
+		template<class Archive>
+		void load(Archive & ar, const unsigned int version)
+		{
+			ar & boost::serialization::base_object<NamedSymbol>(*this);
+			ar & std::const_pointer_cast<Variable>(differential_variable_);
+		}
+		
+		// BOOST_SERIALIZATION_SPLIT_MEMBER()
 
 	};
 

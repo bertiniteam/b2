@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //limbo.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,11 +13,27 @@
 //You should have received a copy of the GNU General Public License
 //along with limbo.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Created by Daniel Brake, July 13, 2015.
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//
-// limbo.hpp:  Declares functions which have not yet found a home.
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
 
+// individual authors of this file include:
+// daniel brake, university of notre dame
+
+
+/**
+\file limbo.hpp 
+
+\brief Declares functions which have not yet found a home. 
+
+If you can find a better home for these functions, please make the changes and submit a pull request.
+*/
+
+
+#ifndef BERTINI_LIMBO_HPP
+#define BERTINI_LIMBO_HPP
 
 #include <vector>
 #include <stdexcept>
@@ -27,16 +43,44 @@ extern "C" {
 	\brief Check for presence of the Bertini 2 library.
 
 	This function's sole purpose is for checking for the presence of the Bertini 2 library.
+
+	\return The character 'y'.
 	*/
 	char HaveBertini2();
 }
 
+
+
+
+
+
+
+
+
 namespace bertini{
 
-	
+	/**
+	\brief Method for printing class enums to streams.
+
+	This was adapted from https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
+	asked by user Adi, answered by James Adkison.  This code was provided CC-BY-SA 3.
+
+	This code does NOT work for streaming enum classes to Boost.Log streams.
+
+	\param stream The stream to print to.
+	\param e The enum value to print
+	\return The stream you are writing to.
+	*/
+	template<typename T>
+	std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
+	{
+	    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+	}
 
 	/**
-	Convert a zero-based index to a zero-based subscript vector.  Throws if the index is out-of-range based on the dimensions.
+	\brief Convert a zero-based index to a zero-based subscript vector.  
+
+	Throws `std::out_of_range` if the index is out-of-range based on the dimensions.
 
 	This goes from front to back, top to bottom.  So 
 
@@ -76,4 +120,55 @@ namespace bertini{
 		return subscripts;
 	  }
 
-}
+	  
+	  /**
+	  \brief Three-argument form of `max`.
+
+	  \param a Input one
+	  \param b Input two
+	  \param c Input three
+	  */
+	  template <typename T>
+	  T max(T const& a, T const& b, T const& c)
+	  {
+	  	using std::max;
+	  	return max(max(a,b),c);
+	  }
+
+	  /**
+	  \brief Four-argument form of `max`.
+
+	  \param a Input one
+	  \param b Input two
+	  \param c Input three
+	  \param d Input four
+	  */
+	  template <typename T>
+	  T max(T const& a, T const& b, T const& c, T const& d)
+	  {
+	  	using std::max;
+	  	using bertini::max;
+	  	return max(max(a,b,c),d);
+	  }
+
+	  /**
+	  \brief Five-argument form of `max`.
+
+	  \param a Input one
+	  \param b Input two
+	  \param c Input three
+	  \param d Input four
+	  \param e Input five
+	  */
+	  template <typename T>
+	  T max(T const& a, T const& b, T const& c, T const& d, T const& e)
+	  {
+	  	using std::max;
+	  	using bertini::max;
+	  	return max(max(a,b,c,d),e);
+	  }
+} // re: namespace bertini
+
+
+#endif
+

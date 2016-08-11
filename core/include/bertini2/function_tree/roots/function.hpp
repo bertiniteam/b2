@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //function.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -13,14 +13,35 @@
 //You should have received a copy of the GNU General Public License
 //along with function.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
+//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+//  James Collins
+//  West Texas A&M University
+//  Spring, Summer 2015
+//
+// Daniel Brake
+// University of Notre Dame
+//
 //  Created by Collins, James B. on 4/30/15.
 //
 //
 // function.hpp:  Declares the class Function.
 
+/**
+\file function.hpp
 
-#ifndef b2Test_Function_h
-#define b2Test_Function_h
+\brief Provides the Function Node type, a NamedSymbol.
+
+*/
+
+
+#ifndef BERTINI_FUNCTION_NODE_HPP
+#define BERTINI_FUNCTION_NODE_HPP
 
 
 #include "bertini2/function_tree/symbols/symbol.hpp"
@@ -35,15 +56,11 @@ namespace node{
 
 	This class defines a function.  It stores the entry node for a particular functions tree.
 	 */
-	class Function : public NamedSymbol
+	class Function : public virtual NamedSymbol
 	{
 	public:
 		
 		
-		/**
-		 The default constructor
-		 */
-		Function() {};
 		
 		
 
@@ -55,7 +72,7 @@ namespace node{
 		/**
 		 Constructor defines entry node at construct time.
 		 */
-		Function(const std::shared_ptr<Node> & entry) : entry_node_(entry)
+		Function(const std::shared_ptr<Node> & entry) : NamedSymbol("unnamed_function"), entry_node_(entry)
 		{
 		}
 		
@@ -76,9 +93,12 @@ namespace node{
 		void print(std::ostream & target) const override
 		{
 			if (entry_node_)
+			{
+				NamedSymbol::print(target);
 				entry_node_->print(target);
+			}
 			else
-				target << "emptyfunction";
+				target << "impossibly emptyfunction";
 		}
 		
 		
@@ -91,7 +111,7 @@ namespace node{
 		/**
 		 The function which flips the fresh eval bit back to fresh.
 		 */
-		void Reset() override
+		void Reset() const override
 		{
 			EnsureNotEmpty();
 			
@@ -124,7 +144,7 @@ namespace node{
 		/** 
 		 Calls Differentiate on the entry node and returns differentiated entry node.
 		 */
-		std::shared_ptr<Node> Differentiate() override
+		std::shared_ptr<Node> Differentiate() const override
 		{
 			return entry_node_->Differentiate();
 		}
@@ -187,10 +207,16 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) override
+		virtual void precision(unsigned int prec) const override
 		{
 			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
+			if (val_pair.first.precision()==prec)
+				return;
+			else{
+				val_pair.first.precision(prec);
+				entry_node_->precision(prec);
+			}
+			
 		}
 		
 	protected:
@@ -198,25 +224,43 @@ namespace node{
 		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		dbl FreshEval(dbl d, std::shared_ptr<Variable> diff_variable) override
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return entry_node_->Eval<dbl>(diff_variable);
 		}
 		
 		/**
+		 Calls FreshEval in place on the entry node to the tree.
+		 */
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			entry_node_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+		}
+
+		
+		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		mpfr FreshEval(mpfr m, std::shared_ptr<Variable> diff_variable) override
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
 			return entry_node_->Eval<mpfr>(diff_variable);
 		}
+		
+		/**
+		 Calls FreshEval in place on the entry node to the tree.
+		 */
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		{
+			entry_node_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		}
+
 
 		
 		
 		std::shared_ptr<Node> entry_node_; ///< The top node for the function.
-
+		
+		Function() = default;
 	private:
-
 		friend class boost::serialization::access;
 		
 		template <typename Archive>

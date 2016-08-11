@@ -1,4 +1,4 @@
-//This file is part of Bertini 2.0.
+//This file is part of Bertini 2.
 //
 //mpfr_extensions.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
@@ -11,50 +11,97 @@
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with .  If not, see <http://www.gnu.org/licenses/>.
+//along with mpfr_extensions.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+// Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-//  This file contains extensions to types provided by Boost.Multiprecision.
-//
-//
+// See <http://www.gnu.org/licenses/> for a copy of the license, 
+// as well as COPYING.  Bertini2 is provided with permitted 
+// additional terms in the b2/licenses/ directory.
+
+// individual authors of this file include:
+// daniel brake, university of notre dame
+
+/**
+\file mpfr_extensions.hpp 
+
+\brief Extensions to the Boost.Multiprecision library.
+
+Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and gmp_int types.
+*/
 
 #ifndef BERTINI_MPFR_EXTENSIONS_HPP
 #define BERTINI_MPFR_EXTENSIONS_HPP
 
+#include "bertini2/config.h"
 
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
-
-#include <random>
+#include <boost/random.hpp>
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/split_member.hpp>
 
-#include <eigen3/Eigen/Core>
-
 #include <string>
-#include <assert.h>
 
 
 
+
+namespace bertini{
+
+#ifdef BMP_EXPRESSION_TEMPLATES
+	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>; 
+	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_on>;
+	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_on>;
+#else
+	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_off>; 
+	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_off>;
+	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_off>;
+#endif
+
+	inline auto DefaultPrecision()
+	{
+		return mpfr_float::default_precision();
+	}
+
+	inline void DefaultPrecision(unsigned prec)
+	{
+		mpfr_float::default_precision(prec);
+	}
+
+	/** 
+	\brief Get the precision of a number.
+
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline
+	unsigned Precision(mpfr_float const& num)
+	{
+		return num.precision();
+	}
+
+	/** 
+	\brief Change the precision of a number.
+
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline void Precision(mpfr_float & num, unsigned prec)
+	{
+		num.precision(prec);
+	}
+}
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
 namespace boost { namespace serialization {
-	
-	using mpfr_float = boost::multiprecision::mpfr_float;
-	
-	
 	/**
 	 Save a mpfr_float type to a boost archive.
 	 */
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0> const& r, unsigned /*version*/)
 	{
+		unsigned num_digits(r.precision());
+		ar & num_digits;
 		std::string tmp = r.str(0,std::ios::scientific);
 		ar & tmp;
 	}
@@ -65,6 +112,9 @@ namespace boost { namespace serialization {
 	template <typename Archive>
 	void load(Archive& ar, ::boost::multiprecision::backends::mpfr_float_backend<0>& r, unsigned /*version*/)
 	{
+		unsigned num_digits;
+		ar & num_digits;
+		r.precision(num_digits);
 		std::string tmp;
 		ar & tmp;
 		r = tmp.c_str();
@@ -124,123 +174,126 @@ BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_rational)
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::gmp_int)
 
 
-// reopen the Eigen namespace to inject this struct.
-namespace Eigen {
-	
-	using boost::multiprecision::mpfr_float;
-	using namespace boost::multiprecision;
-	template<> struct NumTraits<boost::multiprecision::mpfr_float> : GenericNumTraits<boost::multiprecision::mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+// if you wish to use et_on with Boost.Multiprecision with Eigen 3.2.x or earlier, you must apply a patch to Boost.MP related to bug 11149, and use the following non-standard lines.
+// https://svn.boost.org/trac/boost/ticket/11149
+
+#define EIGEN_DEVICE_FUNC // to make Eigen 3.3 happy... ugh, this is likely to break CUDA usage with Bertini2, if that ever happens.
+#include <Eigen/src/Core/util/Macros.h>
+
+#ifdef BMP_EXPRESSION_TEMPLATES
+	#if (!EIGEN_VERSION_AT_LEAST(3,2,92)) // version of 3.3-beta1 is 3,2,92.
+		namespace std{ 
+using boost::multiprecision::min; //error receiver: please see https://svn.boost.org/trac/boost/ticket/11149 for information about these using statements in std namespace.  
+using boost::multiprecision::max; //3 options: ./configure --disable-expression_templates, use Boost 1.61, or patch earlier Boost versions to resolve this.
+		}
+	#endif
+#endif
+
+namespace bertini
+{
+	/**
+	Generate a random integer number between -10^digits and 10^digits
+	*/
+	template <unsigned long digits = 50>
+	inline
+	mpz_int RandomInt()
 	{
-		
-		typedef boost::multiprecision::mpfr_float Real;
-		typedef boost::multiprecision::mpfr_float NonInteger;
-		typedef boost::multiprecision::mpfr_float Nested;
-		enum {
-			IsComplex = 0,
-			IsInteger = 0,
-			IsSigned = 1,
-			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
-			ReadCost = 20,
-			AddCost = 30,
-			MulCost = 40
-		};
-		
-		
-		inline static Real highest() {
-			
-			return (boost::multiprecision::mpfr_float(1) - epsilon()) * pow(boost::multiprecision::mpfr_float(2),mpfr_get_emax()-1);//);//boost::multiprecision::mpfr_float::default_precision());
-		}
-		
-		inline static Real lowest() {
-			return -highest();
-		}
-		
-		inline static Real dummy_precision()
-		{
-			return pow( boost::multiprecision::mpfr_float(10),-int(boost::multiprecision::mpfr_float::default_precision()-3));
-		}
-		
-		inline static Real epsilon()
-		{
-			return pow(boost::multiprecision::mpfr_float(10),-int(boost::multiprecision::mpfr_float::default_precision()));
-		}
-		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
-	};
-}
-
-
-
-
-namespace bertini {
-
-	
-	
-	using mpfr_float = boost::multiprecision::mpfr_float;
+		using namespace boost::random;
+   		static mt19937 mt;
+	    static uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
+	    return ui(mt);
+	}
 	
 	
 	/**
-	 \brief create a random number, at the current default precision
-	 
-	 \note this function calls the templated function RandomMpfr.
-	 
-	 \tparam T the number type to generate.
-	 \return The random number.
-	 */
-	template <typename T>
-	T RandomMp();
-	
+	Generate a random rational number with numerator and denomenator between -10^digits and 10^digits
+	*/
+	template <unsigned long digits = 50>
+	mpq_rational RandomRat()
+	{
+   		using namespace boost::random;
+   		static mt19937 mt;
+	    static uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
+	    return mpq_rational(ui(mt),ui(mt));
+	}
 
+
+	/**
+	 Produce a random number with at length_in_digits non-zero digits.
+	 
+	 \tparam length_in_digits The length of the desired random number
+	 */
+	template <unsigned int length_in_digits>
+	mpfr_float RandomMp()
+	{	
+
+		using namespace boost::multiprecision;
+   		using namespace boost::random;
+
+   		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
+   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
+
+		return ur(gen);
+	}
 	
 	/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
 	 
-	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
-	 \return number_to_make_random The number which you desire to populate with a random number.
 	 */
-	template <typename T, unsigned int length_in_digits>
-	T RandomMpUniformUnitInterval();
-	
-	
-	
-	
-	
-	
-	
-	
+	template <unsigned int length_in_digits>
+	void RandomMp(mpfr_float & a)
+	{	
+
+		using namespace boost::multiprecision;
+   		using namespace boost::random;
+
+   		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
+   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
+
+		a = ur(gen);
+	}
+
 	/**
 	 a templated function for producing random numbers in a specified interval, of a given number of digits.
 	 
-	 \tparam T the number type to generate.
 	 \tparam length_in_digits The length of the desired random number
-	 \return number_to_make_random The number which you desire to populate with a random number.
 	 
 	 \param a The left bound.
 	 \param b The right bound.
 	 */
-	template <typename T, unsigned int length_in_digits>
-	T RandomMpUniformInInterval(const T & a, const T & b);
-	
-	
-	
+	template <unsigned int length_in_digits>
+	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
+	{
+		return (b-a)*RandomMp<length_in_digits>()+a;
+	}
+
+
+
+	/**
+	 \brief create a random number, at the current default precision
+	 */
+	mpfr_float RandomMp();
+
 	/**
 	 \brief create a random number in a given interval, at the current default precision
-	 
-	 \note this function calls the templated function RandomMpfrUniformInInterval.
-	 
-	 \tparam T the number type to generate.
-	 \param a The left bound.
-	 \param b The right bound.
+	*/
+	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b);
 
-	 \return The random number.
+
+
+	/**
+	 \brief Set an existing mpfr_float to a random number, to a given precision.  
+
+	 This function is how to get random numbers at a precision different from the current default.
 	 */
-	template <typename T>
-	T RandomMp(const T & a, const T & b);
+	void RandomMp(mpfr_float & a, unsigned num_digits);
+
 	
-	
-	
+
 	
 } // re: namespace bertini
+
 
 
 #endif
