@@ -182,12 +182,14 @@ namespace bertini {
 			
 			integer_string_.name("integer_string_");
 			integer_string_ = eps[_val = std::string()] >>
+			-(qi::lit('-'))[_val += "-"] >>
 			number_with_no_point_ [_val += _1]
 			>> -exponent_notation_ [_val += _1];
 			
 			
 			long_number_string_.name("long_number_string_");
 			long_number_string_ = eps[_val = std::string()] >>
+			-(qi::lit('-'))[_val += "-"] >>
 			(
 			 // 1. Read possible numbers before decimal, with possible negative
 			 (number_with_digits_after_point_ [_val += _1]
