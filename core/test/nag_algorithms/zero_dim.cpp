@@ -47,8 +47,6 @@ BOOST_AUTO_TEST_CASE(first)
 	zd.Solve();
 
 	zd.Output();
-	
-	std::cout << sys << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
