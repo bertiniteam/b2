@@ -80,7 +80,7 @@ namespace node{
 		template <typename T>
 		void set_current_value(T val)
 		{
-			assert(Precision(std::get< std::pair<T,bool> >(current_value_).first)==Precision(val));
+			assert(Precision(std::get< std::pair<T,bool> >(current_value_).first)==Precision(val) && "precision of value setting into variable doesn't match precision of variable.  is default precision correct?");
 			
 			std::get< std::pair<T,bool> >(current_value_).first = val;
 			std::get< std::pair<T,bool> >(current_value_).second = false;
