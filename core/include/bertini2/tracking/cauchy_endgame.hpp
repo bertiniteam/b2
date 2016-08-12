@@ -355,13 +355,9 @@ public:
 								?
 							  starting_time
 								:
-							  polar(radius, (ii+1)*2*acos(static_cast<RT>(-1)) / (this->EndgameSettings().num_sample_points) + angle)
-							  ; 
+							  polar(radius, (ii+1)*2*acos(static_cast<RT>(-1)) / (this->EndgameSettings().num_sample_points) + angle) + target_time;
 			// If we are tracking to a nonzero target time we need to shift our values to track to. This is a step that may not be needed if target_time = 0
-			if(target_time != BCT(0,0) && next_time != starting_time)
-			{
-				next_time = next_time + target_time; 
-			}
+							  ; 
 
 
 			auto tracking_success = this->GetTracker().TrackPath(next_sample, current_time, next_time, current_sample);	
