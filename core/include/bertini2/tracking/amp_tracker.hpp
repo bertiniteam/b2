@@ -362,6 +362,34 @@ namespace bertini{
 					return std::get<Vec<mpfr>>(this->current_space_);
 			}
 
+			virtual
+			const mpfr_float LatestConditionNumber() const override
+			{
+				if (this->CurrentPrecision()!=DoublePrecision())
+					return std::get<mpfr_float>(this->condition_number_estimate_);
+				else
+					return mpfr_float(std::get<double>(this->condition_number_estimate_));
+			}
+
+			virtual
+			const mpfr_float LatestErrorEstimate() const override
+			{
+				if (this->CurrentPrecision()!=DoublePrecision())
+					return std::get<mpfr_float>(this->error_estimate_);
+				else
+					return mpfr_float(std::get<double>(this->error_estimate_));
+			}
+
+			virtual
+			const mpfr_float LatestNormOfStep() const override
+			{
+				if (this->CurrentPrecision()!=DoublePrecision())
+					return std::get<mpfr_float>(this->norm_delta_z_);
+				else
+					return mpfr_float(std::get<double>(this->norm_delta_z_));
+			}
+
+
 
 		private:
 

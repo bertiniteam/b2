@@ -586,6 +586,17 @@ namespace bertini{
 
 
 			public: 
+
+			virtual
+			const BaseRealType LatestConditionNumber() const = 0;
+
+			virtual
+			const BaseRealType LatestErrorEstimate() const = 0;
+
+			virtual
+			const BaseRealType LatestNormOfStep() const = 0;
+
+
 			unsigned NumVariables() const
 			{
 				return GetSystem().NumVariables();

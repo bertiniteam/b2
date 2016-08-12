@@ -88,6 +88,24 @@ namespace bertini{
 				return std::get<Vec<CT>>(this->current_space_);
 			}
 
+			virtual
+			const RT LatestConditionNumber() const override
+			{
+				return std::get<RT>(this->condition_number_estimate_);
+			}
+
+			virtual
+			const RT LatestErrorEstimate() const override
+			{
+				return std::get<RT>(this->error_estimate_);
+			}
+
+			virtual
+			const RT LatestNormOfStep() const override
+			{
+				return std::get<RT>(this->norm_delta_z_);
+			}
+
 
 			void ResetCounters() const override
 			{
