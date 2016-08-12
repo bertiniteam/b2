@@ -27,6 +27,10 @@
 
 namespace bertini{
 	namespace algorithm{
+
+template<typename T>
+using SolnCont = std::vector<T>;
+
 		namespace config{
 
 

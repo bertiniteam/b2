@@ -41,35 +41,6 @@ namespace bertini {
 
 	namespace algorithm {
 
-		namespace output {
-
-			template<typename BaseComplexType>
-			struct ZeroDim{
-				using BaseRealType = typename Eigen::NumTraits<BaseComplexType>::Real;
-				struct MetaData{
-					mpz_int path_index;     		// path number of the solution
-					mpz_int solution_index;      	// solution number
-
-					BaseRealType function_residual; 	// the latest function residual
-					BaseRealType condition_number; 		// the latest estimate on the condition number
-					BaseRealType newton_residual; 		// the latest newton residual 
-
-					BaseComplexType final_t;   					// the final value of time
-					BaseRealType accuracy_estimate; 			// accuracy estimate between extrapolations
-					BaseRealType time_of_first_prec_increase;    // time value of the first increase in precision
-
-					unsigned cycle_num;    	// cycle number used in extrapolations
-					bool success;      		// success flag 
-					int multiplicity; 		// multiplicity
-					bool is_real;       		// real flag:  0 - not real, 1 - real
-					bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
-					bool is_sing;       		// singular flag: 0 - non-sigular, 1 - singular
-				};
-
-				std::vector<Vec<BaseComplexType> > final_solutions_;
-				std::vector<MetaData> final_metadata_;
-			};
-		}
 
 
 		template<typename TrackerType, typename EndgameType, typename SystemType, typename StartSystemType>
@@ -81,6 +52,50 @@ namespace bertini {
 			using BaseRealType    = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 			
 			using PrecisionConfig = typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
+
+			using SolnIndT = typename SolnCont<BaseComplexType>::size_type;
+
+			struct MetaData{
+
+				// only vaguely metadata.  artifacts of randomness or ordering
+				mpz_int path_index;     		// path number of the solution
+				mpz_int solution_index;      	// solution number
+
+				// computed across all of the solve
+				bool precision_changed = false;
+				BaseComplexType time_of_first_prec_increase;    // time value of the first increase in precision
+
+				
+
+
+
+				//computed in pre-endgame only
+
+				tracking::SuccessCode pre_endgame_success;     // success code 
+
+
+
+				// computed in endgame only
+				BaseRealType condition_number; 		// the latest estimate on the condition number
+				BaseRealType newton_residual; 		// the latest newton residual 
+
+				BaseComplexType final_t;   					// the final value of time
+				BaseRealType accuracy_estimate; 			// accuracy estimate between extrapolations
+
+				unsigned cycle_num;    	// cycle number used in extrapolations
+				
+				tracking::SuccessCode endgame_success;      		// success code 
+
+
+				// things added by post-processing
+				BaseRealType function_residual; 	// the latest function residual
+
+				int multiplicity; 		// multiplicity
+				bool is_real;       		// real flag:  0 - not real, 1 - real
+				bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
+				bool is_sing;       		// singular flag: 0 - non-sigular, 1 - singular
+			};
+
 
 			ZeroDim(System const& sys) : target_system_(Clone(sys)), tracker_(target_system_), endgame_(tracker_)
 			{
@@ -116,10 +131,13 @@ namespace bertini {
 
 				start_system_ = StartSystemType(target_system_); // make the start system from the target system.
 
+				num_start_points_ = start_system_.NumStartPoints();
+
 				Var t = std::make_shared<Variable>("ZERO_DIM_PATH_VARIABLE"); 
 
 				homotopy_ = (1-t)*target_system_ + std::make_shared<node::Rational>(node::Rational::Rand())*t*start_system_;
 				homotopy_.AddPathVariable(t);
+				assert(homotopy_.IsHomogeneous());
 
 				tolerances_ = algorithm::config::Tolerances<BaseRealType>();
 
@@ -192,8 +210,14 @@ namespace bertini {
 				if (!SetupComplete())
 					throw std::runtime_error("attempting to Solve ZeroDim, but setup was not completed");
 
-				if (start_system_.NumStartPoints() > solutions_at_endgame_boundary_.max_size())
+				if (num_start_points_ > solutions_at_endgame_boundary_.max_size())
 					throw std::runtime_error("start system has more solutions than container for results.  I refuse to continue until this has been addressed.");
+
+				auto num_as_size_t = static_cast<SolnIndT>(num_start_points_);
+
+				solution_metadata_.resize(num_as_size_t);
+				solutions_at_endgame_boundary_.resize(num_as_size_t);
+				endgame_solutions_.resize(num_as_size_t);
 			}
 
 
@@ -210,19 +234,40 @@ namespace bertini {
 			{
 				tracker_.SetTrackingTolerance(tolerances_.newton_before_endgame);
 
-				auto num_paths_to_track = start_system_.NumStartPoints();
-
-				for (decltype(num_paths_to_track) ii{0}; ii < num_paths_to_track; ++ii)
+				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
+					auto soln_ind = static_cast<SolnIndT>(ii);
+
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						tracker_.AddObserver(&first_prec_rec_);
+						tracker_.AddObserver(&min_max_prec_);
+					}
 					DefaultPrecision(initial_ambient_precision_);
 
 					auto start_point = start_system_.template StartPoint<BaseComplexType>(ii);
 
 					Vec<BaseComplexType> result;
-					auto tracking_success = tracker_.TrackPath(result,t_start_,t_endgame_boundary_,start_point);
+					auto tracking_success = tracker_.TrackPath(result, t_start_, t_endgame_boundary_, start_point);
 
-					solutions_at_endgame_boundary_.push_back(std::make_tuple(result, tracking_success, tracker_.CurrentStepsize()));
+					solutions_at_endgame_boundary_[soln_ind] = std::make_tuple(result, tracking_success, tracker_.CurrentStepsize());
+
+					solution_metadata_[soln_ind].pre_endgame_success = tracking_success;
+
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && first_prec_rec_.DidPrecisionIncrease())
+					{
+						solution_metadata_[soln_ind].precision_changed = true;
+						solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+					}
+
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						tracker_.RemoveObserver(&first_prec_rec_);
+						tracker_.RemoveObserver(&min_max_prec_);
+					}
 				}
+
+				
 			}
 
 			void EGBoundaryAction()
@@ -251,17 +296,45 @@ namespace bertini {
 
 				tracker_.SetTrackingTolerance(tolerances_.newton_during_endgame);
 
-				for (const auto& s : solutions_at_endgame_boundary_)
+				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
-					const auto& bdry_point = std::get<0>(s);
-					tracker_.SetStepSize(std::get<2>(s));
+					auto soln_ind = static_cast<SolnIndT>(ii);
+
+					if (solution_metadata_[soln_ind].pre_endgame_success != tracking::SuccessCode::Success)
+						continue;
+
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && !first_prec_rec_.DidPrecisionIncrease())
+					{
+						tracker_.AddObserver(&first_prec_rec_);
+						tracker_.AddObserver(&min_max_prec_);
+					}
+
+
+					const auto& bdry_point = std::get<Vec<BaseComplexType>>(solutions_at_endgame_boundary_[soln_ind]);
+
+
+					tracker_.SetStepSize(std::get<BaseRealType>(solutions_at_endgame_boundary_[soln_ind]));
 					tracker_.ReinitializeInitialStepSize(false);
 
 					DefaultPrecision(Precision(bdry_point));
 
 					tracking::SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary_),bdry_point);
 
-					endgame_solutions_.push_back(endgame_.template FinalApproximation<BaseComplexType>());
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && first_prec_rec_.DidPrecisionIncrease())
+					{
+						solution_metadata_[soln_ind].precision_changed = true;
+						solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+					}
+
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						tracker_.RemoveObserver(&first_prec_rec_);
+						tracker_.RemoveObserver(&min_max_prec_);
+					}
+
+					solution_metadata_[soln_ind].condition_number = tracker_.LatestConditionNumber();
+
+					endgame_solutions_[soln_ind] = endgame_.template FinalApproximation<BaseComplexType>();
 				}
 			}
 
@@ -276,12 +349,19 @@ namespace bertini {
 			*/
 			void PostProcess()
 			{
-				
+				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+				{
+					auto soln_ind = static_cast<SolnIndT>(ii);
+					DefaultPrecision(Precision(endgame_solutions_[soln_ind]));
+					target_system_.precision(Precision(endgame_solutions_[soln_ind]));
+					auto function_residuals = target_system_.Eval(endgame_solutions_[soln_ind]);
+				}
 			}
 
 
-			
-			
+			tracking::FirstPrecisionRecorder<TrackerType> first_prec_rec_;
+			tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec_;
+
 			config::PostProcessing<BaseRealType> post_processing_;
 			config::ZeroDim zero_dim_config_;
 			config::Tolerances<BaseRealType> tolerances_;
@@ -298,15 +378,17 @@ namespace bertini {
 
 			BaseComplexType t_start_, t_endgame_boundary_, t_end_;
 
-			std::vector< std::tuple<Vec<BaseComplexType>, tracking::SuccessCode, BaseRealType>> solutions_at_endgame_boundary_;
-			std::vector<Vec<BaseComplexType> > endgame_solutions_;
+			SolnCont< std::tuple<Vec<BaseComplexType>, tracking::SuccessCode, BaseRealType>> solutions_at_endgame_boundary_;
+
+			SolnCont<Vec<BaseComplexType> > endgame_solutions_;
+			SolnCont<MetaData> solution_metadata_;
+
+			mpz_int num_start_points_;
 
 
 			bool setup_complete_ = false;
 			unsigned initial_ambient_precision_ = DoublePrecision();
 
-
-			output::ZeroDim<BaseComplexType> results_;
 		}; // struct ZeroDim
 
 
