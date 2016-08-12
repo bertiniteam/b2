@@ -151,7 +151,7 @@ namespace bertini
 					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = PrecisionType::Adaptive];
 
 					config_name_.name("precisiontype_");
-					config_name_ = *(char_ - no_case["mptype:"]) >> no_case["mptype:"] >> precisiontype_[_val = _1] >> ';';
+					config_name_ = *(char_ - (no_case["mptype"]>>':')) >> (no_case["mptype"] >> ':') >> precisiontype_[_val = _1] >> ';';
 					
 					no_setting_.name("no_setting_");
 					no_setting_ = *(char_ - no_case["mptype:"]);
@@ -251,7 +251,7 @@ namespace bertini
 					predictor_.add("8", config::Predictor::RKVerner67);
 
 					
-					std::string setting_name = "odepredictor:";
+					std::string setting_name = "odepredictor";
 					
 					
 					root_rule_.name("ConfigPredictor_root_rule");
@@ -259,7 +259,7 @@ namespace bertini
 					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = config::Predictor::RKF45];
 					
 					config_name_.name("predictor_");
-					config_name_ = *(char_ - no_case[setting_name]) >> no_case[setting_name] >> predictor_[_val = _1] >> ';';
+					config_name_ = *(char_ - (no_case[setting_name] >> ':')) >> (no_case[setting_name] >> ':') >> predictor_[_val = _1] >> ';';
 					
 					no_setting_.name("no_setting_");
 					no_setting_ = *(char_ - no_case[setting_name]);
@@ -349,8 +349,8 @@ namespace bertini
 					
 					
 					
-					std::string level_name = "securitylevel:";
-					std::string maxnorm_name = "securitymaxnorm:";
+					std::string level_name = "securitylevel";
+					std::string maxnorm_name = "securitymaxnorm";
 					
 					
 					root_rule_.name("ConfigSecurity_root_rule");
@@ -365,13 +365,13 @@ namespace bertini
 												   }, _val, _1 )])
 					>> -no_setting_) | no_setting_;
 					
-					all_names_ = no_case[level_name] | no_case[maxnorm_name];
+					all_names_ = (no_case[level_name] >> ':') | (no_case[maxnorm_name] >> ':');
 					
 					security_level_.name("security_level_");
-					security_level_ = *(char_ - all_names_) >> no_case[level_name] >> qi::int_[_val = _1] >> ';';
+					security_level_ = *(char_ - all_names_) >> (no_case[level_name] >> ':') >> qi::int_[_val = _1] >> ';';
 					
 					security_max_norm_.name("security_max_norm_");
-					security_max_norm_ = *(char_ - all_names_) >> no_case[maxnorm_name]
+					security_max_norm_ = *(char_ - all_names_) >> (no_case[maxnorm_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
@@ -463,10 +463,10 @@ namespace bertini
 					
 					
 					
-					std::string newton_before_name = "tracktolbeforeeg:";
-					std::string newton_during_name = "tracktolduringeg:";
-					std::string final_tol_name = "finaltol:";
-					std::string path_trunc_name = "pathtruncationthreshold:";
+					std::string newton_before_name = "tracktolbeforeeg";
+					std::string newton_during_name = "tracktolduringeg";
+					std::string final_tol_name = "finaltol";
+					std::string path_trunc_name = "pathtruncationthreshold";
 					
 					
 					root_rule_.name("ConfigTolerances_root_rule");
@@ -492,31 +492,32 @@ namespace bertini
 								| no_setting_;
 					
 					
-					all_names_ = no_case[newton_before_name] | no_case[newton_during_name]| no_case[final_tol_name]| no_case[path_trunc_name];
+					all_names_ = (no_case[newton_before_name] >> ':') | (no_case[newton_during_name] >> ':')| (no_case[final_tol_name] >> ':')
+							| (no_case[path_trunc_name] >> ':');
 					
 					newton_before_endgame_.name("newton_before_endgame_");
-					newton_before_endgame_ = *(char_ - all_names_) >> no_case[newton_before_name]
+					newton_before_endgame_ = *(char_ - all_names_) >> (no_case[newton_before_name] >> ':')
 						>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
 																}, _val, _1 )] >> ';';
 
 					newton_during_endgame_.name("newton_during_endgame_");
-					newton_during_endgame_ = *(char_ - all_names_) >> no_case[newton_during_name]
+					newton_during_endgame_ = *(char_ - all_names_) >> (no_case[newton_during_name] >>':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
 																}, _val, _1 )] >> ';';
 
 					final_tol_.name("final_tol_");
-					final_tol_ = *(char_ - all_names_) >> no_case[final_tol_name]
+					final_tol_ = *(char_ - all_names_) >> (no_case[final_tol_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
 																}, _val, _1 )] >> ';';
 
 					path_trunc_threshold_.name("path_trunc_threshold_");
-					path_trunc_threshold_ = *(char_ - all_names_) >> no_case[path_trunc_name]
+					path_trunc_threshold_ = *(char_ - all_names_) >> (no_case[path_trunc_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
@@ -612,11 +613,11 @@ namespace bertini
 					
 					
 					
-					std::string maxstep_name = "maxstepsize:";
-					std::string stepsuccess_name = "stepsuccessfactor:";
-					std::string stepfail_name = "stepfailfactor:";
-					std::string stepsincrease_name = "stepsforincrease:";
-					std::string maxnumsteps_name = "maxnumbersteps:";
+					std::string maxstep_name = "maxstepsize";
+					std::string stepsuccess_name = "stepsuccessfactor";
+					std::string stepfail_name = "stepfailfactor";
+					std::string stepsincrease_name = "stepsforincrease";
+					std::string maxnumsteps_name = "maxnumbersteps";
 					
 					
 					root_rule_.name("ConfigStepping_root_rule");
@@ -646,34 +647,35 @@ namespace bertini
 					| no_setting_;
 					
 					
-					all_names_ = no_case[maxstep_name] | no_case[stepsuccess_name]| no_case[stepfail_name]| no_case[stepsincrease_name] | no_case[maxnumsteps_name];
+					all_names_ = (no_case[maxstep_name] >> ':') | (no_case[stepsuccess_name] >> ':')|
+						(no_case[stepfail_name] >> ':')| (no_case[stepsincrease_name] >> ':') | (no_case[maxnumsteps_name] >> ':');
 					
 					max_step_size_.name("max_step_size_");
-					max_step_size_ = *(char_ - all_names_) >> no_case[maxstep_name]
+					max_step_size_ = *(char_ - all_names_) >> (no_case[maxstep_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
 																}, _val, _1 )] >> ';';
 					
 					stepsize_success_.name("stepsize_success_");
-					stepsize_success_ = *(char_ - all_names_) >> no_case[stepsuccess_name]
+					stepsize_success_ = *(char_ - all_names_) >> (no_case[stepsuccess_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
 																}, _val, _1 )] >> ';';
 					
 					stepsize_fail_.name("stepsize_fail_");
-					stepsize_fail_ = *(char_ - all_names_) >> no_case[stepfail_name]
+					stepsize_fail_ = *(char_ - all_names_) >> (no_case[stepfail_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
 																}, _val, _1 )] >> ';';
 					
 					steps_increase_.name("steps_increase_");
-					steps_increase_ = *(char_ - all_names_) >> no_case[stepsincrease_name] >> qi::uint_[_val=_1] >> ';';
+					steps_increase_ = *(char_ - all_names_) >> (no_case[stepsincrease_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 					
 					max_num_steps_.name("max_num_steps_");
-					max_num_steps_ = *(char_ - all_names_) >> no_case[maxnumsteps_name] >> qi::uint_[_val=_1] >> ';';
+					max_num_steps_ = *(char_ - all_names_) >> (no_case[maxnumsteps_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 					
 					no_setting_.name("no_setting_");
 					no_setting_ = *(char_ - all_names_);
@@ -764,7 +766,7 @@ namespace bertini
 					
 					
 					
-					std::string maxits_name = "maxnewtonits:";
+					std::string maxits_name = "maxnewtonits";
 					
 					
 					root_rule_.name("ConfigNewton_root_rule");
@@ -779,10 +781,10 @@ namespace bertini
 					
 					
 					
-					all_names_ = eps >> no_case[maxits_name];
+					all_names_ = eps >> (no_case[maxits_name] >> ':');
 					
 					max_its_.name("max_its_");
-					max_its_ = *(char_ - no_case[maxits_name]) >> no_case[maxits_name] >> qi::uint_[_val=_1] >> ';';
+					max_its_ = *(char_ - no_case[maxits_name]) >> (no_case[maxits_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 					
 					no_setting_.name("no_setting_");
 					no_setting_ = *(char_ - all_names_);
@@ -866,9 +868,9 @@ namespace bertini
 					
 					
 					
-					std::string samplefactor_name = "samplefactor:";
-					std::string numpoints_name = "numsamplepoints:";
-					std::string mintrack_name = "nbhdradius:";
+					std::string samplefactor_name = "samplefactor";
+					std::string numpoints_name = "numsamplepoints";
+					std::string mintrack_name = "nbhdradius";
 					
 					
 					root_rule_.name("ConfigEndgame_root_rule");
@@ -890,24 +892,24 @@ namespace bertini
 					| no_setting_;
 					
 					
-					all_names_ = no_case[samplefactor_name] | no_case[numpoints_name]| no_case[mintrack_name];
+					all_names_ = (no_case[samplefactor_name] >> ':') | (no_case[numpoints_name] >> ':')| (no_case[mintrack_name] >> ':');
 					
 					sample_factor_.name("sample_factor_");
-					sample_factor_ = *(char_ - all_names_) >> no_case[samplefactor_name]
+					sample_factor_ = *(char_ - all_names_) >> (no_case[samplefactor_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					min_track_.name("min_track_");
-					min_track_ = *(char_ - all_names_) >> no_case[mintrack_name]
+					min_track_ = *(char_ - all_names_) >> (no_case[mintrack_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					num_sample_.name("num_sample_");
-					num_sample_ = *(char_ - all_names_) >> no_case[numpoints_name]
+					num_sample_ = *(char_ - all_names_) >> (no_case[numpoints_name] >> ':')
 								  >> qi::uint_[_val=_1] >> ';';
 										
 					no_setting_.name("no_setting_");
@@ -995,7 +997,7 @@ namespace bertini
 					
 					
 					
-					std::string maxcycle_name = "maxcyclenum:";
+					std::string maxcycle_name = "maxcyclenum";
 					
 					
 					root_rule_.name("ConfigPowerSeries_root_rule");
@@ -1010,10 +1012,10 @@ namespace bertini
 					
 					
 					
-					all_names_ = eps >> no_case[maxcycle_name];
+					all_names_ = eps >> (no_case[maxcycle_name] >> ':');
 					
 					max_cycle_.name("max_cycle_");
-					max_cycle_ = *(char_ - all_names_) >> no_case[maxcycle_name] >> qi::uint_[_val=_1] >> ';';
+					max_cycle_ = *(char_ - all_names_) >> (no_case[maxcycle_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 					
 					no_setting_.name("no_setting_");
 					no_setting_ = *(char_ - all_names_);
@@ -1098,8 +1100,8 @@ namespace bertini
 					
 					
 					
-					std::string cyclecutoff_name = "cycletimecutoff:";
-					std::string ratiocutoff_name = "ratiotimecutoff:";
+					std::string cyclecutoff_name = "cycletimecutoff";
+					std::string ratiocutoff_name = "ratiotimecutoff";
 					
 					
 					root_rule_.name("ConfigCauchy_root_rule");
@@ -1114,17 +1116,17 @@ namespace bertini
 																  }, _val, _1 )])
 								  >> -no_setting_) | no_setting_;
 					
-					all_names_ = no_case[cyclecutoff_name] | no_case[ratiocutoff_name];
+					all_names_ = (no_case[cyclecutoff_name] >> ':') | (no_case[ratiocutoff_name] >> ':');
 					
 					cycle_cutoff_.name("cycle_cutoff_");
-					cycle_cutoff_ = *(char_ - all_names_) >> no_case[cyclecutoff_name]
+					cycle_cutoff_ = *(char_ - all_names_) >> (no_case[cyclecutoff_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
 																}, _val, _1 )] >> ';';
 					
 					ratio_cutoff_.name("ratio_cutoff_");
-					ratio_cutoff_ = *(char_ - all_names_) >> no_case[ratiocutoff_name]
+					ratio_cutoff_ = *(char_ - all_names_) >> (no_case[ratiocutoff_name] >> ':')
 					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
 																{
 																	num = bertini::NumTraits<T>::FromString(str);
