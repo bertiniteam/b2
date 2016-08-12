@@ -299,7 +299,6 @@ namespace bertini
 
 		if (!already_had_homvars)
 		{
-			have_ordering_ = false;
 			homogenizing_variables_.resize(NumVariableGroups());
 		}
 
@@ -327,6 +326,9 @@ namespace bertini
 
 			group_counter++;
 		}
+
+		is_differentiated_ = false;
+		have_ordering_ = false;
 
 		#ifndef BERTINI_DISABLE_ASSERTS
 		assert(homogenizing_variables_.size() == variable_groups_.size());
@@ -959,7 +961,7 @@ namespace bertini
 		if (s.path_variable_)
 			out << "path variable defined.  named " << s.path_variable_->name() << "\n";
 		else 
-			out << "not path variable defined\n";
+			out << "no path variable defined\n";
 
 		if (s.is_differentiated_)
 		{
