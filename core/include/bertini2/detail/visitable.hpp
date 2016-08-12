@@ -132,15 +132,16 @@ namespace bertini{
 		/**
 		\brief Add an observer, to observe this observable.
 		*/
-		void AddObserver(AnyObserver* new_observer)
+		void AddObserver(AnyObserver* new_observer) const
 		{
-			current_watchers_.push_back(new_observer);
+			if (find(begin(current_watchers_), end(current_watchers_), new_observer)==end(current_watchers_))
+				current_watchers_.push_back(new_observer);
 		}
 
 		/**
 		\brief Remove an observer from this observable.
 		*/
-		void RemoveObserver(AnyObserver* observer)
+		void RemoveObserver(AnyObserver* observer) const
 		{
 			current_watchers_.erase(std::remove(current_watchers_.begin(), current_watchers_.end(), observer), current_watchers_.end());
 		}
@@ -162,12 +163,19 @@ namespace bertini{
 
 		}
 
+		void NotifyObservers(AnyEvent & e) const
+		{
+
+			for (auto& obs : current_watchers_)
+				obs->Observe(e);
+		}
+
 
 	private:
 
 		using ObserverContainer = std::vector<AnyObserver*>;
 
-		ObserverContainer current_watchers_;
+		mutable ObserverContainer current_watchers_;
 	};
 
 } // namespace bertini
