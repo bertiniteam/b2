@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_SUITE(round_trip)
 BOOST_AUTO_TEST_CASE(zero)
 {	
 	bertini::DefaultPrecision(30);
-	mpfr z(0);
+	mpfr z(0,0);
 
 
 	std::string result;
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(zero)
 BOOST_AUTO_TEST_CASE(one)
 {	
 	bertini::DefaultPrecision(30);
-	mpfr z(1);
+	mpfr z(1,-1);
 
 
 	std::string result;
@@ -66,6 +66,7 @@ BOOST_AUTO_TEST_CASE(one)
 
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
+    std::cout << result << std::endl;
     mpfr rt;
     BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE(one)
 BOOST_AUTO_TEST_CASE(sqrt_2)
 {   
     bertini::DefaultPrecision(30);
-    auto z = sqrt(mpfr(2));
+    auto z = sqrt(mpfr(2,3));
 
 
     std::string result;
@@ -82,9 +83,18 @@ BOOST_AUTO_TEST_CASE(sqrt_2)
 
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
+    bertini::DefaultPrecision(20);
     mpfr rt;
     BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
-    BOOST_CHECK_EQUAL(rt,z);
+
+    bertini::DefaultPrecision(30);
+
+    BOOST_CHECK(abs(rt-z) < 1e-30);
+    BOOST_CHECK(rt.precision()>=30);
+
+    std::string result2;
+    std::back_insert_iterator<std::string> sink2(result2);
+    bertini::generators::Classic::generate(sink2, rt);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

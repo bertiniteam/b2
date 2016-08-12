@@ -87,6 +87,26 @@ BOOST_AUTO_TEST_CASE(sqrt_2)
     BOOST_CHECK_EQUAL(rt,z);
 }
 
+BOOST_AUTO_TEST_CASE(precision)
+{   
+    bertini::DefaultPrecision(30);
+    mpfr_float z = sqrt(mpfr_float(2));
+
+
+    std::string result;
+    std::back_insert_iterator<std::string> sink(result);
+
+    BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
+
+    bertini::DefaultPrecision(20);
+
+    mpfr_float rt;
+    BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
+
+    BOOST_CHECK_EQUAL(rt,z);
+    BOOST_CHECK(rt.precision()>=30);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

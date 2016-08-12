@@ -57,7 +57,7 @@
 
 #include "bertini2/mpfr_complex.hpp"
 
-
+#include "bertini2/num_traits.hpp"
 
 
 BOOST_FUSION_ADAPT_ADT(
@@ -151,7 +151,9 @@ namespace bertini{
 				number_with_no_point_.name("number_with_no_point_");
 				number_with_no_point_ = eps[_val = std::string()]
 				>>
-				+(qi::char_(L'0',L'9')[_val += _1])
+				(-(qi::lit('-')[_val += "-"]) // then an optional minus sign
+				>>
+				+(qi::char_(L'0',L'9'))[_val += _1])
 				;
 				
 				
@@ -187,26 +189,46 @@ namespace bertini{
 		{
 			MpfrFloatParser() : MpfrFloatParser::base_type(root_rule_,"MpfrFloatParser")
 			{
+				using std::max;
 				namespace phx = boost::phoenix;
 				using qi::_1;
+				using qi::_2;
+				using qi::_3;
+				using qi::_4;
 				using qi::_val;
 
 				root_rule_.name("mpfr_float");
 				root_rule_ = mpfr_rules_.number_string_
 								[ phx::bind( 
 										[]
-										(mpfr_float & B, std::string P)
+										(mpfr_float & B, std::string const& P)
 										{
+											using std::max;
 											auto prev_prec = DefaultPrecision();
-
-											DefaultPrecision(P.size());
+											auto asdf = max(prev_prec,LowestMultiplePrecision());
+											auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
+											std::cout << "making mpfr_float with precition " << digits << " from " << P << std::endl;
+											DefaultPrecision(digits);
 											B = mpfr_float{P};
 											DefaultPrecision(prev_prec);
-											assert(B.precision() == P.size());
+											assert(B.precision() == digits);
 										},
 										_val,_1
 									)
 								];
+
+				using phx::val;
+				using phx::construct;
+				using namespace qi::labels;
+				qi::on_error<qi::fail>
+				( root_rule_ ,
+				 std::cout<<
+				 val("mpfr_float parser could not complete parsing. Expecting ")<<
+				 _4<<
+				 val(" here: ")<<
+				 construct<std::string>(_3,_2)<<
+				 std::endl
+				 );
 			}
 
 			qi::rule<Iterator, mpfr_float(), Skipper > root_rule_;
@@ -303,17 +325,36 @@ namespace bertini{
 			{
 				MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
 				{
+					using std::max;
+					namespace phx = boost::phoenix;
 					using qi::_1;
 					using qi::_2;
 					using qi::_val;
 
 					root_rule_ = 
 						(mpfr_float_ >> mpfr_float_)
-						[ _val = boost::phoenix::construct<bertini::complex>(_1, _2) ];
+						[ phx::bind( 
+										[]
+										(mpfr & B, mpfr_float const& P, mpfr_float const& Q)
+										{
+											auto prev_prec = DefaultPrecision();
+											auto digits = max(P.precision(),Q.precision());
+
+											DefaultPrecision(digits);
+											B.real(P);
+											B.imag(Q);
+											B.precision(digits);
+											DefaultPrecision(prev_prec);
+											assert(B.precision() == digits);
+										},
+										_val,_1,_2
+									)
+						];
 				}
 
 				qi::rule<Iterator, mpfr(), Skipper > root_rule_;
 				MpfrFloatParser<Iterator> mpfr_float_;
+				mpfr temp_result;
 			};
 			    
 
@@ -334,6 +375,7 @@ namespace bertini{
 		            space,
 		            rN);
 
+		        std::cout << rN.real().str() << std::endl;
 		        if (!r || first != last) // fail if we did not get a full match
 		            return false;
 
