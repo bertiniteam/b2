@@ -47,12 +47,12 @@
 
 
 
-#include "bertini.hpp"
-#include "classic.hpp"
-
-
-using namespace bertini::classic::parsing;
-using SplitFile = bertini::classic::SplitInputFile;
+//#include "bertini.hpp"
+//#include "classic.hpp"
+//
+//
+//using namespace bertini::classic::parsing;
+//using SplitFile = bertini::classic::SplitInputFile;
 
 
 
