@@ -49,6 +49,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/spirit/include/qi_no_case.hpp>
 
 #include <boost/spirit/include/support_istream_iterator.hpp>
 
@@ -62,13 +63,25 @@ namespace bertini
 {
 	namespace classic
 	{
+		
+		
+		/**
+		 \class SplitInputFile
+		 
+		 \brief Storage class for input file that splits up the config portion from the input portion.
+		 
+		 ## Use
+		 
+		 SplitFileInputConfig parser return an instance of this class.  The user can then parse the config and input portions separately using the appropriate parser.
+		 
+		 */
+		
+		
+		
 		class SplitInputFile
 		{
-			std::string config_;
-			std::string input_;
-            
-            bool readable_ = true; //Input file can be split accurately
 		public:
+            
 
 			std::string Config() const
 			{
@@ -109,25 +122,54 @@ namespace bertini
             
             
             
-            void StripComments()
-            {
+//            void StripComments()
+//            {
+//				std::string::const_iterator iter = config_.begin();
+//				std::string::const_iterator end = config_.end();
+//				
+//				CommentStripper<std::string::const_iterator> S;
+//				
+//				phrase_parse(iter, end, S,boost::spirit::ascii::space, config_);
+//				
+//				iter = input_.begin();
+//				end = input_.end();
+//				
+//				phrase_parse(iter, end, S,boost::spirit::ascii::space, input_);
+//            }
                 
-            }
-
 
 			friend std::ostream& operator<<(std::ostream & out, SplitInputFile const& printme)
 			{
 				out << "--------config-----------\n\n" << printme.Config() << "\n\n-------input--------\n\n" << printme.Input();
 				return out;
 			}
-		};
+			
+			
+			
+			
+			
+		private:
+			std::string config_;
+			std::string input_;
+			
+			bool readable_ = true; //Input file can be split accurately
+
+		}; //re: SplitInputFile class
+		
+		
+		
+		
+		
+		
+		
+		
 
 
 
 		namespace parsing
 		{
 			/**
-			Qi Parser object for parsing text into the System class.  This ensures we can provide backwards compatibility with Bertini Classic input files.
+			Qi Parser object for parsing text into the SplitInputfile class.  This ensures we can provide backwards compatibility with Bertini Classic input files.
 
 			To use this parser, construct an object of its type, then use it to parse.
 
@@ -147,13 +189,24 @@ namespace bertini
 			\endcode
 
 			\brief Qi Parser object for parsing text into the SplitInputFile class.  
+			 
+			 CON END IN END  (1 1 1 1) 15
+			 CON END IN --       (1 1 1 0) 14
+			 CON END -- END   (1 1 0 1) 13
+			 CON END -- --         (1 1 0 0)  12
+			 CON -- IN END       (1 0 1 1) 11
+			 CON -- IN  --           (1 0 1 0)  10
+			 -- -- IN END            (0 0 1 1)  3
+			 -- -- IN  --                 (0 0 1 0) 2
+			 -- -- --END               (0 0 0 1) 1
+			 --  --  --  --                 (0 0 0 0) 0
 			*/
 			template<typename Iterator, typename Skipper = ascii::space_type> //boost::spirit::unused_type
-			struct SplitFileInputConfig : qi::grammar<Iterator, SplitInputFile(), Skipper>
+			struct SplitInputFileParser : qi::grammar<Iterator, SplitInputFile(), Skipper>
 			{
 				
 				
-				SplitFileInputConfig() : SplitFileInputConfig::base_type(root_rule_, "SplitFileInputConfig")
+				SplitInputFileParser() : SplitInputFileParser::base_type(root_rule_, "SplitInputFile")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -167,8 +220,9 @@ namespace bertini
 					using qi::omit;
 					using boost::spirit::lexeme;
 					using boost::spirit::as_string;
+					using boost::spirit::ascii::no_case;
 
-					root_rule_.name("SplitFileInputConfig_root_rule");
+					root_rule_.name("SplitInputFile_root_rule");
 
 					root_rule_ = both_ | unreadable_ |only_input_ ;
 
@@ -231,13 +285,13 @@ namespace bertini
                                     [phx::bind(&SplitInputFile::SetReadable, _val, false)];
 
 					config_.name("config_");
-					config_ = *(char_ - "CONFIG") >> "CONFIG";
+					config_ = no_case[*(char_ - "CONFIG") >> "CONFIG"];
 
 					end_.name("end_");
-					end_ = lexeme[*(char_ - "END;")] >> "END;";
+					end_ = no_case[lexeme[*(char_ - "END;")] >> "END;"];
 
 					input_.name("input_");
-					input_ = lexeme[*(char_ - "INPUT")] >> "INPUT";
+					input_ = no_case[lexeme[*(char_ - "INPUT")] >> "INPUT"];
 
 
 
@@ -354,8 +408,23 @@ namespace bertini
 
 
 
-            
+			SplitInputFile ParseInputFile(std::string str_input_file)
+			{
+				std::string::const_iterator iter = str_input_file.begin();
+				std::string::const_iterator end = str_input_file.end();
 
+				std::string uncommented_str_input;
+				CommentStripper<std::string::const_iterator> commentparser;
+				phrase_parse(iter, end, commentparser,boost::spirit::ascii::space, uncommented_str_input);
+            
+				iter = uncommented_str_input.begin();
+				end = uncommented_str_input.end();
+
+				SplitInputFileParser<std::string::const_iterator> spliter;
+
+				SplitInputFile input_file;
+				phrase_parse(iter, end, spliter,boost::spirit::ascii::space, input_file);
+			}
 
 
             /**
@@ -373,6 +442,7 @@ namespace bertini
 				config_section = config_and_input.Config();
 				input_section = config_and_input.Input();
             }
+
 		} // re: namespace parsing
 
 	} // re: namespace classic

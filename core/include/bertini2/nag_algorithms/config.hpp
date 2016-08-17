@@ -37,15 +37,16 @@ using SolnCont = std::vector<T>;
 template<typename T>
 struct Tolerances
 {	
-	T newton_before_endgame = T(1)/T(100000);
-	T newton_during_endgame = T(1)/T(1000000);
+	T newton_before_endgame = T(1)/T(100000); //E.4.1
+	T newton_during_endgame = T(1)/T(1000000); //E.4.2
 
-	T final_tolerance = T(1)/T(100000000000);
+	T final_tolerance = T(1)/T(100000000000); //E.5.1
 	T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
-	T path_truncation_threshold = T(100000);
+	T path_truncation_threshold = T(100000); //E.4.13
 	// T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
 };
+
 
 template<typename T>
 struct Sharpening
@@ -59,16 +60,17 @@ struct Sharpening
 	T ratio_tolerance = T(99)/T(100); ///<  A computed value is considered to be zero if the ratio of two different approximations is smaller than this value.  See also FunctionTolerance
 };
 
+
 template<typename T>
 struct Regeneration
 {
-	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.
+	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.  RegenRemoveInf
 
-	bool higher_dimension_check;
+	bool higher_dimension_check = true; ///< RegenHigherDimTest
 
-	T newton_before_endgame; ///< The tolerance for tracking before reaching the endgame.
-	T newton_during_endgame; ///< The tolerance for tracking during the endgame.
-	T final_tolerance; ///< The final tolerance to track to, using the endgame.
+	T newton_before_endgame; ///< The tolerance for tracking before reaching the endgame.  SliceTolBeforeEG
+	T newton_during_endgame; ///< The tolerance for tracking during the endgame.  SliceTolDuringEG
+	T final_tolerance; ///< The final tolerance to track to, using the endgame.  SliceFinalTol
 };
 
 

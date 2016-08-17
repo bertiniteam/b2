@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings);
 
-	auto tracking_success = my_endgame.ComputeInitialSamples(current_time, current_space, times, samples);
+	auto tracking_success = my_endgame.ComputeInitialSamples(current_time, origin, current_space, times, samples);
 
 	BOOST_REQUIRE(tracking_success==SuccessCode::Success);
 	
@@ -624,6 +624,89 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	}
 
 }//end compute initial samples
+
+
+/**
+This test will check to see if we can compute initial samples where the time we start and target_time are not 0.1 and 0 respectively.
+target_time is .1 + .1I and we are going to start at the time value .2
+
+*/
+BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
+{
+	DefaultPrecision(ambient_precision);
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); sys.AddPathVariable(t);
+	// Define homotopy system
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
+
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+	
+	config::Stepping<BRT> stepping_settings;
+	config::Newton newton_settings;
+
+	tracker.Setup(TestedPredictor,
+                RealFromString("1e-5"),
+                RealFromString("1e5"),
+                stepping_settings,
+                newton_settings);
+	
+	tracker.PrecisionSetup(precision_config);
+
+	BCT target_time = ComplexFromString(".1",".1");
+	Vec<BCT> x_origin(1);
+	x_origin << BCT(1);
+	TimeCont<BCT> correct_times; 
+	SampCont<BCT> correct_samples;
+
+	TimeCont<BCT> times; 
+	std::deque<Vec<BCT> > samples;
+	BCT time(1);
+	Vec<BCT> sample(1);
+
+
+	time = ComplexFromString(".2"); // x = .2
+	correct_times.push_back(time);
+	sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // f(.2) = 3.603621541081173e-01 2.859583229930518e-18 from bertini classic
+	correct_samples.push_back(sample);
+
+	time = ComplexFromString(".15",".05"); // x = ((.2) + (.1 + .1I)) / 2 = .15 + .05I
+	correct_times.push_back(time);
+	sample << ComplexFromString("4.205197361710131e-01","-6.739509600163453e-02"); //f(.15 + .05I) = 4.205197361710131e-01 -6.739509600163453e-02  from bertini classic.
+	correct_samples.push_back(sample);
+
+	time = ComplexFromString(".125",".075"); // x = ((.15 + .05I) + (.1 + .1I))/2 = .125 + .075I
+	correct_times.push_back(time);
+	sample << ComplexFromString("4.469031847163714e-01", "-1.059855741137409e-01"); // f(.125 + .075I) =  4.469031847163714e-01 -1.059855741137409e-01 from bertini classic
+	correct_samples.push_back(sample);
+
+	BCT current_time(1);
+	Vec<BCT> current_space(1);
+	current_time = ComplexFromString(".2");
+	current_space << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18");
+
+	config::Endgame<BRT> endgame_settings;
+	config::PowerSeries power_series_settings;
+
+	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings);
+
+	auto tracking_success = my_endgame.ComputeInitialSamples(current_time, target_time, current_space, times, samples);
+
+	BOOST_REQUIRE(tracking_success==SuccessCode::Success);
+	
+
+	for(unsigned ii = 0; ii < samples.size(); ++ii)
+	{
+		BOOST_CHECK_EQUAL(samples[ii].size(),1);
+		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < 1e-5);
+	}
+
+}//end compute initial samples nonzero target time
 
 
 
@@ -687,7 +770,63 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 }//end pseg mp for power series class 
 
 
+/**
+The function that runs the power series endgame is called Run. Run takes an endgame_time value and and endgame_space value that is
+one of the solutions at t = endgame_time, it can also set a target_time other than t = 0. 
 
+This test will start at t = 0.2 and use the endgame to find the solution at t = .1 + .1*I. This is checking to make sure the powerseries
+endgame is general enough to move from t = a to t = b for a,b being generic complex numbers. 
+*/
+BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
+{
+	DefaultPrecision(ambient_precision);
+
+	bertini::System sys;
+	Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t");
+
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+	
+	config::Stepping<BRT> stepping_settings;
+	config::Newton newton_settings;
+
+	tracker.Setup(TestedPredictor,
+                RealFromString("1e-6"),
+                RealFromString("1e5"),
+                stepping_settings,
+                newton_settings);
+	
+	tracker.PrecisionSetup(precision_config);
+
+
+	BCT current_time(1);
+	BCT target_time(1);
+	Vec<BCT> current_space(1);
+	current_time = ComplexFromString(".2");
+	target_time = ComplexFromString(".1", ".1");
+
+	current_space << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18");
+
+	Vec<BCT> correct(1);
+	correct << ComplexFromString("4.680740395503238e-01", "-1.470429372721208e-01");
+
+	config::Endgame<BRT> endgame_settings;
+	config::Security<BRT> security_settings;
+
+	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
+	my_endgame.Run(current_time,current_space,target_time);
+
+
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < 1e-11);
+
+}//end pseg mp for power series class non zero target time
 
 
 
@@ -1125,7 +1264,65 @@ BOOST_AUTO_TEST_CASE(parabola)
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
 
-	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-11) );
+	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-10) );
 }
+
+/**
+	Full blown test to see if we can actually track using an endgame to a nonzero target time. 
+*/
+BOOST_AUTO_TEST_CASE(pseg_full_run_nonzero_target_time)
+{
+
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+		
+	config::Stepping<BRT> stepping_preferences;
+	config::Newton newton_preferences;
+
+	tracker.Setup(TestedPredictor,
+	    RealFromString("1e-5"),
+	    RealFromString("1e5"),
+	    stepping_preferences,
+	    newton_preferences);
+		
+	tracker.PrecisionSetup(precision_config);
+
+	TimeCont<BCT> pseg_times;
+		SampCont<BCT> pseg_samples;
+
+	auto start_time = ComplexFromString("0.2");
+	Vec<BCT> start_sample(1);
+	auto target_time = ComplexFromString(".15","-.01");
+	Vec<BCT> first_approx(1);
+	Vec<BCT> x_to_check_against(1);
+
+	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); 
+	x_to_check_against << ComplexFromString("4.248924277564006e-01", "1.369835558109531e-02");
+
+	config::Endgame<BRT> endgame_settings;
+	config::Security<BRT> security_settings;
+	config::PowerSeries power_series_settings;
+	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings, security_settings);
+
+	auto endgame_success = my_endgame.Run(start_time,start_sample,target_time);
+	BOOST_CHECK(endgame_success == SuccessCode::Success);
+
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_to_check_against).norm() < 1e-10);
+
+}// end cauchy_full_run_nonzero_target_time
 
 

@@ -45,11 +45,15 @@ namespace bertini
 		template<typename T> using TimeCont = std::deque<T>;
 		
 		
-		enum class PrecisionType
+		enum class PrecisionType //E.2.1
 		{
 			Fixed,
 			Adaptive
 		};
+		
+
+
+
 
 		// forward declarations
 		template<class D>
@@ -222,7 +226,7 @@ namespace bertini
 		*/
 		namespace config{
 
-			enum class Predictor
+			enum class Predictor //E.4.3
 			{
 				Constant,
 				Euler,
@@ -245,17 +249,18 @@ namespace bertini
 			template<typename T>
 			struct Stepping
 			{
+
 				T initial_step_size = T(1)/T(10); ///< The length of the first time step when calling TrackPath.  You can turn it resetting, so subsequent calls use the same stepsize, too.  You make a call to the Tracker itself.
-				T max_step_size = T(1)/T(10); ///<  The largest allowed step size.
-				T min_step_size = T(1e-100); ///< The mimum allowed step size.
+				T max_step_size = T(1)/T(10); ///<  The largest allowed step size.  MaxStepSize
+				T min_step_size = T(1e-100); ///< The mimum allowed step size.  MinStepSize
 
-				T step_size_success_factor = T(2); ///< Factor by which to dilate the time step when triggered.
-				T step_size_fail_factor = T(1)/T(2); ///< Factor by which to contract the time step when triggered.
+				T step_size_success_factor = T(2); ///< Factor by which to dilate the time step when triggered.  StepSuccessFactor
+				T step_size_fail_factor = T(1)/T(2); ///< Factor by which to contract the time step when triggered.  StepFailFactor
 
-				unsigned consecutive_successful_steps_before_stepsize_increase = 5; ///< What it says.  If you can come up with a better name, please suggest it.
+				unsigned consecutive_successful_steps_before_stepsize_increase = 5; ///< What it says.  If you can come up with a better name, please suggest it.  StepsForIncrease
 
 				unsigned min_num_steps = 1; ///< The minimum number of steps allowed during tracking.
-				unsigned max_num_steps = 1e5; ///< The maximum number of steps allowed during tracking.  This is per call to TrackPath.
+				unsigned max_num_steps = 1e5; ///< The maximum number of steps allowed during tracking.  This is per call to TrackPath.  MaxNumberSteps
 
 				unsigned frequency_of_CN_estimation = 1; ///< Estimate the condition number every so many steps.  Eh.
 			};
@@ -264,7 +269,7 @@ namespace bertini
 			
 			struct Newton
 			{
-				unsigned max_num_newton_iterations = 2;
+				unsigned max_num_newton_iterations = 2; //MaxNewtonIts
 				unsigned min_num_newton_iterations = 1;
 			};
 
@@ -275,16 +280,16 @@ namespace bertini
 			template<typename T>
 			struct Security
 			{
-				int level = 0;
-				T max_norm = T(100000);
+				int level = 0; //SecurityLevel
+				T max_norm = T(100000); //SecurityMaxNorm wrong default value
 			};
 
 			template<typename T>
 			struct Endgame
 			{
-				unsigned num_sample_points = 3;
-				T min_track_time = T(1e-100); //nbrh radius in Bertini book.
-				T sample_factor = T(1)/T(2);
+				unsigned num_sample_points = 3; //NumSamplePoints default = 2
+				T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
+				T sample_factor = T(1)/T(2); //SampleFactor
 				unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 
 				T final_tolerance = 1e-11;///< The tolerance to which to compute the endpoint using the endgame.
@@ -293,15 +298,15 @@ namespace bertini
 
 			struct PowerSeries
 			{
-				unsigned max_cycle_number = 6;
+				unsigned max_cycle_number = 6; //MaxCycleNum
 				unsigned cycle_number_amplification = 5;
 			};
 
 			template<typename T>
 			struct Cauchy
 			{
-				T cycle_cutoff_time = T(1)/T(100000000);
-				T ratio_cutoff_time = T(1)/T(100000000000000);
+				T cycle_cutoff_time = T(1)/T(100000000); //CycleTimeCutoff
+				T ratio_cutoff_time = T(1)/T(100000000000000); //RatioTimeCutoff
 				T minimum_for_c_over_k_stabilization = T(3)/T(4);
 				unsigned int num_needed_for_stabilization = 3;
 				T maximum_cauchy_ratio = T(1)/T(2);
@@ -312,32 +317,10 @@ namespace bertini
 
 			struct TrackBack
 			{
-				unsigned minimum_cycle;
-				bool junk_removal_test;
-				unsigned max_depth_LDT;
+				unsigned minimum_cycle; //MinCycleTrackback, default = 4
+				bool junk_removal_test; //JunkRemovalTest, default = 1
+				unsigned max_depth_LDT; //MaxLDTDepth, default = 3
 			};
-
-
-
-
-
-
-
-			
-
-
-
-
-
-
-
-
-
-			
-
-			
-
-
 
 
 			template<typename ComplexType>

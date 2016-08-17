@@ -21,8 +21,7 @@ config.status
 libtool
 Makefile
 
-bertini2
-!bertini2/*
+/bertini2
 b2_timing_test
 b2_class_test
 test_tree_interactive
