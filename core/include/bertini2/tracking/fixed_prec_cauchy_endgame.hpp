@@ -61,7 +61,7 @@ public:
 		auto& TR = this->GetTracker();
 
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-		                          	this->Tolerances().final_tolerance/100,
+		                          	this->FinalTolerance()/100,
 		                          	this->EndgameSettings().max_num_newton_iterations);
 
 		return SuccessCode::Success;
@@ -71,14 +71,13 @@ public:
 	explicit FixedPrecCauchyEndgame(TrackerType const& tr, 
 	                               const std::tuple< const config::Cauchy<BRT> &,
 	                               					 const config::Endgame<BRT>&, 
-	                               				     const config::Security<BRT>&, 
-	                               				     const config::Tolerances<BRT>& 
+	                               				     const config::Security<BRT>&
 	                               				    > & settings )
       : EGType(tr, settings)
    	{}
 
     template< typename... Ts >
-		FixedPrecCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecCauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
+		FixedPrecCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecCauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
 		{}
 
 };

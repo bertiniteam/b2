@@ -152,10 +152,10 @@ namespace bertini{
 
 		public:
 
-			Tracker(System const& sys) : tracked_system_(sys)
+			Tracker(System const& sys) : tracked_system_(std::ref(sys))
 			{
-				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), sys);
-				corrector_ = std::make_shared< correct::NewtonCorrector >(sys);
+				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), tracked_system_);
+				corrector_ = std::make_shared< correct::NewtonCorrector >(tracked_system_);
 				Predictor(predict::DefaultPredictor());
 			}
 
@@ -176,8 +176,7 @@ namespace bertini{
 				Predictor(new_predictor_choice);
 				corrector_->Settings(newton);
 				
-				tracking_tolerance_ = tracking_tolerance;
-				digits_tracking_tolerance_ = NumTraits<RT>::TolToDigits(tracking_tolerance);
+				SetTrackingTolerance(tracking_tolerance);
 
 				path_truncation_threshold_ = path_truncation_threshold;
 
@@ -186,8 +185,21 @@ namespace bertini{
 				current_stepsize_ = stepping_config_.initial_step_size;
 			}
 
+			/**
+			\brief Set how tightly to track the path.
 
+			Smaller values tracks the path more tightly, at the expense of higher computational time.
 
+			\param tracking_tolerance The new value.  Newton iterations are performed until the step length is less than this number, or the max number of iterations has been reached, in which case the overall predict-correct step is viewed as a failure, and the step is undone.  This number must be positive.
+			*/
+			void SetTrackingTolerance(RT const& tracking_tolerance)
+			{
+				if (tracking_tolerance <= 0)
+					throw std::runtime_error("tracking tolerance must be positive");
+
+				tracking_tolerance_ = tracking_tolerance;
+				digits_tracking_tolerance_ = NumTraits<RT>::TolToDigits(tracking_tolerance);
+			}
 
 			/**
 			\brief Track a start point through time, from a start time to a target time.
@@ -205,7 +217,7 @@ namespace bertini{
 									Vec<CT> const& start_point
 									) const
 			{	
-				if (start_point.size()!=tracked_system_.NumVariables())
+				if (start_point.size()!=GetSystem().NumVariables())
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
 				
@@ -333,9 +345,9 @@ namespace bertini{
 			/**
 			\brief get a const reference to the system.
 			*/
-			const class System& GetSystem() const
+			const System& GetSystem() const
 			{
-				return tracked_system_;
+				return tracked_system_.get();
 			}
 
 			/**
@@ -432,7 +444,7 @@ namespace bertini{
 			template <typename ComplexType>
 			SuccessCode CheckGoingToInfinity() const
 			{
-				if (tracked_system_.DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
+				if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
 					return SuccessCode::GoingToInfinity;
 				else
 					return SuccessCode::Success;
@@ -514,7 +526,7 @@ namespace bertini{
 			void OnInfiniteTruncation() const = 0;
 
 
-			const class System& tracked_system_; ///< Reference to the system being tracked.
+			std::reference_wrapper<const System> tracked_system_; ///< Reference to the system being tracked.
 
 			bool infinite_path_truncation_ = true; /// Whether should check if the path is going to infinity while tracking.  On by default.
 			bool reinitialize_stepsize_ = true; ///< Whether should re-initialize the stepsize with each call to Trackpath.  On by default.
@@ -574,9 +586,20 @@ namespace bertini{
 
 
 			public: 
+
+			virtual
+			const BaseRealType LatestConditionNumber() const = 0;
+
+			virtual
+			const BaseRealType LatestErrorEstimate() const = 0;
+
+			virtual
+			const BaseRealType LatestNormOfStep() const = 0;
+
+
 			unsigned NumVariables() const
 			{
-				return tracked_system_.NumVariables();
+				return GetSystem().NumVariables();
 			}
 
 			auto CurrentTime() const

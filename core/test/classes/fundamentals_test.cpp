@@ -33,7 +33,7 @@
 
 #include <boost/random.hpp>
 
-using mpfr = bertini::mpfr_float;
+using mpfr_float = bertini::mpfr_float;
 
 using bertini::DefaultPrecision;
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
 
 BOOST_AUTO_TEST_CASE(max_et_on)
 {
-	mpfr a(1), b(2), c(4);
+	mpfr_float a(1), b(2), c(4);
 	// auto d = max(a,b*b+c);
 
 }
@@ -116,18 +116,18 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 {
 	DefaultPrecision(50);
 
-	mpfr x("0.01234567890123456789012345678901234567890123456789");
+	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	BOOST_CHECK_EQUAL(x.precision(), 50);
 
 	DefaultPrecision(30);
-	mpfr y = pow(x,2);
-
+	mpfr_float y = pow(x,2);
 	BOOST_CHECK_EQUAL(y.precision(), 30);
+	
 
-	mpfr z = x;
-
+	mpfr_float z = x;
 	BOOST_CHECK_EQUAL(z.precision(), 30);
 
-	BOOST_CHECK(fabs(z - mpfr("0.012345678901234567890123456789")) < 1e-30);
+	BOOST_CHECK(fabs(z - mpfr_float("0.012345678901234567890123456789")) < 1e-30);
 
 
 
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	z = x;
 
 	BOOST_CHECK_EQUAL(z.precision(),50);
-	BOOST_CHECK(fabs(z - mpfr("0.01234567890123456789012345678901234567890123456789")) < 1e-50);
+	BOOST_CHECK(fabs(z - mpfr_float("0.01234567890123456789012345678901234567890123456789")) < 1e-50);
 
 
 	y.precision(70);
@@ -152,7 +152,12 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	BOOST_CHECK_EQUAL(y.precision(), 70);
 }
 
-
+BOOST_AUTO_TEST_CASE(precision_mpfr_constructed_from_string)
+{
+	DefaultPrecision(30);
+	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	BOOST_CHECK_EQUAL(x.precision(),30);
+}
 
 	
 BOOST_AUTO_TEST_CASE(index_and_subscript_generation1)
