@@ -31,6 +31,7 @@
 //  Summer 2015
 
 #include "bertini.hpp"
+#include <bertini2/classic/split_parsing.hpp>
 #include <string>
 #include <boost/test/unit_test.hpp>
 

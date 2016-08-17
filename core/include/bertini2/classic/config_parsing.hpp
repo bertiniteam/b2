@@ -63,7 +63,9 @@ namespace bertini
 		namespace parsing
 		{
 			using namespace bertini::tracking;
-			
+			namespace qi = ::boost::spirit::qi;
+			namespace ascii = ::boost::spirit::ascii;
+
 			
 			/**
 			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.

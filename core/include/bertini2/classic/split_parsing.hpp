@@ -47,8 +47,11 @@
 
 #include <boost/spirit/include/qi_core.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/phoenix/bind/bind_member_function.hpp>
+#include <boost/bind.hpp>
 #include <boost/spirit/include/qi_no_case.hpp>
 
 #include <boost/spirit/include/support_istream_iterator.hpp>
@@ -168,6 +171,10 @@ namespace bertini
 
 		namespace parsing
 		{
+			
+			namespace qi = ::boost::spirit::qi;
+			namespace ascii = ::boost::spirit::ascii;
+			
 			/**
 			Qi Parser object for parsing text into the SplitInputfile class.  This ensures we can provide backwards compatibility with Bertini Classic input files.
 
