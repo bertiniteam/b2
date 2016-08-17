@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 	
 	tracker.PrecisionSetup(precision_config);
 
-
+	auto origin = BCT(0,0);
 	
 
 	TestedEGType my_endgame(tracker);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 
 	cauchy_samples.back() << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
-	auto first_track_success =  my_endgame.CircleTrack(time,sample);
+	auto first_track_success =  my_endgame.CircleTrack(time,origin,sample);
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - sample).norm() < my_endgame.Tolerances().newton_during_endgame);
 
@@ -183,6 +183,7 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 
 	BCT time(1);
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 
 
 	time = ComplexFromString("0.1");
@@ -195,19 +196,84 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	my_endgame.SetCauchyTimes(cauchy_times);
 	
-	auto tracking_success =  my_endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
 
 	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
 	BOOST_CHECK((first_track_sample - sample).norm() > my_endgame.Tolerances().newton_during_endgame);
 
-	tracking_success =  my_endgame.CircleTrack(time,first_track_sample);
+	tracking_success =  my_endgame.CircleTrack(time,origin,first_track_sample);
 
 	const auto& second_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
 	BOOST_CHECK((second_track_sample - sample).norm() < my_endgame.Tolerances().newton_during_endgame);
 	
 } // end circle_track_mp_cycle_num_greater_than_1
+
+
+/**
+	We are going to track around a nonzero target time. For a random nonzero time value we expect to not encircle any branch points. 
+	Making the cycle number 1.
+*/
+BOOST_AUTO_TEST_CASE(circle_track__nonzero_target_time)
+{
+	
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+	
+	config::Stepping<BRT> stepping_preferences;
+	config::Newton newton_preferences;
+
+	tracker.Setup(TestedPredictor,
+                RealFromString("1e-5"),
+                RealFromString("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.PrecisionSetup(precision_config);
+
+	TimeCont<BCT> cauchy_times; 
+	SampCont<BCT> cauchy_samples; 
+
+
+
+	BCT time(1);
+	Vec<BCT> sample(1);
+	auto center = ComplexFromString(".19","-.01");
+
+
+	time = ComplexFromString("0.2");
+	cauchy_times.push_back(time);
+	sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // 
+	cauchy_samples.push_back(sample);
+
+	TestedEGType my_endgame(tracker);
+
+	my_endgame.SetCauchySamples(cauchy_samples);
+	my_endgame.SetCauchyTimes(cauchy_times);
+	
+	auto tracking_success =  my_endgame.CircleTrack(time,center,sample);
+
+
+	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
+
+	BOOST_CHECK((first_track_sample - sample).norm() < my_endgame.Tolerances().newton_during_endgame);
+
+} // end circle_track_nonzero_target_time
 
 
 
@@ -457,6 +523,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 
 	BCT time(1);
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 
 
 	time = ComplexFromString(".1");
@@ -471,7 +538,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 
 
-	auto tracking_success =  my_endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
 	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
 
 } // end check closed loop if cycle num is 1 for cauchy class test
@@ -516,6 +583,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 
 	TimeCont<BCT> cauchy_times; 
 	SampCont<BCT> cauchy_samples; 
+	auto origin = BCT(0,0);
 
 
 
@@ -532,10 +600,10 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	my_endgame.SetCauchyTimes(cauchy_times);
 
-	auto tracking_success =  my_endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
 	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == false);
 
-	tracking_success =  my_endgame.CircleTrack(my_endgame.GetCauchyTimes<BCT>().back(),my_endgame.GetCauchySamples<BCT>().back());
+	tracking_success =  my_endgame.CircleTrack(my_endgame.GetCauchyTimes<BCT>().back(),origin,my_endgame.GetCauchySamples<BCT>().back());
 	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
 	
 } // end check closed loop if cycle num is greater than 1 for cauchy class test
@@ -590,6 +658,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 
 	auto time = ComplexFromString(".1");
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 
 	cauchy_times.push_back(time);
 	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
@@ -599,7 +668,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto tracking_success =  my_endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
 	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>() == true);
 
 } // end compare cauchy ratios for cauchy class test
@@ -645,6 +714,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 
 	TimeCont<BCT> cauchy_times; 
 	SampCont<BCT> cauchy_samples; 
+	auto origin = BCT(0,0);
 
 
 
@@ -660,7 +730,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 	
-	auto tracking_success =  my_endgame.CircleTrack(time,sample);
+	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
 	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>() == true);
 
 } // end compare cauchy ratios for cycle num greater than 1 cauchy class test
@@ -671,7 +741,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 	origin are within some heuristic value. The function InitialCauchyLoops does this while holding onto the cycle number. 
 	This test case is making sure we succeed and get the correct cycle number. 
 */
-BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
+BOOST_AUTO_TEST_CASE(initial_cauchy_loops)
 {
 	
 	DefaultPrecision(ambient_precision);
@@ -707,6 +777,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 
 	auto time = ComplexFromString("0.1");
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 
 	pseg_times.push_back(time);
 	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
@@ -717,12 +788,71 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 	my_endgame.SetPSEGSamples(pseg_samples);
 	my_endgame.SetPSEGTimes(pseg_times);
 
-	auto success_of_pre_cauchy_loops =  my_endgame.InitialCauchyLoops<BCT>();
+	auto success_of_initial_cauchy_loops =  my_endgame.InitialCauchyLoops<BCT>(origin);
 
-	BOOST_CHECK(success_of_pre_cauchy_loops == SuccessCode::Success);
+	BOOST_CHECK(success_of_initial_cauchy_loops == SuccessCode::Success);
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
-}//end pre_cauchy_loops
+}//end initial_cauchy_loops
+
+/*
+	This test case is to compute pre cauchy loops around a nonzero target time. Need to ensure we will succeed at closing the loops, 
+	and ensure that our ratios around the target time are small enough. 
+*/
+BOOST_AUTO_TEST_CASE(initial_cauchy_loops_nonzero_target_time)
+{
+	
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+	
+	config::Stepping<BRT> stepping_preferences;
+	config::Newton newton_preferences;
+
+	tracker.Setup(TestedPredictor,
+                RealFromString("1e-5"),
+                RealFromString("1e5"),
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.PrecisionSetup(precision_config);
+
+	TimeCont<BCT> pseg_times;
+	SampCont<BCT> pseg_samples;
+
+	auto start_time = ComplexFromString("0.2");
+	Vec<BCT> start_sample(1);
+	auto center_for_loops = ComplexFromString(".15","-.01");
+
+	pseg_times.push_back(start_time);
+	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // 
+	pseg_samples.push_back(start_sample);
+
+	TestedEGType my_endgame(tracker);
+
+	my_endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
+
+	auto success_of_initial_cauchy_loops =  my_endgame.InitialCauchyLoops<BCT>(center_for_loops);
+
+	BOOST_CHECK(success_of_initial_cauchy_loops == SuccessCode::Success);
+
+
+}//end inital_cauchy_loops nonzero target time.
+
 
 
 
@@ -732,7 +862,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops)
 	origin are within some heuristic value. The function InitialCauchyLoops does this while holding onto the cycle number. 
 	This test case is making sure we succeed and get the correct cycle number. 
 */
-BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
+BOOST_AUTO_TEST_CASE(initial_cauchy_loops_cycle_num_greater_than_1)
 {
 	DefaultPrecision(ambient_precision);
 
@@ -769,6 +899,7 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 
 	BCT time(1);
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 
 
 	time = ComplexFromString("0.1");
@@ -782,10 +913,10 @@ BOOST_AUTO_TEST_CASE(pre_cauchy_loops_cycle_num_greater_than_1)
 	my_endgame.SetPSEGSamples(pseg_samples);
 	my_endgame.SetPSEGTimes(pseg_times);
 
-	BOOST_CHECK(my_endgame.InitialCauchyLoops<BCT>() == SuccessCode::Success);
+	BOOST_CHECK(my_endgame.InitialCauchyLoops<BCT>(origin) == SuccessCode::Success);
 	BOOST_CHECK(my_endgame.CycleNumber() == 2);
 	
-}// end pre_cauchy_loops_cycle_num_greater_than_1
+}// end initial_cauchy_loops_cycle_num_greater_than_1
 
 
 
@@ -846,6 +977,72 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 
 }// end first_approximation_using_pseg
 
+/**
+	The function tested is ComputeFirstApproximation. This function is the culmination of tracking samples until our estimation of 
+	c over k is stabilized and we have our Cauchy loop ratios within a tolerance. When this is acheived we can use the power series approximation
+	to compute our first extrapolant at the origin. After this we will use the cauchy integral formula to compute all further extrapolants.
+
+	Specifically this test case will be attempting to do this with a target time that is not the origin. 
+*/
+BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_nonzero_target_time)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+		
+	config::Stepping<BRT> stepping_preferences;
+	config::Newton newton_preferences;
+
+	tracker.Setup(TestedPredictor,
+	    RealFromString("1e-5"),
+	    RealFromString("1e5"),
+	    stepping_preferences,
+	    newton_preferences);
+		
+	tracker.PrecisionSetup(precision_config);
+
+	TimeCont<BCT> pseg_times;
+		SampCont<BCT> pseg_samples;
+
+	auto start_time = ComplexFromString("0.2");
+	Vec<BCT> start_sample(1);
+	auto target_time = ComplexFromString(".15","-.01");
+	Vec<BCT> first_approx(1);
+	Vec<BCT> x_to_check_against(1);
+	x_to_check_against << ComplexFromString("0.424892","0.0136983");
+
+	pseg_times.push_back(start_time);
+	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // 
+	pseg_samples.push_back(start_sample);
+
+	TestedEGType my_endgame(tracker);
+
+	my_endgame.SetPSEGSamples(pseg_samples);
+	my_endgame.SetPSEGTimes(pseg_times);
+
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+
+
+	auto first_approx_success = my_endgame.InitialPowerSeriesApproximation(start_time,start_sample,target_time,first_approx);
+
+	BOOST_CHECK((first_approx - x_to_check_against).norm() < 1e-2);
+	BOOST_CHECK(my_endgame.CycleNumber() == 1);
+
+}// end first_approximation_using_pseg_nonzero_target_time
 
 
 /**
@@ -888,6 +1085,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 
 	auto time = ComplexFromString("0.1");
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 	Vec<BCT> x_origin(1);
 
 	cauchy_times.push_back(time);
@@ -900,7 +1098,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto first_track_success =  my_endgame.CircleTrack(time,sample);
+	auto first_track_success =  my_endgame.CircleTrack(time,origin,sample);
 
 	my_endgame.CycleNumber(1); // manually set cycle number to 1 for this test
 
@@ -954,6 +1152,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 
 	BCT time(1);
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 	Vec<BCT> x_origin(1);
 
 	time = ComplexFromString("0.1");
@@ -968,8 +1167,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto first_track_success =  my_endgame.CircleTrack(time,sample);
-	auto second_track_success = my_endgame.CircleTrack(my_endgame.GetCauchyTimes<BCT>().back(),my_endgame.GetCauchySamples<BCT>().back());
+	auto first_track_success =  my_endgame.CircleTrack(time,origin,sample);
+	auto second_track_success = my_endgame.CircleTrack(my_endgame.GetCauchyTimes<BCT>().back(),origin,my_endgame.GetCauchySamples<BCT>().back());
 
 	my_endgame.CycleNumber(2);
 
@@ -1017,6 +1216,7 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 
 	BCT time(1);
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 
 
 	time = ComplexFromString(".1");
@@ -1026,7 +1226,7 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 
 	TestedEGType my_endgame(tracker);
 
-	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,sample);
+	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,origin,sample);
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).norm() < my_endgame.Tolerances().newton_during_endgame);
 	BOOST_CHECK(my_endgame.GetCauchySamples<BCT>().size() == 4);
@@ -1074,12 +1274,13 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 	auto time = ComplexFromString("0.1");
 
 	Vec<BCT> sample(1);
+	auto origin = BCT(0,0);
 	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
 
 
 	TestedEGType my_endgame(tracker);
 
-	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,sample);
+	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,origin,sample);
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).norm() < my_endgame.Tolerances().newton_during_endgame);
 	BOOST_CHECK_EQUAL(my_endgame.GetCauchySamples<BCT>().size(), 7);
@@ -1318,6 +1519,136 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).norm() < my_endgame.Tolerances().newton_during_endgame);
 
 }// end cauchy_multiple_variables
+
+
+
+/**
+	Test to see if we can compute Cauchy samples around a nonzero target time.
+*/
+BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
+{
+
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+		
+	config::Stepping<BRT> stepping_preferences;
+	config::Newton newton_preferences;
+
+	tracker.Setup(TestedPredictor,
+	    RealFromString("1e-5"),
+	    RealFromString("1e5"),
+	    stepping_preferences,
+	    newton_preferences);
+		
+	tracker.PrecisionSetup(precision_config);
+
+	TimeCont<BCT> pseg_times;
+		SampCont<BCT> pseg_samples;
+
+	auto start_time = ComplexFromString("0.2");
+	Vec<BCT> start_sample(1);
+	auto target_time = ComplexFromString(".15","-.01");
+	Vec<BCT> first_approx(1);
+
+	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); // 
+
+
+
+
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+
+	config::Endgame<BRT> endgame_settings;
+	config::Cauchy<BRT> cauchy_settings;
+	config::Security<BRT> security_settings;
+	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
+
+	auto cauchy_samples_success = my_endgame.ComputeCauchySamples(start_time,target_time,start_sample);
+
+
+	BOOST_CHECK(cauchy_samples_success == SuccessCode::Success);
+}// end compute_cauchy_samples_nonzero_target_time
+
+
+/**
+	Full blown test to see if we can actually track using an endgame to a nonzero target time. 
+*/
+BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
+{
+
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = std::make_shared<Variable>("x");
+	Var t = std::make_shared<Variable>("t"); 
+
+	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+		
+	config::Stepping<BRT> stepping_preferences;
+	config::Newton newton_preferences;
+
+	tracker.Setup(TestedPredictor,
+	    RealFromString("1e-5"),
+	    RealFromString("1e5"),
+	    stepping_preferences,
+	    newton_preferences);
+		
+	tracker.PrecisionSetup(precision_config);
+
+	TimeCont<BCT> pseg_times;
+		SampCont<BCT> pseg_samples;
+
+	auto start_time = ComplexFromString("0.2");
+	Vec<BCT> start_sample(1);
+	auto target_time = ComplexFromString(".15","-.01");
+	Vec<BCT> first_approx(1);
+	Vec<BCT> x_to_check_against(1);
+
+	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); 
+	x_to_check_against << ComplexFromString("4.248924277564006e-01", "1.369835558109531e-02");
+
+
+
+
+
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+
+	config::Endgame<BRT> endgame_settings;
+	config::Cauchy<BRT> cauchy_settings;
+	config::Security<BRT> security_settings;
+	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
+
+	auto endgame_success = my_endgame.Run(start_time,start_sample,target_time);
+	BOOST_CHECK(endgame_success == SuccessCode::Success);
+
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_to_check_against).norm() < 1e-10);
+
+}// end cauchy_full_run_nonzero_target_time
+
 
 
 
