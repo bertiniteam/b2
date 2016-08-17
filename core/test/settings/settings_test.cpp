@@ -48,7 +48,7 @@
 using mpfr = bertini::mpfr;
 using mpfr_float = bertini::mpfr_float;
 
-
+namespace algorithm = bertini::algorithm;
 
 
 BOOST_AUTO_TEST_SUITE(config_settings)
@@ -378,8 +378,8 @@ BOOST_AUTO_TEST_CASE(read_tolerance_mp)
 	std::string::const_iterator end = configStr.end();
 	
 	
-	config::Tolerances<T> security;
-	parsing::ConfigSettingParser<std::string::const_iterator, config::Tolerances<T>, T> parser;
+	algorithm::config::Tolerances<T> security;
+	parsing::ConfigSettingParser<std::string::const_iterator, algorithm::config::Tolerances<T>, T> parser;
 	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
 	
 	
@@ -606,12 +606,12 @@ BOOST_AUTO_TEST_CASE(all_config_settings_mp)
 	
 	std::string configStr = inputfile.Config();
 	
-	auto sets = parsing::GetConfigSettings<mpfr_float, config::Predictor, config::Newton, config::Tolerances<mpfr_float>, config::Endgame<mpfr_float>, config::Stepping<mpfr_float>>(configStr);
+	auto sets = parsing::GetConfigSettings<mpfr_float, config::Predictor, config::Newton, algorithm::config::Tolerances<mpfr_float>, config::Endgame<mpfr_float>, config::Stepping<mpfr_float>>(configStr);
 	
 	config::Stepping<mpfr_float> steps = std::get<config::Stepping<mpfr_float>>(sets);
 	config::Predictor pred = std::get<config::Predictor>(sets);
 	config::Newton newt = std::get<config::Newton>(sets);
-	config::Tolerances<mpfr_float> tols = std::get<config::Tolerances<mpfr_float>>(sets);
+	algorithm::config::Tolerances<mpfr_float> tols = std::get<algorithm::config::Tolerances<mpfr_float>>(sets);
 	config::Endgame<mpfr_float> end = std::get<config::Endgame<mpfr_float>>(sets);
 	
 	BOOST_CHECK(pred == config::Predictor::RKDormandPrince56);
@@ -637,12 +637,12 @@ BOOST_AUTO_TEST_CASE(all_config_settings_d)
 	
 	std::string configStr = inputfile.Config();
 	
-	auto sets = parsing::GetConfigSettings<double, config::Predictor, config::Newton, config::Tolerances<double>, config::Endgame<double>, config::Stepping<double>>(configStr);
+	auto sets = parsing::GetConfigSettings<double, config::Predictor, config::Newton, algorithm::config::Tolerances<double>, config::Endgame<double>, config::Stepping<double>>(configStr);
 	
 	config::Stepping<double> steps = std::get<config::Stepping<double>>(sets);
 	config::Predictor pred = std::get<config::Predictor>(sets);
 	config::Newton newt = std::get<config::Newton>(sets);
-	config::Tolerances<double> tols = std::get<config::Tolerances<double>>(sets);
+	algorithm::config::Tolerances<double> tols = std::get<algorithm::config::Tolerances<double>>(sets);
 	config::Endgame<double> end = std::get<config::Endgame<double>>(sets);
 	
 	BOOST_CHECK(pred == config::Predictor::RKDormandPrince56);

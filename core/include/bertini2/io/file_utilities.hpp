@@ -51,7 +51,7 @@ namespace bertini{
 				if (is_directory(input_path))
 				{
 					std::stringstream err_msg;
-					err_msg << "attempting to open file but is a directory, of name '" << input_path.str() << "'";
+					err_msg << "attempting to open file but is a directory, of name '" << input_path.string() << "'";
 					throw std::runtime_error(err_msg.str());
 				}
 				else
@@ -60,7 +60,7 @@ namespace bertini{
 					if (!in.is_open())
 					{
 						std::stringstream err_msg;
-						err_msg << "file '" << input_path.str() << "' hypothetically exists, but failed to open correctly";
+						err_msg << "file '" << input_path.string() << "' hypothetically exists, but failed to open correctly";
 						throw std::runtime_error(err_msg.str());
 					}
 				}
@@ -68,14 +68,14 @@ namespace bertini{
 			else
 			{
 				std::stringstream err_msg;
-				err_msg << "attempting to open file which doesn't exist, of name '" << input_path.str() << "'";
+				err_msg << "attempting to open file which doesn't exist, of name '" << input_path.string() << "'";
 				throw std::runtime_error(err_msg.str());
 			}
 		}
 		catch (const filesystem_error& ex)
 		{
 			std::stringstream err_msg;
-			err_msg << "boost::filesystem throw while attempting to open file '" << input_path.str() << "': '" << ex.what() << "'";
+			err_msg << "boost::filesystem throw while attempting to open file '" << input_path.string() << "': '" << ex.what() << "'";
 			throw std::runtime_error(err_msg.str());
 		}
 	}
@@ -90,8 +90,8 @@ namespace bertini{
 	std::string FileToString(Path const& input_path)
 	{
 		ifstream infile;
-		OpenInFileThrowIfFail(infile, input_path)
-		return std::string ( istreambuf_iterator<char>(infile), istreambuf_iterator<char>() );
+		OpenInFileThrowIfFail(infile, input_path);
+		return std::string ( std::istreambuf_iterator<char>(infile), std::istreambuf_iterator<char>() );
 	}
 }
 

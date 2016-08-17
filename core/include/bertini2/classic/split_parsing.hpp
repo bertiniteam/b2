@@ -424,17 +424,19 @@ namespace bertini
 
 				SplitInputFile input_file;
 				phrase_parse(iter, end, spliter,boost::spirit::ascii::space, input_file);
+
+				return input_file;
 			}
 
 
             /**
 			\brief Function for splitting a Bertini Classic style input file into `config` and `input`.
             */	
-            void SplitIntoConfigAndInput(std::string & config_section, std::string & input_section, path const& input_file)
+            void SplitIntoConfigAndInput(std::string & config_section, std::string & input_section, Path const& input_file)
             {
             	auto file_as_string = FileToString(input_file);
 
-            	bertini::classic::parsing::SplitFileInputConfig<std::string::const_iterator> parser;
+            	bertini::classic::parsing::SplitInputFileParser<std::string::const_iterator> parser;
 				bertini::classic::SplitInputFile config_and_input;
 				std::string::const_iterator iter = file_as_string.begin();
 				std::string::const_iterator end = file_as_string.end();
