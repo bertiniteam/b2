@@ -72,7 +72,7 @@
 #include "bertini2/function_tree/symbols/number.hpp"
 #include "bertini2/function_tree/symbols/variable.hpp"
 
-#include "bertini2/io/parsers.hpp"
+#include "bertini2/io/parsing/number_rules.hpp"
 
 
 
@@ -327,7 +327,7 @@ namespace bertini {
 		// the number_ rule wants to find strings from the various other number_ rules, and produces a Number node
 		qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
 		
-		parsers::MPParserRules<Iterator> mpfr_rules_;
+		parsing::MPParserRules<Iterator> mpfr_rules_;
 	};
 
 
