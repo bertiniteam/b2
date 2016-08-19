@@ -216,45 +216,45 @@ namespace bertini{
 		};
 
 
-
-		template<typename Iterator, typename Skipper = ascii::space_type>
-		struct MpfrComplexParser : qi::grammar<Iterator, mpfr(), boost::spirit::ascii::space_type>
-		{
-			MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
+		namespace classic {
+			template<typename Iterator, typename Skipper = ascii::space_type>
+			struct MpfrComplexParser : qi::grammar<Iterator, mpfr(), boost::spirit::ascii::space_type>
 			{
-				using std::max;
-				namespace phx = boost::phoenix;
-				using qi::_1;
-				using qi::_2;
-				using qi::_val;
+				MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
+				{
+					using std::max;
+					namespace phx = boost::phoenix;
+					using qi::_1;
+					using qi::_2;
+					using qi::_val;
+					
+					root_rule_ =
+					(mpfr_float_ >> mpfr_float_)
+					[ phx::bind(
+								[]
+								(mpfr & B, mpfr_float const& P, mpfr_float const& Q)
+								{
+									auto prev_prec = DefaultPrecision();
+									auto digits = max(P.precision(),Q.precision());
+									
+									DefaultPrecision(digits);
+									B.real(P);
+									B.imag(Q);
+									B.precision(digits);
+									DefaultPrecision(prev_prec);
+									assert(B.precision() == digits);
+								},
+								_val,_1,_2
+								)
+					 ];
+				}
 				
-				root_rule_ =
-				(mpfr_float_ >> mpfr_float_)
-				[ phx::bind(
-							[]
-							(mpfr & B, mpfr_float const& P, mpfr_float const& Q)
-							{
-								auto prev_prec = DefaultPrecision();
-								auto digits = max(P.precision(),Q.precision());
-								
-								DefaultPrecision(digits);
-								B.real(P);
-								B.imag(Q);
-								B.precision(digits);
-								DefaultPrecision(prev_prec);
-								assert(B.precision() == digits);
-							},
-							_val,_1,_2
-							)
-				 ];
-			}
-			
-			qi::rule<Iterator, mpfr(), Skipper > root_rule_;
-			MpfrFloatParser<Iterator> mpfr_float_;
-			mpfr temp_result;
-		};
+				qi::rule<Iterator, mpfr(), Skipper > root_rule_;
+				MpfrFloatParser<Iterator> mpfr_float_;
+				mpfr temp_result;
+			};
 
-
+		} // re: namespace classic
 
 		
 	}

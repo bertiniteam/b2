@@ -38,7 +38,7 @@
 namespace bertini {
 	namespace parsing {
 		namespace classic {
-			
+		
 			
 			
 			template <typename Iterator>
@@ -61,11 +61,10 @@ namespace bertini {
 				if (!r || first != last) // fail if we did not get a full match
 					return false;
 				
-				func = rN;
+				func = f;
 				return r;
 			}
-
+		} // re: namespace classic
 			
-		} //re: namespace classic
 	}// re: namespace parsing
 }// re: namespace bertini

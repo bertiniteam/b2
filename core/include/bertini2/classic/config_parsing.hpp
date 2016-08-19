@@ -1202,7 +1202,7 @@ namespace bertini
 			
 			
 			/**
-			 This idea for filling a tuple with variadic templates comes from:
+			 This idea for filling a tuple using variadic templates comes from:
 			    http://stackoverflow.com/questions/10014713/build-tuple-using-variadic-templates
 			 
 			 

@@ -118,188 +118,191 @@ BOOST_PHOENIX_ADAPT_FUNCTION(std::shared_ptr<bertini::node::Node>, sqrt_lazy, sq
 
 namespace bertini {
 	namespace parsing {
+		namespace classic {
 		
 		
 		
-		namespace qi = ::boost::spirit::qi;
-		namespace ascii = ::boost::spirit::ascii;
-		
-		
-		
-		
-		
-		/**
-		 A Qi grammar parser for parsing text into function trees.  Currently called from the SystemParser.
-		 
-		 \todo Improve error detection and reporting for the FunctionParser.
-		 
-		 \brief A Qi grammar parser for parsing text into function trees.
-		 
-		 This parser could not have been written without the generous help of SO user sehe.
-		 */
-		template<typename Iterator>
-		struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
-		{
-			using Node = node::Node;
-			using Function = node::Function;
-			using Float = node::Float;
-			using Integer = node::Integer;
-			using Rational = node::Rational;
+			namespace qi = ::boost::spirit::qi;
+			namespace ascii = ::boost::spirit::ascii;
 			
-			FunctionParser(qi::symbols<char,std::shared_ptr<Node> > * encountered_symbols) : FunctionParser::base_type(root_rule_,"FunctionParser")
+			
+			
+			
+			
+			/**
+			 A Qi grammar parser for parsing text into function trees.  Currently called from the SystemParser.
+			 
+			 \todo Improve error detection and reporting for the FunctionParser.
+			 
+			 \brief A Qi grammar parser for parsing text into function trees.
+			 
+			 This parser could not have been written without the generous help of SO user sehe.
+			 */
+			template<typename Iterator>
+			struct FunctionParser : qi::grammar<Iterator, std::shared_ptr<node::Node>(), boost::spirit::ascii::space_type>
 			{
-				namespace phx = boost::phoenix;
-				using qi::_1;
-				using qi::_2;
-				using qi::_3;
-				using qi::_4;
-				using qi::_val;
-				using qi::eps;
-				using qi::lit;
+				using Node = node::Node;
+				using Function = node::Function;
+				using Float = node::Float;
+				using Integer = node::Integer;
+				using Rational = node::Rational;
 				
-				using std::pow;
-				using ::pow;
+				FunctionParser(qi::symbols<char,std::shared_ptr<Node> > * encountered_symbols) : FunctionParser::base_type(root_rule_,"FunctionParser")
+				{
+					namespace phx = boost::phoenix;
+					using qi::_1;
+					using qi::_2;
+					using qi::_3;
+					using qi::_4;
+					using qi::_val;
+					using qi::eps;
+					using qi::lit;
+					
+					using std::pow;
+					using ::pow;
+					
+					root_rule_.name("function_");
+					root_rule_ = expression_ [ _val = make_shared_<Function>()(_1)];
+					
+					
+					///////////////////
+					expression_.name("expression_");
+					expression_ =
+					term_ [_val = _1]
+					>> *(   (lit('+') > term_ [_val += _1])
+						 |  (lit('-') > term_ [_val -= _1])
+						 )
+					;
+					
+					term_.name("term_");
+					term_ =
+					factor_ [_val = _1]
+					>> *(   (lit('*') > factor_ [_val *= _1])
+						 |  (lit('/') > factor_ [_val /= _1])
+						 )
+					;
+					
+					factor_.name("factor_");
+					factor_ =
+					exp_elem_ [_val = _1]
+					>> *(lit('^') // any number of ^somethings
+						 > exp_elem_ [ phx::bind( []
+												 (std::shared_ptr<Node> & B, std::shared_ptr<Node> P)
+												 {
+													 B = pow(B,P);
+												 },
+												 _val,_1)] )
+					;
+					
+					exp_elem_.name("exp_elem_");
+					exp_elem_ =
+					(symbol_  >> !qi::alnum) [_val = _1]
+					|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
+					|   (lit('-') > expression_  [_val = -_1])
+					|   (lit('+') > expression_  [_val = _1])
+					|   (lit("sin") > '(' > expression_ [_val = sin_lazy(_1)] > ')' )
+					|   (lit("cos") > '(' > expression_ [_val = cos_lazy(_1)] > ')' )
+					|   (lit("tan") > '(' > expression_ [_val = tan_lazy(_1)] > ')' )
+					|   (lit("exp") > '(' > expression_ [_val = exp_lazy(_1)] > ')' )
+					|   (lit("log") > '(' > expression_ [_val = log_lazy(_1)] > ')' )
+					|   (lit("sqrt") > '(' > expression_ [_val = sqrt_lazy(_1)] > ')' )
+					;
+					
+					
+					
+					
+					
+					
+					
+					
+					symbol_.name("symbol_");
+					symbol_ %=
+					(*encountered_symbols) // the star here is the dereferencing of the encountered_symbols parameter to the constructor.
+					|
+					number_
+					;
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					number_.name("number_");
+					number_ =
+					mpfr_rules_.long_number_string_ [ _val = make_shared_<Float>()(_1) ]
+					|
+					mpfr_rules_.integer_string_ [ _val = make_shared_<Integer>()(_1) ];
+					
+					
+					
+					
+					
+					
+					
+					
+					using qi::on_error;
+					using boost::phoenix::val;
+					using boost::phoenix::construct;
+					
+					
+					on_error<qi::fail>
+					(
+					 root_rule_
+					 , std::cout
+					 << val("Function parser error:  expecting ")
+					 << _4
+					 << val(" here: \"")
+					 << construct<std::string>(_3, _2)
+					 << val("\"")
+					 << std::endl
+					 );
+					
+					
+					
+					
+					
+					//		debug(root_rule_);
+					//		debug(expression_);
+					//		debug(term_);
+					//		debug(factor_);
+					//		debug(exp_elem_);
+					//		debug(number_);
+					//		debug(number_with_no_point_);
+					//		debug(number_with_digits_after_point_);
+					//		debug(number_with_digits_before_point_);
+					//		debug(exponent_notation_);
+				}
 				
-				root_rule_.name("function_");
-				root_rule_ = expression_ [ _val = make_shared_<Function>()(_1)];
-				
-				
-				///////////////////
-				expression_.name("expression_");
-				expression_ =
-				term_ [_val = _1]
-				>> *(   (lit('+') > term_ [_val += _1])
-					 |  (lit('-') > term_ [_val -= _1])
-					 )
-				;
-				
-				term_.name("term_");
-				term_ =
-				factor_ [_val = _1]
-				>> *(   (lit('*') > factor_ [_val *= _1])
-					 |  (lit('/') > factor_ [_val /= _1])
-					 )
-				;
-				
-				factor_.name("factor_");
-				factor_ =
-				exp_elem_ [_val = _1]
-				>> *(lit('^') // any number of ^somethings
-					 > exp_elem_ [ phx::bind( []
-											 (std::shared_ptr<Node> & B, std::shared_ptr<Node> P)
-											 {
-												 B = pow(B,P);
-											 },
-											 _val,_1)] )
-				;
-				
-				exp_elem_.name("exp_elem_");
-				exp_elem_ =
-				(symbol_  >> !qi::alnum) [_val = _1]
-				|   ( '(' > expression_  [_val = _1] > ')'  ) // using the > expectation here.
-				|   (lit('-') > expression_  [_val = -_1])
-				|   (lit('+') > expression_  [_val = _1])
-				|   (lit("sin") > '(' > expression_ [_val = sin_lazy(_1)] > ')' )
-				|   (lit("cos") > '(' > expression_ [_val = cos_lazy(_1)] > ')' )
-				|   (lit("tan") > '(' > expression_ [_val = tan_lazy(_1)] > ')' )
-				|   (lit("exp") > '(' > expression_ [_val = exp_lazy(_1)] > ')' )
-				|   (lit("log") > '(' > expression_ [_val = log_lazy(_1)] > ')' )
-				|   (lit("sqrt") > '(' > expression_ [_val = sqrt_lazy(_1)] > ')' )
-				;
 				
 				
 				
 				
 				
+				qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type > root_rule_;
+				// the rule for kicking the entire thing off
+				
+				qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type> expression_, term_, factor_, exp_elem_;
+				// rules for how to turn +-*/^ into operator nodes.
 				
 				
 				
-				symbol_.name("symbol_");
-				symbol_ %=
-				(*encountered_symbols) // the star here is the dereferencing of the encountered_symbols parameter to the constructor.
-				|
-				number_
-				;
+				qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > symbol_;
+				// any of the variables and numbers will be symbols.
 				
+				qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > variable_;  // finds a previously encountered number, and associates the correct variable node with it.
 				
+				// the number_ rule wants to find strings from the various other number_ rules, and produces a Number node
+				qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
 				
-				
-				
-				
-				
-				
-				
-				
-				
-				number_.name("number_");
-				number_ =
-				mpfr_rules_.long_number_string_ [ _val = make_shared_<Float>()(_1) ]
-				|
-				mpfr_rules_.integer_string_ [ _val = make_shared_<Integer>()(_1) ];
-				
-				
-				
-				
-				
-				
-				
-				
-				using qi::on_error;
-				using boost::phoenix::val;
-				using boost::phoenix::construct;
-				
-				
-				on_error<qi::fail>
-				(
-				 root_rule_
-				 , std::cout
-				 << val("Function parser error:  expecting ")
-				 << _4
-				 << val(" here: \"")
-				 << construct<std::string>(_3, _2)
-				 << val("\"")
-				 << std::endl
-				 );
-				
-				
-				
-				
-				
-				//		debug(root_rule_);
-				//		debug(expression_);
-				//		debug(term_);
-				//		debug(factor_);
-				//		debug(exp_elem_);
-				//		debug(number_);
-				//		debug(number_with_no_point_);
-				//		debug(number_with_digits_after_point_);
-				//		debug(number_with_digits_before_point_);
-				//		debug(exponent_notation_);
-			}
+				parsers::MPParserRules<Iterator> mpfr_rules_;
+			};
 			
-			
-			
-			
-			
-			
-			qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type > root_rule_;
-			// the rule for kicking the entire thing off
-			
-			qi::rule<Iterator, std::shared_ptr<Node>(), ascii::space_type> expression_, term_, factor_, exp_elem_;
-			// rules for how to turn +-*/^ into operator nodes.
-			
-			
-			
-			qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > symbol_;
-			// any of the variables and numbers will be symbols.
-			
-			qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > variable_;  // finds a previously encountered number, and associates the correct variable node with it.
-			
-			// the number_ rule wants to find strings from the various other number_ rules, and produces a Number node
-			qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
-			
-			parsers::MPParserRules<Iterator> mpfr_rules_;
-		};
+		} // re: namespace classic
 		
 	} // re: namespace parsing
 	

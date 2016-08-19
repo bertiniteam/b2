@@ -55,9 +55,9 @@ BOOST_AUTO_TEST_SUITE(config_settings)
 
 BOOST_AUTO_TEST_CASE(read_mptype)
 {
-	using namespace bertini::classic;
+	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n MPType  : 0; \n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n MPType  : 0; \n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
 	std::string configStr = inputfile.Config();
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(read_mptype)
 	
 	
 	PrecisionType type;
-	parsing::ConfigSettingParser<std::string::const_iterator, PrecisionType> parser;
+	ConfigSettingParser<std::string::const_iterator, PrecisionType> parser;
 	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, type);
 	
 	
@@ -99,9 +99,9 @@ BOOST_AUTO_TEST_CASE(read_mptype)
 
 BOOST_AUTO_TEST_CASE(read_predictor)
 {
-	using namespace bertini::classic;
+	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n MPType: 0; \n  ODEPredictor: 4; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n MPType: 0; \n  ODEPredictor: 4; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
 	std::string configStr = inputfile.Config();
@@ -164,12 +164,12 @@ BOOST_AUTO_TEST_CASE(read_predictor)
 
 BOOST_AUTO_TEST_CASE(read_security_d)
 {
-	using namespace bertini::classic;
+	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
 	using T = double;
 	
 	double tol = 1e-16;
-	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: -2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: -2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
 	std::string configStr = inputfile.Config();
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(read_security_d)
 	
 	
 	config::Security<T> security;
-	parsing::ConfigSettingParser<std::string::const_iterator, config::Security<T>, T> parser;
+	ConfigSettingParser<std::string::const_iterator, config::Security<T>, T> parser;
 	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
 	
 	
@@ -262,14 +262,14 @@ BOOST_AUTO_TEST_CASE(read_security_d)
 
 BOOST_AUTO_TEST_CASE(read_security_mp)
 {
-	using namespace bertini::classic;
+	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
 	bertini::mpfr_float::default_precision(30);
 	
 	using T = bertini::mpfr_float;
 	
 	T tol = 1e-27;
-	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: 2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: 2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
 	std::string configStr = inputfile.Config();
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(read_security_mp)
 	
 	
 	config::Security<T> security;
-	parsing::ConfigSettingParser<std::string::const_iterator, config::Security<T>, T> parser;
+	ConfigSettingParser<std::string::const_iterator, config::Security<T>, T> parser;
 	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
 	
 	
@@ -361,14 +361,14 @@ BOOST_AUTO_TEST_CASE(read_security_mp)
 
 BOOST_AUTO_TEST_CASE(read_tolerance_mp)
 {
-	using namespace bertini::classic;
+	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
 	using T = mpfr_float;
 	bertini::mpfr_float::default_precision(30);
 	
 	
 	double tol = 1e-27;
-	SplitInputFile inputfile = parsing::ParseInputFile("Config \n heLlo: 9 \n   FinalTol   : -.845e-7   ;\n TrackTolDuringEG   : 234e-4   ; % the predictor type\n TrackTolBeforeEG         : 7.32e3; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n   FinalTol   : -.845e-7   ;\n TrackTolDuringEG   : 234e-4   ; % the predictor type\n TrackTolBeforeEG         : 7.32e3; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
 	std::string configStr = inputfile.Config();
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(read_tolerance_mp)
 	
 	
 	algorithm::config::Tolerances<T> security;
-	parsing::ConfigSettingParser<std::string::const_iterator, algorithm::config::Tolerances<T>, T> parser;
+	ConfigSettingParser<std::string::const_iterator, algorithm::config::Tolerances<T>, T> parser;
 	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, security);
 	
 	
