@@ -404,9 +404,8 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 
 
 	config::PowerSeries power_series_settings;
-	config::Tolerances<BRT> tolerances;
 
-	TestedEGType my_endgame(tracker,power_series_settings,tolerances);
+	TestedEGType my_endgame(tracker,power_series_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -484,9 +483,8 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	samples.push_back(sample);
 
 	config::Endgame<BRT> endgame_settings;
-	config::Tolerances<BRT> tolerances;
 
-	TestedEGType my_endgame(tracker,endgame_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
@@ -532,17 +530,6 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	code = my_endgame.ComputeApproximationOfXAtT0(third_approx, origin);
 	approx_3 << ComplexFromString("0.683002","-4.87707e-17");
 	BOOST_CHECK(code==SuccessCode::Success);
-
-	// BOOST_CHECK((approx_1 - first_approx).norm() < 1e-11);
-	// std::cout << "(approx_1 - first_approx).norm() " << (approx_1 - first_approx).norm()  << '\n';
-	// BOOST_CHECK((approx_2 - second_approx).norm() < 1e-11);
-
-	// std::cout << "(approx_2 - second_approx).norm() " << (approx_2 - second_approx).norm()  << '\n';
-	// BOOST_CHECK((approx_3 - third_approx).norm() < 1e-11);
-	// std::cout << "(approx_3 - third_approx).norm() " << (approx_3 - third_approx).norm()  << '\n';
-
-	//BOOST_CHECK((third_approx - x_origin).norm() < (second_approx - x_origin).norm());
-
 } // end compute approximation of x at t0
 
 
@@ -633,7 +620,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
 		BOOST_CHECK_EQUAL(samples[ii].size(),1);
-		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < my_endgame.Tolerances().newton_during_endgame);
+		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < 1e-5);
 	}
 
 }//end compute initial samples
@@ -716,7 +703,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
 	for(unsigned ii = 0; ii < samples.size(); ++ii)
 	{
 		BOOST_CHECK_EQUAL(samples[ii].size(),1);
-		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < my_endgame.Tolerances().newton_during_endgame);
+		BOOST_CHECK((samples[ii] - correct_samples[ii]).norm() < 1e-5);
 	}
 
 }//end compute initial samples nonzero target time
@@ -773,9 +760,8 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 
 	config::Endgame<BRT> endgame_settings;
 	config::Security<BRT> security_settings;
-	config::Tolerances<BRT> tolerances;
 
-	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(current_time,current_space);
 
 
@@ -833,9 +819,8 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 
 	config::Endgame<BRT> endgame_settings;
 	config::Security<BRT> security_settings;
-	config::Tolerances<BRT> tolerances;
 
-	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(current_time,current_space,target_time);
 
 
@@ -903,9 +888,8 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 
 	config::Endgame<BRT> endgame_settings;
 	config::Security<BRT> security_settings;
-	config::Tolerances<BRT> tolerances;
 
-	TestedEGType my_endgame(tracker,endgame_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(t_endgame_boundary,eg_boundary_point);
 
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(),1);
@@ -1078,9 +1062,8 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	config::Endgame<BRT> endgame_settings;
 	config::PowerSeries power_series_settings;
 	config::Security<BRT> security_settings;
-	config::Tolerances<BRT> tolerances;
 
-	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings,tolerances);
+	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;

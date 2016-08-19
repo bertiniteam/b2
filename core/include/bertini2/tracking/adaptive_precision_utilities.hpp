@@ -165,6 +165,8 @@ unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & sampl
 	{
 		auto max_precision = max(MaxPrecision(samples),MaxPrecision(times),MaxPrecision(derivatives));
 
+		DefaultPrecision(max_precision);
+		
 		SetPrecision(times, max_precision);
 		SetPrecision(samples, max_precision);
 		SetPrecision(derivatives, max_precision);

@@ -29,24 +29,11 @@
 #ifndef BERTINI_HPP
 #define BERTINI_HPP
 
-#include "bertini2/config.h"
 
+#include "bertini2/blackbox/argc_argv.hpp"
+#include "bertini2/blackbox/main_mode_switch.hpp"
 
-
-
-#include <complex>
-#include "bertini2/mpfr_extensions.hpp"
-#include "bertini2/mpfr_complex.hpp"
-
-#include "bertini2/function_tree.hpp"
-
-#include "bertini2/system.hpp"
-#include "bertini2/system_parsing.hpp"
-
-#include "bertini2/classic.hpp"
-
-#include <Eigen/Dense>
-#include <Eigen/LU>
+#include "bertini2/parallel.hpp"
 
 
 #endif

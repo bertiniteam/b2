@@ -40,6 +40,118 @@ namespace bertini {
 
 	namespace tracking{
 
+
+		template<class TrackerT>
+		class FirstPrecisionRecorder : public Observer<TrackerT>
+		{ BOOST_TYPE_INDEX_REGISTER_CLASS
+
+			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
+			virtual void Observe(AnyEvent const& e) override
+			{
+				if(auto p = dynamic_cast<const TrackingStarted<EmitterT>*>(&e))
+				{
+					precision_increased_ = false;
+					starting_precision_ = p->Get().CurrentPrecision();
+				}
+				else if (auto p = dynamic_cast<const PrecisionIncreased<EmitterT>*>(&e))
+				{
+					auto& t = p->Get();
+					precision_increased_ = true;
+					next_precision_ = p->Next();
+					time_of_first_increase_ = t.CurrentTime();
+					t.RemoveObserver(this);
+				}
+			}
+
+
+			virtual void Visit(TrackerT const& t) override
+			{
+			}
+
+		public:
+			
+			auto  StartPrecision() const
+			{
+				return starting_precision_;
+			}
+
+			auto NextPrecision() const
+			{
+				return next_precision_;
+			}
+
+			auto DidPrecisionIncrease() const
+			{
+				return precision_increased_;
+			}
+
+			auto TimeOfIncrease() const
+			{
+				return time_of_first_increase_;
+			}
+
+		private:
+
+			unsigned starting_precision_;
+			unsigned next_precision_;
+			bool precision_increased_;
+			typename TrackerTraits<TrackerT>::BaseComplexType time_of_first_increase_;
+		};
+
+
+		template<class TrackerT>
+		class MinMaxPrecisionRecorder : public Observer<TrackerT>
+		{ BOOST_TYPE_INDEX_REGISTER_CLASS
+
+			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
+			virtual void Observe(AnyEvent const& e) override
+			{
+				if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
+				{
+					auto next_precision = p->Next();
+					if (next_precision < min_precision_)
+						min_precision_ = next_precision;
+					if (next_precision > max_precision_)
+						max_precision_ = next_precision;
+				}
+				else if(auto p = dynamic_cast<const TrackingStarted<EmitterT>*>(&e))
+				{
+					min_precision_ = p->Get().CurrentPrecision();
+					max_precision_ = p->Get().CurrentPrecision();
+				}
+			}
+
+
+			virtual void Visit(TrackerT const& t) override
+			{}
+
+		public:
+			
+			auto MinPrecision() const
+			{
+				return min_precision_;
+			}
+
+			auto MaxPrecision() const
+			{
+				return max_precision_;
+			}
+
+			void MinPrecision(unsigned m)
+			{ min_precision_ = m;}
+
+			void MaxPrecision(unsigned m)
+			{ max_precision_ = m;}
+
+		private:
+
+			unsigned min_precision_;
+			unsigned max_precision_;
+		};
+
+
 		template<class TrackerT>
 		class PrecisionAccumulator : public Observer<TrackerT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS

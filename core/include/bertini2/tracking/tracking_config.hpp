@@ -52,7 +52,7 @@ namespace bertini
 		};
 		
 
-		
+
 
 
 		// forward declarations
@@ -243,36 +243,26 @@ namespace bertini
 			
 
 
-			template<typename T>
-			struct Tolerances
-			{	
-				T newton_before_endgame = T(1)/T(100000); //E.4.1
-				T newton_during_endgame = T(1)/T(1000000); //E.4.2
-
-				T final_tolerance = T(1)/T(100000000000); //E.5.1
-				T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
-
-				T path_truncation_threshold = T(100000); //E.4.13
-				T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
-			};
+			
 
 
 			template<typename T>
 			struct Stepping
 			{
-				T initial_step_size = T(1)/T(10);
-				T max_step_size = T(1)/T(10); //MaxStepSize
-				T min_step_size = T(1e-100);
 
-				T step_size_success_factor = T(2); //StepSuccessFactor
-				T step_size_fail_factor = T(1)/T(2); //StepFailFactor
+				T initial_step_size = T(1)/T(10); ///< The length of the first time step when calling TrackPath.  You can turn it resetting, so subsequent calls use the same stepsize, too.  You make a call to the Tracker itself.
+				T max_step_size = T(1)/T(10); ///<  The largest allowed step size.  MaxStepSize
+				T min_step_size = T(1e-100); ///< The mimum allowed step size.  MinStepSize
 
-				unsigned consecutive_successful_steps_before_stepsize_increase = 5; //StepsForIncrease
+				T step_size_success_factor = T(2); ///< Factor by which to dilate the time step when triggered.  StepSuccessFactor
+				T step_size_fail_factor = T(1)/T(2); ///< Factor by which to contract the time step when triggered.  StepFailFactor
 
-				unsigned min_num_steps = 1;
-				unsigned max_num_steps = 1e5; //MaxNumberSteps
+				unsigned consecutive_successful_steps_before_stepsize_increase = 5; ///< What it says.  If you can come up with a better name, please suggest it.  StepsForIncrease
 
-				unsigned frequency_of_CN_estimation = 1;
+				unsigned min_num_steps = 1; ///< The minimum number of steps allowed during tracking.
+				unsigned max_num_steps = 1e5; ///< The maximum number of steps allowed during tracking.  This is per call to TrackPath.  MaxNumberSteps
+
+				unsigned frequency_of_CN_estimation = 1; ///< Estimate the condition number every so many steps.  Eh.
 			};
 
 
@@ -285,14 +275,7 @@ namespace bertini
 
 
 			
-			struct RenameMe
-			{
-				
-				unsigned sharpendigits; //SharpenDigits
-
-				mpfr_float function_residual_tolerance; //FunctionTolerance??
-				mpfr_float ratio_tolerance; //RatioTolerance
-			};
+			
 
 			template<typename T>
 			struct Security
@@ -308,6 +291,8 @@ namespace bertini
 				T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
 				T sample_factor = T(1)/T(2); //SampleFactor
 				unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
+
+				T final_tolerance = 1e-11;///< The tolerance to which to compute the endpoint using the endgame.
 			};
 
 
@@ -336,43 +321,6 @@ namespace bertini
 				bool junk_removal_test; //JunkRemovalTest, default = 1
 				unsigned max_depth_LDT; //MaxLDTDepth, default = 3
 			};
-
-
-
-
-
-
-
-			template<typename T>
-			struct PostProcessing{
-				T real_threshold;
-				T endpoint_finite_threshold; //EndpointFiniteThreshold, default = 10^5
-				T final_tol_multiplier; //TargetTolMultiplier???
-				T final_tol_times_mult;
-			};
-
-
-
-
-
-
-
-
-
-			template<typename T>
-			struct Regeneration
-			{
-				bool remove_infinite_endpoints; //RegenRemoveInf, default = true
-				bool higher_dimension_check; //RegenHigherDimTest, default = true
-
-				T newton_before_endgame; //SliceTolBeforeEG???
-				T newton_during_endgame; //SliceTolDuringEG???
-				T final_tolerance; //SliceFinalTol???
-			};
-
-			
-
-
 
 
 			template<typename ComplexType>

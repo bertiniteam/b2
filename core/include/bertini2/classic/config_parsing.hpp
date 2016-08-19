@@ -48,9 +48,9 @@
 
 #include <boost/spirit/include/support_istream_iterator.hpp>
 
-#include <bertini2/function_tree/function_parsing.hpp>
-#include <bertini2/Tracking/tracking_config.hpp>
-
+#include "bertini2/function_tree/function_parsing.hpp"
+#include "bertini2/tracking/tracking_config.hpp"
+#include "bertini2/nag_algorithms/config.hpp"
 
 #include <iostream>
 #include <string>
@@ -63,7 +63,9 @@ namespace bertini
 		namespace parsing
 		{
 			using namespace bertini::tracking;
-			
+			namespace qi = ::boost::spirit::qi;
+			namespace ascii = ::boost::spirit::ascii;
+
 			
 			/**
 			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
@@ -409,7 +411,7 @@ namespace bertini
 				qi::rule<Iterator, int(), ascii::space_type > security_level_;
 				qi::rule<Iterator, T(), ascii::space_type > security_max_norm_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				parsers::MPParserRules<Iterator> mpfr_rules;
 				
 				
 				
@@ -442,7 +444,7 @@ namespace bertini
 			 
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Tolerances<T>, T, Skipper> : qi::grammar<Iterator, config::Tolerances<T>(), Skipper>
+			struct ConfigSettingParser<Iterator, algorithm::config::Tolerances<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::Tolerances<T>(), Skipper>
 			{
 				
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigTolerancesType")
@@ -471,19 +473,19 @@ namespace bertini
 					
 					root_rule_.name("ConfigTolerances_root_rule");
 					
-					root_rule_ = ((newton_before_endgame_[phx::bind( [this](config::Tolerances<T> & S, T l)
+					root_rule_ = ((newton_before_endgame_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T l)
 															 {
 																 S.newton_before_endgame = l;
 															 }, _val, _1 )]
-								   ^ newton_during_endgame_[phx::bind( [this](config::Tolerances<T> & S, T num)
+								   ^ newton_during_endgame_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T num)
 																  {
 																	  S.newton_during_endgame = num;
 																  }, _val, _1 )]
-								  ^ final_tol_[phx::bind( [this](config::Tolerances<T> & S, T num)
+								  ^ final_tol_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T num)
 																  {
 																	  S.final_tolerance = num;
 																  }, _val, _1 )]
-									^ path_trunc_threshold_[phx::bind( [this](config::Tolerances<T> & S, T num)
+									^ path_trunc_threshold_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T num)
 																	   {
 																		   S.path_truncation_threshold = num;
 																	   }, _val, _1 )])
@@ -552,11 +554,11 @@ namespace bertini
 				
 				
 			private:
-				qi::rule<Iterator, config::Tolerances<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::config::Tolerances<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > newton_before_endgame_, newton_during_endgame_,
 					final_tol_, path_trunc_threshold_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				parsers::MPParserRules<Iterator> mpfr_rules;
 				
 				
 				
@@ -711,7 +713,7 @@ namespace bertini
 						stepsize_fail_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > steps_increase_, max_num_steps_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				parsers::MPParserRules<Iterator> mpfr_rules;
 				
 				
 				
@@ -945,7 +947,7 @@ namespace bertini
 				qi::rule<Iterator, T(), ascii::space_type > sample_factor_, min_track_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > num_sample_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				parsers::MPParserRules<Iterator> mpfr_rules;
 			}; //re: EndgameParser
 			
 			
@@ -1163,7 +1165,7 @@ namespace bertini
 				qi::rule<Iterator, config::Cauchy<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > cycle_cutoff_, ratio_cutoff_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				parsers::MPParserRules<Iterator> mpfr_rules;
 				
 				
 				
