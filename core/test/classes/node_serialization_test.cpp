@@ -49,6 +49,7 @@
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system.hpp"
 #include "bertini2/system_parsing.hpp"
+#include "bertini2/systems/precon.hpp"
 
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
@@ -208,6 +209,43 @@ BOOST_AUTO_TEST_CASE(system_serialize)
 
 }
 
+BOOST_AUTO_TEST_CASE(system_clone)
+{
+	std::string str = "function f1, f2; variable_group x1, x2; y = x1*x2; f1 = y*y; f2 = x1*y; ";
+
+	bertini::System sys;
+	std::string::const_iterator iter = str.begin();
+	std::string::const_iterator end = str.end();
+	bertini::SystemParser<std::string::const_iterator> S;
+	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+
+	
+	auto sys2 = Clone(sys);
+	
+
+	Vec<dbl> values(2);
+
+	values(0) = dbl(2.0);
+	values(1) = dbl(3.0);
+
+	Vec<dbl> v = sys2.Eval(values);
+
+	BOOST_CHECK_EQUAL(v.size(),2);
+
+	BOOST_CHECK_EQUAL(v(0), 36.0);
+	BOOST_CHECK_EQUAL(v(1), 12.0);
+	
+
+}
+
+
+BOOST_AUTO_TEST_CASE(clone_griewank_osborn)
+{
+
+	auto gw = bertini::system::Precon::GriewankOsborn();
+
+	auto clone = bertini::Clone(gw);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

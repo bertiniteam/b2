@@ -279,16 +279,17 @@ public:
 
 
 	explicit PowerSeriesEndgame(TrackerType const& tr, 
-	                            const std::tuple< config::PowerSeries const&, 
-            					const config::Endgame<BRT>&, 
-            					const config::Security<BRT>&, 
-            					const config::Tolerances<BRT>& >& settings )
-      : EndgameBase<TrackerType, FinalPSEG>(tr, std::get<1>(settings), std::get<2>(settings), std::get<3>(settings) ), 
+	                            const std::tuple< 
+	                            	config::PowerSeries const&, 
+	            					const config::Endgame<BRT>&, 
+	            					const config::Security<BRT>&
+	            					>& settings )
+      : EndgameBase<TrackerType, FinalPSEG>(tr, std::get<1>(settings), std::get<2>(settings)), 
           power_series_settings_( std::get<0>(settings) )
    	{}
 
     template< typename... Ts >
-		PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
+		PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
 		{}
 
 
@@ -678,7 +679,7 @@ public:
 	    RT norm_of_dehom_of_latest_approx;
 
 
-		while (approx_error > this->Tolerances().final_tolerance)
+		while (approx_error > this->FinalTolerance())
 		{
 	  		auto advance_code = AdvanceTime<CT>(target_time);
 	  		if (advance_code!=SuccessCode::Success)

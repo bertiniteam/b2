@@ -42,7 +42,7 @@ namespace bertini {
 	/**
 	\brief Generic event for Tracking
 	*/
-	ADD_BERTINI_EVENT_TYPE(TrackingEvent,Event);
+	ADD_BERTINI_EVENT_TYPE(TrackingEvent,ConstEvent);
 
 	/**
 	\brief A successful step occurred
@@ -173,7 +173,7 @@ namespace bertini {
 	\brief Precision increased during tracking
 	*/
 	template<class ObservedT>
-	class PrecisionIncreased : public PrecisionEvent<ObservedT>
+	class PrecisionIncreased : public PrecisionChanged<ObservedT>
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		/**
@@ -194,7 +194,7 @@ namespace bertini {
 	\brief Precision decreased during tracking
 	*/
 	template<class ObservedT>
-	class PrecisionDecreased : public PrecisionEvent<ObservedT>
+	class PrecisionDecreased : public PrecisionChanged<ObservedT>
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 		/**

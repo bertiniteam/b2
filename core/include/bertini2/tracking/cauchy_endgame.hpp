@@ -280,15 +280,14 @@ public:
 	explicit CauchyEndgame(TrackerType const& tr, 
 	                            const std::tuple< config::Cauchy<BRT> const&, 
 	                            					const config::Endgame<BRT>&, 
-	                            					const config::Security<BRT>&, 
-	                            					const config::Tolerances<BRT>& 
+	                            					const config::Security<BRT>&
 	                            				>& settings )
-      : EndgameBase<TrackerType, FinalEGT>(tr, std::get<1>(settings), std::get<2>(settings), std::get<3>(settings) ), 
+      : EndgameBase<TrackerType, FinalEGT>(tr, std::get<1>(settings), std::get<2>(settings)), 
           cauchy_settings_( std::get<0>(settings) )
    	{ }
 
     template< typename... Ts >
-		CauchyEndgame(TrackerType const& tr, const Ts&... ts ) : CauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
+		CauchyEndgame(TrackerType const& tr, const Ts&... ts ) : CauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT>>( ts... ) ) 
 		{}
 
 
@@ -357,7 +356,7 @@ public:
 								:
 							  polar(radius, (ii+1)*2*acos(static_cast<RT>(-1)) / (this->EndgameSettings().num_sample_points) + angle) + target_time;
 			// If we are tracking to a nonzero target time we need to shift our values to track to. This is a step that may not be needed if target_time = 0
-							  ; 
+							  ;
 
 
 			auto tracking_success = this->GetTracker().TrackPath(next_sample, current_time, next_time, current_sample);	
@@ -558,8 +557,8 @@ public:
 			auto new_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
 		}
 
-		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),RT(this->Tolerances().final_tolerance),this->EndgameSettings().max_num_newton_iterations);
-		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),RT(this->Tolerances().final_tolerance),this->EndgameSettings().max_num_newton_iterations);
+		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),RT(this->FinalTolerance()),this->EndgameSettings().max_num_newton_iterations);
+		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),RT(this->FinalTolerance()),this->EndgameSettings().max_num_newton_iterations);
 
 		if((samples.front() - samples.back()).norm() < this->GetTracker().TrackingTolerance())
 		{
@@ -617,11 +616,11 @@ public:
 					min = norm;
 				}
 			}
-			//compute the ratio if they are large enough.
-			if(min > this->Tolerances().final_tolerance && max > this->Tolerances().final_tolerance)
+
+			if(min > this->FinalTolerance() && max > this->FinalTolerance())
 			{
 				norm = min / max;
-				if(norm < cauchy_settings_.maximum_cauchy_ratio && (max - min) > this->Tolerances().final_tolerance)
+				if(norm < cauchy_settings_.maximum_cauchy_ratio && (max - min) > this->FinalTolerance())
 				{
 					return false; // bad ratio and too far apart. 
 				}
@@ -726,7 +725,7 @@ public:
 						continue_loop = true;
 				}
 			}//end if (RatioEGOperatingZoneTest())
-			else
+			else 
 			{
 				//compute the time for the next sample point
 				AsDerived().EnsureAtPrecision(next_time,Precision(ps_samples.back()));
@@ -1102,7 +1101,7 @@ public:
 			// dehom of prev approx and last approx not used because they are not updated with the most current information. However, prev approx and last approx are 
 			// the most current. 
 
-			if (approximate_error < this->Tolerances().final_tolerance)
+			if (approximate_error < this->FinalTolerance())
 			{
 				final_approx = latest_approx;
 				return SuccessCode::Success;
@@ -1156,7 +1155,7 @@ public:
 				final_approx = latest_approx;
 				return cauchy_samples_success;
 			}
-		} while (approximate_error > this->Tolerances().final_tolerance);
+		} while (approximate_error > this->FinalTolerance());
 
 		final_approx = latest_approx;
 		return SuccessCode::Success;

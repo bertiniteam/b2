@@ -61,7 +61,7 @@ public:
 		auto& TR = this->GetTracker();
 
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-		                          	this->Tolerances().final_tolerance/100,
+		                          	this->FinalTolerance()/100,
 		                          	this->EndgameSettings().max_num_newton_iterations);
 
 		return SuccessCode::Success;
@@ -71,14 +71,13 @@ public:
 	explicit FixedPrecPowerSeriesEndgame(TrackerType const& tr, 
 	                               const std::tuple< const config::PowerSeries &,
 	                               					 const config::Endgame<BRT>&, 
-	                               				     const config::Security<BRT>&, 
-	                               				     const config::Tolerances<BRT>& 
+	                               				     const config::Security<BRT>&
 	                               				    > & settings )
       : EGType(tr, settings)
    	{}
 
     template< typename... Ts >
-		FixedPrecPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecPowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT>, config::Tolerances<BRT> >( ts... ) ) 
+		FixedPrecPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecPowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
 		{}
 
 };

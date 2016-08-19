@@ -55,6 +55,9 @@ namespace bertini {
 		virtual ~AnyEvent() = default;
 	};
 
+	template<class ObsT, bool IsConst = true>
+	class Event;
+
 	/**
 	\brief For emission of events from observables.
 	
@@ -67,7 +70,7 @@ namespace bertini {
 	\see Observable, Observable::NotifyObservers, ADD_BERTINI_EVENT_TYPE, AMPPathAccumulator, AnyEvent
 	*/
 	template<class ObsT>
-	class Event : public AnyEvent
+	class Event<ObsT, true> : public AnyEvent
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS
 	public:
 
@@ -92,11 +95,61 @@ namespace bertini {
 		{return current_observable_;}
 
 		Event() = delete;
+
+		using HeldT = const ObsT&;
 	protected:
 		const ObsT& current_observable_;
-
-		
 	};
+
+
+	/**
+	\brief For emission of events from observables.
+	
+	An observable object probably wants to emit events to notify observers that things are happening.  The observers filter the events, at this time by dynamic casting (slow, I know, but it works for now.  Premature optimization, etc.)  A better method than dynamic casting would be to filter based on a union of bits or something.  If you, the reader, want to help make this better, please contact a developer!
+
+	Say I am an observable object, and I want to emit an event.  Events attach the type of object emitting them, and in fact (a refence to) the emitter itself.  So if my type is `T`, I would do something like `NotifyObservers(Event<T>(*this))`.  Then an Observer can filter based on a heirarchy of event types, etc.  
+
+	\tparam ObsT The Observed type.  When emitting an event, you pass in the type of object emitting the event, and the object itself.  Then the observer can `Get` the emitting object, and do (const) stuff to it.
+
+	\see Observable, Observable::NotifyObservers, ADD_BERTINI_EVENT_TYPE, AMPPathAccumulator, AnyEvent
+	*/
+	template<class ObsT>
+	class Event<ObsT,false> : public AnyEvent
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+
+		/**
+		\brief Constructor for an event.  
+
+		\param obs The observable emitting the event to observers.  Passed by const reference, this permits arbitrary `const` function calls by the observer.
+		*/
+		Event(ObsT & obs) : current_observable_(obs)
+		{}
+
+		virtual ~Event() = default;
+
+		/**
+		\brief Get the emitting object, by `const` reference.
+
+		\return The observable who emitted the event.  This permits calls of arbitrary const functions, particularly getters.
+
+		\see AMPPathAccumulator for simple example of filtering using `dynamic_cast`s
+		*/
+		ObsT & Get()
+		{return current_observable_;}
+
+		Event() = delete;
+
+		using HeldT = ObsT&;
+	protected:
+		ObsT& current_observable_;
+	};
+
+	template<typename ObsT>
+	using ConstEvent = Event<ObsT,true>;
+
+	template<typename ObsT>
+	using MutableEvent = Event<ObsT,false>;
 
 	/**
 	\brief Defines a new event type in a hierarchy
@@ -108,7 +161,8 @@ namespace bertini {
 	class event_name : public event_parenttype<ObservedT> \
 	{ BOOST_TYPE_INDEX_REGISTER_CLASS \
 	public: \
-		event_name(const ObservedT & obs) : event_parenttype<ObservedT>(obs){} \
+		using HeldT = typename event_parenttype<ObservedT>::HeldT; \
+		event_name(HeldT obs) : event_parenttype<ObservedT>(obs){} \
 		virtual ~event_name() = default; \
 		event_name() = delete; }
 	

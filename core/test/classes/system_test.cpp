@@ -44,6 +44,7 @@
 #include "bertini2/system.hpp"
 #include "bertini2/system_parsing.hpp"
 
+
 using System = bertini::System;
 using Var = std::shared_ptr<bertini::Variable>;
 using VariableGroup = bertini::VariableGroup;
@@ -963,6 +964,9 @@ BOOST_AUTO_TEST_CASE(ref_test)
 	BOOST_CHECK_EQUAL(J(0,0), 2*x1*x2*x2);
 	BOOST_CHECK_EQUAL(J(0,1), x1*x1*2*x2);
 }
+
+
+
 
 
 

@@ -31,7 +31,12 @@
 
 #pragma once
 
+#include "bertini2/tracking/fixed_prec_endgame.hpp"
+#include "bertini2/tracking/fixed_prec_cauchy_endgame.hpp"
+
 #include "bertini2/tracking/amp_powerseries_endgame.hpp"
+#include "bertini2/tracking/amp_cauchy_endgame.hpp"
+
 
 
 
