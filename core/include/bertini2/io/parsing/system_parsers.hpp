@@ -53,7 +53,7 @@ namespace bertini {
 				
 				SystemParser<Iterator> S;
 				
-				std::shared_ptr<Node>  s{};
+				System s{};
 				bool r = phrase_parse(first, last,
 									  S,
 									  space,
@@ -62,7 +62,7 @@ namespace bertini {
 				if (!r || first != last) // fail if we did not get a full match
 					return false;
 				
-				std::swap(s,sys);
+				sys = s;
 				return r;
 			}
 		

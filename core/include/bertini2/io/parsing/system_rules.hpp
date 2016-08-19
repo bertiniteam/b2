@@ -379,7 +379,7 @@ namespace bertini {
 	{
 		System sys;
 		
-		parsing::SystemParser<std::string::const_iterator> S;
+		parsing::classic::SystemParser<std::string::const_iterator> S;
 		
 		std::string::const_iterator iter = input.begin();
 		std::string::const_iterator end = input.end();
