@@ -42,7 +42,7 @@ namespace bertini {
 			
 			
 			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, std::shared_ptr<Node>& func)
+			static bool parse(Iterator first, Iterator last, std::shared_ptr<bertini::node::Node>& func)
 			{
 				using boost::spirit::qi::double_;
 				using boost::spirit::qi::_1;
@@ -52,7 +52,7 @@ namespace bertini {
 				
 				FunctionParser<Iterator> S;
 				
-				std::shared_ptr<Node>  f{};
+				std::shared_ptr<bertini::node::Node>  f{};
 				bool r = phrase_parse(first, last,
 									  S,
 									  space,

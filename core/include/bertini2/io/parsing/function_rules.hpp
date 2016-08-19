@@ -299,7 +299,7 @@ namespace bertini {
 				// the number_ rule wants to find strings from the various other number_ rules, and produces a Number node
 				qi::rule<Iterator, std::shared_ptr<Node>(),  ascii::space_type > number_;
 				
-				parsers::MPParserRules<Iterator> mpfr_rules_;
+				parsing::MPParserRules<Iterator> mpfr_rules_;
 			};
 			
 		} // re: namespace classic
