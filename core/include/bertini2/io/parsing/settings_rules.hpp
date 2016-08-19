@@ -389,7 +389,7 @@ namespace bertini {
 				qi::rule<Iterator, int(), ascii::space_type > security_level_;
 				qi::rule<Iterator, T(), ascii::space_type > security_max_norm_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				parsers::MPParserRules<Iterator> mpfr_rules;
+				MPParserRules<Iterator> mpfr_rules;
 				
 				
 				
@@ -536,7 +536,7 @@ namespace bertini {
 				qi::rule<Iterator, T(), ascii::space_type > newton_before_endgame_, newton_during_endgame_,
 				final_tol_, path_trunc_threshold_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				parsers::MPParserRules<Iterator> mpfr_rules;
+				MPParserRules<Iterator> mpfr_rules;
 				
 				
 				
@@ -691,7 +691,7 @@ namespace bertini {
 				stepsize_fail_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > steps_increase_, max_num_steps_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				parsers::MPParserRules<Iterator> mpfr_rules;
+				MPParserRules<Iterator> mpfr_rules;
 				
 				
 				
@@ -925,7 +925,7 @@ namespace bertini {
 				qi::rule<Iterator, T(), ascii::space_type > sample_factor_, min_track_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > num_sample_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				parsers::MPParserRules<Iterator> mpfr_rules;
+				MPParserRules<Iterator> mpfr_rules;
 			}; //re: EndgameParser
 			
 			
@@ -1143,7 +1143,7 @@ namespace bertini {
 				qi::rule<Iterator, config::Cauchy<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > cycle_cutoff_, ratio_cutoff_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				parsers::MPParserRules<Iterator> mpfr_rules;
+				MPParserRules<Iterator> mpfr_rules;
 				
 				
 				

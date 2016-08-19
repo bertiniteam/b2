@@ -407,8 +407,8 @@ namespace bertini {
 			{
 				auto file_as_string = FileToString(input_file);
 				
-				bertini::classic::parsing::SplitInputFileParser<std::string::const_iterator> parser;
-				bertini::classic::SplitInputFile config_and_input;
+				SplitInputFileParser<std::string::const_iterator> parser;
+				SplitInputFile config_and_input;
 				std::string::const_iterator iter = file_as_string.begin();
 				std::string::const_iterator end = file_as_string.end();
 				phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);

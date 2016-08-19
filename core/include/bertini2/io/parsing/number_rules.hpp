@@ -250,7 +250,7 @@ namespace bertini{
 				}
 				
 				qi::rule<Iterator, mpfr(), Skipper > root_rule_;
-				MpfrFloatParser<Iterator> mpfr_float_;
+				parsing::MpfrFloatParser<Iterator> mpfr_float_;
 				mpfr temp_result;
 			};
 

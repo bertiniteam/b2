@@ -34,7 +34,7 @@
 
 
 namespace bertini{
-	namespace parsers{
+	namespace parsing{
 
 		namespace classic{
 			
@@ -99,7 +99,7 @@ namespace bertini{
 				using boost::spirit::ascii::space;
 				using boost::phoenix::ref;
 				
-				MpfrFloatParser<Iterator> S;
+				parsing::MpfrFloatParser<Iterator> S;
 				
 				mpfr_float rN {0};
 				bool r = phrase_parse(first, last,
@@ -128,7 +128,7 @@ namespace bertini{
 				using boost::spirit::ascii::space;
 				using boost::phoenix::ref;
 				
-				MpfrComplexParser<Iterator> S;
+				parsing::classic::MpfrComplexParser<Iterator> S;
 				
 				mpfr rN {};
 				bool r = phrase_parse(first, last,
