@@ -93,9 +93,9 @@ namespace bertini {
 		
 		
 
-		mpz_int TotalDegree::NumStartPoints() const
+		unsigned long long TotalDegree::NumStartPoints() const
 		{
-			mpz_int num_start_points = 1;
+			unsigned long long num_start_points = 1;
 			for (auto iter : degrees_)
 				num_start_points*=iter;
 			return num_start_points;
@@ -103,7 +103,7 @@ namespace bertini {
 
 
 		
-		Vec<dbl> TotalDegree::GenerateStartPoint(dbl,mpz_int index) const
+		Vec<dbl> TotalDegree::GenerateStartPoint(dbl,unsigned long long index) const
 		{
 			Vec<dbl> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
@@ -125,7 +125,7 @@ namespace bertini {
 		}
 
 
-		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,mpz_int index) const
+		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,unsigned long long index) const
 		{
 			Vec<mpfr> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
