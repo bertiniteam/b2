@@ -153,7 +153,7 @@ namespace bertini
 
 			std::shared_ptr<node::Rational> gamma_; ///< the gamma from the gamma trick.
 			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
-			std::vector<mpz_int> degrees_; ///< stores the degrees of the functions.
+			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
 
 
 			friend class boost::serialization::access;

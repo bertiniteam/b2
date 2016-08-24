@@ -58,8 +58,8 @@ namespace bertini {
 			struct MetaData{
 
 				// only vaguely metadata.  artifacts of randomness or ordering
-				mpz_int path_index;     		// path number of the solution
-				mpz_int solution_index;      	// solution number
+				unsigned long long path_index;     		// path number of the solution
+				unsigned long long solution_index;      	// solution number
 
 				// computed across all of the solve
 				bool precision_changed = false;
@@ -383,7 +383,7 @@ namespace bertini {
 			SolnCont<Vec<BaseComplexType> > endgame_solutions_;
 			SolnCont<MetaData> solution_metadata_;
 
-			mpz_int num_start_points_;
+			unsigned long long num_start_points_;
 
 
 			bool setup_complete_ = false;

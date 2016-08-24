@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 
 	bertini::start_system::TotalDegree TD(sys);
 
-	for (mpz_int ii = 0; ii < TD.NumStartPoints(); ++ii)
+	for (unsigned long long ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		auto start = TD.StartPoint<dbl>(ii);
 		auto function_values = TD.Eval(start);
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	for (mpz_int ii = 0; ii < TD.NumStartPoints(); ++ii)
+	for (unsigned long long ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		auto start = TD.StartPoint<mpfr>(ii);
 		auto function_values = TD.Eval(start);
