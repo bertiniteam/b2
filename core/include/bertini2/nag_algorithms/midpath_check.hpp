@@ -36,6 +36,9 @@ namespace bertini{
 
 struct Midpath
 {
+	
+	using BoundaryData = typename SolnCont< std::tuple<Vec<BaseComplexType>, tracking::SuccessCode, BaseRealType>>;
+	
 	struct Data{
 		bool Passed()
 		{
@@ -55,6 +58,15 @@ struct Midpath
 	{
 		return Data();
 	}
+	
+	
+	
+	
+	template<>
+	static Data Check<BoundaryData>(BoundaryData const& boundary_solutions)
+	{
+		
+	};
 };
 
 	}
