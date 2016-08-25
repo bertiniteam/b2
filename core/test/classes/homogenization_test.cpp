@@ -36,7 +36,6 @@
 
 
 #include "bertini2/system.hpp"
-#include "bertini2/system_parsing.hpp"
 
 using mpfr_float = bertini::mpfr_float;
 using Var = std::shared_ptr<bertini::node::Variable>;

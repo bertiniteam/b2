@@ -53,7 +53,7 @@
 #include "bertini2/function_tree/roots/function.hpp"
 #include "bertini2/function_tree/roots/jacobian.hpp"
 
-#include "bertini2/function_tree/function_parsing.hpp"
+#include "bertini2/io/parsing/function_parsers.hpp"
 
 #endif
 

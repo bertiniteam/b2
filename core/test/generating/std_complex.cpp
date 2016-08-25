@@ -25,7 +25,7 @@
 
 
 #include "bertini2/io/generators.hpp"
-#include "bertini2/io/parsers.hpp"
+#include "bertini2/io/parsing/number_parsers.hpp"
 
 #include <boost/test/unit_test.hpp>
 
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(zero)
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     std::complex<double> rt;
-    BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
+	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(one)
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     std::complex<double> rt;
-    BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
+	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(sqrt_2)
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     std::complex<double> rt;
-    BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
+	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(check_135_477005)
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
     std::complex<double> rt;
-    BOOST_CHECK(bertini::parsers::Classic::parse(result.begin(), result.end(), rt));
+	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 

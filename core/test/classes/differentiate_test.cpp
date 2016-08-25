@@ -39,7 +39,7 @@
 
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system.hpp"
-#include "bertini2/system_parsing.hpp"
+#include "bertini2/io/parsing/system_parsers.hpp"
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/test/unit_test.hpp>
@@ -104,10 +104,8 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
 	std::string str = "function f; variable_group x,y,z; f = x*y +y^2 - z*x + 9;";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	auto JFunc = std::make_shared<Jacobian>(func->Differentiate());
@@ -132,10 +130,7 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
 	std::string str = "function f; variable_group x,y,z; f = 3*x*y*z;";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -202,10 +197,7 @@ BOOST_AUTO_TEST_CASE(diff_constant){
 	std::string str = "function f; variable_group x,y,z; f = 4.5 + i*8.2;";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -249,10 +241,7 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
 	std::string str = "function f; variable_group x,y,z; f = x-y+z-4.5+i*7.3;";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -303,10 +292,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
 	std::string str = "function f; variable_group x,y,z; f = (x^2)*(y^3);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -384,10 +370,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
 	std::string str = "function f; variable_group x,y,z; f = (x^2)/(y^3);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -438,10 +421,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
 	std::string str = "function f; variable_group x,y,z; f = (x^2)*(x+3);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -490,10 +470,7 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
 	std::string str = "function f; variable_group x,y,z; f = y/(y+1);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -544,10 +521,7 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
 	std::string str = "function f; variable_group x,y,z; f = sin(x);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -596,10 +570,7 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
 	std::string str = "function f; variable_group x,y,z; f = cos(y);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -649,10 +620,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_z){
 	std::string str = "function f; variable_group x,y,z; f = tan(z);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -696,10 +664,7 @@ BOOST_AUTO_TEST_CASE(diff_exp_x){
 	std::string str = "function f; variable_group x,y,z; f = exp(x);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -745,10 +710,7 @@ BOOST_AUTO_TEST_CASE(diff_log_x){
 	std::string str = "function f; variable_group x,y,z; f = log(x^2+y);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -794,10 +756,7 @@ BOOST_AUTO_TEST_CASE(diff_sqrt_y){
 	std::string str = "function f; variable_group x,y,z; f = sqrt(y);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -845,10 +804,7 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
 	std::string str = "function f; variable_group x,y,z; f = (z+3)^3;";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -899,12 +855,7 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
 	std::string str = "function f; variable_group x,y,z; f = x^2+y^2+z^2;";
 
 	bertini::System sys;
-	
-
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -958,10 +909,7 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
 	std::string str = "function f; variable_group x,y,z; f = sin(x*y);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -1011,10 +959,7 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
 	std::string str = "function f; variable_group x,y,z; f = cos(x^2);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -1062,10 +1007,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 	std::string str = "function f; variable_group x,y,z; f = tan(x/z);";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	var_dbl << xnum_dbl, ynum_dbl, znum_dbl;
 	var_mpfr << xnum_mpfr, ynum_mpfr, znum_mpfr;
@@ -1178,8 +1120,8 @@ BOOST_AUTO_TEST_CASE(integer_power)
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	bertini::Var x = std::make_shared<Variable>("x");
-	bertini::Var t = std::make_shared<Variable>("t"); 
+	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> t = std::make_shared<Variable>("t");
 
 	auto f = pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t;
 	std::shared_ptr<Jacobian> j = std::make_shared<Jacobian>(f->Differentiate());
@@ -1213,8 +1155,8 @@ BOOST_AUTO_TEST_CASE(integer_power_system)
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	System sys;
-	bertini::Var x = std::make_shared<Variable>("x");
-	bertini::Var t = std::make_shared<Variable>("t"); 
+	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> t = std::make_shared<Variable>("t"); 
 
 	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 

@@ -5,13 +5,13 @@
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//bertini2/io/parsers.hpp is distributed in the hope that it will be useful,
+//bertini2/io/parsing/number_rules.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with bertini2/io/parsers.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with bertini2/io/parsing/number_rules.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
@@ -21,9 +21,9 @@
 
 
 /**
-\file bertini2/io/parsers.hpp 
+\file bertini2/io/parsing/number_rules.hpp 
 
-\brief Provides the parsers for bertini2.
+\brief Provides the parsersing rules for numbers in bertini2.
 */
 
 #pragma once
@@ -31,29 +31,7 @@
 
 
 
-#define BOOST_SPIRIT_USE_PHOENIX_V3 1
-
-#include <boost/fusion/adapted.hpp>
-#include <boost/fusion/include/adapted.hpp>
-
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
-
-
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/qi_core.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
-#include <boost/fusion/include/std_pair.hpp>
-
-#include <boost/phoenix/bind/bind_function.hpp>
-#include <boost/phoenix/object/construct.hpp>
-#include <boost/bind.hpp>
-
-#include <boost/fusion/adapted/adt/adapt_adt.hpp>
-#include <boost/fusion/include/adapt_adt.hpp>
-
-#include <boost/spirit/include/support_istream_iterator.hpp>
+#include "bertini2/io/parsing/qi_files.hpp"
 
 #include "bertini2/mpfr_complex.hpp"
 
@@ -67,7 +45,7 @@ BOOST_FUSION_ADAPT_ADT(
 
 
 namespace bertini{
-	namespace parsers{
+	namespace parsing{
 
 		
 
@@ -238,91 +216,8 @@ namespace bertini{
 		};
 
 
-
-
-
-		struct Classic{
-
-			template <typename Iterator>
-		    static bool parse(Iterator first, Iterator last, double& c)
-		    {
-		        using boost::spirit::qi::double_;
-		        using boost::spirit::qi::_1;
-		        using boost::spirit::qi::phrase_parse;
-		        using boost::spirit::ascii::space;
-		        using boost::phoenix::ref;
-
-		        double rN = 0.0;
-		        bool r = phrase_parse(first, last,
-		            (
-		                double_[ref(rN) = _1]
-		            ),
-		            space);
-
-		        if (!r || first != last) // fail if we did not get a full match
-		            return false;
-
-		        c = rN;
-		        return r;
-		    }
-
-			template <typename Iterator>
-		    static bool parse(Iterator first, Iterator last, std::complex<double>& c)
-		    {
-		        using boost::spirit::qi::double_;
-		        using boost::spirit::qi::_1;
-		        using boost::spirit::qi::phrase_parse;
-		        using boost::spirit::ascii::space;
-		        using boost::phoenix::ref;
-
-		        double rN = 0.0;
-		        double iN = 0.0;
-		        bool r = phrase_parse(first, last,
-		            (
-		                    double_[ref(rN) = _1]
-		                        >> -(double_[ref(iN) = _1])
-		                |   double_[ref(rN) = _1]
-		            ),
-		            space);
-
-		        if (!r || first != last) // fail if we did not get a full match
-		            return false;
-		        c = std::complex<double>(rN, iN);
-		        return r;
-		    }
-
-
-	    	
-
-
-		    template <typename Iterator>
-		    static bool parse(Iterator first, Iterator last, mpfr_float& c)
-		    {
-		        using boost::spirit::qi::double_;
-		        using boost::spirit::qi::_1;
-		        using boost::spirit::qi::phrase_parse;
-		        using boost::spirit::ascii::space;
-		        using boost::phoenix::ref;
-		        
-		        MpfrFloatParser<Iterator> S;
-
-		        mpfr_float rN {0};
-		        bool r = phrase_parse(first, last,
-		            S,
-		            space,
-		            rN
-		            );
-
-		        if (!r || first != last) // fail if we did not get a full match
-		            return false;
-
-		        c = rN;
-		        return r;
-		    }
-
-
-
-		    template<typename Iterator, typename Skipper = ascii::space_type>
+		namespace classic {
+			template<typename Iterator, typename Skipper = ascii::space_type>
 			struct MpfrComplexParser : qi::grammar<Iterator, mpfr(), boost::spirit::ascii::space_type>
 			{
 				MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
@@ -332,114 +227,34 @@ namespace bertini{
 					using qi::_1;
 					using qi::_2;
 					using qi::_val;
-
-					root_rule_ = 
-						(mpfr_float_ >> mpfr_float_)
-						[ phx::bind( 
-										[]
-										(mpfr & B, mpfr_float const& P, mpfr_float const& Q)
-										{
-											auto prev_prec = DefaultPrecision();
-											auto digits = max(P.precision(),Q.precision());
-
-											DefaultPrecision(digits);
-											B.real(P);
-											B.imag(Q);
-											B.precision(digits);
-											DefaultPrecision(prev_prec);
-											assert(B.precision() == digits);
-										},
-										_val,_1,_2
-									)
-						];
+					
+					root_rule_ =
+					(mpfr_float_ >> mpfr_float_)
+					[ phx::bind(
+								[]
+								(mpfr & B, mpfr_float const& P, mpfr_float const& Q)
+								{
+									auto prev_prec = DefaultPrecision();
+									auto digits = max(P.precision(),Q.precision());
+									
+									DefaultPrecision(digits);
+									B.real(P);
+									B.imag(Q);
+									B.precision(digits);
+									DefaultPrecision(prev_prec);
+									assert(B.precision() == digits);
+								},
+								_val,_1,_2
+								)
+					 ];
 				}
-
+				
 				qi::rule<Iterator, mpfr(), Skipper > root_rule_;
-				MpfrFloatParser<Iterator> mpfr_float_;
+				parsing::MpfrFloatParser<Iterator> mpfr_float_;
 				mpfr temp_result;
 			};
-			    
 
-		    template <typename Iterator>
-		    static bool parse(Iterator first, Iterator last, mpfr& c)
-		    {
-		        using boost::spirit::qi::double_;
-		        using boost::spirit::qi::_1;
-		        using boost::spirit::qi::phrase_parse;
-		        using boost::spirit::ascii::space;
-		        using boost::phoenix::ref;
-		        
-		        MpfrComplexParser<Iterator> S;
-
-		        mpfr rN {};
-		        bool r = phrase_parse(first, last,
-		            S,
-		            space,
-		            rN);
-
-		        std::cout << rN.real().str() << std::endl;
-		        if (!r || first != last) // fail if we did not get a full match
-		            return false;
-
-		        c = rN;
-		        return r;
-		    }
-
-		};
-
-
-
-		struct CPlusPlus{
-
-			template <typename Iterator>
-		    static bool parse(Iterator first, Iterator last, double& c)
-		    {
-		        using boost::spirit::qi::double_;
-		        using boost::spirit::qi::_1;
-		        using boost::spirit::qi::phrase_parse;
-		        using boost::spirit::ascii::space;
-		        using boost::phoenix::ref;
-
-		        double rN = 0.0;
-		        bool r = phrase_parse(first, last,
-		            (
-		                double_[ref(rN) = _1]
-		            ),
-		            space);
-
-		        if (!r || first != last) // fail if we did not get a full match
-		            return false;
-
-		        c = rN;
-		        return r;
-		    }
-
-
-			template <typename Iterator>
-		    static bool parse(Iterator first, Iterator last, std::complex<double>& c)
-		    {
-		        using boost::spirit::qi::double_;
-		        using boost::spirit::qi::_1;
-		        using boost::spirit::qi::phrase_parse;
-		        using boost::spirit::ascii::space;
-		        using boost::phoenix::ref;
-
-		        double rN = 0.0;
-		        double iN = 0.0;
-		        bool r = phrase_parse(first, last,
-		            (
-		                    '(' >> double_[ref(rN) = _1]
-		                        >> -(',' >> double_[ref(iN) = _1]) >> ')'
-		                |   double_[ref(rN) = _1]
-		            ),
-		            space);
-
-		        if (!r || first != last) // fail if we did not get a full match
-		            return false;
-		        c = std::complex<double>(rN, iN);
-		        return r;
-		    }
-		};
+		} // re: namespace classic
 
 		
 	}
