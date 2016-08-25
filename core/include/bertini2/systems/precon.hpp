@@ -59,6 +59,29 @@ System GriewankOsborn()
 
 	return griewank_osborn_sys;
 }
+			
+			
+			/**
+			 Creates system with crossed paths at t = 1/3 and t = 2/3.
+			 
+			 From the returned system, you can unpack the variables, etc.
+			 */
+			static
+			System CrossedPaths()
+			{
+				using Var = std::shared_ptr<node::Variable>;
+				
+				bertini::System crossed_paths_sys;
+				Var x = std::make_shared<node::Variable>("x"), t = std::make_shared<node::Variable>("t"), y = std::make_shared<node::Variable>("y");
+				VariableGroup vars{x,y};
+				crossed_paths_sys.AddVariableGroup(vars);
+				
+				crossed_paths_sys.AddFunction(pow(x,3)+2);
+				crossed_paths_sys.AddFunction(pow(y,2) + 0.5);
+				
+				return crossed_paths_sys;
+			}
+
 
 };
 		
