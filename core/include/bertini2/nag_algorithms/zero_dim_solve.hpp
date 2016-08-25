@@ -54,6 +54,8 @@ namespace bertini {
 			using PrecisionConfig = typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
 			using SolnIndT = typename SolnCont<BaseComplexType>::size_type;
+			
+			using MidpathT = Midpath<StartSystemType, BaseRealType, BaseComplexType>;
 
 			struct MetaData{
 
@@ -140,6 +142,9 @@ namespace bertini {
 				assert(homotopy_.IsHomogeneous());
 
 				tolerances_ = algorithm::config::Tolerances<BaseRealType>();
+				
+				boundary_near_tol_ = NumTraits<BaseRealType>::FromString("1e-5");
+				midpath_ = std::make_shared<MidpathT>(start_system_, boundary_near_tol_);
 
 				tracker_ = TrackerType(homotopy_);
 
@@ -272,19 +277,19 @@ namespace bertini {
 
 			void EGBoundaryAction()
 			{
-				auto midcheck = Midpath::Check(solutions_at_endgame_boundary_);
+				auto midcheck = midpath_->Check(solutions_at_endgame_boundary_);
 				
 				unsigned num_resolve_attempts = 0;
 				while (!midcheck.Passed() && num_resolve_attempts < zero_dim_config_.max_num_crossed_path_resolve_attempts)
 				{
 					MidpathResolve(midcheck, solutions_at_endgame_boundary_);
-					midcheck = Midpath::Check(solutions_at_endgame_boundary_);
+					midcheck = midpath_->Check(solutions_at_endgame_boundary_);
 					num_resolve_attempts++;
 				}
 			}
 
 			template<typename T>
-			void MidpathResolve(Midpath::Data const&, 
+			void MidpathResolve(typename MidpathT::Data const&,
 			                    T const& solutions_at_endgame_boundary)
 			{
 				// insert code here to retrack the crossed paths.
@@ -365,6 +370,7 @@ namespace bertini {
 			config::PostProcessing<BaseRealType> post_processing_;
 			config::ZeroDim zero_dim_config_;
 			config::Tolerances<BaseRealType> tolerances_;
+			BaseRealType boundary_near_tol_;
 
 			PrecisionConfig precision_config_;
 			
@@ -379,6 +385,8 @@ namespace bertini {
 			BaseComplexType t_start_, t_endgame_boundary_, t_end_;
 
 			SolnCont< std::tuple<Vec<BaseComplexType>, tracking::SuccessCode, BaseRealType>> solutions_at_endgame_boundary_;
+			
+			std::shared_ptr<MidpathT> midpath_;
 
 			SolnCont<Vec<BaseComplexType> > endgame_solutions_;
 			SolnCont<MetaData> solution_metadata_;

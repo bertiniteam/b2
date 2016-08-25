@@ -19,6 +19,9 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
+// individual authors of this file include:
+// James Collins, West Texas A&M University
+
 
 /**
 \file bertini2/nag_algorithms/midpath_check.hpp 
@@ -31,43 +34,112 @@ This essentially amounts to being certain that no two points are the same.
 
 #pragma once
 
+#include"bertini2/nag_algorithms/config.hpp"
+#include "bertini2/tracking.hpp"
+
+
 namespace bertini{
 	namespace algorithm{
 
-struct Midpath
-{
-	
-	using BoundaryData = typename SolnCont< std::tuple<Vec<BaseComplexType>, tracking::SuccessCode, BaseRealType>>;
-	
-	struct Data{
-		bool Passed()
+		template<typename StartSystemT, typename RealType, typename ComplexType>
+		struct Midpath
 		{
-			return pass_;
-		}
+			
+			using BoundaryData = SolnCont< std::tuple<Vec<ComplexType>, tracking::SuccessCode, RealType>>;
+			
+			Midpath( StartSystemT start_system, RealType near_tolerance)
+			{
+				boundary_near_tolerance_ = near_tolerance;
+				
+				start_system_ = start_system;
+			}
+			
+			struct Data{
+				bool Passed()
+				{
+					return pass_;
+				}
+				
+				void Crossed(int path_index, bool same_start)
+				{
+					bool already_stored = false;
+					for(auto v : crossed_paths)
+					{
+						int index = std::get<int>(v);
+						if(path_index == index)
+						{
+							already_stored = true;
+						}
+					}
+					
+					if(already_stored == false)
+					{
+						crossed_paths.push_back(std::make_tuple(path_index, same_start));
+					}
+					
+					pass_ = false;
+				}
 
 
-	private:
-		bool pass_ = true;
+			private:
+				bool pass_ = true;
+				std::vector< std::tuple< int, bool > > crossed_paths;
 
 
-	};
+			}; //re: struct Data
 
-	template<typename T>
-	static
-	Data Check(T const&)
-	{
-		return Data();
-	}
-	
-	
-	
-	
-	template<>
-	static Data Check<BoundaryData>(BoundaryData const& boundary_solutions)
-	{
-		
-	};
-};
+//			template<typename T>
+//			static
+//			Data Check(T const&)
+//			{
+//				return Data();
+//			}
+			
+			
+			
+			/**
+			 \brief Checks the solution data at the endgame boundary to see if any paths have crossed during tracking before the endgame.
+			 
+			 \param boundary_data Solution data at the endgame boundary
+			 
+			 \returns A Data object which stores data about crossed paths
+			 
+			*/
+			Data Check(BoundaryData const& boundary_data)
+			{
+				Data check_data;
+				for (int ii = 0; ii < boundary_data.size(); ++ii)
+				{
+					const Vec<ComplexType>& solution_ii = std::get<Vec<ComplexType>>(boundary_data[ii]);
+					
+					for(int jj = ii+1; jj < boundary_data.size(); ++jj)
+					{
+						if(std::get<tracking::SuccessCode>(boundary_data[ii]) == tracking::SuccessCode::Success)
+						{
+							const Vec<ComplexType>& solution_jj = std::get<Vec<ComplexType>>(boundary_data[jj]);
+							const Vec<ComplexType> diff_sol = solution_ii - solution_jj;
+							
+							if(diff_sol.norm() < boundary_near_tolerance_)
+							{
+								// Check if start points are the same
+								const auto& start_ii = start_system_.template StartPoint<ComplexType>(ii);
+								const auto& start_jj = start_system_.template StartPoint<ComplexType>(jj);
+								auto diff_start = start_ii - start_jj;
+								bool same_start = (diff_start.norm() > boundary_near_tolerance_);
+								check_data.Crossed(ii, same_start);
+								check_data.Crossed(jj, same_start);
+							}
+						}
+					}
+				}
+				return check_data;
+			};
+			
+			
+		private:
+			RealType boundary_near_tolerance_;
+			StartSystemT start_system_;
+		}; //re: struct Midpath
 
-	}
-}
+	} // re: namespace algorithm
+}// re: namespace bertini
