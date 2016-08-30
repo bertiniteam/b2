@@ -39,13 +39,14 @@ noinst_LTLIBRARIES =
 
 TESTS =
 
+rootinclude_HEADERS = 
+
 ######  end deliberately blank items
 
 #see https://www.gnu.org/software/automake/manual/html_node/Suffixes.html
 SUFFIXES = .cpp .hpp
 
 rootincludedir = $(includedir)/bertini2
-rootinclude_HEADERS = include/bertini2/config.h
 
 #initialize to empty and add to it in the Makemodule.am files below
 
