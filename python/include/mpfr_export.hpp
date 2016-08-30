@@ -335,10 +335,10 @@ namespace bertini{
 			void (MPFRBaseT::*setimag)(const mpfr_float&) = &MPFRBaseT::imag;
 			
 			void set_real(MPFRBaseT &c, mpfr_float const& r) { c.real(r);}
-			mpfr_float get_real(MPFRBaseT const&c) { return c.real();}
+			const mpfr_float& get_real(MPFRBaseT const&c) { return c.real();}
 			
 			void set_imag(MPFRBaseT &c, mpfr_float const& r) { c.imag(r);}
-			mpfr_float get_imag(MPFRBaseT const&c) { return c.imag();}
+			const mpfr_float& get_imag(MPFRBaseT const&c) { return c.imag();}
 		};
 
 	}

@@ -215,14 +215,14 @@ namespace bertini{
 			
 			.def("__repr__", &MPFRComplexVisitor::__repr__)
 			
-			.add_property("real", getreal, setreal)
-			.add_property("imag", getimag, setimag)
+			.add_property("real", boost::python::make_function( &MPFRComplexVisitor::get_real, return_internal_reference<>() ), setreal) //return_value_policy<reference_existing_object>()
+			.add_property("imag", boost::python::make_function( &MPFRComplexVisitor::get_imag, return_internal_reference<>() ), setimag)
 			;
 			
 			
-			// All complex specific function are free in python
-			def("real",&real);
-			def("imag",&imag);
+			// All complex-specific functions are free in python
+			def("real",&real,return_value_policy<copy_const_reference>());
+			def("imag",&imag,return_value_policy<copy_const_reference>());
 			
 			def("abs2",&MPFRBaseT::abs2);
 			def("polar",&polar);
