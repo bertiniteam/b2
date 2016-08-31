@@ -20,7 +20,7 @@
 AC_DEFUN([AX_BERTINI2],
     [
 AC_ARG_WITH([bertini],
-    [AS_HELP_STRING([--with-bertini@<:@=ARG@:>@], 
+    [AS_HELP_STRING([--with-bertini@<:@=ARG@:>@],
         [Use the Bertini2 numerical algebraic geometry library from a specified or standard location (ARG=yes),
          from the given location (ARG=<path>),
          or disable it (ARG=no)
@@ -45,59 +45,62 @@ if test "x$want_bertini" = "xyes"; then
     AC_LANG_PUSH(C++)
 
     CPPFLAGS_SAVED="$CPPFLAGS"
-    found_bertini_include_dir=no
-    if test "$ac_bertini_path" != ""; then
-        
-        if test -d "$ac_bertini_path/bertini2"; then
-            BERTINI_CPPFLAGS="-I$ac_bertini_path"
-            found_bertini_include_dir=yes;
-        elif test -d "$ac_bertini_path/include/bertini2"; then
-            BERTINI_CPPFLAGS="-I$ac_bertini_path/include"
-            found_bertini_include_dir=yes;
-        fi
-
-    else 
-        for ac_bertini_path_tmp in /usr /usr/local /opt /opt/local ; do
-            if test -d "$ac_bertini_path_tmp/include/bertini2"; then
-                BERTINI_CPPFLAGS="-I$ac_bertini_path_tmp/include"
-                found_bertini_include_dir=yes;
-                break;
-            fi
-        done
-    fi
-
-    if test "x$found_bertini_include_dir" = "xyes"; then
-        CPPFLAGS="$CPPFLAGS_SAVED $BOOST_CPPFLAGS $BERTINI_CPPFLAGS"
-        export CPPFLAGS
-        AC_MSG_NOTICE([found bertini2 includedir])
-    else
-        AC_MSG_ERROR([unable to find include/bertini2 directory])
-    fi
-
     LDFLAGS_SAVED="$LDFLAGS"
+
+    found_bertini_include_dir=no
     found_bertini_lib_dir=no
     if test "$ac_bertini_path" != ""; then
-        if test -d "$ac_bertini_path/lib"; then
-            BERTINI_LDFLAGS="-L$ac_bertini_path/lib"
-            found_bertini_lib_dir=yes;
-        fi
-    else 
-        for ac_bertini_path_tmp in /usr /usr/local /opt /opt/local ; do
-            if test -d "$ac_bertini_path_tmp/lib"; then
-                BERTINI_LDFLAGS="-L$ac_bertini_path_tmp/lib"
+
+        if test -d "$ac_bertini_path/include/bertini2"; then
+
+            if test -d "$ac_bertini_path/lib"; then
+                BERTINI_CPPFLAGS="-I$ac_bertini_path/include";
+                BERTINI_LDFLAGS="-L$ac_bertini_path/lib";
+                found_bertini_include_dir=yes;
                 found_bertini_lib_dir=yes;
-                break;
+            else
+                AC_MSG_ERROR([unable to find lib directory for bertini2 symmetric to include directory])
+            fi
+        else
+            AC_MSG_ERROR([unable to find include/bertini2 directory at specified location --with-bertini=$ac_bertini_path])
+        fi
+
+    else
+        for ac_bertini_path_tmp in /usr /usr/local /opt /opt/local ; do
+            if test -d "$ac_bertini_path_tmp/include/bertini2"; then
+                if test -d "$ac_bertini_path/lib"; then
+                    found_bertini_include_dir=yes;
+                    found_bertini_lib_dir=yes;
+                    BERTINI_LDFLAGS="-L$ac_bertini_path_tmp/lib";
+                    BERTINI_CPPFLAGS="-I$ac_bertini_path_tmp/include";
+                    break;
+                else
+                    AC_MSG_ERROR([unable to find lib directory for bertini2 symmetric to include directory])
+                fi
             fi
         done
+        if test "x$found_bertini_include_dir" = "xno"; then
+            AC_MSG_ERROR([unable to find include/bertini2 directory at standard locations (/usr /usr/local /opt /opt/local)])
+        fi
     fi
 
-    if test "x$found_bertini_lib_dir" = "xyes"; then
-        LDFLAGS="$LDFLAGS_SAVED $BERTINI_LDFLAGS"
-        export LDFLAGS
-        AC_MSG_NOTICE([found bertini2 libdir])
-    else
-        AC_MSG_ERROR([unable to find lib directory for bertini2])
+    found_bertini_dir=no
+    if test "x$found_bertini_include_dir" = "xyes"; then
+      if test "x$found_bertini_lib_dir" = "xyes"; then
+          found_bertini_dir=yes;
+      fi
     fi
+
+
+    if test "x$found_bertini_dir" = "xyes"; then
+        CPPFLAGS="$CPPFLAGS_SAVED $BOOST_CPPFLAGS $BERTINI_CPPFLAGS";
+        LDFLAGS="$LDFLAGS_SAVED $BOOST_LDFLAGS $BERTINI_LDFLAGS";
+        export CPPFLAGS;
+        export LDFLAGS;
+    else
+        AC_MSG_ERROR([unable to find bertini2])
+    fi
+
 
     AC_CHECK_HEADERS([bertini2/mpfr_complex.hpp],
         [
@@ -110,13 +113,15 @@ if test "x$want_bertini" = "xyes"; then
 
     AC_SEARCH_LIBS(
         [HaveBertini2],
-        [bertini2], 
+        [bertini2],
         [
             AC_SUBST(BERTINI_LDFLAGS)
         ],
         [
         AC_MSG_ERROR([unable to find bertini2's library])],
-        [$BOOST_LDFLAGS]
+        [
+            $BOOST_SERIALIZATION_LIB $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_CHRONO_LIB $BOOST_REGEX_LIB $BOOST_THREAD_LIB $BOOST_TIMER_LIB $BOOST_LOG_LIB $BOOST_LOG_SETUP_LIB
+        ]
        )
 
     AC_LANG_POP([C++])
@@ -126,5 +131,3 @@ if test "x$want_bertini" = "xyes"; then
 fi
 
 ])
-
-       
