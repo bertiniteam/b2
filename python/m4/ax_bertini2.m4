@@ -67,7 +67,7 @@ if test "x$want_bertini" = "xyes"; then
     fi
 
     if test "x$found_bertini_include_dir" = "xyes"; then
-        CPPFLAGS="$CPPFLAGS_SAVED $BERTINI_CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS_SAVED $BOOST_CPPFLAGS $BERTINI_CPPFLAGS"
         export CPPFLAGS
         AC_MSG_NOTICE([found bertini2 includedir])
     else
