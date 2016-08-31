@@ -97,7 +97,7 @@ AC_CHECK_LIB($ax_lib, main,
 [link_timer="no"])
 done
 fi
-if test "x$ax_lib" = "xno"; then
+if test "x$ax_lib" = "x"; then
 AC_MSG_ERROR(Could not find a version of the Boost::Timer library!)
 fi
 if test "x$link_timer" = "xno"; then

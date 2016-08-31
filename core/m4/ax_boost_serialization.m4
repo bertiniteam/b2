@@ -102,7 +102,7 @@ AC_DEFUN([AX_BOOST_SERIALIZATION],
                   done
 
             fi
-            if test "x$ax_lib" = "xno"; then
+            if test "x$ax_lib" = "x"; then
                 AC_MSG_ERROR(Could not find a version of the Boost.Serialization library!)
             fi
 			if test "x$link_serialization" = "xno"; then
