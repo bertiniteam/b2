@@ -55,7 +55,6 @@ AC_DEFUN([AX_BOOST_SERIALIZATION],
         AC_REQUIRE([AC_PROG_CC])
 		CPPFLAGS_SAVED="$CPPFLAGS"
 		CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-	    AC_MSG_WARN(BOOST_CPPFLAGS $BOOST_CPPFLAGS)
 		export CPPFLAGS
 
 		LDFLAGS_SAVED="$LDFLAGS"
@@ -103,10 +102,10 @@ AC_DEFUN([AX_BOOST_SERIALIZATION],
                   done
 
             fi
-            if test "x$ax_lib" = "x"; then
+            if test "x$ax_lib" = "xno"; then
                 AC_MSG_ERROR(Could not find a version of the Boost.Serialization library!)
             fi
-			if test "x$link_serialization" != "xyes"; then
+			if test "x$link_serialization" = "xno"; then
 				AC_MSG_ERROR(Could not link against $ax_lib !)
 			fi
 		fi

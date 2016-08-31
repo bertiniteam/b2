@@ -95,10 +95,10 @@ AC_DEFUN([AX_BOOST_PROGRAM_OPTIONS],
                                    [link_program_options="no"])
                   done
                 fi
-            if test "x$ax_lib" = "x"; then
+            if test "x$ax_lib" = "xno"; then
                 AC_MSG_ERROR(Could not find a version of the Boost.ProgramOptions library!)
             fi
-				if test "x$link_program_options" != "xyes"; then
+				if test "x$link_program_options" = "xno"; then
 					AC_MSG_ERROR([Could not link against [$ax_lib] !])
 				fi
 		fi
