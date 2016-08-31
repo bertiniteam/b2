@@ -19,8 +19,8 @@
 
 AC_DEFUN([AX_BERTINI2],
     [
-AC_ARG_WITH([bertini2],
-    [AS_HELP_STRING([--with-bertini2@<:@=ARG@:>@], 
+AC_ARG_WITH([bertini],
+    [AS_HELP_STRING([--with-bertini@<:@=ARG@:>@], 
         [Use the Bertini2 numerical algebraic geometry library from a specified or standard location (ARG=yes),
          from the given location (ARG=<path>),
          or disable it (ARG=no)
@@ -40,12 +40,11 @@ AC_ARG_WITH([bertini2],
 
 
 if test "x$want_bertini" = "xyes"; then
-    
-    CPPFLAGS_SAVED="$CPPFLAGS"
 
     AC_REQUIRE([AC_PROG_CXX])
     AC_LANG_PUSH(C++)
 
+    CPPFLAGS_SAVED="$CPPFLAGS"
     found_bertini_include_dir=no
     if test "$ac_bertini_path" != ""; then
         
@@ -68,12 +67,14 @@ if test "x$want_bertini" = "xyes"; then
     fi
 
     if test "x$found_bertini_include_dir" = "xyes"; then
-        CPPFLAGS="$CPPFLAGS $BERTINI_CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS_SAVED $BERTINI_CPPFLAGS"
+        export CPPFLAGS
+        AC_MSG_NOTICE([found bertini2 includedir])
     else
         AC_MSG_ERROR([unable to find include/bertini2 directory])
     fi
 
-
+    LDFLAGS_SAVED="$LDFLAGS"
     found_bertini_lib_dir=no
     if test "$ac_bertini_path" != ""; then
         if test -d "$ac_bertini_path/lib"; then
@@ -91,28 +92,37 @@ if test "x$want_bertini" = "xyes"; then
     fi
 
     if test "x$found_bertini_lib_dir" = "xyes"; then
-        LDFLAGS="$CPPFLAGS $BERTINI_LDFLAGS"
+        LDFLAGS="$LDFLAGS_SAVED $BERTINI_LDFLAGS"
+        export LDFLAGS
+        AC_MSG_NOTICE([found bertini2 libdir])
     else
         AC_MSG_ERROR([unable to find lib directory for bertini2])
     fi
 
     AC_CHECK_HEADERS([bertini2/mpfr_complex.hpp],
         [
-        succeeded=yes;
-        export CPPFLAGS;
+            succeeded=yes;
+            AC_SUBST(BERTINI_CPPFLAGS)
         ],
         [
-        CPPFLAGS="$CPPFLAGS_SAVED";
-        export CPPFLAGS;
         AC_MSG_ERROR([unable to find required file mpfr_complex.hpp in include for Bertini2])
         ])
 
-    AC_SEARCH_LIBS([HaveBertini2],[bertini2], [],
-       [
+    AC_SEARCH_LIBS(
+        [HaveBertini2],
+        [bertini2], 
+        [
+            AC_SUBST(BERTINI_LDFLAGS)
+        ],
+        [
         AC_MSG_ERROR([unable to find bertini2's library])],
-       [$BOOST_FILESYSTEM_LIB $BOOST_SYSTEM_LIB $BOOST_CHRONO_LIB $BOOST_REGEX_LIB $BOOST_TIMER_LIB $BOOST_UNIT_TEST_FRAMEWORK_LIB $BOOST_SERIALIZATION_LIB $MPI_CXXLDFLAGS ])
+        [$BOOST_LDFLAGS]
+       )
 
     AC_LANG_POP([C++])
+
+    CPPFLAGS="$CPPFLAGS_SAVED";
+    LDFLAGS="$LDFLAGS_SAVED";
 fi
 
 ])
