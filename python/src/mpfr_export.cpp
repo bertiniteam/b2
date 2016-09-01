@@ -213,16 +213,16 @@ namespace bertini{
 			.def("__pow__",&MPFRComplexVisitor::__pow_int)
 			.def("__pow__",&MPFRComplexVisitor::__pow_float)
 			
-			.def("__repr__", &MPFRComplexVisitor::__repr__)
+			.def("__repr__", MPFRComplexVisitor::__repr__)
 			
-			.add_property("real", getreal, setreal)
-			.add_property("imag", getimag, setimag)
+			.add_property("real", &MPFRComplexVisitor::get_real, &MPFRComplexVisitor::set_real)
+			.add_property("imag", &MPFRComplexVisitor::get_imag, &MPFRComplexVisitor::set_imag)
 			;
 			
 			
-			// All complex specific function are free in python
-			def("real",&real);
-			def("imag",&imag);
+			// these complex-specific functions are free in python
+			def("real",&real,return_value_policy<copy_const_reference>());
+			def("imag",&imag,return_value_policy<copy_const_reference>());
 			
 			def("abs2",&MPFRBaseT::abs2);
 			def("polar",&polar);

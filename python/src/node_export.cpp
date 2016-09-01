@@ -87,7 +87,8 @@ namespace bertini{
 		{
 			cl
 			.def("reset", &NodeBaseT::Reset)
-			.def("precision", &NodeBaseT::precision )
+			.def("precision", &GetPrecision )
+			.def("precision", SetPrecision )
 			.def("degree", &Deg0 )
 			.def("degree", Deg1)
 			.def("degree", Deg2 )

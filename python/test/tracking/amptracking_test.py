@@ -102,6 +102,8 @@ class AMPTrackingTest(unittest.TestCase):
         s.add_path_variable(t);
         s.add_variable_group(vars);
 
+        s.precision(30);
+        
         ampconfig = amp_config_from(s);
 
         tracker = AMPTracker(s);
@@ -137,9 +139,9 @@ class AMPTrackingTest(unittest.TestCase):
         s.add_function(y**2 - x)
         s.add_path_variable(t);
         s.add_variable_group(vars);
-
+        s.precision(30);
         ampconfig = amp_config_from(s);
-
+        
         tracker = AMPTracker(s);
 
         stepping_pref = Stepping_mp();
@@ -202,7 +204,7 @@ class AMPTrackingTest(unittest.TestCase):
         s.add_function(y**2 + (1-t)*y)
         s.add_path_variable(t);
         s.add_variable_group(vars);
-
+        s.precision(30);
         ampconfig = amp_config_from(s);
 
         tracker = AMPTracker(s);

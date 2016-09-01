@@ -100,7 +100,7 @@ fi
 if test "x$ax_lib" = "x"; then
 AC_MSG_ERROR(Could not find a version of the Boost::Timer library!)
 fi
-if test "x$link_timer" != "xyes"; then
+if test "x$link_timer" = "xno"; then
 AC_MSG_ERROR(Could not link against $ax_lib !)
 fi
 fi
