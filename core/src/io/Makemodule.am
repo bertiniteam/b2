@@ -1,0 +1,49 @@
+#this is src/io/Makemodule.am
+
+
+io_header_files = \
+	include/bertini2/io/parsing/classic_utilities.hpp \
+	include/bertini2/io/parsing/function_parsers.hpp \
+	include/bertini2/io/parsing/function_rules.hpp \
+	include/bertini2/io/parsing/number_parsers.hpp \
+	include/bertini2/io/parsing/number_rules.hpp \
+	include/bertini2/io/parsing/qi_files.hpp \
+	include/bertini2/io/parsing/settings_parsers.hpp \
+	include/bertini2/io/parsing/settings_rules.hpp \
+	include/bertini2/io/parsing/system_parsers.hpp \
+	include/bertini2/io/parsing/system_rules.hpp \
+	include/bertini2/io/file_utilities.hpp \
+	include/bertini2/io/generators.hpp \
+	include/bertini2/io/splash.hpp
+
+io_source_files = 
+
+io = $(io_header_files) $(io_source_files)
+
+
+##########
+# now the stuff for setting up the installed directory structure
+
+
+rootinclude_HEADERS +=
+
+ioincludedir = $(includedir)/bertini2/io
+ioinclude_HEADERS = \
+	include/bertini2/io/file_utilities.hpp \
+	include/bertini2/io/generators.hpp \
+	include/bertini2/io/splash.hpp
+
+ioparsingdir = $(ioincludedir)/parsing
+ioparsing_HEADERS = \
+	include/bertini2/io/parsing/classic_utilities.hpp \
+	include/bertini2/io/parsing/function_parsers.hpp \
+	include/bertini2/io/parsing/function_rules.hpp \
+	include/bertini2/io/parsing/number_parsers.hpp \
+	include/bertini2/io/parsing/number_rules.hpp \
+	include/bertini2/io/parsing/qi_files.hpp \
+	include/bertini2/io/parsing/settings_parsers.hpp \
+	include/bertini2/io/parsing/settings_rules.hpp \
+	include/bertini2/io/parsing/system_parsers.hpp \
+	include/bertini2/io/parsing/system_rules.hpp 
+	
+

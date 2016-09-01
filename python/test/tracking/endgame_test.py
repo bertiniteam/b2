@@ -105,7 +105,7 @@ class EndgameTest(unittest.TestCase):
         for i in range(n):
             default_precision(self.ambient_precision);
             final_system.precision(self.ambient_precision);
-            start_point = td.start_pointmp(mpfr_int(i));
+            start_point = td.start_pointmp(i);
 
             bdry_pt = VectorXmp();
             track_success_code = tracker.track_path(bdry_pt,t_start, t_endgame_boundary, start_point);

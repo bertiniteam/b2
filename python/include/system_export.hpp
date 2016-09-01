@@ -167,7 +167,7 @@ namespace bertini{
 			
 		private:
 			template <typename T>
-			using GenStart_ptr = Vec<T> (SystemBaseT::*)(mpz_int) const;
+			using GenStart_ptr = Vec<T> (SystemBaseT::*)(unsigned long long) const;
 			template <typename T>
 			static GenStart_ptr<T> return_GenStart_ptr()
 			{

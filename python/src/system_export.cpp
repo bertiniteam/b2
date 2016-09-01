@@ -41,7 +41,7 @@ namespace bertini{
 		
 		struct StartSystemWrap : start_system::StartSystem, wrapper<start_system::StartSystem>
 		{
-			mpz_int NumStartPoints() const {return this->get_override("NumStartPoints")(); }
+			unsigned long long NumStartPoints() const {return this->get_override("NumStartPoints")(); }
 		}; // re: StartSystemWrap
 
 		

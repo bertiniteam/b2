@@ -1024,6 +1024,16 @@ public:
 	}//end ComputeCauchySamples
 
 
+	/**
+	\brief Run the endgame, shooting for t=0.
+
+	\see Run
+	*/
+	template<typename CT>
+	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point)
+	{
+		return Run(start_time, start_point, static_cast<CT>(0));
+	}
 
 	/**
 	\brief Primary function that runs the Cauchy endgame.
@@ -1033,7 +1043,7 @@ public:
 		## Input: 
 			start_time: the time value at which we start the endgame
 			start_point: an approximate solution to our homotopy H at start_time
-			target_time: the time value that we are using the endgame to interpolate to, default set to t = 0.
+			target_time: the time value that we are using the endgame to interpolate to.
 
 		## Output: 
 			SuccessCode: reporting if we were successful in the endgame or if we encountered an error
@@ -1047,7 +1057,7 @@ public:
 					Integral Formula. 
 	*/
 	template<typename CT>
-	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point, CT const& target_time = static_cast<CT>(0))
+	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point, CT const& target_time)
 	{	
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{

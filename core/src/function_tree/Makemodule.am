@@ -4,7 +4,6 @@
 
 function_tree_header_files = \
 	include/bertini2/function_tree.hpp \
-	include/bertini2/function_tree/function_parsing.hpp \
 	include/bertini2/function_tree/node.hpp \
 	include/bertini2/function_tree/operators/operator.hpp \
 	include/bertini2/function_tree/symbols/symbol.hpp \
@@ -33,8 +32,7 @@ rootinclude_HEADERS += \
 
 functiontreeincludedir = $(includedir)/bertini2/function_tree
 functiontreeinclude_HEADERS = \
-	include/bertini2/function_tree/node.hpp \
-	include/bertini2/function_tree/function_parsing.hpp
+	include/bertini2/function_tree/node.hpp
 
 functiontree_operatorsincludedir = $(includedir)/bertini2/function_tree/operators
 functiontree_operatorsinclude_HEADERS = \

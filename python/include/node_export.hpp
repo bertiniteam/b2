@@ -66,6 +66,8 @@ namespace bertini{
 			void visit(PyClass& cl) const;
 
 		private:
+			static unsigned GetPrecision(NodeBaseT const& self) {return self.precision();}
+			static void SetPrecision(NodeBaseT & self, unsigned p){self.precision(p);}
 
 			static int Deg0(NodeBaseT& self) { return self.Degree();}
 			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;

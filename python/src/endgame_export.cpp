@@ -46,17 +46,16 @@ namespace bertini{
 
 			.def("get_endgame_settings",&EndgameT::EndgameSettings,return_internal_reference<>())
 			.def("get_security_settings",&EndgameT::SecuritySettings,return_internal_reference<>())
-			.def("get_tolerances",&EndgameT::Tolerances, return_internal_reference<>())
 
 			.def("set_endgame_settings",&EndgameT::SetEndgameSettings)
 			.def("set_security_settings",&EndgameT::SetSecuritySettings)
-			.def("set_tolerances",&EndgameT::SetToleranceSettings,"Set the tracking tolerances")
 
 			.def("get_tracker", &EndgameT::GetTracker, return_internal_reference<>(),"Get the tracker used in this endgame.  This is the same tracker as you feed the endgame object when you make it.")
 			.def("get_system",  &EndgameT::GetSystem,  return_internal_reference<>(),"Get the tracked system")
 
 			.def("final_approximation", &EndgameT::template FinalApproximation<BCT>, return_internal_reference<>(),"Get the current approximation of the root")
-			.def("run", &EndgameT::template Run<BCT>,"Run the endgame, from start point and start time, to t=0")
+			.def("run", RunDefaultTime<BCT>(),"Run the endgame, from start point and start time, to t=0")
+			.def("run", RunCustomTime<BCT>(),"Run the endgame, from start point and start time, to your choice of target time t")
 			;
 		}
 
@@ -70,8 +69,7 @@ namespace bertini{
 			cl
 			.def(init<TrackerT const&, config::Cauchy<RT> const&>())
 			.def(init<TrackerT const&, config::Endgame<RT> const&>())
-			.def(init<TrackerT const&, config::Security<RT> const&>())
-			.def(init<TrackerT const&, config::Tolerances<RT> const&>());
+			.def(init<TrackerT const&, config::Security<RT> const&>());
 
 		}
 
@@ -85,8 +83,7 @@ namespace bertini{
 			cl
 			.def(init<TrackerT const&, config::PowerSeries const&>())
 			.def(init<TrackerT const&, config::Endgame<RT> const&>())
-			.def(init<TrackerT const&, config::Security<RT> const&>())
-			.def(init<TrackerT const&, config::Tolerances<RT> const&>());
+			.def(init<TrackerT const&, config::Security<RT> const&>());
 		}
 
 
