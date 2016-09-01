@@ -59,7 +59,7 @@ if test "x$want_bertini" = "xyes"; then
                 found_bertini_include_dir=yes;
                 found_bertini_lib_dir=yes;
             else
-                AC_MSG_ERROR([unable to find lib directory for bertini2 symmetric to include directory])
+                AC_MSG_ERROR([unable to find lib directory for bertini2 symmetric to include directory $ac_bertini_path/include/bertini2])
             fi
         else
             AC_MSG_ERROR([unable to find include/bertini2 directory at specified location --with-bertini=$ac_bertini_path])
@@ -68,14 +68,14 @@ if test "x$want_bertini" = "xyes"; then
     else
         for ac_bertini_path_tmp in /usr /usr/local /opt /opt/local ; do
             if test -d "$ac_bertini_path_tmp/include/bertini2"; then
-                if test -d "$ac_bertini_path/lib"; then
+                if test -d "$ac_bertini_path_tmp/lib"; then
                     found_bertini_include_dir=yes;
                     found_bertini_lib_dir=yes;
                     BERTINI_LDFLAGS="-L$ac_bertini_path_tmp/lib";
                     BERTINI_CPPFLAGS="-I$ac_bertini_path_tmp/include";
                     break;
                 else
-                    AC_MSG_ERROR([unable to find lib directory for bertini2 symmetric to include directory])
+                    AC_MSG_ERROR([unable to find lib directory for bertini2 symmetric to include directory $ac_bertini_path_tmp/include/bertini2"])
                 fi
             fi
         done
