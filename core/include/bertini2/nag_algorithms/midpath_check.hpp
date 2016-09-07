@@ -60,12 +60,12 @@ namespace bertini{
 					return pass_;
 				}
 				
-				void Crossed(int path_index, bool same_start)
+				void Crossed(unsigned long long path_index, bool same_start)
 				{
 					bool already_stored = false;
 					for(auto v : crossed_paths)
 					{
-						int index = std::get<int>(v);
+						auto index = std::get<unsigned long long>(v);
 						if(path_index == index)
 						{
 							already_stored = true;
@@ -79,21 +79,23 @@ namespace bertini{
 					
 					pass_ = false;
 				}
+				
+				auto GetCrossedPaths() const
+				{
+					return crossed_paths;
+				}
 
 
 			private:
 				bool pass_ = true;
-				std::vector< std::tuple< int, bool > > crossed_paths;
+				std::vector< std::tuple< unsigned long long, bool > > crossed_paths;
 
 
 			}; //re: struct Data
 
-//			template<typename T>
-//			static
-//			Data Check(T const&)
-//			{
-//				return Data();
-//			}
+
+			
+			
 			
 			
 			
@@ -108,11 +110,11 @@ namespace bertini{
 			Data Check(BoundaryData const& boundary_data)
 			{
 				Data check_data;
-				for (int ii = 0; ii < boundary_data.size(); ++ii)
+				for (unsigned long long ii = 0; ii < boundary_data.size(); ++ii)
 				{
 					const Vec<ComplexType>& solution_ii = std::get<Vec<ComplexType>>(boundary_data[ii]);
-					
-					for(int jj = ii+1; jj < boundary_data.size(); ++jj)
+										
+					for(unsigned long long jj = ii+1; jj < boundary_data.size(); ++jj)
 					{
 						if(std::get<tracking::SuccessCode>(boundary_data[ii]) == tracking::SuccessCode::Success)
 						{

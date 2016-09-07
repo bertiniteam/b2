@@ -86,7 +86,7 @@ struct PostProcessing{
 
 struct ZeroDim
 {
-	unsigned max_num_crossed_path_resolve_attempts = 1; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
+	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 };
 
 

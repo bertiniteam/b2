@@ -73,11 +73,13 @@ System GriewankOsborn()
 				
 				bertini::System crossed_paths_sys;
 				Var x = std::make_shared<node::Variable>("x"), t = std::make_shared<node::Variable>("t"), y = std::make_shared<node::Variable>("y");
+				auto two = std::make_shared<node::Float>("2");
+				auto half = std::make_shared<node::Float>("0.5");
 				VariableGroup vars{x,y};
 				crossed_paths_sys.AddVariableGroup(vars);
 				
-				crossed_paths_sys.AddFunction(pow(x,3)+2);
-				crossed_paths_sys.AddFunction(pow(y,2) + 0.5);
+				crossed_paths_sys.AddFunction(pow(x,3)+ two);
+				crossed_paths_sys.AddFunction(pow(y,2) + half);
 				
 				return crossed_paths_sys;
 			}
