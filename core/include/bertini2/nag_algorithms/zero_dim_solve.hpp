@@ -334,7 +334,7 @@ namespace bertini {
 				midpath_reduced_tolerance_ = midpath_reduced_tolerance_*midpath_decrease_tolerance_factor_;
 				tracker_.SetTrackingTolerance(midpath_reduced_tolerance_);
 				
-				for(auto v : midcheck.GetCrossedPaths())
+				for(auto const& v : midcheck.GetCrossedPaths())
 				{
 					if(!std::get<bool>(v))
 					{

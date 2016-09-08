@@ -63,7 +63,7 @@ namespace bertini{
 				void Crossed(unsigned long long path_index, bool same_start)
 				{
 					bool already_stored = false;
-					for(auto v : crossed_paths)
+					for(auto const& v : crossed_paths)
 					{
 						auto index = std::get<unsigned long long>(v);
 						if(path_index == index)
@@ -121,7 +121,7 @@ namespace bertini{
 							const Vec<ComplexType>& solution_jj = std::get<Vec<ComplexType>>(boundary_data[jj]);
 							const Vec<ComplexType> diff_sol = solution_ii - solution_jj;
 							
-							if(diff_sol.norm() < boundary_near_tolerance_)
+							if((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < boundary_near_tolerance_)
 							{
 								// Check if start points are the same
 								const auto& start_ii = start_system_.template StartPoint<ComplexType>(ii);
