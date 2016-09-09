@@ -59,7 +59,10 @@ namespace bertini{
 			}
 			
 			
-			
+			/**
+			 \struct Stores data for each path that crosses, including the index of the path, all paths that it crosses with, and whether it has the same
+				starting point as a path it crosses with.
+			 */
 			struct CrossedPath{
 				
 				CrossedPath(PathIndT index, PathIndT crossed_with, bool same_start)
