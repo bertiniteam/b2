@@ -41,60 +41,70 @@ This essentially amounts to being certain that no two points are the same.
 namespace bertini{
 	namespace algorithm{
 
+		
 		template<typename StartSystemT, typename RealType, typename ComplexType>
 		struct Midpath
 		{
 			
 			using BoundaryData = SolnCont< std::tuple<Vec<ComplexType>, tracking::SuccessCode, RealType>>;
+			using PathIndT = unsigned long long;
 			
 			Midpath( StartSystemT start_system, RealType near_tolerance)
 			{
 				boundary_near_tolerance_ = near_tolerance;
 				
 				start_system_ = start_system;
+				
+				passed_ = true;
 			}
 			
-			struct Data{
-				bool Passed()
+			
+			
+			struct CrossedPath{
+				
+				CrossedPath(PathIndT index, PathIndT crossed_with, bool same_start)
 				{
-					return pass_;
+					index_ = index;
+					crossed_with_.push_back( std::make_pair(crossed_with, same_start) );
+					rerun_ = !same_start;
 				}
 				
-				void Crossed(unsigned long long path_index, bool same_start)
+				
+				PathIndT index() const
 				{
-					bool already_stored = false;
-					for(auto const& v : crossed_paths)
-					{
-						auto index = std::get<unsigned long long>(v);
-						if(path_index == index)
-						{
-							already_stored = true;
-						}
-					}
-					
-					if(already_stored == false)
-					{
-						crossed_paths.push_back(std::make_tuple(path_index, same_start));
-					}
-					
-					pass_ = false;
+					return index_;
 				}
 				
-				auto GetCrossedPaths() const
+				void crossed_with(std::pair<PathIndT, bool> crossed)
 				{
-					return crossed_paths;
+					crossed_with_.push_back(crossed);
+				}
+				
+				void rerun(bool same_start)
+				{
+					rerun_ = rerun_ || !same_start;
+				}
+				
+				bool rerun() const
+				{
+					return rerun_;
 				}
 
 
 			private:
-				bool pass_ = true;
-				std::vector< std::tuple< unsigned long long, bool > > crossed_paths;
+				PathIndT index_;
+				std::vector< std::pair<PathIndT, bool> > crossed_with_; // first is index of path crossed with, second is bool = true if had same starting point as crossed path
+				bool rerun_;
 
 
-			}; //re: struct Data
+			}; //re: struct CrossedPath
 
 
 			
+			bool Passed()
+			{
+				return passed_;
+			}
 			
 			
 			
@@ -107,14 +117,13 @@ namespace bertini{
 			 \returns A Data object which stores data about crossed paths
 			 
 			*/
-			Data Check(BoundaryData const& boundary_data)
+			bool Check(BoundaryData const& boundary_data)
 			{
-				Data check_data;
-				for (unsigned long long ii = 0; ii < boundary_data.size(); ++ii)
+				for (PathIndT ii = 0; ii < boundary_data.size(); ++ii)
 				{
 					const Vec<ComplexType>& solution_ii = std::get<Vec<ComplexType>>(boundary_data[ii]);
 										
-					for(unsigned long long jj = ii+1; jj < boundary_data.size(); ++jj)
+					for(PathIndT jj = ii+1; jj < boundary_data.size(); ++jj)
 					{
 						if(std::get<tracking::SuccessCode>(boundary_data[ii]) == tracking::SuccessCode::Success)
 						{
@@ -123,24 +132,69 @@ namespace bertini{
 							
 							if((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < boundary_near_tolerance_)
 							{
+								bool i_already_stored = false;
+								bool j_already_stored = false;
 								// Check if start points are the same
 								const auto& start_ii = start_system_.template StartPoint<ComplexType>(ii);
 								const auto& start_jj = start_system_.template StartPoint<ComplexType>(jj);
 								auto diff_start = start_ii - start_jj;
 								bool same_start = (diff_start.norm() > boundary_near_tolerance_);
-								check_data.Crossed(ii, same_start);
-								check_data.Crossed(jj, same_start);
+								
+								
+								// Check if path has already been stored in crossed_paths_
+								for(auto& v : crossed_paths_)
+								{
+									if(v.index() == ii)
+									{
+										v.crossed_with(std::make_pair(jj,same_start));
+										i_already_stored = true;
+										v.rerun(same_start);
+									}
+									if(v.index() == jj)
+									{
+										v.crossed_with(std::make_pair(ii,same_start));
+										j_already_stored = true;
+										v.rerun(same_start);
+									}
+								}
+								
+								// If not already stored, create CrossedPath object and add to crossed_paths_
+								if(!i_already_stored)
+								{
+									CrossedPath tempPath(ii, jj, same_start);
+									crossed_paths_.push_back(tempPath);
+								}
+								if(!j_already_stored)
+								{
+									CrossedPath tempPath(jj, ii, same_start);
+									crossed_paths_.push_back(tempPath);
+								}
+								
+								passed_ = false;
+								
 							}
 						}
 					}
 				}
-				return check_data;
+				return passed_;
 			};
+			
+			
+			std::vector<CrossedPath> GetCrossedPaths()
+			{
+				return crossed_paths_;
+			}
+			
 			
 			
 		private:
 			RealType boundary_near_tolerance_;
 			StartSystemT start_system_;
+			
+			std::vector<CrossedPath> crossed_paths_; // Data for all paths that crossed on last check
+			bool passed_;  // Did the check pass?
+			
+			
 		}; //re: struct Midpath
 
 	} // re: namespace algorithm

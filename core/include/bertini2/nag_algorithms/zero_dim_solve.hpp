@@ -143,10 +143,9 @@ namespace bertini {
 
 				tolerances_ = algorithm::config::Tolerances<BaseRealType>();
 				
+				retrack_ = algorithm::config::AutoRetrack<BaseRealType>();
 				midpath_reduced_tolerance_ = tolerances_.newton_before_endgame;
-				midpath_decrease_tolerance_factor_ = NumTraits<BaseRealType>::FromString("0.5");
-				boundary_near_tol_ = NumTraits<BaseRealType>::FromString("1e-5");
-				midpath_ = std::make_shared<MidpathT>(start_system_, boundary_near_tol_);
+				midpath_ = std::make_shared<MidpathT>(start_system_, retrack_.boundary_near_tol);
 
 				tracker_ = TrackerType(homotopy_);
 
@@ -316,29 +315,29 @@ namespace bertini {
 
 			void EGBoundaryAction()
 			{
-				auto midcheck = midpath_->Check(solutions_at_endgame_boundary_);
+				auto midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
 				
 				unsigned num_resolve_attempts = 0;
-				while (!midcheck.Passed() && num_resolve_attempts < zero_dim_config_.max_num_crossed_path_resolve_attempts)
+				while (!midcheckpassed && num_resolve_attempts < zero_dim_config_.max_num_crossed_path_resolve_attempts)
 				{
-					MidpathResolve(midcheck);
-					midcheck = midpath_->Check(solutions_at_endgame_boundary_);
+					MidpathResolve();
+					midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
 					num_resolve_attempts++;
 				}
 			}
 
 			
-			void MidpathResolve(typename MidpathT::Data const& midcheck)
+			void MidpathResolve()
 			{
 				
-				midpath_reduced_tolerance_ = midpath_reduced_tolerance_*midpath_decrease_tolerance_factor_;
+				midpath_reduced_tolerance_ *= retrack_.midpath_decrease_tolerance_factor;
 				tracker_.SetTrackingTolerance(midpath_reduced_tolerance_);
 				
-				for(auto const& v : midcheck.GetCrossedPaths())
+				for(auto const& v : midpath_->GetCrossedPaths())
 				{
-					if(!std::get<bool>(v))
+					if(v.rerun())
 					{
-						unsigned long long index = std::get<unsigned long long>(v);
+						unsigned long long index = v.index();
 						auto soln_ind = static_cast<SolnIndT>(index);
 						TrackSinglePathBeforeEG(soln_ind);
 					}
@@ -421,9 +420,8 @@ namespace bertini {
 			config::PostProcessing<BaseRealType> post_processing_;
 			config::ZeroDim zero_dim_config_;
 			config::Tolerances<BaseRealType> tolerances_;
-			BaseRealType boundary_near_tol_;
+			config::AutoRetrack<BaseRealType> retrack_;
 			BaseRealType midpath_reduced_tolerance_;
-			BaseRealType midpath_decrease_tolerance_factor_;
 
 			PrecisionConfig precision_config_;
 			
