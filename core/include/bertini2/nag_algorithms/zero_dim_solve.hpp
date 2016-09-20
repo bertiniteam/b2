@@ -54,12 +54,14 @@ namespace bertini {
 			using PrecisionConfig = typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
 			using SolnIndT = typename SolnCont<BaseComplexType>::size_type;
+			
+			using MidpathT = Midpath<StartSystemType, BaseRealType, BaseComplexType>;
 
 			struct MetaData{
 
 				// only vaguely metadata.  artifacts of randomness or ordering
-				mpz_int path_index;     		// path number of the solution
-				mpz_int solution_index;      	// solution number
+				unsigned long long path_index;     		// path number of the solution
+				unsigned long long solution_index;      	// solution number
 
 				// computed across all of the solve
 				bool precision_changed = false;
@@ -140,12 +142,18 @@ namespace bertini {
 				assert(homotopy_.IsHomogeneous());
 
 				tolerances_ = algorithm::config::Tolerances<BaseRealType>();
+				
+				retrack_ = algorithm::config::AutoRetrack<BaseRealType>();
+				midpath_reduced_tolerance_ = tolerances_.newton_before_endgame;
+				midpath_ = std::make_shared<MidpathT>(start_system_, retrack_.boundary_near_tol);
 
 				tracker_ = TrackerType(homotopy_);
 
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
 				              	tolerances_.newton_before_endgame, NumTraits<BaseRealType>::FromString("1e5"),
 								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
+				
+				
 
 				tracker_.PrecisionSetup(PrecisionConfig(homotopy_));
 				
@@ -191,7 +199,7 @@ namespace bertini {
 			template<class GeneratorT = generators::Classic>
 			void Output() const
 			{
-
+				
 			}
 
 			bool SetupComplete() const
@@ -266,28 +274,75 @@ namespace bertini {
 						tracker_.RemoveObserver(&min_max_prec_);
 					}
 				}
-
+			}
+			
+			
+			
+			/**
+			 /brief Track a single path before we reach the endgame boundary.
+			*/
+			void TrackSinglePathBeforeEG(SolnIndT soln_ind)
+			{
+				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+				{
+					tracker_.AddObserver(&first_prec_rec_);
+					tracker_.AddObserver(&min_max_prec_);
+				}
+				DefaultPrecision(initial_ambient_precision_);
 				
+				auto start_point = start_system_.template StartPoint<BaseComplexType>(soln_ind);
+				
+				Vec<BaseComplexType> result;
+				auto tracking_success = tracker_.TrackPath(result, t_start_, t_endgame_boundary_, start_point);
+				
+				solutions_at_endgame_boundary_[soln_ind] = std::make_tuple(result, tracking_success, tracker_.CurrentStepsize());
+				
+				solution_metadata_[soln_ind].pre_endgame_success = tracking_success;
+				
+				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && first_prec_rec_.DidPrecisionIncrease())
+				{
+					solution_metadata_[soln_ind].precision_changed = true;
+					solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+				}
+				
+				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+				{
+					tracker_.RemoveObserver(&first_prec_rec_);
+					tracker_.RemoveObserver(&min_max_prec_);
+				}
+			
 			}
 
 			void EGBoundaryAction()
 			{
-				auto midcheck = Midpath::Check(solutions_at_endgame_boundary_);
+				auto midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
 				
 				unsigned num_resolve_attempts = 0;
-				while (!midcheck.Passed() && num_resolve_attempts < zero_dim_config_.max_num_crossed_path_resolve_attempts)
+				while (!midcheckpassed && num_resolve_attempts < zero_dim_config_.max_num_crossed_path_resolve_attempts)
 				{
-					MidpathResolve(midcheck, solutions_at_endgame_boundary_);
-					midcheck = Midpath::Check(solutions_at_endgame_boundary_);
+					MidpathResolve();
+					midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
 					num_resolve_attempts++;
 				}
 			}
 
-			template<typename T>
-			void MidpathResolve(Midpath::Data const&, 
-			                    T const& solutions_at_endgame_boundary)
+			
+			void MidpathResolve()
 			{
-				// insert code here to retrack the crossed paths.
+				
+				midpath_reduced_tolerance_ *= retrack_.midpath_decrease_tolerance_factor;
+				tracker_.SetTrackingTolerance(midpath_reduced_tolerance_);
+				
+				for(auto const& v : midpath_->GetCrossedPaths())
+				{
+					if(v.rerun())
+					{
+						unsigned long long index = v.index();
+						auto soln_ind = static_cast<SolnIndT>(index);
+						TrackSinglePathBeforeEG(soln_ind);
+					}
+				}
+
 			}
 
 
@@ -365,6 +420,8 @@ namespace bertini {
 			config::PostProcessing<BaseRealType> post_processing_;
 			config::ZeroDim zero_dim_config_;
 			config::Tolerances<BaseRealType> tolerances_;
+			config::AutoRetrack<BaseRealType> retrack_;
+			BaseRealType midpath_reduced_tolerance_;
 
 			PrecisionConfig precision_config_;
 			
@@ -379,11 +436,13 @@ namespace bertini {
 			BaseComplexType t_start_, t_endgame_boundary_, t_end_;
 
 			SolnCont< std::tuple<Vec<BaseComplexType>, tracking::SuccessCode, BaseRealType>> solutions_at_endgame_boundary_;
+			
+			std::shared_ptr<MidpathT> midpath_;
 
 			SolnCont<Vec<BaseComplexType> > endgame_solutions_;
 			SolnCont<MetaData> solution_metadata_;
 
-			mpz_int num_start_points_;
+			unsigned long long num_start_points_;
 
 
 			bool setup_complete_ = false;

@@ -9,7 +9,7 @@
 AM_YFLAGS = -d -p `basename $* | sed 's,y$$,,'`
 AM_LFLAGS = -s -P`basename $* | sed 's,l$$,,'` -olex.yy.c
 
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include $(BOOST_CPPFLAGS)
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -24,6 +24,7 @@ CLEANFILES =
 
 #installed headers
 include_HEADERS =
+rootinclude_HEADERS =
 
 #installed libraries, both free-standing and libtool
 lib_LTLIBRARIES =
@@ -48,7 +49,6 @@ TESTS =
 SUFFIXES = .cpp .hpp
 
 rootincludedir = $(includedir)/bertini2
-rootinclude_HEADERS = include/bertini2/config.h
 
 #initialize to empty and add to it in the Makemodule.am files below
 
@@ -81,6 +81,7 @@ include src/function_tree/Makemodule.am
 include src/system/Makemodule.am
 include src/tracking/Makemodule.am
 include src/detail/Makemodule.am
+include src/io/Makemodule.am
 
 ###
 #  and finally test suites, built as extras

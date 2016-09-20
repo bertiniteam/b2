@@ -42,11 +42,11 @@
 
 
 #include "bertini2/system.hpp"
-#include "bertini2/system_parsing.hpp"
+#include "bertini2/io/parsing/system_parsers.hpp"
 
 
 using System = bertini::System;
-using Var = std::shared_ptr<bertini::Variable>;
+using Var = std::shared_ptr<bertini::node::Variable>;
 using VariableGroup = bertini::VariableGroup;
 
 using mpfr_float = bertini::mpfr_float;
@@ -83,14 +83,9 @@ BOOST_AUTO_TEST_CASE(system_create_parser)
 	System sys;
 	std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
 
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
+	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
-	bertini::SystemParser<std::string::const_iterator> S;
-
-	bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-
-	BOOST_CHECK(s && iter==end);
+	BOOST_CHECK(s);
 	BOOST_CHECK(!sys.IsHomogeneous());
 
 }
@@ -112,11 +107,8 @@ BOOST_AUTO_TEST_CASE(system_parse_xyz_f1f2_t_pq)
 
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
-	BOOST_CHECK(s && iter==end);
+	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	BOOST_CHECK(s);
 
 }
 
@@ -131,11 +123,8 @@ BOOST_AUTO_TEST_CASE(system_parse_with_subfunctions)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
-	BOOST_CHECK(s && iter==end);
+	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	BOOST_CHECK(s);
 
 	BOOST_CHECK(!sys.IsHomogeneous());
 }
@@ -153,11 +142,8 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle)
 
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
-	BOOST_CHECK(s && iter==end);
+	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	BOOST_CHECK(s);
 
 	BOOST_CHECK(!sys.IsHomogeneous());
 }
@@ -174,11 +160,8 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle_alt)
 
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	bool s = phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
-	BOOST_CHECK(s && iter==end);
+	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	BOOST_CHECK(s);
 
 }
 
@@ -207,7 +190,7 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle_alt)
 */
 BOOST_AUTO_TEST_CASE(system_differentiate_x)
 {
-	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
+	Var x = std::make_shared<bertini::node::Variable>("x");
 	auto f1 = pow(x,2);
 	auto f2 = x-1;
 
@@ -232,8 +215,8 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x)
 */
 BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 {
-	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
-	std::shared_ptr<bertini::Variable> y = std::make_shared<bertini::Variable>("y");
+	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var y = std::make_shared<bertini::node::Variable>("y");
 	auto f1 = pow(x,2)*y/2;
 	auto f2 = x-y;
 
@@ -258,8 +241,8 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 */
 BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 {
-	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
-	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
+	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var t = std::make_shared<bertini::node::Variable>("t");
 	auto f1 = (1-t)*x + t*(1-x);
 	auto f2 = x-t;
 
@@ -286,11 +269,11 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 */
 BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 {
-	Var x1 = std::make_shared<bertini::Variable>("x1");
-	Var x2 = std::make_shared<bertini::Variable>("x2");
+	Var x1 = std::make_shared<bertini::node::Variable>("x1");
+	Var x2 = std::make_shared<bertini::node::Variable>("x2");
 
-	Var y1 = std::make_shared<bertini::Variable>("y1");
-	Var y2 = std::make_shared<bertini::Variable>("y2");
+	Var y1 = std::make_shared<bertini::node::Variable>("y1");
+	Var y2 = std::make_shared<bertini::node::Variable>("y2");
 
 
 	bertini::VariableGroup v1{x1, x2};
@@ -324,11 +307,11 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 */
 BOOST_AUTO_TEST_CASE(system_reorder_by_degree_decreasing)
 {
-	Var x1 = std::make_shared<bertini::Variable>("x1");
-	Var x2 = std::make_shared<bertini::Variable>("x2");
+	Var x1 = std::make_shared<bertini::node::Variable>("x1");
+	Var x2 = std::make_shared<bertini::node::Variable>("x2");
 
-	Var y1 = std::make_shared<bertini::Variable>("y1");
-	Var y2 = std::make_shared<bertini::Variable>("y2");
+	Var y1 = std::make_shared<bertini::node::Variable>("y1");
+	Var y2 = std::make_shared<bertini::node::Variable>("y2");
 
 
 	bertini::VariableGroup v1{x1, x2};
@@ -367,11 +350,11 @@ BOOST_AUTO_TEST_CASE(system_reorder_by_degree_decreasing)
 */
 BOOST_AUTO_TEST_CASE(system_reorder_by_degree_increasing)
 {
-	Var x1 = std::make_shared<bertini::Variable>("x1");
-	Var x2 = std::make_shared<bertini::Variable>("x2");
+	Var x1 = std::make_shared<bertini::node::Variable>("x1");
+	Var x2 = std::make_shared<bertini::node::Variable>("x2");
 
-	Var y1 = std::make_shared<bertini::Variable>("y1");
-	Var y2 = std::make_shared<bertini::Variable>("y2");
+	Var y1 = std::make_shared<bertini::node::Variable>("y1");
+	Var y2 = std::make_shared<bertini::node::Variable>("y2");
 
 
 	bertini::VariableGroup v1{x1, x2};
@@ -414,10 +397,7 @@ BOOST_AUTO_TEST_CASE(system_evaluate_double)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	Vec<dbl> values(2);
 
@@ -449,10 +429,7 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	Vec<mpfr> values(2);
 
@@ -483,7 +460,7 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 BOOST_AUTO_TEST_CASE(add_two_systems)
 {
 	bertini::System sys1, sys2;
-	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
 
 	VariableGroup vars;
 	vars.push_back(x); vars.push_back(y);
@@ -528,8 +505,8 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 */
 BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 {
-	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
-	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
+	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var t = std::make_shared<bertini::node::Variable>("t");
 	auto f1 = (1-t)*x + t*(1-x);
 	auto f2 = x-t;
 
@@ -561,7 +538,7 @@ BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
 	VariableGroup vars{x, y};
 	sys.AddVariableGroup(vars);
 
@@ -586,8 +563,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
-	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
+	Var z = std::make_shared<bertini::node::Variable>("z"), w = std::make_shared<bertini::node::Variable>("w");
 	VariableGroup vars{x, y};
 	VariableGroup vars2{z, w};
 	sys.AddVariableGroup(vars);
@@ -620,9 +597,9 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
-	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
-	Var h1 = std::make_shared<bertini::Variable>("h1"), h2 = std::make_shared<bertini::Variable>("h2");
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
+	Var z = std::make_shared<bertini::node::Variable>("z"), w = std::make_shared<bertini::node::Variable>("w");
+	Var h1 = std::make_shared<bertini::node::Variable>("h1"), h2 = std::make_shared<bertini::node::Variable>("h2");
 	VariableGroup vars{x, y};
 	VariableGroup vars2{h1,h2};
 	VariableGroup vars3{z, w};
@@ -661,7 +638,7 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
 	VariableGroup vars{x, y};
 	sys.AddHomVariableGroup(vars);
 
@@ -686,8 +663,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
-	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
+	Var z = std::make_shared<bertini::node::Variable>("z"), w = std::make_shared<bertini::node::Variable>("w");
 	VariableGroup vars{x, y};
 
 	sys.AddHomVariableGroup(vars);
@@ -716,10 +693,10 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_another_aff_grp_hom_grp)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::Variable>("x"), y = std::make_shared<bertini::Variable>("y");
-	Var z = std::make_shared<bertini::Variable>("z"), w = std::make_shared<bertini::Variable>("w");
-	Var h1 = std::make_shared<bertini::Variable>("h1"), h2 = std::make_shared<bertini::Variable>("h2");
-	Var u1 = std::make_shared<bertini::Variable>("u1"), u2 = std::make_shared<bertini::Variable>("u2");
+	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
+	Var z = std::make_shared<bertini::node::Variable>("z"), w = std::make_shared<bertini::node::Variable>("w");
+	Var h1 = std::make_shared<bertini::node::Variable>("h1"), h2 = std::make_shared<bertini::node::Variable>("h2");
+	Var u1 = std::make_shared<bertini::node::Variable>("u1"), u2 = std::make_shared<bertini::node::Variable>("u2");
 
 	VariableGroup vars{x,y};
 	VariableGroup vars2{z,w};
@@ -772,8 +749,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_a
 */
 BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 {
-	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
-	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
+	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var t = std::make_shared<bertini::node::Variable>("t");
 
 	bertini::System S;
 	S.AddUngroupedVariable(x);
@@ -840,8 +817,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 */
 BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 {
-	std::shared_ptr<bertini::Variable> x = std::make_shared<bertini::Variable>("x");
-	std::shared_ptr<bertini::Variable> t = std::make_shared<bertini::Variable>("t");
+	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var t = std::make_shared<bertini::node::Variable>("t");
 
 	bertini::System S;
 	S.AddUngroupedVariable(x);
@@ -940,10 +917,7 @@ BOOST_AUTO_TEST_CASE(ref_test)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 	
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 	
 	Vec<dbl> values(2);
 	

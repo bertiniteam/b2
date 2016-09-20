@@ -79,6 +79,8 @@ namespace bertini{
 			{
 				switch (predictor_choice)
 				{
+					case (Predictor::Constant):
+						return 0;
 					case (Predictor::Euler):
 						return 1;
 					case (Predictor::HeunEuler):
@@ -110,6 +112,8 @@ namespace bertini{
 			{
 				switch (predictor_choice)
 				{
+					case (Predictor::Constant):
+						return false;
 					case (Predictor::Euler):
 						return false;
 					case (Predictor::HeunEuler):
@@ -223,6 +227,25 @@ namespace bertini{
 					p_ = predict::Order(method);
 					switch(method)
 					{
+						case Predictor::Constant:
+						{
+							s_ = 1;
+							Mat<double>& arefd = std::get< Mat<double> >(a_);
+							Vec<double>& brefd = std::get< Vec<double> >(b_);
+							Vec<double>& crefd = std::get< Vec<double> >(c_);
+							crefd.resize(s_); crefd(0) = 0;
+							arefd.resize(s_,s_); arefd(0,0) = 0;
+							brefd.resize(s_); brefd(0) = 0;
+							Mat<mpfr_float>& arefmp = std::get< Mat<mpfr_float> >(a_);
+							Vec<mpfr_float>& brefmp = std::get< Vec<mpfr_float> >(b_);
+							Vec<mpfr_float>& crefmp = std::get< Vec<mpfr_float> >(c_);
+							crefmp.resize(s_); crefmp(0) = 0;
+							arefmp.resize(s_,s_); arefmp(0,0) = 0;
+							brefmp.resize(s_); brefmp(0) = 0;
+							uses_embedded_ = false;
+							
+							break;
+						}
 						case Predictor::Euler:
 						{
 							s_ = 1;
@@ -673,6 +696,14 @@ namespace bertini{
 									 ComplexType const& delta_t)
 				{
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
+					
+					// If using constant predictor
+					if(s_ == 0)
+					{
+						next_space = current_space;
+						
+						return SuccessCode::Success;
+					}
 					
 					Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
 					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);

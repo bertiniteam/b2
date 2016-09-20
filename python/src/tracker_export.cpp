@@ -215,11 +215,11 @@ namespace bertini{
 				scope new_submodule_scope = new_submodule;
 
 
-				class_<config::Tolerances<double>>("Tolerances_d",init<>())
-					.def(TolerancesVisitor<double>());
+				// class_<config::Tolerances<double>>("Tolerances_d",init<>())
+				// 	.def(TolerancesVisitor<double>());
 
-				class_<config::Tolerances<mpfr_float>>("Tolerances_mp",init<>())
-					.def(TolerancesVisitor<mpfr_float>());
+				// class_<config::Tolerances<mpfr_float>>("Tolerances_mp",init<>())
+				// 	.def(TolerancesVisitor<mpfr_float>());
 
 				class_<Stepping<double>, std::shared_ptr<Stepping<double>> >("Stepping_d", init<>())
 					.def(SteppingVisitor<double>())

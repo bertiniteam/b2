@@ -3,7 +3,7 @@
 
 
 
-#we're building b2, version 2.0-alpha5, and the corresponding email is dan brake's
+#we're building b2, version 2.0-alpha5, and the corresponding email is dani brake's
 AC_INIT([b2], [2.0-alpha5], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
 
 
@@ -83,16 +83,16 @@ AS_IF([test "x$enable_copy_and_swap" != "xno"],[
 # the form of the following commands --
 # AC_SEARCH_LIBS(function, libraries-list, action-if-found, action-if-not-found, extra-libraries)
 
-# find mpfr
-AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
-	AC_MSG_ERROR([unable to find mpfr])
-])
 
 #find gmp
 AC_SEARCH_LIBS([__gmpz_init],[gmp], [],[
 	AC_MSG_ERROR([unable to find gmp])
 ])
 
+# find mpfr
+AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
+  AC_MSG_ERROR([unable to find mpfr])
+])
 
 #find the math library
 AC_SEARCH_LIBS([cos], [m], [], [

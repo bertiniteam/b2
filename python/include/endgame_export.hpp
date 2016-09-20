@@ -60,6 +60,24 @@ namespace bertini{
 			using CT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseComplexType;
 			using RT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseRealType;
 
+			template <typename T>
+			using success_time_space = SuccessCode (EndgameT::*)(T const&, Vec<T> const&);
+			template <typename T>
+			using success_time_space_time = SuccessCode (EndgameT::*)(T const&, Vec<T> const&, T const&);
+
+			template <typename T>
+			static success_time_space<T> RunDefaultTime()
+			{
+				return &EndgameT::template Run<T>;
+			};
+
+			template <typename T>
+			static success_time_space_time<T> RunCustomTime()
+			{
+				return &EndgameT::template Run<T>;
+			};
+			
+
 			unsigned (EndgameT::*get_cycle_number_)() const = &EndgameT::CycleNumber;
 		};// EndgameVisitor class
 

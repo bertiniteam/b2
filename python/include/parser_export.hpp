@@ -36,9 +36,8 @@
 #include <boost/spirit/include/qi.hpp>
 
 
-#include <bertini2/function_tree/function_parsing.hpp>
-#include <bertini2/system_parsing.hpp>
-
+#include <bertini2/io/parsing/function_parsers.hpp>
+#include <bertini2/io/parsing/system_parsers.hpp>
 
 
 #include "python_common.hpp"
@@ -67,7 +66,8 @@ namespace bertini{
 		
 		void ExportParsers()
 		{
-			def("parse_system", &Parser<System, SystemParser<std::string::const_iterator> >);
+			using namespace bertini::parsing;
+			def("parse_system", &Parser<System, classic::SystemParser<std::string::const_iterator> >);
 		};
 		
 	}

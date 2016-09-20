@@ -606,6 +606,17 @@ public:
  		return SuccessCode::Success;
 	}
 
+	/**
+	\brief Run the endgame, shooting for t=0.
+
+	\see Run
+	*/
+	template<typename CT>
+	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point)
+	{
+		return Run(start_time, start_point, static_cast<CT>(0));
+	}
+
 
 	/**
 	\brief Primary function running the Power Series endgame. 
@@ -624,7 +635,7 @@ public:
 				approximations are withing final tolerance of each other. 
 	*/		
 	template<typename CT>
-	SuccessCode Run(const CT & start_time, const Vec<CT> & start_point, CT const& target_time = static_cast<CT>(0))
+	SuccessCode Run(const CT & start_time, const Vec<CT> & start_point, CT const& target_time)
 	{
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{

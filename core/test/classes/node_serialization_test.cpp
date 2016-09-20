@@ -48,7 +48,7 @@
 
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system.hpp"
-#include "bertini2/system_parsing.hpp"
+#include "bertini2/io/parsing/system_parsers.hpp"
 #include "bertini2/systems/precon.hpp"
 
 using Variable = bertini::node::Variable;
@@ -166,10 +166,7 @@ BOOST_AUTO_TEST_CASE(system_serialize)
 	std::string str = "function f1, f2; variable_group x1, x2; y = x1*x2; f1 = y*y; f2 = x1*y; ";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	
 
@@ -214,10 +211,7 @@ BOOST_AUTO_TEST_CASE(system_clone)
 	std::string str = "function f1, f2; variable_group x1, x2; y = x1*x2; f1 = y*y; f2 = x1*y; ";
 
 	bertini::System sys;
-	std::string::const_iterator iter = str.begin();
-	std::string::const_iterator end = str.end();
-	bertini::SystemParser<std::string::const_iterator> S;
-	phrase_parse(iter, end, S, boost::spirit::ascii::space, sys);
+	bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	
 	auto sys2 = Clone(sys);
