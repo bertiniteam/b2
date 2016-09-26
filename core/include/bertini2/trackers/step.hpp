@@ -35,8 +35,8 @@ This provides no calls for adaptive precision, those living with the AMPTracker 
 #ifndef BERTINI_STEP_HPP
 #define BERTINI_STEP_HPP
 
-#include "bertini2/tracking/predict.hpp"
-#include "bertini2/tracking/correct.hpp"
+#include "bertini2/trackers/predict.hpp"
+#include "bertini2/trackers/correct.hpp"
 
 namespace bertini {
 

@@ -35,14 +35,14 @@
 
 #include <algorithm>
 //#include "bertini2/tracking/step.hpp"
-#include "bertini2/tracking/ode_predictors.hpp"
-#include "bertini2/tracking/newton_corrector.hpp"
+#include "bertini2/trackers/ode_predictors.hpp"
+#include "bertini2/trackers/newton_corrector.hpp"
 #include "bertini2/limbo.hpp"
 #include "bertini2/logging.hpp"
 #include "bertini2/detail/visitable.hpp"
 
 // Must be at the end of the include list
-#include "bertini2/tracking/events.hpp"
+#include "bertini2/trackers/events.hpp"
 
 namespace bertini{
 

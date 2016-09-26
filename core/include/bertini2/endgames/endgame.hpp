@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//tracking/tracker.hpp is free software: you can redistribute it and/or modify
+//tracking/endgame.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//tracking/tracker.hpp is distributed in the hope that it will be useful,
+//tracking/endgame.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with tracking/tracker.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with tracking/endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
@@ -24,17 +24,19 @@
 
 
 /**
-\file tracker.hpp
+\file endgame.hpp
 
-\brief Contains the includes for all Tracker types.
+\brief Contains the includes for all Endgame types.
 */
 
-#ifndef BERTINI_TRACKER_HPP
-#define BERTINI_TRACKER_HPP
+#pragma once
 
-#include "bertini2/tracking/fixed_precision_tracker.hpp"
-#include "bertini2/tracking/amp_tracker.hpp"
+#include "bertini2/endgames/fixed_prec_endgame.hpp"
+#include "bertini2/endgames/fixed_prec_cauchy.hpp"
+
+#include "bertini2/endgames/amp_powerseries.hpp"
+#include "bertini2/endgames/amp_cauchy.hpp"
 
 
-#endif
+
 

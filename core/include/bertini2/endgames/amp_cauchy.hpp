@@ -34,8 +34,8 @@
 */
 
 
-#include "bertini2/tracking/cauchy_endgame.hpp"
-#include "bertini2/tracking/amp_endgame.hpp"
+#include "bertini2/endgames/cauchy.hpp"
+#include "bertini2/endgames/amp_endgame.hpp"
 
 
 

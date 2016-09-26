@@ -34,8 +34,8 @@
 \brief Contains the adaptive precision power series endgame type.
 */
 
-#include "bertini2/tracking/powerseries_endgame.hpp"
-#include "bertini2/tracking/amp_endgame.hpp"
+#include "bertini2/endgames/powerseries.hpp"
+#include "bertini2/endgames/amp_endgame.hpp"
 
 namespace bertini{ namespace tracking { namespace endgame {
 

@@ -33,7 +33,7 @@
 
 */
 
-#include "bertini2/tracking/tracking_config.hpp"
+#include "bertini2/trackers/tracking_config.hpp"
 
 namespace bertini{
 	namespace tracking{

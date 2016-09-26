@@ -34,22 +34,22 @@
 \brief Contains the fixed precision power series endgame type.
 */
 
-#include "bertini2/tracking/powerseries_endgame.hpp"
-#include "bertini2/tracking/fixed_prec_endgame.hpp"
+#include "bertini2/endgames/cauchy_endgame.hpp"
+#include "bertini2/endgames/fixed_prec_endgame.hpp"
 
 
 namespace bertini{ namespace tracking { namespace endgame {
 
 template<typename TrackerT, typename Enable>
-class FixedPrecPowerSeriesEndgame : 
-		public PowerSeriesEndgame<TrackerT,
-								  FixedPrecPowerSeriesEndgame<TrackerT, typename std::enable_if<TrackerTraits<TrackerT>::IsFixedPrec>::type>, 
-								  typename TrackerTraits<TrackerT>::BaseComplexType>, 
+class FixedPrecCauchyEndgame : 
+		public CauchyEndgame<TrackerT,
+							  FixedPrecCauchyEndgame<TrackerT, typename std::enable_if<TrackerTraits<TrackerT>::IsFixedPrec>::type>, 
+							  typename TrackerTraits<TrackerT>::BaseComplexType>, 
 		public FixedPrecEndgamePolicyBase<TrackerT>
 {
 public:
 	using TrackerType = TrackerT;
-	using EGType = PowerSeriesEndgame<TrackerType, FixedPrecPowerSeriesEndgame, typename TrackerType::BaseComplexType>;
+	using EGType = CauchyEndgame<TrackerType, FixedPrecCauchyEndgame, typename TrackerType::BaseComplexType>;
 	using BRT = typename TrackerTraits<TrackerType>::BaseRealType;
 
 	
@@ -68,8 +68,8 @@ public:
 	}
 
 public:
-	explicit FixedPrecPowerSeriesEndgame(TrackerType const& tr, 
-	                               const std::tuple< const config::PowerSeries &,
+	explicit FixedPrecCauchyEndgame(TrackerType const& tr, 
+	                               const std::tuple< const config::Cauchy<BRT> &,
 	                               					 const config::Endgame<BRT>&, 
 	                               				     const config::Security<BRT>&
 	                               				    > & settings )
@@ -77,7 +77,7 @@ public:
    	{}
 
     template< typename... Ts >
-		FixedPrecPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecPowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
+		FixedPrecCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecCauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
 		{}
 
 };

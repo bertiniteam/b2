@@ -34,8 +34,8 @@
 \brief Contains the policy for fixed precision endgame types.
 */
 
-#include "bertini2/tracking/fixed_precision_tracker.hpp"
-#include "bertini2/tracking/fixed_precision_utilities.hpp"
+#include "bertini2/trackers/fixed_precision_tracker.hpp"
+#include "bertini2/trackers/fixed_precision_utilities.hpp"
 
 namespace bertini{ namespace tracking { namespace endgame {
 

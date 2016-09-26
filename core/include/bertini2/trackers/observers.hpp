@@ -31,8 +31,8 @@
 
 #pragma once
 
-#include "bertini2/tracking/events.hpp"
-#include "bertini2/tracking/base_tracker.hpp"
+#include "bertini2/trackers/events.hpp"
+#include "bertini2/trackers/base_tracker.hpp"
 #include "bertini2/logging.hpp"
 #include <boost/type_index.hpp>
 
