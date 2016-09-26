@@ -14,7 +14,7 @@ tracking_include_HEADERS = \
 	include/bertini2/trackers/base_tracker.hpp \
 	include/bertini2/endgames/cauchy.hpp \
 	include/bertini2/endgames/endgame.hpp \
-	include/bertini2/endgames/events.hpp \	
+	include/bertini2/endgames/events.hpp \
 	include/bertini2/trackers/events.hpp \
 	include/bertini2/trackers/explicit_predictors.hpp \
 	include/bertini2/endgames/fixed_prec_cauchy.hpp \
@@ -26,7 +26,7 @@ tracking_include_HEADERS = \
 	include/bertini2/endgames/newton_correct.hpp \
 	include/bertini2/endgames/newton_corrector.hpp \
 	include/bertini2/trackers/observers.hpp \
-	include/bertini2/endgames/observers.hpp \	
+	include/bertini2/endgames/observers.hpp \
 	include/bertini2/trackers/ode_predictors.hpp \
 	include/bertini2/endgames/powerseries.hpp \
 	include/bertini2/trackers/predict.hpp \

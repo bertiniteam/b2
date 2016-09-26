@@ -30,7 +30,7 @@
 #include "bertini2/start_system.hpp"
 #include "bertini2/num_traits.hpp"
 
-#include "bertini2/tracking/amp_powerseries_endgame.hpp"
+#include "bertini2/endgames/amp_powerseries.hpp"
 
 
 

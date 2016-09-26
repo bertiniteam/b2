@@ -34,7 +34,7 @@
 \brief Contains the fixed precision power series endgame type.
 */
 
-#include "bertini2/endgames/powerseries_endgame.hpp"
+#include "bertini2/endgames/powerseries.hpp"
 #include "bertini2/endgames/fixed_prec_endgame.hpp"
 
 

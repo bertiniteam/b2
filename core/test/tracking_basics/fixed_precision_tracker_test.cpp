@@ -26,8 +26,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include "start_system.hpp"
-#include "tracking/fixed_precision_tracker.hpp"
-#include "bertini2/tracking/observers.hpp"
+#include "trackers/fixed_precision_tracker.hpp"
+#include "bertini2/trackers/observers.hpp"
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
