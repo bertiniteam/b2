@@ -14,33 +14,10 @@ endgames_include_HEADERS = \
 	include/bertini2/endgames/fixed_prec_powerseries.hpp \
 	include/bertini2/endgames/fixed_prec_endgame.hpp \
 	include/bertini2/endgames/interpolation.hpp \
-	include/bertini2/endgames/newton_correct.hpp \
-	include/bertini2/endgames/newton_corrector.hpp \
 	include/bertini2/endgames/observers.hpp \
 	include/bertini2/endgames/powerseries.hpp 
 
 
-
-rootinclude_HEADERS += \
-	include/bertini2/endgames/
-
-endgamesincludedir = $(includedir)/bertini2/endgames
-endgamesinclude_HEADERS = \
-	include/bertini2/endgames/amp_cauchy.hpp \
-	include/bertini2/endgames/amp_endgame.hpp \
-	include/bertini2/endgames/amp_powerseries.hpp \
-	include/bertini2/endgames/base_endgame.hpp \
-	include/bertini2/endgames/cauchy.hpp \
-	include/bertini2/endgames/endgame.hpp \
-	include/bertini2/endgames/events.hpp \
-	include/bertini2/endgames/fixed_prec_cauchy.hpp \
-	include/bertini2/endgames/fixed_prec_powerseries.hpp \
-	include/bertini2/endgames/fixed_prec_endgame.hpp \
-	include/bertini2/endgames/interpolation.hpp \
-	include/bertini2/endgames/newton_correct.hpp \
-	include/bertini2/endgames/newton_corrector.hpp \
-	include/bertini2/endgames/observers.hpp \
-	include/bertini2/endgames/powerseries.hpp 
 
 
 

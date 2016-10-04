@@ -34,7 +34,7 @@ tracking = $(tracking_header_files) $(tracking_source_files)
 
 
 rootinclude_HEADERS += \
-	include/bertini2/trackers/
+	include/bertini2/tracking.hpp
 
 trackersincludedir = $(includedir)/bertini2/trackers
 trackersinclude_HEADERS = \
