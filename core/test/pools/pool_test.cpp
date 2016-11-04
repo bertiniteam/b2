@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(make_nonpointer_system_and_add_to_pool)
 
 	auto result = sp.NonPtrAdd(sys);
 
-	BOOST_CHECK(result.get() == &sys);
+	BOOST_CHECK(result.get() != &sys);
 }
 
 

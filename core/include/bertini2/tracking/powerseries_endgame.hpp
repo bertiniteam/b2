@@ -435,7 +435,7 @@ public:
 			                      num_used_points,s_times,samples,s_derivatives) // the input data
 			                 - 
 			                 most_recent_sample).norm();
-			BOOST_LOG_TRIVIAL(severity_level::trace) << curr_diff;
+
 			if (curr_diff < min_found_difference)
 			{
 				min_found_difference = curr_diff;

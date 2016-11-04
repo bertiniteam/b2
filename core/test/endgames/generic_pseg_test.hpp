@@ -1141,7 +1141,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
 
-	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-11) );
+	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-10) );
 }
 
 
