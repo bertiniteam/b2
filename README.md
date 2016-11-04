@@ -40,11 +40,11 @@ Development is ongoing, and we want your help!
 
 ### Disclaimer
 
-Bertini 2 is in early development.  Although many of the core capabilities are present, performance needs some serious improvement, and there are probably issues.  That said, you can help us improve Bertini 2 if you try it out.  As of this time (2016.06.03), there is not yet a black box executable in the style of Bertini 1, although there is a parser for the INPUT section of Bertini input files.  
+Bertini 2 is in active development.  Although many of the core capabilities are present, performance needs some serious improvement, and there are probably issues.  That said, you can help us improve Bertini 2 if you try it out.  As of this time (2016.11.01), there is not yet a black box executable in the style of Bertini 1, although there is a parser for the INPUT section of Bertini input files.  
 
 ### Supported systems
 
-Supported platforms as of this writing include GNU Linux, Unix, and Mac OSX.  Windows support is promised and upcoming.
+Supported platforms as of this writing include GNU Linux, Unix, and Mac OSX.  Windows support is promised and upcoming.  We welcome help getting compiling and testing on Windows
 
 ### 0. Dependencies
 
@@ -52,7 +52,7 @@ Bertini 2 is written in modern C++, using no few libraries to help us developers
 
 1. A compiler capable of the C++14 extensions.  GCC 4.9.3 works well, but consumes a lot of memory.  Apple's Clang coming with OSX XCode works well too, but lacks the `thread_local` keyword, so when `./configuring`, you have to disable this feature in the Bertini 2 core.
 2. [Boost](http://www.boost.org/).  Minimum version is 1.56.  1.61 will let you compile using expression templates for multiple precision floating point real computations, a valuable optimization.   If you patch Boost.Multiprecision, you can enable them in earlier versions as well.  
-3. [Eigen](eigen.tuxfamily.org).  Minimum version is 3.2. The beta of the upcoming version 3.3 currently fails to build.
+3. [Eigen](eigen.tuxfamily.org).  Minimum version is 3.2.X, where the minimum tested X is about 5. The beta of the upcoming version 3.3 currently builds successfully, too.
 4.  Current GNU Autotools.  You need libtool, automake, and autoconf.  The default versions of these on most platforms are insufficient, so go get them from your favorite package manager.  Building using CMake is not set up yet, but if you want to set it up for us, please contribute! 
 
 ### 1. Download
@@ -73,7 +73,8 @@ First, configure.
 
 Useful configure options:
 
-- `--disable-thread_local`  Mac users will want to use this flag, as Apple's Clang does not implement this C++11 keyword, for whatever reason.  
+- `--disable-thread_local`  Mac users may want to use this flag, because Apple's Clang did not implement this C++11 keyword until Fall 2016.  If your XCode install is at least as new as October 2016, you should be able to omit this flag.  
+- `CPPFLAGS="-I/opt/local/include" LDFLAGS="-L/opt/local/lib"` MacPorts users will want these, probably, since `/opt/local` isn't in the standard set of places to look for headers or libraries, and this is the default MacPorts location.
 - `--disable-expression_templates`  Users who want to use Boost versions 1.56-1.60 will want to do this, unless you patch your Boost install.  Patching is easy, and involves only three modifications, and no re-compilation. 
 
 Second, compile.
@@ -98,6 +99,9 @@ Second, compile.
 1. `make` -- Use of multiple threads is again suggested, if you have enough memory.  The Python bindings take even more memory than the core does.
 2. `make install` -- Install the bindings to wherever `./configure` determined the place for installed Python modules is.
 3. `cd test && python test_all.py` -- Optionally, run the tests.
+
+
+The tests require NumPy, which you should install using your package manager.  `pip install numpy` should get you there.
 
 ### 4. Provide feedback
 
