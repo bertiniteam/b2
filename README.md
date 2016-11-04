@@ -50,7 +50,7 @@ Development is ongoing, and we want your help!
 
 # Building and Installing
 
-Please see [the Wiki compiling section]() for instructions on compiling Bertini2's core library, and companion Python bindings, PyBertini.
+Please see [the Wiki compiling section](https://github.com/bertiniteam/b2/wiki/Compilation-Guide) for instructions on compiling Bertini2's core library, and companion Python bindings, PyBertini.
 
 ==
 
