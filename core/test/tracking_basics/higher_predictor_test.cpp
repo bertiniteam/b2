@@ -57,7 +57,7 @@ extern double threshold_clearance_d;
 extern bertini::mpfr_float threshold_clearance_mp;
 extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
 
-
+using bertini::MakeVariable;
 using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(higher_predict_tracking_basics)
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RK4_double)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RK4_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RK4_d)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RK4_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKF45_double)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKF45_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_d)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};
@@ -741,7 +741,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKCK45_double)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKCK45_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -905,7 +905,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_d)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};
@@ -984,7 +984,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};
@@ -1066,7 +1066,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};
@@ -1218,7 +1218,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_double)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -1303,7 +1303,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -1383,7 +1383,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp_change_precision)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -1515,7 +1515,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_d)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};
@@ -1594,7 +1594,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};
@@ -1688,7 +1688,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKV67_double)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -1774,7 +1774,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKV67_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -1852,7 +1852,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_d)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};
@@ -1931,7 +1931,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_mp)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 	
 	VariableGroup vars{x,y};

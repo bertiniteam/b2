@@ -38,7 +38,7 @@ using Variable = bertini::node::Variable;
 using Float = bertini::node::Float;
 using ExplicitRKPredictor = bertini::tracking::predict::ExplicitRKPredictor;
 
-
+using bertini::MakeVariable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 		
 		VariableGroup vars{x,y};
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
 		
 		VariableGroup vars{x,y};
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -463,7 +463,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -712,7 +712,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		

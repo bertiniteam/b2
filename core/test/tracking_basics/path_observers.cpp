@@ -38,7 +38,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-
+using bertini::MakeVariable;
 
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
@@ -65,9 +65,9 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	DefaultPrecision(16);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -122,9 +122,9 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 	DefaultPrecision(16);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -177,9 +177,9 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 	DefaultPrecision(16);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 

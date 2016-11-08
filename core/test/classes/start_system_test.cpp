@@ -35,7 +35,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-
+using bertini::MakeVariable;
 using mpq_rational = bertini::mpq_rational;
 using mpfr_float = bertini::mpfr_float;
 using mpz_int = bertini::mpz_int;
@@ -387,9 +387,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_coefficient_bound_degree_bound)
 	*/
 	DefaultPrecision(30);
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 

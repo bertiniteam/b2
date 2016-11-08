@@ -50,7 +50,7 @@ System GriewankOsborn()
 	using Var = std::shared_ptr<node::Variable>;
 
 	bertini::System griewank_osborn_sys;
-	Var x = std::make_shared<node::Variable>("x"), t = std::make_shared<node::Variable>("t"), y = std::make_shared<node::Variable>("y");
+	Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
 	VariableGroup vars{x,y};
 	griewank_osborn_sys.AddVariableGroup(vars); 
 
@@ -72,7 +72,7 @@ System GriewankOsborn()
 				using Var = std::shared_ptr<node::Variable>;
 				
 				bertini::System crossed_paths_sys;
-				Var x = std::make_shared<node::Variable>("x"), t = std::make_shared<node::Variable>("t"), y = std::make_shared<node::Variable>("y");
+				Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
 				auto two = std::make_shared<node::Float>("2");
 				auto half = std::make_shared<node::Float>("0.5");
 				VariableGroup vars{x,y};

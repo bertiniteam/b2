@@ -52,7 +52,7 @@ using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Function = bertini::node::Function;
 using Jacobian = bertini::node::Jacobian;
-
+using bertini::MakeVariable;
 
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
@@ -1055,7 +1055,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 
 BOOST_AUTO_TEST_CASE(arcsine_differentiate)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = asin(pow(x,2)+1);
 	auto J = std::make_shared<Jacobian>(N->Differentiate());
 
@@ -1075,7 +1075,7 @@ BOOST_AUTO_TEST_CASE(arcsine_differentiate)
 
 BOOST_AUTO_TEST_CASE(arccosine_differentiate)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = acos(pow(x,2)+1);
 	auto J = std::make_shared<Jacobian>(N->Differentiate());
 
@@ -1093,7 +1093,7 @@ BOOST_AUTO_TEST_CASE(arccosine_differentiate)
 
 BOOST_AUTO_TEST_CASE(arctangent_differentiate)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = atan(pow(x,2)+1);
 	auto J = std::make_shared<Jacobian>(N->Differentiate());
 
@@ -1120,8 +1120,8 @@ BOOST_AUTO_TEST_CASE(integer_power)
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> t = std::make_shared<Variable>("t");
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> t = MakeVariable("t");
 
 	auto f = pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t;
 	std::shared_ptr<Jacobian> j = std::make_shared<Jacobian>(f->Differentiate());
@@ -1155,8 +1155,8 @@ BOOST_AUTO_TEST_CASE(integer_power_system)
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	System sys;
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> t = std::make_shared<Variable>("t"); 
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> t = MakeVariable("t"); 
 
 	sys.AddFunction( pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t);
 

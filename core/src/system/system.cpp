@@ -318,7 +318,7 @@ namespace bertini
 			}
 			else
 			{
-				Var hom_var = std::make_shared<bertini::node::Variable>(converter.str());
+				Var hom_var = MakeVariable(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
 				for (const auto& curr_function : functions_)
 					curr_function->Homogenize(*curr_var_gp, hom_var);

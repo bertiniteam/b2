@@ -54,7 +54,7 @@
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Float = bertini::node::Float;
-
+using bertini::MakeVariable;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_SUITE(node_serialization)
 
 BOOST_AUTO_TEST_CASE(serialize_variable)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 
 
 	{
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(serialize_float)
 
 BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 
 	auto f = exp(sqrt(pow(pow(x*x+ (-x) -sin(x)+cos(x)+tan(x),x),3)))/x;
 
