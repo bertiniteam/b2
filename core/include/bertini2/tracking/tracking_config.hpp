@@ -249,7 +249,7 @@ namespace bertini
 				T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
 				T path_truncation_threshold = T(100000);
-				T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
+				T final_tolerance_times_final_tolerance_multiplier = T(1)/T(10000000000);
 			};
 
 
