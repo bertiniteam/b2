@@ -44,11 +44,9 @@ using mpfr = bertini::mpfr;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-extern double relaxed_threshold_clearance_d;
 
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
+
+#include "externs.hpp"
 
 using bertini::DefaultPrecision;
 
