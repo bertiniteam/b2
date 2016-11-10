@@ -92,7 +92,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override
 		{
-			return std::make_shared<Differential>(shared_from_this(), name());
+			return MakeDifferential(shared_from_this(), name());
 		}
 		
 		

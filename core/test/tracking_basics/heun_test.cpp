@@ -39,6 +39,7 @@ using Float = bertini::node::Float;
 using ExplicitRKPredictor = bertini::tracking::predict::ExplicitRKPredictor;
 
 using bertini::MakeVariable;
+using bertini::MakeFloat;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
@@ -241,7 +242,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		bertini::System sys;
 		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
-		std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
+		std::shared_ptr<Float> half = MakeFloat("0.5");
 		
 		VariableGroup vars{x,y};
 		
@@ -321,7 +322,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		bertini::System sys;
 		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
-		std::shared_ptr<Float> half = std::make_shared<Float>("0.5");
+		std::shared_ptr<Float> half = MakeFloat("0.5");
 		
 		VariableGroup vars{x,y};
 		

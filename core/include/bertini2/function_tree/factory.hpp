@@ -42,6 +42,9 @@ namespace bertini {
 		class Integer;
 		class Float;
 		class Rational;
+		class Function;
+		class Jacobian;
+		class Differential;
 	}
 
 	/**
@@ -49,7 +52,8 @@ namespace bertini {
 
 	\return A node for you!
 
-	\param name The name of the variable to make.  In principle can be anything, but stick to Bertini naming rules.  Don't be silly.
+	\param name The name of the variable to make.  In principle can be anything, but stick to Bertini naming rules.  Don't be silly, you'll cause serialization-deserialization round tripping problems.
+
 	\return A shared pointer to a variable, the name of which you stated.
 	*/
 	inline
@@ -64,8 +68,7 @@ namespace bertini {
 
 	\return A node for you!
 
-	\param name The integer to make.  In principle can be anything, but stick to Bertini naming rules.  Don't be silly.
-	\return A shared pointer to a variable, the name of which you stated.
+	\param name The integer to make.
 	*/
 	template<typename T>
 	std::shared_ptr<node::Integer> MakeInteger(T const& t)
@@ -86,4 +89,23 @@ namespace bertini {
 	{
 		return std::make_shared<node::Float>(t...);
 	}
+
+	template<typename ... T>
+	std::shared_ptr<node::Function> MakeFunction(T const& ...t)
+	{
+		return std::make_shared<node::Function>(t...);
+	}
+
+	template<typename ... T>
+	std::shared_ptr<node::Differential> MakeDifferential(T const& ...t)
+	{
+		return std::make_shared<node::Differential>(t...);
+	}
+
+	template<typename ... T>
+	std::shared_ptr<node::Jacobian> MakeJacobian(T const& ...t)
+	{
+		return std::make_shared<node::Jacobian>(t...);
+	}
+
 }// namespace bertini
