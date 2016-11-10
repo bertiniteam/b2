@@ -48,9 +48,8 @@ using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
 using mpfr_float = bertini::mpfr_float;
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
+
+#include "externs.hpp"
 
 using bertini::DefaultPrecision;
 
