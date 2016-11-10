@@ -26,6 +26,8 @@
 #   Spring 2016
 # 
 
+from __future__ import print_function
+
 import mpfr_test
 import function_tree_test
 import differentiation_test
@@ -39,10 +41,10 @@ import unittest
 
 mods = (mpfr_test, function_tree_test, differentiation_test, system_test, parser_test)
 suite = unittest.TestSuite();
-print mods
+print(mods)
 for tests in mods:
     thissuite = unittest.TestLoader().loadTestsFromModule(tests);
-    print thissuite
+    print(thissuite)
     suite.addTests(thissuite)
 #
 unittest.TextTestRunner(verbosity=2).run(suite)
