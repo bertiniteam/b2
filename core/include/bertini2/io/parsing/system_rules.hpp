@@ -358,7 +358,7 @@ namespace bertini {
 				 */
 				void MakeAndAddVariable(Var & V, std::string str)
 				{
-					V = std::make_shared<Variable>(str);
+					V = MakeVariable(str);
 					encountered_symbols_.add(str, V);
 				}
 				

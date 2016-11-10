@@ -54,15 +54,15 @@
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Float = bertini::node::Float;
+using bertini::MakeVariable;
+using bertini::MakeFloat;
 
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
 using System = bertini::System;
 
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
+#include "externs.hpp"
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_SUITE(node_serialization)
 
 BOOST_AUTO_TEST_CASE(serialize_variable)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 
 
 	{
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(serialize_variable)
 
 BOOST_AUTO_TEST_CASE(serialize_float)
 {
-	std::shared_ptr<Float> two_point_oh_four = std::make_shared<Float>("2.04");
+	std::shared_ptr<Float> two_point_oh_four = MakeFloat("2.04");
 
 	{
 		std::ofstream fout("serialization_test_node");
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(serialize_float)
 
 BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 
 	auto f = exp(sqrt(pow(pow(x*x+ (-x) -sin(x)+cos(x)+tan(x),x),3)))/x;
 

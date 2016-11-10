@@ -135,9 +135,9 @@ namespace bertini {
 
 				num_start_points_ = start_system_.NumStartPoints();
 
-				Var t = std::make_shared<Variable>("ZERO_DIM_PATH_VARIABLE"); 
+				Var t = MakeVariable("ZERO_DIM_PATH_VARIABLE"); 
 
-				homotopy_ = (1-t)*target_system_ + std::make_shared<node::Rational>(node::Rational::Rand())*t*start_system_;
+				homotopy_ = (1-t)*target_system_ + MakeRational(node::Rational::Rand())*t*start_system_;
 				homotopy_.AddPathVariable(t);
 				assert(homotopy_.IsHomogeneous());
 

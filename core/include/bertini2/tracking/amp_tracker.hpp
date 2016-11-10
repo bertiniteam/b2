@@ -241,9 +241,9 @@ namespace bertini{
 		using namespace bertini::tracking;
 
 		// 1. Create the system
-		Var x = std::make_shared<Variable>("x");
-		Var y = std::make_shared<Variable>("y");
-		Var t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x");
+		Var y = MakeVariable("y");
+		Var t = MakeVariable("t");
 
 		System sys;
 

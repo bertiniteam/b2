@@ -45,8 +45,6 @@ using LoggingInit = bertini::LoggingInit;
 
 #include "bertini2/system_pool.hpp"
 
-#define BERTINI_MAKE_VARIABLE(name) \
-std::shared_ptr<bertini::node::Variable> name = std::make_shared<bertini::node::Variable>("name");
 
 BOOST_GLOBAL_FIXTURE( LoggingInit );
 
@@ -66,9 +64,9 @@ BOOST_AUTO_TEST_CASE(make_nonpointer_system_and_add_to_pool)
 	SystemPool sp;
 
 	System sys;
-	BERTINI_MAKE_VARIABLE(x)
-	BERTINI_MAKE_VARIABLE(y)
-	BERTINI_MAKE_VARIABLE(z)
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto z = MakeVariable("z");
 	
 	sys.AddVariableGroup(VariableGroup({x,y,z}));  
 	sys.AddFunction(x);
@@ -86,9 +84,9 @@ BOOST_AUTO_TEST_CASE(make_new_sys_from_pool)
 	SystemPool sp;
 	std::shared_ptr<System> sys = sp.NewObj();
 
-	BERTINI_MAKE_VARIABLE(x)
-	BERTINI_MAKE_VARIABLE(y)
-	BERTINI_MAKE_VARIABLE(z)
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto z = MakeVariable("z");
 	
 	sys->AddVariableGroup(VariableGroup({x,y,z}));  
 	sys->AddFunction(x);
@@ -102,9 +100,9 @@ BOOST_AUTO_TEST_CASE(add_ptr_sys_to_pool)
 	SystemPool sp;
 	std::shared_ptr<System> sys = std::make_shared<System>();
 
-	BERTINI_MAKE_VARIABLE(x)
-	BERTINI_MAKE_VARIABLE(y)
-	BERTINI_MAKE_VARIABLE(z)
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto z = MakeVariable("z");
 	
 	sys->AddVariableGroup(VariableGroup({x,y,z}));  
 	sys->AddFunction(x);

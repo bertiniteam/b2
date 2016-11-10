@@ -97,19 +97,19 @@ namespace bertini
 		// now to do the members which are not simply copied
 		constant_subfunctions_.resize(other.constant_subfunctions_.size());
 		for (unsigned ii = 0; ii < constant_subfunctions_.size(); ++ii)
-			constant_subfunctions_[ii] = std::make_shared<bertini::node::Function>(other.constant_subfunctions_[ii]->entry_node());
+			constant_subfunctions_[ii] = MakeFunction(other.constant_subfunctions_[ii]->entry_node());
 
 		subfunctions_.resize(other.subfunctions_.size());
 		for (unsigned ii = 0; ii < subfunctions_.size(); ++ii)
-			subfunctions_[ii] = std::make_shared<bertini::node::Function>(other.subfunctions_[ii]->entry_node());
+			subfunctions_[ii] = MakeFunction(other.subfunctions_[ii]->entry_node());
 
 		functions_.resize(other.functions_.size());
 		for (unsigned ii = 0; ii < functions_.size(); ++ii)
-			functions_[ii] = std::make_shared<bertini::node::Function>(other.functions_[ii]->entry_node());
+			functions_[ii] = MakeFunction(other.functions_[ii]->entry_node());
 
 		explicit_parameters_.resize(other.explicit_parameters_.size());
 		for (unsigned ii = 0; ii < explicit_parameters_.size(); ++ii)
-			explicit_parameters_[ii] = std::make_shared<bertini::node::Function>(other.explicit_parameters_[ii]->entry_node());
+			explicit_parameters_[ii] = MakeFunction(other.explicit_parameters_[ii]->entry_node());
 	}
 
 	// the assignment operator
@@ -260,7 +260,7 @@ namespace bertini
 			jacobian_.resize(NumFunctions());
 			auto num_functions = NumFunctions();
 			for (int ii = 0; ii < num_functions; ++ii)
-				jacobian_[ii] = std::make_shared<bertini::node::Jacobian>(functions_[ii]->Differentiate());
+				jacobian_[ii] = MakeJacobian(functions_[ii]->Differentiate());
 
 			is_differentiated_ = true;
 		}
@@ -318,7 +318,7 @@ namespace bertini
 			}
 			else
 			{
-				Var hom_var = std::make_shared<bertini::node::Variable>(converter.str());
+				Var hom_var = MakeVariable(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
 				for (const auto& curr_function : functions_)
 					curr_function->Homogenize(*curr_var_gp, hom_var);
@@ -537,7 +537,7 @@ namespace bertini
 
 	void System::AddFunction(Nd const& N)
 	{
-		Fn F = std::make_shared<node::Function>(N);
+		Fn F = MakeFunction(N);
 		functions_.push_back(F);
 		is_differentiated_ = false;
 	}

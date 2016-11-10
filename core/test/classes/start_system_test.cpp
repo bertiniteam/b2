@@ -35,7 +35,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-
+using bertini::MakeVariable;
 using mpq_rational = bertini::mpq_rational;
 using mpfr_float = bertini::mpfr_float;
 using mpz_int = bertini::mpz_int;
@@ -44,11 +44,9 @@ using mpfr = bertini::mpfr;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-extern double relaxed_threshold_clearance_d;
 
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
+
+#include "externs.hpp"
 
 using bertini::DefaultPrecision;
 
@@ -61,7 +59,7 @@ BOOST_AUTO_TEST_SUITE(system_class)
 BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
+	Var x = MakeVariable("x"), y = MakeVariable("y");
 
 	VariableGroup v;
 	v.push_back(x); v.push_back(y);
@@ -93,7 +91,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
+	Var x = MakeVariable("x"), y = MakeVariable("y");
 
 	VariableGroup v;
 	v.push_back(x); v.push_back(y);
@@ -125,7 +123,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y");
+	Var x = MakeVariable("x"), y = MakeVariable("y");
 
 	VariableGroup vars{x,y};
 
@@ -196,7 +194,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
 	VariableGroup vars;
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
@@ -273,7 +271,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
 	VariableGroup vars;
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
@@ -314,7 +312,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -325,7 +323,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 
 	bertini::start_system::TotalDegree TD(sys);
 
-	Var t = std::make_shared<bertini::node::Variable>("t");
+	Var t = MakeVariable("t");
 
 	auto final_mixed_sum = (1-t) * sys + t * TD;
 	final_mixed_sum.AddPathVariable(t);
@@ -363,7 +361,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 BOOST_AUTO_TEST_CASE(start_system_total_degree_nonpolynomial_should_throw)
 {
 	bertini::System sys;
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
 	VariableGroup vars;
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
@@ -387,9 +385,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_coefficient_bound_degree_bound)
 	*/
 	DefaultPrecision(30);
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 

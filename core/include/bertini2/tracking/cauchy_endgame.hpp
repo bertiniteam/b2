@@ -58,7 +58,7 @@ using ComplexT = TrackerTraits<TrackerType>::BaseComplexType; Complex types
 
 // 1. Define the polynomial system that we wish to solve. 
 System target_sys;
-Var x = std::make_shared<Variable>("x"), t = std::make_shared<Variable>("t"), y = std::make_shared<Variable>("y");
+Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
 
 VariableGroup vars{x,y};
 target_sys.AddVariableGroup(vars); 
