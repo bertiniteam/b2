@@ -43,6 +43,8 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "externs.hpp"
+
 using mpq_rational = bertini::mpq_rational;
 
 using Variable = bertini::node::Variable;
@@ -52,37 +54,7 @@ using Float = bertini::node::Float;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
-extern double relaxed_threshold_clearance_d;
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned CLASS_TEST_MPFR_DEFAULT_DIGITS;
 
-extern std::string xstr_real;
-extern std::string xstr_imag;
-extern std::string ystr_real;
-extern std::string ystr_imag;
-extern std::string astr_real;
-extern std::string astr_imag;
-extern std::string bstr_real;
-extern std::string bstr_imag;
-extern std::string pstr_real;
-extern std::string pstr_imag;
-extern std::string zstr_real;
-extern std::string zstr_imag;
-
-extern dbl xnum_dbl;
-extern dbl ynum_dbl;
-extern dbl znum_dbl;
-extern dbl anum_dbl;
-extern dbl bnum_dbl;
-extern dbl pnum_dbl;
-
-extern mpfr xnum_mpfr;
-extern mpfr ynum_mpfr;
-extern mpfr znum_mpfr;
-extern mpfr anum_mpfr;
-extern mpfr bnum_mpfr;
-extern mpfr pnum_mpfr;
 
 using bertini::MakeVariable;
 
