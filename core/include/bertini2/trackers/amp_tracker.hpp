@@ -331,6 +331,15 @@ namespace bertini{
 			}
 
 
+			const unsigned GetCurrentPrecision() const
+			{
+				return current_precision_;
+			}
+
+			const config::AdaptiveMultiplePrecisionConfig GetAMPConfig() const
+			{
+				return AMP_config_;
+			}
 			
 			/**
 			\brief Switch preservation of precision after tracking on / off
