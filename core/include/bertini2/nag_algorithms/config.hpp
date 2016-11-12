@@ -44,8 +44,15 @@ struct Tolerances
 	T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
 	T path_truncation_threshold = T(100000); //E.4.13
-	// T final_tolerance_times_final_tolerance_multiplier = final_tolerance * final_tolerance_multiplier;
 };
+			
+
+			template<typename T>
+			struct AutoRetrack
+			{
+				T midpath_decrease_tolerance_factor = T(1)/T(2);
+				T boundary_near_tol = T(1)/T(100000);
+			};
 
 
 template<typename T>
@@ -86,7 +93,7 @@ struct PostProcessing{
 
 struct ZeroDim
 {
-	unsigned max_num_crossed_path_resolve_attempts = 1; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
+	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 };
 
 

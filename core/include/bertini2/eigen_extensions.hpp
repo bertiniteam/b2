@@ -85,52 +85,21 @@ namespace Eigen {
 	};
 
 	
-	
-
-	template<typename Expr> 
+	template<typename Expr1,typename Expr2, typename Expr3> 
 	struct NumTraits<
-		boost::multiprecision::detail::expression<Expr,
-      	boost::multiprecision::number<boost::multiprecision::backends::mpfr_float_backend<0, boost::multiprecision::allocate_dynamic>,
-      	boost::multiprecision::expression_template_option::et_on>, int, void, void>
+		boost::multiprecision::detail::expression<Expr1,
+      	Expr2, Expr3, void, void>
       		> : NumTraits<mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
 		
 		typedef mpfr_float Real;
 		typedef mpfr_float NonInteger;
 		typedef mpfr_float Nested;
-		enum {
-			IsComplex = 0,
-			IsInteger = 0,
-			IsSigned = 1,
-			RequireInitialization = 1, // yes, require initialization, otherwise get crashes
-			ReadCost = 20,
-			AddCost = 30,
-			MulCost = 40
-		};
-		
-		
-		inline static Real highest() {
-			
-			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//DefaultPrecision());
-		}
-		
-		inline static Real lowest() {
-			return -highest();
-		}
-		
-		inline static Real dummy_precision()
-		{
-			using bertini::DefaultPrecision;
-			return pow( mpfr_float(10),-int(DefaultPrecision()-3));
-		}
-		
-		inline static Real epsilon()
-		{
-			using bertini::DefaultPrecision;
-			return pow(mpfr_float(10),-int(DefaultPrecision()));
-		}
+
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
 	};
+
+
 
 	/**
 	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
