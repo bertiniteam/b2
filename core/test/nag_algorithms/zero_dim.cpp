@@ -72,6 +72,10 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 	using namespace tracking;
 
 	auto sys = system::Precon::GriewankOsborn();
+	auto TD = start_system::TotalDegree(sys);
+
+	auto t = MakeVariable("t");
+	auto h = (1-t)* sys + t*TD;
 
 	auto zd = algorithm::ZeroDim<
 				AMPTracker, 
@@ -80,7 +84,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 				start_system::TotalDegree,
 				policy::RefToGiven
 					>
-			(sys);
+			(sys, TD, h);
 
 	zd.DefaultSetup();
 

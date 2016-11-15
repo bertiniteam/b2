@@ -40,75 +40,135 @@
 namespace bertini {
 
 	namespace policy{
+
+		template<	 typename D,
+					 typename SystemType, typename StartSystemType
+					,typename StoredSystemType, typename StoredStartSystemType>
+		struct SysMgmtPolicy
+		{
+
+			using SystemT = SystemType;
+			using StartSystemT = StartSystemType;
+
+			using StoredSystemT = StoredSystemType;
+			using StoredStartSystemT = StoredStartSystemType;
+
+			
+			// convert the base endgame into the derived type.
+			const D& AsDerived() const
+			{
+				return static_cast<const D&>(*this);
+			}
+
+			// convert the base endgame into the derived type.
+			D& AsDerived() 			
+			{
+				return static_cast<D&>(*this);
+			}
+
+			// SysMgmtPolicy(StoredSystemT  const&target, StoredStartSystemT const& start, StoredSystemT const& hom)
+			//  : 
+			//  target_system_(target), start_system_(start_system_), homotopy_(hom)
+			// {}
+
+			/**
+			A getter for the system to be tracked to.
+			*/
+			const SystemT& TargetSystem() const
+			{
+				return AsDerived().target_system_;
+			}
+
+			/**
+			A getter for the homotopy being used.
+			*/
+			const SystemT& Homotopy() const
+			{
+				return AsDerived().homotopy_;
+			}
+
+			/**
+			A getter for the start system being used.
+			*/
+			const StartSystemT & StartSystem() const
+			{
+				return AsDerived().start_system_;
+			}
+
+
+
+			/**
+			A setter for the system to be tracked to.
+			*/
+			void TargetSystem(StoredSystemT const& sys)
+			{
+				AsDerived().target_system_ = sys;
+			}
+
+			/**
+			A setter for the homotopy being used.
+			*/
+			void Homotopy(StoredSystemT const& sys)
+			{
+				AsDerived().homotopy_ = sys;
+			}
+
+			/**
+			A setter for the start system being used.
+			*/
+			void StartSystem(StoredStartSystemT const& sys)
+			{
+				AsDerived().start_system_ = sys;
+			}
+		};
+
+
+
+			// /**
+			// \brief Set the start system and homotopy.
+
+			// Uses the management policy you put in as a template parameter when making the ZeroDim object.  Pay attention.
+			// */
+			// void SetStartAndHomotopy(StartSystemType const& ss, System const& hh)
+			// {
+			// 	StartSystem() = SystemManagementPolicy::AtSet(ss);
+			// 	Homotopy() = SystemManagementPolicy::AtSet(hh);
+			// }
+
 		/**
 		This system management policy makes it so that the zero dim algorithm makes a clone of the supplied system when the algorithm is created.  The zerodim algorithm will homogenize the system (that's why you want a clone, so it leaves your original system untouched), form a start system (of your type, inferred from the template parameter for the zerodim alg), and couple the two together into the homotopy used to track.
 
 		If you don't want it to take copies, or homogenize, etc, use a different policy.
-	
-		Throws if you try to set your own start system or homotopy.
 
 		\see RefToGiven
 		*/
 		template<typename SystemType, typename StartSystemType>
-		struct CloneGiven{
+		struct CloneGiven : public SysMgmtPolicy<CloneGiven<SystemType, StartSystemType>, SystemType, StartSystemType, SystemType, StartSystemType>
+		{
 
-			using StoredSystemT = SystemType;
-			using StoredStartSystemT = StartSystemType;
+			using SMP = SysMgmtPolicy<CloneGiven<SystemType, StartSystemType>, SystemType, StartSystemType, SystemType, StartSystemType>;
 
-			// do not permute the order of these System declarations
+			using StoredSystemT = typename SMP::StoredSystemT;
+			using StoredStartSystemT = typename SMP::StoredStartSystemT;
+
+			using SMP::TargetSystem;
+			using SMP::StartSystem;
+			using SMP::Homotopy;
+
+			using SystemT = SystemType;
+			using StartSystemT = StartSystemType;
+			
+			
 			StoredSystemT target_system_;
 			StoredStartSystemT start_system_;
 			StoredSystemT homotopy_;
 
 			/**
-			A getter for the system to be tracked to.
+			Simply forward on the systems for the constructor
 			*/
-			const System& TargetSystem() const
-			{
-				return target_system_;
-			}
+			CloneGiven(SystemType const& target) : target_system_(target)
+			{}
 
-			/**
-			A getter for the homotopy being used.
-			*/
-			const System& Homotopy() const
-			{
-				return homotopy_;
-			}
-
-			/**
-			A getter for the start system being used.
-			*/
-			const StartSystemType & StartSystem() const
-			{
-				return start_system_;
-			}
-
-
-
-			/**
-			A getter for the system to be tracked to.
-			*/
-			void TargetSystem(SystemType const& sys)
-			{
-				target_system_ = sys;
-			}
-
-			/**
-			A getter for the homotopy being used.
-			*/
-			void Homotopy(SystemType const& sys)
-			{
-				homotopy_ = sys;
-			}
-
-			/**
-			A getter for the start system being used.
-			*/
-			void StartSystem(StartSystemType const& sys)
-			{
-				start_system_ = sys;
-			}
 
 			static
 			StoredSystemT AtConstruct(SystemType const& sys)
@@ -136,20 +196,65 @@ namespace bertini {
 				target.AutoPatch(); // then patch if needed
 			}
 
-			static StoredStartSystemT FormStart(SystemType const& target)
+			static void FormStart(StartSystemType & start, SystemType const& target)
 			{
-				return StartSystemType(target);	
+				start = StartSystemType(target);	
 			}
 
 			static
-			StoredSystemT FormHomotopy(SystemType const& start, StartSystemType const& target, std::string const& path_variable_name)
+			void FormHomotopy(SystemType & homotopy, SystemType const& start, StartSystemType const& target, std::string const& path_variable_name)
 			{
-				SystemType homotopy;
 				auto t = MakeVariable(path_variable_name); 
 
 				homotopy = (1-t)*target + MakeRational(node::Rational::Rand())*t*start;
 				homotopy.AddPathVariable(t);
-				return homotopy;
+			}
+
+			/**
+			\brief Sets up the homotopy for the system to be solved.
+			
+			1. Homogenizes the system, 
+			2. patches it, 
+			3. constructs the start system,
+			4. stores the number of start points, 
+			5. makes a path variable,
+			6. forms the straight line homotopy between target and start, with the gamma trick
+
+			boom, you're ready to go.
+			*/
+			void SystemSetup(std::string const& path_variable_name)
+			{
+				PrepareTarget(TargetSystem());
+
+				// now we populate the start system
+				FormStart(StartSystem(), TargetSystem());
+
+				FormHomotopy(Homotopy(), StartSystem(), TargetSystem(), path_variable_name);
+			}
+
+
+			/**
+			A getter for the system to be tracked to.
+			*/
+			SystemT& TargetSystem() 
+			{
+				return target_system_;
+			}
+
+			/**
+			A getter for the homotopy being used.
+			*/
+			SystemT& Homotopy() 
+			{
+				return homotopy_;
+			}
+
+			/**
+			A getter for the start system being used.
+			*/
+			StartSystemT & StartSystem() 
+			{
+				return start_system_;
 			}
 		};
 
@@ -162,15 +267,34 @@ namespace bertini {
 		\see CloneGiven
 		*/
 		template<typename SystemType, typename StartSystemType>
-		struct RefToGiven{
+		struct RefToGiven : public SysMgmtPolicy<RefToGiven<SystemType, StartSystemType>, SystemType, StartSystemType, 
+								std::reference_wrapper< const SystemType>, std::reference_wrapper< const StartSystemType>>
+		{
+			using SMP = SysMgmtPolicy<RefToGiven<SystemType, StartSystemType>, SystemType, StartSystemType, 
+								std::reference_wrapper< const SystemType>, std::reference_wrapper< const StartSystemType>>;
+			using StoredSystemT = typename SMP::StoredSystemT;
+			using StoredStartSystemT = typename SMP::StoredStartSystemT;
 
-			using StoredSystemT = std::reference_wrapper<SystemType>;
-			using StoredStartSystemT = std::reference_wrapper<StartSystemType>;
+			using SMP::TargetSystem;
+			using SMP::StartSystem;
+			using SMP::Homotopy;
 
 			// do not permute the order of these System declarations
 			StoredSystemT target_system_;
 			StoredStartSystemT start_system_;
 			StoredSystemT homotopy_;
+
+			/**
+			Simply forward on the systems for the constructor
+			*/
+			RefToGiven(SystemType const& target, StartSystemType const& start, SystemType const& hom)
+			 : 
+			 	target_system_(std::ref(target)), 
+			 	start_system_(std::ref(start)), 
+			 	homotopy_(std::ref(hom))
+			{}
+
+
 
 			static
 			StoredSystemT AtConstruct(SystemType const& sys)
@@ -190,23 +314,40 @@ namespace bertini {
 			*/
 			static
 			void PrepareTarget(SystemType const& sys)
-			{ 
-			}
+			{ }
 
-			static void FormStart(StoredSystemT & start, SystemType const& target)
+
+			/**
+			Rule for making the start system from the target system.
+			*/
+			static void FormStart(SystemType const& start, SystemType const& target)
 			{
-				start = StartSystemType(target);	
+				// start = StartSystemType(target);	
 			}
 
 			static
-			StoredSystemT FormHomotopy(SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
+			void FormHomotopy(SystemType const& homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
 			{
-				StoredSystemT homotopy = std::ref(SystemType());
+				// auto h = SystemType();
 
-				auto t = MakeVariable(path_variable_name); 
+				// auto t = MakeVariable(path_variable_name); 
 
-				homotopy = (1-t)*target + MakeRational(node::Rational::Rand())*t*start;
-				homotopy.AddPathVariable(t);
+				// h = (1-t)*target + MakeRational(node::Rational::Rand())*t*start;
+				// h.AddPathVariable(t);
+
+				// return h;
+			}
+
+			void SystemSetup(std::string const& path_variable_name) const
+			{
+				PrepareTarget(TargetSystem());
+
+				// now we populate the start system
+				FormStart(StartSystem(), TargetSystem());
+
+				FormHomotopy(Homotopy(), StartSystem(), TargetSystem(), path_variable_name);
+
+				
 			}
 
 		};
@@ -220,7 +361,7 @@ namespace bertini {
 					template<typename,typename> class SystemManagementP = policy::CloneGiven >
 		struct ZeroDim : 
 							public Observable<>, 
-							SystemManagementP<SystemType, StartSystemType>
+							public SystemManagementP<SystemType, StartSystemType>
 		{
 			BERTINI_DEFAULT_VISITABLE();
 
@@ -294,25 +435,19 @@ namespace bertini {
 			};
 
 
-			/**
-			Important note: pay attention to the system management policy.
-			*/
-			ZeroDim(System const& sys) : target_system_(SystemManagementPolicy::AtConstruct(sys)), tracker_(target_system_), endgame_(tracker_)
-			{
-				ConsistencyCheck();
-			}
+			using SystemManagementPolicy::TargetSystem;
+			using SystemManagementPolicy::StartSystem;
+			using SystemManagementPolicy::Homotopy;
 
 			/**
 			Important note: pay attention to the system management policy.
 			*/
-			ZeroDim(System const& tar, StartSystemType sta, System hom) : 
-				target_system_(SystemManagementPolicy::AtConstruct(sys)), 
-				target_system_(SystemManagementPolicy::AtConstruct(sys)), 
-
-				tracker_(target_system_), endgame_(tracker_)
+			template<typename ... SysTs>
+			ZeroDim(SysTs const& ...sys) : SystemManagementPolicy(sys...), tracker_(TargetSystem()), endgame_(tracker_)
 			{
 				ConsistencyCheck();
 			}
+
 
 
 			
@@ -324,13 +459,13 @@ namespace bertini {
 			*/
 			void ConsistencyCheck() const
 			{
-				if (target_system_.HavePathVariable())
+				if (TargetSystem().HavePathVariable())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- has path variable, use user homotopy instead.");
 
-				if (target_system_.NumVariables() > target_system_.NumTotalFunctions())
+				if (TargetSystem().NumVariables() > TargetSystem().NumTotalFunctions())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- underconstrained, so has no zero dimensional solutions.");
 
-				if (!target_system_.IsPolynomial())
+				if (!TargetSystem().IsPolynomial())
 					throw std::runtime_error("unable to perform zero dim solve on target system -- system is non-polynomial, use user homotopy instead.");
 			}
 
@@ -342,7 +477,10 @@ namespace bertini {
 				
 				DefaultTimeSetup();
 
-				DefaultSystemSetup();
+				SystemManagementPolicy::SystemSetup(zero_dim_config_.path_variable_name);
+
+				num_start_points_ = StartSystem().NumStartPoints(); // populate the internal variable
+
 				DefaultTrackerSetup();
 				DefaultMidpathSetup();
 				
@@ -370,7 +508,7 @@ namespace bertini {
 			void DefaultMidpathSetup()
 			{
 				midpath_reduced_tolerance_ = tolerances_.newton_before_endgame;
-				midpath_ = std::make_shared<MidpathT>(start_system_, retrack_.boundary_near_tol);
+				midpath_ = std::make_shared<MidpathT>(StartSystem(), retrack_.boundary_near_tol);
 			}
 
 
@@ -388,43 +526,6 @@ namespace bertini {
 
 			
 
-
-			/**
-			\brief Sets up the homotopy for the system to be solved.
-			
-			1. Homogenizes the system, 
-			2. patches it, 
-			3. constructs the start system,
-			4. stores the number of start points, 
-			5. makes a path variable,
-			6. forms the straight line homotopy between target and start, with the gamma trick
-
-			boom, you're ready to go.
-			*/
-			void DefaultSystemSetup()
-			{
-				SystemManagementPolicy::PrepareTarget(target_system_);
-
-				// now we populate the start system
-				SystemManagementPolicy::FormStart(start_system_, target_system_);
-
-				num_start_points_ = start_system_.NumStartPoints(); // populate the internal variable
-
-				SystemManagementPolicy::FormHomotopy(homotopy_, start_system_, target_system_, zero_dim_config_.path_variable_name);
-			}
-
-
-			/**
-			\brief Set the start system and homotopy.
-
-			Uses the management policy you put in as a template parameter when making the ZeroDim object.  Pay attention.
-			*/
-			void SetStartAndHomotopy(StartSystemType const& ss, System const& hh)
-			{
-				start_system_ = SystemManagementPolicy::AtSet(ss);
-				homotopy_ = SystemManagementPolicy::AtSet(hh);
-			}
-
 			/**
 			\brief Takes the default action to set up the zero dim algorithm with the default constructed tracker.
 
@@ -432,14 +533,14 @@ namespace bertini {
 			*/
 			void DefaultTrackerSetup()
 			{
-				tracker_ = TrackerType(homotopy_);
+				tracker_ = TrackerType(Homotopy());
 
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
 				              	tolerances_.newton_before_endgame, 
 				              	tolerances_.path_truncation_threshold,
 								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
 				
-				tracker_.PrecisionSetup(PrecisionConfig(homotopy_));
+				tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
 			}
 
 
@@ -544,7 +645,7 @@ namespace bertini {
 					}
 					DefaultPrecision(zero_dim_config_.initial_ambient_precision);
 
-					auto start_point = start_system_.template StartPoint<BaseComplexType>(ii);
+					auto start_point = StartSystem().template StartPoint<BaseComplexType>(ii);
 
 					Vec<BaseComplexType> result;
 					auto tracking_success = tracker_.TrackPath(result, t_start_, t_endgame_boundary_, start_point);
@@ -581,7 +682,7 @@ namespace bertini {
 				}
 				DefaultPrecision(zero_dim_config_.initial_ambient_precision);
 				
-				auto start_point = start_system_.template StartPoint<BaseComplexType>(soln_ind);
+				auto start_point = StartSystem().template StartPoint<BaseComplexType>(soln_ind);
 				
 				Vec<BaseComplexType> result;
 				auto tracking_success = tracker_.TrackPath(result, t_start_, t_endgame_boundary_, start_point);
@@ -699,8 +800,8 @@ namespace bertini {
 				{
 					auto soln_ind = static_cast<SolnIndT>(ii);
 					DefaultPrecision(Precision(endgame_solutions_[soln_ind]));
-					target_system_.precision(Precision(endgame_solutions_[soln_ind]));
-					auto function_residuals = target_system_.Eval(endgame_solutions_[soln_ind]);
+					TargetSystem().precision(Precision(endgame_solutions_[soln_ind]));
+					auto function_residuals = TargetSystem().Eval(endgame_solutions_[soln_ind]);
 				}
 			}
 
