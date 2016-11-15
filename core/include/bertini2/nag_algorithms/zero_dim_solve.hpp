@@ -43,65 +43,222 @@ namespace bertini {
 
 
 
-		template<typename TrackerType, typename EndgameType, typename SystemType, typename StartSystemType>
+		/**
+		This system management policy makes it so that the zero dim algorithm makes a clone of the supplied system when the algorithm is created.  The zerodim algorithm will homogenize the system (that's why you want a clone, so it leaves your original system untouched), form a start system (of your type, inferred from the template parameter for the zerodim alg), and couple the two together into the homotopy used to track.
+
+		If you don't want it to take copies, or homogenize, etc, use a different policy.
+	
+		Throws if you try to set your own start system or homotopy.
+
+		\see RefToGiven
+		*/
+		template<typename SystemType, typename StartSystemType>
+		struct CloneGiven{
+
+			using StoredSystemT = SystemType;
+			using StoredStartSystemT = StartSystemType;
+
+			static
+			StoredSystemT AtConstruct(SystemType const& sys)
+			{
+				return Clone(sys);
+			}
+
+
+			template<typename T>
+			static
+			T AtSet(T const& sys)
+			{
+				throw std::runtime_error("when using this policy, you cannot provide your own start system or homotopy.  Either change policies, or use default behaviour");
+			}
+
+
+			/**
+			Homogenize and patch the target system.
+			*/
+			static 
+			void PrepareTarget(SystemType & target)
+			{
+				// target system came from the constructor
+				target.Homogenize(); // work over projective coordinates
+				target.AutoPatch(); // then patch if needed
+			}
+
+			static void FormStart(StartSystemType & start, SystemType const& target)
+			{
+				start = StartSystemType(target);	
+			}
+
+			static
+			void FormHomotopy(SystemType & homotopy, SystemType const& start, StartSystemType const& target, std::string const& path_variable_name)
+			{
+				auto t = MakeVariable(path_variable_name); 
+
+				homotopy = (1-t)*target + MakeRational(node::Rational::Rand())*t*start;
+				homotopy.AddPathVariable(t);
+			}
+		};
+
+
+		/**
+		This system management policy allows the user to prevent the zero dim algorithm from making clones, and instead the burden of supplying the target system, start system, and homotopy are entirely up to the user.
+
+		Using this policy implies the user manages these things entirely.
+
+		\see CloneGiven
+		*/
+		template<typename SystemType, typename StartSystemType>
+		struct RefToGiven{
+
+			using StoredSystemT = std::reference_wrapper<SystemType>;
+			using StoredStartSystemT = std::reference_wrapper<StartSystemType>;
+
+			static
+			StoredSystemT AtConstruct(SystemType const& sys)
+			{
+				return std::ref(sys);
+			}
+
+			template<typename T>
+			static
+			T AtSet(T const& sys)
+			{
+				return std::ref(sys);
+			}
+
+			/**
+			 don't do anything to the target system.  it's assumed it was passed in ready to track.
+			*/
+			static
+			void PrepareTarget(SystemType const& sys)
+			{ 
+			}
+
+			static void FormStart(StoredSystemT & start, SystemType const& target)
+			{
+				start = StartSystemType(target);	
+			}
+
+			static
+			void FormHomotopy(SystemType & homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
+			{
+				auto t = MakeVariable(path_variable_name); 
+
+				homotopy = (1-t)*target + MakeRational(node::Rational::Rand())*t*start;
+				homotopy.AddPathVariable(t);
+			}
+
+		};
+
+
+
+
+		template<	typename TrackerType, typename EndgameType, 
+					typename SystemType, typename StartSystemType, 
+					typename SystemManagementPolicy = CloneGiven<SystemType, StartSystemType> >
 		struct ZeroDim : public Observable<>
 		{
 			BERTINI_DEFAULT_VISITABLE();
 
-			using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
-			using BaseRealType    = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
+			using BaseComplexType 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+			using BaseRealType    	= typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 			
-			using PrecisionConfig = typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
+			using PrecisionConfig 	= typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-			using SolnIndT = typename SolnCont<BaseComplexType>::size_type;
+			using SolnIndT 			= typename SolnCont<BaseComplexType>::size_type;
 			
-			using MidpathT = Midpath<StartSystemType, BaseRealType, BaseComplexType>;
+			using MidpathT 			= Midpath<StartSystemType, BaseRealType, BaseComplexType>;
 
-			struct MetaData{
+			using StoredSystemT = typename SystemManagementPolicy::StoredSystemT;
+			using StoredStartSystemT = typename SystemManagementPolicy::StoredStartSystemT;
+
+			struct AlgorithmMetaData
+			{
+				SolnIndT number_path_failures = 0;
+				SolnIndT number_path_successes = 0;
+				SolnIndT number_paths_tracked = 0;
+
+				std::chrono::system_clock::time_point start_time;
+				std::chrono::microseconds elapsed_time;
+			};
+
+
+
+			struct SolutionMetaData
+			{
 
 				// only vaguely metadata.  artifacts of randomness or ordering
-				unsigned long long path_index;     		// path number of the solution
-				unsigned long long solution_index;      	// solution number
+				SolnIndT path_index;     		// path number of the solution
+				SolnIndT solution_index;      	// solution number
 
-				// computed across all of the solve
+
+
+				///// things computed across all of the solve
 				bool precision_changed = false;
 				BaseComplexType time_of_first_prec_increase;    // time value of the first increase in precision
 
-				
 
 
 
-				//computed in pre-endgame only
-
+				///// things computed in pre-endgame only
 				tracking::SuccessCode pre_endgame_success;     // success code 
 
 
 
-				// computed in endgame only
-				BaseRealType condition_number; 		// the latest estimate on the condition number
-				BaseRealType newton_residual; 		// the latest newton residual 
 
-				BaseComplexType final_t;   					// the final value of time
+
+				///// things computed in endgame only
+				BaseRealType condition_number; 				// the latest estimate on the condition number
+				BaseRealType newton_residual; 				// the latest newton residual 
+				BaseComplexType final_time_used;   			// the final value of time tracked to
 				BaseRealType accuracy_estimate; 			// accuracy estimate between extrapolations
-
-				unsigned cycle_num;    	// cycle number used in extrapolations
-				
-				tracking::SuccessCode endgame_success;      		// success code 
+				unsigned cycle_num;    						// cycle number used in extrapolations
+				tracking::SuccessCode endgame_success;      // success code 
 
 
-				// things added by post-processing
+
+
+				///// things added by post-processing
 				BaseRealType function_residual; 	// the latest function residual
 
 				int multiplicity; 		// multiplicity
 				bool is_real;       		// real flag:  0 - not real, 1 - real
 				bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
-				bool is_sing;       		// singular flag: 0 - non-sigular, 1 - singular
+				bool is_singular;       		// singular flag: 0 - non-sigular, 1 - singular
 			};
 
 
-			ZeroDim(System const& sys) : target_system_(Clone(sys)), tracker_(target_system_), endgame_(tracker_)
+			/**
+			Important note: pay attention to the system management policy.
+			*/
+			ZeroDim(System const& sys) : target_system_(SystemManagementPolicy::AtConstruct(sys)), tracker_(target_system_), endgame_(tracker_)
 			{
 				ConsistencyCheck();
+			}
+
+
+			/**
+			A getter for the system to be tracked to.
+			*/
+			const System& TargetSystem() const
+			{
+				return target_system_;
+			}
+
+			/**
+			A getter for the homotopy being used.
+			*/
+			const System& Homotopy() const
+			{
+				return homotopy_;
+			}
+
+			/**
+			A getter for the start system being used.
+			*/
+			const StartSystemType & StartSystem() const
+			{
+				return start_system_;
 			}
 
 
@@ -125,46 +282,121 @@ namespace bertini {
 
 			void DefaultSetup()
 			{
-				using Variable = node::Variable;
-				using Var = std::shared_ptr<Variable>;
-
-				target_system_.Homogenize(); // work over projective coordinates
-				target_system_.AutoPatch(); // then patch if needed
-
-				start_system_ = StartSystemType(target_system_); // make the start system from the target system.
-
-				num_start_points_ = start_system_.NumStartPoints();
-
-				Var t = MakeVariable("ZERO_DIM_PATH_VARIABLE"); 
-
-				homotopy_ = (1-t)*target_system_ + MakeRational(node::Rational::Rand())*t*start_system_;
-				homotopy_.AddPathVariable(t);
-				assert(homotopy_.IsHomogeneous());
-
-				tolerances_ = algorithm::config::Tolerances<BaseRealType>();
+				DefaultSettingsSetup();
 				
+				DefaultTimeSetup();
+
+				DefaultSystemSetup();
+				DefaultTrackerSetup();
+				DefaultMidpathSetup();
+				
+				setup_complete_ = true;
+			}
+
+
+			
+			/**
+			Fills the tolerances and retrack settings from default values.
+			*/
+			void DefaultSettingsSetup()
+			{
+				zero_dim_config_ = algorithm::config::ZeroDim<BaseComplexType>();
+				tolerances_ = algorithm::config::Tolerances<BaseRealType>();
 				retrack_ = algorithm::config::AutoRetrack<BaseRealType>();
+				post_processing_ = algorithm::config::PostProcessing<BaseRealType>();
+
+			}
+
+
+			/**
+			call this after setting up the tolerances, etc.
+			*/
+			void DefaultMidpathSetup()
+			{
 				midpath_reduced_tolerance_ = tolerances_.newton_before_endgame;
 				midpath_ = std::make_shared<MidpathT>(start_system_, retrack_.boundary_near_tol);
+			}
 
+
+			/**
+			gets the start, target, and endgame boundary times from the already-set zero dim config.  
+
+			please ensure the zero dim config is already set.
+			*/
+			void DefaultTimeSetup()
+			{
+				t_start_ 			= zero_dim_config_.start_time;
+				t_endgame_boundary_ = zero_dim_config_.endgame_boundary;
+				t_end_ 				= zero_dim_config_.target_time;
+			}
+
+			
+
+
+			/**
+			\brief Sets up the homotopy for the system to be solved.
+			
+			1. Homogenizes the system, 
+			2. patches it, 
+			3. constructs the start system,
+			4. stores the number of start points, 
+			5. makes a path variable,
+			6. forms the straight line homotopy between target and start, with the gamma trick
+
+			boom, you're ready to go.
+			*/
+			void DefaultSystemSetup()
+			{
+				SystemManagementPolicy::PrepareTarget(target_system_);
+
+				// now we populate the start system
+				SystemManagementPolicy::FormStart(start_system_, target_system_);
+
+				num_start_points_ = start_system_.NumStartPoints(); // populate the internal variable
+
+				SystemManagementPolicy::FormHomotopy(homotopy_, start_system_, target_system_, zero_dim_config_.path_variable_name);
+			}
+
+
+			/**
+			\brief Set the start system and homotopy.
+
+			Uses the management policy you put in as a template parameter when making the ZeroDim object.  Pay attention.
+			*/
+			void SetStartAndHomotopy(StartSystemType const& ss, System const& hh)
+			{
+				start_system_ = SystemManagementPolicy::AtSet(ss);
+				homotopy_ = SystemManagementPolicy::AtSet(hh);
+			}
+
+			/**
+			\brief Takes the default action to set up the zero dim algorithm with the default constructed tracker.
+
+			\note should be called after the homotopy is set up, ideally.
+			*/
+			void DefaultTrackerSetup()
+			{
 				tracker_ = TrackerType(homotopy_);
 
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
-				              	tolerances_.newton_before_endgame, NumTraits<BaseRealType>::FromString("1e5"),
+				              	tolerances_.newton_before_endgame, 
+				              	tolerances_.path_truncation_threshold,
 								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
 				
-				
-
 				tracker_.PrecisionSetup(PrecisionConfig(homotopy_));
-				
-				initial_ambient_precision_ = DoublePrecision();
-
-				t_start_ = static_cast<BaseComplexType>(1);
-				t_endgame_boundary_ = NumTraits<BaseComplexType>::FromString("0.1");
-				t_end_ = static_cast<BaseComplexType>(0);	
-
-				setup_complete_ = true;
 			}
+
+
+			/**
+			\brief Sets the tracker to one you supply to this function.
+
+			Assumes you have done all necessary setup to it, including associating it with the homotopy for the ZeroDim algorithm.
+			*/
+			void SetTracker(TrackerType const& new_tracker)
+			{
+				tracker_ = new_tracker;
+			}
+
 
 
 			/**
@@ -183,7 +415,9 @@ namespace bertini {
 			void Solve()
 			{
 				PreSolveChecks();
-
+				
+				PreSolveSetup();
+			
 				TrackBeforeEG();
 
 				EGBoundaryAction();
@@ -202,7 +436,7 @@ namespace bertini {
 				
 			}
 
-			bool SetupComplete() const
+			bool IsSetupComplete() const
 			{
 				return setup_complete_;
 			}
@@ -215,21 +449,22 @@ namespace bertini {
 			*/
 			void PreSolveChecks()
 			{
-				if (!SetupComplete())
+				if (!IsSetupComplete())
 					throw std::runtime_error("attempting to Solve ZeroDim, but setup was not completed");
 
 				if (num_start_points_ > solutions_at_endgame_boundary_.max_size())
 					throw std::runtime_error("start system has more solutions than container for results.  I refuse to continue until this has been addressed.");
+			}
 
+
+			void PreSolveSetup()
+			{
 				auto num_as_size_t = static_cast<SolnIndT>(num_start_points_);
 
 				solution_metadata_.resize(num_as_size_t);
 				solutions_at_endgame_boundary_.resize(num_as_size_t);
 				endgame_solutions_.resize(num_as_size_t);
 			}
-
-
-
 
 			/**
 			\brief Track from the start point in time, from each start point of the start system, to the endgame boundary.  
@@ -251,7 +486,7 @@ namespace bertini {
 						tracker_.AddObserver(&first_prec_rec_);
 						tracker_.AddObserver(&min_max_prec_);
 					}
-					DefaultPrecision(initial_ambient_precision_);
+					DefaultPrecision(zero_dim_config_.initial_ambient_precision);
 
 					auto start_point = start_system_.template StartPoint<BaseComplexType>(ii);
 
@@ -288,7 +523,7 @@ namespace bertini {
 					tracker_.AddObserver(&first_prec_rec_);
 					tracker_.AddObserver(&min_max_prec_);
 				}
-				DefaultPrecision(initial_ambient_precision_);
+				DefaultPrecision(zero_dim_config_.initial_ambient_precision);
 				
 				auto start_point = start_system_.template StartPoint<BaseComplexType>(soln_ind);
 				
@@ -418,7 +653,7 @@ namespace bertini {
 			tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec_;
 
 			config::PostProcessing<BaseRealType> post_processing_;
-			config::ZeroDim zero_dim_config_;
+			config::ZeroDim<BaseComplexType> zero_dim_config_;
 			config::Tolerances<BaseRealType> tolerances_;
 			config::AutoRetrack<BaseRealType> retrack_;
 			BaseRealType midpath_reduced_tolerance_;
@@ -426,9 +661,9 @@ namespace bertini {
 			PrecisionConfig precision_config_;
 			
 			// do not permute the order of these System declarations
-			System target_system_;
-			StartSystemType start_system_;
-			System homotopy_;
+			StoredSystemT target_system_;
+			StoredStartSystemT start_system_;
+			StoredSystemT homotopy_;
 
 			TrackerType tracker_;
 			EndgameType endgame_;
@@ -440,14 +675,12 @@ namespace bertini {
 			std::shared_ptr<MidpathT> midpath_;
 
 			SolnCont<Vec<BaseComplexType> > endgame_solutions_;
-			SolnCont<MetaData> solution_metadata_;
+			SolnCont<SolutionMetaData> solution_metadata_;
 
 			unsigned long long num_start_points_;
 
 
 			bool setup_complete_ = false;
-			unsigned initial_ambient_precision_ = DoublePrecision();
-
 		}; // struct ZeroDim
 
 
