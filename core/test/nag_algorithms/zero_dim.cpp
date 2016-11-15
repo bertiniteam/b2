@@ -76,7 +76,8 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 
 	auto t = MakeVariable("t");
 	auto h = (1-t)* sys + t*TD;
-
+	h.AddPathVariable(t);
+	
 	auto zd = algorithm::ZeroDim<
 				AMPTracker, 
 				EndgameSelector<AMPTracker>::PSEG, 
@@ -84,8 +85,8 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 				start_system::TotalDegree,
 				policy::RefToGiven
 					>
-			(sys, TD, h);
-
+			(sys, TD, h); 
+	// have to pass in all three to the constructor, because using references. 
 	zd.DefaultSetup();
 
 	zd.Solve();
