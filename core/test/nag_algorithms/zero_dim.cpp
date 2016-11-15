@@ -30,10 +30,10 @@
 #include "bertini2/start_system.hpp"
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(zero_dim_algorithm)
+BOOST_AUTO_TEST_SUITE(zero_dim)
 
 
-BOOST_AUTO_TEST_CASE(first)
+BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 {
 	using namespace bertini;
 	using namespace tracking;
@@ -48,5 +48,48 @@ BOOST_AUTO_TEST_CASE(first)
 
 	zd.Output();
 }
+
+BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
+{
+	// using namespace bertini;
+	// using namespace tracking;
+
+	// auto sys = system::Precon::GriewankOsborn();
+
+	// auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
+
+	// zd.DefaultSetup();
+
+	// zd.Solve();
+
+	// zd.Output();
+}
+
+
+BOOST_AUTO_TEST_CASE(reference_managed_systems)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto sys = system::Precon::GriewankOsborn();
+
+	auto zd = algorithm::ZeroDim<
+				AMPTracker, 
+				EndgameSelector<AMPTracker>::PSEG, 
+				decltype(sys), 
+				start_system::TotalDegree,
+				policy::RefToGiven
+					>
+			(sys);
+
+	zd.DefaultSetup();
+
+	zd.Solve();
+
+	zd.Output();
+}
+
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
