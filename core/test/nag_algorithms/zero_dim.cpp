@@ -51,18 +51,28 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 
 BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 {
-	// using namespace bertini;
-	// using namespace tracking;
+	
+	using namespace bertini;
+	using namespace tracking;
 
-	// auto sys = system::Precon::GriewankOsborn();
+	using Tolerances = algorithm::config::Tolerances<mpfr_float>;
 
-	// auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
+	auto sys = system::Precon::GriewankOsborn();
 
-	// zd.DefaultSetup();
+	auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
 
-	// zd.Solve();
+	zd.DefaultSetup();
 
-	// zd.Output();
+	Tolerances tols;
+
+	auto asdf = zd.Get<Tolerances>();
+	tols.newton_before_endgame = 1e-4;
+
+	zd.Set(tols);
+
+	zd.Solve();
+
+	zd.Output();
 }
 
 
@@ -77,7 +87,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 	auto t = MakeVariable("t");
 	auto h = (1-t)* sys + t*TD;
 	h.AddPathVariable(t);
-	
+
 	auto zd = algorithm::ZeroDim<
 				AMPTracker, 
 				EndgameSelector<AMPTracker>::PSEG, 

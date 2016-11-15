@@ -36,6 +36,7 @@
 #include "bertini2/nag_algorithms/midpath_check.hpp"
 #include "bertini2/io/generators.hpp"
 
+#include "bertini2/detail/configured.hpp"
 
 namespace bertini {
 
@@ -158,7 +159,7 @@ namespace bertini {
 			using SystemT = SystemType;
 			using StartSystemT = StartSystemType;
 			
-			
+
 			StoredSystemT target_system_;
 			StoredStartSystemT start_system_;
 			StoredSystemT homotopy_;
@@ -361,7 +362,8 @@ namespace bertini {
 					template<typename,typename> class SystemManagementP = policy::CloneGiven >
 		struct ZeroDim : 
 							public Observable<>, 
-							public SystemManagementP<SystemType, StartSystemType>
+							public SystemManagementP<SystemType, StartSystemType>,
+							public detail::Configured<config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>
 		{
 			BERTINI_DEFAULT_VISITABLE();
 
@@ -379,6 +381,12 @@ namespace bertini {
 			using StoredSystemT = typename SystemManagementPolicy::StoredSystemT;
 			using StoredStartSystemT = typename SystemManagementPolicy::StoredStartSystemT;
 
+			using Config = detail::Configured<config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>;
+
+
+			using Config::Get;
+			using Config::Set;
+			
 			struct AlgorithmMetaData
 			{
 				SolnIndT number_path_failures = 0;
