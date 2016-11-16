@@ -41,7 +41,6 @@ struct Tolerances
 	T newton_during_endgame = T(1)/T(1000000); //E.4.2
 
 	T final_tolerance = T(1)/T(100000000000); //E.5.1
-	T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
 	T path_truncation_threshold = T(100000); //E.4.13
 };
