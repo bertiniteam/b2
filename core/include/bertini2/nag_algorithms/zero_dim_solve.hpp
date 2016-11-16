@@ -42,6 +42,11 @@ namespace bertini {
 
 	namespace policy{
 
+
+
+		/**
+		\brief A base class for system management for the zero-dim algorithm.
+		*/
 		template<	 typename D,
 					 typename SystemType, typename StartSystemType
 					,typename StoredSystemType, typename StoredStartSystemType>
@@ -54,7 +59,7 @@ namespace bertini {
 			using StoredSystemT = StoredSystemType;
 			using StoredStartSystemT = StoredStartSystemType;
 
-			
+private:
 			// convert the base endgame into the derived type.
 			const D& AsDerived() const
 			{
@@ -67,11 +72,7 @@ namespace bertini {
 				return static_cast<D&>(*this);
 			}
 
-			// SysMgmtPolicy(StoredSystemT  const&target, StoredStartSystemT const& start, StoredSystemT const& hom)
-			//  : 
-			//  target_system_(target), start_system_(start_system_), homotopy_(hom)
-			// {}
-
+public:
 			/**
 			A getter for the system to be tracked to.
 			*/
@@ -125,16 +126,6 @@ namespace bertini {
 
 
 
-			// /**
-			// \brief Set the start system and homotopy.
-
-			// Uses the management policy you put in as a template parameter when making the ZeroDim object.  Pay attention.
-			// */
-			// void SetStartAndHomotopy(StartSystemType const& ss, System const& hh)
-			// {
-			// 	StartSystem() = SystemManagementPolicy::AtSet(ss);
-			// 	Homotopy() = SystemManagementPolicy::AtSet(hh);
-			// }
 
 		/**
 		This system management policy makes it so that the zero dim algorithm makes a clone of the supplied system when the algorithm is created.  The zerodim algorithm will homogenize the system (that's why you want a clone, so it leaves your original system untouched), form a start system (of your type, inferred from the template parameter for the zerodim alg), and couple the two together into the homotopy used to track.
@@ -148,6 +139,7 @@ namespace bertini {
 		{
 
 			using SMP = SysMgmtPolicy<CloneGiven<SystemType, StartSystemType>, SystemType, StartSystemType, SystemType, StartSystemType>;
+			friend SMP;
 
 			using StoredSystemT = typename SMP::StoredSystemT;
 			using StoredStartSystemT = typename SMP::StoredStartSystemT;
@@ -159,13 +151,15 @@ namespace bertini {
 			using SystemT = SystemType;
 			using StartSystemT = StartSystemType;
 			
-
+private:
 			StoredSystemT target_system_;
 			StoredStartSystemT start_system_;
 			StoredSystemT homotopy_;
 
+
+public:
 			/**
-			Simply forward on the systems for the constructor
+			Simply forward on the systems for the constructor.  The AtConstruct function is to be called by the user of this policy, at construct time.
 			*/
 			CloneGiven(SystemType const& target) : target_system_(target)
 			{}
@@ -178,6 +172,9 @@ namespace bertini {
 			}
 
 
+			/**
+			In contrast at AtConstruct, the AtSet function copies the given system into the stored system when setting, after construction.
+			*/
 			template<typename T>
 			static
 			T AtSet(T const& sys)
@@ -273,6 +270,8 @@ namespace bertini {
 		{
 			using SMP = SysMgmtPolicy<RefToGiven<SystemType, StartSystemType>, SystemType, StartSystemType, 
 								std::reference_wrapper< const SystemType>, std::reference_wrapper< const StartSystemType>>;
+			friend SMP;
+
 			using StoredSystemT = typename SMP::StoredSystemT;
 			using StoredStartSystemT = typename SMP::StoredStartSystemT;
 
@@ -280,13 +279,16 @@ namespace bertini {
 			using SMP::StartSystem;
 			using SMP::Homotopy;
 
-			// do not permute the order of these System declarations
-			StoredSystemT target_system_;
-			StoredStartSystemT start_system_;
-			StoredSystemT homotopy_;
 
+private:
+			StoredSystemT target_system_; ///< The target system which we track to.
+			StoredStartSystemT start_system_; ///< The start system, which produces start points.
+			StoredSystemT homotopy_; ///< homotopy, on which we wish the path vanishes.
+
+
+public:
 			/**
-			Simply forward on the systems for the constructor
+			Simply forward references to the given systems on the stored systems.
 			*/
 			RefToGiven(SystemType const& target, StartSystemType const& start, SystemType const& hom)
 			 : 
@@ -296,13 +298,18 @@ namespace bertini {
 			{}
 
 
-
+			/**
+			\brief Store a reference to the argument system.
+			*/
 			static
 			StoredSystemT AtConstruct(SystemType const& sys)
 			{
 				return std::ref(sys);
 			}
 
+			/**
+			\brief Store a reference to the argument system.
+			*/
 			template<typename T>
 			static
 			T AtSet(T const& sys)
@@ -311,7 +318,9 @@ namespace bertini {
 			}
 
 			/**
-			 don't do anything to the target system.  it's assumed it was passed in ready to track.
+			\brief Don't do anything to the target system to prepare it for tracking.  
+
+			It's assumed it was passed in ready to track.
 			*/
 			static
 			void PrepareTarget(SystemType const& sys)
@@ -319,25 +328,17 @@ namespace bertini {
 
 
 			/**
-			Rule for making the start system from the target system.
+			\brief Do nothing to form the start system.  Had to have been given when constructing.
 			*/
 			static void FormStart(SystemType const& start, SystemType const& target)
-			{
-				// start = StartSystemType(target);	
-			}
+			{ }
 
+			/**
+			\brief Do nothing to form the homotopy.  Had to have been given when constructing.
+			*/
 			static
 			void FormHomotopy(SystemType const& homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
-			{
-				// auto h = SystemType();
-
-				// auto t = MakeVariable(path_variable_name); 
-
-				// h = (1-t)*target + MakeRational(node::Rational::Rand())*t*start;
-				// h.AddPathVariable(t);
-
-				// return h;
-			}
+			{ }
 
 			void SystemSetup(std::string const& path_variable_name) const
 			{
@@ -371,6 +372,7 @@ namespace bertini {
 		{
 			BERTINI_DEFAULT_VISITABLE();
 
+/// a bunch of using statements to reduce typing.
 			using BaseComplexType 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
 			using BaseRealType    	= typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 			
@@ -385,6 +387,8 @@ namespace bertini {
 			using StoredSystemT = typename SystemManagementPolicy::StoredSystemT;
 			using StoredStartSystemT = typename SystemManagementPolicy::StoredStartSystemT;
 
+// this one is atrocious.  sorry.
+			// todo: factor out these configs into something traits-based
 			using Config = detail::Configured<
 								config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
 								config::PostProcessing<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
@@ -398,6 +402,8 @@ namespace bertini {
 			using ZeroDimConf = config::ZeroDim<BaseComplexType>;
 			using AutoRetrack = config::AutoRetrack<BaseRealType>;
 
+
+/// metadata structs
 
 			struct AlgorithmMetaData
 			{
@@ -463,11 +469,18 @@ namespace bertini {
 			};
 
 
+
+// a few more using statements
+
 			using MidpathT 			= MidpathChecker<StartSystemType, BaseRealType, BaseComplexType, EGBoundaryMetaData>;
 
 			using SystemManagementPolicy::TargetSystem;
 			using SystemManagementPolicy::StartSystem;
 			using SystemManagementPolicy::Homotopy;
+
+
+
+/// constructors 
 
 			/**
 			Important note: pay attention to the system management policy.
@@ -481,7 +494,7 @@ namespace bertini {
 
 
 			
-
+/// setup functions
 
 
 			/**
@@ -587,6 +600,8 @@ namespace bertini {
 			}
 
 
+
+///  endgame specific stuff
 			/**
 			\brief Sets the endgame to one you supply to this function.
 
@@ -606,6 +621,11 @@ namespace bertini {
 			{
 				return endgame_;
 			}
+
+
+/// the main functions
+
+
 
 			/**
 			\brief Perform the basic Zero Dim solve algorithm.
@@ -703,13 +723,15 @@ namespace bertini {
 			*/
 			void TrackSinglePathBeforeEG(SolnIndT soln_ind)
 			{
+				// if you can think of a way to replace this `if` with something meta, please do so.
 				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 				{
 					tracker_.AddObserver(&first_prec_rec_);
 					tracker_.AddObserver(&min_max_prec_);
 				}
-				DefaultPrecision(Config::template Get<ZeroDimConf>().initial_ambient_precision);
 
+
+				DefaultPrecision(Config::template Get<ZeroDimConf>().initial_ambient_precision);
 				auto t_start = Config::template Get<ZeroDimConf>().start_time;
 				auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
 				auto start_point = StartSystem().template StartPoint<BaseComplexType>(soln_ind);
@@ -721,17 +743,18 @@ namespace bertini {
 				
 				solution_metadata_[soln_ind].pre_endgame_success = tracking_success;
 				
-				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && first_prec_rec_.DidPrecisionIncrease())
-				{
-					solution_metadata_[soln_ind].precision_changed = true;
-					solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
-				}
-				
+				// if you can think of a way to replace this `if` with something meta, please do so.
 				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 				{
+					if (first_prec_rec_.DidPrecisionIncrease())
+					{
+						solution_metadata_[soln_ind].precision_changed = true;
+						solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+					}
 					tracker_.RemoveObserver(&first_prec_rec_);
 					tracker_.RemoveObserver(&min_max_prec_);
 				}
+
 			
 			}
 
@@ -751,9 +774,7 @@ namespace bertini {
 			
 			void MidpathResolve()
 			{
-				
-				midpath_retrack_tolerance_ *= Config::template Get<AutoRetrack>().midpath_decrease_tolerance_factor;
-				tracker_.SetTrackingTolerance(midpath_retrack_tolerance_);
+				ShrinkMidpathTolerance();
 				
 				for(auto const& v : midpath_->GetCrossedPaths())
 				{
@@ -768,6 +789,14 @@ namespace bertini {
 			}
 
 
+			void ShrinkMidpathTolerance()
+			{
+				midpath_retrack_tolerance_ *= Config::template Get<AutoRetrack>().midpath_decrease_tolerance_factor;
+				tracker_.SetTrackingTolerance(midpath_retrack_tolerance_);
+			}
+
+
+
 			void TrackDuringEG()
 			{
 
@@ -780,50 +809,60 @@ namespace bertini {
 					if (solution_metadata_[soln_ind].pre_endgame_success != tracking::SuccessCode::Success)
 						continue;
 
-					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && !first_prec_rec_.DidPrecisionIncrease())
+					TrackSinglePathDuringEG(soln_ind);
+				}
+			}
+
+
+			void TrackSinglePathDuringEG(SolnIndT soln_ind)
+			{
+				// if you can think of a way to replace this `if` with something meta, please do so.
+				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+				{
+					if (!first_prec_rec_.DidPrecisionIncrease())
 					{
 						tracker_.AddObserver(&first_prec_rec_);
 						tracker_.AddObserver(&min_max_prec_);
 					}
+				}
+
+				const auto& bdry_point = solutions_at_endgame_boundary_[soln_ind].path_point;
 
 
-					const auto& bdry_point = solutions_at_endgame_boundary_[soln_ind].path_point;
+				tracker_.SetStepSize(solutions_at_endgame_boundary_[soln_ind].last_used_stepsize);
+				tracker_.ReinitializeInitialStepSize(false);
+
+				DefaultPrecision(Precision(bdry_point));
+				// we make these fresh so they are in the correct precision to start.
+				auto t_end = Config::template Get<ZeroDimConf>().target_time;
+				auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
+
+				tracking::SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary),bdry_point, t_end);
 
 
-					tracker_.SetStepSize(solutions_at_endgame_boundary_[soln_ind].last_used_stepsize);
-					tracker_.ReinitializeInitialStepSize(false);
-
-					DefaultPrecision(Precision(bdry_point));
-
-					auto t_end = Config::template Get<ZeroDimConf>().target_time;
-					auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
-
-					tracking::SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary),bdry_point, t_end);
-
-					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && first_prec_rec_.DidPrecisionIncrease())
+				// if you can think of a way to replace this `if` with something meta, please do so.
+				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+				{
+					if (first_prec_rec_.DidPrecisionIncrease())
 					{
 						solution_metadata_[soln_ind].precision_changed = true;
 						solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
 					}
-
-					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-					{
-						tracker_.RemoveObserver(&first_prec_rec_);
-						tracker_.RemoveObserver(&min_max_prec_);
-					}
-
-					solution_metadata_[soln_ind].condition_number = tracker_.LatestConditionNumber();
-
-					endgame_solutions_[soln_ind] = endgame_.template FinalApproximation<BaseComplexType>();
+					tracker_.RemoveObserver(&first_prec_rec_);
+					tracker_.RemoveObserver(&min_max_prec_);
 				}
+
+				// finally, store the metadata as necessary
+				solution_metadata_[soln_ind].condition_number = tracker_.LatestConditionNumber();
+				endgame_solutions_[soln_ind] = endgame_.template FinalApproximation<BaseComplexType>();
 			}
+
+
 
 
 
 			/**
 			\brief Populates the result_ member, with the post-processed results of the zero dim solve.
-
-			input: 
 
 			output: result_ member variable.
 			*/
@@ -851,6 +890,7 @@ namespace bertini {
 
 
 			/// observers used during tracking
+			// i feel like these should be factored out into some policy class which prescribes how they are used, so that the actions taken are customizable.
 			tracking::FirstPrecisionRecorder<TrackerType> first_prec_rec_;
 			tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec_;
 
