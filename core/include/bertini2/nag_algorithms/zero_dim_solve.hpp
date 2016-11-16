@@ -378,7 +378,7 @@ namespace bertini {
 
 			using SolnIndT 			= typename SolnCont<BaseComplexType>::size_type;
 			
-			using MidpathT 			= Midpath<StartSystemType, BaseRealType, BaseComplexType>;
+			
 
 			using SystemManagementPolicy = SystemManagementP<SystemType, StartSystemType>;
 
@@ -454,6 +454,16 @@ namespace bertini {
 				bool is_singular;       		// singular flag: 0 - non-sigular, 1 - singular
 			};
 
+
+			struct EGBoundaryMetaData
+			{
+				Vec<BaseComplexType> path_point;
+				tracking::SuccessCode success_code;
+				BaseRealType last_used_stepsize;
+			};
+
+
+			using MidpathT 			= MidpathChecker<StartSystemType, BaseRealType, BaseComplexType, EGBoundaryMetaData>;
 
 			using SystemManagementPolicy::TargetSystem;
 			using SystemManagementPolicy::StartSystem;
@@ -566,7 +576,36 @@ namespace bertini {
 				tracker_ = new_tracker;
 			}
 
+			/**
+			\brief Sets the tracker to one you supply to this function.
 
+			Assumes you have done all necessary setup to it, including associating it with the homotopy for the ZeroDim algorithm.
+			*/
+			const TrackerType & GetTracker() const
+			{
+				return tracker_;
+			}
+
+
+			/**
+			\brief Sets the endgame to one you supply to this function.
+
+			Assumes you have done all necessary setup to it, including associating it with the homotopy for the ZeroDim algorithm.
+			*/
+			void SetEndgame(EndgameType const& new_endgame)
+			{
+				endgame_ = new_endgame;
+			}
+
+			/**
+			\brief Sets the endgame to one you supply to this function.
+
+			Assumes you have done all necessary setup to it, including associating it with the homotopy for the ZeroDim algorithm.
+			*/
+			const EndgameType & GetEndgame() const
+			{
+				return endgame_;
+			}
 
 			/**
 			\brief Perform the basic Zero Dim solve algorithm.
@@ -593,7 +632,7 @@ namespace bertini {
 
 				TrackDuringEG();
 				
-				PostProcess();
+				ComputePostTrackMetadata();
 			}
 
 			/**
@@ -616,7 +655,7 @@ namespace bertini {
 			/**
 			\brief Check that the solver functor is ready to go.
 			*/
-			void PreSolveChecks()
+			void PreSolveChecks() const
 			{
 				if (!IsSetupComplete())
 					throw std::runtime_error("attempting to Solve ZeroDim, but setup was not completed");
@@ -678,7 +717,7 @@ namespace bertini {
 				Vec<BaseComplexType> result;
 				auto tracking_success = tracker_.TrackPath(result, t_start, t_endgame_boundary, start_point);
 				
-				solutions_at_endgame_boundary_[soln_ind] = std::make_tuple(result, tracking_success, tracker_.CurrentStepsize());
+				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaData({ result, tracking_success, tracker_.CurrentStepsize() });
 				
 				solution_metadata_[soln_ind].pre_endgame_success = tracking_success;
 				
@@ -748,10 +787,10 @@ namespace bertini {
 					}
 
 
-					const auto& bdry_point = std::get<Vec<BaseComplexType>>(solutions_at_endgame_boundary_[soln_ind]);
+					const auto& bdry_point = solutions_at_endgame_boundary_[soln_ind].path_point;
 
 
-					tracker_.SetStepSize(std::get<BaseRealType>(solutions_at_endgame_boundary_[soln_ind]));
+					tracker_.SetStepSize(solutions_at_endgame_boundary_[soln_ind].last_used_stepsize);
 					tracker_.ReinitializeInitialStepSize(false);
 
 					DefaultPrecision(Precision(bdry_point));
@@ -788,7 +827,7 @@ namespace bertini {
 
 			output: result_ member variable.
 			*/
-			void PostProcess()
+			void ComputePostTrackMetadata()
 			{
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
@@ -800,35 +839,41 @@ namespace bertini {
 			}
 
 
+
+
+		///////
+		//	private data members
+		///////
+
+			bool setup_complete_ = false;
+			unsigned long long num_start_points_;
+			BaseRealType midpath_reduced_tolerance_;
+
+
+			/// observers used during tracking
 			tracking::FirstPrecisionRecorder<TrackerType> first_prec_rec_;
 			tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec_;
 
 
-			BaseRealType midpath_reduced_tolerance_;
-
-			PrecisionConfig precision_config_;
-			
-
+			/// function objects used during the algorithm
 			TrackerType tracker_;
 			EndgameType endgame_;
+			std::shared_ptr<MidpathT> midpath_; /// remove shared_ptr plx.
 
-			SolnCont< std::tuple<Vec<BaseComplexType>, tracking::SuccessCode, BaseRealType>> solutions_at_endgame_boundary_;
-			
-			std::shared_ptr<MidpathT> midpath_;
 
+
+			/// computed data
+			SolnCont< EGBoundaryMetaData > solutions_at_endgame_boundary_; // the BaseRealType is the last used stepsize
 			SolnCont<Vec<BaseComplexType> > endgame_solutions_;
 			SolnCont<SolutionMetaData> solution_metadata_;
 
-			unsigned long long num_start_points_;
-
-
-			bool setup_complete_ = false;
+			
 		}; // struct ZeroDim
 
 
-	} // algo
+	} // ns algo
 
-} // bertini
+} // ns bertini
 
 
 

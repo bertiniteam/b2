@@ -34,7 +34,7 @@ This essentially amounts to being certain that no two points are the same.
 
 #pragma once
 
-#include"bertini2/nag_algorithms/config.hpp"
+#include "bertini2/nag_algorithms/config.hpp"
 #include "bertini2/tracking.hpp"
 
 
@@ -42,14 +42,14 @@ namespace bertini{
 	namespace algorithm{
 
 		
-		template<typename StartSystemT, typename RealType, typename ComplexType>
-		struct Midpath
+		template<typename StartSystemT, typename RealType, typename ComplexType, typename MetaDataType>
+		struct MidpathChecker
 		{
 			
-			using BoundaryData = SolnCont< std::tuple<Vec<ComplexType>, tracking::SuccessCode, RealType>>;
+			using BoundaryData = SolnCont< MetaDataType >;
 			using PathIndT = unsigned long long;
 			
-			Midpath( StartSystemT start_system, RealType near_tolerance)
+			MidpathChecker( StartSystemT start_system, RealType near_tolerance)
 			{
 				boundary_near_tolerance_ = near_tolerance;
 				
@@ -124,16 +124,16 @@ namespace bertini{
 			{
 				for (PathIndT ii = 0; ii < boundary_data.size(); ++ii)
 				{
-					const Vec<ComplexType>& solution_ii = std::get<Vec<ComplexType>>(boundary_data[ii]);
+					const Vec<ComplexType>& solution_ii = boundary_data[ii].path_point;
 										
-					for(PathIndT jj = ii+1; jj < boundary_data.size(); ++jj)
+					for (PathIndT jj = ii+1; jj < boundary_data.size(); ++jj)
 					{
-						if(std::get<tracking::SuccessCode>(boundary_data[ii]) == tracking::SuccessCode::Success)
+						if ( boundary_data[ii].success_code == tracking::SuccessCode::Success)
 						{
-							const Vec<ComplexType>& solution_jj = std::get<Vec<ComplexType>>(boundary_data[jj]);
+							const Vec<ComplexType>& solution_jj = boundary_data[jj].path_point;
 							const Vec<ComplexType> diff_sol = solution_ii - solution_jj;
 							
-							if((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < boundary_near_tolerance_)
+							if ((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < boundary_near_tolerance_)
 							{
 								bool i_already_stored = false;
 								bool j_already_stored = false;
@@ -198,7 +198,7 @@ namespace bertini{
 			bool passed_;  // Did the check pass?
 			
 			
-		}; //re: struct Midpath
+		}; //re: struct MidpathChecker
 
 	} // re: namespace algorithm
 }// re: namespace bertini
