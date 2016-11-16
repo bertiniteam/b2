@@ -45,16 +45,20 @@ namespace bertini {
 
 	namespace detail{
 
+
+		/**
+		This templated struct allows one to provide a variable typelist of config structs (or anything else for that matter), and provides a way to get and set these configs by looking up the structs by type.
+
+		I will add lookup by index if it is needed.  If you need to look up by index, try type first.  If your types are non-unique, consider making a struct to hold the things you are storing.
+		*/
 		template<typename ...Ts>
 		struct Configured
 		{
-
-
 			std::tuple<Ts...> configuration_;
 
 
 			template<typename T>
-			T Get() const
+			const T& Get() const
 			{
 				return std::get<T>(configuration_);
 			}
@@ -64,6 +68,7 @@ namespace bertini {
 			{
 				std::get<T>(configuration_) = t;
 			}
+
 
 		}; // Configured
 

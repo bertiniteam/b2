@@ -363,7 +363,11 @@ namespace bertini {
 		struct ZeroDim : 
 							public Observable<>, 
 							public SystemManagementP<SystemType, StartSystemType>,
-							public detail::Configured<config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>
+							public detail::Configured<
+								config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
+								config::PostProcessing<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
+								config::ZeroDim<typename tracking::TrackerTraits<TrackerType>::BaseComplexType>,
+								config::AutoRetrack<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>
 		{
 			BERTINI_DEFAULT_VISITABLE();
 
@@ -381,12 +385,20 @@ namespace bertini {
 			using StoredSystemT = typename SystemManagementPolicy::StoredSystemT;
 			using StoredStartSystemT = typename SystemManagementPolicy::StoredStartSystemT;
 
-			using Config = detail::Configured<config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>;
+			using Config = detail::Configured<
+								config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
+								config::PostProcessing<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
+								config::ZeroDim<typename tracking::TrackerTraits<TrackerType>::BaseComplexType>,
+								config::AutoRetrack<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>;
 
 
-			using Config::Get;
-			using Config::Set;
-			
+
+			using Tolerances = config::Tolerances<BaseRealType>;
+			using PostProcessing = config::PostProcessing<BaseRealType>;
+			using ZeroDimConf = config::ZeroDim<BaseComplexType>;
+			using AutoRetrack = config::AutoRetrack<BaseRealType>;
+
+
 			struct AlgorithmMetaData
 			{
 				SolnIndT number_path_failures = 0;
@@ -483,9 +495,8 @@ namespace bertini {
 			{
 				DefaultSettingsSetup();
 				
-				DefaultTimeSetup();
 
-				SystemManagementPolicy::SystemSetup(zero_dim_config_.path_variable_name);
+				SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
 
 				num_start_points_ = StartSystem().NumStartPoints(); // populate the internal variable
 
@@ -502,10 +513,15 @@ namespace bertini {
 			*/
 			void DefaultSettingsSetup()
 			{
-				zero_dim_config_ = algorithm::config::ZeroDim<BaseComplexType>();
-				tolerances_ = algorithm::config::Tolerances<BaseRealType>();
-				retrack_ = algorithm::config::AutoRetrack<BaseRealType>();
-				post_processing_ = algorithm::config::PostProcessing<BaseRealType>();
+				Config::template Set<Tolerances>(Tolerances());
+				Config::template Set<PostProcessing>(PostProcessing());
+				Config::template Set<ZeroDimConf>(ZeroDimConf());
+				Config::template Set<AutoRetrack>(AutoRetrack());
+
+				// zero_dim_config_ = algorithm::config::ZeroDim<BaseComplexType>();
+				// // tolerances_ = algorithm::config::Tolerances<BaseRealType>();
+				// retrack_ = algorithm::config::AutoRetrack<BaseRealType>();
+				// post_processing_ = algorithm::config::PostProcessing<BaseRealType>();
 
 			}
 
@@ -515,22 +531,10 @@ namespace bertini {
 			*/
 			void DefaultMidpathSetup()
 			{
-				midpath_reduced_tolerance_ = tolerances_.newton_before_endgame;
-				midpath_ = std::make_shared<MidpathT>(StartSystem(), retrack_.boundary_near_tol);
+				midpath_reduced_tolerance_ = Config::template Get<Tolerances>().newton_before_endgame;
+				midpath_ = std::make_shared<MidpathT>(StartSystem(), Config::template Get<AutoRetrack>().boundary_near_tol);
 			}
 
-
-			/**
-			gets the start, target, and endgame boundary times from the already-set zero dim config.  
-
-			please ensure the zero dim config is already set.
-			*/
-			void DefaultTimeSetup()
-			{
-				t_start_ 			= zero_dim_config_.start_time;
-				t_endgame_boundary_ = zero_dim_config_.endgame_boundary;
-				t_end_ 				= zero_dim_config_.target_time;
-			}
 
 			
 
@@ -544,8 +548,8 @@ namespace bertini {
 				tracker_ = TrackerType(Homotopy());
 
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
-				              	tolerances_.newton_before_endgame, 
-				              	tolerances_.path_truncation_threshold,
+				              	Config::template Get<Tolerances>().newton_before_endgame, 
+				              	Config::template Get<Tolerances>().path_truncation_threshold,
 								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
 				
 				tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
@@ -640,39 +644,16 @@ namespace bertini {
 			*/
 			void TrackBeforeEG()
 			{
-				tracker_.SetTrackingTolerance(tolerances_.newton_before_endgame);
+				DefaultPrecision(Config::template Get<ZeroDimConf>().initial_ambient_precision);
+
+				tracker_.SetTrackingTolerance(Config::template Get<Tolerances>().newton_before_endgame);
+
+				auto t_start = Config::template Get<ZeroDimConf>().start_time;
+				auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
 
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
-					auto soln_ind = static_cast<SolnIndT>(ii);
-
-					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-					{
-						tracker_.AddObserver(&first_prec_rec_);
-						tracker_.AddObserver(&min_max_prec_);
-					}
-					DefaultPrecision(zero_dim_config_.initial_ambient_precision);
-
-					auto start_point = StartSystem().template StartPoint<BaseComplexType>(ii);
-
-					Vec<BaseComplexType> result;
-					auto tracking_success = tracker_.TrackPath(result, t_start_, t_endgame_boundary_, start_point);
-
-					solutions_at_endgame_boundary_[soln_ind] = std::make_tuple(result, tracking_success, tracker_.CurrentStepsize());
-
-					solution_metadata_[soln_ind].pre_endgame_success = tracking_success;
-
-					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && first_prec_rec_.DidPrecisionIncrease())
-					{
-						solution_metadata_[soln_ind].precision_changed = true;
-						solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
-					}
-
-					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-					{
-						tracker_.RemoveObserver(&first_prec_rec_);
-						tracker_.RemoveObserver(&min_max_prec_);
-					}
+					TrackSinglePathBeforeEG(static_cast<SolnIndT>(ii));
 				}
 			}
 			
@@ -688,12 +669,14 @@ namespace bertini {
 					tracker_.AddObserver(&first_prec_rec_);
 					tracker_.AddObserver(&min_max_prec_);
 				}
-				DefaultPrecision(zero_dim_config_.initial_ambient_precision);
-				
+				DefaultPrecision(Config::template Get<ZeroDimConf>().initial_ambient_precision);
+
+				auto t_start = Config::template Get<ZeroDimConf>().start_time;
+				auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
 				auto start_point = StartSystem().template StartPoint<BaseComplexType>(soln_ind);
 				
 				Vec<BaseComplexType> result;
-				auto tracking_success = tracker_.TrackPath(result, t_start_, t_endgame_boundary_, start_point);
+				auto tracking_success = tracker_.TrackPath(result, t_start, t_endgame_boundary, start_point);
 				
 				solutions_at_endgame_boundary_[soln_ind] = std::make_tuple(result, tracking_success, tracker_.CurrentStepsize());
 				
@@ -718,7 +701,7 @@ namespace bertini {
 				auto midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
 				
 				unsigned num_resolve_attempts = 0;
-				while (!midcheckpassed && num_resolve_attempts < zero_dim_config_.max_num_crossed_path_resolve_attempts)
+				while (!midcheckpassed && num_resolve_attempts < Config::template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts)
 				{
 					MidpathResolve();
 					midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
@@ -730,7 +713,7 @@ namespace bertini {
 			void MidpathResolve()
 			{
 				
-				midpath_reduced_tolerance_ *= retrack_.midpath_decrease_tolerance_factor;
+				midpath_reduced_tolerance_ *= Config::template Get<AutoRetrack>().midpath_decrease_tolerance_factor;
 				tracker_.SetTrackingTolerance(midpath_reduced_tolerance_);
 				
 				for(auto const& v : midpath_->GetCrossedPaths())
@@ -749,7 +732,7 @@ namespace bertini {
 			void TrackDuringEG()
 			{
 
-				tracker_.SetTrackingTolerance(tolerances_.newton_during_endgame);
+				tracker_.SetTrackingTolerance(Config::template Get<Tolerances>().newton_during_endgame);
 
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
@@ -773,7 +756,10 @@ namespace bertini {
 
 					DefaultPrecision(Precision(bdry_point));
 
-					tracking::SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary_),bdry_point);
+					auto t_end = Config::template Get<ZeroDimConf>().target_time;
+					auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
+
+					tracking::SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary),bdry_point, t_end);
 
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec && first_prec_rec_.DidPrecisionIncrease())
 					{
@@ -817,20 +803,14 @@ namespace bertini {
 			tracking::FirstPrecisionRecorder<TrackerType> first_prec_rec_;
 			tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec_;
 
-			config::PostProcessing<BaseRealType> post_processing_;
-			config::ZeroDim<BaseComplexType> zero_dim_config_;
-			config::Tolerances<BaseRealType> tolerances_;
-			config::AutoRetrack<BaseRealType> retrack_;
+
 			BaseRealType midpath_reduced_tolerance_;
 
 			PrecisionConfig precision_config_;
 			
-			
 
 			TrackerType tracker_;
 			EndgameType endgame_;
-
-			BaseComplexType t_start_, t_endgame_boundary_, t_end_;
 
 			SolnCont< std::tuple<Vec<BaseComplexType>, tracking::SuccessCode, BaseRealType>> solutions_at_endgame_boundary_;
 			

@@ -63,11 +63,8 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 
 	zd.DefaultSetup();
 
-	Tolerances tols;
-
-	auto asdf = zd.Get<Tolerances>();
+	auto tols = zd.Get<Tolerances>();
 	tols.newton_before_endgame = 1e-4;
-
 	zd.Set(tols);
 
 	zd.Solve();
