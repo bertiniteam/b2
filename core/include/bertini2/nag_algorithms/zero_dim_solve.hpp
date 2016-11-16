@@ -541,7 +541,7 @@ namespace bertini {
 			*/
 			void DefaultMidpathSetup()
 			{
-				midpath_reduced_tolerance_ = Config::template Get<Tolerances>().newton_before_endgame;
+				midpath_retrack_tolerance_ = Config::template Get<Tolerances>().newton_before_endgame;
 				midpath_ = std::make_shared<MidpathT>(StartSystem(), Config::template Get<AutoRetrack>().boundary_near_tol);
 			}
 
@@ -752,8 +752,8 @@ namespace bertini {
 			void MidpathResolve()
 			{
 				
-				midpath_reduced_tolerance_ *= Config::template Get<AutoRetrack>().midpath_decrease_tolerance_factor;
-				tracker_.SetTrackingTolerance(midpath_reduced_tolerance_);
+				midpath_retrack_tolerance_ *= Config::template Get<AutoRetrack>().midpath_decrease_tolerance_factor;
+				tracker_.SetTrackingTolerance(midpath_retrack_tolerance_);
 				
 				for(auto const& v : midpath_->GetCrossedPaths())
 				{
@@ -847,7 +847,7 @@ namespace bertini {
 
 			bool setup_complete_ = false;
 			unsigned long long num_start_points_;
-			BaseRealType midpath_reduced_tolerance_;
+			BaseRealType midpath_retrack_tolerance_;
 
 
 			/// observers used during tracking
