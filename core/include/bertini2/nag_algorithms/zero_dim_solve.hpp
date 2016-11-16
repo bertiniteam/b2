@@ -483,7 +483,11 @@ public:
 /// constructors 
 
 			/**
-			Important note: pay attention to the system management policy.
+			Construct a ZeroDim algorithm object.
+			
+			You must at least pass in the system used to track, though the particular arguments required depend on the policies used in your instantiation of ZeroDim.
+
+			\see RefToGiven, CloneGiven
 			*/
 			template<typename ... SysTs>
 			ZeroDim(SysTs const& ...sys) : SystemManagementPolicy(sys...), tracker_(TargetSystem()), endgame_(tracker_)
@@ -555,7 +559,7 @@ public:
 			void DefaultMidpathSetup()
 			{
 				midpath_retrack_tolerance_ = Config::template Get<Tolerances>().newton_before_endgame;
-				midpath_ = std::make_shared<MidpathT>(StartSystem(), Config::template Get<AutoRetrack>().boundary_near_tol);
+				midpath_ = std::make_shared<MidpathT>(StartSystem(), Config::template Get<AutoRetrack>().same_point_tolerance);
 			}
 
 
