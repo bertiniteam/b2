@@ -75,7 +75,7 @@ namespace bertini {
 
 // this one is atrocious.  sorry.
 			// todo: factor out these configs into something traits-based
-			using Config = detail::Configured<
+			using AlgConfig = detail::Configured<
 								config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
 								config::PostProcessing<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
 								config::ZeroDim<typename tracking::TrackerTraits<TrackerType>::BaseComplexType>,
@@ -226,10 +226,10 @@ namespace bertini {
 			*/
 			void DefaultSettingsSetup()
 			{
-				Config::template Set<Tolerances>(Tolerances());
-				Config::template Set<PostProcessing>(PostProcessing());
-				Config::template Set<ZeroDimConf>(ZeroDimConf());
-				Config::template Set<AutoRetrack>(AutoRetrack());
+				AlgConfig::template Set<Tolerances>(Tolerances());
+				AlgConfig::template Set<PostProcessing>(PostProcessing());
+				AlgConfig::template Set<ZeroDimConf>(ZeroDimConf());
+				AlgConfig::template Set<AutoRetrack>(AutoRetrack());
 
 				// zero_dim_config_ = algorithm::config::ZeroDim<BaseComplexType>();
 				// // tolerances_ = algorithm::config::Tolerances<BaseRealType>();
@@ -244,8 +244,8 @@ namespace bertini {
 			*/
 			void DefaultMidpathSetup()
 			{
-				midpath_retrack_tolerance_ = Config::template Get<Tolerances>().newton_before_endgame;
-				midpath_ = std::make_shared<MidpathT>(StartSystem(), Config::template Get<AutoRetrack>().same_point_tolerance);
+				midpath_retrack_tolerance_ = AlgConfig::template Get<Tolerances>().newton_before_endgame;
+				midpath_ = std::make_shared<MidpathT>(StartSystem(), config::MidPath<BaseRealType>());
 			}
 
 
@@ -261,8 +261,8 @@ namespace bertini {
 				tracker_ = TrackerType(Homotopy());
 
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
-				              	Config::template Get<Tolerances>().newton_before_endgame, 
-				              	Config::template Get<Tolerances>().path_truncation_threshold,
+				              	AlgConfig::template Get<Tolerances>().newton_before_endgame, 
+				              	AlgConfig::template Get<Tolerances>().path_truncation_threshold,
 								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
 				
 				tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
@@ -393,12 +393,12 @@ namespace bertini {
 			*/
 			void TrackBeforeEG()
 			{
-				DefaultPrecision(Config::template Get<ZeroDimConf>().initial_ambient_precision);
+				DefaultPrecision(AlgConfig::template Get<ZeroDimConf>().initial_ambient_precision);
 
-				tracker_.SetTrackingTolerance(Config::template Get<Tolerances>().newton_before_endgame);
+				tracker_.SetTrackingTolerance(AlgConfig::template Get<Tolerances>().newton_before_endgame);
 
-				auto t_start = Config::template Get<ZeroDimConf>().start_time;
-				auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
+				auto t_start = AlgConfig::template Get<ZeroDimConf>().start_time;
+				auto t_endgame_boundary = AlgConfig::template Get<ZeroDimConf>().endgame_boundary;
 
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
@@ -421,9 +421,9 @@ namespace bertini {
 				}
 
 
-				DefaultPrecision(Config::template Get<ZeroDimConf>().initial_ambient_precision);
-				auto t_start = Config::template Get<ZeroDimConf>().start_time;
-				auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
+				DefaultPrecision(AlgConfig::template Get<ZeroDimConf>().initial_ambient_precision);
+				auto t_start = AlgConfig::template Get<ZeroDimConf>().start_time;
+				auto t_endgame_boundary = AlgConfig::template Get<ZeroDimConf>().endgame_boundary;
 				auto start_point = StartSystem().template StartPoint<BaseComplexType>(soln_ind);
 				
 				Vec<BaseComplexType> result;
@@ -453,7 +453,7 @@ namespace bertini {
 				auto midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
 				
 				unsigned num_resolve_attempts = 0;
-				while (!midcheckpassed && num_resolve_attempts < Config::template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts)
+				while (!midcheckpassed && num_resolve_attempts < AlgConfig::template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts)
 				{
 					MidpathResolve();
 					midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
@@ -481,7 +481,7 @@ namespace bertini {
 
 			void ShrinkMidpathTolerance()
 			{
-				midpath_retrack_tolerance_ *= Config::template Get<AutoRetrack>().midpath_decrease_tolerance_factor;
+				midpath_retrack_tolerance_ *= AlgConfig::template Get<AutoRetrack>().midpath_decrease_tolerance_factor;
 				tracker_.SetTrackingTolerance(midpath_retrack_tolerance_);
 			}
 
@@ -490,7 +490,7 @@ namespace bertini {
 			void TrackDuringEG()
 			{
 
-				tracker_.SetTrackingTolerance(Config::template Get<Tolerances>().newton_during_endgame);
+				tracker_.SetTrackingTolerance(AlgConfig::template Get<Tolerances>().newton_during_endgame);
 
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
@@ -524,8 +524,8 @@ namespace bertini {
 
 				DefaultPrecision(Precision(bdry_point));
 				// we make these fresh so they are in the correct precision to start.
-				auto t_end = Config::template Get<ZeroDimConf>().target_time;
-				auto t_endgame_boundary = Config::template Get<ZeroDimConf>().endgame_boundary;
+				auto t_end = AlgConfig::template Get<ZeroDimConf>().target_time;
+				auto t_endgame_boundary = AlgConfig::template Get<ZeroDimConf>().endgame_boundary;
 
 				tracking::SuccessCode endgame_success = endgame_.Run(BaseComplexType(t_endgame_boundary),bdry_point, t_end);
 

@@ -45,13 +45,18 @@ struct Tolerances
 
 	T path_truncation_threshold = T(100000); //E.4.13
 };
-			
+		
+template<typename T>	
+struct MidPath
+{
+	T same_point_tolerance = T(1)/T(100000);
+};
+
 
 template<typename T>
 struct AutoRetrack
 {
 	T midpath_decrease_tolerance_factor = T(1)/T(2);
-	T same_point_tolerance = T(1)/T(100000);
 };
 
 

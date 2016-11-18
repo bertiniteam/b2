@@ -36,16 +36,17 @@ This essentially amounts to being certain that no two points are the same.
 #pragma once
 
 #include "bertini2/nag_algorithms/common/config.hpp"
-
+#include "bertini2/detail/configured.hpp"
 
 namespace bertini{
 	namespace algorithm{
 
 		
 		template<typename StartSystemT, typename RealType, typename ComplexType, typename MetaDataType>
-		struct MidpathChecker
+		struct MidpathChecker : public detail::Configured<config::MidPath<RealType>>
 		{
-			
+			using MidPathConfT = config::MidPath<RealType>;
+			using AlgConf = detail::Configured<config::MidPath<RealType>>;
 			using BoundaryData = SolnCont< MetaDataType >;
 			using PathIndT = unsigned long long;
 			
@@ -54,9 +55,10 @@ namespace bertini{
 
 			\note The tolerance should be *lower* than the tracking tolerance used to compute these points.
 			*/
-			MidpathChecker( StartSystemT start_system, RealType tol)
+			template<typename ...T>
+			MidpathChecker( StartSystemT start_system, T const& ...config) : AlgConf(config...)
 			{
-				boundary_same_point_tolerance_ = tol;
+				// boundary_same_point_tolerance_ = tol;
 				
 				start_system_ = start_system;
 				
@@ -109,13 +111,16 @@ namespace bertini{
 
 
 			
-			bool Passed()
+			bool Passed() const
 			{
 				return passed_;
 			}
 			
 			
-			
+			const auto& SamePointTol() const
+			{
+				return this->template Get<MidPathConfT>().same_point_tolerance;
+			}
 			
 			/**
 			 \brief Checks the solution data at the endgame boundary to see if any paths have crossed during tracking before the endgame.
@@ -138,7 +143,7 @@ namespace bertini{
 							const Vec<ComplexType>& solution_jj = boundary_data[jj].path_point;
 							const Vec<ComplexType> diff_sol = solution_ii - solution_jj;
 							
-							if ((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < boundary_same_point_tolerance_)
+							if ((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < SamePointTol())
 							{
 								bool i_already_stored = false;
 								bool j_already_stored = false;
@@ -146,7 +151,7 @@ namespace bertini{
 								const auto& start_ii = start_system_.template StartPoint<ComplexType>(ii);
 								const auto& start_jj = start_system_.template StartPoint<ComplexType>(jj);
 								auto diff_start = start_ii - start_jj;
-								bool same_start = (diff_start.norm() > boundary_same_point_tolerance_);
+								bool same_start = (diff_start.norm() > SamePointTol());
 								
 								
 								// Check if path has already been stored in crossed_paths_
@@ -196,7 +201,7 @@ namespace bertini{
 			
 			
 		private:
-			RealType boundary_same_point_tolerance_;
+			// RealType boundary_same_point_tolerance_;
 			StartSystemT start_system_;
 			
 			std::vector<CrossedPath> crossed_paths_; // Data for all paths that crossed on last check

@@ -56,6 +56,10 @@ namespace bertini {
 		{
 			std::tuple<Ts...> configuration_;
 
+			template<typename ... T>
+			Configured(T const& ...t) : configuration_(t...)
+			{}
+
 
 			template<typename T>
 			const T& Get() const
