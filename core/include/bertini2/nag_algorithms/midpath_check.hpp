@@ -21,6 +21,7 @@
 
 // individual authors of this file include:
 // James Collins, West Texas A&M University
+// Dani Brake, Notre Dame
 
 
 /**
@@ -34,8 +35,7 @@ This essentially amounts to being certain that no two points are the same.
 
 #pragma once
 
-#include "bertini2/nag_algorithms/config.hpp"
-#include "bertini2/tracking.hpp"
+#include "bertini2/nag_algorithms/common/config.hpp"
 
 
 namespace bertini{

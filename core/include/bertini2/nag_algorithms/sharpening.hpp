@@ -19,6 +19,8 @@
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
+// individual authors of this file include:
+// dani brake, university of notre dame
 
 /**
 \file bertini2/nag_algorithms/sharpening.hpp 
@@ -30,7 +32,7 @@
 #pragma once
 
 #include "bertini2/num_traits.hpp"
-#include "bertini2/nag_algorithms/config.hpp"
+#include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/detail/visitable.hpp"
 #include "bertini2/tracking.hpp"
 #include "bertini2/nag_algorithms/midpath_check.hpp"

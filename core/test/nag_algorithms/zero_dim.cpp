@@ -23,6 +23,8 @@
 \file zero_dim.cpp  Tests the zero dim algorithm.
 */
 
+// individual authors of this file include:
+// dani brake, university of notre dame
 
 #include "bertini2/systems/precon.hpp"
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
@@ -73,6 +75,10 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 }
 
 
+
+/**
+Check whether we can run zero dim on the non-homogenized version of Griewank Osborn.
+*/
 BOOST_AUTO_TEST_CASE(reference_managed_systems)
 {
 	using namespace bertini;
@@ -94,6 +100,8 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 					>
 			(sys, TD, h); 
 	// have to pass in all three to the constructor, because using references. 
+
+
 	zd.DefaultSetup();
 
 	zd.Solve();
