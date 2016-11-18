@@ -44,18 +44,10 @@
 // Must be at the end of the include list
 #include "bertini2/tracking/events.hpp"
 
+#include "bertini2/detail/is_template_parameter.hpp"
+
+
 namespace bertini{
-
-	template <typename...>
-	struct IsTemplateParameter {
-	    static constexpr bool value = false;
-	};
-
-	template <typename F, typename S, typename... T>
-	struct IsTemplateParameter<F, S, T...> {
-	    static constexpr bool value =
-	        std::is_same<F, S>::value || IsTemplateParameter<F, T...>::value;
-	};
 
 	namespace tracking{
 
@@ -286,7 +278,8 @@ namespace bertini{
 			SuccessCode Refine(Vec<C> & new_space,
 								Vec<C> const& start_point, C const& current_time) const
 			{
-				static_assert(IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
+
+				static_assert(detail::IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
 				return this->AsDerived().RefineImpl(new_space, start_point, current_time);
 			}
 
@@ -313,7 +306,8 @@ namespace bertini{
 				static_assert(std::is_same<	typename Eigen::NumTraits<R>::Real, 
 			              				typename Eigen::NumTraits<C>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
-				static_assert(IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
+
+				static_assert(detail::IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
 
 				return this->AsDerived().RefineImpl(new_space, start_point, current_time, tolerance, max_iterations);
 			}
