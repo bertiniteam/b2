@@ -184,6 +184,17 @@ namespace bertini{
 
 
 				/**
+				Tell the endgame to use the given tracker.  Takes a reference.  
+
+				\note Ensure the tracker you are using doesn not go out of scope!
+				*/
+				void SetTracker(TrackerType const& new_tracker)
+				{
+					tracker_ = std::ref(new_tracker); // rebind the reference
+				}
+
+
+				/**
 				\brief Getter for the tracker used inside an instance of the endgame. 
 				*/
 				const TrackerType & GetTracker() const
