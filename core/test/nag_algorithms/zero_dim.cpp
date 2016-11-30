@@ -27,7 +27,7 @@
 #include "bertini2/systems/precon.hpp"
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
 #include "bertini2/endgames/endgame.hpp"
-#include "bertini2/start_system.hpp"
+#include "bertini2/systems/start_system.hpp"
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(zero_dim_algorithm)

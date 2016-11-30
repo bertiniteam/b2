@@ -11,7 +11,7 @@
 
 #include "bertini2/trackers/amp_criteria.hpp"
 #include "bertini2/trackers/tracking_config.hpp"
-#include "bertini2/system.hpp"
+#include "bertini2/systems/system.hpp"
 
 
 namespace bertini{

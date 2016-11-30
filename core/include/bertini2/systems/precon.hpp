@@ -30,7 +30,7 @@
 #pragma once
 
 
-#include "bertini2/system.hpp"
+#include "bertini2/systems/system.hpp"
 
 
 

@@ -29,7 +29,7 @@
  \brief Defines all static variables for ExplicitRKPredictor class
  */
 
-#include "bertini2/tracking/explicit_predictors.hpp"
+#include "bertini2/trackers/explicit_predictors.hpp"
 
 namespace bertini{
 	namespace tracking{

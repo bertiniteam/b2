@@ -34,7 +34,7 @@
 #include <iostream>
 #include <boost/test/unit_test.hpp>
 
-#include "bertini2/start_system.hpp"
+#include "bertini2/systems/start_system.hpp"
 #include "bertini2/num_traits.hpp"
 
 #include "bertini2/endgames/amp_cauchy.hpp"

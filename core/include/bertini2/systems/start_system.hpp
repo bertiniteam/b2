@@ -32,7 +32,7 @@
 #ifndef BERTINI_START_SYSTEM_HPP
 #define BERTINI_START_SYSTEM_HPP
 
-#include "bertini2/system.hpp"
+#include "bertini2/systems/system.hpp"
 #include "bertini2/limbo.hpp"
 
 

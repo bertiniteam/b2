@@ -1,8 +1,8 @@
 #this is src/system/Makemodule.am
 
 system_header_files = \
-	include/bertini2/system.hpp include/bertini2/system_parsing.hpp \
-	include/bertini2/start_system.hpp
+	include/bertini2/systems/system.hpp include/bertini2/system_parsing.hpp \
+	include/bertini2/systems/start_system.hpp
 
 system_source_files = src/system/start_system.cpp src/system/system.cpp
 
@@ -11,5 +11,11 @@ system = $(system_header_files) $(system_source_files)
 
 
 rootinclude_HEADERS += \
-	include/bertini2/systems/system.hpp \
-	include/bertini2/systems/start_system.hpp
+	include/bertini2/systems.hpp
+
+systemincludedir = $(includedir)/bertini2/systems/
+
+systeminclude_HEADERS = \
+	include/bertini2/systems/precon.hpp \
+	include/bertini2/systems/start_system.hpp \
+	include/bertini2/systems/system.hpp
