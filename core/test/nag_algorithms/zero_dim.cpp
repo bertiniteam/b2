@@ -35,7 +35,7 @@
 BOOST_AUTO_TEST_SUITE(zero_dim)
 
 
-BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
+BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_amp)
 {
 	using namespace bertini;
 	using namespace tracking;
@@ -50,6 +50,36 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 
 	zd.Output();
 }
+
+
+BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	using Tolerances = algorithm::config::Tolerances<double>;
+	using Endgame = config::Endgame<double>;
+	using TrackerT = DoublePrecisionTracker;
+
+	auto sys = system::Precon::GriewankOsborn();
+
+	auto zd = algorithm::ZeroDim<TrackerT, EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+
+	zd.DefaultSetup();
+	
+	auto tols = zd.Get<Tolerances>();
+	tols.newton_before_endgame = 1e-4;
+	tols.newton_during_endgame = 1e-5;
+	zd.Set(tols);
+
+	auto eg = zd.Get<Endgame>();
+	zd.Set(eg);
+
+	zd.Solve();
+
+	zd.Output();
+}
+
 
 BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 {

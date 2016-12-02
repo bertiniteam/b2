@@ -45,7 +45,7 @@
 #include "bertini2/tracking/events.hpp"
 
 #include "bertini2/detail/is_template_parameter.hpp"
-
+#include "bertini2/detail/configured.hpp"
 
 namespace bertini{
 
@@ -133,7 +133,11 @@ namespace bertini{
 
 		*/
 		template<class D, typename... NeededTypes>
-		class Tracker : public Observable<>
+		class Tracker : 
+			public Observable<>,
+			public detail::Configured<
+				config::Stepping<typename TrackerTraits<D>::BaseRealType>, config::Newton
+					>
 		{
 
 			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
@@ -141,8 +145,15 @@ namespace bertini{
 
 			using CT = BaseComplexType;
 			using RT = BaseRealType;
-
+			
+			
 		public:
+			using Config = detail::Configured<
+				config::Stepping<typename TrackerTraits<D>::BaseRealType>, config::Newton
+					>;
+					
+			using Stepping = config::Stepping<typename TrackerTraits<D>::BaseRealType>;
+			using Newton = config::Newton;
 
 			Tracker(System const& sys) : tracked_system_(std::ref(sys))
 			{
@@ -172,10 +183,16 @@ namespace bertini{
 
 				path_truncation_threshold_ = path_truncation_threshold;
 
-				stepping_config_ = stepping;
-				newton_config_ = newton;
-				current_stepsize_ = stepping_config_.initial_step_size;
+				this->template Set(stepping);
+				this->template Set(newton);
+
+				current_stepsize_ = stepping.initial_step_size;
 			}
+
+
+			FORWARD_GET_CONFIGURED
+
+
 
 			/**
 			\brief Set how tightly to track the path.
@@ -537,9 +554,9 @@ namespace bertini{
 			std::shared_ptr<predict::ExplicitRKPredictor > predictor_; // The predictor to use while tracking
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
-			config::Stepping<RT> stepping_config_; ///< The stepping configuration.
+			// config::Stepping<RT> stepping_config_; ///< The stepping configuration.
 			std::shared_ptr<correct::NewtonCorrector> corrector_;
-			config::Newton newton_config_; ///< The newton configuration.
+			// config::Newton newton_config_; ///< The newton configuration.
 
 
 

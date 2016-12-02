@@ -76,7 +76,10 @@ namespace bertini {
 
 		}; // Configured
 
+		#define FORWARD_GET_CONFIGURED \
+		template <typename T> \
+		const T& Get() const \
+		{ return Config::template Get<T>();}
+
 	} // namespace detail
-
-
 }

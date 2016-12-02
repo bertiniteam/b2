@@ -43,7 +43,7 @@ struct ZeroDim
 	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
 
 	ComplexT start_time = ComplexT(1);
-	ComplexT endgame_boundary = ComplexT("0.1");
+	ComplexT endgame_boundary = ComplexT(1)/ComplexT(10);
 	ComplexT target_time = ComplexT(0);
 
 	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";

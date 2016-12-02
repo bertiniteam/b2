@@ -38,7 +38,6 @@ namespace bertini{
 
 	namespace tracking{
 
-		using namespace bertini::tracking::config;
 		using std::max;
 		using std::min;
 		using std::pow;
@@ -69,10 +68,13 @@ namespace bertini{
 
 			virtual ~FixedPrecisionTracker() = default;
 
-			typedef FixedPrecisionTracker<DerivedT> EmitterType;
-			typedef Tracker<FixedPrecisionTracker<DerivedT>, BaseComplexType> Base;
+			using EmitterType = FixedPrecisionTracker<DerivedT>;
+			using Base = Tracker<FixedPrecisionTracker<DerivedT>, BaseComplexType>;
 
-
+			using Config =  typename Base::Config;
+			FORWARD_GET_CONFIGURED
+			using Stepping = typename Base::Stepping;
+			using Newton = typename Base::Newton;
 
 			FixedPrecisionTracker(System const& sys) : Base(sys){}
 
@@ -113,7 +115,7 @@ namespace bertini{
 
 				this->num_successful_steps_since_stepsize_increase_ = 0;
 				// initialize to the frequency so guaranteed to compute it the first try 	
-				this->num_steps_since_last_condition_number_computation_ = this->stepping_config_.frequency_of_CN_estimation;
+				this->num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
 			}
 
 
@@ -124,9 +126,9 @@ namespace bertini{
 			*/
 			SuccessCode PreIterationCheck() const override
 			{
-				if (this->num_successful_steps_taken_ >= this->stepping_config_.max_num_steps)
+				if (this->num_successful_steps_taken_ >= Get<Stepping>().max_num_steps)
 					return SuccessCode::MaxNumStepsTaken;
-				if (this->current_stepsize_ < this->stepping_config_.min_step_size)
+				if (this->current_stepsize_ < Get<Stepping>().min_step_size)
 					return SuccessCode::MinStepSizeReached;
 
 				return SuccessCode::Success;
@@ -196,7 +198,7 @@ namespace bertini{
 				{
 					this->NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType >(*this));
 
-					this->next_stepsize_ = this->stepping_config_.step_size_fail_factor*this->current_stepsize_;
+					this->next_stepsize_ = Get<Stepping>().step_size_fail_factor*this->current_stepsize_;
 
 					UpdateStepsize();
 
@@ -222,7 +224,7 @@ namespace bertini{
 				{
 					this->NotifyObservers(CorrectorMatrixSolveFailure<EmitterType >(*this));
 
-					this->next_stepsize_ = this->stepping_config_.step_size_fail_factor*this->current_stepsize_;
+					this->next_stepsize_ = Get<Stepping>().step_size_fail_factor*this->current_stepsize_;
 					UpdateStepsize();
 
 					return corrector_code;
@@ -332,7 +334,7 @@ namespace bertini{
 							delta_t,
 							condition_number_estimate,
 							this->num_steps_since_last_condition_number_computation_,
-							this->stepping_config_.frequency_of_CN_estimation,
+							Get<Stepping>().frequency_of_CN_estimation,
 							RT(this->tracking_tolerance_));
 			}
 
@@ -369,8 +371,8 @@ namespace bertini{
 												current_space,
 												current_time, 
 												RT(this->tracking_tolerance_),
-												this->newton_config_.min_num_newton_iterations,
-												this->newton_config_.max_num_newton_iterations);
+												Get<Newton>().min_num_newton_iterations,
+												Get<Newton>().max_num_newton_iterations);
 			}
 
 
@@ -399,8 +401,8 @@ namespace bertini{
 							   start_point,
 							   current_time, 
 							   this->tracking_tolerance_,
-							   this->newton_config_.min_num_newton_iterations,
-							   this->newton_config_.max_num_newton_iterations);
+							   Get<Newton>().min_num_newton_iterations,
+							   Get<Newton>().max_num_newton_iterations);
 			}
 
 
@@ -504,7 +506,7 @@ namespace bertini{
 				this->endtime_ = end_time;
 				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(this->stepping_config_.initial_step_size,abs(start_time-end_time)/this->stepping_config_.min_num_steps));
+					this->SetStepSize(min(Get<Stepping>().initial_step_size,abs(start_time-end_time)/Get<Stepping>().min_num_steps));
 
 				ResetCounters();
 
@@ -591,7 +593,7 @@ namespace bertini{
 				this->endtime_ = end_time;
 				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(this->stepping_config_.initial_step_size,mpfr_float(abs(start_time-end_time)/this->stepping_config_.min_num_steps)));
+					this->SetStepSize(min(Get<Stepping>().initial_step_size,mpfr_float(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
 
 				ResetCounters();
 
