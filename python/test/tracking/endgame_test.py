@@ -123,7 +123,7 @@ class EndgameTest(unittest.TestCase):
         for i in range(n):
             default_precision(bdry_points[i][0].precision());
             final_system.precision(bdry_points[i][0].precision());
-            track_success_code = my_endgame.run(t_endgame_boundary,bdry_points[i]);
+            track_success_code = my_endgame.run(mpfr_complex(t_endgame_boundary),bdry_points[i]);
             final_homogenized_solutions[i] = my_endgame.final_approximation();
             print(final_system.dehomogenize_point(final_homogenized_solutions[i]));
             self.assertEqual(track_success_code, SuccessCode.Success)

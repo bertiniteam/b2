@@ -23,7 +23,7 @@
 // daniel brake, university of notre dame
 
 
-#include "system.hpp"
+#include "systems/system.hpp"
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
