@@ -35,7 +35,7 @@
 #define BERTINI_SYSTEM_POOL_HPP
 
 #include "bertini2/detail/pool.hpp"
-#include "bertini2/system.hpp"
+#include "bertini2/systems/system.hpp"
 
 namespace bertini {
 

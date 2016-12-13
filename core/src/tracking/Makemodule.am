@@ -1,36 +1,23 @@
 #this is src/tracking/Makemodule.am
 
-tracking_includedir = $(includedir)/bertini2/tracking
+tracking_includedir = $(includedir)/bertini2/
 
 tracking_include_HEADERS = \
-	include/bertini2/tracking/adaptive_precision_utilities.hpp \
-	include/bertini2/tracking/amp_cauchy_endgame.hpp \
-	include/bertini2/tracking/amp_criteria.hpp \
-	include/bertini2/tracking/amp_endgame.hpp \
-	include/bertini2/tracking/amp_powerseries_endgame.hpp \
-	include/bertini2/tracking/amp_tracker.hpp \
-	include/bertini2/tracking/base_endgame.hpp \
-	include/bertini2/tracking/base_predictor.hpp \
-	include/bertini2/tracking/base_tracker.hpp \
-	include/bertini2/tracking/cauchy_endgame.hpp \
-	include/bertini2/tracking/endgame.hpp \
-	include/bertini2/tracking/events.hpp \
-	include/bertini2/tracking/explicit_predictors.hpp \
-	include/bertini2/tracking/fixed_prec_cauchy_endgame.hpp \
-	include/bertini2/tracking/fixed_prec_powerseries_endgame.hpp \
-	include/bertini2/tracking/fixed_prec_endgame.hpp \
-	include/bertini2/tracking/fixed_precision_tracker.hpp \
-	include/bertini2/tracking/fixed_precision_utilities.hpp \
-	include/bertini2/tracking/interpolation.hpp \
-	include/bertini2/tracking/newton_correct.hpp \
-	include/bertini2/tracking/newton_corrector.hpp \
-	include/bertini2/tracking/observers.hpp \
-	include/bertini2/tracking/ode_predictors.hpp \
-	include/bertini2/tracking/powerseries_endgame.hpp \
-	include/bertini2/tracking/predict.hpp \
-	include/bertini2/tracking/step.hpp \
-	include/bertini2/tracking/tracker.hpp \
-	include/bertini2/tracking/tracking_config.hpp
+	include/bertini2/trackers/adaptive_precision_utilities.hpp \
+	include/bertini2/trackers/amp_criteria.hpp \
+	include/bertini2/trackers/amp_tracker.hpp \
+	include/bertini2/trackers/base_predictor.hpp \
+	include/bertini2/trackers/base_tracker.hpp \
+	include/bertini2/trackers/events.hpp \
+	include/bertini2/trackers/explicit_predictors.hpp \
+	include/bertini2/trackers/fixed_precision_tracker.hpp \
+	include/bertini2/trackers/fixed_precision_utilities.hpp \
+	include/bertini2/trackers/observers.hpp \
+	include/bertini2/trackers/ode_predictors.hpp \
+	include/bertini2/trackers/predict.hpp \
+	include/bertini2/trackers/step.hpp \
+	include/bertini2/trackers/tracker.hpp \
+	include/bertini2/trackers/tracking_config.hpp
 
 
 
@@ -48,3 +35,26 @@ tracking = $(tracking_header_files) $(tracking_source_files)
 
 rootinclude_HEADERS += \
 	include/bertini2/tracking.hpp
+
+trackersincludedir = $(includedir)/bertini2/trackers
+trackersinclude_HEADERS = \
+	include/bertini2/trackers/adaptive_precision_utilities.hpp \
+	include/bertini2/trackers/amp_criteria.hpp \
+	include/bertini2/trackers/amp_tracker.hpp \
+	include/bertini2/trackers/base_predictor.hpp \
+	include/bertini2/trackers/base_tracker.hpp \
+	include/bertini2/trackers/events.hpp \
+	include/bertini2/trackers/explicit_predictors.hpp \
+	include/bertini2/trackers/fixed_precision_tracker.hpp \
+	include/bertini2/trackers/fixed_precision_utilities.hpp \
+	include/bertini2/trackers/newton_correct.hpp \
+	include/bertini2/trackers/newton_corrector.hpp \
+	include/bertini2/trackers/observers.hpp \
+	include/bertini2/trackers/ode_predictors.hpp \
+	include/bertini2/trackers/predict.hpp \
+	include/bertini2/trackers/step.hpp \
+	include/bertini2/trackers/tracker.hpp \
+	include/bertini2/trackers/tracking_config.hpp 
+
+
+

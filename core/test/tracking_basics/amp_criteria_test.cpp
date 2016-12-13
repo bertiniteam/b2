@@ -31,7 +31,7 @@
 #include "limbo.hpp"
 #include "mpfr_complex.hpp"
 
-#include "tracking/amp_criteria.hpp"
+#include "trackers/amp_criteria.hpp"
 
 
 using System = bertini::System;

@@ -37,7 +37,7 @@
 
 #include "python_common.hpp"
 
-#include <bertini2/tracking/tracker.hpp>
+#include <bertini2/trackers/tracker.hpp>
 
 namespace bertini{
 	namespace python{

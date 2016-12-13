@@ -32,7 +32,7 @@
 
 
 #include "bertini2/io/parsing/qi_files.hpp"
-#include "bertini2/tracking/tracking_config.hpp"
+#include "bertini2/trackers/tracking_config.hpp"
 #include "bertini2/nag_algorithms/config.hpp"
 
 

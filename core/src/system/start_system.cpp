@@ -22,7 +22,7 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 
-#include "start_system.hpp"
+#include "systems/start_system.hpp"
 
 
 BOOST_CLASS_EXPORT(bertini::start_system::TotalDegree);

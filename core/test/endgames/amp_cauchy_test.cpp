@@ -34,13 +34,14 @@
 #include <iostream>
 #include <boost/test/unit_test.hpp>
 
-#include "bertini2/start_system.hpp"
+#include "bertini2/systems/start_system.hpp"
 #include "bertini2/num_traits.hpp"
 
-#include "bertini2/tracking/amp_cauchy_endgame.hpp"
+#include "bertini2/endgames/amp_cauchy.hpp"
 
-#include "bertini2/tracking/observers.hpp"
-
+//THIS NEEDS TO BE IMPLEMENTED
+//#include "bertini2/endgames/observers.hpp"
+#include "bertini2/trackers/observers.hpp"
 
 // top level test suite for adaptive precision cauchy test
 BOOST_AUTO_TEST_SUITE(adaptive_precision_cauchy_endgame)
