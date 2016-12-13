@@ -29,7 +29,7 @@
 #include <boost/multiprecision/mpfr.hpp>
 #include "limbo.hpp"
 #include "mpfr_complex.hpp"
-#include "tracking/newton_corrector.hpp"
+#include "trackers/newton_corrector.hpp"
 
 
 using System = bertini::System;

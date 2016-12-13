@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
 
 	auto c = ur(gen);
 
-	mpfr_float r(c);
-	mpfr_float s(ur(gen));
+	mpfr_50 r(c);
+	mpfr_50 s(ur(gen));
 }
 
 
@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(make_random_mpfr_float_100)
 
 	auto c = ur(gen);
 
-	mpfr_float r(c);
-	mpfr_float s(ur(gen));
+	mpfr_100 r(c);
+	mpfr_100 s(ur(gen));
 }
 
 

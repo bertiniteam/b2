@@ -33,8 +33,8 @@
 
 #ifndef BERTINI_PYTHON_SYSTEM_EXPORT_HPP
 #define BERTINI_PYTHON_SYSTEM_EXPORT_HPP
-#include <bertini2/system.hpp>
-#include <bertini2/start_system.hpp>
+#include <bertini2/systems/system.hpp>
+#include <bertini2/systems/start_system.hpp>
 
 
 

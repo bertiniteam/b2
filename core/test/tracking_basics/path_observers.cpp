@@ -27,8 +27,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "bertini2/tracking/amp_tracker.hpp"
-#include "bertini2/tracking/observers.hpp"
+#include "bertini2/trackers/amp_tracker.hpp"
+#include "bertini2/trackers/observers.hpp"
 
 
 

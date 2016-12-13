@@ -27,10 +27,10 @@
 #include <iostream>
 #include <boost/test/unit_test.hpp>
 
-#include "bertini2/start_system.hpp"
+#include "bertini2/systems/start_system.hpp"
 #include "bertini2/num_traits.hpp"
 
-#include "bertini2/tracking/fixed_prec_powerseries_endgame.hpp"
+#include "bertini2/endgames/fixed_prec_powerseries.hpp"
 
 
 BOOST_AUTO_TEST_SUITE(fixed_double_powerseries_endgame)
