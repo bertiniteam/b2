@@ -52,6 +52,7 @@
 
 #include "bertini2/logging.hpp"
 
+#include "bertini2/detail/configured.hpp"
 namespace bertini{ 
 
 	namespace tracking {
@@ -85,7 +86,9 @@ namespace bertini{
 			 To create a new endgame type, inherit from this class. 
 			*/
 			template<class TrackerType, class FinalEGT>
-			class EndgameBase
+			class EndgameBase : public detail::Configured<
+				config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+				config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>
 			{
 			protected:
 
@@ -101,27 +104,28 @@ namespace bertini{
 				using BCT = BaseComplexType;
 				using BRT = BaseRealType;
 
+				using AlgConfig = detail::Configured<
+					config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+					config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
 
 				// state variables
 				mutable std::tuple<Vec<dbl>, Vec<mpfr> > final_approximation_at_origin_; 
 				mutable unsigned int cycle_number_ = 0; 
 
 
-				/**
-				\brief Settings that will be used in every endgame. For example, the number of samples points, the cycle number, and the final approximation of that we compute 
-				using the endgame. 
-				*/
-				config::Endgame<BRT> endgame_settings_;
-
-
-				/**
-				During the endgame we may be checking that we are not computing when we have detected divergent paths or other undesirable behavior. The setttings for these checks are 
-				in this data member. 
-				*/
-				config::Security<BRT> security_;
+				const auto & EndgameSettings() const
+				{
+					return AlgConfig::template Get<config::Endgame<BRT>>();
+				}
+				
+				const auto & SecuritySettings() const
+				{
+					return this->template Get<config::Security<BRT>>();
+				}
+				
 
 				/**
-				\brief A tracker tha must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
+				\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
 				*/
 				std::reference_wrapper<const TrackerType> tracker_;
 
@@ -130,8 +134,7 @@ namespace bertini{
 
 				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&>& settings )
 			      : tracker_(std::ref(tr)),
-			      	endgame_settings_( std::get<0>(settings) ),
-			        security_( std::get<1>(settings) )
+			      	AlgConfig( std::get<0>(settings),  std::get<1>(settings) )
 			   	{}
 
 			    template< typename... Ts >
@@ -145,28 +148,28 @@ namespace bertini{
 
 				
 
-				const auto& EndgameSettings() const
-				{
-					return endgame_settings_;
-				}
+				// const auto& EndgameSettings() const
+				// {
+				// 	return endgame_settings_;
+				// }
 
 				inline
 				const auto& FinalTolerance() const
 				{
-					return endgame_settings_.final_tolerance;
+					return this->template Get<config::Endgame<BRT>>().final_tolerance;
 				}
 
-				const auto& SecuritySettings() const
-				{
-					return security_;
-				}
+				// const auto& SecuritySettings() const
+				// {
+				// 	return security_;
+				// }
 
 
 
-				/**
-				\brief Setter for the general settings.
-				*/
-				void SetEndgameSettings(config::Endgame<BRT> new_endgame_settings){endgame_settings_ = new_endgame_settings;}
+				// /**
+				// \brief Setter for the general settings.
+				// */
+				// void SetEndgameSettings(config::Endgame<BRT> new_endgame_settings){endgame_settings_ = new_endgame_settings;}
 
 
 				
@@ -174,13 +177,13 @@ namespace bertini{
 				/**
 				\brief Setter for the security settings.
 				*/
-				void SetSecuritySettings(config::Security<BRT> new_endgame_security_settings){ security_ = new_endgame_security_settings;}
+				// void SetSecuritySettings(config::Security<BRT> new_endgame_security_settings){ security_ = new_endgame_security_settings;}
 
 
 				/**
 				\brief Setter for the final tolerance.
 				*/
-				void SetFinalTolerance(BRT const& ft){endgame_settings_.final_tolerance = ft;}
+				void SetFinalTolerance(BRT const& ft){this->template Get<config::Endgame<BRT>>().final_tolerance = ft;}
 
 
 				/**
@@ -242,7 +245,7 @@ namespace bertini{
 				SuccessCode ComputeInitialSamples(const CT & start_time,const CT & target_time, const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
 				{	
 					using RT = typename Eigen::NumTraits<CT>::Real;
-					assert(endgame_settings_.num_sample_points>0 && "number of sample points must be positive");
+					assert(this->template Get<config::Endgame<BRT>>().num_sample_points>0 && "number of sample points must be positive");
 
 					if (TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
@@ -258,9 +261,9 @@ namespace bertini{
 
 					auto num_vars = GetSystem().NumVariables();
 					//start at 1, because the input point is the 0th element.
-					for(int ii=1; ii < endgame_settings_.num_sample_points; ++ii)
+					for(int ii=1; ii < this->template Get<config::Endgame<BRT>>().num_sample_points; ++ii)
 					{ 
-						times.emplace_back((times[ii-1] + target_time) * RT(endgame_settings_.sample_factor)); // next time is a point between the previous time and target time.
+						times.emplace_back((times[ii-1] + target_time) * RT(this->template Get<config::Endgame<BRT>>().sample_factor)); // next time is a point between the previous time and target time.
 						samples.emplace_back(Vec<CT>(num_vars));											   // sample_factor gives us some point between the two, usually the midpoint.		
 
 						auto tracking_success = GetTracker().TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);

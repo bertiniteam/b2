@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
 	using namespace tracking;
 
 	using Tolerances = algorithm::config::Tolerances<double>;
-	using Endgame = config::Endgame<double>;
+	using EndgameConfT = config::Endgame<double>;
 	using TrackerT = DoublePrecisionTracker;
 
 	auto sys = system::Precon::GriewankOsborn();
@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
 	tols.newton_during_endgame = 1e-5;
 	zd.Set(tols);
 
-	auto eg = zd.Get<Endgame>();
-	zd.Set(eg);
+	auto eg = zd.GetFromEndgame<EndgameConfT>();
+	zd.SetToEndgame(eg);
 
 	zd.Solve();
 

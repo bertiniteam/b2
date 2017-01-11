@@ -160,7 +160,9 @@ File: test/endgames/fixed_double_cauchy_test.cpp
 FIle: test/endgames/fixed_multiple_cauchy_test.cpp
 */	
 template<typename TrackerType, typename FinalEGT, typename... UsedNumTs> 
-class CauchyEndgame : public EndgameBase<TrackerType, FinalEGT>
+class CauchyEndgame : 
+	public EndgameBase<TrackerType, FinalEGT>,
+	public detail::Configured<config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>
 {
 private:
 	// convert the base endgame into the derived type.
@@ -178,10 +180,8 @@ protected:
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
 
-	/**
-	\brief Settings that are specific to the Cauchy endgame. 
-	*/	
-	config::Cauchy<BRT> cauchy_settings_; 
+	using AlgConfig = detail::Configured<config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>;
+
 
 	/**
 	\brief A deque of times that are specifically used to compute the power series approximation for the Cauchy endgame. 
@@ -245,36 +245,54 @@ public:
 	\brief Setter for the deque holding space values for the Cauchy endgame. 
 	*/
 	template<typename CT>
-	void SetCauchySamples(SampCont<CT> cauchy_samples_to_set) { std::get<SampCont<CT> >(cauchy_samples_) = cauchy_samples_to_set;}
+	void SetCauchySamples(SampCont<CT> cauchy_samples_to_set) 
+	{ 
+		std::get<SampCont<CT> >(cauchy_samples_) = cauchy_samples_to_set;
+	}
 
 	/**
 	\brief Getter for the deque holding space values for the Cauchy endgame. 
 	*/
 	template<typename CT>
-	SampCont<CT>& GetCauchySamples() {return std::get<SampCont<CT> >(cauchy_samples_);}
+	SampCont<CT>& GetCauchySamples() 
+	{
+		return std::get<SampCont<CT> >(cauchy_samples_);
+	}
 
 	/**
 	\brief Setter for the deque holding time values for the Cauchy endgame. 
 	*/
 	template<typename CT>
-	void SetCauchyTimes(TimeCont<CT> cauchy_times_to_set) { std::get<TimeCont<CT> >(cauchy_times_) = cauchy_times_to_set;}
+	void SetCauchyTimes(TimeCont<CT> cauchy_times_to_set) 
+	{ 
+		std::get<TimeCont<CT> >(cauchy_times_) = cauchy_times_to_set;
+	}
 
 	/**
 	\brief Getter for the deque holding time values for the Cauchy endgame. 
 	*/
 	template<typename CT>
-	TimeCont<CT>& GetCauchyTimes() {return std::get<TimeCont<CT> >(cauchy_times_);}
+	TimeCont<CT>& GetCauchyTimes() 
+	{
+		return std::get<TimeCont<CT> >(cauchy_times_);
+	}
 
 	
 	/**
 	\brief Setter for the specific settings in tracking_conifg.hpp under Cauchy.
 	*/
-	void SetCauchySettings(config::Cauchy<BRT> new_cauchy_settings){cauchy_settings_ = new_cauchy_settings;}
+	void SetCauchySettings(config::Cauchy<BRT> const& new_cauchy_settings)
+	{
+		this->template Set(new_cauchy_settings);
+	}
 
 	/**
 	\brief Getter for the specific settings in tracking_conifg.hpp under Cauchy.
 	*/
-	auto& GetCauchySettings(){return cauchy_settings_;}
+	const auto& GetCauchySettings() const
+	{
+		return AlgConfig::template Get<config::Cauchy<BRT>>();
+	}
 	
 
 	explicit CauchyEndgame(TrackerType const& tr, 
@@ -283,7 +301,7 @@ public:
 	                            					const config::Security<BRT>&
 	                            				>& settings )
       : EndgameBase<TrackerType, FinalEGT>(tr, std::get<1>(settings), std::get<2>(settings)), 
-          cauchy_settings_( std::get<0>(settings) )
+          AlgConfig( std::get<0>(settings) )
    	{ }
 
     template< typename... Ts >
@@ -453,8 +471,8 @@ public:
 	{	
 		using std::abs;
 
-		assert(c_over_k_array.size()>=cauchy_settings_.num_needed_for_stabilization);
-		for(unsigned ii = 1; ii < cauchy_settings_.num_needed_for_stabilization ; ++ii)
+		assert(c_over_k_array.size()>=GetCauchySettings().num_needed_for_stabilization);
+		for(unsigned ii = 1; ii < GetCauchySettings().num_needed_for_stabilization ; ++ii)
 		{
 			auto a = abs(c_over_k_array[ii-1]);
 			auto b = abs(c_over_k_array[ii]);
@@ -466,7 +484,7 @@ public:
 			else
 				divide = b/a;
 
-			if(divide <  cauchy_settings_.minimum_for_c_over_k_stabilization)
+			if(divide <  GetCauchySettings().minimum_for_c_over_k_stabilization)
 				return false;
 		}
 		return true;
@@ -597,7 +615,7 @@ public:
 		RT max(0);
 		auto& times = std::get<TimeCont<CT> >(cauchy_times_);
 		auto& samples = std::get<SampCont<CT> >(cauchy_samples_);
-		if(norm(times.front()) < cauchy_settings_.ratio_cutoff_time)
+		if(norm(times.front()) < GetCauchySettings().ratio_cutoff_time)
 		{
 			return true;
 		}
@@ -620,7 +638,7 @@ public:
 			if(min > this->FinalTolerance() && max > this->FinalTolerance())
 			{
 				norm = min / max;
-				if(norm < cauchy_settings_.maximum_cauchy_ratio && (max - min) > this->FinalTolerance())
+				if(norm < GetCauchySettings().maximum_cauchy_ratio && (max - min) > this->FinalTolerance())
 				{
 					return false; // bad ratio and too far apart. 
 				}
@@ -667,7 +685,7 @@ public:
 		using std::max;
 		bool continue_loop = true;
 
-		auto fail_safe_max_cycle_number = max(cauchy_settings_.fail_safe_maximum_cycle_number,this->CycleNumber());
+		auto fail_safe_max_cycle_number = max(GetCauchySettings().fail_safe_maximum_cycle_number,this->CycleNumber());
 
 		auto initial_cauchy_loop_success = SuccessCode::Success;
 
@@ -796,7 +814,7 @@ public:
 
 		unsigned ii = 0;
 		//track until for more c_over_k estimates or until we reach a cutoff time. 
-		while ( (ii < cauchy_settings_.num_needed_for_stabilization) )
+		while ( (ii < GetCauchySettings().num_needed_for_stabilization) )
 		{	
 			next_time = (ps_times.back() + approximation_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
 																												  // between ps_times.back() and the approximation_time.
@@ -818,7 +836,7 @@ public:
 
 
 		//have we stabilized yet? 
-		while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()) > cauchy_settings_.cycle_cutoff_time)
+		while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()) > GetCauchySettings().cycle_cutoff_time)
 		{
 			next_time = (ps_times.back() + approximation_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
 																												  // between ps_times.back() and the approximation_time.
@@ -1003,7 +1021,7 @@ public:
 		this->CycleNumber(0);
 
 
-		while( this->CycleNumber() < cauchy_settings_.fail_safe_maximum_cycle_number )
+		while( this->CycleNumber() < GetCauchySettings().fail_safe_maximum_cycle_number )
 		{
 			//track around the origin once.
 			auto tracking_success = CircleTrack(cau_times.back(),target_time,cau_samples.back());
