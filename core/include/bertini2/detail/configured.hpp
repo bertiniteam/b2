@@ -61,13 +61,13 @@ namespace bertini {
 			{}
 
 
-			template<typename T>
+			template<typename T, typename = typename std::enable_if<IsTemplateParameter<T,Ts...>::value>::type>
 			const T& Get() const
 			{
 				return std::get<T>(configuration_);
 			}
 
-			template<typename T>
+			template<typename T, typename = typename std::enable_if<IsTemplateParameter<T,Ts...>::value>::type>
 			void Set(T const& t)
 			{
 				std::get<T>(configuration_) = t;
