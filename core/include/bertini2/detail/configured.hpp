@@ -40,6 +40,7 @@
 
 #pragma once
 
+#include "bertini2/detail/is_template_parameter.hpp"
 
 namespace bertini {
 
