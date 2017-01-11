@@ -73,6 +73,7 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
 	zd.Set(tols);
 
 	auto eg = zd.GetFromEndgame<EndgameConfT>();
+	eg.final_tolerance = 1e-12;
 	zd.SetToEndgame(eg);
 
 	zd.Solve();
