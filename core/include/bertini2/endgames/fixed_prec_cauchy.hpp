@@ -52,6 +52,7 @@ public:
 	using EGType = CauchyEndgame<TrackerType, FixedPrecCauchyEndgame, typename TrackerType::BaseComplexType>;
 	using BRT = typename TrackerTraits<TrackerType>::BaseRealType;
 
+	using EGType::Set;
 	
 	template<typename CT>
 	SuccessCode RefineSample(Vec<CT> & result, Vec<CT> const& current_sample, CT const& current_time) const

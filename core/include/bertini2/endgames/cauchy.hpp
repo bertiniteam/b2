@@ -180,8 +180,7 @@ protected:
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
 
-	using AlgConfig = detail::Configured<config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>;
-
+	using Config = detail::Configured<config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>;
 
 	/**
 	\brief A deque of times that are specifically used to compute the power series approximation for the Cauchy endgame. 
@@ -204,8 +203,16 @@ protected:
 
 	
 	
-
+	
 public:
+
+
+	using Config::Get;
+	using EndgameBase<TrackerType, FinalEGT>::Get;
+
+	using Config::Set;
+	using EndgameBase<TrackerType, FinalEGT>::Set;
+
 	/**
 	\brief Function that clears all samples and times from data members for the Cauchy endgame
 	*/
@@ -277,7 +284,7 @@ public:
 		return std::get<TimeCont<CT> >(cauchy_times_);
 	}
 
-	
+
 	/**
 	\brief Setter for the specific settings in tracking_conifg.hpp under Cauchy.
 	*/
@@ -291,7 +298,7 @@ public:
 	*/
 	const auto& GetCauchySettings() const
 	{
-		return AlgConfig::template Get<config::Cauchy<BRT>>();
+		return this->template Get<config::Cauchy<BRT>>();
 	}
 	
 
@@ -301,7 +308,7 @@ public:
 	                            					const config::Security<BRT>&
 	                            				>& settings )
       : EndgameBase<TrackerType, FinalEGT>(tr, std::get<1>(settings), std::get<2>(settings)), 
-          AlgConfig( std::get<0>(settings) )
+          Config( std::get<0>(settings) )
    	{ }
 
     template< typename... Ts >
@@ -817,8 +824,8 @@ public:
 		while ( (ii < GetCauchySettings().num_needed_for_stabilization) )
 		{	
 			next_time = (ps_times.back() + approximation_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
-																												  // between ps_times.back() and the approximation_time.
 
+																							
 			auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
 			if (tracking_success!=SuccessCode::Success)
 				return tracking_success;
@@ -839,8 +846,7 @@ public:
 		while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()) > GetCauchySettings().cycle_cutoff_time)
 		{
 			next_time = (ps_times.back() + approximation_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
-																												  // between ps_times.back() and the approximation_time.
-
+																									 
 			auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
 
 			if(tracking_success != SuccessCode::Success)

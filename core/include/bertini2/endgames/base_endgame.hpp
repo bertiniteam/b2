@@ -104,7 +104,7 @@ namespace bertini{
 				using BCT = BaseComplexType;
 				using BRT = BaseRealType;
 
-				using AlgConfig = detail::Configured<
+				using Config = detail::Configured<
 					config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
 					config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
 
@@ -115,7 +115,7 @@ namespace bertini{
 
 				const auto & EndgameSettings() const
 				{
-					return AlgConfig::template Get<config::Endgame<BRT>>();
+					return Config::template Get<config::Endgame<BRT>>();
 				}
 				
 				const auto & SecuritySettings() const
@@ -134,7 +134,7 @@ namespace bertini{
 
 				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&>& settings )
 			      : tracker_(std::ref(tr)),
-			      	AlgConfig( std::get<0>(settings),  std::get<1>(settings) )
+			      	Config( std::get<0>(settings),  std::get<1>(settings) )
 			   	{}
 
 			    template< typename... Ts >

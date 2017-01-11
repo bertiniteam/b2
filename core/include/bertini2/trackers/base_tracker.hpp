@@ -190,7 +190,7 @@ namespace bertini{
 			}
 
 
-			FORWARD_GET_CONFIGURED
+			using Config::Get;
 
 
 

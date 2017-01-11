@@ -75,12 +75,13 @@ namespace bertini {
 
 // this one is atrocious.  sorry.
 			// todo: factor out these configs into something traits-based
-			using AlgConfig = detail::Configured<
+			using Config = detail::Configured<
 								config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
 								config::PostProcessing<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
 								config::ZeroDim<typename tracking::TrackerTraits<TrackerType>::BaseComplexType>,
 								config::AutoRetrack<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>;
 
+			using Config::Get;
 
 
 			using Tolerances = config::Tolerances<BaseRealType>;
@@ -323,6 +324,18 @@ namespace bertini {
 				return endgame_;
 			}
 
+
+			template<typename T>
+			const T & GetFromEndgame() const
+			{
+				return endgame_.template Get<T>();
+			} 
+
+			template<typename T>
+			void SetToEndgame(T const& t)
+			{
+				endgame_.Set(t);
+			} 
 
 /// the main functions
 
