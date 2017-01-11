@@ -120,7 +120,6 @@ for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 //Settings for the endgames. 
 
 config::Tolerances<RealT> tolerances;
-tolerances.final_tolerance_multiplier = RealT(100);
 
 config::Cauchy<RealT> cauchy_settings;
 cauchy_settings.fail_safe_maximum_cycle_number = 6;

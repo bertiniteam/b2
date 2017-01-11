@@ -130,7 +130,7 @@ for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 //Settings for the endgames. 
 
 config::Tolerances<RealT> tolerances;
-tolerances.final_tolerance_multiplier = RealT(100);
+
 
 config::PowerSeries power_series_settings;
 power_series_settings.max_cycle_number = 4;
