@@ -47,7 +47,8 @@
 
 #include "bertini2/enable_permuted_arguments.hpp"
 
-#include "bertini2/trackers/tracking_config.hpp"
+#include "bertini2/trackers/config.hpp"
+#include "bertini2/endgames/config.hpp"
 #include "bertini2/endgames/interpolation.hpp"
 
 #include "bertini2/logging.hpp"

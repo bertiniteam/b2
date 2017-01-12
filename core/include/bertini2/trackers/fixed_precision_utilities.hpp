@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include "bertini2/trackers/tracking_config.hpp"
+#include "bertini2/trackers/config.hpp"
 
 
 namespace bertini{ namespace tracking { namespace endgame {

@@ -33,7 +33,7 @@
 #define BERTINI_EXPLICIT_PREDICTORS_HPP
 
 #include "bertini2/trackers/amp_criteria.hpp"
-#include "bertini2/trackers/tracking_config.hpp"
+#include "bertini2/trackers/config.hpp"
 
 #include "bertini2/systems/system.hpp"
 #include "bertini2/mpfr_extensions.hpp"

@@ -17,7 +17,7 @@ tracking_include_HEADERS = \
 	include/bertini2/trackers/predict.hpp \
 	include/bertini2/trackers/step.hpp \
 	include/bertini2/trackers/tracker.hpp \
-	include/bertini2/trackers/tracking_config.hpp
+	include/bertini2/trackers/config.hpp
 
 
 
@@ -54,7 +54,7 @@ trackersinclude_HEADERS = \
 	include/bertini2/trackers/predict.hpp \
 	include/bertini2/trackers/step.hpp \
 	include/bertini2/trackers/tracker.hpp \
-	include/bertini2/trackers/tracking_config.hpp 
+	include/bertini2/trackers/config.hpp 
 
 
 

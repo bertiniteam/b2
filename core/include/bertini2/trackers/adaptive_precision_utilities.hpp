@@ -33,7 +33,7 @@ These definitions are provided for use in tracking and endgames.  This allows a 
 
 #pragma once
 
-#include "bertini2/trackers/tracking_config.hpp"
+#include "bertini2/trackers/config.hpp"
 
 
 namespace bertini{ namespace tracking { namespace endgame {

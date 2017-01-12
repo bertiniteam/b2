@@ -15,7 +15,8 @@ endgames_include_HEADERS = \
 	include/bertini2/endgames/fixed_prec_endgame.hpp \
 	include/bertini2/endgames/interpolation.hpp \
 	include/bertini2/endgames/observers.hpp \
-	include/bertini2/endgames/powerseries.hpp 
+	include/bertini2/endgames/powerseries.hpp \
+	include/bertini2/endgames/config.hpp 
 
 
 
