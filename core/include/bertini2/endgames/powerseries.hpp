@@ -173,16 +173,16 @@ File: test/endgames/fixed_double_powerseries_test.cpp
 FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 */
 
-template<typename TrackerType, typename FinalPSEG, typename... UsedNumTs> 
+template<typename TrackerType, typename FinalEGT, typename... UsedNumTs> 
 class PowerSeriesEndgame : 
-	public EndgameBase<TrackerType, FinalPSEG>,
+	public EndgameBase<TrackerType, FinalEGT>,
 	public detail::Configured<config::PowerSeries>
 {
 
 	// convert the base endgame into the derived type.
-	const FinalPSEG& AsDerived() const
+	const FinalEGT& AsDerived() const
 	{
-		return static_cast<const FinalPSEG&>(*this);
+		return static_cast<const FinalEGT&>(*this);
 	}
 
 protected:
@@ -221,6 +221,12 @@ protected:
 	mutable Vec<BCT> rand_vector;
 
 public:
+
+	using Config::Get;
+	using EndgameBase<TrackerType, FinalEGT>::Get;
+
+	using Config::Set;
+	using EndgameBase<TrackerType, FinalEGT>::Set;
 
 	auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
 
@@ -286,7 +292,7 @@ public:
 	            					const config::Endgame<BRT>&, 
 	            					const config::Security<BRT>&
 	            					>& settings )
-      : EndgameBase<TrackerType, FinalPSEG>(tr, std::get<1>(settings), std::get<2>(settings)), 
+      : EndgameBase<TrackerType, FinalEGT>(tr, std::get<1>(settings), std::get<2>(settings)), 
         Config( std::get<0>(settings) )
    	{}
 

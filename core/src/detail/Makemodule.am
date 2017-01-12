@@ -1,10 +1,13 @@
 #this is src/detail/Makemodule.am
 
 detail_header_files = \
+	include/bertini2/detail/configured.hpp \
 	include/bertini2/detail/events.hpp \
 	include/bertini2/detail/pool.hpp \
 	include/bertini2/detail/visitable.hpp \
-	include/bertini2/detail/visitor.hpp
+	include/bertini2/detail/visitor.hpp \
+	include/bertini2/detail/is_template_parameter.hpp
+
 
 detail = $(detail_header_files)
 

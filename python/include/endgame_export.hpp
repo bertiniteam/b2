@@ -140,8 +140,8 @@ namespace bertini{
 			void visit(PyClass& cl) const
 			{
 				cl
-				.def_readwrite("level", &Security<NumT>::level,"Turns on or off truncation of paths going to infinity during the endgame.  0 is off, 1 is on.")
-				.def_readwrite("max_norm", &Security<NumT>::max_norm,"If on, the norm of which to truncate a path.")
+				.def_readwrite("level", &tracking::config::Security<NumT>::level,"Turns on or off truncation of paths going to infinity during the endgame.  0 is off, 1 is on.")
+				.def_readwrite("max_norm", &tracking::config::Security<NumT>::max_norm,"If on, the norm at which to truncate a path.")
 				;
 			}
 

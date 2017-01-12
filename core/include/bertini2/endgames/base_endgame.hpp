@@ -112,6 +112,12 @@ namespace bertini{
 				mutable std::tuple<Vec<dbl>, Vec<mpfr> > final_approximation_at_origin_; 
 				mutable unsigned int cycle_number_ = 0; 
 
+				/**
+				\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
+				*/
+				std::reference_wrapper<const TrackerType> tracker_;
+
+			public:
 
 				const auto & EndgameSettings() const
 				{
@@ -122,15 +128,6 @@ namespace bertini{
 				{
 					return this->template Get<config::Security<BRT>>();
 				}
-				
-
-				/**
-				\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
-				*/
-				std::reference_wrapper<const TrackerType> tracker_;
-
-			public:
-
 
 				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&>& settings )
 			      : tracker_(std::ref(tr)),
