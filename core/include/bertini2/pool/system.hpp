@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//system_pool.hpp is free software: you can redistribute it and/or modify
+//include/bertini2/pool/system.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//system_pool.hpp is distributed in the hope that it will be useful,
+//include/bertini2/pool/system.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with system_pool.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with include/bertini2/pool/system.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2016 by Bertini2 Development Team
 //
@@ -22,11 +22,11 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 
-// system_pool.hpp:  provides the bertini::system_pool class.
+// include/bertini2/pool/system.hpp:  provides the bertini::SystemPool class.
 
 
 /**
-\file system_pool.hpp 
+\file include/bertini2/pool/system.hpp 
 */
 
 

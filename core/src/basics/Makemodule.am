@@ -8,7 +8,6 @@ basics_header_files = \
 	include/bertini2/num_traits.hpp \
 	include/bertini2/classic.hpp \
 	include/bertini2/eigen_extensions.hpp \
-	include/bertini2/enable_permuted_arguments.hpp \
 	include/bertini2/patch.hpp \
 	include/bertini2/slice.hpp \
 	include/bertini2/logging.hpp \
