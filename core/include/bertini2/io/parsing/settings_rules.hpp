@@ -150,7 +150,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -258,7 +258,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -374,7 +374,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -521,7 +521,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -675,7 +675,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -784,7 +784,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -910,7 +910,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -1015,7 +1015,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
@@ -1129,7 +1129,7 @@ namespace bertini {
 					qi::on_error<qi::fail>
 					( root_rule_ ,
 					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
+					 val("config parser could not complete parsing. Expecting ")<<
 					 _4<<
 					 val(" here: ")<<
 					 construct<std::string>(_3,_2)<<
