@@ -26,10 +26,10 @@
 // individual authors of this file include:
 // dani brake, university of notre dame
 
-#include "bertini2/systems/precon.hpp"
+#include "bertini2/system/precon.hpp"
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
 #include "bertini2/endgames/endgame.hpp"
-#include "bertini2/systems/start_system.hpp"
+#include "bertini2/system/start_system.hpp"
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(zero_dim)

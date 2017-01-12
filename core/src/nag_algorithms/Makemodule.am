@@ -1,0 +1,21 @@
+#this is src/nag_algorithms/Makemodule.am
+
+nag_algorithms_header_files = \
+	include/bertini2/nag_algorithms/midpath_check.hpp \
+	include/bertini2/nag_algorithms/sharpen.hpp \
+	include/bertini2/nag_algorithms/zero_dim_solve.hpp 
+
+
+nag_algorithms = $(nag_algorithms_header_files)
+
+
+nag_algorithms_includedir = $(includedir)/bertini2/nag_algorithms
+
+nag_algorithms_include_HEADERS = \
+	$(nag_algorithms_header_files)
+
+nag_algorithms_common_includedir = $(includedir)/bertini2/nag_algorithms/common
+
+nag_algorithms_common_include_HEADERS = \
+	include/bertini2/nag_algorithms/common/config.hpp \
+	include/bertini2/nag_algorithms/common/policies.hpp

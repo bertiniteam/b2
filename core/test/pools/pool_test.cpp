@@ -43,7 +43,7 @@ using sec_level = boost::log::trivial::severity_level;
 using LoggingInit = bertini::LoggingInit;
 
 
-#include "bertini2/system_pool.hpp"
+#include "bertini2/pool/system.hpp"
 
 
 BOOST_GLOBAL_FIXTURE( LoggingInit );

@@ -47,9 +47,9 @@
 #include <fstream>
 
 #include "bertini2/function_tree.hpp"
-#include "bertini2/systems/system.hpp"
+#include "bertini2/system/system.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
-#include "bertini2/systems/precon.hpp"
+#include "bertini2/system/precon.hpp"
 
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
