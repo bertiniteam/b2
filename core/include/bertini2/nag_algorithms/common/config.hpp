@@ -22,6 +22,7 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 // Tim Hodges, Colorado State University
+// jeb collins, west texas a&m
  
 #pragma once
 
@@ -41,18 +42,22 @@ struct Tolerances
 	T newton_during_endgame = T(1)/T(1000000); //E.4.2
 
 	T final_tolerance = T(1)/T(100000000000); //E.5.1
-	T final_tolerance_multiplier = T(10); // This multiplier is used to cluster or de-cluster points at the target system. 
 
 	T path_truncation_threshold = T(100000); //E.4.13
 };
-			
+		
+template<typename T>	
+struct MidPath
+{
+	T same_point_tolerance = T(1)/T(100000);
+};
 
-			template<typename T>
-			struct AutoRetrack
-			{
-				T midpath_decrease_tolerance_factor = T(1)/T(2);
-				T boundary_near_tol = T(1)/T(100000);
-			};
+
+template<typename T>
+struct AutoRetrack
+{
+	T midpath_decrease_tolerance_factor = T(1)/T(2);
+};
 
 
 template<typename T>
@@ -62,7 +67,7 @@ struct Sharpening
 	
 	std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
 
-	T function_residual_tolerance = Eigen::NumTraits<T>::dummy_precision(); ///< A polynomial (or any function, really) evaluated at a point is considered to be 0 if the magnitude is smaller than this value.  See also RatioTolerance
+	T function_residual_tolerance = Eigen::NumTraits<T>::dummy_precision(); ///< A polynomial (or any function, really) evaluated at a point is considered to be 0 if the magnitude is smaller than this value.  See also RatioTolerance.  **Note that this value depends on the current default precision when this scruct is constructed.**
 
 	T ratio_tolerance = T(99)/T(100); ///<  A computed value is considered to be zero if the ratio of two different approximations is smaller than this value.  See also FunctionTolerance
 };
@@ -87,16 +92,7 @@ struct PostProcessing{
 
 	T endpoint_finite_threshold = T(1)/T(100000);  ///< The threshold on norm of endpoints being considered infinite.  There is another setting in Tolerances, `path_truncation_threshold`, which tells the path tracker to die if exceeded.  Another related setting is in Security, `max_norm` -- the endgame dies if the norm of the computed approximation exceeds this twice.
 
-	T final_tol_multiplier{10}; ///< Multiply this value by FinalTol to yield the tolerance used to numerically determine if two endpoints should be considered the same point.
+	T same_point_tolerance {T(1)/T(10000000000)}; ///< The tolerance for whether two points are the same.  This should be *lower* than the accuracy to which you request your solutions be computed.  Perhaps by at least two orders of magnitude, but the default value is a factor of 10 less stringent.  This also depends on the norm being used to tell whether two points are the same, and the norm used for the convergence condition to terminate tracking.
 };
 
-
-struct ZeroDim
-{
-	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
-};
-
-
-		}
-	}
-}
+} } } // namespaces

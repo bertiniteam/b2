@@ -619,7 +619,6 @@ BOOST_AUTO_TEST_CASE(all_config_settings_mp)
 	BOOST_CHECK(newt.max_num_newton_iterations == 7);
 	BOOST_CHECK(newt.min_num_newton_iterations == 1);
 	BOOST_CHECK(abs(tols.final_tolerance - mpfr_float("1.845e-7")) < tol);
-	BOOST_CHECK(abs(tols.final_tolerance_multiplier - mpfr_float("10")) < tol);
 	BOOST_CHECK(abs(end.sample_factor - mpfr_float("0.647")) < tol);
 	BOOST_CHECK(end.num_sample_points == 7);
 	BOOST_CHECK(abs(end.min_track_time - mpfr_float("1e-100")) < tol);
@@ -650,7 +649,6 @@ BOOST_AUTO_TEST_CASE(all_config_settings_d)
 	BOOST_CHECK(newt.max_num_newton_iterations == 7);
 	BOOST_CHECK(newt.min_num_newton_iterations == 1);
 	BOOST_CHECK(fabs(tols.final_tolerance - 1.845e-7) < tol);
-	BOOST_CHECK(fabs(tols.final_tolerance_multiplier - 10) < tol);
 	BOOST_CHECK(fabs(end.sample_factor - 0.647) < tol);
 	BOOST_CHECK(end.num_sample_points == 7);
 	BOOST_CHECK(fabs(end.min_track_time - 1e-100) < tol);

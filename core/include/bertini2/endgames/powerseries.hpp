@@ -130,7 +130,7 @@ for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 //Settings for the endgames. 
 
 config::Tolerances<RealT> tolerances;
-tolerances.final_tolerance_multiplier = RealT(100);
+
 
 config::PowerSeries power_series_settings;
 power_series_settings.max_cycle_number = 4;
@@ -173,14 +173,16 @@ File: test/endgames/fixed_double_powerseries_test.cpp
 FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 */
 
-template<typename TrackerType, typename FinalPSEG, typename... UsedNumTs> 
-class PowerSeriesEndgame : public EndgameBase<TrackerType, FinalPSEG>
+template<typename TrackerType, typename FinalEGT, typename... UsedNumTs> 
+class PowerSeriesEndgame : 
+	public EndgameBase<TrackerType, FinalEGT>,
+	public detail::Configured<config::PowerSeries>
 {
 
 	// convert the base endgame into the derived type.
-	const FinalPSEG& AsDerived() const
+	const FinalEGT& AsDerived() const
 	{
-		return static_cast<const FinalPSEG&>(*this);
+		return static_cast<const FinalEGT&>(*this);
 	}
 
 protected:
@@ -190,16 +192,13 @@ protected:
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
-				
+	
+	using Config = detail::Configured<config::PowerSeries>;
+
 	/**
 	\brief State variable representing a computed upper bound on the cycle number.
 	*/
 	mutable unsigned upper_bound_on_cycle_number_;
-
-	/**
-	\brief Settings that are specific to the Power series endgame. 
-	*/	
-	config::PowerSeries power_series_settings_; 
 
 	/**
 	\brief Holds the time values for different space values used in the Power series endgame. 
@@ -223,11 +222,17 @@ protected:
 
 public:
 
+	using Config::Get;
+	using EndgameBase<TrackerType, FinalEGT>::Get;
+
+	using Config::Set;
+	using EndgameBase<TrackerType, FinalEGT>::Set;
+
 	auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
 
 	const config::PowerSeries& PowerSeriesSettings() const
 	{
-		return power_series_settings_;
+		return Config::template Get<config::PowerSeries>();
 	}
 
 	/**
@@ -275,7 +280,10 @@ public:
 	/**
 	\brief Setter for the specific settings in tracking_conifg.hpp under PowerSeries.
 	*/	
-	void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings){power_series_settings_ = new_power_series_settings;}
+	void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings)
+	{
+		this->template Set(new_power_series_settings);
+	}
 
 
 	explicit PowerSeriesEndgame(TrackerType const& tr, 
@@ -284,8 +292,8 @@ public:
 	            					const config::Endgame<BRT>&, 
 	            					const config::Security<BRT>&
 	            					>& settings )
-      : EndgameBase<TrackerType, FinalPSEG>(tr, std::get<1>(settings), std::get<2>(settings)), 
-          power_series_settings_( std::get<0>(settings) )
+      : EndgameBase<TrackerType, FinalEGT>(tr, std::get<1>(settings), std::get<2>(settings)), 
+        Config( std::get<0>(settings) )
    	{}
 
     template< typename... Ts >
@@ -349,9 +357,9 @@ public:
 			using std::max;
 			//casting issues between auto and unsigned integer. TODO: Try to stream line this.
 			unsigned int upper_bound;
-			RT upper_bound_before_casting = round(floor(estimate + RT(.5))*power_series_settings_.cycle_number_amplification);
+			RT upper_bound_before_casting = round(floor(estimate + RT(.5))*PowerSeriesSettings().cycle_number_amplification);
 			upper_bound = unsigned (upper_bound_before_casting);
-			upper_bound_on_cycle_number_ = max(upper_bound,power_series_settings_.max_cycle_number);
+			upper_bound_on_cycle_number_ = max(upper_bound,PowerSeriesSettings().max_cycle_number);
 		}
 
 		return upper_bound_on_cycle_number_;

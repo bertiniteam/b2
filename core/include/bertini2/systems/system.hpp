@@ -107,7 +107,7 @@ namespace bertini {
 		/** 
 		\brief The assignment operator
 		*/
-		System& operator=(System other);
+		System& operator=(const System & other);
 
 		/**
 		\brief The move assignment operator

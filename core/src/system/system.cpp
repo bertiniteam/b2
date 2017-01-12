@@ -113,9 +113,9 @@ namespace bertini
 	}
 
 	// the assignment operator
-	System& System::operator=(System other)
+	System& System::operator=(const System & other)
 	{
-		swap(*this, other);
+		*this = System(other);
 		return *this;
 	}
 

@@ -33,7 +33,7 @@
 
 #include "bertini2/io/parsing/qi_files.hpp"
 #include "bertini2/trackers/tracking_config.hpp"
-#include "bertini2/nag_algorithms/config.hpp"
+#include "bertini2/nag_algorithms/common/config.hpp"
 
 
 namespace bertini {

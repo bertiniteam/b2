@@ -40,6 +40,7 @@ namespace bertini{
 		{
 			using TrackerT = typename EndgameT::TrackerType;
 			using BCT = typename TrackerTraits<TrackerT>::BaseComplexType;
+			using BRT = typename TrackerTraits<TrackerT>::BaseRealType;
 
 			cl
 			.def("cycle_number", get_cycle_number_)
@@ -47,8 +48,8 @@ namespace bertini{
 			.def("get_endgame_settings",&EndgameT::EndgameSettings,return_internal_reference<>())
 			.def("get_security_settings",&EndgameT::SecuritySettings,return_internal_reference<>())
 
-			.def("set_endgame_settings",&EndgameT::SetEndgameSettings)
-			.def("set_security_settings",&EndgameT::SetSecuritySettings)
+			.def("set_endgame_settings",&EndgameT::template Set<tracking::config::Endgame<BRT>>)
+			.def("set_security_settings",&EndgameT::template Set<tracking::config::Security<BRT>>)
 
 			.def("get_tracker", &EndgameT::GetTracker, return_internal_reference<>(),"Get the tracker used in this endgame.  This is the same tracker as you feed the endgame object when you make it.")
 			.def("get_system",  &EndgameT::GetSystem,  return_internal_reference<>(),"Get the tracked system")
