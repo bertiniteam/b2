@@ -2,7 +2,7 @@
 
 pool_header_files = \
 	include/bertini2/pool/pool.hpp \
-	include/bertini2/pool/system.hpp \
+	include/bertini2/pool/system.hpp 
 
 
 pool = $(pool_header_files)

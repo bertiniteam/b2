@@ -95,4 +95,17 @@ struct PostProcessing{
 	T same_point_tolerance {T(1)/T(10000000000)}; ///< The tolerance for whether two points are the same.  This should be *lower* than the accuracy to which you request your solutions be computed.  Perhaps by at least two orders of magnitude, but the default value is a factor of 10 less stringent.  This also depends on the norm being used to tell whether two points are the same, and the norm used for the convergence condition to terminate tracking.
 };
 
+template<typename ComplexT>
+struct ZeroDim
+{
+	unsigned initial_ambient_precision = DoublePrecision();
+	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
+
+	ComplexT start_time = ComplexT(1);
+	ComplexT endgame_boundary = ComplexT(1)/ComplexT(10);
+	ComplexT target_time = ComplexT(0);
+
+	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
+};
+
 } } } // namespaces

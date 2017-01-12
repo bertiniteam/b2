@@ -83,6 +83,8 @@ include src/tracking/Makemodule.am
 include src/endgames/Makemodule.am
 include src/detail/Makemodule.am
 include src/io/Makemodule.am
+include src/nag_algorithms/Makemodule.am
+include src/pool/Makemodule.am
 
 ###
 #  and finally test suites, built as extras
