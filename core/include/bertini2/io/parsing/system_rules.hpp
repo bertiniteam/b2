@@ -32,7 +32,7 @@
 
 
 #include "bertini2/io/parsing/qi_files.hpp"
-#include "bertini2/systems/system.hpp"
+#include "bertini2/system/system.hpp"
 #include "bertini2/io/parsing/function_rules.hpp"
 
 

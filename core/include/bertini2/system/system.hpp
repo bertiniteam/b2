@@ -49,7 +49,7 @@
 
 
 #include "bertini2/function_tree.hpp"
-#include "bertini2/patch.hpp"
+#include "bertini2/system/patch.hpp"
 
 #include "bertini2/limbo.hpp"
 

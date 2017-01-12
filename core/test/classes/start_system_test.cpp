@@ -27,7 +27,7 @@
 
 
 
-#include "bertini2/systems/start_system.hpp"
+#include "bertini2/system/start_system.hpp"
 
 using System = bertini::System;
 

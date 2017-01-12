@@ -34,7 +34,7 @@
 #include "bertini2/mpfr_extensions.hpp"
 #include "bertini2/eigen_extensions.hpp"
 
-#include "bertini2/systems/system.hpp"
+#include "bertini2/system/system.hpp"
 
 namespace bertini
 {

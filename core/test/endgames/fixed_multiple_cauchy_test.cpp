@@ -27,7 +27,7 @@
 #include <iostream>
 #include <boost/test/unit_test.hpp>
 
-#include "bertini2/systems/start_system.hpp"
+#include "bertini2/system/start_system.hpp"
 #include "bertini2/num_traits.hpp"
 
 #include "bertini2/endgames/fixed_prec_cauchy.hpp"

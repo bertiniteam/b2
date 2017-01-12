@@ -43,7 +43,7 @@
 #include "bertini2/mpfr_complex.hpp"
 #include "bertini2/limbo.hpp"
 
-#include "bertini2/systems/system.hpp"
+#include "bertini2/system/system.hpp"
 
 #include "bertini2/detail/enable_permuted_arguments.hpp"
 

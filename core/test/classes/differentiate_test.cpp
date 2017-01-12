@@ -38,7 +38,7 @@
 #include <vector>
 
 #include "bertini2/function_tree.hpp"
-#include "bertini2/systems/system.hpp"
+#include "bertini2/system/system.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
 
 #include <boost/spirit/include/qi.hpp>
