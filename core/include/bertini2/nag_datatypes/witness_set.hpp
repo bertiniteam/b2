@@ -40,17 +40,43 @@ namespace bertini {
 
 	namespace nag_datatype {
 
+		template <typename T> 
+		using PointCont = std::deque<T>;
 
-		template<typename NumT, template<typename> class ObjManagementP = policy::CopyGiven >
+		using IndexT = unsigned long long;
+
+		/**
+		\brief The main way to represent a positive dimensional component in numerical algebraic geometry.
+	
+
+		A witness set consists of three properties:
+	
+		1. Points
+		2. A generic linear slice
+		3. The system.  
+
+		The witness set captures two of the most important properties to know about a component of an algebraic variety: 
+
+		 * degree
+		 * dimension
+
+		 The degree is represented in terms of points.  The number of points in the witness set is the degree of the component.
+
+		 The dimension is represented in terms of either the slice, or the system itself.  The number of individual linears in the total slice should be equal to the difference of the number of variables in the system, minus the number of functions.  That is, the system's underdeterminedness is the dimension.  This assumes that randomization has been done on incomplete intersections -- precisely those systems for which this equality fails.
+
+		 \see Randomize
+		*/
+		template<typename NumT, typename SystemT = System, template<typename> class ObjManagementP = policy::CopyGiven >
 		class WitnessSet
 		{
-			using PointP = ObjManagementP<std::deque<Vec<NumT>>>;
+			using PointP = ObjManagementP<Vec<NumT>>;
 			using SliceP = ObjManagementP<LinearSlice>;
-			using SystemP = ObjManagementP<System>;
+			using SystemP = ObjManagementP<SystemT>;
 
+			using PointContT = PointCont<typename PointP::HeldT>;
 
-			typename PointP::HeldT points_;
-			typename SliceP::HeldT linear_slice_;
+			PointContT points_;
+			typename SliceP::HeldT slice_;
 			typename SystemP::HeldT system_;
 
 
@@ -58,38 +84,85 @@ public:
 
 			WitnessSet(){}
 
-			WitnessSet(std::deque<Vec<NumT>> && pts, LinearSlice && slc, System && sys) :
-				points_(PointP::AtSet(pts)),
-				linear_slice_(SliceP::AtSet(slc)),
+			WitnessSet(PointContT const& pts, LinearSlice const& slc, System const& sys) :
+				points_(pts),
+				slice_(SliceP::AtSet(slc)),
 				system_(SystemP::AtSet(sys))
 			{}
 
 			void SetSlice(LinearSlice const& s)
 			{
-				linear_slice_ = ObjManagementP<LinearSlice>::AtSet(s);
+				slice_ = SliceP::AtSet(s);
 			}
 
 			const LinearSlice & GetSlice() const
 			{
-				return ObjManagementP<LinearSlice>::AtGet(linear_slice_);
+				return SliceP::AtGet(slice_);
 			}
 
-
+			inline
 			void AddPoint(Vec<NumT> const& p)
 			{
-				points_.push_back(p);
+				points_.push_back(PointP::AtSet(p));
+			}
+
+			void SetPoints(PointContT && pts)
+			{
+				points_ = PointP::AtSet(pts);
+			}
+
+			inline
+			const PointContT& GetPoints() const
+			{
+				return points_;
 			}
 
 
+			const Vec<NumT>& GetPoint(IndexT ind) const
+			{
+				if (ind > Degree())
+				{
+					std::stringstream ss;
+					ss << "asking for point of index " << ind << ", outside range [0,"<<Degree()-1 << "].";
+					throw std::runtime_error(ss.str());
+				}
+
+				return points_[ind];
+			}
+
+			inline
 			auto Degree() const
 			{
 				return points_.size();
 			}
 
+			inline
 			auto Dimension() const
 			{
-				return linear_slice_.Dimension();
+				return slice_.Dimension();
 			}
+
+			void SetSystem(SystemT && sys)
+			{
+				system_ = SystemP::AtSet(sys);
+			}
+
+			inline
+			const SystemT& GetSystem() const
+			{
+				return system_;
+			}
+
+
+			/**
+			\brief Check whether the witness set makes sense, in terms of system size, number of variables, and linear slice size.
+			*/
+			bool IsConsistent() const
+			{
+				return (system_.NumVariables() - system_.NumFunctions()) == (slice_.Dimension());
+			}
+
+
 		};
 	}
 }
