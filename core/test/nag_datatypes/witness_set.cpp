@@ -31,10 +31,40 @@
 
 BOOST_AUTO_TEST_SUITE(witness_set)
 
+BOOST_AUTO_TEST_SUITE(default_storage_policy)
 BOOST_AUTO_TEST_CASE(make_a_witness_set_copied)
 {
 	bertini::nag_datatype::WitnessSet<bertini::complex> w;
 }
+
+
+
+BOOST_AUTO_TEST_CASE(add_slice_to_witness_set)
+{
+	bertini::nag_datatype::WitnessSet<bertini::complex> w;
+
+	bertini::LinearSlice ell;
+
+	w.SetSlice(ell);
+
+	BOOST_CHECK_EQUAL(w.Dimension(),0);
+	BOOST_CHECK_EQUAL(w.Degree(),0);
+}
+
+
+BOOST_AUTO_TEST_CASE(add_point_to_witness_set)
+{
+	bertini::nag_datatype::WitnessSet<bertini::complex> w;
+
+	bertini::Vec<bertini::complex> p;
+
+	w.AddPoint(p);
+
+	BOOST_CHECK_EQUAL(w.Degree(), 1);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
 
 
 

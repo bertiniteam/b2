@@ -44,17 +44,32 @@ namespace bertini {
 		template<typename NumT, template<typename> class ObjManagementP = policy::CopyGiven >
 		class WitnessSet
 		{
-			typename ObjManagementP<std::deque<Vec<NumT>>>::HeldT points_;
-			typename ObjManagementP<LinearSlice>::HeldT linear_slice_;
-			typename ObjManagementP<System>::HeldT system_;
+			using PointP = ObjManagementP<std::deque<Vec<NumT>>>;
+			using SliceP = ObjManagementP<LinearSlice>;
+			using SystemP = ObjManagementP<System>;
 
 
-			void Slice(LinearSlice const& s)
+			typename PointP::HeldT points_;
+			typename SliceP::HeldT linear_slice_;
+			typename SystemP::HeldT system_;
+
+
+public:
+
+			WitnessSet(){}
+
+			WitnessSet(std::deque<Vec<NumT>> && pts, LinearSlice && slc, System && sys) :
+				points_(PointP::AtSet(pts)),
+				linear_slice_(SliceP::AtSet(slc)),
+				system_(SystemP::AtSet(sys))
+			{}
+
+			void SetSlice(LinearSlice const& s)
 			{
 				linear_slice_ = ObjManagementP<LinearSlice>::AtSet(s);
 			}
 
-			const LinearSlice & Slice()
+			const LinearSlice & GetSlice() const
 			{
 				return ObjManagementP<LinearSlice>::AtGet(linear_slice_);
 			}
@@ -66,6 +81,15 @@ namespace bertini {
 			}
 
 
+			auto Degree() const
+			{
+				return points_.size();
+			}
+
+			auto Dimension() const
+			{
+				return linear_slice_.Dimension();
+			}
 		};
 	}
 }
