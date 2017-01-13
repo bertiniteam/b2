@@ -1,12 +1,17 @@
 #this is src/system/Makemodule.am
 
 system_header_files = \
-	include/bertini2/system/system.hpp include/bertini2/system_parsing.hpp \
+	include/bertini2/system.hpp \
+	include/bertini2/system/system.hpp \
 	include/bertini2/system/start_system.hpp \
 	include/bertini2/system/patch.hpp \
-	include/bertini2/system/slice.hpp 
+	include/bertini2/system/slice.hpp \
+	include/bertini2/system/precon.hpp 
 
-system_source_files = src/system/start_system.cpp src/system/system.cpp
+system_source_files = \
+	src/system/start_system.cpp \
+	src/system/system.cpp \
+	src/system/precon.cpp
 
 system = $(system_header_files) $(system_source_files)
 
