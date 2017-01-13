@@ -71,11 +71,6 @@ BOOST_AUTO_TEST_CASE(add_point_to_witness_set)
 // check whether can construct a witness set from a set of points, a slice, and a system
 BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
 {
-	
-
-	
-
-
 	auto sys = bertini::system::Precon::GriewankOsborn();
 
 	bertini::Vec<bertini::complex> p(sys.NumVariables());
@@ -102,15 +97,28 @@ BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
 
 
 
-BOOST_AUTO_TEST_CASE(some_other_thing)
+BOOST_AUTO_TEST_CASE(sphere_sys_consistent_when_sliced_w_dim2_slice)
 {
-	bertini::nag_datatype::WitnessSet<bertini::complex> w;
+	auto sys = bertini::system::Precon::Sphere();
 
-	bertini::Vec<bertini::complex> p;
+	bertini::Vec<bertini::complex> p(sys.NumVariables());
+	bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex>> points;
+	for (unsigned ii = 0; ii < 2; ++ii)
+		points.push_back(p);
 
-	w.AddPoint(p);
 
-	BOOST_CHECK_EQUAL(w.Degree(), 1);
+	auto& vars = sys.Variables();
+
+	auto slice = bertini::LinearSlice::RandomComplex(vars, 2);
+
+
+	bertini::nag_datatype::WitnessSet<bertini::complex> w{points, slice, sys};
+
+
+	BOOST_CHECK_EQUAL(w.Degree(), 2);
+	BOOST_CHECK_EQUAL(w.Dimension(), 2);
+
+	BOOST_CHECK(w.IsConsistent());
 }
 
 

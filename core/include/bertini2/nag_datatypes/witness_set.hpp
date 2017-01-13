@@ -108,7 +108,7 @@ public:
 
 			void SetPoints(PointContT && pts)
 			{
-				points_ = PointP::AtSet(pts);
+				points_ = pts;
 			}
 
 			inline
