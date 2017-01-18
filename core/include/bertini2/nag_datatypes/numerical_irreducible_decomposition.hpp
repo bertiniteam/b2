@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "bertini2/nag_datatype/witness_set.hpp"
+#include "bertini2/nag_datatypes/witness_set.hpp"
 
 namespace bertini {
 
@@ -40,7 +40,7 @@ namespace bertini {
 		\brief The NID data type for Bertini2.
 
 		*/
-		template<typename ComplexT, template SystemT = System, template<typename> class ObjManagementP = policy::Copy >
+		template<typename ComplexT, typename SystemT = System, template<typename> class ObjManagementP = policy::Copy >
 		class NumericalIrreducibleDecomposition 
 		{
 			using WS = WitnessSet<ComplexT, SystemT, ObjManagementP>;
