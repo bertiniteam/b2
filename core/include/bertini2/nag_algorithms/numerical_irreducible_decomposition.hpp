@@ -30,6 +30,9 @@
 
 #pragma once
 
+#include "bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp"
+
+
 namespace bertini {
 
 	namespace algorithm {
@@ -40,7 +43,7 @@ namespace bertini {
 		{
 
 			static 
-			nag_datatype::NumericalIrreducibleDecomposition RegenerativeCascade()
+			nag_datatype::NumericalIrreducibleDecomposition<ComplexT> RegenerativeCascade()
 			{
 
 			}
@@ -48,6 +51,6 @@ namespace bertini {
 
 
 			
-		}
+		};
 	}
 }

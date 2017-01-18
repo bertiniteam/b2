@@ -32,7 +32,7 @@
 #include "bertini2/system/start_system.hpp"
 #include <boost/test/unit_test.hpp>
 
-BOOST_AUTO_TEST_SUITE(nid)
+BOOST_AUTO_TEST_SUITE(trace)
 
 
 	BOOST_AUTO_TEST_CASE(basics1)
