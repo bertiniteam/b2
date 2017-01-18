@@ -45,44 +45,27 @@ Creates the Griewank-Osborn system.
 From the returned system, you can unpack the variables, etc.
 */
 static
-System GriewankOsborn()
-{
-	using Var = std::shared_ptr<node::Variable>;
-
-	bertini::System griewank_osborn_sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
-	VariableGroup vars{x,y};
-	griewank_osborn_sys.AddVariableGroup(vars); 
-
-	griewank_osborn_sys.AddFunction((mpq_rational(29,16))*pow(x,3)-2*x*y);
-	griewank_osborn_sys.AddFunction((y - pow(x,2)));
-
-	return griewank_osborn_sys;
-}
+System GriewankOsborn();
 			
 			
-			/**
-			 Creates system with crossed paths at t = 1/3 and t = 2/3.
-			 
-			 From the returned system, you can unpack the variables, etc.
-			 */
-			static
-			System CrossedPaths()
-			{
-				using Var = std::shared_ptr<node::Variable>;
-				
-				bertini::System crossed_paths_sys;
-				Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
-				auto two = MakeInteger(2);
-				auto half = MakeRational("1/2");
-				VariableGroup vars{x,y};
-				crossed_paths_sys.AddVariableGroup(vars);
-				
-				crossed_paths_sys.AddFunction(pow(x,3)+ two);
-				crossed_paths_sys.AddFunction(pow(y,2) + half);
-				
-				return crossed_paths_sys;
-			}
+/**
+ Creates system with crossed paths at t = 1/3 and t = 2/3.
+ 
+ From the returned system, you can unpack the variables, etc.
+ */
+static
+System CrossedPaths();
+
+
+
+/**
+\brief Constructs a system describing the 2-sphere, in variables x, y, z.
+
+System has one affine variable group: x, y, z;
+One function: x^2 + y^2 + z^2 - 1;
+*/
+static 
+System Sphere();
 
 
 };

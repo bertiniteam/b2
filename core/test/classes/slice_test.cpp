@@ -36,7 +36,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "bertini2/slice.hpp"
+#include "bertini2/system/slice.hpp"
 
 BOOST_AUTO_TEST_SUITE(linear_slicing)
 

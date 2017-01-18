@@ -171,7 +171,40 @@ namespace bertini {
 		}
 
 
-	private:
+
+		/** 
+		\brief the default constructor for linear slices. 
+
+		Make an empty linear slice. 
+		*/
+		LinearSlice() : 
+			sliced_vars_(), 
+			precision_(DefaultPrecision()), 
+			num_dims_sliced_(0), 
+			coefficients_highest_precision_(0, 0), 
+			is_homogeneous_(false), 
+			constants_highest_precision_(static_cast<unsigned>(0))
+		{ 
+			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
+			std::get<Mat<mpfr> >(coefficients_working_).resize(Dimension(), NumVariables());
+
+			std::get<Vec<dbl> > (constants_working_).resize(Dimension());
+			std::get<Vec<mpfr> >(constants_working_).resize(Dimension());
+		}
+
+		// the constructor for linear slices.
+		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : sliced_vars_(v), precision_(DefaultPrecision()), num_dims_sliced_(dim), coefficients_highest_precision_(dim, v.size()), is_homogeneous_(homogeneous), constants_highest_precision_(dim)
+		{ 
+			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
+			std::get<Mat<mpfr> >(coefficients_working_).resize(Dimension(), NumVariables());
+
+			if (!homogeneous)
+			{
+				std::get<Vec<dbl> > (constants_working_).resize(Dimension());
+				std::get<Vec<mpfr> >(constants_working_).resize(Dimension());
+			}
+		}
+
 
 		// factory function for generating slices
 		static
@@ -247,20 +280,8 @@ namespace bertini {
 			return s;
 		}
 
-
-		// the constructor for linear slices.  private because want to use the static public methods to construct them.
-		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : sliced_vars_(v), precision_(DefaultPrecision()), num_dims_sliced_(dim), coefficients_highest_precision_(dim, v.size()), is_homogeneous_(homogeneous), constants_highest_precision_(dim)
-		{ 
-			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
-			std::get<Mat<mpfr> >(coefficients_working_).resize(Dimension(), NumVariables());
-
-			if (!homogeneous)
-			{
-				std::get<Vec<dbl> > (constants_working_).resize(Dimension());
-				std::get<Vec<mpfr> >(constants_working_).resize(Dimension());
-			}
-
-		}
+	private:
+		
 
 		friend class boost::serialization::access;
 
