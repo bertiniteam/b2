@@ -22,8 +22,10 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 //
-//
-//  nag_algorithms_test.cpp:  main source file for the algorithm testing executable for Bertini2
+
+/**
+\file test/nag_algorithms/nag_algorithms_test.cpp:  main source file for the algorithm testing executable for Bertini2
+*/
 
 
 

@@ -22,9 +22,10 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 //
-//
-//  nag_datatypes_test.cpp:  main source file for the testing executable for NAG datatypes for Bertini2
 
+/**
+\file test/nag_datatypes/nag_datatypes_test.cpp  Main source file for the testing executable for NAG datatypes for Bertini2
+*/
 
 
 

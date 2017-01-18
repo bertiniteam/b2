@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file zero_dim.cpp  Tests the zero dim algorithm.
+\file test/nag_algorithms/zero_dim.cpp  Tests the zero dim algorithm.
 */
 
 // individual authors of this file include:
