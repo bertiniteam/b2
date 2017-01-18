@@ -39,7 +39,7 @@
 
 
 #include <boost/test/unit_test.hpp>
-#include "bertini2/patch.hpp"
+#include "bertini2/system/patch.hpp"
 
 
 using Patch = bertini::Patch;
