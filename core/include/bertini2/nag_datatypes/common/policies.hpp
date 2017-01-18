@@ -15,11 +15,6 @@ namespace bertini{
 			{
 				using HeldT = T;
 
-				static 
-				HeldT AtSet(T const& t)
-				{
-					return t;
-				}
 
 				static
 				const T & AtGet(HeldT const& t)
@@ -35,11 +30,6 @@ namespace bertini{
 			{
 				using HeldT = std::reference_wrapper<T>;
 
-				static 
-				const HeldT AtSet(T const& t)
-				{
-					return std::ref(t);
-				}
 
 				static
 				const T & AtGet(HeldT const& t)
@@ -55,11 +45,6 @@ namespace bertini{
 			{
 				using HeldT = std::shared_ptr<T>;
 
-				static 
-				HeldT AtSet(T const& t)
-				{
-					return t;
-				}
 
 				static
 				const T & AtGet(HeldT const& t)

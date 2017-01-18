@@ -43,7 +43,7 @@ namespace bertini {
 		template <typename T> 
 		using PointCont = std::deque<T>;
 
-		using IndexT = unsigned long long;
+		using IndexT = typename PointCont<int>::size_type;
 
 		/**
 		\brief The main way to represent a positive dimensional component in numerical algebraic geometry.
@@ -63,6 +63,10 @@ namespace bertini {
 		 The degree is represented in terms of points.  The number of points in the witness set is the degree of the component.
 
 		 The dimension is represented in terms of either the slice, or the system itself.  The number of individual linears in the total slice should be equal to the difference of the number of variables in the system, minus the number of functions.  That is, the system's underdeterminedness is the dimension.  This assumes that randomization has been done on incomplete intersections -- precisely those systems for which this equality fails.
+	
+		\tparam ObjManagementP  The policy class for object management.  Default is to copy.  Other provided options are reference wrappers, and shared pointers.
+
+		\see bertini::nag_datatype::policy::Copy, bertini::nag_datatype::policy::Reference, bertini::nag_datatype::policy::SharedPtr
 
 		 \see Randomize
 		*/
@@ -81,43 +85,78 @@ namespace bertini {
 
 
 public:
+			/**
+			\brief The default constructor.  
 
+			The instantiability of this constructor depends on the default-constructability of the policy class used for held objects.
+			*/
 			WitnessSet(){}
 
+			/**
+			\brief Construct a witness set from points, slice, and system.
+
+			Uses the held type of the policy class for object management.
+			*/
 			WitnessSet(PointContT const& pts, typename SliceP::HeldT const& slc, typename SystemP::HeldT const& sys) :
 				points_(pts),
 				slice_(slc),
 				system_(sys)
 			{}
 
-			void SetSlice(typename SliceP::HeldT const& s)
+
+			/**
+			\brief Get the degree of the witness set.  
+
+			This is the number of points in the set.
+			*/
+			inline
+			auto Degree() const
 			{
-				slice_ = s;
+				return GetPoints().size();
 			}
 
-			const LinearSlice & GetSlice() const
+
+			/**
+			\brief Query the dimension of the witness set.  Fundamentally, this is the dimension of the slice.
+			*/
+			inline
+			auto Dimension() const
 			{
-				return SliceP::AtGet(slice_);
+				return GetSlice().Dimension();
 			}
 
+
+			/**
+			\brief Adds a point to the witness set.
+			*/
 			inline
 			void AddPoint(typename PointP::HeldT const& p)
 			{
 				points_.push_back(p);
 			}
 
+
+			/**
+			\brief Sets the set of points for the witness set.
+			*/
 			void SetPoints(PointContT const& pts)
 			{
 				points_ = pts;
 			}
 
+
+			/**
+			\brief Get (a const reference to) the set of points for the witness set.
+			*/
 			inline
 			const PointContT& GetPoints() const
 			{
 				return points_;
 			}
 
-
+			/**
+			\brief Range-checked version of point getter for witness set.
+			*/
 			const Vec<NumT>& GetPoint(IndexT ind) const
 			{
 				if (ind > Degree())
@@ -130,29 +169,57 @@ public:
 				return PointP::AtGet(points_[ind]);
 			}
 
-			inline
-			auto Degree() const
+
+			/**
+			\brief Non-range-checked accessor to get points from witness set.
+			*/
+			const Vec<NumT>& operator[](IndexT ind) const
 			{
-				return GetPoints().size();
+				return PointP::AtGet(points_[ind]);
 			}
 
-			inline
-			auto Dimension() const
-			{
-				return GetSlice().Dimension();
-			}
 
+			
+
+
+			/**
+			Sets the system for the witness set.  Uses policy for held type.
+
+			\see bertini::nag_datatype::policy namespace
+			*/
 			void SetSystem(typename SystemP::HeldT const& sys)
 			{
-				system_ = SystemP::AtSet(sys);
+				system_ = sys;
 			}
 
+
+			/**
+			\brief Gets a (const reference to) the system for the witness set.
+			*/
 			inline
 			const SystemT& GetSystem() const
 			{
 				return SystemP::AtGet(system_);
 			}
 
+
+			/**
+			\brief Sets the slice for the witness set.
+
+			uses the held type policy.
+			*/
+			void SetSlice(typename SliceP::HeldT const& s)
+			{
+				slice_ = s;
+			}
+
+			/**
+			Gets (a const reference to) the slice for the witness set.
+			*/
+			const LinearSlice & GetSlice() const
+			{
+				return SliceP::AtGet(slice_);
+			}
 
 			/**
 			\brief Check whether the witness set makes sense, in terms of system size, number of variables, and linear slice size.
