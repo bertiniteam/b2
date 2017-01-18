@@ -23,7 +23,7 @@
 // daniel brake, university of notre dame
 
 /**
-\file slice.hpp 
+\file bertini2/system/slice.hpp 
 
 \brief Provides the bertini::LinearSlice class.
 */
@@ -39,6 +39,12 @@
 
 namespace bertini {
 
+
+	/**
+	\brief Base class for other Slices.  
+
+	\see LinearSlice
+	*/
 	class Slice
 	{
 
@@ -46,7 +52,9 @@ namespace bertini {
 
 
 
-
+	/**
+	\brief Slice an affine or projective space with a LinearSlice today!
+	*/
 	class LinearSlice : public Slice
 	{
 
@@ -72,14 +80,18 @@ namespace bertini {
 			return Make(v, dim, homogeneous, orthogonal, bertini::RandomReal);
 		}
 
-
+		/**
+		\brief Generate a random complex slice.
+		*/
 		static LinearSlice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
 			return Make(v, dim, homogeneous, orthogonal, bertini::RandomComplex);
 		}
 
 
-
+		/**
+		\brief Evaluate the function values of the LinearSlice, in-place
+		*/
 		template<typename NumT>
 		void Eval(Vec<NumT> & result, Vec<NumT> const& x) const
 		{
@@ -89,7 +101,9 @@ namespace bertini {
 				result += std::get<Vec<NumT> >(constants_working_);
 		}
 
-
+		/**
+		\brief Evaluate the function values of the LinearSlice
+		*/
 		template<typename NumT>
 		Vec<NumT> Eval(Vec<NumT> const& x) const
 		{
@@ -100,13 +114,18 @@ namespace bertini {
 		}
 
 
+		/**
+		\brief Evaluate the Jacobian of the LinearSlice, in-place
+		*/
 		template<typename NumT>
 		void Jacobian(Mat<NumT> & result, Mat<NumT> const& x) const
 		{
 			result = std::get<Mat<NumT> >(coefficients_working_);
 		}
 
-
+		/**
+		\brief Evaluate the Jacobian of the LinearSlice
+		*/
 		template<typename NumT>
 		Mat<NumT> Jacobian(Mat<NumT> const& x) const
 		{
@@ -159,12 +178,17 @@ namespace bertini {
 			precision_ = new_precision;
 		}
 
-
+		/**
+		\brief Get the dimension of the slice
+		*/
 		unsigned Dimension() const
 		{
 			return num_dims_sliced_;
 		}
 
+		/**
+		\brief Get the number of variables sliced.  
+		*/
 		unsigned NumVariables() const
 		{
 			return sliced_vars_.size();
@@ -192,7 +216,9 @@ namespace bertini {
 			std::get<Vec<mpfr> >(constants_working_).resize(Dimension());
 		}
 
-		// the constructor for linear slices.
+		/**
+		\brief the constructor for linear slices.
+		*/
 		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : sliced_vars_(v), precision_(DefaultPrecision()), num_dims_sliced_(dim), coefficients_highest_precision_(dim, v.size()), is_homogeneous_(homogeneous), constants_highest_precision_(dim)
 		{ 
 			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
@@ -206,7 +232,9 @@ namespace bertini {
 		}
 
 
-		// factory function for generating slices
+		/**
+		\brief factory function for generating slices
+		*/
 		static
 		LinearSlice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, std::function<void(mpfr&, unsigned)> gen)
 		{
@@ -299,27 +327,10 @@ namespace bertini {
 		friend std::ostream& operator<<(std::ostream&, LinearSlice const&);
 	};
 
-
-	std::ostream& operator<<(std::ostream& out, LinearSlice const& s)
-	{
-		out << "linear slice on " << s.NumVariables() << " variables:\n";
-		for (auto& v : s.sliced_vars_)
-			out << *v << " ";
-
-		out << "\n\ncoefficient matrix:\n\n";
-		out << std::get<Mat<dbl> >(s.coefficients_working_) << "\n\n";
-
-		
-		if (s.is_homogeneous_)
-			out << "slice is homogeneous";
-		else
-		{
-			out << "slice is not homogeneous, with constants\n";
-			out << std::get<Vec<dbl> >(s.constants_working_) << "\n";
-		}
-		
-		return out;
-	}
+	/**
+	\brief Provides output streaming for LinearSlice
+	*/
+	std::ostream& operator<<(std::ostream& out, LinearSlice const& s);
 } // re: namespace bertini 
 
 #endif

@@ -11,7 +11,8 @@ system_header_files = \
 system_source_files = \
 	src/system/start_system.cpp \
 	src/system/system.cpp \
-	src/system/precon.cpp
+	src/system/precon.cpp \
+	src/system/slice.hpp 
 
 system = $(system_header_files) $(system_source_files)
 

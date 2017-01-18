@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 /**
-\file witness_set.cpp  Tests the zero dim algorithm.
+\file test/nag_datatypes/witness_set.cpp  Tests the zero dim algorithm.
 */
 
 // individual authors of this file include:
