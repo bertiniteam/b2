@@ -202,13 +202,12 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 			BOOST_CHECK_EQUAL(w.Dimension(), 1);
 
 			BOOST_CHECK(!w.IsConsistent());
-
-			BOOST_CHECK_EQUAL(&(w.GetSlice()), &(*(slice)));
-
-			BOOST_CHECK_EQUAL(&(w.GetSystem()), &(*(sys)));
-
-			BOOST_CHECK_EQUAL(&(w.GetPoint(0)), &(*(points[0])));
 			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
+
+			// check that addresses are correct, so that the stored objects are the same.
+			BOOST_CHECK_EQUAL(&(w.GetSlice()), &(*(slice)));
+			BOOST_CHECK_EQUAL(&(w.GetSystem()), &(*(sys)));
+			BOOST_CHECK_EQUAL(&(w.GetPoint(0)), &(*(points[0])));
 		}
 
 	BOOST_AUTO_TEST_SUITE_END() // by_shared_pointer
