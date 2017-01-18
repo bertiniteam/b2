@@ -11,26 +11,7 @@ namespace bertini{
 		namespace policy{
 
 			template<typename T>
-			struct RefToGiven
-			{
-				using HeldT = std::reference_wrapper<T>;
-
-				static 
-				HeldT AtSet(T const& t)
-				{
-					return std::ref(t);
-				}
-
-				static
-				const T & AtGet(HeldT const& t)
-				{
-					return t;
-				}
-
-			};
-
-			template<typename T>
-			struct CopyGiven
+			struct Copy
 			{
 				using HeldT = T;
 
@@ -44,6 +25,46 @@ namespace bertini{
 				const T & AtGet(HeldT const& t)
 				{
 					return t;
+				}
+
+			};
+
+
+			template<typename T>
+			struct Reference
+			{
+				using HeldT = std::reference_wrapper<T>;
+
+				static 
+				const HeldT AtSet(T const& t)
+				{
+					return std::ref(t);
+				}
+
+				static
+				const T & AtGet(HeldT const& t)
+				{
+					return t;
+				}
+
+			};
+			
+
+			template<typename T>
+			struct SharedPtr
+			{
+				using HeldT = std::shared_ptr<T>;
+
+				static 
+				HeldT AtSet(T const& t)
+				{
+					return t;
+				}
+
+				static
+				const T & AtGet(HeldT const& t)
+				{
+					return *t;
 				}
 
 			};

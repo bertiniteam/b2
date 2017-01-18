@@ -31,100 +31,188 @@
 #include "bertini2/system/precon.hpp"
 
 
+
 BOOST_AUTO_TEST_SUITE(witness_set)
 
-BOOST_AUTO_TEST_SUITE(default_storage_policy)
-
-
-BOOST_AUTO_TEST_CASE(make_a_witness_set)
-{
-	bertini::nag_datatype::WitnessSet<bertini::complex> w;
-}
 
 
 
-BOOST_AUTO_TEST_CASE(add_slice_to_witness_set)
-{
-	bertini::nag_datatype::WitnessSet<bertini::complex> w;
 
-	bertini::LinearSlice ell;
+	BOOST_AUTO_TEST_SUITE(default_storage_policy)
 
-	w.SetSlice(ell);
+		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex>;
 
-	BOOST_CHECK_EQUAL(w.Dimension(),0);
-	BOOST_CHECK_EQUAL(w.Degree(),0);
-}
-
-
-BOOST_AUTO_TEST_CASE(add_point_to_witness_set)
-{
-	bertini::nag_datatype::WitnessSet<bertini::complex> w;
-
-	bertini::Vec<bertini::complex> p;
-
-	w.AddPoint(p);
-
-	BOOST_CHECK_EQUAL(w.Degree(), 1);
-}
-
-
-// check whether can construct a witness set from a set of points, a slice, and a system
-BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
-{
-	auto sys = bertini::system::Precon::GriewankOsborn();
-
-	bertini::Vec<bertini::complex> p(sys.NumVariables());
-	bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex>> points;
-	for (unsigned ii = 0; ii < 3; ++ii)
-		points.push_back(p);
-
-
-	auto& vars = sys.VariableGroups()[0];
-
-	auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
-
-
-	bertini::nag_datatype::WitnessSet<bertini::complex> w{points, slice, sys};
-
-
-	BOOST_CHECK_EQUAL(w.Degree(), 3);
-	BOOST_CHECK_EQUAL(w.Dimension(), 1);
-
-	BOOST_CHECK(!w.IsConsistent());
-	// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
-
-}
+		BOOST_AUTO_TEST_CASE(make_a_witness_set)
+		{
+			WitnessSet w;
+		}
 
 
 
-BOOST_AUTO_TEST_CASE(sphere_sys_consistent_when_sliced_w_dim2_slice)
-{
-	auto sys = bertini::system::Precon::Sphere();
+		BOOST_AUTO_TEST_CASE(add_slice_to_witness_set)
+		{
+			WitnessSet w;
 
-	bertini::Vec<bertini::complex> p(sys.NumVariables());
-	bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex>> points;
-	for (unsigned ii = 0; ii < 2; ++ii)
-		points.push_back(p);
+			bertini::LinearSlice ell;
 
+			w.SetSlice(ell);
 
-	auto& vars = sys.Variables();
-
-	auto slice = bertini::LinearSlice::RandomComplex(vars, 2);
+			BOOST_CHECK_EQUAL(w.Dimension(),0);
+			BOOST_CHECK_EQUAL(w.Degree(),0);
+		}
 
 
-	bertini::nag_datatype::WitnessSet<bertini::complex> w{points, slice, sys};
+		BOOST_AUTO_TEST_CASE(add_point_to_witness_set)
+		{
+			WitnessSet w;
+
+			bertini::Vec<bertini::complex> p;
+
+			w.AddPoint(p);
+
+			BOOST_CHECK_EQUAL(w.Degree(), 1);
+		}
 
 
-	BOOST_CHECK_EQUAL(w.Degree(), 2);
-	BOOST_CHECK_EQUAL(w.Dimension(), 2);
+		// check whether can construct a witness set from a set of points, a slice, and a system
+		BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
+		{
+			auto sys = bertini::system::Precon::GriewankOsborn();
 
-	BOOST_CHECK(w.IsConsistent());
-}
+			bertini::Vec<bertini::complex> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex>> points;
+			for (unsigned ii = 0; ii < 3; ++ii)
+				points.push_back(p);
 
 
-BOOST_AUTO_TEST_SUITE_END()
+			auto& vars = sys.VariableGroups()[0];
+
+			auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
+
+
+			WitnessSet w{points, slice, sys};
+
+
+			BOOST_CHECK_EQUAL(w.Degree(), 3);
+			BOOST_CHECK_EQUAL(w.Dimension(), 1);
+
+			BOOST_CHECK(!w.IsConsistent());
+			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
+
+		}
 
 
 
-BOOST_AUTO_TEST_SUITE_END()
+		BOOST_AUTO_TEST_CASE(sphere_sys_consistent_when_sliced_w_dim2_slice)
+		{
+			auto sys = bertini::system::Precon::Sphere();
+
+			bertini::Vec<bertini::complex> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex>> points;
+			for (unsigned ii = 0; ii < 2; ++ii)
+				points.push_back(p);
+
+
+			auto& vars = sys.Variables();
+
+			auto slice = bertini::LinearSlice::RandomComplex(vars, 2);
+
+
+			WitnessSet w{points, slice, sys};
+
+
+			BOOST_CHECK_EQUAL(w.Degree(), 2);
+			BOOST_CHECK_EQUAL(w.Dimension(), 2);
+
+			BOOST_CHECK(w.IsConsistent());
+		}
+
+
+	BOOST_AUTO_TEST_SUITE_END() // default storage policy
+
+
+
+
+	BOOST_AUTO_TEST_SUITE(policy_by_reference)
+
+		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex, bertini::System, bertini::nag_datatype::policy::Reference>;
+
+
+		// check whether can construct a witness set from a set of points, a slice, and a system
+		BOOST_AUTO_TEST_CASE(construct_from_points_slice_system)
+		{
+			auto sys = bertini::system::Precon::GriewankOsborn();
+
+			bertini::Vec<bertini::complex> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<std::reference_wrapper<bertini::Vec<bertini::complex>>> points;
+			for (unsigned ii = 0; ii < 3; ++ii)
+				points.push_back(p);
+
+
+			auto& vars = sys.VariableGroups()[0];
+
+			auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
+
+
+			WitnessSet w{points, slice, sys};
+
+
+			BOOST_CHECK_EQUAL(w.Degree(), 3);
+			BOOST_CHECK_EQUAL(w.Dimension(), 1);
+
+			BOOST_CHECK(!w.IsConsistent());
+			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
+		}
+
+	BOOST_AUTO_TEST_SUITE_END() // by_reference
+
+
+	BOOST_AUTO_TEST_SUITE(policy_by_shared_pointer)
+
+		template <typename T>
+		using sp = std::shared_ptr<T>;
+
+		using WitnessSet = bertini::nag_datatype::WitnessSet<
+			bertini::complex, 
+			bertini::System, 
+			bertini::nag_datatype::policy::SharedPtr>;
+
+		// check whether can construct a witness set from a set of points, a slice, and a system
+		BOOST_AUTO_TEST_CASE(construct_from_points_slice_system1)
+		{	
+			using namespace bertini;
+
+			auto sys = std::make_shared<System>(system::Precon::GriewankOsborn());
+			
+			auto n_vars = sys->NumVariables();
+			auto& vars = sys->VariableGroups()[0];
+
+			nag_datatype::PointCont< sp<Vec<complex>> > points;
+			for (unsigned ii = 0; ii < 3; ++ii)
+				points.push_back(std::make_shared<Vec<complex>>(n_vars));
+
+
+			auto slice = std::make_shared<LinearSlice>(LinearSlice::RandomComplex(vars, 1));
+
+
+			WitnessSet w{points, slice, sys};
+
+
+			BOOST_CHECK_EQUAL(w.Degree(), 3);
+			BOOST_CHECK_EQUAL(w.Dimension(), 1);
+
+			BOOST_CHECK(!w.IsConsistent());
+
+			BOOST_CHECK_EQUAL(&(w.GetSlice()), &(*(slice)));
+
+			BOOST_CHECK_EQUAL(&(w.GetSystem()), &(*(sys)));
+
+			BOOST_CHECK_EQUAL(&(w.GetPoint(0)), &(*(points[0])));
+			// this w should be inconsistent because the griewank obsorn system is square to start, and a complete intersection, with no posdim components.  Hence, this witness set is BOGUS.
+		}
+
+	BOOST_AUTO_TEST_SUITE_END() // by_shared_pointer
+
+
+BOOST_AUTO_TEST_SUITE_END() // witness_set
 

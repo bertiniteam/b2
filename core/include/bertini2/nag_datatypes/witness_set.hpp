@@ -66,7 +66,7 @@ namespace bertini {
 
 		 \see Randomize
 		*/
-		template<typename NumT, typename SystemT = System, template<typename> class ObjManagementP = policy::CopyGiven >
+		template<typename NumT, typename SystemT = System, template<typename> class ObjManagementP = policy::Copy >
 		class WitnessSet
 		{
 			using PointP = ObjManagementP<Vec<NumT>>;
@@ -84,15 +84,15 @@ public:
 
 			WitnessSet(){}
 
-			WitnessSet(PointContT const& pts, LinearSlice const& slc, System const& sys) :
+			WitnessSet(PointContT const& pts, typename SliceP::HeldT const& slc, typename SystemP::HeldT const& sys) :
 				points_(pts),
-				slice_(SliceP::AtSet(slc)),
-				system_(SystemP::AtSet(sys))
+				slice_(slc),
+				system_(sys)
 			{}
 
-			void SetSlice(LinearSlice const& s)
+			void SetSlice(typename SliceP::HeldT const& s)
 			{
-				slice_ = SliceP::AtSet(s);
+				slice_ = s;
 			}
 
 			const LinearSlice & GetSlice() const
@@ -101,12 +101,12 @@ public:
 			}
 
 			inline
-			void AddPoint(Vec<NumT> const& p)
+			void AddPoint(typename PointP::HeldT const& p)
 			{
-				points_.push_back(PointP::AtSet(p));
+				points_.push_back(p);
 			}
 
-			void SetPoints(PointContT && pts)
+			void SetPoints(PointContT const& pts)
 			{
 				points_ = pts;
 			}
@@ -127,22 +127,22 @@ public:
 					throw std::runtime_error(ss.str());
 				}
 
-				return points_[ind];
+				return PointP::AtGet(points_[ind]);
 			}
 
 			inline
 			auto Degree() const
 			{
-				return points_.size();
+				return GetPoints().size();
 			}
 
 			inline
 			auto Dimension() const
 			{
-				return slice_.Dimension();
+				return GetSlice().Dimension();
 			}
 
-			void SetSystem(SystemT && sys)
+			void SetSystem(typename SystemP::HeldT const& sys)
 			{
 				system_ = SystemP::AtSet(sys);
 			}
@@ -150,7 +150,7 @@ public:
 			inline
 			const SystemT& GetSystem() const
 			{
-				return system_;
+				return SystemP::AtGet(system_);
 			}
 
 
@@ -159,7 +159,7 @@ public:
 			*/
 			bool IsConsistent() const
 			{
-				return (system_.NumVariables() - system_.NumFunctions()) == (slice_.Dimension());
+				return (GetSystem().NumVariables() - GetSystem().NumFunctions()) == GetSlice().Dimension();
 			}
 
 
