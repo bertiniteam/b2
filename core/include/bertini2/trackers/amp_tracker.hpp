@@ -42,10 +42,6 @@ namespace bertini{
 	namespace tracking{
 
 		
-		
-		
-		
-		using namespace bertini::tracking::config;
 		using std::max;
 		using std::min;
 		using std::pow;
@@ -241,9 +237,9 @@ namespace bertini{
 		using namespace bertini::tracking;
 
 		// 1. Create the system
-		Var x = std::make_shared<Variable>("x");
-		Var y = std::make_shared<Variable>("y");
-		Var t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x");
+		Var y = MakeVariable("y");
+		Var t = MakeVariable("t");
 
 		System sys;
 
@@ -441,8 +437,8 @@ namespace bertini{
 				current_stepsize_.precision(initial_precision_);
 				if (reinitialize_stepsize_)
 				{
-					mpfr_float segment_length = abs(start_time-end_time)/stepping_config_.min_num_steps;
-					SetStepSize(min(stepping_config_.initial_step_size,segment_length));
+					mpfr_float segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
+					SetStepSize(min(Get<Stepping>().initial_step_size,segment_length));
 				}
 
 				// populate the current space value with the start point, in appropriate precision
@@ -475,7 +471,7 @@ namespace bertini{
 
 			// 	current_stepsize_.precision(initial_precision_);
 			// 	if (reinitialize_stepsize_)
-			// 		SetStepSize(min(double(stepping_config_.initial_step_size),abs(start_time-end_time)/stepping_config_.min_num_steps));
+			// 		SetStepSize(min(double(Get<Stepping>().initial_step_size),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
 
 			// 	// populate the current space value with the start point, in appropriate precision
 				
@@ -493,7 +489,7 @@ namespace bertini{
 				num_successful_steps_since_stepsize_increase_ = 0;
 				num_successful_steps_since_precision_decrease_ = 0;
 				// initialize to the frequency so guaranteed to compute it the first try 	
-				num_steps_since_last_condition_number_computation_ = this->stepping_config_.frequency_of_CN_estimation;
+				num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
 			}
 
 			/** 
@@ -533,9 +529,9 @@ namespace bertini{
 			*/
 			SuccessCode PreIterationCheck() const override
 			{
-				if (num_successful_steps_taken_ >= stepping_config_.max_num_steps)
+				if (num_successful_steps_taken_ >= Get<Stepping>().max_num_steps)
 					return SuccessCode::MaxNumStepsTaken;
-				if (current_stepsize_ < stepping_config_.min_step_size)
+				if (current_stepsize_ < Get<Stepping>().min_step_size)
 					return SuccessCode::MinStepSizeReached;
 				if (current_precision_ > AMP_config_.maximum_precision)
 					return SuccessCode::MaxPrecisionReached;
@@ -757,14 +753,14 @@ namespace bertini{
 			template <typename ComplexType, typename RealType>
 			SuccessCode AdjustAMPStepSuccess() const
 			{
-				mpfr_float min_stepsize = current_stepsize_ * stepping_config_.step_size_fail_factor;
-				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * stepping_config_.step_size_success_factor), stepping_config_.max_step_size);
+				mpfr_float min_stepsize = current_stepsize_ * Get<Stepping>().step_size_fail_factor;
+				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * Get<Stepping>().step_size_success_factor), Get<Stepping>().max_step_size);
 
 
 				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexType, RealType>();
 				unsigned max_precision = max(min_precision,current_precision_);
 
-				if (num_successful_steps_since_stepsize_increase_ < stepping_config_.consecutive_successful_steps_before_stepsize_increase)
+				if (num_successful_steps_since_stepsize_increase_ < Get<Stepping>().consecutive_successful_steps_before_stepsize_increase)
 					max_stepsize = current_stepsize_; // disallow stepsize changing 
 
 
@@ -778,7 +774,7 @@ namespace bertini{
 							min_precision, min_stepsize,
 							max_precision, max_stepsize,
 							B_RHS<ComplexType, RealType>(),
-							newton_config_.max_num_newton_iterations,
+							Get<Newton>().max_num_newton_iterations,
 							predictor_order_);
 
 
@@ -819,7 +815,7 @@ namespace bertini{
 			void NewtonConvergenceError() const
 			{
 				next_precision_ = current_precision_;
-				next_stepsize_ = stepping_config_.step_size_fail_factor*current_stepsize_;
+				next_stepsize_ = Get<Stepping>().step_size_fail_factor*current_stepsize_;
 
 				while (next_stepsize_ < MinStepSizeForPrecision(next_precision_))
 				{
@@ -859,14 +855,14 @@ namespace bertini{
 
 
 				mpfr_float min_stepsize = MinStepSizeForPrecision(current_precision_);
-				mpfr_float max_stepsize = current_stepsize_ * stepping_config_.step_size_fail_factor;  // Stepsize decreases.
+				mpfr_float max_stepsize = current_stepsize_ * Get<Stepping>().step_size_fail_factor;  // Stepsize decreases.
 
 				if (min_stepsize > max_stepsize)
 				{
 					// stepsizes are incompatible, must increase precision
 					next_precision_ = min_next_precision;
 					// decrease stepsize somewhat less than the fail factor
-					next_stepsize_ = current_stepsize_ * (1+stepping_config_.step_size_fail_factor)/2;
+					next_stepsize_ = current_stepsize_ * (1+Get<Stepping>().step_size_fail_factor)/2;
 				}
 				else
 				{
@@ -879,7 +875,7 @@ namespace bertini{
 					                             digits_final_
 					                             );
 					
-					mpfr_float a(ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/newton_config_.max_num_newton_iterations));
+					mpfr_float a(ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/Get<Newton>().max_num_newton_iterations));
 
 					unsigned max_precision = max(min_precision, 
 					                             a.convert_to<unsigned int>()
@@ -889,7 +885,7 @@ namespace bertini{
 							min_precision, min_stepsize,
 							AMP_config_.maximum_precision, max_stepsize,
 							criterion_B_rhs,
-							newton_config_.max_num_newton_iterations,
+							Get<Newton>().max_num_newton_iterations,
 							predictor_order_);
 				}
 
@@ -908,7 +904,7 @@ namespace bertini{
 			{	
 				return max(amp::CriterionBRHS(std::get<RealType>(norm_J_), 
 				           					  std::get<RealType>(norm_J_inverse_), 
-				           					  newton_config_.max_num_newton_iterations, 
+				           					  Get<Newton>().max_num_newton_iterations, 
 				           					  RealType(tracking_tolerance_), 
 				           					  std::get<RealType>(size_proportion_), 
 				           					  AMP_config_),
@@ -1106,7 +1102,7 @@ namespace bertini{
 									delta_t,
 									condition_number_estimate,
 									num_steps_since_last_condition_number_computation_, 
-									stepping_config_.frequency_of_CN_estimation, 
+									Get<Stepping>().frequency_of_CN_estimation, 
 									RealType(tracking_tolerance_),
 									AMP_config_);
 				else
@@ -1119,7 +1115,7 @@ namespace bertini{
 									delta_t,
 									condition_number_estimate,
 									num_steps_since_last_condition_number_computation_, 
-									stepping_config_.frequency_of_CN_estimation, 
+									Get<Stepping>().frequency_of_CN_estimation, 
 									RealType(tracking_tolerance_),
 									AMP_config_);
 			}
@@ -1165,8 +1161,8 @@ namespace bertini{
 									current_space,
 									current_time,
 									RealType(tracking_tolerance_),
-									newton_config_.min_num_newton_iterations,
-									newton_config_.max_num_newton_iterations,
+									Get<Newton>().min_num_newton_iterations,
+									Get<Newton>().max_num_newton_iterations,
 									AMP_config_);
 			}
 
@@ -1243,8 +1239,8 @@ namespace bertini{
 										   start_point,
 										   current_time,
 										   RealType(tracking_tolerance_),
-										   newton_config_.min_num_newton_iterations,
-										   newton_config_.max_num_newton_iterations,
+										   Get<Newton>().min_num_newton_iterations,
+										   Get<Newton>().max_num_newton_iterations,
 										   AMP_config_);
 			}
 
@@ -1341,7 +1337,7 @@ namespace bertini{
 
 				bool upsampling_needed = new_precision > current_precision_;
 				// reset the counter for estimating the condition number.  
-				num_steps_since_last_condition_number_computation_ = this->stepping_config_.frequency_of_CN_estimation;
+				num_steps_since_last_condition_number_computation_ = this->Get<Stepping>().frequency_of_CN_estimation;
 
 				if (new_precision==DoublePrecision() && current_precision_>DoublePrecision())
 				{

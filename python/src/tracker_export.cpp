@@ -105,17 +105,17 @@ namespace bertini{
 		void SteppingVisitor<T>::visit(PyClass& cl) const
 		{
 			cl
-			.def_readwrite("initial_step_size", &Stepping<T>::initial_step_size)
-			.def_readwrite("max_step_size", &Stepping<T>::max_step_size)
-			.def_readwrite("min_step_size", &Stepping<T>::min_step_size)
-			.def_readwrite("step_size_success_factor", &Stepping<T>::step_size_success_factor)
-			.def_readwrite("step_size_fail_factor", &Stepping<T>::step_size_fail_factor)
-			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &Stepping<T>::consecutive_successful_steps_before_stepsize_increase)
-			.def_readwrite("min_num_steps", &Stepping<T>::min_num_steps)
-			.def_readwrite("max_num_steps", &Stepping<T>::max_num_steps)
-			.def_readwrite("frequency_of_CN_estimation", &Stepping<T>::frequency_of_CN_estimation)
-			.def_readwrite("initial_step_size", &Stepping<T>::initial_step_size)
-			.def_readwrite("initial_step_size", &Stepping<T>::initial_step_size)
+			.def_readwrite("initial_step_size", &tracking::config::Stepping<T>::initial_step_size)
+			.def_readwrite("max_step_size", &tracking::config::Stepping<T>::max_step_size)
+			.def_readwrite("min_step_size", &tracking::config::Stepping<T>::min_step_size)
+			.def_readwrite("step_size_success_factor", &tracking::config::Stepping<T>::step_size_success_factor)
+			.def_readwrite("step_size_fail_factor", &tracking::config::Stepping<T>::step_size_fail_factor)
+			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::config::Stepping<T>::consecutive_successful_steps_before_stepsize_increase)
+			.def_readwrite("min_num_steps", &tracking::config::Stepping<T>::min_num_steps)
+			.def_readwrite("max_num_steps", &tracking::config::Stepping<T>::max_num_steps)
+			.def_readwrite("frequency_of_CN_estimation", &tracking::config::Stepping<T>::frequency_of_CN_estimation)
+			.def_readwrite("initial_step_size", &tracking::config::Stepping<T>::initial_step_size)
+			.def_readwrite("initial_step_size", &tracking::config::Stepping<T>::initial_step_size)
 			;
 		}
 

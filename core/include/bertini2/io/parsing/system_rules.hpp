@@ -32,7 +32,7 @@
 
 
 #include "bertini2/io/parsing/qi_files.hpp"
-#include "bertini2/systems/system.hpp"
+#include "bertini2/system/system.hpp"
 #include "bertini2/io/parsing/function_rules.hpp"
 
 
@@ -358,7 +358,7 @@ namespace bertini {
 				 */
 				void MakeAndAddVariable(Var & V, std::string str)
 				{
-					V = std::make_shared<Variable>(str);
+					V = MakeVariable(str);
 					encountered_symbols_.add(str, V);
 				}
 				

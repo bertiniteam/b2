@@ -85,7 +85,7 @@ namespace node{
 			 */
 			std::shared_ptr<Node> Differentiate() const override
 			{
-				return std::make_shared<Integer>(0);
+				return MakeInteger(0);
 			}
 
 			/**
@@ -201,7 +201,7 @@ namespace node{
 			 */
 			std::shared_ptr<Node> Differentiate() const override
 			{
-				return std::make_shared<Integer>(0);
+				return MakeInteger(0);
 			}
 
 			/**

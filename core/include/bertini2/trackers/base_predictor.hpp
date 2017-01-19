@@ -32,8 +32,8 @@
 #ifndef BERTINI_BASE_PREDICTORS_HPP
 #define BERTINI_BASE_PREDICTORS_HPP
 
-#include "trackers/amp_criteria.hpp"
-#include "trackers/tracking_config.hpp"
+#include "bertini2/trackers/amp_criteria.hpp"
+#include "bertini2/trackers/config.hpp"
 
 #include "system.hpp"
 #include "mpfr_extensions.hpp"

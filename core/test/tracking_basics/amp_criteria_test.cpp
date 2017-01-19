@@ -40,7 +40,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-
+using bertini::MakeVariable;
 
 using mpq_rational = bertini::mpq_rational;
 using dbl = std::complex<double>;
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -329,7 +329,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);

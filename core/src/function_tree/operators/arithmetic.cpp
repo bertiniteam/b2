@@ -826,16 +826,16 @@ namespace bertini{
 		{
 			
 			if (exponent_==0)
-				return std::make_shared<Integer>(0);
+				return MakeInteger(0);
 			else if (exponent_==1)
 				return child_->Differentiate();
 			else if (exponent_==2){
-				auto M = std::make_shared<MultOperator>(std::make_shared<Integer>(2), child_);
+				auto M = std::make_shared<MultOperator>(MakeInteger(2), child_);
 				M->AddChild(child_->Differentiate());
 				return M;
 			}
 			else{
-				auto M = std::make_shared<MultOperator>(std::make_shared<Integer>(exponent_),
+				auto M = std::make_shared<MultOperator>(MakeInteger(exponent_),
 														std::make_shared<IntegerPowerOperator>(child_, exponent_-1) );
 				M->AddChild(child_->Differentiate());
 				return M;
@@ -880,9 +880,9 @@ namespace bertini{
 		
 		std::shared_ptr<Node> SqrtOperator::Differentiate() const
 		{
-			auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, std::make_shared<Rational>(mpq_rational(-1,2),0)));
+			auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, MakeRational(mpq_rational(-1,2),0)));
 			ret_mult->AddChild(child_->Differentiate());
-			ret_mult->AddChild(std::make_shared<Rational>(mpq_rational(1,2),0));
+			ret_mult->AddChild(MakeRational(mpq_rational(1,2),0));
 			return ret_mult;
 		}
 		

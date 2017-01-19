@@ -22,7 +22,7 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 
-#include "systems/start_system.hpp"
+#include "bertini2/system/start_system.hpp"
 
 
 BOOST_CLASS_EXPORT(bertini::start_system::TotalDegree);
@@ -66,7 +66,7 @@ namespace bertini {
 
 
 			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
-				random_values_[ii] = std::make_shared<node::Rational>(node::Rational::Rand());
+				random_values_[ii] = MakeRational(node::Rational::Rand());
 
 			// by hypothesis, the system has a single variable group.
 			VariableGroup v = this->AffineVariableGroup(0);
@@ -80,7 +80,7 @@ namespace bertini {
 			if (s.IsPatched())
 				CopyPatches(s);
 
-			gamma_ = std::make_shared<node::Rational>(node::Rational::Rand());
+			gamma_ = MakeRational(node::Rational::Rand());
 			// *this *= static_cast<std::shared_ptr<node::Node> >(gamma_);
 		}// total degree constructor
 

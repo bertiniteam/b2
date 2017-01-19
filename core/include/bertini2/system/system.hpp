@@ -49,7 +49,7 @@
 
 
 #include "bertini2/function_tree.hpp"
-#include "bertini2/patch.hpp"
+#include "bertini2/system/patch.hpp"
 
 #include "bertini2/limbo.hpp"
 
@@ -107,7 +107,7 @@ namespace bertini {
 		/** 
 		\brief The assignment operator
 		*/
-		System& operator=(System other);
+		System& operator=(const System & other);
 
 		/**
 		\brief The move assignment operator

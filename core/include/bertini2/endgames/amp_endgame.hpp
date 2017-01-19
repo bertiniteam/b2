@@ -35,7 +35,7 @@
 
 #include "bertini2/mpfr_complex.hpp"
 #include "bertini2/limbo.hpp"
-#include "bertini2/trackers/tracking_config.hpp"
+#include "bertini2/trackers/config.hpp"
 #include "bertini2/trackers/amp_tracker.hpp"
 #include "bertini2/trackers/adaptive_precision_utilities.hpp"
 

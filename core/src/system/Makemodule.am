@@ -1,21 +1,31 @@
 #this is src/system/Makemodule.am
 
 system_header_files = \
-	include/bertini2/systems/system.hpp include/bertini2/system_parsing.hpp \
-	include/bertini2/systems/start_system.hpp
+	include/bertini2/system.hpp \
+	include/bertini2/system/system.hpp \
+	include/bertini2/system/start_system.hpp \
+	include/bertini2/system/patch.hpp \
+	include/bertini2/system/slice.hpp \
+	include/bertini2/system/precon.hpp 
 
-system_source_files = src/system/start_system.cpp src/system/system.cpp
+system_source_files = \
+	src/system/start_system.cpp \
+	src/system/system.cpp \
+	src/system/precon.cpp \
+	src/system/slice.hpp 
 
 system = $(system_header_files) $(system_source_files)
 
 
 
 rootinclude_HEADERS += \
-	include/bertini2/systems.hpp
+	include/bertini2/system.hpp
 
-systemincludedir = $(includedir)/bertini2/systems/
+systemincludedir = $(includedir)/bertini2/system/
 
 systeminclude_HEADERS = \
-	include/bertini2/systems/precon.hpp \
-	include/bertini2/systems/start_system.hpp \
-	include/bertini2/systems/system.hpp
+	include/bertini2/system/precon.hpp \
+	include/bertini2/system/start_system.hpp \
+	include/bertini2/system/system.hpp \
+	include/bertini2/system/patch.hpp \
+	include/bertini2/system/slice.hpp 

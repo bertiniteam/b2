@@ -26,8 +26,8 @@
 
 
 #include <boost/test/unit_test.hpp>
-#include "systems/start_system.hpp"
-#include "trackers/tracker.hpp"
+#include "bertini2/system/start_system.hpp"
+#include "bertini2/trackers/tracker.hpp"
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
@@ -40,7 +40,7 @@ using VariableGroup = bertini::VariableGroup;
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
 using mpfr_float = bertini::mpfr_float;
-
+using bertini::MakeVariable;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_linear)
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -115,8 +115,8 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_quadratic)
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -165,8 +165,8 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_decic)
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -217,9 +217,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -314,9 +314,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -368,9 +368,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_tracking_DOES_SOMETHING_PREDICTABLE_from_near_t
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -434,9 +434,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	mpfr_float::default_precision(16);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -490,9 +490,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -556,9 +556,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -613,9 +613,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	mpfr_float::default_precision(100);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -688,9 +688,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 	mpfr_float::default_precision(30);
 	using namespace bertini::tracking;
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	auto s = -1*(1-t) + 1*t;
 
@@ -753,9 +753,9 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	using namespace bertini::tracking;
 	mpfr_float::default_precision(30);
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -854,9 +854,9 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 	using namespace bertini::tracking;
 	mpfr_float::default_precision(30);
 
-	Var x = std::make_shared<Variable>("x");
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 

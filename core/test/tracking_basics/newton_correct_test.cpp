@@ -34,7 +34,7 @@
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
-
+using bertini::MakeVariable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	
 	bertini::System sys;
-	Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -631,7 +631,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -745,7 +745,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = std::make_shared<Variable>("x"), y = std::make_shared<Variable>("y"), t = std::make_shared<Variable>("t");
+		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
 		
 		VariableGroup vars{x,y};
 		

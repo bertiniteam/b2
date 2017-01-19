@@ -36,7 +36,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "bertini2/slice.hpp"
+#include "bertini2/system/slice.hpp"
 
 BOOST_AUTO_TEST_SUITE(linear_slicing)
 
@@ -47,7 +47,7 @@ using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_CASE(slice_basic_complex)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(slice_basic_complex)
 
 BOOST_AUTO_TEST_CASE(slice_basic_crazy_overslice)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(slice_basic_crazy_overslice)
 
 BOOST_AUTO_TEST_CASE(slice_basic_real)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x"), y = std::make_shared<bertini::node::Variable>("y"), z = std::make_shared<bertini::node::Variable>("z");
+	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
 	VariableGroup vars{x,y,z};
 

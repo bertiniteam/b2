@@ -1,43 +1,52 @@
 //This file is part of Bertini 2.
 //
-//function_tree.hpp is free software: you can redistribute it and/or modify
+//bertini2/nag_algorithms/trace.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//systems.hpp is distributed in the hope that it will be useful,
+//bertini2/nag_algorithms/trace.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with function_tree.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with bertini2/nag_algorithms/trace.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// Tim Hodges, Colorado State University
+// Dani Brake, Notre Dame
+
 
 /**
-\file systems.hpp 
+\file bertini2/nag_algorithms/trace.hpp 
 
-\brief Collects the various header files which define the Bertini2 systems.
+\brief Provides methods for computing traces.  
+
 */
 
+#pragma once
 
-#ifndef BERTINI_SYSTEMS_HPP
-#define BERTINI_SYSTEMS_HPP
-
-#include "bertini2/systems/precon.hpp"
-#include "bertini2/systems/start_system.hpp"
-#include "bertini2/systems/system.hpp"
-
-#endif
+#include "bertini2/nag_datatypes/witness_set.hpp"
 
 
 
+namespace bertini {
 
+	namespace algorithms {
+
+
+		template <typename ComplexT>
+		ComplexT Trace(nag_datatype::WitnessSet<ComplexT> const& w)
+		{
+			return ComplexT(0);
+		}
+
+	} // algorithm
+
+} // bertini

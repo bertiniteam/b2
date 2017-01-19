@@ -32,6 +32,7 @@ endgames_test
 pool_test
 nag_algorithms_test
 generating_test
+nag_datatypes_test
 
 cachegrind.out.*
 

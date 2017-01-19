@@ -25,8 +25,8 @@
 
 
 #include <boost/test/unit_test.hpp>
-#include "systems/start_system.hpp"
-#include "trackers/fixed_precision_tracker.hpp"
+#include "bertini2/system/start_system.hpp"
+#include "bertini2/trackers/fixed_precision_tracker.hpp"
 #include "bertini2/trackers/observers.hpp"
 
 using System = bertini::System;
@@ -35,7 +35,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-
+using bertini::MakeVariable;
 
 using dbl = std::complex<double>;
 using mpfr = bertini::complex;
@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 
@@ -112,8 +112,8 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
-	Var y = std::make_shared<Variable>("y");
-	Var t = std::make_shared<Variable>("t");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
 
 	System sys;
 

@@ -1,0 +1,22 @@
+#this is core/test/nag_datatypes/Makemodule.am
+
+EXTRA_PROGRAMS += nag_datatypes_test
+
+TESTS += nag_datatypes_test
+
+nag_datatypes_test_source_files = \
+	test/nag_datatypes/witness_set.cpp \
+	test/nag_datatypes/nag_datatypes_test.cpp \
+	test/nag_datatypes/numerical_irreducible_decomposition.cpp 
+
+
+
+nag_datatypes_test_SOURCES = \
+	$(nag_datatypes_test_source_files)
+
+
+
+nag_datatypes_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
+
+nag_datatypes_test_CXXFLAGS = $(BOOST_CPPFLAGS)
+

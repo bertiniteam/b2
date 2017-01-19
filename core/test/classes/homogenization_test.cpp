@@ -35,20 +35,23 @@
 
 
 
-#include "bertini2/systems/system.hpp"
+#include "bertini2/system/system.hpp"
 
 using mpfr_float = bertini::mpfr_float;
 using Var = std::shared_ptr<bertini::node::Variable>;
 using Float = std::shared_ptr<bertini::node::Float>;
 using VariableGroup = bertini::VariableGroup;
 
+using bertini::MakeVariable;
+using bertini::MakeFloat;
+
 BOOST_AUTO_TEST_SUITE(homogenization)
 
 
 BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var h = MakeVariable("h");
 
 	auto f1 = x;
 	
@@ -75,9 +78,9 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var t = std::make_shared<bertini::node::Variable>("t");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var t = MakeVariable("t");
+	Var h = MakeVariable("h");
 
 	auto f1 = x-1;
 	
@@ -104,13 +107,13 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 {
-	std::shared_ptr<bertini::node::Variable> x = std::make_shared<bertini::node::Variable>("x");
-	std::shared_ptr<bertini::node::Variable> t = std::make_shared<bertini::node::Variable>("t");
+	std::shared_ptr<bertini::node::Variable> x = MakeVariable("x");
+	std::shared_ptr<bertini::node::Variable> t = MakeVariable("t");
 	auto f1 = (1-t)*x + t*(1-x);
 
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var h = MakeVariable("h");
 	VariableGroup vars;
 	vars.push_back(x);
 
@@ -132,9 +135,9 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var t = std::make_shared<bertini::node::Variable>("t");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var t = MakeVariable("t");
+	Var h = MakeVariable("h");
 
 	auto f1 = x-t;
 	
@@ -161,10 +164,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 
 BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var y = std::make_shared<bertini::node::Variable>("y");
-	Var t = std::make_shared<bertini::node::Variable>("t");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
+	Var h = MakeVariable("h");
 
 	auto f1 = x-y*t;
 	
@@ -195,10 +198,10 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var y = std::make_shared<bertini::node::Variable>("y");
-	Var z = std::make_shared<bertini::node::Variable>("z");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var z = MakeVariable("z");
+	Var h = MakeVariable("h");
 
 	auto f1 = pow(x,2) + pow(y,2) + pow(z,2)-1;
 	
@@ -230,10 +233,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var y = std::make_shared<bertini::node::Variable>("y");
-	Var z = std::make_shared<bertini::node::Variable>("z");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var z = MakeVariable("z");
+	Var h = MakeVariable("h");
 
 	auto f1 = x*y+x*z+y*z-1;
 	BOOST_CHECK(!f1->IsHomogeneous());
@@ -265,8 +268,8 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var h = MakeVariable("h");
 	
 
 	auto f1 = pow(x,2) + x + 1;
@@ -293,8 +296,8 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var h = MakeVariable("h");
 	
 
 	auto f1 = pow(x,2) + x;
@@ -321,9 +324,9 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var y = std::make_shared<bertini::node::Variable>("y");
-	Var h = std::make_shared<bertini::node::Variable>("h");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var h = MakeVariable("h");
 	
 
 	auto f1 = pow(x,2) + x;
@@ -353,7 +356,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_sin_x)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var x = MakeVariable("x");
 
 	auto f1 = sin(x);
 	
@@ -366,7 +369,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_sin_x)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_cos_x)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var x = MakeVariable("x");
 
 	auto f1 = cos(x);
 	
@@ -377,7 +380,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_cos_x)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_tan_x)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var x = MakeVariable("x");
 
 	auto f1 = tan(x);
 	
@@ -390,7 +393,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_tan_x)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_exp_x)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var x = MakeVariable("x");
 
 	auto f1 = exp(x);
 	
@@ -402,7 +405,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_exp_x)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_sqrt_x)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
+	Var x = MakeVariable("x");
 
 	auto f1 = sqrt(x);
 	
@@ -415,7 +418,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_sqrt_x)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 {
-	Float n = std::make_shared<bertini::node::Float>("1");
+	Float n = MakeFloat("1");
 
 	auto f1 = sin(n);
 	
@@ -426,7 +429,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_sin_0)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 {
-	Float n = std::make_shared<bertini::node::Float>("1");
+	Float n = MakeFloat("1");
 
 	auto f1 = cos(n);
 	
@@ -437,7 +440,7 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_cos_1)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_sin_1_plus_1)
 {
-	Float n = std::make_shared<bertini::node::Float>("1");
+	Float n = MakeFloat("1");
 
 	auto f1 = sin(n + n);
 	
@@ -451,8 +454,8 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_sin_1_plus_1)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var y = std::make_shared<bertini::node::Variable>("y");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
 
 	auto a = pow(x,3) / 2;
 	auto b = pow(x,2) * mpfr_float("4.12331") * pow(x,1);
@@ -470,8 +473,8 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 
 BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 {
-	Var x = std::make_shared<bertini::node::Variable>("x");
-	Var y = std::make_shared<bertini::node::Variable>("y");
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
 
 	auto a = pow(x,3) / 2;
 	auto b = pow(x,2) * mpfr_float("4.12331");

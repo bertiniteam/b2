@@ -56,6 +56,8 @@ using mpfr = bertini::mpfr;
 
 
 
+using bertini::MakeVariable;
+using bertini::MakeFloat;
 
 BOOST_AUTO_TEST_SUITE(function_tree_class)
 
@@ -68,7 +70,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	dbl exact_dbl = anum_dbl*anum_dbl;
 	mpfr exact_mpfr = anum_mpfr*anum_mpfr;
@@ -91,7 +93,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	
 	dbl exact_dbl = xnum_dbl*xnum_dbl;
 	mpfr exact_mpfr = xnum_mpfr*xnum_mpfr;
@@ -121,7 +123,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	
 	dbl exact_dbl = sqrt(xnum_dbl);
 	mpfr exact_mpfr = sqrt(xnum_mpfr);
@@ -147,9 +149,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -236,9 +238,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -329,9 +331,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_times_number){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -418,8 +420,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -464,7 +466,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -497,10 +499,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -538,10 +540,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
 BOOST_AUTO_TEST_CASE(manual_construction_lx_minus_y_minus_num1l_pow_num2){
 	using mpfr_float = bertini::mpfr_float;
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -571,10 +573,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
 	
 	
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -621,9 +623,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_over_yl_pow_num2){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -662,8 +664,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lnegative_xl_pow_num2){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -690,9 +692,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_plus_y_plus_num1){
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -730,9 +732,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_minus_y_minus_num1){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -772,9 +774,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_times_y_times_num1){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -834,9 +836,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_over_y){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -889,8 +891,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_pow_num2){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -923,9 +925,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_over_num){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -975,10 +977,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_times_ly_plus_num2l){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> b = std::make_shared<Float>(bstr_real, bstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> b = MakeFloat(bstr_real, bstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -1007,10 +1009,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_times_y_plus_num2){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> b = std::make_shared<Float>(bstr_real, bstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> b = MakeFloat(bstr_real, bstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -1038,10 +1040,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_over_ly_plus_num2l){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> b = std::make_shared<Float>(bstr_real, bstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> b = MakeFloat(bstr_real, bstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -1069,10 +1071,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_over_y_plus_num2){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Variable> y = std::make_shared<Variable>("y");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> b = std::make_shared<Float>(bstr_real, bstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> y = MakeVariable("y");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> b = MakeFloat(bstr_real, bstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
@@ -1100,9 +1102,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_plus_num1){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1127,9 +1129,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_lnum1_pow_num2l){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1154,9 +1156,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_lnum1_pow_num2l){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1181,9 +1183,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1208,9 +1210,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_over_num1){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1238,8 +1240,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_pow_lsqrt_xl_num)
 	auto exact_dbl = pow(sqrt(xnum_dbl),anum_dbl);
 	auto exact_mpfr = pow(sqrt(xnum_mpfr),anum_mpfr);
 
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(xnum_mpfr);
@@ -1272,9 +1274,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_over_lnum1_pow_num2l){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1299,9 +1301,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1326,9 +1328,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_times_num2l){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1353,9 +1355,9 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_over_num2l){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
-	std::shared_ptr<Float> p = std::make_shared<Float>(pstr_real, pstr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
+	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1389,7 +1391,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	dbl exact_dbl = sin(anum_dbl);
 	mpfr exact_mpfr = sin(anum_mpfr);
@@ -1421,7 +1423,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
 BOOST_AUTO_TEST_CASE(manual_construction_cos_num){
 	using mpfr_float = bertini::mpfr_float;
 	
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	dbl exact_dbl = cos(anum_dbl);
 	mpfr exact_mpfr = cos(anum_mpfr);
@@ -1443,7 +1445,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_num){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	dbl exact_dbl = tan(anum_dbl);
 	mpfr exact_mpfr = tan(anum_mpfr);
@@ -1465,7 +1467,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	dbl exact_dbl = exp(anum_dbl);
 	mpfr exact_mpfr = exp(anum_mpfr);
@@ -1498,7 +1500,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_num){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	dbl exact_dbl = sqrt(anum_dbl);
 	mpfr exact_mpfr = sqrt(anum_mpfr);
@@ -1520,8 +1522,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1546,8 +1548,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
 BOOST_AUTO_TEST_CASE(manual_construction_cos_of_lx_times_numl){
 	using mpfr_float = bertini::mpfr_float;
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1572,8 +1574,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_of_lx_over_numl){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1598,7 +1600,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_of_negative_num){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	dbl exact_dbl = exp(-anum_dbl);
 	mpfr exact_mpfr = exp(-anum_mpfr);
@@ -1619,8 +1621,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-	std::shared_ptr<Float> a = std::make_shared<Float>(astr_real, astr_imag);
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -1659,7 +1661,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
 
 BOOST_AUTO_TEST_CASE(arcsine_evaluate)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = asin(pow(x,2)+1);
 
 	x->set_current_value<dbl>(xnum_dbl);
@@ -1679,7 +1681,7 @@ BOOST_AUTO_TEST_CASE(arcsine_evaluate)
 
 BOOST_AUTO_TEST_CASE(arccosine_evaluate)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = acos(pow(x,2)+1);
 
 	x->set_current_value<dbl>(xnum_dbl);
@@ -1698,7 +1700,7 @@ BOOST_AUTO_TEST_CASE(arccosine_evaluate)
 
 BOOST_AUTO_TEST_CASE(arctangent_evaluate)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = atan(pow(x,2)+1);
 
 	x->set_current_value<dbl>(xnum_dbl);
@@ -1718,7 +1720,7 @@ BOOST_AUTO_TEST_CASE(arctangent_evaluate)
 
 BOOST_AUTO_TEST_CASE(log_evaluate)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = log(pow(x,2)+1);
 
 	x->set_current_value<dbl>(xnum_dbl);
@@ -1798,7 +1800,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_i){
 
 BOOST_AUTO_TEST_CASE(function_tree_combine_product_of_two_integer_powers)
 {
-	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
+	std::shared_ptr<Variable> x = MakeVariable("x");
 	std::shared_ptr<Node> N,M,P;
 
 	N = pow(x,5);
@@ -1825,21 +1827,6 @@ BOOST_AUTO_TEST_CASE(function_tree_combine_product_of_two_integer_powers)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-
-
-
-// BOOST_AUTO_TEST_SUITE(function_tree_default_constructors)
-
-// BOOST_AUTO_TEST_CASE(function)
-// {
-
-// 	std::shared_ptr<Variable> x = std::make_shared<Variable>("x");
-//     std::shared_ptr<Node> f = std::make_shared<Function>();
-//     f += x;
-//     BOOST_CHECK_EQUAL(f->Eval<dbl>(),dbl(0));
-
-// }
-// BOOST_AUTO_TEST_SUITE_END()
 
 
 

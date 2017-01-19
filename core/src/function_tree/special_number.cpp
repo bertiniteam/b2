@@ -41,23 +41,23 @@ namespace node{
 
 	std::shared_ptr<Node> I()
 	{
-		return std::make_shared<Float>(0,1);
+		return MakeFloat(0,1);
 	}
 
 
 	std::shared_ptr<Node> Two()
 	{
-		return std::make_shared<Integer>(2);
+		return MakeInteger(2);
 	}
 
 	std::shared_ptr<Node> One()
 	{
-		return std::make_shared<Integer>(1);
+		return MakeInteger(1);
 	}
 
 	std::shared_ptr<Node> Zero()
 	{
-		return std::make_shared<Integer>(0);
+		return MakeInteger(0);
 	}
 
 }
