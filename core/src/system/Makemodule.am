@@ -2,17 +2,21 @@
 
 system_header_files = \
 	include/bertini2/system.hpp \
-	include/bertini2/system/system.hpp \
-	include/bertini2/system/start_system.hpp \
 	include/bertini2/system/patch.hpp \
+	include/bertini2/system/precon.hpp \
 	include/bertini2/system/slice.hpp \
-	include/bertini2/system/precon.hpp 
+	include/bertini2/system/start_base.hpp \
+	include/bertini2/system/start_systems.hpp \
+	include/bertini2/system/system.hpp \
+	include/bertini2/system/start/total_degree.hpp
+
 
 system_source_files = \
-	src/system/start_system.cpp \
-	src/system/system.cpp \
 	src/system/precon.cpp \
-	src/system/slice.hpp 
+	src/system/slice.cpp \
+	src/system/start_base.cpp \
+	src/system/system.cpp \
+	src/system/start/total_degree.cpp
 
 system = $(system_header_files) $(system_source_files)
 
@@ -24,8 +28,20 @@ rootinclude_HEADERS += \
 systemincludedir = $(includedir)/bertini2/system/
 
 systeminclude_HEADERS = \
-	include/bertini2/system/precon.hpp \
-	include/bertini2/system/start_system.hpp \
-	include/bertini2/system/system.hpp \
 	include/bertini2/system/patch.hpp \
-	include/bertini2/system/slice.hpp 
+	include/bertini2/system/precon.hpp \
+	include/bertini2/system/slice.hpp \
+	include/bertini2/system/start_base.hpp \
+	include/bertini2/system/start_systems.hpp \
+	include/bertini2/system/system.hpp
+	
+	
+	
+
+startincludedir = $(includedir)/bertini2/system/start/
+
+startinclude_HEADERS = \
+	include/bertini2/system/start/total_degree.hpp
+
+
+

@@ -26,7 +26,7 @@
 
 
 #include <boost/test/unit_test.hpp>
-#include "bertini2/system/start_system.hpp"
+#include "bertini2/system/start_systems.hpp"
 #include "bertini2/trackers/tracker.hpp"
 
 using System = bertini::System;
