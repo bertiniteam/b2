@@ -1,19 +1,19 @@
 //This file is part of Bertini 2.
 //
-//start_system.cpp is free software: you can redistribute it and/or modify
+//mhom.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//start_system.cpp is distributed in the hope that it will be useful,
+//mhom.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with start_system.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with mhom.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -22,18 +22,18 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 
-#include "bertini2/system/start_system.hpp"
+#include "bertini2/system/start/mhom.hpp"
 
 
-BOOST_CLASS_EXPORT(bertini::start_system::TotalDegree);
+BOOST_CLASS_EXPORT(bertini::start_system::MHomogeneous);
 
 
 namespace bertini {
 
 	namespace start_system {
 
-		// constructor for TotalDegree start system, from any other *suitable* system.
-		TotalDegree::TotalDegree(System const& s)
+		// constructor for MHomogeneous start system, from any other *suitable* system.
+		MHomogeneous::MHomogeneous(System const& s)
 		{
 
 			if (s.NumHomVariableGroups() > 0)
@@ -44,12 +44,7 @@ namespace bertini {
 				throw std::runtime_error("attempting to construct total degree start system from non-square target system");
 
 			if (s.HavePathVariable())
-				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");
-
-			if (s.NumVariableGroups() != 1)
-				throw std::runtime_error("more than one affine variable group.  currently unallowed");
-
-			
+				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");			
 
 			if (!s.IsPolynomial())
 				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
@@ -85,7 +80,7 @@ namespace bertini {
 		}// total degree constructor
 
 		
-		TotalDegree& TotalDegree::operator*=(Nd const& n)
+		MHomogeneous& MHomogeneous::operator*=(Nd const& n)
 		{
 			*this *= n;
 			return *this;
@@ -93,7 +88,7 @@ namespace bertini {
 		
 		
 
-		unsigned long long TotalDegree::NumStartPoints() const
+		unsigned long long MHomogeneous::NumStartPoints() const
 		{
 			unsigned long long num_start_points = 1;
 			for (auto iter : degrees_)
@@ -103,7 +98,7 @@ namespace bertini {
 
 
 		
-		Vec<dbl> TotalDegree::GenerateStartPoint(dbl,unsigned long long index) const
+		Vec<dbl> MHomogeneous::GenerateStartPoint(dbl,unsigned long long index) const
 		{
 			Vec<dbl> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
@@ -125,7 +120,7 @@ namespace bertini {
 		}
 
 
-		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,unsigned long long index) const
+		Vec<mpfr> MHomogeneous::GenerateStartPoint(mpfr,unsigned long long index) const
 		{
 			Vec<mpfr> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
@@ -151,7 +146,7 @@ namespace bertini {
 		}
 
 		inline
-		TotalDegree operator*(TotalDegree td, std::shared_ptr<node::Node> const& n)
+		MHomogeneous operator*(MHomogeneous td, std::shared_ptr<node::Node> const& n)
 		{
 			td *= n;
 			return td;

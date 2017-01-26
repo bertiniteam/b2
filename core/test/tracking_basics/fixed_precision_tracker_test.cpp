@@ -25,7 +25,7 @@
 
 
 #include <boost/test/unit_test.hpp>
-#include "bertini2/system/start_system.hpp"
+#include "bertini2/system/start_systems.hpp"
 #include "bertini2/trackers/fixed_precision_tracker.hpp"
 #include "bertini2/trackers/observers.hpp"
 
