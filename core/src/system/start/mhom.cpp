@@ -36,44 +36,45 @@ namespace bertini {
 		MHomogeneous::MHomogeneous(System const& s)
 		{
 
-			if (s.NumHomVariableGroups() > 0)
-				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
+			// if (s.NumHomVariableGroups() > 0)
+			// 	throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
 
 
-			if (s.NumTotalFunctions() != s.NumVariables())
-				throw std::runtime_error("attempting to construct total degree start system from non-square target system");
+			// if (s.NumTotalFunctions() != s.NumVariables())
+			// 	throw std::runtime_error("attempting to construct total degree start system from non-square target system");
 
-			if (s.HavePathVariable())
-				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");			
+			// if (s.HavePathVariable())
+			// 	throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");			
 
-			if (!s.IsPolynomial())
-				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
+			// if (!s.IsPolynomial())
+			// 	throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
 
+			CreateDegreeMatrix(s);
 			
 
-			auto deg = s.Degrees();
-			for (auto iter : deg)
-				degrees_.push_back((size_t) iter);
+			// auto deg = s.Degrees();
+			// for (auto iter : deg)
+			// 	degrees_.push_back((size_t) iter);
 
-			CopyVariableStructure(s);
+			// CopyVariableStructure(s);
 
-			random_values_.resize(s.NumFunctions());
+			// random_values_.resize(s.NumFunctions());
 
 
-			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
-				random_values_[ii] = MakeRational(node::Rational::Rand());
+			// for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
+			// 	random_values_[ii] = MakeRational(node::Rational::Rand());
 
-			// by hypothesis, the system has a single variable group.
-			VariableGroup v = this->AffineVariableGroup(0);
+			// // by hypothesis, the system has a single variable group.
+			// VariableGroup v = this->AffineVariableGroup(0);
 
-			for (auto iter = v.begin(); iter!=v.end(); iter++)
-				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[iter-v.begin()]); 
+			// for (auto iter = v.begin(); iter!=v.end(); iter++)
+			// 	AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[iter-v.begin()]); 
 			
-			if (s.IsHomogeneous())
-				Homogenize();
+			// if (s.IsHomogeneous())
+			// 	Homogenize();
 
-			if (s.IsPatched())
-				CopyPatches(s);
+			// if (s.IsPatched())
+			// 	CopyPatches(s);
 
 			gamma_ = MakeRational(node::Rational::Rand());
 			// *this *= static_cast<std::shared_ptr<node::Node> >(gamma_);
@@ -94,6 +95,24 @@ namespace bertini {
 			for (auto iter : degrees_)
 				num_start_points*=iter;
 			return num_start_points;
+		}
+
+		void MHomogeneous::CreateDegreeMatrix(System const& s)
+		{
+			degree_matrix_ = Mat<int>(s.NumFunctions(),s.NumHomVariableGroups());
+			auto var_groups = s.HomVariableGroups();
+			int col_count = 0;
+			for(std::vector<VariableGroup>::iterator it = var_groups.begin(); it != var_groups.end(); ++it) 
+			{
+  				std::vector<int> degs = s.Degrees(*it);
+
+  				for(int ii = 0; ii <= degs.size() - 1; ++ii)
+  				{
+  					degree_matrix_(ii,col_count) = degs[ii];
+  				}
+  				col_count++;
+			}
+
 		}
 
 

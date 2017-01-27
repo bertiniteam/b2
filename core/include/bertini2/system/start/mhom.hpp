@@ -68,6 +68,8 @@ namespace bertini
 			MHomogeneous& operator*=(Nd const& n);
 
 			MHomogeneous& operator+=(System const& sys) = delete;
+
+			Mat<int> degree_matrix_; // stores degrees of all functions in all homogeneous variable groups.
 			
 		private:
 
