@@ -80,8 +80,6 @@ namespace bertini {
 			if (s.IsPatched())
 				CopyPatches(s);
 
-			gamma_ = MakeRational(node::Rational::Rand());
-			// *this *= static_cast<std::shared_ptr<node::Node> >(gamma_);
 		}// total degree constructor
 
 		
