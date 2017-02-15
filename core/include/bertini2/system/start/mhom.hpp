@@ -57,8 +57,9 @@ namespace bertini
 			*/
 			MHomogeneous(System const& s);
 
+			void CreateDegreeMatrix(System const& s);
 
-			
+			void GenerateValidPartitions(System const& s);
 
 			/**
 			Get the number of start points for this total degree start system.  This is the Bezout bound for the target system.  Provided here for your convenience.
@@ -71,6 +72,9 @@ namespace bertini
 
 			Mat<int> degree_matrix_; // stores degrees of all functions in all homogeneous variable groups.
 			
+			Vec< Vec<int> > vector_of_valid_partitions;
+
+
 		private:
 
 			/**
