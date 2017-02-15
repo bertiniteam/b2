@@ -21,6 +21,7 @@
 
 // individual authors of this file include:
 // daniel brake, university of notre dame
+// karleigh cameron, colorado state university
 
 #include "bertini2/system/start/mhom.hpp"
 
