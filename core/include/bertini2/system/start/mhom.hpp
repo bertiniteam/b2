@@ -21,7 +21,7 @@
 
 // individual authors of this file include:
 // daniel brake, university of notre dame
-
+// Tim Hodges, Colorado State University
 /**
 \file mhom.hpp 
 
@@ -36,7 +36,8 @@
 
 namespace bertini 
 {
-	namespace start_system{
+	namespace start_system
+	{
 
 
 		/**
@@ -57,12 +58,23 @@ namespace bertini
 			*/
 			MHomogeneous(System const& s);
 
+			/**
+			\brief Creates a degree matrix for constructing the multi-homogeneous start system.
+			*/
 			void CreateDegreeMatrix(System const& s);
 
+			/**
+			\brief Creates all valid partitions for multi-homogeneous start system to create start points.
+			*/
 			void GenerateValidPartitions(System const& s);
 
 			/**
-			Get the number of start points for this total degree start system.  This is the Bezout bound for the target system.  Provided here for your convenience.
+			\brief Helper function that is used to find valid partitions in the degree matrix.
+			*/
+			int ChooseColumnInRow(System const& s,Vec<int>& variable_group_counter, int row, int column);
+
+			/**
+			Get the number of start points for this m-homogeneous start system.  This is the Bezout bound for the target system.  Provided here for your convenience.
 			*/
 			unsigned long long NumStartPoints() const override;
 
@@ -70,9 +82,15 @@ namespace bertini
 
 			MHomogeneous& operator+=(System const& sys) = delete;
 
+			/**
+			\brief Degree matrix holding degrees for all functions in terms of all variable groups
+			*/
 			Mat<int> degree_matrix_; // stores degrees of all functions in all homogeneous variable groups.
 			
-			Vec< Vec<int> > vector_of_valid_partitions;
+			/**
+			\brief Partitions used for creating start points in the multi-homogeneous start system.
+			*/
+			std::deque< Vec<int> > valid_partitions;
 
 
 		private:
@@ -98,15 +116,16 @@ namespace bertini
 			friend class boost::serialization::access;
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned version) 
+			{
 				ar & boost::serialization::base_object<StartSystem>(*this);
 				ar & random_values_;
 				ar & degrees_;
 			}
 
 		};
-	}
-}
+	}//end start_system namespace
+}//end bertini namespace
 
 
 
