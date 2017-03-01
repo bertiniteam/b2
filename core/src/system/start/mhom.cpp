@@ -64,11 +64,11 @@ namespace bertini
 		}// M-Hom constructor
 
 		
-		// MHomogeneous& MHomogeneous::operator*=(Nd const& n)
-		// {
-		// 	*this *= n;
-		// 	return *this;
-		// }
+		MHomogeneous& MHomogeneous::operator*=(Nd const& n)
+		{
+			*this *= n;
+			return *this;
+		}
 		
 		
 		/**
@@ -140,6 +140,10 @@ namespace bertini
   				col_count++;
 			}
 
+			#ifndef BERTINI_DISABLE_ASSERTS
+				assert(degree_matrix_.rows() == degree_matrix_.cols());
+			#endif
+
 		}
 
 		/**
@@ -176,7 +180,7 @@ namespace bertini
 				variable_group_counter[ii] = size_of_each_var_gp[ii];
 			}			    
 			// std::cout << "variable_group_counter is " << std::endl;
-			// std::cout << variable_group_counter << std::endl;
+			// std::cout << variable_group_counter << std::endl;		
 			  while (row > -1)  // Algorithm will move up and down rows, kicking out to row=-1 at end
 			  {
 			  	// std::cout << "current_partition is " << std::endl;
@@ -323,14 +327,15 @@ namespace bertini
 
 
 			return start_point;
+			
 		}
 
-		// inline
-		// MHomogeneous operator*(MHomogeneous td, std::shared_ptr<node::Node> const& n)
-		// {
-		// 	td *= n;
-		// 	return td;
-		// }
+		inline
+		MHomogeneous operator*(MHomogeneous td, std::shared_ptr<node::Node> const& n)
+		{
+			td *= n;
+			return td;
+		}
 
 	} // namespace start_system
 
