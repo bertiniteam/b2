@@ -703,16 +703,19 @@ namespace bertini
 
 	std::vector<unsigned> System::VariableGroupSizesFIFO() const
 	{
+		bool have_homvars = NumHomVariables()>0;
+		if (have_homvars && NumHomVariables() != NumVariableGroups())
+			throw std::runtime_error("mismatch between number of homogenizing variables, and number of affine variables groups.  unable to form variable vector in FIFO ordering.  you probably need to homogenize the system.");
+
 		std::vector<unsigned> s;
 
 		unsigned hom_group_counter(0), affine_group_counter(0), patch_counter(0);
 		for (auto curr_grouptype : time_order_of_variable_groups_)
 		{
-			
 			if (curr_grouptype==VariableGroupType::Homogeneous)
 				s.push_back(hom_variable_groups_[hom_group_counter++].size());
 			else if (curr_grouptype==VariableGroupType::Affine)
-				s.push_back(variable_groups_[affine_group_counter++].size()+1);
+				s.push_back(variable_groups_[affine_group_counter++].size() + static_cast<int>(have_homvars));
 		}
 		return s;
 	}

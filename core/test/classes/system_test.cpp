@@ -884,7 +884,10 @@ BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 
 
 
-
+/**
+\class bertini::System
+\test \b concatenate_two_systems Test that contactenation of two systems works correctly
+*/
 BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 {
 
@@ -909,8 +912,11 @@ BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 	BOOST_CHECK_EQUAL(sys3.NumFunctions(),6);
 }
 
-
-BOOST_AUTO_TEST_CASE(ref_test)
+/**
+\class bertini::System
+\test \b parsed_system_evaluates_correctly 
+*/
+BOOST_AUTO_TEST_CASE(parsed_system_evaluates_correctly)
 {
 	
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
@@ -942,6 +948,60 @@ BOOST_AUTO_TEST_CASE(ref_test)
 
 
 
+
+BOOST_AUTO_TEST_CASE(variable_group_sizes_and_degrees_homvargrp)
+{
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+
+	System sys;
+
+	VariableGroup v1{x};
+	VariableGroup v2{y};
+
+	sys.AddHomVariableGroup(v1);
+	sys.AddHomVariableGroup(v2);
+
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(pow(x,2) - 1);
+
+	auto size_of_each_var_gp = sys.VariableGroupSizes(); 
+	
+	BOOST_CHECK_EQUAL(size_of_each_var_gp[0], 1);
+	BOOST_CHECK_EQUAL(size_of_each_var_gp[1], 1);
+	
+	BOOST_CHECK(!sys.IsHomogeneous());
+}
+
+BOOST_AUTO_TEST_CASE(variable_group_sizes_and_degrees_affvargrp)
+{
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+
+	System sys;
+
+	VariableGroup v1{x};
+	VariableGroup v2{y};
+
+	sys.AddVariableGroup(v1);
+	sys.AddVariableGroup(v2);
+
+	sys.AddFunction(x*y - 1);
+	sys.AddFunction(pow(x,2) - 1);
+
+	auto size_of_each_var_gp = sys.VariableGroupSizes(); 
+	
+	BOOST_CHECK_EQUAL(size_of_each_var_gp[0], 1);
+	BOOST_CHECK_EQUAL(size_of_each_var_gp[1], 1);
+	
+
+	sys.Homogenize();
+
+	size_of_each_var_gp = sys.VariableGroupSizes(); 
+	
+	BOOST_CHECK_EQUAL(size_of_each_var_gp[0], 2);
+	BOOST_CHECK_EQUAL(size_of_each_var_gp[1], 2);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()
