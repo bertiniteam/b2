@@ -49,18 +49,25 @@ using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(m_hom_system_class)
 
-
-BOOST_AUTO_TEST_CASE(m_hom_system_construct_degree_matrix_num_start_pts_and_partitions_using_hom_var_groups)
+BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_small_example)
 {
 
-	/* Test case to check if we are creating a degree matrix correctly. 
-	   This is not checking how homogenization or patching effects our MHomogeneous start system.
-	*/
-	DefaultPrecision(30);
+	/* 
+		Test case to check if we are creating a degree matrix correctly. 
+		This is not checking how homogenization or patching effects our MHomogeneous start system.
 
+	   	f = x*y;
+	   	g = x^2*y^2;  f, g are homogeneous w.r.t x and y.
+
+		degree matrix: [1 1]
+					   [2 2]
+		valid partitions <0,1>, <1,0> these are the entries in each row to grab.
+		
+		num start points is 1*2 + 1*2 = 4.			   
+
+	*/
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
-
 
 	System sys;
 
@@ -70,145 +77,97 @@ BOOST_AUTO_TEST_CASE(m_hom_system_construct_degree_matrix_num_start_pts_and_part
 	sys.AddHomVariableGroup(v1);
 	sys.AddHomVariableGroup(v2);
 
-	sys.AddFunction(x*y - 1);
-	sys.AddFunction(pow(x,2) - 1);
+	sys.AddFunction(x*y);
+	sys.AddFunction(pow(x,2)*pow(y,2));
 	
 	auto mhom_start_system = bertini::start_system::MHomogeneous(sys);
 
-	std::cout << "deg mat is " << std::endl;
-	std::cout << mhom_start_system.degree_matrix_ << std::endl;
+	Vec<int> partition_1(2);
+	partition_1 << 0, 1;
 
-	std::cout << "1st partition is " << std::endl;
-	std::cout << mhom_start_system.valid_partitions[0] << std::endl;
+	Vec<int> partition_2(2);
+	partition_2 << 1, 0;
 
 
-
-	Vec<int> partition_check(2);
-	partition_check << 1, 0;
-
-	BOOST_CHECK(mhom_start_system.valid_partitions.front() == partition_check);
+	BOOST_CHECK(mhom_start_system.valid_partitions[0] == partition_1);
+	BOOST_CHECK(mhom_start_system.valid_partitions[1] == partition_2);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,0) == 1);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,1) == 1);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(1,0) == 2);
-	BOOST_CHECK(mhom_start_system.degree_matrix_(1,1) == 0);
+	BOOST_CHECK(mhom_start_system.degree_matrix_(1,1) == 2);
 
-	BOOST_CHECK(mhom_start_system.NumStartPoints() == 2);
-
-}
-
-
-BOOST_AUTO_TEST_CASE(m_hom_system_construct_degree_matrix_num_start_pts_and_partitions_using_var_groups)
-{
-
-	/* Test case to check if we are creating a degree matrix correctly. 
-	   This is not checking how homogenization or patching effects our MHomogeneous start system.
-	*/
-	DefaultPrecision(30);
-
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-
-	System sys;
-
-	VariableGroup v1{x};
-	VariableGroup v2{y};
-
-	sys.AddVariableGroup(v1);
-	sys.AddVariableGroup(v2);
-
-	sys.AddFunction(x*y - 1);
-	sys.AddFunction(pow(x,2) - 1);
-	
-	sys.Homogenize();
-	sys.AutoPatch();
-
-	auto mhom_start_system = bertini::start_system::MHomogeneous(sys);
-
-	std::cout << "deg mat is " << std::endl;
-	std::cout << mhom_start_system.degree_matrix_ << std::endl;
-
-	std::cout << "1st partition is " << std::endl;
-	std::cout << mhom_start_system.valid_partitions[0] << std::endl;
-
-
-
-	// Vec<int> partition_check(2);
-	// partition_check << 1, 0;
-
-	// BOOST_CHECK(mhom_start_system.valid_partitions.front() == partition_check);
-	// BOOST_CHECK(mhom_start_system.degree_matrix_(0,0) == 1);
-	// BOOST_CHECK(mhom_start_system.degree_matrix_(0,1) == 1);
-	// BOOST_CHECK(mhom_start_system.degree_matrix_(1,0) == 2);
-	// BOOST_CHECK(mhom_start_system.degree_matrix_(1,1) == 0);
-
-	// BOOST_CHECK(mhom_start_system.NumStartPoints() == 2);
+	BOOST_CHECK(mhom_start_system.NumStartPoints() == 4);
 
 }
 
 
-
-
-BOOST_AUTO_TEST_CASE(m_hom_start_system_bigger_system_contruction_test)
+BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_larger_example)
 {
 
 	/* Test case to check if we are creating a degree matrix correctly. 
 	   This is not checking how homogenization or patching effects our MHomogeneous start system.
-	*/
-	DefaultPrecision(30);
 
+	  	f = x*y;
+	   	g = y^2*z^2;  
+	   	h = x^3*z^3;  f, g, and h are homogeneous w.r.t x, y, and z.
+
+		degree matrix: [1 1 0]
+					   [0 2 2]
+					   [3 0 3]
+		valid partitions <0,1,2>, <1,2,0> these are the entries in each row to grab.
+		
+		num start points is 1*2*3 + 1*2*3 = 12.	
+	*/
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 	auto z = MakeVariable("z");
 
+
 	System sys;
 
 	VariableGroup v1{x};
 	VariableGroup v2{y};
-	VariableGroup v3{z};	
+	VariableGroup v3{z};
 
 	sys.AddHomVariableGroup(v1);
 	sys.AddHomVariableGroup(v2);
 	sys.AddHomVariableGroup(v3);
 
 	sys.AddFunction(x*y);
-	sys.AddFunction(pow(x,2)*pow(y,2) + 2*z);
-	sys.AddFunction(x*z);
+	sys.AddFunction(pow(y,2)*pow(z,2));
+	sys.AddFunction(pow(x,3)*pow(z,3));
 
-	
 	auto mhom_start_system = bertini::start_system::MHomogeneous(sys);
 
+	// for(int ii = 0; ii < mhom_start_system.valid_partitions.size(); ii++)
+	// {
+	// 	std::cout << "valid partition: " << std::endl <<  mhom_start_system.valid_partitions[ii] << std::endl; 
+	// }
+
 	Vec<int> partition_1(3);
-	partition_1 << 0, 1, 2;
+	partition_1 << 0, 1,2;
 
 	Vec<int> partition_2(3);
-	partition_2 << 1, 0, 2;
+	partition_2 << 1, 2, 0;
 
-	Vec<int> partition_3(3);
-	partition_3 << 1, 2, 0;
-
-
-
-	BOOST_CHECK(mhom_start_system.valid_partitions[0] == partition_1);
-	BOOST_CHECK(mhom_start_system.valid_partitions[1] == partition_2);
-	BOOST_CHECK(mhom_start_system.valid_partitions[2] == partition_3);
-
+	BOOST_CHECK(mhom_start_system.valid_partitions[0]== partition_1);
+	BOOST_CHECK(mhom_start_system.valid_partitions[1]== partition_2);
 
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,0) == 1);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,1) == 1);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,2) == 0);
 
-	BOOST_CHECK(mhom_start_system.degree_matrix_(1,0) == 2);
+	BOOST_CHECK(mhom_start_system.degree_matrix_(1,0) == 0);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(1,1) == 2);
-	BOOST_CHECK(mhom_start_system.degree_matrix_(1,2) == 1);
+	BOOST_CHECK(mhom_start_system.degree_matrix_(1,2) == 2);
 
-	BOOST_CHECK(mhom_start_system.degree_matrix_(2,0) == 1);
+	BOOST_CHECK(mhom_start_system.degree_matrix_(2,0) == 3);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(2,1) == 0);
-	BOOST_CHECK(mhom_start_system.degree_matrix_(2,2) == 1);
+	BOOST_CHECK(mhom_start_system.degree_matrix_(2,2) == 3);
 
-	BOOST_CHECK(mhom_start_system.NumStartPoints() == 5);
+	BOOST_CHECK(mhom_start_system.NumStartPoints() == 12);
 
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 
