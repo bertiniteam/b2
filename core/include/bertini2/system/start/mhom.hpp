@@ -78,6 +78,8 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
+			unsigned long long NumStartPointsForPartition(Vec<int> partition) const;
+
 			MHomogeneous& operator*=(Nd const& n);
 
 			MHomogeneous& operator+=(System const& sys) = delete;

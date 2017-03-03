@@ -44,10 +44,17 @@ namespace bertini
 				throw std::runtime_error("attempting to construct multi homogeneous start system from non-square target system");
 
 			if (s.HavePathVariable())
-				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");			
+				throw std::runtime_error("attempting to construct multi homogeneous start system, but target system has path varible declared already");			
 
 			if (!s.IsPolynomial())
-				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
+				throw std::runtime_error("attempting to construct multi homogeneous start system from non-polynomial target system");
+
+
+			if(!s.IsHomogeneous())
+						throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
+
+
+
 
 			CreateDegreeMatrix(s);
 
@@ -87,17 +94,10 @@ namespace bertini
 		unsigned long long MHomogeneous::NumStartPoints() const
 		{
 			unsigned long long num_start_points = 0;
-			unsigned long long temp = 1;
 			for(int ii = 0; ii < valid_partitions.size(); ii++)
 			{ 
-    			for(int jj = 0; jj < valid_partitions[ii].size() ; jj++)
-    			{
-    				temp *= degree_matrix_(jj,valid_partitions[ii][jj]); 
-    			}
-    			num_start_points += temp;
-    			temp = 1;
+    			num_start_points += NumStartPointsForPartition(valid_partitions[ii]);
 			}
-
 			return num_start_points;
 		}
 
@@ -285,20 +285,6 @@ namespace bertini
 		Vec<dbl> MHomogeneous::GenerateStartPoint(dbl,unsigned long long index) const
 		{
 			Vec<dbl> start_point(NumVariables());
-			// auto indices = IndexToSubscript(index, degrees_);
-
-			// unsigned offset = 0;
-			// if (IsPatched())
-			// {
-			// 	start_point(0) = dbl(1);
-			// 	offset = 1;
-			// }
-
-			// for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-			// 	start_point(ii+offset) = exp( std::acos(-1) * dbl(0,2) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), double(1) / double(degrees_[ii]));
-
-			// if (IsPatched())
-			// 	RescalePointToFitPatchInPlace(start_point);
 
 			return start_point;
 		}
@@ -307,27 +293,8 @@ namespace bertini
 		Vec<mpfr> MHomogeneous::GenerateStartPoint(mpfr,unsigned long long index) const
 		{
 			Vec<mpfr> start_point(NumVariables());
-			// auto indices = IndexToSubscript(index, degrees_);
 
-			// unsigned offset = 0;
-			// if (IsPatched())
-			// {
-			// 	start_point(0) = mpfr(1);
-			// 	offset = 1;
-			// }
-
-			// auto two_i = mpfr(0,2);
-			// auto one = mpfr(1);
-
-			// for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-			// 	start_point(ii+offset) = exp( acos( mpfr_float(-1) ) * two_i * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), one / degrees_[ii]);
-
-			// if (IsPatched())
-			// 	RescalePointToFitPatchInPlace(start_point);
-
-
-			return start_point;
-			
+			return start_point;	
 		}
 
 		inline
@@ -335,6 +302,18 @@ namespace bertini
 		{
 			td *= n;
 			return td;
+		}
+
+
+		unsigned long long MHomogeneous::NumStartPointsForPartition(Vec<int> partition) const
+		{
+			unsigned long long num_points = 1;
+    			for(int ii = 0; ii < partition.size() ; ii++)
+    			{
+    				num_points *= degree_matrix_(ii,partition[ii]); 
+    			}
+
+			return num_points;
 		}
 
 	} // namespace start_system
