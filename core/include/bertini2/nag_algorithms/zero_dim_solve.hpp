@@ -158,7 +158,7 @@ namespace bertini {
 
 // a few more using statements
 
-			using MidpathT 			= MidpathChecker<StartSystemType, BaseRealType, BaseComplexType, EGBoundaryMetaData>;
+			using MidpathType = MidpathChecker<BaseRealType, BaseComplexType, EGBoundaryMetaData>;
 
 			using SystemManagementPolicy::TargetSystem;
 			using SystemManagementPolicy::StartSystem;
@@ -251,13 +251,13 @@ namespace bertini {
 			*/
 			void DefaultMidpathSetup()
 			{
-				midpath_ = std::make_shared<MidpathT>(StartSystem(), config::MidPath<BaseRealType>());
+				midpath_ = MidpathType(config::MidPath<BaseRealType>());
 			}
 
 
 			void SetMidpath(config::MidPath<BaseRealType> const& mp)
 			{
-				midpath_->Set(mp);
+				midpath_.Set(mp);
 			}
 
 			/**
@@ -473,13 +473,13 @@ namespace bertini {
 
 			void EGBoundaryAction()
 			{
-				auto midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
+				auto midcheckpassed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
 				
 				unsigned num_resolve_attempts = 0;
 				while (!midcheckpassed && num_resolve_attempts < this->template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts)
 				{
 					MidpathResolve();
-					midcheckpassed = midpath_->Check(solutions_at_endgame_boundary_);
+					midcheckpassed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
 					num_resolve_attempts++;
 				}
 			}
@@ -489,7 +489,7 @@ namespace bertini {
 			{
 				ShrinkMidpathTolerance();
 				
-				for(auto const& v : midpath_->GetCrossedPaths())
+				for(auto const& v : midpath_.GetCrossedPaths())
 				{
 					if(v.rerun())
 					{
@@ -611,7 +611,7 @@ namespace bertini {
 			/// function objects used during the algorithm
 			TrackerType tracker_;
 			EndgameType endgame_;
-			std::shared_ptr<MidpathT> midpath_; /// remove shared_ptr plx.
+			MidpathType midpath_; /// remove shared_ptr plx.
 
 
 

@@ -42,7 +42,7 @@ namespace bertini{
 	namespace algorithm{
 
 		
-		template<typename StartSystemT, typename RealType, typename ComplexType, typename MetaDataType>
+		template<typename RealType, typename ComplexType, typename MetaDataType>
 		struct MidpathChecker : public detail::Configured<config::MidPath<RealType>>
 		{
 			using MidPathConfT = config::MidPath<RealType>;
@@ -50,18 +50,17 @@ namespace bertini{
 			using BoundaryData = SolnCont< MetaDataType >;
 			using PathIndT = unsigned long long;
 			
+
+			MidpathChecker() = default;
+
 			/**
 			\brief Construct a MidpathChecker, given the system it is checking, and the tolerance which should be used to tell whether two points are the same.  
 
 			\note The tolerance should be *lower* than the tracking tolerance used to compute these points.
 			*/
 			template<typename ...T>
-			MidpathChecker( StartSystemT start_system, T const& ...config) : AlgConf(config...)
+			MidpathChecker( T const& ...config) : AlgConf(config...)
 			{
-				// boundary_same_point_tolerance_ = tol;
-				
-				start_system_ = start_system;
-				
 				passed_ = true;
 			}
 			
@@ -130,7 +129,8 @@ namespace bertini{
 			 \returns A Data object which stores data about crossed paths
 			 
 			*/
-			bool Check(BoundaryData const& boundary_data)
+			template <typename StartSystemT>
+			bool Check(BoundaryData const& boundary_data, StartSystemT const& start_system)
 			{
 				for (PathIndT ii = 0; ii < boundary_data.size(); ++ii)
 				{
@@ -148,8 +148,8 @@ namespace bertini{
 								bool i_already_stored = false;
 								bool j_already_stored = false;
 								// Check if start points are the same
-								const auto& start_ii = start_system_.template StartPoint<ComplexType>(ii);
-								const auto& start_jj = start_system_.template StartPoint<ComplexType>(jj);
+								const auto& start_ii = start_system.template StartPoint<ComplexType>(ii);
+								const auto& start_jj = start_system.template StartPoint<ComplexType>(jj);
 								auto diff_start = start_ii - start_jj;
 								bool same_start = (diff_start.norm() > SamePointTol());
 								
@@ -193,7 +193,7 @@ namespace bertini{
 			};
 			
 			
-			std::vector<CrossedPath> GetCrossedPaths()
+			const std::vector<CrossedPath> GetCrossedPaths() const
 			{
 				return crossed_paths_;
 			}
@@ -201,8 +201,6 @@ namespace bertini{
 			
 			
 		private:
-			// RealType boundary_same_point_tolerance_;
-			StartSystemT start_system_;
 			
 			std::vector<CrossedPath> crossed_paths_; // Data for all paths that crossed on last check
 			bool passed_;  // Did the check pass?
