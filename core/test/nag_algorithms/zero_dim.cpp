@@ -31,6 +31,8 @@
 #include "bertini2/endgames/endgame.hpp"
 #include "bertini2/system/start_systems.hpp"
 #include <boost/test/unit_test.hpp>
+#include "bertini2/nag_algorithms/output.hpp"
+
 
 BOOST_AUTO_TEST_SUITE(zero_dim)
 
@@ -78,7 +80,8 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
 
 	zd.Solve();
 
-	zd.Output();
+
+	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
 }
 
 
@@ -99,10 +102,6 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 	auto tols = zd.Get<Tolerances>();
 	tols.newton_before_endgame = 1e-4;
 	zd.Set(tols);
-
-	zd.Solve();
-
-	zd.Output();
 }
 
 
@@ -132,12 +131,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 			(sys, TD, h); 
 	// have to pass in all three to the constructor, because using references. 
 
-
 	zd.DefaultSetup();
-
-	zd.Solve();
-
-	zd.Output();
 }
 
 

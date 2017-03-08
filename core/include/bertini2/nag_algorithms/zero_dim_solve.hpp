@@ -75,10 +75,10 @@ namespace bertini {
 // this one is atrocious.  sorry.
 			// todo: factor out these configs into something traits-based
 			using Config = detail::Configured<
-								config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
-								config::PostProcessing<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
-								config::ZeroDim<typename tracking::TrackerTraits<TrackerType>::BaseComplexType>,
-								config::AutoRetrack<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>;
+								config::Tolerances<BaseRealType>,
+								config::PostProcessing<BaseRealType>,
+								config::ZeroDim<BaseComplexType>,
+								config::AutoRetrack<BaseRealType>>;
 
 			using Config::Get;
 
@@ -87,7 +87,6 @@ namespace bertini {
 			using PostProcessing = config::PostProcessing<BaseRealType>;
 			using ZeroDimConf = config::ZeroDim<BaseComplexType>;
 			using AutoRetrack = config::AutoRetrack<BaseRealType>;
-
 
 /// metadata structs
 
@@ -115,7 +114,7 @@ namespace bertini {
 				///// things computed across all of the solve
 				bool precision_changed = false;
 				BaseComplexType time_of_first_prec_increase;    // time value of the first increase in precision
-
+				decltype(DefaultPrecision()) max_precision_used = DefaultPrecision();
 
 
 
@@ -140,7 +139,7 @@ namespace bertini {
 				///// things added by post-processing
 				BaseRealType function_residual; 	// the latest function residual
 
-				int multiplicity; 		// multiplicity
+				int multiplicity = 1; 		// multiplicity
 				bool is_real;       		// real flag:  0 - not real, 1 - real
 				bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
 				bool is_singular;       		// singular flag: 0 - non-sigular, 1 - singular
@@ -377,11 +376,41 @@ namespace bertini {
 				
 			}
 
+
+
+			/**
+			\brief Checks whether the algorithm is ready to rock and roll.
+			*/
 			bool IsSetupComplete() const
 			{
 				return setup_complete_;
 			}
 
+
+
+			/**
+			\brief Get the final computed solutions
+			*/
+			const auto& FinalSolutions() const
+			{
+				return endgame_solutions_;
+			}
+			
+			/**
+			\brief Get the metadat associated with the final computed solutions
+			*/
+			const auto& FinalSolutionMetadata() const
+			{
+				return solution_metadata_;
+			}
+
+			/**
+			\brief Get the solutions as computed at the endgame boundary
+			*/
+			const auto& EndgameBoundaryData() const
+			{
+				return solutions_at_endgame_boundary_;
+			}
 
 		private:
 
@@ -443,6 +472,10 @@ namespace bertini {
 					tracker_.AddObserver(&min_max_prec_);
 				}
 
+				auto& smd = solution_metadata_[soln_ind];
+
+				smd.path_index = soln_ind;
+				smd.solution_index = soln_ind;
 
 				DefaultPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
 				auto t_start = this->template Get<ZeroDimConf>().start_time;
@@ -454,18 +487,21 @@ namespace bertini {
 				
 				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaData({ result, tracking_success, tracker_.CurrentStepsize() });
 				
-				solution_metadata_[soln_ind].pre_endgame_success = tracking_success;
+				smd.pre_endgame_success = tracking_success;
 				
 				// if you can think of a way to replace this `if` with something meta, please do so.
 				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 				{
 					if (first_prec_rec_.DidPrecisionIncrease())
 					{
-						solution_metadata_[soln_ind].precision_changed = true;
-						solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+						smd.precision_changed = true;
+						smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
 					}
 					tracker_.RemoveObserver(&first_prec_rec_);
 					tracker_.RemoveObserver(&min_max_prec_);
+					using std::max;
+					smd.max_precision_used = 
+						max(smd.max_precision_used, min_max_prec_.MaxPrecision());
 				}
 
 			
@@ -529,14 +565,14 @@ namespace bertini {
 
 			void TrackSinglePathDuringEG(SolnIndT soln_ind)
 			{
+
+				auto& smd = solution_metadata_[soln_ind];
 				// if you can think of a way to replace this `if` with something meta, please do so.
 				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 				{
-					if (!first_prec_rec_.DidPrecisionIncrease())
-					{
+					if (!smd.precision_changed)
 						tracker_.AddObserver(&first_prec_rec_);
-						tracker_.AddObserver(&min_max_prec_);
-					}
+					tracker_.AddObserver(&min_max_prec_);
 				}
 
 				const auto& bdry_point = solutions_at_endgame_boundary_[soln_ind].path_point;
@@ -556,18 +592,34 @@ namespace bertini {
 				// if you can think of a way to replace this `if` with something meta, please do so.
 				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 				{
-					if (first_prec_rec_.DidPrecisionIncrease())
+					if (!smd.precision_changed && first_prec_rec_.DidPrecisionIncrease())
 					{
-						solution_metadata_[soln_ind].precision_changed = true;
-						solution_metadata_[soln_ind].time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+						smd.precision_changed = true;
+						smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
 					}
 					tracker_.RemoveObserver(&first_prec_rec_);
 					tracker_.RemoveObserver(&min_max_prec_);
+					using std::max;
+					smd.max_precision_used = 
+						max(smd.max_precision_used, min_max_prec_.MaxPrecision());
+				}
+
+				endgame_solutions_[soln_ind] = GetEndgame().template FinalApproximation<BaseComplexType>();
+
+				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+				{
+					assert(Precision(endgame_solutions_[soln_ind])==Precision(GetEndgame().template FinalApproximation<BaseComplexType>()));
+					DefaultPrecision(Precision(endgame_solutions_[soln_ind]));
+					TargetSystem().precision(Precision(endgame_solutions_[soln_ind]));
 				}
 
 				// finally, store the metadata as necessary
-				solution_metadata_[soln_ind].condition_number = tracker_.LatestConditionNumber();
-				endgame_solutions_[soln_ind] = GetEndgame().template FinalApproximation<BaseComplexType>();
+				smd.condition_number = tracker_.LatestConditionNumber();
+				smd.newton_residual = tracker_.LatestErrorEstimate();
+				smd.function_residual = TargetSystem().Eval(endgame_solutions_[soln_ind]).template lpNorm<Eigen::Infinity>();
+
+				smd.accuracy_estimate = endgame_.template ApproximateError<BaseRealType>();
+				smd.cycle_num = endgame_.template CycleNumber();
 			}
 
 
@@ -581,13 +633,22 @@ namespace bertini {
 			*/
 			void ComputePostTrackMetadata()
 			{
+				std::vector<std::vector<int>> multiplicity_indices(num_start_points_);
+
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
-					auto soln_ind = static_cast<SolnIndT>(ii);
-					DefaultPrecision(Precision(endgame_solutions_[soln_ind]));
-					TargetSystem().precision(Precision(endgame_solutions_[soln_ind]));
-					auto function_residuals = TargetSystem().Eval(endgame_solutions_[soln_ind]);
+					for (decltype(num_start_points_) jj{ii+1}; jj < num_start_points_; ++jj)
+					{
+						if ( (endgame_solutions_[ii] - endgame_solutions_[jj]).norm() < this->template Get<PostProcessing>().same_point_tolerance)
+						{
+							multiplicity_indices[ii].push_back(jj);
+							multiplicity_indices[jj].push_back(ii);
+							++solution_metadata_[ii].multiplicity;
+							++solution_metadata_[jj].multiplicity;
+						}
+					}
 				}
+
 			}
 
 

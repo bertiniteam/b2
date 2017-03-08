@@ -1103,7 +1103,8 @@ public:
 		this->CycleNumber(0);
 
 		Vec<CT> prev_approx, latest_approx;
-		RT approximate_error;
+		RT& approx_error = std::get<RT>(this->approximate_error_);
+		approx_error = 1;
 		Vec<CT>& final_approx = std::get<Vec<CT> >(this->final_approximation_at_origin_);
 	
 
@@ -1129,12 +1130,12 @@ public:
 			if (this->SecuritySettings().level <= 0)
 				norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
 
-			approximate_error = (latest_approx - prev_approx).norm(); //Calculate the error between approximations. 
+			approx_error = (latest_approx - prev_approx).norm(); //Calculate the error between approximations. 
 
 			// dehom of prev approx and last approx not used because they are not updated with the most current information. However, prev approx and last approx are 
 			// the most current. 
 
-			if (approximate_error < this->FinalTolerance())
+			if (approx_error < this->FinalTolerance())
 			{
 				final_approx = latest_approx;
 				return SuccessCode::Success;
@@ -1188,7 +1189,7 @@ public:
 				final_approx = latest_approx;
 				return cauchy_samples_success;
 			}
-		} while (approximate_error > this->FinalTolerance());
+		} while (approx_error > this->FinalTolerance());
 
 		final_approx = latest_approx;
 		return SuccessCode::Success;

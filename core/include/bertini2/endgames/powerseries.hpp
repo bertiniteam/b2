@@ -579,7 +579,7 @@ public:
 
 		Vec<CT> next_sample;
 		CT next_time = (times.back() + target_time) * this->EndgameSettings().sample_factor; //setting up next time value using the midpoint formula, sample_factor will give us some 
-																							 // point between the two. 
+
   		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time) // generalized for target_time not equal to 0.
   		{
   			BOOST_LOG_TRIVIAL(severity_level::trace) << "Current time norm is less than min track time." << '\n';
@@ -659,17 +659,16 @@ public:
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		//Set up for the endgame.
-			ClearTimesAndSamples<CT>();
+		ClearTimesAndSamples<CT>();
 
-			auto& samples = std::get<SampCont<CT> >(samples_);
-			auto& times   = std::get<TimeCont<CT> >(times_);
-			auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
-			Vec<CT>& final_approx = std::get<Vec<CT> >(this->final_approximation_at_origin_);
-			SetRandVec(start_point);
-
-	 	RT approx_error(1);  //setting up the error of successive approximations. 
-	 	
-
+		auto& samples = std::get<SampCont<CT> >(samples_);
+		auto& times   = std::get<TimeCont<CT> >(times_);
+		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		Vec<CT>& final_approx = std::get<Vec<CT> >(this->final_approximation_at_origin_);
+		SetRandVec(start_point);	 	
+		RT& approx_error = std::get<RT>(this->approximate_error_);
+		approx_error = 1;
+		
 		auto initial_sample_success = this->ComputeInitialSamples(start_time, target_time, start_point, times, samples);
 
 		if (initial_sample_success!=SuccessCode::Success)

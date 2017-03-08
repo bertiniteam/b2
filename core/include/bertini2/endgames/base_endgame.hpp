@@ -112,7 +112,7 @@ namespace bertini{
 				// state variables
 				mutable std::tuple<Vec<dbl>, Vec<mpfr> > final_approximation_at_origin_; 
 				mutable unsigned int cycle_number_ = 0; 
-
+				mutable std::tuple<double, mpfr_float> approximate_error_;
 				/**
 				\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
 				*/
@@ -204,6 +204,12 @@ namespace bertini{
 				template<typename CT>
 				const Vec<CT>& FinalApproximation() const 
 				{return std::get<Vec<CT> >(final_approximation_at_origin_);}
+
+				template<typename RT>
+				const RT& ApproximateError() const
+				{
+					return std::get<RT>(approximate_error_);
+				}
 
 				const System& GetSystem() const 
 				{ return GetTracker().GetSystem();}
