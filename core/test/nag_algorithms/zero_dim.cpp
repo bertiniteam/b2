@@ -97,11 +97,18 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 
 	auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
 
+	auto& tr = zd.GetTracker();
+
 	zd.DefaultSetup();
 
 	auto tols = zd.Get<Tolerances>();
 	tols.newton_before_endgame = 1e-4;
 	zd.Set(tols);
+
+	zd.Solve();
+
+
+	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
 }
 
 
@@ -132,6 +139,10 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 	// have to pass in all three to the constructor, because using references. 
 
 	zd.DefaultSetup();
+
+	zd.Solve();
+
+	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
 }
 
 
