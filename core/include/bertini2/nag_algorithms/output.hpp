@@ -61,6 +61,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	void All(OutT & out, ZDT const& zd)
 	{
 		MainData(out, zd);
+		RawData(out, zd);
 	}
 
 	
@@ -68,44 +69,63 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	static
 	void MainData(OutT & out, ZDT const& zd)
 	{
-		Variables(out, zd);
-		out << '\n';
+		NumVariables(out, zd);
+		Variables(out, zd,"\n\n");
 
 		const auto& s = zd.FinalSolutions();
 		const auto& m = zd.FinalSolutionMetadata();
 		const auto n = s.size();
-		for (decltype(s.size()) ii=0; ii<n; ++ii)
+		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
-			EndPointMD(ii, out, zd);
-			out << '\n';
-			EndPoint(ii, out, zd);
-			out << '\n';
+			EndPointMDFull(ii, out, zd);
+			EndPoint(ii, out, zd,"\n\n");
 		}
 	}
 
 	template <typename OutT>
 	static 
-	void Variables(OutT & out, ZDT const& zd)
+	void RawData(OutT & out, ZDT const& zd)
+	{
+		const auto n = zd.FinalSolutions().size();
+		NumVariables(out, zd,"\n\n");
+		for (decltype(zd.FinalSolutions().size()) ii{0}; ii<n; ++ii)
+			EndPointMDRaw(ii,out,zd,"\n\n");
+
+		out << "\n\n" << zd.TargetSystem() << "\n\n";
+	}
+
+
+	template <typename OutT>
+	static 
+	void NumVariables(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& sys = zd.TargetSystem();
+		out << sys.NumVariables() << additional;
+	}
 
-		out << sys.NumVariables() << "\n\n";
+
+	template <typename OutT>
+	static 
+	void Variables(OutT & out, ZDT const& zd, std::string const& additional = "\n")
+	{
+		const auto& sys = zd.TargetSystem();
 		const auto& vars = sys.Variables();
 		for (const auto& x : vars)
 			out << *x << ' ';
-		out << '\n';
+		out << additional;
 	}
 
 	template <typename IndexT, typename OutT>
 	static
-	void EndPoint(IndexT const& ind, OutT & out, ZDT const& zd)
+	void EndPoint(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.FinalSolutions()[ind]);
+		out << additional;
 	}
 
 	template <typename IndexT, typename OutT>
 	static
-	void EndPointMD(IndexT const& ind, OutT & out, ZDT const& zd)
+	void EndPointMDFull(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& data = zd.FinalSolutionMetadata()[ind];
 		out << data.path_index << '\n'
@@ -114,12 +134,39 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 			<< data.condition_number << '\n'
 			<< data.newton_residual << '\n';
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.final_time_used);
-			// << data.final_time_used << '\n'
-		out << '\n' << data.max_precision_used << '\n'
-			<< data.accuracy_estimate << '\n'
+		out << '\n' << data.max_precision_used << '\n';
+
+		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.time_of_first_prec_increase);
+		out << '\n' << data.accuracy_estimate << '\n'
 			<< data.cycle_num << '\n'
-			<< data.multiplicity << '\n';	
+			<< data.multiplicity << '\n'
+			<< data.pre_endgame_success << ' ' << data.endgame_success << '\n';
+		out << additional;
 	}
+
+
+
+	template <typename IndexT, typename OutT>
+	static
+	void EndPointMDRaw(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
+	{
+		const auto& pt = zd.FinalSolutions()[ind];
+		const auto& data = zd.FinalSolutionMetadata()[ind];
+		out << data.path_index << '\n'
+			<< Precision(pt) << '\n';
+		EndPoint(ind, out, zd);
+		out << data.function_residual << '\n'
+			<< data.condition_number << '\n'
+			<< data.newton_residual << '\n';
+		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.final_time_used);
+		out << '\n' << data.accuracy_estimate << '\n';
+		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.time_of_first_prec_increase);
+		out << '\n' << data.cycle_num << '\n'
+			<< data.endgame_success << '\n'
+			<< additional;
+	}
+
+
 };
 
 } // namespace output
