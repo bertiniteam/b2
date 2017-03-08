@@ -26,6 +26,7 @@
 \brief Provides the algorithm for computing all zero-dimensional solutions for an algberaic system.  
 */
 
+#pragma once
 
 #include "bertini2/num_traits.hpp"
 
