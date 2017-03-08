@@ -110,8 +110,6 @@ namespace bertini {
 				SolnIndT path_index;     		// path number of the solution
 				SolnIndT solution_index;      	// solution number
 
-
-
 				///// things computed across all of the solve
 				bool precision_changed = false;
 				BaseComplexType time_of_first_prec_increase;    // time value of the first increase in precision
@@ -289,15 +287,24 @@ namespace bertini {
 			}
 
 			/**
-			\brief Sets the tracker to one you supply to this function.
+			\brief Gets the tracker
 
-			Assumes you have done all necessary setup to it, including associating it with the homotopy for the ZeroDim algorithm.
+			This version gets a const reference to it.
 			*/
 			const TrackerType & GetTracker() const
 			{
 				return tracker_;
 			}
 
+			/**
+			\brief Gets the tracker
+
+			This version gets a mutable reference to it.
+			*/
+			TrackerType & GetTracker() 
+			{
+				return tracker_;
+			}
 
 
 ///  endgame specific stuff
@@ -314,9 +321,19 @@ namespace bertini {
 			}
 
 			/**
-			\brief Sets the endgame to one you supply to this function.
+			\brief Gets the endgame
 
-			Assumes you have done all necessary setup to it, including associating it with the homotopy for the ZeroDim algorithm.
+			This version gets a `const` reference to it.
+			*/
+			const EndgameType & GetEndgame() const
+			{
+				return endgame_;
+			}
+
+			/**
+			\brief Gets the endgame
+
+			This version gets a mutable reference to it.
 			*/
 			EndgameType & GetEndgame()
 			{
