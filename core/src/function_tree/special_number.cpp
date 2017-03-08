@@ -22,7 +22,7 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 
-#include "function_tree/symbols/special_number.hpp"
+#include "bertini2/function_tree/symbols/special_number.hpp"
 
 
 

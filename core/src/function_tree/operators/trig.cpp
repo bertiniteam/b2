@@ -24,7 +24,7 @@
 // Jeb Collins, West Texas A&M
 
 
-#include "function_tree/operators/trig.hpp"
+#include "bertini2/function_tree/operators/trig.hpp"
 
 
 namespace bertini {
