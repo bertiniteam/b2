@@ -1033,7 +1033,7 @@ namespace bertini{
 				mutable std::map<unsigned,Eigen::PartialPivLU<Mat<mpfr>>> LU_mp_;
 				
 				
-				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods)
+				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods )
 				mutable unsigned s_; // Number of stages
 				mutable std::tuple< Mat<double>, Mat<mpfr_float> > a_;
 				mutable std::tuple< Vec<double>, Vec<mpfr_float> > b_;
