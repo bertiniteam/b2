@@ -49,8 +49,6 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_amp)
 	zd.DefaultSetup();
 
 	zd.Solve();
-
-	zd.Output();
 }
 
 
