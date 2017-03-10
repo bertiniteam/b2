@@ -301,28 +301,65 @@ namespace bertini {
 	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
+	
+	/**
+	\brief Checks whether the number of rows and columns are both positive
+	*/
+	template<typename Derived>
+	bool IsEmpty(Eigen::MatrixBase<Derived> const & v)
+	{
+		return v.rows() && v.cols();
+	}
+
+
+	/**
+	\brief Get the precision of an Eigen object. If the object is empty, it's the precision of a default-constructed Scalar.  If it actually has content, then it's the precision of the first element.  
+
+	If you require that the object be of uniform precision when you check, use PrecisionRequireUniform
+	*/
 	template<typename Derived>
 	unsigned Precision(Eigen::MatrixBase<Derived> const & v)
 	{
-		auto a = Precision(v(0,0));
-		for (int ii=0; ii<v.rows(); ++ii)
-			for (int jj=0; jj<v.cols(); ++jj)
+		return IsEmpty(v)? Precision(typename Eigen::MatrixBase<Derived>::value_type())
+ : Precision(v(0,0));
+	}
+
+
+	/**
+	\brief Query the precision of an Eigen object, requiring it to be non-empty, and of uniform precision
+
+	\throw runtime_error if not uniform precision
+	Dies in an Eigen assert if empty (assuming you didn't disable these)
+	*/
+	template<typename Derived>
+	unsigned PrecisionRequireUniform(Eigen::MatrixBase<Derived> const & v)
+	{
+		const auto a = Precision(v(0,0));
+		for (int ii=0; ii<v.cols(); ++ii)
+			for (int jj=0; jj<v.rows(); ++jj)
 			{
-				auto b = Precision(v(ii,jj));
-				assert (a==b);
-				a = b;
+				if (a!=Precision(v(jj,ii)))
+				{
+					std::stringstream ss;
+					ss << "non-uniform precision in object! (" << a << "!=" << Precision(v(jj,ii)) <<   ") at position " << jj << "," << ii;
+					throw std::runtime_error(ss.str());
+				}
 			}
 		return a;
 	}
 
+
+	/**
+	\brief Set the precision of an Eigen object.
+	*/
 	template<typename Derived>
 	void Precision(Eigen::MatrixBase<Derived> & v, unsigned prec)
 	{
 		using bertini::Precision;
 		
-		for (int ii=0; ii<v.rows(); ++ii)
-			for (int jj=0; jj<v.cols(); ++jj)
-				Precision(v(ii,jj),prec);
+		for (int ii=0; ii<v.cols(); ++ii)
+			for (int jj=0; jj<v.rows(); ++jj)
+				Precision(v(jj,ii),prec);
 	}
 
 	
