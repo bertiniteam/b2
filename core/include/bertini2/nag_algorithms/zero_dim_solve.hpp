@@ -265,7 +265,7 @@ namespace bertini {
 			*/
 			void DefaultTrackerSetup()
 			{
-				tracker_ = TrackerType(Homotopy());
+				tracker_.SetSystem(Homotopy());
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
 				              	this->template Get<Tolerances>().newton_before_endgame, 
 				              	this->template Get<Tolerances>().path_truncation_threshold,
@@ -277,8 +277,12 @@ namespace bertini {
 
 			/**
 			\brief Sets the tracker to one you supply to this function.
+	
+			Setting the tracker associates the endgame with the tracker you pass in, too.  If this is a problem, and you need this generalized so you can use a different tracker for the pre/endgame zones, please file an issue requesting this feature.
 
 			Assumes you have done all necessary setup to it, including associating it with the homotopy for the ZeroDim algorithm.
+
+			Again, YOU must ensure the tracker is associated with the correct homotopy
 			*/
 			void SetTracker(TrackerType const& new_tracker)
 			{
@@ -382,7 +386,7 @@ namespace bertini {
 
 				TrackDuringEG();
 				
-				ComputePostTrackMetadata();
+				PostEGAction();
 			}
 
 
@@ -635,6 +639,11 @@ namespace bertini {
 			}
 
 
+
+			void PostEGAction()
+			{
+				ComputePostTrackMetadata();
+			}
 
 
 

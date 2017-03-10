@@ -356,6 +356,16 @@ namespace bertini{
 			/**
 			\brief get a const reference to the system.
 			*/
+			void SetSystem(const System & new_sys)
+			{
+				tracked_system_ = std::ref(new_sys);
+				predictor_->ChangeSystem(tracked_system_);
+				corrector_->ChangeSystem(tracked_system_);
+			}
+
+			/**
+			\brief get a const reference to the system.
+			*/
 			const System& GetSystem() const
 			{
 				return tracked_system_.get();
