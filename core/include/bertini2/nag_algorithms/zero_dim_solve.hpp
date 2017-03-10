@@ -385,15 +385,6 @@ namespace bertini {
 				ComputePostTrackMetadata();
 			}
 
-			/**
-			\brief Outputs the finalized solutions to a target destination
-			*/
-			template<class GeneratorT = generators::Classic>
-			void Output() const
-			{
-				
-			}
-
 
 
 			/**
