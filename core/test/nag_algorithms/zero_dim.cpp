@@ -148,4 +148,45 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 
 
 
+
+/**
+Check whether we can run zero dim on the non-homogenized version of Griewank Osborn.
+*/
+BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto sys = system::Precon::GriewankOsborn();
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	auto TD = start_system::TotalDegree(sys);
+
+	auto t = MakeVariable("t");
+	auto h = (1-t)* sys + t*TD;
+	h.AddPathVariable(t);
+
+	auto zd = algorithm::ZeroDim<
+				AMPTracker, 
+				EndgameSelector<AMPTracker>::PSEG, 
+				decltype(sys), 
+				start_system::TotalDegree,
+				policy::RefToGiven
+					>
+			(sys, TD, h); 
+	// have to pass in all three to the constructor, because using references. 
+
+	zd.DefaultSetup();
+
+	auto& tr = zd.GetTracker();
+	GoryDetailLogger<AMPTracker> logger;
+	tr.AddObserver(&logger);
+	
+	zd.Solve();
+
+	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
