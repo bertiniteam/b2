@@ -465,7 +465,7 @@ namespace bertini {
 				auto t_start = this->template Get<ZeroDimConf>().start_time;
 				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
 
-				for (decltype(num_start_points_) ii{0}; ii < numnum_start_points_; ++ii)
+				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
 					TrackSinglePathBeforeEG(static_cast<SolnIndT>(ii));
 				}
