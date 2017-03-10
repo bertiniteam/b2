@@ -118,7 +118,7 @@ namespace bertini {
 
 
 				///// things computed in pre-endgame only
-				tracking::SuccessCode pre_endgame_success;     // success code 
+				tracking::SuccessCode pre_endgame_success = tracking::SuccessCode::NeverStarted;     // success code 
 
 
 
@@ -130,7 +130,7 @@ namespace bertini {
 				BaseComplexType final_time_used;   			// the final value of time tracked to
 				BaseRealType accuracy_estimate; 			// accuracy estimate between extrapolations
 				unsigned cycle_num;    						// cycle number used in extrapolations
-				tracking::SuccessCode endgame_success;      // success code 
+				tracking::SuccessCode endgame_success = tracking::SuccessCode::NeverStarted;      // success code 
 
 
 
@@ -148,7 +148,7 @@ namespace bertini {
 			struct EGBoundaryMetaData
 			{
 				Vec<BaseComplexType> path_point;
-				tracking::SuccessCode success_code;
+				tracking::SuccessCode success_code = tracking::SuccessCode::NeverStarted;
 				BaseRealType last_used_stepsize;
 			};
 
