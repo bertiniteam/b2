@@ -75,17 +75,17 @@ namespace  bertini {
 				num_variables_ = variables.size();
 				
 				// Resize coeffs matrix
-				coeffs_rat_real_.resize(num_factors_, num_variables_);
-				coeffs_rat_imag_.resize(num_factors_, num_variables_);
+				coeffs_rat_real_.resize(num_factors_, num_variables_ + 1);
+				coeffs_rat_imag_.resize(num_factors_, num_variables_ + 1);
 				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				coeffs_dbl_ref.resize(num_factors_, num_variables_);
+				coeffs_dbl_ref.resize(num_factors_, num_variables_ + 1);
 				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				coeffs_mpfr_ref.resize(num_factors_, num_variables_);
+				coeffs_mpfr_ref.resize(num_factors_, num_variables_ + 1);
 				
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					for (int jj = 0; jj < num_variables_; ++jj)
+					for (int jj = 0; jj < num_variables_ + 1; ++jj)
 					{
 						// Generate random constants as mpq_rationals.  Then downsample to mpfr and dbl.
 						// TODO: RandomRat() does not generate random numbers.  Same each run.
@@ -107,8 +107,8 @@ namespace  bertini {
 			 
 			 \param variables A deque of variable nodes that are used in each linear factor.  This does not have to be an actual system variable group.
 			 \param num_factors The number of linear factors in the product.
-			 \param coeffs_real A matrix of dbl data types for all the coefficients in the linear factors.
-			 \param coeffs_mpfr A matrix of mpfr data types for all the coefficients in the linear factors.
+			 \param coeffs_real A matrix of dbl data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
+			 \param coeffs_mpfr A matrix of mpfr data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
 			 
 			 */
 			LinearProduct(VariableGroup variables, int num_factors, Mat<dbl>& coeffs_dbl, Mat<mpfr>& coeffs_mpfr)
@@ -137,9 +137,11 @@ namespace  bertini {
 			//////////////////////////////////////////
 			void print_coeffs()
 			{
+				
+				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					for (int jj = 0; jj < num_variables_; ++jj)
+					for (int jj = 0; jj < num_variables_ + 1; ++jj)
 					{
 						std::cout << std::get< Mat<mpfr> >(coeffs_)(ii,jj) << " | ";
 					}
@@ -150,55 +152,27 @@ namespace  bertini {
 			
 			
 			
-//			SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
+			
+			
+			
+			
+			
+			/**
+			 \brief Accept a variable and add it to the list of variables in linear factors.
+			 
+			 \param child Variable to be added.  If node is not a Variable, then runtime error is thrown.
+			 
+			*/
+//			void AddChild(std::shared_ptr<Node> child) override
 //			{
-//				AddChild(s, add_or_sub);
-//			}
-//			
-//			SumOperator(const std::shared_ptr<Node> & left, const std::shared_ptr<Node> & right)
-//			{
-//				AddChild(left);
-//				AddChild(right);
-//			}
-//			
-//			
-//			SumOperator(const std::shared_ptr<Node> & left, bool add_or_sub_left, const std::shared_ptr<Node> & right, bool add_or_sub_right)
-//			{
-//				AddChild(left, add_or_sub_left);
-//				AddChild(right, add_or_sub_right);
-//			}
-//			
-//			
-//			SumOperator& operator+=(const std::shared_ptr<Node> & rhs)
-//			{
-//				this->AddChild(rhs);
-//				return *this;
-//			}
-//			
-//			SumOperator& operator-=(const std::shared_ptr<Node> & rhs)
-//			{
-//				this->AddChild(rhs,false);
-//				return *this;
+//				if(std::dynamic_pointer_cast< std::shared_ptr<Variable> >(child) == nullptr)
+//				{
+//					throw std::runtime_error("Only Variable node types can be children of a LinearProduct node.");
+//				}
 //			}
 			
 			
 			
-			
-			
-			
-			//Special Behaviour: by default all terms added are positive
-			void AddChild(std::shared_ptr<Node> child) override
-			{
-				
-			}
-			
-			
-			
-			//Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
-			void AddChild(std::shared_ptr<Node> child, bool sign) // not an override
-			{
-				
-			}
 			
 			
 			/**
@@ -259,29 +233,95 @@ namespace  bertini {
 			
 		protected:
 			/**
-			 Specific implementation of FreshEval for add and subtract.
-			 If child_sign_ = true, then add, else subtract
+			 \brief Evaluation of linear product node.  Returns evaluation value.
+			 
+			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
 			 */
-			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override{return dbl(2);};
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				dbl eval_value;
+				
+				this->FreshEval_d(eval_value, diff_variable);
+				return eval_value;
+			}
 			
 			/**
-			 Specific implementation of FreshEval in place for add and subtract.
-			 If child_sign_ = true, then add, else subtract
+			 \brief Evaluation of linear product node IN PLACE.  Returns evaluation value.
+			 
+			 \param evaluation_value The in place variable that stores the evaluation.
+			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
 			 */
-			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override{};
+			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				evaluation_value = dbl(1);
+				const Mat<dbl>& coeffs_ref = std::get< Mat<dbl> >(coeffs_);
+				
+				for (int ii = 0; ii < num_factors_; ++ii)
+				{
+					// Add all terms in one linear factor and store in temp_sum_d_
+					temp_sum_d_ = dbl(0);
+					for (int jj = 0; jj < num_variables_; ++jj)
+					{
+						variables_[jj]->EvalInPlace<dbl>(temp_d_, diff_variable);
+						temp_sum_d_ += coeffs_ref(ii,jj)*temp_d_;
+					}
+					
+					// Add in the constant coefficient
+					temp_sum_d_ += coeffs_ref(ii,num_variables_);
+					
+					// Multiply factors together
+					evaluation_value *= temp_sum_d_;
+				}
+			}
 			
 			
 			/**
-			 Specific implementation of FreshEval for add and subtract.
-			 If child_sign_ = true, then add, else subtract
+			 \brief Evaluation of linear product node.  Returns evaluation value.
+			 
+			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
 			 */
-			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override{return mpfr(2);};
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				mpfr eval_value;
+				
+				this->FreshEval_mp(eval_value, diff_variable);
+				return eval_value;
+			}
+			
 			
 			/**
-			 Specific implementation of FreshEval for add and subtract.
-			 If child_sign_ = true, then add, else subtract
+			 \brief Evaluation of linear product node IN PLACE.  Returns evaluation value.
+			 
+			 \param evaluation_value The in place variable that stores the evaluation.
+			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
 			 */
-			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override{};
+			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				evaluation_value = mpfr(1);
+				const Mat<mpfr>& coeffs_ref = std::get< Mat<mpfr> >(coeffs_);
+				
+				for (int ii = 0; ii < num_factors_; ++ii)
+				{
+					// Add all terms in one linear factor and store in temp_sum_d_
+					temp_sum_mp_ = mpfr(0);
+					for (int jj = 0; jj < num_variables_; ++jj)
+					{
+						variables_[jj]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+						temp_sum_mp_ += coeffs_ref(ii,jj)*temp_mp_;
+					}
+					
+					// Add in the constant coefficient
+					temp_sum_mp_ += coeffs_ref(ii,num_variables_);
+					
+					// Multiply factors together
+					evaluation_value *= temp_sum_mp_;
+				}
+			}
+
+			
+			
+			
+			
 			
 		private:
 //			std::vector< std::vector< std::tuple<mpq_rational, dbl, mpfr> > > coeffs_;
@@ -294,6 +334,10 @@ namespace  bertini {
 			size_t num_variables_;  ///< The number of variables in each linear.
 			
 			
+			mutable mpfr temp_mp_;
+			mutable dbl temp_d_;
+			mutable mpfr temp_sum_mp_;
+			mutable dbl temp_sum_d_;
 			
 			
 			
@@ -304,6 +348,8 @@ namespace  bertini {
 		private:
 			
 			LinearProduct() = default;
+			
+			void AddChild(std::shared_ptr<Node> child) override {};
 			
 			friend class boost::serialization::access;
 			
@@ -318,8 +364,6 @@ namespace  bertini {
 				temp_mp_.precision(prec);
 			}
 			
-			mutable mpfr temp_mp_;
-			mutable dbl temp_d_;
 		};
 		
 		
