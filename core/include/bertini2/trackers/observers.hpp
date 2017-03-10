@@ -233,11 +233,15 @@ namespace bertini {
 
 				if (auto p = dynamic_cast<const Initializing<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
+					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing in double, tracking path\nfrom\tt = " 
+						<< p->StartTime() << "\nto\tt = " << p->EndTime() 
+						<< "\n from\tx = \n" << p->StartPoint() 
+						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
 				else if (auto p = dynamic_cast<const Initializing<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
+					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing in multiprecision, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint() 
+						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
 
 				else if(auto p = dynamic_cast<const TrackingEnded<EmitterT>*>(&e))
@@ -283,20 +287,20 @@ namespace bertini {
 
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful, result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful (mpfr), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful, result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful, result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful (mpfr), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful, result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
 
