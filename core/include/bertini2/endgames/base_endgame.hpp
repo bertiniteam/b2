@@ -86,7 +86,7 @@ namespace bertini{
 
 			 To create a new endgame type, inherit from this class. 
 			*/
-			template<class TrackerType, class FinalEGT>
+			template<class TrackerType, class FinalEGT, typename... UsedNumTs>
 			class EndgameBase : public detail::Configured<
 				config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
 				config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>
@@ -110,9 +110,10 @@ namespace bertini{
 					config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
 
 				// state variables
-				mutable std::tuple<Vec<dbl>, Vec<mpfr> > final_approximation_at_origin_; 
+				mutable std::tuple<Vec<UsedNumTs>... > final_approximation_; 
+				mutable std::tuple<Vec<UsedNumTs>... > previous_approximation_; 
 				mutable unsigned int cycle_number_ = 0; 
-				mutable std::tuple<double, mpfr_float> approximate_error_;
+				mutable std::tuple<BaseRealType> approximate_error_;
 				/**
 				\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
 				*/
@@ -199,11 +200,15 @@ namespace bertini{
 				\brief Getter for the tracker used inside an instance of the endgame. 
 				*/
 				const TrackerType & GetTracker() const
-				{return tracker_.get();}
+				{
+					return tracker_.get();
+				}
 
 				template<typename CT>
 				const Vec<CT>& FinalApproximation() const 
-				{return std::get<Vec<CT> >(final_approximation_at_origin_);}
+				{
+					return std::get<Vec<CT> >(final_approximation_);
+				}
 
 				template<typename RT>
 				const RT& ApproximateError() const

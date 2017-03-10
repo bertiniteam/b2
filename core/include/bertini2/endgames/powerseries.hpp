@@ -175,7 +175,7 @@ FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 
 template<typename TrackerType, typename FinalEGT, typename... UsedNumTs> 
 class PowerSeriesEndgame : 
-	public EndgameBase<TrackerType, FinalEGT>,
+	public EndgameBase<TrackerType, FinalEGT, UsedNumTs...>,
 	public detail::Configured<config::PowerSeries>
 {
 
@@ -223,10 +223,10 @@ protected:
 public:
 
 	using Config::Get;
-	using EndgameBase<TrackerType, FinalEGT>::Get;
+	using EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::Get;
 
 	using Config::Set;
-	using EndgameBase<TrackerType, FinalEGT>::Set;
+	using EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::Set;
 
 	auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
 
@@ -273,7 +273,7 @@ public:
 	\brief Function to set the times used for the Power Series endgame.
 	// */	
 	template<typename CT>
-	void SetRandVec(Vec<CT> sample) {rand_vector = Vec<CT>::Random(sample.size());}
+	void SetRandVec(int size) {rand_vector = Vec<CT>::Random(size);}
 
 
 
@@ -292,7 +292,7 @@ public:
 	            					const config::Endgame<BRT>&, 
 	            					const config::Security<BRT>&
 	            					>& settings )
-      : EndgameBase<TrackerType, FinalEGT>(tr, std::get<1>(settings), std::get<2>(settings)), 
+      : EndgameBase<TrackerType, FinalEGT, UsedNumTs...>(tr, std::get<1>(settings), std::get<2>(settings)), 
         Config( std::get<0>(settings) )
    	{}
 
@@ -343,9 +343,9 @@ public:
 					  abs(
 		                  log(
 		                      abs(
-		                          ((sample2 - sample1).transpose()*rand_vector).norm()
+		                          ((sample2 - sample1).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()
 		                          /
-		                          ((sample1 - sample0).transpose()*rand_vector).norm()
+		                          ((sample1 - sample0).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()
 		                          )
 		                      )
 		                  );
@@ -443,7 +443,7 @@ public:
 			                      pow(most_recent_time,static_cast<RT>(1)/candidate), // the target time
 			                      num_used_points,s_times,samples,s_derivatives) // the input data
 			                 - 
-			                 most_recent_sample).norm();
+			                 most_recent_sample).template lpNorm<Eigen::Infinity>();
 
 			if (curr_diff < min_found_difference)
 			{
@@ -664,9 +664,12 @@ public:
 		auto& samples = std::get<SampCont<CT> >(samples_);
 		auto& times   = std::get<TimeCont<CT> >(times_);
 		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
-		Vec<CT>& final_approx = std::get<Vec<CT> >(this->final_approximation_at_origin_);
-		SetRandVec(start_point);	 	
+		Vec<CT>& latest_approx = std::get<Vec<CT> >(this->final_approximation_);
+		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
+
 		RT& approx_error = std::get<RT>(this->approximate_error_);
+
+		SetRandVec<CT>(start_point.size());	 	
 		approx_error = 1;
 		
 		auto initial_sample_success = this->ComputeInitialSamples(start_time, target_time, start_point, times, samples);
@@ -679,9 +682,11 @@ public:
 
 		ComputeDerivatives<CT>();
 
-	 	Vec<CT> prev_approx;
+	    RT norm_of_dehom_of_latest_approx;
+
+
 	 	auto extrapolation_code = ComputeApproximationOfXAtT0(prev_approx, target_time);
-	 	final_approx = prev_approx;
+	 	latest_approx = prev_approx;
 
 	 	if (extrapolation_code != SuccessCode::Success)
 	 		return extrapolation_code;
@@ -689,12 +694,11 @@ public:
 
 	 	RT norm_of_dehom_of_prev_approx;
 	 	if (this->SecuritySettings().level <= 0)
-	 	 	norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
+	 	 	norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
 
 	 	
 
-	  	Vec<CT> latest_approx;
-	    RT norm_of_dehom_of_latest_approx;
+	  	
 
 
 		while (approx_error > this->FinalTolerance())
@@ -716,20 +720,21 @@ public:
 
 	 		if(this->SecuritySettings().level <= 0)
 	 		{
-	 			norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
+	 			norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).template lpNorm<Eigen::Infinity>();
 		 		if(norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm && norm_of_dehom_of_prev_approx > this->SecuritySettings().max_norm)
 	 				return SuccessCode::SecurityMaxNormReached;
+
+	 			//update
+	 			norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 	 		}
 
-	 		approx_error = (latest_approx - prev_approx).norm();
-	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
-
+	 		//update
+	 		approx_error = (latest_approx - prev_approx).template lpNorm<Eigen::Infinity>();
 	 		prev_approx = latest_approx;
-	 		if(this->SecuritySettings().level <= 0)
-			    norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
+
+	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
 		} //end while	
-		// in case if we get out of the for loop without setting. 
-		final_approx = latest_approx;
+
 		return SuccessCode::Success;
 
 	} //end PSEG

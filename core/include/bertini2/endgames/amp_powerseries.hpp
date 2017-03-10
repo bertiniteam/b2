@@ -55,8 +55,8 @@ protected:
 	void MultipleToMultipleImpl(unsigned new_precision) const override
 	{
 		// first, change precision on the final approximation
-		const auto& source_point = std::get<Vec<mpfr> >(this->final_approximation_at_origin_);
-		auto& target_point = std::get<Vec<mpfr> >(this->final_approximation_at_origin_);
+		const auto& source_point = std::get<Vec<mpfr> >(this->final_approximation_);
+		auto& target_point = std::get<Vec<mpfr> >(this->final_approximation_);
 		target_point.resize(source_point.size());
 
 		for (unsigned ii=0; ii<source_point.size(); ii++)
@@ -78,8 +78,8 @@ protected:
 
 	void DoubleToMultipleImpl(unsigned new_precision) const override
 	{
-		const auto& source_point = std::get<Vec<dbl> >(this->final_approximation_at_origin_);
-		auto& target_point = std::get<Vec<mpfr> >(this->final_approximation_at_origin_);
+		const auto& source_point = std::get<Vec<dbl> >(this->final_approximation_);
+		auto& target_point = std::get<Vec<mpfr> >(this->final_approximation_);
 
 		target_point.resize(source_point.size());
 		for (unsigned ii=0; ii<source_point.size(); ii++)
@@ -116,8 +116,8 @@ protected:
 
 	void MultipleToDoubleImpl() const override
 	{
-		const auto& source_point = std::get<Vec<mpfr> >(this->final_approximation_at_origin_);
-		auto& target_point = std::get<Vec<dbl> >(this->final_approximation_at_origin_);
+		const auto& source_point = std::get<Vec<mpfr> >(this->final_approximation_);
+		auto& target_point = std::get<Vec<dbl> >(this->final_approximation_);
 		target_point.resize(source_point.size());
 
 		for (unsigned ii=0; ii<source_point.size(); ii++)
