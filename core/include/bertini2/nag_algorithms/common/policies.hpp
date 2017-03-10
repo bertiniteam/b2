@@ -154,7 +154,7 @@ public:
 			/**
 			Simply forward on the systems for the constructor.  The AtConstruct function is to be called by the user of this policy, at construct time.
 			*/
-			CloneGiven(SystemType const& target) : target_system_(target)
+			CloneGiven(SystemType const& target) : target_system_(AtConstruct(target))
 			{}
 
 
