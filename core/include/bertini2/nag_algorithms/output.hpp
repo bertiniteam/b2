@@ -60,7 +60,10 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	static
 	void All(OutT & out, ZDT const& zd)
 	{
+		out << "\n\n\n MAINDATA \n\n\n";
 		MainData(out, zd);
+
+		out << "\n\n\n RAWDATA \n\n\n";
 		RawData(out, zd);
 	}
 
@@ -77,9 +80,19 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
+			if (zd.FinalSolutionMetadata()[ii].endgame_success == tracking::SuccessCode::NeverStarted)
+				continue;
+			
 			EndPointMDFull(ii, out, zd);
 			EndPoint(ii, out, zd,"\n\n");
 		}
+
+		out << "\n\n";
+		TargetSystem(out,zd,"\n\n");
+
+		StartSystem(out,zd,"\n\n");
+
+		Homotopy(out,zd,"\n\n");
 	}
 
 	template <typename OutT>
@@ -89,9 +102,14 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		const auto n = zd.FinalSolutions().size();
 		NumVariables(out, zd,"\n\n");
 		for (decltype(zd.FinalSolutions().size()) ii{0}; ii<n; ++ii)
+		{
+			if (zd.FinalSolutionMetadata()[ii].endgame_success == tracking::SuccessCode::NeverStarted)
+				continue;
 			EndPointMDRaw(ii,out,zd,"\n\n");
+		}
 
-		out << "\n\n" << zd.TargetSystem() << "\n\n";
+		out << "\n\n";
+		TargetSystem(out,zd,"\n\n");
 	}
 
 
@@ -109,17 +127,49 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 	void Variables(OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& sys = zd.TargetSystem();
-		const auto& vars = sys.Variables();
+		const auto& vars = sys.VariableOrdering();
 		for (const auto& x : vars)
 			out << *x << ' ';
 		out << additional;
 	}
 
+
+	template <typename OutT>
+	static 
+	void TargetSystem(OutT & out, ZDT const& zd, std::string const& additional = "\n")
+	{
+		out << zd.TargetSystem() << additional;
+	}
+
+	template <typename OutT>
+	static 
+	void StartSystem(OutT & out, ZDT const& zd, std::string const& additional = "\n")
+	{
+		out << zd.StartSystem() << additional;
+	}
+
+	template <typename OutT>
+	static 
+	void Homotopy(OutT & out, ZDT const& zd, std::string const& additional = "\n")
+	{
+		out << zd.Homotopy() << additional;
+	}
+
 	template <typename IndexT, typename OutT>
 	static
 	void EndPoint(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
-	{
+	{	
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.FinalSolutions()[ind]);
+		out << additional;
+	}
+
+	template <typename IndexT, typename OutT>
+	static
+	void EndPointDehom(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
+	{	
+		DefaultPrecision(Precision(zd.FinalSolutions()[ind]));
+
+		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.TargetSystem().DehomogenizePoint(zd.FinalSolutions()[ind]));
 		out << additional;
 	}
 
@@ -148,7 +198,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 
 	template <typename IndexT, typename OutT>
 	static
-	void EndPointMDRaw(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
+	void EndPointMDRaw(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
 	{
 		const auto& pt = zd.FinalSolutions()[ind];
 		const auto& data = zd.FinalSolutionMetadata()[ind];
