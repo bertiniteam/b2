@@ -54,13 +54,20 @@ namespace bertini {
 					precision_increased_ = false;
 					starting_precision_ = p->Get().CurrentPrecision();
 				}
-				else if (auto p = dynamic_cast<const PrecisionIncreased<EmitterT>*>(&e))
+				else if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
 				{
 					auto& t = p->Get();
-					precision_increased_ = true;
-					next_precision_ = p->Next();
-					time_of_first_increase_ = t.CurrentTime();
-					t.RemoveObserver(this);
+					auto next = p->Next();
+					if (next > p->Previous())
+					{
+						precision_increased_ = true;
+						next_precision_ = next;
+						time_of_first_increase_ = t.CurrentTime();
+						t.RemoveObserver(this);
+
+						std::cout << "precision increased to " << next_precision_ << " at time " << time_of_first_increase_ << '\n';
+					}
+					
 				}
 			}
 
@@ -147,8 +154,8 @@ namespace bertini {
 
 		private:
 
-			unsigned min_precision_;
-			unsigned max_precision_;
+			unsigned min_precision_ = std::numeric_limits<unsigned>::max();
+			unsigned max_precision_ = 0;
 		};
 
 

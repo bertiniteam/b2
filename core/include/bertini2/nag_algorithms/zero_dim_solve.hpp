@@ -113,7 +113,7 @@ namespace bertini {
 				///// things computed across all of the solve
 				bool precision_changed = false;
 				BaseComplexType time_of_first_prec_increase;    // time value of the first increase in precision
-				decltype(DefaultPrecision()) max_precision_used = DefaultPrecision();
+				decltype(DefaultPrecision()) max_precision_used = 0;
 
 
 
@@ -129,6 +129,7 @@ namespace bertini {
 				BaseRealType newton_residual; 				// the latest newton residual 
 				BaseComplexType final_time_used;   			// the final value of time tracked to
 				BaseRealType accuracy_estimate; 			// accuracy estimate between extrapolations
+				BaseRealType accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
 				unsigned cycle_num;    						// cycle number used in extrapolations
 				tracking::SuccessCode endgame_success = tracking::SuccessCode::NeverStarted;      // success code 
 
@@ -631,8 +632,11 @@ namespace bertini {
 
 				// finally, store the metadata as necessary
 				smd.condition_number = GetTracker().LatestConditionNumber();
-				smd.newton_residual = GetTracker().LatestErrorEstimate();
+				smd.newton_residual = GetTracker().LatestNormOfStep();
 				
+				smd.accuracy_estimate_user_coords = 
+					(TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) - 
+					TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>();
 
 				smd.accuracy_estimate = endgame_.template ApproximateError<BaseRealType>();
 				smd.cycle_num = endgame_.template CycleNumber();

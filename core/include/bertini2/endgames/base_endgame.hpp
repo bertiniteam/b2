@@ -93,7 +93,11 @@ namespace bertini{
 			{
 			protected:
 
-				// convert the base endgame into the derived type.
+				/**
+				\brief convert the base endgame into the derived type.
+
+				This enables the CRPT as used by the endgames
+				*/
 				const FinalEGT& AsDerived() const
 				{
 					return static_cast<const FinalEGT&>(*this);
@@ -114,6 +118,7 @@ namespace bertini{
 				mutable std::tuple<Vec<UsedNumTs>... > previous_approximation_; 
 				mutable unsigned int cycle_number_ = 0; 
 				mutable std::tuple<BaseRealType> approximate_error_;
+
 				/**
 				\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
 				*/
@@ -121,11 +126,13 @@ namespace bertini{
 
 			public:
 
+				inline
 				const auto & EndgameSettings() const
 				{
 					return Config::template Get<config::Endgame<BRT>>();
 				}
 				
+				inline
 				const auto & SecuritySettings() const
 				{
 					return this->template Get<config::Security<BRT>>();
@@ -141,9 +148,9 @@ namespace bertini{
    				{}
 
 
-				unsigned CycleNumber() const { return cycle_number_;}
-				void CycleNumber(unsigned c) { cycle_number_ = c;}
-				void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
+   				inline unsigned CycleNumber() const { return cycle_number_;}
+				inline void CycleNumber(unsigned c) { cycle_number_ = c;}
+				inline void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
 
 				
 
@@ -182,6 +189,7 @@ namespace bertini{
 				/**
 				\brief Setter for the final tolerance.
 				*/
+				inline
 				void SetFinalTolerance(BRT const& ft){this->template Get<config::Endgame<BRT>>().final_tolerance = ft;}
 
 
@@ -190,6 +198,7 @@ namespace bertini{
 
 				\note Ensure the tracker you are using doesn not go out of scope!
 				*/
+				inline
 				void SetTracker(TrackerType const& new_tracker)
 				{
 					tracker_ = std::ref(new_tracker); // rebind the reference
@@ -199,23 +208,46 @@ namespace bertini{
 				/**
 				\brief Getter for the tracker used inside an instance of the endgame. 
 				*/
+				inline
 				const TrackerType & GetTracker() const
 				{
 					return tracker_.get();
 				}
 
+				/**
+				\brief Get the most-recent approximation
+				*/
 				template<typename CT>
+				inline
 				const Vec<CT>& FinalApproximation() const 
 				{
 					return std::get<Vec<CT> >(final_approximation_);
 				}
 
+				/**
+				\brief Get the second-most-recent approximation
+				*/
+				template<typename CT>
+				inline
+				const Vec<CT>& PreviousApproximation() const 
+				{
+					return std::get<Vec<CT> >(final_approximation_);
+				}
+
+				/**
+				\brief Get the most recent accuracy estimate
+				*/
 				template<typename RT>
+				inline
 				const RT& ApproximateError() const
 				{
 					return std::get<RT>(approximate_error_);
 				}
 
+				/**
+				\brief Get the system being tracked on, which is referred to by the tracker.
+				*/
+				inline
 				const System& GetSystem() const 
 				{ return GetTracker().GetSystem();}
 

@@ -180,14 +180,15 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		const auto& data = zd.FinalSolutionMetadata()[ind];
 		out << data.path_index << '\n'
 			<< data.solution_index << '\n'
-			<< data.function_residual << '\n'
 			<< data.condition_number << '\n'
+			<< data.function_residual << '\n'
 			<< data.newton_residual << '\n';
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.final_time_used);
 		out << '\n' << data.max_precision_used << '\n';
 
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), data.time_of_first_prec_increase);
 		out << '\n' << data.accuracy_estimate << '\n'
+			<< data.accuracy_estimate_user_coords << '\n'
 			<< data.cycle_num << '\n'
 			<< data.multiplicity << '\n'
 			<< data.pre_endgame_success << ' ' << data.endgame_success << '\n';
