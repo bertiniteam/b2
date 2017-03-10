@@ -596,10 +596,10 @@ namespace bertini {
 
 				DefaultPrecision(Precision(bdry_point));
 				// we make these fresh so they are in the correct precision to start.
-				auto t_end = this->template Get<ZeroDimConf>().target_time;
-				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
+				BaseComplexType t_end = this->template Get<ZeroDimConf>().target_time;
+				BaseComplexType t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
 
-				smd.endgame_success = GetEndgame().Run(BaseComplexType(t_endgame_boundary),bdry_point, t_end);
+				smd.endgame_success = GetEndgame().Run(t_endgame_boundary, bdry_point, t_end);
 
 
 				// if you can think of a way to replace this `if` with something meta, please do so.

@@ -653,9 +653,9 @@ public:
 		}
 
 		BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << DefaultPrecision() << "\n\n";
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point(0)) << "\n\n";
+		BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point) << "\n\n";
 
-		DefaultPrecision(Precision(start_point(0)));
+		DefaultPrecision(Precision(start_point));
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		//Set up for the endgame.
