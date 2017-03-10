@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 /**
 Check whether we can run zero dim on the non-homogenized version of Griewank Osborn.
 */
-BOOST_AUTO_TEST_CASE(reference_managed_systems)
+BOOST_AUTO_TEST_CASE(reference_managed_systems_GO_nonhom)
 {
 	using namespace bertini;
 	using namespace tracking;
