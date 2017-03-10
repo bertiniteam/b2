@@ -259,7 +259,6 @@ namespace bertini{
 					if (TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
 						assert(Precision(start_time)==Precision(x_endgame) && "Computing initial samples requires input time and space with uniform precision");
-						DefaultPrecision();
 					}
 
 					samples.clear();

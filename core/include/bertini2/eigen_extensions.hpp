@@ -306,6 +306,7 @@ namespace bertini {
 	\brief Checks whether the number of rows and columns are both positive
 	*/
 	template<typename Derived>
+	inline
 	bool IsEmpty(Eigen::MatrixBase<Derived> const & v)
 	{
 		return v.rows() && v.cols();
@@ -318,9 +319,10 @@ namespace bertini {
 	If you require that the object be of uniform precision when you check, use PrecisionRequireUniform
 	*/
 	template<typename Derived>
+	inline
 	unsigned Precision(Eigen::MatrixBase<Derived> const & v)
 	{
-		return IsEmpty(v)? Precision(typename Eigen::MatrixBase<Derived>::value_type())
+		return IsEmpty(v)? NumTraits<typename Eigen::MatrixBase<Derived>::value_type>::NumDigits()
  : Precision(v(0,0));
 	}
 
@@ -376,6 +378,7 @@ namespace bertini {
 	 \return true, if the number is very small.  False otherwise.
 	*/
 	template<typename T>
+	inline
 	bool IsSmallValue(T const& testme)
 	{
 		using std::abs;
@@ -413,6 +416,7 @@ namespace bertini {
 	 \return true, if the ratio is very large, false otherwise
 	*/
 	template<typename T>
+	inline
 	bool IsLargeChange(T const& numerator ,T const& denomenator)
 	{
 		using std::abs;
@@ -520,6 +524,7 @@ namespace bertini {
 	\tparam NumberType the type of number to fill the matrix with.
 	*/
 	template <typename NumberType>
+	inline
 	Mat<NumberType> RandomOfUnits(uint rows, uint cols)
 	{
 		return Mat<NumberType>(rows,cols).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
@@ -534,6 +539,7 @@ namespace bertini {
 	\tparam NumberType the type of number to fill the vector with.
 	*/
 	template <typename NumberType>
+	inline
 	Vec<NumberType> RandomOfUnits(uint size)
 	{
 		return Vec<NumberType>(size).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
