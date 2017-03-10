@@ -158,7 +158,8 @@ namespace bertini
 
 		enum class SuccessCode
 		{
-			Success,
+			NeverStarted = -1,
+			Success = 0,
 			HigherPrecisionNecessary,
 			ReduceStepSize,
 			GoingToInfinity,
