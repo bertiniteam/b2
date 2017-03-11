@@ -244,6 +244,14 @@ namespace bertini{
 					return std::get<RT>(approximate_error_);
 				}
 
+
+
+				inline 
+				const BCT& LatestTime() const
+				{
+					return AsDerived().LatestTimeImpl();
+				}
+
 				/**
 				\brief Get the system being tracked on, which is referred to by the tracker.
 				*/

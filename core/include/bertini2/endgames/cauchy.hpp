@@ -223,32 +223,37 @@ public:
 		std::get<SampCont<CT> >(pseg_samples_).clear(); 
 		std::get<SampCont<CT> >(cauchy_samples_).clear();}
 	/**
-	\brief Setter for the deque holding time values for the power series approximation of the Cauchy endgame. 
+	\brief Setter for the time values for the power series approximation of the Cauchy endgame. 
 	*/
 	template<typename CT>
 	void SetPSEGTimes(TimeCont<CT> pseg_times_to_set) 
 	{ std::get<TimeCont<CT> >(pseg_times_) = pseg_times_to_set;}
 
 	/**
-	\brief Getter for the deque holding time values for the power series approximation of the Cauchy endgame.
+	\brief Getter for the time values for the power series approximation of the Cauchy endgame.
 	*/
 	template<typename CT>
 	TimeCont<CT>& GetPSEGTimes() {return std::get<TimeCont<CT> >(pseg_times_);}
+	template<typename CT>
+	const TimeCont<CT>& GetPSEGTimes() const {return std::get<TimeCont<CT> >(pseg_times_);}
 
 	/**
-	\brief Setter for the deque holding space values for the power series approximation of the Cauchy endgame. 
+	\brief Setter for the space values for the power series approximation of the Cauchy endgame. 
 	*/
 	template<typename CT>
 	void SetPSEGSamples(SampCont<CT> pseg_samples_to_set) { std::get<SampCont<CT> >(pseg_samples_) = pseg_samples_to_set;}
 
 	/**
-	\brief Getter for the deque holding space values for the power series approximation of the Cauchy endgame. 
+	\brief Getter for the space values for the power series approximation of the Cauchy endgame. 
+
+	Available in const and non-const flavors
 	*/
 	template<typename CT>
 	SampCont<CT>& GetPSEGSamples() {return std::get<SampCont<CT> >(pseg_samples_);}
-
+	template<typename CT>
+	const SampCont<CT>& GetPSEGSamples() const {return std::get<SampCont<CT> >(pseg_samples_);}
 	/**
-	\brief Setter for the deque holding space values for the Cauchy endgame. 
+	\brief Setter for the space values for the Cauchy endgame. 
 	*/
 	template<typename CT>
 	void SetCauchySamples(SampCont<CT> cauchy_samples_to_set) 
@@ -257,16 +262,21 @@ public:
 	}
 
 	/**
-	\brief Getter for the deque holding space values for the Cauchy endgame. 
+	\brief Getter for the space values for the Cauchy endgame. 
+
+	Available in const and non-const flavors
 	*/
 	template<typename CT>
 	SampCont<CT>& GetCauchySamples() 
 	{
 		return std::get<SampCont<CT> >(cauchy_samples_);
 	}
+	template<typename CT>
+	const SampCont<CT>& GetCauchySamples() const { return std::get<SampCont<CT> >(cauchy_samples_); }
+
 
 	/**
-	\brief Setter for the deque holding time values for the Cauchy endgame. 
+	\brief Setter for the time values for the Cauchy endgame. 
 	*/
 	template<typename CT>
 	void SetCauchyTimes(TimeCont<CT> cauchy_times_to_set) 
@@ -275,12 +285,23 @@ public:
 	}
 
 	/**
-	\brief Getter for the deque holding time values for the Cauchy endgame. 
+	\brief Getter for the time values for the Cauchy endgame. 
 	*/
 	template<typename CT>
 	TimeCont<CT>& GetCauchyTimes() 
 	{
 		return std::get<TimeCont<CT> >(cauchy_times_);
+	}
+	template<typename CT>
+	const TimeCont<CT>& GetCauchyTimes() const
+	{
+		return std::get<TimeCont<CT> >(cauchy_times_);
+	}
+
+
+	const BCT& LatestTimeImpl() const
+	{
+		return GetPSEGTimes<BCT>().back();
 	}
 
 

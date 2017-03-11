@@ -602,44 +602,41 @@ namespace bertini {
 
 				smd.endgame_success = GetEndgame().Run(t_endgame_boundary, bdry_point, t_end);
 
-
-				// if you can think of a way to replace this `if` with something meta, please do so.
-				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-				{
-					if (!smd.precision_changed && first_prec_rec_.DidPrecisionIncrease())
-					{
-						smd.precision_changed = true;
-						smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
-					}
-					GetTracker().RemoveObserver(&first_prec_rec_);
-					GetTracker().RemoveObserver(&min_max_prec_);
-					using std::max;
-					smd.max_precision_used = 
-						max(smd.max_precision_used, min_max_prec_.MaxPrecision());
-				}
-
 				solutions_post_endgame_[soln_ind] = GetEndgame().template FinalApproximation<BaseComplexType>();
 
 
-				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-				{
-					assert(Precision(solutions_post_endgame_[soln_ind])==Precision(GetEndgame().template FinalApproximation<BaseComplexType>()));
-					DefaultPrecision(Precision(solutions_post_endgame_[soln_ind]));
-					TargetSystem().precision(Precision(solutions_post_endgame_[soln_ind]));
-				}
-				smd.function_residual = TargetSystem().Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>();
-
-
 				// finally, store the metadata as necessary
-				smd.condition_number = GetTracker().LatestConditionNumber();
-				smd.newton_residual = GetTracker().LatestNormOfStep();
-				
-				smd.accuracy_estimate_user_coords = 
-					(TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) - 
-					TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>();
-
-				smd.accuracy_estimate = endgame_.template ApproximateError<BaseRealType>();
-				smd.cycle_num = endgame_.template CycleNumber();
+						// if you can think of a way to replace this `if` with something meta, please do so.
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						if (!smd.precision_changed && first_prec_rec_.DidPrecisionIncrease())
+						{
+							smd.precision_changed = true;
+							smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+						}
+						GetTracker().RemoveObserver(&first_prec_rec_);
+						GetTracker().RemoveObserver(&min_max_prec_);
+						using std::max;
+						smd.max_precision_used = 
+							max(smd.max_precision_used, min_max_prec_.MaxPrecision());
+					}
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						assert(Precision(solutions_post_endgame_[soln_ind])==Precision(GetEndgame().template FinalApproximation<BaseComplexType>()));
+						DefaultPrecision(Precision(solutions_post_endgame_[soln_ind]));
+						TargetSystem().precision(Precision(solutions_post_endgame_[soln_ind]));
+					}
+					smd.function_residual = TargetSystem().Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>();
+					smd.final_time_used = GetEndgame().LatestTime();
+					smd.condition_number = GetTracker().LatestConditionNumber();
+					smd.newton_residual = GetTracker().LatestNormOfStep();
+					
+					smd.accuracy_estimate = GetEndgame().template ApproximateError<BaseRealType>();
+					smd.accuracy_estimate_user_coords = 
+						(TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) - 
+						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>();
+					smd.cycle_num = GetEndgame().template CycleNumber();
+					// end metadata gathering
 			}
 
 

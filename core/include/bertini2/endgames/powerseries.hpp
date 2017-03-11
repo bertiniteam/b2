@@ -255,7 +255,13 @@ public:
 	\brief Function to get the times used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	auto GetTimes() const {return std::get<TimeCont<CT> >(times_);}
+	const auto& GetTimes() const {return std::get<TimeCont<CT> >(times_);}
+
+
+	const BCT& LatestTimeImpl() const
+	{
+		return GetTimes<BCT>().back();
+	}
 
 	/**
 	\brief Function to set the space values used for the Power Series endgame.
@@ -267,11 +273,11 @@ public:
 	\brief Function to get the space values used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	auto GetSamples() const {return std::get<SampCont<CT> >(samples_);}
+	const auto& GetSamples() const {return std::get<SampCont<CT> >(samples_);}
 
 	/**
 	\brief Function to set the times used for the Power Series endgame.
-	// */	
+	*/	
 	template<typename CT>
 	void SetRandVec(int size) {rand_vector = Vec<CT>::Random(size);}
 
@@ -280,7 +286,7 @@ public:
 	/**
 	\brief Setter for the specific settings in tracking_conifg.hpp under PowerSeries.
 	*/	
-	void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings)
+	void SetPowerSeriesSettings(config::PowerSeries const& new_power_series_settings)
 	{
 		this->template Set(new_power_series_settings);
 	}
