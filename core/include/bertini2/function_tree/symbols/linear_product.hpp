@@ -73,6 +73,7 @@ namespace  bertini {
 			LinearProduct(VariableGroup variables, int num_factors) : variables_(variables), num_factors_(num_factors)
 			{
 				num_variables_ = variables.size();
+				factors_.resize(num_factors_);
 				
 				// Resize coeffs matrix
 				coeffs_rat_real_.resize(num_factors_, num_variables_ + 1);
@@ -95,9 +96,23 @@ namespace  bertini {
 						coeffs_dbl_ref(ii,jj).imag( static_cast<double>(coeffs_rat_imag_(ii,jj)) );
 						coeffs_mpfr_ref(ii,jj).real( static_cast<mpfr_float>(coeffs_rat_real_(ii,jj)) );
 						coeffs_mpfr_ref(ii,jj).imag( static_cast<mpfr_float>(coeffs_rat_imag_(ii,jj)) );
-					}
-					
-				}
+						
+						// Create i^th factor as sumoperator and add term
+						if(jj == 0)
+						{
+							factors_(ii) =
+								std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeRational(coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj)), variables_[jj]), true);
+						}
+						else if(jj < num_variables_)
+						{
+							factors_(ii)->AddChild(std::make_shared<MultOperator>(bertini::MakeRational(coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj)), variables_[jj]), true);
+						}
+						else
+						{
+							factors_(ii)->AddChild(bertini::MakeRational( coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj) ), true);
+						}
+					} //re: variable loop
+				}//re: factor loop
 			}
 			
 
@@ -115,6 +130,7 @@ namespace  bertini {
 					: variables_(variables), num_factors_(num_factors)
 			{
 				num_variables_ = variables.size();
+				factors_.resize(num_factors_);
 				
 				// Resize coeffs matrix
 				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
@@ -127,6 +143,26 @@ namespace  bertini {
 				coeffs_dbl_ref = coeffs_dbl;
 				coeffs_mpfr_ref = coeffs_mpfr;
 				
+				for (int ii = 0; ii < num_factors_; ++ii)
+				{
+					for (int jj = 0; jj < num_variables_ + 1; ++jj)
+					{
+						// Create i^th factor as sumoperator and add term
+						if(jj == 0)
+						{
+							factors_(ii) =
+							std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)), variables_[jj]), true);
+						}
+						else if(jj < num_variables_)
+						{
+							factors_(ii)->AddChild(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)), variables_[jj]), true);
+						}
+						else
+						{
+							factors_(ii)->AddChild(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)) , true);
+						}
+					} //re: variable loop
+				}//re: factor loop
 			}
 
 			
@@ -402,6 +438,8 @@ namespace  bertini {
 			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
 			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
 			VariableGroup variables_; ///< Variables to be used in each linear factor.  Does not have to correspond directly to a variable group from the system.
+			
+			Vec< std::shared_ptr<SumOperator> > factors_;  ///< All the various linear factors in the product.
 			
 			size_t num_factors_;  ///< The number of factors in the linear product.
 			size_t num_variables_;  ///< The number of variables in each linear.
