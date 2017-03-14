@@ -819,7 +819,7 @@ public:
 	*/
 	template<typename CT>
 	SuccessCode InitialPowerSeriesApproximation(CT const& start_time, Vec<CT> const& start_point, 
-	                                            CT const& approximation_time, Vec<CT> & approximation)
+	                                            CT const& target_time, Vec<CT> & approximation)
 	{	
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
@@ -830,7 +830,7 @@ public:
 		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
 
 		//Compute initial samples for pseg
-		auto initial_sample_success = this->ComputeInitialSamples(start_time, approximation_time, start_point, ps_times, ps_samples);
+		auto initial_sample_success = this->ComputeInitialSamples(start_time, target_time, start_point, ps_times, ps_samples);
 		if (initial_sample_success!=SuccessCode::Success)
 			return initial_sample_success;
 
@@ -843,7 +843,7 @@ public:
 		//track until for more c_over_k estimates or until we reach a cutoff time. 
 		for (unsigned ii = 0; ii < GetCauchySettings().num_needed_for_stabilization; ++ii) 
 		{	
-			next_time = (ps_times.back() + approximation_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
+			next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
 																
 			auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
 			if (tracking_success!=SuccessCode::Success)
@@ -862,7 +862,7 @@ public:
 		//have we stabilized yet? 
 		while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()) > GetCauchySettings().cycle_cutoff_time)
 		{
-			next_time = (ps_times.back() + approximation_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
+			next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
 																									 
 			auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
 
@@ -881,7 +881,13 @@ public:
 
 		}//end while
 
-		return ComputePSEGApproximationAtT0(approximation, approximation_time);
+		// you have to leave this here.  yeah, i know, you want to extract it, but this sets up the cycle number
+		// used in the subsequent call to ComputePSEGApproximationAtT0.  Ah, side-effects.  Sorry.
+		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
+		if (cauchy_loop_success != SuccessCode::Success)
+			return cauchy_loop_success;
+
+		return ComputePSEGApproximationAtT0(approximation, target_time);
 
 	}//end InitialPowerSeriesApproximation
 
@@ -1125,11 +1131,6 @@ public:
 		auto initial_ps_success = InitialPowerSeriesApproximation(start_time, start_point, target_time, prev_approx);  // last argument is output here
 		if (initial_ps_success != SuccessCode::Success)
 			return initial_ps_success;
-
-
-		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
-		if (cauchy_loop_success != SuccessCode::Success)
-			return cauchy_loop_success;
 
 
 		CT next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor);
