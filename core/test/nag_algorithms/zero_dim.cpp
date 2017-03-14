@@ -36,30 +36,18 @@
 
 BOOST_AUTO_TEST_SUITE(zero_dim)
 
-
-BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_amp)
-{
-	using namespace bertini;
-	using namespace tracking;
-
-	auto sys = system::Precon::GriewankOsborn();
-
-	auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
-
-	zd.DefaultSetup();
-
-	zd.Solve();
-}
+using TrackerT = bertini::tracking::DoublePrecisionTracker;
 
 
-BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
+
+BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 {
 	using namespace bertini;
 	using namespace tracking;
 
 	using Tolerances = algorithm::config::Tolerances<double>;
 	using EndgameConfT = config::Endgame<double>;
-	using TrackerT = DoublePrecisionTracker;
+	
 
 	auto sys = system::Precon::GriewankOsborn();
 
@@ -68,9 +56,14 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
 	zd.DefaultSetup();
 	
 	auto tols = zd.Get<Tolerances>();
-	tols.newton_before_endgame = 1e-4;
-	tols.newton_during_endgame = 1e-5;
+	tols.newton_before_endgame = 1e-5;
+	tols.newton_during_endgame = 1e-6;
 	zd.Set(tols);
+
+	auto& tr = zd.GetTracker();
+	GoryDetailLogger<TrackerT> logger;
+	tr.AddObserver(&logger);
+
 
 	auto eg = zd.GetFromEndgame<EndgameConfT>();
 	eg.final_tolerance = 1e-12;
@@ -83,6 +76,8 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
 }
 
 
+
+
 BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 {
 	
@@ -93,14 +88,20 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 
 	auto sys = system::Precon::GriewankOsborn();
 
-	auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
-
-	auto& tr = zd.GetTracker();
+	auto zd = algorithm::ZeroDim<TrackerT, EndgameSelector<TrackerT>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
 
 	zd.DefaultSetup();
+	
+	auto& tr = zd.GetTracker();
+	GoryDetailLogger<TrackerT> logger;
+	tr.AddObserver(&logger);
+
+	
 
 	auto tols = zd.Get<Tolerances>();
 	tols.newton_before_endgame = 1e-4;
+	tols.newton_during_endgame = 1e-4;
+
 	zd.Set(tols);
 
 	zd.Solve();
@@ -127,8 +128,8 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO_nonhom)
 	h.AddPathVariable(t);
 
 	auto zd = algorithm::ZeroDim<
-				AMPTracker, 
-				EndgameSelector<AMPTracker>::PSEG, 
+				TrackerT, 
+				EndgameSelector<TrackerT>::PSEG, 
 				decltype(sys), 
 				start_system::TotalDegree,
 				policy::RefToGiven
@@ -166,8 +167,8 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 	h.AddPathVariable(t);
 
 	auto zd = algorithm::ZeroDim<
-				AMPTracker, 
-				EndgameSelector<AMPTracker>::PSEG, 
+				TrackerT, 
+				EndgameSelector<TrackerT>::PSEG, 
 				decltype(sys), 
 				start_system::TotalDegree,
 				policy::RefToGiven
@@ -178,7 +179,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 	zd.DefaultSetup();
 
 	auto& tr = zd.GetTracker();
-	GoryDetailLogger<AMPTracker> logger;
+	GoryDetailLogger<TrackerT> logger;
 	tr.AddObserver(&logger);
 	
 	zd.Solve();

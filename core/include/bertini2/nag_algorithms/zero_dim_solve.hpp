@@ -479,17 +479,17 @@ namespace bertini {
 			*/
 			void TrackSinglePathBeforeEG(SolnIndT soln_ind)
 			{
-				// if you can think of a way to replace this `if` with something meta, please do so.
-				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-				{
-					GetTracker().AddObserver(&first_prec_rec_);
-					GetTracker().AddObserver(&min_max_prec_);
-				}
+					// if you can think of a way to replace this `if` with something meta, please do so.
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						GetTracker().AddObserver(&first_prec_rec_);
+						GetTracker().AddObserver(&min_max_prec_);
+					}
 
-				auto& smd = solution_final_metadata_[soln_ind];
+					auto& smd = solution_final_metadata_[soln_ind];
 
-				smd.path_index = soln_ind;
-				smd.solution_index = soln_ind;
+					smd.path_index = soln_ind;
+					smd.solution_index = soln_ind;
 
 				DefaultPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
 				auto t_start = this->template Get<ZeroDimConf>().start_time;
@@ -501,22 +501,25 @@ namespace bertini {
 				
 				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaData({ result, tracking_success, GetTracker().CurrentStepsize() });
 				
-				smd.pre_endgame_success = tracking_success;
-				
-				// if you can think of a way to replace this `if` with something meta, please do so.
-				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-				{
-					if (first_prec_rec_.DidPrecisionIncrease())
+					smd.pre_endgame_success = tracking_success;
+					
+					// if you can think of a way to replace this `if` with something meta, please do so.
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
-						smd.precision_changed = true;
-						smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+						if (first_prec_rec_.DidPrecisionIncrease())
+						{
+							smd.precision_changed = true;
+							smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+							std::cout << "precision changed before endgame\n";
+						}
+						else
+							std::cout << "precision didn't change before endgame\n";
+						GetTracker().RemoveObserver(&first_prec_rec_);
+						GetTracker().RemoveObserver(&min_max_prec_);
+						using std::max;
+						smd.max_precision_used = 
+							max(smd.max_precision_used, min_max_prec_.MaxPrecision());
 					}
-					GetTracker().RemoveObserver(&first_prec_rec_);
-					GetTracker().RemoveObserver(&min_max_prec_);
-					using std::max;
-					smd.max_precision_used = 
-						max(smd.max_precision_used, min_max_prec_.MaxPrecision());
-				}
 
 			
 			}
@@ -580,14 +583,14 @@ namespace bertini {
 			void TrackSinglePathDuringEG(SolnIndT soln_ind)
 			{
 
-				auto& smd = solution_final_metadata_[soln_ind];
-				// if you can think of a way to replace this `if` with something meta, please do so.
-				if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-				{
-					if (!smd.precision_changed)
-						GetTracker().AddObserver(&first_prec_rec_);
-					GetTracker().AddObserver(&min_max_prec_);
-				}
+					auto& smd = solution_final_metadata_[soln_ind];
+					// if you can think of a way to replace this `if` with something meta, please do so.
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						if (!smd.precision_changed)
+							GetTracker().AddObserver(&first_prec_rec_);
+						GetTracker().AddObserver(&min_max_prec_);
+					}
 
 				const auto& bdry_point = solutions_at_endgame_boundary_[soln_ind].path_point;
 
@@ -600,19 +603,27 @@ namespace bertini {
 				BaseComplexType t_end = this->template Get<ZeroDimConf>().target_time;
 				BaseComplexType t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
 
-				smd.endgame_success = GetEndgame().Run(t_endgame_boundary, bdry_point, t_end);
+				auto eg_success = GetEndgame().Run(t_endgame_boundary, bdry_point, t_end);
 
 				solutions_post_endgame_[soln_ind] = GetEndgame().template FinalApproximation<BaseComplexType>();
 
 
-				// finally, store the metadata as necessary
+					// finally, store the metadata as necessary
+					smd.endgame_success = eg_success;
 						// if you can think of a way to replace this `if` with something meta, please do so.
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
-						if (!smd.precision_changed && first_prec_rec_.DidPrecisionIncrease())
+						if (!smd.precision_changed)
 						{
-							smd.precision_changed = true;
-							smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+							if (first_prec_rec_.DidPrecisionIncrease())
+							{
+								smd.precision_changed = true;
+								smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
+								std::cout << "precision changed during endgame\n";
+							}
+							else
+								std::cout << "precision didn't change during endgame\n";
+							
 						}
 						GetTracker().RemoveObserver(&first_prec_rec_);
 						GetTracker().RemoveObserver(&min_max_prec_);
