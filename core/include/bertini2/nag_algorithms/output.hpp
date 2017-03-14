@@ -157,7 +157,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 
 	template <typename IndexT, typename OutT>
 	static
-	void EndPoint(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
+	void EndPoint(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
 	{	
 		generators::Classic::generate(boost::spirit::ostream_iterator(out), zd.FinalSolutions()[ind]);
 		out << additional;
@@ -165,7 +165,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 
 	template <typename IndexT, typename OutT>
 	static
-	void EndPointDehom(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "\n")
+	void EndPointDehom(IndexT const& ind, OutT & out, ZDT const& zd, std::string const& additional = "")
 	{	
 		DefaultPrecision(Precision(zd.FinalSolutions()[ind]));
 
