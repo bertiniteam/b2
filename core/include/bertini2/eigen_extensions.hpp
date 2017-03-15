@@ -303,13 +303,13 @@ namespace bertini {
 
 	
 	/**
-	\brief Checks whether the number of rows and columns are both positive
+	\brief Checks whether the number of rows and columns are either 0
 	*/
 	template<typename Derived>
 	inline
 	bool IsEmpty(Eigen::MatrixBase<Derived> const & v)
 	{
-		return v.rows() && v.cols();
+		return (v.rows()==0) || (v.cols()==0);
 	}
 
 
@@ -322,8 +322,10 @@ namespace bertini {
 	inline
 	unsigned Precision(Eigen::MatrixBase<Derived> const & v)
 	{
-		return IsEmpty(v)? NumTraits<typename Eigen::MatrixBase<Derived>::value_type>::NumDigits()
- : Precision(v(0,0));
+		if (IsEmpty(v))
+			throw std::runtime_error("getting precision of empty object");
+		
+		return Precision(v(0,0));
 	}
 
 
