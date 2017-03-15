@@ -365,21 +365,14 @@ namespace  bertini {
 				evaluation_value = dbl(1);
 				const Mat<dbl>& coeffs_ref = std::get< Mat<dbl> >(coeffs_);
 				
+				
+				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					// Add all terms in one linear factor and store in temp_sum_d_
-					temp_sum_d_ = dbl(0);
-					for (int jj = 0; jj < num_variables_; ++jj)
-					{
-						variables_[jj]->EvalInPlace<dbl>(temp_d_, diff_variable);
-						temp_sum_d_ += coeffs_ref(ii,jj)*temp_d_;
-					}
-					
-					// Add in the constant coefficient
-					temp_sum_d_ += coeffs_ref(ii,num_variables_);
+					factors_[ii]->EvalInPlace(temp_d_, diff_variable);
 					
 					// Multiply factors together
-					evaluation_value *= temp_sum_d_;
+					evaluation_value *= temp_d_;
 				}
 			}
 			
@@ -411,19 +404,10 @@ namespace  bertini {
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					// Add all terms in one linear factor and store in temp_sum_d_
-					temp_sum_mp_.SetZero();
-					for (int jj = 0; jj < num_variables_; ++jj)
-					{
-						variables_[jj]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
-						temp_sum_mp_ += coeffs_ref(ii,jj)*temp_mp_;
-					}
-					
-					// Add in the constant coefficient
-					temp_sum_mp_ += coeffs_ref(ii,num_variables_);
+					factors_[ii]->EvalInPlace(temp_mp_, diff_variable);
 					
 					// Multiply factors together
-					evaluation_value *= temp_sum_mp_;
+					evaluation_value *= temp_mp_;
 				}
 			}
 
