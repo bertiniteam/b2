@@ -221,7 +221,21 @@ namespace  bertini {
 			/**
 			 Method for printing to output stream
 			 */
-			void print(std::ostream & target) const override{};
+			void print(std::ostream & target) const override
+			{
+				target << "(";
+				
+				for (auto iter = factors_.begin(); iter != factors_.end(); ++iter)
+				{
+					(*iter)->print(target);
+					if(iter != factors_.end() - 1)
+					{
+						target << "*";
+					}
+				}
+				
+				target << ")";
+			};
 			
 			
 			
@@ -231,8 +245,14 @@ namespace  bertini {
 			 */
 			std::shared_ptr<Node> Differentiate() const override
 			{
-				std::shared_ptr<Node> n = MakeVariable("x");
-				return n;
+				std::shared_ptr<Node> ret_sum = node::Zero();
+				
+				for (int ii = 0; ii < factors_.size(); ++ii)
+				{
+					std::shared_ptr<Node> local_deriv = f[ii]->Differentiate();
+					
+					
+				}
 			}
 			
 			
@@ -345,15 +365,42 @@ namespace  bertini {
 			 */
 			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 			{
-				
+				for(f : factors_)
+				{
+					f->Homogenize(vars, homvar);
+				}
 			};
 			
-			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override{return false;};
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+			{
+				// the only hope this has of being homogeneous, is that each factor is homogeneous
+				for (auto iter : factors_)
+				{
+					if (! iter->IsHomogeneous(v))
+					{
+						return false;
+					}
+				}
+				return true;
+
+			};
 			
 			/**
 			 Check for homogeneity, with respect to a variable group.
 			 */
-			bool IsHomogeneous(VariableGroup const& vars) const override {return false;};
+			bool IsHomogeneous(VariableGroup const& vars) const override
+			{
+				// the only hope this has of being homogeneous, is that each factor is homogeneous
+				for (auto iter : factors_)
+				{
+					if (! iter->IsHomogeneous(vars))
+					{
+						return false;
+					}
+				}
+				return true;
+
+			};
 			
 			
 			
