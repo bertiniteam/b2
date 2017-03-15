@@ -100,16 +100,16 @@ namespace  bertini {
 						// Create i^th factor as sumoperator and add term
 						if(jj == 0)
 						{
-							factors_(ii) =
+							factors_[ii] =
 								std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeRational(coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj)), variables_[jj]), true);
 						}
 						else if(jj < num_variables_)
 						{
-							factors_(ii)->AddChild(std::make_shared<MultOperator>(bertini::MakeRational(coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj)), variables_[jj]), true);
+							factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeRational(coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj)), variables_[jj]), true);
 						}
 						else
 						{
-							factors_(ii)->AddChild(bertini::MakeRational( coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj) ), true);
+							factors_[ii]->AddChild(bertini::MakeRational( coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj) ), true);
 						}
 					} //re: variable loop
 				}//re: factor loop
@@ -150,16 +150,16 @@ namespace  bertini {
 						// Create i^th factor as sumoperator and add term
 						if(jj == 0)
 						{
-							factors_(ii) =
+							factors_[ii] =
 							std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)), variables_[jj]), true);
 						}
 						else if(jj < num_variables_)
 						{
-							factors_(ii)->AddChild(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)), variables_[jj]), true);
+							factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)), variables_[jj]), true);
 						}
 						else
 						{
-							factors_(ii)->AddChild(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)) , true);
+							factors_[ii]->AddChild(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)) , true);
 						}
 					} //re: variable loop
 				}//re: factor loop
@@ -246,11 +246,19 @@ namespace  bertini {
 			{
 				int deg = 0;
 				
-				// If v is part of the linear product
-				if(std::find(variables_.begin(), variables_.end(), v) != std::end(variables_))
+				for (auto f = factors_.begin(); f != factors_.end(); ++f)
 				{
-					deg = num_factors_;
+					auto factor_deg = (*f)->Degree(v);
+					
+					deg += factor_deg;
 				}
+				
+//				// If v is part of the linear product
+//				if(std::find(variables_.begin(), variables_.end(), v) != std::end(variables_))
+//				{
+//					deg = num_factors_;
+//				}
+//				
 				
 				return deg;
 			};
@@ -270,15 +278,23 @@ namespace  bertini {
 			{
 				int deg = 0;
 				
-				for (auto v = vars.begin(); v != vars.end(); ++v)
+				for (auto f : factors_)
 				{
-					// if v is a part of the linear product
-					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
-					{
-						deg = num_factors_;
-						break;
-					}
+					auto factor_deg = f->Degree(vars);
+					
+					deg += factor_deg;
 				}
+
+//				
+//				for (auto v = vars.begin(); v != vars.end(); ++v)
+//				{
+//					// if v is a part of the linear product
+//					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
+//					{
+//						deg = num_factors_;
+//						break;
+//					}
+//				}
 				
 				return deg;
 			};
@@ -293,14 +309,25 @@ namespace  bertini {
 			{
 				std::vector<int> degs(vars.size(), 0);
 				
-				for (auto v = vars.begin(); v != vars.end(); ++v)
+				for (f : factors_)
 				{
-					// If v is part of the linear product
-					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
+					auto factor_deg = f->MultiDegree(vars);
+					
+					for (auto iter = factor_deg.begin(); iter != factor_deg.end(); ++iter)
 					{
-						*(degs.begin()+(v-vars.begin())) = num_factors_;
+						*(degs.begin()+(iter-factor_deg.begin())) += *iter;
 					}
 				}
+				
+				
+//				for (auto v = vars.begin(); v != vars.end(); ++v)
+//				{
+//					// If v is part of the linear product
+//					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
+//					{
+//						*(degs.begin()+(v-vars.begin())) = num_factors_;
+//					}
+//				}
 				
 				
 				return degs;
@@ -363,7 +390,6 @@ namespace  bertini {
 			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				evaluation_value = dbl(1);
-				const Mat<dbl>& coeffs_ref = std::get< Mat<dbl> >(coeffs_);
 				
 				
 				
@@ -400,7 +426,6 @@ namespace  bertini {
 			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				evaluation_value.SetOne();
-				const Mat<mpfr>& coeffs_ref = std::get< Mat<mpfr> >(coeffs_);
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
@@ -423,7 +448,7 @@ namespace  bertini {
 			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
 			VariableGroup variables_; ///< Variables to be used in each linear factor.  Does not have to correspond directly to a variable group from the system.
 			
-			Vec< std::shared_ptr<SumOperator> > factors_;  ///< All the various linear factors in the product.
+			std::vector< std::shared_ptr<SumOperator> > factors_;  ///< All the various linear factors in the product.
 			
 			size_t num_factors_;  ///< The number of factors in the linear product.
 			size_t num_variables_;  ///< The number of variables in each linear.
