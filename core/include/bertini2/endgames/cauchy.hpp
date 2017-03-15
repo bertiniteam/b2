@@ -1110,7 +1110,11 @@ public:
 		}
 
 		if (Precision(start_time)!=Precision(start_point))
-			throw std::runtime_error("CauchyEG Run time and point must be of matching precision");
+		{
+			std::stringstream ss;
+			ss << "CauchyEG Run time and point must be of matching precision. (" << Precision(start_time) << "!=" << Precision(start_point) << ")";
+			throw std::runtime_error(ss.str());
+		}
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
