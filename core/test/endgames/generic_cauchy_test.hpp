@@ -124,11 +124,10 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 
 	cauchy_times.push_back(ComplexFromString("0.1"));
 	cauchy_samples.push_back(Vec<BCT>(1));
+	cauchy_samples.back() << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
 	const auto& time = cauchy_times.back();
 	const auto& sample = cauchy_samples.back();
-
-	cauchy_samples.back() << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
 	auto first_track_success =  my_endgame.CircleTrack(time,origin,sample);
 
@@ -1837,12 +1836,13 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	tracker.PrecisionSetup(precision_config);
 	
 	unsigned num_paths_to_track{1};
-	BCT t_start(1), t_endgame_boundary(0.1);
+	BCT t_start(1);
 	std::vector<Vec<BCT> > solutions;
 	std::vector<Vec<BCT> > homogenized_solutions;
 	for (unsigned ii = 0; ii < num_paths_to_track; ++ii)
 	{
 		DefaultPrecision(ambient_precision);
+		BCT t_endgame_boundary{0.1};
 		final_system.precision(ambient_precision);
 		auto start_point = TD.StartPoint<BCT>(ii);
 
@@ -1870,10 +1870,12 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	unsigned num_successful_occurences = 0;
 	unsigned num_min_track_time_reached = 0;
-	for (auto s : homogenized_solutions)
+	for (const auto& s : homogenized_solutions)
 	{
-		DefaultPrecision(ambient_precision);
-		final_system.precision(Precision(s(0)));
+		auto eg_prec = Precision(s);
+		DefaultPrecision(eg_prec);
+		BCT t_endgame_boundary{0.1};
+		final_system.precision(eg_prec);
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{
