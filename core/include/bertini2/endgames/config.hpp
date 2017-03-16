@@ -37,6 +37,18 @@ namespace bertini{
 
 	namespace tracking{
 
+		namespace endgame{
+		// some forward declarations
+		template<typename Tracker, typename Enable = void>
+		class FixedPrecPowerSeriesEndgame;
+
+		template<typename Tracker, typename Enable = void>
+		class FixedPrecCauchyEndgame;
+
+		class AMPPowerSeriesEndgame;
+		class AMPCauchyEndgame;
+		}
+
 		/**
 		\brief Facilitates lookup of required endgame type based on tracker type
 		

@@ -31,7 +31,7 @@
 
 #pragma once
 
-#include "bertini2/endgames/fixed_prec_endgame.hpp"
+#include "bertini2/endgames/fixed_prec_powerseries.hpp"
 #include "bertini2/endgames/fixed_prec_cauchy.hpp"
 
 #include "bertini2/endgames/amp_powerseries.hpp"

@@ -139,17 +139,7 @@ namespace bertini
 		};
 
 
-		namespace endgame{
-		// some forward declarations
-		template<typename Tracker, typename Enable = void>
-		class FixedPrecPowerSeriesEndgame;
 
-		template<typename Tracker, typename Enable = void>
-		class FixedPrecCauchyEndgame;
-
-		class AMPPowerSeriesEndgame;
-		class AMPCauchyEndgame;
-		}
 
 		
 
