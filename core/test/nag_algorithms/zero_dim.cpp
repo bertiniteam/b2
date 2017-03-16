@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 	using namespace bertini;
 	using namespace tracking;
 
-	using Tolerances = algorithm::config::Tolerances<mpfr_float>;
+	using Tolerances = algorithm::config::Tolerances<double>;
 
 	auto sys = system::Precon::GriewankOsborn();
 
