@@ -201,7 +201,12 @@ namespace  bertini {
 			/**
 			 \brief Reset variable values in this node
 			*/
-			void Reset() const override {};
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+				for (auto ii:factors_)
+					ii->Reset();
+			};
 			
 			
 			/**
