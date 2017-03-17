@@ -236,8 +236,27 @@ namespace  bertini {
 				for (int ii = 0; ii < factors_.size(); ++ii)
 				{
 					std::shared_ptr<Node> local_deriv = factors_[ii]->Differentiate();
+					auto temp_mult = std::make_shared<MultOperator>(local_deriv);
+					std::vector<size_t> indices;
 					
+					for(int jj = 0; jj < factors_.size(); ++jj)
+					{
+						if(ii != jj)
+						{
+							indices.push_back(jj);
+						}
+					}
 					
+					temp_mult->AddChild(GetLinears(indices));
+					
+					if(ii == 0)
+					{
+						ret_sum = std::make_shared<SumOperator>(temp_mult, true);
+					}
+					else
+					{
+						std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddChild(temp_mult,true);
+					}
 				}
 				
 				return ret_sum;
@@ -420,7 +439,7 @@ namespace  bertini {
 			 \return LinearProduct node contain the single linear.
 			*/
 			
-			std::shared_ptr<LinearProduct> GetLinears(size_t index)
+			std::shared_ptr<LinearProduct> GetLinears(size_t index) const
 			{
 				LinearProduct temp(variables_, 1, factors_[index]);
 				std::shared_ptr<LinearProduct> ret_lin = std::make_shared<LinearProduct>(temp);
@@ -436,7 +455,7 @@ namespace  bertini {
 			 \return LinearProduct node contain the linears.
 			 */
 			
-			std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices)
+			std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices) const
 			{
 				std::vector< std::shared_ptr<SumOperator> > factors;
 				for (int ii = 0; ii < indices.size(); ++ii)
