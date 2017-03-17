@@ -75,41 +75,29 @@ namespace  bertini {
 				num_variables_ = variables.size();
 				factors_.resize(num_factors_);
 				
-				// Resize coeffs matrix
-				coeffs_rat_real_.resize(num_factors_, num_variables_ + 1);
-				coeffs_rat_imag_.resize(num_factors_, num_variables_ + 1);
-				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				coeffs_dbl_ref.resize(num_factors_, num_variables_ + 1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				coeffs_mpfr_ref.resize(num_factors_, num_variables_ + 1);
 				
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
 					for (int jj = 0; jj < num_variables_ + 1; ++jj)
 					{
-						// Generate random constants as mpq_rationals.  Then downsample to mpfr and dbl.
-						// TODO: RandomRat() does not generate random numbers.  Same each run.
-						coeffs_rat_real_(ii,jj) = RandomRat();
-						coeffs_rat_imag_(ii,jj) = RandomRat();
-						coeffs_dbl_ref(ii,jj).real( static_cast<double>(coeffs_rat_real_(ii,jj)) );
-						coeffs_dbl_ref(ii,jj).imag( static_cast<double>(coeffs_rat_imag_(ii,jj)) );
-						coeffs_mpfr_ref(ii,jj).real( static_cast<mpfr_float>(coeffs_rat_real_(ii,jj)) );
-						coeffs_mpfr_ref(ii,jj).imag( static_cast<mpfr_float>(coeffs_rat_imag_(ii,jj)) );
+						
+						mpq_rational rand_coeff_real = RandomRat();
+						mpq_rational rand_coeff_imag = RandomRat();
 						
 						// Create i^th factor as sumoperator and add term
 						if(jj == 0)
 						{
 							factors_[ii] =
-								std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeRational(coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj)), variables_[jj]), true);
+								std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeRational(rand_coeff_real, rand_coeff_imag), variables_[jj]), true);
 						}
 						else if(jj < num_variables_)
 						{
-							factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeRational(coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj)), variables_[jj]), true);
+							factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeRational(rand_coeff_real, rand_coeff_imag), variables_[jj]), true);
 						}
 						else
 						{
-							factors_[ii]->AddChild(bertini::MakeRational( coeffs_rat_real_(ii,jj), coeffs_rat_imag_(ii,jj) ), true);
+							factors_[ii]->AddChild(bertini::MakeRational(rand_coeff_real, rand_coeff_imag), true);
 						}
 					} //re: variable loop
 				}//re: factor loop
@@ -126,22 +114,12 @@ namespace  bertini {
 			 \param coeffs_mpfr A matrix of mpfr data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
 			 
 			 */
-			LinearProduct(VariableGroup variables, int num_factors, Mat<dbl>& coeffs_dbl, Mat<mpfr>& coeffs_mpfr)
+			LinearProduct(VariableGroup variables, int num_factors, Mat<mpfr>& coeffs_mpfr)
 					: variables_(variables), num_factors_(num_factors)
 			{
 				num_variables_ = variables.size();
 				factors_.resize(num_factors_);
 				
-				// Resize coeffs matrix
-				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				coeffs_dbl_ref.resize(num_factors_, num_variables_);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				coeffs_mpfr_ref.resize(num_factors_, num_variables_);
-				
-				
-				// Set the coefficient matrices with input matrices.
-				coeffs_dbl_ref = coeffs_dbl;
-				coeffs_mpfr_ref = coeffs_mpfr;
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
@@ -151,19 +129,27 @@ namespace  bertini {
 						if(jj == 0)
 						{
 							factors_[ii] =
-							std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)), variables_[jj]), true);
+								std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr(ii,jj)), variables_[jj]), true);
 						}
 						else if(jj < num_variables_)
 						{
-							factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)), variables_[jj]), true);
+							factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr(ii,jj)), variables_[jj]), true);
 						}
 						else
 						{
-							factors_[ii]->AddChild(bertini::MakeFloat(coeffs_mpfr_ref(ii,jj)) , true);
+							factors_[ii]->AddChild(bertini::MakeFloat(coeffs_mpfr(ii,jj)) , true);
 						}
 					} //re: variable loop
 				}//re: factor loop
 			}
+			
+			
+			
+			
+			
+			
+			
+
 
 			
 			//////////////////////////////////////////
@@ -171,19 +157,19 @@ namespace  bertini {
 			//         Testing/Debugging
 			//
 			//////////////////////////////////////////
-			void print_coeffs()
-			{
-				
-				
-				for (int ii = 0; ii < num_factors_; ++ii)
-				{
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
-					{
-						std::cout << std::get< Mat<mpfr> >(coeffs_)(ii,jj) << " | ";
-					}
-					std::cout << "\n";
-				}
-			}
+//			void print_coeffs()
+//			{
+//				
+//				
+//				for (int ii = 0; ii < num_factors_; ++ii)
+//				{
+//					for (int jj = 0; jj < num_variables_ + 1; ++jj)
+//					{
+//						std::cout << std::get< Mat<mpfr> >(coeffs_)(ii,jj) << " | ";
+//					}
+//					std::cout << "\n";
+//				}
+//			}
 			
 			
 			
@@ -249,10 +235,12 @@ namespace  bertini {
 				
 				for (int ii = 0; ii < factors_.size(); ++ii)
 				{
-					std::shared_ptr<Node> local_deriv = f[ii]->Differentiate();
+					std::shared_ptr<Node> local_deriv = factors_[ii]->Differentiate();
 					
 					
 				}
+				
+				return ret_sum;
 			}
 			
 			
@@ -409,7 +397,59 @@ namespace  bertini {
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) const {};
+			virtual void precision(unsigned int prec) const
+			{
+				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+				val_pair.first.precision(prec);
+				
+				this->PrecisionChangeSpecific(prec);
+				
+				for (auto iter : factors_)
+					iter->precision(prec);
+			};
+			
+			
+			
+			
+			
+			
+			/** 
+			 \brief Break off a single linear factor in the product and return as a LinearProduct node.
+			 
+			 \param index Index of the linear factor, starting at 0
+			 \return LinearProduct node contain the single linear.
+			*/
+			
+			std::shared_ptr<LinearProduct> GetLinears(size_t index)
+			{
+				LinearProduct temp(variables_, 1, factors_[index]);
+				std::shared_ptr<LinearProduct> ret_lin = std::make_shared<LinearProduct>(temp);
+				
+				return ret_lin;
+			}
+			
+			
+			/**
+			 \brief Break off a set of linear factors in the product and return as a LinearProduct node.
+			 
+			 \param indices std::vector of indices into the factors_ vector
+			 \return LinearProduct node contain the linears.
+			 */
+			
+			std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices)
+			{
+				std::vector< std::shared_ptr<SumOperator> > factors;
+				for (int ii = 0; ii < indices.size(); ++ii)
+				{
+					factors.push_back(factors_[indices[ii]]);
+				}
+				
+				LinearProduct temp(variables_, indices.size(), factors);
+				std::shared_ptr<LinearProduct> ret_lin = std::make_shared<LinearProduct>(temp);
+				
+				return ret_lin;
+			}
+
 			
 			
 			
@@ -490,9 +530,9 @@ namespace  bertini {
 			
 		private:
 //			std::vector< std::vector< std::tuple<mpq_rational, dbl, mpfr> > > coeffs_;
-			Mat<mpq_rational> coeffs_rat_real_;   ///< Matrix of real rational coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor, with the final column being the constant coefficient.  These rationals can then be downsampled for each data type.
-			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
-			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
+//			Mat<mpq_rational> coeffs_rat_real_;   ///< Matrix of real rational coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor, with the final column being the constant coefficient.  These rationals can then be downsampled for each data type.
+//			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
+//			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
 			VariableGroup variables_; ///< Variables to be used in each linear factor.  Does not have to correspond directly to a variable group from the system.
 			
 			std::vector< std::shared_ptr<SumOperator> > factors_;  ///< All the various linear factors in the product.
@@ -516,7 +556,25 @@ namespace  bertini {
 			
 			LinearProduct() = default;
 			
+			LinearProduct(VariableGroup variables, int num_factors, std::shared_ptr<SumOperator> factor) : variables_(variables), num_factors_(num_factors)
+			{
+				num_variables_ = variables.size();
+				factors_.push_back(factor);
+				
+			}
+
 			
+			LinearProduct(VariableGroup variables, int num_factors, std::vector< std::shared_ptr<SumOperator> > factors)
+				: variables_(variables), num_factors_(num_factors)
+			{
+				num_variables_ = variables.size();
+				for (int ii = 0; ii < factors.size(); ++ii)
+				{
+					factors_.push_back(factors[ii]);
+				}
+				
+			}
+
 			
 			friend class boost::serialization::access;
 			
