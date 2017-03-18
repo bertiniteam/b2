@@ -288,6 +288,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 		auto start = TD.StartPoint<dbl>(ii);
 		auto function_values = TD.Eval(start);
 		
+		std::cout << "relaxed = " << function_values << std::endl;
 		for (size_t jj = 0; jj < function_values.size(); ++jj)
 			BOOST_CHECK(abs(function_values(jj)) < relaxed_threshold_clearance_d);
 	}

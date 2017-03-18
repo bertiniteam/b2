@@ -489,6 +489,42 @@ BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 }
 
 
+
+BOOST_AUTO_TEST_CASE(linear_product_homogenize)
+{
+	using namespace bertini::node;
+	
+	bertini::VariableGroup vargp, vargp2, vargp3;
+	std::shared_ptr<Variable> x = bertini::MakeVariable("x");
+	std::shared_ptr<Variable> y = bertini::MakeVariable("y");
+	std::shared_ptr<Variable> z = bertini::MakeVariable("z");
+	std::shared_ptr<Variable> w = bertini::MakeVariable("w");
+	vargp.push_back(x);
+	vargp.push_back(y);
+	vargp.push_back(z);
+	
+	vargp2.push_back(x);
+	vargp2.push_back(z);
+	vargp2.push_back(w);
+	
+	vargp3.push_back(w);
+	
+	
+	
+	// Make with automatically genearted coefficients
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp,4);
+	
+	BOOST_CHECK(!linprod->IsHomogeneous(vargp));
+	BOOST_CHECK(!linprod->IsHomogeneous(x));
+	linprod->Homogenize(vargp, w);
+	BOOST_CHECK(linprod->IsHomogeneous());
+	BOOST_CHECK(!linprod->IsHomogeneous(vargp2));
+	
+	
+}
+
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

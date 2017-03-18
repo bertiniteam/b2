@@ -341,7 +341,7 @@ namespace  bertini {
 			{
 				std::vector<int> degs(vars.size(), 0);
 				
-				for (f : factors_)
+				for (auto f : factors_)
 				{
 					auto factor_deg = f->MultiDegree(vars);
 					
@@ -377,7 +377,7 @@ namespace  bertini {
 			 */
 			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 			{
-				for(f : factors_)
+				for(auto f : factors_)
 				{
 					f->Homogenize(vars, homvar);
 				}
