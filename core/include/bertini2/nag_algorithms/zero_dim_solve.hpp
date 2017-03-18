@@ -39,6 +39,8 @@
 
 #include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/nag_algorithms/common/policies.hpp"
+#include <chrono>
+
 
 namespace bertini {
 

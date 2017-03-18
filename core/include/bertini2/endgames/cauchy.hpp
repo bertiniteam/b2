@@ -205,12 +205,37 @@ protected:
 	
 public:
 
+	template <typename T>
+	const 
+	typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, T>::type
+	& Get() const
+	{
+		return Config::template Get<T>();
+	}
 
-	using Config::Get;
-	using EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::Get;
+	template <typename T>
+	const 
+	typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, T>::type
+	& Get() const
+	{
+		return EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Get<T>();
+	}
 
-	using Config::Set;
-	using EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::Set;
+
+	template <typename T>
+	typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, void>::type
+	Set(T const& t)
+	{
+		Config::template Set(t);
+	}
+
+	template <typename T>
+	typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, void>::type
+	Set(T const& t)
+	{
+		EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Set(t);
+	}
+
 
 	/**
 	\brief Function that clears all samples and times from data members for the Cauchy endgame
