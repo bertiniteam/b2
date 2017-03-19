@@ -45,6 +45,45 @@ namespace bertini {
 		This templated struct allows one to provide a variable typelist of config structs (or anything else for that matter), and provides a way to get and set these configs by looking up the structs by type.
 
 		I will add lookup by index if it is needed.  If you need to look up by index, try type first.  If your types are non-unique, consider making a struct to hold the things you are storing.
+	
+
+		## On nested configs.  If two or more things in your inheritance tree require Configured, 
+		consider the following code, which can help determine whether to Get or Set from here, or to pass 
+		down the tree to a base class.
+	
+	\code
+		template <typename T>
+		const 
+		typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, T>::type
+		& Get() const
+		{
+			return Config::template Get<T>();
+		}
+
+		template <typename T>
+		const 
+		typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, T>::type
+		& Get() const
+		{
+			return EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Get<T>();
+		}
+
+
+		template <typename T>
+		typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, void>::type
+		Set(T const& t)
+		{
+			Config::template Set(t);
+		}
+
+		template <typename T>
+		typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, void>::type
+		Set(T const& t)
+		{
+			EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Set(t);
+		}
+	\endcode
+
 		*/
 		template<typename ...Ts>
 		struct Configured

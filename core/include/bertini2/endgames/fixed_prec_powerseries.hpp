@@ -43,8 +43,7 @@ namespace bertini{ namespace tracking { namespace endgame {
 template<typename TrackerT, typename Enable>
 class FixedPrecPowerSeriesEndgame : 
 		public PowerSeriesEndgame<TrackerT,
-								  FixedPrecPowerSeriesEndgame<TrackerT, typename std::enable_if<TrackerTraits<TrackerT>::IsFixedPrec>::type>, 
-								  typename TrackerTraits<TrackerT>::BaseComplexType>, 
+								  FixedPrecPowerSeriesEndgame<TrackerT, typename std::enable_if<TrackerTraits<TrackerT>::IsFixedPrec>::type>>, 
 		public FixedPrecEndgamePolicyBase<TrackerT>
 {
 public:

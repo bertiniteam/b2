@@ -158,10 +158,9 @@ File: test/endgames/amp_cauchy_test.cpp
 File: test/endgames/fixed_double_cauchy_test.cpp
 FIle: test/endgames/fixed_multiple_cauchy_test.cpp
 */	
-template<typename TrackerType, typename FinalEGT, typename... UsedNumTs> 
+template<typename TrackerType, typename FinalEGT> 
 class CauchyEndgame : 
-	public EndgameBase<TrackerType, FinalEGT, UsedNumTs...>,
-	public detail::Configured<config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>
+	public EndgameBase<TrackerType, FinalEGT>
 {
 private:
 	// convert the base endgame into the derived type.
@@ -172,31 +171,34 @@ private:
 
 
 protected:
+	using BaseEG = EndgameBase<TrackerType, FinalEGT>;
 
-	using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
-	using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
+	using BaseComplexType = typename BaseEG::BaseComplexType;
+	using BaseRealType = typename BaseEG::BaseRealType;
+
+	using TupleOfTimes = typename BaseEG::TupleOfTimes;
+	using TupleOfSamps = typename BaseEG::TupleOfSamps;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
 
-	using Config = detail::Configured<config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>;
 
 	/**
 	\brief A deque of times that are specifically used to compute the power series approximation for the Cauchy endgame. 
 	*/
-	mutable std::tuple<TimeCont<UsedNumTs>...> pseg_times_;
+	mutable TupleOfTimes pseg_times_;
 	/**
 	\brief A deque of samples that are in correspondence with the pseg_times_. These samples are also used to compute the first power series approximation for the Cauchy endgame.
 	*/
-	mutable std::tuple<SampCont<UsedNumTs>...> pseg_samples_; //samples used for the first approximation. 
+	mutable TupleOfSamps pseg_samples_; //samples used for the first approximation. 
 	/**
 	\brief A deque of times that are collected by CircleTrack. These samples are used to compute all approximations of the origin after the first. 
 	*/
-	mutable std::tuple<TimeCont<UsedNumTs>...> cauchy_times_;
+	mutable TupleOfTimes cauchy_times_;
 	/**
 	\brief A deque of samples collected by CircleTrack. Computed a mean of the values of this deque, after a loop has been closed, will give an approximation of the origin.
 	*/
-	mutable std::tuple<SampCont<UsedNumTs>...> cauchy_samples_;
+	mutable TupleOfSamps cauchy_samples_;
 
 
 
@@ -205,36 +207,7 @@ protected:
 	
 public:
 
-	template <typename T>
-	const 
-	typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, T>::type
-	& Get() const
-	{
-		return Config::template Get<T>();
-	}
-
-	template <typename T>
-	const 
-	typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, T>::type
-	& Get() const
-	{
-		return EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Get<T>();
-	}
-
-
-	template <typename T>
-	typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, void>::type
-	Set(T const& t)
-	{
-		Config::template Set(t);
-	}
-
-	template <typename T>
-	typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, void>::type
-	Set(T const& t)
-	{
-		EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Set(t);
-	}
+	
 
 
 	/**
@@ -348,12 +321,12 @@ public:
 	
 
 	explicit CauchyEndgame(TrackerType const& tr, 
-	                            const std::tuple< config::Cauchy<BRT> const&, 
-	                            					const config::Endgame<BRT>&, 
-	                            					const config::Security<BRT>&
-	                            				>& settings )
-      : EndgameBase<TrackerType, FinalEGT, UsedNumTs...>(tr, std::get<1>(settings), std::get<2>(settings)), 
-          Config( std::get<0>(settings) )
+                            const std::tuple< 
+	                            const config::Cauchy<BRT> &, 
+	                            const config::Endgame<BRT>&, 
+	                            const config::Security<BRT>&
+                            >& settings )
+      : EndgameBase<TrackerType, FinalEGT>(tr, std::get<0>(settings), std::get<1>(settings), std::get<2>(settings))
    	{ }
 
     template< typename... Ts >

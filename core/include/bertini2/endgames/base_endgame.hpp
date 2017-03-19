@@ -86,9 +86,9 @@ namespace bertini{
 
 			 To create a new endgame type, inherit from this class. 
 			*/
-			template<class TrackerType, class FinalEGT, typename... UsedNumTs>
-			class EndgameBase : public detail::Configured<
-				>
+			template<class TrackerType, class FinalEGT>
+			class EndgameBase : 
+				public detail::Configured< typename AlgoTraits<FinalEGT>::NeededConfigs >
 			{
 			protected:
 
@@ -102,21 +102,27 @@ namespace bertini{
 					return static_cast<const FinalEGT&>(*this);
 				}
 
+				// a list of all the needed arithemtic types (complex for complex trackers)
+				
 				using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
 				using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
 
 				using BCT = BaseComplexType;
 				using BRT = BaseRealType;
 
-				using Config = detail::Configured<
-					config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
-					config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
+				using Config = detail::Configured< typename AlgoTraits<FinalEGT>::NeededConfigs >;
+
+				using NeededTypes = typename TrackerTraits<TrackerType>::NeededTypes;
+				using TupOfVec = typename NeededTypes::ToTupleOfVec;
+				using TupOfReal = typename NeededTypes::ToTupleOfReal;
+				using TupleOfTimes = typename NeededTypes::template ToTupleOf<TimeCont>;
+				using TupleOfSamps = typename NeededTypes::template ToTupleOf<SampCont>;
 
 				// state variables
-				mutable std::tuple<Vec<UsedNumTs>... > final_approximation_; 
-				mutable std::tuple<Vec<UsedNumTs>... > previous_approximation_; 
+				mutable TupOfVec final_approximation_; 
+				mutable TupOfVec previous_approximation_; 
 				mutable unsigned int cycle_number_ = 0; 
-				mutable std::tuple<BaseRealType> approximate_error_;
+				mutable TupOfReal approximate_error_;
 
 				/**
 				\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
@@ -153,36 +159,12 @@ namespace bertini{
 
 				
 
-				// const auto& EndgameSettings() const
-				// {
-				// 	return endgame_settings_;
-				// }
-
 				inline
 				const auto& FinalTolerance() const
 				{
 					return this->template Get<config::Endgame<BRT>>().final_tolerance;
 				}
 
-				// const auto& SecuritySettings() const
-				// {
-				// 	return security_;
-				// }
-
-
-
-				// /**
-				// \brief Setter for the general settings.
-				// */
-				// void SetEndgameSettings(config::Endgame<BRT> new_endgame_settings){endgame_settings_ = new_endgame_settings;}
-
-
-				
-
-				/**
-				\brief Setter for the security settings.
-				*/
-				// void SetSecuritySettings(config::Security<BRT> new_endgame_security_settings){ security_ = new_endgame_security_settings;}
 
 
 				/**

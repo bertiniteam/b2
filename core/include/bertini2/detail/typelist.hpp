@@ -44,6 +44,12 @@ struct TypeList {
 	using ToTuple = std::tuple<Ts...>;
 	using ToTupleOfVec = std::tuple<Vec<Ts>...>;
 	using ToTupleOfReal = std::tuple<typename Eigen::NumTraits<Ts>::Real...>;
+
+	template <template<typename> class ContT>
+	using ToTupleOf = std::tuple<ContT<Ts>...>;
+
+	template<template<typename> class ContT>
+	using ToContOf = ContT<Ts...>;
 };
 
 

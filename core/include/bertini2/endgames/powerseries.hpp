@@ -168,10 +168,9 @@ File: test/endgames/fixed_double_powerseries_test.cpp
 FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 */
 
-template<typename TrackerType, typename FinalEGT, typename... UsedNumTs> 
+template<typename TrackerType, typename FinalEGT> 
 class PowerSeriesEndgame : 
-	public EndgameBase<TrackerType, FinalEGT, UsedNumTs...>,
-	public detail::Configured<config::PowerSeries>
+	public EndgameBase<TrackerType, FinalEGT>
 {
 
 	// convert the base endgame into the derived type.
@@ -182,13 +181,16 @@ class PowerSeriesEndgame :
 
 protected:
 
-	using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
-	using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
+	using BaseEG = EndgameBase<TrackerType, FinalEGT>;
+
+	using BaseComplexType = typename BaseEG::BaseComplexType;
+	using BaseRealType = typename BaseEG::BaseRealType;
+
+	using TupleOfTimes = typename BaseEG::TupleOfTimes;
+	using TupleOfSamps = typename BaseEG::TupleOfSamps;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
-	
-	using Config = detail::Configured<config::PowerSeries>;
 
 	/**
 	\brief State variable representing a computed upper bound on the cycle number.
@@ -198,17 +200,17 @@ protected:
 	/**
 	\brief Holds the time values for different space values used in the Power series endgame. 
 	*/	
-	mutable std::tuple< TimeCont<UsedNumTs>... > times_;
+	mutable TupleOfTimes times_;
 
 	/**
 	\brief Holds the space values used in the Power series endgame. 
 	*/			
-	mutable std::tuple< SampCont<UsedNumTs>... > samples_;
+	mutable TupleOfSamps samples_;
 
 	/**
 	\brief Holds the derivatives at each space point. 
 	*/			
-	mutable std::tuple< SampCont<UsedNumTs>... > derivatives_;
+	mutable TupleOfSamps derivatives_;
 
 	/**
 	\brief Random vector used in computing an upper bound on the cycle number. 

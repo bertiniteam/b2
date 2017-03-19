@@ -43,16 +43,14 @@ namespace bertini{ namespace tracking { namespace endgame {
 template<typename TrackerT, typename Enable>
 class FixedPrecCauchyEndgame : 
 		public CauchyEndgame<TrackerT,
-							  FixedPrecCauchyEndgame<TrackerT, typename std::enable_if<TrackerTraits<TrackerT>::IsFixedPrec>::type>, 
-							  typename TrackerTraits<TrackerT>::BaseComplexType>, 
+							  FixedPrecCauchyEndgame<TrackerT, typename std::enable_if<TrackerTraits<TrackerT>::IsFixedPrec>::type>>, 
 		public FixedPrecEndgamePolicyBase<TrackerT>
 {
 public:
 	using TrackerType = TrackerT;
-	using EGType = CauchyEndgame<TrackerType, FixedPrecCauchyEndgame, typename TrackerType::BaseComplexType>;
+	using EGType = CauchyEndgame<TrackerType, FixedPrecCauchyEndgame>;
 	using BRT = typename TrackerTraits<TrackerType>::BaseRealType;
 
-	using EGType::Set;
 	
 	template<typename CT>
 	SuccessCode RefineSample(Vec<CT> & result, Vec<CT> const& current_sample, CT const& current_time) const
