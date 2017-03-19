@@ -31,12 +31,7 @@
 
 namespace bertini{ namespace tracking { namespace endgame{
 
-inline
-dbl operator*(unsigned i, dbl z)
-{
-	z*=i;
-	return z;
-}
+
 /** 
 \class PowerSeriesEndgame
 

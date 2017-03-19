@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with configured.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -23,14 +23,8 @@
 // Daniel Brake
 // University of Notre Dame
 //
-
 //  detail/configured.hpp
-//
-//  copyright 2016
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring 2016
+
 
 /**
 \file detail/configured.hpp
@@ -74,8 +68,20 @@ namespace bertini {
 				std::get<T>(configuration_) = t;
 			}
 
+			using UsedConfigs = TypeList<Ts...>;
 
 		}; // Configured
+
+		template<typename ...Ts>
+		struct Configured<TypeList<Ts...>> : public Configured<Ts...>
+		{
+			template<typename ... T>
+			Configured(T const& ...t) : Configured<Ts...>(t...)
+			{}
+
+			Configured() : Configured<Ts...>() {}
+
+		};
 
 		#define FORWARD_GET_CONFIGURED \
 		template <typename T> \

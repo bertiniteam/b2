@@ -63,6 +63,15 @@ namespace bertini {
 	        // either it is the same as the first one in the pack, or we need to expand to the right in the pack.
 	};
 
+
+	template < template< typename ...> class ContT, typename ...Ts>
+	struct IsTemplateParameter< ContT<Ts...>>
+	{
+		static constexpr bool value = IsTemplateParameter<Ts...>::value;
+	};
+
+
+
 	} // namespace detail
 
 

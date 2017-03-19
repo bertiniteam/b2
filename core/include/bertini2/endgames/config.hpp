@@ -141,5 +141,38 @@ namespace bertini{
 		};
 
 	}
+
+	template <typename T>
+	struct AlgoTraits;
+
+	template<typename TrackerType, typename FinalEGT, typename... UsedNumTs>
+	struct AlgoTraits< PowerSeriesEndgame<TrackerType, FinalEGT, UsedNumTs... >>
+	{
+		using NeededConfigs = detail::TypeList<config::PowerSeries>;
+	};
+
+	template<typename TrackerType>
+	struct AlgoTraits<FixedPrecPowerSeriesEndgame<TrackerType>> : 
+		public AlgoTraits<PowerSeriesEndgame<TrackerType, FixedPrecPowerSeriesEndgame<TrackerType>, 
+
+	template<typename TrackerType, typename FinalEGT, typename... UsedNumTs>
+	struct AlgoTraits< CauchyEndgame<TrackerType, FinalEGT, UsedNumTs... >>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
+	};
+	
+	
+
+		template<typename Tracker, typename Enable = void>
+		class FixedPrecCauchyEndgame;
+
+		class AMPPowerSeriesEndgame;
+		class AMPCauchyEndgame;
+
+
+
 	}
 }

@@ -88,8 +88,7 @@ namespace bertini{
 			*/
 			template<class TrackerType, class FinalEGT, typename... UsedNumTs>
 			class EndgameBase : public detail::Configured<
-				config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
-				config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>
+				>
 			{
 			protected:
 

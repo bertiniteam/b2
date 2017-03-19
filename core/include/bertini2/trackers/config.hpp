@@ -33,8 +33,8 @@
 */
 #include "bertini2/mpfr_extensions.hpp"
 #include "bertini2/eigen_extensions.hpp"
-
 #include "bertini2/system/system.hpp"
+#include "bertini2/detail/typelist.hpp"
 
 namespace bertini
 {
@@ -55,95 +55,7 @@ namespace bertini
 
 
 
-		// forward declarations
-		template<class D>
-		class FixedPrecisionTracker;
-		class MultiplePrecisionTracker;
-		class DoublePrecisionTracker;
-
-		namespace config{
-			template<typename T>
-			struct FixedPrecisionConfig;
-			struct AdaptiveMultiplePrecisionConfig;
-		}
-		// end forward declarations
-
-
-
-
-		// now for the TrackerTraits structs, which enable lookup of correct settings objects and types, etc.
-		template<class T>
-		struct TrackerTraits
-		{};
-
-
-
-		template<>
-		struct TrackerTraits<DoublePrecisionTracker>
-		{
-			using BaseComplexType = dbl;
-			using BaseRealType = double;
-			using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
-			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
-			enum {
-				IsFixedPrec = 1,
-				IsAdaptivePrec = 0
-			};
-		};
-
-
-		template<>
-		struct TrackerTraits<MultiplePrecisionTracker>
-		{
-			using BaseComplexType = mpfr;
-			using BaseRealType = mpfr_float;
-			using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
-			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
-
-			enum {
-				IsFixedPrec = 1,
-				IsAdaptivePrec = 0
-			};
-		};
-
-		class AMPTracker;
-		template<>
-		struct TrackerTraits<AMPTracker>
-		{
-			using BaseComplexType = mpfr;
-			using BaseRealType = mpfr_float;
-			using EventEmitterType = AMPTracker;
-			using PrecisionConfig = config::AdaptiveMultiplePrecisionConfig;
-
-			enum {
-				IsFixedPrec = 0,
-				IsAdaptivePrec = 1
-			};
-		};
-
-
 		
-
-		template<class D>
-		struct TrackerTraits<FixedPrecisionTracker<D> >
-		{
-			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
-			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
-			using EventEmitterType = typename TrackerTraits<D>::EventEmitterType;
-			using PrecisionConfig = typename TrackerTraits<D>::PrecisionConfig;
-
-			enum {
-				IsFixedPrec = 1,
-				IsAdaptivePrec = 0
-			};
-		};
-
-
-
-
-		
-
-
 
 
 		enum class SuccessCode
@@ -236,6 +148,8 @@ namespace bertini
 				*/
 				FixedPrecisionConfig(System const& sys) 
 				{ }
+
+				FixedPrecisionConfig() = default;
 			};
 
 			template<typename ComplexType>
@@ -369,6 +283,100 @@ namespace bertini
 			}
 
 		} //re: namespace config
+
+
+
+		// forward declarations
+		template<class D>
+		class Tracker;
+		template<class D>
+		class FixedPrecisionTracker;
+		class MultiplePrecisionTracker;
+		class DoublePrecisionTracker;
+		
+
+// now for the TrackerTraits structs, which enable lookup of correct settings objects and types, etc.
+		template<class T>
+		struct TrackerTraits
+		{};
+
+
+		
+
+		template<>
+		struct TrackerTraits<DoublePrecisionTracker>
+		{
+			using BaseComplexType = dbl;
+			using BaseRealType = double;
+			using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
+			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
+			enum {
+				IsFixedPrec = 1,
+				IsAdaptivePrec = 0
+			};
+
+			using NeededTypes = detail::TypeList<dbl>;
+			using NeededConfigs = detail::TypeList<
+				config::Stepping<BaseRealType>, 
+				config::Newton,
+				PrecisionConfig
+				>;
+		};
+
+
+		template<>
+		struct TrackerTraits<MultiplePrecisionTracker>
+		{
+			using BaseComplexType = mpfr;
+			using BaseRealType = mpfr_float;
+			using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
+			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
+
+			enum {
+				IsFixedPrec = 1,
+				IsAdaptivePrec = 0
+			};
+
+			using NeededTypes = detail::TypeList<mpfr>;
+
+			using NeededConfigs = detail::TypeList<
+				config::Stepping<BaseRealType>, 
+				config::Newton,
+				PrecisionConfig
+				>;
+		};
+
+
+		class AMPTracker; // forward declare
+		template<>
+		struct TrackerTraits<AMPTracker>
+		{
+			using BaseComplexType = mpfr;
+			using BaseRealType = mpfr_float;
+			using EventEmitterType = AMPTracker;
+			using PrecisionConfig = config::AdaptiveMultiplePrecisionConfig;
+
+			enum {
+				IsFixedPrec = 0,
+				IsAdaptivePrec = 1
+			};
+
+			using NeededTypes = detail::TypeList<dbl, mpfr>;
+
+			using NeededConfigs = detail::TypeList<
+				config::Stepping<BaseRealType>, 
+				config::Newton,
+				PrecisionConfig
+				>;
+		};
+
+
+		
+
+		template<class D>
+		struct TrackerTraits<FixedPrecisionTracker<D> > : public TrackerTraits<D>
+		{ };
+
 	} // re: namespace tracking 
 } // re: namespace bertini
 

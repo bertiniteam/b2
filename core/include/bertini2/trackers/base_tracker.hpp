@@ -132,14 +132,14 @@ namespace bertini{
 
 
 		*/
-		template<class D, typename... NeededTypes>
+		template<class D>
 		class Tracker : 
 			public Observable<>,
 			public detail::Configured<
-				config::Stepping<typename TrackerTraits<D>::BaseRealType>, config::Newton
+				typename TrackerTraits< D >::NeededConfigs
 					>
 		{
-
+			using NeededTypes = typename TrackerTraits< D >::NeededTypes;
 			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
 			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
 
@@ -148,12 +148,10 @@ namespace bertini{
 			
 			
 		public:
-			using Config = detail::Configured<
-				config::Stepping<typename TrackerTraits<D>::BaseRealType>, config::Newton
-					>;
-					
-			using Stepping = config::Stepping<typename TrackerTraits<D>::BaseRealType>;
+			using Config = detail::Configured< typename TrackerTraits< D >::NeededConfigs >;
+			using Stepping = config::Stepping<BaseRealType>;
 			using Newton = config::Newton;
+			using PrecConf = typename TrackerTraits< D >::PrecisionConfig;
 
 			Tracker(System const& sys) : tracked_system_(std::ref(sys))
 			{
@@ -296,7 +294,7 @@ namespace bertini{
 								Vec<C> const& start_point, C const& current_time) const
 			{
 
-				static_assert(detail::IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
+				static_assert(detail::IsTemplateParameter<C,NeededTypes>::value,"complex type for refinement must be a used type for the tracker");
 				return this->AsDerived().RefineImpl(new_space, start_point, current_time);
 			}
 
@@ -324,7 +322,7 @@ namespace bertini{
 			              				typename Eigen::NumTraits<C>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
-				static_assert(detail::IsTemplateParameter<C,NeededTypes...>::value,"complex type for refinement must be a used type for the tracker");
+				static_assert(detail::IsTemplateParameter<C,NeededTypes>::value,"complex type for refinement must be a used type for the tracker");
 
 				return this->AsDerived().RefineImpl(new_space, start_point, current_time, tolerance, max_iterations);
 			}
@@ -591,17 +589,20 @@ namespace bertini{
 			mutable unsigned num_successful_steps_since_stepsize_increase_; ///< How many successful steps have been taken since increased stepsize.
 			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
 
-			mutable std::tuple< Vec<NeededTypes>...> current_space_; ///< The current space value. 
-			mutable std::tuple< Vec<NeededTypes>...> tentative_space_; ///< After correction, the tentative next space value
-			mutable std::tuple< Vec<NeededTypes>...> temporary_space_; ///< After prediction, the tentative next space value.
+			using TupOfVec = typename NeededTypes::ToTupleOfVec;
+			using TupOfReal = typename NeededTypes::ToTupleOfReal;
+			
+			mutable TupOfVec current_space_; ///< The current space value. 
+			mutable TupOfVec tentative_space_; ///< After correction, the tentative next space value
+			mutable TupOfVec temporary_space_; ///< After prediction, the tentative next space value.
 
 
-			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
-			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > error_estimate_; ///< An estimate on the error of a step.
-			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > norm_J_; ///< An estimate on the norm of the Jacobian
-			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
-			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > norm_delta_z_; ///< The norm of the change in space resulting from a step.
-			mutable std::tuple< typename Eigen::NumTraits<NeededTypes>::Real... > size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
+			mutable TupOfReal condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
+			mutable TupOfReal error_estimate_; ///< An estimate on the error of a step.
+			mutable TupOfReal norm_J_; ///< An estimate on the norm of the Jacobian
+			mutable TupOfReal norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
+			mutable TupOfReal norm_delta_z_; ///< The norm of the change in space resulting from a step.
+			mutable TupOfReal size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
 
 
 
