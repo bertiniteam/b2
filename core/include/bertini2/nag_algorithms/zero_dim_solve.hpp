@@ -15,15 +15,15 @@
 //
 // Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 
 /**
-\file bertini2/nag_algorithms/zero_dim_solve/algorithm.hpp 
+\file bertini2/nag_algorithms/zero_dim_solve/algorithm.hpp
 
-\brief Provides the algorithm for computing all zero-dimensional solutions for an algberaic system.  
+\brief Provides the algorithm for computing all zero-dimensional solutions for an algberaic system.
 */
 
 #pragma once
@@ -46,11 +46,11 @@ namespace bertini {
 
 	namespace algorithm {
 
-		template<	typename TrackerType, typename EndgameType, 
-					typename SystemType, typename StartSystemType, 
+		template<	typename TrackerType, typename EndgameType,
+					typename SystemType, typename StartSystemType,
 					template<typename,typename> class SystemManagementP = policy::CloneGiven >
-		struct ZeroDim : 
-							public Observable<>, 
+		struct ZeroDim :
+							public Observable<>,
 							public SystemManagementP<SystemType, StartSystemType>,
 							public detail::Configured<
 								config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
@@ -63,12 +63,12 @@ namespace bertini {
 /// a bunch of using statements to reduce typing.
 			using BaseComplexType 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
 			using BaseRealType    	= typename tracking::TrackerTraits<TrackerType>::BaseRealType;
-			
+
 			using PrecisionConfig 	= typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
 			using SolnIndT 			= typename SolnCont<BaseComplexType>::size_type;
-			
-			
+
+
 
 			using SystemManagementPolicy = SystemManagementP<SystemType, StartSystemType>;
 
@@ -120,7 +120,7 @@ namespace bertini {
 
 
 				///// things computed in pre-endgame only
-				tracking::SuccessCode pre_endgame_success = tracking::SuccessCode::NeverStarted;     // success code 
+				tracking::SuccessCode pre_endgame_success = tracking::SuccessCode::NeverStarted;     // success code
 
 
 
@@ -128,12 +128,12 @@ namespace bertini {
 
 				///// things computed in endgame only
 				BaseRealType condition_number; 				// the latest estimate on the condition number
-				BaseRealType newton_residual; 				// the latest newton residual 
+				BaseRealType newton_residual; 				// the latest newton residual
 				BaseComplexType final_time_used;   			// the final value of time tracked to
 				BaseRealType accuracy_estimate; 			// accuracy estimate between extrapolations
 				BaseRealType accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
 				unsigned cycle_num;    						// cycle number used in extrapolations
-				tracking::SuccessCode endgame_success = tracking::SuccessCode::NeverStarted;      // success code 
+				tracking::SuccessCode endgame_success = tracking::SuccessCode::NeverStarted;      // success code
 
 
 
@@ -153,6 +153,13 @@ namespace bertini {
 				Vec<BaseComplexType> path_point;
 				tracking::SuccessCode success_code = tracking::SuccessCode::NeverStarted;
 				BaseRealType last_used_stepsize;
+
+				EGBoundaryMetaData() = default;
+				EGBoundaryMetaData(EGBoundaryMetaData const&) = default;
+				EGBoundaryMetaData(Vec<BaseComplexType> const& pt, tracking::SuccessCode const& code, BaseRealType const& ss) :
+					path_point(pt), success_code(code), last_used_stepsize(ss)
+				{}
+					
 			};
 
 
@@ -167,11 +174,11 @@ namespace bertini {
 
 
 
-/// constructors 
+/// constructors
 
 			/**
 			Construct a ZeroDim algorithm object.
-			
+
 			You must at least pass in the system used to track, though the particular arguments required depend on the policies used in your instantiation of ZeroDim.
 
 			\see RefToGiven, CloneGiven
@@ -185,7 +192,7 @@ namespace bertini {
 
 
 
-			
+
 /// setup functions
 
 
@@ -209,7 +216,7 @@ namespace bertini {
 			void DefaultSetup()
 			{
 				DefaultSettingsSetup();
-				
+
 
 				SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
 
@@ -217,12 +224,12 @@ namespace bertini {
 
 				DefaultTrackerSetup();
 				DefaultMidpathSetup();
-				
+
 				setup_complete_ = true;
 			}
 
 
-			
+
 			/**
 			Fills the tolerances and retrack settings from default values.
 			*/
@@ -233,7 +240,7 @@ namespace bertini {
 				this->template Set<ZeroDimConf>(ZeroDimConf());
 				this->template Set<AutoRetrack>(AutoRetrack());
 
-				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);	
+				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
 			}
 
 			void SetMidpathRetrackTol(BaseRealType const& rt)
@@ -246,7 +253,7 @@ namespace bertini {
 				return midpath_retrack_tolerance_;
 			}
 
-			
+
 			/**
 			call this after setting up the tolerances, etc.
 			*/
@@ -270,17 +277,17 @@ namespace bertini {
 			{
 				tracker_.SetSystem(Homotopy());
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
-				              	this->template Get<Tolerances>().newton_before_endgame, 
+				              	this->template Get<Tolerances>().newton_before_endgame,
 				              	this->template Get<Tolerances>().path_truncation_threshold,
 								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
-				
+
 				tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
 			}
 
 
 			/**
 			\brief Sets the tracker to one you supply to this function.
-	
+
 			Setting the tracker associates the endgame with the tracker you pass in, too.  If this is a problem, and you need this generalized so you can use a different tracker for the pre/endgame zones, please file an issue requesting this feature.
 
 			Assumes you have done all necessary setup to it, including associating it with the homotopy for the ZeroDim algorithm.
@@ -308,7 +315,7 @@ namespace bertini {
 
 			This version gets a mutable reference to it.
 			*/
-			TrackerType & GetTracker() 
+			TrackerType & GetTracker()
 			{
 				return tracker_;
 			}
@@ -352,13 +359,13 @@ namespace bertini {
 			const T & GetFromEndgame() const
 			{
 				return endgame_.template Get<T>();
-			} 
+			}
 
 			template<typename T>
 			void SetToEndgame(T const& t)
 			{
 				endgame_.Set(t);
-			} 
+			}
 
 /// the main functions
 
@@ -367,28 +374,28 @@ namespace bertini {
 			/**
 			\brief Perform the basic Zero Dim solve algorithm.
 
-			This function iterates over all start points to the start system, tracking from each to the endgame boundary.  At the endgame boundary, path crossings are checked for.  Multiple paths which jump onto each other will not be detected, unless you are using a certified tracker, in which case this is prevented in the first place.  
+			This function iterates over all start points to the start system, tracking from each to the endgame boundary.  At the endgame boundary, path crossings are checked for.  Multiple paths which jump onto each other will not be detected, unless you are using a certified tracker, in which case this is prevented in the first place.
 
-			Paths which have crossed are re-run, up to a certain number of times. 
+			Paths which have crossed are re-run, up to a certain number of times.
 
-			Then, the points at the endgame boundary are tracked using the prescribed endgame toward the final time.  
+			Then, the points at the endgame boundary are tracked using the prescribed endgame toward the final time.
 
-			Finally, results are post-processed. 
+			Finally, results are post-processed.
 
 			It is up to you to put the output somewhere.
 			*/
 			void Solve()
 			{
 				PreSolveChecks();
-				
+
 				PreSolveSetup();
-			
+
 				TrackBeforeEG();
 
 				EGBoundaryAction();
 
 				TrackDuringEG();
-				
+
 				PostEGAction();
 			}
 
@@ -411,7 +418,7 @@ namespace bertini {
 			{
 				return solutions_post_endgame_;
 			}
-			
+
 			/**
 			\brief Get the metadat associated with the final computed solutions
 			*/
@@ -453,7 +460,7 @@ namespace bertini {
 			}
 
 			/**
-			\brief Track from the start point in time, from each start point of the start system, to the endgame boundary.  
+			\brief Track from the start point in time, from each start point of the start system, to the endgame boundary.
 
 			Results are accumulated into an internally stored variable, solutions_at_endgame_boundary_.
 
@@ -473,9 +480,9 @@ namespace bertini {
 					TrackSinglePathBeforeEG(static_cast<SolnIndT>(ii));
 				}
 			}
-			
-			
-			
+
+
+
 			/**
 			 /brief Track a single path before we reach the endgame boundary.
 			*/
@@ -497,14 +504,14 @@ namespace bertini {
 				auto t_start = this->template Get<ZeroDimConf>().start_time;
 				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
 				auto start_point = StartSystem().template StartPoint<BaseComplexType>(soln_ind);
-				
+
 				Vec<BaseComplexType> result;
 				auto tracking_success = GetTracker().TrackPath(result, t_start, t_endgame_boundary, start_point);
-				
+
 				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaData({ result, tracking_success, GetTracker().CurrentStepsize() });
-				
+
 					smd.pre_endgame_success = tracking_success;
-					
+
 					// if you can think of a way to replace this `if` with something meta, please do so.
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
@@ -519,17 +526,17 @@ namespace bertini {
 						GetTracker().RemoveObserver(&first_prec_rec_);
 						GetTracker().RemoveObserver(&min_max_prec_);
 						using std::max;
-						smd.max_precision_used = 
+						smd.max_precision_used =
 							max(smd.max_precision_used, min_max_prec_.MaxPrecision());
 					}
 
-			
+
 			}
 
 			void EGBoundaryAction()
 			{
 				auto midcheckpassed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
-				
+
 				unsigned num_resolve_attempts = 0;
 				while (!midcheckpassed && num_resolve_attempts < this->template Get<ZeroDimConf>().max_num_crossed_path_resolve_attempts)
 				{
@@ -539,11 +546,11 @@ namespace bertini {
 				}
 			}
 
-			
+
 			void MidpathResolve()
 			{
 				ShrinkMidpathTolerance();
-				
+
 				for(auto const& v : midpath_.GetCrossedPaths())
 				{
 					if(v.rerun())
@@ -625,12 +632,12 @@ namespace bertini {
 							}
 							else
 								std::cout << "precision didn't change during endgame\n";
-							
+
 						}
 						GetTracker().RemoveObserver(&first_prec_rec_);
 						GetTracker().RemoveObserver(&min_max_prec_);
 						using std::max;
-						smd.max_precision_used = 
+						smd.max_precision_used =
 							max(smd.max_precision_used, min_max_prec_.MaxPrecision());
 					}
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
@@ -643,10 +650,10 @@ namespace bertini {
 					smd.final_time_used = GetEndgame().LatestTime();
 					smd.condition_number = GetTracker().LatestConditionNumber();
 					smd.newton_residual = GetTracker().LatestNormOfStep();
-					
+
 					smd.accuracy_estimate = GetEndgame().template ApproximateError<BaseRealType>();
-					smd.accuracy_estimate_user_coords = 
-						(TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) - 
+					smd.accuracy_estimate_user_coords =
+						(TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
 						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>();
 					smd.cycle_num = GetEndgame().template CycleNumber();
 					// end metadata gathering
@@ -725,7 +732,7 @@ namespace bertini {
 			SolnCont<Vec<BaseComplexType> > solutions_post_endgame_;
 			SolnCont<SolutionMetaData> solution_final_metadata_;
 
-			
+
 		}; // struct ZeroDim
 
 
