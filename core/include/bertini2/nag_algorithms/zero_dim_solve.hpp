@@ -546,10 +546,8 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 						{
 							smd.precision_changed = true;
 							smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
-							std::cout << "precision changed before endgame\n";
 						}
 						else
-							std::cout << "precision didn't change before endgame\n";
 						GetTracker().RemoveObserver(&first_prec_rec_);
 						GetTracker().RemoveObserver(&min_max_prec_);
 						using std::max;
@@ -655,11 +653,7 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 							{
 								smd.precision_changed = true;
 								smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
-								std::cout << "precision changed during endgame\n";
 							}
-							else
-								std::cout << "precision didn't change during endgame\n";
-
 						}
 						GetTracker().RemoveObserver(&first_prec_rec_);
 						GetTracker().RemoveObserver(&min_max_prec_);
