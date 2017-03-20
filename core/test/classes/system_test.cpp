@@ -42,6 +42,7 @@
 
 
 #include "bertini2/system/system.hpp"
+#include "bertini2/system/precon.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
 
 
@@ -1003,6 +1004,34 @@ BOOST_AUTO_TEST_CASE(variable_group_sizes_and_degrees_affvargrp)
 	BOOST_CHECK_EQUAL(size_of_each_var_gp[1], 2);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(clone_system_new_variables_evaluation)
+{
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	auto sys = bertini::system::Precon::GriewankOsborn();
+	Vec<mpfr> x1(2), x2(2);
+	x1(0) = bertini::RandomUnit(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	x1(1) = bertini::RandomUnit(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	auto f = sys.Eval(x1);
+
+	auto sys_clone = bertini::Clone(sys);
+
+	x2(0) = mpfr{2};
+	x2(1) = mpfr{3};
+
+	auto f_clone = sys_clone.Eval(x2);
+
+	BOOST_CHECK_EQUAL(mpfr(2.5), f_clone(0));
+	BOOST_CHECK_EQUAL(mpfr(-1), f_clone(1));
+
+	auto f_clone2 = sys_clone.Eval(x1);
+	auto f2 = sys.Eval<mpfr>();
+
+	BOOST_CHECK_EQUAL(f,f2);
+	BOOST_CHECK_EQUAL(f_clone2,f2);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

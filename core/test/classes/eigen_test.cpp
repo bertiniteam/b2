@@ -60,6 +60,25 @@ BOOST_AUTO_TEST_CASE(expressions_of_mpfr_floats)
 
 }
 
+BOOST_AUTO_TEST_CASE(size_object_sensible_vec)
+{
+	bertini::Vec<bertini::dbl> v(3);
+	BOOST_CHECK_EQUAL(v.rows(),3);
+	BOOST_CHECK_EQUAL(v.cols(),1);
+
+	BOOST_CHECK(!bertini::IsEmpty(v));
+}
+
+
+BOOST_AUTO_TEST_CASE(size_object_sensible_mat)
+{
+	bertini::Mat<bertini::dbl> v(3,4);
+	BOOST_CHECK_EQUAL(v.rows(),3);
+	BOOST_CHECK_EQUAL(v.cols(),4);
+
+	BOOST_CHECK(!bertini::IsEmpty(v));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

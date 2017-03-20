@@ -26,8 +26,8 @@
 #   Spring 2016
 # 
 
-import amptracking_test
-import endgame_test
+import tracking.amptracking_test as amptracking_test
+import tracking.endgame_test as endgame_test
 import unittest
 
 

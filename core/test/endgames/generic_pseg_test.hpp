@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.SetRandVec(samples.back());
+	my_endgame.SetRandVec<BCT>(samples.back().size());
 	my_endgame.ComputeBoundOnCycleNumber<BCT>();
 
 
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
-	my_endgame.SetRandVec(samples.back());
+	my_endgame.SetRandVec<BCT>(samples.back().size());
 	my_endgame.ComputeCycleNumber<BCT>();
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 	Vec<BCT> first_approx;
 	Vec<BCT> approx_1(1);
-	my_endgame.SetRandVec(samples.back());
+	my_endgame.SetRandVec<BCT>(samples.back().size());
 	auto code = my_endgame.ComputeApproximationOfXAtT0(first_approx, origin);
 	approx_1 << ComplexFromString("1.04025","6.86403e-14");
 	BOOST_CHECK(code==SuccessCode::Success);

@@ -56,7 +56,7 @@ namespace bertini{
 		\brief Functor-like class for tracking paths on a system
 		*/
 		template<class DerivedT>
-		class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<DerivedT>, typename TrackerTraits<DerivedT>::BaseComplexType>
+		class FixedPrecisionTracker : public Tracker<FixedPrecisionTracker<DerivedT>>
 		{	
 		public:
 
@@ -69,7 +69,7 @@ namespace bertini{
 			virtual ~FixedPrecisionTracker() = default;
 
 			using EmitterType = FixedPrecisionTracker<DerivedT>;
-			using Base = Tracker<FixedPrecisionTracker<DerivedT>, BaseComplexType>;
+			using Base = Tracker<FixedPrecisionTracker<DerivedT>>;
 
 			using Config =  typename Base::Config;
 			FORWARD_GET_CONFIGURED

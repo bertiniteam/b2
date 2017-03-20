@@ -44,7 +44,7 @@ namespace bertini {  namespace tracking  { namespace endgame  {
 /**
 \brief The Adaptive Precision Cauchy Endgame, in a class.
 */
-class AMPCauchyEndgame : public CauchyEndgame<AMPTracker,AMPCauchyEndgame, dbl,mpfr>, 
+class AMPCauchyEndgame : public CauchyEndgame<AMPTracker,AMPCauchyEndgame>, 
 							  public AMPEndgamePolicyBase
 {
 	
@@ -184,7 +184,7 @@ protected:
 
 public:
 	using TrackerType = AMPTracker;
-	using EGType = CauchyEndgame<TrackerType, AMPCauchyEndgame, dbl, mpfr>;
+	using EGType = CauchyEndgame<TrackerType, AMPCauchyEndgame>;
 	
 	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time) const
 	{
@@ -281,18 +281,15 @@ public:
 		return refinement_success;
 	}
 
-
+	using Configs = typename AlgoTraits<EGType>::NeededConfigs;
 
 	explicit AMPCauchyEndgame(TrackerType const& tr, 
-	                               const std::tuple< const config::Cauchy<BRT> &,
-	                               					 const config::Endgame<BRT>&, 
-	                               				     const config::Security<BRT>&
-	                               				    > & settings )
+	                          typename Configs::ToTuple const& settings )
       : EGType(tr, settings)
    	{}
 
     template< typename... Ts >
-	AMPCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : AMPCauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
+	AMPCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : AMPCauchyEndgame(tr, Configs::Unpermute( ts... ) ) 
 	{}
 };// AMPCauchyEndgame
 

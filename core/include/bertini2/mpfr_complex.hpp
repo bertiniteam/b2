@@ -1554,6 +1554,13 @@ namespace bertini {
 		DefaultPrecision(prev_precision);
 	}
 
+	inline 
+	bertini::complex RandomUnit(unsigned num_digits)
+	{
+		bertini::complex a;
+		RandomUnit(a,num_digits);
+		return a;
+	}
 	using mpfr = bertini::complex;
 } // re: namespace bertini
 

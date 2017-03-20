@@ -138,16 +138,16 @@ namespace bertini
 	For doubles, this is trivially 16.
 	*/
 	inline
-	unsigned Precision(const double num)
+	unsigned Precision(double)
 	{
-		return 16;
+		return DoublePrecision();
 	}
 
 	/**
 	For complex doubles, throw if the requested precision is not DoublePrecision.
 	*/
 	inline
-	void Precision(const double num, unsigned prec)
+	void Precision(double, unsigned prec)
 	{
 		if (prec!=DoublePrecision())
 		{
@@ -163,16 +163,16 @@ namespace bertini
 	For complex doubles, this is trivially 16.
 	*/
 	inline
-	unsigned Precision(const std::complex<double> num)
+	unsigned Precision(std::complex<double>)
 	{
-		return 16;
+		return DoublePrecision();
 	}
 
 	/**
 	For complex doubles, throw if the requested precision is not DoublePrecision.
 	*/
 	inline
-	void Precision(const std::complex<double> & num, unsigned prec)
+	void Precision(std::complex<double>, unsigned prec)
 	{
 		if (prec!=DoublePrecision())
 		{
