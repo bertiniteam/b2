@@ -6,7 +6,8 @@ detail_header_files = \
 	include/bertini2/detail/visitable.hpp \
 	include/bertini2/detail/visitor.hpp \
 	include/bertini2/detail/is_template_parameter.hpp \
-	include/bertini2/detail/enable_permuted_arguments.hpp 
+	include/bertini2/detail/enable_permuted_arguments.hpp \
+	include/bertini2/detail/typelist.hpp
 
 detail = $(detail_header_files)
 
