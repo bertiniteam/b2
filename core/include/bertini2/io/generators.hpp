@@ -30,6 +30,7 @@
 
 
 #include "bertini2/mpfr_complex.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
 #include <boost/math/special_functions/modf.hpp> 
 
