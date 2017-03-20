@@ -182,7 +182,9 @@ protected:
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
 
-
+	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
+	using ConfigsAsTuple = typename Configs::ToTuple;
+	
 	/**
 	\brief A deque of times that are specifically used to compute the power series approximation for the Cauchy endgame. 
 	*/
@@ -321,16 +323,12 @@ public:
 	
 
 	explicit CauchyEndgame(TrackerType const& tr, 
-                            const std::tuple< 
-	                            const config::Cauchy<BRT> &, 
-	                            const config::Endgame<BRT>&, 
-	                            const config::Security<BRT>&
-                            >& settings )
-      : EndgameBase<TrackerType, FinalEGT>(tr, std::get<0>(settings), std::get<1>(settings), std::get<2>(settings))
+                            const ConfigsAsTuple& settings )
+      : EndgameBase<TrackerType, FinalEGT>(tr, settings)
    	{ }
 
     template< typename... Ts >
-		CauchyEndgame(TrackerType const& tr, const Ts&... ts ) : CauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT>>( ts... ) ) 
+		CauchyEndgame(TrackerType const& tr, const Ts&... ts ) : CauchyEndgame(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
 

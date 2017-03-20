@@ -175,7 +175,26 @@ namespace bertini{
 		public AlgoTraits<
 				endgame::PowerSeriesEndgame<TrackerType, typename endgame::FixedPrecPowerSeriesEndgame<TrackerType>>
 				>
-	{};
+	{
+		using NeededConfigs = detail::TypeList<
+			config::PowerSeries,
+			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>
+			>;
+	};
+
+	template<>
+	struct AlgoTraits<endgame::AMPPowerSeriesEndgame> : 
+		public AlgoTraits<
+				endgame::PowerSeriesEndgame<AMPTracker, typename endgame::AMPPowerSeriesEndgame>
+				>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::PowerSeries,
+			config::Endgame<typename TrackerTraits<AMPTracker>::BaseRealType>,
+			config::Security<typename TrackerTraits<AMPTracker>::BaseRealType>
+			>;
+	};
 
 	/**
 	specialization for Cauchy, which uses CRTP
@@ -194,9 +213,25 @@ namespace bertini{
 		public AlgoTraits<
 				endgame::CauchyEndgame<TrackerType, typename endgame::FixedPrecCauchyEndgame<TrackerType>>
 				>
-	{};
+	{
+		using NeededConfigs = detail::TypeList<
+			config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
+	};
 	
-
+	template<>
+	struct AlgoTraits<endgame::AMPCauchyEndgame> : 
+		public AlgoTraits<
+				endgame::CauchyEndgame<AMPTracker, typename endgame::AMPCauchyEndgame>
+				>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::Cauchy<typename TrackerTraits<AMPTracker>::BaseRealType>,
+			config::Endgame<typename TrackerTraits<AMPTracker>::BaseRealType>,
+			config::Security<typename TrackerTraits<AMPTracker>::BaseRealType>
+			>;
+	};
 
 
 

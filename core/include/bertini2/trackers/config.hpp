@@ -375,7 +375,20 @@ namespace bertini
 
 		template<class D>
 		struct TrackerTraits<FixedPrecisionTracker<D> > : public TrackerTraits<D>
-		{ };
+		{ 
+			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
+			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+			using EventEmitterType = typename TrackerTraits<D>::EventEmitterType;
+			using PrecisionConfig = typename TrackerTraits<D>::PrecisionConfig;
+
+			enum {
+				IsFixedPrec = 0,
+				IsAdaptivePrec = 1
+			};
+
+			using NeededTypes = typename TrackerTraits<D>::NeededTypes;
+			using NeededConfigs = typename TrackerTraits<D>::NeededConfigs;
+		};
 
 	} // re: namespace tracking 
 } // re: namespace bertini

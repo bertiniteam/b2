@@ -110,13 +110,15 @@ namespace bertini{
 				using BCT = BaseComplexType;
 				using BRT = BaseRealType;
 
-				using Config = detail::Configured< typename AlgoTraits<FinalEGT>::NeededConfigs >;
+				using Configured = detail::Configured< typename AlgoTraits<FinalEGT>::NeededConfigs >;
+				using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
+				using ConfigsAsTuple = typename Configs::ToTuple;
 
 				using NeededTypes = typename TrackerTraits<TrackerType>::NeededTypes;
 				using TupOfVec = typename NeededTypes::ToTupleOfVec;
 				using TupOfReal = typename NeededTypes::ToTupleOfReal;
-				using TupleOfTimes = typename NeededTypes::template ToTupleOf<TimeCont>;
-				using TupleOfSamps = typename NeededTypes::template ToTupleOf<SampCont>;
+				using TupleOfTimes = typename NeededTypes::template ToTupleOfCont<TimeCont>;
+				using TupleOfSamps = typename NeededTypes::template ToTupleOfCont<SampCont>;
 
 				// state variables
 				mutable TupOfVec final_approximation_; 
@@ -134,7 +136,7 @@ namespace bertini{
 				inline
 				const auto & EndgameSettings() const
 				{
-					return Config::template Get<config::Endgame<BRT>>();
+					return Configured::template Get<config::Endgame<BRT>>();
 				}
 				
 				inline
@@ -143,13 +145,13 @@ namespace bertini{
 					return this->template Get<config::Security<BRT>>();
 				}
 
-				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&>& settings )
+				explicit EndgameBase(TrackerType const& tr, const ConfigsAsTuple& settings )
 			      : tracker_(std::ref(tr)),
-			      	Config( std::get<0>(settings),  std::get<1>(settings) )
+			      	Configured( settings )
 			   	{}
 
 			    template< typename... Ts >
-   				EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Unpermute< config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
+   				EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Configs::Unpermute( ts... ) ) 
    				{}
 
 

@@ -43,7 +43,7 @@ namespace bertini{ namespace tracking { namespace endgame {
 /**
 \brief The Adaptive Precision Power Series Endgame, in a class.
 */
-class AMPPowerSeriesEndgame : public PowerSeriesEndgame<AMPTracker,AMPPowerSeriesEndgame, dbl,mpfr>, 
+class AMPPowerSeriesEndgame : public PowerSeriesEndgame<AMPTracker,AMPPowerSeriesEndgame>, 
 							  public AMPEndgamePolicyBase
 {
 	
@@ -148,7 +148,7 @@ protected:
 	}
 public:
 	using TrackerType = AMPTracker;
-	using EGType = PowerSeriesEndgame<TrackerType, AMPPowerSeriesEndgame, dbl, mpfr>;
+	using EGType = PowerSeriesEndgame<TrackerType, AMPPowerSeriesEndgame>;
 	
 	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time) const
 	{
@@ -245,17 +245,16 @@ public:
 		return refinement_success;
 	}
 	
+	using Configs = typename AlgoTraits<EGType>::NeededConfigs;
+
 	explicit AMPPowerSeriesEndgame(TrackerType const& tr, 
-	                               const std::tuple< const config::PowerSeries &,
-	                               					 const config::Endgame<BRT>&, 
-	                               				     const config::Security<BRT>&
-	                               				    > & settings )
+	                          typename Configs::ToTuple const& settings )
       : EGType(tr, settings)
    	{}
 
     template< typename... Ts >
-		AMPPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : AMPPowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
-		{}
+	AMPPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : AMPPowerSeriesEndgame(tr, Configs::Unpermute( ts... ) ) 
+	{}
 
 
 }; // re: AMPPowerSeriesEndgame

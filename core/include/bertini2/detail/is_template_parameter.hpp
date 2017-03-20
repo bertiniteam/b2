@@ -39,7 +39,7 @@
 */
 
 #pragma once
-
+#include "bertini2/detail/typelist.hpp"
 
 namespace bertini {
 
@@ -64,10 +64,10 @@ namespace bertini {
 	};
 
 
-	template < template< typename ...> class ContT, typename ...Ts>
-	struct IsTemplateParameter< ContT<Ts...>>
+	template < typename T, typename ...Ts>
+	struct IsTemplateParameter<T, TypeList<Ts...>>
 	{
-		static constexpr bool value = IsTemplateParameter<Ts...>::value;
+		static constexpr bool value = IsTemplateParameter<T, Ts...>::value;
 	};
 
 

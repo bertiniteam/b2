@@ -192,6 +192,9 @@ protected:
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
 
+	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
+	using ConfigsAsTuple = typename Configs::ToTuple;
+
 	/**
 	\brief State variable representing a computed upper bound on the cycle number.
 	*/
@@ -219,18 +222,8 @@ protected:
 
 public:
 
-	using Config::Get;
-	using EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::Get;
-
-	using Config::Set;
-	using EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::Set;
-
 	auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
 
-	const config::PowerSeries& PowerSeriesSettings() const
-	{
-		return Config::template Get<config::PowerSeries>();
-	}
 
 	/**
 	\brief Function that clears all samples and times from data members for the Power Series endgame
@@ -280,27 +273,15 @@ public:
 
 
 
-	/**
-	\brief Setter for the specific settings in tracking_conifg.hpp under PowerSeries.
-	*/	
-	void SetPowerSeriesSettings(config::PowerSeries const& new_power_series_settings)
-	{
-		this->template Set(new_power_series_settings);
-	}
 
 
 	explicit PowerSeriesEndgame(TrackerType const& tr, 
-	                            const std::tuple< 
-	                            	config::PowerSeries const&, 
-	            					const config::Endgame<BRT>&, 
-	            					const config::Security<BRT>&
-	            					>& settings )
-      : EndgameBase<TrackerType, FinalEGT, UsedNumTs...>(tr, std::get<1>(settings), std::get<2>(settings)), 
-        Config( std::get<0>(settings) )
+	                            const ConfigsAsTuple& settings )
+      : EndgameBase<TrackerType, FinalEGT>(tr, settings)
    	{}
 
     template< typename... Ts >
-		PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
+		PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
 
@@ -360,9 +341,9 @@ public:
 			using std::max;
 			//casting issues between auto and unsigned integer. TODO: Try to stream line this.
 			unsigned int upper_bound;
-			RT upper_bound_before_casting = round(floor(estimate + RT(.5))*PowerSeriesSettings().cycle_number_amplification);
+			RT upper_bound_before_casting = round(floor(estimate + RT(.5))*this->template Get<config::PowerSeries>().cycle_number_amplification);
 			upper_bound = unsigned (upper_bound_before_casting);
-			upper_bound_on_cycle_number_ = max(upper_bound,PowerSeriesSettings().max_cycle_number);
+			upper_bound_on_cycle_number_ = max(upper_bound,this->template Get<config::PowerSeries>().max_cycle_number);
 		}
 
 		return upper_bound_on_cycle_number_;

@@ -50,8 +50,9 @@ public:
 	using TrackerType = TrackerT;
 	using EGType = CauchyEndgame<TrackerType, FixedPrecCauchyEndgame>;
 	using BRT = typename TrackerTraits<TrackerType>::BaseRealType;
+	using Configs = typename AlgoTraits<EGType>::NeededConfigs;
+	using ConfigsAsTuple = typename Configs::ToTuple;
 
-	
 	template<typename CT>
 	SuccessCode RefineSample(Vec<CT> & result, Vec<CT> const& current_sample, CT const& current_time) const
 	{
@@ -68,15 +69,12 @@ public:
 
 public:
 	explicit FixedPrecCauchyEndgame(TrackerType const& tr, 
-	                               const std::tuple< const config::Cauchy<BRT> &,
-	                               					 const config::Endgame<BRT>&, 
-	                               				     const config::Security<BRT>&
-	                               				    > & settings )
+	                               ConfigsAsTuple const& settings )
       : EGType(tr, settings)
    	{}
 
     template< typename... Ts >
-		FixedPrecCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecCauchyEndgame(tr, Unpermute<config::Cauchy<BRT>, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
+		FixedPrecCauchyEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecCauchyEndgame(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
 };

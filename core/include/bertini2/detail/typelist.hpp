@@ -29,7 +29,9 @@
 
 \brief Contains the detail/typelist helper type, for templated getting/setting/storage of config structs
 */
+#pragma once
 
+#include "bertini2/detail/enable_permuted_arguments.hpp"
 
 namespace bertini {
 namespace detail {
@@ -46,10 +48,15 @@ struct TypeList {
 	using ToTupleOfReal = std::tuple<typename Eigen::NumTraits<Ts>::Real...>;
 
 	template <template<typename> class ContT>
-	using ToTupleOf = std::tuple<ContT<Ts>...>;
+	using ToTupleOfCont = std::tuple<ContT<Ts>...>;
 
-	template<template<typename> class ContT>
-	using ToContOf = ContT<Ts...>;
+
+	template<typename ...Rs>
+	static 
+	std::tuple<Ts...> Unpermute(const Rs& ...rs)
+	{
+		return bertini::Unpermute<Ts...>(rs...);
+	}
 };
 
 
