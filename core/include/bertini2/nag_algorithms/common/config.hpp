@@ -108,4 +108,13 @@ struct ZeroDim
 	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
 };
 
-} } } // namespaces
+
+
+}// config
+
+// a forward declare
+template <typename T>
+	struct AlgoTraits;
+
+
+} } // namespaces

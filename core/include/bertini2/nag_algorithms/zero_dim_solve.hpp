@@ -46,17 +46,49 @@ namespace bertini {
 
 	namespace algorithm {
 
+
+/**
+forward declare of ZeroDim algorithm
+*/
+template<	typename TrackerType, typename EndgameType,
+			typename SystemType, typename StartSystemType,
+			template<typename,typename> class SystemManagementP = policy::CloneGiven >
+struct ZeroDim;
+
+
+
+/**
+specify the traits for the algorithm.  this is why we need the forward declare
+*/
+template<typename TrackerType, typename EndgameType,
+			typename SystemType, typename StartSystemType,
+			template<typename,typename> class SystemManagementP>
+struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>
+{
+	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
+	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+
+	using NeededConfigs = detail::TypeList<
+								config::Tolerances<BaseRealType>,
+								config::PostProcessing<BaseRealType>,
+								config::ZeroDim<BaseComplexType>,
+								config::AutoRetrack<BaseRealType>
+								>;
+};
+
+
+
+/**
+\brief the basic zero dim algorithm, which solves a system.
+*/
 		template<	typename TrackerType, typename EndgameType,
 					typename SystemType, typename StartSystemType,
-					template<typename,typename> class SystemManagementP = policy::CloneGiven >
+					template<typename,typename> class SystemManagementP>
 		struct ZeroDim :
 							public Observable<>,
 							public SystemManagementP<SystemType, StartSystemType>,
 							public detail::Configured<
-								config::Tolerances<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
-								config::PostProcessing<typename tracking::TrackerTraits<TrackerType>::BaseRealType>,
-								config::ZeroDim<typename tracking::TrackerTraits<TrackerType>::BaseComplexType>,
-								config::AutoRetrack<typename tracking::TrackerTraits<TrackerType>::BaseRealType>>
+								typename AlgoTraits< ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>::NeededConfigs>
 		{
 			BERTINI_DEFAULT_VISITABLE();
 
@@ -75,14 +107,9 @@ namespace bertini {
 			using StoredSystemT = typename SystemManagementPolicy::StoredSystemT;
 			using StoredStartSystemT = typename SystemManagementPolicy::StoredStartSystemT;
 
-// this one is atrocious.  sorry.
-			// todo: factor out these configs into something traits-based
-			using Config = detail::Configured<
-								config::Tolerances<BaseRealType>,
-								config::PostProcessing<BaseRealType>,
-								config::ZeroDim<BaseComplexType>,
-								config::AutoRetrack<BaseRealType>>;
 
+			using Config = detail::Configured<
+								typename AlgoTraits<ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>::NeededConfigs>;
 			using Config::Get;
 
 
