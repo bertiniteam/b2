@@ -27,7 +27,7 @@
 */
 
 #pragma once
-
+#include <iostream>
 #include <boost/filesystem.hpp>
 
 namespace bertini{
