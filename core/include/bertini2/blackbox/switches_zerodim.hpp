@@ -16,9 +16,9 @@ enum class Endgame{ PowerSeries, Cauchy};
 
 struct ZeroDimRT
 {
-	type::Start start;
-	type::Tracker tracker;
-	type::Endgame endgame;
+	type::Start start = type::Start::TotalDegree;
+	type::Tracker tracker = type::Tracker::Adaptive;
+	type::Endgame endgame = type::Endgame::Cauchy;
 };
 
 
