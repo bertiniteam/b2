@@ -48,7 +48,7 @@ using LoggingInit = bertini::LoggingInit;
 
 BOOST_GLOBAL_FIXTURE( LoggingInit );
 
-BOOST_AUTO_TEST_SUITE(blackbox)
+BOOST_AUTO_TEST_SUITE(blackbox_test)
 BOOST_AUTO_TEST_SUITE(zerodim)
 
 using namespace bertini;
@@ -56,7 +56,9 @@ using namespace bertini;
 BOOST_AUTO_TEST_CASE(make_zero_dim)
 {
 	auto sys = system::Precon::GriewankOsborn();
-	
+	blackbox::ZeroDimRT my_runtime_type_options; // make defaults
+
+	auto zd_ptr = blackbox::MakeZeroDim(my_runtime_type_options, sys);
 }
 
 
