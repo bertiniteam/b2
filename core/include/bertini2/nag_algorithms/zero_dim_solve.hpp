@@ -37,6 +37,7 @@
 
 #include "bertini2/detail/configured.hpp"
 
+#include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/nag_algorithms/common/policies.hpp"
 #include <chrono>
@@ -77,6 +78,9 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 };
 
 
+struct AnyZeroDim : public virtual AnyAlgorithm
+{};
+
 
 /**
 \brief the basic zero dim algorithm, which solves a system.
@@ -85,6 +89,7 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 					typename SystemType, typename StartSystemType,
 					template<typename,typename> class SystemManagementP>
 		struct ZeroDim :
+							public virtual AnyZeroDim,
 							public Observable<>,
 							public SystemManagementP<SystemType, StartSystemType>,
 							public detail::Configured<
@@ -218,7 +223,11 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 			}
 
 
-
+			/**
+			\brief Main Run() function provided for calling from the blackbox mode
+			*/
+			void Run() override
+			{}
 
 /// setup functions
 
@@ -755,7 +764,6 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 
 
 		}; // struct ZeroDim
-
 
 	} // ns algo
 

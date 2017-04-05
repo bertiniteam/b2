@@ -33,6 +33,7 @@ pool_test
 nag_algorithms_test
 generating_test
 nag_datatypes_test
+blackbox_test
 
 cachegrind.out.*
 
