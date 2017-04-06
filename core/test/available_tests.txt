@@ -1,0 +1,9 @@
+b2_class_test
+b2_classic_compatibility_test
+endgames_test
+generating_test
+nag_algorithms_test
+nag_datatypes_test
+pool_test
+settings_test
+tracking_basics_test
