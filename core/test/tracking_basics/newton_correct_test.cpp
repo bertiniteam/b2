@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_double)
 	{
-		
+		DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		/*
 		 Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
 		 to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
@@ -494,6 +494,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	BOOST_AUTO_TEST_CASE(newton_step_amp_criterion_C_violated_mp)
 	{
+		DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		/*
 		 Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
 		 to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
@@ -675,7 +676,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_d)
 	{
-		
+		DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		/*
 		 Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
 		 to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence.
@@ -730,6 +731,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_mp)
 	{
+		DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 		/*
 		 Using the Griewank Osborne example. Starting at t = 0 where there is a multiplicity 3 isolated solution. We predict
 		 to .1 and try to correct back down. Anywhere except at t = 0, we will have divergence. The difference from this
