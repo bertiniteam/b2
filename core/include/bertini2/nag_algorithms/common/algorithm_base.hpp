@@ -39,6 +39,8 @@ namespace algorithm {
 
 		virtual 
 		void Run() = 0;
+
+		virtual ~AnyAlgorithm() = default;
 	};
 }
 }

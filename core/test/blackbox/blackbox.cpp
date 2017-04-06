@@ -49,7 +49,8 @@ using LoggingInit = bertini::LoggingInit;
 BOOST_GLOBAL_FIXTURE( LoggingInit );
 
 BOOST_AUTO_TEST_SUITE(blackbox_test)
-BOOST_AUTO_TEST_SUITE(zerodim)
+
+BOOST_AUTO_TEST_SUITE(zero_dim)
 
 using namespace bertini;
 
@@ -59,11 +60,14 @@ BOOST_AUTO_TEST_CASE(make_zero_dim)
 	blackbox::ZeroDimRT my_runtime_type_options; // make defaults
 
 	auto zd_ptr = blackbox::MakeZeroDim(my_runtime_type_options, sys);
+
+	zd_ptr->Run();
 }
 
 
 
 BOOST_AUTO_TEST_SUITE_END() // end the zerodim sub-suite
+
 BOOST_AUTO_TEST_SUITE_END() // end the blackbox suite
 
 

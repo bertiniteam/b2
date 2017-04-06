@@ -79,7 +79,9 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 
 
 struct AnyZeroDim : public virtual AnyAlgorithm
-{};
+{
+	virtual ~AnyZeroDim() = default;
+};
 
 
 /**
@@ -229,6 +231,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			void Run() override
 			{}
 
+			virtual ~ZeroDim() = default;
 /// setup functions
 
 
