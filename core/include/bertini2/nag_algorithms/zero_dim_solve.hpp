@@ -274,6 +274,13 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			*/
 			void DefaultSettingsSetup()
 			{
+				// this code can be made generic using Boost.Hana.  
+				// see https://stackoverflow.com/questions/28764085/how-to-create-an-element-for-each-type-in-a-typelist-and-add-it-to-a-vector-in-c,
+				// for example
+				//
+				// all that would need to be done is to extract a hana::tuple_t from the 
+				// typelist contained in this::Config, and then hana::for_each() over it.
+
 				this->template Set<Tolerances>(Tolerances());
 				this->template Set<PostProcessing>(PostProcessing());
 				this->template Set<ZeroDimConf>(ZeroDimConf());
