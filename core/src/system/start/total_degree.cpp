@@ -57,14 +57,12 @@ namespace bertini {
 			
 
 			auto deg = s.Degrees();
-			for (auto iter : deg)
-				degrees_.push_back((size_t) iter);
+			for (const auto& d : deg)
+				degrees_.push_back(static_cast<const size_t>(d));
 
 			CopyVariableStructure(s);
 
 			random_values_.resize(s.NumFunctions());
-
-
 			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
 				random_values_[ii] = MakeRational(node::Rational::Rand());
 
@@ -94,7 +92,7 @@ namespace bertini {
 		unsigned long long TotalDegree::NumStartPoints() const
 		{
 			unsigned long long num_start_points = 1;
-			for (auto iter : degrees_)
+			for (const auto& iter : degrees_)
 				num_start_points*=iter;
 			return num_start_points;
 		}
@@ -113,8 +111,10 @@ namespace bertini {
 				offset = 1;
 			}
 
+			auto two_i_pi = std::acos(-1.0) * dbl(0,2);
+
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( std::acos(-1) * dbl(0,2) * double(indices[ii]) / double(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), double(1) / double(degrees_[ii]));
+				start_point(ii+offset) = exp( two_i_pi * static_cast<double>(indices[ii]) / static_cast<double>(degrees_[ii])  ) * pow(random_values_[ii]->Eval<dbl>(), 1.0 / static_cast<double>(degrees_[ii]));
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
@@ -135,11 +135,12 @@ namespace bertini {
 				offset = 1;
 			}
 
-			auto two_i = mpfr(0,2);
+			
 			auto one = mpfr(1);
+			auto two_i_pi = mpfr(0,2) * acos( mpfr_float(-1) );
 
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( acos( mpfr_float(-1) ) * two_i * mpfr_float(indices[ii]) / mpfr_float(degrees_[ii])  ) * pow(random_values_[ii]->Eval<mpfr>(), one / degrees_[ii]);
+				start_point(ii+offset) = exp( two_i_pi * mpfr_float(indices[ii]) / degrees_[ii]  ) * pow(random_values_[ii]->Eval<mpfr>(), one / degrees_[ii]);
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);

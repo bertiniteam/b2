@@ -768,13 +768,14 @@ namespace bertini
     		Vec<mpfr> randy = RandomOfUnits<mpfr>(NumVariables());
     		Vec<mpfr> f_vals;
     		if (HavePathVariable())
-    			f_vals = Eval(randy, mpfr::rand());
+    			f_vals = Eval(randy, mpfr::RandomUnit());
     		else
     			f_vals = Eval(randy);
 	    	
 	    	auto dh_dx = Jacobian<mpfr>();
 	    	
-			bound = max(f_vals.array().abs().maxCoeff(),dh_dx.array().abs().maxCoeff(), bound);
+			bound = max(f_vals.array().abs().maxCoeff(),
+				         dh_dx.array().abs().maxCoeff(), bound);
 		}
     	return bound;
 	}

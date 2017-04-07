@@ -96,11 +96,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 			for (int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) /  RAND_MAX : B(ii,jj) = 0;
 		
-		
-//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
-//		std::cout << C << std::endl;
-//		std::cout << "pure double time to solve:" << std::endl;
 		//add statement on the value of C to actually test
 
 	}
@@ -122,12 +118,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		for (int ii=0; ii<size; ii++)
 			for (int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1.0) + bertini::mpfr_float(rand()) /  bertini::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
-		
-		
-//		boost::timer::auto_cpu_timer t;
+
 		C = A.lu().solve(B);
-//		std::cout << C << std::endl;
-//		std::cout << "mpfr_float pure 16 time to solve:" << std::endl;
 	}
 
 
@@ -141,7 +133,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		using mpfr = bertini::mpfr_float;
 		using mpfr_matrix = Eigen::Matrix<mpfr, Eigen::Dynamic, Eigen::Dynamic>;
 
-		mpfr::default_precision(50);
+		bertini::DefaultPrecision(100);
 		
 		mpfr_matrix A = KahanMatrix(size, mpfr(0.285)), B(size,size), C;
 		
@@ -150,15 +142,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 				(jj!=ii) ? B(ii,jj) = -1.0/(ii+1) + mpfr(rand()) /  mpfr(RAND_MAX) : B(ii,jj) = mpfr(0.0);
 			}
 		}
-		
-		
-	
-		
-//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
-//		std::cout << C << std::endl;
-//		std::cout << "mpfr_float pure 100 time to solve:" << std::endl;
-		
+
 	}
 
 
@@ -179,12 +164,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) / double(RAND_MAX) : B(ii,jj) = 0;
 		
 		
-		
-		
-//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
-//		std::cout << C << std::endl;
-//		std::cout << "std::complex time to solve:" << std::endl;
 	}
 	
 	
@@ -203,12 +183,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 			for (int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = bertini::complex( bertini::complex(-1)/bertini::complex(ii+1) + bertini::complex(rand()) / bertini::complex(RAND_MAX)) : B(ii,jj) = bertini::complex(0);
 		
-//		boost::timer::auto_cpu_timer t;
 		C = A.lu().solve(B);
-		
-		
-//		std::cout << C << std::endl;
-//		std::cout << "bertini::complex precision 100 time to solve:" << std::endl;
 	}
 
 		
@@ -304,6 +279,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(large_change_multiprecision)
 	{
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
 
 		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(1.0),p));
@@ -341,31 +318,33 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		double n = A.norm();
 	}
 
-		BOOST_AUTO_TEST_CASE(dot_product_with_mpfr_type)
-		{
-			
-			using data_type = bertini::mpfr;
-			
-			Eigen::Matrix<data_type, 3, 1> v(data_type(2),data_type(4),data_type(3));
-			Eigen::Matrix<data_type, 3, 1> w(data_type(1),data_type(2),data_type(-1));
+	BOOST_AUTO_TEST_CASE(dot_product_with_mpfr_type)
+	{
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-			data_type result = v.dot(w);
-			data_type exact(7);
-			
-			BOOST_CHECK_EQUAL(result, exact);
-			
-		}
+		using data_type = bertini::mpfr;
+		
+		Eigen::Matrix<data_type, 3, 1> v(data_type(2),data_type(4),data_type(3));
+		Eigen::Matrix<data_type, 3, 1> w(data_type(1),data_type(2),data_type(-1));
+
+		data_type result = v.dot(w);
+		data_type exact(7);
+		
+		BOOST_CHECK_EQUAL(result, exact);
+		
+	}
 
 
 	BOOST_AUTO_TEST_CASE(svd_with_mpfr_type)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
 		
-		// this is commented out because et_on breaks this with eigen 3.2.7.  this issue is fixed with upcoming eigen release.  hence, we need to control et_on/et_off with a compile-time option and requirements on the version of eigen used.
+		// this breaks with boost multiprecision et_on with eigen 3.2.7.
 		Eigen::JacobiSVD<Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic>> svd(A, Eigen::ComputeThinU | Eigen::ComputeThinV);
 		
 		
@@ -376,14 +355,15 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_mpfr)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
 		
 		data_type a(1);
-		// this is commented out because et_on breaks this with eigen 3.2.7.  this issue is fixed with upcoming eigen release.  hence, we need to control et_on/et_off with a compile-time option and requirements on the version of eigen used.
+		// this breaks with boost multiprecision et_on with eigen 3.2.7.
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B = a*A;
 		B = A*a;
 	}
@@ -391,7 +371,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_int)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		data_type q(1);
@@ -411,7 +392,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_long)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		data_type q(1);
@@ -430,7 +412,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(scalar_multiplication_mpfr_mpz_int)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		data_type q(1);
@@ -468,7 +451,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_mpfr)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
@@ -482,7 +466,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_int)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		data_type q(1);
@@ -499,7 +484,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_long)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		data_type q(1);
@@ -513,7 +499,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(self_multiplication_mpfr_mpz_int)
 	{
-		
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using data_type = bertini::mpfr;
 		
 		data_type q(1);
@@ -527,6 +514,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(change_precision_mpfr_float)
 	{
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using bertini::Precision;
 		using data_type = bertini::mpfr_float;
 		
@@ -539,6 +528,8 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
 	BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex)
 	{
+		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 		using bertini::Precision;
 		using data_type = bertini::mpfr;
 		
