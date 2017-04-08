@@ -21,7 +21,7 @@
 
 // individual authors of this file include:
 // daniel brake, university of notre dame
-
+// Tim Hodges, Colorado State University
 /**
 \file mhom.hpp 
 
@@ -36,7 +36,8 @@
 
 namespace bertini 
 {
-	namespace start_system{
+	namespace start_system
+	{
 
 
 		/**
@@ -57,18 +58,43 @@ namespace bertini
 			*/
 			MHomogeneous(System const& s);
 
-
-			
+			/**
+			\brief Creates a degree matrix for constructing the multi-homogeneous start system.
+			*/
+			void CreateDegreeMatrix(System const& s);
 
 			/**
-			Get the number of start points for this total degree start system.  This is the Bezout bound for the target system.  Provided here for your convenience.
+			\brief Creates all valid partitions for multi-homogeneous start system to create start points.
+			*/
+			void GenerateValidPartitions(System const& s);
+
+			/**
+			\brief Helper function that is used to find valid partitions in the degree matrix.
+			*/
+			int ChooseColumnInRow(System const& s,Vec<int>& variable_group_counter, int row, int column);
+
+			/**
+			Get the number of start points for this m-homogeneous start system.  This is the Bezout bound for the target system.  Provided here for your convenience.
 			*/
 			unsigned long long NumStartPoints() const override;
+
+			unsigned long long NumStartPointsForPartition(Vec<int> partition) const;
 
 			MHomogeneous& operator*=(Nd const& n);
 
 			MHomogeneous& operator+=(System const& sys) = delete;
+
+			/**
+			\brief Degree matrix holding degrees for all functions in terms of all variable groups
+			*/
+			Mat<int> degree_matrix_; // stores degrees of all functions in all homogeneous variable groups.
 			
+			/**
+			\brief Partitions used for creating start points in the multi-homogeneous start system.
+			*/
+			std::deque< Vec<int> > valid_partitions_;
+
+
 		private:
 
 			/**
@@ -87,20 +113,22 @@ namespace bertini
 
 			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
+			std::vector< VariableGroup > var_groups_; ///< All variables groups from the target system, both affine and projective.
 
 
 			friend class boost::serialization::access;
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned version) 
+			{
 				ar & boost::serialization::base_object<StartSystem>(*this);
 				ar & random_values_;
 				ar & degrees_;
 			}
 
 		};
-	}
-}
+	}//end start_system namespace
+}//end bertini namespace
 
 
 
