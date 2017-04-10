@@ -92,13 +92,8 @@ namespace node{
 		 */
 		void print(std::ostream & target) const override
 		{
-			if (entry_node_)
-			{
-				NamedSymbol::print(target);
-				entry_node_->print(target);
-			}
-			else
-				target << "impossibly emptyfunction";
+			EnsureNotEmpty();
+			entry_node_->print(target);
 		}
 		
 		
@@ -257,7 +252,7 @@ namespace node{
 
 		
 		
-		std::shared_ptr<Node> entry_node_; ///< The top node for the function.
+		std::shared_ptr<Node> entry_node_ = nullptr; ///< The top node for the function.
 		
 		Function() = default;
 	private:

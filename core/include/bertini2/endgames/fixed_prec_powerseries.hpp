@@ -43,16 +43,17 @@ namespace bertini{ namespace tracking { namespace endgame {
 template<typename TrackerT, typename Enable>
 class FixedPrecPowerSeriesEndgame : 
 		public PowerSeriesEndgame<TrackerT,
-								  FixedPrecPowerSeriesEndgame<TrackerT, typename std::enable_if<TrackerTraits<TrackerT>::IsFixedPrec>::type>, 
-								  typename TrackerTraits<TrackerT>::BaseComplexType>, 
+								  FixedPrecPowerSeriesEndgame<TrackerT, typename std::enable_if<TrackerTraits<TrackerT>::IsFixedPrec>::type>>, 
 		public FixedPrecEndgamePolicyBase<TrackerT>
 {
 public:
 	using TrackerType = TrackerT;
-	using EGType = PowerSeriesEndgame<TrackerType, FixedPrecPowerSeriesEndgame, typename TrackerType::BaseComplexType>;
+	using EGType = PowerSeriesEndgame<TrackerType, FixedPrecPowerSeriesEndgame>;
 	using BRT = typename TrackerTraits<TrackerType>::BaseRealType;
 
-	
+	using Configs = typename AlgoTraits<EGType>::NeededConfigs;
+
+
 	template<typename CT>
 	SuccessCode RefineSample(Vec<CT> & result, Vec<CT> const& current_sample, CT const& current_time) const
 	{
@@ -69,15 +70,13 @@ public:
 
 public:
 	explicit FixedPrecPowerSeriesEndgame(TrackerType const& tr, 
-	                               const std::tuple< const config::PowerSeries &,
-	                               					 const config::Endgame<BRT>&, 
-	                               				     const config::Security<BRT>&
-	                               				    > & settings )
+	                                	typename Configs::ToTuple const& settings )
       : EGType(tr, settings)
    	{}
 
     template< typename... Ts >
-		FixedPrecPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : FixedPrecPowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
+		FixedPrecPowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : 
+			FixedPrecPowerSeriesEndgame(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
 };

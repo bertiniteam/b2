@@ -87,31 +87,44 @@ namespace bertini{
 			 To create a new endgame type, inherit from this class. 
 			*/
 			template<class TrackerType, class FinalEGT>
-			class EndgameBase : public detail::Configured<
-				config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
-				config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>
+			class EndgameBase : 
+				public detail::Configured< typename AlgoTraits<FinalEGT>::NeededConfigs >
 			{
 			protected:
 
-				// convert the base endgame into the derived type.
+				/**
+				\brief convert the base endgame into the derived type.
+
+				This enables the CRPT as used by the endgames
+				*/
 				const FinalEGT& AsDerived() const
 				{
 					return static_cast<const FinalEGT&>(*this);
 				}
 
+				// a list of all the needed arithemtic types (complex for complex trackers)
+				
 				using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
 				using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
 
 				using BCT = BaseComplexType;
 				using BRT = BaseRealType;
 
-				using Config = detail::Configured<
-					config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
-					config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
+				using Configured = detail::Configured< typename AlgoTraits<FinalEGT>::NeededConfigs >;
+				using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
+				using ConfigsAsTuple = typename Configs::ToTuple;
+
+				using NeededTypes = typename TrackerTraits<TrackerType>::NeededTypes;
+				using TupOfVec = typename NeededTypes::ToTupleOfVec;
+				using TupOfReal = typename NeededTypes::ToTupleOfReal;
+				using TupleOfTimes = typename NeededTypes::template ToTupleOfCont<TimeCont>;
+				using TupleOfSamps = typename NeededTypes::template ToTupleOfCont<SampCont>;
 
 				// state variables
-				mutable std::tuple<Vec<dbl>, Vec<mpfr> > final_approximation_at_origin_; 
+				mutable TupOfVec final_approximation_; 
+				mutable TupOfVec previous_approximation_; 
 				mutable unsigned int cycle_number_ = 0; 
+				mutable TupOfReal approximate_error_;
 
 				/**
 				\brief A tracker that must be passed into the endgame through a constructor. This tracker is what will be used to track to all time values during the endgame. 
@@ -120,36 +133,33 @@ namespace bertini{
 
 			public:
 
+				inline
 				const auto & EndgameSettings() const
 				{
-					return Config::template Get<config::Endgame<BRT>>();
+					return Configured::template Get<config::Endgame<BRT>>();
 				}
 				
+				inline
 				const auto & SecuritySettings() const
 				{
 					return this->template Get<config::Security<BRT>>();
 				}
 
-				explicit EndgameBase(TrackerType const& tr, const std::tuple< const config::Endgame<BRT>&, const config::Security<BRT>&>& settings )
+				explicit EndgameBase(TrackerType const& tr, const ConfigsAsTuple& settings )
 			      : tracker_(std::ref(tr)),
-			      	Config( std::get<0>(settings),  std::get<1>(settings) )
+			      	Configured( settings )
 			   	{}
 
 			    template< typename... Ts >
-   				EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Unpermute< config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
+   				EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Configs::Unpermute( ts... ) ) 
    				{}
 
 
-				unsigned CycleNumber() const { return cycle_number_;}
-				void CycleNumber(unsigned c) { cycle_number_ = c;}
-				void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
+   				inline unsigned CycleNumber() const { return cycle_number_;}
+				inline void CycleNumber(unsigned c) { cycle_number_ = c;}
+				inline void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
 
 				
-
-				// const auto& EndgameSettings() const
-				// {
-				// 	return endgame_settings_;
-				// }
 
 				inline
 				const auto& FinalTolerance() const
@@ -157,30 +167,12 @@ namespace bertini{
 					return this->template Get<config::Endgame<BRT>>().final_tolerance;
 				}
 
-				// const auto& SecuritySettings() const
-				// {
-				// 	return security_;
-				// }
-
-
-
-				// /**
-				// \brief Setter for the general settings.
-				// */
-				// void SetEndgameSettings(config::Endgame<BRT> new_endgame_settings){endgame_settings_ = new_endgame_settings;}
-
-
-				
-
-				/**
-				\brief Setter for the security settings.
-				*/
-				// void SetSecuritySettings(config::Security<BRT> new_endgame_security_settings){ security_ = new_endgame_security_settings;}
 
 
 				/**
 				\brief Setter for the final tolerance.
 				*/
+				inline
 				void SetFinalTolerance(BRT const& ft){this->template Get<config::Endgame<BRT>>().final_tolerance = ft;}
 
 
@@ -189,6 +181,7 @@ namespace bertini{
 
 				\note Ensure the tracker you are using doesn not go out of scope!
 				*/
+				inline
 				void SetTracker(TrackerType const& new_tracker)
 				{
 					tracker_ = std::ref(new_tracker); // rebind the reference
@@ -198,13 +191,54 @@ namespace bertini{
 				/**
 				\brief Getter for the tracker used inside an instance of the endgame. 
 				*/
+				inline
 				const TrackerType & GetTracker() const
-				{return tracker_.get();}
+				{
+					return tracker_.get();
+				}
 
+				/**
+				\brief Get the most-recent approximation
+				*/
 				template<typename CT>
+				inline
 				const Vec<CT>& FinalApproximation() const 
-				{return std::get<Vec<CT> >(final_approximation_at_origin_);}
+				{
+					return std::get<Vec<CT> >(final_approximation_);
+				}
 
+				/**
+				\brief Get the second-most-recent approximation
+				*/
+				template<typename CT>
+				inline
+				const Vec<CT>& PreviousApproximation() const 
+				{
+					return std::get<Vec<CT> >(final_approximation_);
+				}
+
+				/**
+				\brief Get the most recent accuracy estimate
+				*/
+				template<typename RT>
+				inline
+				const RT& ApproximateError() const
+				{
+					return std::get<RT>(approximate_error_);
+				}
+
+
+
+				inline 
+				const BCT& LatestTime() const
+				{
+					return AsDerived().LatestTimeImpl();
+				}
+
+				/**
+				\brief Get the system being tracked on, which is referred to by the tracker.
+				*/
+				inline
 				const System& GetSystem() const 
 				{ return GetTracker().GetSystem();}
 
@@ -248,7 +282,6 @@ namespace bertini{
 					if (TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
 						assert(Precision(start_time)==Precision(x_endgame) && "Computing initial samples requires input time and space with uniform precision");
-						DefaultPrecision();
 					}
 
 					samples.clear();

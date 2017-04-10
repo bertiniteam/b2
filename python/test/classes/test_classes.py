@@ -28,11 +28,11 @@
 
 from __future__ import print_function
 
-import mpfr_test
-import function_tree_test
-import differentiation_test
-import system_test
-import parser_test
+import classes.mpfr_test as mpfr_test
+import classes.function_tree_test as function_tree_test
+import classes.differentiation_test as differentiation_test
+import classes.system_test as system_test
+import classes.parser_test as parser_test
 
 import unittest
 
