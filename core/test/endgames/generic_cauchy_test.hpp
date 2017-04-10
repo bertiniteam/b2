@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 	my_endgame.SetCauchySamples(cauchy_samples);
 
 	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
-	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>() == true);
+	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
 
 } // end compare cauchy ratios for cauchy class test
 
@@ -729,7 +729,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	
 	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
-	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>() == true);
+	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
 
 } // end compare cauchy ratios for cycle num greater than 1 cauchy class test
 

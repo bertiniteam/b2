@@ -614,14 +614,14 @@ public:
 				heuristcially will tell us if we are. 
 	*/
 	template<typename CT>
-	bool RatioEGOperatingZoneTest()
+	bool RatioEGOperatingZoneTest(CT const& target_time)
 	{	
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		RT min(1e300);
 		RT max(0);
 		auto& times = std::get<TimeCont<CT> >(cauchy_times_);
 		auto& samples = std::get<SampCont<CT> >(cauchy_samples_);
-		if(norm(times.front()) < GetCauchySettings().ratio_cutoff_time)
+		if(norm(times.front() - target_time) < GetCauchySettings().ratio_cutoff_time)
 		{
 			return true;
 		}
@@ -715,7 +715,7 @@ public:
 				return tracking_success;
 
 			// find the ratio of the maximum and minimum coordinate wise for the loop. 
-			if (RatioEGOperatingZoneTest<CT>())
+			if (RatioEGOperatingZoneTest<CT>(target_time))
 			{ // then we believe we are in the EG operating zone, since the path is relatively flat.  i still disbelieve this is a good test (dab 20160310)
 				while (true)
 				{
