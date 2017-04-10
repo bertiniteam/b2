@@ -43,32 +43,8 @@ using sec_level = boost::log::trivial::severity_level;
 using LoggingInit = bertini::LoggingInit;
 
 
-#include "bertini2/blackbox/switches_zerodim.hpp"
-#include "bertini2/system/precon.hpp"
-
 BOOST_GLOBAL_FIXTURE( LoggingInit );
 
-BOOST_AUTO_TEST_SUITE(blackbox_test)
-
-BOOST_AUTO_TEST_SUITE(zero_dim)
-
-using namespace bertini;
-
-BOOST_AUTO_TEST_CASE(make_zero_dim)
-{
-	auto sys = system::Precon::GriewankOsborn();
-	blackbox::ZeroDimRT my_runtime_type_options; // make defaults
-
-	auto zd_ptr = blackbox::MakeZeroDim(my_runtime_type_options, sys);
-
-	zd_ptr->Run();
-}
-
-
-
-BOOST_AUTO_TEST_SUITE_END() // end the zerodim sub-suite
-
-BOOST_AUTO_TEST_SUITE_END() // end the blackbox suite
 
 
 
