@@ -243,6 +243,7 @@ namespace bertini
 				AdaptiveMultiplePrecisionConfig() : coefficient_bound(1000), degree_bound(5), safety_digits_1(1), safety_digits_2(1), maximum_precision(300) 
 				{}
 
+				explicit
 				AdaptiveMultiplePrecisionConfig(System const& sys) : AdaptiveMultiplePrecisionConfig()
 				{
 					SetAMPConfigFrom(sys);
