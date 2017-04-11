@@ -255,16 +255,18 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			void DefaultSetup()
 			{
 				DefaultSettingsSetup();
-
-
-				SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
-
-				num_start_points_ = StartSystem().NumStartPoints(); // populate the internal variable
-
+				DefaultSystemSetup();
 				DefaultTrackerSetup();
 				DefaultMidpathSetup();
+			}
 
-				setup_complete_ = true;
+
+
+
+			void DefaultSystemSetup()
+			{
+				SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
+				num_start_points_ = StartSystem().NumStartPoints(); // populate the internal variable
 			}
 
 
@@ -285,8 +287,6 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				this->template Set<PostProcessing>(PostProcessing());
 				this->template Set<ZeroDimConf>(ZeroDimConf());
 				this->template Set<AutoRetrack>(AutoRetrack());
-
-				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
 			}
 
 			void SetMidpathRetrackTol(BaseRealType const& rt)
@@ -447,15 +447,6 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 
-			/**
-			\brief Checks whether the algorithm is ready to rock and roll.
-			*/
-			bool IsSetupComplete() const
-			{
-				return setup_complete_;
-			}
-
-
 
 			/**
 			\brief Get the final computed solutions
@@ -488,9 +479,6 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			*/
 			void PreSolveChecks() const
 			{
-				if (!IsSetupComplete())
-					throw std::runtime_error("attempting to Solve ZeroDim, but setup was not completed");
-
 				if (num_start_points_ > solutions_at_endgame_boundary_.max_size())
 					throw std::runtime_error("start system has more solutions than container for results.  I refuse to continue until this has been addressed.");
 			}
@@ -503,6 +491,8 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				solution_final_metadata_.resize(num_as_size_t);
 				solutions_at_endgame_boundary_.resize(num_as_size_t);
 				solutions_post_endgame_.resize(num_as_size_t);
+
+				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
 			}
 
 			/**
@@ -749,7 +739,6 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 		//	private data members
 		///////
 
-			bool setup_complete_ = false;
 			unsigned long long num_start_points_;
 			BaseRealType midpath_retrack_tolerance_;
 
