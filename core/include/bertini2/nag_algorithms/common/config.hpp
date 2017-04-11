@@ -79,7 +79,7 @@ struct Regeneration
 	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.  RegenRemoveInf
 
 	bool higher_dimension_check = true; ///< RegenHigherDimTest
-
+	unsigned start_level = 0;
 	T newton_before_endgame; ///< The tolerance for tracking before reaching the endgame.  SliceTolBeforeEG
 	T newton_during_endgame; ///< The tolerance for tracking during the endgame.  SliceTolDuringEG
 	T final_tolerance; ///< The final tolerance to track to, using the endgame.  SliceFinalTol
