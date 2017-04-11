@@ -30,7 +30,7 @@
 
 
 
-
+#include "bertini2/detail/typelist.hpp"
 #include "bertini2/io/parsing/settings_rules.hpp"
 
 
@@ -40,54 +40,105 @@ namespace bertini {
 		
 		namespace classic {
 			
-			
 			/**
 			 \brief Helper function to fill a single configuration struct by parsing a config input file.
 			 
 			 \param config_str The comment-stripped configuration string from a Bertini classic input file.
 			 
-			 \tparam Structure The config structure type
+			 \tparam ConfigT The config ConfigT type
 			 \tparam RT Real number type
 			 
 			 \returns The config struct filled with data from the input file.
 			 */
 			
-			template<typename Structure, typename RT>
-			Structure FillConfigStruct(std::string config_str)
+			template<typename RT, typename ConfigT>
+			ConfigT FillConfigStruct(std::string const& config_str)
 			{
 				std::string::const_iterator iter = config_str.begin();
 				std::string::const_iterator end = config_str.end();
-				Structure settings;
-				ConfigSettingParser<std::string::const_iterator, Structure, RT> parser;
-				// TODO: error handling if parsing goes wrong
-				bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, settings);
+				ConfigT settings;
+				ConfigSettingParser<std::string::const_iterator, ConfigT, RT> parser;
 				
+				if (!phrase_parse(iter, end, parser,boost::spirit::ascii::space, settings))
+					throw std::runtime_error("failed to parse into config struct from file");
+
 				return settings;
 			}
-			
-			
-			
-			
+
+
+
+
 			/**
-			 This idea for filling a tuple using variadic templates comes from:
-			 http://stackoverflow.com/questions/10014713/build-tuple-using-variadic-templates
-			 
-			 
-			 \brief Reads in a comment-stripped, config portion of a Bertini classic input file.  Parses the config settings and returns the structures passed into the template parameters with the relevant config settings.
-			 
-			 \param config_str The string containing the comment-stripped config portion of the Bertini classic input file.
-			 
-			 \tparam RT Real number type
-			 \tparam Structs A configuration structure to be filled by the parser
-			 
-			 \return A tuple containing all the required config structures.
-			 */
-			template<typename RT, typename... Structs>
-			std::tuple<Structs...> GetConfigSettings(std::string config_str)
+			\brief Base variadic parser for parsing many config structs at once.
+
+			A specialization for a typelist of configs appears below.
+
+			\tparam RT Real number type
+			\tparam Ts Configuration structures to be filled by the parser
+			*/
+			template<typename RT, typename ...Ts>
+			struct ConfigParser
 			{
-				return std::make_tuple<Structs...>(FillConfigStruct<Structs,RT>(config_str)...);
-			}
-			
+				/**
+				 The primary idea for filling a tuple using variadic templates comes from:
+				 http://stackoverflow.com/questions/10014713/build-tuple-using-variadic-templates
+				 
+				 
+				 \brief Reads in a comment-stripped, config portion of a Bertini classic input file.  Parses the config settings and returns the structures passed into the template parameters with the relevant config settings.
+				 
+				 \param config The string containing the comment-stripped config portion of the Bertini classic input file.
+				 
+				 \return A tuple containing all the required config structures.
+				 */
+				static
+				std::tuple<Ts...> Parse(std::string const& config)
+				{
+					return std::make_tuple<Ts...>(FillConfigStruct<RT, Ts>(config)...);
+				}
+
+			};
+
+
+			/**
+			\brief Specialization of ConfigParser for a single config struct
+
+			\tparam ConfigT The config ConfigT type
+			\tparam RT Real number type
+			*/
+			template<typename RT, typename ConfigT>
+			struct ConfigParser <RT, ConfigT>
+			{	
+
+				/**
+				 \brief Fill a single configuration struct by parsing a config input file.
+				 
+				 \param config The comment-stripped configuration string from a Bertini classic input file.
+				 
+				 \returns The config struct filled with data from the input file.
+				 */
+				static
+				ConfigT Parse(std::string const& config)
+				{
+					return FillConfigStruct<RT, ConfigT>(config);
+				}
+			};
+
+
+			/**
+			\brief Specialization of ConfigParser for a typelist, returning a thing passed down from the base variadic case.
+
+			\tparam ConfigT The config ConfigT type
+			\tparam RT Real number type
+			*/
+			template<typename RT, typename ...Ts>
+			struct ConfigParser<RT, detail::TypeList<Ts...>>
+			{	
+				static
+				auto Parse(std::string const& config)
+				{
+					return ConfigParser<RT, Ts...>::Parse(config);
+				}
+			};
 		} // re: namespace classic
 		
 	}// re: namespace parsing

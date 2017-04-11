@@ -38,8 +38,9 @@ using namespace bertini;
 
 BOOST_AUTO_TEST_CASE(parse1)
 {
-	using T = double;
-	using AllConfs = blackbox::config::Configs::All<T>::type::ToTuple;
+	
+	using AllConfsD = blackbox::config::Configs::All<double>::type;
+	using AllConfsMP = blackbox::config::Configs::All<mpfr_float>::type;
 
 std::string config = 
 R"(outputlevel: 0;
@@ -71,7 +72,8 @@ condnumthreshold: 1e300;
 maxstepsbeforenewton: 0;
 maxnewtonits: 1;)";
 
-	auto result = bertini::parsing::classic::GetConfigSettings<double, AllConfs>(config);
+	auto results_double = bertini::parsing::classic::ConfigParser<double, AllConfsD>::Parse(config);
+	auto results_mp = bertini::parsing::classic::ConfigParser<mpfr_float, AllConfsMP>::Parse(config);
 }
 
 

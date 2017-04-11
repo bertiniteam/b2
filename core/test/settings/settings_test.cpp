@@ -606,7 +606,7 @@ BOOST_AUTO_TEST_CASE(all_config_settings_mp)
 	
 	std::string configStr = inputfile.Config();
 	
-	auto sets = GetConfigSettings<mpfr_float, config::Predictor, config::Newton, algorithm::config::Tolerances<mpfr_float>, config::Endgame<mpfr_float>, config::Stepping<mpfr_float>>(configStr);
+	auto sets = ConfigParser<mpfr_float, config::Predictor, config::Newton, algorithm::config::Tolerances<mpfr_float>, config::Endgame<mpfr_float>, config::Stepping<mpfr_float>>::Parse(configStr);
 	
 	config::Stepping<mpfr_float> steps = std::get<config::Stepping<mpfr_float>>(sets);
 	config::Predictor pred = std::get<config::Predictor>(sets);
@@ -636,7 +636,7 @@ BOOST_AUTO_TEST_CASE(all_config_settings_d)
 	
 	std::string configStr = inputfile.Config();
 	
-	auto sets = GetConfigSettings<double, config::Predictor, config::Newton, algorithm::config::Tolerances<double>, config::Endgame<double>, config::Stepping<double>>(configStr);
+	auto sets = ConfigParser<double, config::Predictor, config::Newton, algorithm::config::Tolerances<double>, config::Endgame<double>, config::Stepping<double>>::Parse(configStr);
 	
 	config::Stepping<double> steps = std::get<config::Stepping<double>>(sets);
 	config::Predictor pred = std::get<config::Predictor>(sets);
