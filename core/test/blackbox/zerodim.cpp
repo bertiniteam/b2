@@ -52,6 +52,9 @@ BOOST_AUTO_TEST_CASE(make_zero_dim_nondefaults)
 	my_runtime_type_options.tracker = bertini::blackbox::type::Tracker::FixedDouble;
 	my_runtime_type_options.endgame = bertini::blackbox::type::Endgame::Cauchy;
 	auto zd_ptr = blackbox::MakeZeroDim(my_runtime_type_options, sys);
+
+	
+	// zd_ptr->DefaultSetup();
 }
 
 BOOST_AUTO_TEST_SUITE_END() // end the zerodim sub-suite
