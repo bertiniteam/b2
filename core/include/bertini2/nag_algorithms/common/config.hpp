@@ -65,7 +65,7 @@ struct Sharpening
 {
 	unsigned sharpendigits; ///< how many digits should be correct after sharpening.
 	
-	std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
+	// std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
 
 	T function_residual_tolerance = Eigen::NumTraits<T>::dummy_precision(); ///< A polynomial (or any function, really) evaluated at a point is considered to be 0 if the magnitude is smaller than this value.  See also RatioTolerance.  **Note that this value depends on the current default precision when this scruct is constructed.**
 
