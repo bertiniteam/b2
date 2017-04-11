@@ -64,6 +64,7 @@ namespace bertini
 			CopyVariableStructure(s);
 			
 			
+			linprod_matrix_ = Mat<Nd>(degree_matrix_.rows(), degree_matrix_.cols());
 			std::shared_ptr<node::Node> func;
 			for (int ii = 0; ii < degree_matrix_.rows(); ++ii)
 			{
@@ -71,7 +72,13 @@ namespace bertini
 				
 				for (int jj = 0; jj < degree_matrix_.cols(); ++jj)
 				{
-					func *= std::make_shared<node::LinearProduct>(var_groups_[jj], degree_matrix_(ii,jj));
+					if(degree_matrix_(ii,jj) != 0)
+					{
+						// Fill the linear product matrix
+						linprod_matrix_(ii,jj) = std::make_shared<node::LinearProduct>(var_groups_[jj], degree_matrix_(ii,jj));
+						
+						func *= linprod_matrix_(ii,jj);
+					}
 				}
 				
 				AddFunction(func);
@@ -320,17 +327,18 @@ namespace bertini
 			}
 			
 			if(partition_ii == -1)
-				throw std::runtime_error("index to generate mhom start point not valid");
+				throw std::runtime_error("attempted to generate mhom start point, but index not valid");
 			
 			
 			// Using partition ii, create dimension vector.  Then find the subscript.
-			std::vector<int> dim_vector(valid_partitions_[partition_ii].size());
-			for (int ii = 0; ii < valid_partitions_[partition_ii].size(); ++ii)
+			auto partition = valid_partitions_[partition_ii];
+			std::vector<size_t> dim_vector(partition.size());
+			for (int ii = 0; ii < partition.size(); ++ii)
 			{
-				dim_vector[ii] = degree_matrix_(ii, valid_partitions_[partition_ii](ii));
+				dim_vector[ii] = degree_matrix_(ii, partition(ii));
 			}
 			
-			std::vector<int> subscript = IndexToSubscript<int>(index, dim_vector);
+			std::vector<size_t> subscript = IndexToSubscript<size_t>(index, dim_vector);
 			
 			
 			
@@ -339,7 +347,8 @@ namespace bertini
 			
 			
 			// Create a linear system to solve.
-			
+			size_t num_grouped_variables = NumNaturalVariables() - NumUngroupedVariables();
+			Mat<dbl> A(partition.size(), num_grouped_variables);
 			
 			
 			

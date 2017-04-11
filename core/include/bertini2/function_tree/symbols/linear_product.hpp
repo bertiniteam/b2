@@ -79,34 +79,21 @@ namespace  bertini {
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
+					factors_[ii] = std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeRational(RandomRat(), RandomRat()), variables_[0]), true);
+					
+					for (int jj = 1; jj < num_variables_; ++jj)
 					{
-						
-						mpq_rational rand_coeff_real = RandomRat();
-						mpq_rational rand_coeff_imag = RandomRat();
-						
-						// Create i^th factor as sumoperator and add term
-						if(jj == 0)
-						{
-							factors_[ii] =
-								std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeRational(rand_coeff_real, rand_coeff_imag), variables_[jj]), true);
-						}
-						else if(jj < num_variables_)
-						{
-							factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeRational(rand_coeff_real, rand_coeff_imag), variables_[jj]), true);
-						}
-						else
-						{
-							factors_[ii]->AddChild(bertini::MakeRational(rand_coeff_real, rand_coeff_imag), true);
-						}
+						factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeRational(RandomRat(), RandomRat()), variables_[jj]), true);
 					} //re: variable loop
-				}//re: factor loop
+					
+					factors_[ii]->AddChild(bertini::MakeRational(RandomRat(), RandomRat()), true);
+				} //re: factor loop
 			}
 			
 
 			
 			/**
-			 /brief Constructor for a linear product node that passes in random coefficients.
+			 \brief Constructor for a linear product node that passes in random coefficients.
 			 
 			 \param variables A deque of variable nodes that are used in each linear factor.  This does not have to be an actual system variable group.
 			 \param num_factors The number of linear factors in the product.
@@ -123,23 +110,14 @@ namespace  bertini {
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
+					factors_[ii] = std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr(ii,0)), variables_[0]), true);
+					
+					for (int jj = 1; jj < num_variables_; ++jj)
 					{
-						// Create i^th factor as sumoperator and add term
-						if(jj == 0)
-						{
-							factors_[ii] =
-								std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr(ii,jj)), variables_[jj]), true);
-						}
-						else if(jj < num_variables_)
-						{
-							factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr(ii,jj)), variables_[jj]), true);
-						}
-						else
-						{
-							factors_[ii]->AddChild(bertini::MakeFloat(coeffs_mpfr(ii,jj)) , true);
-						}
+						factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr(ii,jj)), variables_[jj]), true);
 					} //re: variable loop
+					
+					factors_[ii]->AddChild(bertini::MakeFloat(coeffs_mpfr(ii,num_factors_+1)) , true);
 				}//re: factor loop
 			}
 			

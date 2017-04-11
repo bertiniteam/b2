@@ -114,6 +114,7 @@ namespace bertini
 			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
 			std::vector< VariableGroup > var_groups_; ///< All variables groups from the target system, both affine and projective.
+			Mat<Nd> linprod_matrix_; ///< All the linear products for each entry in the degree matrix.
 
 
 			friend class boost::serialization::access;
