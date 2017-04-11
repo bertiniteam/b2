@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with function_tree.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -41,10 +41,6 @@
 #include "bertini2/function_tree/operators/trig.hpp"
 
 
-
-
-
-
 #include "bertini2/function_tree/symbols/symbol.hpp"
 #include "bertini2/function_tree/symbols/variable.hpp"
 #include "bertini2/function_tree/symbols/number.hpp"
@@ -55,7 +51,6 @@
 
 #include "bertini2/function_tree/factory.hpp"
 
-#include "bertini2/io/parsing/function_parsers.hpp"
 
 
 #endif
