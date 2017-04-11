@@ -32,8 +32,10 @@
 #pragma once
 
 #include "bertini2/detail/enable_permuted_arguments.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
 namespace bertini {
+
 namespace detail {
 
 /**
