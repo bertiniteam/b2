@@ -1095,10 +1095,8 @@ namespace bertini {
 
 					
 					root_rule_.name("ConfigFixedPrecision_root_rule");
-					root_rule_ = no_decl_;
+					root_rule_ = eps[_val = config::FixedPrecisionConfig<T>()] >> omit[*(char_)];
 					
-					no_decl_.name("no_decl_");
-					no_decl_ = *(char_);
 					
 					
 					using phx::val;
@@ -1118,8 +1116,6 @@ namespace bertini {
 				
 			private:
 				qi::rule<Iterator, config::FixedPrecisionConfig<T>(), ascii::space_type > root_rule_;
-				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_;
-
 			}; //re: FixedPrecisionConfig Parser
 
 			
