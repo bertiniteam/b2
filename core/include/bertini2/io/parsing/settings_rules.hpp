@@ -65,21 +65,21 @@ namespace bertini {
 			 To use this parser, construct an object of its type, then use it to parse.
 			 
 			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
+			 ConfigT conf
+			 std::string str = "tracktype: 1; tracktolbeforeeg: 1e-8; \n";
 			 
 			 std::string::const_iterator iter = str.begin();
 			 std::string::const_iterator end = str.end();
 			 
 			 
-			 bertini::SystemParser<std::string::const_iterator> S;
+			 bertini::ConfigSettingParser<std::string::const_iterator, ConfigT> S;
 			 
 			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
+			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, conf);
 			 
 			 \endcode
 			 
-			 \brief Qi Parser object for parsing config file to determine MPType setting.
+			 \brief Qi Parser object for parsing config file to determine settings.
 			 
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
@@ -160,27 +160,7 @@ namespace bertini {
 			
 			
 			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 To use this parser, construct an object of its type, then use it to parse.
-			 
-			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
-			 
-			 std::string::const_iterator iter = str.begin();
-			 std::string::const_iterator end = str.end();
-			 
-			 
-			 bertini::SystemParser<std::string::const_iterator> S;
-			 
-			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-			 
-			 \endcode
-			 
-			 \brief Qi Parser object for parsing config file to determine the tracking predictor from ODEPredictor.
-			 
+
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
 			struct ConfigSettingParser<Iterator, config::Predictor, T, Skipper> : qi::grammar<Iterator, config::Predictor(), Skipper>
@@ -268,27 +248,7 @@ namespace bertini {
 			
 			
 			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 To use this parser, construct an object of its type, then use it to parse.
-			 
-			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
-			 
-			 std::string::const_iterator iter = str.begin();
-			 std::string::const_iterator end = str.end();
-			 
-			 
-			 bertini::SystemParser<std::string::const_iterator, T> S;
-			 
-			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-			 
-			 \endcode
-			 
-			 \brief Qi Parser object for parsing config file to determine the security settings.
-			 
+
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
 			struct ConfigSettingParser<Iterator, config::Security<T>, T, Skipper> : qi::grammar<Iterator, config::Security<T>(), Skipper>
@@ -382,27 +342,7 @@ namespace bertini {
 			
 			
 			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 To use this parser, construct an object of its type, then use it to parse.
-			 
-			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
-			 
-			 std::string::const_iterator iter = str.begin();
-			 std::string::const_iterator end = str.end();
-			 
-			 
-			 bertini::SystemParser<std::string::const_iterator, T> S;
-			 
-			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-			 
-			 \endcode
-			 
-			 \brief Qi Parser object for parsing config file to determine the tolerance settings.
-			 
+
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
 			struct ConfigSettingParser<Iterator, algorithm::config::Tolerances<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::Tolerances<T>(), Skipper>
@@ -532,27 +472,7 @@ namespace bertini {
 			
 			
 			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 To use this parser, construct an object of its type, then use it to parse.
-			 
-			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
-			 
-			 std::string::const_iterator iter = str.begin();
-			 std::string::const_iterator end = str.end();
-			 
-			 
-			 bertini::SystemParser<std::string::const_iterator, T> S;
-			 
-			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-			 
-			 \endcode
-			 
-			 \brief Qi Parser object for parsing config file to determine the stepping settings.
-			 
+
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
 			struct ConfigSettingParser<Iterator, config::Stepping<T>, T, Skipper> : qi::grammar<Iterator, config::Stepping<T>(), Skipper>
@@ -685,27 +605,7 @@ namespace bertini {
 			
 			
 			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 To use this parser, construct an object of its type, then use it to parse.
-			 
-			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
-			 
-			 std::string::const_iterator iter = str.begin();
-			 std::string::const_iterator end = str.end();
-			 
-			 
-			 bertini::SystemParser<std::string::const_iterator> S;
-			 
-			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-			 
-			 \endcode
-			 
-			 \brief Qi Parser object for parsing config file to determine the Newton settings.
-			 
+
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
 			struct ConfigSettingParser<Iterator, config::Newton, T, Skipper> : qi::grammar<Iterator, config::Newton(), Skipper>
@@ -787,27 +687,7 @@ namespace bertini {
 			
 			
 			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 To use this parser, construct an object of its type, then use it to parse.
-			 
-			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
-			 
-			 std::string::const_iterator iter = str.begin();
-			 std::string::const_iterator end = str.end();
-			 
-			 
-			 bertini::SystemParser<std::string::const_iterator, T> S;
-			 
-			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-			 
-			 \endcode
-			 
-			 \brief Qi Parser object for parsing config file to determine the endgame settings.
-			 
+
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
 			struct ConfigSettingParser<Iterator, config::Endgame<T>, T, Skipper> : qi::grammar<Iterator, config::Endgame<T>(), Skipper>
@@ -916,27 +796,7 @@ namespace bertini {
 			
 			
 			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 To use this parser, construct an object of its type, then use it to parse.
-			 
-			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
-			 
-			 std::string::const_iterator iter = str.begin();
-			 std::string::const_iterator end = str.end();
-			 
-			 
-			 bertini::SystemParser<std::string::const_iterator> S;
-			 
-			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-			 
-			 \endcode
-			 
-			 \brief Qi Parser object for parsing config file to determine the power series settings.
-			 
+
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
 			struct ConfigSettingParser<Iterator, config::PowerSeries, T, Skipper> : qi::grammar<Iterator, config::PowerSeries(), Skipper>
@@ -1019,27 +879,7 @@ namespace bertini {
 			
 			
 			/**
-			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
-			 
-			 To use this parser, construct an object of its type, then use it to parse.
-			 
-			 \code
-			 System sys;
-			 std::string str = "variable_group x, y, z; \nfunction f1, f2;\n  f1 = x*y*z;\n f2 = x+y+z;\n";
-			 
-			 std::string::const_iterator iter = str.begin();
-			 std::string::const_iterator end = str.end();
-			 
-			 
-			 bertini::SystemParser<std::string::const_iterator, T> S;
-			 
-			 
-			 bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-			 
-			 \endcode
-			 
-			 \brief Qi Parser object for parsing config file to determine the Cauchy settings.
-			 
+
 			 */
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
 			struct ConfigSettingParser<Iterator, config::Cauchy<T>, T, Skipper> : qi::grammar<Iterator, config::Cauchy<T>(), Skipper>
