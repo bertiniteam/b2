@@ -1212,12 +1212,13 @@ namespace bertini {
 								 (no_case[safety_two_name] >> ':') |
 								 (no_case[max_prec_name] >> ':') |
 								 (no_case[consec_steps_prec_dec_name] >> ':') |
-								 (no_case[max_num_prec_decs_] >> ':')
+								 (no_case[max_num_prec_decs_name] >> ':')
 								 ;
 					
 
 					auto str_to_T = [this](mpfr_float & num, std::string str)
 									   {
+									   	std::cout << str << std::endl;
 										   num = bertini::NumTraits<T>::FromString(str);
 									   };
 
@@ -1249,13 +1250,13 @@ namespace bertini {
 					safety_two_ = *(char_ - all_names_) >> (no_case[safety_two_name] >> ':') >> qi::int_[_val=_1] >> ';';
 
 					max_prec_.name("max_prec_");
-					max_prec_ = *(char_ - all_names_) >> (no_case[max_prec_name] >> ':') >> qi::int_[_val=_1] >> ';';
+					max_prec_ = *(char_ - all_names_) >> (no_case[max_prec_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 
 					consec_steps_prec_dec_.name("consec_steps_prec_dec_");
-					consec_steps_prec_dec_ = *(char_ - all_names_) >> (no_case[consec_steps_prec_dec_name] >> ':') >> qi::int_[_val=_1] >> ';';
+					consec_steps_prec_dec_ = *(char_ - all_names_) >> (no_case[consec_steps_prec_dec_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 
 					max_num_prec_decs_.name("max_num_prec_decs_");
-					max_num_prec_decs_ = *(char_ - all_names_) >> (no_case[max_num_prec_decs_name] >> ':') >> qi::int_[_val=_1] >> ';';
+					max_num_prec_decs_ = *(char_ - all_names_) >> (no_case[max_num_prec_decs_name] >> ':') >> qi::uint_[_val=_1] >> ';';
 
 
 					no_setting_.name("no_setting_");
