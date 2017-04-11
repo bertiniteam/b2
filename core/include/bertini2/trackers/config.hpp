@@ -140,21 +140,22 @@ namespace bertini
 
 			
 
-			template<typename ComplexType>
+			template<typename RealType>
 			struct FixedPrecisionConfig
 			{
 				/**
 				\brief Construct a ready-to-go set of fixed precision settings from a system.
 				*/
+				explicit
 				FixedPrecisionConfig(System const& sys) 
 				{ }
 
 				FixedPrecisionConfig() = default;
 			};
 
-			template<typename ComplexType>
+			template<typename RealType>
 			inline
-			std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig<ComplexType> const& fpc)
+			std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig<RealType> const& fpc)
 			{
 				return out;
 			}
