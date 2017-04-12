@@ -37,9 +37,9 @@ namespace bertini{
 
 		namespace classic{
 			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrFloat : qi::grammar<Iterator, mpfr_float(), boost::spirit::ascii::space_type>
+			struct MpfrFloatParser : qi::grammar<Iterator, mpfr_float(), boost::spirit::ascii::space_type>
 			{
-				MpfrFloat() : MpfrFloat::base_type(root_rule_,"MpfrFloat")
+				MpfrFloatParser() : MpfrFloatParser::base_type(root_rule_,"MpfrFloatParser")
 				{
 					using std::max;
 					namespace phx = boost::phoenix;
@@ -121,7 +121,7 @@ namespace bertini{
 				}
 				
 				qi::rule<Iterator, mpfr(), Skipper > root_rule_;
-				parsing::MpfrFloat<Iterator> mpfr_float_;
+				parsing::MpfrFloatParser<Iterator> mpfr_float_;
 			};
 
 			template <typename Iterator>
