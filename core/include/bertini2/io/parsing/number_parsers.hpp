@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/io/parsing/number_parsers.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license,
 // as well as COPYING.  Bertini2 is provided with permitted
@@ -23,12 +23,11 @@
 /**
  \file bertini2/io/parsing/number_parsers.hpp
  
- \brief Provides functions for parsing numbers in bertini.
+ \brief Provides parsers for numbers in bertini.
  */
 
 #pragma once
 
-#include "bertini2/io/parsing/qi_files.hpp"
 #include "bertini2/io/parsing/number_rules.hpp"
 
 
@@ -37,7 +36,94 @@ namespace bertini{
 	namespace parsing{
 
 		namespace classic{
-			
+			template<typename Iterator, typename Skipper = ascii::space_type>
+			struct MpfrFloat : qi::grammar<Iterator, mpfr_float(), boost::spirit::ascii::space_type>
+			{
+				MpfrFloat() : MpfrFloat::base_type(root_rule_,"MpfrFloat")
+				{
+					using std::max;
+					namespace phx = boost::phoenix;
+					using qi::_1;
+					using qi::_2;
+					using qi::_3;
+					using qi::_4;
+					using qi::_val;
+
+					root_rule_.name("mpfr_float");
+					root_rule_ = mpfr_rules_.number_string_
+									[ phx::bind( 
+											[]
+											(mpfr_float & B, std::string const& P)
+											{
+												using std::max;
+												auto prev_prec = DefaultPrecision();
+												auto asdf = max(prev_prec,LowestMultiplePrecision());
+												auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
+												std::cout << "making mpfr_float with precition " << digits << " from " << P << std::endl;
+												DefaultPrecision(digits);
+												B = mpfr_float{P};
+												DefaultPrecision(prev_prec);
+												assert(B.precision() == digits);
+											},
+											_val,_1
+										)
+									];
+
+					using phx::val;
+					using phx::construct;
+					using namespace qi::labels;
+					qi::on_error<qi::fail>
+					( root_rule_ ,
+					 std::cout<<
+					 val("mpfr_float parser could not complete parsing. Expecting ")<<
+					 _4<<
+					 val(" here: ")<<
+					 construct<std::string>(_3,_2)<<
+					 std::endl
+					 );
+				}
+
+				qi::rule<Iterator, mpfr_float(), Skipper > root_rule_;
+				rules::LongNum<Iterator> mpfr_rules_;
+			};
+
+
+			template<typename Iterator, typename Skipper = ascii::space_type>
+			struct MpfrComplex : qi::grammar<Iterator, mpfr(), boost::spirit::ascii::space_type>
+			{
+				MpfrComplex() : MpfrComplex::base_type(root_rule_,"MpfrComplex")
+				{
+					using std::max;
+					namespace phx = boost::phoenix;
+					using qi::_1;
+					using qi::_2;
+					using qi::_val;
+					
+					root_rule_ =
+					(mpfr_float_ >> mpfr_float_)
+					[ phx::bind(
+								[]
+								(mpfr & B, mpfr_float const& P, mpfr_float const& Q)
+								{
+									auto prev_prec = DefaultPrecision();
+									auto digits = max(P.precision(),Q.precision());
+									
+									DefaultPrecision(digits);
+									B.real(P);
+									B.imag(Q);
+									B.precision(digits);
+									DefaultPrecision(prev_prec);
+									assert(B.precision() == digits);
+								},
+								_val,_1,_2
+								)
+					 ];
+				}
+				
+				qi::rule<Iterator, mpfr(), Skipper > root_rule_;
+				parsing::MpfrFloat<Iterator> mpfr_float_;
+			};
+
 			template <typename Iterator>
 			static bool parse(Iterator first, Iterator last, double& c)
 			{

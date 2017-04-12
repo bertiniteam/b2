@@ -23,13 +23,10 @@
 /**
  \file bertini2/io/parsing/settings_parsers.hpp
  
- \brief A collective include for the config settings parsers
+ \brief Useful Qi rules for parsing settings
  */
 
 
 #pragma once
 
-#include "bertini2/io/parsing/settings_rules/tracking.hpp"
-#include "bertini2/io/parsing/settings_rules/endgames.hpp"
-#include "bertini2/io/parsing/settings_rules/algorithm.hpp"
 

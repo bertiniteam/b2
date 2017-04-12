@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//bertini2/io/parsing/settings_rules/base.hpp is free software: you can redistribute it and/or modify
+//bertini2/io/parsing/settings_parsers/base.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//bertini2/io/parsing/setting_rules/base.hpp is distributed in the hope that it will be useful,
+//bertini2/io/parsing/settings_parsers/base.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with bertini2/io/parsing/setting_rules/base.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with bertini2/io/parsing/settings_parsers/base.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
@@ -21,7 +21,7 @@
 
 
 /**
- \file bertini2/io/parsing/setting_rules/base.hpp
+ \file bertini2/io/parsing/settings_parsers/base.hpp
  
  \brief Provides the base type for config settings parsers
  */
@@ -32,13 +32,12 @@
 
 
 #include "bertini2/io/parsing/qi_files.hpp"
-
+#include "bertini2/io/parsing/number_rules.hpp"
 
 namespace bertini {
 	namespace parsing {
 		namespace classic {
 
-			using namespace bertini::tracking;
 			namespace qi = ::boost::spirit::qi;
 			namespace ascii = ::boost::spirit::ascii;
 			

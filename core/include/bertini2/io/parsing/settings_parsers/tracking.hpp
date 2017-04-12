@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//bertini2/io/parsing/settings_rules/tracking.hpp is free software: you can redistribute it and/or modify
+//bertini2/io/parsing/settings_parsers/tracking.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//bertini2/io/parsing/setting_rules/tracking.hpp is distributed in the hope that it will be useful,
+//bertini2/io/parsing/settings_parsers/tracking.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with bertini2/io/parsing/setting_rules/tracking.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with bertini2/io/parsing/settings_parsers/tracking.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
@@ -21,7 +21,7 @@
 
 
 /**
- \file bertini2/io/parsing/setting_rules/tracking.hpp
+ \file bertini2/io/parsing/settings_parsers/tracking.hpp
  
  \brief Provides the parsing rules for tracking-related settings in bertini2.
  */
@@ -29,7 +29,7 @@
 #pragma once
 
 
-#include "bertini2/io/parsing/settings_rules/base.hpp"
+#include "bertini2/io/parsing/settings_parsers/base.hpp"
 #include "bertini2/trackers/config.hpp"
 
 
@@ -38,8 +38,9 @@ namespace bertini {
 		namespace classic {
 
 			
-			
-			
+			namespace {
+				using namespace bertini::tracking;
+			}
 			/**
 			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
 			 
@@ -361,7 +362,7 @@ namespace bertini {
 				stepsize_fail_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > steps_increase_, max_num_steps_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				
@@ -679,7 +680,7 @@ namespace bertini {
 				qi::rule<Iterator, unsigned int(), ascii::space_type > max_prec_, consec_steps_prec_dec_, max_num_prec_decs_;
 
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				

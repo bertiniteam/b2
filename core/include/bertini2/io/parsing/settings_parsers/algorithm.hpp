@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//bertini2/io/parsing/settings_rules/algorithm.hpp is free software: you can redistribute it and/or modify
+//bertini2/io/parsing/settings_parsers/algorithm.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//bertini2/io/parsing/setting_rules/algorithm.hpp is distributed in the hope that it will be useful,
+//bertini2/io/parsing/settings_parsers/algorithm.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with bertini2/io/parsing/setting_rules/algorithm.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with bertini2/io/parsing/settings_parsers/algorithm.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
@@ -21,7 +21,7 @@
 
 
 /**
- \file bertini2/io/parsing/setting_rules/algorithm.hpp
+ \file bertini2/io/parsing/settings_parsers/algorithm.hpp
  
  \brief Provides the parsing rules for algorithm-related settings in bertini2.
  */
@@ -29,7 +29,7 @@
 #pragma once
 
 
-#include "bertini2/io/parsing/settings_rules/base.hpp"
+#include "bertini2/io/parsing/settings_parsers/base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
 
 namespace bertini {
@@ -41,7 +41,7 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			template<typename Iterator, typename T, typename Skipper> 
 			struct ConfigSettingParser<Iterator, algorithm::config::Tolerances<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::Tolerances<T>(), Skipper>
 			{
 				
@@ -156,11 +156,11 @@ namespace bertini {
 				qi::rule<Iterator, T(), ascii::space_type > newton_before_endgame_, newton_during_endgame_,
 				final_tol_, path_trunc_threshold_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				
-			}; //re: ToleranceParser
+			}; //re: Tolerances
 			
 			
 			
@@ -308,13 +308,13 @@ namespace bertini {
 				
 
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				
 			}; //re: ZeroDim
 
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			template<typename Iterator, typename T, typename Skipper> 
 			struct ConfigSettingParser<Iterator, algorithm::config::MidPath<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::MidPath<T>(), Skipper>
 			{
 				
@@ -392,12 +392,12 @@ namespace bertini {
 				qi::rule<Iterator, algorithm::config::MidPath<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > same_point_tol_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
-			}; //re: MidPathParser
+			}; //re: MidPath
 
 
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			template<typename Iterator, typename T, typename Skipper> 
 			struct ConfigSettingParser<Iterator, algorithm::config::AutoRetrack<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::AutoRetrack<T>(), Skipper>
 			{
 				
@@ -475,9 +475,9 @@ namespace bertini {
 				qi::rule<Iterator, algorithm::config::AutoRetrack<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > decrease_factor;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
-			}; //re: AutoRetrackParser
+			}; //re: AutoRetrack
 
 
 			template<typename Iterator, typename T, typename Skipper> 
@@ -583,7 +583,7 @@ namespace bertini {
 				qi::rule<Iterator, unsigned int(), ascii::space_type > sharpen_digits_;
 
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				
@@ -722,7 +722,7 @@ namespace bertini {
 				qi::rule<Iterator, int(), ascii::space_type > regen_remove_inf_, start_level_, higher_dim_check_;
 
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				
@@ -832,7 +832,7 @@ namespace bertini {
 				qi::rule<Iterator, T(), ascii::space_type > real_threshold_, endpoint_finite_, same_point_;
 
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				

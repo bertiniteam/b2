@@ -31,7 +31,11 @@
 
 
 #include "bertini2/detail/typelist.hpp"
-#include "bertini2/io/parsing/settings_rules.hpp"
+
+#include "bertini2/io/parsing/settings_parsers/tracking.hpp"
+#include "bertini2/io/parsing/settings_parsers/endgames.hpp"
+#include "bertini2/io/parsing/settings_parsers/algorithm.hpp"
+
 
 
 
@@ -58,8 +62,8 @@ namespace bertini {
 				std::string::const_iterator end = config_str.end();
 				ConfigT settings;
 				ConfigSettingParser<std::string::const_iterator, ConfigT, RT> parser;
-				
-				if (!phrase_parse(iter, end, parser,boost::spirit::ascii::space, settings))
+				auto parse_success = phrase_parse(iter, end, parser,boost::spirit::ascii::space, settings);
+				if (!parse_success || iter!=end)
 					throw std::runtime_error("failed to parse into config struct from file");
 
 				return settings;

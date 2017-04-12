@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//bertini2/io/parsing/settings_rules/endgames.hpp is free software: you can redistribute it and/or modify
+//bertini2/io/parsing/settings_parsers/endgames.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//bertini2/io/parsing/setting_rules/endgames.hpp is distributed in the hope that it will be useful,
+//bertini2/io/parsing/settings_parsers/endgames.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with bertini2/io/parsing/setting_rules/endgames.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with bertini2/io/parsing/settings_parsers/endgames.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
@@ -21,7 +21,7 @@
 
 
 /**
- \file bertini2/io/parsing/setting_rules/endgames.hpp
+ \file bertini2/io/parsing/settings_parsers/endgames.hpp
  
  \brief Provides the parsing rules for endgames-related settings in bertini2.
  */
@@ -29,7 +29,7 @@
 #pragma once
 
 
-#include "bertini2/io/parsing/settings_rules/base.hpp"
+#include "bertini2/io/parsing/settings_parsers/base.hpp"
 #include "bertini2/endgames/config.hpp"
 
 
@@ -130,7 +130,7 @@ namespace bertini {
 				qi::rule<Iterator, int(), ascii::space_type > security_level_;
 				qi::rule<Iterator, T(), ascii::space_type > security_max_norm_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				
@@ -242,7 +242,7 @@ namespace bertini {
 				qi::rule<Iterator, T(), ascii::space_type > sample_factor_, min_track_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > num_sample_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 			}; //re: EndgameParser
 			
 			
@@ -420,7 +420,7 @@ namespace bertini {
 				qi::rule<Iterator, config::Cauchy<T>(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > cycle_cutoff_, ratio_cutoff_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
-				MPParserRules<Iterator> mpfr_rules;
+				rules::LongNum<Iterator> mpfr_rules;
 				
 				
 				
