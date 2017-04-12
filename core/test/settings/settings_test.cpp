@@ -1,19 +1,19 @@
 //This file is part of Bertini 2.
 //
-//settings_test.cpp is free software: you can redistribute it and/or modify
+//test/settings/settings_test.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//settings_test.cpp is distributed in the hope that it will be useful,
+//test/settings/settings_test.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with settings_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with test/settings/settings_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -22,6 +22,7 @@
 //  Created by Collins, James B. on 8/27/15.
 //  Copyright (c) 2015 West Texas A&M University.
 //
+// additionally authored by Dani Brake, University of Notre Dame
 
 //TODO: make the DYN_LINK change depending on the targeted architecture.  some need it, others don't.
 //if used, this BOOST_TEST_DYN_LINK appear before #include <boost/test/unit_test.hpp>
