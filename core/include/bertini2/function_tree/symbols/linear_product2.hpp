@@ -69,50 +69,31 @@ namespace  bertini {
 			 \param variables A deque of variable nodes that are used in each linear factor.  This does not have to be an actual system variable group.
 			 \param num_factors The number of linear factors in the product.
 			 
-			 */
+			*/
 			LinearProduct(VariableGroup variables, int num_factors) : variables_(variables), num_factors_(num_factors)
 			{
-				//				num_variables_ = variables.size();  //Include homogenize variable
-				//
-				//				// Resize coeffs matrix
-				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				//				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				//				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
-				//				// Resize temporary variable holders and fill constant with 1
-				//				temp_var_d_.resize(num_variables_ + 1);
-				//				temp_var_d_[num_variables_] = dbl(1);
-				//				temp_var_mp_.resize(num_variables_ + 1);
-				//				temp_var_mp_[num_variables_].SetOne();
+				num_variables_ = variables.size();
+				factors_.resize(num_factors_);
 				
-				SetupVariables(num_factors, variables);
-				coeffs_rat_real_.resize(num_factors_, num_variables_+1);
-				coeffs_rat_imag_.resize(num_factors_, num_variables_+1);
 				
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					for (int jj = 0; jj < num_variables_+1; ++jj)
+					factors_[ii] = std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeRational(RandomRat(), RandomRat()), variables_[0]), true);
+					
+					for (int jj = 1; jj < num_variables_; ++jj)
 					{
-						// Generate random constants as mpq_rationals.  Then downsample to mpfr and dbl.
-						// TODO: RandomRat() does not generate random numbers.  Same each run.
-						coeffs_rat_real_(ii,jj) = RandomRat();
-						coeffs_rat_imag_(ii,jj) = RandomRat();
-						coeffs_dbl_ref(ii,jj).real( static_cast<double>(coeffs_rat_real_(ii,jj)) );
-						coeffs_dbl_ref(ii,jj).imag( static_cast<double>(coeffs_rat_imag_(ii,jj)) );
-						coeffs_mpfr_ref(ii,jj).real( static_cast<mpfr_float>(coeffs_rat_real_(ii,jj)) );
-						coeffs_mpfr_ref(ii,jj).imag( static_cast<mpfr_float>(coeffs_rat_imag_(ii,jj)) );
-					}
-				}
-				
-				is_rational_coeffs_ = true;
-				
+						factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeRational(RandomRat(), RandomRat()), variables_[jj]), true);
+					} //re: variable loop
+					
+					factors_[ii]->AddChild(bertini::MakeRational(RandomRat(), RandomRat()), true);
+				} //re: factor loop
 			}
 			
-			
+
 			
 			/**
-			 /brief Constructor for a linear product node that passes in random coefficients.
+			 \brief Constructor for a linear product node that passes in random coefficients.
 			 
 			 \param variables A deque of variable nodes that are used in each linear factor.  This does not have to be an actual system variable group.
 			 \param num_factors The number of linear factors in the product.
@@ -120,74 +101,53 @@ namespace  bertini {
 			 \param coeffs_mpfr A matrix of mpfr data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
 			 
 			 */
-			LinearProduct(VariableGroup variables, int num_factors, Mat<dbl>& coeffs_dbl, Mat<mpfr>& coeffs_mpfr)
-			: variables_(variables), num_factors_(num_factors)
-			{
-				//				num_variables_ = variables.size();
-				//
-				//				// Resize coeffs matrix
-				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				//				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				//				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
-				//				// Resize temporary variable holders
-				//				temp_var_d_.resize(num_variables_ + 1);
-				//				temp_var_d_[num_variables_] = dbl(1);
-				//				temp_var_mp_.resize(num_variables_ + 1);
-				//				temp_var_mp_[num_variables_].SetOne();
-				
-				SetupVariables(num_factors, variables);
-				
-				
-				// Set the coefficient matrices with input matrices.
-				coeffs_dbl_ref = coeffs_dbl;
-				coeffs_mpfr_ref = coeffs_mpfr;
-				
-				is_rational_coeffs_ = false;
-			}
-			
-			
-			
-			
-			
-			void SetupVariables(int num_factors, VariableGroup& variables)
+			LinearProduct(VariableGroup variables, int num_factors, Mat<mpfr>& coeffs_mpfr)
+					: variables_(variables), num_factors_(num_factors)
 			{
 				num_variables_ = variables.size();
+				factors_.resize(num_factors_);
 				
-				// Resize coeffs matrix
-				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
 				
-				// Resize temporary variable holders
-				temp_var_d_.resize(num_variables_ + 1);
-				temp_var_d_[num_variables_] = dbl(1);
-				temp_var_mp_.resize(num_variables_ + 1);
-				temp_var_mp_[num_variables_].SetOne();
-				
-				hom_variable_ = MakeInteger(1);
+				for (int ii = 0; ii < num_factors_; ++ii)
+				{
+					factors_[ii] = std::make_shared<SumOperator>(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr(ii,0)), variables_[0]), true);
+					
+					for (int jj = 1; jj < num_variables_; ++jj)
+					{
+						factors_[ii]->AddChild(std::make_shared<MultOperator>(bertini::MakeFloat(coeffs_mpfr(ii,jj)), variables_[jj]), true);
+					} //re: variable loop
+					
+					factors_[ii]->AddChild(bertini::MakeFloat(coeffs_mpfr(ii,num_factors_+1)) , true);
+				}//re: factor loop
 			}
 			
+			
+			
+			
+			
+			
+			
+
+
 			
 			//////////////////////////////////////////
 			//
 			//         Testing/Debugging
 			//
 			//////////////////////////////////////////
-			void print_coeffs()
-			{
-				
-				
-				for (int ii = 0; ii < num_factors_; ++ii)
-				{
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
-					{
-						std::cout << std::get< Mat<mpfr> >(coeffs_)(ii,jj) << " | ";
-					}
-					std::cout << "\n";
-				}
-			}
+//			void print_coeffs()
+//			{
+//				
+//				
+//				for (int ii = 0; ii < num_factors_; ++ii)
+//				{
+//					for (int jj = 0; jj < num_variables_ + 1; ++jj)
+//					{
+//						std::cout << std::get< Mat<mpfr> >(coeffs_)(ii,jj) << " | ";
+//					}
+//					std::cout << "\n";
+//				}
+//			}
 			
 			
 			
@@ -202,14 +162,14 @@ namespace  bertini {
 			 
 			 \param child Variable to be added.  If node is not a Variable, then runtime error is thrown.
 			 
-			 */
-			//			void AddVariable(std::shared_ptr<Node> child) override
-			//			{
-			//				if(std::dynamic_pointer_cast< std::shared_ptr<Variable> >(child) == nullptr)
-			//				{
-			//					throw std::runtime_error("Only Variable node types can be children of a LinearProduct node.");
-			//				}
-			//			}
+			*/
+//			void AddVariable(std::shared_ptr<Node> child) override
+//			{
+//				if(std::dynamic_pointer_cast< std::shared_ptr<Variable> >(child) == nullptr)
+//				{
+//					throw std::runtime_error("Only Variable node types can be children of a LinearProduct node.");
+//				}
+//			}
 			
 			
 			
@@ -218,14 +178,33 @@ namespace  bertini {
 			
 			/**
 			 \brief Reset variable values in this node
-			 */
-			void Reset() const override {};
+			*/
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+				for (auto ii:factors_)
+					ii->Reset();
+			};
 			
 			
 			/**
 			 Method for printing to output stream
 			 */
-			void print(std::ostream & target) const override{};
+			void print(std::ostream & target) const override
+			{
+				target << "(";
+				
+				for (auto iter = factors_.begin(); iter != factors_.end(); ++iter)
+				{
+					(*iter)->print(target);
+					if(iter != factors_.end() - 1)
+					{
+						target << "*";
+					}
+				}
+				
+				target << ")";
+			};
 			
 			
 			
@@ -235,8 +214,35 @@ namespace  bertini {
 			 */
 			std::shared_ptr<Node> Differentiate() const override
 			{
-				std::shared_ptr<Node> n = MakeVariable("x");
-				return n;
+				std::shared_ptr<Node> ret_sum = node::Zero();
+				
+				for (int ii = 0; ii < factors_.size(); ++ii)
+				{
+					std::shared_ptr<Node> local_deriv = factors_[ii]->Differentiate();
+					auto temp_mult = std::make_shared<MultOperator>(local_deriv);
+					std::vector<size_t> indices;
+					
+					for(int jj = 0; jj < factors_.size(); ++jj)
+					{
+						if(ii != jj)
+						{
+							indices.push_back(jj);
+						}
+					}
+					
+					temp_mult->AddChild(GetLinears(indices));
+					
+					if(ii == 0)
+					{
+						ret_sum = std::make_shared<SumOperator>(temp_mult, true);
+					}
+					else
+					{
+						std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddChild(temp_mult,true);
+					}
+				}
+				
+				return ret_sum;
 			}
 			
 			
@@ -250,11 +256,19 @@ namespace  bertini {
 			{
 				int deg = 0;
 				
-				// If v is part of the linear product
-				if(std::find(variables_.begin(), variables_.end(), v) != std::end(variables_))
+				for (auto f = factors_.begin(); f != factors_.end(); ++f)
 				{
-					deg = num_factors_;
+					auto factor_deg = (*f)->Degree(v);
+					
+					deg += factor_deg;
 				}
+				
+//				// If v is part of the linear product
+//				if(std::find(variables_.begin(), variables_.end(), v) != std::end(variables_))
+//				{
+//					deg = num_factors_;
+//				}
+//				
 				
 				return deg;
 			};
@@ -268,21 +282,29 @@ namespace  bertini {
 			 \param vars The group of variables we are determing the degree with respect to.
 			 
 			 \return Degree of polynomial with respect to variable group.
-			 */
+			*/
 			
 			int Degree(VariableGroup const& vars) const override
 			{
 				int deg = 0;
 				
-				for (auto v = vars.begin(); v != vars.end(); ++v)
+				for (auto f : factors_)
 				{
-					// if v is a part of the linear product
-					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
-					{
-						deg = num_factors_;
-						break;
-					}
+					auto factor_deg = f->Degree(vars);
+					
+					deg += factor_deg;
 				}
+
+//				
+//				for (auto v = vars.begin(); v != vars.end(); ++v)
+//				{
+//					// if v is a part of the linear product
+//					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
+//					{
+//						deg = num_factors_;
+//						break;
+//					}
+//				}
 				
 				return deg;
 			};
@@ -297,14 +319,25 @@ namespace  bertini {
 			{
 				std::vector<int> degs(vars.size(), 0);
 				
-				for (auto v = vars.begin(); v != vars.end(); ++v)
+				for (auto f : factors_)
 				{
-					// If v is part of the linear product
-					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
+					auto factor_deg = f->MultiDegree(vars);
+					
+					for (auto iter = factor_deg.begin(); iter != factor_deg.end(); ++iter)
 					{
-						*(degs.begin()+(v-vars.begin())) = num_factors_;
+						*(degs.begin()+(iter-factor_deg.begin())) += *iter;
 					}
 				}
+				
+				
+//				for (auto v = vars.begin(); v != vars.end(); ++v)
+//				{
+//					// If v is part of the linear product
+//					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
+//					{
+//						*(degs.begin()+(v-vars.begin())) = num_factors_;
+//					}
+//				}
 				
 				
 				return degs;
@@ -322,40 +355,42 @@ namespace  bertini {
 			 */
 			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 			{
-				// Check if vars is the variable group for this linear product
-				bool is_vargroup_same = true; // Check if vars and variables_ are the same
-				bool is_v_in_vars = false; // Check if at least one v in variables_ is in vars
-				for (auto const v : variables_)
+				for(auto f : factors_)
 				{
-					// If v is in vars?
-					if(std::find(vars.begin(), vars.end(), v) != std::end(variables_))
-					{
-						is_v_in_vars = true;
-					}
-					else
-					{
-						is_vargroup_same = false;
-					}
+					f->Homogenize(vars, homvar);
 				}
-				
-				if(!is_vargroup_same && is_v_in_vars)
-				{
-					throw std::runtime_error("attempting to homogenize linear product with respect to part of the variables, but not all");
-				}
-				
-				if(is_vargroup_same)
-				{
-					hom_variable_ = homvar;
-				}
-				
 			};
 			
-			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override{return false;};
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+			{
+				// the only hope this has of being homogeneous, is that each factor is homogeneous
+				for (auto iter : factors_)
+				{
+					if (! iter->IsHomogeneous(v))
+					{
+						return false;
+					}
+				}
+				return true;
+
+			};
 			
 			/**
 			 Check for homogeneity, with respect to a variable group.
 			 */
-			bool IsHomogeneous(VariableGroup const& vars) const override {return false;};
+			bool IsHomogeneous(VariableGroup const& vars) const override
+			{
+				// the only hope this has of being homogeneous, is that each factor is homogeneous
+				for (auto iter : factors_)
+				{
+					if (! iter->IsHomogeneous(vars))
+					{
+						return false;
+					}
+				}
+				return true;
+
+			};
 			
 			
 			
@@ -364,28 +399,59 @@ namespace  bertini {
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) const {};
+			virtual void precision(unsigned int prec) const
+			{
+				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+				val_pair.first.precision(prec);
+				
+				this->PrecisionChangeSpecific(prec);
+				
+				for (auto iter : factors_)
+					iter->precision(prec);
+			};
 			
 			
 			
 			
 			
 			
+			/** 
+			 \brief Break off a single linear factor in the product and return as a LinearProduct node.
+			 
+			 \param index Index of the linear factor, starting at 0
+			 \return LinearProduct node contain the single linear.
+			*/
+			
+			std::shared_ptr<LinearProduct> GetLinears(size_t index) const
+			{
+				LinearProduct temp(variables_, 1, factors_[index]);
+				std::shared_ptr<LinearProduct> ret_lin = std::make_shared<LinearProduct>(temp);
+				
+				return ret_lin;
+			}
 			
 			
+			/**
+			 \brief Break off a set of linear factors in the product and return as a LinearProduct node.
+			 
+			 \param indices std::vector of indices into the factors_ vector
+			 \return LinearProduct node contain the linears.
+			 */
 			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+			std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices) const
+			{
+				std::vector< std::shared_ptr<SumOperator> > factors;
+				for (int ii = 0; ii < indices.size(); ++ii)
+				{
+					factors.push_back(factors_[indices[ii]]);
+				}
+				
+				LinearProduct temp(variables_, indices.size(), factors);
+				std::shared_ptr<LinearProduct> ret_lin = std::make_shared<LinearProduct>(temp);
+				
+				return ret_lin;
+			}
+
 			
 			
 			
@@ -413,36 +479,16 @@ namespace  bertini {
 			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				evaluation_value = dbl(1);
-				const Mat<dbl>& coeffs_ref = std::get< Mat<dbl> >(coeffs_);
-				
-				
-				// Evaluate all afine variables and store
-				for (int jj = 0; jj < num_variables_; ++jj)
-				{
-					variables_[jj]->EvalInPlace<dbl>(temp_var_d_[jj], diff_variable);
-				}
-				
-				hom_variable_->EvalInPlace<dbl>(temp_var_d_[num_variables_+1], diff_variable);
 				
 				
 				
-				
-				
-				
-				// Evaluate the linear product
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					// Add all terms in one linear factor and store in temp_sum_d_
-					temp_sum_d_ = dbl(0);
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
-					{
-						temp_sum_d_ += coeffs_ref(ii,jj)*temp_var_d_[jj];
-					}// re: loop through variables
-					
+					factors_[ii]->EvalInPlace(temp_d_, diff_variable);
 					
 					// Multiply factors together
-					evaluation_value *= temp_sum_d_;
-				}// re: loop through factors
+					evaluation_value *= temp_d_;
+				}
 			}
 			
 			
@@ -469,82 +515,38 @@ namespace  bertini {
 			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				evaluation_value.SetOne();
-				const Mat<mpfr>& coeffs_ref = std::get< Mat<mpfr> >(coeffs_);
-				
-				
-				// Evaluate all afine variables and store
-				for (int jj = 0; jj < num_variables_; ++jj)
-				{
-					variables_[jj]->EvalInPlace<mpfr>(temp_var_mp_[jj], diff_variable);
-				}
-				hom_variable_->EvalInPlace<mpfr>(temp_var_mp_[num_variables_+1], diff_variable);
-				
-				
-				
-				
-				
 				
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
-					// Add all terms in one linear factor and store in temp_sum_d_
-					temp_sum_mp_.SetZero();
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
-					{
-						temp_sum_mp_ += coeffs_ref(ii,jj)*temp_var_mp_[jj];
-					}
-					
+					factors_[ii]->EvalInPlace(temp_mp_, diff_variable);
 					
 					// Multiply factors together
-					evaluation_value *= temp_sum_mp_;
+					evaluation_value *= temp_mp_;
 				}
 			}
-			
-			
-		
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+
 			
 			
 			
 			
 			
 		private:
-			//			std::vector< std::vector< std::tuple<mpq_rational, dbl, mpfr> > > coeffs_;
-			Mat<mpq_rational> coeffs_rat_real_;   ///< Matrix of real rational coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor, with the final column being the constant coefficient.  These rationals can then be downsampled for each data type.
-			
-			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
-			
-			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
-			
+//			std::vector< std::vector< std::tuple<mpq_rational, dbl, mpfr> > > coeffs_;
+//			Mat<mpq_rational> coeffs_rat_real_;   ///< Matrix of real rational coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor, with the final column being the constant coefficient.  These rationals can then be downsampled for each data type.
+//			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
+//			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
 			VariableGroup variables_; ///< Variables to be used in each linear factor.  Does not have to correspond directly to a variable group from the system.
 			
-			std::shared_ptr<Node> hom_variable_; ///< The homogenizing variable for this variable group.  Initially this is set to an Integer = 1.  When we homogenize, this is set to the variable.
-			
-//			std::vector< std::tuple< std::shared_ptr<Variable>, Vec<bool> > > hom_variables_; ///< A vector of tuples holding 1) the homogenizing variable and 2) which terms in the linear factor get multiplied by the hom variable.
+			std::vector< std::shared_ptr<SumOperator> > factors_;  ///< All the various linear factors in the product.
 			
 			size_t num_factors_;  ///< The number of factors in the linear product.
 			size_t num_variables_;  ///< The number of variables in each linear.
-			bool is_rational_coeffs_; ///< Do we have a rational coefficient to downsample from?
 			
 			
-			mutable std::vector<dbl> temp_var_d_;
-			mutable std::vector<mpfr> temp_var_mp_;
 			mutable mpfr temp_mp_;
+			mutable dbl temp_d_;
 			mutable mpfr temp_sum_mp_;
 			mutable dbl temp_sum_d_;
-			mutable std::vector<dbl> temp_homvar_d_;
-			mutable std::vector<mpfr> temp_homvar_mp_;
 			
 			
 			
@@ -556,7 +558,25 @@ namespace  bertini {
 			
 			LinearProduct() = default;
 			
+			LinearProduct(VariableGroup variables, int num_factors, std::shared_ptr<SumOperator> factor) : variables_(variables), num_factors_(num_factors)
+			{
+				num_variables_ = variables.size();
+				factors_.push_back(factor);
+				
+			}
+
 			
+			LinearProduct(VariableGroup variables, int num_factors, std::vector< std::shared_ptr<SumOperator> > factors)
+				: variables_(variables), num_factors_(num_factors)
+			{
+				num_variables_ = variables.size();
+				for (int ii = 0; ii < factors.size(); ++ii)
+				{
+					factors_.push_back(factors[ii]);
+				}
+				
+			}
+
 			
 			friend class boost::serialization::access;
 			
