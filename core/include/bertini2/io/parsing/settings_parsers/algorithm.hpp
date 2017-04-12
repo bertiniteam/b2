@@ -45,7 +45,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, algorithm::config::Tolerances<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::Tolerances<T>(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigTolerancesType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::TolerancesType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -69,7 +69,7 @@ namespace bertini {
 					std::string path_trunc_name = "pathtruncationthreshold";
 					
 					
-					root_rule_.name("ConfigTolerances_root_rule");
+					root_rule_.name("config::Tolerances");
 					
 					root_rule_ = ((newton_before_endgame_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T l)
 																	{
@@ -200,7 +200,7 @@ namespace bertini {
 					std::string path_variable_name_name = "pathvarname";
 
 
-					root_rule_.name("ConfigZeroDim_root_rule");
+					root_rule_.name("config::ZeroDim");
 					
 					root_rule_ = ((init_prec_[phx::bind( [this](algorithm::config::ZeroDim<T> & S, int num)
 														   {
@@ -318,7 +318,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, algorithm::config::MidPath<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::MidPath<T>(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigMidPath")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::MidPath")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -339,7 +339,7 @@ namespace bertini {
 					std::string same_point_tol_name = "midpathtol";
 					
 					
-					root_rule_.name("ConfigMidPath_root_rule");
+					root_rule_.name("config::MidPath");
 					
 					root_rule_ = ((same_point_tol_[phx::bind( [this](algorithm::config::MidPath<T> & S, T num)
 														   {
@@ -401,7 +401,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, algorithm::config::AutoRetrack<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::AutoRetrack<T>(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigAutoretrack")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::AutoRetrack")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -422,7 +422,7 @@ namespace bertini {
 					std::string decrease_factor_name = "retracktolfactor";
 					
 					
-					root_rule_.name("ConfigAutoRetrack_root_rule");
+					root_rule_.name("config::AutoRetrack");
 					
 					root_rule_ = ((decrease_factor[phx::bind( [this](algorithm::config::AutoRetrack<T> & S, T num)
 														   {
@@ -507,7 +507,7 @@ namespace bertini {
 					std::string ratio_tol_name = "ratiotolerance";
 
 
-					root_rule_.name("ConfigSharpening_root_rule");
+					root_rule_.name("config::Sharpening");
 					
 					root_rule_ = ((sharpen_digits_[phx::bind( [this](algorithm::config::Sharpening<T> & S, unsigned num)
 														   {
@@ -619,7 +619,7 @@ namespace bertini {
 					std::string start_level_name = "regenstartlevel";
 
 
-					root_rule_.name("ConfigRegeneration_root_rule");
+					root_rule_.name("config::Regeneration");
 					
 					root_rule_ = ((regen_remove_inf_[phx::bind( [this](algorithm::config::Regeneration<T> & S, int num)
 														   {
@@ -757,7 +757,7 @@ namespace bertini {
 
 
 
-					root_rule_.name("ConfigPostProcessing_root_rule");
+					root_rule_.name("config::PostProcessing");
 					
 					root_rule_ = ((real_threshold_[phx::bind( [this](algorithm::config::PostProcessing<T> & S, T num)
 															 {

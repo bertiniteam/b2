@@ -68,7 +68,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, PrecisionType, T, Skipper> : qi::grammar<Iterator, PrecisionType(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigPrecisionType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::PrecisionType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -91,7 +91,7 @@ namespace bertini {
 					
 					
 					
-					root_rule_.name("ConfigPrecisionType_root_rule");
+					root_rule_.name("config::PrecisionType");
 					
 					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = PrecisionType::Adaptive];
 					
@@ -148,7 +148,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::Predictor, T, Skipper> : qi::grammar<Iterator, config::Predictor(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigPredictorType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::PredictorType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -179,7 +179,7 @@ namespace bertini {
 					std::string setting_name = "odepredictor";
 					
 					
-					root_rule_.name("ConfigPredictor_root_rule");
+					root_rule_.name("config::Predictor");
 					
 					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = config::Predictor::RKF45];
 					
@@ -246,7 +246,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::Stepping<T>, T, Skipper> : qi::grammar<Iterator, config::Stepping<T>(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigSteppingType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::SteppingType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -271,7 +271,7 @@ namespace bertini {
 					std::string maxnumsteps_name = "maxnumbersteps";
 					
 					
-					root_rule_.name("ConfigStepping_root_rule");
+					root_rule_.name("config::Stepping");
 					
 					root_rule_ = ((max_step_size_[phx::bind( [this](config::Stepping<T> & S, T num)
 															{
@@ -379,7 +379,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::Newton, T, Skipper> : qi::grammar<Iterator, config::Newton(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigNewtonType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::NewtonType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -400,7 +400,7 @@ namespace bertini {
 					std::string maxits_name = "maxnewtonits";
 					
 					
-					root_rule_.name("ConfigNewton_root_rule");
+					root_rule_.name("config::Newton");
 					
 					root_rule_ = (max_its_[phx::bind( [this](config::Newton & S, unsigned num)
 													 {
@@ -462,7 +462,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::FixedPrecisionConfig<T>, T, Skipper> : qi::grammar<Iterator, config::FixedPrecisionConfig<T>(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigFixedPrecision")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::FixedPrecision")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -480,7 +480,7 @@ namespace bertini {
 					
 
 					
-					root_rule_.name("ConfigFixedPrecision_root_rule");
+					root_rule_.name("config::FixedPrecision");
 					root_rule_ = eps[_val = config::FixedPrecisionConfig<T>()] >> omit[*(char_)];
 					
 					
@@ -544,7 +544,7 @@ namespace bertini {
 					std::string consec_steps_prec_dec_name = "maxstepsprecisiondecrease";
 					std::string max_num_prec_decs_name = "maxnumprecdecreases";
 
-					root_rule_.name("ConfigAMP_root_rule");
+					root_rule_.name("config::AMP");
 					
 					root_rule_ = ((coefficient_bound_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, mpfr_float num)
 														   {

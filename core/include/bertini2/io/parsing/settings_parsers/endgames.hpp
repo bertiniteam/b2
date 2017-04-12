@@ -52,7 +52,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::Security<T>, T, Skipper> : qi::grammar<Iterator, config::Security<T>(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigSecurityType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::SecurityType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -74,7 +74,7 @@ namespace bertini {
 					std::string maxnorm_name = "securitymaxnorm";
 					
 					
-					root_rule_.name("ConfigSecurity_root_rule");
+					root_rule_.name("config::Security");
 					
 					root_rule_ = ((security_level_[phx::bind( [this](config::Security<T> & S, int l)
 															 {
@@ -147,7 +147,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::Endgame<T>, T, Skipper> : qi::grammar<Iterator, config::Endgame<T>(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigEndgameType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::EndgameType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -170,7 +170,7 @@ namespace bertini {
 					std::string mintrack_name = "nbhdradius";
 					
 					
-					root_rule_.name("ConfigEndgame_root_rule");
+					root_rule_.name("config::Endgame");
 					
 					root_rule_ = ((sample_factor_[phx::bind( [this](config::Endgame<T> & S, T num)
 															{
@@ -256,7 +256,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::PowerSeries, T, Skipper> : qi::grammar<Iterator, config::PowerSeries(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigPowerSeriesType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::PowerSeriesType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -277,7 +277,7 @@ namespace bertini {
 					std::string maxcycle_name = "maxcyclenum";
 					
 					
-					root_rule_.name("ConfigPowerSeries_root_rule");
+					root_rule_.name("config::PowerSeries");
 					
 					root_rule_ = (max_cycle_[phx::bind( [this](config::PowerSeries & S, unsigned num)
 													   {
@@ -339,7 +339,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::Cauchy<T>, T, Skipper> : qi::grammar<Iterator, config::Cauchy<T>(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigCauchyType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::CauchyType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -361,7 +361,7 @@ namespace bertini {
 					std::string ratiocutoff_name = "ratiotimecutoff";
 					
 					
-					root_rule_.name("ConfigCauchy_root_rule");
+					root_rule_.name("config::Cauchy");
 					
 					root_rule_ = ((cycle_cutoff_[phx::bind( [this](config::Cauchy<T> & S, T num)
 														   {
@@ -432,7 +432,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, config::TrackBack, T, Skipper> : qi::grammar<Iterator, config::TrackBack(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "ConfigTrackBack")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::TrackBack")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -454,7 +454,7 @@ namespace bertini {
 					std::string junk_removal_name = "junkremovaltrackback";
 					std::string maxdepth_name = "maxldtdepth";
 
-					root_rule_.name("ConfigTrackBack_root_rule");
+					root_rule_.name("config::TrackBack");
 					
 					root_rule_ = root_rule_ = ((min_cycle_[phx::bind( [this](config::TrackBack & S, unsigned num)
 																	   {
