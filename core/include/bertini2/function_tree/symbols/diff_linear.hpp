@@ -5,7 +5,7 @@
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//variable.hpp is distributed in the hope that it will be useful,
+//diff_linear.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
@@ -25,10 +25,10 @@
 //  Spring, Summer 2015
 //
 //
-//  Created by Collins, James B. on 3/6/2017.
+//  Created by Collins, James B. on 4/17/2017.
 //
 //
-// linear_product.hpp:  Declares the class LinearProduct.
+// diff_linear.hpp:  Declares the class DiffLinear.
 
 
 /**
@@ -37,8 +37,8 @@
  \brief Provides the LinearProduct Node class.
  
  */
-#ifndef BERTINI_FUNCTION_TREE_LINPRODUCT_HPP
-#define BERTINI_FUNCTION_TREE_LINPRODUCT_HPP
+#ifndef BERTINI_FUNCTION_TREE_DIFFLIN_HPP
+#define BERTINI_FUNCTION_TREE_DIFFLIN_HPP
 
 #include "bertini2/function_tree/symbols/symbol.hpp"
 #include "bertini2/function_tree/factory.hpp"
@@ -56,85 +56,76 @@ namespace  bertini {
 		 
 		 When differentiated, produces a differential referring to it.
 		 */
-		class LinearProduct : public virtual Symbol
+		class DiffLinear : public virtual Symbol
 		{
 		public:
-			virtual ~LinearProduct() = default;
-			
+			virtual ~DiffLinear() = default;
 			
 			
 			/**
-			 /brief Constructor for a linear product node that generates random coefficients automatically.
+			 \brief Create a linear differential node with rational coefficients.  Only a linear, not a product.  Not homogenized, so no hom variable.
 			 
-			 \param variables A deque of variable nodes that are used in each linear factor.  This does not have to be an actual system variable group.
-			 \param num_factors The number of linear factors in the product.
+			 \param coeffs_real Rational coefficients for the linear.
+			 \param coeffs_imag Rational coefficients for the linear.
+			 \param vars Variables associated with the linear.
 			 
 			 */
-			LinearProduct(VariableGroup variables, int num_factors) : variables_(variables), num_factors_(num_factors)
+			DiffLinear(Mat<mpq_rational> const& coeffs_real, Mat<mpq_rational> const& coeffs_imag, VariableGroup const& vars) :
+			coeffs_rat_real_(coeffs_real), coeffs_rat_imag_(coeffs_imag), variables_(vars), num_variables_(vars.size())
 			{
-				//				num_variables_ = variables.size();  //Include homogenize variable
-				//
-				//				// Resize coeffs matrix
-				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				//				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				//				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
-				//				// Resize temporary variable holders and fill constant with 1
-				//				temp_var_d_.resize(num_variables_ + 1);
-				//				temp_var_d_[num_variables_] = dbl(1);
-				//				temp_var_mp_.resize(num_variables_ + 1);
-				//				temp_var_mp_[num_variables_].SetOne();
-				
-				SetupVariables(num_factors, variables);
-				coeffs_rat_real_.resize(num_factors_, num_variables_+1);
-				coeffs_rat_imag_.resize(num_factors_, num_variables_+1);
-				
-				
-				for (int ii = 0; ii < num_factors_; ++ii)
-				{
-					for (int jj = 0; jj < num_variables_+1; ++jj)
-					{
-						// Generate random constants as mpq_rationals.  Then downsample to mpfr and dbl.
-						// TODO: RandomRat() does not generate random numbers.  Same each run.
-						coeffs_rat_real_(ii,jj) = RandomRat();
-						coeffs_rat_imag_(ii,jj) = RandomRat();
-						coeffs_dbl_ref(ii,jj).real( static_cast<double>(coeffs_rat_real_(ii,jj)) );
-						coeffs_dbl_ref(ii,jj).imag( static_cast<double>(coeffs_rat_imag_(ii,jj)) );
-						coeffs_mpfr_ref(ii,jj).real( static_cast<mpfr_float>(coeffs_rat_real_(ii,jj)) );
-						coeffs_mpfr_ref(ii,jj).imag( static_cast<mpfr_float>(coeffs_rat_imag_(ii,jj)) );
-					}
-				}
-				
-				is_rational_coeffs_ = true;
-				
+				hom_variable_ = MakeInteger(0);
+				is_homogenized_ = false;
 			}
-			
-			
+
 			
 			/**
-			 /brief Constructor for a linear product node that passes in random coefficients.
+			 \brief Create a linear differential node with rational coefficients.  Only a linear, not a product.  Not homogenized, so no hom variable.
 			 
-			 \param variables A deque of variable nodes that are used in each linear factor.  This does not have to be an actual system variable group.
-			 \param num_factors The number of linear factors in the product.
-			 \param coeffs_real A matrix of dbl data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
-			 \param coeffs_mpfr A matrix of mpfr data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
+			 \param coeffs_real Rational coefficients for the linear.
+			 \param coeffs_imag Rational coefficients for the linear.
+			 \param vars Variables associated with the linear.
+			 
+			*/
+			DiffLinear(Mat<mpq_rational> const& coeffs_real, Mat<mpq_rational> const& coeffs_imag, VariableGroup const& vars) :
+				coeffs_rat_real_(coeffs_real), coeffs_rat_imag_(coeffs_imag), variables_(vars), num_variables_(vars.size())
+			{
+				hom_variable_ = MakeInteger(0);
+				is_homogenized_ = false;
+			}
+
+			/**
+			 \brief Create a linear differential node with rational coefficients.  Only a linear, not a product.  With homogenizing variable.
+			 
+			 \param coeffs_real Rational coefficients for the linear.
+			 \param coeffs_imag Rational coefficients for the linear.
+			 \param vars Variables associated with the linear.
+			 \param hom_var Homogenizing variable.
 			 
 			 */
-			LinearProduct(VariableGroup const& variables, Mat<mpfr> const& coeffs_mpfr)
-			: variables_(variables), num_factors_(coeffs_mpfr.rows())
+			DiffLinear(Mat<mpq_rational> const& coeffs_real, Mat<mpq_rational> const& coeffs_imag, VariableGroup const& vars, std::shared_ptr<Variable> hom_var) :
+			coeffs_rat_real_(coeffs_real), coeffs_rat_imag_(coeffs_imag), variables_(vars), hom_variable_(hom_var), num_variables_(vars.size())
 			{
-				if(variables.size()+1 != coeffs_mpfr.cols())
-					throw std::runtime_error("attempting to construct a linear product manually, not enough columns for the number of variables in the variable group");
-				
-				
-				// Resize coeffs matrix
-				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				
-				SetupVariables(num_factors_, variables);
-				
+				is_homogenized_ = true;
+			}
+
+			
+			/**
+			 \brief Create a linear differential node with mpfr coefficients.  Only a linear, not a product.  Not homogenized, so no hom variable.
+			 
+			 \param coeffs mpfr coefficients for the linear.
+			 \param vars Variables associated with the linear.
+			 
+			 */
+			DiffLinear(Mat<mpfr> const& coeffs, VariableGroup const& vars) :
+			variables_(vars), num_variables_(vars.size())
+			{
+				hom_variable_ = MakeInteger(0);
+				is_homogenized_ = false;
 				
 				// Set the coefficient matrices with input matrices.
+				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
+				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				
 				for(int ii = 0; ii < num_factors_; ++ii)
 				{
 					for(int jj = 0; jj < coeffs_mpfr.cols(); ++jj)
@@ -143,31 +134,58 @@ namespace  bertini {
 					}
 				}
 				coeffs_mpfr_ref = coeffs_mpfr;
-				
-				is_rational_coeffs_ = false;
 			}
 			
-			
-			
-			
-			
-			void SetupVariables(int num_factors, VariableGroup const& variables)
+			/**
+			 \brief Create a linear differential node with mpfr coefficients.  Only a linear, not a product.  With homogenizing variable.
+			 
+			 \param coeffs Rational coefficients for the linear.
+			 \param vars Variables associated with the linear.
+			 \param hom_var Homogenizing variable.
+			 
+			 */
+			DiffLinear(Mat<mpfr> const& coeffs, VariableGroup const& vars, std::shared_ptr<Variable> hom_var) :
+			variables_(vars), hom_variable_(hom_var), num_variables_(vars.size())
 			{
-				num_variables_ = variables.size();
+				is_homogenized_ = true;
 				
-				// Resize coeffs matrix
+				// Set the coefficient matrices with input matrices.
 				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
 				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
+
+				for(int ii = 0; ii < num_factors_; ++ii)
+				{
+					for(int jj = 0; jj < coeffs_mpfr.cols(); ++jj)
+					{
+						coeffs_dbl_ref(ii,jj) = static_cast<dbl>(coeffs(ii,jj));
+					}
+				}
+				coeffs_mpfr_ref = coeffs;
+
+			}
+
+			
+			
+			
+			
+			
+			
+			
+			
+			void SetupCoeffs(Mat<mpfr> const& coeffs)
+			{
+				// Set the coefficient matrices with input matrices.
+				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
+				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
 				
-				// Resize temporary variable holders
-				temp_var_d_.resize(num_variables_ + 1);
-				temp_var_d_[num_variables_] = dbl(1);
-				temp_var_mp_.resize(num_variables_ + 1);
-				temp_var_mp_[num_variables_].SetOne();
-				
-				hom_variable_ = MakeInteger(1);
+				for(int ii = 0; ii < num_factors_; ++ii)
+				{
+					for(int jj = 0; jj < coeffs_mpfr.cols(); ++jj)
+					{
+						coeffs_dbl_ref(ii,jj) = static_cast<dbl>(coeffs(ii,jj));
+					}
+				}
+				coeffs_mpfr_ref = coeffs;
 			}
 			
 			
@@ -323,7 +341,7 @@ namespace  bertini {
 			 */
 			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 			{
-//				std::cout << "Homogenizing linprod with num factors = " << num_factors_ << std::endl;  //DEBUGING
+				//				std::cout << "Homogenizing linprod with num factors = " << num_factors_ << std::endl;  //DEBUGING
 				
 				// Check if vars is the variable group for this linear product
 				bool is_vargroup_same = true; // Check if vars and variables_ are the same
@@ -333,19 +351,19 @@ namespace  bertini {
 				// Is homvar in vars?
 				VariableGroup temp_vars = vars;
 				temp_vars.erase(std::remove(temp_vars.begin(), temp_vars.end(), homvar), temp_vars.end());
-//				auto var_it = std::find(vars.begin(), vars.end(), homvar);
-//				// If yes, remove it from vars.
-//				if(var_it != std::end(vars))
-//				{
-//					std::cout << " it = " << **var_it << std::endl;
-////					temp_vars.erase(vars[0]);
-//					std::remove(temp_vars.begin(), temp_vars.end(), homvar);
-//				}
-//				
-//				for (auto v : temp_vars)
-//				{
-//					std::cout << "v = " << *v << std::endl;
-//				}
+				//				auto var_it = std::find(vars.begin(), vars.end(), homvar);
+				//				// If yes, remove it from vars.
+				//				if(var_it != std::end(vars))
+				//				{
+				//					std::cout << " it = " << **var_it << std::endl;
+				////					temp_vars.erase(vars[0]);
+				//					std::remove(temp_vars.begin(), temp_vars.end(), homvar);
+				//				}
+				//
+				//				for (auto v : temp_vars)
+				//				{
+				//					std::cout << "v = " << *v << std::endl;
+				//				}
 				
 				
 				// Which group is larger, variables_ or vars?
@@ -386,10 +404,10 @@ namespace  bertini {
 					hom_variable_ = homvar;
 					is_homogenized_ = true;
 				}
-//				else
-//				{
-//					throw std::runtime_error("attemtping to homogenize linear product with respect to another variable group");
-//				}
+				//				else
+				//				{
+				//					throw std::runtime_error("attemtping to homogenize linear product with respect to another variable group");
+				//				}
 				
 			};
 			
@@ -420,7 +438,7 @@ namespace  bertini {
 					}
 				}
 				
-
+				
 			};
 			
 			/**
@@ -439,10 +457,10 @@ namespace  bertini {
 				bool is_v_in_vars = false; // Check if at least one v in variables_ is in vars
 				for (auto const v : variables_)
 				{
-//					std::cout << *vars.begin() << std::endl;
-//					std::cout << *std::end( << std::endl;
-//					std::cout << *std::find(vars.begin(), vars.end(), variables_[0]) << std::endl;
-
+					//					std::cout << *vars.begin() << std::endl;
+					//					std::cout << *std::end( << std::endl;
+					//					std::cout << *std::find(vars.begin(), vars.end(), variables_[0]) << std::endl;
+					
 					// If v is in vars?
 					if(std::find(vars.begin(), vars.end(), v) != std::end(vars))
 					{
@@ -628,7 +646,7 @@ namespace  bertini {
 			}
 			
 			
-		
+			
 			
 			
 			
@@ -659,18 +677,13 @@ namespace  bertini {
 			
 			std::shared_ptr<Node> hom_variable_; ///< The homogenizing variable for this variable group.  Initially this is set to an Integer = 1.  When we homogenize, this is set to the variable.
 			
-//			std::vector< std::tuple< std::shared_ptr<Variable>, Vec<bool> > > hom_variables_; ///< A vector of tuples holding 1) the homogenizing variable and 2) which terms in the linear factor get multiplied by the hom variable.
+			//			std::vector< std::tuple< std::shared_ptr<Variable>, Vec<bool> > > hom_variables_; ///< A vector of tuples holding 1) the homogenizing variable and 2) which terms in the linear factor get multiplied by the hom variable.
 			
-			size_t num_factors_;  ///< The number of factors in the linear product.
 			size_t num_variables_;  ///< The number of variables in each linear.
 			bool is_rational_coeffs_; ///< Do we have a rational coefficient to downsample from?
 			bool is_homogenized_;  ///< Have we homogenized the linear product?
 			
 			
-			mutable std::vector<dbl> temp_var_d_;
-			mutable std::vector<mpfr> temp_var_mp_;
-			mutable mpfr temp_sum_mp_;
-			mutable dbl temp_sum_d_;
 			
 			
 			
@@ -680,7 +693,7 @@ namespace  bertini {
 			
 		private:
 			
-			LinearProduct() = default;
+			DiffLinear() = default;
 			
 			
 			
@@ -694,11 +707,7 @@ namespace  bertini {
 			
 			void PrecisionChangeSpecific(unsigned prec) const
 			{
-				temp_sum_mp_.precision(prec);
-				for(auto& v : temp_var_mp_)
-				{
-					v.precision(prec);
-				}
+				temp_mp_.precision(prec);
 			}
 			
 		};

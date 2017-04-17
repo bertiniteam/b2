@@ -2041,7 +2041,7 @@ BOOST_AUTO_TEST_CASE(linear_prod_get_linears)
 		exact_mp[ii] = temp_mp;
 	}
 	
-	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp, num_factors, coeff_mpfr);
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
 	std::shared_ptr<LinearProduct> one_linear = linprod->GetLinears(1);
 	std::vector<size_t> indices{0,1};
 	std::shared_ptr<LinearProduct> two_linears = linprod->GetLinears(indices);
@@ -2057,7 +2057,6 @@ BOOST_AUTO_TEST_CASE(linear_prod_get_linears)
 	mpfr exact2_mp = exact_mp[0]*exact_mp[1];
 	
 	
-	//		std::cout << "eval = " << eval1_mp << "    exact = " << exact2_mp << std::endl;
 	
 	BOOST_CHECK(fabs(eval1_d.real()/exact_d[1].real() - 1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(eval1_d.imag()/exact_d[1].imag() - 1) < threshold_clearance_d);
