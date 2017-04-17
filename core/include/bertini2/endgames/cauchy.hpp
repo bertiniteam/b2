@@ -616,7 +616,7 @@ public:
 
 
 		## Input: 
-			None: all data needed are class data members
+			target_time: Used to stay correct if we are using the endgame for a non-zero target time. 
 		 
 		## Output:
 			true: If we are within the ratio cutoff time, or have a ratio within the thresholds.
