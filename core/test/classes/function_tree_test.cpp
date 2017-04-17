@@ -1851,7 +1851,7 @@ BOOST_AUTO_TEST_CASE(make_linear_product)
 		}
 	}
 	
-	std::shared_ptr<LinearProduct> linprod2 = std::make_shared<LinearProduct>(vargp, 3, coeff_mpfr);
+	std::shared_ptr<LinearProduct> linprod2 = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
 	
 }
 
@@ -1917,7 +1917,7 @@ BOOST_AUTO_TEST_CASE(eval_linear_product)
 		exact_mp *= temp_mp;
 	}
 	
-	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp, num_factors, coeff_mpfr);
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
 	
 	
 	dbl eval_d = linprod->Eval<dbl>();
@@ -2042,31 +2042,18 @@ BOOST_AUTO_TEST_CASE(linear_prod_get_linears)
 	}
 	
 	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
-	std::shared_ptr<LinearProduct> one_linear = linprod->GetLinears(1);
-	std::vector<size_t> indices{0,1};
-	std::shared_ptr<LinearProduct> two_linears = linprod->GetLinears(indices);
-	
-	dbl eval1_d = one_linear->Eval<dbl>();
-	one_linear->Reset();
-	mpfr eval1_mp = one_linear->Eval<mpfr>();
-	
-	dbl eval2_d = two_linears->Eval<dbl>();
-	mpfr eval2_mp = two_linears->Eval<mpfr>();
-	
-	dbl exact2_d = exact_d[0]*exact_d[1];
-	mpfr exact2_mp = exact_mp[0]*exact_mp[1];
+	bertini::Vec<dbl> coeff_d = linprod->GetCoeffs<dbl>(1);
+	bertini::Vec<mpfr> coeff_mp = linprod->GetCoeffs<mpfr>(2);
 	
 	
 	
-	BOOST_CHECK(fabs(eval1_d.real()/exact_d[1].real() - 1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(eval1_d.imag()/exact_d[1].imag() - 1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(eval1_mp.real()/exact_mp[1].real() - 1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(eval1_mp.imag()/exact_mp[1].imag() - 1) < threshold_clearance_mp);
-	
-	BOOST_CHECK(fabs(eval2_d.real()/exact2_d.real() - 1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(eval2_d.imag()/exact2_d.imag() - 1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(eval2_mp.real()/exact2_mp.real() - 1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(eval2_mp.imag()/exact2_mp.imag() - 1) < threshold_clearance_mp);
+	for(int ii = 0; ii < num_vars+1; ++ii)
+	{
+		BOOST_CHECK(fabs(coeff_d[ii].real()/coeff_dbl(1,ii).real() - 1) < threshold_clearance_d);
+		BOOST_CHECK(fabs(coeff_d[ii].imag()/coeff_dbl(1,ii).imag() - 1) < threshold_clearance_d);
+		BOOST_CHECK(fabs(coeff_mp[ii].real()/coeff_mpfr(2,ii).real() - 1) < threshold_clearance_mp);
+		BOOST_CHECK(fabs(coeff_mp[ii].imag()/coeff_mpfr(2,ii).imag() - 1) < threshold_clearance_mp);
+	}
 	
 }
 

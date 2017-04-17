@@ -40,7 +40,7 @@
 #ifndef BERTINI_FUNCTION_TREE_LINPRODUCT_HPP
 #define BERTINI_FUNCTION_TREE_LINPRODUCT_HPP
 
-#include "bertini2/function_tree/symbols/symbol.hpp"
+#include "bertini2/function_tree.hpp"
 #include "bertini2/function_tree/factory.hpp"
 #include "bertini2/eigen_extensions.hpp"
 
@@ -171,33 +171,6 @@ namespace  bertini {
 			}
 			
 			
-			//////////////////////////////////////////
-			//
-			//         Testing/Debugging
-			//
-			//////////////////////////////////////////
-			void print_coeffs()
-			{
-				
-				
-				for (int ii = 0; ii < num_factors_; ++ii)
-				{
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
-					{
-						std::cout << std::get< Mat<mpfr> >(coeffs_)(ii,jj) << " | ";
-					}
-					std::cout << "\n";
-				}
-			}
-			
-			
-			
-			
-			
-			
-			
-			
-			
 			/**
 			 \brief Accept a variable and add it to the list of variables in linear factors.
 			 
@@ -220,7 +193,14 @@ namespace  bertini {
 			/**
 			 \brief Reset variable values in this node
 			 */
-			void Reset() const override {};
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+				for(auto& v : variables_)
+				{
+					v->Reset();
+				}
+			};
 			
 			
 			/**
@@ -234,11 +214,9 @@ namespace  bertini {
 			/**
 			 Return SumOperator whose children are derivatives of children_
 			 */
-			std::shared_ptr<Node> Differentiate() const override
-			{
-				std::shared_ptr<Node> n = MakeVariable("x");
-				return n;
-			}
+			std::shared_ptr<Node> Differentiate() const override;
+	
+			
 			
 			
 			/**
@@ -247,18 +225,7 @@ namespace  bertini {
 			 \param v The variable we are determining the degree with respect to.
 			 \return Degree of polynomial with respect to variable v.
 			 */
-			int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-			{
-				int deg = 0;
-				
-				// If v is part of the linear product
-				if(std::find(variables_.begin(), variables_.end(), v) != std::end(variables_))
-				{
-					deg = num_factors_;
-				}
-				
-				return deg;
-			};
+			int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 			
 			
 			
@@ -271,22 +238,8 @@ namespace  bertini {
 			 \return Degree of polynomial with respect to variable group.
 			 */
 			
-			int Degree(VariableGroup const& vars) const override
-			{
-				int deg = 0;
-				
-				for (auto v = vars.begin(); v != vars.end(); ++v)
-				{
-					// if v is a part of the linear product
-					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
-					{
-						deg = num_factors_;
-						break;
-					}
-				}
-				
-				return deg;
-			};
+			int Degree(VariableGroup const& vars) const override;
+			
 			
 			/**
 			 \brief Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.
@@ -294,22 +247,9 @@ namespace  bertini {
 			 \param vars The variable group computing degree with respect to.
 			 \return Multidegree vector of polynomial with repect to variable group.
 			 */
-			std::vector<int> MultiDegree(VariableGroup const& vars) const override
-			{
-				std::vector<int> degs(vars.size(), 0);
-				
-				for (auto v = vars.begin(); v != vars.end(); ++v)
-				{
-					// If v is part of the linear product
-					if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
-					{
-						*(degs.begin()+(v-vars.begin())) = num_factors_;
-					}
-				}
-				
-				
-				return degs;
-			}
+			std::vector<int> MultiDegree(VariableGroup const& vars) const override;
+			
+			
 			
 			
 			
@@ -321,107 +261,19 @@ namespace  bertini {
 			 \param vars Variable group to homogenize with respect to.
 			 \param homvar Homogenization variable.
 			 */
-			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
-			{
-//				std::cout << "Homogenizing linprod with num factors = " << num_factors_ << std::endl;  //DEBUGING
-				
-				// Check if vars is the variable group for this linear product
-				bool is_vargroup_same = true; // Check if vars and variables_ are the same
-				bool is_v_in_vars = false; // Check if at least one v in variables_ is in vars
-				
-				
-				// Is homvar in vars?
-				VariableGroup temp_vars = vars;
-				temp_vars.erase(std::remove(temp_vars.begin(), temp_vars.end(), homvar), temp_vars.end());
-//				auto var_it = std::find(vars.begin(), vars.end(), homvar);
-//				// If yes, remove it from vars.
-//				if(var_it != std::end(vars))
-//				{
-//					std::cout << " it = " << **var_it << std::endl;
-////					temp_vars.erase(vars[0]);
-//					std::remove(temp_vars.begin(), temp_vars.end(), homvar);
-//				}
-//				
-//				for (auto v : temp_vars)
-//				{
-//					std::cout << "v = " << *v << std::endl;
-//				}
-				
-				
-				// Which group is larger, variables_ or vars?
-				VariableGroup larger_group;
-				VariableGroup smaller_group;
-				if(variables_.size() > temp_vars.size())
-				{
-					larger_group = variables_;
-					smaller_group = temp_vars;
-				}
-				else
-				{
-					larger_group = temp_vars;
-					smaller_group = variables_;
-				}
-				
-				// Is vars the same as variables_?
-				for (auto const v : larger_group)
-				{
-					// If v is in vars?
-					if(std::find(smaller_group.begin(), smaller_group.end(), v) != std::end(smaller_group))
-					{
-						is_v_in_vars = true;
-					}
-					else
-					{
-						is_vargroup_same = false;
-					}
-				}
-				
-				if(!is_vargroup_same && is_v_in_vars)
-				{
-					throw std::runtime_error("attempting to homogenize linear product with respect to part of the variables, but not all");
-				}
-				
-				if(is_vargroup_same)
-				{
-					hom_variable_ = homvar;
-					is_homogenized_ = true;
-				}
-//				else
-//				{
-//					throw std::runtime_error("attemtping to homogenize linear product with respect to another variable group");
-//				}
-				
-			};
+			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
 			
-			bool IsHomogeneous(std::shared_ptr<Variable> const& v) const override
-			{
-				
-				if(v == nullptr)
-				{
-					if(is_homogenized_)
-					{
-						return true;
-					}
-					else
-					{
-						return false;
-					}
-				}
-				else
-				{
-					// If v is not part of the linear product
-					if(std::find(variables_.begin(), variables_.end(), v) == std::end(variables_))
-					{
-						return true;
-					}
-					else
-					{
-						return false;
-					}
-				}
-				
+			
+			
+			/**
+				\brief Check for homogeneity, with respect to a variable.  If vars is the same variable group as the one used to create the linear product, and it has been homogenized, then return true.
+			 
+				\param vars Variable group to check if homogenous with respect to.
+			 
+				\return boolean.
+			 */
 
-			};
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 			
 			/**
 				\brief Check for homogeneity, with respect to a variable group.  If vars is the same variable group as the one used to create the linear product, and it has been homogenized, then return true.
@@ -430,60 +282,7 @@ namespace  bertini {
 			 
 				\return boolean.
 			 */
-			bool IsHomogeneous(VariableGroup const& vars) const override
-			{
-				bool is_hom = false;
-				
-				// Check if vars is the variable group for this linear product
-				bool is_vargroup_same = true; // Check if vars and variables_ are the same
-				bool is_v_in_vars = false; // Check if at least one v in variables_ is in vars
-				for (auto const v : variables_)
-				{
-//					std::cout << *vars.begin() << std::endl;
-//					std::cout << *std::end( << std::endl;
-//					std::cout << *std::find(vars.begin(), vars.end(), variables_[0]) << std::endl;
-
-					// If v is in vars?
-					if(std::find(vars.begin(), vars.end(), v) != std::end(vars))
-					{
-						is_v_in_vars = true;
-					}
-					else
-					{
-						is_vargroup_same = false;
-					}
-				}
-				
-				if(is_homogenized_)
-				{
-					// If homvar is in vars?
-					if(std::find(vars.begin(), vars.end(), hom_variable_) != std::end(vars))
-					{
-						is_v_in_vars = true;
-					}
-					else
-					{
-						is_vargroup_same = false;
-					}
-				}
-				
-				if(!is_vargroup_same && is_v_in_vars)
-				{
-					return false;
-				}
-				
-				if(!is_vargroup_same)
-				{
-					is_hom = true;
-				}
-				else if(is_homogenized_)
-				{
-					is_hom = true;
-				}
-				
-				return is_hom;
-				
-			};
+			bool IsHomogeneous(VariableGroup const& vars) const override;
 			
 			
 			
@@ -492,7 +291,20 @@ namespace  bertini {
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) const {};
+			virtual void precision(unsigned int prec) const
+			{
+				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+				val_pair.first.precision(prec);
+				
+				this->PrecisionChangeSpecific(prec);
+				
+				for (auto iter : variables_)
+					iter->precision(prec);
+
+			};
+			
+			
+
 			
 			
 			
@@ -505,6 +317,86 @@ namespace  bertini {
 			
 			
 			
+			
+			
+
+			
+			
+			
+			/**
+			 \brief Getter for the differential of all variables
+			 
+			*/
+			void GetVariables(VariableGroup& vars) const
+			{
+				vars = variables_;
+			}
+			
+			
+			
+			
+			/**
+			 \brief Getter for the homogenizing variable
+			*/
+			void GetHomVariable(std::shared_ptr<Node>& hom_var) const
+			{
+				hom_var = hom_variable_;
+			}
+			
+			
+			
+			/**
+			 \brief Getter for rational coefficients
+			*/
+			void GetRatCoeffs(Mat<mpq_rational>& coeffs_real, Mat<mpq_rational>& coeffs_imag) const
+			{
+				coeffs_real = coeffs_rat_real_;
+				coeffs_imag = coeffs_rat_imag_;
+			}
+			
+			/**
+			 \brief Getter for mpfr coefficients
+			*/
+			void GetMPFRCoeffs(Mat<mpfr>& coeffs) const
+			{
+				auto& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				coeffs = coeffs_mpfr_ref;
+			}
+			
+			/**
+			 \brief Are there rational coefficients?
+			*/
+			bool IsRationalCoefficients()
+			{
+				return is_rational_coeffs_;
+			}
+			
+			
+			
+			/**
+			 \brief Getter for the coefficients of a single linear factor.  Constant coefficient is last element of the Vector.
+			 
+			 \param index Index of the linear factor.
+			 
+			 \return Vector containing coefficients.
+			 */
+			template<typename CType>
+			Vec<CType> GetCoeffs(size_t index)
+			{
+				Vec<CType> coeff_ret(num_variables_ + 1);
+				Mat<CType>& coeff_ref = std::get<Mat<CType>>(coeffs_);
+				
+				for(int jj = 0; jj < num_variables_ + 1; ++jj)
+				{
+					coeff_ret(jj) = coeff_ref(index,jj);
+				}
+				
+				return coeff_ret;
+			}
+			
+			
+
+
 			
 			
 			
@@ -648,7 +540,6 @@ namespace  bertini {
 			
 			
 		private:
-			//			std::vector< std::vector< std::tuple<mpq_rational, dbl, mpfr> > > coeffs_;
 			Mat<mpq_rational> coeffs_rat_real_;   ///< Matrix of real rational coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor, with the final column being the constant coefficient.  These rationals can then be downsampled for each data type.
 			
 			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
@@ -659,7 +550,6 @@ namespace  bertini {
 			
 			std::shared_ptr<Node> hom_variable_; ///< The homogenizing variable for this variable group.  Initially this is set to an Integer = 1.  When we homogenize, this is set to the variable.
 			
-//			std::vector< std::tuple< std::shared_ptr<Variable>, Vec<bool> > > hom_variables_; ///< A vector of tuples holding 1) the homogenizing variable and 2) which terms in the linear factor get multiplied by the hom variable.
 			
 			size_t num_factors_;  ///< The number of factors in the linear product.
 			size_t num_variables_;  ///< The number of variables in each linear.
@@ -682,6 +572,97 @@ namespace  bertini {
 			
 			LinearProduct() = default;
 			
+			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var, Mat<mpq_rational> const& coeffs_real, Mat<mpq_rational> const& coeffs_imag) :
+				variables_(variables), num_factors_(coeffs_real.rows()), hom_variable_(hom_var)
+			{
+				num_variables_ = variables.size();
+				
+				// Resize coeffs matrix
+				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
+				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
+				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
+				
+				// Resize temporary variable holders
+				temp_var_d_.resize(num_variables_ + 1);
+				temp_var_d_[num_variables_] = dbl(1);
+				temp_var_mp_.resize(num_variables_ + 1);
+				temp_var_mp_[num_variables_].SetOne();
+				
+				
+				coeffs_rat_real_ = coeffs_real;
+				coeffs_rat_imag_ = coeffs_imag;
+				
+				for (int ii = 0; ii < num_factors_; ++ii)
+				{
+					for (int jj = 0; jj < num_variables_+1; ++jj)
+					{
+						coeffs_dbl_ref(ii,jj).real( static_cast<double>(coeffs_rat_real_(ii,jj)) );
+						coeffs_dbl_ref(ii,jj).imag( static_cast<double>(coeffs_rat_imag_(ii,jj)) );
+						coeffs_mpfr_ref(ii,jj).real( static_cast<mpfr_float>(coeffs_rat_real_(ii,jj)) );
+						coeffs_mpfr_ref(ii,jj).imag( static_cast<mpfr_float>(coeffs_rat_imag_(ii,jj)) );
+					}
+				}
+				
+				is_rational_coeffs_ = true;
+
+				
+			}
+
+			
+			
+			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var, Mat<mpfr> const& coeffs) :
+			variables_(variables), num_factors_(coeffs.rows()), hom_variable_(hom_var)
+			{
+				num_variables_ = variables.size();
+				
+				// Resize coeffs matrix
+				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
+				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
+				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
+				
+				// Resize temporary variable holders
+				temp_var_d_.resize(num_variables_ + 1);
+				temp_var_d_[num_variables_] = dbl(1);
+				temp_var_mp_.resize(num_variables_ + 1);
+				temp_var_mp_[num_variables_].SetOne();
+				
+				coeffs_mpfr_ref = coeffs;
+				
+				for (int ii = 0; ii < num_factors_; ++ii)
+				{
+					for (int jj = 0; jj < num_variables_+1; ++jj)
+					{
+						coeffs_dbl_ref(ii,jj) = static_cast<dbl>(coeffs_mpfr_ref(ii,jj));
+					}
+				}
+				
+				is_rational_coeffs_ = false;
+				
+				
+			}
+
+			
+			/**
+			 \brief Break off a single linear factor in the product and return as a LinearProduct node.
+			 
+			 \param index Index of the linear factor, starting at 0
+			 \return LinearProduct node contain the single linear.
+			 */
+			
+			std::shared_ptr<LinearProduct> GetLinears(size_t index) const;
+			
+			
+			/**
+			 \brief Break off a set of linear factors in the product and return as a LinearProduct node.
+			 
+			 \param indices std::vector of indices into the factors_ vector
+			 \return LinearProduct node contain the linears.
+			 */
+			
+			std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices) const;
+			
 			
 			
 			friend class boost::serialization::access;
@@ -699,9 +680,370 @@ namespace  bertini {
 				{
 					v.precision(prec);
 				}
+				
+				Mat<mpfr> coeffs_ref = std::get<Mat<mpfr>>(coeffs_);
+				for(int ii = 0; ii < coeffs_ref.rows(); ++ii)
+				{
+					for(int jj = 0; jj < coeffs_ref.cols(); ++jj)
+					{
+						coeffs_ref(ii,jj).precision(prec);
+					}
+				}
 			}
 			
 		};
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		/**
+		 \brief Represents the differential of a single linear.
+		 
+		 This class represents a linear of differentials.  This is the result of differentiating a single linear node.
+		 
+		 */
+		class DiffLinear : public virtual Symbol
+		{
+		public:
+			virtual ~DiffLinear() = default;
+			
+			
+			/**
+			 \brief Create a linear differential node. Only a linear, not a product.
+			 
+			 \param linear The linear that we are differentiating.
+			 
+			 */
+			DiffLinear(std::shared_ptr<LinearProduct> const& linear);
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			/**
+			 \brief Reset variable values in this node
+			 */
+			void Reset() const override
+			{
+				Node::ResetStoredValues();
+			};
+			
+			
+			/**
+			 Method for printing to output stream
+			 */
+			void print(std::ostream & target) const override{};
+			
+			
+			
+			
+			/**
+			 Return SumOperator whose children are derivatives of children_
+			 */
+			std::shared_ptr<Node> Differentiate() const override
+			{
+				return MakeInteger(0);
+			}
+			
+			
+			/**
+			 \brief Computes the degree for a particular variable.  If that variable is part of the linear product, the degree is equal to the number of factors.
+			 
+			 \param v The variable we are determining the degree with respect to.
+			 \return Degree of polynomial with respect to variable v.
+			 */
+			int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+			{
+				return 0;
+			};
+			
+			
+			
+			
+			/**
+			 \brief Computer the degree for a particular group of variables.  If one of the variables is a part of the linear product, the degree is equal to the number of factors.
+			 
+			 \param vars The group of variables we are determing the degree with respect to.
+			 
+			 \return Degree of polynomial with respect to variable group.
+			 */
+			
+			int Degree(VariableGroup const& vars) const override
+			{
+				return 0;
+			};
+			
+			/**
+			 \brief Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.
+			 
+			 \param vars The variable group computing degree with respect to.
+			 \return Multidegree vector of polynomial with repect to variable group.
+			 */
+			std::vector<int> MultiDegree(VariableGroup const& vars) const override
+			{
+				return std::vector<int>(vars.size(),0);
+			}
+			
+			
+			
+			
+			
+			/**
+			 \brief Homogenize a sum, with respect to a variable group, and using a homogenizing variable.
+			 
+			 \param vars Variable group to homogenize with respect to.
+			 \param homvar Homogenization variable.
+			 */
+			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+			{
+			};
+			
+			
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const
+			{
+				return true;
+			}
+			
+			/**
+				\brief Check for homogeneity, with respect to a variable group.  If vars is the same variable group as the one used to create the linear product, and it has been homogenized, then return true.
+			 
+				\param vars Variable group to check if homogenous with respect to.
+			 
+				\return boolean.
+			 */
+			bool IsHomogeneous(VariableGroup const& vars) const override
+			{
+				return true;
+			};
+			
+			
+			
+			/**
+			 Change the precision of this variable-precision tree node.
+			 
+			 \param prec the number of digits to change precision to.
+			 */
+			virtual void precision(unsigned int prec) const
+			{
+				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+				val_pair.first.precision(prec);
+				
+				this->PrecisionChangeSpecific(prec);
+				
+			};
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		protected:
+			/**
+			 \brief Evaluation of linear product node.  Returns evaluation value.
+			 
+			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
+			 */
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				dbl eval_value;
+				
+				this->FreshEval_d(eval_value, diff_variable);
+				return eval_value;
+			}
+			
+			/**
+			 \brief Evaluation of linear product node IN PLACE.  Returns evaluation value.
+			 
+			 \param evaluation_value The in place variable that stores the evaluation.
+			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
+			 */
+			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				for(int ii = 0; ii < variables_.size(); ++ii)
+				{
+					if(diff_variable == variables_[ii])
+					{
+						auto& coeff_ref = std::get<Mat<dbl>>(coeffs_);
+						evaluation_value = coeff_ref(0,ii);
+						return;
+					}
+				}
+				
+				// If not one of the affine variables
+				if(diff_variable == hom_variable_)
+				{
+					auto& coeff_ref = std::get<Mat<dbl>>(coeffs_);
+					evaluation_value = coeff_ref(0,variables_.size()-1);
+					return;
+				}
+				
+				
+				// If none of the variables
+				evaluation_value = dbl(0);
+				return;
+			}
+			
+			
+			/**
+			 \brief Evaluation of linear product node.  Returns evaluation value.
+			 
+			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
+			 */
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				mpfr eval_value;
+				
+				this->FreshEval_mp(eval_value, diff_variable);
+				return eval_value;
+			}
+			
+			
+			/**
+			 \brief Evaluation of linear product node IN PLACE.  Returns evaluation value.
+			 
+			 \param evaluation_value The in place variable that stores the evaluation.
+			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
+			 */
+			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			{
+				for(int ii = 0; ii < variables_.size(); ++ii)
+				{
+					if(diff_variable == variables_[ii])
+					{
+						auto& coeff_ref = std::get<Mat<mpfr>>(coeffs_);
+						evaluation_value = coeff_ref(0,ii);
+						return;
+					}
+				}
+				
+				// If not one of the affine variables
+				if(diff_variable == hom_variable_)
+				{
+					auto& coeff_ref = std::get<Mat<mpfr>>(coeffs_);
+					evaluation_value = coeff_ref(0,variables_.size()-1);
+					return;
+				}
+				
+				
+				// If none of the variables
+				evaluation_value.SetZero();
+				return;
+			}
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		private:
+			//			std::vector< std::vector< std::tuple<mpq_rational, dbl, mpfr> > > coeffs_;
+			Mat<mpq_rational> coeffs_rat_real_;   ///< Matrix of real rational coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor, with the final column being the constant coefficient.  These rationals can then be downsampled for each data type.
+			
+			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
+			
+			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
+			
+			VariableGroup variables_; ///< Differentials of variables used in the linear.
+			
+			std::shared_ptr<Node> hom_variable_; ///< The homogenizing variable for this variable group.  Initially this is set to an Integer = 0.  When we homogenize, this is set to the variable.
+			
+			
+			size_t num_variables_;  ///< The number of variables in each linear.
+			
+			
+			
+			
+			
+			
+			
+			
+			
+		private:
+			
+			DiffLinear() = default;
+			
+			
+			
+			friend class boost::serialization::access;
+			
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & boost::serialization::base_object<NaryOperator>(*this);
+			}
+			
+			
+			void PrecisionChangeSpecific(unsigned prec) const
+			{
+				Mat<mpfr> coeffs_ref = std::get<Mat<mpfr>>(coeffs_);
+				for(int ii = 0; ii < coeffs_ref.rows(); ++ii)
+				{
+					for(int jj = 0; jj < coeffs_ref.cols(); ++jj)
+					{
+						coeffs_ref(ii,jj).precision(prec);
+					}
+				}
+			}
+			
+		};
+		
+		
 		
 		
 		

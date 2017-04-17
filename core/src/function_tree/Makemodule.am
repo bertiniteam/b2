@@ -15,13 +15,15 @@ function_tree_header_files = \
 	include/bertini2/function_tree/roots/function.hpp \
 	include/bertini2/function_tree/roots/jacobian.hpp \
 	include/bertini2/function_tree/operators/arithmetic.hpp \
-	include/bertini2/function_tree/operators/trig.hpp
+	include/bertini2/function_tree/operators/trig.hpp \
+	include/bertini2/function_tree/symbols/linear_product.hpp
 
 function_tree_source_files = \
 	src/function_tree/node.cpp \
 	src/function_tree/operators/arithmetic.cpp \
 	src/function_tree/operators/trig.cpp \
-	src/function_tree/special_number.cpp
+	src/function_tree/special_number.cpp \
+	src/function_tree/linear_product.cpp
 
 function_tree = $(function_tree_header_files) $(function_tree_source_files)
 
@@ -48,7 +50,8 @@ functiontree_symbolsinclude_HEADERS = \
 	include/bertini2/function_tree/symbols/variable.hpp \
 	include/bertini2/function_tree/symbols/differential.hpp \
 	include/bertini2/function_tree/symbols/special_number.hpp \
-	include/bertini2/function_tree/symbols/number.hpp
+	include/bertini2/function_tree/symbols/number.hpp \
+	include/bertini2/function_tree/symbols/linear_product.hpp
 
 functiontree_rootsincludedir = $(includedir)/bertini2/function_tree/roots
 functiontree_rootsinclude_HEADERS = \

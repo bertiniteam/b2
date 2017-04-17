@@ -1153,128 +1153,88 @@ BOOST_AUTO_TEST_CASE(integer_power_system)
 
 
 
-BOOST_AUTO_TEST_CASE(linear_prod_diff)
+BOOST_AUTO_TEST_CASE(linprod_diff_eval)
 {
-	using namespace bertini::node;
+	using bertini::VariableGroup;
 	
-	bertini::VariableGroup vargp;
-	std::shared_ptr<Variable> x = bertini::MakeVariable("x");
-	std::shared_ptr<Variable> y = bertini::MakeVariable("y");
-	std::shared_ptr<Variable> z = bertini::MakeVariable("z");
-	std::shared_ptr<Variable> w = bertini::MakeVariable("w");
-	vargp.push_back(x);
-	vargp.push_back(y);
-	vargp.push_back(z);
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto h0 = MakeVariable("HOM0");
+	auto h1 = MakeVariable("HOM1");
+	auto z = MakeVariable("z");
+	
+	
+	
+	VariableGroup v0{x,z,y};
+	VariableGroup v1{y};
+	Mat<dbl> coeff_dbl(3,4);
+	Mat<mpfr> coeff_mpfr(3,4);
+	
+	for(int ii = 0; ii < 3; ++ii)
+	{
+		for(int jj = 0; jj < 4; ++jj)
+		{
+			coeff_dbl(ii,jj) = dbl(ii+1, jj+1);
+			coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
+		}
+	}
+	
+	
+	
+	std::shared_ptr<bertini::node::Node> linprod_node = (mpfr(1,1)*x + mpfr(1,2)*z + mpfr(1,3)*y+ mpfr(1,4)) * (mpfr(2,1)*x + mpfr(2,2)*z + mpfr(2,3)*y+ mpfr(2,4))*(mpfr(3,1)*x + mpfr(3,2)*z + mpfr(3,3)*y+ mpfr(3,4));
+	std::shared_ptr<bertini::node::Node> linprod = bertini::MakeLinearProduct(v0, coeff_mpfr);
 	
 	dbl xval_d = dbl(.5,1);
 	dbl yval_d = dbl(.6,1);
 	dbl zval_d = dbl(.7,1);
+	dbl h0val_d = dbl(.34, -2.1);
+	dbl h1val_d = dbl(-1.2, .0043);
 	mpfr xval_mp = mpfr(".5", "1");
 	mpfr yval_mp = mpfr(".6", "1");
 	mpfr zval_mp = mpfr(".7", "1");
+	mpfr h0val_mp = mpfr(".34", "-2.1");
+	mpfr h1val_mp = mpfr("-1.2", ".0043");
 	
+	v0[0]->set_current_value(xval_d);
+	v0[1]->set_current_value(zval_d);
+	v1[0]->set_current_value(yval_d);
+	v0[0]->set_current_value(xval_mp);
+	v0[1]->set_current_value(zval_mp);
+	v1[0]->set_current_value(yval_mp);
 	
-	vargp[0]->set_current_value<dbl>(xval_d);
-	vargp[1]->set_current_value<dbl>(yval_d);
-	vargp[2]->set_current_value<dbl>(zval_d);
-	vargp[0]->set_current_value<mpfr>(xval_mp);
-	vargp[1]->set_current_value<mpfr>(yval_mp);
-	vargp[2]->set_current_value<mpfr>(zval_mp);
+	linprod_node->Differentiate();
+	linprod->Differentiate();
 	
-	
-	// Make with user defined coefficients
-	int num_factors = 3;
-	int num_vars = 3;
-	Mat<dbl> coeff_dbl(num_factors,num_vars+1);
-	Mat<mpfr> coeff_mpfr(num_factors,num_vars+1);
-	std::vector<dbl> lin_d;
-	std::vector<mpfr> lin_mp;
-	dbl exactx_d = dbl(0);
-	mpfr exactx_mp = mpfr(0);
-	dbl exactz_d = dbl(0);
-	mpfr exactz_mp = mpfr(0);
-	dbl exactw_d = dbl(0);
-	mpfr exactw_mp = mpfr(0);
-	
-	for(int ii = 0; ii < num_factors; ++ii)
-	{
-		lin_d.push_back(dbl(1));
-		lin_mp.push_back(mpfr(1));
-		
-		dbl temp_d = dbl(0);
-		mpfr temp_mp = mpfr(0);
-		for(int jj = 0; jj < num_vars+1; ++jj)
-		{
-			coeff_dbl(ii,jj) = dbl(ii+1, jj+1);
-			coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
-			
-			if(jj < num_vars)
-			{
-				temp_d += coeff_dbl(ii,jj)*vargp[jj]->Eval<dbl>();
-				temp_mp += coeff_mpfr(ii,jj)*vargp[jj]->Eval<mpfr>();
-			}
-			else
-			{
-				temp_d += coeff_dbl(ii,jj);
-				temp_mp += coeff_mpfr(ii,jj);
-			}
-			
-		}
-		lin_d[ii] = temp_d;
-		lin_mp[ii] = temp_mp;
-	}
-	
-	for (int ii = 0; ii < num_factors; ++ii)
-	{
-		dbl temp_d = dbl(1);
-		mpfr temp_mp = mpfr(1);
-		
-		for (int jj = 0; jj < num_factors; ++jj)
-		{
-			
-			if( ii != jj)
-			{
-				temp_d *= lin_d[jj];
-				temp_mp *= lin_mp[jj];
-			}
-		}
-		
-		
-		exactx_d += coeff_dbl(ii,0)*temp_d;
-		exactx_mp += coeff_mpfr(ii,0)*temp_mp;
-		exactz_d += coeff_dbl(ii,2)*temp_d;
-		exactz_mp += coeff_mpfr(ii,2)*temp_mp;
-	}
-	
-	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp, num_factors, coeff_mpfr);
-	std::shared_ptr<Node> diff_linprod = linprod->Differentiate();
-	
-	dbl evalx_d = diff_linprod->Eval<dbl>(x);
-	mpfr evalx_mp = diff_linprod->Eval<mpfr>(x);
-	diff_linprod->Reset();
-	dbl evalz_d = diff_linprod->Eval<dbl>(z);
-	mpfr evalz_mp = diff_linprod->Eval<mpfr>(z);
-	diff_linprod->Reset();
-	dbl evalw_d = diff_linprod->Eval<dbl>(w);
-	mpfr evalw_mp = diff_linprod->Eval<mpfr>(w);
-	
-	
-	//		std::cout << "eval = " << evalw_mp << "    exact = " << exactw_mp << std::endl;
+	dbl evalx_d = linprod->Eval<dbl>(x);
+	dbl exactx_d = linprod_node->Eval<dbl>(x);
+	mpfr evalx_mp = linprod->Eval<mpfr>(x);
+	mpfr exactx_mp = linprod_node->Eval<mpfr>(x);
 	
 	BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
 	
-	BOOST_CHECK(fabs(evalz_d.real()/exactz_d.real() - 1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(evalz_d.imag()/exactz_d.imag() - 1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(evalz_mp.real()/exactz_mp.real() - 1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(evalz_mp.imag()/exactz_mp.imag() - 1) < threshold_clearance_mp);
+	evalx_d = linprod->Eval<dbl>(y);
+	exactx_d = linprod_node->Eval<dbl>(y);
+	evalx_mp = linprod->Eval<mpfr>(y);
+	exactx_mp = linprod_node->Eval<mpfr>(y);
 	
-	BOOST_CHECK(fabs(evalw_d.real()-exactw_d.real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(evalw_d.imag()-exactw_d.imag() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(evalw_mp.real()-exactw_mp.real() ) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(evalw_mp.imag()-exactw_mp.imag() ) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
+	
+	evalx_d = linprod->Eval<dbl>(z);
+	exactx_d = linprod_node->Eval<dbl>(z);
+	evalx_mp = linprod->Eval<mpfr>(z);
+	exactx_mp = linprod_node->Eval<mpfr>(z);
+	
+	BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
+	
 	
 }
 
