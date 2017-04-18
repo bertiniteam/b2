@@ -144,9 +144,9 @@ namespace bertini{
 
 		struct TrackBack
 		{
-			unsigned minimum_cycle; //MinCycleTrackback, default = 4
-			bool junk_removal_test; //JunkRemovalTest, default = 1
-			unsigned max_depth_LDT; //MaxLDTDepth, default = 3
+			unsigned minimum_cycle = 4; //MinCycleTrackback, default = 4
+			bool junk_removal_test = 1; //JunkRemovalTest, default = 1
+			unsigned max_depth_LDT = 3; //MaxLDTDepth, default = 3
 		};
 
 	}

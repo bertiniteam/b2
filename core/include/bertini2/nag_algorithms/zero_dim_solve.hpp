@@ -37,6 +37,7 @@
 
 #include "bertini2/detail/configured.hpp"
 
+#include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/nag_algorithms/common/policies.hpp"
 #include <chrono>
@@ -77,6 +78,11 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 };
 
 
+struct AnyZeroDim : public virtual AnyAlgorithm
+{
+	virtual ~AnyZeroDim() = default;
+};
+
 
 /**
 \brief the basic zero dim algorithm, which solves a system.
@@ -85,6 +91,7 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 					typename SystemType, typename StartSystemType,
 					template<typename,typename> class SystemManagementP>
 		struct ZeroDim :
+							public virtual AnyZeroDim,
 							public Observable<>,
 							public SystemManagementP<SystemType, StartSystemType>,
 							public detail::Configured<
@@ -218,8 +225,13 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 			}
 
 
+			/**
+			\brief Main Run() function provided for calling from the blackbox mode
+			*/
+			void Run() override
+			{}
 
-
+			virtual ~ZeroDim() = default;
 /// setup functions
 
 
@@ -243,16 +255,18 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 			void DefaultSetup()
 			{
 				DefaultSettingsSetup();
-
-
-				SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
-
-				num_start_points_ = StartSystem().NumStartPoints(); // populate the internal variable
-
+				DefaultSystemSetup();
 				DefaultTrackerSetup();
 				DefaultMidpathSetup();
+			}
 
-				setup_complete_ = true;
+
+
+
+			void DefaultSystemSetup()
+			{
+				SystemManagementPolicy::SystemSetup(this->template Get<ZeroDimConf>().path_variable_name);
+				num_start_points_ = StartSystem().NumStartPoints(); // populate the internal variable
 			}
 
 
@@ -262,12 +276,17 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 			*/
 			void DefaultSettingsSetup()
 			{
+				// this code can be made generic using Boost.Hana.  
+				// see https://stackoverflow.com/questions/28764085/how-to-create-an-element-for-each-type-in-a-typelist-and-add-it-to-a-vector-in-c,
+				// for example
+				//
+				// all that would need to be done is to extract a hana::tuple_t from the 
+				// typelist contained in this::Config, and then hana::for_each() over it.
+
 				this->template Set<Tolerances>(Tolerances());
 				this->template Set<PostProcessing>(PostProcessing());
 				this->template Set<ZeroDimConf>(ZeroDimConf());
 				this->template Set<AutoRetrack>(AutoRetrack());
-
-				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
 			}
 
 			void SetMidpathRetrackTol(BaseRealType const& rt)
@@ -428,15 +447,6 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 
 
 
-			/**
-			\brief Checks whether the algorithm is ready to rock and roll.
-			*/
-			bool IsSetupComplete() const
-			{
-				return setup_complete_;
-			}
-
-
 
 			/**
 			\brief Get the final computed solutions
@@ -469,9 +479,6 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 			*/
 			void PreSolveChecks() const
 			{
-				if (!IsSetupComplete())
-					throw std::runtime_error("attempting to Solve ZeroDim, but setup was not completed");
-
 				if (num_start_points_ > solutions_at_endgame_boundary_.max_size())
 					throw std::runtime_error("start system has more solutions than container for results.  I refuse to continue until this has been addressed.");
 			}
@@ -484,6 +491,8 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 				solution_final_metadata_.resize(num_as_size_t);
 				solutions_at_endgame_boundary_.resize(num_as_size_t);
 				solutions_post_endgame_.resize(num_as_size_t);
+
+				SetMidpathRetrackTol(this->template Get<Tolerances>().newton_before_endgame);
 			}
 
 			/**
@@ -730,7 +739,6 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 		//	private data members
 		///////
 
-			bool setup_complete_ = false;
 			unsigned long long num_start_points_;
 			BaseRealType midpath_retrack_tolerance_;
 
@@ -755,7 +763,6 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 
 
 		}; // struct ZeroDim
-
 
 	} // ns algo
 

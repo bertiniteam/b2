@@ -32,8 +32,10 @@
 #pragma once
 
 #include "bertini2/detail/enable_permuted_arguments.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
 namespace bertini {
+
 namespace detail {
 
 /**
@@ -59,6 +61,26 @@ struct TypeList {
 	}
 };
 
+
+/**
+\brief Concatenate two typelists, get via ::type
+*/
+template <typename ...Ts>
+struct ListCat {};
+
+
+
+template <typename ...Ts, typename ... Rs>
+struct ListCat <TypeList<Ts...>, TypeList<Rs...>>
+{
+	using type = TypeList<Ts..., Rs...>;
+};
+
+template <typename ...Ps, typename ... Qs, typename ... Rs>
+struct ListCat <TypeList<Ps...>, TypeList<Qs...>, TypeList<Rs...>>
+{
+	using type = TypeList<Ps..., Qs..., Rs...>;
+};
 
 }} // close namespaces
 

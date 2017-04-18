@@ -34,6 +34,25 @@ using SolnCont = std::vector<T>;
 
 		namespace config{
 
+namespace classic{
+
+enum class AlgoChoice
+{
+	EvalFunctions = -4,
+	EvalFunctionJacobian = -3,
+	NewtonIteration = -2,
+	NewtonIterationCondNum = -1,
+	ZeroDim = 0,
+	NID = 1,
+	SampleComponent = 2,
+	MembershipTest = 3,
+	ExtractWitnessSet = 4,
+	WitnessSetProjection = 5,
+	IsosingularStab = 6
+}
+
+} // namespace classic
+
 
 template<typename T>
 struct Tolerances
@@ -65,7 +84,7 @@ struct Sharpening
 {
 	unsigned sharpendigits; ///< how many digits should be correct after sharpening.
 	
-	std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
+	// std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
 
 	T function_residual_tolerance = Eigen::NumTraits<T>::dummy_precision(); ///< A polynomial (or any function, really) evaluated at a point is considered to be 0 if the magnitude is smaller than this value.  See also RatioTolerance.  **Note that this value depends on the current default precision when this scruct is constructed.**
 
@@ -79,7 +98,7 @@ struct Regeneration
 	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.  RegenRemoveInf
 
 	bool higher_dimension_check = true; ///< RegenHigherDimTest
-
+	unsigned start_level = 0;
 	T newton_before_endgame; ///< The tolerance for tracking before reaching the endgame.  SliceTolBeforeEG
 	T newton_during_endgame; ///< The tolerance for tracking during the endgame.  SliceTolDuringEG
 	T final_tolerance; ///< The final tolerance to track to, using the endgame.  SliceFinalTol
@@ -108,7 +127,10 @@ struct ZeroDim
 	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
 };
 
-
+struct Meta
+{
+	classic::AlgoChoice tracktype = 0;
+};
 
 }// config
 
