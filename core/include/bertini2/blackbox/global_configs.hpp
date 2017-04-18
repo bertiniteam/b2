@@ -42,10 +42,10 @@ namespace blackbox{
 namespace config {
 
 
-
+namespace {
 	using namespace tracking::config;
 	using namespace algorithm::config;
-
+}
 
 struct Configs
 {
@@ -58,7 +58,7 @@ struct Configs
 	using Endgame = detail::TypeList<Security<T>, Endgame<T>, PowerSeries, Cauchy<T>, TrackBack>;
 
 	template<typename T>
-	using Algorithm = detail::TypeList<Tolerances<T>, MidPath<T>, AutoRetrack<T>, Sharpening<T>, Regeneration<T>, PostProcessing<T>, ZeroDim<T>>;
+	using Algorithm = detail::TypeList<Tolerances<T>, MidPath<T>, AutoRetrack<T>, Sharpening<T>, Regeneration<T>, PostProcessing<T>, ZeroDim<T>, Meta>;
 
 	template<typename T>
 	using All = detail::ListCat<Tracking<T>, Endgame<T>, Algorithm<T>>;

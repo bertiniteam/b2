@@ -840,6 +840,85 @@ namespace bertini {
 
 
 
+			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Meta, T, Skipper> : qi::grammar<Iterator, config::Meta(), Skipper>
+			{
+				
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::Meta")
+				{
+					namespace phx = boost::phoenix;
+					using qi::_1;
+					using qi::_2;
+					using qi::_3;
+					using qi::_4;
+					using qi::_val;
+					using qi::eps;
+					using qi::lit;
+					using qi::char_;
+					using qi::omit;
+					using boost::spirit::lexeme;
+					using boost::spirit::as_string;
+					using boost::spirit::ascii::no_case;
+					
+					tracktype_.add("-4", config::classic::AlgoChoice::EvalFunctions);
+					tracktype_.add("-3", config::classic::AlgoChoice::EvalFunctionJacobian);
+					tracktype_.add("-2", config::classic::AlgoChoice::NewtonIteration);
+					tracktype_.add("-1", config::classic::AlgoChoice::NewtonIterationCondNum);
+					tracktype_.add("0", config::classic::AlgoChoice::ZeroDim);
+					tracktype_.add("1", config::classic::AlgoChoice::NID);
+					tracktype_.add("2", config::classic::AlgoChoice::SampleComponent);
+					tracktype_.add("3", config::classic::AlgoChoice::MembershipTest);
+					tracktype_.add("4", config::classic::AlgoChoice::ExtractWitnessSet);
+					tracktype_.add("5", config::classic::AlgoChoice::WitnessSetProjection);
+					tracktype_.add("6", config::classic::AlgoChoice::IsosingularStab);
+					
+					std::string setting_name = "tracktype";
+					
+					
+					root_rule_.name("config::Meta");
+					
+					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = config::Meta::RKF45];
+					
+					config_name_.name("tracktype_");
+					config_name_ = *(char_ - (no_case[setting_name] >> ':')) >> (no_case[setting_name] >> ':') >> tracktype_[_val = _1] >> ';';
+					
+					no_setting_.name("no_setting_");
+					no_setting_ = *(char_ - no_case[setting_name]);
+					
+					no_decl_.name("no_decl_");
+					no_decl_ = *(char_);
+					
+					
+					
+					
+					using phx::val;
+					using phx::construct;
+					using namespace qi::labels;
+					qi::on_error<qi::fail>
+					( root_rule_ ,
+					 std::cout<<
+					 val("config parser could not complete parsing. Expecting ")<<
+					 _4<<
+					 val(" here: ")<<
+					 construct<std::string>(_3,_2)<<
+					 std::endl
+					 );
+					
+					
+					
+				}
+				
+				
+			private:
+				qi::rule<Iterator, config::Meta(), ascii::space_type > root_rule_, config_name_;
+				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_;
+				
+				qi::symbols<char,config::classic::AlgoChoice> tracktype_;
+				
+				
+			}; //re: Meta
+
+
 
 		} // re: namespace classic
 		

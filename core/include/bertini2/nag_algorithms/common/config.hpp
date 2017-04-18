@@ -34,6 +34,25 @@ using SolnCont = std::vector<T>;
 
 		namespace config{
 
+namespace classic{
+
+enum class AlgoChoice
+{
+	EvalFunctions = -4,
+	EvalFunctionJacobian = -3,
+	NewtonIteration = -2,
+	NewtonIterationCondNum = -1,
+	ZeroDim = 0,
+	NID = 1,
+	SampleComponent = 2,
+	MembershipTest = 3,
+	ExtractWitnessSet = 4,
+	WitnessSetProjection = 5,
+	IsosingularStab = 6
+}
+
+} // namespace classic
+
 
 template<typename T>
 struct Tolerances
@@ -108,7 +127,10 @@ struct ZeroDim
 	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
 };
 
-
+struct Meta
+{
+	classic::AlgoChoice tracktype = 0;
+};
 
 }// config
 
