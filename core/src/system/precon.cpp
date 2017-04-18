@@ -29,7 +29,7 @@
 namespace bertini{
 	namespace system {
 
-
+// has multiplicity 3 root at origin, and 3 infinite roots
 System Precon::GriewankOsborn()
 {
 	using Var = std::shared_ptr<node::Variable>;

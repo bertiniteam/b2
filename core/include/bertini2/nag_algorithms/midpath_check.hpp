@@ -42,7 +42,7 @@ namespace bertini{
 	namespace algorithm{
 
 		
-		template<typename StartSystemT, typename RealType, typename ComplexType, typename MetaDataType>
+		template<typename RealType, typename ComplexType, typename MetaDataType>
 		struct MidpathChecker : public detail::Configured<config::MidPath<RealType>>
 		{
 			using MidPathConfT = config::MidPath<RealType>;
@@ -50,18 +50,17 @@ namespace bertini{
 			using BoundaryData = SolnCont< MetaDataType >;
 			using PathIndT = unsigned long long;
 			
+
+			MidpathChecker() = default;
+
 			/**
 			\brief Construct a MidpathChecker, given the system it is checking, and the tolerance which should be used to tell whether two points are the same.  
 
 			\note The tolerance should be *lower* than the tracking tolerance used to compute these points.
 			*/
 			template<typename ...T>
-			MidpathChecker( StartSystemT start_system, T const& ...config) : AlgConf(config...)
+			MidpathChecker( T const& ...config) : AlgConf(config...)
 			{
-				// boundary_same_point_tolerance_ = tol;
-				
-				start_system_ = start_system;
-				
 				passed_ = true;
 			}
 			
@@ -130,62 +129,67 @@ namespace bertini{
 			 \returns A Data object which stores data about crossed paths
 			 
 			*/
-			bool Check(BoundaryData const& boundary_data)
+			template <typename StartSystemT>
+			bool Check(BoundaryData const& boundary_data, StartSystemT const& start_system)
 			{
 				for (PathIndT ii = 0; ii < boundary_data.size(); ++ii)
 				{
+					if ( boundary_data[ii].success_code != tracking::SuccessCode::Success)
+							continue;
+
 					const Vec<ComplexType>& solution_ii = boundary_data[ii].path_point;
-										
+					const auto start_ii = start_system.template StartPoint<ComplexType>(ii);
+
 					for (PathIndT jj = ii+1; jj < boundary_data.size(); ++jj)
 					{
-						if ( boundary_data[ii].success_code == tracking::SuccessCode::Success)
+						if ( boundary_data[jj].success_code != tracking::SuccessCode::Success)
+							continue;
+
+						const Vec<ComplexType>& solution_jj = boundary_data[jj].path_point;
+						const Vec<ComplexType> diff_sol = solution_ii - solution_jj;
+						
+						if ((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < SamePointTol())
 						{
-							const Vec<ComplexType>& solution_jj = boundary_data[jj].path_point;
-							const Vec<ComplexType> diff_sol = solution_ii - solution_jj;
+							bool i_already_stored = false;
+							bool j_already_stored = false;
+							// Check if start points are the same
 							
-							if ((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < SamePointTol())
+							const auto start_jj = start_system.template StartPoint<ComplexType>(jj);
+							auto diff_start = start_ii - start_jj;
+							bool same_start = (diff_start.template lpNorm<Eigen::Infinity>() > SamePointTol());
+							
+							
+							// Check if path has already been stored in crossed_paths_
+							for(auto& v : crossed_paths_)
 							{
-								bool i_already_stored = false;
-								bool j_already_stored = false;
-								// Check if start points are the same
-								const auto& start_ii = start_system_.template StartPoint<ComplexType>(ii);
-								const auto& start_jj = start_system_.template StartPoint<ComplexType>(jj);
-								auto diff_start = start_ii - start_jj;
-								bool same_start = (diff_start.norm() > SamePointTol());
-								
-								
-								// Check if path has already been stored in crossed_paths_
-								for(auto& v : crossed_paths_)
+								if(v.index() == ii)
 								{
-									if(v.index() == ii)
-									{
-										v.crossed_with(std::make_pair(jj,same_start));
-										i_already_stored = true;
-										v.rerun(same_start);
-									}
-									if(v.index() == jj)
-									{
-										v.crossed_with(std::make_pair(ii,same_start));
-										j_already_stored = true;
-										v.rerun(same_start);
-									}
+									v.crossed_with(std::make_pair(jj,same_start));
+									i_already_stored = true;
+									v.rerun(same_start);
 								}
-								
-								// If not already stored, create CrossedPath object and add to crossed_paths_
-								if(!i_already_stored)
+								if(v.index() == jj)
 								{
-									CrossedPath tempPath(ii, jj, same_start);
-									crossed_paths_.push_back(tempPath);
+									v.crossed_with(std::make_pair(ii,same_start));
+									j_already_stored = true;
+									v.rerun(same_start);
 								}
-								if(!j_already_stored)
-								{
-									CrossedPath tempPath(jj, ii, same_start);
-									crossed_paths_.push_back(tempPath);
-								}
-								
-								passed_ = false;
-								
 							}
+							
+							// If not already stored, create CrossedPath object and add to crossed_paths_
+							if(!i_already_stored)
+							{
+								CrossedPath tempPath(ii, jj, same_start);
+								crossed_paths_.push_back(tempPath);
+							}
+							if(!j_already_stored)
+							{
+								CrossedPath tempPath(jj, ii, same_start);
+								crossed_paths_.push_back(tempPath);
+							}
+							
+							passed_ = false;
+							
 						}
 					}
 				}
@@ -193,7 +197,7 @@ namespace bertini{
 			};
 			
 			
-			std::vector<CrossedPath> GetCrossedPaths()
+			const std::vector<CrossedPath> GetCrossedPaths() const
 			{
 				return crossed_paths_;
 			}
@@ -201,8 +205,6 @@ namespace bertini{
 			
 			
 		private:
-			// RealType boundary_same_point_tolerance_;
-			StartSystemT start_system_;
 			
 			std::vector<CrossedPath> crossed_paths_; // Data for all paths that crossed on last check
 			bool passed_;  // Did the check pass?

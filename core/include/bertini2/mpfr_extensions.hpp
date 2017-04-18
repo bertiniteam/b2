@@ -50,6 +50,16 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 
 namespace bertini{
 
+	/**
+	\brief Overload * for unsigned * complex<double>
+	*/
+	inline
+	std::complex<double> operator*(unsigned i, std::complex<double> z)
+	{
+		z*=i;
+		return z;
+	}
+
 #ifdef BMP_EXPRESSION_TEMPLATES
 	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>; 
 	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_on>;

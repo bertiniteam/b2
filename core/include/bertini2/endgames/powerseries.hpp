@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with powerseries_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -31,12 +31,7 @@
 
 namespace bertini{ namespace tracking { namespace endgame{
 
-inline
-dbl operator*(unsigned i, dbl z)
-{
-	z*=i;
-	return z;
-}
+
 /** 
 \class PowerSeriesEndgame
 
@@ -173,10 +168,9 @@ File: test/endgames/fixed_double_powerseries_test.cpp
 FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 */
 
-template<typename TrackerType, typename FinalEGT, typename... UsedNumTs> 
+template<typename TrackerType, typename FinalEGT> 
 class PowerSeriesEndgame : 
-	public EndgameBase<TrackerType, FinalEGT>,
-	public detail::Configured<config::PowerSeries>
+	public EndgameBase<TrackerType, FinalEGT>
 {
 
 	// convert the base endgame into the derived type.
@@ -187,13 +181,19 @@ class PowerSeriesEndgame :
 
 protected:
 
-	using BaseComplexType = typename TrackerTraits<TrackerType>::BaseComplexType;
-	using BaseRealType = typename TrackerTraits<TrackerType>::BaseRealType;
+	using BaseEG = EndgameBase<TrackerType, FinalEGT>;
+
+	using BaseComplexType = typename BaseEG::BaseComplexType;
+	using BaseRealType = typename BaseEG::BaseRealType;
+
+	using TupleOfTimes = typename BaseEG::TupleOfTimes;
+	using TupleOfSamps = typename BaseEG::TupleOfSamps;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
-	
-	using Config = detail::Configured<config::PowerSeries>;
+
+	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
+	using ConfigsAsTuple = typename Configs::ToTuple;
 
 	/**
 	\brief State variable representing a computed upper bound on the cycle number.
@@ -203,17 +203,17 @@ protected:
 	/**
 	\brief Holds the time values for different space values used in the Power series endgame. 
 	*/	
-	mutable std::tuple< TimeCont<UsedNumTs>... > times_;
+	mutable TupleOfTimes times_;
 
 	/**
 	\brief Holds the space values used in the Power series endgame. 
 	*/			
-	mutable std::tuple< SampCont<UsedNumTs>... > samples_;
+	mutable TupleOfSamps samples_;
 
 	/**
 	\brief Holds the derivatives at each space point. 
 	*/			
-	mutable std::tuple< SampCont<UsedNumTs>... > derivatives_;
+	mutable TupleOfSamps derivatives_;
 
 	/**
 	\brief Random vector used in computing an upper bound on the cycle number. 
@@ -222,18 +222,8 @@ protected:
 
 public:
 
-	using Config::Get;
-	using EndgameBase<TrackerType, FinalEGT>::Get;
-
-	using Config::Set;
-	using EndgameBase<TrackerType, FinalEGT>::Set;
-
 	auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
 
-	const config::PowerSeries& PowerSeriesSettings() const
-	{
-		return Config::template Get<config::PowerSeries>();
-	}
 
 	/**
 	\brief Function that clears all samples and times from data members for the Power Series endgame
@@ -255,7 +245,13 @@ public:
 	\brief Function to get the times used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	auto GetTimes() const {return std::get<TimeCont<CT> >(times_);}
+	const auto& GetTimes() const {return std::get<TimeCont<CT> >(times_);}
+
+
+	const BCT& LatestTimeImpl() const
+	{
+		return GetTimes<BCT>().back();
+	}
 
 	/**
 	\brief Function to set the space values used for the Power Series endgame.
@@ -267,37 +263,25 @@ public:
 	\brief Function to get the space values used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	auto GetSamples() const {return std::get<SampCont<CT> >(samples_);}
+	const auto& GetSamples() const {return std::get<SampCont<CT> >(samples_);}
 
 	/**
 	\brief Function to set the times used for the Power Series endgame.
-	// */	
-	template<typename CT>
-	void SetRandVec(Vec<CT> sample) {rand_vector = Vec<CT>::Random(sample.size());}
-
-
-
-	/**
-	\brief Setter for the specific settings in tracking_conifg.hpp under PowerSeries.
 	*/	
-	void SetPowerSeriesSettings(config::PowerSeries new_power_series_settings)
-	{
-		this->template Set(new_power_series_settings);
-	}
+	template<typename CT>
+	void SetRandVec(int size) {rand_vector = Vec<CT>::Random(size);}
+
+
+
 
 
 	explicit PowerSeriesEndgame(TrackerType const& tr, 
-	                            const std::tuple< 
-	                            	config::PowerSeries const&, 
-	            					const config::Endgame<BRT>&, 
-	            					const config::Security<BRT>&
-	            					>& settings )
-      : EndgameBase<TrackerType, FinalEGT>(tr, std::get<1>(settings), std::get<2>(settings)), 
-        Config( std::get<0>(settings) )
+	                            const ConfigsAsTuple& settings )
+      : EndgameBase<TrackerType, FinalEGT>(tr, settings)
    	{}
 
     template< typename... Ts >
-		PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Unpermute<config::PowerSeries, config::Endgame<BRT>, config::Security<BRT> >( ts... ) ) 
+		PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
 
@@ -343,9 +327,9 @@ public:
 					  abs(
 		                  log(
 		                      abs(
-		                          ((sample2 - sample1).transpose()*rand_vector).norm()
+		                          ((sample2 - sample1).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()
 		                          /
-		                          ((sample1 - sample0).transpose()*rand_vector).norm()
+		                          ((sample1 - sample0).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()
 		                          )
 		                      )
 		                  );
@@ -357,9 +341,9 @@ public:
 			using std::max;
 			//casting issues between auto and unsigned integer. TODO: Try to stream line this.
 			unsigned int upper_bound;
-			RT upper_bound_before_casting = round(floor(estimate + RT(.5))*PowerSeriesSettings().cycle_number_amplification);
+			RT upper_bound_before_casting = round(floor(estimate + RT(.5))*this->template Get<config::PowerSeries>().cycle_number_amplification);
 			upper_bound = unsigned (upper_bound_before_casting);
-			upper_bound_on_cycle_number_ = max(upper_bound,PowerSeriesSettings().max_cycle_number);
+			upper_bound_on_cycle_number_ = max(upper_bound,this->template Get<config::PowerSeries>().max_cycle_number);
 		}
 
 		return upper_bound_on_cycle_number_;
@@ -443,7 +427,7 @@ public:
 			                      pow(most_recent_time,static_cast<RT>(1)/candidate), // the target time
 			                      num_used_points,s_times,samples,s_derivatives) // the input data
 			                 - 
-			                 most_recent_sample).norm();
+			                 most_recent_sample).template lpNorm<Eigen::Infinity>();
 
 			if (curr_diff < min_found_difference)
 			{
@@ -579,7 +563,7 @@ public:
 
 		Vec<CT> next_sample;
 		CT next_time = (times.back() + target_time) * this->EndgameSettings().sample_factor; //setting up next time value using the midpoint formula, sample_factor will give us some 
-																							 // point between the two. 
+
   		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time) // generalized for target_time not equal to 0.
   		{
   			BOOST_LOG_TRIVIAL(severity_level::trace) << "Current time norm is less than min track time." << '\n';
@@ -653,23 +637,25 @@ public:
 		}
 
 		BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << DefaultPrecision() << "\n\n";
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point(0)) << "\n\n";
+		BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point) << "\n\n";
 
-		DefaultPrecision(Precision(start_point(0)));
+		DefaultPrecision(Precision(start_point));
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		//Set up for the endgame.
-			ClearTimesAndSamples<CT>();
+		ClearTimesAndSamples<CT>();
 
-			auto& samples = std::get<SampCont<CT> >(samples_);
-			auto& times   = std::get<TimeCont<CT> >(times_);
-			auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
-			Vec<CT>& final_approx = std::get<Vec<CT> >(this->final_approximation_at_origin_);
-			SetRandVec(start_point);
+		auto& samples = std::get<SampCont<CT> >(samples_);
+		auto& times   = std::get<TimeCont<CT> >(times_);
+		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		Vec<CT>& latest_approx = std::get<Vec<CT> >(this->final_approximation_);
+		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
 
-	 	RT approx_error(1);  //setting up the error of successive approximations. 
-	 	
+		RT& approx_error = std::get<RT>(this->approximate_error_);
 
+		SetRandVec<CT>(start_point.size());	 	
+		approx_error = 1;
+		
 		auto initial_sample_success = this->ComputeInitialSamples(start_time, target_time, start_point, times, samples);
 
 		if (initial_sample_success!=SuccessCode::Success)
@@ -680,9 +666,11 @@ public:
 
 		ComputeDerivatives<CT>();
 
-	 	Vec<CT> prev_approx;
+	    RT norm_of_dehom_of_latest_approx;
+
+
 	 	auto extrapolation_code = ComputeApproximationOfXAtT0(prev_approx, target_time);
-	 	final_approx = prev_approx;
+	 	latest_approx = prev_approx;
 
 	 	if (extrapolation_code != SuccessCode::Success)
 	 		return extrapolation_code;
@@ -690,12 +678,11 @@ public:
 
 	 	RT norm_of_dehom_of_prev_approx;
 	 	if (this->SecuritySettings().level <= 0)
-	 	 	norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).norm();
+	 	 	norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
 
 	 	
 
-	  	Vec<CT> latest_approx;
-	    RT norm_of_dehom_of_latest_approx;
+	  	
 
 
 		while (approx_error > this->FinalTolerance())
@@ -717,20 +704,21 @@ public:
 
 	 		if(this->SecuritySettings().level <= 0)
 	 		{
-	 			norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).norm();
+	 			norm_of_dehom_of_latest_approx = this->GetSystem().DehomogenizePoint(latest_approx).template lpNorm<Eigen::Infinity>();
 		 		if(norm_of_dehom_of_latest_approx > this->SecuritySettings().max_norm && norm_of_dehom_of_prev_approx > this->SecuritySettings().max_norm)
 	 				return SuccessCode::SecurityMaxNormReached;
+
+	 			//update
+	 			norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
 	 		}
 
-	 		approx_error = (latest_approx - prev_approx).norm();
-	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
-
+	 		//update
+	 		approx_error = (latest_approx - prev_approx).template lpNorm<Eigen::Infinity>();
 	 		prev_approx = latest_approx;
-	 		if(this->SecuritySettings().level <= 0)
-			    norm_of_dehom_of_prev_approx = norm_of_dehom_of_latest_approx;
+
+	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
 		} //end while	
-		// in case if we get out of the for loop without setting. 
-		final_approx = latest_approx;
+
 		return SuccessCode::Success;
 
 	} //end PSEG

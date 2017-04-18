@@ -121,7 +121,7 @@ public:
 
 
 		/**
-		This system management policy makes it so that the zero dim algorithm makes a clone of the supplied system when the algorithm is created.  The zerodim algorithm will homogenize the system (that's why you want a clone, so it leaves your original system untouched), form a start system (of your type, inferred from the template parameter for the zerodim alg), and couple the two together into the homotopy used to track.
+		This system management policy makes it so that the zero dim algorithm makes a clone of the supplied system when the algorithm is created.  The zerodim algorithm, and others, will homogenize the system (that's why you want a clone, so it leaves your original system untouched), form a start system (of your type, inferred from the template parameter for the zerodim alg), and couple the two together into the homotopy used to track.
 
 		If you don't want it to take copies, or homogenize, etc, use a different policy.
 
@@ -154,7 +154,7 @@ public:
 			/**
 			Simply forward on the systems for the constructor.  The AtConstruct function is to be called by the user of this policy, at construct time.
 			*/
-			CloneGiven(SystemType const& target) : target_system_(target)
+			CloneGiven(SystemType const& target) : target_system_(AtConstruct(target))
 			{}
 
 
@@ -193,7 +193,7 @@ public:
 			}
 
 			static
-			void FormHomotopy(SystemType & homotopy, SystemType const& start, StartSystemType const& target, std::string const& path_variable_name)
+			void FormHomotopy(SystemType & homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
 			{
 				auto t = MakeVariable(path_variable_name); 
 
@@ -220,7 +220,7 @@ public:
 				// now we populate the start system
 				FormStart(StartSystem(), TargetSystem());
 
-				FormHomotopy(Homotopy(), StartSystem(), TargetSystem(), path_variable_name);
+				FormHomotopy(Homotopy(), TargetSystem(), StartSystem(), path_variable_name);
 			}
 
 
@@ -310,40 +310,8 @@ public:
 				return std::ref(sys);
 			}
 
-			/**
-			\brief Don't do anything to the target system to prepare it for tracking.  
-
-			It's assumed it was passed in ready to track.
-			*/
-			static
-			void PrepareTarget(SystemType const& sys)
-			{ }
-
-
-			/**
-			\brief Do nothing to form the start system.  Had to have been given when constructing.
-			*/
-			static void FormStart(SystemType const& start, SystemType const& target)
-			{ }
-
-			/**
-			\brief Do nothing to form the homotopy.  Had to have been given when constructing.
-			*/
-			static
-			void FormHomotopy(SystemType const& homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
-			{ }
-
 			void SystemSetup(std::string const& path_variable_name) const
-			{
-				PrepareTarget(TargetSystem());
-
-				// now we populate the start system
-				FormStart(StartSystem(), TargetSystem());
-
-				FormHomotopy(Homotopy(), StartSystem(), TargetSystem(), path_variable_name);
-
-				
-			}
+			{ }
 
 		};
 	} // ns policy

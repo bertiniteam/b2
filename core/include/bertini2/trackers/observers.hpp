@@ -15,8 +15,8 @@
 //
 // Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
@@ -54,13 +54,20 @@ namespace bertini {
 					precision_increased_ = false;
 					starting_precision_ = p->Get().CurrentPrecision();
 				}
-				else if (auto p = dynamic_cast<const PrecisionIncreased<EmitterT>*>(&e))
+				else if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
 				{
 					auto& t = p->Get();
-					precision_increased_ = true;
-					next_precision_ = p->Next();
-					time_of_first_increase_ = t.CurrentTime();
-					t.RemoveObserver(this);
+					auto next = p->Next();
+					if (next > p->Previous())
+					{
+						precision_increased_ = true;
+						next_precision_ = next;
+						time_of_first_increase_ = t.CurrentTime();
+						t.RemoveObserver(this);
+
+						std::cout << "precision increased to " << next_precision_ << " at time " << time_of_first_increase_ << '\n';
+					}
+
 				}
 			}
 
@@ -70,23 +77,23 @@ namespace bertini {
 			}
 
 		public:
-			
-			auto  StartPrecision() const
+
+			unsigned  StartPrecision() const
 			{
 				return starting_precision_;
 			}
 
-			auto NextPrecision() const
+			unsigned NextPrecision() const
 			{
 				return next_precision_;
 			}
 
-			auto DidPrecisionIncrease() const
+			bool DidPrecisionIncrease() const
 			{
 				return precision_increased_;
 			}
 
-			auto TimeOfIncrease() const
+			typename TrackerTraits<TrackerT>::BaseComplexType TimeOfIncrease() const
 			{
 				return time_of_first_increase_;
 			}
@@ -128,13 +135,13 @@ namespace bertini {
 			{}
 
 		public:
-			
-			auto MinPrecision() const
+
+			unsigned MinPrecision() const
 			{
 				return min_precision_;
 			}
 
-			auto MaxPrecision() const
+			unsigned MaxPrecision() const
 			{
 				return max_precision_;
 			}
@@ -147,8 +154,8 @@ namespace bertini {
 
 		private:
 
-			unsigned min_precision_;
-			unsigned max_precision_;
+			unsigned min_precision_ = std::numeric_limits<unsigned>::max();
+			unsigned max_precision_ = 0;
 		};
 
 
@@ -229,15 +236,19 @@ namespace bertini {
 
 			virtual void Observe(AnyEvent const& e) override
 			{
-				
+
 
 				if (auto p = dynamic_cast<const Initializing<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
+					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing in double, tracking path\nfrom\tt = "
+						<< p->StartTime() << "\nto\tt = " << p->EndTime()
+						<< "\n from\tx = \n" << p->StartPoint()
+						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
 				else if (auto p = dynamic_cast<const Initializing<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint();// << "\n\nusing predictor " << p->Get().Predictor();
+					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing in multiprecision, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint()
+						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
 
 				else if(auto p = dynamic_cast<const TrackingEnded<EmitterT>*>(&e))
@@ -248,10 +259,10 @@ namespace bertini {
 					auto& t = p->Get();
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Tracker iteration " << t.NumTotalStepsTaken() << "\ncurrent precision: " << t.CurrentPrecision();
 
-					
-					BOOST_LOG_TRIVIAL(severity_level::trace) 
-						<< "t = " << t.CurrentTime() 
-						<< "\ncurrent stepsize: " << t.CurrentStepsize() 
+
+					BOOST_LOG_TRIVIAL(severity_level::trace)
+						<< "t = " << t.CurrentTime()
+						<< "\ncurrent stepsize: " << t.CurrentStepsize()
 						<< "\ndelta_t = " << t.DeltaT() << "\ncurrent x = "
 						<< t.CurrentPoint();
 				}
@@ -270,7 +281,7 @@ namespace bertini {
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration successful\n\n\n";
 				}
-				
+
 				else if (auto p = dynamic_cast<const FailedStep<EmitterT>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "tracker iteration unsuccessful\n\n\n";
@@ -279,45 +290,45 @@ namespace bertini {
 
 
 
-				
+
 
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful, result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful (mpfr), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful, result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful, result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful (mpfr), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful, result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
 
 				else if (auto p = dynamic_cast<const PredictorHigherPrecisionNecessary<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, higher precision necessary";
 				else if (auto p = dynamic_cast<const CorrectorHigherPrecisionNecessary<EmitterT>*>(&e))
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, higher precision necessary";				
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, higher precision necessary";
 
 
 
 				else if (auto p = dynamic_cast<const CorrectorMatrixSolveFailure<EmitterT>*>(&e))
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, matrix solve failure or failure to converge";				
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "corrector, matrix solve failure or failure to converge";
 				else if (auto p = dynamic_cast<const PredictorMatrixSolveFailure<EmitterT>*>(&e))
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "predictor, matrix solve failure or failure to converge";	
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "predictor, matrix solve failure or failure to converge";
 				else if (auto p = dynamic_cast<const FirstStepPredictorMatrixSolveFailure<EmitterT>*>(&e))
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure in initial solve of prediction";	
+					BOOST_LOG_TRIVIAL(severity_level::trace) << "Predictor, matrix solve failure in initial solve of prediction";
 
-					
+
 				else if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "changing precision from " << p->Previous() << " to " << p->Next();
-				
+
 				else
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "unlogged event, of type: " << boost::typeindex::type_id_runtime(e).pretty_name();
 			}
@@ -332,7 +343,7 @@ namespace bertini {
 		class StepFailScreenPrinter : public Observer<TrackerT>
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 		public:
-			
+
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
 			virtual void Observe(AnyEvent const& e) override

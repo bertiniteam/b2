@@ -39,7 +39,7 @@
 */
 
 #pragma once
-
+#include "bertini2/detail/typelist.hpp"
 
 namespace bertini {
 
@@ -62,6 +62,15 @@ namespace bertini {
 	        std::is_same<F, S>::value || IsTemplateParameter<F, T...>::value;
 	        // either it is the same as the first one in the pack, or we need to expand to the right in the pack.
 	};
+
+
+	template < typename T, typename ...Ts>
+	struct IsTemplateParameter<T, TypeList<Ts...>>
+	{
+		static constexpr bool value = IsTemplateParameter<T, Ts...>::value;
+	};
+
+
 
 	} // namespace detail
 

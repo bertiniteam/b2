@@ -30,6 +30,7 @@
 
 
 #include "bertini2/mpfr_complex.hpp"
+#include "bertini2/eigen_extensions.hpp"
 
 #include <boost/math/special_functions/modf.hpp> 
 
@@ -179,6 +180,21 @@ namespace bertini{
 
 	                c.real().str(), c.imag().str()     //  Data to output
 	                );
+			}
+
+
+			template <typename OutputIterator, typename T>
+			static bool generate(OutputIterator sink, Vec<T> const& c)
+			{
+				auto s = c.size();
+				for (decltype(s) ii=0; ii<s; ++ii)
+				{
+					bool b = generate(sink, c(ii));
+					if (!b)
+						return b;
+					boost::spirit::karma::generate(sink, (boost::spirit::karma::char_), '\n');
+				}
+				return true;
 			}
 
 		};

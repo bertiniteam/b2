@@ -130,7 +130,9 @@ inline
 unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & samples)
 {
 	auto def_prec = DefaultPrecision();
-	if (std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}))
+	if (std::any_of(begin(times),end(times),[=](auto const& p){return Precision(p)!=def_prec;}) 
+		||
+		std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}))
 	{
 		auto max_precision = max(MaxPrecision(samples), MaxPrecision(times));
 
