@@ -50,8 +50,8 @@ namespace bertini
 				throw std::runtime_error("attempting to construct multi homogeneous start system from non-polynomial target system");
 
 
-			if(!s.IsHomogeneous())
-						throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
+//			if(!s.IsHomogeneous())
+//						throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
 
 
 
@@ -70,7 +70,7 @@ namespace bertini
 			{
 				func = bertini::MakeInteger(1);
 				
-				for (int jj = 0; jj < degree_matrix_.cols(); ++jj)
+				for (int jj = 0; jj < s.NumHomVariableGroups(); ++jj)
 				{
 					if(degree_matrix_(ii,jj) != 0)
 					{
