@@ -75,6 +75,16 @@ namespace bertini
 					if(degree_matrix_(ii,jj) != 0)
 					{
 						// Fill the linear product matrix
+						linprod_matrix_(ii,jj) = std::make_shared<node::LinearProduct>(var_groups_[jj], degree_matrix_(ii,jj), true);
+						
+						func *= linprod_matrix_(ii,jj);
+					}
+				}
+				for (int jj = s.NumHomVariableGroups(); jj < degree_matrix_.cols(); ++jj)
+				{
+					if(degree_matrix_(ii,jj) != 0)
+					{
+						// Fill the linear product matrix
 						linprod_matrix_(ii,jj) = std::make_shared<node::LinearProduct>(var_groups_[jj], degree_matrix_(ii,jj));
 						
 						func *= linprod_matrix_(ii,jj);

@@ -269,9 +269,9 @@ namespace  bertini {
 				}
 			}
 			
-			if(is_homogenized_)
+			if(is_homogenized_ && !is_hom_vars_)
 			{
-				// If homvar is in vars?
+				// Is hom_variable is in vars?
 				if(std::find(vars.begin(), vars.end(), hom_variable_) != std::end(vars))
 				{
 					is_v_in_vars = true;
