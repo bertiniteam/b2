@@ -154,6 +154,13 @@ namespace  bertini {
 		
 		void LinearProduct::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
 		{
+			// Needed if this is for a homogeneous variable group
+			if(is_homogenized_)
+			{
+				return;
+			}
+			
+			
 			// Check if vars is the variable group for this linear product
 			bool is_vargroup_same = true; // Check if vars and variables_ are the same
 			bool is_v_in_vars = false; // Check if at least one v in variables_ is in vars
@@ -314,7 +321,7 @@ namespace  bertini {
 					temp_imag(0,jj) = coeffs_rat_imag_(index,jj);
 				}
 				
-				LinearProduct temp(variables_, hom_variable_, temp_real, temp_imag);
+				LinearProduct temp(variables_, hom_variable_, temp_real, temp_imag, is_hom_vars_);
 				return std::make_shared<LinearProduct>(temp);
 			}
 			else
@@ -326,7 +333,7 @@ namespace  bertini {
 					temp_mpfr(0,jj) = coeffs_mp_ref(index,jj);
 				}
 				
-				LinearProduct temp(variables_, hom_variable_, temp_mpfr);
+				LinearProduct temp(variables_, hom_variable_, temp_mpfr, is_hom_vars_);
 				return std::make_shared<LinearProduct>(temp);
 
 			}
@@ -350,7 +357,7 @@ namespace  bertini {
 					}
 				}
 				
-				LinearProduct temp(variables_, hom_variable_, temp_real, temp_imag);
+				LinearProduct temp(variables_, hom_variable_, temp_real, temp_imag, is_hom_vars_);
 				return std::make_shared<LinearProduct>(temp);
 			}
 			else
@@ -365,7 +372,7 @@ namespace  bertini {
 					}
 				}
 				
-				LinearProduct temp(variables_, hom_variable_, temp_mpfr);
+				LinearProduct temp(variables_, hom_variable_, temp_mpfr, is_hom_vars_);
 				return std::make_shared<LinearProduct>(temp);
 			}
 			

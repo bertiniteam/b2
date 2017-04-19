@@ -70,7 +70,8 @@ namespace  bertini {
 			 \param num_factors The number of linear factors in the product.
 			 
 			 */
-			LinearProduct(VariableGroup variables, int num_factors) : variables_(variables), num_factors_(num_factors)
+			LinearProduct(VariableGroup variables, int num_factors, bool is_hom_vars = false) :
+				variables_(variables), num_factors_(num_factors), is_hom_vars_(is_hom_vars)
 			{
 				//				num_variables_ = variables.size();  //Include homogenize variable
 				//
@@ -107,12 +108,19 @@ namespace  bertini {
 				
 				is_rational_coeffs_ = true;
 				
+				if(is_hom_vars)
+				{
+					is_homogenized_ = true;
+					hom_variable_ = MakeInteger(0);
+				}
+
+				
 			}
 			
 			
 			
 			/**
-			 /brief Constructor for a linear product node that passes in random coefficients.
+			 \brief Constructor for a linear product node that passes in random coefficients.
 			 
 			 \param variables A deque of variable nodes that are used in each linear factor.  This does not have to be an actual system variable group.
 			 \param num_factors The number of linear factors in the product.
@@ -120,8 +128,8 @@ namespace  bertini {
 			 \param coeffs_mpfr A matrix of mpfr data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
 			 
 			 */
-			LinearProduct(VariableGroup const& variables, Mat<mpfr> const& coeffs_mpfr)
-			: variables_(variables), num_factors_(coeffs_mpfr.rows())
+			LinearProduct(VariableGroup const& variables, Mat<mpfr> const& coeffs_mpfr, bool is_hom_vars = false)
+			: variables_(variables), num_factors_(coeffs_mpfr.rows()), is_hom_vars_(is_hom_vars)
 			{
 				if(variables.size()+1 != coeffs_mpfr.cols())
 					throw std::runtime_error("attempting to construct a linear product manually, not enough columns for the number of variables in the variable group");
@@ -145,30 +153,18 @@ namespace  bertini {
 				coeffs_mpfr_ref = coeffs_mpfr;
 				
 				is_rational_coeffs_ = false;
+				
+				if(is_hom_vars)
+				{
+					is_homogenized_ = true;
+					hom_variable_ = MakeInteger(0);
+				}
 			}
 			
 			
 			
 			
 			
-			void SetupVariables(int num_factors, VariableGroup const& variables)
-			{
-				num_variables_ = variables.size();
-				
-				// Resize coeffs matrix
-				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
-				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
-				
-				// Resize temporary variable holders
-				temp_var_d_.resize(num_variables_ + 1);
-				temp_var_d_[num_variables_] = dbl(1);
-				temp_var_mp_.resize(num_variables_ + 1);
-				temp_var_mp_[num_variables_].SetOne();
-				
-				hom_variable_ = MakeInteger(1);
-			}
 			
 			
 			/**
@@ -555,6 +551,7 @@ namespace  bertini {
 			size_t num_variables_;  ///< The number of variables in each linear.
 			bool is_rational_coeffs_; ///< Do we have a rational coefficient to downsample from?
 			bool is_homogenized_;  ///< Have we homogenized the linear product?
+			bool is_hom_vars_;  ///< Is this linear for a homogeneous variable group?
 			
 			
 			mutable std::vector<dbl> temp_var_d_;
@@ -572,8 +569,9 @@ namespace  bertini {
 			
 			LinearProduct() = default;
 			
-			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var, Mat<mpq_rational> const& coeffs_real, Mat<mpq_rational> const& coeffs_imag) :
-				variables_(variables), num_factors_(coeffs_real.rows()), hom_variable_(hom_var)
+			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var,
+						  Mat<mpq_rational> const& coeffs_real, Mat<mpq_rational> const& coeffs_imag, bool is_hom_vars) :
+				variables_(variables), num_factors_(coeffs_real.rows()), hom_variable_(hom_var), is_hom_vars_(is_hom_vars)
 			{
 				num_variables_ = variables.size();
 				
@@ -606,13 +604,18 @@ namespace  bertini {
 				
 				is_rational_coeffs_ = true;
 
-				
+				if(is_hom_vars)
+				{
+					is_homogenized_ = true;
+					hom_variable_ = MakeInteger(0);
+				}
+
 			}
 
 			
 			
-			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var, Mat<mpfr> const& coeffs) :
-			variables_(variables), num_factors_(coeffs.rows()), hom_variable_(hom_var)
+			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var, Mat<mpfr> const& coeffs, bool is_hom_vars) :
+			variables_(variables), num_factors_(coeffs.rows()), hom_variable_(hom_var), is_hom_vars_(is_hom_vars)
 			{
 				num_variables_ = variables.size();
 				
@@ -640,7 +643,12 @@ namespace  bertini {
 				
 				is_rational_coeffs_ = false;
 				
-				
+				if(is_hom_vars)
+				{
+					is_homogenized_ = true;
+					hom_variable_ = MakeInteger(0);
+				}
+
 			}
 
 			
@@ -662,6 +670,28 @@ namespace  bertini {
 			 */
 			
 			std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices) const;
+			
+			
+			
+			void SetupVariables(int num_factors, VariableGroup const& variables)
+			{
+				num_variables_ = variables.size();
+				
+				// Resize coeffs matrix
+				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
+				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
+				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
+				
+				// Resize temporary variable holders
+				temp_var_d_.resize(num_variables_ + 1);
+				temp_var_d_[num_variables_] = dbl(1);
+				temp_var_mp_.resize(num_variables_ + 1);
+				temp_var_mp_[num_variables_].SetOne();
+				
+				hom_variable_ = MakeInteger(1);
+			}
+
 			
 			
 			
