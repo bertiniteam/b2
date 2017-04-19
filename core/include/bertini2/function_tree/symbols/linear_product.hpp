@@ -202,7 +202,7 @@ namespace  bertini {
 			/**
 			 Method for printing to output stream
 			 */
-			void print(std::ostream & target) const override{};
+			void print(std::ostream & target) const override;
 			
 			
 			

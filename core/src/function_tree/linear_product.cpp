@@ -380,6 +380,36 @@ namespace  bertini {
 
 		
 		
+		void LinearProduct::print(std::ostream & target) const
+		{
+			auto& coeff_ref = std::get<Mat<dbl>>(coeffs_);
+			
+			for(int ii = 0; ii < num_factors_; ++ii)
+			{
+				target << "(" << coeff_ref(ii,0) << "*";
+				variables_[0]->print(target);
+				for(int jj = 1; jj < num_variables_; ++jj)
+				{
+					target << " + " << coeff_ref(ii,jj) << "*";
+					variables_[jj]->print(target);
+				}
+				
+				if(!is_hom_vars_)
+				{
+					target << " + " << coeff_ref(ii,num_variables_);
+				}
+				
+				if(ii == num_factors_ - 1)
+				{
+					target << ")";
+				}
+				else
+				{
+					target << ")*";
+				}
+			}
+		}
+		
 		
 		
 		
@@ -437,6 +467,36 @@ namespace  bertini {
 			
 			
 		}
+		
+		
+		
+		
+		void DiffLinear::print(std::ostream & target) const
+		{
+			auto& coeff_ref = std::get<Mat<dbl>>(coeffs_);
+			
+			for(int ii = 0; ii < num_factors_; ++ii)
+			{
+				target << "(" << coeff_ref(ii,0) << "*d";
+				variables_[0]->print(target);
+				for(int jj = 1; jj < num_variables_; ++jj)
+				{
+					target << " + " << coeff_ref(ii,jj) << "*d";
+					variables_[jj]->print(target);
+				}
+				
+				
+				if(ii == num_factors_ - 1)
+				{
+					target << ")";
+				}
+				else
+				{
+					target << ")*";
+				}
+			}
+		}
+
 
 
 	}
