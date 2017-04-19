@@ -652,6 +652,106 @@ BOOST_AUTO_TEST_CASE(linprod_hom_eval)
 	
 }
 
+BOOST_AUTO_TEST_CASE(linprod_hom_eval_homvars)
+{
+	using bertini::VariableGroup;
+	using namespace bertini::node;
+	
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto h0 = MakeVariable("HOM0");
+	auto h1 = MakeVariable("HOM1");
+	auto z = MakeVariable("z");
+	
+	
+	
+	VariableGroup v0{x,z};
+	VariableGroup v1{y};
+	Mat<dbl> coeff_dbl(2,3);
+	Mat<mpfr> coeff_mpfr(2,3);
+	
+	for(int ii = 0; ii < 2; ++ii)
+	{
+		for(int jj = 0; jj < 3; ++jj)
+		{
+			coeff_dbl(ii,jj) = dbl(ii+1, jj+1);
+			coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
+		}
+	}
+	
+	std::shared_ptr<bertini::node::Node>linprod1 = bertini::MakeLinearProduct(v0, coeff_mpfr, true);
+	
+	coeff_dbl = Mat<dbl>(1,2);
+	coeff_mpfr = Mat<mpfr>(1,2);
+	
+	for(int ii = 0; ii < 1; ++ii)
+	{
+		for(int jj = 0; jj < 2; ++jj)
+		{
+			coeff_dbl(ii,jj) = dbl(ii+3, jj+3);
+			coeff_mpfr(ii,jj) = mpfr(ii+3, jj+3);
+		}
+	}
+	
+	std::shared_ptr<bertini::node::Node> linprod2 = bertini::MakeLinearProduct(v1, coeff_mpfr, true);
+	
+	std::shared_ptr<bertini::node::Node> linprod_node = (mpfr(1,1)*x + mpfr(1,2)*z) * (mpfr(2,1)*x + mpfr(2,2)*z)* (mpfr(3,3)*y);
+	std::shared_ptr<bertini::node::Node> linprod = linprod1*linprod2;
+	
+	dbl xval_d = dbl(.5,1);
+	dbl yval_d = dbl(.6,1);
+	dbl zval_d = dbl(.7,1);
+	dbl h0val_d = dbl(.34, -2.1);
+	dbl h1val_d = dbl(-1.2, .0043);
+	mpfr xval_mp = mpfr(".5", "1");
+	mpfr yval_mp = mpfr(".6", "1");
+	mpfr zval_mp = mpfr(".7", "1");
+	mpfr h0val_mp = mpfr(".34", "-2.1");
+	mpfr h1val_mp = mpfr("-1.2", ".0043");
+	
+	v0[0]->set_current_value(xval_d);
+	v0[1]->set_current_value(zval_d);
+	v1[0]->set_current_value(yval_d);
+	v0[0]->set_current_value(xval_mp);
+	v0[1]->set_current_value(zval_mp);
+	v1[0]->set_current_value(yval_mp);
+	
+	h0->set_current_value(h0val_d);
+	h1->set_current_value(h1val_d);
+	h0->set_current_value(h0val_mp);
+	h1->set_current_value(h1val_mp);
+	
+	
+	linprod_node->Homogenize(v0,h0);
+	linprod->Homogenize(v0,h0);
+	
+	dbl eval_d = linprod->Eval<dbl>();
+	dbl exact_d = linprod_node->Eval<dbl>();
+	mpfr eval_mp = linprod->Eval<mpfr>();
+	mpfr exact_mp = linprod_node->Eval<mpfr>();
+	
+	BOOST_CHECK(fabs(eval_d.real()/exact_d.real() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(eval_d.imag()/exact_d.imag() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(eval_mp.real()/exact_mp.real() - 1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(eval_mp.imag()/exact_mp.imag() - 1) < threshold_clearance_mp);
+	
+	linprod_node->Homogenize(v1,h1);
+	linprod->Homogenize(v1,h1);
+	
+	eval_d = linprod->Eval<dbl>();
+	exact_d = linprod_node->Eval<dbl>();
+	eval_mp = linprod->Eval<mpfr>();
+	exact_mp = linprod_node->Eval<mpfr>();
+	
+	BOOST_CHECK(fabs(eval_d.real()/exact_d.real() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(eval_d.imag()/exact_d.imag() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(eval_mp.real()/exact_mp.real() - 1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(eval_mp.imag()/exact_mp.imag() - 1) < threshold_clearance_mp);
+	
+	
+}
+
+
 
 BOOST_AUTO_TEST_CASE(linprod_hom_diff_eval)
 {
