@@ -49,7 +49,7 @@ enum class AlgoChoice
 	ExtractWitnessSet = 4,
 	WitnessSetProjection = 5,
 	IsosingularStab = 6
-}
+};
 
 } // namespace classic
 
@@ -129,7 +129,7 @@ struct ZeroDim
 
 struct Meta
 {
-	classic::AlgoChoice tracktype = 0;
+	classic::AlgoChoice tracktype = classic::AlgoChoice::ZeroDim;
 };
 
 }// config
