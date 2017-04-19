@@ -161,16 +161,24 @@ namespace bertini
 
 			int col_count = 0;
 			int outer_loop = 0;
+			size_t var_count = 0;
 			for(std::vector<VariableGroup>::iterator it = var_groups_.begin(); it != var_groups_.end(); ++it)
 			{
 				outer_loop++;
   				std::vector<int> degs = target_system.Degrees(*it);
 
+				for(int ii = 0; ii < (*iter)->size(); ++ii)
+				{
+					variable_cols[col_count].push_back(var_count);
+					var_count++;
+				}
+				
   				for(int ii = 0; ii <= degs.size() - 1; ++ii)
   				{
   					degree_matrix_(ii,col_count) = degs[ii];
   				}
   				col_count++;
+				
 			}
 
 
@@ -359,6 +367,18 @@ namespace bertini
 			// Create a linear system to solve.
 			size_t num_grouped_variables = NumNaturalVariables() - NumUngroupedVariables();
 			Mat<dbl> A(partition.size(), num_grouped_variables);
+			
+			for(int ii = 0; ii < partition.size(); ++ii)
+			{
+				Vec<size_t> cols = variable_cols[partition[ii]];
+				auto coeff = linprod_matrix_(ii,partition[ii])->GetCoeff(subscript[ii]);
+				for(int jj = 0; jj < cols.size(); ++jj)
+				{
+					v(cols[jj]) = coeff[jj]
+				}
+				Vec<dbl> v(num_grouped_variables);
+			}
+			
 			
 			
 			

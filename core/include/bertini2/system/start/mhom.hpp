@@ -115,7 +115,9 @@ namespace bertini
 			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
 			std::vector< VariableGroup > var_groups_; ///< All variables groups from the target system, both affine and projective.
 			Mat<Nd> linprod_matrix_; ///< All the linear products for each entry in the degree matrix.
+			std::vector< std::vector<size_t> > variable_cols_; ///< The columns associated with each variable.  The first index is the variable group, the second index is the particular variable in the group.
 
+			mutable Vec<mpfr> temp_v_mp_;
 
 			friend class boost::serialization::access;
 
