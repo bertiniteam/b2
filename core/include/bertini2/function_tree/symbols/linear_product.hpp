@@ -112,6 +112,13 @@ namespace  bertini {
 				{
 					is_homogenized_ = true;
 					hom_variable_ = MakeInteger(0);
+					for(int ii = 0; ii < coeffs_mpfr_ref.rows(); ++ii)
+					{
+						coeffs_rat_real_(ii,num_variables_) = mpq_rational(0);
+						coeffs_rat_imag_(ii,num_variables_) = mpq_rational(0);
+						coeffs_dbl_ref(ii,num_variables_) = dbl(0);
+						coeffs_mpfr_ref(ii,num_variables_) = mpfr(0);
+					}
 				}
 
 				
@@ -141,24 +148,30 @@ namespace  bertini {
 				
 				SetupVariables(num_factors_, variables);
 				
-				
-				// Set the coefficient matrices with input matrices.
-				for(int ii = 0; ii < num_factors_; ++ii)
-				{
-					for(int jj = 0; jj < coeffs_mpfr.cols(); ++jj)
-					{
-						coeffs_dbl_ref(ii,jj) = static_cast<dbl>(coeffs_mpfr(ii,jj));
-					}
-				}
 				coeffs_mpfr_ref = coeffs_mpfr;
-				
-				is_rational_coeffs_ = false;
-				
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
 					hom_variable_ = MakeInteger(0);
+					for(int ii = 0; ii < coeffs_mpfr_ref.rows(); ++ii)
+					{
+						coefs_mpfr_ref(ii,num_variables_) = mpfr(0);
+					}
 				}
+				
+				// Set the coefficient matrices with input matrices.
+				
+				for(int ii = 0; ii < num_factors_; ++ii)
+				{
+					for(int jj = 0; jj < coeffs_mpfr.cols(); ++jj)
+					{
+						coeffs_dbl_ref(ii,jj) = static_cast<dbl>(coeffs_mpfr_ref(ii,jj));
+					}
+				}
+				
+				
+				is_rational_coeffs_ = false;
+				
 			}
 			
 			
@@ -673,7 +686,7 @@ namespace  bertini {
 			
 			
 			
-			void SetupVariables(int num_factors, VariableGroup const& variables)
+			void SetupVariables(size_t num_factors, VariableGroup const& variables)
 			{
 				num_variables_ = variables.size();
 				
@@ -717,6 +730,8 @@ namespace  bertini {
 					for(int jj = 0; jj < coeffs_ref.cols(); ++jj)
 					{
 						coeffs_ref(ii,jj).precision(prec);
+						coeffs_ref(ii,jj).real( static_cast<mpfr_float>(coeffs_rat_real_(ii,jj)) );
+						coeffs_ref(ii,jj).imag( static_cast<mpfr_float>(coeffs_rat_imag_(ii,jj)) );
 					}
 				}
 			}
