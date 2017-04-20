@@ -64,7 +64,7 @@ namespace bertini
 			CopyVariableStructure(s);
 			
 			
-			linprod_matrix_ = Mat<Nd>(degree_matrix_.rows(), degree_matrix_.cols());
+			linprod_matrix_ = Mat<std::shared_ptr<node::LinearProduct>>(degree_matrix_.rows(), degree_matrix_.cols());
 			std::shared_ptr<node::Node> func;
 			for (int ii = 0; ii < degree_matrix_.rows(); ++ii)
 			{
@@ -162,16 +162,19 @@ namespace bertini
 			int col_count = 0;
 			int outer_loop = 0;
 			size_t var_count = 0;
+			
 			for(std::vector<VariableGroup>::iterator it = var_groups_.begin(); it != var_groups_.end(); ++it)
 			{
 				outer_loop++;
   				std::vector<int> degs = target_system.Degrees(*it);
-
-				for(int ii = 0; ii < (*iter)->size(); ++ii)
+				
+				std::vector<size_t> temp_v;
+				for(int ii = 0; ii < (*it).size(); ++ii)
 				{
-					variable_cols[col_count].push_back(var_count);
+					temp_v.push_back(var_count);
 					var_count++;
 				}
+				variable_cols_.push_back(temp_v);
 				
   				for(int ii = 0; ii <= degs.size() - 1; ++ii)
   				{
@@ -320,12 +323,12 @@ namespace bertini
 
 
 		
-		Vec<dbl> MHomogeneous::GenerateStartPoint(dbl,unsigned long long index) const
+		template<typename T>
+		void MHomogeneous::GenerateStartPointT(Vec<T>& start_point, unsigned long long index) const
 		{
 			if(valid_partitions_.size() <= 0)
 				throw std::runtime_error("Trying to generate MHom start points before determining valid partitions.");
 			
-			Vec<dbl> start_point(NumVariables());
 			
 			
 			// First, determine which partition we are looking through
@@ -363,27 +366,45 @@ namespace bertini
 			
 			
 			
-			
 			// Create a linear system to solve.
 			size_t num_grouped_variables = NumNaturalVariables() - NumUngroupedVariables();
-			Mat<dbl> A(partition.size(), num_grouped_variables);
+			Mat<T> A(partition.size(), num_grouped_variables);
+			Vec<T> v(num_grouped_variables);
+			Vec<T> b(partition.size());
 			
 			for(int ii = 0; ii < partition.size(); ++ii)
 			{
-				Vec<size_t> cols = variable_cols[partition[ii]];
-				auto coeff = linprod_matrix_(ii,partition[ii])->GetCoeff(subscript[ii]);
+				v.setZero();
+				std::vector<size_t> cols = variable_cols_[partition[ii]];
+				auto coeff = linprod_matrix_(ii,partition[ii])->GetCoeffs<T>(subscript[ii]);
 				for(int jj = 0; jj < cols.size(); ++jj)
 				{
-					v(cols[jj]) = coeff[jj]
+					v(cols[jj]) = coeff[jj];
 				}
-				Vec<dbl> v(num_grouped_variables);
+				
+				A.row(ii) = v;
+				b(ii) = -coeff[cols.size()];
 			}
 			
+			start_point = A.partialPivLu().solve(b);
 			
+			
+			var_groups_[0][0]->set_current_value(start_point(0));
+			var_groups_[0][1]->set_current_value(start_point(1));
+			
+			std::shared_ptr<node::Node> f = Function(0);
 			
 			
 			
 
+		}
+		
+		
+		Vec<dbl> MHomogeneous::GenerateStartPoint(dbl,unsigned long long index) const
+		{
+			Vec<dbl> start_point(NumVariables());
+			GenerateStartPointT(start_point, index);
+			
 			return start_point;
 		}
 
@@ -391,6 +412,7 @@ namespace bertini
 		Vec<mpfr> MHomogeneous::GenerateStartPoint(mpfr,unsigned long long index) const
 		{
 			Vec<mpfr> start_point(NumVariables());
+			GenerateStartPointT(start_point, index);
 
 			return start_point;	
 		}

@@ -475,26 +475,15 @@ namespace  bertini {
 		{
 			auto& coeff_ref = std::get<Mat<dbl>>(coeffs_);
 			
-			for(int ii = 0; ii < num_factors_; ++ii)
+			target << "(" << coeff_ref(0,0) << "*d";
+			variables_[0]->print(target);
+			for(int jj = 1; jj < num_variables_; ++jj)
 			{
-				target << "(" << coeff_ref(ii,0) << "*d";
-				variables_[0]->print(target);
-				for(int jj = 1; jj < num_variables_; ++jj)
-				{
-					target << " + " << coeff_ref(ii,jj) << "*d";
-					variables_[jj]->print(target);
-				}
-				
-				
-				if(ii == num_factors_ - 1)
-				{
-					target << ")";
-				}
-				else
-				{
-					target << ")*";
-				}
+				target << " + " << coeff_ref(0,jj) << "*d";
+				variables_[jj]->print(target);
 			}
+			
+			target << ")";
 		}
 
 

@@ -110,11 +110,18 @@ namespace bertini
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
 			Vec<mpfr> GenerateStartPoint(mpfr,unsigned long long index) const override;
+			
+			/**
+			 A local version of GenerateStartPoint that can be templated
+			*/
+			template<typename T>
+			void GenerateStartPointT(Vec<T>& start_point, unsigned long long index) const;
+			
+			
 
-			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.
-			std::vector< VariableGroup > var_groups_; ///< All variables groups from the target system, both affine and projective.
-			Mat<Nd> linprod_matrix_; ///< All the linear products for each entry in the degree matrix.
+			std::vector< VariableGroup > var_groups_;
+			Mat<std::shared_ptr<node::LinearProduct>> linprod_matrix_; ///< All the linear products for each entry in the degree matrix.
 			std::vector< std::vector<size_t> > variable_cols_; ///< The columns associated with each variable.  The first index is the variable group, the second index is the particular variable in the group.
 
 			mutable Vec<mpfr> temp_v_mp_;
@@ -125,7 +132,6 @@ namespace bertini
 			void serialize(Archive& ar, const unsigned version) 
 			{
 				ar & boost::serialization::base_object<StartSystem>(*this);
-				ar & random_values_;
 				ar & degrees_;
 			}
 

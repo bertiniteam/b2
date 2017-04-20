@@ -155,7 +155,7 @@ namespace  bertini {
 					hom_variable_ = MakeInteger(0);
 					for(int ii = 0; ii < coeffs_mpfr_ref.rows(); ++ii)
 					{
-						coefs_mpfr_ref(ii,num_variables_) = mpfr(0);
+						coeffs_mpfr_ref(ii,num_variables_) = mpfr(0);
 					}
 				}
 				
@@ -799,7 +799,7 @@ namespace  bertini {
 			/**
 			 Method for printing to output stream
 			 */
-			void print(std::ostream & target) const override{};
+			void print(std::ostream & target) const override;
 			
 			
 			
