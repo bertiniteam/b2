@@ -717,6 +717,8 @@ namespace  bertini {
 					for(int jj = 0; jj < coeffs_ref.cols(); ++jj)
 					{
 						coeffs_ref(ii,jj).precision(prec);
+						coeffs_ref(ii,jj).real( static_cast<mpfr_float>(coeffs_rat_real_(ii,jj)) );
+						coeffs_ref(ii,jj).imag( static_cast<mpfr_float>(coeffs_rat_imag_(ii,jj)) );
 					}
 				}
 			}
