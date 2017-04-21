@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with include/bertini2/function_tree/factory.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 
 
@@ -56,10 +56,10 @@ namespace bertini {
 
 	\return A shared pointer to a variable, the name of which you stated.
 	*/
-	inline
-	std::shared_ptr<node::Variable> MakeVariable(std::string const& name)
+	template<typename T>
+	std::shared_ptr<node::Variable> MakeVariable(T const& t)
 	{
-		return std::make_shared<node::Variable>(name);
+		return std::make_shared<node::Variable>(t);
 	}
 
 

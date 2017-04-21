@@ -277,10 +277,8 @@ public:
 	 */
 	virtual void precision(unsigned int prec) const = 0;
 
-	unsigned precision() const
-	{
-		return std::get<std::pair<mpfr,bool> >(current_value_).first.precision();
-	}
+	unsigned precision() const;
+
 	///////// PUBLIC PURE METHODS /////////////////
 
 	/**
@@ -288,21 +286,15 @@ public:
 
 	\return True if it is polynomial, false if not.
 	*/
-	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const
-	{
-		return Degree(v)>=0;
-	}
-
+	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const;
+	
 
 	/**
 	Check if a Node is polynomial -- it has degree at least 0.  Negative degrees indicate non-polynomial.
 
 	\return True if it is polynomial, false if not.
 	*/
-	bool IsPolynomial(VariableGroup const&v) const
-	{
-		return Degree(v)>=0;
-	}
+	bool IsPolynomial(VariableGroup const&v) const;
 
 
 	
@@ -359,17 +351,10 @@ protected:
 	/**
 	Set the stored values for the Node to indicate a fresh eval on the next pass.  This is so that Nodes which are referred to more than once, are only evaluated once.  The first evaluation is fresh, and then the indicator for fresh/stored is set to stored.  Subsequent evaluation calls simply return the stored number.
 	*/
-	void ResetStoredValues() const
-	{
-		std::get< std::pair<dbl,bool> >(current_value_).second = false;
-		std::get< std::pair<mpfr,bool> >(current_value_).second = false;
-	}
+	void ResetStoredValues() const;
 
-	Node()
-	{
-		std::get<std::pair<dbl,bool> >(current_value_).second = false;
-		std::get<std::pair<mpfr,bool> >(current_value_).second = false;
-	}
+	Node();
+
 private:
 	friend std::ostream& operator<<(std::ostream & out, const Node& N);
 
