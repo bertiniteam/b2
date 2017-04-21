@@ -32,6 +32,5 @@
 
 #include "bertini2/system/start/total_degree.hpp"
 #include "bertini2/system/start/mhom.hpp"
-#include "bertini2/system/start/user.hpp"
 
 

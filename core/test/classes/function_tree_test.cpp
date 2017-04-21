@@ -1825,6 +1825,239 @@ BOOST_AUTO_TEST_CASE(function_tree_combine_product_of_two_integer_powers)
 
 
 
+BOOST_AUTO_TEST_CASE(make_linear_product)
+{
+	using namespace bertini::node;
+	
+	bertini::VariableGroup vargp;
+	std::shared_ptr<Variable> x = bertini::MakeVariable("x");
+	std::shared_ptr<Variable> y = bertini::MakeVariable("y");
+	std::shared_ptr<Variable> z = bertini::MakeVariable("z");
+	std::shared_ptr<Variable> U = bertini::MakeVariable("U");
+	vargp.push_back(x);
+	vargp.push_back(y);
+	vargp.push_back(z);
+	
+	// Make with automatically genearted coefficients
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp,4);
+	
+	// Make with user defined coefficients
+	Mat<mpfr> coeff_mpfr(3,4);
+	for(int ii = 0; ii < 3; ++ii)
+	{
+		for(int jj = 0; jj < 4; ++jj)
+		{
+			coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
+		}
+	}
+	
+	std::shared_ptr<LinearProduct> linprod2 = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
+	
+}
+
+
+
+BOOST_AUTO_TEST_CASE(eval_linear_product)
+{
+	using namespace bertini::node;
+	
+	bertini::VariableGroup vargp;
+	std::shared_ptr<Variable> x = bertini::MakeVariable("x");
+	std::shared_ptr<Variable> y = bertini::MakeVariable("y");
+	std::shared_ptr<Variable> z = bertini::MakeVariable("z");
+	vargp.push_back(x);
+	vargp.push_back(y);
+	vargp.push_back(z);
+	
+	dbl xval_d = dbl(.5,1);
+	dbl yval_d = dbl(.6,1);
+	dbl zval_d = dbl(.7,1);
+	mpfr xval_mp = mpfr(".5", "1");
+	mpfr yval_mp = mpfr(".6", "1");
+	mpfr zval_mp = mpfr(".7", "1");
+	
+	
+	vargp[0]->set_current_value<dbl>(xval_d);
+	vargp[1]->set_current_value<dbl>(yval_d);
+	vargp[2]->set_current_value<dbl>(zval_d);
+	vargp[0]->set_current_value<mpfr>(xval_mp);
+	vargp[1]->set_current_value<mpfr>(yval_mp);
+	vargp[2]->set_current_value<mpfr>(zval_mp);
+	
+	
+	// Make with user defined coefficients
+	int num_factors = 1;
+	int num_vars = 3;
+	Mat<dbl> coeff_dbl(num_factors,num_vars+1);
+	Mat<mpfr> coeff_mpfr(num_factors,num_vars+1);
+	dbl exact_d = dbl(1);
+	mpfr exact_mp = mpfr(1);
+	for(int ii = 0; ii < num_factors; ++ii)
+	{
+		dbl temp_d = dbl(0);
+		mpfr temp_mp = mpfr(0);
+		for(int jj = 0; jj < num_vars+1; ++jj)
+		{
+			coeff_dbl(ii,jj) = dbl(ii+1, jj+1);
+			coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
+			
+			if(jj < num_vars)
+			{
+				temp_d += coeff_dbl(ii,jj)*vargp[jj]->Eval<dbl>();
+				temp_mp += coeff_mpfr(ii,jj)*vargp[jj]->Eval<mpfr>();
+			}
+			else
+			{
+				temp_d += coeff_dbl(ii,jj);
+				temp_mp += coeff_mpfr(ii,jj);
+			}
+			
+		}
+		exact_d *= temp_d;
+		exact_mp *= temp_mp;
+	}
+	
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
+	
+	
+	dbl eval_d = linprod->Eval<dbl>();
+	mpfr eval_mp = linprod->Eval<mpfr>();
+	
+	//		std::cout << "eval = " << eval_mp << "    exact = " << exact_mp << std::endl;
+	
+	BOOST_CHECK(fabs(eval_d.real()/exact_d.real() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(eval_d.imag()/exact_d.imag() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(eval_mp.real()/exact_mp.real() - 1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(eval_mp.imag()/exact_mp.imag() - 1) < threshold_clearance_mp);
+	
+}
+
+
+BOOST_AUTO_TEST_CASE(linear_product_degree)
+{
+	using namespace bertini::node;
+	
+	bertini::VariableGroup vargp, vargp2, vargp3;
+	std::shared_ptr<Variable> x = bertini::MakeVariable("x");
+	std::shared_ptr<Variable> y = bertini::MakeVariable("y");
+	std::shared_ptr<Variable> z = bertini::MakeVariable("z");
+	std::shared_ptr<Variable> w = bertini::MakeVariable("w");
+	vargp.push_back(x);
+	vargp.push_back(y);
+	vargp.push_back(z);
+	
+	vargp2.push_back(x);
+	vargp2.push_back(z);
+	vargp2.push_back(w);
+	
+	vargp3.push_back(w);
+	
+	
+	
+	// Make with automatically genearted coefficients
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp,4);
+	
+	BOOST_CHECK_EQUAL(linprod->Degree(x), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(y), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(z), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(w), 0);
+	
+	BOOST_CHECK_EQUAL(linprod->Degree(vargp), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(vargp2), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(vargp3), 0);
+	
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp)[0], 4);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp)[1], 4);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp)[2], 4);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp2)[0], 4);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp2)[2], 0);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp3)[0], 0);
+	
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(linear_prod_get_linears)
+{
+	using namespace bertini::node;
+	
+	bertini::VariableGroup vargp;
+	std::shared_ptr<Variable> x = bertini::MakeVariable("x");
+	std::shared_ptr<Variable> y = bertini::MakeVariable("y");
+	std::shared_ptr<Variable> z = bertini::MakeVariable("z");
+	vargp.push_back(x);
+	vargp.push_back(y);
+	vargp.push_back(z);
+	
+	dbl xval_d = dbl(.5,1);
+	dbl yval_d = dbl(.6,1);
+	dbl zval_d = dbl(.7,1);
+	mpfr xval_mp = mpfr(".5", "1");
+	mpfr yval_mp = mpfr(".6", "1");
+	mpfr zval_mp = mpfr(".7", "1");
+	
+	
+	vargp[0]->set_current_value<dbl>(xval_d);
+	vargp[1]->set_current_value<dbl>(yval_d);
+	vargp[2]->set_current_value<dbl>(zval_d);
+	vargp[0]->set_current_value<mpfr>(xval_mp);
+	vargp[1]->set_current_value<mpfr>(yval_mp);
+	vargp[2]->set_current_value<mpfr>(zval_mp);
+	
+	
+	// Make with user defined coefficients
+	int num_factors = 3;
+	int num_vars = 3;
+	Mat<dbl> coeff_dbl(num_factors,num_vars+1);
+	Mat<mpfr> coeff_mpfr(num_factors,num_vars+1);
+	std::vector<dbl> exact_d;
+	std::vector<mpfr> exact_mp;
+	for(int ii = 0; ii < num_factors; ++ii)
+	{
+		exact_d.push_back(dbl(1));
+		exact_mp.push_back(mpfr(1));
+		
+		dbl temp_d = dbl(0);
+		mpfr temp_mp = mpfr(0);
+		for(int jj = 0; jj < num_vars+1; ++jj)
+		{
+			coeff_dbl(ii,jj) = dbl(ii+1, jj+1);
+			coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
+			
+			if(jj < num_vars)
+			{
+				temp_d += coeff_dbl(ii,jj)*vargp[jj]->Eval<dbl>();
+				temp_mp += coeff_mpfr(ii,jj)*vargp[jj]->Eval<mpfr>();
+			}
+			else
+			{
+				temp_d += coeff_dbl(ii,jj);
+				temp_mp += coeff_mpfr(ii,jj);
+			}
+			
+		}
+		exact_d[ii] = temp_d;
+		exact_mp[ii] = temp_mp;
+	}
+	
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
+	bertini::Vec<dbl> coeff_d = linprod->GetCoeffs<dbl>(1);
+	bertini::Vec<mpfr> coeff_mp = linprod->GetCoeffs<mpfr>(2);
+	
+	
+	
+	for(int ii = 0; ii < num_vars+1; ++ii)
+	{
+		BOOST_CHECK(fabs(coeff_d[ii].real()/coeff_dbl(1,ii).real() - 1) < threshold_clearance_d);
+		BOOST_CHECK(fabs(coeff_d[ii].imag()/coeff_dbl(1,ii).imag() - 1) < threshold_clearance_d);
+		BOOST_CHECK(fabs(coeff_mp[ii].real()/coeff_mpfr(2,ii).real() - 1) < threshold_clearance_mp);
+		BOOST_CHECK(fabs(coeff_mp[ii].imag()/coeff_mpfr(2,ii).imag() - 1) < threshold_clearance_mp);
+	}
+	
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
