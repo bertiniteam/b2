@@ -374,25 +374,6 @@ namespace bertini {
 	} //re: namespace parsing
 	
 	
-	inline
-	System::System(std::string const& input)
-	{
-		System sys;
-		
-		parsing::classic::SystemParser<std::string::const_iterator> S;
-		
-		std::string::const_iterator iter = input.begin();
-		std::string::const_iterator end = input.end();
-		
-		bool s = phrase_parse(iter, end, S,boost::spirit::ascii::space, sys);
-		
-		if (!s || iter!=end)
-		{
-			throw std::runtime_error("unable to correctly parse string in construction of system");
-		}
-		
-		using std::swap;
-		swap(sys,*this);
-	}
+	
 
 } // re: namespace bertini

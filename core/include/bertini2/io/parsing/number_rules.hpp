@@ -52,15 +52,16 @@ namespace bertini{
 		namespace qi = ::boost::spirit::qi;
 		namespace ascii = ::boost::spirit::ascii;
 
+		namespace rules{
 		/** 
 		/brief Struct that holds the rules for parsing mpfr numbers
 		
 		Use: Include this struct with the rest of your rules.
 		*/
 		template<typename Iterator>
-		struct MPParserRules
+		struct LongNum
 		{
-			MPParserRules()
+			LongNum()
 			{
 				namespace phx = boost::phoenix;
 				using qi::_1;
@@ -161,100 +162,11 @@ namespace bertini{
 			qi::rule<Iterator, std::string()> number_string_, integer_string_, long_number_string_, number_with_digits_before_point_,
 			number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
 			
-		}; //re: MPParserRules
+		}; //re: LongNum
 
+		} // namespace rules
 
-		template<typename Iterator, typename Skipper = ascii::space_type>
-		struct MpfrFloatParser : qi::grammar<Iterator, mpfr_float(), boost::spirit::ascii::space_type>
-		{
-			MpfrFloatParser() : MpfrFloatParser::base_type(root_rule_,"MpfrFloatParser")
-			{
-				using std::max;
-				namespace phx = boost::phoenix;
-				using qi::_1;
-				using qi::_2;
-				using qi::_3;
-				using qi::_4;
-				using qi::_val;
-
-				root_rule_.name("mpfr_float");
-				root_rule_ = mpfr_rules_.number_string_
-								[ phx::bind( 
-										[]
-										(mpfr_float & B, std::string const& P)
-										{
-											using std::max;
-											auto prev_prec = DefaultPrecision();
-											auto asdf = max(prev_prec,LowestMultiplePrecision());
-											auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
-											std::cout << "making mpfr_float with precition " << digits << " from " << P << std::endl;
-											DefaultPrecision(digits);
-											B = mpfr_float{P};
-											DefaultPrecision(prev_prec);
-											assert(B.precision() == digits);
-										},
-										_val,_1
-									)
-								];
-
-				using phx::val;
-				using phx::construct;
-				using namespace qi::labels;
-				qi::on_error<qi::fail>
-				( root_rule_ ,
-				 std::cout<<
-				 val("mpfr_float parser could not complete parsing. Expecting ")<<
-				 _4<<
-				 val(" here: ")<<
-				 construct<std::string>(_3,_2)<<
-				 std::endl
-				 );
-			}
-
-			qi::rule<Iterator, mpfr_float(), Skipper > root_rule_;
-			MPParserRules<Iterator> mpfr_rules_;
-		};
-
-
-		namespace classic {
-			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrComplexParser : qi::grammar<Iterator, mpfr(), boost::spirit::ascii::space_type>
-			{
-				MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
-				{
-					using std::max;
-					namespace phx = boost::phoenix;
-					using qi::_1;
-					using qi::_2;
-					using qi::_val;
-					
-					root_rule_ =
-					(mpfr_float_ >> mpfr_float_)
-					[ phx::bind(
-								[]
-								(mpfr & B, mpfr_float const& P, mpfr_float const& Q)
-								{
-									auto prev_prec = DefaultPrecision();
-									auto digits = max(P.precision(),Q.precision());
-									
-									DefaultPrecision(digits);
-									B.real(P);
-									B.imag(Q);
-									B.precision(digits);
-									DefaultPrecision(prev_prec);
-									assert(B.precision() == digits);
-								},
-								_val,_1,_2
-								)
-					 ];
-				}
-				
-				qi::rule<Iterator, mpfr(), Skipper > root_rule_;
-				parsing::MpfrFloatParser<Iterator> mpfr_float_;
-				mpfr temp_result;
-			};
-
-		} // re: namespace classic
+		
 
 		
 	}

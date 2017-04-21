@@ -37,6 +37,27 @@ namespace bertini{
 
 	namespace tracking{
 
+		namespace endgame{
+
+
+		// some forward declarations
+		template<typename Tracker, typename Enable = void>
+		class FixedPrecPowerSeriesEndgame;
+
+		template<typename Tracker, typename Enable = void>
+		class FixedPrecCauchyEndgame;
+
+		class AMPPowerSeriesEndgame;
+		class AMPCauchyEndgame;
+
+		template<typename TrackerType, typename FinalEGT> 
+		class PowerSeriesEndgame;
+
+		template<typename TrackerType, typename FinalEGT> 
+		class CauchyEndgame;
+		}
+
+		
 		/**
 		\brief Facilitates lookup of required endgame type based on tracker type
 		
@@ -123,11 +144,96 @@ namespace bertini{
 
 		struct TrackBack
 		{
-			unsigned minimum_cycle; //MinCycleTrackback, default = 4
-			bool junk_removal_test; //JunkRemovalTest, default = 1
-			unsigned max_depth_LDT; //MaxLDTDepth, default = 3
+			unsigned minimum_cycle = 4; //MinCycleTrackback, default = 4
+			bool junk_removal_test = 1; //JunkRemovalTest, default = 1
+			unsigned max_depth_LDT = 3; //MaxLDTDepth, default = 3
 		};
 
 	}
+
+
+
+	template <typename T>
+	struct AlgoTraits;
+
+	/**
+	specialization for PowerSeries, which uses CRTP
+	*/
+	template<typename TrackerType, typename FinalEGT>
+	struct AlgoTraits< typename endgame::PowerSeriesEndgame<TrackerType, FinalEGT>>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::PowerSeries,
+			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>
+			>;
+	};
+
+	
+	template<typename TrackerType>
+	struct AlgoTraits<typename endgame::FixedPrecPowerSeriesEndgame<TrackerType>> : 
+		public AlgoTraits<
+				endgame::PowerSeriesEndgame<TrackerType, typename endgame::FixedPrecPowerSeriesEndgame<TrackerType>>
+				>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::PowerSeries,
+			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>
+			>;
+	};
+
+	template<>
+	struct AlgoTraits<endgame::AMPPowerSeriesEndgame> : 
+		public AlgoTraits<
+				endgame::PowerSeriesEndgame<AMPTracker, typename endgame::AMPPowerSeriesEndgame>
+				>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::PowerSeries,
+			config::Endgame<typename TrackerTraits<AMPTracker>::BaseRealType>,
+			config::Security<typename TrackerTraits<AMPTracker>::BaseRealType>
+			>;
+	};
+
+	/**
+	specialization for Cauchy, which uses CRTP
+	*/
+	template<typename TrackerType, typename FinalEGT>
+	struct AlgoTraits< typename endgame::CauchyEndgame<TrackerType, FinalEGT>>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
+	};
+	
+	template<typename TrackerType>
+	struct AlgoTraits<typename endgame::FixedPrecCauchyEndgame<TrackerType>> : 
+		public AlgoTraits<
+				endgame::CauchyEndgame<TrackerType, typename endgame::FixedPrecCauchyEndgame<TrackerType>>
+				>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
+			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
+	};
+	
+	template<>
+	struct AlgoTraits<endgame::AMPCauchyEndgame> : 
+		public AlgoTraits<
+				endgame::CauchyEndgame<AMPTracker, typename endgame::AMPCauchyEndgame>
+				>
+	{
+		using NeededConfigs = detail::TypeList<
+			config::Cauchy<typename TrackerTraits<AMPTracker>::BaseRealType>,
+			config::Endgame<typename TrackerTraits<AMPTracker>::BaseRealType>,
+			config::Security<typename TrackerTraits<AMPTracker>::BaseRealType>
+			>;
+	};
+
+
+
 	}
 }

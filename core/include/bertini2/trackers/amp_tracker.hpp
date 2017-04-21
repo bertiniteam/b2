@@ -293,13 +293,13 @@ namespace bertini{
 		* Functionality tested: Can use an AMPTracker to track in various situations, including tracking on nonsingular paths.  Also track to a singularity on the square root function.  Furthermore test that tracking fails to start from a singular start point, and tracking fails if a singularity is directly on the path being tracked.
 
 		*/
-		class AMPTracker : public Tracker<AMPTracker, dbl, mpfr>
+		class AMPTracker : public Tracker<AMPTracker>
 		{
-			friend class Tracker<AMPTracker, dbl, mpfr>;
+			friend class Tracker<AMPTracker>;
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
-			typedef Tracker<AMPTracker, dbl, mpfr> Base;
+			typedef Tracker<AMPTracker> Base;
 			typedef typename TrackerTraits<AMPTracker>::EventEmitterType EmitterType;
 
 			enum UpsampleRefinementOption
@@ -314,7 +314,7 @@ namespace bertini{
 			*/
 			AMPTracker(class System const& sys) : Tracker(sys), current_precision_(DefaultPrecision())
 			{	
-				AMP_config_ = config::AMPConfigFrom(sys);
+				Set<PrecConf>(config::AMPConfigFrom(sys));
 			}
 			
 
@@ -323,7 +323,7 @@ namespace bertini{
 			*/
 			void PrecisionSetup(config::AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				AMP_config_ = AMP_config;
+				Set<PrecConf>(AMP_config);
 			}
 
 
@@ -332,10 +332,6 @@ namespace bertini{
 				return current_precision_;
 			}
 
-			const config::AdaptiveMultiplePrecisionConfig GetAMPConfig() const
-			{
-				return AMP_config_;
-			}
 			
 			/**
 			\brief Switch preservation of precision after tracking on / off
@@ -503,7 +499,7 @@ namespace bertini{
 				if (initial_refinement_code!=SuccessCode::Success)
 				{
 					do {
-						if (current_precision_ > AMP_config_.maximum_precision)
+						if (current_precision_ > Get<PrecConf>().maximum_precision)
 						{
 							NotifyObservers(SingularStartPoint<EmitterType>(*this));
 							return SuccessCode::SingularStartPoint;
@@ -533,7 +529,7 @@ namespace bertini{
 					return SuccessCode::MaxNumStepsTaken;
 				if (current_stepsize_ < Get<Stepping>().min_step_size)
 					return SuccessCode::MinStepSizeReached;
-				if (current_precision_ > AMP_config_.maximum_precision)
+				if (current_precision_ > Get<PrecConf>().maximum_precision)
 					return SuccessCode::MaxPrecisionReached;
 
 				return SuccessCode::Success;
@@ -764,9 +760,9 @@ namespace bertini{
 					max_stepsize = current_stepsize_; // disallow stepsize changing 
 
 
-				if ( (num_successful_steps_since_precision_decrease_ < AMP_config_.consecutive_successful_steps_before_precision_decrease)
+				if ( (num_successful_steps_since_precision_decrease_ < Get<PrecConf>().consecutive_successful_steps_before_precision_decrease)
 				    ||
-				    (num_precision_decreases_ >= AMP_config_.max_num_precision_decreases))
+				    (num_precision_decreases_ >= Get<PrecConf>().max_num_precision_decreases))
 					min_precision = max(min_precision, current_precision_); // disallow precision changing 
 
 
@@ -883,7 +879,7 @@ namespace bertini{
 
 					MinimizeTrackingCost<RealType>(next_precision_, next_stepsize_, 
 							min_precision, min_stepsize,
-							AMP_config_.maximum_precision, max_stepsize,
+							Get<PrecConf>().maximum_precision, max_stepsize,
 							criterion_B_rhs,
 							Get<Newton>().max_num_newton_iterations,
 							predictor_order_);
@@ -907,7 +903,7 @@ namespace bertini{
 				           					  Get<Newton>().max_num_newton_iterations, 
 				           					  RealType(tracking_tolerance_), 
 				           					  std::get<RealType>(size_proportion_), 
-				           					  AMP_config_),
+				           					  Get<PrecConf>()),
 				            RealType(0));
 			}
 
@@ -948,7 +944,7 @@ namespace bertini{
 				return max(amp::CriterionCRHS(std::get<RealType>(norm_J_inverse_), 
 				                              std::get<Vec<ComplexType> > (current_space_).norm(), 
 				                              RealType(tracking_tolerance_), 
-				                              AMP_config_),
+				                              Get<PrecConf>()),
 				           RealType(0));
 			}
 
@@ -1104,7 +1100,7 @@ namespace bertini{
 									num_steps_since_last_condition_number_computation_, 
 									Get<Stepping>().frequency_of_CN_estimation, 
 									RealType(tracking_tolerance_),
-									AMP_config_);
+									Get<PrecConf>());
 				else
 					return predictor_->Predict<ComplexType,RealType>(predicted_space,
 									size_proportion,
@@ -1117,7 +1113,7 @@ namespace bertini{
 									num_steps_since_last_condition_number_computation_, 
 									Get<Stepping>().frequency_of_CN_estimation, 
 									RealType(tracking_tolerance_),
-									AMP_config_);
+									Get<PrecConf>());
 			}
 
 
@@ -1163,7 +1159,7 @@ namespace bertini{
 									RealType(tracking_tolerance_),
 									Get<Newton>().min_num_newton_iterations,
 									Get<Newton>().max_num_newton_iterations,
-									AMP_config_);
+									Get<PrecConf>());
 			}
 
 
@@ -1241,7 +1237,7 @@ namespace bertini{
 										   RealType(tracking_tolerance_),
 										   Get<Newton>().min_num_newton_iterations,
 										   Get<Newton>().max_num_newton_iterations,
-										   AMP_config_);
+										   Get<PrecConf>());
 			}
 
 
@@ -1295,7 +1291,7 @@ namespace bertini{
 							   tolerance,
 							   1,
 							   max_iterations,
-							   AMP_config_);
+							   Get<PrecConf>());
 			}
 
 
@@ -1652,8 +1648,6 @@ namespace bertini{
 			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
 
 			mutable mpfr endtime_highest_precision_;
-
-			config::AdaptiveMultiplePrecisionConfig AMP_config_; ///< The Adaptive Multiple Precision settings.
 
 		public:
 			// functions offered for observers.

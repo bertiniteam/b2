@@ -100,7 +100,6 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 
 	auto code = tracker.TrackPath(y_end, t_start, t_end, y_start);
 	BOOST_CHECK(code==SuccessCode::Success);
-	std::cout << code << '\n';
 
 	BOOST_CHECK_EQUAL(y_end.size(),1);
 	BOOST_CHECK(abs(y_end(0)-dbl(0)) < 1e-5);

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/io/parsing/classic_utilities.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license,
 // as well as COPYING.  Bertini2 is provided with permitted
@@ -55,9 +55,6 @@ namespace bertini {
 			 SplitFileInputConfig parser return an instance of this class.  The user can then parse the config and input portions separately using the appropriate parser.
 			 
 			 */
-			
-			
-			
 			class SplitInputFile
 			{
 			public:
@@ -399,11 +396,12 @@ namespace bertini {
 				return input_file;
 			}
 			
-			
+
+
 			/**
 			 \brief Function for splitting a Bertini Classic style input file into `config` and `input`.
 			 */
-			void SplitIntoConfigAndInput(std::string & config_section, std::string & input_section, Path const& input_file)
+			std::tuple<std::string, std::string> SplitIntoConfigAndInput(Path const& input_file)
 			{
 				auto file_as_string = FileToString(input_file);
 				
@@ -412,8 +410,17 @@ namespace bertini {
 				std::string::const_iterator iter = file_as_string.begin();
 				std::string::const_iterator end = file_as_string.end();
 				phrase_parse(iter, end, parser, boost::spirit::ascii::space, config_and_input);
-				config_section = config_and_input.Config();
-				input_section = config_and_input.Input();
+
+				return std::make_tuple(config_and_input.Config(), config_and_input.Input());
+			}
+
+
+			/**
+			 \brief Function for splitting a Bertini Classic style input file into `config` and `input`.
+			 */
+			void SplitIntoConfigAndInput(std::string & config_section, std::string & input_section, Path const& input_file)
+			{
+				std::tie(config_section, input_section) = SplitIntoConfigAndInput(input_file);
 			}
 
 

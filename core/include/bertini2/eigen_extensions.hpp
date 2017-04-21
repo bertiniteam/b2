@@ -301,28 +301,69 @@ namespace bertini {
 	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
+	
+	/**
+	\brief Checks whether the number of rows and columns are either 0
+	*/
 	template<typename Derived>
+	inline
+	bool IsEmpty(Eigen::MatrixBase<Derived> const & v)
+	{
+		return (v.rows()==0) || (v.cols()==0);
+	}
+
+
+	/**
+	\brief Get the precision of an Eigen object. If the object is empty, it's the precision of a default-constructed Scalar.  If it actually has content, then it's the precision of the first element.  
+
+	If you require that the object be of uniform precision when you check, use PrecisionRequireUniform
+	*/
+	template<typename Derived>
+	inline
 	unsigned Precision(Eigen::MatrixBase<Derived> const & v)
 	{
-		auto a = Precision(v(0,0));
-		for (int ii=0; ii<v.rows(); ++ii)
-			for (int jj=0; jj<v.cols(); ++jj)
+		if (IsEmpty(v))
+			throw std::runtime_error("getting precision of empty object");
+		
+		return Precision(v(0,0));
+	}
+
+
+	/**
+	\brief Query the precision of an Eigen object, requiring it to be non-empty, and of uniform precision
+
+	\throw runtime_error if not uniform precision
+	Dies in an Eigen assert if empty (assuming you didn't disable these)
+	*/
+	template<typename Derived>
+	unsigned PrecisionRequireUniform(Eigen::MatrixBase<Derived> const & v)
+	{
+		const auto a = Precision(v(0,0));
+		for (int ii=0; ii<v.cols(); ++ii)
+			for (int jj=0; jj<v.rows(); ++jj)
 			{
-				auto b = Precision(v(ii,jj));
-				assert (a==b);
-				a = b;
+				if (a!=Precision(v(jj,ii)))
+				{
+					std::stringstream ss;
+					ss << "non-uniform precision in object! (" << a << "!=" << Precision(v(jj,ii)) <<   ") at position " << jj << "," << ii;
+					throw std::runtime_error(ss.str());
+				}
 			}
 		return a;
 	}
 
+
+	/**
+	\brief Set the precision of an Eigen object.
+	*/
 	template<typename Derived>
 	void Precision(Eigen::MatrixBase<Derived> & v, unsigned prec)
 	{
 		using bertini::Precision;
 		
-		for (int ii=0; ii<v.rows(); ++ii)
-			for (int jj=0; jj<v.cols(); ++jj)
-				Precision(v(ii,jj),prec);
+		for (int ii=0; ii<v.cols(); ++ii)
+			for (int jj=0; jj<v.rows(); ++jj)
+				Precision(v(jj,ii),prec);
 	}
 
 	
@@ -339,6 +380,7 @@ namespace bertini {
 	 \return true, if the number is very small.  False otherwise.
 	*/
 	template<typename T>
+	inline
 	bool IsSmallValue(T const& testme)
 	{
 		using std::abs;
@@ -376,6 +418,7 @@ namespace bertini {
 	 \return true, if the ratio is very large, false otherwise
 	*/
 	template<typename T>
+	inline
 	bool IsLargeChange(T const& numerator ,T const& denomenator)
 	{
 		using std::abs;
@@ -483,6 +526,7 @@ namespace bertini {
 	\tparam NumberType the type of number to fill the matrix with.
 	*/
 	template <typename NumberType>
+	inline
 	Mat<NumberType> RandomOfUnits(uint rows, uint cols)
 	{
 		return Mat<NumberType>(rows,cols).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });
@@ -497,6 +541,7 @@ namespace bertini {
 	\tparam NumberType the type of number to fill the vector with.
 	*/
 	template <typename NumberType>
+	inline
 	Vec<NumberType> RandomOfUnits(uint size)
 	{
 		return Vec<NumberType>(size).unaryExpr([](NumberType const& x) { return RandomUnit<NumberType>(); });

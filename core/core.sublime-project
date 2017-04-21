@@ -27,12 +27,10 @@
 										"endgames_test",
 										"pool_test",
 										"generating_test",
-										"bertini_*.log",
 										"config.log",
 										"config.status",
 										"configure",
 										"*.trs",
-										"*.log",
 										"ltmain.sh"],
 			"folder_exclude_patterns": [
 				".deps",

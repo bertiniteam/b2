@@ -860,11 +860,6 @@ namespace bertini{
 						if (!std::is_same<ComplexType,dbl>::value)
 						{
 							assert(Precision(dhdxref)==current_precision_);
-							if (Precision(LUref.matrixLU())!=current_precision_)
-							{
-								std::cout << Precision(LUref.matrixLU())<< " " << DefaultPrecision() << " " << current_precision_ << '\n';
-								std::cout << LUref.matrixLU() << std::endl;
-							}
 							assert(Precision(LUref.matrixLU())==current_precision_);
 						}
 

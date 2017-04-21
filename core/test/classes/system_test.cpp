@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with system_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -28,10 +28,10 @@
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
 //
 // also modified by
-//  Daniel Brake
+//  Dani Brake
 //  University of Notre Dame
 //  ACMS
-//  Spring, Summer 2015
+//  Spring, Summer 2015, Spring 2017
 
 /**
 \file system_test.cpp Unit testing for the bertini::System class.
@@ -42,6 +42,7 @@
 
 
 #include "bertini2/system/system.hpp"
+#include "bertini2/system/precon.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
 
 
@@ -424,6 +425,7 @@ BOOST_AUTO_TEST_CASE(system_evaluate_double)
 */
 BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 {
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 
@@ -748,6 +750,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_a
 */
 BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 {
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 	Var x = MakeVariable("x");
 	Var t = MakeVariable("t");
 
@@ -758,7 +762,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 	S.AddFunction(x-t);
 
 	mpfr_float coefficient_bound = S.CoefficientBound();
-	BOOST_CHECK(coefficient_bound < mpfr_float("3"));
+	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
 	BOOST_CHECK(coefficient_bound > mpfr_float("0.5"));
 }
 
@@ -769,6 +773,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 */
 BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 {
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 	bertini::System sys;
 	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
@@ -792,6 +798,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 */
 BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 {
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 	bertini::System sys;
 	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
@@ -816,6 +824,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 */
 BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 {
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 	Var x = MakeVariable("x");
 	Var t = MakeVariable("t");
 
@@ -836,6 +846,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 */
 BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 {
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 	bertini::System sys;
 	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
@@ -859,6 +871,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 */
 BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 {
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
 	bertini::System sys1, sys2;
 	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
@@ -890,7 +904,6 @@ BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 */
 BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 {
-
 	bertini::System sys1, sys2;
 	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
@@ -1003,6 +1016,34 @@ BOOST_AUTO_TEST_CASE(variable_group_sizes_and_degrees_affvargrp)
 	BOOST_CHECK_EQUAL(size_of_each_var_gp[1], 2);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(clone_system_new_variables_evaluation)
+{
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	auto sys = bertini::system::Precon::GriewankOsborn();
+	Vec<mpfr> x1(2), x2(2);
+	x1(0) = bertini::RandomUnit(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	x1(1) = bertini::RandomUnit(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	auto f = sys.Eval(x1);
+
+	auto sys_clone = bertini::Clone(sys);
+
+	x2(0) = mpfr{2};
+	x2(1) = mpfr{3};
+
+	auto f_clone = sys_clone.Eval(x2);
+
+	BOOST_CHECK_EQUAL(mpfr(2.5), f_clone(0));
+	BOOST_CHECK_EQUAL(mpfr(-1), f_clone(1));
+
+	auto f_clone2 = sys_clone.Eval(x1);
+	auto f2 = sys.Eval<mpfr>();
+
+	BOOST_CHECK_EQUAL(f,f2);
+	BOOST_CHECK_EQUAL(f_clone2,f2);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

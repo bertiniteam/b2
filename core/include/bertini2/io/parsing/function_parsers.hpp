@@ -42,7 +42,7 @@ namespace bertini {
 			
 			
 			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, std::shared_ptr<bertini::node::Node>& func)
+			bool parse(Iterator first, Iterator last, std::shared_ptr<bertini::node::Node>& func)
 			{
 				using boost::spirit::qi::double_;
 				using boost::spirit::qi::_1;

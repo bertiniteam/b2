@@ -31,35 +31,23 @@
 #include "bertini2/endgames/endgame.hpp"
 #include "bertini2/system/start_systems.hpp"
 #include <boost/test/unit_test.hpp>
+#include "bertini2/nag_algorithms/output.hpp"
+
 
 BOOST_AUTO_TEST_SUITE(zero_dim)
 
-
-BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_amp)
-{
-	using namespace bertini;
-	using namespace tracking;
-
-	auto sys = system::Precon::GriewankOsborn();
-
-	auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
-
-	zd.DefaultSetup();
-
-	zd.Solve();
-
-	zd.Output();
-}
+using TrackerT = bertini::tracking::DoublePrecisionTracker;
 
 
-BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
+
+BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 {
 	using namespace bertini;
 	using namespace tracking;
 
 	using Tolerances = algorithm::config::Tolerances<double>;
 	using EndgameConfT = config::Endgame<double>;
-	using TrackerT = DoublePrecisionTracker;
+	
 
 	auto sys = system::Precon::GriewankOsborn();
 
@@ -68,9 +56,14 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
 	zd.DefaultSetup();
 	
 	auto tols = zd.Get<Tolerances>();
-	tols.newton_before_endgame = 1e-4;
-	tols.newton_during_endgame = 1e-5;
+	tols.newton_before_endgame = 1e-5;
+	tols.newton_during_endgame = 1e-6;
 	zd.Set(tols);
+
+	auto& tr = zd.GetTracker();
+	GoryDetailLogger<TrackerT> logger;
+	tr.AddObserver(&logger);
+
 
 	auto eg = zd.GetFromEndgame<EndgameConfT>();
 	eg.final_tolerance = 1e-12;
@@ -78,8 +71,11 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn_fixed_double)
 
 	zd.Solve();
 
-	zd.Output();
+
+	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
 }
+
+
 
 
 BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
@@ -88,21 +84,30 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 	using namespace bertini;
 	using namespace tracking;
 
-	using Tolerances = algorithm::config::Tolerances<mpfr_float>;
+	using Tolerances = algorithm::config::Tolerances<double>;
 
 	auto sys = system::Precon::GriewankOsborn();
 
-	auto zd = algorithm::ZeroDim<AMPTracker, EndgameSelector<AMPTracker>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
+	auto zd = algorithm::ZeroDim<TrackerT, EndgameSelector<TrackerT>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
 
 	zd.DefaultSetup();
+	
+	auto& tr = zd.GetTracker();
+	GoryDetailLogger<TrackerT> logger;
+	tr.AddObserver(&logger);
+
+	
 
 	auto tols = zd.Get<Tolerances>();
 	tols.newton_before_endgame = 1e-4;
+	tols.newton_during_endgame = 1e-4;
+
 	zd.Set(tols);
 
 	zd.Solve();
 
-	zd.Output();
+
+	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
 }
 
 
@@ -110,7 +115,7 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 /**
 Check whether we can run zero dim on the non-homogenized version of Griewank Osborn.
 */
-BOOST_AUTO_TEST_CASE(reference_managed_systems)
+BOOST_AUTO_TEST_CASE(reference_managed_systems_GO_nonhom)
 {
 	using namespace bertini;
 	using namespace tracking;
@@ -123,8 +128,8 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 	h.AddPathVariable(t);
 
 	auto zd = algorithm::ZeroDim<
-				AMPTracker, 
-				EndgameSelector<AMPTracker>::PSEG, 
+				TrackerT, 
+				EndgameSelector<TrackerT>::PSEG, 
 				decltype(sys), 
 				start_system::TotalDegree,
 				policy::RefToGiven
@@ -132,15 +137,55 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems)
 			(sys, TD, h); 
 	// have to pass in all three to the constructor, because using references. 
 
-
 	zd.DefaultSetup();
 
 	zd.Solve();
 
-	zd.Output();
+	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
 }
 
 
+
+
+
+/**
+Check whether we can run zero dim on the non-homogenized version of Griewank Osborn.
+*/
+BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
+{
+	using namespace bertini;
+	using namespace tracking;
+
+	auto sys = system::Precon::GriewankOsborn();
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	auto TD = start_system::TotalDegree(sys);
+
+	auto t = MakeVariable("t");
+	auto h = (1-t)* sys + t*TD;
+	h.AddPathVariable(t);
+
+	auto zd = algorithm::ZeroDim<
+				TrackerT, 
+				EndgameSelector<TrackerT>::PSEG, 
+				decltype(sys), 
+				start_system::TotalDegree,
+				policy::RefToGiven
+					>
+			(sys, TD, h); 
+	// have to pass in all three to the constructor, because using references. 
+
+	zd.DefaultSetup();
+
+	auto& tr = zd.GetTracker();
+	GoryDetailLogger<TrackerT> logger;
+	tr.AddObserver(&logger);
+	
+	zd.Solve();
+
+	bertini::algorithm::output::Classic<decltype(zd)>::All(std::cout, zd);
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()
