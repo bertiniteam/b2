@@ -36,7 +36,7 @@ namespace bertini
 	namespace start_system 
 	{
 
-		// constructor for MHomogeneous start system, from any other *suitable* system.
+		// constructor for MHomogeneous start system, from any other *suitable* system. System can be homogeneous or non-homogeneous. 
 		MHomogeneous::MHomogeneous(System const& s)
 		{
 
@@ -50,23 +50,10 @@ namespace bertini
 				throw std::runtime_error("attempting to construct multi homogeneous start system from non-polynomial target system");
 
 
-			if(!s.IsHomogeneous())
-						throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
-
-
-
-
 			CreateDegreeMatrix(s);
 
 
 			GenerateValidPartitions(s);
-
-
-			// if (s.IsHomogeneous())
-			// 	Homogenize();
-
-			// if (s.IsPatched())
-			// 	CopyPatches(s);
 
 		}// M-Hom constructor
 
@@ -119,7 +106,7 @@ namespace bertini
 		*/
 		void MHomogeneous::CreateDegreeMatrix(System const& target_system)
 		{
-			degree_matrix_ = Mat<int>(target_system.NumFunctions(),target_system.NumTotalVariableGroups());
+			degree_matrix_ = Mat<int>::Zero(target_system.NumFunctions(),target_system.NumTotalVariableGroups());
 
 			auto var_groups = target_system.HomVariableGroups();
 			auto affine_var_groups = target_system.VariableGroups();
@@ -128,10 +115,19 @@ namespace bertini
 
 			int col_count = 0;
 			int outer_loop = 0;
+			std::vector<int> zero_column_vector(target_system.Degrees(*(var_groups.begin())).size(), 0);
+
 			for(std::vector<VariableGroup>::iterator it = var_groups.begin(); it != var_groups.end(); ++it) 
 			{
+				
+			// std::cout << std::endl << "degree_matrix_ is " <<  std::endl << degree_matrix_ << std::endl;
 				outer_loop++;
   				std::vector<int> degs = target_system.Degrees(*it);
+  				if(degs == zero_column_vector)
+  				{
+  					//check for zero column in degree matrix.
+  					throw std::runtime_error("zero column in degree matrix for m-homogeneous start system!");
+  				}
 
   				for(int ii = 0; ii <= degs.size() - 1; ++ii)
   				{
@@ -140,9 +136,20 @@ namespace bertini
   				col_count++;
 			}
 
-			#ifndef BERTINI_DISABLE_ASSERTS
-				assert(degree_matrix_.rows() == degree_matrix_.cols());
-			#endif
+			//check for zero row in degree matrix. 
+			Vec<int> zero_row_vector = (degree_matrix_.row(0)*0).transpose();
+
+			for(int ii = 0; ii < degree_matrix_.rows(); ii++)
+			{
+
+				if(degree_matrix_.row(ii) == zero_row_vector)
+				{
+					throw std::runtime_error("zero row in degree matrix for m-homogeneous start system!");
+				}
+			}
+
+
+
 
 		}
 
