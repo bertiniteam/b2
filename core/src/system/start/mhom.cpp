@@ -137,12 +137,12 @@ namespace bertini
 			}
 
 			//check for zero row in degree matrix. 
-			Vec<int> zero_row_vector = (degree_matrix_.row(0)*0).transpose();
+			Vec<int> zero_row_vector = degree_matrix_.row(0)*0;
 
 			for(int ii = 0; ii < degree_matrix_.rows(); ii++)
 			{
 
-				if(degree_matrix_.row(ii) == zero_row_vector)
+				if(degree_matrix_.row(ii) == zero_row_vector.transpose())//transpose to make comparison work correctly.
 				{
 					throw std::runtime_error("zero row in degree matrix for m-homogeneous start system!");
 				}
