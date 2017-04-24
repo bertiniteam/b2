@@ -54,7 +54,9 @@ namespace bertini
 			/**
 			 Constructor for making a multi-homogeneous start system from a polynomial system
 
-			 \throws std::runtime_error, if the input target system is not square, is not polynomial, has a path variable already, or has any homogeneous variable groups.
+			 \throws std::runtime_error, if the input target system is not square, is not polynomial, has a path variable already.
+
+			 Constructor can take in a non-homogeneous system or homogeneous system. 
 			*/
 			MHomogeneous(System const& s);
 

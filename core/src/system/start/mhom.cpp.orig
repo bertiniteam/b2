@@ -50,6 +50,15 @@ namespace bertini
 				throw std::runtime_error("attempting to construct multi homogeneous start system from non-polynomial target system");
 
 
+<<<<<<< HEAD
+//			if(!s.IsHomogeneous())
+//						throw std::runtime_error("inhomogeneous function, with homogeneous variable group");
+
+
+
+
+=======
+>>>>>>> Local_Tim_Fork/feature/M_Hom_Construction
 			CreateDegreeMatrix(s);
 
 
@@ -88,6 +97,7 @@ namespace bertini
 				AddFunction(func);
 			}
 
+<<<<<<< HEAD
 
 			 if (s.IsHomogeneous())
 			 	Homogenize();
@@ -95,6 +105,8 @@ namespace bertini
 			 if (s.IsPatched())
 			 	CopyPatches(s);
 
+=======
+>>>>>>> Local_Tim_Fork/feature/M_Hom_Construction
 		}// M-Hom constructor
 
 		
@@ -155,12 +167,21 @@ namespace bertini
 
 			int col_count = 0;
 			int outer_loop = 0;
+<<<<<<< HEAD
+			size_t var_count = 0;
+			
+			for(std::vector<VariableGroup>::iterator it = var_groups_.begin(); it != var_groups_.end(); ++it)
+=======
 			std::vector<int> zero_column_vector(target_system.Degrees(*(var_groups.begin())).size(), 0);
 
 			for(std::vector<VariableGroup>::iterator it = var_groups.begin(); it != var_groups.end(); ++it) 
+>>>>>>> Local_Tim_Fork/feature/M_Hom_Construction
 			{
+				
+			// std::cout << std::endl << "degree_matrix_ is " <<  std::endl << degree_matrix_ << std::endl;
 				outer_loop++;
   				std::vector<int> degs = target_system.Degrees(*it);
+<<<<<<< HEAD
 				
 				std::vector<size_t> temp_v;
 				for(int ii = 0; ii < (*it).size(); ++ii)
@@ -170,19 +191,24 @@ namespace bertini
 				}
 				variable_cols_.push_back(temp_v);
 				
+=======
   				if(degs == zero_column_vector)
   				{
   					//check for zero column in degree matrix.
   					throw std::runtime_error("zero column in degree matrix for m-homogeneous start system!");
   				}
 
+>>>>>>> Local_Tim_Fork/feature/M_Hom_Construction
   				for(int ii = 0; ii <= degs.size() - 1; ++ii)
   				{
   					degree_matrix_(ii,col_count) = degs[ii];
   				}
   				col_count++;
+				
 			}
 
+<<<<<<< HEAD
+=======
 			//check for zero row in degree matrix. 
 			Vec<int> zero_row_vector = degree_matrix_.row(0)*0;
 
@@ -197,6 +223,7 @@ namespace bertini
 
 
 
+>>>>>>> Local_Tim_Fork/feature/M_Hom_Construction
 
 		}
 
