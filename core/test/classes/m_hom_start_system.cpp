@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_small_example)
 	partition_2 << 1, 0;
 
 
-	BOOST_CHECK(mhom_start_system.valid_partitions[0] == partition_1);
-	BOOST_CHECK(mhom_start_system.valid_partitions[1] == partition_2);
+	BOOST_CHECK(mhom_start_system.valid_partitions_[0] == partition_1);
+	BOOST_CHECK(mhom_start_system.valid_partitions_[1] == partition_2);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,0) == 1);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,1) == 1);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(1,0) == 2);
@@ -146,8 +146,8 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_larger_example)
 	Vec<int> partition_2(3);
 	partition_2 << 1, 2, 0;
 
-	BOOST_CHECK(mhom_start_system.valid_partitions[0]== partition_1);
-	BOOST_CHECK(mhom_start_system.valid_partitions[1]== partition_2);
+	BOOST_CHECK(mhom_start_system.valid_partitions_[0]== partition_1);
+	BOOST_CHECK(mhom_start_system.valid_partitions_[1]== partition_2);
 
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,0) == 1);
 	BOOST_CHECK(mhom_start_system.degree_matrix_(0,1) == 1);

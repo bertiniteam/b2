@@ -155,9 +155,10 @@ namespace bertini
 
 			int col_count = 0;
 			int outer_loop = 0;
-			std::vector<int> zero_column_vector(target_system.Degrees(*(var_groups.begin())).size(), 0);
+			size_t var_count = 0;
+			std::vector<int> zero_column_vector(target_system.Degrees(*(var_groups_.begin())).size(), 0);
 
-			for(std::vector<VariableGroup>::iterator it = var_groups.begin(); it != var_groups.end(); ++it) 
+			for(std::vector<VariableGroup>::iterator it = var_groups_.begin(); it != var_groups_.end(); ++it)
 			{
 				outer_loop++;
   				std::vector<int> degs = target_system.Degrees(*it);
@@ -237,12 +238,14 @@ namespace bertini
 			// std::cout << variable_group_counter << std::endl;		
 			  while (row > -1)  // Algorithm will move up and down rows, kicking out to row=-1 at end
 			  {
-			  	// std::cout << "current_partition is " << std::endl;
-			  	// std::cout <<  current_partition << std::endl;
+//			  	 std::cout << "current_partition before is " << std::endl;
+//			  	 std::cout <<  current_partition << std::endl;
 			    old_current_part_row = current_partition[row];  //Hang on to previous choice of column for this row, in case we are done with this row.
 			    current_partition[row] = ChooseColumnInRow(target_system,variable_group_counter,row,current_partition[row]);  //Pick next column (var gp) for the current row (func)
-			    
-			    //ChooseColumnInRow() will make this happen if it runs into col being equal to system.NumVariables()!  
+//				  std::cout << "current_partition after is " << std::endl;
+//				  std::cout <<  current_partition << std::endl;
+
+			    //ChooseColumnInRow() will make this happen if it runs into col being equal to system.NumVariables()!
 			    if (current_partition[row] == target_system.NumTotalVariableGroups()) // means we have exhausted all good columns for the current row, so we go back up a row
 			    { //no choices for current row
 			      row = row - 1;  //go back up a row
