@@ -68,37 +68,23 @@ namespace node{
 		/**
 		 Input shared_ptr to a Variable.
 		 */
-		Differential(std::shared_ptr<const Variable> diff_variable, std::string var_name) : NamedSymbol('d'+ var_name), differential_variable_(diff_variable)
-		{
-		}
+		Differential(std::shared_ptr<const Variable> diff_variable, std::string var_name);
 
 
-		void Reset() const override
-		{
-			Node::ResetStoredValues();
-		}
+		void Reset() const override;
 
 
-		auto GetVariable() const 
-		{
-			return differential_variable_;
-		}
+		const std::shared_ptr<const Variable>& GetVariable() const;
 
 
-		void print(std::ostream & target) const override
-		{
-			target << name();
-		}
+		void print(std::ostream & target) const override;
 
 
 
 		/**
 		 Differentiates a number.  Should this return the special number Zero?
 		 */
-		std::shared_ptr<Node> Differentiate() const override
-		{
-			return MakeInteger(0);
-		}
+		std::shared_ptr<Node> Differentiate() const override;
 
 
 
@@ -110,38 +96,20 @@ namespace node{
 		/**
 		Compute the degree with respect to a single variable.   For differentials, the degree is 0.
 		*/
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return 0;
-		}
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
-		int Degree(VariableGroup const& vars) const override
-		{
-			return 0;
-		}
+		int Degree(VariableGroup const& vars) const override;
 		
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override
-		{
-			return std::vector<int>(vars.size(),0);
-		}
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
-		{
-			
-		}
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
 		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return true;
-		}
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		/**
 		Check for homogeneity, with respect to a variable group.
 		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
-		{
-			return true;
-		}
+		bool IsHomogeneous(VariableGroup const& vars) const override;
 		
 
 		/**
@@ -149,63 +117,19 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) const override
-		{
-			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
-		}
+		void precision(unsigned int prec) const override;
 
 		
 	protected:
 		// This should never be called for a Differential.  Only for Jacobians.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			if(differential_variable_ == diff_variable)
-			{
-				return 1.0;
-			}
-			else
-			{
-				return 0.0;
-			}
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			if(differential_variable_ == diff_variable)
-			{
-				evaluation_value = 1.0;
-			}
-			else
-			{
-				evaluation_value = 0.0;
-			}
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			if(differential_variable_ == diff_variable)
-			{
-				return mpfr(1);
-			}
-			else
-			{
-				return mpfr(0);
-			}
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			if(differential_variable_ == diff_variable)
-			{
-				evaluation_value.SetOne();
-			}
-			else
-			{
-				evaluation_value.SetZero();
-			}
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 

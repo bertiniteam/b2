@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with trig.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -60,7 +60,29 @@ namespace node{
 	}
 	
 
-
+	// Specific implementation of FreshEval for negate.
+	dbl SinOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return sin(child_->Eval<dbl>(diff_variable));
+	}
+	
+	mpfr SinOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return sin(child_->Eval<mpfr>(diff_variable));
+	}
+	
+	
+	void SinOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		evaluation_value = sin(evaluation_value);
+	}
+	
+	void SinOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+		evaluation_value = sin(evaluation_value);
+	}
 
 	void ArcSinOperator::print(std::ostream & target) const
 	{
@@ -76,7 +98,29 @@ namespace node{
 	}
 
 
+	// Specific implementation of FreshEval for negate.
+	dbl ArcSinOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return asin(child_->Eval<dbl>(diff_variable));
+	}
+	
+	mpfr ArcSinOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return asin(child_->Eval<mpfr>(diff_variable));
+	}
 
+	
+	void ArcSinOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		evaluation_value = asin(evaluation_value);
+	}
+	
+	void ArcSinOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+		evaluation_value = asin(evaluation_value);
+	}
 
 	void CosOperator::print(std::ostream & target) const
 	{
@@ -92,7 +136,28 @@ namespace node{
 	
 	
 
-
+	dbl CosOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return cos(child_->Eval<dbl>(diff_variable));
+	}
+	
+	mpfr CosOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return cos(child_->Eval<mpfr>(diff_variable));
+	}
+	
+	
+	void CosOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		evaluation_value = cos(evaluation_value);
+	}
+	
+	void CosOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+		evaluation_value = cos(evaluation_value);
+	}
 
 
 
@@ -114,7 +179,29 @@ namespace node{
 
 
 
-
+	// Specific implementation of FreshEval for negate.
+	dbl ArcCosOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return acos(child_->Eval<dbl>(diff_variable));
+	}
+	
+	mpfr ArcCosOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return acos(child_->Eval<mpfr>(diff_variable));
+	}
+	
+	
+	void ArcCosOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		evaluation_value = acos(evaluation_value);
+	}
+	
+	void ArcCosOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+		evaluation_value = acos(evaluation_value);
+	}
 
 
 
@@ -131,7 +218,28 @@ namespace node{
 		return child_->Differentiate() /  pow(cos(child_),2);
 	}
 
-
+	dbl TanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return tan(child_->Eval<dbl>(diff_variable));
+	}
+	
+	mpfr TanOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return tan(child_->Eval<mpfr>(diff_variable));
+	}
+	
+	
+	void TanOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		evaluation_value = tan(evaluation_value);
+	}
+	
+	void TanOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+		evaluation_value = tan(evaluation_value);
+	}
 
 
 
@@ -150,5 +258,27 @@ namespace node{
 		return child_->Differentiate() / (1 + pow(child_,2));
 	}
 
+	dbl ArcTanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return atan(child_->Eval<dbl>(diff_variable));
+	}
+	
+	mpfr ArcTanOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	{
+		return atan(child_->Eval<mpfr>(diff_variable));
+	}
+	
+	
+	void ArcTanOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		evaluation_value = atan(evaluation_value);
+	}
+	
+	void ArcTanOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+		evaluation_value = atan(evaluation_value);
+	}
 } // re: namespace node	
 } // re: bertini namespace

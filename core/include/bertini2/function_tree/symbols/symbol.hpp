@@ -90,27 +90,21 @@ namespace node {
 		/**
 		Get the name of the named symbol
 		*/
-		std::string name() const
-		{
-			return name_;
-		};
+		const std::string & name() const;
 		
 		/**
 		Get the name of the named symbol
 		*/
-		void name(const std::string & new_name){name_ = new_name;};
+		void name(const std::string & new_name);
 		
 		
 		/**
 		Parameterized constructor, sets the name of the symbol
 		*/
-		NamedSymbol(const std::string & new_name) : name_(new_name){};
+		NamedSymbol(const std::string & new_name);
 		
 		
-		void print(std::ostream& target) const override
-		{
-			target << name();
-		}
+		void print(std::ostream& target) const override;
 		
 		virtual ~NamedSymbol() = default;
 		

@@ -45,6 +45,7 @@
 
 
 #include "bertini2/function_tree/node.hpp"
+#include "bertini2/function_tree/roots/function.hpp"
 #include "bertini2/function_tree/symbols/variable.hpp"
 
 
@@ -62,17 +63,9 @@ namespace node{
 			friend detail::FreshEvalSelector<dbl>;
 			friend detail::FreshEvalSelector<mpfr>;
 		public:
-				
-				
-				
-				
-				
 				/**
-				 Constructor defines entry node at construct time.
 				 */
-				Jacobian(const std::shared_ptr<Node> & entry) : Function(entry)
-				{
-				}
+				Jacobian(const std::shared_ptr<Node> & entry);
 				
 				
 				/**
@@ -86,72 +79,39 @@ namespace node{
 				// Evaluate the node.  If flag false, just return value, if flag true
 				//  run the specific FreshEval of the node, then set flag to false.
 				template<typename T>
-				T EvalJ(std::shared_ptr<Variable> const& diff_variable) const
-				{
-						auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-
-						if(diff_variable == current_diff_variable_ && val_pair.second)
-							return val_pair.first;
-						else
-						{
-							current_diff_variable_ = diff_variable;
-							Reset();
-							detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this, diff_variable);
-							val_pair.second = true;
-							return val_pair.first;
-						}						
-				}
-				
+				T EvalJ(std::shared_ptr<Variable> const& diff_variable) const;				
 
 
 				// Evaluate the node.  If flag false, just return value, if flag true
 				//  run the specific FreshEval of the node, then set flag to false.
 				template<typename T>
-				void EvalJInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const
-				{
-						auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-
-						if(diff_variable == current_diff_variable_ && val_pair.second)
-							eval_value = val_pair.first;
-						else
-						{
-							current_diff_variable_ = diff_variable;
-							Reset();
-							detail::FreshEvalSelector<T>::RunInPlace(val_pair.first,*this,diff_variable);
-							val_pair.second = true;
-							eval_value = val_pair.first;
-						}						
-				}
+				void EvalJInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const;
 
 
 				/**
 				 The function which flips the fresh eval bit back to fresh.
 				 */
-				void Reset() const override
-				{
-					EnsureNotEmpty();
-					
-					Node::ResetStoredValues();
-					entry_node_->Reset();
-				}
+				void Reset() const override;
 
 				
 				virtual ~Jacobian() = default;
 				
-	
-				mutable std::shared_ptr<Variable> current_diff_variable_;
-				Jacobian() = default;
-		private:
 				/**
-				 The default constructor
-				 */
-				
-				friend class boost::serialization::access;
-		
-				template <typename Archive>
-				void serialize(Archive& ar, const unsigned version) {
-						ar & boost::serialization::base_object<Function>(*this);
-				}
+				\brief Default construction of a Jacobian node is forbidden
+				*/
+				Jacobian() = default;
+
+		private:
+
+			mutable std::shared_ptr<Variable> current_diff_variable_;
+
+
+			friend class boost::serialization::access;
+	
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+					ar & boost::serialization::base_object<Function>(*this);
+			}
 		};
 		
 } // re: namespace node
