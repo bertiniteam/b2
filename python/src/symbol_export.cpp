@@ -56,8 +56,8 @@ namespace bertini{
 		void RationalVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("rand", 		&NodeBaseT::Rand)
-			.def("rand_real", 	&NodeBaseT::RandReal)
+			.def("rand", 		&NodeBaseT::template Rand<16>)
+			.def("rand_real", 	&NodeBaseT::template RandReal<16>)
 			.staticmethod("rand")
 			.staticmethod("rand_real")
 			;
@@ -82,7 +82,7 @@ namespace bertini{
 		void DifferentialVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("get_variable", &NodeBaseT::GetVariable)
+			.def("get_variable", &NodeBaseT::GetVariable,return_value_policy<reference_existing_object>())
 			;
 		}
 
