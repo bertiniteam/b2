@@ -593,6 +593,51 @@ BOOST_AUTO_TEST_CASE(read_cauchy_d)
 }
 
 
+
+BOOST_AUTO_TEST_CASE(read_meta)
+{
+	using namespace bertini::parsing::classic;
+	using namespace bertini::algorithm;
+
+	
+	
+	SplitInputFile inputfile = ParseInputFile("Config \n TrackType: 5; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	std::string configStr = inputfile.Config();
+	
+	
+	std::string::const_iterator iter = configStr.begin();
+	std::string::const_iterator end = configStr.end();
+	
+	
+	bertini::algorithm::config::classic::AlgoChoice tt;
+	ConfigSettingParser<std::string::const_iterator,bertini::algorithm::config::classic::AlgoChoice> parser;
+	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, tt);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(tt == bertini::algorithm::config::classic::AlgoChoice::WitnessSetProjection);
+	
+	
+	inputfile = ParseInputFile("Config \n  \n heLlo: 9 \n StepSuccessFactor: 4.2;  \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
+	
+	
+	configStr = inputfile.Config();
+	
+	iter = configStr.begin();
+	end = configStr.end();
+	tt = bertini::algorithm::config::classic::AlgoChoice();
+	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, tt);
+	
+	
+	BOOST_CHECK(parsed && iter == end);
+	BOOST_CHECK(tt == bertini::algorithm::config::classic::AlgoChoice::ZeroDim);
+	
+}
+
+
+
 BOOST_AUTO_TEST_CASE(all_config_settings_mp)
 {
 	using namespace bertini::parsing::classic;
