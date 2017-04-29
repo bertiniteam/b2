@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with trig.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -118,28 +118,14 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return sin(child_->Eval<dbl>(diff_variable));
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return sin(child_->Eval<mpfr>(diff_variable));
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
-			evaluation_value = sin(evaluation_value);
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-			evaluation_value = sin(evaluation_value);
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
 	private:
@@ -184,28 +170,14 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return asin(child_->Eval<dbl>(diff_variable));
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return asin(child_->Eval<mpfr>(diff_variable));
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
-			evaluation_value = asin(evaluation_value);
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-			evaluation_value = asin(evaluation_value);
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 		ArcSinOperator() = default;
@@ -260,28 +232,14 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return cos(child_->Eval<dbl>(diff_variable));
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return cos(child_->Eval<mpfr>(diff_variable));
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
-			evaluation_value = cos(evaluation_value);
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-			evaluation_value = cos(evaluation_value);
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
 		
@@ -331,28 +289,14 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return acos(child_->Eval<dbl>(diff_variable));
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return acos(child_->Eval<mpfr>(diff_variable));
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
-			evaluation_value = acos(evaluation_value);
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-			evaluation_value = acos(evaluation_value);
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
 	private:
@@ -408,28 +352,14 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for negate.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return tan(child_->Eval<dbl>(diff_variable));
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return tan(child_->Eval<mpfr>(diff_variable));
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
-			evaluation_value = tan(evaluation_value);
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-			evaluation_value = tan(evaluation_value);
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
 	private:
@@ -478,29 +408,14 @@ namespace node{
 		
 		
 		// Specific implementation of FreshEval for arctangent.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return atan(child_->Eval<dbl>(diff_variable));
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return atan(child_->Eval<mpfr>(diff_variable));
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
-			evaluation_value = atan(evaluation_value);
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
-			evaluation_value = atan(evaluation_value);
-		}
-
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 	private:
 		ArcTanOperator() = default;

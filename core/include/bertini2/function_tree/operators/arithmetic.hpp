@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with arithmetic.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
@@ -116,8 +116,9 @@ namespace node{
 		
 		
 		
-		
-		//Special Behaviour: by default all terms added are positive
+		/**
+		\note: Special Behaviour: by default all terms added are positive
+		*/
 		void AddChild(std::shared_ptr<Node> child) override
 		{
 			NaryOperator::AddChild(std::move(child));
@@ -125,8 +126,9 @@ namespace node{
 		}
 		
 		
-		
-		//Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
+		/**
+		\note Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
+		*/
 		void AddChild(std::shared_ptr<Node> child, bool sign) // not an override
 		{
 			NaryOperator::AddChild(std::move(child));

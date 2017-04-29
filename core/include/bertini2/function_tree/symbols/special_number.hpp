@@ -43,10 +43,7 @@
 #define BERTINI_FUNCTION_TREE_SPECIAL_NUMBER_HPP
 
 
-#include "bertini2/function_tree/symbols/symbol.hpp"
-
-#include "bertini2/function_tree/operators/arithmetic.hpp"
-#include "bertini2/function_tree/operators/trig.hpp"
+#include "bertini2/function_tree/symbols/number.hpp"
 
 #include <cmath>
 
@@ -65,7 +62,7 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public virtual NamedSymbol
+		class Pi : public virtual Number, public virtual NamedSymbol
 		{
 		public:
 			Pi() : NamedSymbol("pi")
@@ -73,98 +70,16 @@ namespace node{
 
 			virtual ~Pi() = default;
 
-
-			void Reset() const override
-			{
-				Node::ResetStoredValues();
-			}
-
-
-			/**
-			 Differentiates a number.  Should this return the special number Zero?
-			 */
-			std::shared_ptr<Node> Differentiate() const override
-			{
-				return MakeInteger(0);
-			}
-
-			/**
-			Compute the degree with respect to a single variable.
-
-			For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-			*/
-			int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-			{
-				return 0;
-			}
-
-
-			int Degree(VariableGroup const& vars) const override
-			{
-				return 0;
-			}
-
-			std::vector<int> MultiDegree(VariableGroup const& vars) const override
-			{
-				return std::vector<int>(vars.size(), 0);
-			}
-
-
-			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
-			{
-				
-			}
-
-			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-			{
-				return true;
-			}
-			
-			/**
-			Check for homogeneity, with respect to a variable group.
-			*/
-			bool IsHomogeneous(VariableGroup const& vars) const override
-			{
-				return true;
-			}
-
-
-			/**
-			 Change the precision of this variable-precision tree node.
-			 
-			 \param prec the number of digits to change precision to.
-			 */
-			virtual void precision(unsigned int prec) const override
-			{
-				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-				val_pair.first.precision(prec);
-			}
-
-
-
-			
 		private:
 			// Return value of constant
-			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-			{
-				return acos(-1.0);
-			}
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-			{
-				evaluation_value = acos(-1.0);
-			}
+			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-			{
-				return mpfr(mpfr_float(acos(mpfr_float(-1))));
-			}
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-			{
-				evaluation_value = mpfr(mpfr_float(acos(mpfr_float(-1))));
-			}
+			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 			friend class boost::serialization::access;
@@ -182,7 +97,7 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public virtual NamedSymbol
+		class E : public virtual Number, public virtual NamedSymbol
 		{
 		public:
 			E() : NamedSymbol("e")
@@ -191,92 +106,17 @@ namespace node{
 			virtual ~E() = default;
 
 
-			void Reset() const override
-			{
-				Node::ResetStoredValues();
-			}
-
-			/**
-			 Differentiates a number.  Should this return the special number Zero?
-			 */
-			std::shared_ptr<Node> Differentiate() const override
-			{
-				return MakeInteger(0);
-			}
-
-			/**
-			Compute the degree with respect to a single variable.
-
-			For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
-			*/
-			int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-			{
-				return 0;
-			}
-
-
-			int Degree(VariableGroup const& vars) const override
-			{
-				return 0;
-			}
-
-			std::vector<int> MultiDegree(VariableGroup const& vars) const override
-			{
-				return std::vector<int>(vars.size(), 0);
-			}
-
-
-			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
-			{
-				
-			}
-
-			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-			{
-				return true;
-			}
-			
-			/**
-			Check for homogeneity, with respect to a variable group.
-			*/
-			bool IsHomogeneous(VariableGroup const& vars) const override
-			{
-				return true;
-			}
-
-			/**
-			 Change the precision of this variable-precision tree node.
-			 
-			 \param prec the number of digits to change precision to.
-			 */
-			virtual void precision(unsigned int prec) const override
-			{
-				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-				val_pair.first.precision(prec);
-			}
 
 		private:
 			// Return value of constant
-			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-			{
-				return dbl(exp(1.0f),0.0);
-			}
+			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-			{
-				evaluation_value = dbl(exp(1.0f),0.0);
-			}
+			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-			{
-				return mpfr(mpfr_float(exp(mpfr_float(1))));
-			}
+			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-			{
-				evaluation_value = mpfr(mpfr_float(exp(mpfr_float(1))));
-			}
+			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 			friend class boost::serialization::access;

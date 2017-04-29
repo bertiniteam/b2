@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//variable.hpp is free software: you can redistribute it and/or modify
+//include/bertini2/function_tree/symbols/variable.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//variable.hpp is distributed in the hope that it will be useful,
+//include/bertini2/function_tree/symbols/variable.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with variable.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with include/bertini2/function_tree/symbols/variable.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015, 2016 by Bertini2 Development Team
 //
@@ -30,11 +30,11 @@
 //  Created by Collins, James B. on 4/30/15.
 //
 //
-// variable.hpp:  Declares the class Variable.
+// include/bertini2/function_tree/symbols/variable.hpp:  Declares the class Variable.
 
 
 /**
-\file variable.hpp
+\file include/bertini2/function_tree/symbols/variable.hpp
 
 \brief Provides the Variable Node class.
 
@@ -62,8 +62,7 @@ namespace node{
 	public:
 		
 		
-		Variable(std::string new_name) : NamedSymbol(new_name)
-		{ }
+		Variable(std::string new_name);
 		
 		
 		
@@ -78,89 +77,39 @@ namespace node{
 		
 		// This sets the value for the variable
 		template <typename T>
-		void set_current_value(T val)
-		{
-			assert(Precision(std::get< std::pair<T,bool> >(current_value_).first)==Precision(val) && "precision of value setting into variable doesn't match precision of variable.  is default precision correct?");
-			
-			std::get< std::pair<T,bool> >(current_value_).first = val;
-			std::get< std::pair<T,bool> >(current_value_).second = false;
-		}
-		
+		void set_current_value(T const& val);
+
 		
 		/**
 		 Differentiates a variable.  
 		 */
-		std::shared_ptr<Node> Differentiate() const override
-		{
-			return MakeDifferential(shared_from_this(), name());
-		}
+		std::shared_ptr<Node> Differentiate() const override;
 		
 		
 
-		void Reset() const override
-		{
-			Node::ResetStoredValues();
-		}
-
+		void Reset() const override;
 
 		/**
 		Compute the degree with respect to a single variable.
 
 		If this is the variable, then the degree is 1.  Otherwise, 0.
 		*/
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			if (v)
-			{
-				if (this == v.get())
-					return 1;
-				else
-					return 0;
-			}
-			else
-				return 1;
-			
-		}
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 
-		int Degree(VariableGroup const& vars) const override
-		{
-			for (auto iter : vars)
-				if (this==iter.get())
-					return 1;
-				
-			return 0;
-		}
+		int Degree(VariableGroup const& vars) const override;
 
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override
-		{
-			std::vector<int> deg;
-			for (auto iter=vars.begin(); iter!=vars.end(); iter++)
-				if (this==(*iter).get())
-					deg.push_back(1);
-				else
-					deg.push_back(0);
-			return deg;
-		}
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
-		{
-			
-		}
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
 
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return true;
-		}
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		/**
 		Check for homogeneity, with respect to a variable group.
 		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
-		{
-			return true;
-		}
+		bool IsHomogeneous(VariableGroup const& vars) const override;
 
 
 		/**
@@ -168,35 +117,19 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) const override
-		{
-			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
-		}
+		void precision(unsigned int prec) const override;
 		
 	protected:
 		
 		// Return current value of the variable.
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return std::get< std::pair<dbl,bool> >(current_value_).first;
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			evaluation_value = std::get< std::pair<dbl,bool> >(current_value_).first;
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return std::get< std::pair<mpfr,bool> >(current_value_).first;
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			evaluation_value = std::get< std::pair<mpfr,bool> >(current_value_).first;
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		Variable() = default;
 	private:
