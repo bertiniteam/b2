@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 				points.push_back(p);
 
 
-			const auto& vars = sys.VariableGroups()[0];
+			const auto vars = sys.VariableGroups()[0];
 
 			auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 				points.push_back(p);
 
 
-			const auto& vars = sys.Variables();
+			const auto vars = sys.Variables();
 
 			auto slice = bertini::LinearSlice::RandomComplex(vars, 2);
 
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 				points.push_back(p);
 
 
-			const auto& vars = sys.VariableGroups()[0];
+			const auto vars = sys.VariableGroups()[0];
 
 			auto slice = bertini::LinearSlice::RandomComplex(vars, 1);
 
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 			auto sys = std::make_shared<System>(system::Precon::GriewankOsborn());
 			
 			auto n_vars = sys->NumVariables();
-			const auto& vars = sys->VariableGroups()[0];
+			const auto vars = sys->VariableGroups()[0];
 
 			nag_datatype::PointCont< sp<Vec<complex>> > points;
 			for (unsigned ii = 0; ii < 3; ++ii)
