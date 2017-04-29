@@ -491,6 +491,7 @@ public:
 	template<typename CT>
 	bool CheckForCOverKStabilization(TimeCont<CT> const& c_over_k_array)
 	{	
+		using RT = typename Eigen::NumTraits<CT>::Real;
 		using std::abs;
 
 		assert(c_over_k_array.size()>=GetCauchySettings().num_needed_for_stabilization);
