@@ -79,6 +79,10 @@ std::shared_ptr<Node> Function::Differentiate() const
 	return entry_node_->Differentiate();
 }
 
+std::shared_ptr<Node> Function::Derivative(std::shared_ptr<Variable> const& v) const
+{
+	return entry_node_->Derivative(v);
+}
 
 /**
 Compute the degree of a node.  For functions, the degree is the degree of the entry node.

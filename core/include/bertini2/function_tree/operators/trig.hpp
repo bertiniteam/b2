@@ -111,7 +111,8 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		
+		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+
 		virtual ~SinOperator() = default;
 		
 	protected:
@@ -163,7 +164,8 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		
+		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+
 		virtual ~ArcSinOperator() = default;
 		
 	protected:
@@ -225,7 +227,8 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		
+		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+
 		virtual ~CosOperator() = default;
 		
 	protected:
@@ -281,7 +284,8 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-
+		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		
 
 		virtual ~ArcCosOperator() = default;
 		
@@ -344,7 +348,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		
+		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
 		
 		virtual ~TanOperator() = default;
 		
@@ -400,7 +404,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		
+		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
 		
 		virtual ~ArcTanOperator() = default;
 		

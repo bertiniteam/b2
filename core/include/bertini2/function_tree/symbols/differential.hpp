@@ -86,7 +86,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 
-
+		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
 
 		virtual ~Differential() = default;
 

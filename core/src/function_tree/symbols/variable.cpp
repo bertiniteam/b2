@@ -53,6 +53,11 @@ std::shared_ptr<Node> Variable::Differentiate() const
 	return MakeDifferential(shared_from_this(), name());
 }
 
+std::shared_ptr<Node> Variable::Derivative(std::shared_ptr<Variable> const& v) const
+{
+	return v.get() == this ? MakeInteger(1) : MakeInteger(0);
+}
+
 void Variable::Reset() const
 {
 	Node::ResetStoredValues();

@@ -221,7 +221,10 @@ public:
 	virtual std::shared_ptr<Node> Differentiate() const = 0;
 
 
-
+	/**
+	\brief Compute the derivative with respect to a single variable.
+	*/
+	virtual std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const = 0;
 	/**
 	Compute the degree, optionally with respect to a single variable.
 

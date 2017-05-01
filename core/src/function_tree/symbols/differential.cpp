@@ -56,7 +56,11 @@ std::shared_ptr<Node> Differential::Differentiate() const
 	return MakeInteger(0);
 }
 
-
+std::shared_ptr<Node> Differential::Derivative(std::shared_ptr<Variable> const& v) const
+{
+	throw std::runtime_error("taking a Derivative of a differential is not correctly implemented yet");
+	return MakeInteger(0);
+}
 
 /**
 Compute the degree with respect to a single variable.   For differentials, the degree is 0.
