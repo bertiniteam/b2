@@ -48,9 +48,13 @@ void Variable::set_current_value(T const& val)
 template void Variable::set_current_value<dbl>(dbl const&);
 template void Variable::set_current_value<mpfr>(mpfr const&);
 
-std::shared_ptr<Node> Variable::Differentiate() const
+
+std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return MakeDifferential(shared_from_this(), name());
+	if (v==nullptr)
+		return MakeDifferential(shared_from_this(), name());
+	else
+		return v.get() == this ? MakeInteger(1) : MakeInteger(0);
 }
 
 void Variable::Reset() const

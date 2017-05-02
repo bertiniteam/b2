@@ -52,13 +52,11 @@ namespace node{
 		target << ")";
 	}
 
-
-
-	std::shared_ptr<Node> SinOperator::Differentiate() const
-	{
-		return cos(child_) * child_->Differentiate();
-	}
 	
+	std::shared_ptr<Node> SinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
+	{
+		return cos(child_) * child_->Differentiate(v);
+	}
 
 	// Specific implementation of FreshEval for negate.
 	dbl SinOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -91,10 +89,9 @@ namespace node{
 		target << ")";
 	}
 
-
-	std::shared_ptr<Node> ArcSinOperator::Differentiate() const
+	std::shared_ptr<Node> ArcSinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return child_->Differentiate()/sqrt(1-pow(child_,2));
+		return child_->Differentiate(v)/sqrt(1-pow(child_,2));
 	}
 
 
@@ -129,12 +126,10 @@ namespace node{
 		target << ")";
 	}
 	
-	std::shared_ptr<Node> CosOperator::Differentiate() const
+	std::shared_ptr<Node> CosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return -sin(child_) * child_->Differentiate();
+		return -sin(child_) * child_->Differentiate(v);
 	}
-	
-	
 
 	dbl CosOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 	{
@@ -170,14 +165,10 @@ namespace node{
 	}
 
 
-
-
-	std::shared_ptr<Node> ArcCosOperator::Differentiate() const
+	std::shared_ptr<Node> ArcCosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return -child_->Differentiate()/sqrt(1-pow(child_,2));
+		return -child_->Differentiate(v)/sqrt(1-pow(child_,2));
 	}
-
-
 
 	// Specific implementation of FreshEval for negate.
 	dbl ArcCosOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -212,10 +203,9 @@ namespace node{
 		target << ")";
 	}
 
-
-	std::shared_ptr<Node> TanOperator::Differentiate() const
+	std::shared_ptr<Node> TanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return child_->Differentiate() /  pow(cos(child_),2);
+		return child_->Differentiate(v) /  pow(cos(child_),2);
 	}
 
 	dbl TanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -252,10 +242,9 @@ namespace node{
 	}
 		
 
-
-	std::shared_ptr<Node> ArcTanOperator::Differentiate() const
+	std::shared_ptr<Node> ArcTanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return child_->Differentiate() / (1 + pow(child_,2));
+		return child_->Differentiate(v) / (1 + pow(child_,2));
 	}
 
 	dbl ArcTanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
