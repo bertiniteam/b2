@@ -214,14 +214,14 @@ public:
 	
 
 	/**
-	Virtual method for differentiating the node.  Produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
+	\brief Compute the derivative with respect to a single variable.
 
-	\return The Jacobian for the node.
+	Virtual method for differentiating the node.  If no variable is passed, produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
+
+	\return The result of differentiation.  Jacobian or regular Node depending on what you passed in.
 	*/
-	virtual std::shared_ptr<Node> Differentiate() const = 0;
-
-
-
+	virtual std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+	
 	/**
 	Compute the degree, optionally with respect to a single variable.
 

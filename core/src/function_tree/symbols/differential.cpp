@@ -51,12 +51,12 @@ void Differential::print(std::ostream & target) const
 	target << name();
 }
 
-std::shared_ptr<Node> Differential::Differentiate() const
+
+std::shared_ptr<Node> Differential::Differentiate(std::shared_ptr<Variable> const& v) const
 {
+	throw std::runtime_error("differentiating a differential is not correctly implemented yet");
 	return MakeInteger(0);
 }
-
-
 
 /**
 Compute the degree with respect to a single variable.   For differentials, the degree is 0.

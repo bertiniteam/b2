@@ -82,11 +82,9 @@ namespace node{
 
 
 		/**
-		 Differentiates a number.  Should this return the special number Zero?
+		 Differentiates a number.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-
-
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		virtual ~Differential() = default;
 

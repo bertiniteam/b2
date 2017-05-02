@@ -109,9 +109,8 @@ namespace node{
 		/**
 		 Differentiates the sine function.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
 		virtual ~SinOperator() = default;
 		
 	protected:
@@ -161,9 +160,8 @@ namespace node{
 		/**
 		 Differentiates the sine function.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
 		virtual ~ArcSinOperator() = default;
 		
 	protected:
@@ -223,9 +221,8 @@ namespace node{
 		/**
 		 Differentiates the cosine function.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
 		virtual ~CosOperator() = default;
 		
 	protected:
@@ -279,9 +276,8 @@ namespace node{
 		/**
 		 Differentiates the cosine function.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
-
 
 		virtual ~ArcCosOperator() = default;
 		
@@ -342,9 +338,7 @@ namespace node{
 		/**
 		 Differentiates the tangent function.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		virtual ~TanOperator() = default;
 		
@@ -397,10 +391,8 @@ namespace node{
 		
 		/**
 		 Differentiates the tangent function.
-		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		 */		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		virtual ~ArcTanOperator() = default;
 		
