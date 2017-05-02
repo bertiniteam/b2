@@ -79,9 +79,9 @@ std::shared_ptr<Node> Function::Differentiate() const
 	return entry_node_->Differentiate();
 }
 
-std::shared_ptr<Node> Function::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> Function::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return entry_node_->Derivative(v);
+	return entry_node_->Differentiate(v);
 }
 
 /**

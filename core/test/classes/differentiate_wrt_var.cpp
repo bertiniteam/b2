@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(just_diff_a_function){
 	
 	for(auto vv : vars)
 	{
-		func->Derivative(vv);
+		func->Differentiate(vv);
 	}
 
 	std::vector<int> multidegree{1,2,1};
@@ -110,9 +110,9 @@ BOOST_AUTO_TEST_CASE(diff_3xyz){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 	
 
 	std::vector<dbl> exact_dbl = {3.0*ynum_dbl*znum_dbl, 3.0*xnum_dbl*znum_dbl, 3.0*ynum_dbl*xnum_dbl};
@@ -172,9 +172,9 @@ BOOST_AUTO_TEST_CASE(diff_constant){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 	std::vector<dbl> exact_dbl = {0.0, 0.0, 0.0};
@@ -219,9 +219,9 @@ BOOST_AUTO_TEST_CASE(diff_sum_xyz_constant){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 	std::vector<dbl> exact_dbl {1.0, -1.0, 1.0};
@@ -264,9 +264,9 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_z_cubed){
 
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 	std::vector<dbl> exact_dbl = {2.0*xnum_dbl*pow(ynum_dbl,3.0), 3.0*pow(ynum_dbl*xnum_dbl,2.0), 0.0};
@@ -337,9 +337,9 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_over_y_cubed){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 	
 
 
@@ -383,9 +383,9 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_times_lx_plus_numl){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 
@@ -429,9 +429,9 @@ BOOST_AUTO_TEST_CASE(diff_2y_over_ly_squared_minus_numl){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 	
@@ -476,9 +476,9 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 
@@ -522,9 +522,9 @@ BOOST_AUTO_TEST_CASE(diff_cos_y){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 	
@@ -568,9 +568,9 @@ BOOST_AUTO_TEST_CASE(diff_tan_z){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 
@@ -613,9 +613,9 @@ BOOST_AUTO_TEST_CASE(diff_exp_x){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 	std::vector<dbl> exact_dbl = {exp(xnum_dbl), 0.0, 0.0};
@@ -658,9 +658,9 @@ BOOST_AUTO_TEST_CASE(diff_log_x){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 
 	std::vector<dbl> exact_dbl = {2.0*xnum_dbl/(xnum_dbl*xnum_dbl+ynum_dbl), 1.0/(xnum_dbl*xnum_dbl+ynum_dbl), 0.0};
@@ -702,9 +702,9 @@ BOOST_AUTO_TEST_CASE(diff_sqrt_y){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 	
 
@@ -749,9 +749,9 @@ BOOST_AUTO_TEST_CASE(diff_lz_plus_3l_cubed){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 	std::vector<dbl> exact_dbl = {0.0, 0.0, 3.0*(pow(znum_dbl+3.0,2.0))};
 	std::vector<mpfr> exact_mpfr = {mpfr("0.0"),mpfr("0.0"),mpfr("3.0")*pow(znum_mpfr+mpfr("3.0"),mpfr("2.0"))};
@@ -794,9 +794,9 @@ BOOST_AUTO_TEST_CASE(diff_x_squared_plus_y_squared_plus_z_squared){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 	
 
@@ -843,9 +843,9 @@ BOOST_AUTO_TEST_CASE(diff_sin_lx_squared_times_yl){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 	std::vector<dbl> exact_dbl = {cos(xnum_dbl*ynum_dbl)*ynum_dbl, cos(xnum_dbl*ynum_dbl)*xnum_dbl, 0.0};
 	std::vector<mpfr> exact_mpfr = {cos(xnum_mpfr*ynum_mpfr)*ynum_mpfr,
@@ -887,9 +887,9 @@ BOOST_AUTO_TEST_CASE(diff_cos_lx_squaredl){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 	std::vector<dbl> exact_dbl = {-2.0*sin(pow(xnum_dbl,2.0))*xnum_dbl, 0.0, 0.0};
 	std::vector<mpfr> exact_mpfr = {mpfr("-2.0")*sin(pow(xnum_mpfr,mpfr("2.0")))*xnum_mpfr,mpfr("0.0"), mpfr("0.0")};
@@ -930,9 +930,9 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 	auto func = sys.Function(0);
 	auto vars = sys.Variables();
 	
-	auto dx = func->Derivative(vars[0]);
-	auto dy = func->Derivative(vars[1]);
-	auto dz = func->Derivative(vars[2]);
+	auto dx = func->Differentiate(vars[0]);
+	auto dy = func->Differentiate(vars[1]);
+	auto dz = func->Differentiate(vars[2]);
 
 	std::vector<dbl> exact_dbl = {1.0/( znum_dbl*pow( cos(xnum_dbl/znum_dbl), 2.0 ) ), 0.0, -xnum_dbl/( pow(znum_dbl, 2.0)*pow( cos(xnum_dbl/znum_dbl), 2.0 ) )};
 	std::vector<mpfr> exact_mpfr = {mpfr("1.0")/( znum_mpfr*pow( cos(xnum_mpfr/znum_mpfr), mpfr("2.0") ) ), mpfr("0.0"), -xnum_mpfr/( pow(znum_mpfr, mpfr("2.0"))*pow( cos(xnum_mpfr/znum_mpfr), mpfr("2.0") ) )};
@@ -961,7 +961,7 @@ BOOST_AUTO_TEST_CASE(arcsine_differentiate)
 {
 	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = asin(pow(x,2)+1);
-	auto dx = N->Derivative(x);
+	auto dx = N->Differentiate(x);
 
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -981,7 +981,7 @@ BOOST_AUTO_TEST_CASE(arccosine_differentiate)
 {
 	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = acos(pow(x,2)+1);
-	auto dx = N->Derivative(x);
+	auto dx = N->Differentiate(x);
 
 	x->set_current_value<dbl>(xnum_dbl);
 	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
@@ -999,7 +999,7 @@ BOOST_AUTO_TEST_CASE(arctangent_differentiate)
 {
 	std::shared_ptr<Variable> x = MakeVariable("x");
 	auto N = atan(pow(x,2)+1);
-	auto dx = N->Derivative(x);
+	auto dx = N->Differentiate(x);
 
 
 	x->set_current_value<dbl>(xnum_dbl);
@@ -1026,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(integer_power)
 	std::shared_ptr<Variable> t = MakeVariable("t");
 
 	auto f = pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t;
-	auto dx = f->Derivative(x);
+	auto dx = f->Differentiate(x);
 
 
 	x->set_current_value(mpfr("-0.844487","-0.535576"));

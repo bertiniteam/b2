@@ -89,7 +89,7 @@ std::shared_ptr<Node> SumOperator::Differentiate() const
 }
 
 
-std::shared_ptr<Node> SumOperator::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> SumOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
 	unsigned int counter = 0;
 	std::shared_ptr<Node> ret_sum = Zero();
@@ -99,7 +99,7 @@ std::shared_ptr<Node> SumOperator::Derivative(std::shared_ptr<Variable> const& v
 		if (converted)
 			continue;
 		
-		auto temp_node = children_[ii]->Derivative(v);
+		auto temp_node = children_[ii]->Differentiate(v);
 		converted = std::dynamic_pointer_cast<Number>(temp_node);
 		if (converted)
 			if (converted->Eval<dbl>()==dbl(0.0))
@@ -364,9 +364,9 @@ std::shared_ptr<Node> NegateOperator::Differentiate() const
 	return std::make_shared<NegateOperator>(child_->Differentiate());
 }
 
-std::shared_ptr<Node> NegateOperator::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> NegateOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return std::make_shared<NegateOperator>(child_->Derivative(v));
+	return std::make_shared<NegateOperator>(child_->Differentiate(v));
 }
 
 dbl NegateOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -490,7 +490,7 @@ std::shared_ptr<Node> MultOperator::Differentiate() const
 }
 
 
-std::shared_ptr<Node> MultOperator::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
 	std::shared_ptr<Node> ret_sum = node::Zero();
 	
@@ -498,7 +498,7 @@ std::shared_ptr<Node> MultOperator::Derivative(std::shared_ptr<Variable> const& 
 	// this loop implements the generic product rule, perhaps inefficiently.
 	for (int ii = 0; ii < children_.size(); ++ii)
 	{
-		auto local_derivative = children_[ii]->Derivative(v);
+		auto local_derivative = children_[ii]->Differentiate(v);
 		
 		// if the derivative of the current term is 0, then stop 
 		auto is_it_a_number = std::dynamic_pointer_cast<Float>(local_derivative);
@@ -726,10 +726,10 @@ std::shared_ptr<Node> PowerOperator::Differentiate() const
 }
 
 
-std::shared_ptr<Node> PowerOperator::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
 	auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, MakeInteger(1),false);
-	auto ret_mult = std::make_shared<MultOperator>(base_->Derivative(v));
+	auto ret_mult = std::make_shared<MultOperator>(base_->Differentiate(v));
 	ret_mult->AddChild(exponent_);
 	ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
 	return ret_mult;
@@ -928,21 +928,21 @@ std::shared_ptr<Node> IntegerPowerOperator::Differentiate() const
 }
 
 
-std::shared_ptr<Node> IntegerPowerOperator::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> IntegerPowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
 	if (exponent_==0)
 		return MakeInteger(0);
 	else if (exponent_==1)
-		return child_->Derivative(v);
+		return child_->Differentiate(v);
 	else if (exponent_==2){
 		auto M = std::make_shared<MultOperator>(MakeInteger(2), child_);
-		M->AddChild(child_->Derivative(v));
+		M->AddChild(child_->Differentiate(v));
 		return M;
 	}
 	else{
 		auto M = std::make_shared<MultOperator>(MakeInteger(exponent_),
 												std::make_shared<IntegerPowerOperator>(child_, exponent_-1) );
-		M->AddChild(child_->Derivative(v));
+		M->AddChild(child_->Differentiate(v));
 		return M;
 	}
 }
@@ -992,10 +992,10 @@ std::shared_ptr<Node> SqrtOperator::Differentiate() const
 	return ret_mult;
 }
 
-std::shared_ptr<Node> SqrtOperator::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> SqrtOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
 	auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, MakeRational(mpq_rational(-1,2),0)));
-	ret_mult->AddChild(child_->Derivative(v));
+	ret_mult->AddChild(child_->Differentiate(v));
 	ret_mult->AddChild(MakeRational(mpq_rational(1,2),0));
 	return ret_mult;
 }
@@ -1069,9 +1069,9 @@ std::shared_ptr<Node> ExpOperator::Differentiate() const
 }
 
 
-std::shared_ptr<Node> ExpOperator::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> ExpOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return exp(child_)*child_->Derivative(v);
+	return exp(child_)*child_->Differentiate(v);
 }
 
 
@@ -1139,9 +1139,9 @@ std::shared_ptr<Node> LogOperator::Differentiate() const
 }
 
 
-std::shared_ptr<Node> LogOperator::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> LogOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return std::make_shared<MultOperator>(child_,false,child_->Derivative(v),true);
+	return std::make_shared<MultOperator>(child_,false,child_->Differentiate(v),true);
 }
 
 

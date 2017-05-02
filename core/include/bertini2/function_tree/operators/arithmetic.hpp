@@ -149,7 +149,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
 
 		/**
 		 Compute the degree of a node.  For sum functions, the degree is the max among summands.
@@ -279,7 +279,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
 
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
@@ -401,7 +401,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
 		
 		/**
 		 Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
@@ -519,7 +519,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
 		
 		/**
 		 Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
@@ -650,7 +650,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
 		
 		/**
 		 Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
@@ -769,7 +769,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
 		
 		/**
 		 Compute the degree with respect to a single variable.
@@ -837,7 +837,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
 		
 		/**
 		 Compute the degree with respect to a single variable.
@@ -892,7 +892,7 @@ namespace node{
 		 */
 		std::shared_ptr<Node> Differentiate() const override;
 		
-		std::shared_ptr<Node> Derivative(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
 		
 		/**
 		 Compute the degree with respect to a single variable.

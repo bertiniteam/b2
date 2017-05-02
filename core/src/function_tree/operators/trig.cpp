@@ -59,9 +59,9 @@ namespace node{
 		return cos(child_) * child_->Differentiate();
 	}
 	
-	std::shared_ptr<Node> SinOperator::Derivative(std::shared_ptr<Variable> const& v) const
+	std::shared_ptr<Node> SinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return cos(child_) * child_->Derivative(v);
+		return cos(child_) * child_->Differentiate(v);
 	}
 
 	// Specific implementation of FreshEval for negate.
@@ -101,9 +101,9 @@ namespace node{
 		return child_->Differentiate()/sqrt(1-pow(child_,2));
 	}
 
-	std::shared_ptr<Node> ArcSinOperator::Derivative(std::shared_ptr<Variable> const& v) const
+	std::shared_ptr<Node> ArcSinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return child_->Derivative(v)/sqrt(1-pow(child_,2));
+		return child_->Differentiate(v)/sqrt(1-pow(child_,2));
 	}
 
 
@@ -143,9 +143,9 @@ namespace node{
 		return -sin(child_) * child_->Differentiate();
 	}
 	
-	std::shared_ptr<Node> CosOperator::Derivative(std::shared_ptr<Variable> const& v) const
+	std::shared_ptr<Node> CosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return -sin(child_) * child_->Derivative(v);
+		return -sin(child_) * child_->Differentiate(v);
 	}
 
 	dbl CosOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -189,9 +189,9 @@ namespace node{
 		return -child_->Differentiate()/sqrt(1-pow(child_,2));
 	}
 
-	std::shared_ptr<Node> ArcCosOperator::Derivative(std::shared_ptr<Variable> const& v) const
+	std::shared_ptr<Node> ArcCosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return -child_->Derivative(v)/sqrt(1-pow(child_,2));
+		return -child_->Differentiate(v)/sqrt(1-pow(child_,2));
 	}
 
 	// Specific implementation of FreshEval for negate.
@@ -233,9 +233,9 @@ namespace node{
 		return child_->Differentiate() /  pow(cos(child_),2);
 	}
 
-	std::shared_ptr<Node> TanOperator::Derivative(std::shared_ptr<Variable> const& v) const
+	std::shared_ptr<Node> TanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return child_->Derivative(v) /  pow(cos(child_),2);
+		return child_->Differentiate(v) /  pow(cos(child_),2);
 	}
 
 	dbl TanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -278,9 +278,9 @@ namespace node{
 		return child_->Differentiate() / (1 + pow(child_,2));
 	}
 
-	std::shared_ptr<Node> ArcTanOperator::Derivative(std::shared_ptr<Variable> const& v) const
+	std::shared_ptr<Node> ArcTanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
-		return child_->Derivative(v) / (1 + pow(child_,2));
+		return child_->Differentiate(v) / (1 + pow(child_,2));
 	}
 
 	dbl ArcTanOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const

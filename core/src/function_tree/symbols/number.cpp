@@ -51,7 +51,7 @@ std::shared_ptr<Node> Number::Differentiate() const
 	return MakeInteger(0);
 }
 
-std::shared_ptr<Node> Number::Derivative(std::shared_ptr<Variable> const& v) const
+std::shared_ptr<Node> Number::Differentiate(std::shared_ptr<Variable> const& v) const
 {
 	return MakeInteger(0);
 }
