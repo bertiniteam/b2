@@ -52,12 +52,6 @@ namespace node{
 		target << ")";
 	}
 
-
-
-	std::shared_ptr<Node> SinOperator::Differentiate() const
-	{
-		return cos(child_) * child_->Differentiate();
-	}
 	
 	std::shared_ptr<Node> SinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
@@ -95,12 +89,6 @@ namespace node{
 		target << ")";
 	}
 
-
-	std::shared_ptr<Node> ArcSinOperator::Differentiate() const
-	{
-		return child_->Differentiate()/sqrt(1-pow(child_,2));
-	}
-
 	std::shared_ptr<Node> ArcSinOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
 		return child_->Differentiate(v)/sqrt(1-pow(child_,2));
@@ -136,11 +124,6 @@ namespace node{
 		target << "cos(";
 		child_->print(target);
 		target << ")";
-	}
-	
-	std::shared_ptr<Node> CosOperator::Differentiate() const
-	{
-		return -sin(child_) * child_->Differentiate();
 	}
 	
 	std::shared_ptr<Node> CosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
@@ -182,13 +165,6 @@ namespace node{
 	}
 
 
-
-
-	std::shared_ptr<Node> ArcCosOperator::Differentiate() const
-	{
-		return -child_->Differentiate()/sqrt(1-pow(child_,2));
-	}
-
 	std::shared_ptr<Node> ArcCosOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{
 		return -child_->Differentiate(v)/sqrt(1-pow(child_,2));
@@ -225,12 +201,6 @@ namespace node{
 		target << "tan(";
 		child_->print(target);
 		target << ")";
-	}
-
-
-	std::shared_ptr<Node> TanOperator::Differentiate() const
-	{
-		return child_->Differentiate() /  pow(cos(child_),2);
 	}
 
 	std::shared_ptr<Node> TanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
@@ -271,12 +241,6 @@ namespace node{
 		target << ")";
 	}
 		
-
-
-	std::shared_ptr<Node> ArcTanOperator::Differentiate() const
-	{
-		return child_->Differentiate() / (1 + pow(child_,2));
-	}
 
 	std::shared_ptr<Node> ArcTanOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 	{

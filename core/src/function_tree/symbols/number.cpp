@@ -46,10 +46,6 @@ void Number::precision(unsigned int prec) const
 	val_pair.second = false; // false indicates to re-evaluate 
 }
 
-std::shared_ptr<Node> Number::Differentiate() const
-{
-	return MakeInteger(0);
-}
 
 std::shared_ptr<Node> Number::Differentiate(std::shared_ptr<Variable> const& v) const
 {

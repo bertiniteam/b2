@@ -83,10 +83,7 @@ namespace node{
 		/**
 		 Differentiates a variable.  
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		void Reset() const override;
 

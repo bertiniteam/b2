@@ -109,10 +109,7 @@ namespace node{
 		/** 
 		 Calls Differentiate on the entry node and returns differentiated entry node.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
-		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v) const override;
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 
 		/**
 		Compute the degree of a node.  For functions, the degree is the degree of the entry node.
