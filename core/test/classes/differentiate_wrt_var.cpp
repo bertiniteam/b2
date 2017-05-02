@@ -176,29 +176,27 @@ BOOST_AUTO_TEST_CASE(diff_constant){
 	auto dy = func->Derivative(vars[1]);
 	auto dz = func->Derivative(vars[2]);
 
-	
-
 
 	std::vector<dbl> exact_dbl = {0.0, 0.0, 0.0};
 	std::vector<mpfr> exact_mpfr = {mpfr("0.0"),mpfr("0.0"),mpfr("0.0")};
 
 	dx->Reset();
-	BOOST_CHECK(fabs(dx->Eval<dbl>().real() / exact_dbl[0].real() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(dx->Eval<dbl>().imag() / exact_dbl[0].imag() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(dx->Eval<mpfr>().real() / exact_mpfr[0].real() -1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(dx->Eval<mpfr>().imag() / exact_mpfr[0].imag() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(dx->Eval<dbl>().real() - exact_dbl[0].real()) < threshold_clearance_d);
+	BOOST_CHECK(fabs(dx->Eval<dbl>().imag() - exact_dbl[0].imag()) < threshold_clearance_d);
+	BOOST_CHECK(fabs(dx->Eval<mpfr>().real() - exact_mpfr[0].real()) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(dx->Eval<mpfr>().imag() - exact_mpfr[0].imag()) < threshold_clearance_mp);
 
 	dy->Reset();
-	BOOST_CHECK(fabs(dy->Eval<dbl>().real() / exact_dbl[1].real() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(dy->Eval<dbl>().imag() / exact_dbl[1].imag() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(dy->Eval<mpfr>().real() / exact_mpfr[1].real() -1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(dy->Eval<mpfr>().imag() / exact_mpfr[1].imag() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(dy->Eval<dbl>().real() - exact_dbl[1].real()) < threshold_clearance_d);
+	BOOST_CHECK(fabs(dy->Eval<dbl>().imag() - exact_dbl[1].imag()) < threshold_clearance_d);
+	BOOST_CHECK(fabs(dy->Eval<mpfr>().real() - exact_mpfr[1].real()) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(dy->Eval<mpfr>().imag() - exact_mpfr[1].imag()) < threshold_clearance_mp);
 
 	dz->Reset();
-	BOOST_CHECK(fabs(dz->Eval<dbl>().real() / exact_dbl[2].real() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(dz->Eval<dbl>().imag() / exact_dbl[2].imag() -1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(dz->Eval<mpfr>().real() / exact_mpfr[2].real() -1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(dz->Eval<mpfr>().imag() / exact_mpfr[2].imag() -1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(dz->Eval<dbl>().real() - exact_dbl[2].real()) < threshold_clearance_d);
+	BOOST_CHECK(fabs(dz->Eval<dbl>().imag() - exact_dbl[2].imag()) < threshold_clearance_d);
+	BOOST_CHECK(fabs(dz->Eval<mpfr>().real() - exact_mpfr[2].real()) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(dz->Eval<mpfr>().imag() - exact_mpfr[2].imag()) < threshold_clearance_mp);
 }
 
 
