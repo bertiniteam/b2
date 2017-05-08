@@ -86,6 +86,8 @@ include src/io/Makemodule.am
 include src/nag_algorithms/Makemodule.am
 include src/pool/Makemodule.am
 
+#include src/unity/Makemodule.am
+
 ###
 #  and finally test suites, built as extras
 ####

@@ -1,0 +1,35 @@
+#this is src/unity/Makemodule.am
+
+
+lib_LTLIBRARIES += libbertini2.la
+
+unity_build_source_files = \
+	src/unity/unity.cpp
+
+libbertini2_la_SOURCES = \
+	$(unity_build_source_files) \
+	$(all_headers)
+
+rootinclude_HEADERS += include/bertini2/bertini.hpp
+
+
+
+libbertini2_la_LIBADD = $(BOOST_LDFLAGS) \
+	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) 
+
+
+bin_PROGRAMS += bertini2
+
+bertini2_SOURCES = \
+	src/bertini2/bertini.cpp \
+	include/bertini2/blackbox/main_mode_switch.hpp src/blackbox/main_mode_switch.cpp \
+	include/bertini2/blackbox/argc_argv.hpp src/blackbox/argc_argv.cpp \
+	include/bertini2/parallel.hpp \
+	include/bertini2/parallel/initialize_finalize.hpp src/parallel/initialize_finalize.cpp
+
+bertini2_LDADD = $(BOOST_LDFLAGS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
+
+bertini2_CXXFLAGS = $(BOOST_CPPFLAGS)
+
+
+
