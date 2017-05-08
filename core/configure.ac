@@ -80,6 +80,16 @@ AS_IF([test "x$enable_copy_and_swap" != "xno"],[
 ])
 
 
+AC_ARG_ENABLE([unity_build],
+[  --enable-unity_build    Turn on unity_build-style building, better for a low-thread environment.  possible values yes and no.],
+[case "${enableval}" in
+  yes) unity_build=true ;;
+  no)  unity_build=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-unity_build]) ;;
+esac],[unity_build=false])
+AM_CONDITIONAL([UNITYBUILD], [test x$unity_build = xtrue])
+
+
 # the form of the following commands --
 # AC_SEARCH_LIBS(function, libraries-list, action-if-found, action-if-not-found, extra-libraries)
 

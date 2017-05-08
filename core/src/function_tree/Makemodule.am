@@ -2,7 +2,7 @@
 
 
 
-function_tree_header_files = \
+function_tree_headers = \
 	include/bertini2/function_tree.hpp \
 	include/bertini2/function_tree/node.hpp \
 	include/bertini2/function_tree/factory.hpp \
@@ -17,7 +17,7 @@ function_tree_header_files = \
 	include/bertini2/function_tree/operators/arithmetic.hpp \
 	include/bertini2/function_tree/operators/trig.hpp
 
-function_tree_source_files = \
+function_tree_sources = \
 	src/function_tree/node.cpp \
 	src/function_tree/operators/arithmetic.cpp \
 	src/function_tree/operators/trig.cpp \
@@ -31,9 +31,11 @@ function_tree_source_files = \
 	src/function_tree/roots/function.cpp
 	
 
-function_tree = $(function_tree_header_files) $(function_tree_source_files)
+function_tree = $(function_tree_headers) $(function_tree_sources)
 
-
+core_headers += $(function_tree_headers)
+core_sources += $(function_tree_sources)
+core_all += $(function_tree)
 
 
 rootinclude_HEADERS += \

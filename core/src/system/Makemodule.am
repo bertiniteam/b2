@@ -24,7 +24,9 @@ system_source_files = \
 
 system = $(system_header_files) $(system_source_files)
 
-
+core_headers += $(system_header_files)
+core_sources += $(system_source_files)
+core_all += $(system)
 
 rootinclude_HEADERS += \
 	include/bertini2/system.hpp

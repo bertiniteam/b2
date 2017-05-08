@@ -4,8 +4,6 @@
 #include "src/basics/mpfr_complex.cpp"
 #include "src/basics/mpfr_extensions.cpp"
 
-#include "src/bertini2/bertini.cpp"
-
 #include "src/function_tree/node.cpp"
 #include "src/function_tree/operators/arithmetic.cpp"
 #include "src/function_tree/operators/operator.cpp"
