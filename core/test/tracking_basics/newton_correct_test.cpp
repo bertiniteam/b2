@@ -32,6 +32,16 @@
 #include "trackers/newton_corrector.hpp"
 
 
+
+
+extern double threshold_clearance_d;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
+
+
+
+BOOST_AUTO_TEST_SUITE(newton_correct_tracking_basics)
+
 using System = bertini::System;
 using Variable = bertini::node::Variable;
 using bertini::MakeVariable;
@@ -50,13 +60,8 @@ using mpq_rational = bertini::mpq_rational;
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
 
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
 using bertini::DefaultPrecision;
 
-BOOST_AUTO_TEST_SUITE(newton_correct_tracking_basics)
 
 
 BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)

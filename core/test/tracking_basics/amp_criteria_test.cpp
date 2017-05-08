@@ -34,6 +34,17 @@
 #include "trackers/amp_criteria.hpp"
 
 
+
+
+extern double threshold_clearance_d;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
+
+
+
+
+BOOST_AUTO_TEST_SUITE(amp_criteria_tracking_basics)
+
 using System = bertini::System;
 using Variable = bertini::node::Variable;
 
@@ -50,15 +61,6 @@ using mpfr_float = bertini::mpfr_float;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
-
-
-
-BOOST_AUTO_TEST_SUITE(amp_criteria_tracking_basics)
 
 
 BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)

@@ -4,13 +4,16 @@ EXTRA_PROGRAMS += generating_test
 
 TESTS += generating_test
 
+if UNITYBUILD
+generating_test_source_files = test/generating/unity/unity.cpp
+else
 generating_test_source_files = \
 	test/generating/mpfr_float.cpp \
 	test/generating/mpfr_complex.cpp \
 	test/generating/double.cpp \
 	test/generating/std_complex.cpp \
 	test/generating/generating_test.cpp 
-
+endif
 
 
 generating_test_SOURCES = \

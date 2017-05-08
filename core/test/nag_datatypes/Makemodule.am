@@ -4,11 +4,14 @@ EXTRA_PROGRAMS += nag_datatypes_test
 
 TESTS += nag_datatypes_test
 
+if UNITYBUILD
+nag_datatypes_test_source_files = test/nag_datatypes/unity/unity.cpp
+else
 nag_datatypes_test_source_files = \
 	test/nag_datatypes/witness_set.cpp \
 	test/nag_datatypes/nag_datatypes_test.cpp \
 	test/nag_datatypes/numerical_irreducible_decomposition.cpp 
-
+endif
 
 
 nag_datatypes_test_SOURCES = \
