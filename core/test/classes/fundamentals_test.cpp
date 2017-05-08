@@ -33,13 +33,13 @@
 
 #include <boost/random.hpp>
 
-using mpfr_float = bertini::mpfr_float;
 
-using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
+using mpfr_float = bertini::mpfr_float;
 
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
 {	

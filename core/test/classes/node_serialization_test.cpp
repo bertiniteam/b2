@@ -51,6 +51,16 @@
 #include "bertini2/io/parsing/system_parsers.hpp"
 #include "bertini2/system/precon.hpp"
 
+
+
+#include "externs.hpp"
+
+
+
+BOOST_AUTO_TEST_SUITE(node_serialization)
+
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Float = bertini::node::Float;
@@ -61,13 +71,6 @@ using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
 using System = bertini::System;
-
-#include "externs.hpp"
-
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-BOOST_AUTO_TEST_SUITE(node_serialization)
 
 
 BOOST_AUTO_TEST_CASE(serialize_variable)
