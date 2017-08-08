@@ -36,7 +36,6 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "bertini2/bertini.hpp"
 #include "bertini2/function_tree.hpp"
 
 
