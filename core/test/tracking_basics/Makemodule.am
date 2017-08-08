@@ -7,7 +7,7 @@ TESTS += tracking_basics_test
 tracking_basics_test_SOURCES = \
 	test/tracking_basics/tracking_basics_test.cpp \
 	test/tracking_basics/fixed_precision_tracker_test.cpp \
-	test/tracking_basics/tracker_test.cpp \
+	test/tracking_basics/amp_tracker_test.cpp \
 	test/tracking_basics/newton_correct_test.cpp \
 	test/tracking_basics/euler_test.cpp \
 	test/tracking_basics/heun_test.cpp \

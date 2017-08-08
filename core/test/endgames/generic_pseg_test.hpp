@@ -253,12 +253,12 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -358,12 +358,12 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -445,12 +445,12 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -563,12 +563,12 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -647,12 +647,12 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -738,12 +738,12 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -794,12 +794,12 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -861,12 +861,12 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -927,12 +927,12 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -1017,12 +1017,12 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -1139,10 +1139,10 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 
 	auto tracker = TrackerType(final_system);
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 	tracker.Setup(TestedPredictor,
-	              	RealFromString("1e-5"), RealFromString("1e5"),
+	              	1e-5, 1e5,
 					stepping_settings, newton_settings);
 
 	tracker.PrecisionSetup(precision_config);
@@ -1169,7 +1169,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	correct << BCT(1),BCT(1);
 
 	tracker.Setup(TestedPredictor,
-	              	RealFromString("1e-6"), RealFromString("1e5"),
+	              	1e-6, 1e5,
 					stepping_settings, newton_settings);
 
 	TestedEGType my_endgame(tracker);
@@ -1230,10 +1230,10 @@ BOOST_AUTO_TEST_CASE(parabola)
 
 
 	auto tracker = TrackerType(sys);
-	config::Stepping<BRT> stepping_settings;
+	config::Stepping stepping_settings;
 	config::Newton newton_settings;
 	tracker.Setup(TestedPredictor,
-	              	RealFromString("1e-5"), RealFromString("1e5"),
+	              	1e-5, 1e5,
 					stepping_settings, newton_settings);
 
 	tracker.PrecisionSetup(precision_config);
@@ -1253,7 +1253,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 	correct_eg_soln << BCT(0);
 
 	tracker.Setup(TestedPredictor,
-	              	RealFromString("1e-6"), RealFromString("1e5"),
+	              	1e-6, 1e5,
 					stepping_settings, newton_settings);
 
 	TestedEGType my_endgame(tracker);
@@ -1290,12 +1290,12 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_nonzero_target_time)
 
 	TrackerType tracker(sys);
 		
-	config::Stepping<BRT> stepping_preferences;
+	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
 	tracker.Setup(TestedPredictor,
-	    RealFromString("1e-5"),
-	    RealFromString("1e5"),
+	    1e-5,
+	    1e5,
 	    stepping_preferences,
 	    newton_preferences);
 		

@@ -83,13 +83,13 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping<mpfr_float> stepping_preferences;
+	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
 
 	tracker.Setup(config::Predictor::Euler,
-	              	mpfr_float("1e-5"),
-					mpfr_float("1e5"),
+	              	1e-5,
+					1e5,
 					stepping_preferences,
 					newton_preferences);
 
@@ -140,13 +140,13 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping<mpfr_float> stepping_preferences;
+	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
 
 	tracker.Setup(config::Predictor::Euler,
-	              	mpfr_float("1e-5"),
-					mpfr_float("1e5"),
+	              	1e-5,
+					1e5,
 					stepping_preferences,
 					newton_preferences);
 
@@ -195,13 +195,13 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping<mpfr_float> stepping_preferences;
+	config::Stepping stepping_preferences;
 	config::Newton newton_preferences;
 
 
 	tracker.Setup(config::Predictor::Euler,
-	              	mpfr_float("1e-5"),
-					mpfr_float("1e5"),
+	              	1e-5,
+					1e5,
 					stepping_preferences,
 					newton_preferences);
 
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 
 	SuccessCode tracking_success;
 
-	bertini::MultiObserver<AMPTracker, GoryDetailLogger, StepFailScreenPrinter> agglomeration;
+	bertini::MultiObserver<AMPTracker, GoryDetailLogger> agglomeration;
 
 	tracker.AddObserver(&agglomeration);
 

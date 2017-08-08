@@ -107,9 +107,9 @@ namespace bertini
 			
 
 
-			template<typename T>
 			struct Stepping
 			{
+				using T = double;
 
 				T initial_step_size = T(1)/T(10); ///< The length of the first time step when calling TrackPath.  You can turn it resetting, so subsequent calls use the same stepsize, too.  You make a call to the Tracker itself.
 				T max_step_size = T(1)/T(10); ///<  The largest allowed step size.  MaxStepSize
@@ -140,9 +140,11 @@ namespace bertini
 
 			
 
-			template<typename RealType>
+
 			struct FixedPrecisionConfig
 			{
+				using RealType = double;
+
 				/**
 				\brief Construct a ready-to-go set of fixed precision settings from a system.
 				*/
@@ -153,9 +155,9 @@ namespace bertini
 				FixedPrecisionConfig() = default;
 			};
 
-			template<typename RealType>
+
 			inline
-			std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig<RealType> const& fpc)
+			std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig const& fpc)
 			{
 				return out;
 			}
@@ -185,17 +187,19 @@ namespace bertini
 			*/
 			struct AdaptiveMultiplePrecisionConfig
 			{
-				mpfr_float coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
-				mpfr_float degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
+				using RealType = double;
 
-				mpfr_float epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite AMP1, \cite AMP2, and is used for AMP criteria A and B.  See top of page 13 of \cite AMP1.  A pessimistic bound is \f$2^n\f$.
+				RealType coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
+				RealType degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
+
+				RealType epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite AMP1, \cite AMP2, and is used for AMP criteria A and B.  See top of page 13 of \cite AMP1.  A pessimistic bound is \f$2^n\f$.
 				// rename to linear_solve_error_bound.
 
-				mpfr_float Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
+				RealType Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
 				// \f$\Phi\f$ is error in Jacobian evaluation divided by the unit roundoff error, \f$10^{-P}\f$
 				// rename to jacobian_eval_error_bound
 
-				mpfr_float Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
+				RealType Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
 				// Error in function evaluation, divided by the precision-dependent unit roundoff error.
 				// rename to function_eval_error_bound
 
@@ -217,9 +221,12 @@ namespace bertini
 				*/
 				void SetBoundsAndEpsilonFrom(System const& sys)
 				{
-					epsilon = pow(mpfr_float(sys.NumVariables()),2);
+					using RealType = double;
+					using std::pow;
+
+					epsilon = pow(RealType(sys.NumVariables()),2);
 					degree_bound = sys.DegreeBound();
-					coefficient_bound = sys.CoefficientBound();
+					coefficient_bound = sys.CoefficientBound<dbl>();
 				}
 				
 
@@ -230,8 +237,10 @@ namespace bertini
 				 * Psi is set as \f$ D*B \f$.
 				*/
 				void SetPhiPsiFromBounds()
-				{
-					Phi = degree_bound*(degree_bound-mpfr_float(1))*coefficient_bound;
+				{	
+					using RealType = double;
+
+					Phi = degree_bound*(degree_bound-RealType(1))*coefficient_bound;
 				    Psi = degree_bound*coefficient_bound;  //Psi from the AMP paper.
 				}
 
@@ -311,7 +320,7 @@ namespace bertini
 			using BaseComplexType = dbl;
 			using BaseRealType = double;
 			using EventEmitterType = FixedPrecisionTracker<DoublePrecisionTracker>;
-			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
+			using PrecisionConfig = config::FixedPrecisionConfig;
 			enum {
 				IsFixedPrec = 1,
 				IsAdaptivePrec = 0
@@ -319,7 +328,7 @@ namespace bertini
 
 			using NeededTypes = detail::TypeList<dbl>;
 			using NeededConfigs = detail::TypeList<
-				config::Stepping<BaseRealType>, 
+				config::Stepping, 
 				config::Newton,
 				PrecisionConfig
 				>;
@@ -332,7 +341,7 @@ namespace bertini
 			using BaseComplexType = mpfr;
 			using BaseRealType = mpfr_float;
 			using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
-			using PrecisionConfig = config::FixedPrecisionConfig<BaseRealType>;
+			using PrecisionConfig = config::FixedPrecisionConfig;
 
 			enum {
 				IsFixedPrec = 1,
@@ -342,7 +351,7 @@ namespace bertini
 			using NeededTypes = detail::TypeList<mpfr>;
 
 			using NeededConfigs = detail::TypeList<
-				config::Stepping<BaseRealType>, 
+				config::Stepping, 
 				config::Newton,
 				PrecisionConfig
 				>;
@@ -366,7 +375,7 @@ namespace bertini
 			using NeededTypes = detail::TypeList<dbl, mpfr>;
 
 			using NeededConfigs = detail::TypeList<
-				config::Stepping<BaseRealType>, 
+				config::Stepping, 
 				config::Newton,
 				PrecisionConfig
 				>;

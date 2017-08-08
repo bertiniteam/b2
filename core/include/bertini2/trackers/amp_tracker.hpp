@@ -434,7 +434,7 @@ namespace bertini{
 				if (reinitialize_stepsize_)
 				{
 					mpfr_float segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
-					SetStepSize(min(Get<Stepping>().initial_step_size,segment_length));
+					SetStepSize(min(mpfr_float(Get<Stepping>().initial_step_size),segment_length));
 				}
 
 				// populate the current space value with the start point, in appropriate precision
@@ -750,7 +750,7 @@ namespace bertini{
 			SuccessCode AdjustAMPStepSuccess() const
 			{
 				mpfr_float min_stepsize = current_stepsize_ * Get<Stepping>().step_size_fail_factor;
-				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * Get<Stepping>().step_size_success_factor), Get<Stepping>().max_step_size);
+				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * Get<Stepping>().step_size_success_factor), mpfr_float(Get<Stepping>().max_step_size));
 
 
 				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexType, RealType>();

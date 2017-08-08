@@ -548,8 +548,8 @@ namespace bertini {
 		*/
 		template<typename Derived, typename OtherDerived, typename T>
 		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
-		                    const Eigen::MatrixBase<OtherDerived> & variable_values, 
-		                    const T & path_variable_value) const
+							const Eigen::MatrixBase<OtherDerived> & variable_values, 
+							const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
@@ -965,7 +965,7 @@ namespace bertini {
 
 
 
-        /**
+		/**
 		 Order the variables, by the order in which the groups were added.
 
 		 This function returns the variables in First In First Out (FIFO) ordering.
@@ -973,11 +973,11 @@ namespace bertini {
 		 Homogenizing variables precede affine variable groups, so that groups always are grouped together.
 
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
-        */
-        VariableGroup VariableOrdering() const;
+		*/
+		VariableGroup VariableOrdering() const;
 
 
-        /**
+		/**
 		 Get the variables in the problem.
 		*/
 		const VariableGroup& Variables() const;
@@ -999,25 +999,25 @@ namespace bertini {
 			return VariableGroupSizesFIFO();
 		}
 
-        /**
+		/**
 		\brief Dehomogenize a point, using the variable grouping / structure of the system.
 		
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 
 		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
-        */
-        template<typename T>
-	    Vec<T> DehomogenizePoint(Vec<T> const& x) const
-	        {
+		*/
+		template<typename T>
+		Vec<T> DehomogenizePoint(Vec<T> const& x) const
+			{
 
-	        	if (x.size()!=NumVariables())
-	        		throw std::runtime_error("dehomogenizing point with incorrect number of coordinates");
+				if (x.size()!=NumVariables())
+					throw std::runtime_error("dehomogenizing point with incorrect number of coordinates");
 
-	        	if (!have_ordering_)
-	    			ConstructOrdering();
+				if (!have_ordering_)
+					ConstructOrdering();
 
-	    		return DehomogenizePointFIFO(x);
-	        }
+				return DehomogenizePointFIFO(x);
+			}
 
 
 
@@ -1050,21 +1050,54 @@ namespace bertini {
 			return hom_variable_groups_;
 		}
 
+
+		//////////////////////
+		//
+		//  Functions involving coefficients of the system
+		//
+		///////////////////////
+
+
 		/**
 		Compute an estimate of an upper bound of the absolute values of the coefficients in the system.
 		
 		\param num_evaluations The number of times to compute this estimate.  Default is 1.
 		\returns An upper bound on the absolute values of the coefficients.
 		*/
-        mpfr_float CoefficientBound(unsigned num_evaluations=1) const;
+		template <typename NumT>
+		auto CoefficientBound(unsigned num_evaluations = 1) const
+		{
+			static_assert(Eigen::NumTraits<NumT>::IsComplex,"NumT must be a complex type");
+			
+			using RT = typename Eigen::NumTraits<NumT>::Real;
+			using CT = NumT;
+
+			RT bound(0);
+
+			for (unsigned ii=0; ii < num_evaluations; ii++)
+			{	
+				Vec<CT> randy = RandomOfUnits<CT>(NumVariables());
+				Vec<CT> f_vals;
+				if (HavePathVariable())
+					f_vals = Eval(randy, RandomUnit<CT>());
+				else
+					f_vals = Eval(randy);
+				
+				auto dh_dx = Jacobian<CT>();
+				
+				bound = max(f_vals.array().abs().maxCoeff(),
+							 dh_dx.array().abs().maxCoeff(), bound);
+			}
+			return bound;
+		}
 
 
-        /**
-         \brief Compute an upper bound on the degree of the system.  
+		/**
+		 \brief Compute an upper bound on the degree of the system.  
 
-         This number will be wrong if the system is non-polynomial, because degree for non-polynomial systems is not defined.
-         */
-        int DegreeBound() const;
+		 This number will be wrong if the system is non-polynomial, because degree for non-polynomial systems is not defined.
+		 */
+		int DegreeBound() const;
 
 		/**
 		 \brief Get the degrees of the functions in the system, with respect to all variables.
@@ -1235,67 +1268,67 @@ namespace bertini {
 		\see FIFOVariableOrdering
 		*/
 		template<typename T>
-	    Vec<T> DehomogenizePointFIFO(Vec<T> const& x) const
-        {
-        	#ifndef BERTINI_DISABLE_ASSERTS
-        	assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
-        	#endif
+		Vec<T> DehomogenizePointFIFO(Vec<T> const& x) const
+		{
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
+			#endif
 
-        	bool is_homogenized = homogenizing_variables_.size()!=0;
-        	Vec<T> x_dehomogenized(NumNaturalVariables());
+			bool is_homogenized = homogenizing_variables_.size()!=0;
+			Vec<T> x_dehomogenized(NumNaturalVariables());
 
-        	unsigned affine_group_counter = 0;
-        	unsigned hom_group_counter = 0;
-        	unsigned ungrouped_variable_counter = 0;
+			unsigned affine_group_counter = 0;
+			unsigned hom_group_counter = 0;
+			unsigned ungrouped_variable_counter = 0;
 
-        	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
-        	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
+			unsigned hom_index = 0; // index into x, the point we are dehomogenizing
+			unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
 
-    		for (auto& iter : time_order_of_variable_groups_)
-    		{
-    			switch (iter){
-    				case VariableGroupType::Affine:
-    				{
-    					if (is_homogenized)
-    					{
-	    					auto h = x(hom_index++);
-	    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
-	    						x_dehomogenized(dehom_index++) = x(hom_index++) / h;
-	    					affine_group_counter++;
-	    				}
-	    				else
-	    				{
-	    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
-	    						x_dehomogenized(dehom_index++) = x(hom_index++);
-	    				}
-    					break;
-    				}
-    				case VariableGroupType::Homogeneous:
-    				{
-    					for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
-    						x_dehomogenized(dehom_index++) = x(hom_index++);
-    					break;
-    				}
-    				case VariableGroupType::Ungrouped:
-    				{
-    					x_dehomogenized(dehom_index++) = x(hom_index++);
-    					ungrouped_variable_counter++;
-    					break;
-    				}
-    				default:
-    				{
-    					throw std::runtime_error("unacceptable VariableGroupType in FIFOVariableOrdering");
-    				}
-    			}
-    		}
+			for (auto& iter : time_order_of_variable_groups_)
+			{
+				switch (iter){
+					case VariableGroupType::Affine:
+					{
+						if (is_homogenized)
+						{
+							auto h = x(hom_index++);
+							for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+								x_dehomogenized(dehom_index++) = x(hom_index++) / h;
+							affine_group_counter++;
+						}
+						else
+						{
+							for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+								x_dehomogenized(dehom_index++) = x(hom_index++);
+						}
+						break;
+					}
+					case VariableGroupType::Homogeneous:
+					{
+						for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
+							x_dehomogenized(dehom_index++) = x(hom_index++);
+						break;
+					}
+					case VariableGroupType::Ungrouped:
+					{
+						x_dehomogenized(dehom_index++) = x(hom_index++);
+						ungrouped_variable_counter++;
+						break;
+					}
+					default:
+					{
+						throw std::runtime_error("unacceptable VariableGroupType in FIFOVariableOrdering");
+					}
+				}
+			}
 
-    		return x_dehomogenized;
-        }
+			return x_dehomogenized;
+		}
 
-	    /**
+		/**
 		 Puts together the ordering of variables, and stores it internally.
-	    */
-	    void ConstructOrdering() const;
+		*/
+		void ConstructOrdering() const;
 
 
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.

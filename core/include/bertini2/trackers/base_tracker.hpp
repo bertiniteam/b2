@@ -149,7 +149,7 @@ namespace bertini{
 			
 		public:
 			using Config = detail::Configured< typename TrackerTraits< D >::NeededConfigs >;
-			using Stepping = config::Stepping<BaseRealType>;
+			using Stepping = config::Stepping;
 			using Newton = config::Newton;
 			using PrecConf = typename TrackerTraits< D >::PrecisionConfig;
 
@@ -169,9 +169,9 @@ namespace bertini{
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
 			void Setup(config::Predictor new_predictor_choice,
-			           RT const& tracking_tolerance,
-						RT const& path_truncation_threshold,
-						config::Stepping<RT> const& stepping,
+			           double const& tracking_tolerance,
+						double const& path_truncation_threshold,
+						config::Stepping const& stepping,
 						config::Newton const& newton)
 			{
 				Predictor(new_predictor_choice);
@@ -199,13 +199,13 @@ namespace bertini{
 
 			\param tracking_tolerance The new value.  Newton iterations are performed until the step length is less than this number, or the max number of iterations has been reached, in which case the overall predict-correct step is viewed as a failure, and the step is undone.  This number must be positive.
 			*/
-			void SetTrackingTolerance(RT const& tracking_tolerance)
+			void SetTrackingTolerance(double const& tracking_tolerance)
 			{
 				if (tracking_tolerance <= 0)
-					throw std::runtime_error("tracking tolerance must be positive");
+					throw std::runtime_error("tracking tolerance must be strictly positive");
 
 				tracking_tolerance_ = tracking_tolerance;
-				digits_tracking_tolerance_ = NumTraits<RT>::TolToDigits(tracking_tolerance);
+				digits_tracking_tolerance_ = NumTraits<double>::TolToDigits(tracking_tolerance);
 			}
 
 			/**
@@ -562,16 +562,14 @@ namespace bertini{
 			std::shared_ptr<predict::ExplicitRKPredictor > predictor_; // The predictor to use while tracking
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
-			// config::Stepping<RT> stepping_config_; ///< The stepping configuration.
 			std::shared_ptr<correct::NewtonCorrector> corrector_;
-			// config::Newton newton_config_; ///< The newton configuration.
 
 
 
 			unsigned digits_final_ = 0; ///< The number of digits to track to, due to being in endgame zone.
 			unsigned digits_tracking_tolerance_; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
-			RT tracking_tolerance_; ///< The tracking tolerance.
-			RT path_truncation_threshold_; ///< The threshold for path truncation.
+			double tracking_tolerance_; ///< The tracking tolerance.
+			double path_truncation_threshold_; ///< The threshold for path truncation.
 
 			mutable CT endtime_; ///< The time we are tracking to.
 			mutable CT current_time_; ///< The current time.

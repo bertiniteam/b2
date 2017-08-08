@@ -81,7 +81,7 @@ namespace bertini{
 			/**
 			\brief An additional no-op call, provided for conformity of interface with AMP tracker in generic code.
 			*/
-			void PrecisionSetup(config::FixedPrecisionConfig<RT> const&)
+			void PrecisionSetup(config::FixedPrecisionConfig const&)
 			{ }
 
 
@@ -593,7 +593,7 @@ namespace bertini{
 				this->endtime_ = end_time;
 				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(Get<Stepping>().initial_step_size,mpfr_float(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
+					this->SetStepSize(min(mpfr_float(Get<Stepping>().initial_step_size),mpfr_float(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
 
 				ResetCounters();
 
