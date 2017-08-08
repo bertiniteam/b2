@@ -118,6 +118,15 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 }
 
 
+BOOST_AUTO_TEST_CASE(self_multiplication){
+
+	auto rat_coeff = [](){return bertini::MakeRational(bertini::node::Rational::Rand());};
+
+	std::shared_ptr<Node> v = rat_coeff();
+	std::shared_ptr<Node> N = v*v;
+}
+
+
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
@@ -1822,7 +1831,24 @@ BOOST_AUTO_TEST_CASE(function_tree_combine_product_of_two_integer_powers)
 	BOOST_CHECK_EQUAL(P->Degree(), -1);
 }
 
+BOOST_AUTO_TEST_CASE(long_arithmetic_chain)
+{
 
+	std::vector<std::shared_ptr<Node>> polytypes(9);
+
+	auto rat_coeff = [](){return bertini::MakeRational(bertini::node::Rational::Rand());};
+	for (unsigned int ii=0; ii<9; ++ii)
+	    polytypes[ii] = rat_coeff();
+
+	std::shared_ptr<Node> v = rat_coeff();
+	std::shared_ptr<Node> m12_2 = rat_coeff();
+	std::shared_ptr<Node> cosb = rat_coeff();
+	std::shared_ptr<Node> sinb = rat_coeff();
+	std::shared_ptr<Node> sin2b = rat_coeff();
+
+	std::shared_ptr<Node> N = 2*m12_2/sin2b - v*v * polytypes[9-1] / 16;
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
