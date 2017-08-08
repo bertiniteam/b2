@@ -273,7 +273,7 @@ namespace node{
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		const mpfr highest_precision_value_;
+		mpfr highest_precision_value_;
 
 		friend class boost::serialization::access;
 		Float() = default;
@@ -372,7 +372,7 @@ namespace node{
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		const mpq_rational true_value_real_, true_value_imag_;
+		mpq_rational true_value_real_, true_value_imag_;
 		Rational() = default;
 		friend class boost::serialization::access;
 
