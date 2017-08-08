@@ -19,6 +19,7 @@ endgames_include_HEADERS = \
 	include/bertini2/endgames/config.hpp 
 
 
-
+rootinclude_HEADERS += \
+	include/bertini2/endgames.hpp
 
 
