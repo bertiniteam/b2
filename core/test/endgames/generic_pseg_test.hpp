@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	sample << ComplexFromString("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
 
-	config::Endgame<BRT> endgame_settings;
+	config::Endgame endgame_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings);
 	my_endgame.SetTimes(times);
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	sample << ComplexFromString("0.67729059415987117534436422700325955211292174181447e0", "0.38712848412230230944976856052769427012481164605204e-16"); // f(.025) = 0.67729059415987117534436422700325955211292174181447e0 0.38712848412230230944976856052769427012481164605204e-16 from bertini classic
 	samples.push_back(sample);
 
-	config::Endgame<BRT> endgame_settings;
+	config::Endgame endgame_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings);
 	my_endgame.SetTimes(times);
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	current_time = ComplexFromString(".1");
 	current_space << ComplexFromString("5.000000000000001e-01", "9.084258952712920e-17");
 
-	config::Endgame<BRT> endgame_settings;
+	config::Endgame endgame_settings;
 	config::PowerSeries power_series_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings);
@@ -690,7 +690,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
 	current_time = ComplexFromString(".2");
 	current_space << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18");
 
-	config::Endgame<BRT> endgame_settings;
+	config::Endgame endgame_settings;
 	config::PowerSeries power_series_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings);
@@ -758,8 +758,8 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 	Vec<BCT> correct(1);
 	correct << BCT(1);
 
-	config::Endgame<BRT> endgame_settings;
-	config::Security<BRT> security_settings;
+	config::Endgame endgame_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(current_time,current_space);
@@ -817,8 +817,8 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 	Vec<BCT> correct(1);
 	correct << ComplexFromString("4.680740395503238e-01", "-1.470429372721208e-01");
 
-	config::Endgame<BRT> endgame_settings;
-	config::Security<BRT> security_settings;
+	config::Endgame endgame_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(current_time,current_space,target_time);
@@ -886,8 +886,8 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 	Vec<BCT> correct_root(1);
 	correct_root << BCT(1);
 
-	config::Endgame<BRT> endgame_settings;
-	config::Security<BRT> security_settings;
+	config::Endgame endgame_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(t_endgame_boundary,eg_boundary_point);
@@ -947,9 +947,9 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 	Vec<BCT> correct(2);
 	correct << BCT(1),BCT(1);
 
-	config::Endgame<BRT> endgame_settings;
+	config::Endgame endgame_settings;
 	config::PowerSeries power_series_settings;
-	config::Security<BRT> security_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
@@ -1059,9 +1059,9 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	Vec<BCT> correct(2);
 	correct << BCT(0), BCT(0);
 
-	config::Endgame<BRT> endgame_settings;
+	config::Endgame endgame_settings;
 	config::PowerSeries power_series_settings;
-	config::Security<BRT> security_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
@@ -1174,28 +1174,22 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	TestedEGType my_endgame(tracker);
 
-
+#ifdef B2_OBSERVE
+			GoryDetailLogger<TrackerType> tons_of_detail;
+			tracker.AddObserver(&tons_of_detail);
+#endif
+			
 	std::vector<Vec<BCT> > endgame_solutions;
 
 	unsigned num_successful_occurences = 0;
-	unsigned num_min_track_time_reached = 0;
 	for (auto const& s : homogenized_solutions)
 	{
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
-		{
 				num_successful_occurences++;
-
-		}
-		if(endgame_success == SuccessCode::MinStepSizeReached)
-		{
-			num_min_track_time_reached++;
-		}
 	}
 
  	BOOST_CHECK_EQUAL(num_successful_occurences,num_paths_to_run);
- 	BOOST_CHECK_EQUAL(num_min_track_time_reached,0);
-
 }
 
 
@@ -1313,8 +1307,8 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_nonzero_target_time)
 	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); 
 	x_to_check_against << ComplexFromString("4.248924277564006e-01", "1.369835558109531e-02");
 
-	config::Endgame<BRT> endgame_settings;
-	config::Security<BRT> security_settings;
+	config::Endgame endgame_settings;
+	config::Security security_settings;
 	config::PowerSeries power_series_settings;
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings, security_settings);
 

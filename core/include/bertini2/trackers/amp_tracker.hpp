@@ -34,6 +34,8 @@
 #ifndef BERTINI_AMP_TRACKER_HPP
 #define BERTINI_AMP_TRACKER_HPP
 
+#pragma once 
+
 #include "bertini2/trackers/base_tracker.hpp"
 
 
@@ -48,16 +50,21 @@ namespace bertini{
 
 		using bertini::max;
 
-
+		/**
+		The minimum time that can be represented effectively using a given precision
+		*/
 		inline
-		mpfr_float MinTimeForCurrentPrecision(unsigned precision)
+		mpfr_float MinTimeForCurrentPrecision(unsigned precision, int safety_digits = 3)
 		{
 			if (precision==DoublePrecision())
-				return max( mpfr_float(pow( mpfr_float(10), -long(precision)+3)), mpfr_float("1e-150"));
+				return max( pow( mpfr_float(10), -long(precision)+safety_digits), mpfr_float("1e-150"));
 			else
-				return pow( mpfr_float(10), -long(precision)+3);
+				return      pow( mpfr_float(10), -long(precision)+safety_digits);
 		}
 
+		/**
+		\brief Just another name for MinTimeForCurrentPrecision
+		*/
 		inline
 		mpfr_float MinStepSizeForPrecision(unsigned precision)
 		{
@@ -76,12 +83,12 @@ namespace bertini{
 		 \todo Recompute this cost function for boost::multiprecision::mpfr_float
 		*/
 		inline
-		mpfr_float ArithmeticCost(unsigned precision)
+		double ArithmeticCost(unsigned precision)
 		{
 			if (precision==DoublePrecision())
 				return 1;
 			else
-				return mpfr_float("10.35") + mpfr_float("0.13") * precision;
+				return 10.35 + 0.13 * precision;
 		}
 
 
@@ -92,7 +99,7 @@ namespace bertini{
 		*/
 		inline
 		mpfr_float StepsizeSatisfyingCriterionB(unsigned precision,
-										mpfr_float const& criterion_B_rhs,
+										double const& criterion_B_rhs,
 										unsigned num_newton_iterations,
 										unsigned predictor_order = 0)
 		{
@@ -104,18 +111,22 @@ namespace bertini{
 		\brief The minimum number of digits based on a log10 of a stepsize.
 
 		\param log_of_stepsize log10 of a stepsize
-		\param current_time The current time
+		\param time_to_go How much time you have left to track.
 		*/
 		inline
-		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr const& current_time)
+		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr const& time_to_go)
 		{
-			return mpfr_float(ceil(log_of_stepsize) + ceil(log10(abs(current_time))) + 2).convert_to<int>();
+			return (ceil(log_of_stepsize) + ceil(log10(abs(time_to_go))) + 2).convert_to<unsigned>();
 		}
 
+		/**
+		\todo this function assumes you are going to 0.
+		*/
 		inline
-		unsigned MinDigitsForStepsizeInterval(mpfr_float const& min_stepsize, mpfr_float const& max_stepsize, mpfr const& current_time)
+		unsigned MinDigitsForStepsizeInterval(mpfr_float const& min_stepsize, mpfr_float const& max_stepsize, mpfr const& time_to_go)
 		{
-			return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),current_time), MinDigitsForLogOfStepsize(-log10(max_stepsize),current_time));
+			return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),time_to_go),   
+				       MinDigitsForLogOfStepsize(-log10(max_stepsize),time_to_go));
 		}
 		
 
@@ -130,7 +141,7 @@ namespace bertini{
 		 \param[out] new_precision The minimizing precision.
 		 \param[out] new_stepsize The minimizing stepsize.
 		 \param[in] min_precision The minimum considered precision.
-		 \param[in] old_stepsize The previously used stepsize.
+		 \param[in] min_stepsize The minimum permitted stepsize.
 		 \param[in] max_precision The maximum considered precision.
 		 \param[in] max_stepsize The maximum permitted stepsize.  
 		 \param[in] criterion_B_rhs The right hand side of CriterionB from \cite AMP1, \cite AMP2
@@ -140,31 +151,31 @@ namespace bertini{
 
 		 \see ArithmeticCost
 		*/
- 		template <typename RealType>
-		void MinimizeTrackingCost(unsigned & new_precision, mpfr_float & new_stepsize, 
-						  unsigned min_precision, mpfr_float const& old_stepsize,
-						  unsigned max_precision, mpfr_float const& max_stepsize,
-						  mpfr_float const& criterion_B_rhs,
+		template<typename RealT>
+		void MinimizeTrackingCost(unsigned & new_precision, RealT & new_stepsize, 
+						  unsigned min_precision, RealT const& min_stepsize,
+						  unsigned max_precision, RealT const& max_stepsize,
+						  double const& criterion_B_rhs,
 						  unsigned num_newton_iterations,
 						  unsigned predictor_order = 0)
 		{
-			mpfr_float min_cost = Eigen::NumTraits<mpfr_float>::highest();
+			double min_cost = Eigen::NumTraits<double>::highest();
 			new_precision = MaxPrecisionAllowed()+1; // initialize to an impossible value.
-			new_stepsize = old_stepsize; // initialize to original step size.
+			new_stepsize = min_stepsize; // initialize to minimum permitted step size.
 
 			auto minimizer_routine = 
-				[&min_cost, &new_stepsize, &new_precision, criterion_B_rhs, num_newton_iterations, predictor_order, max_stepsize](unsigned candidate_precision)
+				[&min_cost, &new_stepsize, &new_precision, &criterion_B_rhs, num_newton_iterations, predictor_order, max_stepsize](unsigned p)
 				{
-					mpfr_float candidate_stepsize = min(StepsizeSatisfyingCriterionB(candidate_precision, criterion_B_rhs, num_newton_iterations, predictor_order),
+					RealT candidate_stepsize = min(StepsizeSatisfyingCriterionB(p, criterion_B_rhs, num_newton_iterations, predictor_order),
 					                              max_stepsize);
-
-					mpfr_float current_cost = ArithmeticCost(candidate_precision) / abs(candidate_stepsize);
+					using std::abs;
+					double current_cost = ArithmeticCost(p) / abs(double(candidate_stepsize));
 
 					if (current_cost < min_cost)
 					{
 						min_cost = current_cost;
 						new_stepsize = candidate_stepsize;
-						new_precision = candidate_precision;
+						new_precision = p;
 					}
 				};
 
@@ -185,8 +196,8 @@ namespace bertini{
 			else
 				max_precision = (max_precision/PrecisionIncrement()) * PrecisionIncrement(); // use integer arithmetic to round.
 
-			for (unsigned candidate_precision = lowest_mp_precision_to_test; candidate_precision <= max_precision; candidate_precision+=PrecisionIncrement())
-				minimizer_routine(candidate_precision);
+			for (unsigned p = lowest_mp_precision_to_test; p <= max_precision; p+=PrecisionIncrement())
+				minimizer_routine(p);
 		}
 
 
@@ -363,34 +374,7 @@ namespace bertini{
 					return std::get<Vec<mpfr>>(this->current_space_);
 			}
 
-			virtual
-			const mpfr_float LatestConditionNumber() const override
-			{
-				if (this->CurrentPrecision()!=DoublePrecision())
-					return std::get<mpfr_float>(this->condition_number_estimate_);
-				else
-					return mpfr_float(std::get<double>(this->condition_number_estimate_));
-			}
-
-			virtual
-			const mpfr_float LatestErrorEstimate() const override
-			{
-				if (this->CurrentPrecision()!=DoublePrecision())
-					return std::get<mpfr_float>(this->error_estimate_);
-				else
-					return mpfr_float(std::get<double>(this->error_estimate_));
-			}
-
-			virtual
-			const mpfr_float LatestNormOfStep() const override
-			{
-				if (this->CurrentPrecision()!=DoublePrecision())
-					return std::get<mpfr_float>(this->norm_delta_z_);
-				else
-					return mpfr_float(std::get<double>(this->norm_delta_z_));
-			}
-
-
+			
 
 		private:
 
@@ -453,29 +437,7 @@ namespace bertini{
 			}
 
 
-			// SuccessCode TrackerLoopInitialization(dbl const& start_time,
-			//                                dbl const& end_time,
-			// 							   Vec<dbl> const& start_point) const override
-			// {
-			// 	NotifyObservers(Initializing<AMPTracker,dbl>(*this,start_time, end_time, start_point));
 
-			// 	// set up the master current time and the current step size
-			// 	initial_precision_ = Precision(DoublePrecision());
-			// 	DefaultPrecision(initial_precision_);
-			// 	current_time_.precision(initial_precision_);
-			// 	current_time_ = mpfr(start_time);
-
-			// 	current_stepsize_.precision(initial_precision_);
-			// 	if (reinitialize_stepsize_)
-			// 		SetStepSize(min(double(Get<Stepping>().initial_step_size),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
-
-			// 	// populate the current space value with the start point, in appropriate precision
-				
-			// 	DoubleToDouble( start_point);
-			// 	ChangePrecision<upsample_refine_off>(DoublePrecision());
-			// 	ResetCounters();
-			// 	return InitialRefinement();
-			// }
 
 
 			void ResetCounters() const override
@@ -579,25 +541,7 @@ namespace bertini{
 			}
 
 
-			// void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const override
-			// {
-			// 	if (preserve_precision_)
-			// 		ChangePrecision(initial_precision_);
 
-			// 	// the current precision is the precision of the output solution point.
-			// 	if (current_precision_==DoublePrecision())
-			// 	{
-			// 		solution_at_endtime = std::get<Vec<dbl> >(current_space_);
-			// 	}
-			// 	else
-			// 	{
-			// 		unsigned num_vars = GetSystem().NumVariables();
-			// 		solution_at_endtime.resize(num_vars);
-			// 		for (unsigned ii=0; ii<num_vars; ii++)
-			// 			solution_at_endtime(ii) = dbl(std::get<Vec<mpfr> >(current_space_)(ii));
-
-			// 	}
-			// }
 
 			/**
 			\brief Run an iteration of the tracker loop.
@@ -609,9 +553,9 @@ namespace bertini{
 			SuccessCode TrackerIteration() const override
 			{
 				if (current_precision_==DoublePrecision())
-					return TrackerIteration<dbl, double>();
+					return TrackerIteration<dbl>();
 				else
-					return TrackerIteration<mpfr, mpfr_float>();
+					return TrackerIteration<mpfr>();
 			}
 
 
@@ -622,12 +566,11 @@ namespace bertini{
 			\tparam ComplexType The complex number type.
 			\tparam RealType The real number type.
 			*/
-			template <typename ComplexType, typename RealType>
+			template <typename ComplexType>
 			SuccessCode TrackerIteration() const // not an override, because it is templated
 			{	
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
+
+				using RealType = typename Eigen::NumTraits<ComplexType>::Real;
 
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
@@ -664,7 +607,7 @@ namespace bertini{
 				else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
 					NotifyObservers(PredictorHigherPrecisionNecessary<EmitterType>(*this));
-					AMPCriterionError<ComplexType, RealType>();
+					AMPCriterionError<ComplexType>();
 					return predictor_code;
 				}
 
@@ -688,7 +631,7 @@ namespace bertini{
 				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
 				{
 					NotifyObservers(CorrectorHigherPrecisionNecessary<EmitterType>(*this));
-					AMPCriterionError<ComplexType, RealType>();
+					AMPCriterionError<ComplexType>();
 					return corrector_code;
 				}
 				else if (corrector_code == SuccessCode::GoingToInfinity)
@@ -701,7 +644,7 @@ namespace bertini{
 
 				// copy the tentative vector into the current space vector;
 				current_space = tentative_next_space;
-				return AdjustAMPStepSuccess<ComplexType,RealType>();
+				return AdjustAMPStepSuccess<ComplexType>();
 			}
 
 
@@ -746,14 +689,15 @@ namespace bertini{
 
 			The number of consecutive successful steps is recorded as state in this class, and if this number exceeds a user-determine threshold, the precision or stepsize are allowed to favorably change.  If not, then precision can only go up or remain the same.  Stepsize can only decrease.  These changes depend on the AMP criteria and current tracking tolerance.
 			*/
-			template <typename ComplexType, typename RealType>
+			template <typename ComplexType>
 			SuccessCode AdjustAMPStepSuccess() const
 			{
+				// TODO: think about why we consider reducing the stepsize?  this is despite documentation stating that it can only increase
 				mpfr_float min_stepsize = current_stepsize_ * Get<Stepping>().step_size_fail_factor;
-				mpfr_float max_stepsize = min(mpfr_float(current_stepsize_ * Get<Stepping>().step_size_success_factor), mpfr_float(Get<Stepping>().max_step_size));
+				mpfr_float max_stepsize = min( current_stepsize_ * Get<Stepping>().step_size_success_factor,  mpfr_float(Get<Stepping>().max_step_size));
 
 
-				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexType, RealType>();
+				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexType>();
 				unsigned max_precision = max(min_precision,current_precision_);
 
 				if (num_successful_steps_since_stepsize_increase_ < Get<Stepping>().consecutive_successful_steps_before_stepsize_increase)
@@ -766,10 +710,10 @@ namespace bertini{
 					min_precision = max(min_precision, current_precision_); // disallow precision changing 
 
 
-				MinimizeTrackingCost<RealType>(next_precision_, next_stepsize_, 
+				MinimizeTrackingCost(next_precision_, next_stepsize_, 
 							min_precision, min_stepsize,
 							max_precision, max_stepsize,
-							B_RHS<ComplexType, RealType>(),
+							B_RHS<ComplexType>(),
 							Get<Newton>().max_num_newton_iterations,
 							predictor_order_);
 
@@ -777,16 +721,16 @@ namespace bertini{
 				if ( (next_stepsize_ > current_stepsize_) || (next_precision_ < current_precision_) )
 					num_successful_steps_since_stepsize_increase_ = 0;
 				else
-					num_successful_steps_since_stepsize_increase_++;
+					++num_successful_steps_since_stepsize_increase_;
 				
 
 				if (next_precision_ < current_precision_)
 				{ 
-					num_precision_decreases_++;
+					++num_precision_decreases_;
 					num_successful_steps_since_precision_decrease_ = 0;
 				}
 				else
-					num_successful_steps_since_precision_decrease_ ++;
+					++num_successful_steps_since_precision_decrease_;
 
 				return UpdatePrecisionAndStepsize();
 			}
@@ -838,12 +782,13 @@ namespace bertini{
 			Precision is REQUIRED to increase at least one increment.  Stepsize is REQUIRED to decrease.
 
 			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
 			*/
-			template<typename ComplexType, typename RealType>
+			template<typename ComplexType>
 			void AMPCriterionError() const
 			{	
-				unsigned min_next_precision;
+				using RealT = typename Eigen::NumTraits<ComplexType>::Real;
+
+				unsigned min_next_precision; // sure, i could use a trigraph here, but it'd be terrible
 				if (current_precision_==DoublePrecision())
 					min_next_precision = LowestMultiplePrecision(); // precision increases
 				else
@@ -858,26 +803,24 @@ namespace bertini{
 					// stepsizes are incompatible, must increase precision
 					next_precision_ = min_next_precision;
 					// decrease stepsize somewhat less than the fail factor
-					next_stepsize_ = current_stepsize_ * (1+Get<Stepping>().step_size_fail_factor)/2;
+					next_stepsize_ = max(current_stepsize_ * (1+Get<Stepping>().step_size_fail_factor)/2,  mpfr_float(min_stepsize));
 				}
 				else
 				{
-					mpfr_float criterion_B_rhs = B_RHS<ComplexType,RealType>();
+					unsigned criterion_B_rhs = B_RHS<ComplexType>();
 
 					unsigned min_precision = max(min_next_precision,
-					                             criterion_B_rhs.convert_to<unsigned int>(),
-					                             DigitsC<ComplexType,RealType>(),
-					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, current_time_),
+					                             criterion_B_rhs,
+					                             DigitsC<ComplexType>(),
+					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)),
 					                             digits_final_
 					                             );
 					
-					mpfr_float a(ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/Get<Newton>().max_num_newton_iterations));
+						unsigned a = ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/Get<Newton>().max_num_newton_iterations).convert_to<unsigned>();
 
-					unsigned max_precision = max(min_precision, 
-					                             a.convert_to<unsigned int>()
-					                             );
+					unsigned max_precision = max(min_precision, a);
 
-					MinimizeTrackingCost<RealType>(next_precision_, next_stepsize_, 
+					MinimizeTrackingCost(next_precision_, next_stepsize_, 
 							min_precision, min_stepsize,
 							Get<PrecConf>().maximum_precision, max_stepsize,
 							criterion_B_rhs,
@@ -895,16 +838,15 @@ namespace bertini{
 			/**
 			\brief Get the raw right-hand side of Criterion B based on current state.
 			*/
-			template<typename ComplexType, typename RealType>
-			RealType B_RHS() const
+			template<typename ComplexType>
+			double B_RHS() const
 			{	
-				return max(amp::CriterionBRHS(std::get<RealType>(norm_J_), 
-				           					  std::get<RealType>(norm_J_inverse_), 
+				return max(amp::CriterionBRHS(this->norm_J_, 
+				           					  this->norm_J_inverse_, 
 				           					  Get<Newton>().max_num_newton_iterations, 
-				           					  RealType(tracking_tolerance_), 
-				           					  std::get<RealType>(size_proportion_), 
-				           					  Get<PrecConf>()),
-				            RealType(0));
+				           					  tracking_tolerance_, 
+				           					  this->size_proportion_, 
+				           					  Get<PrecConf>()), double(0));
 			}
 
 
@@ -925,10 +867,10 @@ namespace bertini{
 			* the AMP configuration.
 
 			*/
-			template<typename ComplexType, typename RealType>
+			template<typename ComplexType>
 			unsigned DigitsB() const
 			{	
-				return unsigned(B_RHS<ComplexType, RealType>());
+				return unsigned(B_RHS<ComplexType>());
 			}
 
 
@@ -938,14 +880,13 @@ namespace bertini{
 			/**
 			\brief Get the raw right-hand side of Criterion B based on current state.
 			*/
-			template<typename ComplexType, typename RealType>
-			RealType C_RHS() const
+			template<typename ComplexType>
+			double C_RHS() const
 			{	
-				return max(amp::CriterionCRHS(std::get<RealType>(norm_J_inverse_), 
-				                              std::get<Vec<ComplexType> > (current_space_).norm(), 
-				                              RealType(tracking_tolerance_), 
-				                              Get<PrecConf>()),
-				           RealType(0));
+				return max(amp::CriterionCRHS(this->norm_J_inverse_, 
+				                              double(std::get<Vec<ComplexType> > (current_space_).norm()), 
+				                              tracking_tolerance_, 
+				                              Get<PrecConf>()), double(0));
 			}
 
 
@@ -963,10 +904,10 @@ namespace bertini{
 			* the AMP configuration.
 
 			*/
-			template<typename ComplexType, typename RealType>
+			template<typename ComplexType>
 			unsigned DigitsC() const
 			{	
-				return unsigned(C_RHS<ComplexType, RealType>());
+				return unsigned(C_RHS<ComplexType>());
 			}
 
 
@@ -993,11 +934,11 @@ namespace bertini{
 			\tparam ComplexType The complex number type.
 			\tparam RealType The real number type.
 			*/
-			template <typename ComplexType, typename RealType>
+			template <typename ComplexType>
 			unsigned MinRequiredPrecision_BCTol() const
 			{
-				return max(DigitsB<ComplexType,RealType>(), 
-				           DigitsC<ComplexType,RealType>(), 
+				return max(DigitsB<ComplexType>(), 
+				           DigitsC<ComplexType>(), 
 				           digits_tracking_tolerance_, 
 				           DoublePrecision()); 
 			}
@@ -1081,38 +1022,33 @@ namespace bertini{
 			              				"underlying complex type and the type for comparisons must match");
 				static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
-				RealType& norm_J = std::get<RealType>(norm_J_);
-				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
-				RealType& size_proportion = std::get<RealType>(size_proportion_);
-				RealType& error_estimate = std::get<RealType>(error_estimate_);
-				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
 				if (predictor_->HasErrorEstimate())
-					return predictor_->Predict<ComplexType,RealType>(predicted_space,
-									error_estimate,
-									size_proportion,
-									norm_J,
-									norm_J_inverse,
+					return predictor_->Predict(predicted_space,
+									this->error_estimate_,
+									this->size_proportion_,
+									this->norm_J_,
+									this->norm_J_inverse_,
 									tracked_system_,
 									current_space, current_time, 
 									delta_t,
-									condition_number_estimate,
+									this->condition_number_estimate_,
 									num_steps_since_last_condition_number_computation_, 
 									Get<Stepping>().frequency_of_CN_estimation, 
-									RealType(tracking_tolerance_),
+									tracking_tolerance_,
 									Get<PrecConf>());
 				else
-					return predictor_->Predict<ComplexType,RealType>(predicted_space,
-									size_proportion,
-									norm_J,
-									norm_J_inverse,
+					return predictor_->Predict(predicted_space,
+									this->size_proportion_,
+									this->norm_J_,
+									this->norm_J_inverse_,
 									tracked_system_,
 									current_space, current_time, 
 									delta_t,
-									condition_number_estimate,
+									this->condition_number_estimate_,
 									num_steps_since_last_condition_number_computation_, 
 									Get<Stepping>().frequency_of_CN_estimation, 
-									RealType(tracking_tolerance_),
+									tracking_tolerance_,
 									Get<PrecConf>());
 			}
 
@@ -1142,21 +1078,17 @@ namespace bertini{
 			              				"underlying complex type and the type for comparisons must match");
 
 
-				RealType& norm_J = std::get<RealType>(norm_J_);
-				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
-				RealType& norm_delta_z = std::get<RealType>(norm_delta_z_);
-				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
 
 
 				return corrector_->Correct(corrected_space,
-									norm_delta_z,
-									norm_J,
-									norm_J_inverse,
-									condition_number_estimate,
+									this->norm_delta_z_,
+									this->norm_J_,
+									this->norm_J_inverse_,
+									this->condition_number_estimate_,
 									tracked_system_,
 									current_space,
 									current_time,
-									RealType(tracking_tolerance_),
+									tracking_tolerance_,
 									Get<Newton>().min_num_newton_iterations,
 									Get<Newton>().max_num_newton_iterations,
 									Get<PrecConf>());
@@ -1220,21 +1152,18 @@ namespace bertini{
 				ChangePrecision(target_precision);
 				Precision(new_space,target_precision);
 				
-				RealType& norm_J = std::get<RealType>(norm_J_);
-				RealType& norm_J_inverse = std::get<RealType>(norm_J_inverse_);
-				RealType& norm_delta_z = std::get<RealType>(norm_delta_z_);
-				RealType& condition_number_estimate = std::get<RealType>(condition_number_estimate_);
+
 
 
 				return corrector_->Correct(new_space,
-										   norm_delta_z,
-										   norm_J,
-										   norm_J_inverse,
-										   condition_number_estimate,
+										   this->norm_delta_z_,
+										   this->norm_J_,
+										   this->norm_J_inverse_,
+										   this->condition_number_estimate_,
 										   tracked_system_,
 										   start_point,
 										   current_time,
-										   RealType(tracking_tolerance_),
+										   tracking_tolerance_,
 										   Get<Newton>().min_num_newton_iterations,
 										   Get<Newton>().max_num_newton_iterations,
 										   Get<PrecConf>());
@@ -1260,38 +1189,28 @@ namespace bertini{
 			\param max_iterations The maximum allowable number of iterations to perform.
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
-			template <typename ComplexType, typename RealType>
+			template <typename ComplexType>
 			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time,
-								RealType const& tolerance, unsigned max_iterations) const
+								double const& tolerance, unsigned max_iterations) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
 				auto target_precision = Precision(current_time);
 				assert(Precision(start_point)==target_precision);
 				ChangePrecision(target_precision);
 				Precision(new_space,target_precision);
 
-				using R = typename Eigen::NumTraits<ComplexType>::Real;
-
-				R& norm_J = std::get<R>(norm_J_);
-				R& norm_J_inverse = std::get<R>(norm_J_inverse_);
-				R& norm_delta_z = std::get<R>(norm_delta_z_);
-				R& condition_number_estimate = std::get<R>(condition_number_estimate_);
-
 				return corrector_->Correct(new_space,
-							   norm_delta_z,
-								norm_J,
-								norm_J_inverse,
-								condition_number_estimate,
-							   tracked_system_,
-							   start_point,
-							   current_time, 
-							   tolerance,
-							   1,
-							   max_iterations,
-							   Get<PrecConf>());
+										this->norm_delta_z_,
+										this->norm_J_,
+										this->norm_J_inverse_,
+										this->condition_number_estimate_,
+										tracked_system_,
+										start_point,
+										current_time, 
+										tolerance,
+										1,
+										max_iterations,
+										Get<PrecConf>());
 			}
 
 
@@ -1575,13 +1494,6 @@ namespace bertini{
 				std::get<Vec<mpfr> >(temporary_space_).resize(num_vars);
 				for (unsigned ii = 0; ii < num_vars; ++ii)
 					std::get<Vec<mpfr> >(temporary_space_)(ii).precision(new_precision);
-
-				std::get<mpfr_float>(condition_number_estimate_).precision(new_precision);
-				std::get<mpfr_float>(error_estimate_).precision(new_precision);
-				std::get<mpfr_float>(norm_J_).precision(new_precision);
-				std::get<mpfr_float>(norm_J_inverse_).precision(new_precision);
-				std::get<mpfr_float>(norm_delta_z_).precision(new_precision);
-				std::get<mpfr_float>(size_proportion_).precision(new_precision);
 			}
 
 
@@ -1607,12 +1519,6 @@ namespace bertini{
 							std::get<Vec<mpfr> >(current_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(tentative_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr> >(temporary_space_)(0).precision() == current_precision_ &&
-							std::get<mpfr_float>(norm_delta_z_).precision() == current_precision_ &&
-							std::get<mpfr_float>(condition_number_estimate_).precision() == current_precision_ &&
-							std::get<mpfr_float>(error_estimate_).precision() == current_precision_ &&
-							std::get<mpfr_float>(norm_J_).precision() == current_precision_ &&
-							std::get<mpfr_float>(norm_J_inverse_).precision() == current_precision_ &&
-							std::get<mpfr_float>(size_proportion_).precision() == current_precision_ &&
 							Precision(endtime_) == current_precision_ && 
 							Precision(current_time_) == current_precision_
 							        ;
@@ -1650,15 +1556,6 @@ namespace bertini{
 			mutable mpfr endtime_highest_precision_;
 
 		public:
-			// functions offered for observers.
-			template<typename RT>
-			RT CondNum() const { return std::get<RT>(condition_number_estimate_);}
-
-			template<typename RT>
-			RT NormJ() const { return std::get<RT>(norm_J_);}
-
-			template<typename RT>
-			RT NormJInv() const { return std::get<RT>(norm_J_inverse_);}
 
 			unsigned CurrentPrecision() const override
 			{

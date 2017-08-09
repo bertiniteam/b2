@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		Vec<mpfr> predicted(2);
 		predicted << mpfr("2.38948874619536140814029774733947","0.208678935223681033727262214382917"),
@@ -189,8 +189,8 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> heun_prediction_result;
 		mpfr next_time;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
@@ -215,6 +215,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 		
 		BOOST_CHECK(abs(error_est - predicted_error) < threshold_clearance_mp);
+		std::cout << error_est << " " << predicted_error << '\n';
 		
 	}
 	
@@ -340,7 +341,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 		AMP.coefficient_bound = 2;
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		
 		Vec<mpfr> predicted(2);
@@ -351,8 +352,8 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> heun_prediction_result;
 		mpfr next_time;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
@@ -477,12 +478,12 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_cond_num_est = 1;
 		unsigned freq_of_CN_estimation = 1;
@@ -601,13 +602,13 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_1 = 100;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
@@ -726,13 +727,13 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_2 = 100;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;

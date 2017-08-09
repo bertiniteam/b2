@@ -136,13 +136,13 @@ namespace bertini{
 				inline
 				const auto & EndgameSettings() const
 				{
-					return Configured::template Get<config::Endgame<BRT>>();
+					return Configured::template Get<config::Endgame>();
 				}
 				
 				inline
 				const auto & SecuritySettings() const
 				{
-					return this->template Get<config::Security<BRT>>();
+					return this->template Get<config::Security>();
 				}
 
 				explicit EndgameBase(TrackerType const& tr, const ConfigsAsTuple& settings )
@@ -164,7 +164,7 @@ namespace bertini{
 				inline
 				const auto& FinalTolerance() const
 				{
-					return this->template Get<config::Endgame<BRT>>().final_tolerance;
+					return this->template Get<config::Endgame>().final_tolerance;
 				}
 
 
@@ -173,7 +173,7 @@ namespace bertini{
 				\brief Setter for the final tolerance.
 				*/
 				inline
-				void SetFinalTolerance(BRT const& ft){this->template Get<config::Endgame<BRT>>().final_tolerance = ft;}
+				void SetFinalTolerance(BRT const& ft){this->template Get<config::Endgame>().final_tolerance = ft;}
 
 
 				/**
@@ -277,7 +277,7 @@ namespace bertini{
 				SuccessCode ComputeInitialSamples(const CT & start_time,const CT & target_time, const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
 				{	
 					using RT = typename Eigen::NumTraits<CT>::Real;
-					assert(this->template Get<config::Endgame<BRT>>().num_sample_points>0 && "number of sample points must be positive");
+					assert(this->template Get<config::Endgame>().num_sample_points>0 && "number of sample points must be positive");
 
 					if (TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
@@ -292,9 +292,9 @@ namespace bertini{
 
 					auto num_vars = GetSystem().NumVariables();
 					//start at 1, because the input point is the 0th element.
-					for(int ii=1; ii < this->template Get<config::Endgame<BRT>>().num_sample_points; ++ii)
+					for(int ii=1; ii < this->template Get<config::Endgame>().num_sample_points; ++ii)
 					{ 
-						times.emplace_back((times[ii-1] + target_time) * RT(this->template Get<config::Endgame<BRT>>().sample_factor)); // next time is a point between the previous time and target time.
+						times.emplace_back((times[ii-1] + target_time) * RT(this->template Get<config::Endgame>().sample_factor)); // next time is a point between the previous time and target time.
 						samples.emplace_back(Vec<CT>(num_vars));											   // sample_factor gives us some point between the two, usually the midpoint.		
 
 						auto tracking_success = GetTracker().TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);

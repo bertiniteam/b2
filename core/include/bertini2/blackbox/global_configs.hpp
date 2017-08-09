@@ -51,8 +51,7 @@ struct Configs
 {
 	
 
-	template<typename T>
-	using Tracking = detail::TypeList<Stepping<T>, Newton, FixedPrecisionConfig<T>, AdaptiveMultiplePrecisionConfig, tracking::PrecisionType, Predictor>;
+	using Tracking = detail::TypeList<Stepping, Newton, FixedPrecisionConfig, AdaptiveMultiplePrecisionConfig, tracking::PrecisionType, Predictor>;
 
 	template<typename T>
 	using Endgame = detail::TypeList<Security<T>, Endgame<T>, PowerSeries, Cauchy<T>, TrackBack>;
@@ -61,7 +60,7 @@ struct Configs
 	using Algorithm = detail::TypeList<Tolerances<T>, MidPath<T>, AutoRetrack<T>, Sharpening<T>, Regeneration<T>, PostProcessing<T>, ZeroDim<T>, classic::AlgoChoice>;
 
 	template<typename T>
-	using All = detail::ListCat<Tracking<T>, Endgame<T>, Algorithm<T>>;
+	using All = detail::ListCat<Tracking, Endgame<T>, Algorithm<T>>;
 };
 
 

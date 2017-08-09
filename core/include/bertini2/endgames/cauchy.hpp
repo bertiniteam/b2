@@ -308,7 +308,7 @@ public:
 	/**
 	\brief Setter for the specific settings in tracking_conifg.hpp under Cauchy.
 	*/
-	void SetCauchySettings(config::Cauchy<BRT> const& new_cauchy_settings)
+	void SetCauchySettings(config::Cauchy const& new_cauchy_settings)
 	{
 		this->template Set(new_cauchy_settings);
 	}
@@ -318,7 +318,7 @@ public:
 	*/
 	const auto& GetCauchySettings() const
 	{
-		return this->template Get<config::Cauchy<BRT>>();
+		return this->template Get<config::Cauchy>();
 	}
 	
 
@@ -597,8 +597,8 @@ public:
 			auto new_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
 		}
 
-		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),RT(this->FinalTolerance()),this->EndgameSettings().max_num_newton_iterations);
-		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),RT(this->FinalTolerance()),this->EndgameSettings().max_num_newton_iterations);
+		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),this->FinalTolerance(),this->EndgameSettings().max_num_newton_iterations);
+		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),this->FinalTolerance(),this->EndgameSettings().max_num_newton_iterations);
 
 		if((samples.front() - samples.back()).template lpNorm<Eigen::Infinity>() < this->GetTracker().TrackingTolerance())
 		{

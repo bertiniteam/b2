@@ -104,16 +104,20 @@ namespace bertini{
 
 	namespace config{
 
-		template<typename T>
+		
 		struct Security
 		{
+			using T = double;
+
 			int level = 0; //SecurityLevel
 			T max_norm = T(100000); //SecurityMaxNorm wrong default value
 		};
 
-		template<typename T>
+		
 		struct Endgame
 		{
+			using T = double;
+
 			unsigned num_sample_points = 3; //NumSamplePoints default = 2
 			T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
 			T sample_factor = T(1)/T(2); //SampleFactor
@@ -129,9 +133,11 @@ namespace bertini{
 			unsigned cycle_number_amplification = 5;
 		};
 
-		template<typename T>
+		
 		struct Cauchy
 		{
+			using T = double;
+
 			T cycle_cutoff_time = T(1)/T(100000000); //CycleTimeCutoff
 			T ratio_cutoff_time = T(1)/T(100000000000000); //RatioTimeCutoff
 			T minimum_for_c_over_k_stabilization = T(3)/T(4);
@@ -164,8 +170,8 @@ namespace bertini{
 	{
 		using NeededConfigs = detail::TypeList<
 			config::PowerSeries,
-			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
-			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>
+			config::Endgame,
+			config::Security
 			>;
 	};
 
@@ -178,8 +184,8 @@ namespace bertini{
 	{
 		using NeededConfigs = detail::TypeList<
 			config::PowerSeries,
-			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
-			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>
+			config::Endgame,
+			config::Security
 			>;
 	};
 
@@ -191,8 +197,8 @@ namespace bertini{
 	{
 		using NeededConfigs = detail::TypeList<
 			config::PowerSeries,
-			config::Endgame<typename TrackerTraits<AMPTracker>::BaseRealType>,
-			config::Security<typename TrackerTraits<AMPTracker>::BaseRealType>
+			config::Endgame,
+			config::Security
 			>;
 	};
 
@@ -203,9 +209,9 @@ namespace bertini{
 	struct AlgoTraits< typename endgame::CauchyEndgame<TrackerType, FinalEGT>>
 	{
 		using NeededConfigs = detail::TypeList<
-			config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>,
-			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
-			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
+			config::Cauchy,
+			config::Endgame,
+			config::Security>;
 	};
 	
 	template<typename TrackerType>
@@ -215,9 +221,9 @@ namespace bertini{
 				>
 	{
 		using NeededConfigs = detail::TypeList<
-			config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>,
-			config::Endgame<typename TrackerTraits<TrackerType>::BaseRealType>,
-			config::Security<typename TrackerTraits<TrackerType>::BaseRealType>>;
+			config::Cauchy,
+			config::Endgame,
+			config::Security>;
 	};
 	
 	template<>
@@ -227,9 +233,9 @@ namespace bertini{
 				>
 	{
 		using NeededConfigs = detail::TypeList<
-			config::Cauchy<typename TrackerTraits<AMPTracker>::BaseRealType>,
-			config::Endgame<typename TrackerTraits<AMPTracker>::BaseRealType>,
-			config::Security<typename TrackerTraits<AMPTracker>::BaseRealType>
+			config::Cauchy,
+			config::Endgame,
+			config::Security
 			>;
 	};
 

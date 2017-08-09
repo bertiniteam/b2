@@ -314,14 +314,10 @@ namespace bertini{
 			\param tolerance The tolerance to which to refine.
 			\param max_iterations The maximum number of iterations to use to refine.
 			*/
-			template<typename C, typename R>
+			template<typename C>
 			SuccessCode Refine(Vec<C> & new_space,
-								Vec<C> const& start_point, C const& current_time, R const& tolerance, unsigned max_iterations) const
+								Vec<C> const& start_point, C const& current_time, double const& tolerance, unsigned max_iterations) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<R>::Real, 
-			              				typename Eigen::NumTraits<C>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
 				static_assert(detail::IsTemplateParameter<C,NeededTypes>::value,"complex type for refinement must be a used type for the tracker");
 
 				return this->AsDerived().RefineImpl(new_space, start_point, current_time, tolerance, max_iterations);
@@ -595,26 +591,35 @@ namespace bertini{
 			mutable TupOfVec temporary_space_; ///< After prediction, the tentative next space value.
 
 
-			mutable TupOfReal condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
-			mutable TupOfReal error_estimate_; ///< An estimate on the error of a step.
-			mutable TupOfReal norm_J_; ///< An estimate on the norm of the Jacobian
-			mutable TupOfReal norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
-			mutable TupOfReal norm_delta_z_; ///< The norm of the change in space resulting from a step.
-			mutable TupOfReal size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
+			mutable double condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
+			mutable double error_estimate_; ///< An estimate on the error of a step.
+			mutable double norm_J_; ///< An estimate on the norm of the Jacobian
+			mutable double norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
+			mutable double norm_delta_z_; ///< The norm of the change in space resulting from a step.
+			mutable double size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
 
 
 
 
 			public: 
 
-			virtual
-			const BaseRealType LatestConditionNumber() const = 0;
+			
+			const double LatestConditionNumber() const
+			{
+				this->condition_number_estimate_;
+			}
 
-			virtual
-			const BaseRealType LatestErrorEstimate() const = 0;
+			
+			const double LatestErrorEstimate() const
+			{
+				this->error_estimate_;
+			}
 
-			virtual
-			const BaseRealType LatestNormOfStep() const = 0;
+			
+			const double LatestNormOfStep() const
+			{
+				this->norm_delta_z_;
+			}
 
 
 			unsigned NumVariables() const

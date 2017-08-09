@@ -90,23 +90,6 @@ namespace bertini{
 				return std::get<Vec<CT>>(this->current_space_);
 			}
 
-			virtual
-			const RT LatestConditionNumber() const override
-			{
-				return std::get<RT>(this->condition_number_estimate_);
-			}
-
-			virtual
-			const RT LatestErrorEstimate() const override
-			{
-				return std::get<RT>(this->error_estimate_);
-			}
-
-			virtual
-			const RT LatestNormOfStep() const override
-			{
-				return std::get<RT>(this->norm_delta_z_);
-			}
 
 
 			void ResetCounters() const override
@@ -317,25 +300,16 @@ namespace bertini{
 								Vec<CT> const& current_space, 
 								CT const& current_time, CT const& delta_t) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<CT>::Real, 
-			              				typename Eigen::NumTraits<CT>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
-				RT& norm_J = std::get<RT>(this->norm_J_);
-				RT& norm_J_inverse = std::get<RT>(this->norm_J_inverse_);
-				RT& size_proportion = std::get<RT>(this->size_proportion_);
-				RT& error_estimate = std::get<RT>(this->error_estimate_);
-				RT& condition_number_estimate = std::get<RT>(this->condition_number_estimate_);
 
 				return this->predictor_->Predict(
 			                predicted_space,
 							this->tracked_system_,
 							current_space, current_time,
 							delta_t,
-							condition_number_estimate,
+							this->condition_number_estimate_,
 							this->num_steps_since_last_condition_number_computation_,
 							Get<Stepping>().frequency_of_CN_estimation,
-							RT(this->tracking_tolerance_));
+							this->tracking_tolerance_);
 			}
 
 
@@ -355,22 +329,11 @@ namespace bertini{
 								Vec<CT> const& current_space, 
 								CT const& current_time) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RT>::Real, 
-			              				typename Eigen::NumTraits<CT>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
-
-				RT& norm_J = std::get<RT>(this->norm_J_);
-				RT& norm_J_inverse = std::get<RT>(this->norm_J_inverse_);
-				RT& norm_delta_z = std::get<RT>(this->norm_delta_z_);
-				RT& condition_number_estimate = std::get<RT>(this->condition_number_estimate_);
-
-
 				return this->corrector_->Correct(corrected_space,
 												this->tracked_system_,
 												current_space,
 												current_time, 
-												RT(this->tracking_tolerance_),
+												this->tracking_tolerance_,
 												Get<Newton>().min_num_newton_iterations,
 												Get<Newton>().max_num_newton_iterations);
 			}
@@ -392,10 +355,6 @@ namespace bertini{
 			SuccessCode RefineImpl(Vec<CT> & new_space,
 								Vec<CT> const& start_point, CT const& current_time) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RT>::Real, 
-			              				typename Eigen::NumTraits<CT>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
 				return this->corrector_->Correct(new_space,
 							   this->tracked_system_,
 							   start_point,
@@ -426,12 +385,8 @@ namespace bertini{
 			*/
 			SuccessCode RefineImpl(Vec<CT> & new_space,
 								Vec<CT> const& start_point, CT const& current_time,
-								RT const& tolerance, unsigned max_iterations) const
+								double const& tolerance, unsigned max_iterations) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RT>::Real, 
-			              				typename Eigen::NumTraits<CT>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
 				return this->corrector_->Correct(new_space,
 							   this->tracked_system_,
 							   start_point,
@@ -607,12 +562,6 @@ namespace bertini{
 						std::get<Vec<mpfr> >(current_space_)(0).precision() == precision_ &&
 						std::get<Vec<mpfr> >(tentative_space_)(0).precision() == precision_ &&
 						std::get<Vec<mpfr> >(temporary_space_)(0).precision() == precision_ &&
-						std::get<mpfr_float>(norm_delta_z_).precision() == precision_ &&
-						std::get<mpfr_float>(condition_number_estimate_).precision() == precision_ &&
-						std::get<mpfr_float>(error_estimate_).precision() == precision_ &&
-						std::get<mpfr_float>(norm_J_).precision() == precision_ &&
-						std::get<mpfr_float>(norm_J_inverse_).precision() == precision_ &&
-						std::get<mpfr_float>(size_proportion_).precision() == precision_ && 
 						Precision(this->endtime_)==precision_
 						        ;				
 			}

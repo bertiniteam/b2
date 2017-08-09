@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RK4_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion;
+	double norm_J, norm_J_inverse, size_proportion;
 	
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39187197874999601460772208561997","0.215631510575697758920211277830812"),
@@ -182,8 +182,8 @@ BOOST_AUTO_TEST_CASE(circle_line_RK4_mp)
 	Vec<mpfr> RK4_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -325,8 +325,8 @@ BOOST_AUTO_TEST_CASE(monodromy_RK4_mp)
 	Vec<mpfr> RK4_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -494,7 +494,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKF45_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189497719010446148169962134860","0.215706089331670902152009632918759"),
@@ -504,8 +504,8 @@ BOOST_AUTO_TEST_CASE(circle_line_RKF45_mp)
 	Vec<mpfr> RKF45_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -654,7 +654,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 	AMP.coefficient_bound = 2;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	
 	Vec<mpfr> predicted(2);
@@ -665,8 +665,8 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_mp)
 	Vec<mpfr> RKF45_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -844,7 +844,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKCK45_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189687053703334440737233377404","0.215710089694839238261207432302796"),
@@ -854,8 +854,8 @@ BOOST_AUTO_TEST_CASE(circle_line_RKCK45_mp)
 	Vec<mpfr> RKCK45_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -1004,7 +1004,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 	AMP.coefficient_bound = 2;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	
 	Vec<mpfr> predicted(2);
@@ -1015,8 +1015,8 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 	Vec<mpfr> RKCK45_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -1086,7 +1086,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 	AMP.coefficient_bound = 2;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	
 	Vec<mpfr> predicted(2);
@@ -1097,8 +1097,8 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	Vec<mpfr> RKCK45_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189763095027864748166494355925","0.215711752936893239277981497324557"),
@@ -1331,8 +1331,8 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp)
 	Vec<mpfr> RKDP56_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -1401,7 +1401,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp_change_precision)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189763095027864748166494355925","0.215711752936893239277981497324557"),
@@ -1411,8 +1411,8 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp_change_precision)
 	Vec<mpfr> RKDP56_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -1614,7 +1614,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 	AMP.coefficient_bound = 2;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	
 	Vec<mpfr> predicted(2);
@@ -1625,8 +1625,8 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_mp)
 	Vec<mpfr> RKDP56_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -1792,7 +1792,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKV67_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189815934576660586899846426669","0.215712712024488132602524062094065"),
@@ -1802,8 +1802,8 @@ BOOST_AUTO_TEST_CASE(circle_line_RKV67_mp)
 	Vec<mpfr> RKV67_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
@@ -1951,7 +1951,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_mp)
 	BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 	AMP.coefficient_bound = 2;
 	
-	mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+	double norm_J, norm_J_inverse, size_proportion, error_est;
 	
 	
 	Vec<mpfr> predicted(2);
@@ -1962,8 +1962,8 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_mp)
 	Vec<mpfr> RKV67_prediction_result;
 	mpfr next_time;
 	
-	mpfr_float tracking_tolerance("1e-5");
-	mpfr_float condition_number_estimate;
+	double tracking_tolerance = 1e-5;
+	double condition_number_estimate;
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	

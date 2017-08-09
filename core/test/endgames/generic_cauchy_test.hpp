@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
 	pseg_samples.push_back(sample);
 
 
-	config::Security<BRT> security_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,security_settings);
 	my_endgame.SetPSEGTimes(pseg_times);
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 	pseg_samples.push_back(sample);
 
 
-	config::Security<BRT> security_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,security_settings);
 	my_endgame.SetPSEGTimes(pseg_times);
@@ -1505,9 +1505,9 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 	Vec<BCT> correct(2);
 	correct << BCT(1,0),BCT(1,0);
 
-	config::Endgame<BRT> endgame_settings;
-	config::Cauchy<BRT> cauchy_settings;
-	config::Security<BRT> security_settings;
+	config::Endgame endgame_settings;
+	config::Cauchy cauchy_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
@@ -1569,9 +1569,9 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
 	GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 
-	config::Endgame<BRT> endgame_settings;
-	config::Cauchy<BRT> cauchy_settings;
-	config::Security<BRT> security_settings;
+	config::Endgame endgame_settings;
+	config::Cauchy cauchy_settings;
+	config::Security security_settings;
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
 	auto cauchy_samples_success = my_endgame.ComputeCauchySamples(start_time,target_time,start_sample);
@@ -1634,9 +1634,9 @@ BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
 	GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 
-	config::Endgame<BRT> endgame_settings;
-	config::Cauchy<BRT> cauchy_settings;
-	config::Security<BRT> security_settings;
+	config::Endgame endgame_settings;
+	config::Cauchy cauchy_settings;
+	config::Security security_settings;
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
 	auto endgame_success = my_endgame.Run(start_time,start_sample,target_time);
@@ -1726,9 +1726,9 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	Vec<BCT> correct(2);
 	correct << BCT(0,0),BCT(0,0);
 
-	config::Endgame<BRT> endgame_settings;
-	config::Cauchy<BRT> cauchy_settings;
-	config::Security<BRT> security_settings;
+	config::Endgame endgame_settings;
+	config::Cauchy cauchy_settings;
+	config::Security security_settings;
 
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 

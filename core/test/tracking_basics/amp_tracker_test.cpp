@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_tracking_DOES_SOMETHING_PREDICTABLE_from_near_t
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success==SuccessCode::MaxNumStepsTaken);
+	BOOST_CHECK(tracking_success!=SuccessCode::Success && tracking_success!=SuccessCode::NeverStarted);
 	BOOST_CHECK_EQUAL(end_point.size(),0);
 }
 
