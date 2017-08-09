@@ -37,9 +37,19 @@ using mpfr_float = bertini::mpfr_float;
 
 using bertini::DefaultPrecision;
 
+#include <limits>
+
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
 
+BOOST_AUTO_TEST_CASE(constructing_mpfr_from_double)
+{
+	DefaultPrecision(50);
+	mpfr_float from_double(0.1);
+	mpfr_float from_string("0.1");
+
+	BOOST_CHECK(abs(from_string - from_double) < std::numeric_limits<double>::epsilon());
+}
 
 BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
 {	
