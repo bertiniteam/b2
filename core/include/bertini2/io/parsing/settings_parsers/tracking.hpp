@@ -242,12 +242,14 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Stepping<T>, T, Skipper> : qi::grammar<Iterator, config::Stepping<T>(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, config::Stepping, Skipper> : qi::grammar<Iterator, config::Stepping(), Skipper>
 			{
 				
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::SteppingType")
 				{
+					using T = double;
+					
 					namespace phx = boost::phoenix;
 					using qi::_1;
 					using qi::_2;

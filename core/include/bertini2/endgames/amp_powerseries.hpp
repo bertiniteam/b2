@@ -153,14 +153,14 @@ public:
 	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time) const
 	{
 		using bertini::Precision;
-		assert(Precision(current_time)==Precision(current_sample) && "precision of sample and time must match");
+		assert(Precision(current_time)==Precision(current_sample) && "precision of sample and time to be refined in AMP endgame must match");
 
 		using RT = mpfr_float;
 		using std::max;
 		auto& TR = this->GetTracker();
 		TR.ChangePrecision(Precision(current_time));
 
-		double refinement_tolerance = this->FinalTolerance()/100;
+		double refinement_tolerance = this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor;
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 		                          	refinement_tolerance,
 		                          	this->EndgameSettings().max_num_newton_iterations);
@@ -169,6 +169,8 @@ public:
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "trying refining in higher precision";
+			
 			using bertini::Precision;
 
 			auto prev_precision = DefaultPrecision();
@@ -186,7 +188,7 @@ public:
 			Precision(time_higher_precision,temp_higher_prec);
 
 			assert(time_higher_precision.precision()==DefaultPrecision());
-			double refinement_tolerance = this->FinalTolerance()/100;
+			double refinement_tolerance = this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,
@@ -208,13 +210,15 @@ public:
 		using RT = double;
 
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-		                          	static_cast<RT>(this->FinalTolerance())/100,
+		                          	static_cast<RT>(this->FinalTolerance()) * this->EndgameSettings().sample_point_refinement_factor,
 		                          	this->EndgameSettings().max_num_newton_iterations);
 
 		
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "trying refining in higher precision";
+
 			auto prev_precision = DoublePrecision();
 			auto temp_higher_prec = LowestMultiplePrecision();
 			DefaultPrecision(temp_higher_prec);
@@ -228,7 +232,7 @@ public:
 			auto result_higher_prec = Vec<mpfr>(current_sample.size());
 			mpfr time_higher_precision(current_time);
 
-			double refinement_tolerance = this->FinalTolerance()/100;
+			double refinement_tolerance = this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor;
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,

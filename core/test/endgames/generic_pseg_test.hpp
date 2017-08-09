@@ -409,6 +409,8 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
+	my_endgame.ComputeAllDerivatives<BCT>();
+
 	my_endgame.SetRandVec<BCT>(samples.back().size());
 	my_endgame.ComputeCycleNumber<BCT>();
 
@@ -491,6 +493,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	Vec<BCT> first_approx;
 	Vec<BCT> approx_1(1);
 	my_endgame.SetRandVec<BCT>(samples.back().size());
+
+	my_endgame.ComputeAllDerivatives<BCT>();
+
 	auto code = my_endgame.ComputeApproximationOfXAtT0(first_approx, origin);
 	approx_1 << ComplexFromString("1.04025","6.86403e-14");
 	BOOST_CHECK(code==SuccessCode::Success);
@@ -509,6 +514,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 	Vec<BCT> second_approx;
 	Vec<BCT> approx_2(1);
+
+	my_endgame.ComputeAllDerivatives<BCT>();
+
 	code = my_endgame.ComputeApproximationOfXAtT0(second_approx,origin);
 	approx_2 << ComplexFromString("0.69995","2.05044e-16");
 	BOOST_CHECK(code==SuccessCode::Success);
@@ -525,6 +533,8 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
+	my_endgame.ComputeAllDerivatives<BCT>();
+	
 	Vec<BCT> third_approx;
 	Vec<BCT> approx_3(1);
 	code = my_endgame.ComputeApproximationOfXAtT0(third_approx, origin);
@@ -1178,7 +1188,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 			GoryDetailLogger<TrackerType> tons_of_detail;
 			tracker.AddObserver(&tons_of_detail);
 #endif
-			
+
 	std::vector<Vec<BCT> > endgame_solutions;
 
 	unsigned num_successful_occurences = 0;

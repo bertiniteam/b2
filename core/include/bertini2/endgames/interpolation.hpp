@@ -66,9 +66,6 @@ template<typename CT>
 	assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
 	assert((derivatives.size() >= num_sample_points) && "must have sufficient number of derivatives");
 
-	auto num_provided_samples = samples.size();
-	auto num_provided_times = times.size();
-	auto num_provided_derivs = derivatives.size();
 
 	Mat< Vec<CT> > space_differences(2*num_sample_points,2*num_sample_points);
 	Vec<CT> time_differences(2*num_sample_points);
@@ -76,11 +73,11 @@ template<typename CT>
 
 	for(unsigned int ii=0; ii<num_sample_points; ++ii)
 	{ 
-		space_differences(2*ii,0)   = samples[    num_provided_samples-1-ii];		/*  F[2*i][0]    = samples[i];    */
-		space_differences(2*ii+1,0) = samples[    num_provided_samples-1-ii]; 		/*  F[2*i+1][0]  = samples[i];    */
-		space_differences(2*ii+1,1) = derivatives[num_provided_derivs -1-ii];	/*  F[2*i+1][1]  = derivatives[i]; */
-		time_differences(2*ii)      = times[      num_provided_times  -1-ii];				/*  z[2*i]       = times[i];       */
-		time_differences(2*ii+1)    = times[      num_provided_times  -1-ii];			/*  z[2*i+1]     = times[i];       */
+		space_differences(2*ii,0)   = samples[    num_sample_points-1-ii];		/*  F[2*i][0]    = samples[i];    */
+		space_differences(2*ii+1,0) = samples[    num_sample_points-1-ii]; 		/*  F[2*i+1][0]  = samples[i];    */
+		space_differences(2*ii+1,1) = derivatives[num_sample_points -1-ii];	/*  F[2*i+1][1]  = derivatives[i]; */
+		time_differences(2*ii)      = times[      num_sample_points  -1-ii];				/*  z[2*i]       = times[i];       */
+		time_differences(2*ii+1)    = times[      num_sample_points  -1-ii];			/*  z[2*i+1]     = times[i];       */
 	}
 
 	//Add first round of finite differences to fill out rest of matrix. 

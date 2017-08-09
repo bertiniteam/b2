@@ -70,10 +70,10 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
 
 	using NeededConfigs = detail::TypeList<
-								config::Tolerances<BaseRealType>,
-								config::PostProcessing<BaseRealType>,
+								config::Tolerances,
+								config::PostProcessing,
 								config::ZeroDim<BaseComplexType>,
-								config::AutoRetrack<BaseRealType>
+								config::AutoRetrack
 								>;
 };
 
@@ -120,10 +120,10 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			using Config::Get;
 
 
-			using Tolerances = config::Tolerances<BaseRealType>;
-			using PostProcessing = config::PostProcessing<BaseRealType>;
+			using Tolerances = config::Tolerances;
+			using PostProcessing = config::PostProcessing;
 			using ZeroDimConf = config::ZeroDim<BaseComplexType>;
-			using AutoRetrack = config::AutoRetrack<BaseRealType>;
+			using AutoRetrack = config::AutoRetrack;
 
 /// metadata structs
 
@@ -289,7 +289,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				this->template Set<AutoRetrack>(AutoRetrack());
 			}
 
-			void SetMidpathRetrackTol(BaseRealType const& rt)
+			void SetMidpathRetrackTol(double const& rt)
 			{
 				midpath_retrack_tolerance_ = rt;
 			}
@@ -305,11 +305,11 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			*/
 			void DefaultMidpathSetup()
 			{
-				midpath_ = MidpathType(config::MidPath<BaseRealType>());
+				midpath_ = MidpathType(config::MidPath());
 			}
 
 
-			void SetMidpath(config::MidPath<BaseRealType> const& mp)
+			void SetMidpath(config::MidPath const& mp)
 			{
 				midpath_.Set(mp);
 			}
@@ -325,7 +325,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
 				              	this->template Get<Tolerances>().newton_before_endgame,
 				              	this->template Get<Tolerances>().path_truncation_threshold,
-								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
+								tracking::config::Stepping(), tracking::config::Newton());
 
 				tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
 			}
@@ -740,7 +740,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 		///////
 
 			unsigned long long num_start_points_;
-			BaseRealType midpath_retrack_tolerance_;
+			double midpath_retrack_tolerance_;
 
 
 			/// observers used during tracking

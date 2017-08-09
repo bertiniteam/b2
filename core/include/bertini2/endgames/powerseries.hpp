@@ -220,6 +220,14 @@ protected:
 	*/
 	mutable Vec<BCT> rand_vector;
 
+	template<typename CT>
+	void AssertSizes() const
+	{
+		const auto num_sample_points = this->EndgameSettings().num_sample_points;
+		assert(std::get<SampCont<CT> >(samples_).size()==std::get<TimeCont<CT> >(times_).size() && "must have same number of samples in times and spaces");
+		assert(std::get<SampCont<CT> >(samples_).size()>=num_sample_points && "must have sufficient number of samples");
+	}
+
 public:
 
 	auto UpperBoundOnCycleNumber() const { return upper_bound_on_cycle_number_;}
@@ -307,13 +315,15 @@ public:
 		using std::log; using std::abs;
 
 		const auto& samples = std::get<SampCont<CT> >(samples_);
-		assert(samples.size()>=3 && "must have at least three sample points to estimate the cycle number");
+		
+		AssertSizes<CT>();
+
 		auto num_samples = samples.size();
 		const Vec<CT> & sample0 = samples[num_samples-3];
 		const Vec<CT> & sample1 = samples[num_samples-2];
 		const Vec<CT> & sample2 = samples[num_samples-1]; // most recent sample.  oldest samples at front of the container
 
-		// Vec<BCT> rand_vector = Vec<CT>::Random(sample0.size()); // todo: eliminate this temporary vector, make permanent.
+
 		
 		if (sample2==sample1 || sample1==sample0)
 		{
@@ -339,10 +349,7 @@ public:
 		else
 		{
 			using std::max;
-			//casting issues between auto and unsigned integer. TODO: Try to stream line this.
-			unsigned int upper_bound;
-			RT upper_bound_before_casting = round(floor(estimate + RT(.5))*this->template Get<config::PowerSeries>().cycle_number_amplification);
-			upper_bound = unsigned (upper_bound_before_casting);
+			auto upper_bound = unsigned(round(estimate)*this->template Get<config::PowerSeries>().cycle_number_amplification);
 			upper_bound_on_cycle_number_ = max(upper_bound,this->template Get<config::PowerSeries>().max_cycle_number);
 		}
 
@@ -372,63 +379,48 @@ public:
 	{
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
+		const auto& samples = std::get<SampCont<CT> >(samples_);
+		const auto& times   = std::get<TimeCont<CT> >(times_);
+		const auto& derivatives = std::get<SampCont<CT> >(derivatives_);
+
+		AssertSizes<CT>();
+		
+		const Vec<CT> &most_recent_sample = samples.back();  // take a copy of the vector
+		const CT& most_recent_time = times.back();
+
 		//Compute upper bound for cycle number.
 		ComputeBoundOnCycleNumber<CT>();
 
+		unsigned num_pts = samples.size() > this->EndgameSettings().num_sample_points ? 
+					this->EndgameSettings().num_sample_points
+				:
+					this->EndgameSettings().num_sample_points-1;
 
-		SampCont<CT> samples = std::get<SampCont<CT> >(samples_); // take a copy...  replace this asap with something that doesn't copy the data...
-			const auto& times   = std::get<TimeCont<CT> >(times_);
-			const auto& derivatives = std::get<SampCont<CT> >(derivatives_);
 
-		assert((samples.size() == times.size()) && "must have same number of times and samples");
-
-		if (derivatives.empty())
-			ComputeDerivatives<CT>();
-		else
-			assert((samples.size() == derivatives.size()) && "must have same number of samples and derivatives");
-
-		assert((samples.size() >= this->EndgameSettings().num_sample_points) && "must have sufficiently many sample points");
-
-		
-		const Vec<CT> most_recent_sample = samples.back();  // take a copy of the vector
-		samples.pop_back();// again, this should be replaced by something that doesn't need a copy of the samples
-		const CT most_recent_time = times.back();
-
-		//Now we actually compute the Cycle Number
-
-		//num_used_points is (num_sample_points-1)
-		//because we are using the most current sample to do an 
-		//exhaustive search for the best cycle number. 
-		//if there are less samples than num_sample_points return samples.size() otherwise return num_sample_points.
-		
-
-		unsigned num_used_points = samples.size() < this->EndgameSettings().num_sample_points 
-									?
-								   samples.size() : this->EndgameSettings().num_sample_points ;
-
-		unsigned offset = samples.size() - num_used_points;
 		auto min_found_difference = Eigen::NumTraits<RT>::highest();
 
-		TimeCont<CT> s_times(num_used_points);
-		SampCont<CT> s_derivatives(num_used_points);
+		TimeCont<CT> s_times(num_pts);
+		SampCont<CT> s_derivatives(num_pts);
 
+		auto offset = samples.size() - num_pts - 1;
 
 		for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 		{			
 			BOOST_LOG_TRIVIAL(severity_level::trace) << "testing cycle candidate " << candidate;
 
-			for(unsigned int ii=0; ii<num_used_points; ++ii)// using the last sample to predict to. 
-			{   using std::pow;
+			for(unsigned int ii=0; ii<num_pts; ++ii)// using the last sample to predict to. 
+			{   
+				using std::pow;
 				s_times[ii] = pow(times[ii+offset],1/static_cast<RT>(candidate));
 				s_derivatives[ii] = derivatives[ii+offset] * (candidate * pow(times[ii+offset], static_cast<RT>(candidate-1)/candidate));
 			}
 
 			RT curr_diff = (HermiteInterpolateAndSolve(
 			                      pow(most_recent_time,static_cast<RT>(1)/candidate), // the target time
-			                      num_used_points,s_times,samples,s_derivatives) // the input data
+			                      num_pts,s_times,samples,s_derivatives) // the input data
 			                 - 
 			                 most_recent_sample).template lpNorm<Eigen::Infinity>();
-
+			BOOST_LOG_TRIVIAL(severity_level::trace) << "residual " << curr_diff;
 			if (curr_diff < min_found_difference)
 			{
 				min_found_difference = curr_diff;
@@ -455,7 +447,7 @@ public:
 				\tparam CT The complex number type.
 	*/
 	template<typename CT>
-	void ComputeDerivatives()
+	void ComputeAllDerivatives()
 	{
 		auto& samples = std::get<SampCont<CT> >(samples_);
 		auto& times   = std::get<TimeCont<CT> >(times_);
@@ -502,30 +494,18 @@ public:
 		const auto& times   = std::get<TimeCont<CT> >(times_);
 		const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 
-		auto num_sample_points = this->EndgameSettings().num_sample_points;
+		AssertSizes<CT>();
 
-		assert(samples.size()==times.size() && "must have same number of samples in times and spaces");
+		const auto num_pts = this->EndgameSettings().num_sample_points;
 
-		if (derivatives.empty())
-			ComputeDerivatives<CT>();
-		else
-			assert((samples.size() == derivatives.size()) && "must have same number of samples and derivatives");
+		auto c = ComputeCycleNumber<CT>();
 
-			assert(samples.size()>=num_sample_points && "must have sufficient number of samples");
-			assert(times.size()>=num_sample_points && "must have sufficient number of times");
-			assert(derivatives.size()>=num_sample_points && "must have sufficient number of derivatives");
-
-			ComputeCycleNumber<CT>();
-		auto c = this->CycleNumber();
 		// Conversion to S-plane.
+		auto offset = samples.size() - num_pts;
+		TimeCont<CT> s_times(num_pts);
+		SampCont<CT> s_derivatives(num_pts);
 
-		
-		auto offset = samples.size() - num_sample_points;
-
-		TimeCont<CT> s_times(num_sample_points);
-		SampCont<CT> s_derivatives(num_sample_points);
-
-		for(unsigned ii = 0; ii < num_sample_points; ++ii){
+		for(unsigned ii = 0; ii < num_pts; ++ii){
 			if (c==0)
 				throw std::runtime_error("cycle number is 0 while computing approximation of root at target time");
 
@@ -533,7 +513,7 @@ public:
 			s_derivatives[ii] = derivatives[ii+offset]*( c*pow(times[ii+offset],static_cast<RT>(c-1)/c ));
 		}
 
-		result = HermiteInterpolateAndSolve(pow(t0,static_cast<RT>(1)/c), num_sample_points, s_times, samples, s_derivatives);
+		result = HermiteInterpolateAndSolve(pow(t0,static_cast<RT>(1)/c), num_pts, s_times, samples, s_derivatives);
 		return SuccessCode::Success;
 	}//end ComputeApproximationOfXAtT0
 
@@ -574,26 +554,40 @@ public:
 
   		BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking to t = " << next_time << ", default precision: " << DefaultPrecision() << "\n";
 		SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,times.back(),next_time,samples.back());
-		if (tracking_success != SuccessCode::Success)
-			return tracking_success;
+			if (tracking_success != SuccessCode::Success)
+				return tracking_success;
 
 		AsDerived().EnsureAtPrecision(next_time,Precision(next_sample));
-		
+	
+
 		times.push_back(next_time);
 		samples.push_back(next_sample);
 
-		auto refine_success = AsDerived().RefineSample(samples.back(), next_sample,  times.back());
-		if (refine_success != SuccessCode::Success)
+		// we keep one more samplepoint than needed around
+		bool need_to_pop = times.size() > this->EndgameSettings().num_sample_points+1;
+
+		if (need_to_pop)
 		{
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
-			return refine_success;
+			times.pop_front();
+			samples.pop_front();
 		}
+
+		auto refine_success = AsDerived().RefineSample(samples.back(), next_sample,  times.back());
+			if (refine_success != SuccessCode::Success)
+			{
+				BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
+				return refine_success;
+			}
 
 
  		auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples, derivatives);
 		this->GetSystem().precision(max_precision);
 
+
 		derivatives.push_back(-(this->GetSystem().Jacobian(samples.back(),times.back()).inverse())*(this->GetSystem().TimeDerivative(samples.back(),times.back())));
+
+		if (need_to_pop)
+			derivatives.pop_front();
 
  		return SuccessCode::Success;
 	}
@@ -664,7 +658,8 @@ public:
 			return initial_sample_success;
 		}
 
-		ComputeDerivatives<CT>();
+		ComputeAllDerivatives<CT>();
+
 
 	    RT norm_of_dehom_of_latest_approx;
 

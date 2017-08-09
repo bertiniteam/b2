@@ -412,7 +412,6 @@ public:
 			if (refinement_success != SuccessCode::Success)
 			{
 				return refinement_success;
-				return refinement_success;
 			}
 
 			AsDerived().EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));

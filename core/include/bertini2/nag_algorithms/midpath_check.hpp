@@ -43,10 +43,10 @@ namespace bertini{
 
 		
 		template<typename RealType, typename ComplexType, typename MetaDataType>
-		struct MidpathChecker : public detail::Configured<config::MidPath<RealType>>
+		struct MidpathChecker : public detail::Configured<config::MidPath>
 		{
-			using MidPathConfT = config::MidPath<RealType>;
-			using AlgConf = detail::Configured<config::MidPath<RealType>>;
+			using MidPathConfT = config::MidPath;
+			using AlgConf = detail::Configured<config::MidPath>;
 			using BoundaryData = SolnCont< MetaDataType >;
 			using PathIndT = unsigned long long;
 			

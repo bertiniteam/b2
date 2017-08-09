@@ -54,9 +54,11 @@ enum class AlgoChoice
 } // namespace classic
 
 
-template<typename T>
+
 struct Tolerances
 {	
+	using T = double;
+
 	T newton_before_endgame = T(1)/T(100000); //E.4.1
 	T newton_during_endgame = T(1)/T(1000000); //E.4.2
 
@@ -65,23 +67,29 @@ struct Tolerances
 	T path_truncation_threshold = T(100000); //E.4.13
 };
 		
-template<typename T>	
+	
 struct MidPath
 {
+	using T = double;
+
 	T same_point_tolerance = T(1)/T(100000);
 };
 
 
-template<typename T>
+
 struct AutoRetrack
 {
+	using T = double;
+
 	T midpath_decrease_tolerance_factor = T(1)/T(2);
 };
 
 
-template<typename T>
+
 struct Sharpening
 {
+	using T = double;
+
 	unsigned sharpendigits; ///< how many digits should be correct after sharpening.
 	
 	// std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
@@ -92,9 +100,11 @@ struct Sharpening
 };
 
 
-template<typename T>
+
 struct Regeneration
 {
+	using T = double;
+
 	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.  RegenRemoveInf
 
 	bool higher_dimension_check = true; ///< RegenHigherDimTest
@@ -105,8 +115,10 @@ struct Regeneration
 };
 
 
-template<typename T>
+
 struct PostProcessing{
+	using T = double;
+	
 	T real_threshold = T(1)/T(100000000); ///< threshold on the imaginary part of a solution being 0.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.
 
 	T endpoint_finite_threshold = T(1)/T(100000);  ///< The threshold on norm of endpoints being considered infinite.  There is another setting in Tolerances, `path_truncation_threshold`, which tells the path tracker to die if exceeded.  Another related setting is in Security, `max_norm` -- the endgame dies if the norm of the computed approximation exceeds this twice.

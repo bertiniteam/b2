@@ -110,7 +110,7 @@ namespace bertini{
 			using T = double;
 
 			int level = 0; //SecurityLevel
-			T max_norm = T(100000); //SecurityMaxNorm wrong default value
+			T max_norm = T(1e4); //SecurityMaxNorm wrong default value
 		};
 
 		
@@ -118,6 +118,7 @@ namespace bertini{
 		{
 			using T = double;
 
+			T sample_point_refinement_factor = 1e-2; ///* Extra amount of tolerance for refining before computing the final approximation, during endgame.
 			unsigned num_sample_points = 3; //NumSamplePoints default = 2
 			T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
 			T sample_factor = T(1)/T(2); //SampleFactor

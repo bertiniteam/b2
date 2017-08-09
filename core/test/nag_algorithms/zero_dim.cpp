@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 	using namespace bertini;
 	using namespace tracking;
 
-	using Tolerances = algorithm::config::Tolerances<double>;
+	using Tolerances = algorithm::config::Tolerances;
 	using EndgameConfT = config::Endgame<double>;
 	
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 	using namespace bertini;
 	using namespace tracking;
 
-	using Tolerances = algorithm::config::Tolerances<double>;
+	using Tolerances = algorithm::config::Tolerances;
 
 	auto sys = system::Precon::GriewankOsborn();
 
