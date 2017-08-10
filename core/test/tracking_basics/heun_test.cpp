@@ -214,9 +214,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 		
-		BOOST_CHECK(abs(error_est - predicted_error) < threshold_clearance_mp);
-		std::cout << error_est << " " << predicted_error << '\n';
-		
+		BOOST_CHECK(abs(error_est - predicted_error) < std::numeric_limits<double>::epsilon());	
 	}
 	
 	
@@ -379,7 +377,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 		}
 		
-		BOOST_CHECK(abs(error_est / predicted_error - 1) < threshold_clearance_mp);
+		BOOST_CHECK(abs(error_est / predicted_error - 1) < std::numeric_limits<double>::epsilon());
 	}
 	
 	
