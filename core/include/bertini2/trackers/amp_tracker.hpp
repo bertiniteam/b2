@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with amp_tracker.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -100,11 +100,11 @@ namespace bertini{
 		*/
 		inline
 		mpfr_float StepsizeSatisfyingCriterionB(unsigned precision,
-										double const& criterion_B_rhs,
+										unsigned digits_B,
 										unsigned num_newton_iterations,
 										unsigned predictor_order = 0)
 		{
-			return pow(mpfr_float(10), -( criterion_B_rhs - precision )*num_newton_iterations/(predictor_order+1));
+			return pow(mpfr_float(10), -( digits_B - precision )*num_newton_iterations/(predictor_order+1));
 		}
 		
 
@@ -156,7 +156,7 @@ namespace bertini{
 		void MinimizeTrackingCost(unsigned & new_precision, RealT & new_stepsize, 
 						  unsigned min_precision, RealT const& min_stepsize,
 						  unsigned max_precision, RealT const& max_stepsize,
-						  double const& criterion_B_rhs,
+						  unsigned digits_B,
 						  unsigned num_newton_iterations,
 						  unsigned predictor_order = 0)
 		{
@@ -165,9 +165,9 @@ namespace bertini{
 			new_stepsize = min_stepsize; // initialize to minimum permitted step size.
 
 			auto minimizer_routine = 
-				[&min_cost, &new_stepsize, &new_precision, &criterion_B_rhs, num_newton_iterations, predictor_order, max_stepsize](unsigned p)
+				[&min_cost, &new_stepsize, &new_precision, &digits_B, num_newton_iterations, predictor_order, max_stepsize](unsigned p)
 				{
-					RealT candidate_stepsize = min(StepsizeSatisfyingCriterionB(p, criterion_B_rhs, num_newton_iterations, predictor_order),
+					RealT candidate_stepsize = min(StepsizeSatisfyingCriterionB(p, digits_B, num_newton_iterations, predictor_order),
 					                              max_stepsize);
 					using std::abs;
 					double current_cost = ArithmeticCost(p) / abs(double(candidate_stepsize));
@@ -714,7 +714,7 @@ namespace bertini{
 				MinimizeTrackingCost(next_precision_, next_stepsize_, 
 							min_precision, min_stepsize,
 							max_precision, max_stepsize,
-							B_RHS<ComplexType>(),
+							DigitsB<ComplexType>(),
 							Get<Newton>().max_num_newton_iterations,
 							predictor_order_);
 
@@ -808,23 +808,23 @@ namespace bertini{
 				}
 				else
 				{
-					unsigned criterion_B_rhs = B_RHS<ComplexType>();
+					unsigned digits_B = DigitsB<ComplexType>();
 
 					unsigned min_precision = max(min_next_precision,
-					                             criterion_B_rhs,
+					                             digits_B,
 					                             DigitsC<ComplexType>(),
 					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)),
 					                             digits_final_
 					                             );
 					
-						unsigned a = ceil(criterion_B_rhs - (predictor_order_+1)* -log10(max_stepsize)/Get<Newton>().max_num_newton_iterations).convert_to<unsigned>();
+						unsigned a = ceil(digits_B - (predictor_order_+1)* -log10(max_stepsize)/Get<Newton>().max_num_newton_iterations).convert_to<unsigned>();
 
 					unsigned max_precision = max(min_precision, a);
 
 					MinimizeTrackingCost(next_precision_, next_stepsize_, 
 							min_precision, min_stepsize,
 							Get<PrecConf>().maximum_precision, max_stepsize,
-							criterion_B_rhs,
+							digits_B,
 							Get<Newton>().max_num_newton_iterations,
 							predictor_order_);
 				}
