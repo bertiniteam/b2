@@ -5,6 +5,8 @@ EXTRA_PROGRAMS += endgames_test
 TESTS += endgames_test
 
 endgames_test_source_files = \
+	test/endgames/generic_interpolation.hpp \
+	test/endgames/interpolation.cpp \
 	test/endgames/generic_cauchy_test.hpp \
 	test/endgames/fixed_double_cauchy_test.cpp \
 	test/endgames/fixed_multiple_cauchy_test.cpp \
