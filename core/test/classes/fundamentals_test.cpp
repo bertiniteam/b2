@@ -34,6 +34,7 @@
 #include <boost/random.hpp>
 
 using mpfr_float = bertini::mpfr_float;
+using mpq_rational = bertini::mpq_rational;
 
 using bertini::DefaultPrecision;
 
@@ -50,6 +51,73 @@ BOOST_AUTO_TEST_CASE(constructing_mpfr_from_double)
 
 	BOOST_CHECK(abs(from_string - from_double) < std::numeric_limits<double>::epsilon());
 }
+
+
+// this commented out test will fail... because of mixed precision arithmetic
+// BOOST_AUTO_TEST_CASE(multiple_mpfr_by_double)
+// {
+// 	DefaultPrecision(50);
+// 	mpfr_float a("0.1");
+// 	double factor = 0.1;
+
+// 	mpfr_float result = a*factor;
+// 	mpfr_float expected("0.01");
+
+// 	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+// }
+
+
+
+BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_int_base)
+{
+	DefaultPrecision(50);
+
+	mpfr_float result = pow(mpfr_float(10), -5);
+	mpfr_float expected("1e-5");
+
+	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+}
+
+BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_str_base)
+{
+	DefaultPrecision(50);
+
+	mpfr_float result = pow(mpfr_float("10"), -5);
+	mpfr_float expected("1e-5");
+
+	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+}
+
+
+BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_doub_exp)
+{
+	DefaultPrecision(50);
+
+	mpfr_float result = pow(mpfr_float(10), -5.0);
+	mpfr_float expected("1e-5");
+
+	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+}
+
+
+BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_int_base_mpfr_exp)
+{
+	DefaultPrecision(50);
+
+	mpfr_float result = pow(10, mpfr_float(-5));
+	mpfr_float expected("1e-5");
+
+	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+}
+
+
+BOOST_AUTO_TEST_CASE(make_rational_from_double)
+{
+	mpq_rational result(0.1);
+	mpq_rational expected(1,10);
+	BOOST_CHECK_CLOSE(result, expected, 1e-16);
+}
+
 
 BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
 {	
