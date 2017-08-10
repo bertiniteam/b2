@@ -54,21 +54,22 @@ namespace bertini{
 		The minimum time that can be represented effectively using a given precision
 		*/
 		inline
-		mpfr_float MinTimeForCurrentPrecision(unsigned precision, int safety_digits = 3)
+		mpfr_float MinTimeForCurrentPrecision(unsigned precision, mpfr_float const& time_to_go, int safety_digits = 3)
 		{
-			if (precision==DoublePrecision())
-				return max( pow( mpfr_float(10), -long(precision)+safety_digits), mpfr_float("1e-150"));
+			mpfr_float t = pow( mpfr_float(10), safety_digits-long(precision)) * time_to_go;
+			if (precision==DoublePrecision() && t<1e-150)
+				return mpfr_float("1e-150");
 			else
-				return      pow( mpfr_float(10), -long(precision)+safety_digits);
+				return t;
 		}
 
 		/**
 		\brief Just another name for MinTimeForCurrentPrecision
 		*/
 		inline
-		mpfr_float MinStepSizeForPrecision(unsigned precision)
+		mpfr_float MinStepSizeForPrecision(unsigned precision, mpfr_float const& time_to_go, int safety_digits = 3)
 		{
-			return MinTimeForCurrentPrecision(precision);
+			return MinTimeForCurrentPrecision(precision, time_to_go, safety_digits);
 		}
 
 
@@ -114,16 +115,16 @@ namespace bertini{
 		\param time_to_go How much time you have left to track.
 		*/
 		inline
-		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr const& time_to_go)
+		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr_float const& time_to_go, unsigned safety_digits = 3)
 		{
-			return (ceil(log_of_stepsize) + ceil(log10(abs(time_to_go))) + 2).convert_to<unsigned>();
+			return (ceil(log_of_stepsize) + ceil(log10(abs(time_to_go))) + safety_digits).convert_to<unsigned>();
 		}
 
 		/**
 		\todo this function assumes you are going to 0.
 		*/
 		inline
-		unsigned MinDigitsForStepsizeInterval(mpfr_float const& min_stepsize, mpfr_float const& max_stepsize, mpfr const& time_to_go)
+		unsigned MinDigitsForStepsizeInterval(mpfr_float const& min_stepsize, mpfr_float const& max_stepsize, mpfr_float const& time_to_go)
 		{
 			return max(MinDigitsForLogOfStepsize(-log10(min_stepsize),time_to_go),   
 				       MinDigitsForLogOfStepsize(-log10(max_stepsize),time_to_go));
@@ -757,7 +758,7 @@ namespace bertini{
 				next_precision_ = current_precision_;
 				next_stepsize_ = Get<Stepping>().step_size_fail_factor*current_stepsize_;
 
-				while (next_stepsize_ < MinStepSizeForPrecision(next_precision_))
+				while (next_stepsize_ < MinStepSizeForPrecision(next_precision_, abs(current_time_ - endtime_)))
 				{
 					if (next_precision_==DoublePrecision())
 						next_precision_=LowestMultiplePrecision();
@@ -795,7 +796,7 @@ namespace bertini{
 					min_next_precision = current_precision_ + (1+num_consecutive_failed_steps_)*PrecisionIncrement(); // precision increases
 
 
-				mpfr_float min_stepsize = MinStepSizeForPrecision(current_precision_);
+				mpfr_float min_stepsize = MinStepSizeForPrecision(current_precision_, abs(current_time_ - endtime_));
 				mpfr_float max_stepsize = current_stepsize_ * Get<Stepping>().step_size_fail_factor;  // Stepsize decreases.
 
 				if (min_stepsize > max_stepsize)
@@ -803,7 +804,7 @@ namespace bertini{
 					// stepsizes are incompatible, must increase precision
 					next_precision_ = min_next_precision;
 					// decrease stepsize somewhat less than the fail factor
-					next_stepsize_ = max(current_stepsize_ * (1+Get<Stepping>().step_size_fail_factor)/2,  mpfr_float(min_stepsize));
+					next_stepsize_ = max(current_stepsize_ * (1+Get<Stepping>().step_size_fail_factor)/2, min_stepsize);
 				}
 				else
 				{

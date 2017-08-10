@@ -53,7 +53,31 @@ using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(AMP_tracker_basics)
 
+BOOST_AUTO_TEST_CASE(minstepsize)
+{
+	DefaultPrecision(30);
+	using namespace bertini::tracking;
+	mpfr_float remaining_time("1e-10");
+	
+	BOOST_CHECK_EQUAL(MinStepSizeForPrecision(16, remaining_time),mpfr_float("1e-23"));
 
+	BOOST_CHECK_CLOSE(MinStepSizeForPrecision(40, remaining_time),mpfr_float("1e-47"), mpfr_float("1e-28"));
+}
+
+
+BOOST_AUTO_TEST_CASE(mindigits)
+{
+	DefaultPrecision(30);
+	using namespace bertini::tracking;
+
+	mpfr_float remaining_time("1e-30");
+	mpfr_float min_stepsize("1e-35");
+	mpfr_float max_stepsize("1e-33");
+
+	auto digits = MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, remaining_time);
+
+	BOOST_CHECK_EQUAL(digits, 8);
+}
 
 BOOST_AUTO_TEST_CASE(AMP_tracker_track_linear)
 {
