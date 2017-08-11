@@ -60,12 +60,25 @@ Details:
 \tparam CT The complex number type.
 */			
 template<typename CT>		
-	Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives)
+	Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives, ContStart Dir = ContStart::Back)
 {
 	assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
 	assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
 	assert((derivatives.size() >= num_sample_points) && "must have sufficient number of derivatives");
 
+	
+	unsigned num_t, num_s, num_d;
+
+	if (Dir == ContStart::Back)
+	{
+		num_t = times.size()-1;
+		num_s = samples.size()-1;
+		num_d = derivatives.size()-1;
+	}
+	else
+	{
+		num_t = num_s = num_d = num_sample_points-1;
+	}
 
 	Mat< Vec<CT> > space_differences(2*num_sample_points,2*num_sample_points);
 	Vec<CT> time_differences(2*num_sample_points);
@@ -73,11 +86,11 @@ template<typename CT>
 
 	for(unsigned int ii=0; ii<num_sample_points; ++ii)
 	{ 
-		space_differences(2*ii,0)   = samples[    num_sample_points-1-ii];		/*  F[2*i][0]    = samples[i];    */
-		space_differences(2*ii+1,0) = samples[    num_sample_points-1-ii]; 		/*  F[2*i+1][0]  = samples[i];    */
-		space_differences(2*ii+1,1) = derivatives[num_sample_points -1-ii];	/*  F[2*i+1][1]  = derivatives[i]; */
-		time_differences(2*ii)      = times[      num_sample_points  -1-ii];				/*  z[2*i]       = times[i];       */
-		time_differences(2*ii+1)    = times[      num_sample_points  -1-ii];			/*  z[2*i+1]     = times[i];       */
+		space_differences(2*ii,0)   = samples[    num_s-ii];		/*  F[2*i][0]    = samples[i];    */
+		space_differences(2*ii+1,0) = samples[    num_s-ii]; 	/*  F[2*i+1][0]  = samples[i];    */
+		space_differences(2*ii+1,1) = derivatives[num_d-ii];		/*  F[2*i+1][1]  = derivatives[i]; */
+		time_differences(2*ii)      = times[      num_t-ii];		/*  z[2*i]       = times[i];       */
+		time_differences(2*ii+1)    = times[      num_t-ii];		/*  z[2*i+1]     = times[i];       */
 	}
 
 	//Add first round of finite differences to fill out rest of matrix. 
@@ -101,7 +114,7 @@ template<typename CT>
 
 	//Start of Result from Hermite polynomial, this is using the diagonal of the 
 	//finite difference matrix.
-	auto Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
+	Vec<CT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
 
 
 	//This builds the hermite polynomial from the highest term down. 
