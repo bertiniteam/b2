@@ -147,7 +147,7 @@ public:
 	*/
 	SuccessCode Run(const BCT & start_time, const Vec<BCT> & start_point, BCT const& target_time)
 	{
-		this->AsFlavor().RunImpl(start_time, start_point, target_time);
+		return this->AsFlavor().RunImpl(start_time, start_point, target_time);
 	}
 
 	/**
@@ -163,9 +163,9 @@ public:
 	/**
 	A function passed off to the precision-specific endgame part
 	*/
-	SuccessCode RefineSample(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time) const
+	SuccessCode RefineSample(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, double tol, unsigned max_iterations) const
 	{
-		return this->RefineSampleImpl(result, current_sample, current_time);
+		return this->RefineSampleImpl(result, current_sample, current_time, tol, max_iterations);
 	}
 
 

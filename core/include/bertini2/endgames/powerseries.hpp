@@ -446,7 +446,9 @@ public:
 
 		for (size_t ii=0; ii<samples.size(); ++ii)
 		{
-			auto refine_success = this->RefineSample(samples[ii], samples[ii],  times[ii]);
+			auto refine_success = this->RefineSample(samples[ii], samples[ii],  times[ii], 
+										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
+										this->EndgameSettings().max_num_newton_iterations);
 			if (refine_success != SuccessCode::Success)
 			{
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
@@ -599,7 +601,9 @@ public:
 	
 
 
-		auto refine_success = this->RefineSample(samples.back(), next_sample,  times.back());
+		auto refine_success = this->RefineSample(samples.back(), next_sample,  times.back(), 
+										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
+										this->EndgameSettings().max_num_newton_iterations);
 			if (refine_success != SuccessCode::Success)
 			{
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);

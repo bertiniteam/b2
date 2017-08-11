@@ -27,6 +27,7 @@
 
 #pragma once
 
+
 /**
 \file base_endgame.hpp
 

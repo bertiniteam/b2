@@ -37,37 +37,23 @@
 #include "bertini2/trackers/fixed_precision_tracker.hpp"
 #include "bertini2/trackers/fixed_precision_utilities.hpp"
 
-namespace bertini{ namespace tracking { namespace endgame {
+#include "bertini2/endgames/config.hpp"
+#include "bertini2/endgames/prec_base.hpp"
 
-template<typename TrackerT>
-class FixedPrecEndgame
+
+namespace bertini{ namespace endgame {
+
+template<typename TrackerType>
+class FixedPrecEndgame : public EndgamePrecPolicyBase<TrackerType>
 {
-	using BaseComplexType = typename TrackerTraits<TrackerT>::BaseComplexType;
-	using BaseRealType = typename TrackerTraits<TrackerT>::BaseRealType;
+public:
+
+	using TrackerT = TrackerType;
+	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
-
-protected:
-
-	// const unsigned precision_;
-
-
-	// bool PrecisionSanityCheck() const
-	// {
-	// 	return true;
-	// }
-
-	// SuccessCode ChangePrecision(unsigned) const
-	// {
-	// 	return SuccessCode::Success;
-	// }
-
-public:
-
-	// auto Precision() const
-	// { return precision_; }
-
 
 	template<typename... T>
 	static
@@ -89,30 +75,42 @@ public:
 		}
 	}
 
+	SuccessCode RefineSampleImpl(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, double tol, unsigned max_iterations) const
+	{
+		using RT = mpfr_float;
+		using std::max;
+		auto& TR = this->GetTracker();
 
-	FixedPrecEndgame() //: precision_(NumTraits<BRT>::NumDigits())
+		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
+		                          	tol,
+		                          	max_iterations);
+
+		return SuccessCode::Success;
+	}
+
+	FixedPrecEndgame(TrackerT const& new_tracker) : EndgamePrecPolicyBase<TrackerT>(new_tracker)
 	{}
 }; // re: fixed prec endgame policy
 
 template<>
-struct EGPrecSelector<DoublePrecisionTracker>
+struct EGPrecSelector<tracking::DoublePrecisionTracker>
 {
-	using type = FixedPrecEndgame<DoublePrecisionTracker>;
+	using type = FixedPrecEndgame<tracking::DoublePrecisionTracker>;
 };
 
 template<>
-struct EGPrecSelector<MultiplePrecisionTracker>
+struct EGPrecSelector<tracking::MultiplePrecisionTracker>
 {
-	using type = FixedPrecEndgame<MultiplePrecisionTracker>;
+	using type = FixedPrecEndgame<tracking::MultiplePrecisionTracker>;
 };
 
 template<class D>
-struct EGPrecSelector<FixedPrecisionTracker<D>>
+struct EGPrecSelector<tracking::FixedPrecisionTracker<D>>
 {
-	using type = FixedPrecEndgame<FixedPrecisionTracker<D>>;
+	using type = FixedPrecEndgame<tracking::FixedPrecisionTracker<D>>;
 };
 
-}}} //re: namespaces
+}} //re: namespaces
 
 
 

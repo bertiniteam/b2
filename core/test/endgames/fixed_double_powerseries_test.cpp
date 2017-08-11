@@ -30,19 +30,19 @@
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/num_traits.hpp"
 
-#include "bertini2/endgames/fixed_prec_powerseries.hpp"
+#include "bertini2/endgames/fixed_prec_endgame.hpp"
+#include "bertini2/endgames/powerseries.hpp"
 
 
 BOOST_AUTO_TEST_SUITE(fixed_double_powerseries_endgame)
 
 BOOST_AUTO_TEST_SUITE(generic_tests_ambient_precision_16)
 
-using namespace bertini::tracking;
-using namespace bertini::tracking::endgame;
+using namespace bertini::endgame;
 
-using TrackerType = DoublePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::DoublePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-auto TestedPredictor = Predictor::HeunEuler;
+auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = 16;
 #include "test/endgames/generic_pseg_test.hpp"
 
@@ -56,12 +56,11 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(generic_tests_ambient_precision_30)
 
-using namespace bertini::tracking;
-using namespace bertini::tracking::endgame;
+using namespace bertini::endgame;
 
-using TrackerType = DoublePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::DoublePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-auto TestedPredictor = Predictor::HeunEuler;
+auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = 30;
 #include "test/endgames/generic_pseg_test.hpp"
 
