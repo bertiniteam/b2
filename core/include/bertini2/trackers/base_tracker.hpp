@@ -604,21 +604,21 @@ namespace bertini{
 			public: 
 
 			
-			const double LatestConditionNumber() const
+			double LatestConditionNumber() const
 			{
-				this->condition_number_estimate_;
+				return this->condition_number_estimate_;
 			}
 
 			
-			const double LatestErrorEstimate() const
+			double LatestErrorEstimate() const
 			{
-				this->error_estimate_;
+				return this->error_estimate_;
 			}
 
 			
-			const double LatestNormOfStep() const
+			double LatestNormOfStep() const
 			{
-				this->norm_delta_z_;
+				return this->norm_delta_z_;
 			}
 
 
