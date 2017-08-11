@@ -44,13 +44,41 @@ BRT RealFromString(T... s)
 {return bertini::NumTraits<BRT>::FromString(s...);}
 
 
+BOOST_AUTO_TEST_CASE( constant_four_variate )
+{
+	int num_samples = 3;
+	DefaultPrecision(ambient_precision);
+	TimeCont<BCT> times; 
+	SampCont<BCT> samples, derivatives;
+
+	times.emplace_back(ComplexFromString("1.890235648907826359017283461724"));
+	times.emplace_back(ComplexFromString("2.6751239470926520645293652"));
+	times.emplace_back(ComplexFromString("3.566754186725389412876498127534875"));
+
+	Vec<BCT> sample(4);
+
+	sample << ComplexFromString("6.4789162736409137056734534678679"), ComplexFromString("-1.5877816237549123614917624"), ComplexFromString("5.947461892534781890236417801"),ComplexFromString("-3.87746985236816238746178293");
+	for (int ii=0; ii<3; ++ii)
+		samples.push_back(sample);
+
+	Vec<BCT> derivative(4);
+	derivative << ComplexFromString("0"), ComplexFromString("0"), ComplexFromString("0"),ComplexFromString("0");
+	for (int ii=0; ii<3; ++ii)
+		derivatives.push_back(derivative);
+
+	BCT target_time = ComplexFromString("0.9471925368945182312341234123");
+	auto result = HermiteInterpolateAndSolve(target_time,num_samples,times,samples,derivatives);
+	BOOST_CHECK( (result - sample).norm() < pow(RealFromString("10"),ambient_precision-2)); 
+}
+
+
 /**
 This test case illustrates the convergent nature of the HemiteInterpolateAndSolve function. 
 The test case will construct 3 samples with derivative,time, and space values for the function x^8 + 1.
 After the three samples have been constructed there will be a hermite interpolation. 
 We check this against the tracking tolerance for the endgame. 
 */
-BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
+BOOST_AUTO_TEST_CASE( eight_degree_univariate )
 {
 	DefaultPrecision(ambient_precision);
 
@@ -117,7 +145,7 @@ We then check to make sure our approximations are getting better by checking the
 various approximations made. 
 
 */
-BOOST_AUTO_TEST_CASE(hermite_interpolation)
+BOOST_AUTO_TEST_CASE(eight_degree_univariate_advanced_gets_better)
 {
 	DefaultPrecision(ambient_precision);
 
