@@ -950,7 +950,7 @@ public:
 			s_times[ii] =  pow(ps_times[ii], one_over_c);
 		}
 
-		result = HermiteInterpolateAndSolve(target_time, num_sample_points, 
+		result = HermiteInterpolateAndSolve(pow(target_time,one_over_c), num_sample_points, 
                                             s_times, ps_samples, s_derivatives);
 		return SuccessCode::Success;
 	}//end ComputePSEGApproximationOfXAtT0
