@@ -60,7 +60,7 @@ Details:
 \tparam CT The complex number type.
 */			
 template<typename CT>		
-	Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives, ContStart Dir = ContStart::Back)
+	Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives, ContStart shift_from = ContStart::Back)
 {
 	assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
 	assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
@@ -68,8 +68,7 @@ template<typename CT>
 
 	
 	unsigned num_t, num_s, num_d;
-
-	if (Dir == ContStart::Back)
+	if (shift_from == ContStart::Back)
 	{
 		num_t = times.size()-1;
 		num_s = samples.size()-1;
