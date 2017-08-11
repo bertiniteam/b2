@@ -69,9 +69,10 @@ namespace bertini
 
 			\param index The index of the start function for which you want the corresponding random value.
 			*/
-			mpfr RandomValue(size_t index)
+			template<typename NumT>
+			const NumT& RandomValue(size_t index) const
 			{
-				return random_values_[index]->Eval<mpfr>();
+				return random_values_[index]->Eval<NumT>();
 			}
 
 
