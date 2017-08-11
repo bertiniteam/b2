@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "bertini2/tracking.hpp"
+
 namespace bertini{
 
 	
