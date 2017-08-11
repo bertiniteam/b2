@@ -162,7 +162,7 @@ namespace bertini{
 						
 						next_space += step_ref;
 						
-						if ( (step_ref.norm() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
+						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 					}
 					
@@ -223,12 +223,12 @@ namespace bertini{
 						Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
 						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
 						
-						if ( (step_ref.norm() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
+						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 						
 						double norm_J_inverse(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
 
-						if (!amp::CriterionB<ComplexType>(double(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, double(step_ref.norm()), AMP_config))
+						if (!amp::CriterionB<ComplexType>(double(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, double(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 						
 						if (!amp::CriterionC<ComplexType>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
@@ -299,13 +299,11 @@ namespace bertini{
 						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
 						
 						
-						norm_delta_z = double(step_ref.norm());
+						norm_delta_z = double(step_ref.template lpNorm<Eigen::Infinity>());
 						norm_J = double(J_temp_ref.norm());
 						norm_J_inverse = double(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
 						condition_number_estimate = double(norm_J*norm_J_inverse);
-						
-						
-						
+												
 						if ( (norm_delta_z < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 						
