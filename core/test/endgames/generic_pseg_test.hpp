@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 	my_endgame.ComputeAllDerivatives<BCT>();
 
 	my_endgame.SetRandVec<BCT>(samples.back().size());
-	my_endgame.ComputeCycleNumber<BCT>();
+	my_endgame.ComputeCycleNumber<BCT>(BCT(0));
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
