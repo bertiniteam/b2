@@ -134,10 +134,9 @@ BOOST_LOG_TRIVIAL(severity_level::trace) << "initial point\n" << std::setprecisi
 		                          							tol,
 		                          							max_iterations);
 
-			DefaultPrecision(prev_precision);
-			this->GetTracker().ChangePrecision(prev_precision);
+			Precision(result, temp_higher_prec);
 			result = result_higher_prec;
-			Precision(result, prev_precision);
+			
 			assert(Precision(result)==DefaultPrecision());
 		}
 		BOOST_LOG_TRIVIAL(severity_level::trace) << "refining residual " << this->GetTracker().LatestNormOfStep();
