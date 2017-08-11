@@ -211,7 +211,7 @@ protected:
 	/**
 	\brief Random vector used in computing an upper bound on the cycle number. 
 	*/
-	mutable Vec<BCT> rand_vector;
+	mutable Vec<BCT> rand_vector_;
 
 	template<typename CT>
 	void AssertSizesTimeSpace() const
@@ -279,7 +279,7 @@ public:
 	\brief Function to set the times used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	void SetRandVec(int size) {rand_vector = Vec<CT>::Random(size);}
+	void SetRandVec(int size) {rand_vector_ = Vec<CT>::Random(size);}
 
 
 
@@ -326,8 +326,8 @@ public:
 		const Vec<CT> & sample2 = samples[num_samples-1]; // most recent sample.  oldest samples at front of the container
 
 
-		CT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector).sum();
-		CT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector).sum();
+		CT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector_).sum();
+		CT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector_).sum();
 
 		if ( abs(rand_sum1)==0 || abs(rand_sum2)==0) // avoid division by 0
 		{
@@ -368,7 +368,7 @@ public:
 	*/
 
 	template<typename CT>
-	unsigned ComputeCycleNumber()
+	unsigned ComputeCycleNumber(CT const& t0)
 	{
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
@@ -384,10 +384,12 @@ public:
 		//Compute upper bound for cycle number.
 		ComputeBoundOnCycleNumber<CT>();
 
-		unsigned num_pts = samples.size() > this->EndgameSettings().num_sample_points ? 
-					this->EndgameSettings().num_sample_points
-				:
-					this->EndgameSettings().num_sample_points-1;
+
+		unsigned num_pts;
+		if (samples.size() > this->EndgameSettings().num_sample_points)
+			num_pts = this->EndgameSettings().num_sample_points;
+		else 
+			num_pts = this->EndgameSettings().num_sample_points-1;
 
 
 		auto min_found_difference = Eigen::NumTraits<RT>::highest();
@@ -399,17 +401,11 @@ public:
 		for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 		{			
 			BOOST_LOG_TRIVIAL(severity_level::trace) << "testing cycle candidate " << candidate;
-			RT c = static_cast<RT>(candidate);
-			RT one_over_c = 1/c;
-			for(unsigned int ii=0; ii<num_pts; ++ii)// using the last sample to predict to. 
-			{   
-				using std::pow;
-				s_times[ii] = pow(times[ii+offset],one_over_c);
-				s_derivatives[ii] = derivatives[ii+offset] * (c * pow(s_times[ii], candidate-1));
-			}
+
+			std::tie(s_times, s_derivatives) = TransformToSPlane(candidate, t0, num_pts, ContStart::Front);
 
 			RT curr_diff = (HermiteInterpolateAndSolve(
-			                      pow(most_recent_time,one_over_c), // the target time
+								  pow((most_recent_time-t0)/(times[0]-t0), 1/static_cast<RT>(candidate)), // the target time
 			                      num_pts,s_times,samples,s_derivatives, ContStart::Front) // the input data
 			                 - 
 			                 most_recent_sample).template lpNorm<Eigen::Infinity>();
@@ -433,7 +429,7 @@ public:
 	SuccessCode RefineAllSamples()
 	{
 		auto& samples = std::get<SampCont<CT> >(samples_);
-		const auto& times   = std::get<TimeCont<CT> >(times_);
+		auto& times   = std::get<TimeCont<CT> >(times_);
 
 		for (size_t ii=0; ii<samples.size(); ++ii)
 		{
@@ -446,6 +442,13 @@ public:
 				return refine_success;
 			}
 		}
+
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
+		{
+			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
+			this->GetSystem().precision(max_precision);
+		}
+
 		return SuccessCode::Success;
 	}
 
@@ -481,9 +484,59 @@ public:
 		for(unsigned ii = 0; ii < samples.size(); ++ii)
 		{	
 			// uses LU look at Eigen documentation on inverse in Eigen/LU.
-		 	derivatives[ii] = -(this->GetSystem().Jacobian(samples[ii],times[ii]).inverse())*(this->GetSystem().TimeDerivative(samples[ii],times[ii]));
+		 	derivatives[ii] = (this->GetSystem().Jacobian(samples[ii],times[ii]).inverse())*(this->GetSystem().TimeDerivative(samples[ii],times[ii]));
 		}
 	}
+
+
+	/**
+	\param c The cycle number you want to use
+
+	This function transforms the times and derivatives into the S-plane, scaled by the cycle number.
+
+	this function also transforms them into the interval [0 1]
+	*/
+	template <typename CT>
+	std::tuple<TimeCont<CT>, SampCont<CT>> TransformToSPlane(int cycle_num, CT const& t0, unsigned num_pts, ContStart shift_from)
+	{
+		if (cycle_num==0)
+			throw std::runtime_error("cannot transform to s plane with cycle number 0");
+		AssertSizesTimeSpaceDeriv<CT>();
+
+
+		using RT = typename Eigen::NumTraits<CT>::Real;
+
+		const auto& times   = std::get<TimeCont<CT> >(times_);
+		const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+
+		RT c = static_cast<RT>(cycle_num);
+		RT one_over_c = 1/c;
+
+		unsigned offset_t, offset_d;
+		if (shift_from == ContStart::Back)
+		{
+			offset_t = times.size()-num_pts;
+			offset_d = derivatives.size()-num_pts;
+		}
+		else
+			offset_t = offset_d = 0;
+
+
+		TimeCont<CT> s_times(num_pts);
+		SampCont<CT> s_derivatives(num_pts);
+
+		CT time_shift = times[offset_t] - t0;
+
+		for(unsigned ii = 0; ii < num_pts; ++ii){
+			s_times[ii] = pow((times[ii+offset_t]-t0)/time_shift, one_over_c); 
+			s_derivatives[ii] = derivatives[ii+offset_d]*( c*pow(s_times[ii],cycle_num-1))*time_shift;
+		}
+
+		return std::make_tuple(s_times, s_derivatives);
+	}
+
+
+
 	/**
 	\brief This function computes an approximation of the space value at the time time_t0. 
 
@@ -503,41 +556,26 @@ public:
 	template<typename CT>
 	SuccessCode ComputeApproximationOfXAtT0(Vec<CT>& result, const CT & t0)
 	{	
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		const auto c = ComputeCycleNumber<CT>(t0);
 
-		const auto& samples = std::get<SampCont<CT> >(samples_);
-		const auto& times   = std::get<TimeCont<CT> >(times_);
-		const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		auto num_pts = this->EndgameSettings().num_sample_points;
 
-		AssertSizesTimeSpaceDeriv<CT>();
+		TimeCont<CT> s_times;
+		SampCont<CT> s_derivatives;
 
-		const auto num_pts = this->EndgameSettings().num_sample_points;
+		std::tie(s_times, s_derivatives) = TransformToSPlane(c, t0, num_pts, ContStart::Back);
 
-		RT c = static_cast<RT>(ComputeCycleNumber<CT>());
-		RT one_over_c = 1/c;
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << "data " << ii << '\n';
 
-		// Conversion to S-plane.
-		auto offset = samples.size() - num_pts;
-		TimeCont<CT> s_times(num_pts);
-		SampCont<CT> s_derivatives(num_pts);
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " time " << times[ii+offset] << '\n';
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " sample " << samples[ii+offset] << '\n';
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " derivative " << derivatives[ii+offset] << "\n\n";
 
-		for(unsigned ii = 0; ii < num_pts; ++ii){
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " s_time " << s_times[ii] << '\n';
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
 
-			if (c==0)
-				throw std::runtime_error("cycle number is 0 while computing approximation of root at target time");
-			s_times[ii] = pow(times[ii+offset],one_over_c); // s = t^(1/c)
-			s_derivatives[ii] = derivatives[ii+offset]*( c*pow(s_times[ii],this->cycle_number_-1));
-
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "data " << ii << '\n';
-
-			BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " time " << times[ii+offset] << '\n';
-			BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " sample " << samples[ii+offset] << '\n';
-			BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " derivative " << derivatives[ii+offset] << "\n\n";
-
-			BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " s_time " << s_times[ii] << '\n';
-			BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
-		}
-		result = HermiteInterpolateAndSolve(pow(t0,one_over_c), num_pts, s_times, samples, s_derivatives, ContStart::Back);
+		// the data was transformed to be on the interval [0 1] so we can hard-code the time-to-solve as 0 here.
+		result = HermiteInterpolateAndSolve(CT(0), num_pts, s_times, std::get<SampCont<CT> >(samples_), s_derivatives, ContStart::Back);
 		return SuccessCode::Success;
 	}//end ComputeApproximationOfXAtT0
 
@@ -601,20 +639,11 @@ public:
 				return refine_success;
 			}
 
-
- 		auto max_precision = this->EnsureAtUniformPrecision(times, samples, derivatives);
-		this->GetSystem().precision(max_precision);
-
-
-		derivatives.push_back(-(this->GetSystem().Jacobian(samples.back(),times.back()).inverse())*(this->GetSystem().TimeDerivative(samples.back(),times.back())));
-
 		// we keep one more samplepoint than needed around, for estimating the cycle number
 		if (times.size() > this->EndgameSettings().num_sample_points+1)
 		{
-
 			times.pop_front();
 			samples.pop_front();
-			derivatives.pop_front();
 		}
 
  		return SuccessCode::Success;
@@ -707,6 +736,10 @@ public:
 	 			BOOST_LOG_TRIVIAL(severity_level::trace) << "unable to advance time, code " << int(advance_code);
 	 			return advance_code;
 	 		}
+
+	 		// this commented out code is what bertini1 does... it refines all samples, like, all the time.
+	 		RefineAllSamples<CT>();
+	 		ComputeAllDerivatives<CT>();
 
 	 		extrapolation_code = ComputeApproximationOfXAtT0(latest_approx, target_time);
 	 		if (extrapolation_code!=SuccessCode::Success)
