@@ -326,25 +326,16 @@ public:
 		const Vec<CT> & sample2 = samples[num_samples-1]; // most recent sample.  oldest samples at front of the container
 
 
-		
-		if (sample2==sample1 || sample1==sample0)
+		CT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector).sum();
+		CT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector).sum();
+
+		if ( abs(rand_sum1)==0 || abs(rand_sum2)==0) // avoid division by 0
 		{
 			upper_bound_on_cycle_number_ = 1;
 			return upper_bound_on_cycle_number_;
 		}
 
-		//DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
-		RT estimate = abs(log(this->EndgameSettings().sample_factor))
-						/
-					  abs(
-		                  log(
-		                      abs(
-		                          ((sample2 - sample1).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()
-		                          /
-		                          ((sample1 - sample0).transpose()*rand_vector).template lpNorm<Eigen::Infinity>()
-		                          )
-		                      )
-		                  );
+		RT estimate = log(this->EndgameSettings().sample_factor)/log(abs(rand_sum2/rand_sum1));
 
 		if (estimate < 1) // would be nan if sample points are same as each other
 		  	upper_bound_on_cycle_number_ = 1;
