@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with amp_powerseries_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of notre dame, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -43,10 +43,8 @@ namespace bertini{ namespace tracking { namespace endgame {
 /**
 \brief The Adaptive Precision Power Series Endgame, in a class.
 */
-class AMPPowerSeriesEndgame : public PowerSeriesEndgame<AMPTracker,AMPPowerSeriesEndgame>, 
-							  public AMPEndgamePolicyBase
+class AMPPowerSeriesEndgame : public PowerSeriesEndgame<AMPTracker,AMPPowerSeriesEndgame>
 {
-	
 protected:
 
 	void ChangeTemporariesPrecisionImpl(unsigned new_precision) const override
@@ -150,105 +148,7 @@ public:
 	using TrackerType = AMPTracker;
 	using EGType = PowerSeriesEndgame<TrackerType, AMPPowerSeriesEndgame>;
 	
-	SuccessCode RefineSample(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time) const
-	{
-BOOST_LOG_TRIVIAL(severity_level::trace) << "initial point\n" << std::setprecision(bertini::Precision(current_sample)) << current_sample << '\n';
-
-		using bertini::Precision;
-		assert(Precision(current_time)==Precision(current_sample) && "precision of sample and time to be refined in AMP endgame must match");
-
-		using RT = mpfr_float;
-		using std::max;
-		auto& TR = this->GetTracker();
-		TR.ChangePrecision(Precision(current_time));
-
-		double refinement_tolerance = this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor;
-		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-		                          	refinement_tolerance,
-		                          	this->EndgameSettings().max_num_newton_iterations);
-
-		
-		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
-		    refinement_success==SuccessCode::FailedToConverge)
-		{
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "trying refining in higher precision";
-			
-			using bertini::Precision;
-
-			auto prev_precision = DefaultPrecision();
-			auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
-			DefaultPrecision(temp_higher_prec);
-			this->GetTracker().ChangePrecision(temp_higher_prec);
-
-
-			auto next_sample_higher_prec = current_sample;
-			Precision(next_sample_higher_prec, temp_higher_prec);
-
-			auto result_higher_prec = Vec<mpfr>(current_sample.size());
-
-			auto time_higher_precision = current_time;
-			Precision(time_higher_precision,temp_higher_prec);
-
-			assert(time_higher_precision.precision()==DefaultPrecision());
-			refinement_success = this->GetTracker().Refine(result_higher_prec,
-			                                               next_sample_higher_prec,
-			                                               time_higher_precision,
-		                          							refinement_tolerance,
-		                          							this->EndgameSettings().max_num_newton_iterations);
-
-			DefaultPrecision(prev_precision);
-			this->GetTracker().ChangePrecision(prev_precision);
-			result = result_higher_prec;
-			Precision(result, prev_precision);
-			assert(Precision(result)==DefaultPrecision());
-		}
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "refining residual " << this->GetTracker().LatestNormOfStep();
-		return refinement_success;
-	}
-
-	SuccessCode RefineSample(Vec<dbl> & result, Vec<dbl> const& current_sample, dbl const& current_time) const
-	{
-		using RT = double;
-
-		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-		                          	static_cast<RT>(this->FinalTolerance()) * this->EndgameSettings().sample_point_refinement_factor,
-		                          	this->EndgameSettings().max_num_newton_iterations);
-
-		
-		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
-		    refinement_success==SuccessCode::FailedToConverge)
-		{
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "trying refining in higher precision";
-
-			auto prev_precision = DoublePrecision();
-			auto temp_higher_prec = LowestMultiplePrecision();
-			DefaultPrecision(temp_higher_prec);
-			this->GetTracker().ChangePrecision(temp_higher_prec);
-
-
-			auto next_sample_higher_prec = Vec<mpfr>(current_sample.size());
-			for (int ii=0; ii<current_sample.size(); ++ii)
-				next_sample_higher_prec(ii) = mpfr(current_sample(ii));
-
-			auto result_higher_prec = Vec<mpfr>(current_sample.size());
-			mpfr time_higher_precision(current_time);
-
-			double refinement_tolerance = this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor;
-			refinement_success = this->GetTracker().Refine(result_higher_prec,
-			                                               next_sample_higher_prec,
-			                                               time_higher_precision,
-		                          							refinement_tolerance,
-		                          							this->EndgameSettings().max_num_newton_iterations);
-
-
-			DefaultPrecision(prev_precision);
-			this->GetTracker().ChangePrecision(prev_precision);
-			for (unsigned ii(0); ii<current_sample.size(); ++ii)
-				result(ii) = dbl(result_higher_prec(ii));
-		}
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "refining residual " << this->GetTracker().LatestNormOfStep();
-		return refinement_success;
-	}
+	
 	
 	using Configs = typename AlgoTraits<EGType>::NeededConfigs;
 

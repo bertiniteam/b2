@@ -113,13 +113,13 @@ BOOST_AUTO_TEST_CASE(read_predictor)
 	std::string::const_iterator end = configStr.end();
 	
 	
-	config::Predictor predictor;
-	ConfigSettingParser<std::string::const_iterator, config::Predictor> parser;
+	Predictor predictor;
+	ConfigSettingParser<std::string::const_iterator, Predictor> parser;
 	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, predictor);
 	
 	
 	BOOST_CHECK(parsed && iter == end);
-	BOOST_CHECK(predictor == config::Predictor::RKNorsett34);
+	BOOST_CHECK(predictor == Predictor::RKNorsett34);
 	
 	
 	
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(read_predictor)
 	
 	
 	BOOST_CHECK(parsed && iter == end);
-	BOOST_CHECK(predictor == config::Predictor::Constant);
+	BOOST_CHECK(predictor == Predictor::Constant);
 	
 	
 	inputfile = ParseInputFile("Config \n heLlo: 9 \n MPType: 0;  end;  \n iNpUt % \n  \n variable x; \n ENd;");
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(read_predictor)
 	
 	
 	BOOST_CHECK(parsed && iter == end);
-	BOOST_CHECK(predictor == config::Predictor::RKF45);
+	BOOST_CHECK(predictor == Predictor::RKF45);
 	
 	
 }
@@ -413,8 +413,8 @@ BOOST_AUTO_TEST_CASE(read_stepping_d)
 	std::string::const_iterator end = configStr.end();
 	
 	
-	config::Stepping<T> structure;
-	ConfigSettingParser<std::string::const_iterator,config::Stepping<T>, T> parser;
+	SteppingConfig<T> structure;
+	ConfigSettingParser<std::string::const_iterator,SteppingConfig<T>, T> parser;
 	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
 	
 	
@@ -450,8 +450,8 @@ BOOST_AUTO_TEST_CASE(read_newton_d)
 	std::string::const_iterator end = configStr.end();
 	
 	
-	config::Newton structure;
-	ConfigSettingParser<std::string::const_iterator,config::Newton> parser;
+	NewtonConfig structure;
+	ConfigSettingParser<std::string::const_iterator,NewtonConfig> parser;
 	bool parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
 	
 	
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(read_newton_d)
 	
 	iter = configStr.begin();
 	end = configStr.end();
-	structure = config::Newton();
+	structure = NewtonConfig();
 	parsed = phrase_parse(iter, end, parser,boost::spirit::ascii::space, structure);
 	
 	
@@ -652,15 +652,15 @@ BOOST_AUTO_TEST_CASE(all_config_settings_mp)
 	
 	std::string configStr = inputfile.Config();
 	
-	auto sets = ConfigParser<mpfr_float, config::Predictor, config::Newton, algorithm::config::Tolerances<mpfr_float>, config::Endgame<mpfr_float>, config::Stepping<mpfr_float>>::Parse(configStr);
+	auto sets = ConfigParser<mpfr_float, Predictor, NewtonConfig, algorithm::config::Tolerances<mpfr_float>, config::Endgame<mpfr_float>, SteppingConfig<mpfr_float>>::Parse(configStr);
 	
-	config::Stepping<mpfr_float> steps = std::get<config::Stepping<mpfr_float>>(sets);
-	config::Predictor pred = std::get<config::Predictor>(sets);
-	config::Newton newt = std::get<config::Newton>(sets);
+	SteppingConfig<mpfr_float> steps = std::get<SteppingConfig<mpfr_float>>(sets);
+	Predictor pred = std::get<Predictor>(sets);
+	NewtonConfig newt = std::get<NewtonConfig>(sets);
 	algorithm::config::Tolerances<mpfr_float> tols = std::get<algorithm::config::Tolerances<mpfr_float>>(sets);
 	config::Endgame<mpfr_float> end = std::get<config::Endgame<mpfr_float>>(sets);
 	
-	BOOST_CHECK(pred == config::Predictor::RKDormandPrince56);
+	BOOST_CHECK(pred == Predictor::RKDormandPrince56);
 	BOOST_CHECK(abs(steps.max_step_size - mpfr_float("0.1")) < tol);
 	BOOST_CHECK(newt.max_num_newton_iterations == 7);
 	BOOST_CHECK(newt.min_num_newton_iterations == 1);
@@ -682,15 +682,15 @@ BOOST_AUTO_TEST_CASE(all_config_settings_d)
 	
 	std::string configStr = inputfile.Config();
 	
-	auto sets = ConfigParser<double, config::Predictor, config::Newton, algorithm::config::Tolerances<double>, config::Endgame<double>, config::Stepping<double>>::Parse(configStr);
+	auto sets = ConfigParser<double, Predictor, NewtonConfig, algorithm::config::Tolerances<double>, config::Endgame<double>, SteppingConfig<double>>::Parse(configStr);
 	
-	config::Stepping<double> steps = std::get<config::Stepping<double>>(sets);
-	config::Predictor pred = std::get<config::Predictor>(sets);
-	config::Newton newt = std::get<config::Newton>(sets);
+	SteppingConfig<double> steps = std::get<SteppingConfig<double>>(sets);
+	Predictor pred = std::get<Predictor>(sets);
+	NewtonConfig newt = std::get<NewtonConfig>(sets);
 	algorithm::config::Tolerances<double> tols = std::get<algorithm::config::Tolerances<double>>(sets);
 	config::Endgame<double> end = std::get<config::Endgame<double>>(sets);
 	
-	BOOST_CHECK(pred == config::Predictor::RKDormandPrince56);
+	BOOST_CHECK(pred == Predictor::RKDormandPrince56);
 	BOOST_CHECK(fabs(steps.max_step_size - 0.1) < tol);
 	BOOST_CHECK(newt.max_num_newton_iterations == 7);
 	BOOST_CHECK(newt.min_num_newton_iterations == 1);

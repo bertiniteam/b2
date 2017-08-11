@@ -29,10 +29,10 @@
 
 #pragma once
 
-#include "bertini2/trackers/config.hpp"
+#include "bertini2/common/config.hpp"
 
 namespace bertini{
-	namespace tracking{
+	namespace endgame{
 
 /**
 

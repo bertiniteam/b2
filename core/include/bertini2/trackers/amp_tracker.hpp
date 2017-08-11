@@ -262,16 +262,16 @@ namespace bertini{
 		sys.AddPathVariable(t);
 		sys.AddVariableGroup(v);
 
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		//  2. Create the Tracker object, associating the system to it.
 		bertini::tracking::AMPTracker tracker(sys);
 
-		config::Stepping stepping_preferences;
-		config::Newton newton_preferences;
+		SteppingConfig stepping_preferences;
+		NewtonConfig newton_preferences;
 
 		// 3. Get the settings into the tracker 
-		tracker.Setup(config::Predictor::Euler,
+		tracker.Setup(Predictor::Euler,
 		              	mpfr_float("1e-5"),
 						mpfr_float("1e5"),
 						stepping_preferences,
@@ -326,14 +326,14 @@ namespace bertini{
 			*/
 			AMPTracker(class System const& sys) : Tracker(sys), current_precision_(DefaultPrecision())
 			{	
-				Set<PrecConf>(config::AMPConfigFrom(sys));
+				Set<PrecConf>(AMPConfigFrom(sys));
 			}
 			
 
 			/**
 			\brief Special additional setup call for the AMPTracker, selecting the config for adaptive precision.
 			*/
-			void PrecisionSetup(config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+			void PrecisionSetup(AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				Set<PrecConf>(AMP_config);
 			}
@@ -715,7 +715,7 @@ namespace bertini{
 							min_precision, min_stepsize,
 							max_precision, max_stepsize,
 							DigitsB<ComplexType>(),
-							Get<Newton>().max_num_newton_iterations,
+							Get<NewtonConfig>().max_num_newton_iterations,
 							predictor_order_);
 
 
@@ -817,7 +817,7 @@ namespace bertini{
 					                             digits_final_
 					                             );
 					
-						unsigned a = ceil(digits_B - (predictor_order_+1)* -log10(max_stepsize)/Get<Newton>().max_num_newton_iterations).convert_to<unsigned>();
+						unsigned a = ceil(digits_B - (predictor_order_+1)* -log10(max_stepsize)/Get<NewtonConfig>().max_num_newton_iterations).convert_to<unsigned>();
 
 					unsigned max_precision = max(min_precision, a);
 
@@ -825,7 +825,7 @@ namespace bertini{
 							min_precision, min_stepsize,
 							Get<PrecConf>().maximum_precision, max_stepsize,
 							digits_B,
-							Get<Newton>().max_num_newton_iterations,
+							Get<NewtonConfig>().max_num_newton_iterations,
 							predictor_order_);
 				}
 
@@ -844,7 +844,7 @@ namespace bertini{
 			{	
 				return max(amp::CriterionBRHS(this->norm_J_, 
 				           					  this->norm_J_inverse_, 
-				           					  Get<Newton>().max_num_newton_iterations, 
+				           					  Get<NewtonConfig>().max_num_newton_iterations, 
 				           					  tracking_tolerance_, 
 				           					  this->size_proportion_, 
 				           					  Get<PrecConf>()), double(0));
@@ -1090,8 +1090,8 @@ namespace bertini{
 									current_space,
 									current_time,
 									tracking_tolerance_,
-									Get<Newton>().min_num_newton_iterations,
-									Get<Newton>().max_num_newton_iterations,
+									Get<NewtonConfig>().min_num_newton_iterations,
+									Get<NewtonConfig>().max_num_newton_iterations,
 									Get<PrecConf>());
 			}
 
@@ -1165,8 +1165,8 @@ namespace bertini{
 										   start_point,
 										   current_time,
 										   tracking_tolerance_,
-										   Get<Newton>().min_num_newton_iterations,
-										   Get<Newton>().max_num_newton_iterations,
+										   Get<NewtonConfig>().min_num_newton_iterations,
+										   Get<NewtonConfig>().max_num_newton_iterations,
 										   Get<PrecConf>());
 			}
 

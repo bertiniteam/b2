@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 	
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
-	std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+	std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 	
 	auto success_code = predictor->Predict(heun_prediction_result,
 										   error_est,
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 										   tracking_tolerance,
 										   AMP);
 	
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
 	for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 	{
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 		{
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 		AMP.coefficient_bound = 2;
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 		{
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<dbl> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
+		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 		
 	}
 	
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -504,7 +504,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
+		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 	}
 	
 	
@@ -536,7 +536,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<dbl> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_a_is_false_mp)
@@ -598,7 +598,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -629,7 +629,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_c_is_false_d)
@@ -660,7 +660,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -677,7 +677,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		Vec<dbl> heun_prediction_result;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_c_is_false_mp)
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	

@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 	
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 											  max_num_newton_iterations,
 											  AMP);
 	
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
 		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_d);
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations,
 												  AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		
 		for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations,
 												  AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
 		{
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations,
 												  AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
 			BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_mp);
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction(mpfr("0","0")*x);
 		sys.AddFunction(mpfr("0","0")*y);
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,1);
 		AMP.coefficient_bound = 5;
@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::MatrixSolveFailure);
+		BOOST_CHECK(success_code==bertini::SuccessCode::MatrixSolveFailure);
 	}
 	
 	
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction(mpfr("0","0")*x);
 		sys.AddFunction(mpfr("0","0")*y);
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,1);
 		AMP.coefficient_bound = 5;
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::MatrixSolveFailure);
+		BOOST_CHECK(success_code==bertini::SuccessCode::MatrixSolveFailure);
 	}
 	
 	
@@ -727,7 +727,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::FailedToConverge);
+		BOOST_CHECK(success_code==bertini::SuccessCode::FailedToConverge);
 	}
 	
 	BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_mp)
@@ -780,7 +780,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::FailedToConverge);
+		BOOST_CHECK(success_code==bertini::SuccessCode::FailedToConverge);
 	}
 
 BOOST_AUTO_TEST_SUITE_END()

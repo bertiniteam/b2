@@ -53,8 +53,8 @@ Below we demonstrate a basic usage of the CauchyEndgame class to find the singul
 The pattern is as described above: create an instance of the class, feeding it the system to be used, and the endgame boundary time and other variable values at the endgame boundary. 
 \code{.cpp}
 using namespace bertini::tracking;
-using RealT = TrackerTraits<TrackerType>::BaseRealType; // Real types
-using ComplexT = TrackerTraits<TrackerType>::BaseComplexType; Complex types
+using RealT = TrackerTraits<TrackerT>::BaseRealType; // Real types
+using ComplexT = TrackerTraits<TrackerT>::BaseComplexType; Complex types
 
 // 1. Define the polynomial system that we wish to solve. 
 System target_sys;
@@ -85,9 +85,9 @@ auto precision_config = PrecisionConfig(my_homotopy);
 AMPTracker tracker(my_homotopy);
 
 //Tracker setup of settings. 
-config::Stepping<RealT> stepping_preferences;
+SteppingConfig<RealT> stepping_preferences;
 stepping_preferences.initial_step_size = RealT(1)/RealT(5);// change a stepping preference
-config::Newton newton_preferences;
+NewtonConfig newton_preferences;
 tracker.Setup(TestedPredictor,
             RealFromString("1e-6"),
             RealFromString("1e5"),
@@ -126,7 +126,7 @@ cauchy_settings.fail_safe_maximum_cycle_number = 6;
 
 
 // 5. Create a cauchy endgame, and use them to get the soutions at t = 0. 
-EndgameSelector<TrackerType>::Cauchy my_cauchy_endgame(tracker,cauchy_settings,tolerances);
+EndgameSelector<TrackerT>::Cauchy my_cauchy_endgame(tracker,cauchy_settings,tolerances);
 
 
 std::vector<Vec<ComplexT> > my_homotopy_solutions; 
@@ -158,9 +158,9 @@ File: test/endgames/amp_cauchy_test.cpp
 File: test/endgames/fixed_double_cauchy_test.cpp
 FIle: test/endgames/fixed_multiple_cauchy_test.cpp
 */	
-template<typename TrackerType, typename FinalEGT> 
+template<typename TrackerT> 
 class CauchyEndgame : 
-	public EndgameBase<TrackerType, FinalEGT>
+	public EndgameBase<CauchyEndgame, TrackerT>
 {
 private:
 	// convert the base endgame into the derived type.
@@ -171,7 +171,7 @@ private:
 
 
 protected:
-	using BaseEG = EndgameBase<TrackerType, FinalEGT>;
+	using BaseEG = EndgameBase<TrackerT, FinalEGT>;
 
 	using BaseComplexType = typename BaseEG::BaseComplexType;
 	using BaseRealType = typename BaseEG::BaseRealType;
@@ -322,13 +322,13 @@ public:
 	}
 	
 
-	explicit CauchyEndgame(TrackerType const& tr, 
+	explicit CauchyEndgame(TrackerT const& tr, 
                             const ConfigsAsTuple& settings )
-      : EndgameBase<TrackerType, FinalEGT>(tr, settings)
+      : EndgameBase<TrackerT, FinalEGT>(tr, settings)
    	{ }
 
     template< typename... Ts >
-		CauchyEndgame(TrackerType const& tr, const Ts&... ts ) : CauchyEndgame(tr, Configs::Unpermute( ts... ) ) 
+		CauchyEndgame(TrackerT const& tr, const Ts&... ts ) : CauchyEndgame(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
 
@@ -590,7 +590,7 @@ public:
 			return true;
 		}
 
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+		if (TrackerTraits<TrackerT>::IsAdaptivePrec)
 		{
 			//Ensure all samples are of the same precision.
 			auto new_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
@@ -911,7 +911,7 @@ public:
 		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
 
 		//Ensure all samples are of the same precision.
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+		if (TrackerTraits<TrackerT>::IsAdaptivePrec)
 			AsDerived().EnsureAtUniformPrecision(ps_times, ps_samples);
 
 
@@ -923,7 +923,7 @@ public:
 		}
 		
 		//Ensure all samples are of the same precision.
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+		if (TrackerTraits<TrackerT>::IsAdaptivePrec)
 			AsDerived().EnsureAtUniformPrecision(ps_times, ps_samples);
 		
 
@@ -985,7 +985,7 @@ public:
 
 
 		//Ensure all samples are of the same precision.
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+		if (TrackerTraits<TrackerT>::IsAdaptivePrec)
 			auto new_precision = AsDerived().EnsureAtUniformPrecision(cau_times, cau_samples);
 
 
@@ -1060,16 +1060,7 @@ public:
 	}//end ComputeCauchySamples
 
 
-	/**
-	\brief Run the endgame, shooting for t=0.
-
-	\see Run
-	*/
-	template<typename CT>
-	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point)
-	{
-		return Run(start_time, start_point, static_cast<CT>(0));
-	}
+	
 
 	/**
 	\brief Primary function that runs the Cauchy endgame.
@@ -1093,7 +1084,7 @@ public:
 					Integral Formula. 
 	*/
 	template<typename CT>
-	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point, CT const& target_time)
+	SuccessCode RunImpl(CT const& start_time, Vec<CT> const& start_point, CT const& target_time)
 	{	
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{

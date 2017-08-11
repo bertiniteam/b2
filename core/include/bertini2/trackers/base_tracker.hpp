@@ -149,15 +149,15 @@ namespace bertini{
 			
 		public:
 			using Config = detail::Configured< typename TrackerTraits< D >::NeededConfigs >;
-			using Stepping = config::Stepping;
-			using Newton = config::Newton;
+			using Stepping = SteppingConfig;
+			using Newton = NewtonConfig;
 			using PrecConf = typename TrackerTraits< D >::PrecisionConfig;
 
 			Tracker(System const& sys) : tracked_system_(std::ref(sys))
 			{
 				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), tracked_system_);
 				corrector_ = std::make_shared< correct::NewtonCorrector >(tracked_system_);
-				Predictor(predict::DefaultPredictor());
+				SetPredictor(predict::DefaultPredictor());
 			}
 
 
@@ -168,13 +168,13 @@ namespace bertini{
 
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
-			void Setup(config::Predictor new_predictor_choice,
+			void Setup(Predictor new_predictor_choice,
 			           double const& tracking_tolerance,
 						double const& path_truncation_threshold,
-						config::Stepping const& stepping,
-						config::Newton const& newton)
+						SteppingConfig const& stepping,
+						NewtonConfig const& newton)
 			{
-				Predictor(new_predictor_choice);
+				SetPredictor(new_predictor_choice);
 				corrector_->Settings(newton);
 				
 				SetTrackingTolerance(tracking_tolerance);
@@ -329,9 +329,9 @@ namespace bertini{
 
 			\param new_predictor_choice The new predictor to be used.
 
-			\see config::Predictor
+			\see Predictor
 			*/
-			void Predictor(config::Predictor new_predictor_choice)
+			void SetPredictor(Predictor new_predictor_choice)
 			{
 				predictor_->PredictorMethod(new_predictor_choice);
 				predictor_order_ = predictor_->Order();
@@ -341,7 +341,7 @@ namespace bertini{
 			/**
 			\brief Query the currently set predictor
 			*/
-			config::Predictor Predictor() const
+			Predictor GetPredictor() const
 			{
 				return predictor_->PredictorMethod();
 			}

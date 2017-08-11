@@ -35,7 +35,6 @@
 #define BERTINI_EXPLICIT_PREDICTORS_HPP
 
 #include "bertini2/trackers/amp_criteria.hpp"
-#include "bertini2/trackers/config.hpp"
 
 #include "bertini2/system/system.hpp"
 #include "bertini2/mpfr_extensions.hpp"
@@ -47,11 +46,6 @@
 namespace bertini{
 	namespace tracking{
 		namespace predict{
-			
-						
-			using Predictor = config::Predictor;
-			
-			
 			
 			
 			/**
@@ -182,7 +176,7 @@ namespace bertini{
 			 Each predictor method is stored as a static Butcher table.  To perform a predict step, you must instantiate an object with a particular predictor method and call Predict:
 			 
 			 \code
-			 ExplicitRKPredictors<Complex,Real> euler(config::Predictor::Euler, sys)
+			 ExplicitRKPredictors<Complex,Real> euler(Predictor::Euler, sys)
 			 success_code = euler.Predict( ... )
 			 \endcode
 			 */
@@ -495,7 +489,7 @@ namespace bertini{
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
 									double const& tracking_tolerance,
-									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
@@ -579,7 +573,7 @@ namespace bertini{
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
 									double const& tracking_tolerance,
-									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 

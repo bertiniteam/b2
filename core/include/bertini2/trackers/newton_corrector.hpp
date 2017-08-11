@@ -64,7 +64,7 @@ namespace bertini{
 				 
 				 */
 				
-				void Settings(const config::Newton& newton_settings)
+				void Settings(const NewtonConfig& newton_settings)
 				{
 					newton_config_ = newton_settings;
 				}
@@ -202,7 +202,7 @@ namespace bertini{
 									   double const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
-									   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									   AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					#ifndef BERTINI_DISABLE_ASSERTS
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
@@ -277,7 +277,7 @@ namespace bertini{
 									   double const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
-									   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									   AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					#ifndef BERTINI_DISABLE_ASSERTS
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
@@ -379,7 +379,7 @@ namespace bertini{
 				
 				unsigned current_precision_;
 
-				config::Newton newton_config_; // Hold the settings of the Newton iteration
+				NewtonConfig newton_config_; // Hold the settings of the Newton iteration
 
 				
 			}; //re: class NewtonCorrector

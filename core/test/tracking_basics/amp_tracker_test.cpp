@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with tracker_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -95,16 +95,16 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_linear)
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              1e-5,
 					1e5,
 					stepping_preferences,
@@ -150,16 +150,16 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_quadratic)
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              1e-5,
 					1e5,
 					stepping_preferences,
@@ -200,16 +200,16 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_decic)
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -254,16 +254,16 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -277,14 +277,14 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 
 	start_point << mpfr(1), mpfr(1);
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr(0)) < 1e-5);
 	BOOST_CHECK(abs(end_point(1)-mpfr(0)) < 1e-5);
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr(0)) < 1e-5);
 	BOOST_CHECK(abs(end_point(1)-mpfr(0)) < 1e-5);
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr(0)) < 1e-5);
 	BOOST_CHECK(abs(end_point(1)-mpfr(0)) < 1e-5);
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr(0)) < 1e-5);
 	BOOST_CHECK(abs(end_point(1)-mpfr(0)) < 1e-5);
@@ -351,16 +351,16 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -374,14 +374,14 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 
 	start_point << mpfr(0), mpfr(0);
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success==SuccessCode::SingularStartPoint);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::SingularStartPoint);
 	BOOST_CHECK_EQUAL(end_point.size(),0);
 }
 
@@ -405,17 +405,17 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_tracking_DOES_SOMETHING_PREDICTABLE_from_near_t
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 	stepping_preferences.max_num_steps = 1e2;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -429,13 +429,13 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_tracking_DOES_SOMETHING_PREDICTABLE_from_near_t
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 	start_point << mpfr("1e-28"), mpfr("1e-28");
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success!=SuccessCode::Success && tracking_success!=SuccessCode::NeverStarted);
+	BOOST_CHECK(tracking_success!=bertini::SuccessCode::Success && tracking_success!=bertini::SuccessCode::NeverStarted);
 	BOOST_CHECK_EQUAL(end_point.size(),0);
 }
 
@@ -471,16 +471,16 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -494,14 +494,14 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 
 	start_point << mpfr(1), mpfr("1.41421356237309504880168872421");
 	tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
 	BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
@@ -527,17 +527,17 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 	newton_preferences.max_num_newton_iterations = 6;
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-30,
 					1e5,
 					stepping_preferences,
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 
 	start_point << mpfr(1), mpfr("1.41421356237309504880168872421");
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	true_solution <<  mpfr("0.61803398874989484820458683436563811772030918"), mpfr("1.13856426511017256414753784441721594451116198");
 
 
-	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-true_solution(0)) < 1e-30);
 	BOOST_CHECK(abs(end_point(1)-true_solution(1)) < 1e-30);
@@ -593,16 +593,16 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 	tracker.PrecisionPreservation(true);
 
 	start_point << mpfr(1), mpfr("1.414");
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	                  t_start, t_end, start_point);
 
 	BOOST_CHECK_EQUAL(DefaultPrecision(),30);
-	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
 	BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
@@ -655,17 +655,17 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
 					newton_preferences);
 	tracker.PrecisionPreservation(true);
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 
 	start_point << mpfr(1), mpfr("1.414");
@@ -682,7 +682,7 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	                  t_start, t_end, start_point);
 
 	BOOST_CHECK_EQUAL(DefaultPrecision(),100);
-	BOOST_CHECK(tracking_success==SuccessCode::Success);
+	BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(end_point.size(),2);
 	BOOST_CHECK(abs(end_point(0)-mpfr("6.180339887498949e-01")) < 1e-5);
 	BOOST_CHECK(abs(end_point(1)-mpfr("1.138564265110173e+00")) < 1e-5);
@@ -732,17 +732,17 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
 					newton_preferences);
 	tracker.PrecisionPreservation(true);
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	tracker.PrecisionSetup(AMP);
 
 	mpfr t_start(1);
@@ -752,10 +752,10 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 	Vec<mpfr> end_point;
 
 	start_point << mpfr(1), mpfr(1);
-	SuccessCode tracking_success = tracker.TrackPath(end_point,
+	bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
-	BOOST_CHECK(tracking_success!=SuccessCode::Success);
+	BOOST_CHECK(tracking_success!=bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(DefaultPrecision(),30);
 }
 
@@ -806,13 +806,13 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	final_system.AddPathVariable(t);
 
 	auto tracker = AMPTracker(final_system);
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
-	tracker.Setup(config::Predictor::Euler,
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
+	tracker.Setup(Predictor::Euler,
 	              	1e-5, 1e5,
 					stepping_preferences, newton_preferences);
 	
-	tracker.PrecisionSetup(bertini::tracking::config::AMPConfigFrom(final_system));
+	tracker.PrecisionSetup(bertini::tracking::AMPConfigFrom(final_system));
 	tracker.PrecisionPreservation(true);
 	mpfr t_start(1), t_end(0);
 	std::vector<Vec<mpfr> > solutions;
@@ -821,8 +821,8 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 		auto start_point = TD.StartPoint<mpfr>(ii);
 
 		Vec<mpfr> result;
-		SuccessCode tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
-		BOOST_CHECK(tracking_success==SuccessCode::Success);
+		bertini::SuccessCode tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
+		BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(DefaultPrecision(),30);
 		solutions.push_back(final_system.DehomogenizePoint(result));
 	}
@@ -863,10 +863,10 @@ std::vector<Vec<mpfr> > track_total_degree(bertini::tracking::AMPTracker const& 
 		auto start_point = TD.StartPoint<mpfr>(ii);
 
 		Vec<mpfr> result;
-		SuccessCode tracking_success;
+		bertini::SuccessCode tracking_success;
 
 		tracking_success = tracker.TrackPath(result,t_start,t_end,start_point);
-		BOOST_CHECK(tracking_success==SuccessCode::Success);
+		BOOST_CHECK(tracking_success==bertini::SuccessCode::Success);
 		solutions.push_back(tracker.GetSystem().DehomogenizePoint(result));
 	}
 
@@ -907,13 +907,13 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 	final_system.AddPathVariable(t);
 
 	auto tracker = AMPTracker(final_system);
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
-	tracker.Setup(config::Predictor::Euler,
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
+	tracker.Setup(Predictor::Euler,
 	              	1e-5, 1e5,
 					stepping_preferences, newton_preferences);
 	
-	auto AMP = bertini::tracking::config::AMPConfigFrom(final_system);
+	auto AMP = bertini::tracking::AMPConfigFrom(final_system);
 	tracker.PrecisionSetup(AMP);
 	tracker.PrecisionPreservation(true);
 	auto solutions = track_total_degree(tracker, TD);

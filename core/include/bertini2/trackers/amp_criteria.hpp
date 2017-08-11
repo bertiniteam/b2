@@ -39,11 +39,6 @@ namespace bertini{
 	namespace tracking{
 		namespace amp{
 
-
-
-			using AdaptiveMultiplePrecisionConfig = config::AdaptiveMultiplePrecisionConfig;
-
-
 			/**
 			\brief Check AMP Criterion A.
 

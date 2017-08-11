@@ -29,7 +29,7 @@
 #include "bertini2/endgames/base_endgame.hpp"
 
 
-namespace bertini{ namespace tracking { namespace endgame{
+namespace bertini{ namespace endgame{
 
 
 /** 
@@ -58,8 +58,8 @@ The pattern is as described above: create an instance of the class, feeding it t
 
 \code{.cpp}
 using namespace bertini::tracking;
-using RealT = TrackerTraits<TrackerType>::BaseRealType; // Real types
-using ComplexT = TrackerTraits<TrackerType>::BaseComplexType; Complex types
+using RealT = tracking::TrackerTraits<TrackerType>::BaseRealType; // Real types
+using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexType; Complex types
 
 // 1. Define the polynomial system that we wish to solve. 
 System target_sys;
@@ -90,9 +90,9 @@ auto precision_config = PrecisionConfig(my_homotopy);
 AMPTracker tracker(my_homotopy);
 
 //Tracker setup of settings. 
-config::Stepping<RealT> stepping_preferences;
+SteppingConfig<RealT> stepping_preferences;
 stepping_preferences.initial_step_size = RealT(1)/RealT(5);// change a stepping preference
-config::Newton newton_preferences;
+NewtonConfig newton_preferences;
 tracker.Setup(TestedPredictor,
             RealFromString("1e-6"),
             RealFromString("1e5"),
@@ -124,10 +124,7 @@ for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 
 //Settings for the endgames. 
 
-config::Tolerances<RealT> tolerances;
-
-
-config::PowerSeries power_series_settings;
+PowerSeriesConfig power_series_settings;
 power_series_settings.max_cycle_number = 4;
 
 
@@ -168,26 +165,22 @@ File: test/endgames/fixed_double_powerseries_test.cpp
 FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 */
 
-template<typename TrackerType, typename FinalEGT> 
+template<typename PrecT> 
 class PowerSeriesEndgame : 
-	public EndgameBase<TrackerType, FinalEGT>
+	public EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>
 {
-
-	// convert the base endgame into the derived type.
-	const FinalEGT& AsDerived() const
-	{
-		return static_cast<const FinalEGT&>(*this);
-	}
 
 protected:
 
-	using BaseEG = EndgameBase<TrackerType, FinalEGT>;
+	using BaseEGT = EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>;
+	using FinalEGT = PowerSeriesEndgame<PrecT>;
+	using TrackerType = typename PrecT::TrackerT;
 
-	using BaseComplexType = typename BaseEG::BaseComplexType;
-	using BaseRealType = typename BaseEG::BaseRealType;
+	using BaseComplexType = typename BaseEGT::BaseComplexType;
+	using BaseRealType = typename BaseEGT::BaseRealType;
 
-	using TupleOfTimes = typename BaseEG::TupleOfTimes;
-	using TupleOfSamps = typename BaseEG::TupleOfSamps;
+	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
+	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
@@ -294,7 +287,7 @@ public:
 
 	explicit PowerSeriesEndgame(TrackerType const& tr, 
 	                            const ConfigsAsTuple& settings )
-      : EndgameBase<TrackerType, FinalEGT>(tr, settings)
+      : BaseEGT(tr, settings)
    	{}
 
     template< typename... Ts >
@@ -358,8 +351,8 @@ public:
 		else
 		{
 			using std::max;
-			auto upper_bound = unsigned(round(estimate)*this->template Get<config::PowerSeries>().cycle_number_amplification);
-			upper_bound_on_cycle_number_ = max(upper_bound,this->template Get<config::PowerSeries>().max_cycle_number);
+			auto upper_bound = unsigned(round(estimate)*this->template Get<PowerSeriesConfig>().cycle_number_amplification);
+			upper_bound_on_cycle_number_ = max(upper_bound,this->template Get<PowerSeriesConfig>().max_cycle_number);
 		}
 
 		return upper_bound_on_cycle_number_;
@@ -453,7 +446,7 @@ public:
 
 		for (size_t ii=0; ii<samples.size(); ++ii)
 		{
-			auto refine_success = AsDerived().RefineSample(samples[ii], samples[ii],  times[ii]);
+			auto refine_success = this->RefineSample(samples[ii], samples[ii],  times[ii]);
 			if (refine_success != SuccessCode::Success)
 			{
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
@@ -484,9 +477,9 @@ public:
 
 		assert((samples.size() == times.size()) && "must have same number of times and samples");
 
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
 		{
-			auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
+			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
 			this->GetSystem().precision(max_precision);
 		}
 
@@ -597,7 +590,7 @@ public:
 			if (tracking_success != SuccessCode::Success)
 				return tracking_success;
 
-		AsDerived().EnsureAtPrecision(next_time,Precision(next_sample));
+		this->EnsureAtPrecision(next_time,Precision(next_sample));
 	
 
 		times.push_back(next_time);
@@ -606,7 +599,7 @@ public:
 	
 
 
-		auto refine_success = AsDerived().RefineSample(samples.back(), next_sample,  times.back());
+		auto refine_success = this->RefineSample(samples.back(), next_sample,  times.back());
 			if (refine_success != SuccessCode::Success)
 			{
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
@@ -614,7 +607,7 @@ public:
 			}
 
 
- 		auto max_precision = AsDerived().EnsureAtUniformPrecision(times, samples, derivatives);
+ 		auto max_precision = this->EnsureAtUniformPrecision(times, samples, derivatives);
 		this->GetSystem().precision(max_precision);
 
 
@@ -630,17 +623,6 @@ public:
 		}
 
  		return SuccessCode::Success;
-	}
-
-	/**
-	\brief Run the endgame, shooting for t=0.
-
-	\see Run
-	*/
-	template<typename CT>
-	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point)
-	{
-		return Run(start_time, start_point, static_cast<CT>(0));
 	}
 
 
@@ -661,7 +643,7 @@ public:
 				approximations are withing final tolerance of each other. 
 	*/		
 	template<typename CT>
-	SuccessCode Run(const CT & start_time, const Vec<CT> & start_point, CT const& target_time)
+	SuccessCode RunImpl(const CT & start_time, const Vec<CT> & start_point, CT const& target_time)
 	{
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{
@@ -766,4 +748,4 @@ public:
 
 
 
-}}} // re: namespaces
+}} // re: namespaces

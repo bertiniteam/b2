@@ -325,7 +325,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
 				              	this->template Get<Tolerances>().newton_before_endgame,
 				              	this->template Get<Tolerances>().path_truncation_threshold,
-								tracking::config::Stepping(), tracking::config::Newton());
+								tracking::SteppingConfig(), tracking::NewtonConfig());
 
 				tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
 			}

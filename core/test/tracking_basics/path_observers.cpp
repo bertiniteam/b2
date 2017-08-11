@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with path_observers.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -78,16 +78,16 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 	AMPPathAccumulator<AMPTracker> path_accumulator;
 	PrecisionAccumulator<AMPTracker> precision_accumulator;
@@ -135,16 +135,16 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 	GoryDetailLogger<AMPTracker> tons_of_detail;
 
@@ -190,16 +190,16 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 	sys.AddPathVariable(t);
 	sys.AddVariableGroup(v);
 
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 
 	bertini::tracking::AMPTracker tracker(sys);
 
 
-	config::Stepping stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              	1e-5,
 					1e5,
 					stepping_preferences,
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	SuccessCode tracking_success;
+	bertini::SuccessCode tracking_success;
 
 	bertini::MultiObserver<AMPTracker, GoryDetailLogger> agglomeration;
 

@@ -81,7 +81,7 @@ namespace bertini{
 			/**
 			\brief An additional no-op call, provided for conformity of interface with AMP tracker in generic code.
 			*/
-			void PrecisionSetup(config::FixedPrecisionConfig const&)
+			void PrecisionSetup(FixedPrecisionConfig const&)
 			{ }
 
 

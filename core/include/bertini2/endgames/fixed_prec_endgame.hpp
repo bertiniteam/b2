@@ -40,7 +40,7 @@
 namespace bertini{ namespace tracking { namespace endgame {
 
 template<typename TrackerT>
-class FixedPrecEndgamePolicyBase
+class FixedPrecEndgame
 {
 	using BaseComplexType = typename TrackerTraits<TrackerT>::BaseComplexType;
 	using BaseRealType = typename TrackerTraits<TrackerT>::BaseRealType;
@@ -50,23 +50,23 @@ class FixedPrecEndgamePolicyBase
 
 protected:
 
-	const unsigned precision_;
+	// const unsigned precision_;
 
 
-	bool PrecisionSanityCheck() const
-	{
-		return true;
-	}
+	// bool PrecisionSanityCheck() const
+	// {
+	// 	return true;
+	// }
 
-	SuccessCode ChangePrecision(unsigned) const
-	{
-		return SuccessCode::Success;
-	}
+	// SuccessCode ChangePrecision(unsigned) const
+	// {
+	// 	return SuccessCode::Success;
+	// }
 
 public:
 
-	auto Precision() const
-	{ return precision_; }
+	// auto Precision() const
+	// { return precision_; }
 
 
 	template<typename... T>
@@ -90,10 +90,27 @@ public:
 	}
 
 
-	FixedPrecEndgamePolicyBase() : precision_(NumTraits<BRT>::NumDigits())
+	FixedPrecEndgame() //: precision_(NumTraits<BRT>::NumDigits())
 	{}
 }; // re: fixed prec endgame policy
 
+template<>
+struct EGPrecSelector<DoublePrecisionTracker>
+{
+	using type = FixedPrecEndgame<DoublePrecisionTracker>;
+};
+
+template<>
+struct EGPrecSelector<MultiplePrecisionTracker>
+{
+	using type = FixedPrecEndgame<MultiplePrecisionTracker>;
+};
+
+template<class D>
+struct EGPrecSelector<FixedPrecisionTracker<D>>
+{
+	using type = FixedPrecEndgame<FixedPrecisionTracker<D>>;
+};
 
 }}} //re: namespaces
 

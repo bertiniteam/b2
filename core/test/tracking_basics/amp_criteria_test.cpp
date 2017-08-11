@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 
 
 	//Setting up saftety digits to trigger AMP Criterion A failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
 	auto CritA = bertini::tracking::amp::CriterionA(norm_J,norm_J_inverse,AMP);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 
 
 	//Setting up saftety digits to trigger AMP Criterion A failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
 	auto CritA = bertini::tracking::amp::CriterionA(norm_J,norm_J_inverse,AMP);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 
 
 	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
 	unsigned int num_newton_iterations_remaining = 1;
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 
 
 	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 	unsigned int num_newton_iterations_remaining = 1;
 	double TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 
 
 	//Setting up saftety digits to trigger AMP Criterion C failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_2 = 32000;
 	auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
 
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 
 
 	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_2 = 32000;
 	double TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
 

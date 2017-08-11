@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 	
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 										   tracking_tolerance,
 										   AMP);
 	
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
 	for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
 	BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
 			BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + mpfr_float("0.5")) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 		AMP.coefficient_bound = 2;
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   frequency_of_CN_estimation,
 											   tracking_tolerance);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
 			BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_d);
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(y,2)-1) + (1-t)*(pow(y,2) + mpfr_float("0.5")) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 		AMP.coefficient_bound = 2;
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   frequency_of_CN_estimation,
 											   tracking_tolerance);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
 		 BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		AMP.coefficient_bound = 5;
 		
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   freq_of_CN_estimation,
 											   tracking_tolerance);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
+		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 		
 		
 	}
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		AMP.coefficient_bound = 5;
 		
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   freq_of_CN_estimation,
 											   tracking_tolerance);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
+		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 	}
 	
 	
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_a_is_false_mp)
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -573,7 +573,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_d)
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -635,7 +635,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(euler_predict_linear_criterion_c_is_false_mp)
@@ -666,7 +666,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -696,7 +696,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -731,7 +731,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
@@ -763,7 +763,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
 			BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
@@ -792,7 +792,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		
 		
-		AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 										  tracking_tolerance,
 										  AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
 		{

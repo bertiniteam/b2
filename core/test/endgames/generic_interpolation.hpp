@@ -25,9 +25,12 @@
 
 // this file in intended to be included into other test files, with blanks filled in above.
 
+
+using namespace bertini;
+using namespace bertini::endgame;
+
 using bertini::DefaultPrecision;
 
-using namespace bertini::tracking;
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;

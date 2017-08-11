@@ -57,7 +57,7 @@ namespace bertini{
 		\tparam TolT The numeric type for tolerances and state.
 		*/
 		template <typename ComplexT, typename TolT>
-		SuccessCode Predict(config::Predictor predictor_choice,
+		SuccessCode Predict(Predictor predictor_choice,
 							Vec<ComplexT> & next_space,
 							   System const& sys,
 							   Vec<ComplexT> const& current_space, ComplexT const& current_time, 
@@ -96,7 +96,7 @@ namespace bertini{
 		\see Predict
 		*/
 		template <typename ComplexT, typename TolT>
-		SuccessCode Predict(config::Predictor predictor_choice,
+		SuccessCode Predict(Predictor predictor_choice,
 							Vec<ComplexT> & next_space,
 							TolT & size_proportion, /*\f$a\f$ from the AMP2 paper */
 							TolT & norm_J,
@@ -108,7 +108,7 @@ namespace bertini{
 							unsigned & num_steps_since_last_condition_number_computation, 
 							unsigned frequency_of_CN_estimation, 
 							TolT const& tracking_tolerance,
-							config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+							AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 			predict::ExplicitRKPredictor<ComplexT, TolT> predictor(predictor_choice);
 
@@ -138,7 +138,7 @@ namespace bertini{
 		\see Predict
 		*/
 		template <typename ComplexT, typename TolT>
-		SuccessCode Predict(config::Predictor predictor_choice,
+		SuccessCode Predict(Predictor predictor_choice,
 							Vec<ComplexT> & next_space,
 							TolT & error_estimate,
 							TolT & size_proportion, /*\f$a\f$ from the AMP2 paper */
@@ -151,7 +151,7 @@ namespace bertini{
 							unsigned & num_steps_since_last_condition_number_computation, 
 							unsigned frequency_of_CN_estimation, 
 							TolT const& tracking_tolerance,
-							config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+							AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 			predict::ExplicitRKPredictor<ComplexT, TolT> predictor(predictor_choice);
 
@@ -192,7 +192,7 @@ namespace bertini{
 		\tparam TolT The complex number type for evaluation.
 		*/
 		template <typename ComplexT, typename TolT>
-		SuccessCode Predict(config::Predictor predictor_choice,
+		SuccessCode Predict(Predictor predictor_choice,
 							Vec<ComplexT> & next_space,
 							   System const& sys,
 							   Vec<ComplexT> const& current_space, ComplexT current_time, 
@@ -201,7 +201,7 @@ namespace bertini{
 							   unsigned & num_steps_since_last_condition_number_computation, 
 							   unsigned frequency_of_CN_estimation, 
 							   TolT const& tracking_tolerance,
-							   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+							   AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 			TolT size_proportion, norm_J, norm_J_inverse;
 
