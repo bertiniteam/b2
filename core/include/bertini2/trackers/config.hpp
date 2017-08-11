@@ -44,6 +44,10 @@ namespace bertini
 		template<typename T> using SampCont = std::deque<Vec<T> >;
 		template<typename T> using TimeCont = std::deque<T>;
 		
+		enum class ContStart{
+			Front,
+			Back
+		};
 		
 		enum class PrecisionType //E.2.1
 		{
