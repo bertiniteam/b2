@@ -588,15 +588,7 @@ namespace bertini{
 				if (predictor_code==SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
 				{
 					NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType>(*this));
-					next_stepsize_ = current_stepsize_;
-
-					if (current_precision_==DoublePrecision())
-						next_precision_ = LowestMultiplePrecision();
-					else
-						next_precision_ = current_precision_+(1+num_consecutive_failed_steps_) * PrecisionIncrement();
-
-					UpdatePrecisionAndStepsize();
-
+					InitialMatrixSolveError();
 					return predictor_code;
 				}
 				else if (predictor_code==SuccessCode::MatrixSolveFailure)
@@ -738,9 +730,17 @@ namespace bertini{
 
 
 
+			void InitialMatrixSolveError() const
+			{
+				next_stepsize_ = current_stepsize_;
 
+				if (current_precision_==DoublePrecision())
+					next_precision_ = LowestMultiplePrecision();
+				else
+					next_precision_ = current_precision_+(1+num_consecutive_failed_steps_) * PrecisionIncrement();
 
-
+				UpdatePrecisionAndStepsize();
+			}
 
 			/**
 			\brief The convergence_error function from \cite AMP2.  
