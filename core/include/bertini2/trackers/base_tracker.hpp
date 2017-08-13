@@ -184,7 +184,7 @@ namespace bertini{
 				this->template Set(stepping);
 				this->template Set(newton);
 
-				current_stepsize_ = stepping.initial_step_size;
+				current_stepsize_ = BaseRealType(stepping.initial_step_size);
 			}
 
 
