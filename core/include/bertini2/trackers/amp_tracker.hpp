@@ -686,7 +686,7 @@ namespace bertini{
 			SuccessCode AdjustAMPStepSuccess() const
 			{
 				// TODO: think about why we consider reducing the stepsize?  this is despite documentation stating that it can only increase
-				mpfr_float min_stepsize = current_stepsize_; // * Get<Stepping>().step_size_fail_factor;
+				mpfr_float min_stepsize = current_stepsize_ * Get<Stepping>().step_size_fail_factor;
 				mpfr_float max_stepsize = min( current_stepsize_ * Get<Stepping>().step_size_success_factor,  mpfr_float(Get<Stepping>().max_step_size));
 
 
