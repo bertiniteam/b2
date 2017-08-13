@@ -483,8 +483,7 @@ public:
 		derivatives.clear(); derivatives.resize(samples.size());
 		for(unsigned ii = 0; ii < samples.size(); ++ii)
 		{	
-			// uses LU look at Eigen documentation on inverse in Eigen/LU.
-		 	derivatives[ii] = (this->GetSystem().Jacobian(samples[ii],times[ii]).inverse())*(this->GetSystem().TimeDerivative(samples[ii],times[ii]));
+			derivatives[ii] = -this->GetSystem().Jacobian(samples[ii],times[ii]).lu().solve(this->GetSystem().TimeDerivative(samples[ii],times[ii]));
 		}
 	}
 
