@@ -74,11 +74,11 @@ namespace tracking{
 
 	struct SteppingConfig
 	{
-		using T = double;
+		using T = mpq_rational;
 
 		T initial_step_size = T(1)/T(10); ///< The length of the first time step when calling TrackPath.  You can turn it resetting, so subsequent calls use the same stepsize, too.  You make a call to the Tracker itself.
 		T max_step_size = T(1)/T(10); ///<  The largest allowed step size.  MaxStepSize
-		T min_step_size = T(1e-100); ///< The mimum allowed step size.  MinStepSize
+		T min_step_size = T(1)/T(1e100); ///< The mimum allowed step size.  MinStepSize
 
 		T step_size_success_factor = T(2); ///< Factor by which to dilate the time step when triggered.  StepSuccessFactor
 		T step_size_fail_factor = T(1)/T(2); ///< Factor by which to contract the time step when triggered.  StepFailFactor
