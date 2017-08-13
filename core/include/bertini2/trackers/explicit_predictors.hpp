@@ -802,7 +802,7 @@ namespace bertini{
 						SetErrorEstimate(err_est, delta_t);
 						
 						using std::pow;
-						size_proportion = double(err_est/(pow(abs(delta_t), p_+1)));
+						size_proportion = double(err_est/double(pow(abs(delta_t), p_+1)));
 						
 						return SuccessCode::Success;
 					}
