@@ -37,6 +37,9 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 
 #include <boost/multiprecision/mpfr.hpp>
 #include <boost/multiprecision/random.hpp>
+
+#include "bertini2/forbid_double.hpp"
+
 #include <boost/random.hpp>
 
 #include <boost/archive/text_oarchive.hpp>
