@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> predicted(2);
 		predicted << mpfr("2.38948874619536140814029774733947","0.208678935223681033727262214382917"),
 		mpfr("0.524558056401030798191044945035673", "1.43029356995029310361616395235936");
-		mpfr_float predicted_error = mpfr_float(".197349645229023708608160063982175");
+		double predicted_error = double(.197349645229023708608160063982175);
 		
 		Vec<mpfr> heun_prediction_result;
 		mpfr next_time;
@@ -214,6 +214,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 		
+		using std::abs;
 		BOOST_CHECK(abs(error_est - predicted_error) < std::numeric_limits<double>::epsilon());	
 	}
 	
@@ -345,7 +346,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> predicted(2);
 		predicted << mpfr("0.412299156269677938503694812160886"),
 		mpfr("0.731436945256924470273568899877140");
-		mpfr_float predicted_error = mpfr_float("0.00544428757292458409463632380167773");
+		double predicted_error = double(0.00544428757292458409463632380167773);
 		
 		Vec<mpfr> heun_prediction_result;
 		mpfr next_time;
@@ -377,6 +378,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 		}
 		
+		using std::abs;
 		BOOST_CHECK(abs(error_est / predicted_error - 1) < std::numeric_limits<double>::epsilon());
 	}
 	
