@@ -335,7 +335,7 @@ public:
 			return upper_bound_on_cycle_number_;
 		}
 
-		RT estimate = log(this->EndgameSettings().sample_factor)/log(abs(rand_sum2/rand_sum1));
+		RT estimate = log(static_cast<RT>(this->EndgameSettings().sample_factor))/log(abs(rand_sum2/rand_sum1));
 
 		if (estimate < 1) // would be nan if sample points are same as each other
 		  	upper_bound_on_cycle_number_ = 1;
@@ -598,6 +598,8 @@ public:
 	template<typename CT>
 	SuccessCode AdvanceTime(const CT & target_time)
 	{
+		using RT = typename Eigen::NumTraits<CT>::Real;
+		
 		auto& samples = std::get<SampCont<CT> >(samples_);
 		auto& times   = std::get<TimeCont<CT> >(times_);
 		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
@@ -605,7 +607,7 @@ public:
 		AssertSizesTimeSpaceDeriv<CT>();
 
 		Vec<CT> next_sample;
-		CT next_time = (times.back() + target_time) * this->EndgameSettings().sample_factor; //setting up next time value using the midpoint formula, sample_factor will give us some 
+		CT next_time = (times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor); //setting up next time value using the midpoint formula, sample_factor will give us some 
 
   		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time) // generalized for target_time not equal to 0.
   		{
