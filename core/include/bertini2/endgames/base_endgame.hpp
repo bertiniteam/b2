@@ -104,7 +104,7 @@ protected:
 	using Configs = typename AlgoTraits<FlavorT>::NeededConfigs;
 	using ConfigsAsTuple = typename Configs::ToTuple;
 
-	using NeededTypes = typename tracking::TrackerTraits<TrackerT>::NeededTypes;
+	using NeededTypes = detail::TypeList<BCT>;
 	using TupOfVec = typename NeededTypes::ToTupleOfVec;
 	using TupOfReal = typename NeededTypes::ToTupleOfReal;
 	using TupleOfTimes = typename NeededTypes::template ToTupleOfCont<TimeCont>;
@@ -116,7 +116,7 @@ protected:
 	mutable TupOfVec final_approximation_; 
 	mutable TupOfVec previous_approximation_; 
 	mutable unsigned int cycle_number_ = 0; 
-	mutable TupOfReal approximate_error_;
+	mutable double approximate_error_;
 
 
 
@@ -166,6 +166,12 @@ public:
 	SuccessCode RefineSample(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, double tol, unsigned max_iterations) const
 	{
 		return this->RefineSampleImpl(result, current_sample, current_time, tol, max_iterations);
+	}
+
+	void ChangePrecision(unsigned p)
+	{
+		AsFlavor().ChangePrecision(p);
+		PrecT::ChangePrecision();
 	}
 
 

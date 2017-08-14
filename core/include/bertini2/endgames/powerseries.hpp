@@ -404,6 +404,24 @@ public:
 
 			std::tie(s_times, s_derivatives) = TransformToSPlane(candidate, t0, num_pts, ContStart::Front);
 
+
+for (int ii=0; ii<times.size(); ++ii)
+{
+	BOOST_LOG_TRIVIAL(severity_level::trace) << "t-plane data " << ii << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(times[ii])) << " time " << times[ii] << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(samples[ii])) << " sample " << samples[ii] << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(derivatives[ii])) << " derivative " << derivatives[ii] << "\n\n";
+}
+
+for (int ii=0; ii<s_times.size(); ++ii)
+{
+	BOOST_LOG_TRIVIAL(severity_level::trace) << "s-plane data " << ii << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_times[ii])) << " s_time " << s_times[ii] << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_derivatives[ii])) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
+}
+
+
+
 			RT curr_diff = (HermiteInterpolateAndSolve(
 								  pow((most_recent_time-t0)/(times[0]-t0), 1/static_cast<RT>(candidate)), // the target time
 			                      num_pts,s_times,samples,s_derivatives, ContStart::Front) // the input data
@@ -564,14 +582,24 @@ public:
 
 		std::tie(s_times, s_derivatives) = TransformToSPlane(c, t0, num_pts, ContStart::Back);
 
-		// BOOST_LOG_TRIVIAL(severity_level::trace) << "data " << ii << '\n';
+		
+const auto& times   = std::get<TimeCont<CT> >(times_);
+const auto& samples  = std::get<SampCont<CT> >(samples_);
+const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+for (int ii=0; ii<times.size(); ++ii)
+{
+	BOOST_LOG_TRIVIAL(severity_level::trace) << "t-plane data " << ii << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(times[ii])) << " time " << times[ii] << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(samples[ii])) << " sample " << samples[ii] << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(derivatives[ii])) << " derivative " << derivatives[ii] << "\n\n";
+}
 
-		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " time " << times[ii+offset] << '\n';
-		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " sample " << samples[ii+offset] << '\n';
-		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " derivative " << derivatives[ii+offset] << "\n\n";
-
-		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " s_time " << s_times[ii] << '\n';
-		// BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(16) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
+for (int ii=0; ii<s_times.size(); ++ii)
+{
+	BOOST_LOG_TRIVIAL(severity_level::trace) << "s-plane data " << ii << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_times[ii])) << " s_time " << s_times[ii] << '\n';
+		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_derivatives[ii])) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
+}
 
 		// the data was transformed to be on the interval [0 1] so we can hard-code the time-to-solve as 0 here.
 		result = HermiteInterpolateAndSolve(CT(0), num_pts, s_times, std::get<SampCont<CT> >(samples_), s_derivatives, ContStart::Back);
@@ -639,6 +667,8 @@ public:
 				BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
 				return refine_success;
 			}
+		
+		this->EnsureAtPrecision(times.back(),Precision(samples.back()));
 
 		// we keep one more samplepoint than needed around, for estimating the cycle number
 		if (times.size() > this->EndgameSettings().num_sample_points+1)
@@ -726,7 +756,7 @@ public:
 
 	  	
 
-	 	RT& approx_error = std::get<RT>(this->approximate_error_);
+	 	double& approx_error = this->approximate_error_;
 		approx_error = 1;
 
 		while (approx_error > this->FinalTolerance())
@@ -761,7 +791,7 @@ public:
 	 		}
 
 	 		//update
-	 		approx_error = (latest_approx - prev_approx).template lpNorm<Eigen::Infinity>();
+	 		approx_error = static_cast<double>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
 	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
 
 	 		prev_approx = latest_approx;

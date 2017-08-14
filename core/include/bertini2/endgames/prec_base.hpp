@@ -80,7 +80,11 @@ public:
 	const System& GetSystem() const 
 	{ return GetTracker().GetSystem();}
 
-
+	void ChangePrecision(unsigned p)
+	{
+		tracker_.ChangePrecision(p);
+	}
+	
 private:
 
 	/**
