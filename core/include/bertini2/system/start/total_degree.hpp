@@ -70,7 +70,7 @@ namespace bertini
 			\param index The index of the start function for which you want the corresponding random value.
 			*/
 			template<typename NumT>
-			const NumT& RandomValue(size_t index) const
+			NumT RandomValue(size_t index) const
 			{
 				return random_values_[index]->Eval<NumT>();
 			}
