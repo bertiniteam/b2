@@ -109,7 +109,9 @@ namespace bertini{ namespace endgame{
 		T sample_point_refinement_factor = 1e-2; ///* Extra amount of tolerance for refining before computing the final approximation, during endgame.
 		unsigned num_sample_points = 3; //NumSamplePoints default = 2
 		T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
-		T sample_factor = T(1)/T(2); //SampleFactor
+
+		mpq_rational sample_factor = mpq_rational(1,2); //SampleFactor
+		
 		unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 
 		T final_tolerance = 1e-11;///< The tolerance to which to compute the endpoint using the endgame.
