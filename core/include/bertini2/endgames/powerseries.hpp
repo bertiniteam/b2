@@ -400,25 +400,25 @@ public:
 		auto offset = samples.size() - num_pts - 1; // -1 here to shift away from the back of the container
 		for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 		{			
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "testing cycle candidate " << candidate;
+			// BOOST_LOG_TRIVIAL(severity_level::trace) << "testing cycle candidate " << candidate;
 
 			std::tie(s_times, s_derivatives) = TransformToSPlane(candidate, t0, num_pts, ContStart::Front);
 
+//TODO move these to an observer on the endgame.  of course, you have to implement the event types first, ha.	
+// for (int ii=0; ii<times.size(); ++ii)
+// {
+// 	BOOST_LOG_TRIVIAL(severity_level::trace) << "t-plane data " << ii << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(times[ii])) << " time " << times[ii] << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(samples[ii])) << " sample " << samples[ii] << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(derivatives[ii])) << " derivative " << derivatives[ii] << "\n\n";
+// }
 
-for (int ii=0; ii<times.size(); ++ii)
-{
-	BOOST_LOG_TRIVIAL(severity_level::trace) << "t-plane data " << ii << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(times[ii])) << " time " << times[ii] << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(samples[ii])) << " sample " << samples[ii] << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(derivatives[ii])) << " derivative " << derivatives[ii] << "\n\n";
-}
-
-for (int ii=0; ii<s_times.size(); ++ii)
-{
-	BOOST_LOG_TRIVIAL(severity_level::trace) << "s-plane data " << ii << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_times[ii])) << " s_time " << s_times[ii] << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_derivatives[ii])) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
-}
+// for (int ii=0; ii<s_times.size(); ++ii)
+// {
+// 	BOOST_LOG_TRIVIAL(severity_level::trace) << "s-plane data " << ii << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_times[ii])) << " s_time " << s_times[ii] << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_derivatives[ii])) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
+// }
 
 
 
@@ -427,7 +427,7 @@ for (int ii=0; ii<s_times.size(); ++ii)
 			                      num_pts,s_times,samples,s_derivatives, ContStart::Front) // the input data
 			                 - 
 			                 most_recent_sample).template lpNorm<Eigen::Infinity>();
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "residual " << curr_diff;
+			// BOOST_LOG_TRIVIAL(severity_level::trace) << "residual " << curr_diff;
 			if (curr_diff < min_found_difference)
 			{
 				min_found_difference = curr_diff;
@@ -435,7 +435,7 @@ for (int ii=0; ii<s_times.size(); ++ii)
 			}
 
 		}// end cc loop over cycle number possibilities
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "cycle number computed to be " << this->CycleNumber();
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << "cycle number computed to be " << this->CycleNumber();
 		return this->cycle_number_;
 	}//end ComputeCycleNumber
 
@@ -456,7 +456,7 @@ for (int ii=0; ii<s_times.size(); ++ii)
 										this->EndgameSettings().max_num_newton_iterations);
 			if (refine_success != SuccessCode::Success)
 			{
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
+				// BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
 				return refine_success;
 			}
 		}
@@ -582,24 +582,24 @@ for (int ii=0; ii<s_times.size(); ++ii)
 
 		std::tie(s_times, s_derivatives) = TransformToSPlane(c, t0, num_pts, ContStart::Back);
 
-		
-const auto& times   = std::get<TimeCont<CT> >(times_);
-const auto& samples  = std::get<SampCont<CT> >(samples_);
-const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
-for (int ii=0; ii<times.size(); ++ii)
-{
-	BOOST_LOG_TRIVIAL(severity_level::trace) << "t-plane data " << ii << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(times[ii])) << " time " << times[ii] << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(samples[ii])) << " sample " << samples[ii] << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(derivatives[ii])) << " derivative " << derivatives[ii] << "\n\n";
-}
+//TODO move these to an observer on the endgame.  of course, you have to implement the event types first, ha.	
+// const auto& times   = std::get<TimeCont<CT> >(times_);
+// const auto& samples  = std::get<SampCont<CT> >(samples_);
+// const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+// for (int ii=0; ii<times.size(); ++ii)
+// {
+// 	BOOST_LOG_TRIVIAL(severity_level::trace) << "t-plane data " << ii << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(times[ii])) << " time " << times[ii] << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(samples[ii])) << " sample " << samples[ii] << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(derivatives[ii])) << " derivative " << derivatives[ii] << "\n\n";
+// }
 
-for (int ii=0; ii<s_times.size(); ++ii)
-{
-	BOOST_LOG_TRIVIAL(severity_level::trace) << "s-plane data " << ii << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_times[ii])) << " s_time " << s_times[ii] << '\n';
-		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_derivatives[ii])) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
-}
+// for (int ii=0; ii<s_times.size(); ++ii)
+// {
+// 	BOOST_LOG_TRIVIAL(severity_level::trace) << "s-plane data " << ii << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_times[ii])) << " s_time " << s_times[ii] << '\n';
+// 		BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(s_derivatives[ii])) << " s_derivative" << s_derivatives[ii] << "\n\n\n";
+// }
 
 		// the data was transformed to be on the interval [0 1] so we can hard-code the time-to-solve as 0 here.
 		result = HermiteInterpolateAndSolve(CT(0), num_pts, s_times, std::get<SampCont<CT> >(samples_), s_derivatives, ContStart::Back);
@@ -639,13 +639,13 @@ for (int ii=0; ii<s_times.size(); ++ii)
 
   		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time) // generalized for target_time not equal to 0.
   		{
-  			BOOST_LOG_TRIVIAL(severity_level::trace) << "Current time norm is less than min track time." << '\n';
-
+//TODO move these to an observer on the endgame.  of course, you have to implement the event types first, ha.	
+  			// BOOST_LOG_TRIVIAL(severity_level::trace) << "Current time norm is less than min track time." << '\n';
   			return SuccessCode::MinTrackTimeReached;
   		}
 
-
-  		BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking to t = " << next_time << ", default precision: " << DefaultPrecision() << "\n";
+//TODO move these to an observer on the endgame.  of course, you have to implement the event types first, ha.	
+  		// BOOST_LOG_TRIVIAL(severity_level::trace) << "tracking to t = " << next_time << ", default precision: " << DefaultPrecision() << "\n";
 		SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,times.back(),next_time,samples.back());
 			if (tracking_success != SuccessCode::Success)
 				return tracking_success;
@@ -664,7 +664,7 @@ for (int ii=0; ii<s_times.size(); ++ii)
 										this->EndgameSettings().max_num_newton_iterations);
 			if (refine_success != SuccessCode::Success)
 			{
-				BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
+				// BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
 				return refine_success;
 			}
 		
@@ -707,8 +707,8 @@ for (int ii=0; ii<s_times.size(); ++ii)
 			throw std::runtime_error(err_msg.str());
 		}
 
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << DefaultPrecision() << "\n\n";
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point) << "\n\n";
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << "\n\nPSEG(), default precision: " << DefaultPrecision() << "\n\n";
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << "start point precision: " << Precision(start_point) << "\n\n";
 
 		DefaultPrecision(Precision(start_point));
 
@@ -730,7 +730,7 @@ for (int ii=0; ii<s_times.size(); ++ii)
 
 		if (initial_sample_success!=SuccessCode::Success)
 		{
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "initial sample gathering failed, code " << int(initial_sample_success) << std::endl;
+			// BOOST_LOG_TRIVIAL(severity_level::trace) << "initial sample gathering failed, code " << int(initial_sample_success) << std::endl;
 			return initial_sample_success;
 		}
 
@@ -764,7 +764,7 @@ for (int ii=0; ii<s_times.size(); ++ii)
 	  		auto advance_code = AdvanceTime<CT>(target_time);
 	  		if (advance_code!=SuccessCode::Success)
 	 		{
-	 			BOOST_LOG_TRIVIAL(severity_level::trace) << "unable to advance time, code " << int(advance_code);
+	 			// BOOST_LOG_TRIVIAL(severity_level::trace) << "unable to advance time, code " << int(advance_code);
 	 			return advance_code;
 	 		}
 
@@ -775,10 +775,10 @@ for (int ii=0; ii<s_times.size(); ++ii)
 	 		extrapolation_code = ComputeApproximationOfXAtT0(latest_approx, target_time);
 	 		if (extrapolation_code!=SuccessCode::Success)
 	 		{
-	 			BOOST_LOG_TRIVIAL(severity_level::trace) << "failed to compute the approximation at " << target_time << "\n\n";
+	 			// BOOST_LOG_TRIVIAL(severity_level::trace) << "failed to compute the approximation at " << target_time << "\n\n";
 	 			return extrapolation_code;
 	 		}
-	 		BOOST_LOG_TRIVIAL(severity_level::trace)  << std::setprecision(Precision(latest_approx)) << "latest approximation:\n" << latest_approx << '\n';
+	 		// BOOST_LOG_TRIVIAL(severity_level::trace)  << std::setprecision(Precision(latest_approx)) << "latest approximation:\n" << latest_approx << '\n';
 
 	 		if(this->SecuritySettings().level <= 0)
 	 		{
@@ -792,7 +792,7 @@ for (int ii=0; ii<s_times.size(); ++ii)
 
 	 		//update
 	 		approx_error = static_cast<double>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
-	 		BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
+	 		// BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
 
 	 		prev_approx = latest_approx;
 
