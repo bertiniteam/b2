@@ -450,7 +450,12 @@ namespace bertini{
 				{
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
-					return FullStep(next_space, S, current_space, current_time, delta_t);
+					auto step_success = FullStep(next_space, S, current_space, current_time, delta_t);
+
+					double norm_J, norm_J_inverse;
+					SetNormsCond<ComplexType>(norm_J, norm_J_inverse, condition_number_estimate, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
+
+					return step_success;
 				}
 				
 				
@@ -497,40 +502,26 @@ namespace bertini{
 					auto success_code = Predict<ComplexType>(next_space, S, current_space, current_time, delta_t,
 										   condition_number_estimate, num_steps_since_last_condition_number_computation,
 										   frequency_of_CN_estimation, tracking_tolerance);
-					
-					if(success_code != SuccessCode::Success)
-						return success_code;
-					
-					// Calculate condition number and updated if needed
-					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
-					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
-					
-					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr!
-					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
-					Vec<ComplexType> temp_soln = LUref.solve(randy);
-					
-					norm_J = double(dhdxref.norm());
-					norm_J_inverse = double(temp_soln.norm());
-					
-					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
-					{
-						condition_number_estimate = double(norm_J * norm_J_inverse);
-						num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
-					}
-					else // no need to compute the condition number
-						num_steps_since_last_condition_number_computation++;
-					
+
+					SetNormsCond<ComplexType>(norm_J, norm_J_inverse, condition_number_estimate, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
 					
 					// Set size_proportion
 					SetSizeProportion(size_proportion, delta_t);
+
+					if(success_code != SuccessCode::Success)
+						return success_code;
 					
 					
 					
 					//AMP Criteria
-					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+					if (!amp::CriterionA<ComplexType>(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+					{
 						return SuccessCode::HigherPrecisionNecessary;
+					}
 					else if (!amp::CriterionC<ComplexType>(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+					{
 						return SuccessCode::HigherPrecisionNecessary;
+					}
 					
 					
 					return success_code;
@@ -580,23 +571,15 @@ namespace bertini{
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
 					
 					if(!predict::HasErrorEstimate(predictor_))
-					{
 						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
-					}
 					
-					
-					
-					
+
 					auto success_code = Predict(next_space, size_proportion, norm_J, norm_J_inverse,
 											  S, current_space, current_time, delta_t,
 											  condition_number_estimate, num_steps_since_last_condition_number_computation,
 											  frequency_of_CN_estimation, tracking_tolerance, AMP_config);
 					
-					if(success_code != SuccessCode::Success)
-						return success_code;
-					
 					SetErrorEstimate(error_estimate, delta_t);
-					
 					
 					return success_code;
 				}
@@ -695,7 +678,6 @@ namespace bertini{
 					if(s_ == 0)
 					{
 						next_space = current_space;
-						
 						return SuccessCode::Success;
 					}
 					
@@ -717,23 +699,16 @@ namespace bertini{
 					{
 						temp.setZero();
 						for(int jj = 0; jj < ii; ++jj)
-						{
 							temp += aref(ii,jj)*Kref.col(jj);
-							
-						}
-						
+
 						if(EvalRHS(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
-						{
 							return SuccessCode::MatrixSolveFailure;
-						}
 					}
 					
 					
 					temp.setZero();
 					for(int ii = 0; ii < s_; ++ii)
-					{
 						temp += bref(ii)*Kref.col(ii);
-					}
 										
 					next_space = current_space + delta_t*temp;
 					
@@ -741,7 +716,28 @@ namespace bertini{
 				};
 
 				
-				
+				template<typename ComplexType>
+				void SetNormsCond(double & norm_J, double & norm_J_inverse, double & condition_number_estimate, unsigned num_steps_since_last_condition_number_computation, unsigned frequency_of_CN_estimation)
+				{
+					// Calculate condition number and update if needed
+					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
+					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
+
+					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr!
+					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(numVariables_);
+					Vec<ComplexType> temp_soln = LUref.solve(randy);
+					
+					norm_J = double(dhdxref.norm());
+					norm_J_inverse = double(temp_soln.norm());
+					
+					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
+					{
+						condition_number_estimate = double(norm_J * norm_J_inverse);
+						num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
+					}
+					else // no need to compute the condition number
+						num_steps_since_last_condition_number_computation++;
+				}
 				
 				
 				/**
@@ -802,7 +798,7 @@ namespace bertini{
 						SetErrorEstimate(err_est, delta_t);
 						
 						using std::pow;
-						size_proportion = double(err_est/double(pow(abs(delta_t), p_+1)));
+						size_proportion = err_est/double(pow(abs(delta_t), p_+1));
 						
 						return SuccessCode::Success;
 					}
@@ -878,7 +874,7 @@ namespace bertini{
 						auto LU = dhdxtempref.lu();
 						
 						if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
-							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
+							return SuccessCode::MatrixSolveFailure;
 						
 						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
 						S.TimeDerivativeInPlace(dhdtref, space, time);
