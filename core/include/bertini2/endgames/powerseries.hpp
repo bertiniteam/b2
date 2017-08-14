@@ -441,35 +441,6 @@ public:
 
 
 
-
-
-	template<typename CT>
-	SuccessCode RefineAllSamples()
-	{
-		auto& samples = std::get<SampCont<CT> >(samples_);
-		auto& times   = std::get<TimeCont<CT> >(times_);
-
-		for (size_t ii=0; ii<samples.size(); ++ii)
-		{
-			auto refine_success = this->RefineSample(samples[ii], samples[ii],  times[ii], 
-										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
-										this->EndgameSettings().max_num_newton_iterations);
-			if (refine_success != SuccessCode::Success)
-			{
-				// BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
-				return refine_success;
-			}
-		}
-
-		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
-		{
-			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
-			this->GetSystem().precision(max_precision);
-		}
-
-		return SuccessCode::Success;
-	}
-
 	/**
 		\brief Compute a set of derivatives using internal data to the endgame.
 
@@ -734,7 +705,7 @@ public:
 			return initial_sample_success;
 		}
 
-		RefineAllSamples<CT>();
+		this->template RefineAllSamples<CT>(samples, times);
 		ComputeAllDerivatives<CT>();
 
 
@@ -768,8 +739,8 @@ public:
 	 			return advance_code;
 	 		}
 
-	 		// this commented out code is what bertini1 does... it refines all samples, like, all the time.
-	 		RefineAllSamples<CT>();
+	 		// this code is what bertini1 does... it refines all samples, like, all the time.
+	 		this->template RefineAllSamples<CT>(samples, times);
 	 		ComputeAllDerivatives<CT>();
 
 	 		extrapolation_code = ComputeApproximationOfXAtT0(latest_approx, target_time);

@@ -160,6 +160,32 @@ public:
 		return Run(start_time, start_point, static_cast<BCT>(0));
 	}
 
+
+	template<typename CT>
+	SuccessCode RefineAllSamples(SampCont<CT> & samples, TimeCont<CT> & times)
+	{
+		for (size_t ii=0; ii<samples.size(); ++ii)
+		{
+			auto refine_success = this->RefineSample(samples[ii], samples[ii],  times[ii], 
+										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
+										this->EndgameSettings().max_num_newton_iterations);
+			if (refine_success != SuccessCode::Success)
+			{
+				// BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
+				return refine_success;
+			}
+		}
+
+		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec) // known at compile time
+		{
+			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
+			this->GetSystem().precision(max_precision);
+		}
+
+		return SuccessCode::Success;
+	}
+
+
 	/**
 	A function passed off to the precision-specific endgame part
 	*/

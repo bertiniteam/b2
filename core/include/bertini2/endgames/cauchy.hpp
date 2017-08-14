@@ -914,15 +914,7 @@ public:
 		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
 			this->EnsureAtUniformPrecision(ps_times, ps_samples);
 
-
-		for (unsigned ii=0; ii<ps_samples.size(); ++ii)
-		{
-			auto refine_code = this->RefineSample(ps_samples[ii],ps_samples[ii],ps_times[ii], 
-										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
-										this->EndgameSettings().max_num_newton_iterations);
-			if (refine_code != SuccessCode::Success)
-				return refine_code;
-		}
+		this->template RefineAllSamples(ps_samples, ps_times);
 		
 		//Ensure all samples are of the same precision.
 		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
@@ -992,14 +984,8 @@ public:
 
 
 		auto total_num_pts = this->CycleNumber() * this->EndgameSettings().num_sample_points;
-		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
-		{
-			auto refine_code = this->RefineSample(cau_samples[ii],cau_samples[ii],cau_times[ii], 
-										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
-										this->EndgameSettings().max_num_newton_iterations);
-			if (refine_code!=SuccessCode::Success)
-				return refine_code;
-		}
+		this->template RefineAllSamples(cau_samples, cau_times);
+
 
 		result = Vec<CT>::Zero(this->GetSystem().NumVariables());
 		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
