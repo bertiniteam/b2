@@ -181,7 +181,7 @@ namespace bertini{
 				{
 					this->NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType >(*this));
 
-					this->next_stepsize_ = Get<Stepping>().step_size_fail_factor*this->current_stepsize_;
+					this->next_stepsize_ = RT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
 
 					UpdateStepsize();
 
@@ -207,7 +207,7 @@ namespace bertini{
 				{
 					this->NotifyObservers(CorrectorMatrixSolveFailure<EmitterType >(*this));
 
-					this->next_stepsize_ = Get<Stepping>().step_size_fail_factor*this->current_stepsize_;
+					this->next_stepsize_ = RT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
 					UpdateStepsize();
 
 					return corrector_code;
@@ -461,7 +461,7 @@ namespace bertini{
 				this->endtime_ = end_time;
 				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(Get<Stepping>().initial_step_size,abs(start_time-end_time)/Get<Stepping>().min_num_steps));
+					this->SetStepSize(min(BaseRealType(Get<Stepping>().initial_step_size),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
 
 				ResetCounters();
 
