@@ -319,4 +319,68 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 
+BOOST_AUTO_TEST_SUITE(numtraits)
 
+template<typename T>
+using NumTraits = bertini::NumTraits<T>;
+
+BOOST_AUTO_TEST_CASE(num_digits_double)
+{
+	using T = double;
+	
+	DefaultPrecision(16);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(30);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(100);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+}
+
+BOOST_AUTO_TEST_CASE(num_digits_complex_double)
+{
+	using T = std::complex<double>;
+	
+	DefaultPrecision(16);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(30);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(100);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+}
+
+
+BOOST_AUTO_TEST_CASE(num_digits_mpfr_float)
+{
+	using T = bertini::mpfr_float;
+	
+	DefaultPrecision(16);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(30);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 30);
+
+	DefaultPrecision(100);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 100);
+}
+
+
+BOOST_AUTO_TEST_CASE(num_digits_mpfr_complex)
+{
+	using T = bertini::mpfr;
+	
+	DefaultPrecision(16);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(30);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 30);
+
+	DefaultPrecision(100);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 100);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END() // numtraits tests
