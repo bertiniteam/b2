@@ -30,7 +30,8 @@
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/num_traits.hpp"
 
-#include "bertini2/endgames/fixed_prec_cauchy.hpp"
+#include "bertini2/endgames/fixed_prec_endgame.hpp"
+#include "bertini2/endgames/cauchy.hpp"
 
 //THIS NEEDS TO BE IMPLEMENTED
 // #include "bertini2/endgames/observers.hpp"
@@ -44,7 +45,7 @@ BOOST_AUTO_TEST_SUITE(fixed_multiple_cauchy_endgame)
 BOOST_AUTO_TEST_SUITE(generic_tests_precision_16)
 
 using namespace bertini::tracking;
-using namespace bertini::tracking::endgame;
+using namespace bertini::endgame;
 
 using TrackerType = MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
@@ -61,7 +62,7 @@ BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 BOOST_AUTO_TEST_SUITE(generic_tests_precision_30)
 
 using namespace bertini::tracking;
-using namespace bertini::tracking::endgame;
+using namespace bertini::endgame;
 
 using TrackerType = MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 BOOST_AUTO_TEST_SUITE(generic_tests_precision_50)
 
 using namespace bertini::tracking;
-using namespace bertini::tracking::endgame;
+using namespace bertini::endgame;
 
 using TrackerType = MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;

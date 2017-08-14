@@ -1117,7 +1117,7 @@ public:
 
 		Vec<CT>& latest_approx = std::get<Vec<CT> >(this->final_approximation_);
 		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
-		RT& approx_error = std::get<RT>(this->approximate_error_);
+		double& approx_error = this->approximate_error_;
 
 		//Compute the first approximation using the power series approximation technique. 
 		auto initial_ps_success = InitialPowerSeriesApproximation(start_time, start_point, target_time, prev_approx);  // last argument is output here
@@ -1141,7 +1141,7 @@ public:
 			if (this->SecuritySettings().level <= 0)
 				norm_of_dehom_latest = this->GetSystem().DehomogenizePoint(latest_approx).template lpNorm<Eigen::Infinity>();
 
-			approx_error = (latest_approx - prev_approx).template lpNorm<Eigen::Infinity>();
+			approx_error = static_cast<double>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
 
 			if (approx_error < this->FinalTolerance())
 				return SuccessCode::Success;
