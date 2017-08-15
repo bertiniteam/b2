@@ -41,10 +41,11 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> 
-			struct ConfigSettingParser<Iterator, algorithm::config::Tolerances<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::Tolerances<T>(), Skipper>
+			template<typename Iterator, typename Skipper> 
+			struct ConfigSettingParser<Iterator, algorithm::TolerancesConfig, Skipper> : qi::grammar<Iterator, algorithm::TolerancesConfig(), Skipper>
 			{
-				
+				using T = double;
+
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::TolerancesType")
 				{
 					namespace phx = boost::phoenix;
@@ -71,19 +72,19 @@ namespace bertini {
 					
 					root_rule_.name("config::Tolerances");
 					
-					root_rule_ = ((newton_before_endgame_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T l)
+					root_rule_ = ((newton_before_endgame_[phx::bind( [this](algorithm::TolerancesConfig & S, T l)
 																	{
 																		S.newton_before_endgame = l;
 																	}, _val, _1 )]
-								   ^ newton_during_endgame_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T num)
+								   ^ newton_during_endgame_[phx::bind( [this](algorithm::TolerancesConfig & S, T num)
 																	  {
 																		  S.newton_during_endgame = num;
 																	  }, _val, _1 )]
-								   ^ final_tol_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T num)
+								   ^ final_tol_[phx::bind( [this](algorithm::TolerancesConfig & S, T num)
 														  {
 															  S.final_tolerance = num;
 														  }, _val, _1 )]
-								   ^ path_trunc_threshold_[phx::bind( [this](algorithm::config::Tolerances<T> & S, T num)
+								   ^ path_trunc_threshold_[phx::bind( [this](algorithm::TolerancesConfig & S, T num)
 																	 {
 																		 S.path_truncation_threshold = num;
 																	 }, _val, _1 )])
@@ -152,7 +153,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::config::Tolerances<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::TolerancesConfig(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > newton_before_endgame_, newton_during_endgame_,
 				final_tol_, path_trunc_threshold_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
@@ -170,11 +171,11 @@ namespace bertini {
 			
 			
 
-			template<typename Iterator, typename T, typename Skipper> 
-			struct ConfigSettingParser<Iterator, algorithm::config::ZeroDim<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::ZeroDim<T>(), Skipper>
+			template<typename Iterator, typename ComplexT, typename Skipper> 
+			struct ConfigSettingParser<Iterator, algorithm::ZeroDimConfig<ComplexT>, Skipper> : qi::grammar<Iterator, algorithm::ZeroDimConfig<ComplexT>(), Skipper>
 			{
-				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::config::ZeroDim")
+
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::ZeroDimConfig")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -202,27 +203,27 @@ namespace bertini {
 
 					root_rule_.name("config::ZeroDim");
 					
-					root_rule_ = ((init_prec_[phx::bind( [this](algorithm::config::ZeroDim<T> & S, int num)
+					root_rule_ = ((init_prec_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, int num)
 														   {
 															   S.initial_ambient_precision = num;
 														   }, _val, _1 )]
-								   ^ path_variable_name_[phx::bind( [this](algorithm::config::ZeroDim<T> & S, std::string omnom)
+								   ^ path_variable_name_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, std::string omnom)
 															 {
 																 S.path_variable_name = omnom;
 															 }, _val, _1 )]
-								   ^ max_cross_resolve_[phx::bind( [this](algorithm::config::ZeroDim<T> & S, int num)
+								   ^ max_cross_resolve_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, int num)
 															 {
 																 S.max_num_crossed_path_resolve_attempts = num;
 															 }, _val, _1 )]
-								   ^ start_time_[phx::bind( [this](algorithm::config::ZeroDim<T> & S, T num)
+								   ^ start_time_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, ComplexT num)
 															 {
 																 S.start_time = num;
 															 }, _val, _1 )]
-								   ^ endgame_boundary_[phx::bind( [this](algorithm::config::ZeroDim<T> & S, T num)
+								   ^ endgame_boundary_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, ComplexT num)
 															 {
 																 S.endgame_boundary = num;
 															 }, _val, _1 )]
-								   ^ target_time_[phx::bind( [this](algorithm::config::ZeroDim<T> & S, T num)
+								   ^ target_time_[phx::bind( [this](algorithm::ZeroDimConfig<ComplexT> & S, ComplexT num)
 															 {
 																 S.target_time = num;
 															 }, _val, _1 )]
@@ -238,9 +239,9 @@ namespace bertini {
 								 ;
 					
 
-					auto str_to_T = [this](T & num, std::string str)
+					auto str_to_ComplexT = [this](ComplexT & num, std::string str)
 									   {
-										   num = bertini::NumTraits<T>::FromString(str);
+										   num = bertini::NumTraits<ComplexT>::FromString(str);
 									   };
 
 
@@ -260,15 +261,15 @@ namespace bertini {
 
 					start_time_.name("start_time_");
 					start_time_ = *(char_ - all_names_) >> (no_case[start_time_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( str_to_T, _val, _1 )] >> ';';
+					>> mpfr_rules.number_string_[phx::bind( str_to_ComplexT, _val, _1 )] >> ';';
 
 					endgame_boundary_.name("endgame_boundary_");
 					endgame_boundary_ = *(char_ - all_names_) >> (no_case[endgame_boundary_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( str_to_T, _val, _1 )] >> ';';
+					>> mpfr_rules.number_string_[phx::bind( str_to_ComplexT, _val, _1 )] >> ';';
 
 					target_time_.name("target_time_");
 					target_time_ = *(char_ - all_names_) >> (no_case[target_time_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( str_to_T, _val, _1 )] >> ';';
+					>> mpfr_rules.number_string_[phx::bind( str_to_ComplexT, _val, _1 )] >> ';';
 
 
 
@@ -300,9 +301,9 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::config::ZeroDim<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::ZeroDimConfig<ComplexT>(), ascii::space_type > root_rule_;
 
-				qi::rule<Iterator, T(), ascii::space_type > start_time_, target_time_, endgame_boundary_;
+				qi::rule<Iterator, ComplexT(), ascii::space_type > start_time_, target_time_, endgame_boundary_;
 				qi::rule<Iterator, int(), ascii::space_type > init_prec_, max_cross_resolve_;
 				qi::rule<Iterator, std::string(), ascii::space_type > valid_variable_name_, path_variable_name_;
 				
@@ -314,10 +315,11 @@ namespace bertini {
 				
 			}; //re: ZeroDim
 
-			template<typename Iterator, typename T, typename Skipper> 
-			struct ConfigSettingParser<Iterator, algorithm::config::MidPath<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::MidPath<T>(), Skipper>
+			template<typename Iterator, typename Skipper> 
+			struct ConfigSettingParser<Iterator, algorithm::MidPathConfig, Skipper> : qi::grammar<Iterator, algorithm::MidPathConfig(), Skipper>
 			{
-				
+				using T = double;
+
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::MidPath")
 				{
 					namespace phx = boost::phoenix;
@@ -341,7 +343,7 @@ namespace bertini {
 					
 					root_rule_.name("config::MidPath");
 					
-					root_rule_ = ((same_point_tol_[phx::bind( [this](algorithm::config::MidPath<T> & S, T num)
+					root_rule_ = ((same_point_tol_[phx::bind( [this](algorithm::MidPathConfig & S, T num)
 														   {
 															   S.same_point_tolerance = num;
 														   }, _val, _1 )]
@@ -389,7 +391,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::config::MidPath<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::MidPathConfig(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > same_point_tol_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 				rules::LongNum<Iterator> mpfr_rules;
@@ -397,10 +399,11 @@ namespace bertini {
 			}; //re: MidPath
 
 
-			template<typename Iterator, typename T, typename Skipper> 
-			struct ConfigSettingParser<Iterator, algorithm::config::AutoRetrack<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::AutoRetrack<T>(), Skipper>
+			template<typename Iterator, typename Skipper> 
+			struct ConfigSettingParser<Iterator, algorithm::AutoRetrackConfig, Skipper> : qi::grammar<Iterator, algorithm::AutoRetrackConfig(), Skipper>
 			{
-				
+				using T = double;
+
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::AutoRetrack")
 				{
 					namespace phx = boost::phoenix;
@@ -424,7 +427,7 @@ namespace bertini {
 					
 					root_rule_.name("config::AutoRetrack");
 					
-					root_rule_ = ((decrease_factor[phx::bind( [this](algorithm::config::AutoRetrack<T> & S, T num)
+					root_rule_ = ((decrease_factor[phx::bind( [this](algorithm::AutoRetrackConfig & S, T num)
 														   {
 															   S.midpath_decrease_tolerance_factor = num;
 														   }, _val, _1 )]
@@ -472,7 +475,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::config::AutoRetrack<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::AutoRetrackConfig(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > decrease_factor;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 				rules::LongNum<Iterator> mpfr_rules;
@@ -480,10 +483,11 @@ namespace bertini {
 			}; //re: AutoRetrack
 
 
-			template<typename Iterator, typename T, typename Skipper> 
-			struct ConfigSettingParser<Iterator, algorithm::config::Sharpening<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::Sharpening<T>(), Skipper>
+			template<typename Iterator, typename Skipper> 
+			struct ConfigSettingParser<Iterator, algorithm::SharpeningConfig, Skipper> : qi::grammar<Iterator, algorithm::SharpeningConfig(), Skipper>
 			{
-				
+				using T = double;
+
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::config::Sharpening")
 				{
 					namespace phx = boost::phoenix;
@@ -509,15 +513,15 @@ namespace bertini {
 
 					root_rule_.name("config::Sharpening");
 					
-					root_rule_ = ((sharpen_digits_[phx::bind( [this](algorithm::config::Sharpening<T> & S, unsigned num)
+					root_rule_ = ((sharpen_digits_[phx::bind( [this](algorithm::SharpeningConfig & S, unsigned num)
 														   {
 															   S.sharpendigits = num;
 														   }, _val, _1 )]
-								   ^ func_res_tol_[phx::bind( [this](algorithm::config::Sharpening<T> & S, T num)
+								   ^ func_res_tol_[phx::bind( [this](algorithm::SharpeningConfig & S, T num)
 															 {
 																 S.function_residual_tolerance = num;
 															 }, _val, _1 )]
-								   ^ ratio_tol_[phx::bind( [this](algorithm::config::Sharpening<T> & S, T num)
+								   ^ ratio_tol_[phx::bind( [this](algorithm::SharpeningConfig & S, T num)
 															 {
 																 S.ratio_tolerance = num;
 															 }, _val, _1 )]
@@ -577,7 +581,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::config::Sharpening<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::SharpeningConfig(), ascii::space_type > root_rule_;
 
 				qi::rule<Iterator, T(), ascii::space_type > func_res_tol_, ratio_tol_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > sharpen_digits_;
@@ -589,10 +593,11 @@ namespace bertini {
 				
 			}; //re: Sharpening
 
-			template<typename Iterator, typename T, typename Skipper> 
-			struct ConfigSettingParser<Iterator, algorithm::config::Regeneration<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::Regeneration<T>(), Skipper>
+			template<typename Iterator, typename Skipper> 
+			struct ConfigSettingParser<Iterator, algorithm::RegenerationConfig, Skipper> : qi::grammar<Iterator, algorithm::RegenerationConfig(), Skipper>
 			{
-				
+				using T = double;
+
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::config::Regeneration")
 				{
 					namespace phx = boost::phoenix;
@@ -621,27 +626,27 @@ namespace bertini {
 
 					root_rule_.name("config::Regeneration");
 					
-					root_rule_ = ((regen_remove_inf_[phx::bind( [this](algorithm::config::Regeneration<T> & S, int num)
+					root_rule_ = ((regen_remove_inf_[phx::bind( [this](algorithm::RegenerationConfig & S, int num)
 														   {
 															   S.remove_infinite_endpoints = static_cast<bool>(num);
 														   }, _val, _1 )]
-								   ^ higher_dim_check_[phx::bind( [this](algorithm::config::Regeneration<T> & S, int num)
+								   ^ higher_dim_check_[phx::bind( [this](algorithm::RegenerationConfig & S, int num)
 															 {
 																 S.higher_dimension_check = static_cast<bool>(num);
 															 }, _val, _1 )]
-								   ^ start_level_[phx::bind( [this](algorithm::config::Regeneration<T> & S, int num)
+								   ^ start_level_[phx::bind( [this](algorithm::RegenerationConfig & S, int num)
 															 {
 																 S.start_level = num;
 															 }, _val, _1 )]
-								   ^ slice_before_[phx::bind( [this](algorithm::config::Regeneration<T> & S, T num)
+								   ^ slice_before_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
 																 S.newton_before_endgame = num;
 															 }, _val, _1 )]
-								   ^ slice_during_[phx::bind( [this](algorithm::config::Regeneration<T> & S, T num)
+								   ^ slice_during_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
 																 S.newton_during_endgame = num;
 															 }, _val, _1 )]
-								   ^ slice_final_[phx::bind( [this](algorithm::config::Regeneration<T> & S, T num)
+								   ^ slice_final_[phx::bind( [this](algorithm::RegenerationConfig & S, T num)
 															 {
 																 S.final_tolerance = num;
 															 }, _val, _1 )]
@@ -716,7 +721,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::config::Regeneration<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::RegenerationConfig(), ascii::space_type > root_rule_;
 
 				qi::rule<Iterator, T(), ascii::space_type > slice_before_, slice_during_, slice_final_;
 				qi::rule<Iterator, int(), ascii::space_type > regen_remove_inf_, start_level_, higher_dim_check_;
@@ -729,11 +734,12 @@ namespace bertini {
 			}; //re: Regeneration
 
 
-			template<typename Iterator, typename T, typename Skipper> 
-			struct ConfigSettingParser<Iterator, algorithm::config::PostProcessing<T>, T, Skipper> : qi::grammar<Iterator, algorithm::config::PostProcessing<T>(), Skipper>
+			template<typename Iterator, typename Skipper> 
+			struct ConfigSettingParser<Iterator, algorithm::PostProcessingConfig, Skipper> : qi::grammar<Iterator, algorithm::PostProcessingConfig(), Skipper>
 			{
-				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::config::PostProcessing")
+				using T = double;
+
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "algorithm::PostProcessingConfig")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -759,15 +765,15 @@ namespace bertini {
 
 					root_rule_.name("config::PostProcessing");
 					
-					root_rule_ = ((real_threshold_[phx::bind( [this](algorithm::config::PostProcessing<T> & S, T num)
+					root_rule_ = ((real_threshold_[phx::bind( [this](algorithm::PostProcessingConfig & S, T num)
 															 {
 																 S.real_threshold = num;
 															 }, _val, _1 )]
-								   ^ endpoint_finite_[phx::bind( [this](algorithm::config::PostProcessing<T> & S, T num)
+								   ^ endpoint_finite_[phx::bind( [this](algorithm::PostProcessingConfig & S, T num)
 															 {
 																 S.endpoint_finite_threshold = num;
 															 }, _val, _1 )]
-								   ^ same_point_[phx::bind( [this](algorithm::config::PostProcessing<T> & S, T num)
+								   ^ same_point_[phx::bind( [this](algorithm::PostProcessingConfig & S, T num)
 															 {
 																 S.same_point_tolerance = num;
 															 }, _val, _1 )]
@@ -827,7 +833,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::config::PostProcessing<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, algorithm::PostProcessingConfig(), ascii::space_type > root_rule_;
 
 				qi::rule<Iterator, T(), ascii::space_type > real_threshold_, endpoint_finite_, same_point_;
 
@@ -840,10 +846,11 @@ namespace bertini {
 
 
 
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, algorithm::config::classic::AlgoChoice, T, Skipper> : qi::grammar<Iterator, algorithm::config::classic::AlgoChoice(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, algorithm::classic::AlgoChoice, Skipper> : qi::grammar<Iterator, algorithm::classic::AlgoChoice(), Skipper>
 			{
-				
+				using T = double;
+
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::classic::AlgoChoice")
 				{
 					namespace phx = boost::phoenix;
@@ -860,17 +867,17 @@ namespace bertini {
 					using boost::spirit::as_string;
 					using boost::spirit::ascii::no_case;
 					
-					tracktype_.add("-4", algorithm::config::classic::AlgoChoice::EvalFunctions);
-					tracktype_.add("-3", algorithm::config::classic::AlgoChoice::EvalFunctionJacobian);
-					tracktype_.add("-2", algorithm::config::classic::AlgoChoice::NewtonIteration);
-					tracktype_.add("-1", algorithm::config::classic::AlgoChoice::NewtonIterationCondNum);
-					tracktype_.add("0", algorithm::config::classic::AlgoChoice::ZeroDim);
-					tracktype_.add("1", algorithm::config::classic::AlgoChoice::NID);
-					tracktype_.add("2", algorithm::config::classic::AlgoChoice::SampleComponent);
-					tracktype_.add("3", algorithm::config::classic::AlgoChoice::MembershipTest);
-					tracktype_.add("4", algorithm::config::classic::AlgoChoice::ExtractWitnessSet);
-					tracktype_.add("5", algorithm::config::classic::AlgoChoice::WitnessSetProjection);
-					tracktype_.add("6", algorithm::config::classic::AlgoChoice::IsosingularStab);
+					tracktype_.add("-4", algorithm::classic::AlgoChoice::EvalFunctions);
+					tracktype_.add("-3", algorithm::classic::AlgoChoice::EvalFunctionJacobian);
+					tracktype_.add("-2", algorithm::classic::AlgoChoice::NewtonIteration);
+					tracktype_.add("-1", algorithm::classic::AlgoChoice::NewtonIterationCondNum);
+					tracktype_.add("0", algorithm::classic::AlgoChoice::ZeroDim);
+					tracktype_.add("1", algorithm::classic::AlgoChoice::NID);
+					tracktype_.add("2", algorithm::classic::AlgoChoice::SampleComponent);
+					tracktype_.add("3", algorithm::classic::AlgoChoice::MembershipTest);
+					tracktype_.add("4", algorithm::classic::AlgoChoice::ExtractWitnessSet);
+					tracktype_.add("5", algorithm::classic::AlgoChoice::WitnessSetProjection);
+					tracktype_.add("6", algorithm::classic::AlgoChoice::IsosingularStab);
 					
 					std::string setting_name = "tracktype";
 					
@@ -878,7 +885,7 @@ namespace bertini {
 					root_rule_.name("config::classic::AlgoChoice");
 					
 					root_rule_ = config_name_[_val = _1] >> -no_setting_
-								| no_setting_[_val = algorithm::config::classic::AlgoChoice::ZeroDim];
+								| no_setting_[_val = algorithm::classic::AlgoChoice::ZeroDim];
 					
 					config_name_.name("tracktype_");
 					config_name_ = *(char_ - (no_case[setting_name] >> ':')) >> (no_case[setting_name] >> ':') >> tracktype_[_val = _1] >> ';';
@@ -911,10 +918,10 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, algorithm::config::classic::AlgoChoice(), ascii::space_type > root_rule_, config_name_;
+				qi::rule<Iterator, algorithm::classic::AlgoChoice(), ascii::space_type > root_rule_, config_name_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_;
 				
-				qi::symbols<char,algorithm::config::classic::AlgoChoice> tracktype_;
+				qi::symbols<char,algorithm::classic::AlgoChoice> tracktype_;
 				
 				
 			}; //re: Meta

@@ -32,8 +32,6 @@ namespace bertini{
 template<typename T>
 using SolnCont = std::vector<T>;
 
-		namespace config{
-
 namespace classic{
 
 enum class AlgoChoice
@@ -55,7 +53,7 @@ enum class AlgoChoice
 
 
 
-struct Tolerances
+struct TolerancesConfig
 {	
 	using T = double;
 
@@ -68,7 +66,7 @@ struct Tolerances
 };
 		
 	
-struct MidPath
+struct MidPathConfig
 {
 	using T = double;
 
@@ -77,7 +75,7 @@ struct MidPath
 
 
 
-struct AutoRetrack
+struct AutoRetrackConfig
 {
 	using T = double;
 
@@ -86,7 +84,7 @@ struct AutoRetrack
 
 
 
-struct Sharpening
+struct SharpeningConfig
 {
 	using T = double;
 
@@ -101,7 +99,7 @@ struct Sharpening
 
 
 
-struct Regeneration
+struct RegenerationConfig
 {
 	using T = double;
 
@@ -116,7 +114,7 @@ struct Regeneration
 
 
 
-struct PostProcessing{
+struct PostProcessingConfig{
 	using T = double;
 	
 	T real_threshold = T(1)/T(100000000); ///< threshold on the imaginary part of a solution being 0.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.
@@ -127,7 +125,7 @@ struct PostProcessing{
 };
 
 template<typename ComplexT>
-struct ZeroDim
+struct ZeroDimConfig
 {
 	unsigned initial_ambient_precision = DoublePrecision();
 	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
@@ -139,12 +137,11 @@ struct ZeroDim
 	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
 };
 
-struct Meta
+struct MetaConfig
 {
 	classic::AlgoChoice tracktype = classic::AlgoChoice::ZeroDim;
 };
 
-}// config
 
 // a forward declare
 template <typename T>
