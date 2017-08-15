@@ -52,6 +52,29 @@ BOOST_AUTO_TEST_CASE(constructing_mpfr_from_double)
 	BOOST_CHECK(abs(from_string - from_double) < std::numeric_limits<double>::epsilon());
 }
 
+BOOST_AUTO_TEST_CASE(construct_rational_from_integers)
+{
+	mpq_rational p(1,2);
+	mpq_rational q(-1,2);
+
+	BOOST_CHECK_EQUAL(p+q, mpq_rational(0));
+}
+
+BOOST_AUTO_TEST_CASE(construct_rational_from_mpfr)
+{
+	DefaultPrecision(50);
+	mpfr_float p("1.1");
+	mpq_rational q(p);
+	BOOST_CHECK_EQUAL(mpq_rational(11,10), q);
+}
+
+
+BOOST_AUTO_TEST_CASE(construct_rational_from_string)
+{
+	mpq_rational q("1.1");
+	BOOST_CHECK_EQUAL(mpq_rational(11,10), q);
+}
+
 
 // this commented out test will fail... because of mixed precision arithmetic
 // BOOST_AUTO_TEST_CASE(multiple_mpfr_by_double)
