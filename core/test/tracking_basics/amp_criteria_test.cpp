@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
-	auto CritA = bertini::tracking::amp::CriterionA(norm_J,norm_J_inverse,AMP);
+	auto CritA = bertini::tracking::amp::CriterionA<dbl>(norm_J,norm_J_inverse,AMP);
 
 
 	//Check to make sure we failed.
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
-	auto CritA = bertini::tracking::amp::CriterionA(norm_J,norm_J_inverse,AMP);
+	auto CritA = bertini::tracking::amp::CriterionA<mpfr>(norm_J,norm_J_inverse,AMP);
 
 
 	//Check to make sure we failed.
