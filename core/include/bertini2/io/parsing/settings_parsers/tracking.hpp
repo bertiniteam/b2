@@ -319,17 +319,14 @@ namespace bertini {
 					stepsize_success_ = *(char_ - all_names_) >> (no_case[stepsuccess_name] >> ':')
 					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string const& str)
 														   {
-														   	std::cout << "input string " << str << '\n';
-														   	auto as_mpfr = bertini::NumTraits<mpfr_float>::FromString(str);
-														   	std::cout << "as mpfr " << as_mpfr << '\n';
-															   num = mpq_rational(as_mpfr);
+															num = bertini::NumTraits<double>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					stepsize_fail_.name("stepsize_fail_");
 					stepsize_fail_ = *(char_ - all_names_) >> (no_case[stepfail_name] >> ':')
 					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<mpfr_float>::FromString(str).convert_to<mpq_rational>();
+															   num = bertini::NumTraits<double>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					steps_increase_.name("steps_increase_");

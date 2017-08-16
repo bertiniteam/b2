@@ -301,6 +301,8 @@ BOOST_AUTO_TEST_CASE(read_tolerances)
 
 BOOST_AUTO_TEST_CASE(read_stepping)
 {
+	bool check_rational = false;
+
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
 	using T = double;
@@ -323,11 +325,23 @@ BOOST_AUTO_TEST_CASE(read_stepping)
 	
 	
 	BOOST_CHECK(parsed && iter == end);
-	BOOST_CHECK_EQUAL(structure.max_step_size, mpq_rational(1,100));
-	BOOST_CHECK_EQUAL(structure.step_size_success_factor, mpq_rational(42,10));
-	BOOST_CHECK_EQUAL(structure.step_size_fail_factor, mpq_rational(1/2));
-	BOOST_CHECK(structure.consecutive_successful_steps_before_stepsize_increase == 7);
-	BOOST_CHECK(structure.max_num_steps == 234);
+
+	if (check_rational)
+	{
+		BOOST_CHECK_EQUAL(structure.max_step_size, mpq_rational(1,100));
+		BOOST_CHECK_EQUAL(structure.step_size_success_factor, mpq_rational(42,10));
+		BOOST_CHECK_EQUAL(structure.step_size_fail_factor, mpq_rational(1/2));
+	}
+	else
+	{
+		double tol_double = 1e-14;
+		BOOST_CHECK_CLOSE(structure.max_step_size, mpq_rational(1,100), tol_double);
+		BOOST_CHECK_CLOSE(structure.step_size_success_factor, mpq_rational(42,10), tol_double);
+		BOOST_CHECK_CLOSE(structure.step_size_fail_factor, mpq_rational(1/2), tol_double);
+	}
+
+	BOOST_CHECK_EQUAL(structure.consecutive_successful_steps_before_stepsize_increase, 7);
+	BOOST_CHECK_EQUAL(structure.max_num_steps, 234);
 	
 	
 }

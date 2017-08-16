@@ -193,7 +193,7 @@ namespace bertini {
 					sample_factor_ = *(char_ - all_names_) >> (no_case[samplefactor_name] >> ':')
 					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string str)
 														   {
-															   num = bertini::NumTraits<mpfr_float>::FromString(str).convert_to<mpq_rational>();
+															   num = bertini::NumTraits<double>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					min_track_.name("min_track_");
