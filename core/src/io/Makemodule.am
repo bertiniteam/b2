@@ -1,39 +1,13 @@
 #this is src/io/Makemodule.am
 
-
-io_headers = \
-	include/bertini2/io/parsing/classic_utilities.hpp \
-	include/bertini2/io/parsing/function_parsers.hpp \
-	include/bertini2/io/parsing/function_rules.hpp \
-	include/bertini2/io/parsing/number_parsers.hpp \
-	include/bertini2/io/parsing/number_rules.hpp \
-	include/bertini2/io/parsing/qi_files.hpp \
-	include/bertini2/io/parsing/settings_parsers.hpp \
-	include/bertini2/io/parsing/settings_rules.hpp \
-	include/bertini2/io/parsing/system_parsers.hpp \
-	include/bertini2/io/parsing/system_rules.hpp \
-	include/bertini2/io/file_utilities.hpp \
-	include/bertini2/io/generators.hpp \
-	include/bertini2/io/splash.hpp
-
-io_sources = 
-
-io = $(io_headers) $(io_sources)
-
-core_headers += $(io_headers)
-core_sources += $(io_sources)
-core_all += $(io)
-
-##########
-# now the stuff for setting up the installed directory structure
-
-
+#nothing for io at root level
 rootinclude_HEADERS +=
 
 ioincludedir = $(includedir)/bertini2/io
 ioinclude_HEADERS = \
 	include/bertini2/io/file_utilities.hpp \
 	include/bertini2/io/generators.hpp \
+	include/bertini2/io/parsing.hpp \
 	include/bertini2/io/splash.hpp
 
 ioparsingdir = $(ioincludedir)/parsing
@@ -49,4 +23,23 @@ ioparsing_HEADERS = \
 	include/bertini2/io/parsing/system_parsers.hpp \
 	include/bertini2/io/parsing/system_rules.hpp 
 	
+ioparsingsettingsdir = $(ioincludedir)/parsing/settings_parsers
+ioparsingsettings_HEADERS = \
+	include/bertini2/io/parsing/settings_parsers/algorithm.hpp \
+	include/bertini2/io/parsing/settings_parsers/base.hpp \
+	include/bertini2/io/parsing/settings_parsers/endgames.hpp \
+	include/bertini2/io/parsing/settings_parsers/tracking.hpp
 
+io_headers = \
+	$(ioinclude_HEADERS) \
+	$(ioparsing_HEADERS) \
+	$(ioparsingsettings_HEADERS)
+
+#empty, is currently header only
+io_sources = 
+
+io = $(io_headers) $(io_sources)
+
+core_headers += $(io_headers)
+core_sources += $(io_sources)
+core_all += $(io)

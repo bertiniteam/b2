@@ -375,6 +375,12 @@ private:
 		return out;
 	}
 	
+	inline std::ostream& operator<<(std::ostream & out, const std::shared_ptr<Node>& N)
+	{
+		N->print(out);
+		return out;
+	}
+
 	} // re: namespace node
 } // re: namespace bertini
 

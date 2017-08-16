@@ -53,22 +53,20 @@ namespace bertini{
 		\param tracking_tolerance How tightly to track the path.
 		\param AMP_config The settings for adaptive multiple precision.
 
-		\tparam ComplexType The complex number type for evaluation.
-		\tparam RealType The complex number type for evaluation.
+		\tparam ComplexT The complex number type for evaluation.
+		\tparam TolT The numeric type for tolerances and state.
 		*/
-		template <typename ComplexType, typename RealType>
-		SuccessCode Predict(config::Predictor predictor_choice,
-							Vec<ComplexType> & next_space,
+		template <typename ComplexT, typename TolT>
+		SuccessCode Predict(Predictor predictor_choice,
+							Vec<ComplexT> & next_space,
 							   System const& sys,
-							   Vec<ComplexType> const& current_space, ComplexType current_time, 
-							   ComplexType const& delta_t,
-							   RealType & condition_number_estimate,
+							   Vec<ComplexT> const& current_space, ComplexT const& current_time, 
+							   ComplexT const& delta_t,
+							   TolT & condition_number_estimate,
 							   unsigned & num_steps_since_last_condition_number_computation, 
 							   unsigned frequency_of_CN_estimation, 
-							   RealType const& tracking_tolerance)
+							   TolT const& tracking_tolerance)
 		{
-			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-			
 			predict::ExplicitRKPredictor predictor(predictor_choice);
 
 			return predictor.Predict(next_space,
@@ -97,29 +95,27 @@ namespace bertini{
 
 		\see Predict
 		*/
-		template <typename ComplexType, typename RealType>
-		SuccessCode Predict(config::Predictor predictor_choice,
-							Vec<ComplexType> & next_space,
-							RealType & size_proportion, /*\f$a\f$ from the AMP2 paper */
-							RealType & norm_J,
-							RealType & norm_J_inverse,
+		template <typename ComplexT, typename TolT>
+		SuccessCode Predict(Predictor predictor_choice,
+							Vec<ComplexT> & next_space,
+							TolT & size_proportion, /*\f$a\f$ from the AMP2 paper */
+							TolT & norm_J,
+							TolT & norm_J_inverse,
 							System const& sys,
-							Vec<ComplexType> const& current_space, ComplexType current_time, 
-							ComplexType const& delta_t,
-							RealType & condition_number_estimate,
+							Vec<ComplexT> const& current_space, ComplexT current_time, 
+							ComplexT const& delta_t,
+							TolT & condition_number_estimate,
 							unsigned & num_steps_since_last_condition_number_computation, 
 							unsigned frequency_of_CN_estimation, 
-							RealType const& tracking_tolerance,
-							config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+							TolT const& tracking_tolerance,
+							AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
-			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-			
-			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
+			predict::ExplicitRKPredictor<ComplexT, TolT> predictor(predictor_choice);
 
 			return predictor.Predict(next_space,
-										  size_proportion,
-										  norm_J,
-										  norm_J_inverse,
+										size_proportion,
+										norm_J,
+										norm_J_inverse,
 										sys,
 										current_space, current_time, 
 										delta_t,
@@ -141,25 +137,23 @@ namespace bertini{
 
 		\see Predict
 		*/
-		template <typename ComplexType, typename RealType>
-		SuccessCode Predict(config::Predictor predictor_choice,
-							Vec<ComplexType> & next_space,
-							RealType & error_estimate,
-							RealType & size_proportion, /*\f$a\f$ from the AMP2 paper */
-							RealType & norm_J,
-							RealType & norm_J_inverse,
+		template <typename ComplexT, typename TolT>
+		SuccessCode Predict(Predictor predictor_choice,
+							Vec<ComplexT> & next_space,
+							TolT & error_estimate,
+							TolT & size_proportion, /*\f$a\f$ from the AMP2 paper */
+							TolT & norm_J,
+							TolT & norm_J_inverse,
 							System const& sys,
-							Vec<ComplexType> const& current_space, ComplexType current_time, 
-							ComplexType const& delta_t,
-							RealType & condition_number_estimate,
+							Vec<ComplexT> const& current_space, ComplexT current_time, 
+							ComplexT const& delta_t,
+							TolT & condition_number_estimate,
 							unsigned & num_steps_since_last_condition_number_computation, 
 							unsigned frequency_of_CN_estimation, 
-							RealType const& tracking_tolerance,
-							config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+							TolT const& tracking_tolerance,
+							AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
-			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-
-			predict::ExplicitRKPredictor<ComplexType, RealType> predictor(predictor_choice);
+			predict::ExplicitRKPredictor<ComplexT, TolT> predictor(predictor_choice);
 
 			return predictor.Predict(next_space,
 												error_estimate,
@@ -194,24 +188,22 @@ namespace bertini{
 		\param tracking_tolerance How tightly to track the path.
 		\param AMP_config The settings for adaptive multiple precision.
 
-		\tparam ComplexType The complex number type for evaluation.
-		\tparam RealType The complex number type for evaluation.
+		\tparam ComplexT The complex number type for evaluation.
+		\tparam TolT The complex number type for evaluation.
 		*/
-		template <typename ComplexType, typename RealType>
-		SuccessCode Predict(config::Predictor predictor_choice,
-							Vec<ComplexType> & next_space,
+		template <typename ComplexT, typename TolT>
+		SuccessCode Predict(Predictor predictor_choice,
+							Vec<ComplexT> & next_space,
 							   System const& sys,
-							   Vec<ComplexType> const& current_space, ComplexType current_time, 
-							   ComplexType const& delta_t,
-							   RealType & condition_number_estimate,
+							   Vec<ComplexT> const& current_space, ComplexT current_time, 
+							   ComplexT const& delta_t,
+							   TolT & condition_number_estimate,
 							   unsigned & num_steps_since_last_condition_number_computation, 
 							   unsigned frequency_of_CN_estimation, 
-							   RealType const& tracking_tolerance,
-							   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+							   TolT const& tracking_tolerance,
+							   AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
-			static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-
-			RealType size_proportion, norm_J, norm_J_inverse;
+			TolT size_proportion, norm_J, norm_J_inverse;
 
 			return Predict(predictor_choice,
 			               next_space,

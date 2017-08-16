@@ -762,7 +762,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 	S.AddFunction((1-t)*x + t*(1-x));
 	S.AddFunction(x-t);
 
-	mpfr_float coefficient_bound = S.CoefficientBound();
+	mpfr_float coefficient_bound = S.CoefficientBound<mpfr>();
 	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
 	BOOST_CHECK(coefficient_bound > mpfr_float("0.5"));
 }
@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	mpfr_float coefficient_bound = sys.CoefficientBound();
+	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
 	BOOST_CHECK(coefficient_bound < mpfr_float("5"));
 	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
 }
@@ -814,7 +814,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	mpfr_float coefficient_bound = sys.CoefficientBound();
+	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
 	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
 	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
 }

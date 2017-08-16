@@ -35,49 +35,17 @@ namespace bertini {
 		// constructor for TotalDegree start system, from any other *suitable* system.
 		TotalDegree::TotalDegree(System const& s)
 		{
-
-			if (s.NumHomVariableGroups() > 0)
-				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
-
-
-			if (s.NumTotalFunctions() != s.NumVariables())
-				throw std::runtime_error("attempting to construct total degree start system from non-square target system");
-
-			if (s.HavePathVariable())
-				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");
-
-			if (s.NumVariableGroups() != 1)
-				throw std::runtime_error("more than one affine variable group.  currently unallowed");
-
-			
-
-			if (!s.IsPolynomial())
-				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
-
-			
-
-			auto deg = s.Degrees();
-			for (const auto& d : deg)
-				degrees_.push_back(static_cast<const size_t>(d));
-
+			SanityChecks(s);
+			CopyDegrees(s);
 			CopyVariableStructure(s);
+			SeedRandomValues(s.NumFunctions());
+			GenerateFunctions();
 
-			random_values_.resize(s.NumFunctions());
-			for (unsigned ii = 0; ii < s.NumFunctions(); ++ii)
-				random_values_[ii] = MakeRational(node::Rational::Rand());
-
-			// by hypothesis, the system has a single variable group.
-			VariableGroup v = this->AffineVariableGroup(0);
-
-			for (auto iter = v.begin(); iter!=v.end(); iter++)
-				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[iter-v.begin()]); 
-			
 			if (s.IsHomogeneous())
 				Homogenize();
 
 			if (s.IsPatched())
 				CopyPatches(s);
-
 		}// total degree constructor
 
 		
@@ -156,5 +124,45 @@ namespace bertini {
 			return td;
 		}
 
+		void TotalDegree::SanityChecks(System const& s)
+		{
+			if (s.NumHomVariableGroups() > 0)
+				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
+
+			if (s.NumTotalFunctions() != s.NumVariables())
+				throw std::runtime_error("attempting to construct total degree start system from non-square target system");
+
+			if (s.HavePathVariable())
+				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");
+
+			if (s.NumVariableGroups() != 1)
+				throw std::runtime_error("more than one affine variable group.  currently unallowed");
+
+			if (!s.IsPolynomial())
+				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
+		}
+
+		void TotalDegree::CopyDegrees(System const& s)
+		{
+			auto deg = s.Degrees();
+			for (const auto& d : deg)
+				degrees_.push_back(static_cast<const size_t>(d));
+		}
+
+
+		void TotalDegree::SeedRandomValues(int num_functions)
+		{
+			random_values_.resize(num_functions);
+			for (unsigned ii = 0; ii < num_functions; ++ii)
+				random_values_[ii] = MakeRational(node::Rational::Rand());
+		}
+
+		void TotalDegree::GenerateFunctions()
+		{
+			// by hypothesis, the system has a single variable group.
+			auto v = this->AffineVariableGroup(0);
+			for (auto iter = v.begin(); iter!=v.end(); iter++)
+				AddFunction(pow(*iter,(int) *(degrees_.begin() + (iter-v.begin()))) - random_values_[iter-v.begin()]);
+		}
 	} // namespace start_system
 } //namespace bertini

@@ -36,8 +36,7 @@ These definitions are provided for use in tracking and endgames.  This allows a 
 #include "bertini2/trackers/config.hpp"
 
 
-namespace bertini{ namespace tracking { namespace endgame {
-namespace adaptive{
+namespace bertini{ namespace tracking { namespace adaptive{
 
 /**
 \brief Sets the precision of each space sample to be of input precision.
@@ -179,4 +178,4 @@ unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & sampl
 
 
 
-}}}} // re: namespaces
+}}} // re: namespaces

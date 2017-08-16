@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	auto sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 2; ++ii)
-		BOOST_CHECK( abs(sysvals(ii) - (1.0 - dbl(TD.RandomValue(ii)))) < threshold_clearance_d);
+		BOOST_CHECK( abs(sysvals(ii) - (1.0 - TD.RandomValue<dbl>(ii))) < threshold_clearance_d);
 
 
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 2; ++ii)
-		BOOST_CHECK(abs(sysvals(ii)+dbl(TD.RandomValue(ii))) < threshold_clearance_d);
+		BOOST_CHECK(abs(sysvals(ii)+TD.RandomValue<dbl>(ii)) < threshold_clearance_d);
 	
 
 	J = TD.Jacobian(vals);
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	auto sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 3; ++ii)
-		BOOST_CHECK( abs(sysvals(ii) - (1.0 - dbl(TD.RandomValue(ii)))) < threshold_clearance_d);
+		BOOST_CHECK( abs(sysvals(ii) - (1.0 - TD.RandomValue<dbl>(ii))) < threshold_clearance_d);
 
 	auto J = TD.Jacobian(vals);
 
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 3; ++ii)
-		BOOST_CHECK(abs(sysvals(ii)+dbl(TD.RandomValue(ii))) < threshold_clearance_d);
+		BOOST_CHECK(abs(sysvals(ii)+TD.RandomValue<dbl>(ii)) < threshold_clearance_d);
 
 	J = TD.Jacobian(vals);
 

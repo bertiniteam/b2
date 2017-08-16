@@ -154,15 +154,23 @@ namespace bertini{
 					+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
 					); // finish the rule off
 				
+				rational.name("long_rational");
+				rational =
+				(number_string_
+				|
+				(number_string_ >> char_('/') >> number_string_));
+
 			}
 			
 			
 			
 			// these rules all produce strings which are fed into numbers.
 			qi::rule<Iterator, std::string()> number_string_, integer_string_, long_number_string_, number_with_digits_before_point_,
-			number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+			number_with_digits_after_point_, number_with_no_point_, exponent_notation_, rational;
 			
+
 		}; //re: LongNum
+
 
 		} // namespace rules
 

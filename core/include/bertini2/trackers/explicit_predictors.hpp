@@ -1,26 +1,28 @@
 //This file is part of Bertini 2.0.
 //
-//heun_euler.hpp is free software: you can redistribute it and/or modify
+//bertini2/trackers/explicit_predictors.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//heun_euler.hpp is distributed in the hope that it will be useful,
+//bertini2/trackers/explicit_predictors.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with heun_euler.hpp.  If not, see <http://www.gnu.org/licenses/>.
-//
-
-//  base_predictor.hpp
+//along with bertini2/trackers/explicit_predictors.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 //  copyright 2015
 //  James B. Collins
 //  West Texas A&M University
 //  Department of Mathematics
 //  Spring 2016
+//
+// 2017
+// Dani Brake
+// University of Wisconsin Eau Claire
+// Department of Mathematics
 
 
 /**
@@ -33,7 +35,6 @@
 #define BERTINI_EXPLICIT_PREDICTORS_HPP
 
 #include "bertini2/trackers/amp_criteria.hpp"
-#include "bertini2/trackers/config.hpp"
 
 #include "bertini2/system/system.hpp"
 #include "bertini2/mpfr_extensions.hpp"
@@ -45,11 +46,6 @@
 namespace bertini{
 	namespace tracking{
 		namespace predict{
-			
-						
-			using Predictor = config::Predictor;
-			
-			
 			
 			
 			/**
@@ -180,7 +176,7 @@ namespace bertini{
 			 Each predictor method is stored as a static Butcher table.  To perform a predict step, you must instantiate an object with a particular predictor method and call Predict:
 			 
 			 \code
-			 ExplicitRKPredictors<Complex,Real> euler(config::Predictor::Euler, sys)
+			 ExplicitRKPredictors<Complex,Real> euler(Predictor::Euler, sys)
 			 success_code = euler.Predict( ... )
 			 \endcode
 			 */
@@ -442,20 +438,24 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename RealType, typename Derived>
+				template<typename ComplexType, typename Derived>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									System const& S,
 									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
-									RealType & condition_number_estimate,
+									double & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
-									RealType const& tracking_tolerance)
+									double const& tracking_tolerance)
 				{
-					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
-					return FullStep<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t);
+					auto step_success = FullStep(next_space, S, current_space, current_time, delta_t);
+
+					double norm_J, norm_J_inverse;
+					SetNormsCond<ComplexType>(norm_J, norm_J_inverse, condition_number_estimate, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
+
+					return step_success;
 				}
 				
 				
@@ -482,60 +482,46 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename RealType, typename Derived>
+				template<typename ComplexType, typename Derived>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
-									RealType & size_proportion,
-									RealType & norm_J,
-									RealType & norm_J_inverse,
+									double & size_proportion,
+									double & norm_J,
+									double & norm_J_inverse,
 									System const& S,
 									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
-									RealType & condition_number_estimate,
+									double & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
-									RealType const& tracking_tolerance,
-									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									double const& tracking_tolerance,
+									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					
-					auto success_code = Predict<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t,
-																	   condition_number_estimate, num_steps_since_last_condition_number_computation,
-																	   frequency_of_CN_estimation, tracking_tolerance);
-					
-					if(success_code != SuccessCode::Success)
-						return success_code;
-					
-					// Calculate condition number and updated if needed
-					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
-					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
-					
-					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
-					Vec<ComplexType> temp_soln = LUref.solve(randy);
-					
-					norm_J = dhdxref.norm();
-					norm_J_inverse = temp_soln.norm();
-					
-					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
-					{
-						condition_number_estimate = norm_J * norm_J_inverse;
-						num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
-					}
-					else // no need to compute the condition number
-						num_steps_since_last_condition_number_computation++;
-					
+					auto success_code = Predict<ComplexType>(next_space, S, current_space, current_time, delta_t,
+										   condition_number_estimate, num_steps_since_last_condition_number_computation,
+										   frequency_of_CN_estimation, tracking_tolerance);
+
+					SetNormsCond<ComplexType>(norm_J, norm_J_inverse, condition_number_estimate, num_steps_since_last_condition_number_computation, frequency_of_CN_estimation);
 					
 					// Set size_proportion
-					SetSizeProportion<ComplexType,RealType>(size_proportion, delta_t);
+					SetSizeProportion(size_proportion, delta_t);
+
+					if(success_code != SuccessCode::Success)
+						return success_code;
 					
 					
 					
 					//AMP Criteria
-					if (!amp::CriterionA(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+					if (!amp::CriterionA<ComplexType>(norm_J, norm_J_inverse, AMP_config)) // AMP_criterion_A != ok
+					{
 						return SuccessCode::HigherPrecisionNecessary;
-					else if (!amp::CriterionC(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+					}
+					else if (!amp::CriterionC<ComplexType>(norm_J_inverse, current_space, tracking_tolerance, AMP_config)) // AMP_criterion_C != ok
+					{
 						return SuccessCode::HigherPrecisionNecessary;
+					}
 					
 					
 					return success_code;
@@ -565,44 +551,35 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename RealType, typename Derived>
+				template<typename ComplexType, typename Derived>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
-									RealType & error_estimate,
-									RealType & size_proportion,
-									RealType & norm_J,
-									RealType & norm_J_inverse,
+									double & error_estimate,
+									double & size_proportion,
+									double & norm_J,
+									double & norm_J_inverse,
 									System const& S,
 									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
-									RealType & condition_number_estimate,
+									double & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
-									RealType const& tracking_tolerance,
-									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									double const& tracking_tolerance,
+									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
 					
 					if(!predict::HasErrorEstimate(predictor_))
-					{
 						throw std::runtime_error("incompatible predictor choice in ExplicitPredict, no error estimator");
-					}
 					
+
+					auto success_code = Predict(next_space, size_proportion, norm_J, norm_J_inverse,
+											  S, current_space, current_time, delta_t,
+											  condition_number_estimate, num_steps_since_last_condition_number_computation,
+											  frequency_of_CN_estimation, tracking_tolerance, AMP_config);
 					
-					
-					
-					auto success_code = Predict<ComplexType,RealType>(next_space, size_proportion, norm_J, norm_J_inverse,
-																	  S, current_space, current_time, delta_t,
-																	  condition_number_estimate, num_steps_since_last_condition_number_computation,
-																	  frequency_of_CN_estimation, tracking_tolerance, AMP_config);
-					
-					if(success_code != SuccessCode::Success)
-						return success_code;
-					
-					SetErrorEstimate<ComplexType,RealType>(error_estimate, delta_t);
-					
+					SetErrorEstimate(error_estimate, delta_t);
 					
 					return success_code;
 				}
@@ -689,7 +666,7 @@ namespace bertini{
 				 \return SuccessCode determining result of the computation
 				 */
 				
-				template<typename ComplexType, typename RealType, typename Derived>
+				template<typename ComplexType, typename Derived>
 				SuccessCode FullStep(Vec<typename Derived::Scalar> & next_space,
 									System const& S,
 									 Eigen::MatrixBase<Derived> const& current_space, ComplexType const& current_time,
@@ -701,10 +678,11 @@ namespace bertini{
 					if(s_ == 0)
 					{
 						next_space = current_space;
-						
 						return SuccessCode::Success;
 					}
 					
+					using RealType = typename Eigen::NumTraits<ComplexType>::Real;
+
 					Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
 					Mat<RealType>& aref = std::get< Mat<RealType> >(a_);
 					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
@@ -721,23 +699,16 @@ namespace bertini{
 					{
 						temp.setZero();
 						for(int jj = 0; jj < ii; ++jj)
-						{
 							temp += aref(ii,jj)*Kref.col(jj);
-							
-						}
-						
+
 						if(EvalRHS(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
-						{
 							return SuccessCode::MatrixSolveFailure;
-						}
 					}
 					
 					
 					temp.setZero();
 					for(int ii = 0; ii < s_; ++ii)
-					{
 						temp += bref(ii)*Kref.col(ii);
-					}
 										
 					next_space = current_space + delta_t*temp;
 					
@@ -745,7 +716,28 @@ namespace bertini{
 				};
 
 				
-				
+				template<typename ComplexType>
+				void SetNormsCond(double & norm_J, double & norm_J_inverse, double & condition_number_estimate, unsigned num_steps_since_last_condition_number_computation, unsigned frequency_of_CN_estimation)
+				{
+					// Calculate condition number and update if needed
+					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
+					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
+
+					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr!
+					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(numVariables_);
+					Vec<ComplexType> temp_soln = LUref.solve(randy);
+					
+					norm_J = double(dhdxref.norm());
+					norm_J_inverse = double(temp_soln.norm());
+					
+					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
+					{
+						condition_number_estimate = double(norm_J * norm_J_inverse);
+						num_steps_since_last_condition_number_computation = 1; // reset the counter to 1
+					}
+					else // no need to compute the condition number
+						num_steps_since_last_condition_number_computation++;
+				}
 				
 				
 				/**
@@ -758,9 +750,11 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename ComplexType, typename RealType>
-				SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t)
+				template<typename ComplexType>
+				SuccessCode SetErrorEstimate(double & error_estimate, ComplexType const& delta_t)
 				{
+					using RealType = typename Eigen::NumTraits<ComplexType>::Real;
+
 					Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
 					Vec<RealType>& b_minus_bstar_ref = std::get< Vec<RealType> >(b_minus_bstar_);
 					
@@ -775,7 +769,7 @@ namespace bertini{
 					
 					err *= delta_t;
 					
-					error_estimate = err.norm();
+					error_estimate = double(err.norm());
 					
 					return SuccessCode::Success;
 				};
@@ -795,16 +789,16 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename ComplexType, typename RealType>
-				SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t)
+				template<typename ComplexType>
+				SuccessCode SetSizeProportion(double & size_proportion, ComplexType const& delta_t)
 				{
 					if(predict::HasErrorEstimate(predictor_))
 					{
-						RealType err_est;
-						SetErrorEstimate<ComplexType,RealType>(err_est, delta_t);
+						double err_est;
+						SetErrorEstimate(err_est, delta_t);
 						
 						using std::pow;
-						size_proportion = err_est/(pow(abs(delta_t), p_+1));
+						size_proportion = err_est/double(pow(abs(delta_t), p_+1));
 						
 						return SuccessCode::Success;
 					}
@@ -812,7 +806,7 @@ namespace bertini{
 					{
 						Mat<ComplexType>& Kref = std::get< Mat<ComplexType> >(K_);
 						using std::pow;
-						size_proportion = Kref.array().abs().maxCoeff()/(pow(abs(delta_t), p_));
+						size_proportion = double(Kref.array().abs().maxCoeff()/(pow(abs(delta_t), p_)));
 						return SuccessCode::Success;
 					}
 				};
@@ -880,7 +874,7 @@ namespace bertini{
 						auto LU = dhdxtempref.lu();
 						
 						if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
-							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
+							return SuccessCode::MatrixSolveFailure;
 						
 						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
 						S.TimeDerivativeInPlace(dhdtref, space, time);

@@ -80,7 +80,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
-			if (zd.FinalSolutionMetadata()[ii].endgame_success == tracking::SuccessCode::NeverStarted)
+			if (zd.FinalSolutionMetadata()[ii].endgame_success == SuccessCode::NeverStarted)
 				continue;
 			
 			EndPointMDFull(ii, out, zd);
@@ -103,7 +103,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		NumVariables(out, zd,"\n\n");
 		for (decltype(zd.FinalSolutions().size()) ii{0}; ii<n; ++ii)
 		{
-			if (zd.FinalSolutionMetadata()[ii].endgame_success == tracking::SuccessCode::NeverStarted)
+			if (zd.FinalSolutionMetadata()[ii].endgame_success == SuccessCode::NeverStarted)
 				continue;
 			EndPointMDRaw(ii,out,zd,"\n\n");
 		}

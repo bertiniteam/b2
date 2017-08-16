@@ -49,7 +49,7 @@ namespace bertini {
 
 		*/
 		template <typename ComplexType, typename RealType>
-		SuccessCode Step(config::Predictor predictor_choice,
+		SuccessCode Step(Predictor predictor_choice,
 		                    Vec<ComplexType> & next_space, ComplexType & next_time,
 				               System & sys,
 				               Vec<ComplexType> const& current_space, ComplexType current_time, 
@@ -61,7 +61,7 @@ namespace bertini {
 				               RealType const& path_truncation_threshold,
 				               unsigned min_num_newton_iterations,
 				               unsigned max_num_newton_iterations,
-				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+				               AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 
 			SuccessCode predictor_code = Predict(next_space,

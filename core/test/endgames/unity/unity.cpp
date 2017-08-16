@@ -12,4 +12,6 @@
 #include "test/endgames/fixed_multiple_cauchy_test.cpp"
 #include "test/endgames/fixed_multiple_powerseries_test.cpp"
 
+#include "test/endgames/interpolation.cpp"
+
 

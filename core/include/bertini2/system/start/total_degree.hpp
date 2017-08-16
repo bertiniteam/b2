@@ -69,9 +69,10 @@ namespace bertini
 
 			\param index The index of the start function for which you want the corresponding random value.
 			*/
-			mpfr RandomValue(size_t index)
+			template<typename NumT>
+			NumT RandomValue(size_t index) const
 			{
-				return random_values_[index]->Eval<mpfr>();
+				return random_values_[index]->Eval<NumT>();
 			}
 
 
@@ -93,7 +94,25 @@ namespace bertini
 
 			TotalDegree& operator+=(System const& sys) = delete;
 			
+			void SanityChecks(System const& s);
+
 		private:
+
+			/**
+			Copy the degrees from another system into this one
+			*/
+			void CopyDegrees(System const& s);
+
+			/**
+			Populate the random values of this system.
+			*/
+			void SeedRandomValues(int num_functions);
+
+			/**
+			Generate the functions for this total degree start system.  Assumes the random values, degrees, and variables are already g2g.
+			*/
+			void GenerateFunctions();
+
 
 			/**
 			Get the ith start point, in double precision.

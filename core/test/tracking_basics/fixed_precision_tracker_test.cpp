@@ -76,11 +76,11 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 	bertini::tracking::DoublePrecisionTracker tracker(sys);
 
 
-	config::Stepping<double> stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
+	tracker.Setup(Predictor::Euler,
 	              double(1e-5),
 					double(1e5),
 					stepping_preferences,
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 		tracker.AddObserver(&obs);
 
 	auto code = tracker.TrackPath(y_end, t_start, t_end, y_start);
-	BOOST_CHECK(code==SuccessCode::Success);
+	BOOST_CHECK(code==bertini::SuccessCode::Success);
 
 	BOOST_CHECK_EQUAL(y_end.size(),1);
 	BOOST_CHECK(abs(y_end(0)-dbl(0)) < 1e-5);
@@ -126,13 +126,13 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 	bertini::tracking::MultiplePrecisionTracker tracker(sys);
 
 
-	config::Stepping<mpfr_float> stepping_preferences;
-	config::Newton newton_preferences;
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
 
 
-	tracker.Setup(config::Predictor::Euler,
-	              mpfr_float("1e-5"),
-					mpfr_float("1e5"),
+	tracker.Setup(Predictor::Euler,
+	              1e-5,
+					1e5,
 					stepping_preferences,
 					newton_preferences);
 

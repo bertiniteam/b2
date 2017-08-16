@@ -114,7 +114,7 @@ using bertini::KahanMatrix;
 		
 		for (int ii=0; ii<size; ii++)
 			for (int jj=0; jj<size; jj++)
-				jj!=ii? B(ii,jj) = -1.0/(ii+1.0) + bertini::mpfr_float(rand()) /  bertini::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
+				jj!=ii? B(ii,jj) = -bertini::mpfr_float(1)/(ii+1) + bertini::mpfr_float(rand()) /  bertini::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
 
 		C = A.lu().solve(B);
 	}
@@ -136,7 +136,7 @@ using bertini::KahanMatrix;
 		
 		for (int ii=0; ii<size; ii++){
 			for (int jj=0; jj<size; jj++){
-				(jj!=ii) ? B(ii,jj) = -1.0/(ii+1) + mpfr(rand()) /  mpfr(RAND_MAX) : B(ii,jj) = mpfr(0.0);
+				(jj!=ii) ? B(ii,jj) = -mpfr(1)/(ii+1) + mpfr(rand()) /  mpfr(RAND_MAX) : B(ii,jj) = mpfr(0.0);
 			}
 		}
 		C = A.lu().solve(B);

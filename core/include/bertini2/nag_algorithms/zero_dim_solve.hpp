@@ -70,10 +70,10 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
 
 	using NeededConfigs = detail::TypeList<
-								config::Tolerances<BaseRealType>,
-								config::PostProcessing<BaseRealType>,
-								config::ZeroDim<BaseComplexType>,
-								config::AutoRetrack<BaseRealType>
+								TolerancesConfig,
+								PostProcessingConfig,
+								ZeroDimConfig<BaseComplexType>,
+								AutoRetrackConfig
 								>;
 };
 
@@ -120,10 +120,10 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			using Config::Get;
 
 
-			using Tolerances = config::Tolerances<BaseRealType>;
-			using PostProcessing = config::PostProcessing<BaseRealType>;
-			using ZeroDimConf = config::ZeroDim<BaseComplexType>;
-			using AutoRetrack = config::AutoRetrack<BaseRealType>;
+			using Tolerances = TolerancesConfig;
+			using PostProcessing = PostProcessingConfig;
+			using ZeroDimConf = ZeroDimConfig<BaseComplexType>;
+			using AutoRetrack = AutoRetrackConfig;
 
 /// metadata structs
 
@@ -154,26 +154,26 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 				///// things computed in pre-endgame only
-				tracking::SuccessCode pre_endgame_success = tracking::SuccessCode::NeverStarted;     // success code
+				SuccessCode pre_endgame_success = SuccessCode::NeverStarted;     // success code
 
 
 
 
 
 				///// things computed in endgame only
-				BaseRealType condition_number; 				// the latest estimate on the condition number
-				BaseRealType newton_residual; 				// the latest newton residual
+				double condition_number; 				// the latest estimate on the condition number
+				double newton_residual; 				// the latest newton residual
 				BaseComplexType final_time_used;   			// the final value of time tracked to
-				BaseRealType accuracy_estimate; 			// accuracy estimate between extrapolations
-				BaseRealType accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
+				double accuracy_estimate; 			// accuracy estimate between extrapolations
+				double accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
 				unsigned cycle_num;    						// cycle number used in extrapolations
-				tracking::SuccessCode endgame_success = tracking::SuccessCode::NeverStarted;      // success code
+				SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
 
 
 
 
 				///// things added by post-processing
-				BaseRealType function_residual; 	// the latest function residual
+				double function_residual; 	// the latest function residual
 
 				int multiplicity = 1; 		// multiplicity
 				bool is_real;       		// real flag:  0 - not real, 1 - real
@@ -185,12 +185,12 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			struct EGBoundaryMetaData
 			{
 				Vec<BaseComplexType> path_point;
-				tracking::SuccessCode success_code = tracking::SuccessCode::NeverStarted;
+				SuccessCode success_code = SuccessCode::NeverStarted;
 				BaseRealType last_used_stepsize;
 
 				EGBoundaryMetaData() = default;
 				EGBoundaryMetaData(EGBoundaryMetaData const&) = default;
-				EGBoundaryMetaData(Vec<BaseComplexType> const& pt, tracking::SuccessCode const& code, BaseRealType const& ss) :
+				EGBoundaryMetaData(Vec<BaseComplexType> const& pt, SuccessCode const& code, BaseRealType const& ss) :
 					path_point(pt), success_code(code), last_used_stepsize(ss)
 				{}
 					
@@ -289,7 +289,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				this->template Set<AutoRetrack>(AutoRetrack());
 			}
 
-			void SetMidpathRetrackTol(BaseRealType const& rt)
+			void SetMidpathRetrackTol(double const& rt)
 			{
 				midpath_retrack_tolerance_ = rt;
 			}
@@ -305,11 +305,11 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			*/
 			void DefaultMidpathSetup()
 			{
-				midpath_ = MidpathType(config::MidPath<BaseRealType>());
+				midpath_ = MidpathType(MidPathConfig());
 			}
 
 
-			void SetMidpath(config::MidPath<BaseRealType> const& mp)
+			void SetMidpath(MidPathConfig const& mp)
 			{
 				midpath_.Set(mp);
 			}
@@ -325,7 +325,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				tracker_.Setup(tracking::predict::DefaultPredictor(),
 				              	this->template Get<Tolerances>().newton_before_endgame,
 				              	this->template Get<Tolerances>().path_truncation_threshold,
-								tracking::config::Stepping<BaseRealType>(), tracking::config::Newton());
+								tracking::SteppingConfig(), tracking::NewtonConfig());
 
 				tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
 			}
@@ -615,7 +615,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				{
 					auto soln_ind = static_cast<SolnIndT>(ii);
 
-					if (solution_final_metadata_[soln_ind].pre_endgame_success != tracking::SuccessCode::Success)
+					if (solution_final_metadata_[soln_ind].pre_endgame_success != SuccessCode::Success)
 						continue;
 
 					TrackSinglePathDuringEG(soln_ind);
@@ -681,7 +681,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 					smd.condition_number = GetTracker().LatestConditionNumber();
 					smd.newton_residual = GetTracker().LatestNormOfStep();
 
-					smd.accuracy_estimate = GetEndgame().template ApproximateError<BaseRealType>();
+					smd.accuracy_estimate = GetEndgame().template ApproximateError();
 					smd.accuracy_estimate_user_coords =
 						(TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
 						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>();
@@ -714,12 +714,12 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 				for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
 				{
-					if (solution_final_metadata_[ii].endgame_success!=tracking::SuccessCode::Success)
+					if (solution_final_metadata_[ii].endgame_success!=SuccessCode::Success)
 						continue;
 
 					for (decltype(num_start_points_) jj{ii+1}; jj < num_start_points_; ++jj)
 					{
-						if (solution_final_metadata_[jj].endgame_success!=tracking::SuccessCode::Success)
+						if (solution_final_metadata_[jj].endgame_success!=SuccessCode::Success)
 							continue;
 
 						if ( (solutions_post_endgame_[ii] - solutions_post_endgame_[jj]).norm() < this->template Get<PostProcessing>().same_point_tolerance)
@@ -740,7 +740,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 		///////
 
 			unsigned long long num_start_points_;
-			BaseRealType midpath_retrack_tolerance_;
+			double midpath_retrack_tolerance_;
 
 
 			/// observers used during tracking
