@@ -637,10 +637,10 @@ void PowerOperator::print(std::ostream & target) const
 }
 
 
-
 std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, MakeInteger(1),false);
+	
+	auto exp_minus_one = exponent_-1;
 	auto ret_mult = std::make_shared<MultOperator>(base_->Differentiate(v));
 	ret_mult->AddChild(exponent_);
 	ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
