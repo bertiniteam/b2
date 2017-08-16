@@ -29,6 +29,16 @@
 #include "bertini2/trackers/fixed_precision_tracker.hpp"
 #include "bertini2/trackers/observers.hpp"
 
+
+
+extern double threshold_clearance_d;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
+
+
+
+BOOST_AUTO_TEST_SUITE(fixed_precision_tracker_basics)
+
 using System = bertini::System;
 using Variable = bertini::node::Variable;
 
@@ -44,17 +54,7 @@ using mpfr_float = bertini::mpfr_float;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
 using bertini::DefaultPrecision;
-
-BOOST_AUTO_TEST_SUITE(fixed_precision_tracker_basics)
-
-
-
 BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 {
 	using bertini::operator<<;

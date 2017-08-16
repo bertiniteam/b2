@@ -37,6 +37,10 @@
 
 #include "bertini2/system/system.hpp"
 
+
+
+BOOST_AUTO_TEST_SUITE(homogenization)
+
 using mpfr_float = bertini::mpfr_float;
 using Var = std::shared_ptr<bertini::node::Variable>;
 using Float = std::shared_ptr<bertini::node::Float>;
@@ -44,8 +48,6 @@ using VariableGroup = bertini::VariableGroup;
 
 using bertini::MakeVariable;
 using bertini::MakeFloat;
-
-BOOST_AUTO_TEST_SUITE(homogenization)
 
 
 BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)

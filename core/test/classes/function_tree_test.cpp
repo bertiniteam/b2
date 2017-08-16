@@ -44,6 +44,11 @@
 
 #include "externs.hpp"
 
+
+
+BOOST_AUTO_TEST_SUITE(function_tree_class)
+
+
 using mpq_rational = bertini::mpq_rational;
 
 using Variable = bertini::node::Variable;
@@ -53,12 +58,9 @@ using Float = bertini::node::Float;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
-
-
 using bertini::MakeVariable;
 using bertini::MakeFloat;
 
-BOOST_AUTO_TEST_SUITE(function_tree_class)
 
 /////////// Basic Operations Alone ///////////////////
 

@@ -4,12 +4,15 @@ EXTRA_PROGRAMS += nag_algorithms_test
 
 TESTS += nag_algorithms_test
 
+if UNITYBUILD
+nag_algorithms_test_source_files = test/nag_algorithms/unity/unity.cpp
+else
 nag_algorithms_test_source_files = \
 	test/nag_algorithms/nag_algorithms_test.cpp \
 	test/nag_algorithms/zero_dim.cpp \
 	test/nag_algorithms/numerical_irreducible_decomposition.cpp \
 	test/nag_algorithms/trace.cpp 
-
+endif
 
 
 

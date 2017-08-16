@@ -1,9 +1,10 @@
 #this is src/basics/Makemodule.am
 
 
-basics_header_files = \
+basics_headers = \
 	include/bertini2/limbo.hpp \
 	include/bertini2/mpfr_complex.hpp \
+	include/bertini2/forbid_double.hpp \
 	include/bertini2/mpfr_extensions.hpp \
 	include/bertini2/num_traits.hpp \
 	include/bertini2/classic.hpp \
@@ -11,18 +12,21 @@ basics_header_files = \
 	include/bertini2/logging.hpp \
 	include/bertini2/config.h
 
-basics_source_files = \
+basics_sources = \
 	src/basics/mpfr_extensions.cpp \
 	src/basics/mpfr_complex.cpp \
 	src/basics/limbo.cpp
 	
 
 
-basics = $(basics_header_files) $(basics_source_files)
+basics = $(basics_headers) $(basics_sources)
 
+core_headers += $(basics_headers)
+core_sources += $(basics_sources)
+core_all += $(basics)
 
 rootinclude_HEADERS += \
-	$(basics_header_files)
+	$(basics_headers)
 
 
 

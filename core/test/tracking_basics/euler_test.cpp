@@ -35,6 +35,17 @@
 #include "trackers/ode_predictors.hpp"
 
 
+
+
+extern double threshold_clearance_d;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
+
+
+
+
+BOOST_AUTO_TEST_SUITE(euler_predict_tracking_basics)
+
 using System = bertini::System;
 using Variable = bertini::node::Variable;
 using Float = bertini::node::Float;
@@ -52,15 +63,7 @@ using mpfr_float = bertini::mpfr_float;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
-
 using bertini::DefaultPrecision;
-
-BOOST_AUTO_TEST_SUITE(euler_predict_tracking_basics)
 
 
 BOOST_AUTO_TEST_CASE(circle_line_euler_double)

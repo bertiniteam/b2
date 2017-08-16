@@ -33,14 +33,15 @@
 
 #include <boost/random.hpp>
 
+
+
+BOOST_AUTO_TEST_SUITE(super_fundamentals)
+
 using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
 using bertini::DefaultPrecision;
-
 #include <limits>
-
-BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
 
 BOOST_AUTO_TEST_CASE(constructing_mpfr_from_double)
@@ -141,7 +142,6 @@ BOOST_AUTO_TEST_CASE(make_rational_from_double)
 	mpq_rational expected(1,10);
 	BOOST_CHECK_CLOSE(result, expected, 1e-16);
 }
-
 
 BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
 {	
@@ -344,6 +344,8 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 BOOST_AUTO_TEST_SUITE(numtraits)
+
+using bertini::DefaultPrecision;
 
 template<typename T>
 using NumTraits = bertini::NumTraits<T>;

@@ -29,6 +29,16 @@
 
 #include "bertini2/system/start_systems.hpp"
 
+
+
+
+#include "externs.hpp"
+
+
+
+BOOST_AUTO_TEST_SUITE(system_class)
+
+using bertini::DefaultPrecision;
 using System = bertini::System;
 
 using Variable = bertini::node::Variable;
@@ -44,16 +54,6 @@ using mpfr = bertini::mpfr;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-
-#include "externs.hpp"
-
-using bertini::DefaultPrecision;
-
-BOOST_AUTO_TEST_SUITE(system_class)
-
-
-
 
 
 BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)

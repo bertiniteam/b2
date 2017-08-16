@@ -1,33 +1,21 @@
-#this is src/bertini/Makemodule.am
-
-#
-#  THE primary Makemodule.am file for the computational core of Bertini2
-#
-#  provides source and dependency information for both the library and command-line executable.
+#this is src/unity/Makemodule.am
 
 
 lib_LTLIBRARIES += libbertini2.la
 
-bertini2_sources = \
-	$(basics) \
-	$(function_tree) \
-	$(system) \
-	$(tracking) \
-	include/bertini2/bertini.hpp
+unity_build_source_files = \
+	src/unity/unity.cpp
 
+libbertini2_la_SOURCES = \
+	$(unity_build_source_files) \
+	$(all_headers)
 
 rootinclude_HEADERS += include/bertini2/bertini.hpp
 
-libbertini2_la_SOURCES = \
-	$(bertini2_sources)
 
 
 libbertini2_la_LIBADD = $(BOOST_LDFLAGS) \
 	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) 
-
-
-
-
 
 
 bin_PROGRAMS += bertini2
@@ -42,3 +30,6 @@ bertini2_SOURCES = \
 bertini2_LDADD = $(BOOST_LDFLAGS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
 
 bertini2_CXXFLAGS = $(BOOST_CPPFLAGS)
+
+
+

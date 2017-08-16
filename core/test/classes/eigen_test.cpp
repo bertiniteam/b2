@@ -39,15 +39,11 @@
 #include "externs.hpp"
 
 
-using mpfr_float = bertini::mpfr_float;
-
-using bertini::KahanMatrix;
-
-
 
 
 BOOST_AUTO_TEST_SUITE(num_traits_checking)
 
+using mpfr_float = bertini::mpfr_float;
 
 // this test assures that the Eigen::NumTraits defined in eigen_extensions.hpp is correctly found during template instantiation, and that the Real type it defines is actually mpfr_float.  If it were not, then we would be unable to make an expression of ::Real type in variable q, because it would be an expression, not a populatable number of type mpfr_float.
 BOOST_AUTO_TEST_CASE(expressions_of_mpfr_floats)
@@ -84,7 +80,8 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
-
+using mpfr_float = bertini::mpfr_float;
+using bertini::KahanMatrix;
 
 	BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_double) {
 		unsigned int size = 10;

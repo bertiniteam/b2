@@ -29,6 +29,16 @@
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/trackers/tracker.hpp"
 
+
+
+extern double threshold_clearance_d;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
+
+
+
+BOOST_AUTO_TEST_SUITE(AMP_tracker_basics)
+
 using System = bertini::System;
 using Variable = bertini::node::Variable;
 
@@ -45,14 +55,7 @@ using bertini::MakeVariable;
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
 
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
 using bertini::DefaultPrecision;
-
-BOOST_AUTO_TEST_SUITE(AMP_tracker_basics)
-
 BOOST_AUTO_TEST_CASE(minstepsize)
 {
 	DefaultPrecision(30);

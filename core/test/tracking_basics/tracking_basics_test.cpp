@@ -26,8 +26,7 @@
 
 
  
-#define BOOST_TEST_DYN_LINK 1
-
+#define BOOST_TEST_DYN_LINK
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
 #define BOOST_TEST_MODULE "Bertini 2 Tracking Basics Testing"
 #include <boost/test/unit_test.hpp>

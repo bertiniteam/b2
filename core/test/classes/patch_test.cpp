@@ -42,22 +42,26 @@
 #include "bertini2/system/patch.hpp"
 
 
+
+
+#include "externs.hpp"
+
+
+
+
+BOOST_AUTO_TEST_SUITE(patch_class)
+
+
+using bertini::DefaultPrecision;
+
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
 using Patch = bertini::Patch;
 
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
 using mpfr_float = bertini::mpfr_float;
-
-#include "externs.hpp"
-
-using bertini::DefaultPrecision;
-
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-
-BOOST_AUTO_TEST_SUITE(patch_class)
 
 
 BOOST_AUTO_TEST_CASE(patch_create)
