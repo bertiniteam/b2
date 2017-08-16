@@ -43,29 +43,29 @@ namespace config {
 
 
 namespace {
-	using namespace tracking::config;
-	using namespace algorithm::config;
+	using namespace tracking;
+	using namespace endgame;
+	using namespace algorithm;
 }
 
 struct Configs
 {
 	
 
-	using Tracking = detail::TypeList<Stepping, Newton, FixedPrecisionConfig, AdaptiveMultiplePrecisionConfig, tracking::PrecisionType, Predictor>;
+	using Tracking = detail::TypeList<SteppingConfig, NewtonConfig, FixedPrecisionConfig, AdaptiveMultiplePrecisionConfig, tracking::PrecisionType, Predictor>;
+
+	using Endgame = detail::TypeList<SecurityConfig, EndgameConfig, PowerSeriesConfig, CauchyConfig, TrackBackConfig>;
 
 	template<typename T>
-	using Endgame = detail::TypeList<Security<T>, Endgame<T>, PowerSeries, Cauchy<T>, TrackBack>;
+	using Algorithm = detail::TypeList<TolerancesConfig, MidPathConfig, AutoRetrackConfig, SharpeningConfig, RegenerationConfig, PostProcessingConfig, ZeroDimConfig<T>, classic::AlgoChoice>;
 
 	template<typename T>
-	using Algorithm = detail::TypeList<Tolerances<T>, MidPath<T>, AutoRetrack<T>, Sharpening<T>, Regeneration<T>, PostProcessing<T>, ZeroDim<T>, classic::AlgoChoice>;
-
-	template<typename T>
-	using All = detail::ListCat<Tracking, Endgame<T>, Algorithm<T>>;
+	using All = detail::ListCat<Tracking, Endgame, Algorithm<T>>;
 };
 
 
 struct Defaults : 
-detail::Configured<Configs::All<double>, Configs::All<mpfr_float>>
+detail::Configured<Configs::All<bertini::dbl>, Configs::All<bertini::mpfr>>
 {
 
 
