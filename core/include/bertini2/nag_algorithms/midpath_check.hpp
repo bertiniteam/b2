@@ -43,10 +43,10 @@ namespace bertini{
 
 		
 		template<typename RealType, typename ComplexType, typename MetaDataType>
-		struct MidpathChecker : public detail::Configured<config::MidPath>
+		struct MidpathChecker : public detail::Configured<MidPathConfig>
 		{
-			using MidPathConfT = config::MidPath;
-			using AlgConf = detail::Configured<config::MidPath>;
+			using MidPathConfT = MidPathConfig;
+			using AlgConf = detail::Configured<MidPathConfig>;
 			using BoundaryData = SolnCont< MetaDataType >;
 			using PathIndT = unsigned long long;
 			
@@ -134,7 +134,7 @@ namespace bertini{
 			{
 				for (PathIndT ii = 0; ii < boundary_data.size(); ++ii)
 				{
-					if ( boundary_data[ii].success_code != tracking::SuccessCode::Success)
+					if ( boundary_data[ii].success_code != SuccessCode::Success)
 							continue;
 
 					const Vec<ComplexType>& solution_ii = boundary_data[ii].path_point;
@@ -142,7 +142,7 @@ namespace bertini{
 
 					for (PathIndT jj = ii+1; jj < boundary_data.size(); ++jj)
 					{
-						if ( boundary_data[jj].success_code != tracking::SuccessCode::Success)
+						if ( boundary_data[jj].success_code != SuccessCode::Success)
 							continue;
 
 						const Vec<ComplexType>& solution_jj = boundary_data[jj].path_point;
