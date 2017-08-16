@@ -161,11 +161,11 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 				///// things computed in endgame only
-				BaseRealType condition_number; 				// the latest estimate on the condition number
-				BaseRealType newton_residual; 				// the latest newton residual
+				double condition_number; 				// the latest estimate on the condition number
+				double newton_residual; 				// the latest newton residual
 				BaseComplexType final_time_used;   			// the final value of time tracked to
-				BaseRealType accuracy_estimate; 			// accuracy estimate between extrapolations
-				BaseRealType accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
+				double accuracy_estimate; 			// accuracy estimate between extrapolations
+				double accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
 				unsigned cycle_num;    						// cycle number used in extrapolations
 				SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
 
@@ -173,7 +173,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 				///// things added by post-processing
-				BaseRealType function_residual; 	// the latest function residual
+				double function_residual; 	// the latest function residual
 
 				int multiplicity = 1; 		// multiplicity
 				bool is_real;       		// real flag:  0 - not real, 1 - real
@@ -681,7 +681,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 					smd.condition_number = GetTracker().LatestConditionNumber();
 					smd.newton_residual = GetTracker().LatestNormOfStep();
 
-					smd.accuracy_estimate = GetEndgame().template ApproximateError<BaseRealType>();
+					smd.accuracy_estimate = GetEndgame().template ApproximateError();
 					smd.accuracy_estimate_user_coords =
 						(TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
 						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>();
