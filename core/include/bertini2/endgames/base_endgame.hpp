@@ -273,11 +273,10 @@ public:
 	/**
 	\brief Get the most recent accuracy estimate
 	*/
-	template<typename RT>
 	inline
-	const RT& ApproximateError() const
+	double ApproximateError() const
 	{
-		return std::get<RT>(approximate_error_);
+		return approximate_error_;
 	}
 
 
