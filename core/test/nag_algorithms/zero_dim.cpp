@@ -45,13 +45,13 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 	using namespace bertini;
 	using namespace tracking;
 
-	using Tolerances = algorithm::config::Tolerances;
-	using EndgameConfT = config::Endgame<double>;
+	using Tolerances = algorithm::TolerancesConfig;
+	using EndgameConfT = endgame::EndgameConfig;
 	
 
 	auto sys = system::Precon::GriewankOsborn();
 
-	auto zd = algorithm::ZeroDim<TrackerT, EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
+	auto zd = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, decltype(sys), start_system::TotalDegree>(sys);
 
 	zd.DefaultSetup();
 	
@@ -84,11 +84,11 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 	using namespace bertini;
 	using namespace tracking;
 
-	using Tolerances = algorithm::config::Tolerances;
+	using Tolerances = algorithm::TolerancesConfig;
 
 	auto sys = system::Precon::GriewankOsborn();
 
-	auto zd = algorithm::ZeroDim<TrackerT, EndgameSelector<TrackerT>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
+	auto zd = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, decltype(sys), start_system::TotalDegree>(sys);
 
 	zd.DefaultSetup();
 	
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO_nonhom)
 
 	auto zd = algorithm::ZeroDim<
 				TrackerT, 
-				EndgameSelector<TrackerT>::PSEG, 
+				bertini::endgame::EndgameSelector<TrackerT>::PSEG, 
 				decltype(sys), 
 				start_system::TotalDegree,
 				policy::RefToGiven
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 
 	auto zd = algorithm::ZeroDim<
 				TrackerT, 
-				EndgameSelector<TrackerT>::PSEG, 
+				bertini::endgame::EndgameSelector<TrackerT>::PSEG, 
 				decltype(sys), 
 				start_system::TotalDegree,
 				policy::RefToGiven

@@ -59,7 +59,7 @@ public:
 	static
 	unsigned EnsureAtUniformPrecision(T& ...args)
 	{
-		return bertini::tracking::endgame::fixed::EnsureAtUniformPrecision(args...);
+		return bertini::tracking::fixed::EnsureAtUniformPrecision(args...);
 	}
 
 	template<typename T>
