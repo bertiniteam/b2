@@ -62,12 +62,12 @@ void Pi::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& d
 // Return value of constant
 dbl E::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const 
 {
-	return dbl(exp(1.0f),0.0);
+	return dbl(exp(1),0.0);
 }
 
 void E::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const 
 {
-	evaluation_value = dbl(exp(1.0f),0.0);
+	evaluation_value = dbl(exp(1),0.0);
 }
 
 

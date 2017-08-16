@@ -34,11 +34,113 @@
 #include <boost/random.hpp>
 
 using mpfr_float = bertini::mpfr_float;
+using mpq_rational = bertini::mpq_rational;
 
 using bertini::DefaultPrecision;
 
+#include <limits>
+
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
+
+BOOST_AUTO_TEST_CASE(constructing_mpfr_from_double)
+{
+	DefaultPrecision(50);
+	mpfr_float from_double(0.1);
+	mpfr_float from_string("0.1");
+
+	BOOST_CHECK(abs(from_string - from_double) < std::numeric_limits<double>::epsilon());
+}
+
+BOOST_AUTO_TEST_CASE(construct_rational_from_integers)
+{
+	mpq_rational p(1,2);
+	mpq_rational q(-1,2);
+
+	BOOST_CHECK_EQUAL(p+q, mpq_rational(0));
+}
+
+// commented out code below checks construction of mpq_rationals from other types.  they're broken.  :(
+// BOOST_AUTO_TEST_CASE(construct_rational_from_mpfr)
+// {
+// 	DefaultPrecision(50);
+// 	mpfr_float p("1.1");
+// 	mpq_rational q(p);
+// 	BOOST_CHECK_EQUAL(mpq_rational(11,10), q);
+// }
+
+
+// BOOST_AUTO_TEST_CASE(construct_rational_from_string)
+// {
+// 	mpq_rational q("1.1");
+// 	BOOST_CHECK_EQUAL(mpq_rational(11,10), q);
+// }
+
+
+// this commented out test will fail... because of mixed precision arithmetic
+// BOOST_AUTO_TEST_CASE(multiple_mpfr_by_double)
+// {
+// 	DefaultPrecision(50);
+// 	mpfr_float a("0.1");
+// 	double factor = 0.1;
+
+// 	mpfr_float result = a*factor;
+// 	mpfr_float expected("0.01");
+
+// 	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+// }
+
+
+
+BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_int_base)
+{
+	DefaultPrecision(50);
+
+	mpfr_float result = pow(mpfr_float(10), -5);
+	mpfr_float expected("1e-5");
+
+	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+}
+
+BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_str_base)
+{
+	DefaultPrecision(50);
+
+	mpfr_float result = pow(mpfr_float("10"), -5);
+	mpfr_float expected("1e-5");
+
+	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+}
+
+
+BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_doub_exp)
+{
+	DefaultPrecision(50);
+
+	mpfr_float result = pow(mpfr_float(10), -5.0);
+	mpfr_float expected("1e-5");
+
+	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+}
+
+
+BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_int_base_mpfr_exp)
+{
+	DefaultPrecision(50);
+
+	mpfr_float result = pow(10, mpfr_float(-5));
+	mpfr_float expected("1e-5");
+
+	BOOST_CHECK_CLOSE(expected, result, 1e-50);
+}
+
+
+BOOST_AUTO_TEST_CASE(make_rational_from_double)
+{
+	mpq_rational result(0.1);
+	mpq_rational expected(1,10);
+	BOOST_CHECK_CLOSE(result, expected, 1e-16);
+}
 
 
 BOOST_AUTO_TEST_CASE(make_random_mpfr_float_50)
@@ -241,4 +343,68 @@ BOOST_AUTO_TEST_SUITE_END()
 
 
 
+BOOST_AUTO_TEST_SUITE(numtraits)
 
+template<typename T>
+using NumTraits = bertini::NumTraits<T>;
+
+BOOST_AUTO_TEST_CASE(num_digits_double)
+{
+	using T = double;
+	
+	DefaultPrecision(16);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(30);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(100);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+}
+
+BOOST_AUTO_TEST_CASE(num_digits_complex_double)
+{
+	using T = std::complex<double>;
+	
+	DefaultPrecision(16);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(30);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(100);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+}
+
+
+BOOST_AUTO_TEST_CASE(num_digits_mpfr_float)
+{
+	using T = bertini::mpfr_float;
+	
+	DefaultPrecision(16);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(30);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 30);
+
+	DefaultPrecision(100);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 100);
+}
+
+
+BOOST_AUTO_TEST_CASE(num_digits_mpfr_complex)
+{
+	using T = bertini::mpfr;
+	
+	DefaultPrecision(16);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);
+
+	DefaultPrecision(30);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 30);
+
+	DefaultPrecision(100);
+	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 100);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END() // numtraits tests

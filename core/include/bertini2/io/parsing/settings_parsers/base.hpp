@@ -45,9 +45,9 @@ namespace bertini {
 			/**
 			 Qi Parser object for parsing config settings  This ensures we can provide backwards compatibility with Bertini Classic input files.
 			 
-			 This is a base case template, which we specialize below
+			 This is a base case template, which we specialize elsewhere
 			 */
-			template<typename Iterator, typename Structure, typename T = double, typename Skipper = ascii::space_type> //boost::spirit::unused_type
+			template<typename Iterator, typename Structure, typename Skipper = ascii::space_type> //boost::spirit::unused_type
 			struct ConfigSettingParser : qi::grammar<Iterator, Structure(), Skipper>
 			{ 
 			};

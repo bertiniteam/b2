@@ -753,39 +753,6 @@ namespace bertini
 
 			
 
-    //////////////////////
-    //
-    //  Functions involving coefficients of the system
-    //
-    ///////////////////////
-
-    mpfr_float System::CoefficientBound(unsigned num_evaluations) const
-    {
-    	mpfr_float bound("0");
-
-    	for (unsigned ii=0; ii < num_evaluations; ii++)
-    	{	
-    		Vec<mpfr> randy = RandomOfUnits<mpfr>(NumVariables());
-    		Vec<mpfr> f_vals;
-    		if (HavePathVariable())
-    			f_vals = Eval(randy, mpfr::RandomUnit());
-    		else
-    			f_vals = Eval(randy);
-	    	
-	    	auto dh_dx = Jacobian<mpfr>();
-	    	
-			bound = max(f_vals.array().abs().maxCoeff(),
-				         dh_dx.array().abs().maxCoeff(), bound);
-		}
-    	return bound;
-	}
-
-
-
-
-
-
-
 
 
     /////////////////

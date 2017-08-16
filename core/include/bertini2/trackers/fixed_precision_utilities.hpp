@@ -28,7 +28,7 @@
 #include "bertini2/trackers/config.hpp"
 
 
-namespace bertini{ namespace tracking { namespace endgame {
+namespace bertini{ namespace tracking {
 namespace fixed{
 
 inline
@@ -98,6 +98,6 @@ unsigned EnsureAtUniformPrecision(TimeCont<mpfr> const & times, SampCont<mpfr> c
 }
 
 
-}}}} // re: namespaces
+}}} // re: namespaces
 
 

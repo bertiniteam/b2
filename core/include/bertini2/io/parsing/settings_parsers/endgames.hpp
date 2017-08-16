@@ -38,22 +38,18 @@ namespace bertini {
 		namespace classic {
 
 			
-			
-			
-			
-			
-			
-			
-			
+		
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Security<T>, T, Skipper> : qi::grammar<Iterator, config::Security<T>(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, bertini::endgame::SecurityConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::SecurityConfig(), Skipper>
 			{
-				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::SecurityType")
+				using T = double;
+
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "SecurityConfig")
 				{
+
 					namespace phx = boost::phoenix;
 					using qi::_1;
 					using qi::_2;
@@ -76,11 +72,11 @@ namespace bertini {
 					
 					root_rule_.name("config::Security");
 					
-					root_rule_ = ((security_level_[phx::bind( [this](config::Security<T> & S, int l)
+					root_rule_ = ((security_level_[phx::bind( [this](bertini::endgame::SecurityConfig & S, int l)
 															 {
 																 S.level = l;
 															 }, _val, _1 )]
-								   ^ security_max_norm_[phx::bind( [this](config::Security<T> & S, T norm)
+								   ^ security_max_norm_[phx::bind( [this](bertini::endgame::SecurityConfig & S, T norm)
 																  {
 																	  S.max_norm = norm;
 																  }, _val, _1 )])
@@ -126,7 +122,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::Security<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, bertini::endgame::SecurityConfig(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, int(), ascii::space_type > security_level_;
 				qi::rule<Iterator, T(), ascii::space_type > security_max_norm_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
@@ -143,11 +139,13 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Endgame<T>, T, Skipper> : qi::grammar<Iterator, config::Endgame<T>(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, bertini::endgame::EndgameConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::EndgameConfig(), Skipper>
 			{
-				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::EndgameType")
+				using T = double;
+				using R = mpq_rational;
+
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "EndgameConfig")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -172,15 +170,15 @@ namespace bertini {
 					
 					root_rule_.name("config::Endgame");
 					
-					root_rule_ = ((sample_factor_[phx::bind( [this](config::Endgame<T> & S, T num)
+					root_rule_ = ((sample_factor_[phx::bind( [this](bertini::endgame::EndgameConfig & S, R num)
 															{
 																S.sample_factor = num;
 															}, _val, _1 )]
-								   ^ min_track_[phx::bind( [this](config::Endgame<T> & S, T num)
+								   ^ min_track_[phx::bind( [this](bertini::endgame::EndgameConfig & S, T num)
 														  {
 															  S.min_track_time = num;
 														  }, _val, _1 )]
-								   ^ num_sample_[phx::bind( [this](config::Endgame<T> & S, unsigned num)
+								   ^ num_sample_[phx::bind( [this](bertini::endgame::EndgameConfig & S, unsigned num)
 															  {
 																  S.num_sample_points = num;
 															  }, _val, _1 )])
@@ -193,9 +191,9 @@ namespace bertini {
 					
 					sample_factor_.name("sample_factor_");
 					sample_factor_ = *(char_ - all_names_) >> (no_case[samplefactor_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string str)
 														   {
-															   num = bertini::NumTraits<T>::FromString(str);
+															   num = bertini::NumTraits<double>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					min_track_.name("min_track_");
@@ -238,8 +236,9 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::Endgame<T>(), ascii::space_type > root_rule_;
-				qi::rule<Iterator, T(), ascii::space_type > sample_factor_, min_track_;
+				qi::rule<Iterator, bertini::endgame::EndgameConfig(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, R(), ascii::space_type > sample_factor_;
+				qi::rule<Iterator, T(), ascii::space_type > min_track_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > num_sample_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 				rules::LongNum<Iterator> mpfr_rules;
@@ -252,11 +251,12 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::PowerSeries, T, Skipper> : qi::grammar<Iterator, config::PowerSeries(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, bertini::endgame::PowerSeriesConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::PowerSeriesConfig(), Skipper>
 			{
-				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::PowerSeriesType")
+				using T = double;
+
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::PowerSeriesConfigType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -277,9 +277,9 @@ namespace bertini {
 					std::string maxcycle_name = "maxcyclenum";
 					
 					
-					root_rule_.name("config::PowerSeries");
+					root_rule_.name("bertini::endgame::PowerSeriesConfig");
 					
-					root_rule_ = (max_cycle_[phx::bind( [this](config::PowerSeries & S, unsigned num)
+					root_rule_ = (max_cycle_[phx::bind( [this](bertini::endgame::PowerSeriesConfig & S, unsigned num)
 													   {
 														   S.max_cycle_number = num;
 													   }, _val, _1 )]
@@ -323,7 +323,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::PowerSeries(), Skipper> root_rule_;
+				qi::rule<Iterator, bertini::endgame::PowerSeriesConfig(), Skipper> root_rule_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > max_cycle_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 			}; //re: PowerSeriesParser
@@ -335,11 +335,12 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Cauchy<T>, T, Skipper> : qi::grammar<Iterator, config::Cauchy<T>(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, bertini::endgame::CauchyConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::CauchyConfig(), Skipper>
 			{
-				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::CauchyType")
+				using T = double;
+
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::CauchyConfig")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -363,11 +364,11 @@ namespace bertini {
 					
 					root_rule_.name("config::Cauchy");
 					
-					root_rule_ = ((cycle_cutoff_[phx::bind( [this](config::Cauchy<T> & S, T num)
+					root_rule_ = ((cycle_cutoff_[phx::bind( [this](bertini::endgame::CauchyConfig & S, T num)
 														   {
 															   S.cycle_cutoff_time = num;
 														   }, _val, _1 )]
-								   ^ ratio_cutoff_[phx::bind( [this](config::Cauchy<T> & S, T num)
+								   ^ ratio_cutoff_[phx::bind( [this](bertini::endgame::CauchyConfig & S, T num)
 															 {
 																 S.ratio_cutoff_time = num;
 															 }, _val, _1 )])
@@ -417,7 +418,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::Cauchy<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, bertini::endgame::CauchyConfig(), ascii::space_type > root_rule_;
 				qi::rule<Iterator, T(), ascii::space_type > cycle_cutoff_, ratio_cutoff_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 				rules::LongNum<Iterator> mpfr_rules;
@@ -428,11 +429,12 @@ namespace bertini {
 
 			
 
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::TrackBack, T, Skipper> : qi::grammar<Iterator, config::TrackBack(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, bertini::endgame::TrackBackConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::TrackBackConfig(), Skipper>
 			{
-				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::TrackBack")
+				using T = double;
+
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "bertini::endgame::TrackBackConfig")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -454,17 +456,17 @@ namespace bertini {
 					std::string junk_removal_name = "junkremovaltrackback";
 					std::string maxdepth_name = "maxldtdepth";
 
-					root_rule_.name("config::TrackBack");
+					root_rule_.name("bertini::endgame::TrackBackConfig");
 					
-					root_rule_ = root_rule_ = ((min_cycle_[phx::bind( [this](config::TrackBack & S, unsigned num)
+					root_rule_ = root_rule_ = ((min_cycle_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, unsigned num)
 																	   {
 																		   S.minimum_cycle = num;
 																	   }, _val, _1 )]
-											   ^ junk_removal_[phx::bind( [this](config::TrackBack & S, int num)
+											   ^ junk_removal_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, int num)
 																		 {
 																			 S.junk_removal_test = static_cast<bool>(num);
 																		 }, _val, _1 )]
-											   ^ max_depth_[phx::bind( [this](config::TrackBack & S, unsigned num)
+											   ^ max_depth_[phx::bind( [this](bertini::endgame::TrackBackConfig & S, unsigned num)
 																	   {
 																		   S.max_depth_LDT = num;
 																	   }, _val, _1 )]
@@ -515,7 +517,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::TrackBack(), Skipper> root_rule_;
+				qi::rule<Iterator, bertini::endgame::TrackBackConfig(), Skipper> root_rule_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > min_cycle_, max_depth_;
 				qi::rule<Iterator, int(), ascii::space_type > junk_removal_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;

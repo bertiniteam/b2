@@ -272,6 +272,16 @@ namespace bertini {
 			return bertini::complex(s,t);
 		}
 	};
+
+	template <> struct NumTraits<mpq_rational> 
+	{
+		inline static 
+		mpq_rational FromString(std::string const& s)
+		{
+			return mpq_rational(s);
+		}
+	};	
+
 }
 
 #endif

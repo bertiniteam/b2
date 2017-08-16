@@ -419,10 +419,11 @@ namespace bertini {
 	*/
 	template<typename T>
 	inline
-	bool IsLargeChange(T const& numerator ,T const& denomenator)
+	bool IsLargeChange(T const& numerator, T const& denomenator)
 	{
+		static_assert(!Eigen::NumTraits<T>::IsInteger, "IsLargeChange cannot be used safely on non-integral types");
 		using std::abs;
-		return abs(numerator/denomenator) >= 1.0/Eigen::NumTraits<T>::dummy_precision();
+		return abs(numerator/denomenator) >= 1/Eigen::NumTraits<T>::dummy_precision();
 	} 
 
 	enum class MatrixSuccessCode

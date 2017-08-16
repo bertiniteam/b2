@@ -127,7 +127,7 @@ namespace bertini{
 					               RealType const& tracking_tolerance,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
-					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+					               AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
@@ -203,7 +203,7 @@ namespace bertini{
 					               RealType const& tracking_tolerance,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
-					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+					               AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");

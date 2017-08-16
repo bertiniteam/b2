@@ -47,7 +47,7 @@ namespace bertini{
 		namespace predict{
 			
 			
-			using Predictor = config::Predictor;
+			using Predictor = Predictor;
 			
 			/**
 			 \brief Get the Bertini2 default predictor.
@@ -221,7 +221,7 @@ namespace bertini{
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
 									RealType const& tracking_tolerance,
-											config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+											AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					
 					
@@ -301,7 +301,7 @@ namespace bertini{
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
 									RealType const& tracking_tolerance,
-									config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
 					
