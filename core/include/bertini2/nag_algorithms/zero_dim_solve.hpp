@@ -676,15 +676,15 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 						DefaultPrecision(Precision(solutions_post_endgame_[soln_ind]));
 						TargetSystem().precision(Precision(solutions_post_endgame_[soln_ind]));
 					}
-					smd.function_residual = TargetSystem().Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>();
+					smd.function_residual = static_cast<double>(TargetSystem().Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>());
 					smd.final_time_used = GetEndgame().LatestTime();
 					smd.condition_number = GetTracker().LatestConditionNumber();
 					smd.newton_residual = GetTracker().LatestNormOfStep();
 
 					smd.accuracy_estimate = GetEndgame().template ApproximateError();
 					smd.accuracy_estimate_user_coords =
-						(TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
-						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>();
+						static_cast<double>( (TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
+						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>() );
 					smd.cycle_num = GetEndgame().template CycleNumber();
 					// end metadata gathering
 			}
