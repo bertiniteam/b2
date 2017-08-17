@@ -594,6 +594,7 @@ public:
 		{
 			//Ensure all samples are of the same precision.
 			auto new_precision = this->EnsureAtUniformPrecision(times, samples);
+			this->GetSystem().precision(new_precision);
 		}
 
 		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),this->FinalTolerance(),this->EndgameSettings().max_num_newton_iterations);
@@ -910,15 +911,15 @@ public:
 		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
 		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
 
-		//Ensure all samples are of the same precision.
-		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
-			this->EnsureAtUniformPrecision(ps_times, ps_samples);
 
 		this->template RefineAllSamples(ps_samples, ps_times);
 		
 		//Ensure all samples are of the same precision.
 		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
-			this->EnsureAtUniformPrecision(ps_times, ps_samples);
+		{
+			auto max_precision = this->EnsureAtUniformPrecision(ps_times, ps_samples);
+			this->GetSystem().precision(max_precision);
+		}
 		
 
 		auto num_sample_points = this->EndgameSettings().num_sample_points;
@@ -980,7 +981,10 @@ public:
 
 		//Ensure all samples are of the same precision.
 		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
+		{
 			auto new_precision = this->EnsureAtUniformPrecision(cau_times, cau_samples);
+			this->GetSystem().precision(new_precision);
+		}
 
 
 		auto total_num_pts = this->CycleNumber() * this->EndgameSettings().num_sample_points;
