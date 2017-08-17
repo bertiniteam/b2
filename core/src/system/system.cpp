@@ -202,6 +202,9 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
+		if (this->assume_uniform_precision_ && new_precision == this->precision_)
+			return;
+
 		for (const auto& iter : functions_) {
 			iter->precision(new_precision);
 		}

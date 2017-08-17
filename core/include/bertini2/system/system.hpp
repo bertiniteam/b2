@@ -1206,7 +1206,33 @@ namespace bertini {
 		*/ 
 		void CopyVariableStructure(System const& other);
 		
+		/**
+		\brief One of a family of functions indicating whether we can assume the system will always have uniform precision.
 
+		\see PleaseAssumeUniformPrecision AssumeUniformPrecision IsAssumingUniformPrecision
+		*/
+		void DontAssumeUniformPrecision()
+		{
+			AssumeUniformPrecision(false);
+		}
+
+		void PleaseAssumeUniformPrecision()
+		{
+			AssumeUniformPrecision(true);
+		}
+
+		void AssumeUniformPrecision(bool val)
+		{
+			assume_uniform_precision_ = false;
+		}
+
+		/** 
+		\brief yon getter for the obvious thing it gets
+		*/
+		auto IsAssumingUniformPrecision() const
+		{
+			return assume_uniform_precision_;
+		}
 		/**
 		\brief Add two systems together.
 
@@ -1364,6 +1390,7 @@ namespace bertini {
 
 		mutable unsigned precision_; ///< the current working precision of the system 
 
+		bool assume_uniform_precision_ = true; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
 
 		friend class boost::serialization::access;
 
@@ -1396,6 +1423,8 @@ namespace bertini {
 			ar & precision_;
 			ar & is_patched_;
 			ar & patch_;
+
+			ar & assume_uniform_precision_;
 		}
 
 	};
