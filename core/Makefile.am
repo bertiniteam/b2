@@ -81,6 +81,7 @@ rootincludedir = $(includedir)/bertini2
 # in other files.
 
 include src/basics/Makemodule.am
+include src/common/Makemodule.am
 include src/function_tree/Makemodule.am
 include src/system/Makemodule.am
 include src/tracking/Makemodule.am
@@ -88,6 +89,7 @@ include src/endgames/Makemodule.am
 include src/detail/Makemodule.am
 include src/io/Makemodule.am
 include src/nag_algorithms/Makemodule.am
+include src/nag_datatypes/Makemodule.am
 include src/pool/Makemodule.am
 include src/parallel/Makemodule.am
 

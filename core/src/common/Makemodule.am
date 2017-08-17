@@ -1,12 +1,11 @@
 #this is src/common/Makemodule.am
 
-common_includedir = $(includedir)/bertini2/
-
-common_include_HEADERS = \
+common_header_files = \
 	include/bertini2/common/config.hpp
 
-common_header_files = \
-	$(common_include_HEADERS)
+common_includedir = $(includedir)/bertini2/common
+common_include_HEADERS = \
+	$(common_header_files)	
 
 common_source_files =
 
@@ -16,6 +15,4 @@ core_headers += $(common_header_files)
 core_sources += $(common_source_files)
 core_all += $(common)
 
-rootinclude_HEADERS += \
-	include/bertini2/common.hpp
 
