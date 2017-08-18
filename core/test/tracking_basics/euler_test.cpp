@@ -733,7 +733,8 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
-		
+		std::cout << "setting AMP config\n";
+
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
@@ -781,6 +782,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.precision(50);assert(sys.precision()==50);
 		Precision(predicted,50); assert(predicted(0).precision()==50);
 		Precision(euler_prediction_result,50);  assert(euler_prediction_result(0).precision()==50);
+		predictor->ChangePrecision(50);
 
 		// Starting point in spacetime step
 		current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
@@ -804,9 +806,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		predicted << mpfr("2.4031096351621464001825321091204810500227008230702","0.18770656738888783093049334281656388282191769240875"),
 		mpfr("0.37098433783397908568820969869707413571104273956141", "1.3088990618015874527242152367404908738825831867988");
 		
-		
-		
-		predictor->ChangePrecision(50);
+
 		success_code = predictor->Predict(euler_prediction_result,
 										  size_proportion,
 										  norm_J, norm_J_inverse,
@@ -823,10 +823,8 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		BOOST_CHECK_EQUAL(euler_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < euler_prediction_result.size(); ++ii)
 		{
-			std::cout << abs(euler_prediction_result(ii)-predicted(ii)) << "\n";
 			BOOST_CHECK(abs(euler_prediction_result(ii)-predicted(ii)) < 1e-47);
 		}
-		
 	}
 
 BOOST_AUTO_TEST_SUITE_END()
