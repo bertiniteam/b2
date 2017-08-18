@@ -142,7 +142,7 @@ namespace bertini{
 									   System const& S,
 									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 									   ComplexType const& current_time,
-									   double const& tracking_tolerance,
+									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations)
 				{
@@ -199,7 +199,7 @@ namespace bertini{
 									   System const& S,
 									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 									   ComplexType const& current_time,
-									   double const& tracking_tolerance,
+									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
 									   AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -226,9 +226,9 @@ namespace bertini{
 						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 						
-						double norm_J_inverse(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
+						NumErrorT norm_J_inverse(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
 
-						if (!amp::CriterionB<ComplexType>(double(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, double(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
+						if (!amp::CriterionB<ComplexType>(NumErrorT(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, NumErrorT(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 						
 						if (!amp::CriterionC<ComplexType>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
@@ -267,14 +267,14 @@ namespace bertini{
 				 */
 				template <typename ComplexType>
 				SuccessCode Correct(Vec<ComplexType> & next_space,
-									   double & norm_delta_z,
-									   double & norm_J,
-									   double & norm_J_inverse,
-									   double & condition_number_estimate,
+									   NumErrorT & norm_delta_z,
+									   NumErrorT & norm_J,
+									   NumErrorT & norm_J_inverse,
+									   NumErrorT & condition_number_estimate,
 									   System const& S,
 									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 									   ComplexType const& current_time,
-									   double const& tracking_tolerance,
+									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
 									   AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -299,10 +299,10 @@ namespace bertini{
 						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
 						
 						
-						norm_delta_z = double(step_ref.template lpNorm<Eigen::Infinity>());
-						norm_J = double(J_temp_ref.norm());
-						norm_J_inverse = double(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
-						condition_number_estimate = double(norm_J*norm_J_inverse);
+						norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
+						norm_J = NumErrorT(J_temp_ref.norm());
+						norm_J_inverse = NumErrorT(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
+						condition_number_estimate = NumErrorT(norm_J*norm_J_inverse);
 												
 						if ( (norm_delta_z < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;

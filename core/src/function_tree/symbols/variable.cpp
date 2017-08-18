@@ -81,7 +81,7 @@ int Variable::Degree(std::shared_ptr<Variable> const& v) const
 
 int Variable::Degree(VariableGroup const& vars) const
 {
-	for (auto iter : vars)
+	for (const auto& iter : vars)
 		if (this==iter.get())
 			return 1;
 		

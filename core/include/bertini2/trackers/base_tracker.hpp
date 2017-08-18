@@ -564,8 +564,8 @@ namespace bertini{
 
 			unsigned digits_final_ = 0; ///< The number of digits to track to, due to being in endgame zone.
 			unsigned digits_tracking_tolerance_; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
-			double tracking_tolerance_; ///< The tracking tolerance.
-			double path_truncation_threshold_; ///< The threshold for path truncation.
+			NumErrorT tracking_tolerance_; ///< The tracking tolerance.
+			NumErrorT path_truncation_threshold_; ///< The threshold for path truncation.
 
 			mutable CT endtime_; ///< The time we are tracking to.
 			mutable CT current_time_; ///< The current time.
@@ -591,12 +591,12 @@ namespace bertini{
 			mutable TupOfVec temporary_space_; ///< After prediction, the tentative next space value.
 
 
-			mutable double condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
-			mutable double error_estimate_; ///< An estimate on the error of a step.
-			mutable double norm_J_; ///< An estimate on the norm of the Jacobian
-			mutable double norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
-			mutable double norm_delta_z_; ///< The norm of the change in space resulting from a step.
-			mutable double size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
+			mutable NumErrorT condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
+			mutable NumErrorT error_estimate_; ///< An estimate on the error of a step.
+			mutable NumErrorT norm_J_; ///< An estimate on the norm of the Jacobian
+			mutable NumErrorT norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
+			mutable NumErrorT norm_delta_z_; ///< The norm of the change in space resulting from a step.
+			mutable NumErrorT size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
 
 
 
@@ -604,19 +604,19 @@ namespace bertini{
 			public: 
 
 			
-			double LatestConditionNumber() const
+			NumErrorT LatestConditionNumber() const
 			{
 				return this->condition_number_estimate_;
 			}
 
 			
-			double LatestErrorEstimate() const
+			NumErrorT LatestErrorEstimate() const
 			{
 				return this->error_estimate_;
 			}
 
 			
-			double LatestNormOfStep() const
+			NumErrorT LatestNormOfStep() const
 			{
 				return this->norm_delta_z_;
 			}

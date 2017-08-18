@@ -116,7 +116,7 @@ protected:
 	mutable TupOfVec final_approximation_; 
 	mutable TupOfVec previous_approximation_; 
 	mutable unsigned int cycle_number_ = 0; 
-	mutable double approximate_error_;
+	mutable NumErrorT approximate_error_;
 
 
 
@@ -189,7 +189,7 @@ public:
 	/**
 	A function passed off to the precision-specific endgame part
 	*/
-	SuccessCode RefineSample(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, double tol, unsigned max_iterations) const
+	SuccessCode RefineSample(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, NumErrorT tol, unsigned max_iterations) const
 	{
 		return this->RefineSampleImpl(result, current_sample, current_time, tol, max_iterations);
 	}
@@ -274,7 +274,7 @@ public:
 	\brief Get the most recent accuracy estimate
 	*/
 	inline
-	double ApproximateError() const
+	NumErrorT ApproximateError() const
 	{
 		return approximate_error_;
 	}

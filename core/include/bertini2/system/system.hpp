@@ -63,6 +63,17 @@
 namespace bertini {
 
 	
+	enum class JacobianEvalMethod
+	{
+		JacobianNode,
+		Derivatives
+		//StraightLineProgram not yet....
+	};
+
+	/**
+	\brief Gets the default evaluation method for Jacobians.  One might be faster...
+	*/
+	JacobianEvalMethod DefaultJacobianEvalMethod();
 
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
@@ -352,7 +363,7 @@ namespace bertini {
 		
 		
 		/**
-		 Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
+		 \brief Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
 
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		*/
@@ -370,14 +381,33 @@ namespace bertini {
 
 			if (!is_differentiated_)
 				Differentiate();
-			else
-				for (const auto& iter : jacobian_) 
-					iter->Reset();
+			
+			
 
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-				for (int jj = 0; jj < NumVariables(); ++jj)
-					jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
-				
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+				{
+					for (const auto& iter : jacobian_) 
+						iter->Reset();
+
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						for (int jj = 0; jj < NumVariables(); ++jj)
+							jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
+					break;
+				}
+				case JacobianEvalMethod::Derivatives:
+				{
+					for (const auto& iter : space_derivatives_) 
+						iter->Reset();
+
+					for (int jj = 0; jj < NumVariables(); ++jj)
+						for (int ii = 0; ii < NumFunctions(); ++ii)
+							space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
+					break;
+				}
+			}
+			
 			if (IsPatched())
 				patch_.JacobianInPlace(J,std::get<Vec<T> >(current_variable_values_));
 			
@@ -569,10 +599,29 @@ namespace bertini {
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
 
-			
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+				{
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						jacobian_[ii]->Reset();
 
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
+					break;
+				}
+				case JacobianEvalMethod::Derivatives:
+				{
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						time_derivatives_[ii]->Reset();
+
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
+					break;
+				}
+			}
+
+			// the patch doesn't move with time.  derivatives 0.
 			if (IsPatched())
 				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
 					ds_dt(ii+NumFunctions()) = T(0);
@@ -972,6 +1021,8 @@ namespace bertini {
 
 		 Homogenizing variables precede affine variable groups, so that groups always are grouped together.
 
+		This function freshly constructs the ordering every time. If you want to use the cached value, \see Variables.
+
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
 		*/
 		VariableGroup VariableOrdering() const;
@@ -979,6 +1030,8 @@ namespace bertini {
 
 		/**
 		 Get the variables in the problem.
+
+		 Returns the variable ordering, constructing it if necessary.
 		*/
 		const VariableGroup& Variables() const;
 
@@ -1051,6 +1104,10 @@ namespace bertini {
 		}
 
 
+		const Var& PathVariable() const
+		{
+			return path_variable_;
+		}
 		//////////////////////
 		//
 		//  Functions involving coefficients of the system
@@ -1065,31 +1122,8 @@ namespace bertini {
 		\returns An upper bound on the absolute values of the coefficients.
 		*/
 		template <typename NumT>
-		auto CoefficientBound(unsigned num_evaluations = 1) const
-		{
-			static_assert(Eigen::NumTraits<NumT>::IsComplex,"NumT must be a complex type");
-			
-			using RT = typename Eigen::NumTraits<NumT>::Real;
-			using CT = NumT;
-
-			RT bound(0);
-
-			for (unsigned ii=0; ii < num_evaluations; ii++)
-			{	
-				Vec<CT> randy = RandomOfUnits<CT>(NumVariables());
-				Vec<CT> f_vals;
-				if (HavePathVariable())
-					f_vals = Eval(randy, RandomUnit<CT>());
-				else
-					f_vals = Eval(randy);
-				
-				auto dh_dx = Jacobian<CT>();
-				
-				bound = max(f_vals.array().abs().maxCoeff(),
-							 dh_dx.array().abs().maxCoeff(), bound);
-			}
-			return bound;
-		}
+		typename Eigen::NumTraits<NumT>::Real CoefficientBound(unsigned num_evaluations = 1) const;
+		
 
 
 		/**
@@ -1364,7 +1398,7 @@ namespace bertini {
 		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.  
 
 
-		bool have_path_variable_; ///< Whether we have the variable or not.
+		bool have_path_variable_ = false; ///< Whether we have the variable or not.
 		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
 		
 		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
@@ -1375,10 +1409,15 @@ namespace bertini {
 		std::vector< Fn > functions_; ///< The system's functions.
 		
 		class Patch patch_; ///< Patch on the variable groups.  Assumed to be in the same order as the time_order_of_variable_groups_ if the system uses FIFO ordering, or in same order as the AffHomUng variable groups if that is set.
-		bool is_patched_;	///< Indicator of whether the system has been patched.
+		bool is_patched_ = false;	///< Indicator of whether the system has been patched.
 
 		mutable std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
-		mutable bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
+
+		mutable std::vector< Nd > space_derivatives_; ///< The generated functions from differentiation with respect to space.  in column-major order to be consistent with Eigen default order.  Created when first call for a Jacobian matrix evaluation.
+
+		mutable std::vector< Nd > time_derivatives_; ///< The generated functions from differentiation with respect to time.  in column-major order to be consistent with Eigen default order.  Created when first call for a Jacobian matrix evaluation.
+
+		mutable bool is_differentiated_ = false; ///< indicator for whether the jacobian tree has been populated.
 
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
@@ -1386,11 +1425,13 @@ namespace bertini {
 		mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_variable_values_;
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
-		mutable bool have_ordering_;
+		mutable bool have_ordering_ = false;
 
 		mutable unsigned precision_; ///< the current working precision of the system 
 
-		bool assume_uniform_precision_ = true; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
+		bool assume_uniform_precision_ = false; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
+
+		JacobianEvalMethod jacobian_eval_method_ = DefaultJacobianEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
 
 		friend class boost::serialization::access;
 
@@ -1420,11 +1461,15 @@ namespace bertini {
 			ar & is_differentiated_;
 			ar & jacobian_;
 
+			ar & space_derivatives_;
+			ar & time_derivatives_;
+			
 			ar & precision_;
 			ar & is_patched_;
 			ar & patch_;
 
 			ar & assume_uniform_precision_;
+			ar & jacobian_eval_method_;
 		}
 
 	};

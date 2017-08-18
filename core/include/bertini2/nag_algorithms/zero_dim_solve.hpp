@@ -161,11 +161,11 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 				///// things computed in endgame only
-				double condition_number; 				// the latest estimate on the condition number
-				double newton_residual; 				// the latest newton residual
+				NumErrorT condition_number; 				// the latest estimate on the condition number
+				NumErrorT newton_residual; 				// the latest newton residual
 				BaseComplexType final_time_used;   			// the final value of time tracked to
-				double accuracy_estimate; 			// accuracy estimate between extrapolations
-				double accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
+				NumErrorT accuracy_estimate; 			// accuracy estimate between extrapolations
+				NumErrorT accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
 				unsigned cycle_num;    						// cycle number used in extrapolations
 				SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
 
@@ -173,7 +173,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 				///// things added by post-processing
-				double function_residual; 	// the latest function residual
+				NumErrorT function_residual; 	// the latest function residual
 
 				int multiplicity = 1; 		// multiplicity
 				bool is_real;       		// real flag:  0 - not real, 1 - real
@@ -289,7 +289,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				this->template Set<AutoRetrack>(AutoRetrack());
 			}
 
-			void SetMidpathRetrackTol(double const& rt)
+			void SetMidpathRetrackTol(NumErrorT const& rt)
 			{
 				midpath_retrack_tolerance_ = rt;
 			}
@@ -676,14 +676,14 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 						DefaultPrecision(Precision(solutions_post_endgame_[soln_ind]));
 						TargetSystem().precision(Precision(solutions_post_endgame_[soln_ind]));
 					}
-					smd.function_residual = static_cast<double>(TargetSystem().Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>());
+					smd.function_residual = static_cast<NumErrorT>(TargetSystem().Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>());
 					smd.final_time_used = GetEndgame().LatestTime();
 					smd.condition_number = GetTracker().LatestConditionNumber();
 					smd.newton_residual = GetTracker().LatestNormOfStep();
 
 					smd.accuracy_estimate = GetEndgame().template ApproximateError();
 					smd.accuracy_estimate_user_coords =
-						static_cast<double>( (TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
+						static_cast<NumErrorT>( (TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
 						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>() );
 					smd.cycle_num = GetEndgame().template CycleNumber();
 					// end metadata gathering
@@ -740,7 +740,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 		///////
 
 			unsigned long long num_start_points_;
-			double midpath_retrack_tolerance_;
+			NumErrorT midpath_retrack_tolerance_;
 
 
 			/// observers used during tracking

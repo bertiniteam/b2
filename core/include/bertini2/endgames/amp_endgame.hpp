@@ -89,7 +89,7 @@ public:
 
 
 
-	SuccessCode RefineSampleImpl(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time, double tol, unsigned max_iterations) const
+	SuccessCode RefineSampleImpl(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time, NumErrorT tol, unsigned max_iterations) const
 	{
 BOOST_LOG_TRIVIAL(severity_level::trace) << "initial point\n" << std::setprecision(bertini::Precision(current_sample)) << current_sample << '\n';
 

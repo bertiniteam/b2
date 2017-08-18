@@ -385,7 +385,7 @@ namespace bertini{
 			*/
 			SuccessCode RefineImpl(Vec<CT> & new_space,
 								Vec<CT> const& start_point, CT const& current_time,
-								double const& tolerance, unsigned max_iterations) const
+								NumErrorT const& tolerance, unsigned max_iterations) const
 			{
 				return this->corrector_->Correct(new_space,
 							   this->tracked_system_,
