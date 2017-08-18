@@ -60,6 +60,21 @@ BOOST_CLASS_EXPORT(bertini::node::ExpOperator)
 namespace bertini{
 namespace node{
 
+	template<typename T>
+	void Node::EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+		if(!val_pair.second)
+		{
+			detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this,diff_variable);
+			val_pair.second = true;
+		}
+		eval_value = val_pair.first;
+	}
+
+	template void Node::EvalInPlace<dbl>(dbl&, std::shared_ptr<Variable> const&) const;
+	template void Node::EvalInPlace<mpfr>(mpfr&, std::shared_ptr<Variable> const&) const;
+
 	unsigned Node::precision() const
 	{
 		return std::get<std::pair<mpfr,bool> >(current_value_).first.precision();
