@@ -10,6 +10,7 @@ b2_class_test_SOURCES = \
 	test/classes/fundamentals_test.cpp \
 	test/classes/eigen_test.cpp \
 	test/classes/function_tree_test.cpp \
+	test/classes/function_tree_transform.cpp \
 	test/classes/class_test.cpp \
 	test/classes/system_test.cpp \
 	test/classes/differentiate_test.cpp \
