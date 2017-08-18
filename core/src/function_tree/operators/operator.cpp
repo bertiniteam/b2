@@ -138,7 +138,7 @@ void UnaryOperator::precision(unsigned int prec) const
 void NaryOperator::Reset() const
 {
 	Node::ResetStoredValues();
-	for (auto ii:children_)
+	for (const auto& ii : children_)
 		ii->Reset();
 
 }
@@ -179,7 +179,7 @@ void NaryOperator::precision(unsigned int prec) const
 	
 	this->PrecisionChangeSpecific(prec);
 
-	for (auto iter : children_)
+	for (const auto& iter : children_)
 		iter->precision(prec);
 }
 
