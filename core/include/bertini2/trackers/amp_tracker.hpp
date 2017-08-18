@@ -840,14 +840,14 @@ namespace bertini{
 			\brief Get the raw right-hand side of Criterion B based on current state.
 			*/
 			template<typename ComplexType>
-			double B_RHS() const
+			NumErrorT B_RHS() const
 			{	
 				return max(amp::CriterionBRHS(this->norm_J_, 
 				           					  this->norm_J_inverse_, 
 				           					  Get<NewtonConfig>().max_num_newton_iterations, 
 				           					  tracking_tolerance_, 
 				           					  this->size_proportion_, 
-				           					  Get<PrecConf>()), double(0));
+				           					  Get<PrecConf>()), NumErrorT(0));
 			}
 
 
@@ -882,12 +882,12 @@ namespace bertini{
 			\brief Get the raw right-hand side of Criterion B based on current state.
 			*/
 			template<typename ComplexType>
-			double C_RHS() const
+			NumErrorT C_RHS() const
 			{	
 				return max(amp::CriterionCRHS(this->norm_J_inverse_, 
-				                              double(std::get<Vec<ComplexType> > (current_space_).norm()), 
+				                              NumErrorT(std::get<Vec<ComplexType> > (current_space_).norm()), 
 				                              tracking_tolerance_, 
-				                              Get<PrecConf>()), double(0));
+				                              Get<PrecConf>()), NumErrorT(0));
 			}
 
 
@@ -1193,7 +1193,7 @@ namespace bertini{
 			template <typename ComplexType>
 			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
 								Vec<ComplexType> const& start_point, ComplexType const& current_time,
-								double const& tolerance, unsigned max_iterations) const
+								NumErrorT const& tolerance, unsigned max_iterations) const
 			{
 				auto target_precision = Precision(current_time);
 				assert(Precision(start_point)==target_precision);

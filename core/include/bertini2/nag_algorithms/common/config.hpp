@@ -55,7 +55,7 @@ enum class AlgoChoice
 
 struct TolerancesConfig
 {	
-	using T = double;
+	using T = NumErrorT;
 
 	T newton_before_endgame = T(1)/T(100000); //E.4.1
 	T newton_during_endgame = T(1)/T(1000000); //E.4.2
@@ -68,7 +68,7 @@ struct TolerancesConfig
 	
 struct MidPathConfig
 {
-	using T = double;
+	using T = NumErrorT;
 
 	T same_point_tolerance = T(1)/T(100000);
 };
@@ -77,7 +77,7 @@ struct MidPathConfig
 
 struct AutoRetrackConfig
 {
-	using T = double;
+	using T = NumErrorT;
 
 	T midpath_decrease_tolerance_factor = T(1)/T(2);
 };
@@ -86,7 +86,7 @@ struct AutoRetrackConfig
 
 struct SharpeningConfig
 {
-	using T = double;
+	using T = NumErrorT;
 
 	unsigned sharpendigits; ///< how many digits should be correct after sharpening.
 	
@@ -101,7 +101,7 @@ struct SharpeningConfig
 
 struct RegenerationConfig
 {
-	using T = double;
+	using T = NumErrorT;
 
 	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.  RegenRemoveInf
 
@@ -115,7 +115,7 @@ struct RegenerationConfig
 
 
 struct PostProcessingConfig{
-	using T = double;
+	using T = NumErrorT;
 	
 	T real_threshold = T(1)/T(100000000); ///< threshold on the imaginary part of a solution being 0.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.
 

@@ -727,7 +727,7 @@ public:
 
 	  	
 
-	 	double& approx_error = this->approximate_error_;
+	 	NumErrorT& approx_error = this->approximate_error_;
 		approx_error = 1;
 
 		while (approx_error > this->FinalTolerance())
@@ -762,7 +762,7 @@ public:
 	 		}
 
 	 		//update
-	 		approx_error = static_cast<double>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
+	 		approx_error = static_cast<NumErrorT>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
 	 		// BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
 
 	 		prev_approx = latest_approx;

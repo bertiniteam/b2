@@ -95,17 +95,14 @@ namespace bertini{ namespace endgame{
 
 	struct SecurityConfig
 	{
-		using T = double;
-
 		int level = 0; //SecurityLevel
-		T max_norm = T(1e4); //SecurityMaxNorm wrong default value
+		NumErrorT max_norm = NumErrorT(1e4); //SecurityMaxNorm wrong default value
 	};
 
 	
 	struct EndgameConfig
 	{
-		using T = double;
-
+		using T = NumErrorT;
 		T sample_point_refinement_factor = 1e-2; ///* Extra amount of tolerance for refining before computing the final approximation, during endgame.
 		unsigned num_sample_points = 3; //NumSamplePoints default = 2
 		T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
@@ -127,7 +124,7 @@ namespace bertini{ namespace endgame{
 	
 	struct CauchyConfig
 	{
-		using T = double;
+		using T = NumErrorT;
 
 		T cycle_cutoff_time = T(1)/T(100000000); //CycleTimeCutoff
 		T ratio_cutoff_time = T(1)/T(100000000000000); //RatioTimeCutoff
