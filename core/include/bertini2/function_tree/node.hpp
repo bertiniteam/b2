@@ -166,15 +166,9 @@ public:
 	template<typename T>
 	T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const 
 	{
-		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-		if(!val_pair.second)
-		{
-			val_pair.first = detail::FreshEvalSelector<T>::Run(*this,diff_variable);
-			val_pair.second = true;
-		}
- 
-		
-		return val_pair.first;
+		T result;
+		EvalInPlace(result, diff_variable);
+		return result;
 	}
 	
 
@@ -198,8 +192,6 @@ public:
 		}
 		
 		eval_value = val_pair.first;
-		
-		
 	}
 
 	
@@ -310,8 +302,6 @@ protected:
 	
 	
 	///////// PRIVATE PURE METHODS /////////////////
-//    virtual dbl FreshEval(dbl) = 0;
-//    virtual mpfr FreshEval(mpfr) = 0;
 	
 	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
