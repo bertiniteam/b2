@@ -152,19 +152,17 @@ namespace tracking{
 	*/
 	struct AdaptiveMultiplePrecisionConfig
 	{
-		using RealType = double;
+		NumErrorT coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
+		NumErrorT degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
 
-		RealType coefficient_bound;  ///< User-defined bound on the sum of the abs vals of the coeffs for any polynomial in the system (for adaptive precision). 
-		RealType degree_bound; ///<  User-set bound on degrees of polynomials in the system - tricky to compute for factored polys, subfuncs, etc. (for adaptive precision). 
-
-		RealType epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite AMP1, \cite AMP2, and is used for AMP criteria A and B.  See top of page 13 of \cite AMP1.  A pessimistic bound is \f$2^n\f$.
+		NumErrorT epsilon;  ///< Bound on growth in error from linear solves.  This is \f$\epsilon\f$ in \cite AMP1, \cite AMP2, and is used for AMP criteria A and B.  See top of page 13 of \cite AMP1.  A pessimistic bound is \f$2^n\f$.
 		// rename to linear_solve_error_bound.
 
-		RealType Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
+		NumErrorT Phi;  ///< Bound on \f$\Phi\f$ (an error bound).   Used for AMP criteria A, B.
 		// \f$\Phi\f$ is error in Jacobian evaluation divided by the unit roundoff error, \f$10^{-P}\f$
 		// rename to jacobian_eval_error_bound
 
-		RealType Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
+		NumErrorT Psi;  ///< Bound on \f$\Psi\f$ (an error bound).   Used for AMP criterion C.
 		// Error in function evaluation, divided by the precision-dependent unit roundoff error.
 		// rename to function_eval_error_bound
 
@@ -186,10 +184,9 @@ namespace tracking{
 		*/
 		void SetBoundsAndEpsilonFrom(System const& sys)
 		{
-			using RealType = double;
 			using std::pow;
 
-			epsilon = pow(RealType(sys.NumVariables()),2);
+			epsilon = pow(NumErrorT(sys.NumVariables()),2);
 			degree_bound = sys.DegreeBound();
 			coefficient_bound = sys.CoefficientBound<dbl>();
 		}
@@ -203,9 +200,7 @@ namespace tracking{
 		*/
 		void SetPhiPsiFromBounds()
 		{	
-			using RealType = double;
-
-			Phi = degree_bound*(degree_bound-RealType(1))*coefficient_bound;
+			Phi = degree_bound*(degree_bound-NumErrorT(1))*coefficient_bound;
 		    Psi = degree_bound*coefficient_bound;  //Psi from the AMP paper.
 		}
 

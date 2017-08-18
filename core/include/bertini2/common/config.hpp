@@ -64,6 +64,7 @@ namespace bertini
 
 	};
 
+	using NumErrorT = double;
 } // namespace bertini
 
 

@@ -74,7 +74,7 @@ NumT NumFromString(T... s)
 
 using std::abs;
 
-using ErrorT = double;
+using NumErrorT = bertini::NumErrorT;
 
 
 //////////////////////////////////////////////
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKF45_mp)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189497719010446148169962134860","0.215706089331670902152009632918759"),
 	mpfr("0.524023229576057910435628847490594", "1.42873163348439955724728985152555");
-	auto predicted_error = NumFromString<ErrorT>("0.0000106466724075688025735071053994891");
+	auto predicted_error = NumFromString<NumErrorT>("0.0000106466724075688025735071053994891");
 	
 	Vec<mpfr> RKF45_prediction_result;
 	mpfr next_time;
@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKF45_mp)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("0.412128542780464095503570026382729"),
 	mpfr("0.731436941916416473300161135742533");
-	auto predicted_error = NumFromString<ErrorT>("7.17724133646795598396247354053062e-8");
+	auto predicted_error = NumFromString<NumErrorT>("7.17724133646795598396247354053062e-8");
 	
 	Vec<mpfr> RKF45_prediction_result;
 	mpfr next_time;
@@ -861,7 +861,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKCK45_mp)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189687053703334440737233377404","0.215710089694839238261207432302796"),
 	mpfr("0.524023000601737797891275060536396", "1.42873127596071439996076584113815");
-	auto predicted_error = NumFromString<ErrorT>("0.00000353010590253211978478006394088836");
+	auto predicted_error = NumFromString<NumErrorT>("0.00000353010590253211978478006394088836");
 	
 	Vec<mpfr> RKCK45_prediction_result;
 	mpfr next_time;
@@ -1022,7 +1022,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("0.412128535278042242819741034030722"),
 	mpfr("0.731436941916396784391576913351911");
-	auto predicted_error = NumFromString<ErrorT>("4.51352044466211707817977052519894e-9");
+	auto predicted_error = NumFromString<NumErrorT>("4.51352044466211707817977052519894e-9");
 	
 	Vec<mpfr> RKCK45_prediction_result;
 	mpfr next_time;
@@ -1104,7 +1104,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("0.412128535278042242819741034030722"),
 	mpfr("0.731436941916396784391576913351911");
-	auto predicted_error = NumFromString<ErrorT>("4.51352044466211707817977052519894e-9");
+	auto predicted_error = NumFromString<NumErrorT>("4.51352044466211707817977052519894e-9");
 	
 	Vec<mpfr> RKCK45_prediction_result;
 	mpfr next_time;
@@ -1166,7 +1166,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	
 	predicted << mpfr("0.41212853527804224281974103403072207383998320746093"),
 	mpfr("0.73143694191639678439157691335191077020461981185497");
-	predicted_error = NumFromString<ErrorT>("4.5135204446621170781797705326691218021056435215073e-9");
+	predicted_error = NumFromString<NumErrorT>("4.5135204446621170781797705326691218021056435215073e-9");
 	
 	
 	predictor->ChangePrecision(50);
@@ -1338,7 +1338,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189763095027864748166494355925","0.215711752936893239277981497324557"),
 	mpfr("0.524022748677715856115185568097945", "1.42873072156957928016044855615010");
-	auto predicted_error = NumFromString<ErrorT>("6.79397491522542193110307157970405e-7");
+	auto predicted_error = NumFromString<NumErrorT>("6.79397491522542193110307157970405e-7");
 	
 	Vec<mpfr> RKDP56_prediction_result;
 	mpfr next_time;
@@ -1418,7 +1418,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp_change_precision)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189763095027864748166494355925","0.215711752936893239277981497324557"),
 	mpfr("0.524022748677715856115185568097945", "1.42873072156957928016044855615010");
-	auto predicted_error = NumFromString<ErrorT>("6.79397491522542193110307157970405e-7");
+	auto predicted_error = NumFromString<NumErrorT>("6.79397491522542193110307157970405e-7");
 	
 	Vec<mpfr> RKDP56_prediction_result;
 	mpfr next_time;
@@ -1477,7 +1477,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp_change_precision)
 	
 	predicted << mpfr("2.3918976309502786474816649435592524145893505795708","0.21571175293689323927798149732455717990784116340616"),
 	mpfr("0.52402274867771585611518556809794390786903320453982", "1.4287307215695792801604485561500984044649241859097");
-	predicted_error = NumFromString<ErrorT>("6.7939749152254219311030715790073321381093755581241e-7");
+	predicted_error = NumFromString<NumErrorT>("6.7939749152254219311030715790073321381093755581241e-7");
 	
 	
 	predictor->ChangePrecision(50);
@@ -1632,7 +1632,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKDP56_mp)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("0.412128532164122346459968880922735"),
 	mpfr("0.731436941916392989685864031055020");
-	auto predicted_error = NumFromString<ErrorT>("3.85904197101299548102733617445410e-9");
+	auto predicted_error = NumFromString<NumErrorT>("3.85904197101299548102733617445410e-9");
 	
 	Vec<mpfr> RKDP56_prediction_result;
 	mpfr next_time;
@@ -1809,7 +1809,7 @@ BOOST_AUTO_TEST_CASE(circle_line_RKV67_mp)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("2.39189815934576660586899846426669","0.215712712024488132602524062094065"),
 	mpfr("0.524022631256496309806889230162953", "1.42873050843900263719943909731242");
-	auto predicted_error = NumFromString<ErrorT>("0.00000128891520195955347062706145253149");
+	auto predicted_error = NumFromString<NumErrorT>("0.00000128891520195955347062706145253149");
 	
 	Vec<mpfr> RKV67_prediction_result;
 	mpfr next_time;
@@ -1969,7 +1969,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKV67_mp)
 	Vec<mpfr> predicted(2);
 	predicted << mpfr("0.412128533889452110491490000899263"),
 	mpfr("0.731436941916389669876029584806957");
-	auto predicted_error = NumFromString<ErrorT>("1.42794733055750714441060080061e-8");
+	auto predicted_error = NumFromString<NumErrorT>("1.42794733055750714441060080061e-8");
 	
 	Vec<mpfr> RKV67_prediction_result;
 	mpfr next_time;
