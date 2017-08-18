@@ -841,10 +841,10 @@ namespace bertini {
 
 
 			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Meta, T, Skipper> : qi::grammar<Iterator, config::Meta(), Skipper>
+			struct ConfigSettingParser<Iterator, algorithm::config::classic::AlgoChoice, T, Skipper> : qi::grammar<Iterator, algorithm::config::classic::AlgoChoice(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::Meta")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::classic::AlgoChoice")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -860,24 +860,25 @@ namespace bertini {
 					using boost::spirit::as_string;
 					using boost::spirit::ascii::no_case;
 					
-					tracktype_.add("-4", config::classic::AlgoChoice::EvalFunctions);
-					tracktype_.add("-3", config::classic::AlgoChoice::EvalFunctionJacobian);
-					tracktype_.add("-2", config::classic::AlgoChoice::NewtonIteration);
-					tracktype_.add("-1", config::classic::AlgoChoice::NewtonIterationCondNum);
-					tracktype_.add("0", config::classic::AlgoChoice::ZeroDim);
-					tracktype_.add("1", config::classic::AlgoChoice::NID);
-					tracktype_.add("2", config::classic::AlgoChoice::SampleComponent);
-					tracktype_.add("3", config::classic::AlgoChoice::MembershipTest);
-					tracktype_.add("4", config::classic::AlgoChoice::ExtractWitnessSet);
-					tracktype_.add("5", config::classic::AlgoChoice::WitnessSetProjection);
-					tracktype_.add("6", config::classic::AlgoChoice::IsosingularStab);
+					tracktype_.add("-4", algorithm::config::classic::AlgoChoice::EvalFunctions);
+					tracktype_.add("-3", algorithm::config::classic::AlgoChoice::EvalFunctionJacobian);
+					tracktype_.add("-2", algorithm::config::classic::AlgoChoice::NewtonIteration);
+					tracktype_.add("-1", algorithm::config::classic::AlgoChoice::NewtonIterationCondNum);
+					tracktype_.add("0", algorithm::config::classic::AlgoChoice::ZeroDim);
+					tracktype_.add("1", algorithm::config::classic::AlgoChoice::NID);
+					tracktype_.add("2", algorithm::config::classic::AlgoChoice::SampleComponent);
+					tracktype_.add("3", algorithm::config::classic::AlgoChoice::MembershipTest);
+					tracktype_.add("4", algorithm::config::classic::AlgoChoice::ExtractWitnessSet);
+					tracktype_.add("5", algorithm::config::classic::AlgoChoice::WitnessSetProjection);
+					tracktype_.add("6", algorithm::config::classic::AlgoChoice::IsosingularStab);
 					
 					std::string setting_name = "tracktype";
 					
 					
-					root_rule_.name("config::Meta");
+					root_rule_.name("config::classic::AlgoChoice");
 					
-					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = config::Meta::RKF45];
+					root_rule_ = config_name_[_val = _1] >> -no_setting_
+								| no_setting_[_val = algorithm::config::classic::AlgoChoice::ZeroDim];
 					
 					config_name_.name("tracktype_");
 					config_name_ = *(char_ - (no_case[setting_name] >> ':')) >> (no_case[setting_name] >> ':') >> tracktype_[_val = _1] >> ';';
@@ -910,10 +911,10 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::Meta(), ascii::space_type > root_rule_, config_name_;
+				qi::rule<Iterator, algorithm::config::classic::AlgoChoice(), ascii::space_type > root_rule_, config_name_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_;
 				
-				qi::symbols<char,config::classic::AlgoChoice> tracktype_;
+				qi::symbols<char,algorithm::config::classic::AlgoChoice> tracktype_;
 				
 				
 			}; //re: Meta

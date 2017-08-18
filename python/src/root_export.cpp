@@ -46,7 +46,8 @@ namespace bertini{
 		void FunctionVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.add_property("root", &Function::entry_node, &Function::SetRoot)
+			.def("root", &Function::entry_node,return_value_policy<reference_existing_object>())
+			.def("root", &Function::SetRoot)
 			.def("ensure_not_empy", &Function::EnsureNotEmpty)
 			;
 		}

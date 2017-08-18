@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with arithmetic.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
@@ -116,8 +116,9 @@ namespace node{
 		
 		
 		
-		
-		//Special Behaviour: by default all terms added are positive
+		/**
+		\note: Special Behaviour: by default all terms added are positive
+		*/
 		void AddChild(std::shared_ptr<Node> child) override
 		{
 			NaryOperator::AddChild(std::move(child));
@@ -125,8 +126,9 @@ namespace node{
 		}
 		
 		
-		
-		//Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
+		/**
+		\note Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
+		*/
 		void AddChild(std::shared_ptr<Node> child, bool sign) // not an override
 		{
 			NaryOperator::AddChild(std::move(child));
@@ -143,11 +145,10 @@ namespace node{
 		
 		
 		/**
-		 Return SumOperator whose children are derivatives of children_
+		 Return SumOperator whose children are derivatives of the children, omitted as possible
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
 		/**
 		 Compute the degree of a node.  For sum functions, the degree is the max among summands.
 		 */
@@ -274,8 +275,8 @@ namespace node{
 		/**
 		 Returns negative of derivative of child.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return child_->IsHomogeneous(v);
@@ -394,9 +395,7 @@ namespace node{
 		/**
 		 Differentiates using the product rule.  If there is division, consider as ^(-1) and use chain rule.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		/**
 		 Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
@@ -512,9 +511,7 @@ namespace node{
 		/**
 		 Differentiates with the power rule.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		/**
 		 Compute the degree of a node.  For power functions, the degree depends on the degree of the power.  If the exponent is constant, then the degree is actually a number.  If the exponent is non-constant, then the degree is ill-defined.
@@ -623,7 +620,7 @@ namespace node{
 		
 		
 		/**
-		 Get the integet exponent of an ExpOperator
+		 Set the integer exponent of an integer power operator
 		 */
 		void set_exponent(int exp)
 		{
@@ -632,7 +629,7 @@ namespace node{
 		
 		
 		/**
-		 Get the exponent of an ExpOperator
+		 Get the exponent
 		 */
 		int exponent() const
 		{
@@ -641,10 +638,9 @@ namespace node{
 		
 		
 		/**
-		 Differentiates a number.
+		 \brief Differentiate
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		/**
 		 Compute the degree of a node.  For integer power functions, the degree is the product of the degree of the argument, and the power.
@@ -673,7 +669,7 @@ namespace node{
 		/**
 		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
 		 */
-		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p = 1) : exponent_(p), UnaryOperator(N)
+		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p) : exponent_(p), UnaryOperator(N)
 		{}
 		
 		
@@ -709,7 +705,7 @@ namespace node{
 		IntegerPowerOperator() = default;
 
 
-		int exponent_ = 1; ///< Exponent for the exponenetial operator
+		int exponent_; ///< Exponent for the exponenetial operator
 
 		friend class boost::serialization::access;
 		
@@ -761,9 +757,7 @@ namespace node{
 		/**
 		 Differentiates the square root function.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		/**
 		 Compute the degree with respect to a single variable.
@@ -829,9 +823,7 @@ namespace node{
 		/**
 		 Differentiates the exponential function.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		/**
 		 Compute the degree with respect to a single variable.
@@ -884,9 +876,7 @@ namespace node{
 		/**
 		 Differentiates the exponential function.
 		 */
-		std::shared_ptr<Node> Differentiate() const override;
-		
-		
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		/**
 		 Compute the degree with respect to a single variable.

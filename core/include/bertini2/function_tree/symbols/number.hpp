@@ -66,10 +66,7 @@ namespace node{
 
 
 
-		void Reset() const override
-		{
-			ResetStoredValues();
-		}
+		void Reset() const override;
 
 
 		
@@ -78,32 +75,54 @@ namespace node{
 
 
 		/**
-		Compute the degree with respect to a single variable.
+		\brief Get the degree of this node.
 
-		For transcendental functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return -1.
+		The degree of a number is always 0.  It's a number.
 		*/
+		inline
 		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return 0;
 		}
 
+		/**
+		\brief Get the degree of this node.
 
+		The degree of a number is always 0.  It's a number.
+		*/
+		inline
 		int Degree(VariableGroup const& vars) const override
 		{
 			return 0;
 		}
 
+
+		/**
+		\brief Get the multidegree of this node.
+
+		The degree of a number is always 0.  It's a number.
+		*/
+		inline
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override
 		{
 			return std::vector<int>(vars.size(), 0);
 		}
 
+		/**
+		\brief Homogenize this node.
 
+		Homogenization of a number is a trivial operation.  Don't do anything.
+		*/
 		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
 		{
 			
 		}
 
+		/**
+		\brief Is this node homogeneous?
+
+		Numbers are always homogeneous
+		*/
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
 			return true;
@@ -123,14 +142,13 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) const override
-		{
-			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
-		}
+		void precision(unsigned int prec) const override;
 
-
-
+		/**
+		\brief Differentiate a number.
+		 */
+		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;
+		
 	protected:
 
 	private:
@@ -174,45 +192,20 @@ namespace node{
 
 
 
-		void print(std::ostream & target) const override
-		{
-			target << true_value_;
-		}
-
-
-		/**
-		 Differentiates a number.  Should this return the special number Zero?
-		 */
-		std::shared_ptr<Node> Differentiate() const override
-		{
-			return MakeInteger(0);
-		}
-
+		void print(std::ostream & target) const override;
 
 
 	private:
 
 		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return dbl(double(true_value_),0);
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			evaluation_value = dbl(double(true_value_),0);
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return mpfr(true_value_,0);
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			evaluation_value = true_value_;
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpz_int true_value_;
@@ -262,43 +255,22 @@ namespace node{
 
 
 
-		void print(std::ostream & target) const override
-		{
-			target << highest_precision_value_;
-		}
+		void print(std::ostream & target) const override;
 
 
-		/**
-		 Differentiates a number.  Should this return the special number Zero?
-		 */
-		std::shared_ptr<Node> Differentiate() const override
-		{
-			return MakeInteger(0);
-		}
+
 
 
 	private:
-		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return dbl(highest_precision_value_);
-		}
+
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			evaluation_value = dbl(highest_precision_value_);
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return mpfr(highest_precision_value_);
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			evaluation_value = mpfr(highest_precision_value_);
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		const mpfr highest_precision_value_;
@@ -356,55 +328,48 @@ namespace node{
 
 		~Rational() = default;
 		
-		static Rational Rand()
-		{
-			return Rational(RandomRat(),RandomRat());
-		}
+		/**
+		\brief Get a random complex rational node.  Numerator and denominator will have about 50 digits.
 
-		static Rational RandReal()
+		\see RandomRat()
+		*/
+		template<unsigned long Digits = 50>
+		static
+		Rational Rand()
 		{
-			return Rational(RandomRat(),0);
+			return Rational(RandomRat<Digits>(),RandomRat<Digits>());
 		}
-
-		void print(std::ostream & target) const override
-		{
-			target << "(" << true_value_real_ << "," << true_value_imag_ << ")";
-		}
-
 
 		/**
-		 Differentiates a number.  
-		 */
-		std::shared_ptr<Node> Differentiate() const override
+		\brief Get a random real rational node.  Numerator and denominator will have about 50 digits.
+
+		\see RandomRat()
+		*/
+		template<int Digits = 50>
+		static
+		Rational RandReal()
 		{
-			return MakeInteger(0);
+			return Rational(RandomRat<Digits>(),0);
 		}
+
+		void print(std::ostream & target) const override;
+
+
+
 
 
 
 	private:
 
 		// Return value of constant
-		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return dbl(double(true_value_real_),double(true_value_imag_));
-		}
+		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			evaluation_value = dbl(double(true_value_real_),double(true_value_imag_));
-		}
+		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
-		}
+		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
-		{
-			evaluation_value = mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
-		}
+		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		const mpq_rational true_value_real_, true_value_imag_;

@@ -10,6 +10,7 @@ b2_class_test_SOURCES = \
 	test/classes/class_test.cpp \
 	test/classes/system_test.cpp \
 	test/classes/differentiate_test.cpp \
+	test/classes/differentiate_wrt_var.cpp \
 	test/classes/homogenization_test.cpp \
 	test/classes/start_system_test.cpp \
 	test/classes/node_serialization_test.cpp \

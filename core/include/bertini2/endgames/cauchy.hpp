@@ -391,7 +391,7 @@ public:
 			RT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
 
 			auto next_sample = Vec<CT>(num_vars);
-			auto next_time = (ii==this->EndgameSettings().num_sample_points-1) 
+			CT next_time = (ii==this->EndgameSettings().num_sample_points-1) 
 								?
 							  starting_time
 								:
@@ -491,13 +491,14 @@ public:
 	template<typename CT>
 	bool CheckForCOverKStabilization(TimeCont<CT> const& c_over_k_array)
 	{	
+		using RT = typename Eigen::NumTraits<CT>::Real;
 		using std::abs;
 
 		assert(c_over_k_array.size()>=GetCauchySettings().num_needed_for_stabilization);
 		for(unsigned ii = 1; ii < GetCauchySettings().num_needed_for_stabilization ; ++ii)
 		{
-			auto a = abs(c_over_k_array[ii-1]);
-			auto b = abs(c_over_k_array[ii]);
+			RT a = abs(c_over_k_array[ii-1]);
+			RT b = abs(c_over_k_array[ii]);
 
 			typename Eigen::NumTraits<CT>::Real divide = a;
 
@@ -718,7 +719,7 @@ public:
 			cau_samples.push_back(ps_samples.back()); // cauchy samples and times should be empty before this point. 
 			cau_times.push_back(ps_times.back());
 
-			auto next_time = ps_times.back();
+			CT next_time = ps_times.back();
 			auto next_sample = ps_samples.back();
 
 			// track around a circle once.  we'll use it to measure whether we believe we are in the eg operating zone, based on the ratio of norms of sample points around the circle
@@ -941,8 +942,8 @@ public:
  		//Conversion to S-plane.
 		TimeCont<CT> s_times(num_sample_points);
 		SampCont<CT> s_derivatives(num_sample_points);
-		auto c = static_cast<RT>(this->CycleNumber());
-		auto one_over_c = 1/c;
+		RT c = static_cast<RT>(this->CycleNumber());
+		RT one_over_c = 1/c;
 		for(unsigned ii = 0; ii < num_sample_points; ++ii)
 		{
 			s_derivatives[ii] = pseg_derivatives[ii]*
