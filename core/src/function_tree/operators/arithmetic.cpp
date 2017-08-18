@@ -39,6 +39,16 @@ namespace bertini{
 //
 //////////////////////
 
+unsigned SumOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned SumOperator::EliminateOnes()
+{
+	return 0;
+}
+
+
 void SumOperator::print(std::ostream & target) const
 {
 	target << "(";
@@ -324,6 +334,14 @@ void SumOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable>
 //
 ////////////////////////
 
+unsigned NegateOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned NegateOperator::EliminateOnes()
+{
+	return 0;
+}
 
 void NegateOperator::print(std::ostream & target) const
 {
@@ -387,6 +405,15 @@ void NegateOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variab
 //  Mult Operator definitions
 //
 //////////////////////
+
+unsigned MultOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned MultOperator::EliminateOnes()
+{
+	return 0;
+}
 
 void MultOperator::print(std::ostream & target) const
 {
@@ -624,6 +651,17 @@ void MultOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable
 //
 /////////////////
 
+
+unsigned PowerOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned PowerOperator::EliminateOnes()
+{
+	return 0;
+}
+
+
 void PowerOperator::Reset() const
 {
 	Node::ResetStoredValues();
@@ -811,6 +849,15 @@ void PowerOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variabl
 //
 ////////////////////
 
+unsigned IntegerPowerOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned IntegerPowerOperator::EliminateOnes()
+{
+	return 0;
+}
+
 void IntegerPowerOperator::print(std::ostream & target) const
 {
 	target << "(";
@@ -866,6 +913,15 @@ int IntegerPowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 //  Square Root Operator definitions
 //
 /////////////////
+
+unsigned SqrtOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned SqrtOperator::EliminateOnes()
+{
+	return 0;
+}
 
 void SqrtOperator::print(std::ostream & target) const
 {
@@ -940,6 +996,15 @@ void SqrtOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable
 //
 //////////////
 
+unsigned ExpOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned ExpOperator::EliminateOnes()
+{
+	return 0;
+}
+
 void ExpOperator::print(std::ostream & target) const
 {
 	target << "exp(";
@@ -1006,6 +1071,15 @@ void ExpOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable>
 //  LogOperator definitions
 //
 //////////////
+
+unsigned LogOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned LogOperator::EliminateOnes()
+{
+	return 0;
+}
 
 void LogOperator::print(std::ostream & target) const
 {

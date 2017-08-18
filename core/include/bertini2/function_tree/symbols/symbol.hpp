@@ -61,6 +61,9 @@ namespace node {
 		
 		virtual ~Symbol() = default;
 
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
+		
 	private:
 		friend class boost::serialization::access;
 

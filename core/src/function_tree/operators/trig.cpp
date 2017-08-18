@@ -43,7 +43,14 @@ namespace node{
 	}
 
 
-
+	unsigned SinOperator::EliminateZeros()
+	{
+		return 0;
+	}
+	unsigned SinOperator::EliminateOnes()
+	{
+		return 0;
+	}
 
 	void SinOperator::print(std::ostream & target) const
 	{
@@ -80,6 +87,15 @@ namespace node{
 	{
 		child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
 		evaluation_value = sin(evaluation_value);
+	}
+
+	unsigned ArcSinOperator::EliminateZeros()
+	{
+		return 0;
+	}
+	unsigned ArcSinOperator::EliminateOnes()
+	{
+		return 0;
 	}
 
 	void ArcSinOperator::print(std::ostream & target) const
@@ -119,6 +135,15 @@ namespace node{
 		evaluation_value = asin(evaluation_value);
 	}
 
+	unsigned CosOperator::EliminateZeros()
+	{
+		return 0;
+	}
+	unsigned CosOperator::EliminateOnes()
+	{
+		return 0;
+	}
+
 	void CosOperator::print(std::ostream & target) const
 	{
 		target << "cos(";
@@ -155,7 +180,14 @@ namespace node{
 	}
 
 
-
+	unsigned ArcCosOperator::EliminateZeros()
+	{
+		return 0;
+	}
+	unsigned ArcCosOperator::EliminateOnes()
+	{
+		return 0;
+	}
 
 	void ArcCosOperator::print(std::ostream & target) const
 	{
@@ -195,6 +227,14 @@ namespace node{
 	}
 
 
+	unsigned TanOperator::EliminateZeros()
+	{
+		return 0;
+	}
+	unsigned TanOperator::EliminateOnes()
+	{
+		return 0;
+	}
 
 	void TanOperator::print(std::ostream & target) const
 	{
@@ -232,7 +272,14 @@ namespace node{
 	}
 
 
-
+	unsigned ArcTanOperator::EliminateZeros()
+	{
+		return 0;
+	}
+	unsigned ArcTanOperator::EliminateOnes()
+	{
+		return 0;
+	}
 
 	void ArcTanOperator::print(std::ostream & target) const
 	{
