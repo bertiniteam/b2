@@ -26,6 +26,7 @@
 
 #include "function_tree/symbols/variable.hpp"
 
+#include "bertini2/eigen_extensions.hpp"
 
 
 
@@ -34,19 +35,43 @@ namespace bertini{
 		using ::pow;
 		
 Variable::Variable(std::string new_name) : NamedSymbol(new_name)
-{ }
+{ 
+	SetToNan<dbl>();
+	SetToNan<mpfr>();
+}
+
+Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
+{ 
+	SetToNan<dbl>();
+	SetToNan<mpfr>();
+}
 
 template <typename T>
 void Variable::set_current_value(T const& val)
 {
-	assert(Precision(std::get< std::pair<T,bool> >(current_value_).first)==Precision(val) && "precision of value setting into variable doesn't match precision of variable.  is default precision correct?");
+	using CT = typename NumTraits<T>::Complex;
+	static_assert(!Eigen::NumTraits<T>::IsInteger,"type must be floating point in nature, with a real-complex pair defined in NumTraits");
+
+	assert(Precision(std::get< std::pair<CT,bool> >(current_value_).first)==Precision(val) && "precision of value setting into variable doesn't match precision of variable.  is default precision correct?");
 	
-	std::get< std::pair<T,bool> >(current_value_).first = val;
-	std::get< std::pair<T,bool> >(current_value_).second = false;
+	std::get< std::pair<CT,bool> >(current_value_).first = static_cast<CT>(val);
+	std::get< std::pair<CT,bool> >(current_value_).second = false;
 }
 
+template void Variable::set_current_value<double>(double const&);
 template void Variable::set_current_value<dbl>(dbl const&);
+template void Variable::set_current_value<mpfr_float>(mpfr_float const&);
 template void Variable::set_current_value<mpfr>(mpfr const&);
+
+
+template <typename T>
+void Variable::SetToNan()
+{
+	set_current_value<T>(static_cast<T>(std::numeric_limits<double>::quiet_NaN()));
+}
+
+template void Variable::SetToNan<dbl>();
+template void Variable::SetToNan<mpfr>();
 
 
 std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v) const
