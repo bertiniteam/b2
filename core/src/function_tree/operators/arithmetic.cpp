@@ -88,9 +88,10 @@ unsigned SumOperator::EliminateZeros()
 		num_eliminated += iter->EliminateZeros();
 
 	return num_eliminated;
-
-
 }
+
+
+
 unsigned SumOperator::EliminateOnes()
 {
 	return 0;
@@ -456,7 +457,36 @@ void NegateOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variab
 
 unsigned MultOperator::EliminateZeros()
 {
-	return 0;
+	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
+
+	// find those zeros in the sum.  then, compress.
+	std::vector<std::shared_ptr<Node>> non_zeros, zeros; 
+	std::vector<bool> non_zeros_ops;
+
+	bool have_a_zero = false;
+	for (const auto& iter : children_)
+	{
+		if (iter->Eval<dbl>() == 0.)
+		{
+			have_a_zero = true;
+			break;
+		}
+	}
+
+	if (have_a_zero) // if there is a single zero, the whole thing should collapse.
+	{
+		unsigned num_eliminated = children_.size();
+		children_.clear(); children_mult_or_div_.clear();
+		AddChild(MakeInteger(0), true);
+		return num_eliminated;
+	}
+
+	// recurse over the remaining children
+	unsigned num_eliminated{0};
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateZeros();
+
+	return num_eliminated;
 }
 unsigned MultOperator::EliminateOnes()
 {
