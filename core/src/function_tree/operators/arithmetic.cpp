@@ -41,7 +41,7 @@ namespace bertini{
 
 unsigned SumOperator::EliminateZeros()
 {
-	assert(!children_.empty() && "children_ must not be empty to elimiate zeros");
+	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
 
 	// find those zeros in the sum.  then, compress.
 	std::vector<std::shared_ptr<Node>> non_zeros, zeros; 

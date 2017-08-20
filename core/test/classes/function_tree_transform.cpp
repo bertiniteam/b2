@@ -59,6 +59,7 @@ BOOST_AUTO_TEST_SUITE(transform)
 
 BOOST_AUTO_TEST_SUITE(eliminate_zeros)
 
+BOOST_AUTO_TEST_SUITE(sum)
 
 BOOST_AUTO_TEST_CASE(cant_eliminate_self)
 {
@@ -78,7 +79,7 @@ BOOST_AUTO_TEST_CASE(cant_eliminate_self2)
 }
 
 
-BOOST_AUTO_TEST_CASE(eliminate_single_zero_sum)
+BOOST_AUTO_TEST_CASE(level_one)
 {
 	auto zero = MakeZero();
 	auto n = zero+zero;
@@ -88,7 +89,7 @@ BOOST_AUTO_TEST_CASE(eliminate_single_zero_sum)
 }
 
 
-BOOST_AUTO_TEST_CASE(eliminate_single_zero_sum2)
+BOOST_AUTO_TEST_CASE(level_one2)
 {
 	auto zero = MakeZero();
 	auto n = zero+0;
@@ -98,7 +99,7 @@ BOOST_AUTO_TEST_CASE(eliminate_single_zero_sum2)
 }
 
 
-BOOST_AUTO_TEST_CASE(eliminate_single_zero_sum3)
+BOOST_AUTO_TEST_CASE(level_one3)
 {
 	auto zero = MakeZero();
 	auto n = 0+zero;
@@ -109,37 +110,10 @@ BOOST_AUTO_TEST_CASE(eliminate_single_zero_sum3)
 
 
 
-BOOST_AUTO_TEST_CASE(eliminate_zero_product)
-{
-	auto zero = MakeZero();
-	auto n = 1*zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
-}
-
-
-BOOST_AUTO_TEST_CASE(eliminate_zero_product2)
-{
-	auto zero = MakeZero();
-	auto n = 1*zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
-}
-
-BOOST_AUTO_TEST_CASE(eliminate_zero_product3)
-{
-	auto zero = MakeZero();
-	auto n = zero*zero;
-	auto num_eliminated = n->EliminateZeros();
-	BOOST_CHECK(num_eliminated >= 1);
-	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
-}
 
 
 
-BOOST_AUTO_TEST_CASE(eliminate_zero_sum_zero_summand)
+BOOST_AUTO_TEST_CASE(lebel_one_more_complicated)
 {
 	auto x = MakeVariable("x");
 	auto zero = MakeZero();
@@ -156,7 +130,7 @@ BOOST_AUTO_TEST_CASE(eliminate_zero_sum_zero_summand)
 
 
 
-BOOST_AUTO_TEST_CASE(eliminate_zero_sum_zero_summand2)
+BOOST_AUTO_TEST_CASE(lebel_one_more_complicated2)
 {
 	auto x = MakeVariable("x");
 	auto zero = MakeZero();
@@ -171,7 +145,7 @@ BOOST_AUTO_TEST_CASE(eliminate_zero_sum_zero_summand2)
 	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 4.);
 }
 
-BOOST_AUTO_TEST_CASE(eliminate_zero_in_sum_level2)
+BOOST_AUTO_TEST_CASE(level_two)
 {
 	auto x = MakeVariable("x");
 	auto zero = MakeZero();
@@ -183,10 +157,78 @@ BOOST_AUTO_TEST_CASE(eliminate_zero_in_sum_level2)
 
 	auto num_eliminated = n->EliminateZeros();
 
-	std::cout << n << '\n';
 	BOOST_CHECK(num_eliminated >= 1);
 	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 35.414213562373095048801688724209698078569671875377);
 }
+
+BOOST_AUTO_TEST_CASE(level_two_variable_set_to_zero_eliminated)
+{
+	auto x = MakeVariable("x");
+	auto zero = MakeZero();
+
+
+	auto n = (x + sqrt(x) + zero) + x*2*(x*x*x);
+
+	auto as_op = std::dynamic_pointer_cast<bertini::node::NaryOperator>(n);
+
+
+	x->set_current_value(dbl(0));
+
+	auto num_eliminated = n->EliminateZeros();
+
+	x->set_current_value(dbl(2.0));
+
+	BOOST_CHECK_EQUAL(as_op->children_size(), 1);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.0);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END() // eliminate zeros :: sum
+
+
+
+/////////
+//
+//    ppppppppp
+//     pp   pp
+//     pp   pp
+//     pp   pp
+//     pp   pp
+//
+//////////////
+
+BOOST_AUTO_TEST_SUITE(product)
+
+
+BOOST_AUTO_TEST_CASE(level_one)
+{
+	auto zero = MakeZero();
+	auto n = 1*zero;
+	auto num_eliminated = n->EliminateZeros();
+	BOOST_CHECK(num_eliminated >= 1);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
+}
+
+
+BOOST_AUTO_TEST_CASE(level_one2)
+{
+	auto zero = MakeZero();
+	auto n = 1*zero;
+	auto num_eliminated = n->EliminateZeros();
+	BOOST_CHECK(num_eliminated >= 1);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
+}
+
+BOOST_AUTO_TEST_CASE(level_one3)
+{
+	auto zero = MakeZero();
+	auto n = zero*zero;
+	auto num_eliminated = n->EliminateZeros();
+	BOOST_CHECK(num_eliminated >= 1);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // eliminate zeros :: product
 
 
 BOOST_AUTO_TEST_SUITE_END() // eliminate zeros
