@@ -52,7 +52,7 @@ unsigned SumOperator::EliminateZeros()
 	{
 		const auto& curr_nd = children_[ii];
 		if (curr_nd->Eval<dbl>()==0.)	
-			zeros.push_back(curr_nd);// not pushing back the converted, because use the original node
+			zeros.push_back(curr_nd);
 		else
 		{
 			non_zeros.push_back(curr_nd);
@@ -74,7 +74,7 @@ unsigned SumOperator::EliminateZeros()
 		return num_eliminated;
 	}
 
-	// otherwise, it's not an all-zero sum.  so, there's a non-zero elements.
+	// otherwise, it's not an all-zero sum.  so, there's a non-zero element.
 	// need to add them with their original sign.
 	num_eliminated += zeros.size();
 	for (unsigned ii=0; ii<non_zeros.size(); ++ii)
@@ -488,9 +488,57 @@ unsigned MultOperator::EliminateZeros()
 
 	return num_eliminated;
 }
+
+
+
+
+
 unsigned MultOperator::EliminateOnes()
 {
-	return 0;
+	assert(!children_.empty() && "children_ must not be empty to eliminate ones");
+
+	if (children_.size() <=1)
+		return 0;
+
+	std::vector<bool> is_one(children_.size(),false);
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_.size(); ++ii)
+		is_one[ii] = children_[ii]->Eval<dbl>()==1.0;
+
+
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_mult_div;
+	for (unsigned ii=1; ii<is_one.size(); ++ii)
+	{
+		if (!is_one[ii])
+		{
+			new_children.push_back(children_[ii]);
+			new_mult_div.push_back(children_mult_or_div_[ii]);
+		}
+		else
+		{
+			++num_eliminated;
+		}
+	}
+
+	if (new_children.size()==0 || !is_one[0])
+	{
+		new_children.push_back(children_[0]);
+		new_mult_div.push_back(children_mult_or_div_[0]);
+	}
+	else
+		++num_eliminated;
+
+
+	using std::swap;
+	swap(children_, new_children);
+	swap(children_mult_or_div_, new_mult_div);
+
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateOnes();
+
+	return num_eliminated;
 }
 
 void MultOperator::print(std::ostream & target) const

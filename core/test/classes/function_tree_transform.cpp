@@ -337,6 +337,32 @@ BOOST_AUTO_TEST_CASE(level_one4)
 }
 
 
+BOOST_AUTO_TEST_CASE(level_one5)
+{
+	auto x = MakeVariable("x");
+	auto one = MakeInteger(1);
+	auto n = one*one/one*one/one*one*x;
+	auto num_eliminated = n->EliminateOnes();
+	x->set_current_value(2.);
+	BOOST_CHECK(num_eliminated > 0);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 2.);
+}
+
+
+BOOST_AUTO_TEST_CASE(level_two)
+{
+	auto x = MakeVariable("x");
+	auto one = MakeInteger(1);
+	auto n = (one*one*2) * (one*x*one);
+	x->set_current_value(2.);
+
+	auto num_eliminated = n->EliminateOnes();
+	
+	BOOST_CHECK(num_eliminated > 0);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 4.);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END() // predict
 BOOST_AUTO_TEST_SUITE_END() // eliminate ones
 
