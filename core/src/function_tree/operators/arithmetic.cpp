@@ -41,7 +41,55 @@ namespace bertini{
 
 unsigned SumOperator::EliminateZeros()
 {
-	return 0;
+	assert(!children_.empty() && "children_ must not be empty to elimiate zeros");
+
+	// find those zeros in the sum.  then, compress.
+	std::vector<std::shared_ptr<Node>> non_zeros, zeros; 
+	std::vector<bool> non_zeros_signs;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_.size(); ++ii)
+	{
+		const auto& curr_nd = children_[ii];
+		if (curr_nd->Eval<dbl>()==0.)	
+			zeros.push_back(curr_nd);// not pushing back the converted, because use the original node
+		else
+		{
+			non_zeros.push_back(curr_nd);
+			non_zeros_signs.push_back(children_sign_[ii]);
+		}
+	}
+	// do the elimination
+	if (zeros.size() == children_.size()) // then all zeros
+	{
+		children_.clear(); children_sign_.clear();
+		AddChild(MakeInteger(0));
+		return zeros.size()-1;
+	}
+	else if (non_zeros.size() == children_.size()) // no zero entries at this level. 
+	{
+		// recurse over the remaining children
+		for (auto& iter : children_)
+			num_eliminated += iter->EliminateZeros();
+		return num_eliminated;
+	}
+
+	// otherwise, it's not an all-zero sum.  so, there's a non-zero elements.
+	// need to add them with their original sign.
+	num_eliminated += zeros.size();
+	for (unsigned ii=0; ii<non_zeros.size(); ++ii)
+	{
+		children_.clear(); children_sign_.clear();
+		AddChild(non_zeros[ii], non_zeros_signs[ii]);
+	}
+
+	// recurse over the remaining children
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateZeros();
+
+	return num_eliminated;
+
+
 }
 unsigned SumOperator::EliminateOnes()
 {
