@@ -79,6 +79,17 @@ BOOST_AUTO_TEST_CASE(cant_eliminate_self2)
 }
 
 
+
+BOOST_AUTO_TEST_CASE(level_one_signs_preserved)
+{
+	auto zero = MakeZero();
+	auto n = 2 + zero - 1 + zero - 2;
+	auto num_eliminated = n->EliminateZeros();
+	BOOST_CHECK(num_eliminated > 0);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), -1.);
+}
+
+
 BOOST_AUTO_TEST_CASE(level_one)
 {
 	auto zero = MakeZero();
@@ -113,7 +124,7 @@ BOOST_AUTO_TEST_CASE(level_one3)
 
 
 
-BOOST_AUTO_TEST_CASE(lebel_one_more_complicated)
+BOOST_AUTO_TEST_CASE(level_one_more_complicated)
 {
 	auto x = MakeVariable("x");
 	auto zero = MakeZero();
@@ -130,7 +141,7 @@ BOOST_AUTO_TEST_CASE(lebel_one_more_complicated)
 
 
 
-BOOST_AUTO_TEST_CASE(lebel_one_more_complicated2)
+BOOST_AUTO_TEST_CASE(level_one_more_complicated2)
 {
 	auto x = MakeVariable("x");
 	auto zero = MakeZero();
