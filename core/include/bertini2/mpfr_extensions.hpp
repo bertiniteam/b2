@@ -65,6 +65,16 @@ namespace bertini{
 		return z;
 	}
 
+	/**
+	an overload of isnan, for std::complex<double>
+	*/
+	inline
+	bool isnan(std::complex<double> const& z)
+	{
+		using std::isnan;
+		return isnan(z.real()) || isnan(z.imag());
+	}
+
 #ifdef BMP_EXPRESSION_TEMPLATES
 	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>; 
 	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_on>;
