@@ -268,6 +268,7 @@ BOOST_AUTO_TEST_SUITE_END() // eliminate zeros
 /////////////////////////
 
 BOOST_AUTO_TEST_SUITE(eliminate_ones)
+BOOST_AUTO_TEST_SUITE(product)
 
 BOOST_AUTO_TEST_CASE(cant_eliminate_self)
 {
@@ -287,6 +288,56 @@ BOOST_AUTO_TEST_CASE(cant_eliminate_self2)
 }
 
 
+
+
+BOOST_AUTO_TEST_CASE(level_one)
+{
+	auto one = MakeOne();
+	auto n = one*one;
+	auto num_eliminated = n->EliminateOnes();
+	BOOST_CHECK(num_eliminated > 0);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 1.);
+}
+
+
+BOOST_AUTO_TEST_CASE(level_one2)
+{
+	auto x = MakeVariable("x");
+	auto one = MakeOne();
+	auto n = x*one;
+	auto num_eliminated = n->EliminateOnes();
+	x->set_current_value(2.);
+	BOOST_CHECK(num_eliminated > 0);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 2.);
+}
+
+
+BOOST_AUTO_TEST_CASE(level_one3)
+{
+	auto x = MakeVariable("x");
+	auto one = MakeOne();
+	auto n = one*x;
+	auto num_eliminated = n->EliminateOnes();
+	x->set_current_value(2.);
+	BOOST_CHECK(num_eliminated > 0);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 2.);
+}
+
+
+BOOST_AUTO_TEST_CASE(level_one4)
+{
+	auto x = MakeVariable("x");
+	auto one = MakeInteger(1);
+	auto two = MakeInteger(2);
+	auto n = (two*one/two)*x;
+	auto num_eliminated = n->EliminateOnes();
+	x->set_current_value(2.);
+	BOOST_CHECK(num_eliminated > 0);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 2.);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END() // predict
 BOOST_AUTO_TEST_SUITE_END() // eliminate ones
 
 
