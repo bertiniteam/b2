@@ -752,19 +752,21 @@ mpfr MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) 
 
 void MultOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value.SetOne();
-	for(int ii = 0; ii < children_.size(); ++ii)
+	if (children_mult_or_div_[0])
+		children_[0]->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	else
 	{
+		children_[0]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+		evaluation_value = static_cast<mpfr_float>(1)/temp_mp_;
+	}
+
+	for(int ii = 1; ii < children_.size(); ++ii)
+	{
+		children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
 		if(children_mult_or_div_[ii])
-		{
-			children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
 			evaluation_value *= temp_mp_;
-		}
 		else
-		{
-			children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
 			evaluation_value /= temp_mp_;
-		}
 	}
 	
 }
