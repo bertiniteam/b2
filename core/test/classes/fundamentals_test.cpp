@@ -75,6 +75,14 @@ BOOST_AUTO_TEST_CASE(complex_double_nans4)
 }
 
 
+BOOST_AUTO_TEST_CASE(mpfr_float_can_be_nan)
+{
+	DefaultPrecision(50);
+	mpfr_float a(std::numeric_limits<double>::quiet_NaN());
+	BOOST_CHECK(isnan(a));
+}
+
+
 BOOST_AUTO_TEST_CASE(constructing_mpfr_from_double)
 {
 	DefaultPrecision(50);
