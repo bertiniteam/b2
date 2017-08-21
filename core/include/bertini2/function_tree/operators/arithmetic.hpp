@@ -81,6 +81,9 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		unsigned ReduceDepth() override;
+		unsigned ReduceSubSums();
+		unsigned ReduceSubMults();
 		
 		SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
 		{
@@ -345,6 +348,9 @@ namespace node{
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		unsigned ReduceDepth() override;
+		unsigned ReduceSubSums();
+		unsigned ReduceSubMults();
 
 		/**
 		 single-node instantiation.  

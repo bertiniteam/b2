@@ -60,6 +60,12 @@ BOOST_CLASS_EXPORT(bertini::node::ExpOperator)
 namespace bertini{
 namespace node{
 
+	unsigned Node::ReduceDepth()
+	{
+		return 0;
+	}
+
+
 	template<typename T>
 	void Node::EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const
 	{

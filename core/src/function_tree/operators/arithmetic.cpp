@@ -97,6 +97,49 @@ unsigned SumOperator::EliminateOnes()
 	return 0;
 }
 
+unsigned SumOperator::ReduceSubSums()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
+		if (converted)
+		{ // we have a sum!  reduce it into this one
+			for (unsigned jj=0; jj<converted->children_size(); ++jj)
+			{
+				new_children.push_back(converted->children_[jj]);
+				new_ops.push_back(converted->children_sign_[jj]);
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_sign_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_sign_, new_ops);
+
+	return num_eliminated;
+}
+
+
+unsigned SumOperator::ReduceSubMults()
+{
+	return 0;
+}
+
+
+unsigned SumOperator::ReduceDepth()
+{
+	return ReduceSubSums() + ReduceSubMults();;
+}
 
 void SumOperator::print(std::ostream & target) const
 {
@@ -547,6 +590,25 @@ unsigned MultOperator::EliminateOnes()
 
 	return num_eliminated;
 }
+
+
+unsigned MultOperator::ReduceSubSums()
+{
+	return 0;
+}
+
+unsigned MultOperator::ReduceSubMults()
+{
+	return 0;
+}
+
+
+unsigned MultOperator::ReduceDepth()
+{
+	return ReduceSubSums() + ReduceSubMults();
+}
+
+
 
 void MultOperator::print(std::ostream & target) const
 {

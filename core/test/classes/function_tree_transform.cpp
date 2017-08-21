@@ -43,7 +43,6 @@
 #include "externs.hpp"
 
 using Nd = std::shared_ptr<bertini::node::Node>;
-using Nd = std::shared_ptr<bertini::node::Node>;
 
 using bertini::MakeVariable;
 using bertini::MakeInteger;
@@ -367,6 +366,59 @@ BOOST_AUTO_TEST_SUITE_END() // predict
 BOOST_AUTO_TEST_SUITE_END() // eliminate ones
 
 
+
+
+BOOST_AUTO_TEST_SUITE(reduce_depth)
+
+
+BOOST_AUTO_TEST_CASE(sum_eliminates_sum_of_single)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+	Nd m = std::make_shared<bertini::node::SumOperator>(x);
+	Nd n = std::make_shared<bertini::node::SumOperator>(y);
+
+	auto p = m+n;
+
+	unsigned num_eliminated = p->ReduceDepth();
+
+	BOOST_CHECK(num_eliminated > 0);
+
+	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
+	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
+
+	x->set_current_value(a); y->set_current_value(b);
+
+	auto result = p->Eval<dbl>();
+	BOOST_CHECK_EQUAL(result, a+b);
+}
+
+
+BOOST_AUTO_TEST_CASE(sum_eliminates_mult_of_single)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+	Nd m = std::make_shared<bertini::node::MultOperator>(x);
+	Nd n = std::make_shared<bertini::node::MultOperator>(y);
+
+	auto p = m+n;
+
+	unsigned num_eliminated = p->ReduceDepth();
+
+	BOOST_CHECK(num_eliminated > 0);
+
+	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
+	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
+
+	x->set_current_value(a); y->set_current_value(b);
+
+	auto result = p->Eval<dbl>();
+	BOOST_CHECK_EQUAL(result, a+b);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // reduce_depth
 
 
 BOOST_AUTO_TEST_SUITE_END() // transform
