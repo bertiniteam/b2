@@ -79,7 +79,8 @@ namespace node{
 	public:
 		virtual ~SumOperator() = default;
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
 		
 		SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
 		{
@@ -265,7 +266,9 @@ namespace node{
 		{};
 		
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
+
 		/**
 		 Print to an arbitrary ostream.
 		 */
@@ -339,6 +342,9 @@ namespace node{
 	class MultOperator : public virtual NaryOperator
 	{
 	public:
+
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
 
 		/**
 		 single-node instantiation.  
@@ -482,7 +488,9 @@ namespace node{
 		
 	public:
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
+
 		PowerOperator(const std::shared_ptr<Node> & new_base, const std::shared_ptr<Node> & new_exponent) : base_(new_base), exponent_(new_exponent)
 		{
 		}
@@ -611,7 +619,8 @@ namespace node{
 	public:
 		
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
 		
 		/**
 		 polymorphic method for printing to an arbitrary stream.
@@ -749,7 +758,8 @@ namespace node{
 		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
 		
 		void print(std::ostream & target) const override;
 		
@@ -810,7 +820,10 @@ namespace node{
 	class ExpOperator : public  virtual UnaryOperator
 	{
 	public:
-		
+
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
+
 		ExpOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 	 
@@ -864,6 +877,10 @@ namespace node{
 	{
 	public:
 		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
+
+
 		LogOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 	 

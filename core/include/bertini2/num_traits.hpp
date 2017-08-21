@@ -79,6 +79,9 @@ namespace bertini
 		{
 			return boost::lexical_cast<double>(s);
 		}
+
+		using Real = double;
+		using Complex = dbl;
 	};
 
 
@@ -105,6 +108,9 @@ namespace bertini
 		{
 			return std::complex<double>(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
 		}
+
+		using Real = double;
+		using Complex = dbl;
 	};
 
 
@@ -249,6 +255,9 @@ namespace bertini {
 		{
 			return mpfr_float(s);
 		}
+
+		using Real = mpfr_float;
+		using Complex = mpfr;
 	};	
 
 
@@ -271,6 +280,9 @@ namespace bertini {
 		{
 			return bertini::complex(s,t);
 		}
+
+		using Real = mpfr_float;
+		using Complex = mpfr;
 	};
 
 	template <> struct NumTraits<mpq_rational> 

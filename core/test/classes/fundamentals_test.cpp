@@ -39,9 +39,48 @@ BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
 using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
-
+using dbl = bertini::dbl;
 using bertini::DefaultPrecision;
 #include <limits>
+
+BOOST_AUTO_TEST_CASE(complex_double_nans)
+{
+	dbl x(0., std::numeric_limits<double>::quiet_NaN());
+	using bertini::isnan;
+	BOOST_CHECK(isnan(x));
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_double_nans2)
+{
+	dbl x(std::numeric_limits<double>::quiet_NaN(), 0.);
+	using bertini::isnan;
+	BOOST_CHECK(isnan(x));
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_double_nans3)
+{
+	dbl x(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
+	using bertini::isnan;
+	BOOST_CHECK(isnan(x));
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_double_nans4)
+{
+	dbl x(0., 0.);
+	using bertini::isnan;
+	BOOST_CHECK(!isnan(x));
+}
+
+
+BOOST_AUTO_TEST_CASE(mpfr_float_can_be_nan)
+{
+	DefaultPrecision(50);
+	mpfr_float a(std::numeric_limits<double>::quiet_NaN());
+	BOOST_CHECK(isnan(a));
+}
 
 
 BOOST_AUTO_TEST_CASE(constructing_mpfr_from_double)

@@ -79,7 +79,12 @@ namespace node{
 		template <typename T>
 		void set_current_value(T const& val);
 
-		
+		/**
+		\brief Changes the value of the variable to be not-a-number.  
+		*/
+		template <typename T>
+		void SetToNan();
+
 		/**
 		 Differentiates a variable.  
 		 */
@@ -129,7 +134,7 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		Variable() = default;
+		Variable();
 	private:
 		
 		friend class boost::serialization::access;
