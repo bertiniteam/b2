@@ -343,8 +343,15 @@ mpfr SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) c
 
 void SumOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value.SetZero();
-	for(int ii = 0; ii < children_.size(); ++ii)
+	if (children_sign_[0])
+		children_[0]->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	else
+	{
+		children_[0]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+		evaluation_value = -temp_mp_;
+	}
+
+	for(int ii = 1; ii < children_.size(); ++ii)
 	{
 		if(children_sign_[ii])
 		{
