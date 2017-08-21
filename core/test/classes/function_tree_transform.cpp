@@ -471,7 +471,75 @@ BOOST_AUTO_TEST_SUITE(prod)
 
 BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
 {
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
 
+	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
+	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
+
+	auto p = m*n;
+
+	unsigned num_eliminated = p->ReduceDepth();
+
+	BOOST_CHECK(num_eliminated > 0);
+
+	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
+	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
+
+	x->set_current_value(a); y->set_current_value(b);
+
+	auto result = p->Eval<dbl>();
+	BOOST_CHECK_EQUAL(result, a*b);
+}
+
+
+BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+	Nd m = std::make_shared<bertini::node::MultOperator>(x);
+	Nd n = std::make_shared<bertini::node::MultOperator>(y);
+
+	auto p = m*n;
+
+	unsigned num_eliminated = p->ReduceDepth();
+
+	BOOST_CHECK(num_eliminated > 0);
+
+	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
+	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
+
+	x->set_current_value(a); y->set_current_value(b);
+
+	auto result = p->Eval<dbl>();
+	BOOST_CHECK_EQUAL(result, a*b);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(distributive)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+
+	auto m = x*y;
+	auto n = x/y;
+
+	auto p = m/n; // should reduce to y*y
+
+	unsigned num_eliminated = p->ReduceDepth();
+
+	BOOST_CHECK(num_eliminated > 0);
+
+	dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
+	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
+
+	x->set_current_value(a); y->set_current_value(b);
+
+	auto result = p->Eval<dbl>();
+	BOOST_CHECK_SMALL(abs(result - b*b), 1e-13);
 }
 
 

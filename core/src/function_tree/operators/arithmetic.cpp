@@ -618,12 +618,70 @@ unsigned MultOperator::EliminateOnes()
 
 unsigned MultOperator::ReduceSubSums()
 {
-	return 0;
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
+		if (converted)
+		{ // we have a sum node! if its a single add node, then its child can be folded into this sum.
+			if (converted->children_size()==1)
+			{
+				if (converted->children_sign_[0])
+					new_children.push_back(converted->children_[0]);
+				else
+					new_children.push_back(-converted->children_[0]);
+
+				new_ops.push_back(children_mult_or_div_[ii]);
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_mult_or_div_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_mult_or_div_, new_ops);
+
+	return num_eliminated;	
 }
 
 unsigned MultOperator::ReduceSubMults()
 {
-	return 0;
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
+		if (converted)
+		{ // we have a multiply!  reduce it into this one
+			for (unsigned jj=0; jj<converted->children_size(); ++jj)
+			{
+				new_children.push_back(converted->children_[jj]);
+				new_ops.push_back(!(converted->children_mult_or_div_[jj] ^ this->children_mult_or_div_[ii]));
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_mult_or_div_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_mult_or_div_, new_ops);
+
+	return num_eliminated;
 }
 
 
