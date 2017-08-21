@@ -132,7 +132,34 @@ unsigned SumOperator::ReduceSubSums()
 
 unsigned SumOperator::ReduceSubMults()
 {
-	return 0;
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
+		if (converted)
+		{ // we have a multiply node! if its a single node and is mult, not div, then its child can be folded into this sum.
+			if (converted->children_size()==1 && converted->children_mult_or_div_[0])
+			{
+				new_children.push_back(converted->children_[0]);
+				new_ops.push_back(converted->children_mult_or_div_[0]);
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_sign_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_sign_, new_ops);
+
+	return num_eliminated;
 }
 
 

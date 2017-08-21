@@ -370,14 +370,15 @@ BOOST_AUTO_TEST_SUITE_END() // eliminate ones
 
 BOOST_AUTO_TEST_SUITE(reduce_depth)
 
+BOOST_AUTO_TEST_SUITE(sum)
 
-BOOST_AUTO_TEST_CASE(sum_eliminates_sum_of_single)
+BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
 {
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::SumOperator>(x);
-	Nd n = std::make_shared<bertini::node::SumOperator>(y);
+	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
+	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
 
 	auto p = m+n;
 
@@ -395,7 +396,7 @@ BOOST_AUTO_TEST_CASE(sum_eliminates_sum_of_single)
 }
 
 
-BOOST_AUTO_TEST_CASE(sum_eliminates_mult_of_single)
+BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
 {
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
@@ -417,13 +418,22 @@ BOOST_AUTO_TEST_CASE(sum_eliminates_mult_of_single)
 	auto result = p->Eval<dbl>();
 	BOOST_CHECK_EQUAL(result, a+b);
 }
+BOOST_AUTO_TEST_SUITE_END() // sum
+
+
+BOOST_AUTO_TEST_SUITE(prod)
+
+BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
+{
+
+}
+
+
+
+BOOST_AUTO_TEST_SUITE_END() // prod
 
 BOOST_AUTO_TEST_SUITE_END() // reduce_depth
-
-
 BOOST_AUTO_TEST_SUITE_END() // transform
-
-
 BOOST_AUTO_TEST_SUITE_END() // function_tree
 
 
