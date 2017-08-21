@@ -29,6 +29,9 @@
 #pragma once
 
 #include "bertini2/config.h"
+
+#include "boost/version.hpp"
+
 #include <sstream>
 
 namespace bertini{
@@ -130,6 +133,25 @@ inline
 std::string GenericHelp()
 {
 	return "";
+}
+
+
+inline 
+std::string BoostHeaderVersion()
+{
+	std::stringstream ss;
+	ss << BOOST_VERSION; 
+	return ss.str();
+}
+
+
+
+inline 
+std::string DependencyVersions()
+{
+	std::stringstream ss;
+	ss << "Compiled against Boost headers " << BoostHeaderVersion() << "\n\n";
+	return ss.str();
 }
 
 
