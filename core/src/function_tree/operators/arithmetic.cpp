@@ -111,7 +111,7 @@ unsigned SumOperator::ReduceSubSums()
 			for (unsigned jj=0; jj<converted->children_size(); ++jj)
 			{
 				new_children.push_back(converted->children_[jj]);
-				new_ops.push_back(converted->children_sign_[jj]);
+				new_ops.push_back(!(converted->children_sign_[jj] ^ children_sign_[ii]));
 				num_eliminated++;
 			}
 			
@@ -122,10 +122,8 @@ unsigned SumOperator::ReduceSubSums()
 			new_ops.push_back(this->children_sign_[ii]);
 		}
 	}
-
 	swap(this->children_, new_children);
 	swap(this->children_sign_, new_ops);
-
 	return num_eliminated;
 }
 
@@ -398,7 +396,6 @@ void SumOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> c
 			evaluation_value -= temp_d_;
 		}
 	}
-	
 }
 
 	
