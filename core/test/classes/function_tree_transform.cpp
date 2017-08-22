@@ -547,6 +547,43 @@ BOOST_AUTO_TEST_CASE(distributive)
 BOOST_AUTO_TEST_SUITE_END() // prod
 
 BOOST_AUTO_TEST_SUITE_END() // reduce_depth
+
+
+BOOST_AUTO_TEST_SUITE(simplify)
+
+BOOST_AUTO_TEST_CASE(flattens_completely)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
+	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
+
+	auto p = m+n+0;
+	auto q = 0+m-n*1;
+	auto s = pow(x,2);
+
+	auto r = p+q+0*s + 0*1 + sqrt(0*x);
+
+dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
+dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
+x->set_current_value(a); y->set_current_value(b);
+
+	auto num_rounds = bertini::Simplify(r);
+
+	BOOST_CHECK(num_rounds >= 2);
+
+
+	r->Reset();
+	auto result = r->Eval<dbl>();
+	BOOST_CHECK_EQUAL(result, a+a+b);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END() // simplify
+
+
+
 BOOST_AUTO_TEST_SUITE_END() // transform
 BOOST_AUTO_TEST_SUITE_END() // function_tree
 

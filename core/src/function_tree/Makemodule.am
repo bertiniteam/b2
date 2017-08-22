@@ -7,6 +7,7 @@ function_tree_headers = \
 	include/bertini2/function_tree/node.hpp \
 	include/bertini2/function_tree/factory.hpp \
 	include/bertini2/function_tree/forward_declares.hpp \
+	include/bertini2/function_tree/simplify.hpp \
 	include/bertini2/function_tree/operators/operator.hpp \
 	include/bertini2/function_tree/symbols/symbol.hpp \
 	include/bertini2/function_tree/symbols/variable.hpp \
@@ -20,6 +21,7 @@ function_tree_headers = \
 
 function_tree_sources = \
 	src/function_tree/node.cpp \
+	src/function_tree/simplify.cpp \
 	src/function_tree/operators/arithmetic.cpp \
 	src/function_tree/operators/trig.cpp \
 	src/function_tree/operators/operator.cpp \
@@ -46,7 +48,8 @@ functiontreeincludedir = $(includedir)/bertini2/function_tree
 functiontreeinclude_HEADERS = \
 	include/bertini2/function_tree/node.hpp \
 	include/bertini2/function_tree/factory.hpp \
-	include/bertini2/function_tree/forward_declares.hpp
+	include/bertini2/function_tree/forward_declares.hpp \
+	include/bertini2/function_tree/simplify.hpp
 
 functiontree_operatorsincludedir = $(includedir)/bertini2/function_tree/operators
 functiontree_operatorsinclude_HEADERS = \
