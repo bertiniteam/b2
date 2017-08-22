@@ -51,7 +51,7 @@
 
 #include "bertini2/function_tree/factory.hpp"
 
-
+#include "bertini2/function_tree/simplify.hpp"
 
 #endif
 

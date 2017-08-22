@@ -185,7 +185,9 @@ public:
 	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const;
 
 	
-	
+	///////// PUBLIC PURE METHODS /////////////////
+
+
 	/**
 	\brief A transform function, which eliminates nodes from the tree
 
@@ -208,7 +210,14 @@ public:
 	*/
 	virtual unsigned EliminateZeros() = 0;
 
-	///////// PUBLIC PURE METHODS /////////////////
+
+	/**
+	\brief A mutating function which finds ways to reduce the depth of the tree
+
+	\note The default implementation is empty, and does literally nothing.
+	*/
+	virtual unsigned ReduceDepth();
+
 	/**
 	Virtual method for printing Nodes to arbitrary output streams.
 	*/

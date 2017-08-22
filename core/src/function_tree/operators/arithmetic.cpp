@@ -97,6 +97,74 @@ unsigned SumOperator::EliminateOnes()
 	return 0;
 }
 
+unsigned SumOperator::ReduceSubSums()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
+		if (converted)
+		{ // we have a sum!  reduce it into this one
+			for (unsigned jj=0; jj<converted->children_size(); ++jj)
+			{
+				new_children.push_back(converted->children_[jj]);
+				new_ops.push_back(!(converted->children_sign_[jj] ^ children_sign_[ii]));
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_sign_[ii]);
+		}
+	}
+	swap(this->children_, new_children);
+	swap(this->children_sign_, new_ops);
+	return num_eliminated;
+}
+
+
+unsigned SumOperator::ReduceSubMults()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
+		if (converted)
+		{ // we have a multiply node! if its a single node and is mult, not div, then its child can be folded into this sum.
+			if (converted->children_size()==1 && converted->children_mult_or_div_[0])
+			{
+				new_children.push_back(converted->children_[0]);
+				new_ops.push_back(converted->children_mult_or_div_[0]);
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_sign_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_sign_, new_ops);
+
+	return num_eliminated;
+}
+
+
+unsigned SumOperator::ReduceDepth()
+{
+	return ReduceSubSums() + ReduceSubMults();;
+}
 
 void SumOperator::print(std::ostream & target) const
 {
@@ -328,7 +396,6 @@ void SumOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> c
 			evaluation_value -= temp_d_;
 		}
 	}
-	
 }
 
 	
@@ -547,6 +614,83 @@ unsigned MultOperator::EliminateOnes()
 
 	return num_eliminated;
 }
+
+
+unsigned MultOperator::ReduceSubSums()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
+		if (converted)
+		{ // we have a sum node! if its a single add node, then its child can be folded into this sum.
+			if (converted->children_size()==1)
+			{
+				if (converted->children_sign_[0])
+					new_children.push_back(converted->children_[0]);
+				else
+					new_children.push_back(-converted->children_[0]);
+
+				new_ops.push_back(children_mult_or_div_[ii]);
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_mult_or_div_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_mult_or_div_, new_ops);
+
+	return num_eliminated;	
+}
+
+unsigned MultOperator::ReduceSubMults()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
+		if (converted)
+		{ // we have a multiply!  reduce it into this one
+			for (unsigned jj=0; jj<converted->children_size(); ++jj)
+			{
+				new_children.push_back(converted->children_[jj]);
+				new_ops.push_back(!(converted->children_mult_or_div_[jj] ^ this->children_mult_or_div_[ii]));
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_mult_or_div_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_mult_or_div_, new_ops);
+
+	return num_eliminated;
+}
+
+
+unsigned MultOperator::ReduceDepth()
+{
+	return ReduceSubSums() + ReduceSubMults();
+}
+
+
 
 void MultOperator::print(std::ostream & target) const
 {

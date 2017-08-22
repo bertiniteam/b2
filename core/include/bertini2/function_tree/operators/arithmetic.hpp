@@ -56,6 +56,8 @@
 #include "bertini2/function_tree/symbols/variable.hpp"
 #include "bertini2/function_tree/symbols/differential.hpp"
 
+#include "bertini2/function_tree/forward_declares.hpp"
+
 #include <cmath>
 
 
@@ -81,7 +83,10 @@ namespace node{
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
-		
+		unsigned ReduceDepth() override;
+		unsigned ReduceSubSums();
+		unsigned ReduceSubMults();
+
 		SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
 		{
 			AddChild(s, add_or_sub);
@@ -238,6 +243,8 @@ namespace node{
 
 		mutable mpfr temp_mp_;
 		mutable dbl temp_d_;
+
+		friend MultOperator;
 	};
 	
 	
@@ -345,6 +352,9 @@ namespace node{
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
+		unsigned ReduceDepth() override;
+		unsigned ReduceSubSums();
+		unsigned ReduceSubMults();
 
 		/**
 		 single-node instantiation.  
@@ -469,6 +479,8 @@ namespace node{
 
 		mutable mpfr temp_mp_;
 		mutable dbl temp_d_;
+
+		friend SumOperator;
 	};
 	
 	

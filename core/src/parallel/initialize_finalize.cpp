@@ -49,6 +49,7 @@ namespace bertini{
 		void Initialize()
 		{
 			std::cout << "\n\n\n" << SplashScreen() << "\n\n\n";
+			std::cout << "\n\n" << DependencyVersions() << "\n\n";
 		}
 
 		void Finalize()
