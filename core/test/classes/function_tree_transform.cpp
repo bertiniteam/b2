@@ -576,7 +576,7 @@ x->set_current_value(a); y->set_current_value(b);
 
 	r->Reset();
 	auto result = r->Eval<dbl>();
-	BOOST_CHECK_EQUAL(result, a+a+b);
+	BOOST_CHECK_EQUAL(result, a+a);
 }
 
 
