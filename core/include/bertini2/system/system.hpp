@@ -76,6 +76,11 @@ namespace bertini {
 	JacobianEvalMethod DefaultJacobianEvalMethod();
 
 	/**
+	\brief Get the default value for whether a system should autosimplify.
+	*/
+	bool DefaultAutoSimplify();
+
+	/**
 	\brief The fundamental polynomial system class for Bertini2.
 	
 	 The fundamental polynomial system class for Bertini2.
@@ -1267,6 +1272,55 @@ namespace bertini {
 		{
 			return assume_uniform_precision_;
 		}
+
+		inline
+		void PleaseAutoSimplify()
+		{
+			SetAutoSimplify(true);
+		}
+
+		inline
+		void DontAutoSimplify()
+		{
+			SetAutoSimplify(false);
+		}
+
+		void SetAutoSimplify(bool val)
+		{
+			auto_simplify_ = val;
+		}
+
+
+		/**
+		\brief Query the state of autosimplification
+		*/
+		auto IsAutoSimplifying() const
+		{
+			return auto_simplify_;
+		}
+
+		/**
+		\brief Simplify the functions contained in the system.
+
+		\note This may change any nodes on which the system depends.
+		*/
+		void SimplifyFunctions();
+
+		/**
+		\brief Simplify the derivatives / jacobian / etc contained in the system.
+
+		\note This may change any nodes on which the system depends.
+		*/
+		void SimplifyDerivatives() const;
+
+		/**
+		\brief Simplify as many aspects of the system as possible.  
+
+		\note This may change any nodes on which the system depends.
+		*/
+		void Simplify();
+
+
 		/**
 		\brief Add two systems together.
 
@@ -1433,6 +1487,8 @@ namespace bertini {
 
 		JacobianEvalMethod jacobian_eval_method_ = DefaultJacobianEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
 
+		bool auto_simplify_ = DefaultAutoSimplify();
+
 		friend class boost::serialization::access;
 
 		template <typename Archive>
@@ -1496,7 +1552,10 @@ namespace bertini {
 	*/
 	System Clone(System const& sys);
 
-
+	/**
+	\brief Free form function for simplifying systems.
+	*/
+	void Simplify(System & sys);
 }
 
 

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with system.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -38,6 +38,11 @@ namespace bertini
 	JacobianEvalMethod DefaultJacobianEvalMethod()
 	{
 		return JacobianEvalMethod::Derivatives;
+	}
+
+	bool DefaultAutoSimplify()
+	{
+		return true;
 	}
 
 	void swap(System & a, System & b)
@@ -324,6 +329,11 @@ namespace bertini
 			}
 		}
 		is_differentiated_ = true;
+
+		if (auto_simplify_)
+		{
+			this->SimplifyDerivatives();
+		}
 	}
 
 
@@ -958,7 +968,74 @@ namespace bertini
 
 
 
+	void System::SimplifyFunctions()
+	{
+		using bertini::Simplify;
+		for (auto& iter : this->functions_)
+			Simplify(iter);
+	}
 
+
+
+	void System::SimplifyDerivatives() const
+	{
+		using bertini::Simplify;
+
+		auto num_vars = this->NumVariables();
+		std::vector<dbl> old_vals(num_vars);
+
+		std::cout << *this;
+		auto vars = this->Variables();
+		for (unsigned ii=0; ii<num_vars; ++ii)
+		{
+			old_vals[ii] = vars[ii]->Eval<dbl>();
+			vars[ii]->SetToRandUnit<dbl>();
+		}
+		for (const auto& n : jacobian_)
+			n->Reset();
+		for (const auto& n : space_derivatives_)
+			n->Reset();
+		for (const auto& n : time_derivatives_)
+			n->Reset();
+
+
+		switch (jacobian_eval_method_)
+		{
+			case JacobianEvalMethod::JacobianNode:
+				for (auto& iter : this->jacobian_)
+					Simplify(iter);
+				break;
+			case JacobianEvalMethod::Derivatives:
+				for (auto& iter : this->space_derivatives_)
+					Simplify(iter);
+				for (auto& iter : this->time_derivatives_)
+					Simplify(iter);
+				break;
+
+		}
+		
+
+		std::cout << *this;
+
+		for (unsigned ii=0; ii<num_vars; ++ii)
+			vars[ii]->set_current_value<dbl>(old_vals[ii]);
+
+		for (const auto& n : jacobian_)
+			n->Reset();
+		for (const auto& n : space_derivatives_)
+			n->Reset();
+		for (const auto& n : time_derivatives_)
+			n->Reset();
+
+	}
+
+
+
+	void System::Simplify()
+	{
+		SimplifyFunctions();
+		SimplifyDerivatives();
+	}
 
 
 
@@ -1229,5 +1306,9 @@ namespace bertini
 		return sys_clone;
 	}
 
+	void Simplify(System & sys)
+	{
+		sys.Simplify();
+	}
 
 }
