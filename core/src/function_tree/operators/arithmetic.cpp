@@ -77,11 +77,10 @@ unsigned SumOperator::EliminateZeros()
 	// otherwise, it's not an all-zero sum.  so, there's a non-zero element.
 	// need to add them with their original sign.
 	num_eliminated += zeros.size();
+
+	children_.clear(); children_sign_.clear();
 	for (unsigned ii=0; ii<non_zeros.size(); ++ii)
-	{
-		children_.clear(); children_sign_.clear();
 		AddChild(non_zeros[ii], non_zeros_signs[ii]);
-	}
 
 	// recurse over the remaining children
 	for (auto& iter : children_)
@@ -94,7 +93,11 @@ unsigned SumOperator::EliminateZeros()
 
 unsigned SumOperator::EliminateOnes()
 {
-	return 0;
+	unsigned num_eliminated{0};
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateOnes();
+
+	return num_eliminated;
 }
 
 unsigned SumOperator::ReduceSubSums()
@@ -110,6 +113,7 @@ unsigned SumOperator::ReduceSubSums()
 		{ // we have a sum!  reduce it into this one
 			for (unsigned jj=0; jj<converted->children_size(); ++jj)
 			{
+				std::cout << "reducing sum, subsum\n";
 				new_children.push_back(converted->children_[jj]);
 				new_ops.push_back(!(converted->children_sign_[jj] ^ children_sign_[ii]));
 				num_eliminated++;
@@ -137,15 +141,12 @@ unsigned SumOperator::ReduceSubMults()
 	for (unsigned ii=0; ii<children_size(); ++ii)
 	{
 		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
-		if (converted)
+		if (converted && converted->children_size()==1 && converted->children_mult_or_div_[0])
 		{ // we have a multiply node! if its a single node and is mult, not div, then its child can be folded into this sum.
-			if (converted->children_size()==1 && converted->children_mult_or_div_[0])
-			{
-				new_children.push_back(converted->children_[0]);
-				new_ops.push_back(converted->children_mult_or_div_[0]);
-				num_eliminated++;
-			}
-			
+			std::cout << "reducing sum, mult of one\n";
+			new_children.push_back(converted->children_[0]);
+			new_ops.push_back(children_sign_[ii]);
+			num_eliminated++;			
 		}
 		else
 		{
@@ -163,7 +164,12 @@ unsigned SumOperator::ReduceSubMults()
 
 unsigned SumOperator::ReduceDepth()
 {
-	return ReduceSubSums() + ReduceSubMults();;
+	auto num_eliminated = ReduceSubSums() + ReduceSubMults();
+
+	for (auto& iter : children_)
+		num_eliminated += iter->ReduceDepth();
+
+	return num_eliminated;
 }
 
 void SumOperator::print(std::ostream & target) const
@@ -549,7 +555,7 @@ unsigned MultOperator::EliminateZeros()
 
 	if (have_a_zero) // if there is a single zero, the whole thing should collapse.
 	{
-		unsigned num_eliminated = children_.size();
+		unsigned num_eliminated = children_.size()-1;
 		children_.clear(); children_mult_or_div_.clear();
 		AddChild(MakeInteger(0), true);
 		return num_eliminated;
@@ -580,10 +586,9 @@ unsigned MultOperator::EliminateOnes()
 	for (unsigned ii=0; ii<children_.size(); ++ii)
 		is_one[ii] = children_[ii]->Eval<dbl>()==1.0;
 
-
 	std::vector<std::shared_ptr<Node>> new_children;
 	std::vector<bool> new_mult_div;
-	for (unsigned ii=1; ii<is_one.size(); ++ii)
+	for (unsigned ii=0; ii<is_one.size(); ++ii)
 	{
 		if (!is_one[ii])
 		{
@@ -596,13 +601,12 @@ unsigned MultOperator::EliminateOnes()
 		}
 	}
 
-	if (new_children.size()==0 || !is_one[0])
+	if (new_children.empty())
 	{
 		new_children.push_back(children_[0]);
-		new_mult_div.push_back(children_mult_or_div_[0]);
+		new_mult_div.push_back(true);
+		--num_eliminated;
 	}
-	else
-		++num_eliminated;
 
 
 	using std::swap;
@@ -625,19 +629,16 @@ unsigned MultOperator::ReduceSubSums()
 	for (unsigned ii=0; ii<children_size(); ++ii)
 	{
 		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
-		if (converted)
+		if (converted && converted->children_size()==1)
 		{ // we have a sum node! if its a single add node, then its child can be folded into this sum.
-			if (converted->children_size()==1)
-			{
-				if (converted->children_sign_[0])
-					new_children.push_back(converted->children_[0]);
-				else
-					new_children.push_back(-converted->children_[0]);
+			std::cout << "reducing mult, sum of one\n";
+			if (converted->children_sign_[0])
+				new_children.push_back(converted->children_[0]);
+			else
+				new_children.push_back(-converted->children_[0]);
 
-				new_ops.push_back(children_mult_or_div_[ii]);
-				num_eliminated++;
-			}
-			
+			new_ops.push_back(children_mult_or_div_[ii]);
+			num_eliminated++;
 		}
 		else
 		{
@@ -663,6 +664,7 @@ unsigned MultOperator::ReduceSubMults()
 		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
 		if (converted)
 		{ // we have a multiply!  reduce it into this one
+			std::cout << "reducing mult, submult\n";
 			for (unsigned jj=0; jj<converted->children_size(); ++jj)
 			{
 				new_children.push_back(converted->children_[jj]);
@@ -687,7 +689,12 @@ unsigned MultOperator::ReduceSubMults()
 
 unsigned MultOperator::ReduceDepth()
 {
-	return ReduceSubSums() + ReduceSubMults();
+	auto num_eliminated = ReduceSubSums() + ReduceSubMults();
+
+	for (auto& iter : children_)
+		num_eliminated += iter->ReduceDepth();
+
+	return num_eliminated;
 }
 
 

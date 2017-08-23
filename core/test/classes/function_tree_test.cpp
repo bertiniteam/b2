@@ -132,6 +132,26 @@ BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_nan){
 	BOOST_CHECK(!isnan(x->Eval<mpfr>()));
 }
 
+BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_zero){
+	using mpfr_float = bertini::mpfr_float;
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	
+	BOOST_CHECK(x->Eval<dbl>()!=dbl(0,0));
+	BOOST_CHECK(x->Eval<mpfr>()!=mpfr(0,0));
+}
+
+
+BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_one){
+	using mpfr_float = bertini::mpfr_float;
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	
+	BOOST_CHECK(x->Eval<dbl>()!=dbl(1,0));
+	BOOST_CHECK(x->Eval<mpfr>()!=mpfr(1,0));
+}
 
 BOOST_AUTO_TEST_CASE(self_multiplication){
 

@@ -56,6 +56,17 @@ BOOST_AUTO_TEST_SUITE(function_tree)
 
 BOOST_AUTO_TEST_SUITE(transform)
 
+
+//       _ _           _             _                               
+//      | (_)         (_)           | |                              
+//   ___| |_ _ __ ___  _ _ __   __ _| |_ ___   _______ _ __ ___  ___ 
+//  / _ \ | | '_ ` _ \| | '_ \ / _` | __/ _ \ |_  / _ \ '__/ _ \/ __|
+// |  __/ | | | | | | | | | | | (_| | ||  __/  / /  __/ | | (_) \__ \
+//  \___|_|_|_| |_| |_|_|_| |_|\__,_|\__\___| /___\___|_|  \___/|___/
+                                                                  
+                                                                  
+
+
 BOOST_AUTO_TEST_SUITE(eliminate_zeros)
 
 BOOST_AUTO_TEST_SUITE(sum)
@@ -368,6 +379,27 @@ BOOST_AUTO_TEST_SUITE_END() // eliminate ones
 
 
 
+
+
+
+
+
+//                                                        _..._                        
+//                            _______                  .-'_..._''.                     
+//               __.....__    \  ___ `'.             .' .'      '.\     __.....__      
+//           .-''         '.   ' |--.\  \           / .'            .-''         '.    
+// .-,.--.  /     .-''"'-.  `. | |    \  '         . '             /     .-''"'-.  `.  
+// |  .-. |/     /________\   \| |     |  '        | |            /     /________\   \ 
+// | |  | ||                  || |     |  | _    _ | |            |                  | 
+// | |  | |\    .-------------'| |     ' .'| '  / |. '            \    .-------------' 
+// | |  '-  \    '-.____...---.| |___.' /'.' | .' | \ '.          .\    '-.____...---. 
+// | |       `.             .'/_______.'/ /  | /  |  '. `._____.-'/ `.             .'  
+// | |         `''-...... -'  \_______|/ |   `'.  |    `-.______ /    `''-...... -'    
+// |_|                                   '   .'|  '/            `                      
+//                                        `-'  `--'                                    
+
+
+
 BOOST_AUTO_TEST_SUITE(reduce_depth)
 
 BOOST_AUTO_TEST_SUITE(sum)
@@ -543,10 +575,77 @@ BOOST_AUTO_TEST_CASE(distributive)
 }
 
 
+BOOST_AUTO_TEST_CASE(a_nested_one)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+	auto n = ((((((2*x)*1)*y))/2));
+	while(n->ReduceDepth())
+		; //deliberately empty statement
+
+	auto as_op = std::dynamic_pointer_cast<bertini::node::MultOperator>(n);
+	BOOST_CHECK_EQUAL(as_op->children_size(), 5);
+
+	auto a = x->Eval<dbl>();
+	auto b = y->Eval<dbl>();
+
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), a*b);
+
+	std::cout << n << '\n';
+}
+
+
+BOOST_AUTO_TEST_CASE(many_nested_singletons)
+{
+	auto x = MakeVariable("x");
+
+	Nd n1 = std::make_shared<bertini::node::MultOperator>(x);
+	Nd n2 = std::make_shared<bertini::node::MultOperator>(n1);
+	Nd n3 = std::make_shared<bertini::node::MultOperator>(n2);
+	Nd n4 = std::make_shared<bertini::node::MultOperator>(n3);
+	Nd n5 = std::make_shared<bertini::node::MultOperator>(n4);
+
+	while(n5->ReduceDepth())
+		; //deliberately empty statement
+
+	auto as_op = std::dynamic_pointer_cast<bertini::node::MultOperator>(n5);
+	BOOST_CHECK_EQUAL(as_op->children_size(), 1);
+
+	BOOST_CHECK_EQUAL(as_op->first_child(), x);
+}
 
 BOOST_AUTO_TEST_SUITE_END() // prod
 
 BOOST_AUTO_TEST_SUITE_END() // reduce_depth
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//        .__               .__  .__  _____       
+//   _____|__| _____ ______ |  | |__|/ ____\__.__.
+//  /  ___/  |/     \\____ \|  | |  \   __<   |  |
+//  \___ \|  |  Y Y  \  |_> >  |_|  ||  |  \___  |
+// /____  >__|__|_|  /   __/|____/__||__|  / ____|
+//      \/         \/|__|                  \/     
+//
+//
+// http://patorjk.com/software/taag/#p=display&f=Graffiti&t=Type%20Something%20
+
+
+
+
+
 
 
 BOOST_AUTO_TEST_SUITE(simplify)
@@ -579,7 +678,42 @@ x->set_current_value(a); y->set_current_value(b);
 	BOOST_CHECK_EQUAL(result, a+a);
 }
 
+BOOST_AUTO_TEST_CASE(complicated)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
 
+	auto n = (((((2*x*1)*y)+(0*(pow(x,2))))/2)-(0*((pow(x,2))*y)/(pow(2,2))));
+
+	auto num_rounds = bertini::Simplify(n);
+	std::cout << n << '\n';
+
+	auto a = x->Eval<dbl>();
+	auto b = y->Eval<dbl>();
+
+	BOOST_CHECK(num_rounds >= 2);
+	BOOST_CHECK_EQUAL(n->Eval<dbl>(), a*b);
+}
+
+
+BOOST_AUTO_TEST_CASE(complicated2)
+{
+	auto x = MakeVariable("x");
+	auto t = MakeVariable("t");
+
+	auto f = (((pow((x-1),2))*(1-t))+((pow(x,2)+1)*t));
+
+	auto dfdx = f->Differentiate(x);
+
+	bertini::Simplify(dfdx);
+
+	dfdx->Reset();
+
+auto xval = x->Eval<dbl>();
+auto tval = t->Eval<dbl>();
+
+	BOOST_CHECK_SMALL(abs(dfdx->Eval<dbl>()- 2.*(xval+tval-1.)), 1e-15);
+}
 BOOST_AUTO_TEST_SUITE_END() // simplify
 
 
