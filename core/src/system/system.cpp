@@ -982,7 +982,7 @@ namespace bertini
 		using bertini::Simplify;
 
 		auto num_vars = this->NumVariables();
-		std::vector<dbl> old_vals(num_vars);
+		std::vector<dbl> old_vals(num_vars);  dbl old_path_var_val;
 
 		std::cout << *this;
 		auto vars = this->Variables();
@@ -991,6 +991,14 @@ namespace bertini
 			old_vals[ii] = vars[ii]->Eval<dbl>();
 			vars[ii]->SetToRandUnit<dbl>();
 		}
+
+		if (HavePathVariable())
+		{
+			old_path_var_val = path_variable_->Eval<dbl>();
+			path_variable_->SetToRandUnit<dbl>();
+		}
+
+
 		for (const auto& n : jacobian_)
 			n->Reset();
 		for (const auto& n : space_derivatives_)
@@ -1007,9 +1015,19 @@ namespace bertini
 				break;
 			case JacobianEvalMethod::Derivatives:
 				for (auto& iter : this->space_derivatives_)
+				{
+					auto prev = iter->Eval<dbl>();
 					Simplify(iter);
+					iter->Reset();
+					assert(abs(prev-iter->Eval<dbl>()) < 1e-15);
+				}
 				for (auto& iter : this->time_derivatives_)
+				{
+					auto prev = iter->Eval<dbl>();
 					Simplify(iter);
+					iter->Reset();
+					assert(abs(prev-iter->Eval<dbl>()) < 1e-15);
+				}
 				break;
 
 		}
@@ -1019,6 +1037,9 @@ namespace bertini
 
 		for (unsigned ii=0; ii<num_vars; ++ii)
 			vars[ii]->set_current_value<dbl>(old_vals[ii]);
+		if (HavePathVariable())
+			path_variable_->set_current_value(old_path_var_val);
+
 
 		for (const auto& n : jacobian_)
 			n->Reset();
