@@ -1116,7 +1116,14 @@ namespace bertini
 					for (int ii = 0; ii < s.NumFunctions(); ++ii)
 					{
 						const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
-						out << "jac_fn(" << ii << "," << jj << ") = " << d << "\n";
+						out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+					}
+
+				if (s.HavePathVariable())
+					for (int ii = 0; ii < s.NumFunctions(); ++ii)
+					{
+						const auto& d = s.time_derivatives_[ii];
+						out << "jac_time_der(" << ii << ") = " << d << "\n";
 					}
 				break;
 			}
