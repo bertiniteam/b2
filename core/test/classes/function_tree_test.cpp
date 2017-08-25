@@ -61,6 +61,7 @@ using mpfr = bertini::mpfr;
 using bertini::MakeVariable;
 using bertini::MakeFloat;
 
+using namespace bertini;
 
 /////////// Basic Operations Alone ///////////////////
 

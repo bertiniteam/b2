@@ -52,19 +52,9 @@
 
 BOOST_AUTO_TEST_SUITE(system_class)
 
-using System = bertini::System;
 using Var = std::shared_ptr<bertini::node::Variable>;
-using VariableGroup = bertini::VariableGroup;
-using bertini::MakeVariable;
 
-using mpfr_float = bertini::mpfr_float;
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr;
-
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-
+using namespace bertini;
 /**
 \class bertini::System
 \test \b system_make_a_system_at_all Confirms that can default construct a System.
