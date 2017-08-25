@@ -193,8 +193,8 @@ namespace bertini
 	{
 		using std::abs;
 		using std::sqrt;
-		std::default_random_engine generator;
-		std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		static std::default_random_engine generator;
+		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
 		std::complex<double> returnme(distribution(generator), distribution(generator));
 		return returnme / sqrt( abs(returnme));
 	}
@@ -202,8 +202,8 @@ namespace bertini
 	template <> inline
 	std::complex<double> RandomUnit<std::complex<double> >()
 	{
-		std::default_random_engine generator;
-		std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		static std::default_random_engine generator;
+		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
 		std::complex<double> returnme(distribution(generator), distribution(generator));
 		return returnme / abs(returnme);
 	}

@@ -453,6 +453,38 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 }
 
 
+BOOST_AUTO_TEST_CASE(system_jacobian)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto z = MakeVariable("z");
+
+	System sys;
+
+	sys.AddVariableGroup(VariableGroup{x, y, z});
+
+	sys.AddFunction(pow(x,2)*pow(y,3)*pow(z,4) + 1);
+	sys.AddFunction(pow(x,3)*pow(y,4)*pow(z,5) + 4);
+
+	auto a = x->Eval<dbl>();
+	auto b = y->Eval<dbl>();
+	auto c = z->Eval<dbl>();
+
+	Vec<dbl> v(3);
+	v << a, b, c;
+
+	auto J = sys.Jacobian(v);
+
+	BOOST_CHECK_SMALL(abs(J(0,0)- 2.*a*pow(b,3)*pow(c,4)), 1e-15);
+	BOOST_CHECK_SMALL(abs(J(0,1)- 3.*pow(a,2)*pow(b,2)*pow(c,4)), 1e-15);
+	BOOST_CHECK_SMALL(abs(J(0,2)- 4.*pow(a,2)*pow(b,3)*pow(c,3)), 1e-15);
+
+	BOOST_CHECK_SMALL(abs(J(1,0)- 3.*pow(a,2)*pow(b,4)*pow(c,5)), 1e-15);
+	BOOST_CHECK_SMALL(abs(J(1,1)- 4.*pow(a,3)*pow(b,3)*pow(c,5)), 1e-15);
+	BOOST_CHECK_SMALL(abs(J(1,2)- 5.*pow(a,3)*pow(b,4)*pow(c,4)), 1e-15);
+
+
+}
 
 
 /**

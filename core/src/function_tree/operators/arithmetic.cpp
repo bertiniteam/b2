@@ -43,44 +43,37 @@ unsigned SumOperator::EliminateZeros()
 {
 	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
 
-	// find those zeros in the sum.  then, compress.
-	std::vector<std::shared_ptr<Node>> non_zeros, zeros; 
-	std::vector<bool> non_zeros_signs;
 	unsigned num_eliminated{0};
+	if (children_size()>1)
+	{	
+		std::vector<std::shared_ptr<Node>> new_children; std::vector<bool> new_ops;
 
-	for (unsigned ii=0; ii<children_.size(); ++ii)
-	{
-		const auto& curr_nd = children_[ii];
-		if (curr_nd->Eval<dbl>()==0.)	
-			zeros.push_back(curr_nd);
-		else
+		std::vector<bool> is_zero(children_.size(), false);
+		for (unsigned ii=0; ii<children_.size(); ++ii)
+			if (children_[ii]->Eval<dbl>()==0.)	
+				is_zero[ii] = true;
+
+		for (unsigned ii=0; ii<children_size(); ++ii)
+			if (!is_zero[ii])
+			{
+				new_children.push_back(children_[ii]);
+				new_ops.push_back(children_sign_[ii]);
+			}
+			else
+			{
+				++num_eliminated;
+			}
+
+		if (new_children.empty())
 		{
-			non_zeros.push_back(curr_nd);
-			non_zeros_signs.push_back(children_sign_[ii]);
+			new_children.push_back(MakeInteger(0));
+			new_ops.push_back(true);
+			--num_eliminated;
 		}
-	}
-	// do the elimination
-	if (zeros.size() == children_.size()) // then all zeros
-	{
-		children_.clear(); children_sign_.clear();
-		AddChild(MakeInteger(0));
-		return zeros.size()-1;
-	}
-	else if (non_zeros.size() == children_.size()) // no zero entries at this level. 
-	{
-		// recurse over the remaining children
-		for (auto& iter : children_)
-			num_eliminated += iter->EliminateZeros();
-		return num_eliminated;
-	}
 
-	// otherwise, it's not an all-zero sum.  so, there's a non-zero element.
-	// need to add them with their original sign.
-	num_eliminated += zeros.size();
-	for (unsigned ii=0; ii<non_zeros.size(); ++ii)
-	{
-		children_.clear(); children_sign_.clear();
-		AddChild(non_zeros[ii], non_zeros_signs[ii]);
+		using std::swap;
+		swap(children_, new_children);
+		swap(children_sign_, new_ops);
 	}
 
 	// recurse over the remaining children
@@ -94,7 +87,11 @@ unsigned SumOperator::EliminateZeros()
 
 unsigned SumOperator::EliminateOnes()
 {
-	return 0;
+	unsigned num_eliminated{0};
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateOnes();
+
+	return num_eliminated;
 }
 
 unsigned SumOperator::ReduceSubSums()
@@ -137,15 +134,11 @@ unsigned SumOperator::ReduceSubMults()
 	for (unsigned ii=0; ii<children_size(); ++ii)
 	{
 		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
-		if (converted)
+		if (converted && converted->children_size()==1 && converted->children_mult_or_div_[0])
 		{ // we have a multiply node! if its a single node and is mult, not div, then its child can be folded into this sum.
-			if (converted->children_size()==1 && converted->children_mult_or_div_[0])
-			{
-				new_children.push_back(converted->children_[0]);
-				new_ops.push_back(converted->children_mult_or_div_[0]);
-				num_eliminated++;
-			}
-			
+			new_children.push_back(converted->children_[0]);
+			new_ops.push_back(children_sign_[ii]);
+			num_eliminated++;			
 		}
 		else
 		{
@@ -163,7 +156,12 @@ unsigned SumOperator::ReduceSubMults()
 
 unsigned SumOperator::ReduceDepth()
 {
-	return ReduceSubSums() + ReduceSubMults();;
+	auto num_eliminated = ReduceSubSums() + ReduceSubMults();
+
+	for (auto& iter : children_)
+		num_eliminated += iter->ReduceDepth();
+
+	return num_eliminated;
 }
 
 void SumOperator::print(std::ostream & target) const
@@ -534,7 +532,6 @@ unsigned MultOperator::EliminateZeros()
 	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
 
 	// find those zeros in the sum.  then, compress.
-	std::vector<std::shared_ptr<Node>> non_zeros, zeros; 
 	std::vector<bool> non_zeros_ops;
 
 	bool have_a_zero = false;
@@ -549,7 +546,7 @@ unsigned MultOperator::EliminateZeros()
 
 	if (have_a_zero) // if there is a single zero, the whole thing should collapse.
 	{
-		unsigned num_eliminated = children_.size();
+		unsigned num_eliminated = children_.size()-1;
 		children_.clear(); children_mult_or_div_.clear();
 		AddChild(MakeInteger(0), true);
 		return num_eliminated;
@@ -571,43 +568,42 @@ unsigned MultOperator::EliminateOnes()
 {
 	assert(!children_.empty() && "children_ must not be empty to eliminate ones");
 
-	if (children_.size() <=1)
-		return 0;
-
-	std::vector<bool> is_one(children_.size(),false);
 	unsigned num_eliminated{0};
-
-	for (unsigned ii=0; ii<children_.size(); ++ii)
-		is_one[ii] = children_[ii]->Eval<dbl>()==1.0;
-
-
-	std::vector<std::shared_ptr<Node>> new_children;
-	std::vector<bool> new_mult_div;
-	for (unsigned ii=1; ii<is_one.size(); ++ii)
+	if (children_.size()>1)
 	{
-		if (!is_one[ii])
+		std::vector<bool> is_one(children_.size(),false);
+		
+
+		for (unsigned ii=0; ii<children_.size(); ++ii)
+			is_one[ii] = children_[ii]->Eval<dbl>()==1.0;
+
+		std::vector<std::shared_ptr<Node>> new_children;
+		std::vector<bool> new_mult_div;
+		for (unsigned ii=0; ii<is_one.size(); ++ii)
 		{
-			new_children.push_back(children_[ii]);
-			new_mult_div.push_back(children_mult_or_div_[ii]);
+			if (!is_one[ii])
+			{
+				new_children.push_back(children_[ii]);
+				new_mult_div.push_back(children_mult_or_div_[ii]);
+			}
+			else
+			{
+				++num_eliminated;
+			}
 		}
-		else
+
+		if (new_children.empty())
 		{
-			++num_eliminated;
+			new_children.push_back(children_[0]);
+			new_mult_div.push_back(children_mult_or_div_[0]);
+			--num_eliminated;
 		}
+
+
+		using std::swap;
+		swap(children_, new_children);
+		swap(children_mult_or_div_, new_mult_div);
 	}
-
-	if (new_children.size()==0 || !is_one[0])
-	{
-		new_children.push_back(children_[0]);
-		new_mult_div.push_back(children_mult_or_div_[0]);
-	}
-	else
-		++num_eliminated;
-
-
-	using std::swap;
-	swap(children_, new_children);
-	swap(children_mult_or_div_, new_mult_div);
 
 	for (auto& iter : children_)
 		num_eliminated += iter->EliminateOnes();
@@ -625,19 +621,15 @@ unsigned MultOperator::ReduceSubSums()
 	for (unsigned ii=0; ii<children_size(); ++ii)
 	{
 		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
-		if (converted)
+		if (converted && converted->children_size()==1)
 		{ // we have a sum node! if its a single add node, then its child can be folded into this sum.
-			if (converted->children_size()==1)
-			{
-				if (converted->children_sign_[0])
-					new_children.push_back(converted->children_[0]);
-				else
-					new_children.push_back(-converted->children_[0]);
+			if (converted->children_sign_[0])
+				new_children.push_back(converted->children_[0]);
+			else
+				new_children.push_back(-converted->children_[0]);
 
-				new_ops.push_back(children_mult_or_div_[ii]);
-				num_eliminated++;
-			}
-			
+			new_ops.push_back(children_mult_or_div_[ii]);
+			num_eliminated++;
 		}
 		else
 		{
@@ -687,7 +679,12 @@ unsigned MultOperator::ReduceSubMults()
 
 unsigned MultOperator::ReduceDepth()
 {
-	return ReduceSubSums() + ReduceSubMults();
+	auto num_eliminated = ReduceSubSums() + ReduceSubMults();
+
+	for (auto& iter : children_)
+		num_eliminated += iter->ReduceDepth();
+
+	return num_eliminated;
 }
 
 

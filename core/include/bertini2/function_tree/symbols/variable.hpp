@@ -86,6 +86,18 @@ namespace node{
 		void SetToNan();
 
 		/**
+		\brief Changes the value of the variable to be a random complex number.  
+		*/
+		template <typename T>
+		void SetToRand();
+
+		/**
+		\brief Changes the value of the variable to be a random complex number, of magnitude 1.  
+		*/
+		template <typename T>
+		void SetToRandUnit();
+
+		/**
 		 Differentiates a variable.  
 		 */
 		std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override;

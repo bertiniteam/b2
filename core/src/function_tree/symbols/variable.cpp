@@ -36,14 +36,14 @@ namespace bertini{
 		
 Variable::Variable(std::string new_name) : NamedSymbol(new_name)
 { 
-	SetToNan<dbl>();
-	SetToNan<mpfr>();
+	SetToRandUnit<mpfr>();
+	set_current_value(dbl(Eval<mpfr>()));
 }
 
 Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
 { 
-	SetToNan<dbl>();
-	SetToNan<mpfr>();
+	SetToRandUnit<mpfr>();
+	set_current_value(dbl(Eval<mpfr>()));
 }
 
 template <typename T>
@@ -73,6 +73,23 @@ void Variable::SetToNan()
 template void Variable::SetToNan<dbl>();
 template void Variable::SetToNan<mpfr>();
 
+
+template <typename T>
+void Variable::SetToRand()
+{
+	set_current_value<T>(RandomUnit<T>());
+}
+template void Variable::SetToRand<dbl>();
+template void Variable::SetToRand<mpfr>();
+
+
+template <typename T>
+void Variable::SetToRandUnit()
+{
+	set_current_value<T>(RandomUnit<T>());
+}
+template void Variable::SetToRandUnit<dbl>();
+template void Variable::SetToRandUnit<mpfr>();
 
 std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v) const
 {

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with system.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -38,6 +38,11 @@ namespace bertini
 	JacobianEvalMethod DefaultJacobianEvalMethod()
 	{
 		return JacobianEvalMethod::Derivatives;
+	}
+
+	bool DefaultAutoSimplify()
+	{
+		return true;
 	}
 
 	void swap(System & a, System & b)
@@ -324,6 +329,11 @@ namespace bertini
 			}
 		}
 		is_differentiated_ = true;
+
+		if (auto_simplify_)
+		{
+			this->SimplifyDerivatives();
+		}
 	}
 
 
@@ -958,7 +968,91 @@ namespace bertini
 
 
 
+	void System::SimplifyFunctions()
+	{
+		using bertini::Simplify;
+		for (auto& iter : this->functions_)
+			Simplify(iter);
+	}
 
+
+
+	void System::SimplifyDerivatives() const
+	{
+		using bertini::Simplify;
+
+		auto num_vars = this->NumVariables();
+		std::vector<dbl> old_vals(num_vars);  dbl old_path_var_val;
+
+		auto vars = this->Variables();
+		for (unsigned ii=0; ii<num_vars; ++ii)
+		{
+			old_vals[ii] = vars[ii]->Eval<dbl>();
+			vars[ii]->SetToRandUnit<dbl>();
+		}
+
+		if (HavePathVariable())
+		{
+			old_path_var_val = path_variable_->Eval<dbl>();
+			path_variable_->SetToRandUnit<dbl>();
+		}
+
+
+		for (const auto& n : jacobian_)
+			n->Reset();
+		for (const auto& n : space_derivatives_)
+			n->Reset();
+		for (const auto& n : time_derivatives_)
+			n->Reset();
+
+
+		switch (jacobian_eval_method_)
+		{
+			case JacobianEvalMethod::JacobianNode:
+				for (auto& iter : this->jacobian_)
+					Simplify(iter);
+				break;
+			case JacobianEvalMethod::Derivatives:
+				for (auto& iter : this->space_derivatives_)
+				{
+					auto prev = iter->Eval<dbl>();
+					Simplify(iter);
+					iter->Reset();
+					assert(abs(prev-iter->Eval<dbl>()) < 1e-15);
+				}
+				for (auto& iter : this->time_derivatives_)
+				{
+					auto prev = iter->Eval<dbl>();
+					Simplify(iter);
+					iter->Reset();
+					assert(abs(prev-iter->Eval<dbl>()) < 1e-15);
+				}
+				break;
+
+		}
+		
+		for (unsigned ii=0; ii<num_vars; ++ii)
+			vars[ii]->set_current_value<dbl>(old_vals[ii]);
+		if (HavePathVariable())
+			path_variable_->set_current_value(old_path_var_val);
+
+
+		for (const auto& n : jacobian_)
+			n->Reset();
+		for (const auto& n : space_derivatives_)
+			n->Reset();
+		for (const auto& n : time_derivatives_)
+			n->Reset();
+
+	}
+
+
+
+	void System::Simplify()
+	{
+		SimplifyFunctions();
+		SimplifyDerivatives();
+	}
 
 
 
@@ -1039,7 +1133,14 @@ namespace bertini
 					for (int ii = 0; ii < s.NumFunctions(); ++ii)
 					{
 						const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
-						out << "jac_fn(" << ii << "," << jj << ") = " << d << "\n";
+						out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+					}
+
+				if (s.HavePathVariable())
+					for (int ii = 0; ii < s.NumFunctions(); ++ii)
+					{
+						const auto& d = s.time_derivatives_[ii];
+						out << "jac_time_der(" << ii << ") = " << d << "\n";
 					}
 				break;
 			}
@@ -1229,5 +1330,9 @@ namespace bertini
 		return sys_clone;
 	}
 
+	void Simplify(System & sys)
+	{
+		sys.Simplify();
+	}
 
 }
