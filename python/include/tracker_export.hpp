@@ -64,8 +64,8 @@ namespace bertini{
 
 
 			// resolve overloads for getting and setting predictor method.
-			void (TrackerT::*set_predictor_)(config::Predictor)= &TrackerT::Predictor;
-			config::Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::Predictor;
+			void (TrackerT::*set_predictor_)(Predictor)= &TrackerT::SetPredictor;
+			Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::GetPredictor;
 			
 
 
