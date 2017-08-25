@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, University of Wisconsin Eau Claire
 
 /**
 \file bertini2/double_extensions.hpp 
