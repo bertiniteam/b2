@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with predictor_test.m.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -21,7 +21,7 @@
 
 // individual authors of this file include:
 // jeb collins, west texas a&m
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 

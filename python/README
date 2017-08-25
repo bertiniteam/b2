@@ -26,7 +26,7 @@ Then, if you want to, you can run the test programs.  So far, there is one: b2_c
 
 notes:
 
-If you add files to the project, or wish to add a compiled program, etc, you modify the b2/core/Makefile.am, and a b2/core/path/to/Makemodule.am file, or possibly create a Makemodule.am file at the correct location.  If you need help with this, please contact Daniel Brake danielthebrake@gmail.com
+If you add files to the project, or wish to add a compiled program, etc, you modify the b2/core/Makefile.am, and a b2/core/path/to/Makemodule.am file, or possibly create a Makemodule.am file at the correct location.  If you need help with this, please contact Dani Brake brakeda@uwec.edu
 
 Please do not commit autotools-built files to the repository, including the configure script, any file in the created b2/core/config/ folder, or the others.  There is a chance you may have to add a m4 macro or something, and this is ok.  Do what you need, but commit only the source files, not generated files.
 

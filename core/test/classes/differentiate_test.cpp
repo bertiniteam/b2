@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 //
 //  Created by Collins, James B. on 4/30/15.
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
