@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with fundamentals_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -72,6 +72,16 @@ BOOST_AUTO_TEST_CASE(complex_double_nans4)
 	dbl x(0., 0.);
 	using bertini::isnan;
 	BOOST_CHECK(!isnan(x));
+}
+
+BOOST_AUTO_TEST_CASE(complex_double_random_subsequent_not_equal)
+{
+	using T = dbl;
+
+	auto x = bertini::RandomUnit<T>();
+	auto y = bertini::RandomUnit<T>();
+
+	BOOST_CHECK(x!=y);
 }
 
 
