@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 
