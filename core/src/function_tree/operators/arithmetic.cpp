@@ -43,44 +43,40 @@ unsigned SumOperator::EliminateZeros()
 {
 	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
 
-	// find those zeros in the sum.  then, compress.
-	std::vector<std::shared_ptr<Node>> non_zeros, zeros; 
-	std::vector<bool> non_zeros_signs;
 	unsigned num_eliminated{0};
+	if (children_size()>1)
+	{	
+		std::vector<std::shared_ptr<Node>> new_children; std::vector<bool> new_ops;
 
-	for (unsigned ii=0; ii<children_.size(); ++ii)
-	{
-		const auto& curr_nd = children_[ii];
-		if (curr_nd->Eval<dbl>()==0.)	
-			zeros.push_back(curr_nd);
-		else
+		std::vector<bool> is_zero(children_.size(), false);
+		for (unsigned ii=0; ii<children_.size(); ++ii)
+			if (children_[ii]->Eval<dbl>()==0.)	
+				is_zero[ii] = true;
+
+		for (unsigned ii=0; ii<children_size(); ++ii)
+			if (!is_zero[ii])
+			{
+				new_children.push_back(children_[ii]);
+				new_ops.push_back(children_sign_[ii]);
+			}
+			else
+			{
+				++num_eliminated;
+				std::cout << "eliminating " << children_[ii] << " as 0\n";
+			}
+
+		if (new_children.empty())
 		{
-			non_zeros.push_back(curr_nd);
-			non_zeros_signs.push_back(children_sign_[ii]);
+			std::cout << "empty sum after eliminating zeros\n";
+			new_children.push_back(MakeInteger(0));
+			new_ops.push_back(true);
+			--num_eliminated;
 		}
-	}
-	// do the elimination
-	if (zeros.size() == children_.size()) // then all zeros
-	{
-		children_.clear(); children_sign_.clear();
-		AddChild(MakeInteger(0));
-		return zeros.size()-1;
-	}
-	else if (non_zeros.size() == children_.size()) // no zero entries at this level. 
-	{
-		// recurse over the remaining children
-		for (auto& iter : children_)
-			num_eliminated += iter->EliminateZeros();
-		return num_eliminated;
-	}
 
-	// otherwise, it's not an all-zero sum.  so, there's a non-zero element.
-	// need to add them with their original sign.
-	num_eliminated += zeros.size();
-
-	children_.clear(); children_sign_.clear();
-	for (unsigned ii=0; ii<non_zeros.size(); ++ii)
-		AddChild(non_zeros[ii], non_zeros_signs[ii]);
+		using std::swap;
+		swap(children_, new_children);
+		swap(children_sign_, new_ops);
+	}
 
 	// recurse over the remaining children
 	for (auto& iter : children_)
