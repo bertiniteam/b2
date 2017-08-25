@@ -69,6 +69,16 @@ BOOST_AUTO_TEST_SUITE(transform)
 
 BOOST_AUTO_TEST_SUITE(eliminate_zeros)
 
+    
+// ______ 
+// \  ___)
+//  \ \   
+//   > >  
+//  / /__ 
+// /_____)
+       
+
+                                                                      
 BOOST_AUTO_TEST_SUITE(sum)
 
 BOOST_AUTO_TEST_CASE(cant_eliminate_self)
@@ -208,15 +218,13 @@ BOOST_AUTO_TEST_SUITE_END() // eliminate zeros :: sum
 
 
 
-/////////
-//
-//    ppppppppp
-//     pp   pp
-//     pp   pp
-//     pp   pp
-//     pp   pp
-//
-//////////////
+//  _______ 
+// (   _   )
+//  | | | | 
+//  | | | | 
+//  | | | | 
+//  |_| |_| 
+
 
 BOOST_AUTO_TEST_SUITE(product)
 
@@ -260,24 +268,29 @@ BOOST_AUTO_TEST_SUITE_END() // eliminate zeros
 
 
 
+//         _   _         _                                                          
+//        | | (_)       (_)                 _                                       
+//  _____ | |  _  ____   _  ____   _____  _| |_  _____     ___   ____   _____   ___ 
+// | ___ || | | ||    \ | ||  _ \ (____ |(_   _)| ___ |   / _ \ |  _ \ | ___ | /___)
+// | ____|| | | || | | || || | | |/ ___ |  | |_ | ____|  | |_| || | | || ____||___ |
+// |_____) \_)|_||_|_|_||_||_| |_|\_____|   \__)|_____)   \___/ |_| |_||_____)(___/ 
 
 
 
-
-//////////////////////////////
-//
-//   ONES
-//
-//      1
-//     11
-//    1 1
-//      1
-//      1
-//    11111
-//
-/////////////////////////
 
 BOOST_AUTO_TEST_SUITE(eliminate_ones)
+
+
+//                                                                   _ 
+//                                                                  ( )
+//    _     ___     __    ___     ______     _ _    _ __    _      _| |
+//  /'_`\ /' _ `\ /'__`\/',__)   (______)   ( '_`\ ( '__) /'_`\  /'_` |
+// ( (_) )| ( ) |(  ___/\__, \              | (_) )| |   ( (_) )( (_| |
+// `\___/'(_) (_)`\____)(____/              | ,__/'(_)   `\___/'`\__,_)
+//                                          | |                        
+//                                          (_)                        
+
+
 BOOST_AUTO_TEST_SUITE(product)
 
 BOOST_AUTO_TEST_CASE(cant_eliminate_self)
@@ -402,6 +415,16 @@ BOOST_AUTO_TEST_SUITE_END() // eliminate ones
 
 BOOST_AUTO_TEST_SUITE(reduce_depth)
 
+
+
+
+//                   _                                                            
+//                  ( )                                                           
+//  _ __    __     _| | _   _    ___    __      ______      ___  _   _   ___ ___  
+// ( '__) /'__`\ /'_` |( ) ( ) /'___) /'__`\   (______)   /',__)( ) ( )/' _ ` _ `\
+// | |   (  ___/( (_| || (_) |( (___ (  ___/              \__, \| (_) || ( ) ( ) |
+// (_)   `\____)`\__,_)`\___/'`\____)`\____)              (____/`\___/'(_) (_) (_)
+
 BOOST_AUTO_TEST_SUITE(sum)
 
 BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
@@ -498,6 +521,14 @@ BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
 }
 BOOST_AUTO_TEST_SUITE_END() // sum
 
+
+
+//  _______ 
+// (   _   )
+//  | | | | 
+//  | | | | 
+//  | | | | 
+//  |_| |_| 
 
 BOOST_AUTO_TEST_SUITE(prod)
 
