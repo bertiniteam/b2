@@ -25,7 +25,7 @@
 //  West Texas A&M University
 //  Spring 2016
 //
-//  Daniel Brake
+//  Dani Brake
 //  University of Notre Dame
 //
 //  python/node_export.cpp:  Source file for exposing Node class to python.
