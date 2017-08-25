@@ -713,8 +713,6 @@ BOOST_AUTO_TEST_CASE(a_nested_one)
 	auto b = y->Eval<dbl>();
 
 	BOOST_CHECK_EQUAL(n->Eval<dbl>(), a*b);
-
-	std::cout << n << '\n';
 }
 
 
@@ -808,7 +806,6 @@ BOOST_AUTO_TEST_CASE(complicated)
 	auto n = (((((2*x*1)*y)+(0*(pow(x,2))))/2)-(0*((pow(x,2))*y)/(pow(2,2))));
 
 	auto num_rounds = bertini::Simplify(n);
-	std::cout << n << '\n';
 
 	auto a = x->Eval<dbl>();
 	auto b = y->Eval<dbl>();
