@@ -46,6 +46,7 @@ using Nd = std::shared_ptr<bertini::node::Node>;
 
 using bertini::MakeVariable;
 using bertini::MakeInteger;
+using bertini::MakeRational;
 
 using dbl = bertini::dbl;
 
@@ -445,7 +446,7 @@ BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
 	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
 
 	x->set_current_value(a); y->set_current_value(b);
-
+	p->Reset();
 	auto result = p->Eval<dbl>();
 	BOOST_CHECK_EQUAL(result, a+b);
 }
@@ -474,6 +475,7 @@ BOOST_AUTO_TEST_CASE(double_sum_signs_distribute)
 		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
 
 		x->set_current_value(a); y->set_current_value(b);
+		r->Reset();
 		auto result = r->Eval<dbl>();
 		BOOST_CHECK_EQUAL(result, (a+b) + (a-b));
 	}
@@ -495,6 +497,50 @@ BOOST_AUTO_TEST_CASE(double_sum_signs_distribute)
 
 }
 
+BOOST_AUTO_TEST_CASE(double_sum_signs_distribute2)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
+	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
+
+	auto p = m+n;
+	auto q = m-n;
+
+	auto r = p-q;
+
+	{
+		unsigned num_eliminated = r->ReduceDepth();
+		BOOST_CHECK(num_eliminated > 0);
+		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
+		BOOST_CHECK_EQUAL(R->children_size(), 4);
+
+		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
+		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
+
+		x->set_current_value(a); y->set_current_value(b);
+		r->Reset();
+		auto result = r->Eval<dbl>();
+		BOOST_CHECK_EQUAL(result, (a+b) - (a-b));
+	}
+
+	{
+		unsigned num_eliminated = r->ReduceDepth();
+		BOOST_CHECK(num_eliminated > 0);
+		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
+		BOOST_CHECK_EQUAL(R->children_size(), 4);
+
+		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
+		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
+
+		x->set_current_value(a); y->set_current_value(b);
+		r->Reset();
+		auto result = r->Eval<dbl>();
+		BOOST_CHECK_EQUAL(result, (a+b) - (a-b));
+	}
+
+}
 
 
 BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
@@ -515,10 +561,55 @@ BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
 	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
 
 	x->set_current_value(a); y->set_current_value(b);
-
+	p->Reset();
 	auto result = p->Eval<dbl>();
 	BOOST_CHECK_EQUAL(result, a+b);
 }
+
+
+
+
+BOOST_AUTO_TEST_CASE(eliminates_mult_single_regular)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+	Nd m = std::make_shared<bertini::node::MultOperator>(x);
+
+	auto p = m+y;
+
+	unsigned num_eliminated = p->ReduceDepth();
+
+	BOOST_CHECK(num_eliminated > 0);
+
+	auto a = x->Eval<dbl>();
+	auto b = y->Eval<dbl>();
+	p->Reset();
+	auto result = p->Eval<dbl>();
+	BOOST_CHECK_EQUAL(result, a+b);
+}
+
+BOOST_AUTO_TEST_CASE(eliminates_mult_single_regular2)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+
+	Nd m = std::make_shared<bertini::node::MultOperator>(x);
+	Nd n = std::make_shared<bertini::node::MultOperator>(y);
+
+	auto p = x+n;
+
+	unsigned num_eliminated = p->ReduceDepth();
+
+	BOOST_CHECK(num_eliminated > 0);
+
+	auto a = x->Eval<dbl>();
+	auto b = y->Eval<dbl>();
+	p->Reset();
+	auto result = p->Eval<dbl>();
+	BOOST_CHECK_EQUAL(result, a+b);
+}
+
 BOOST_AUTO_TEST_SUITE_END() // sum
 
 
@@ -550,7 +641,7 @@ BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
 	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
 
 	x->set_current_value(a); y->set_current_value(b);
-
+	p->Reset();
 	auto result = p->Eval<dbl>();
 	BOOST_CHECK_EQUAL(result, a*b);
 }
@@ -574,7 +665,7 @@ BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
 	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
 
 	x->set_current_value(a); y->set_current_value(b);
-
+	p->Reset();
 	auto result = p->Eval<dbl>();
 	BOOST_CHECK_EQUAL(result, a*b);
 }
@@ -600,7 +691,7 @@ BOOST_AUTO_TEST_CASE(distributive)
 	dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
 
 	x->set_current_value(a); y->set_current_value(b);
-
+	p->Reset();
 	auto result = p->Eval<dbl>();
 	BOOST_CHECK_SMALL(abs(result - b*b), 1e-13);
 }
@@ -745,6 +836,78 @@ auto tval = t->Eval<dbl>();
 
 	BOOST_CHECK_SMALL(abs(dfdx->Eval<dbl>()- 2.*(xval+tval-1.)), 1e-15);
 }
+
+
+BOOST_AUTO_TEST_CASE(complicated3)
+{
+	auto zero = MakeZero();
+	auto one = MakeOne();
+
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto HOM_VAR_0 = MakeVariable("HOM_VAR_0");
+	auto t = MakeVariable("t");
+
+	auto f = ((zero*pow((y-(HOM_VAR_0*one)),2))+((2*(y-(HOM_VAR_0*one))*(one-((zero*one)+(zero*HOM_VAR_0))))*(one-t)));
+
+	auto init_val = f->Eval<dbl>();
+
+	bertini::Simplify(f);
+
+	f->Reset();
+
+	BOOST_CHECK_EQUAL(init_val, f->Eval<dbl>());
+
+}
+
+BOOST_AUTO_TEST_CASE(complicated4)
+{
+	auto zero = MakeZero();
+	auto one = MakeOne();
+
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto HOM_VAR_0 = MakeVariable("HOM_VAR_0");
+	auto t = MakeVariable("t");
+
+	auto a = x->Eval<dbl>();
+	auto b = y->Eval<dbl>();
+	auto h = HOM_VAR_0->Eval<dbl>();
+	auto T = t->Eval<dbl>();
+
+	auto f = ((zero*(pow((x-(HOM_VAR_0*one)),3)))+((3*(pow((x-(HOM_VAR_0*one)),2))*(-((one*one)+(zero*HOM_VAR_0))))*(one-t)));
+
+	auto f_val_init = f->Eval<dbl>();
+	auto actual_val = 3.*pow((h - a),2)*(T - 1.);
+
+	bertini::Simplify(f);
+
+	f->Reset();
+	auto f_val_after = f->Eval<dbl>();
+	BOOST_CHECK_SMALL(abs(f_val_init - actual_val), 1e-15);
+	BOOST_CHECK_SMALL(abs(f_val_after- actual_val), 1e-15);
+}
+
+//((0*((x-(HOM_VAR_0*1))^3))+((3*((x-(HOM_VAR_0*1))^2)*(-((1*1)+(0*HOM_VAR_0))))*(1-t)))
+
+BOOST_AUTO_TEST_CASE(yet_more_complicated)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto t = MakeVariable("t");
+	auto HOM_VAR_0 = MakeVariable("HOM_VAR_0");
+
+	auto f = (((0*(pow(y,2)-(pow(HOM_VAR_0,2)*MakeRational("9215126146405988386300422552813438491596469014004/18831809439874092151531390861220941995712612447011","-34979570316540871529966189550041755413443953059471/3298415588464117388268211317293113094514010909093"))))+(((2*y*1)-(((2*HOM_VAR_0*0)*MakeRational("9215126146405988386300422552813438491596469014004/18831809439874092151531390861220941995712612447011","-34979570316540871529966189550041755413443953059471/3298415588464117388268211317293113094514010909093"))+(0*pow(HOM_VAR_0,2))))*t))+((0*pow((y-(HOM_VAR_0*1)),2))+((2*(y-(HOM_VAR_0*1))*(1-((0*1)+(0*HOM_VAR_0))))*(1-t))));
+
+	// jac_fn(1,2) = (((0*((y^2)-((HOM_VAR_0^2)*(9215126146405988386300422552813438491596469014004/18831809439874092151531390861220941995712612447011,-34979570316540871529966189550041755413443953059471/3298415588464117388268211317293113094514010909093))))+(((2*y*1)-(((2*HOM_VAR_0*0)*(9215126146405988386300422552813438491596469014004/18831809439874092151531390861220941995712612447011,-34979570316540871529966189550041755413443953059471/3298415588464117388268211317293113094514010909093))+(0*(HOM_VAR_0^2))))*t))+((0*((y-(HOM_VAR_0*1))^2))+((2*(y-(HOM_VAR_0*1))*(1-((0*1)+(0*HOM_VAR_0))))*(1-t))))
+
+	auto init_val = f->Eval<dbl>();
+
+	bertini::Simplify(f);
+f->Reset();
+	BOOST_CHECK_EQUAL(init_val, f->Eval<dbl>());
+}
+
 BOOST_AUTO_TEST_SUITE_END() // simplify
 
 
