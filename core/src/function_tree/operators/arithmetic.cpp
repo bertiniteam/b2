@@ -536,7 +536,6 @@ unsigned MultOperator::EliminateZeros()
 	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
 
 	// find those zeros in the sum.  then, compress.
-	std::vector<std::shared_ptr<Node>> non_zeros, zeros; 
 	std::vector<bool> non_zeros_ops;
 
 	bool have_a_zero = false;
@@ -551,6 +550,7 @@ unsigned MultOperator::EliminateZeros()
 
 	if (have_a_zero) // if there is a single zero, the whole thing should collapse.
 	{
+		std::cout << "collapsing entire product as 0 " << *this << '\n';
 		unsigned num_eliminated = children_.size()-1;
 		children_.clear(); children_mult_or_div_.clear();
 		AddChild(MakeInteger(0), true);
@@ -573,41 +573,47 @@ unsigned MultOperator::EliminateOnes()
 {
 	assert(!children_.empty() && "children_ must not be empty to eliminate ones");
 
-	if (children_.size() <=1)
-		return 0;
-
-	std::vector<bool> is_one(children_.size(),false);
 	unsigned num_eliminated{0};
-
-	for (unsigned ii=0; ii<children_.size(); ++ii)
-		is_one[ii] = children_[ii]->Eval<dbl>()==1.0;
-
-	std::vector<std::shared_ptr<Node>> new_children;
-	std::vector<bool> new_mult_div;
-	for (unsigned ii=0; ii<is_one.size(); ++ii)
+	if (children_.size()>1)
 	{
-		if (!is_one[ii])
+		std::vector<bool> is_one(children_.size(),false);
+		
+
+		for (unsigned ii=0; ii<children_.size(); ++ii)
+			is_one[ii] = children_[ii]->Eval<dbl>()==1.0;
+
+		std::vector<std::shared_ptr<Node>> new_children;
+		std::vector<bool> new_mult_div;
+		for (unsigned ii=0; ii<is_one.size(); ++ii)
 		{
-			new_children.push_back(children_[ii]);
-			new_mult_div.push_back(children_mult_or_div_[ii]);
+			if (!is_one[ii])
+			{
+				new_children.push_back(children_[ii]);
+				new_mult_div.push_back(children_mult_or_div_[ii]);
+			}
+			else
+			{
+				std::cout << "eliminated " << children_[ii] << '\n';
+				++num_eliminated;
+			}
 		}
-		else
+
+		if (new_children.empty())
 		{
-			++num_eliminated;
+			std::cout << "eliminated all children of " << *this << '\n';
+			new_children.push_back(children_[0]);
+			new_mult_div.push_back(children_mult_or_div_[0]);
+
+			std::cout << "adding back " << children_[0] <<'\n';
+
+			--num_eliminated;
 		}
+
+
+		using std::swap;
+		swap(children_, new_children);
+		swap(children_mult_or_div_, new_mult_div);
 	}
-
-	if (new_children.empty())
-	{
-		new_children.push_back(children_[0]);
-		new_mult_div.push_back(true);
-		--num_eliminated;
-	}
-
-
-	using std::swap;
-	swap(children_, new_children);
-	swap(children_mult_or_div_, new_mult_div);
 
 	for (auto& iter : children_)
 		num_eliminated += iter->EliminateOnes();
