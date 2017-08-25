@@ -1014,19 +1014,9 @@ namespace bertini
 				break;
 			case JacobianEvalMethod::Derivatives:
 				for (auto& iter : this->space_derivatives_)
-				{
-					auto prev = iter->Eval<dbl>();
 					Simplify(iter);
-					iter->Reset();
-					assert(abs(prev-iter->Eval<dbl>()) < 1e-15);
-				}
 				for (auto& iter : this->time_derivatives_)
-				{
-					auto prev = iter->Eval<dbl>();
 					Simplify(iter);
-					iter->Reset();
-					assert(abs(prev-iter->Eval<dbl>()) < 1e-15);
-				}
 				break;
 
 		}

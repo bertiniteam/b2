@@ -33,7 +33,7 @@
 
 #include <boost/random.hpp>
 
-
+#include "bertini2/double_extensions.hpp"
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
@@ -42,6 +42,29 @@ using mpq_rational = bertini::mpq_rational;
 using dbl = bertini::dbl;
 using bertini::DefaultPrecision;
 #include <limits>
+
+BOOST_AUTO_TEST_CASE(complex_pow)
+{
+	auto x = bertini::rand_complex();
+
+	using bertini::pow;
+	BOOST_CHECK_EQUAL(pow(x, 2), x*x);
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_pow_on_real_stays_real)
+{
+	using bertini::pow;
+	
+	for (int ii=0; ii<100; ++ii)
+	{
+		auto x = dbl(bertini::RandReal());
+		auto result = pow(x, 2);
+		BOOST_CHECK_EQUAL(result, x*x);
+		BOOST_CHECK_EQUAL(imag(result), 0);
+	}
+}
+
 
 BOOST_AUTO_TEST_CASE(complex_double_nans)
 {
