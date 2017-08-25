@@ -984,7 +984,6 @@ namespace bertini
 		auto num_vars = this->NumVariables();
 		std::vector<dbl> old_vals(num_vars);  dbl old_path_var_val;
 
-		std::cout << *this;
 		auto vars = this->Variables();
 		for (unsigned ii=0; ii<num_vars; ++ii)
 		{
@@ -1032,9 +1031,6 @@ namespace bertini
 
 		}
 		
-
-		std::cout << *this;
-
 		for (unsigned ii=0; ii<num_vars; ++ii)
 			vars[ii]->set_current_value<dbl>(old_vals[ii]);
 		if (HavePathVariable())
