@@ -53,8 +53,8 @@ Below we demonstrate a basic usage of the CauchyEndgame class to find the singul
 The pattern is as described above: create an instance of the class, feeding it the system to be used, and the endgame boundary time and other variable values at the endgame boundary. 
 \code{.cpp}
 using namespace bertini::tracking;
-using RealT = tracking::TrackerTraits<TrackerT>::BaseRealType; // Real types
-using ComplexT = tracking::TrackerTraits<TrackerT>::BaseComplexType; Complex types
+using RealT = tracking::TrackerTraits<TrackerType>::BaseRealType; // Real types
+using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexType; Complex types
 
 // 1. Define the polynomial system that we wish to solve. 
 System target_sys;
@@ -126,7 +126,7 @@ cauchy_settings.fail_safe_maximum_cycle_number = 6;
 
 
 // 5. Create a cauchy endgame, and use them to get the soutions at t = 0. 
-EndgameSelector<TrackerT>::Cauchy my_cauchy_endgame(tracker,cauchy_settings,tolerances);
+EndgameSelector<TrackerType>::Cauchy my_cauchy_endgame(tracker,cauchy_settings,tolerances);
 
 
 std::vector<Vec<ComplexT> > my_homotopy_solutions; 
@@ -162,17 +162,21 @@ template<typename PrecT>
 class CauchyEndgame : 
 	public EndgameBase<CauchyEndgame<PrecT>, PrecT>
 {
-private:
+public:
+	using BaseEGT = EndgameBase<CauchyEndgame<PrecT>, PrecT>;
+	using FinalEGT = CauchyEndgame<PrecT>;
+	using TrackerType = typename PrecT::TrackerType;
+
+	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 
 
 protected:
 
-	using BaseEGT = EndgameBase<CauchyEndgame<PrecT>, PrecT>;
-	using FinalEGT = CauchyEndgame<PrecT>;
-	using TrackerT = typename PrecT::TrackerT;
+	
 
-	using BaseComplexType = typename BaseEGT::BaseComplexType;
-	using BaseRealType = typename BaseEGT::BaseRealType;
+
+
 
 	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
 	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
@@ -320,13 +324,13 @@ public:
 	}
 	
 
-	explicit CauchyEndgame(TrackerT const& tr, 
+	explicit CauchyEndgame(TrackerType const& tr, 
                             const ConfigsAsTuple& settings )
       : BaseEGT(tr, settings)
    	{ }
 
     template< typename... Ts >
-		CauchyEndgame(TrackerT const& tr, const Ts&... ts ) : CauchyEndgame(tr, Configs::Unpermute( ts... ) ) 
+		CauchyEndgame(TrackerType const& tr, const Ts&... ts ) : CauchyEndgame(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
 
@@ -590,7 +594,7 @@ public:
 			return true;
 		}
 
-		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
 			//Ensure all samples are of the same precision.
 			auto new_precision = this->EnsureAtUniformPrecision(times, samples);
@@ -915,7 +919,7 @@ public:
 		this->template RefineAllSamples(ps_samples, ps_times);
 		
 		//Ensure all samples are of the same precision.
-		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
 			auto max_precision = this->EnsureAtUniformPrecision(ps_times, ps_samples);
 			this->GetSystem().precision(max_precision);
@@ -980,7 +984,7 @@ public:
 
 
 		//Ensure all samples are of the same precision.
-		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
 			auto new_precision = this->EnsureAtUniformPrecision(cau_times, cau_samples);
 			this->GetSystem().precision(new_precision);

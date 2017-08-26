@@ -169,15 +169,17 @@ template<typename PrecT>
 class PowerSeriesEndgame : 
 	public EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>
 {
-
-protected:
-
+public:
 	using BaseEGT = EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>;
 	using FinalEGT = PowerSeriesEndgame<PrecT>;
-	using TrackerType = typename PrecT::TrackerT;
+	using TrackerType = typename BaseEGT::TrackerType;
 
 	using BaseComplexType = typename BaseEGT::BaseComplexType;
 	using BaseRealType = typename BaseEGT::BaseRealType;
+
+
+protected:
+	
 
 	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
 	using TupleOfSamps = typename BaseEGT::TupleOfSamps;

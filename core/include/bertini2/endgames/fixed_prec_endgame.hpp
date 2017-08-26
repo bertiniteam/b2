@@ -43,12 +43,11 @@
 
 namespace bertini{ namespace endgame {
 
-template<typename TrackerType>
-class FixedPrecEndgame : public EndgamePrecPolicyBase<TrackerType>
+template<typename TrackerT>
+class FixedPrecEndgame : public EndgamePrecPolicyBase<TrackerT>
 {
 public:
-
-	using TrackerT = TrackerType;
+	using TrackerType = TrackerT;
 	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
 	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 
