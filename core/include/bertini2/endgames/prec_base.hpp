@@ -46,6 +46,7 @@ class EndgamePrecPolicyBase
 {
 public:
 
+	using TrackerType = TrackerT;
 
 	EndgamePrecPolicyBase(TrackerT const& new_tracker) : tracker_(std::ref(new_tracker))
 	{}

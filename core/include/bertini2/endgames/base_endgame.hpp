@@ -88,13 +88,14 @@ class EndgameBase :
 	public detail::Configured< typename AlgoTraits<FlavorT>::NeededConfigs >,
 	public PrecT
 {
+public:
+	using TrackerType = typename PrecT::TrackerType;
+
+	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
+
+
 protected:
-
-	// a list of all the needed arithemtic types (complex for complex trackers)
-	using TrackerT = typename PrecT::TrackerT;
-
-	using BaseComplexType = typename tracking::TrackerTraits<TrackerT>::BaseComplexType;
-	using BaseRealType = typename tracking::TrackerTraits<TrackerT>::BaseRealType;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
@@ -104,6 +105,7 @@ protected:
 	using Configs = typename AlgoTraits<FlavorT>::NeededConfigs;
 	using ConfigsAsTuple = typename Configs::ToTuple;
 
+	// a list of all the needed arithemtic types (complex for complex trackers)
 	using NeededTypes = detail::TypeList<BCT>;
 	using TupOfVec = typename NeededTypes::ToTupleOfVec;
 	using TupOfReal = typename NeededTypes::ToTupleOfReal;
@@ -176,7 +178,7 @@ public:
 			}
 		}
 
-		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec) // known at compile time
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
 		{
 			auto max_precision = this->EnsureAtUniformPrecision(times, samples);
 			this->GetSystem().precision(max_precision);
@@ -216,12 +218,12 @@ public:
 		return this->template Get<SecurityConfig>();
 	}
 
-	explicit EndgameBase(TrackerT const& tr, const ConfigsAsTuple& settings ) :
+	explicit EndgameBase(TrackerType const& tr, const ConfigsAsTuple& settings ) :
       	Configured( settings ), PrecT(tr)
    	{}
 
     template< typename... Ts >
-		EndgameBase(TrackerT const& tr, const Ts&... ts ) : EndgameBase(tr, Configs::Unpermute( ts... ) ) 
+		EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
 
@@ -335,7 +337,7 @@ public:
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		assert(this->template Get<EndgameConfig>().num_sample_points>0 && "number of sample points must be positive");
 
-		if (tracking::TrackerTraits<TrackerT>::IsAdaptivePrec)
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
 			assert(Precision(start_time)==Precision(x_endgame) && "Computing initial samples requires input time and space with uniform precision");
 		}

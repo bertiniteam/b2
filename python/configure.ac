@@ -35,8 +35,8 @@ AX_CXX_COMPILE_STDCXX_14
 #enable the creation of shared libraries
 AC_ENABLE_SHARED
 
-#enable the creation of static libraries
-AC_ENABLE_STATIC
+# no, do not enable the creation of static libraries
+# AC_ENABLE_STATIC
 
 
 #find the linker

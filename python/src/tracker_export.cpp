@@ -63,8 +63,8 @@ namespace bertini{
 			.def("current_precision", &TrackerT::CurrentPrecision)
 			.def("refine", return_Refine3_ptr<dbl>)
 			.def("refine", return_Refine3_ptr<mpfr>)
-			.def("refine", return_Refine4_ptr<dbl, double>)
-			.def("refine", return_Refine4_ptr<mpfr, mpfr_float>)
+			.def("refine", return_Refine4_ptr<dbl>)
+			.def("refine", return_Refine4_ptr<mpfr>)
 			;
 		}
 
@@ -80,7 +80,7 @@ namespace bertini{
 			.def("current_precision", &TrackerT::CurrentPrecision)
 			.def("tracker_loop_initialization", &TrackerT::TrackerLoopInitialization)
 			.def("refine", return_Refine3_ptr<dbl>)
-			.def("refine", return_Refine4_ptr<dbl, double>)
+			.def("refine", return_Refine4_ptr<dbl>)
 			;
 		}
 
@@ -95,7 +95,7 @@ namespace bertini{
 			.def("current_precision", &TrackerT::CurrentPrecision)
 			.def("tracker_loop_initialization", &TrackerT::TrackerLoopInitialization)
 			.def("refine", return_Refine3_ptr<mpfr>)
-			.def("refine", return_Refine4_ptr<mpfr, mpfr_float>)
+			.def("refine", return_Refine4_ptr<mpfr>)
 			;
 		}
 
@@ -105,17 +105,17 @@ namespace bertini{
 		void SteppingVisitor<T>::visit(PyClass& cl) const
 		{
 			cl
-			.def_readwrite("initial_step_size", &tracking::config::Stepping<T>::initial_step_size)
-			.def_readwrite("max_step_size", &tracking::config::Stepping<T>::max_step_size)
-			.def_readwrite("min_step_size", &tracking::config::Stepping<T>::min_step_size)
-			.def_readwrite("step_size_success_factor", &tracking::config::Stepping<T>::step_size_success_factor)
-			.def_readwrite("step_size_fail_factor", &tracking::config::Stepping<T>::step_size_fail_factor)
-			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::config::Stepping<T>::consecutive_successful_steps_before_stepsize_increase)
-			.def_readwrite("min_num_steps", &tracking::config::Stepping<T>::min_num_steps)
-			.def_readwrite("max_num_steps", &tracking::config::Stepping<T>::max_num_steps)
-			.def_readwrite("frequency_of_CN_estimation", &tracking::config::Stepping<T>::frequency_of_CN_estimation)
-			.def_readwrite("initial_step_size", &tracking::config::Stepping<T>::initial_step_size)
-			.def_readwrite("initial_step_size", &tracking::config::Stepping<T>::initial_step_size)
+			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size)
+			.def_readwrite("max_step_size", &tracking::SteppingConfig::max_step_size)
+			.def_readwrite("min_step_size", &tracking::SteppingConfig::min_step_size)
+			.def_readwrite("step_size_success_factor", &tracking::SteppingConfig::step_size_success_factor)
+			.def_readwrite("step_size_fail_factor", &tracking::SteppingConfig::step_size_fail_factor)
+			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::SteppingConfig::consecutive_successful_steps_before_stepsize_increase)
+			.def_readwrite("min_num_steps", &tracking::SteppingConfig::min_num_steps)
+			.def_readwrite("max_num_steps", &tracking::SteppingConfig::max_num_steps)
+			.def_readwrite("frequency_of_CN_estimation", &tracking::SteppingConfig::frequency_of_CN_estimation)
+			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size)
+			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size)
 			;
 		}
 
@@ -171,7 +171,7 @@ namespace bertini{
 		
 		void ExportConfigSettings()
 		{
-			using namespace bertini::tracking::config;
+			using namespace bertini::tracking;
 
 			enum_<Predictor>("Predictor")
 				.value("Constant", Predictor::Constant)
@@ -221,22 +221,18 @@ namespace bertini{
 				// class_<config::Tolerances<mpfr_float>>("Tolerances_mp",init<>())
 				// 	.def(TolerancesVisitor<mpfr_float>());
 
-				class_<Stepping<double>, std::shared_ptr<Stepping<double>> >("Stepping_d", init<>())
+				class_<SteppingConfig, std::shared_ptr<SteppingConfig> >("SteppingConfig", init<>())
 					.def(SteppingVisitor<double>())
 					;
 				
-				class_<Stepping<mpfr_float>, std::shared_ptr<Stepping<mpfr_float>> >("Stepping_mp", init<>())
-					.def(SteppingVisitor<mpfr_float>())
-					;
 				
-				class_<Newton, std::shared_ptr<Newton> >("Newton", init<>())
-					.def_readwrite("max_num_newton_iterations", &Newton::max_num_newton_iterations)
-					.def_readwrite("min_num_newton_iterations", &Newton::min_num_newton_iterations)
+				class_<NewtonConfig, std::shared_ptr<NewtonConfig> >("NewtonConfig", init<>())
+					.def_readwrite("max_num_newton_iterations", &NewtonConfig::max_num_newton_iterations)
+					.def_readwrite("min_num_newton_iterations", &NewtonConfig::min_num_newton_iterations)
 					;
 				
 				
-				class_<FixedPrecisionConfig<dbl>, std::shared_ptr<FixedPrecisionConfig<dbl>> >("FixedPrecisionConfig", init<System const&>());
-				class_<FixedPrecisionConfig<mpfr>, std::shared_ptr<FixedPrecisionConfig<mpfr>> >("FixedPrecisionConfig", init<System const&>());
+				class_<FixedPrecisionConfig, std::shared_ptr<FixedPrecisionConfig> >("FixedPrecisionConfig", init<System const&>());
 
 
 				
