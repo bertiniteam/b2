@@ -64,13 +64,13 @@ namespace bertini{
 			template <typename T>
 			static success_time_space<T> RunDefaultTime()
 			{
-				return &EndgameT::template Run<T>;
+				return &EndgameT::Run;
 			};
 
 			template <typename T>
 			static success_time_space_time<T> RunCustomTime()
 			{
-				return &EndgameT::template Run<T>;
+				return &EndgameT::Run;
 			};
 			
 
