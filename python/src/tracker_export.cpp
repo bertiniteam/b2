@@ -221,7 +221,7 @@ namespace bertini{
 				// class_<config::Tolerances<mpfr_float>>("Tolerances_mp",init<>())
 				// 	.def(TolerancesVisitor<mpfr_float>());
 
-				class_<SteppingConfig, std::shared_ptr<SteppingConfig> >("Stepping_d", init<>())
+				class_<SteppingConfig, std::shared_ptr<SteppingConfig> >("SteppingConfig", init<>())
 					.def(SteppingVisitor<double>())
 					;
 				
