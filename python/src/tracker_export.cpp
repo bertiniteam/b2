@@ -63,8 +63,8 @@ namespace bertini{
 			.def("current_precision", &TrackerT::CurrentPrecision)
 			.def("refine", return_Refine3_ptr<dbl>)
 			.def("refine", return_Refine3_ptr<mpfr>)
-			.def("refine", return_Refine4_ptr<dbl, double>)
-			.def("refine", return_Refine4_ptr<mpfr, mpfr_float>)
+			.def("refine", return_Refine4_ptr<dbl>)
+			.def("refine", return_Refine4_ptr<mpfr>)
 			;
 		}
 
@@ -80,7 +80,7 @@ namespace bertini{
 			.def("current_precision", &TrackerT::CurrentPrecision)
 			.def("tracker_loop_initialization", &TrackerT::TrackerLoopInitialization)
 			.def("refine", return_Refine3_ptr<dbl>)
-			.def("refine", return_Refine4_ptr<dbl, double>)
+			.def("refine", return_Refine4_ptr<dbl>)
 			;
 		}
 
@@ -95,7 +95,7 @@ namespace bertini{
 			.def("current_precision", &TrackerT::CurrentPrecision)
 			.def("tracker_loop_initialization", &TrackerT::TrackerLoopInitialization)
 			.def("refine", return_Refine3_ptr<mpfr>)
-			.def("refine", return_Refine4_ptr<mpfr, mpfr_float>)
+			.def("refine", return_Refine4_ptr<mpfr>)
 			;
 		}
 

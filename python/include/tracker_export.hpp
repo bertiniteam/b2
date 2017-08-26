@@ -98,12 +98,12 @@ namespace bertini{
 				return &TrackerT::template Refine<T>;
 			};
 			
-			template <typename ComplexT, typename RealT>
-			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, RealT const&, unsigned) const;
-			template <typename ComplexT, typename RealT>
-			static Refine4_ptr<ComplexT, RealT> return_Refine4_ptr()
+			template <typename ComplexT>
+			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, double const&, unsigned) const;
+			template <typename ComplexT>
+			static Refine4_ptr<ComplexT> return_Refine4_ptr()
 			{
-				return &TrackerT::template Refine<ComplexT, RealT>;
+				return &TrackerT::template Refine<ComplexT>;
 			};
 
 			
@@ -133,12 +133,12 @@ namespace bertini{
 				return &TrackerT::template Refine<T>;
 			};
 			
-			template <typename ComplexT, typename RealT>
-			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, RealT const&, unsigned) const;
-			template <typename ComplexT, typename RealT>
-			static Refine4_ptr<ComplexT, RealT> return_Refine4_ptr()
+			template <typename ComplexT>
+			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, double const&, unsigned) const;
+			template <typename ComplexT>
+			static Refine4_ptr<ComplexT> return_Refine4_ptr()
 			{
-				return &TrackerT::template Refine<ComplexT, RealT>;
+				return &TrackerT::template Refine<ComplexT>;
 			};
 
 			
@@ -168,12 +168,12 @@ namespace bertini{
 				return &TrackerT::template Refine<T>;
 			};
 			
-			template <typename ComplexT, typename RealT>
-			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, RealT const&, unsigned) const;
-			template <typename ComplexT, typename RealT>
-			static Refine4_ptr<ComplexT, RealT> return_Refine4_ptr()
+			template <typename ComplexT>
+			using Refine4_ptr = SuccessCode (TrackerT::*)(Vec<ComplexT>&, Vec<ComplexT> const&, ComplexT const&, double const&, unsigned) const;
+			template <typename ComplexT>
+			static Refine4_ptr<ComplexT> return_Refine4_ptr()
 			{
-				return &TrackerT::template Refine<ComplexT, RealT>;
+				return &TrackerT::template Refine<ComplexT>;
 			};
 			
 			
