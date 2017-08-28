@@ -885,7 +885,7 @@ public:
 		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
 		if (cauchy_loop_success != SuccessCode::Success)
 			return cauchy_loop_success;
-
+		Precision(approximation, Precision(target_time));
 		return ComputePSEGApproximationAtT0(approximation, target_time);
 
 	}//end InitialPowerSeriesApproximation
@@ -948,7 +948,7 @@ public:
 			                        (c*pow(ps_times[ii],1-one_over_c));
 			s_times[ii] =  pow(ps_times[ii], one_over_c);
 		}
-
+		Precision(result, Precision(s_times.back()));
 		result = HermiteInterpolateAndSolve(pow(target_time,one_over_c), num_sample_points, 
                                             s_times, ps_samples, s_derivatives);
 		return SuccessCode::Success;
@@ -994,6 +994,7 @@ public:
 		auto total_num_pts = this->CycleNumber() * this->EndgameSettings().num_sample_points;
 		this->template RefineAllSamples(cau_samples, cau_times);
 
+		Precision(result, Precision(cau_samples.back()));
 
 		result = Vec<CT>::Zero(this->GetSystem().NumVariables());
 		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
@@ -1124,6 +1125,7 @@ public:
 
 		if(this->SecuritySettings().level <= 0)
 			norm_of_dehom_prev = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
+		
 		do
 		{
 			//Compute a cauchy approximation.  Uses the previously computed samples, 

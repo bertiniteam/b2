@@ -575,6 +575,8 @@ public:
 // }
 
 		// the data was transformed to be on the interval [0 1] so we can hard-code the time-to-solve as 0 here.
+
+		Precision(result, Precision(s_derivatives.back()));
 		result = HermiteInterpolateAndSolve(CT(0), num_pts, s_times, std::get<SampCont<CT> >(samples_), s_derivatives, ContStart::Back);
 		return SuccessCode::Success;
 	}//end ComputeApproximationOfXAtT0
@@ -767,6 +769,7 @@ public:
 	 		approx_error = static_cast<NumErrorT>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
 	 		// BOOST_LOG_TRIVIAL(severity_level::trace) << "consecutive approximation error:\n" << approx_error << '\n';
 
+	 		Precision(prev_approx, Precision(latest_approx));
 	 		prev_approx = latest_approx;
 
 		} //end while	
