@@ -1749,6 +1749,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 		if(endgame_success == SuccessCode::Success)
 		{
+			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
 			num_paths_converging++;
 		}
 		if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
@@ -1856,6 +1857,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 		homogenized_solutions.push_back(result);
 		solutions.push_back(final_system.DehomogenizePoint(result));
+
+		BOOST_CHECK_EQUAL(Precision(result), tracker.CurrentPrecision());
 	}
 
 	Vec<BCT> correct(2);
@@ -1881,6 +1884,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{
+			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
 			if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation<BCT>())-correct).template lpNorm<Eigen::Infinity>() < 1e-11)
 			{
 				num_successful_occurences++;
