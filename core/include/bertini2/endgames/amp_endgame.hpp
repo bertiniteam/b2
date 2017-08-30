@@ -91,7 +91,7 @@ public:
 
 	SuccessCode RefineSampleImpl(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time, NumErrorT tol, unsigned max_iterations) const
 	{
-BOOST_LOG_TRIVIAL(severity_level::trace) << "initial point\n" << std::setprecision(bertini::Precision(current_sample)) << current_sample << '\n';
+// BOOST_LOG_TRIVIAL(severity_level::trace) << "initial point\n" << std::setprecision(bertini::Precision(current_sample)) << current_sample << '\n';
 
 		using bertini::Precision;
 		assert(Precision(current_time)==Precision(current_sample) && "precision of sample and time to be refined in AMP endgame must match");
@@ -109,7 +109,7 @@ BOOST_LOG_TRIVIAL(severity_level::trace) << "initial point\n" << std::setprecisi
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
-			BOOST_LOG_TRIVIAL(severity_level::trace) << "trying refining in higher precision";
+			// BOOST_LOG_TRIVIAL(severity_level::trace) << "trying refining in higher precision";
 			
 			using bertini::Precision;
 
@@ -139,7 +139,7 @@ BOOST_LOG_TRIVIAL(severity_level::trace) << "initial point\n" << std::setprecisi
 			
 			assert(Precision(result)==DefaultPrecision());
 		}
-		BOOST_LOG_TRIVIAL(severity_level::trace) << "refining residual " << this->GetTracker().LatestNormOfStep();
+		// BOOST_LOG_TRIVIAL(severity_level::trace) << "refining residual " << this->GetTracker().LatestNormOfStep();
 		return refinement_success;
 	}
 
