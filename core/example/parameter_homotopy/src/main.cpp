@@ -21,7 +21,7 @@ int main()
 
     std::cout << "done computing step1 solutions, and here they are: \n";
     for (auto& iter : stepone_solutions)
-        std::cout << iter << '\n';
+        std::cout << iter << '\n' << '\n';
 
 
     auto t = bertini::MakeVariable("t");
@@ -55,7 +55,7 @@ int main()
     
     std::cout << "done computing step2 solutions, and here they are: \n";
     for (auto& iter : steptwo_solutions)
-        std::cout << iter << '\n';
+        std::cout << iter << '\n' << '\n';
 
 	return 0;
 }
