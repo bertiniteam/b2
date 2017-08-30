@@ -1160,7 +1160,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	tracker.PrecisionSetup(precision_config);
 
-#ifdef B2_OBSERVE
+#ifdef B2_OBSERVE_TRACKERS
 			GoryDetailLogger<TrackerType> tons_of_detail;
 			tracker.AddObserver(&tons_of_detail);
 #endif
@@ -1201,7 +1201,11 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	{
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
+		{
+			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
+
 				num_successful_occurences++;
+		}
 	}
 
  	BOOST_CHECK_EQUAL(num_successful_occurences,num_paths_to_run);
@@ -1272,6 +1276,9 @@ BOOST_AUTO_TEST_CASE(parabola)
 	BOOST_CHECK(endgame_success==SuccessCode::Success);
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
+
+	BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
+
 
 	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-10) );
 }
