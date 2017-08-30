@@ -42,6 +42,27 @@ namespace demo{
 	}
 
 
+	template<typename ParamContT>
+	auto MakeStep2Parameters(ParamContT const& step1_params, Node const& time)
+	{
+
+		using bertini::MakeVariable;
+
+		std::vector<Node> steptwo_param_funcs;
+		std::vector<Variable> steptwo_params;
+
+		std::string suffix = "A";
+		for (const auto& p: step1_params)
+		{
+			auto new_param = MakeVariable("param_"+suffix);
+			steptwo_params.push_back(new_param);
+			steptwo_param_funcs.push_back((1-time)*new_param + time*p);
+			++suffix[0];
+		}
+
+		return std::make_tuple(steptwo_param_funcs, steptwo_params);
+	}
+
 
 	template <typename ParamContT>
 	auto ConstructSystem(ParamContT const& params)
