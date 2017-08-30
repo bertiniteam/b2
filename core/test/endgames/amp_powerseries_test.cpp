@@ -35,7 +35,7 @@
 
 
 #include "bertini2/trackers/observers.hpp"
-#define B2_OBSERVE
+#define B2_OBSERVE_TRACKERS
 
 BOOST_AUTO_TEST_SUITE(amp_powerseries_endgame_generic_tests_ambient_precision_16)
 

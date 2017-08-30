@@ -961,9 +961,10 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 	Vec<BCT> sample(1);
 	sample << ComplexFromString("0.5","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
 
+#ifdef B2_OBSERVE_TRACKERS
 	GoryDetailLogger<TrackerType> tons_of_detail;
-
 	tracker.AddObserver(&tons_of_detail);
+#endif
 
 	TestedEGType my_endgame(tracker);
 
@@ -1032,8 +1033,10 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_nonzero_target_time)
 	my_endgame.SetPSEGSamples(pseg_samples);
 	my_endgame.SetPSEGTimes(pseg_times);
 
+#ifdef B2_OBSERVE_TRACKERS
 	GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
+#endif
 
 
 	auto first_approx_success = my_endgame.InitialPowerSeriesApproximation(start_time,start_sample,target_time,first_approx);
@@ -1567,9 +1570,10 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
 
 
 
-
+#ifdef B2_OBSERVE_TRACKERS
 	GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
+#endif
 
 	EndgameConfig endgame_settings;
 	CauchyConfig cauchy_settings;
@@ -1734,8 +1738,10 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
+#ifdef B2_OBSERVE_TRACKERS
 	GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
+#endif
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
@@ -1749,6 +1755,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 		if(endgame_success == SuccessCode::Success)
 		{
+			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
 			num_paths_converging++;
 		}
 		if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
@@ -1856,6 +1863,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 		homogenized_solutions.push_back(result);
 		solutions.push_back(final_system.DehomogenizePoint(result));
+
+		BOOST_CHECK_EQUAL(Precision(result), tracker.CurrentPrecision());
 	}
 
 	Vec<BCT> correct(2);
@@ -1867,6 +1876,10 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	              	1e-6, 1e5,
 					stepping_preferences, newton_preferences);
 
+#ifdef B2_OBSERVE_TRACKERS
+			GoryDetailLogger<TrackerType> tons_of_detail;
+			tracker.AddObserver(&tons_of_detail);
+#endif
 
 	std::vector<Vec<BCT> > endgame_solutions;
 
@@ -1881,6 +1894,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{
+			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
 			if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation<BCT>())-correct).template lpNorm<Eigen::Infinity>() < 1e-11)
 			{
 				num_successful_occurences++;

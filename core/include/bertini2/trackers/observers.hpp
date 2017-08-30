@@ -64,8 +64,6 @@ namespace bertini {
 						next_precision_ = next;
 						time_of_first_increase_ = t.CurrentTime();
 						t.RemoveObserver(this);
-
-						std::cout << "precision increased to " << next_precision_ << " at time " << time_of_first_increase_ << '\n';
 					}
 
 				}
