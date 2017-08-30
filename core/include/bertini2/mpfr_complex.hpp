@@ -1540,6 +1540,13 @@ namespace bertini {
 		rand(a,num_digits);
 	}
 
+	inline 
+	bertini::complex RandomComplex(unsigned num_digits)
+	{
+		bertini::complex z;
+		RandomComplex(z, num_digits);
+		return z;
+	}
 
 	inline 
 	void RandomUnit(bertini::complex & a, unsigned num_digits)
