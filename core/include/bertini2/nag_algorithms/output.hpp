@@ -230,7 +230,8 @@ struct NonsingularSolutions
 	auto Extract(AlgoT const& alg)
 	{
 		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
-		return SampCont<BCT>();
+		SampCont<BCT> solns;
+		return solns;
 	}
 };
 
@@ -244,7 +245,8 @@ struct AllSolutions
 	auto Extract(AlgoT const& alg)
 	{
 		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
-		return SampCont<BCT>();
+		SampCont<BCT> solns;
+		return solns;
 	}
 };
 
