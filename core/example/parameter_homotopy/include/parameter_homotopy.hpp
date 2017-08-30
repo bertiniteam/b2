@@ -56,7 +56,6 @@ auto StepTwo(bertini::System const& target_sys, bertini::System const& start_sys
 
 	auto userss = bertini::start_system::User(start_sys, solns);
 
-
 	auto zd = bertini::algorithm::ZeroDim<TrackerT, typename bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::User, bertini::policy::RefToGiven>(target_sys, userss, homotopy);
 
 	zd.DefaultSetup();
@@ -72,6 +71,8 @@ auto StepTwo(bertini::System const& target_sys, bertini::System const& start_sys
 	eg.final_tolerance = 1e-12;
 	zd.SetToEndgame(eg);
 	
+	zd.Solve();
+
 	return output::AllSolutions::Extract(zd);
 }
 

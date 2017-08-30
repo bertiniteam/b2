@@ -17,26 +17,10 @@ namespace demo{
 		using bertini::MakeVariable;
 
 		// make symbolic objects for the parameters
-		auto param_A = MakeVariable("param_A");
-		auto param_B = MakeVariable("param_B");
-		auto param_C = MakeVariable("param_C");
-		auto param_D = MakeVariable("param_D");
-
-		auto val_A = bertini::RandomMp();
-		auto val_B = bertini::RandomMp();
-		auto val_C = bertini::RandomMp();
-		auto val_D = bertini::RandomMp();
-
-
-		param_A->set_current_value<dbl>(val_A.convert_to<double>());
-		param_B->set_current_value<dbl>(val_B.convert_to<double>());
-		param_C->set_current_value<dbl>(val_C.convert_to<double>());
-		param_D->set_current_value<dbl>(val_D.convert_to<double>());
-
-		param_A->set_current_value<mpfr>(val_A);
-		param_B->set_current_value<mpfr>(val_B);
-		param_C->set_current_value<mpfr>(val_C);
-		param_D->set_current_value<mpfr>(val_D);
+		auto param_A = MakeFloat(bertini::RandomComplex(30));
+		auto param_B = MakeFloat(bertini::RandomComplex(30));
+		auto param_C = MakeFloat(bertini::RandomComplex(30));
+		auto param_D = MakeFloat(bertini::RandomComplex(30));
 
 		return std::vector<Node>{param_A, param_B, param_C, param_D};
 	}
