@@ -220,6 +220,20 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 
 };
 
+
+struct NonsingularSolutions
+{
+
+	
+	template<typename AlgoT>
+	static
+	auto Extract(AlgoT const& alg)
+	{
+		return 0;
+	}
+};
+
+
 } // namespace output
 } // namespace algorithm
 } // namespace bertini
