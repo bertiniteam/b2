@@ -418,7 +418,8 @@ public:
 				return refinement_success;
 			}
 
-			this->EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));
+			this->EnsureAtPrecision(next_time,Precision(next_sample)); 
+			assert(Precision(next_time)==Precision(next_sample));
 
 			circle_times.push_back(next_time);
 			circle_samples.push_back(next_sample);
@@ -449,7 +450,7 @@ public:
 				Consult page 53 of \cite bertinibook, for the reasoning behind this heuristic.
 	*/
 	template<typename CT>
-	auto ComputeCOverK() -> typename Eigen::NumTraits<CT>::Real
+	auto ComputeCOverK() const -> typename Eigen::NumTraits<CT>::Real
 	{//Obtain samples for computing C over K.
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		using std::abs;
@@ -492,7 +493,7 @@ public:
 
 	*/
 	template<typename CT>
-	bool CheckForCOverKStabilization(TimeCont<CT> const& c_over_k_array)
+	bool CheckForCOverKStabilization(TimeCont<CT> const& c_over_k_array) const
 	{	
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		using std::abs;
@@ -634,7 +635,7 @@ public:
 				heuristcially will tell us if we are. 
 	*/
 	template<typename CT>
-	bool RatioEGOperatingZoneTest(CT const& target_time)
+	bool RatioEGOperatingZoneTest(CT const& target_time) const
 	{	
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		RT min(1e300);
@@ -718,16 +719,11 @@ public:
 		while (continue_loop)
 		{	
 			this->CycleNumber(0);
-			cau_times.clear();
-			cau_samples.clear();
-			cau_samples.push_back(ps_samples.back()); // cauchy samples and times should be empty before this point. 
-			cau_times.push_back(ps_times.back());
-
-			CT next_time = ps_times.back();
-			auto next_sample = ps_samples.back();
+			ClearAndSeedCauchyData<CT>();
 
 			// track around a circle once.  we'll use it to measure whether we believe we are in the eg operating zone, based on the ratio of norms of sample points around the circle
-			auto tracking_success = CircleTrack(cau_times.front(),target_time,cau_samples.front());
+
+			auto tracking_success = CircleTrack(cau_times.back(),target_time,cau_samples.back());
 
 			this->IncrementCycleNumber(1);
 
@@ -771,18 +767,19 @@ public:
 			}//end if (RatioEGOperatingZoneTest())
 			else 
 			{
-				//compute the time for the next sample point
-				this->EnsureAtPrecision(next_time,Precision(ps_samples.back()));
-				next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor);
 
+				
+
+				//compute the time for the next sample point
+				// CT next_time;
+				// this->EnsureAtPrecision(next_time,Precision(ps_samples.back()));
+				CT next_time = (ps_times.back() - target_time) * static_cast<RT>(this->EndgameSettings().sample_factor) + ps_times.back();
+
+				Vec<CT> next_sample;
 				SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
 				this->EnsureAtPrecision(next_time,Precision(next_sample));
 
-				ps_times.pop_front();
-				ps_samples.pop_front();
-
-				ps_times.push_back(next_time);
-				ps_samples.push_back(next_sample);
+				RotateOntoPS(next_time, next_sample);
 
 				if(tracking_success != SuccessCode::Success)
 					return tracking_success;
@@ -793,6 +790,33 @@ public:
 	}//end InitialCauchyLoops
 
 
+
+	template <typename CT>
+	void RotateOntoPS(CT const& next_time, Vec<CT> const& next_sample)
+	{
+		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
+		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
+
+		ps_times.pop_front();
+		ps_samples.pop_front();
+
+		ps_times.push_back(next_time);
+		ps_samples.push_back(next_sample);
+	}
+
+	template <typename CT>
+	void ClearAndSeedCauchyData()
+	{
+		auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
+		auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
+		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
+		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
+
+		cau_times.clear();
+		cau_samples.clear();
+		cau_samples.push_back(ps_samples.back()); // cauchy samples and times should be empty before this point. 
+		cau_times.push_back(ps_times.back());
+	}
 	/**
 		\brief 	The Cauchy endgame will first find an initial approximation using the notion of the power series endgame. This function computes this approximation and returns a
 	SuccessCode to let us know if an error was encountered. 
@@ -850,10 +874,7 @@ public:
 
 			this->EnsureAtPrecision(next_time, Precision(next_sample));
 
-			ps_samples.pop_front();
-			ps_times.pop_front();
-			ps_samples.push_back(next_sample);
-			ps_times.push_back(next_time);
+			RotateOntoPS(next_time, next_sample);
 			c_over_k.push_back(ComputeCOverK<CT>());
 		}//end while
 
@@ -871,11 +892,7 @@ public:
 			this->EnsureAtPrecision(next_time, Precision(next_sample));
 
 			c_over_k.pop_front();
-			ps_samples.pop_front();
-			ps_times.pop_front();
-
-			ps_samples.push_back(next_sample);	
-			ps_times.push_back(next_time);
+			RotateOntoPS(next_time, next_sample);
 			c_over_k.push_back(ComputeCOverK<CT>());
 
 		}//end while
@@ -969,7 +986,7 @@ public:
 				We can compute the Cauchy Integral Formula in this particular instance by computing the mean of the samples we have collected around the origin. 
 	*/
 	template<typename CT>
-	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<CT>& result)
+	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<CT>& result) const
 	{	
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
