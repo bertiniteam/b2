@@ -9,9 +9,9 @@ int main()
 
 
 
-    auto params = demo::MakeParameters();
+    auto step1_params = demo::MakeStep1Parameters();
 
-    auto target_sys = demo::ConstructSystem(params);
+    auto target_sys = demo::ConstructSystem(step1_params);
     auto start_sys = demo::ConstructStart(target_sys);
 
 	auto homotopy = demo::ConstructHomotopy(target_sys, start_sys);
@@ -28,7 +28,7 @@ int main()
 
 
     // now to solve the start system.
-    demo::StepOne(start_sys);
+    auto solutions = demo::StepOne(start_sys);
 
     demo::StepTwo(homotopy, start_sys);
     

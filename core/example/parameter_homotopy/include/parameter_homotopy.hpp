@@ -2,6 +2,7 @@
 #pragma once
 
 #include <bertini2/nag_algorithms/zero_dim_solve.hpp>
+#include <bertini2/nag_algorithms/output.hpp>
 #include <bertini2/endgames.hpp>
 #include <bertini2/system.hpp>
 
@@ -12,8 +13,7 @@ using TrackerT = bertini::tracking::AMPTracker;
 using Tolerances = bertini::algorithm::TolerancesConfig;
 using EndgameConfT = bertini::endgame::EndgameConfig;
 
-// not really supposed to be void
-void StepOne(bertini::System const& sys)
+auto StepOne(bertini::System const& sys)
 {
 	using namespace bertini;
 	using namespace tracking;
@@ -44,7 +44,7 @@ void StepOne(bertini::System const& sys)
 
 	zd.Solve();
 
-	std::cout << "solved start system\n";
+	return output::NonsingularSolutions::Extract(zd);
 }
 
 void StepTwo(bertini::System const& homotopy, bertini::System const& start_sys)

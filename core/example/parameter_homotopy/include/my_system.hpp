@@ -12,7 +12,7 @@ namespace demo{
 	using dbl = bertini::dbl;
 	using mpfr = bertini::mpfr;
 
-	auto MakeParameters()
+	auto MakeStep1Parameters()
 	{
 		using bertini::MakeVariable;
 
