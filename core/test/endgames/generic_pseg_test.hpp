@@ -50,7 +50,7 @@ using mpfr = bertini::complex;
 using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
-
+using bertini::Precision;
 using bertini::DefaultPrecision;
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
