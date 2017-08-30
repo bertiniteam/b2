@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with total_degree.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 /**
 \file total_degree.hpp 
@@ -69,9 +69,10 @@ namespace bertini
 
 			\param index The index of the start function for which you want the corresponding random value.
 			*/
-			mpfr RandomValue(size_t index)
+			template<typename NumT>
+			NumT RandomValue(size_t index) const
 			{
-				return random_values_[index]->Eval<mpfr>();
+				return random_values_[index]->Eval<NumT>();
 			}
 
 
@@ -93,7 +94,25 @@ namespace bertini
 
 			TotalDegree& operator+=(System const& sys) = delete;
 			
+			void SanityChecks(System const& s);
+
 		private:
+
+			/**
+			Copy the degrees from another system into this one
+			*/
+			void CopyDegrees(System const& s);
+
+			/**
+			Populate the random values of this system.
+			*/
+			void SeedRandomValues(int num_functions);
+
+			/**
+			Generate the functions for this total degree start system.  Assumes the random values, degrees, and variables are already g2g.
+			*/
+			void GenerateFunctions();
+
 
 			/**
 			Get the ith start point, in double precision.

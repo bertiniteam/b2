@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with number.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
@@ -273,7 +273,7 @@ namespace node{
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		const mpfr highest_precision_value_;
+		mpfr highest_precision_value_;
 
 		friend class boost::serialization::access;
 		Float() = default;
@@ -372,7 +372,7 @@ namespace node{
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		const mpq_rational true_value_real_, true_value_imag_;
+		mpq_rational true_value_real_, true_value_imag_;
 		Rational() = default;
 		friend class boost::serialization::access;
 

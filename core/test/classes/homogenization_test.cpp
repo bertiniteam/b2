@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with homogenization_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 //  homogenization_test.cpp
 //
@@ -37,6 +37,10 @@
 
 #include "bertini2/system/system.hpp"
 
+
+
+BOOST_AUTO_TEST_SUITE(homogenization)
+
 using mpfr_float = bertini::mpfr_float;
 using Var = std::shared_ptr<bertini::node::Variable>;
 using Float = std::shared_ptr<bertini::node::Float>;
@@ -44,8 +48,6 @@ using VariableGroup = bertini::VariableGroup;
 
 using bertini::MakeVariable;
 using bertini::MakeFloat;
-
-BOOST_AUTO_TEST_SUITE(homogenization)
 
 
 BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)

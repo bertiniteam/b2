@@ -57,6 +57,9 @@ serialization_test*
 *.dirstamp
 *.deps
 
+*.dtps
+# these are data files from iprofiler, from osx
+
 
 *~
 

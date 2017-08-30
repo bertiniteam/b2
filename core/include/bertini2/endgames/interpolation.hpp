@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with interpolation.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 /**
@@ -29,10 +29,10 @@
 
 #pragma once
 
-#include "bertini2/trackers/config.hpp"
+#include "bertini2/common/config.hpp"
 
 namespace bertini{
-	namespace tracking{
+	namespace endgame{
 
 /**
 
@@ -60,15 +60,24 @@ Details:
 \tparam CT The complex number type.
 */			
 template<typename CT>		
-	Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives)
+	Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives, ContStart shift_from = ContStart::Back)
 {
 	assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
 	assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
 	assert((derivatives.size() >= num_sample_points) && "must have sufficient number of derivatives");
 
-	auto num_provided_samples = samples.size();
-	auto num_provided_times = times.size();
-	auto num_provided_derivs = derivatives.size();
+	
+	unsigned num_t, num_s, num_d;
+	if (shift_from == ContStart::Back)
+	{
+		num_t = times.size()-1;
+		num_s = samples.size()-1;
+		num_d = derivatives.size()-1;
+	}
+	else
+	{
+		num_t = num_s = num_d = num_sample_points-1;
+	}
 
 	Mat< Vec<CT> > space_differences(2*num_sample_points,2*num_sample_points);
 	Vec<CT> time_differences(2*num_sample_points);
@@ -76,11 +85,11 @@ template<typename CT>
 
 	for(unsigned int ii=0; ii<num_sample_points; ++ii)
 	{ 
-		space_differences(2*ii,0)   = samples[    num_provided_samples-1-ii];		/*  F[2*i][0]    = samples[i];    */
-		space_differences(2*ii+1,0) = samples[    num_provided_samples-1-ii]; 		/*  F[2*i+1][0]  = samples[i];    */
-		space_differences(2*ii+1,1) = derivatives[num_provided_derivs -1-ii];	/*  F[2*i+1][1]  = derivatives[i]; */
-		time_differences(2*ii)      = times[      num_provided_times  -1-ii];				/*  z[2*i]       = times[i];       */
-		time_differences(2*ii+1)    = times[      num_provided_times  -1-ii];			/*  z[2*i+1]     = times[i];       */
+		space_differences(2*ii,0)   = samples[    num_s-ii];		/*  F[2*i][0]    = samples[i];    */
+		space_differences(2*ii+1,0) = samples[    num_s-ii]; 	/*  F[2*i+1][0]  = samples[i];    */
+		space_differences(2*ii+1,1) = derivatives[num_d-ii];		/*  F[2*i+1][1]  = derivatives[i]; */
+		time_differences(2*ii)      = times[      num_t-ii];		/*  z[2*i]       = times[i];       */
+		time_differences(2*ii+1)    = times[      num_t-ii];		/*  z[2*i+1]     = times[i];       */
 	}
 
 	//Add first round of finite differences to fill out rest of matrix. 
@@ -104,7 +113,7 @@ template<typename CT>
 
 	//Start of Result from Hermite polynomial, this is using the diagonal of the 
 	//finite difference matrix.
-	auto Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
+	Vec<CT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
 
 
 	//This builds the hermite polynomial from the highest term down. 

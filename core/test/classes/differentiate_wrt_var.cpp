@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 //
 //  Created by Collins, James B. on 4/30/15.
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
@@ -47,6 +47,17 @@
 #include <Eigen/Dense>
 
 
+
+
+#include "externs.hpp"
+
+
+
+
+
+BOOST_AUTO_TEST_SUITE(differentiate_wrt_variable)
+
+using bertini::DefaultPrecision;
 using dbl = std::complex<double>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
@@ -57,15 +68,6 @@ using bertini::MakeJacobian;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 using mpfr_float = bertini::mpfr_float;
-
-#include "externs.hpp"
-
-
-
-using bertini::DefaultPrecision;
-
-BOOST_AUTO_TEST_SUITE(differentiate_wrt_variable)
-
 /////////// Basic Operations Alone ///////////////////
 
 BOOST_AUTO_TEST_CASE(just_diff_a_function){

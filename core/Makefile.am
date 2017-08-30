@@ -40,6 +40,11 @@ EXTRA_LTLIBRARIES =
 
 TESTS =
 
+core_all =
+core_sources =
+core_headers =
+
+
 ############################################
 ######  end deliberately blank items     ##
 ##########################################
@@ -75,8 +80,8 @@ rootincludedir = $(includedir)/bertini2
 # include the bertini2 Makemodule first, as it defines some useful groups of files which are used later
 # in other files.
 
-include src/bertini2/Makemodule.am
 include src/basics/Makemodule.am
+include src/common/Makemodule.am
 include src/function_tree/Makemodule.am
 include src/system/Makemodule.am
 include src/tracking/Makemodule.am
@@ -84,7 +89,12 @@ include src/endgames/Makemodule.am
 include src/detail/Makemodule.am
 include src/io/Makemodule.am
 include src/nag_algorithms/Makemodule.am
+include src/nag_datatypes/Makemodule.am
 include src/pool/Makemodule.am
+include src/parallel/Makemodule.am
+
+include src/corelibrary/Makemodule.am
+include src/blackbox/Makemodule.am
 
 ###
 #  and finally test suites, built as extras

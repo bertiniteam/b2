@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with function_tree_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 //  Created by Collins, James B. on 4/30/15.
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
@@ -36,7 +36,6 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "bertini2/bertini.hpp"
 #include "bertini2/function_tree.hpp"
 
 
@@ -44,6 +43,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "externs.hpp"
+
+
+
+BOOST_AUTO_TEST_SUITE(function_tree_class)
+
 
 using mpq_rational = bertini::mpq_rational;
 
@@ -54,12 +58,10 @@ using Float = bertini::node::Float;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
-
-
 using bertini::MakeVariable;
 using bertini::MakeFloat;
 
-BOOST_AUTO_TEST_SUITE(function_tree_class)
+using namespace bertini;
 
 /////////// Basic Operations Alone ///////////////////
 
@@ -116,6 +118,48 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 	BOOST_CHECK_EQUAL(N->Degree(x),2);
 	
 
+}
+
+
+
+BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_nan){
+	using mpfr_float = bertini::mpfr_float;
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	
+	using bertini::isnan;
+	BOOST_CHECK(!isnan(x->Eval<dbl>()));
+	BOOST_CHECK(!isnan(x->Eval<mpfr>()));
+}
+
+BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_zero){
+	using mpfr_float = bertini::mpfr_float;
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	
+	BOOST_CHECK(x->Eval<dbl>()!=dbl(0,0));
+	BOOST_CHECK(x->Eval<mpfr>()!=mpfr(0,0));
+}
+
+
+BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_one){
+	using mpfr_float = bertini::mpfr_float;
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	
+	std::shared_ptr<Variable> x = MakeVariable("x");
+	
+	BOOST_CHECK(x->Eval<dbl>()!=dbl(1,0));
+	BOOST_CHECK(x->Eval<mpfr>()!=mpfr(1,0));
+}
+
+BOOST_AUTO_TEST_CASE(self_multiplication){
+
+	auto rat_coeff = [](){return bertini::MakeRational(bertini::node::Rational::Rand());};
+
+	std::shared_ptr<Node> v = rat_coeff();
+	std::shared_ptr<Node> N = v*v;
 }
 
 
@@ -1823,7 +1867,24 @@ BOOST_AUTO_TEST_CASE(function_tree_combine_product_of_two_integer_powers)
 	BOOST_CHECK_EQUAL(P->Degree(), -1);
 }
 
+BOOST_AUTO_TEST_CASE(long_arithmetic_chain)
+{
 
+	std::vector<std::shared_ptr<Node>> polytypes(9);
+
+	auto rat_coeff = [](){return bertini::MakeRational(bertini::node::Rational::Rand());};
+	for (unsigned int ii=0; ii<9; ++ii)
+	    polytypes[ii] = rat_coeff();
+
+	std::shared_ptr<Node> v = rat_coeff();
+	std::shared_ptr<Node> m12_2 = rat_coeff();
+	std::shared_ptr<Node> cosb = rat_coeff();
+	std::shared_ptr<Node> sinb = rat_coeff();
+	std::shared_ptr<Node> sin2b = rat_coeff();
+
+	std::shared_ptr<Node> N = 2*m12_2/sin2b - v*v * polytypes[9-1] / 16;
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

@@ -4,16 +4,21 @@
 EXTRA_PROGRAMS += tracking_basics_test
 TESTS += tracking_basics_test
 
+if UNITYBUILD
+tracking_basics_test_SOURCES = test/tracking_basics/unity/unity.cpp
+else
 tracking_basics_test_SOURCES = \
-	test/tracking_basics/tracking_basics_test.cpp \
-	test/tracking_basics/fixed_precision_tracker_test.cpp \
-	test/tracking_basics/tracker_test.cpp \
 	test/tracking_basics/newton_correct_test.cpp \
 	test/tracking_basics/euler_test.cpp \
 	test/tracking_basics/heun_test.cpp \
 	test/tracking_basics/higher_predictor_test.cpp\
+	test/tracking_basics/tracking_basics_test.cpp \
+	test/tracking_basics/fixed_precision_tracker_test.cpp \
 	test/tracking_basics/amp_criteria_test.cpp \
+	test/tracking_basics/amp_tracker_test.cpp \
 	test/tracking_basics/path_observers.cpp
+endif
+
 
 tracking_basics_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
 

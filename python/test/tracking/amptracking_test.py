@@ -70,10 +70,10 @@ class AMPTrackingTest(unittest.TestCase):
 
         tracker = AMPTracker(s);
 
-        stepping_pref = Stepping_mp();
-        newton_pref = Newton();
+        stepping_pref = SteppingConfig();
+        newton_pref = NewtonConfig();
 
-        tracker.setup(Predictor.Euler, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref);
         tracker.precision_setup(ampconfig);
 
         t_start = mpfr_complex(1)
@@ -86,7 +86,7 @@ class AMPTrackingTest(unittest.TestCase):
         tracker.track_path(y_end, t_start, t_end, y_start);
 
         self.assertEqual(y_end.rows(), 1)
-        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), 1e-5)
 
 
 
@@ -108,10 +108,10 @@ class AMPTrackingTest(unittest.TestCase):
 
         tracker = AMPTracker(s);
 
-        stepping_pref = Stepping_mp();
-        newton_pref = Newton();
+        stepping_pref = SteppingConfig();
+        newton_pref = NewtonConfig();
 
-        tracker.setup(Predictor.Euler, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref);
         tracker.precision_setup(ampconfig);
 
         t_start = mpfr_complex(1)
@@ -124,7 +124,7 @@ class AMPTrackingTest(unittest.TestCase):
         tracker.track_path(y_end, t_start, t_end, y_start);
 
         self.assertEqual(y_end.rows(), 1)
-        self.assertLessEqual(norm(y_end[0]-mpfr_complex(1)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(1)), 1e-5)
 
 
 
@@ -144,10 +144,10 @@ class AMPTrackingTest(unittest.TestCase):
         
         tracker = AMPTracker(s);
 
-        stepping_pref = Stepping_mp();
-        newton_pref = Newton();
+        stepping_pref = SteppingConfig();
+        newton_pref = NewtonConfig();
 
-        tracker.setup(Predictor.Euler, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref);
         tracker.precision_setup(ampconfig);
 
         t_start = mpfr_complex(1)
@@ -161,16 +161,16 @@ class AMPTrackingTest(unittest.TestCase):
 
         self.assertTrue(track_success == SuccessCode.Success)
         self.assertEqual(y_end.rows(), 2)
-        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
-        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), 1e-5)
+        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), 1e-5)
 
         y_start = VectorXmp([mpfr_complex(1), mpfr_complex(-1)]);
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
         self.assertEqual(y_end.rows(), 2)
-        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
-        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), 1e-5)
+        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), 1e-5)
 
 
         y_start = VectorXmp([mpfr_complex(-1), mpfr_complex(-1)]);
@@ -178,8 +178,8 @@ class AMPTrackingTest(unittest.TestCase):
         tracker.track_path(y_end, t_start, t_end, y_start);
 
         self.assertEqual(y_end.rows(), 2)
-        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
-        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), 1e-5)
+        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), 1e-5)
 
 
         y_start = VectorXmp([mpfr_complex(-1), mpfr_complex(0,1)]);
@@ -189,8 +189,8 @@ class AMPTrackingTest(unittest.TestCase):
 
         self.assertTrue(track_success == SuccessCode.Success)
         self.assertEqual(y_end.rows(), 2)
-        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), mpfr_float("1e-5"))
-        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), mpfr_float("1e-5"))
+        self.assertLessEqual(norm(y_end[0]-mpfr_complex(0)), 1e-5)
+        self.assertLessEqual(norm(y_end[1]-mpfr_complex(0)), 1e-5)
 
 
     def test_tracker_singular_start(self):
@@ -209,10 +209,10 @@ class AMPTrackingTest(unittest.TestCase):
 
         tracker = AMPTracker(s);
 
-        stepping_pref = Stepping_mp();
-        newton_pref = Newton();
+        stepping_pref = SteppingConfig();
+        newton_pref = NewtonConfig();
 
-        tracker.setup(Predictor.Euler, mpfr_float("1e-5"), mpfr_float("1e5"), stepping_pref, newton_pref);
+        tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref);
         tracker.precision_setup(ampconfig);
 
         t_start = mpfr_complex(1)

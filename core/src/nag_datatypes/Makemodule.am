@@ -1,0 +1,26 @@
+#this is src/nag_datatypes/Makemodule.am
+
+nag_datatypes_includedir = $(includedir)/bertini2/nag_datatypes
+nag_datatypes_base_headers = \
+	include/bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp \
+	include/bertini2/nag_datatypes/witness_set.hpp
+nag_datatypes_include_HEADERS = $(nag_datatypes_base_headers)
+
+
+nag_datatypes_common_includedir = $(includedir)/bertini2/nag_datatypes/common
+nag_datatypes_common_headers = \
+	include/bertini2/nag_datatypes/common/policies.hpp
+nag_datatypes_common_include_HEADERS = $(nag_datatypes_common_headers)
+
+nag_datatypes_headers = $(nag_datatypes_base_headers) $(nag_datatypes_common_headers)
+
+#header only, so empty
+nag_datatypes_sources =
+
+nag_datatypes = $(nag_datatypes_headers) $(nag_datatypes_sources)
+
+
+core_headers += $(nag_datatypes_headers)
+core_sources += $(nag_datatypes_sources)
+core_all += $(nag_datatypes)
+

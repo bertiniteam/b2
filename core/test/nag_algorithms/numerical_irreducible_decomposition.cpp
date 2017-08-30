@@ -28,7 +28,7 @@
 
 #include "bertini2/system/precon.hpp"
 #include "bertini2/nag_algorithms/numerical_irreducible_decomposition.hpp"
-#include "bertini2/endgames/endgame.hpp"
+#include "bertini2/endgames.hpp"
 #include "bertini2/system/start_systems.hpp"
 #include <boost/test/unit_test.hpp>
 

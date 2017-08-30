@@ -69,6 +69,9 @@ namespace bertini{
 			static unsigned GetPrecision(NodeBaseT const& self) {return self.precision();}
 			static void SetPrecision(NodeBaseT & self, unsigned p){self.precision(p);}
 
+			static Nodeptr Diff0(NodeBaseT& self) { return self.Differentiate();}
+			Nodeptr (NodeBaseT::*Diff1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Differentiate;
+
 			static int Deg0(NodeBaseT& self) { return self.Degree();}
 			int (NodeBaseT::*Deg1)(std::shared_ptr<Variable> const&) const= &NodeBaseT::Degree;
 			int (NodeBaseT::*Deg2)(VariableGroup const&) const  = &NodeBaseT::Degree;

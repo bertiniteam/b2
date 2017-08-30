@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with node_serialization.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 //  node_serialization.cpp
 //
@@ -51,6 +51,16 @@
 #include "bertini2/io/parsing/system_parsers.hpp"
 #include "bertini2/system/precon.hpp"
 
+
+
+#include "externs.hpp"
+
+
+
+BOOST_AUTO_TEST_SUITE(node_serialization)
+
+template<typename NumType> using Vec = bertini::Vec<NumType>;
+template<typename NumType> using Mat = bertini::Mat<NumType>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Float = bertini::node::Float;
@@ -61,13 +71,6 @@ using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
 using System = bertini::System;
-
-#include "externs.hpp"
-
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-BOOST_AUTO_TEST_SUITE(node_serialization)
 
 
 BOOST_AUTO_TEST_CASE(serialize_variable)

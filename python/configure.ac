@@ -1,5 +1,5 @@
-#we're building pybertini, version 1.0.alpha2, and the corresponding email is daniel brake's
-AC_INIT([pybertini], [1.0.alpha2], [danielthebrake@gmail.com],[pybertini], [http://github.com/bertiniteam/b2])
+#we're building pybertini, version 1.0.alpha2, and the corresponding email is dani brake's
+AC_INIT([pybertini], [1.0.alpha2], [brakeda@uwec.edu],[pybertini], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -35,8 +35,8 @@ AX_CXX_COMPILE_STDCXX_14
 #enable the creation of shared libraries
 AC_ENABLE_SHARED
 
-#enable the creation of static libraries
-AC_ENABLE_STATIC
+# no, do not enable the creation of static libraries
+# AC_ENABLE_STATIC
 
 
 #find the linker

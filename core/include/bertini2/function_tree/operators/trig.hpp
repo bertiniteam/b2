@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by daniel brake
@@ -97,6 +97,9 @@ namespace node{
 	{
 	public:
 		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
+
 		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
 		
@@ -148,7 +151,8 @@ namespace node{
 	{
 	public:
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
 		
 		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -206,7 +210,10 @@ namespace node{
 	public:
 		
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
+
+
 		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
 		
@@ -261,7 +268,8 @@ namespace node{
 	{
 	public:
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
 		
 		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -324,7 +332,8 @@ namespace node{
 	{
 	public:
 		
-		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
 		
 		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
@@ -379,6 +388,8 @@ namespace node{
 	public:
 		
 		
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
 		
 		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};

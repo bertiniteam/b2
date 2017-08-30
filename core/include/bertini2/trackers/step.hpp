@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with tracking/step.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 /**
@@ -49,7 +49,7 @@ namespace bertini {
 
 		*/
 		template <typename ComplexType, typename RealType>
-		SuccessCode Step(config::Predictor predictor_choice,
+		SuccessCode Step(Predictor predictor_choice,
 		                    Vec<ComplexType> & next_space, ComplexType & next_time,
 				               System & sys,
 				               Vec<ComplexType> const& current_space, ComplexType current_time, 
@@ -61,7 +61,7 @@ namespace bertini {
 				               RealType const& path_truncation_threshold,
 				               unsigned min_num_newton_iterations,
 				               unsigned max_num_newton_iterations,
-				               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+				               AdaptiveMultiplePrecisionConfig const& AMP_config)
 		{
 
 			SuccessCode predictor_code = Predict(next_space,

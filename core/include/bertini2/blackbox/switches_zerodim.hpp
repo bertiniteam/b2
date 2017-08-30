@@ -72,11 +72,11 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyEndgame(ZeroDimRT const& rt
 	{
 		case type::Endgame::PowerSeries:
 			return ZeroDimSpecify<StartType, TrackerType, 
-					typename tracking::EndgameSelector<TrackerType>::PSEG>(ts...);
+					typename endgame::EndgameSelector<TrackerType>::PSEG>(ts...);
 
 		case type::Endgame::Cauchy:
 			return ZeroDimSpecify<StartType, TrackerType, 
-					typename tracking::EndgameSelector<TrackerType>::Cauchy>(ts...);
+					typename endgame::EndgameSelector<TrackerType>::Cauchy>(ts...);
 	}
 }
 

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with newton_correct_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 
@@ -31,6 +31,16 @@
 #include "mpfr_complex.hpp"
 #include "trackers/newton_corrector.hpp"
 
+
+
+
+extern double threshold_clearance_d;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
+
+
+
+BOOST_AUTO_TEST_SUITE(newton_correct_tracking_basics)
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
@@ -50,13 +60,8 @@ using mpq_rational = bertini::mpq_rational;
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
 
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
 using bertini::DefaultPrecision;
 
-BOOST_AUTO_TEST_SUITE(newton_correct_tracking_basics)
 
 
 BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
@@ -84,7 +89,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 	
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
@@ -100,10 +105,11 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	Vec<dbl> newton_correction_result;
 	
-	tracking_tolerance = double(1e1);
+	tracking_tolerance = 1e1;
 	unsigned max_num_newton_iterations = 1;
 	unsigned min_num_newton_iterations = 1;
 	std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
+
 	auto success_code = corrector->Correct(newton_correction_result,
 											  sys,
 											  current_space,
@@ -113,10 +119,10 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 											  max_num_newton_iterations,
 											  AMP);
 	
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 	for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
-	BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_d);
+		BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_d);
 	
 	}
 	
@@ -145,14 +151,14 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
 		
 		
 		
-		bertini::mpfr_float tracking_tolerance("1e-5");
+		double tracking_tolerance = 1e-5;
 		
 		
 		Vec<mpfr> corrected(2);
@@ -161,7 +167,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<mpfr> newton_correction_result;
 		
-		tracking_tolerance = bertini::mpfr_float("1e1");
+		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -174,7 +180,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations,
 												  AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		
 		for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
@@ -207,7 +213,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
@@ -223,7 +229,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<dbl> newton_correction_result;
 		
-		tracking_tolerance = double(1e1);
+		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 2;
 		unsigned min_num_newton_iterations = 2;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -236,7 +242,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations,
 												  AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
 		{
@@ -271,14 +277,14 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
 		
 		
 		
-		bertini::mpfr_float tracking_tolerance("1e-5");
+		double tracking_tolerance = 1e-5;
 		
 		
 		Vec<mpfr> corrected(2);
@@ -287,7 +293,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<mpfr> newton_correction_result;
 		
-		tracking_tolerance = bertini::mpfr_float("1e1");
+		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 2;
 		unsigned min_num_newton_iterations = 2;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -300,7 +306,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations,
 												  AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
 		for (unsigned ii = 0; ii < newton_correction_result.size(); ++ii)
 			BOOST_CHECK(abs(newton_correction_result(ii)-corrected(ii)) < threshold_clearance_mp);
@@ -338,7 +344,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
@@ -362,7 +368,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -396,18 +402,18 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_1 = 32000;
 		
-		mpfr_float tracking_tolerance("1e-5");
+		double tracking_tolerance = 1e-5;
 		
 		Vec<mpfr> newton_correction_result;
 		
-		tracking_tolerance = mpfr_float("1e1");
+		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -421,7 +427,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -456,14 +462,14 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_2 = 32000;
 		
-		mpfr_float tracking_tolerance("1e-5");
+		double tracking_tolerance = 1e-5;
 		
 		
 		Vec<mpfr> corrected(2);
@@ -474,7 +480,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<mpfr> newton_correction_result;
 		
-		tracking_tolerance = mpfr_float("1e1");
+		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -488,7 +494,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -522,14 +528,14 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_2 = 32000;
 		
-		mpfr_float tracking_tolerance("1e-5");
+		double tracking_tolerance = 1e-5;
 		
 		
 		Vec<mpfr> corrected(2);
@@ -540,7 +546,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<mpfr> newton_correction_result;
 		
-		tracking_tolerance = mpfr_float("1e1");
+		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -554,7 +560,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code==bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	
@@ -585,13 +591,13 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction(mpfr("0","0")*x);
 		sys.AddFunction(mpfr("0","0")*y);
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,1);
 		AMP.coefficient_bound = 5;
 		
 		
-		mpfr_float tracking_tolerance("1e-5");
+		double tracking_tolerance = 1e-5;
 		
 		
 		Vec<mpfr> corrected(2);
@@ -599,7 +605,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<mpfr> newton_correction_result;
 		
-		tracking_tolerance = mpfr_float("1e1");
+		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -613,7 +619,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::MatrixSolveFailure);
+		BOOST_CHECK(success_code==bertini::SuccessCode::MatrixSolveFailure);
 	}
 	
 	
@@ -642,13 +648,13 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		sys.AddFunction(mpfr("0","0")*x);
 		sys.AddFunction(mpfr("0","0")*y);
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,1);
 		AMP.coefficient_bound = 5;
 		
 		
-		mpfr_float tracking_tolerance("1e-5");
+		double tracking_tolerance = 1e-5;
 		
 		
 		Vec<mpfr> corrected(2);
@@ -656,7 +662,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<mpfr> newton_correction_result;
 		
-		tracking_tolerance = mpfr_float("1e1");
+		tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -670,7 +676,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  AMP);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::MatrixSolveFailure);
+		BOOST_CHECK(success_code==bertini::SuccessCode::MatrixSolveFailure);
 	}
 	
 	
@@ -710,7 +716,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		mpfr("-1.043206463433583e25","-2.450083921191992e25");
 		
 		
-		mpfr_float tracking_tolerance("1e1");
+		double tracking_tolerance = 1e1;
 		
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
@@ -726,7 +732,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::FailedToConverge);
+		BOOST_CHECK(success_code==bertini::SuccessCode::FailedToConverge);
 	}
 	
 	BOOST_AUTO_TEST_CASE(newton_step_diverging_to_infinity_fails_to_converge_mp)
@@ -766,7 +772,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		Vec<mpfr> newton_correction_result;
 		
-		mpfr_float tracking_tolerance("1e1");
+		double tracking_tolerance = 1e1;
 		unsigned max_num_newton_iterations = 1;
 		unsigned min_num_newton_iterations = 1;
 		std::shared_ptr<NewtonCorrector> corrector = std::make_shared<NewtonCorrector>(sys);
@@ -779,7 +785,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 												  max_num_newton_iterations);
 		
 		BOOST_CHECK_EQUAL(newton_correction_result.size(),2);
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::FailedToConverge);
+		BOOST_CHECK(success_code==bertini::SuccessCode::FailedToConverge);
 	}
 
 BOOST_AUTO_TEST_SUITE_END()
