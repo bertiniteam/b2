@@ -28,9 +28,9 @@ int main()
 
 
     // now to solve the start system.
-    auto solutions = demo::StepOne(start_sys);
+    auto stepone_solutions = demo::StepOne(start_sys);
 
-    demo::StepTwo(homotopy, start_sys);
+    demo::StepTwo(target_sys, start_sys, homotopy, stepone_solutions);
     
 	return 0;
 }
