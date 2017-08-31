@@ -718,12 +718,13 @@ public:
 	SuccessCode InitialCauchyLoops(CT const& target_time)
 	{	
 		using std::max;
-		auto fail_safe_max_cycle_number = max(GetCauchySettings().fail_safe_maximum_cycle_number,this->CycleNumber());
+		// auto fail_safe_max_cycle_number = max(GetCauchySettings().fail_safe_maximum_cycle_number,this->CycleNumber());
+		auto fail_safe_max_cycle_number = GetCauchySettings().fail_safe_maximum_cycle_number;
 
 		auto initial_cauchy_loop_success = SuccessCode::Success;
 
-		bool continue_loop = true;
-		while (continue_loop)
+		bool loop_hasnt_closed = true;
+		while (loop_hasnt_closed)
 		{	
 			this->CycleNumber(0);
 			ClearAndSeedCauchyData<CT>();
@@ -742,13 +743,13 @@ public:
 					if (CheckClosedLoop<CT>())
 					{//error is small enough, exit the loop with success. 
 						initial_cauchy_loop_success = SuccessCode::Success;
-						continue_loop = false;
+						loop_hasnt_closed = false;
 						break;
 					}
 					else if(this->CycleNumber() > fail_safe_max_cycle_number)
 					{// too many iterations
 						initial_cauchy_loop_success = SuccessCode::CycleNumTooHigh;
-						continue_loop = false;
+						loop_hasnt_closed = false;
 						break;
 					}
 
@@ -765,7 +766,7 @@ public:
 				if (advance_success!=SuccessCode::Success)
 					return advance_success;
 			}
-		} //end while(continue_loop)
+		} //end while(loop_hasnt_closed)
 
 		return initial_cauchy_loop_success;
 	}//end InitialCauchyLoops
@@ -795,14 +796,13 @@ public:
 
 		cau_times.clear();
 		cau_samples.clear();
-		cau_samples.push_back(ps_samples.back()); // cauchy samples and times should be empty before this point. 
+		cau_samples.push_back(ps_samples.back());
 		cau_times.push_back(ps_times.back());
 	}
 
 
 	/**
-		\brief 	The Cauchy endgame will first find an initial approximation using the notion of the power series endgame. This function computes this approximation and returns a
-	SuccessCode to let us know if an error was encountered. 
+		\brief 	Tracks til we believe we are in the Endgame Operating Zone, and then does a cauchy approximation
 
 		## Input: 
 				start_time: time value for which we start to make a power series approximation
@@ -817,16 +817,34 @@ public:
 
 		##Details:
 	\tparam CT The complex number type.
-				This function is in charge of finding the very first approximation of the origin. It does this by first computing some initial samples 
-							 like what is done in the Power Series Endgame. We continue to track forward in this manner until we have stabilization of the cycle number being approximated. 
-							 This prevents the unnecessary circle tracking if we are possibly not in the endgame operating zone. 
-							 Once we have stabilization we then perform InitialCauchyLoops while getting the accurate cycle number, and check the norms of the samples and make sure we are ready 
-							 to approximate. When ready we call ComputePSEGApproximationOfXAtT0. This function will use a hermtie interpolater to get an approximation of the value at the origin. 
+
+	This function is in charge of finding the very first approximation of the origin. It does this by first computing some initial samples 
+	like what is done in the Power Series Endgame. We continue to track forward in this manner until we have stabilization of the cycle number being approximated. 
+	This prevents the unnecessary circle tracking if we are possibly not in the endgame operating zone. 
+	Once we have stabilization we then perform InitialCauchyLoops while getting the accurate cycle number, and check the norms of the samples and make sure we are ready 
+	to approximate.
 	*/
 	template<typename CT>
-	SuccessCode InitialPowerSeriesApproximation(CT const& start_time, Vec<CT> const& start_point, 
+	SuccessCode InitialApproximation(CT const& start_time, Vec<CT> const& start_point, 
 	                                            CT const& target_time, Vec<CT> & approximation)
 	{	
+		auto init_success = GetIntoEGZone(start_time, start_point, target_time);
+		if (init_success!= SuccessCode::Success)
+			return init_success;
+
+		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
+		if (cauchy_loop_success != SuccessCode::Success)
+			return cauchy_loop_success;
+		
+		return ComputeCauchyApproximationOfXAtT0(approximation);
+
+	}//end InitialApproximation
+
+
+
+	template<typename CT>
+	SuccessCode GetIntoEGZone(CT const& start_time, Vec<CT> const& start_point, CT const& target_time)
+	{
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
 		//initialize array holding c_over_k estimates
@@ -865,80 +883,8 @@ public:
 
 		}//end while
 
-		// you have to leave this here.  yeah, i know, you want to extract it, but this sets up the cycle number
-		// used in the subsequent call to ComputePSEGApproximationAtT0.  Ah, side-effects.  Sorry.
-		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
-		if (cauchy_loop_success != SuccessCode::Success)
-			return cauchy_loop_success;
-		
-		return ComputePSEGApproximationAtT0(approximation, target_time);
-
-	}//end InitialPowerSeriesApproximation
-
-	/**
-		\brief 	This function takes the pseg_samples_ and pseg_times that have been collected and uses them to compute a Hermite interpolation to the time value target_time. 
-
-		## Input: 
-				result: This vector holds the approxmation that we end up calculating
-				target_time: The time value at which we are trying to approximate, usually t = 0
-
-		## Output:
-				SuccessCode deeming if we were successful or if we encountered an error. 
-
-		##Details:
-				\tparam CT The complex number type. 
-				This function handles computing an approximation at the origin. 
-		We compute the derivatives at the different times and samples. We then make sure all samples are to the same precision before refining them to final tolerance. 
-						By InitialCauchyLoops we know what the cycle number is so we convert derivatives and times to the s-plane where s = t^(1/(cyle number).
-		We use the converted times and derivatives along with the samples to do a Hermite interpolation which is found in base_endgame.hpp.
-	*/
-	template<typename CT>
-	SuccessCode ComputePSEGApproximationAtT0(Vec<CT>& result, const CT & target_time)
-	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
-
-		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
-		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
-
-
-		this->template RefineAllSamples(ps_samples, ps_times);
-		
-		//Ensure all samples are of the same precision.
-		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
-		{
-			auto max_precision = this->EnsureAtUniformPrecision(ps_times, ps_samples);
-			this->GetSystem().precision(max_precision);
-		}
-		
-
-		auto num_sample_points = this->EndgameSettings().num_sample_points;
-		//Compute dx_dt for each sample.
-		SampCont<CT> pseg_derivatives;
-		for(unsigned ii = 0; ii < num_sample_points; ++ii)
-		{	
-			// the inverse() call uses LU look at Eigen documentation on inverse in Eigen/LU.
-			pseg_derivatives.emplace_back(
-			                           -(this->GetSystem().Jacobian(ps_samples[ii],ps_times[ii]).inverse())*this->GetSystem().TimeDerivative(ps_samples[ii],ps_times[ii])
-			                           );
-		}
-
- 		//Conversion to S-plane.
-		TimeCont<CT> s_times(num_sample_points);
-		SampCont<CT> s_derivatives(num_sample_points);
-		RT c = static_cast<RT>(this->CycleNumber());
-		RT one_over_c = 1/c;
-		for(unsigned ii = 0; ii < num_sample_points; ++ii)
-		{
-			s_derivatives[ii] = pseg_derivatives[ii]*
-			                        (c*pow(ps_times[ii],1-one_over_c));
-			s_times[ii] =  pow(ps_times[ii], one_over_c);
-		}
-		Precision(result, Precision(s_times.back()));
-		result = HermiteInterpolateAndSolve(pow(target_time,one_over_c), num_sample_points, 
-                                            s_times, ps_samples, s_derivatives);
 		return SuccessCode::Success;
-	}//end ComputePSEGApproximationOfXAtT0
-
+	}
 
 	/**
 	\brief Function that computes the mean of the samples that were collected while tracking around the origin. This value is the approximation of the value at the origin. 
@@ -952,6 +898,8 @@ public:
 		##Details:
 	\tparam CT The complex number type.
 				We can compute the Cauchy Integral Formula in this particular instance by computing the mean of the samples we have collected around the origin. 
+
+				/todo i believe this function works incorrectly when the target time is not 0.  hence, the target time needs to be passed in.
 	*/
 	template<typename CT>
 	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<CT>& result)
@@ -1056,11 +1004,12 @@ public:
 		auto& current_sample = ps_samples.back();
 
 		//Generalized next_time in case if we are not trying to converge to the t = 0.
-		CT next_time = (current_time - target_time) * static_cast<RT>(this->EndgameSettings().sample_factor)+current_time;
+		CT next_time = (target_time-current_time) * static_cast<RT>(this->EndgameSettings().sample_factor)+current_time;
 
 		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time)//we are too close to t = 0 but we do not have the correct tolerance - so we exit
 			return SuccessCode::MinTrackTimeReached;
 		
+		std::cout << "advancing time from " << current_time << " to " << next_time << " starting from " << current_sample << '\n';
 		// advance in time
 		Vec<CT> next_sample;
 		auto time_advance_success = this->GetTracker().TrackPath(next_sample,current_time, next_time, current_sample);
@@ -1126,10 +1075,9 @@ public:
 		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
 		NumErrorT& approx_error = this->approximate_error_;
 
-		//Compute the first approximation using the power series approximation technique. 
-		auto initial_ps_success = InitialPowerSeriesApproximation(start_time, start_point, target_time, prev_approx);  // last argument is output here
-		if (initial_ps_success != SuccessCode::Success)
-			return initial_ps_success;
+		auto initial_success = InitialApproximation(start_time, start_point, target_time, prev_approx);  // last argument is output here
+		if (initial_success != SuccessCode::Success)
+			return initial_success;
 
 
 		CT next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor);

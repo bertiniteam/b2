@@ -918,10 +918,9 @@ BOOST_AUTO_TEST_CASE(initial_cauchy_loops_cycle_num_greater_than_1)
 
 /**
 	The function tested is ComputeFirstApproximation. This function is the culmination of tracking samples until our estimation of 
-	c over k is stabilized and we have our Cauchy loop ratios within a tolerance. When this is acheived we can use the power series approximation
-	to compute our first extrapolant at the origin. After this we will use the cauchy integral formula to compute all further extrapolants.
+	c over k is stabilized and we have our Cauchy loop ratios within a tolerance.  After this we will use the cauchy integral formula to compute all further extrapolants.
 */
-BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
+BOOST_AUTO_TEST_CASE(first_approximation)
 {
 	DefaultPrecision(ambient_precision);
 
@@ -967,21 +966,20 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg)
 
 
 
-	auto first_approx_success = my_endgame.InitialPowerSeriesApproximation(time,sample,origin,first_approx);
+	auto first_approx_success = my_endgame.InitialApproximation(time,sample,origin,first_approx);
 	BOOST_CHECK(first_approx_success == SuccessCode::Success);
 	BOOST_CHECK((first_approx - x_origin).template lpNorm<Eigen::Infinity>() < 1e-2);
 	BOOST_CHECK(my_endgame.CycleNumber() == 3);
 
-}// end first_approximation_using_pseg
+}
 
 /**
 	The function tested is ComputeFirstApproximation. This function is the culmination of tracking samples until our estimation of 
-	c over k is stabilized and we have our Cauchy loop ratios within a tolerance. When this is acheived we can use the power series approximation
-	to compute our first extrapolant at the origin. After this we will use the cauchy integral formula to compute all further extrapolants.
+	c over k is stabilized and we have our Cauchy loop ratios within a tolerance. After this we will use the cauchy integral formula to compute all further extrapolants.
 
 	Specifically this test case will be attempting to do this with a target time that is not the origin. 
 */
-BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_nonzero_target_time)
+BOOST_AUTO_TEST_CASE(first_approximation_nonzero_target_time)
 {
 	DefaultPrecision(ambient_precision);
 
@@ -1036,7 +1034,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_using_pseg_nonzero_target_time)
 #endif
 
 
-	auto first_approx_success = my_endgame.InitialPowerSeriesApproximation(start_time,start_sample,target_time,first_approx);
+	auto first_approx_success = my_endgame.InitialApproximation(start_time,start_sample,target_time,first_approx);
 
 	BOOST_CHECK((first_approx - x_to_check_against).template lpNorm<Eigen::Infinity>() < 1e-2);
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
@@ -1091,6 +1089,11 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 	cauchy_samples.push_back(sample);
 	x_origin << BCT(1,0);
+
+#ifdef B2_OBSERVE_TRACKERS
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+#endif
 
 	TestedEGType my_endgame(tracker);
 
@@ -1160,6 +1163,10 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 	cauchy_samples.push_back(sample);
 	x_origin << BCT(1,0);
 
+#ifdef B2_OBSERVE_TRACKERS
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+#endif
 
 	TestedEGType my_endgame(tracker);
 
@@ -1221,6 +1228,10 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 
 	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
+#ifdef B2_OBSERVE_TRACKERS
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+#endif
 
 	TestedEGType my_endgame(tracker);
 	my_endgame.AddToPSData(time, sample);
@@ -1276,6 +1287,10 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 	auto origin = BCT(0,0);
 	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
 
+#ifdef B2_OBSERVE_TRACKERS
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+#endif
 
 	TestedEGType my_endgame(tracker);
 
@@ -1340,6 +1355,11 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 
 	TestedEGType my_endgame(tracker);
 
+#ifdef B2_OBSERVE_TRACKERS
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+#endif
+
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - solution).template lpNorm<Eigen::Infinity>() < 1e-5);
@@ -1398,6 +1418,10 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
+#ifdef B2_OBSERVE_TRACKERS
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+#endif
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
@@ -1460,6 +1484,11 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 	TestedEGType my_endgame(tracker);
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
+#ifdef B2_OBSERVE_TRACKERS
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+#endif
+
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
 	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
@@ -1514,7 +1543,14 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
-	my_endgame.Run(current_time,current_space);
+#ifdef B2_OBSERVE_TRACKERS
+	std::cout << 'a' << '\n';
+	GoryDetailLogger<TrackerType> tons_of_detail;
+	tracker.AddObserver(&tons_of_detail);
+#endif
+
+	auto code = my_endgame.Run(current_time,current_space);
+	BOOST_CHECK(code == SuccessCode::Success);
 
 	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - correct).template lpNorm<Eigen::Infinity>() < 1e-11);
 
@@ -1752,7 +1788,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		final_griewank_osborn_system.precision(init_prec);
 
 		SuccessCode endgame_success = my_endgame.Run(BCT(t_endgame_boundary),s);
-
+std::cout << my_endgame.FinalApproximation<BCT>() << '\n';
 		if(endgame_success == SuccessCode::Success)
 		{
 			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
