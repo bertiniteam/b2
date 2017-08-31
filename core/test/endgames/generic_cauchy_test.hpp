@@ -1544,7 +1544,6 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
 #ifdef B2_OBSERVE_TRACKERS
-	std::cout << 'a' << '\n';
 	GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
@@ -1781,6 +1780,9 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	unsigned num_paths_diverging = 0;
 	unsigned num_paths_converging = 0;
+	unsigned num_fails = 0;
+
+	unsigned num_infinite_solutions = 0;
 	for (auto& s : griewank_homogenized_solutions) //current_space_values)
 	{
 		auto init_prec = Precision(s(0));
@@ -1788,20 +1790,26 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		final_griewank_osborn_system.precision(init_prec);
 
 		SuccessCode endgame_success = my_endgame.Run(BCT(t_endgame_boundary),s);
-std::cout << my_endgame.FinalApproximation<BCT>() << '\n';
+
+		BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
+
 		if(endgame_success == SuccessCode::Success)
 		{
-			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
 			num_paths_converging++;
 		}
-		if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
+		else if(endgame_success == SuccessCode::SecurityMaxNormReached || endgame_success == SuccessCode::GoingToInfinity)
 		{
 			num_paths_diverging++;
 		}
-	}
-	BOOST_CHECK_EQUAL(num_paths_converging,3);
-	BOOST_CHECK_EQUAL(num_paths_diverging,3);
+		else
+			++num_fails;
 
+		if (griewank_osborn_sys.DehomogenizePoint(my_endgame.FinalApproximation<BCT>()).template lpNorm<Eigen::Infinity>() > security_settings.max_norm)
+			++num_infinite_solutions;
+
+	}
+	BOOST_CHECK(num_paths_converging>=3);
+	BOOST_CHECK(num_paths_diverging<=3);
 }//end compute griewank osborne
 
 
