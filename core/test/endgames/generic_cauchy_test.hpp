@@ -128,12 +128,10 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 	cauchy_samples.push_back(Vec<BCT>(1));
 	cauchy_samples.back() << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
-	const auto& time = cauchy_times.back();
-	const auto& sample = cauchy_samples.back();
 
-	auto first_track_success =  my_endgame.CircleTrack(time,origin,sample);
+	auto first_track_success =  my_endgame.CircleTrack(origin);
 
-	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - sample).template lpNorm<Eigen::Infinity>() < 1e-5);
+	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - cauchy_samples.front()).template lpNorm<Eigen::Infinity>() < 1e-5);
 
 }
 
@@ -182,12 +180,11 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 
 
 
-	BCT time(1);
 	Vec<BCT> sample(1);
 	auto origin = BCT(0,0);
 
 
-	time = ComplexFromString("0.1");
+	BCT time = ComplexFromString("0.1");
 	cauchy_times.push_back(time);
 	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
 	cauchy_samples.push_back(sample);
@@ -197,13 +194,13 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	my_endgame.SetCauchyTimes(cauchy_times);
 	
-	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
+	auto tracking_success =  my_endgame.CircleTrack(origin);
 
 	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
 	BOOST_CHECK((first_track_sample - sample).template lpNorm<Eigen::Infinity>() > 1e-5);
 
-	tracking_success =  my_endgame.CircleTrack(time,origin,first_track_sample);
+	tracking_success =  my_endgame.CircleTrack(origin);
 
 	const auto& second_track_sample = my_endgame.GetCauchySamples<BCT>().back();
 
@@ -267,7 +264,7 @@ BOOST_AUTO_TEST_CASE(circle_track__nonzero_target_time)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	my_endgame.SetCauchyTimes(cauchy_times);
 	
-	auto tracking_success =  my_endgame.CircleTrack(time,center,sample);
+	auto tracking_success =  my_endgame.CircleTrack(center);
 
 
 	const auto& first_track_sample = my_endgame.GetCauchySamples<BCT>().back();
@@ -537,7 +534,7 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 
 
-	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
+	auto tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
 
 } // end check closed loop if cycle num is 1 for cauchy class test
@@ -599,10 +596,10 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 	my_endgame.SetCauchySamples(cauchy_samples);
 	my_endgame.SetCauchyTimes(cauchy_times);
 
-	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
+	auto tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == false);
 
-	tracking_success =  my_endgame.CircleTrack(my_endgame.GetCauchyTimes<BCT>().back(),origin,my_endgame.GetCauchySamples<BCT>().back());
+	tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.CheckClosedLoop<BCT>() == true);
 	
 } // end check closed loop if cycle num is greater than 1 for cauchy class test
@@ -667,7 +664,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
+	auto tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
 
 } // end compare cauchy ratios for cauchy class test
@@ -729,7 +726,7 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 	
-	auto tracking_success =  my_endgame.CircleTrack(time,origin,sample);
+	auto tracking_success =  my_endgame.CircleTrack(origin);
 	BOOST_CHECK(my_endgame.RatioEGOperatingZoneTest<BCT>(origin) == true);
 
 } // end compare cauchy ratios for cycle num greater than 1 cauchy class test
@@ -1100,7 +1097,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto first_track_success =  my_endgame.CircleTrack(time,origin,sample);
+	auto first_track_success =  my_endgame.CircleTrack(origin);
 
 	my_endgame.CycleNumber(1); // manually set cycle number to 1 for this test
 
@@ -1169,8 +1166,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 	my_endgame.SetCauchyTimes(cauchy_times);
 	my_endgame.SetCauchySamples(cauchy_samples);
 
-	auto first_track_success =  my_endgame.CircleTrack(time,origin,sample);
-	auto second_track_success = my_endgame.CircleTrack(my_endgame.GetCauchyTimes<BCT>().back(),origin,my_endgame.GetCauchySamples<BCT>().back());
+	auto first_track_success =  my_endgame.CircleTrack(origin);
+	auto second_track_success = my_endgame.CircleTrack(origin);
 
 	my_endgame.CycleNumber(2);
 
@@ -1216,19 +1213,19 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 
 
 
-	BCT time(1);
 	Vec<BCT> sample(1);
 	auto origin = BCT(0,0);
 
 
-	time = ComplexFromString(".1");
+	BCT time = ComplexFromString(".1");
 
 	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
 
 	TestedEGType my_endgame(tracker);
+	my_endgame.AddToPSData(time, sample);
 
-	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,origin,sample);
+	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).template lpNorm<Eigen::Infinity>() < 1e-5);
 	BOOST_CHECK(my_endgame.GetCauchySamples<BCT>().size() == 4);
@@ -1282,7 +1279,8 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 
 	TestedEGType my_endgame(tracker);
 
-	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(time,origin,sample);
+	my_endgame.AddToPSData(time, sample);
+	auto finding_cauchy_samples_success = my_endgame.ComputeCauchySamples(origin);
 
 	BOOST_CHECK((my_endgame.GetCauchySamples<BCT>().back() - my_endgame.GetCauchySamples<BCT>().front()).template lpNorm<Eigen::Infinity>() < 1e-6);
 	BOOST_CHECK_EQUAL(my_endgame.GetCauchySamples<BCT>().size(), 7);
@@ -1580,7 +1578,9 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
 	SecurityConfig security_settings;
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
-	auto cauchy_samples_success = my_endgame.ComputeCauchySamples(start_time,target_time,start_sample);
+	my_endgame.AddToPSData(start_time, start_sample);
+
+	auto cauchy_samples_success = my_endgame.ComputeCauchySamples(target_time);
 
 
 	BOOST_CHECK(cauchy_samples_success == SuccessCode::Success);

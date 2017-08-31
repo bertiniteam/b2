@@ -336,7 +336,15 @@ public:
 
 	~CauchyEndgame() {};
 
-
+	void ValidateConfigs()
+	{
+		if (this->EndgameSettings().num_sample_points < 3) // need to make sure we won't track right through the origin.
+		{
+			std::stringstream err_msg;
+			err_msg << "ERROR: The number of sample points " << this->EndgameSettings().num_sample_points << " for circle tracking must be >= 3";
+			throw std::runtime_error(err_msg.str());
+		}	
+	}
 
 	/**
 		\brief Function to track around the origin 
@@ -356,24 +364,18 @@ public:
 				as paths converging to the solution we are approximating. 
 	*/
 	template<typename CT> 
-	SuccessCode CircleTrack(CT const& starting_time, CT const& target_time, Vec<CT> const& starting_sample)
+	SuccessCode CircleTrack(CT const& target_time)
 	{	
 		using bertini::Precision;
-		assert(Precision(starting_time)==Precision(starting_sample) && "starting time and sample for circle track must be of same precision");
-		DefaultPrecision(Precision(starting_time));
-
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		using std::acos;
 
-		if (this->EndgameSettings().num_sample_points < 3) // need to make sure we won't track right through the origin.
-		{
-			std::stringstream err_msg;
-			err_msg << "ERROR: The number of sample points " << this->EndgameSettings().num_sample_points << " for circle tracking must be >= 3";
-			throw std::runtime_error(err_msg.str());
-		}	
+		ValidateConfigs();
 
 		auto& circle_times = std::get<TimeCont<CT> >(cauchy_times_);
 		auto& circle_samples = std::get<SampCont<CT> >(cauchy_samples_);
+
+		CT starting_time = circle_times.back();  // take a COPY here, so won't invalidate it later
 
 		// the initial sample has already been added to the sample repo... so don't do that here, please
 		
@@ -421,8 +423,7 @@ public:
 			this->EnsureAtPrecision(next_time,Precision(next_sample)); 
 			assert(Precision(next_time)==Precision(next_sample));
 
-			circle_times.push_back(next_time);
-			circle_samples.push_back(next_sample);
+			AddToCauchyData(next_time, next_sample);
 
 			// down here next_sample and next_time should have the same precision.
 		}
@@ -431,6 +432,19 @@ public:
 
 	}//end CircleTrack
 
+	template<typename CT>
+	void AddToCauchyData(CT const& time, Vec<CT> const& sample)
+	{
+		std::get<TimeCont<CT>>(cauchy_times_).push_back(time);
+		std::get<SampCont<CT>>(cauchy_samples_).push_back(sample);
+	}
+
+	template<typename CT>
+	void AddToPSData(CT const& time, Vec<CT> const& sample)
+	{
+		std::get<TimeCont<CT>>(pseg_times_).push_back(time);
+		std::get<SampCont<CT>>(pseg_samples_).push_back(sample);
+	}
 
 	/**
 		\brief A function that uses the assumption of being in the endgame operating zone to compute an approximation of the ratio c over k. 
@@ -703,30 +717,20 @@ public:
 	template<typename CT>
 	SuccessCode InitialCauchyLoops(CT const& target_time)
 	{	
-		using RT = typename Eigen::NumTraits<CT>::Real;
-		auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
-		auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
-		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
-		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
-
 		using std::max;
-		bool continue_loop = true;
-
 		auto fail_safe_max_cycle_number = max(GetCauchySettings().fail_safe_maximum_cycle_number,this->CycleNumber());
 
 		auto initial_cauchy_loop_success = SuccessCode::Success;
 
+		bool continue_loop = true;
 		while (continue_loop)
 		{	
 			this->CycleNumber(0);
 			ClearAndSeedCauchyData<CT>();
-
+			
 			// track around a circle once.  we'll use it to measure whether we believe we are in the eg operating zone, based on the ratio of norms of sample points around the circle
-
-			auto tracking_success = CircleTrack(cau_times.back(),target_time,cau_samples.back());
-
+			auto tracking_success = CircleTrack(target_time);
 			this->IncrementCycleNumber(1);
-
 			if (tracking_success != SuccessCode::Success)
 				return tracking_success;
 
@@ -749,40 +753,17 @@ public:
 					}
 
 					//compute next loop, the last sample in times and samples is the sample our loop ended on. Either where we started or on another sheet at the same time value. 
-					tracking_success = CircleTrack(cau_times.back(),target_time,cau_samples.back());
-
+					tracking_success = CircleTrack(target_time);
 					this->IncrementCycleNumber(1);
-
 					if(tracking_success != SuccessCode::Success)
 						return tracking_success;
-				}
-
-				if(initial_cauchy_loop_success == SuccessCode::CycleNumTooHigh)
-				{//see if we should continue to the next sample point
-					if(abs(cau_times.back() - target_time) < this->EndgameSettings().min_track_time)
-						continue_loop = false;
-					else
-						continue_loop = true;
 				}
 			}//end if (RatioEGOperatingZoneTest())
 			else 
 			{
-
-				
-
-				//compute the time for the next sample point
-				// CT next_time;
-				// this->EnsureAtPrecision(next_time,Precision(ps_samples.back()));
-				CT next_time = (ps_times.back() - target_time) * static_cast<RT>(this->EndgameSettings().sample_factor) + ps_times.back();
-
-				Vec<CT> next_sample;
-				SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
-				this->EnsureAtPrecision(next_time,Precision(next_sample));
-
-				RotateOntoPS(next_time, next_sample);
-
-				if(tracking_success != SuccessCode::Success)
-					return tracking_success;
+				auto advance_success = AdvanceTime<CT>(target_time);
+				if (advance_success!=SuccessCode::Success)
+					return advance_success;
 			}
 		} //end while(continue_loop)
 
@@ -817,6 +798,8 @@ public:
 		cau_samples.push_back(ps_samples.back()); // cauchy samples and times should be empty before this point. 
 		cau_times.push_back(ps_times.back());
 	}
+
+
 	/**
 		\brief 	The Cauchy endgame will first find an initial approximation using the notion of the power series endgame. This function computes this approximation and returns a
 	SuccessCode to let us know if an error was encountered. 
@@ -859,40 +842,25 @@ public:
 
 		c_over_k.push_back(ComputeCOverK<CT>());
 
-		Vec<CT> next_sample;
-		CT next_time;
-
 		
 		//track until for more c_over_k estimates or until we reach a cutoff time. 
 		for (unsigned ii = 0; ii < GetCauchySettings().num_needed_for_stabilization; ++ii) 
 		{	
-			next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
-																
-			auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
-			if (tracking_success!=SuccessCode::Success)
-				return tracking_success;
-
-			this->EnsureAtPrecision(next_time, Precision(next_sample));
-
-			RotateOntoPS(next_time, next_sample);
+			auto advance_success = AdvanceTime<CT>(target_time);
+			if (advance_success!=SuccessCode::Success)
+				return advance_success;
 			c_over_k.push_back(ComputeCOverK<CT>());
 		}//end while
 
 
 		//have we stabilized yet? 
-		while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()) > GetCauchySettings().cycle_cutoff_time)
+		while(!CheckForCOverKStabilization(c_over_k) && abs(ps_times.back()-target_time) > GetCauchySettings().cycle_cutoff_time)
 		{
-			next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor); // using general midpoint formula with sample_factor to give us a time
-																									 
-			auto tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
-
-			if(tracking_success != SuccessCode::Success)
-				return tracking_success;
-
-			this->EnsureAtPrecision(next_time, Precision(next_sample));
+			auto advance_success = AdvanceTime<CT>(target_time);
+			if (advance_success!=SuccessCode::Success)
+				return advance_success;
 
 			c_over_k.pop_front();
-			RotateOntoPS(next_time, next_sample);
 			c_over_k.push_back(ComputeCOverK<CT>());
 
 		}//end while
@@ -902,7 +870,7 @@ public:
 		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
 		if (cauchy_loop_success != SuccessCode::Success)
 			return cauchy_loop_success;
-		Precision(approximation, Precision(target_time));
+		
 		return ComputePSEGApproximationAtT0(approximation, target_time);
 
 	}//end InitialPowerSeriesApproximation
@@ -986,7 +954,7 @@ public:
 				We can compute the Cauchy Integral Formula in this particular instance by computing the mean of the samples we have collected around the origin. 
 	*/
 	template<typename CT>
-	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<CT>& result) const
+	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<CT>& result)
 	{	
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
@@ -1023,43 +991,36 @@ public:
 	}
 
 	/**
-	\brief Function that will utilize CircleTrack and CheckClosedLoop to collect all samples while tracking around the origin till we close the loop. 
+	\brief Collects samples while tracking around the target time, until we close the loop, or exceed the limit on # of loops. 
 
 		## Input: 
-			starting_time: the time value at which we start finding cauchy samples 
-			target_time: the time value we are computing cauchy samples around
-			starting_sample: the current space point at starting_time, this will also be the first cauchy sample
+			the target time, at which we are computing roots of a system
 
 
 		## Output: 
 			SuccessCode deeming if we were able to collect all samples around the origin, or if we encounted an error at some point. 
 
 		##Details:
+
+			the starting time and point for this routine are the most recent power series samples.
 	\tparam CT The complex number type.
 				This function populates the deque cauchy_samples and cauchy_times. These are data members of the class and are not passed in. This function will continue to 
 				call CircleTrack until we have closed the loop. 
 
 	*/
 	template<typename CT>
-	SuccessCode ComputeCauchySamples(CT const& starting_time,CT const& target_time, Vec<CT> const& starting_sample)
+	SuccessCode ComputeCauchySamples(CT const& target_time)
 	{
 		using bertini::Precision;
-		assert(Precision(starting_time)==Precision(starting_sample));
 
-		auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
-		auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
-
-		cau_times.clear();
-		cau_samples.clear();
-		cau_times.push_back(starting_time);
-		cau_samples.push_back(starting_sample);
+		ClearAndSeedCauchyData<CT>();
 		this->CycleNumber(0);
 
 
 		while( this->CycleNumber() < GetCauchySettings().fail_safe_maximum_cycle_number )
 		{
 			//track around the origin once.
-			auto tracking_success = CircleTrack(cau_times.back(),target_time,cau_samples.back());
+			auto tracking_success = CircleTrack(target_time);
 			this->IncrementCycleNumber(1);
 
 			if(tracking_success != SuccessCode::Success)
@@ -1076,7 +1037,41 @@ public:
 	}//end ComputeCauchySamples
 
 
-	
+	/**
+	\brief Advances time, marching toward the target time.
+
+	Works from the most recent time-sample pair stored in the power series data.
+
+	If the distance between next and target is too small, dies (returns not success).
+	*/
+	template<typename CT>
+	SuccessCode AdvanceTime(CT const& target_time)
+	{
+		using RT = typename Eigen::NumTraits<CT>::Real;
+
+		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
+		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
+
+		auto& current_time = ps_times.back();
+		auto& current_sample = ps_samples.back();
+
+		//Generalized next_time in case if we are not trying to converge to the t = 0.
+		CT next_time = (current_time - target_time) * static_cast<RT>(this->EndgameSettings().sample_factor)+current_time;
+
+		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time)//we are too close to t = 0 but we do not have the correct tolerance - so we exit
+			return SuccessCode::MinTrackTimeReached;
+		
+		// advance in time
+		Vec<CT> next_sample;
+		auto time_advance_success = this->GetTracker().TrackPath(next_sample,current_time, next_time, current_sample);
+		if (time_advance_success != SuccessCode::Success)
+			return time_advance_success;
+
+		this->EnsureAtPrecision(next_time,Precision(next_sample));
+		RotateOntoPS(next_time, next_sample);
+
+		return SuccessCode::Success;
+	}
 
 	/**
 	\brief Primary function that runs the Cauchy endgame.
@@ -1165,28 +1160,13 @@ public:
 				return SuccessCode::SecurityMaxNormReached;
 			}
 
-
 			prev_approx = latest_approx;
 			norm_of_dehom_prev = norm_of_dehom_latest;
 
-			//Generalized next_time in case if we are not trying to converge to the t = 0.
-			next_time = (next_time + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor);
-			if (abs(next_time - target_time) < this->EndgameSettings().min_track_time)//we are too close to t = 0 but we do not have the correct tolerance - so we exit
-				return SuccessCode::MinTrackTimeReached;
-			
-			// advance in time
-			Vec<CT> next_sample;
-			auto time_advance_success = this->GetTracker().TrackPath(next_sample,cau_times.back(),next_time,cau_samples.front()); // the front is used because the loops go round and round
-			if (time_advance_success != SuccessCode::Success)
-				return time_advance_success;
-
-			this->EnsureAtPrecision(next_time,Precision(next_sample));
-
-			ps_times.push_back(next_time);  ps_times.pop_front();
-			ps_samples.push_back(next_sample); ps_samples.pop_front();
+			AdvanceTime<CT>(target_time);
 
 			// then compute the next set of cauchy samples used for extrapolating the point at target time
-			auto cauchy_samples_success = ComputeCauchySamples(next_time,target_time,next_sample);
+			auto cauchy_samples_success = ComputeCauchySamples(target_time);
 			if (cauchy_samples_success != SuccessCode::Success)
 				return cauchy_samples_success;
 
