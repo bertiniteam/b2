@@ -1009,7 +1009,6 @@ public:
 		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time)//we are too close to t = 0 but we do not have the correct tolerance - so we exit
 			return SuccessCode::MinTrackTimeReached;
 		
-		std::cout << "advancing time from " << current_time << " to " << next_time << " starting from " << current_sample << '\n';
 		// advance in time
 		Vec<CT> next_sample;
 		auto time_advance_success = this->GetTracker().TrackPath(next_sample,current_time, next_time, current_sample);
@@ -1075,12 +1074,17 @@ public:
 		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
 		NumErrorT& approx_error = this->approximate_error_;
 
-		auto initial_success = InitialApproximation(start_time, start_point, target_time, prev_approx);  // last argument is output here
-		if (initial_success != SuccessCode::Success)
-			return initial_success;
+		prev_approx = start_point;
+		
+		auto init_success = GetIntoEGZone(start_time, start_point, target_time);
+		if (init_success!= SuccessCode::Success)
+			return init_success;
+
+		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
+		if (cauchy_loop_success != SuccessCode::Success)
+			return cauchy_loop_success;
 
 
-		CT next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor);
 		RT norm_of_dehom_prev, norm_of_dehom_latest;
 
 		if(this->SecuritySettings().level <= 0)

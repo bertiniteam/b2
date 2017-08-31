@@ -1880,7 +1880,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 	tracker.PrecisionSetup(precision_config);
 	
-	unsigned num_paths_to_track{1};
+	auto num_paths_to_track{TD.NumStartPoints()};
 	BCT t_start(1);
 	std::vector<Vec<BCT> > solutions;
 	std::vector<Vec<BCT> > homogenized_solutions;
@@ -1920,7 +1920,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	std::vector<Vec<BCT> > endgame_solutions;
 
 	unsigned num_successful_occurences = 0;
-	unsigned num_min_track_time_reached = 0;
+	unsigned num_fails = 0;
+	unsigned num_correct = 0;
 	for (const auto& s : homogenized_solutions)
 	{
 		auto eg_prec = Precision(s);
@@ -1930,15 +1931,20 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{
+			++num_successful_occurences;
+
 			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
 			if((tracker.GetSystem().DehomogenizePoint(my_endgame.FinalApproximation<BCT>())-correct).template lpNorm<Eigen::Infinity>() < 1e-11)
 			{
-				num_successful_occurences++;
+				++num_correct;
 			}
 		}
+		else
+			++num_fails;
 	}
  	BOOST_CHECK_EQUAL(num_successful_occurences,num_paths_to_track);
-
+ 	BOOST_CHECK_EQUAL(num_fails,0);
+ 	BOOST_CHECK_EQUAL(num_correct,num_paths_to_track);
 }
 
 
