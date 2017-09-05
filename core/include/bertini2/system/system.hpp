@@ -634,9 +634,6 @@ namespace bertini {
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
-			if (!is_differentiated_)
-				Differentiate();
-
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
 			ResetTimeDerivatives();
@@ -679,9 +676,6 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
-
-			if (!is_differentiated_)
-				Differentiate();
 
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			ResetTimeDerivatives();
@@ -726,7 +720,6 @@ namespace bertini {
 
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
-
 
 
 			if (!is_differentiated_)
