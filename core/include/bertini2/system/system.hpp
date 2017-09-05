@@ -158,7 +158,56 @@ namespace bertini {
 
 
 		
-		
+		/**
+		\brief Force re-evaluation of the system next eval of functions. If something has changed in the system, call this.
+		*/
+		void ResetFunctions() const
+		{
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			for (const auto& iter : functions_) 
+				iter->Reset();
+		}
+
+		/**
+		\brief Force re-evaluation of the system next eval of Jacobians. If something has changed in the system, call this.
+		*/
+		void ResetJacobian() const
+		{
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+				{
+					for (const auto& iter : jacobian_) 
+						iter->Reset();
+					break;
+				}
+				case JacobianEvalMethod::Derivatives:
+				{
+					for (const auto& iter : space_derivatives_) 
+						iter->Reset();
+					break;
+				}
+			}
+		}
+
+		void ResetTimeDerivatives() const
+		{
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+				{
+					for (const auto& iter : jacobian_) 
+						iter->Reset();
+					break;
+				}
+				case JacobianEvalMethod::Derivatives:
+				{
+					for (const auto& iter : time_derivatives_) 
+						iter->Reset();
+					break;
+				}
+			}
+		}
 
 
 		/**
@@ -179,12 +228,6 @@ namespace bertini {
 				ss << "trying to evaluate system in place, but number of input functions (" << function_values.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
 				throw std::runtime_error(ss.str());
 			}
-
-			// the Reset() function call traverses the entire tree, resetting everything.
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			for (const auto& iter : functions_) 
-				iter->Reset();
-
 
 			unsigned counter(0);
 			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
@@ -246,7 +289,7 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 			
 			SetVariables(variable_values.eval());
-			
+			ResetFunctions();
 			EvalInPlace(function_values);
 		}
 		
@@ -320,6 +363,8 @@ namespace bertini {
 			SetVariables(variable_values.eval());//TODO: remove this eval
 			SetPathVariable(path_variable_value);
 
+			ResetFunctions();
+
 			EvalInPlace(function_values);
 		}
 
@@ -386,16 +431,11 @@ namespace bertini {
 
 			if (!is_differentiated_)
 				Differentiate();
-			
-			
 
 			switch (jacobian_eval_method_)
 			{
 				case JacobianEvalMethod::JacobianNode:
 				{
-					for (const auto& iter : jacobian_) 
-						iter->Reset();
-
 					for (int ii = 0; ii < NumFunctions(); ++ii)
 						for (int jj = 0; jj < NumVariables(); ++jj)
 							jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
@@ -403,9 +443,6 @@ namespace bertini {
 				}
 				case JacobianEvalMethod::Derivatives:
 				{
-					for (const auto& iter : space_derivatives_) 
-						iter->Reset();
-
 					for (int jj = 0; jj < NumVariables(); ++jj)
 						for (int ii = 0; ii < NumFunctions(); ++ii)
 							space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
@@ -463,7 +500,7 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 			
 			SetVariables(variable_values);
-			
+			ResetJacobian();
 			JacobianInPlace(J);
 		}
 
@@ -522,7 +559,7 @@ namespace bertini {
 			
 			SetVariables(variable_values.eval()); // TODO: remove this eval
 			SetPathVariable(path_variable_value);
-
+			ResetJacobian();
 			JacobianInPlace(J);
 		}
 
@@ -603,23 +640,18 @@ namespace bertini {
 
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
+			ResetTimeDerivatives();
 
 			switch (jacobian_eval_method_)
 			{
 				case JacobianEvalMethod::JacobianNode:
 				{
 					for (int ii = 0; ii < NumFunctions(); ++ii)
-						jacobian_[ii]->Reset();
-
-					for (int ii = 0; ii < NumFunctions(); ++ii)
 						jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
 					break;
 				}
 				case JacobianEvalMethod::Derivatives:
 				{
-					for (int ii = 0; ii < NumFunctions(); ++ii)
-						time_derivatives_[ii]->Reset();
-
 					for (int ii = 0; ii < NumFunctions(); ++ii)
 						time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
 					break;
@@ -659,7 +691,10 @@ namespace bertini {
 			TimeDerivativeInPlace(ds_dt, variable_values, path_variable_value);
 			return ds_dt;
 		}
-	
+		
+
+
+		
 		/**
 		Homogenize the system, adding new homogenizing variables for each VariableGroup defined for the system.
 
