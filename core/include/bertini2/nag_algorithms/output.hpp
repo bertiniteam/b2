@@ -262,7 +262,19 @@ struct AllSolutions
 	auto Extract(AlgoT const& alg)
 	{
 		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
+
+		const auto& sys = alg.TargetSystem();
+
 		SampCont<BCT> solns;
+
+		const auto& s = alg.FinalSolutions();
+		const auto& m = alg.FinalSolutionMetadata();
+		const auto n = s.size();
+		for (decltype(s.size()) ii{0}; ii<n; ++ii)
+		{
+			solns.push_back(sys.DehomogenizePoint(s[ii]));
+		}
+
 		return solns;
 	}
 };
