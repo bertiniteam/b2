@@ -619,7 +619,7 @@ namespace bertini {
 
 		
 		/**
-		\brief Compute the time-derivative is a system. 
+		\brief Compute the time-derivative of a system. 
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
@@ -634,21 +634,103 @@ namespace bertini {
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
-			if(ds_dt.size() < NumFunctions())
-		{
-				std::stringstream ss;
-				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
-				throw std::runtime_error(ss.str());
-			}
-			if (!HavePathVariable())
-				throw std::runtime_error("computing time derivative of system with no path variable defined");
-
 			if (!is_differentiated_)
 				Differentiate();
 
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
 			ResetTimeDerivatives();
+			TimeDerivativeInPlace(ds_dt);
+		}
+
+		
+		
+		
+		
+		
+		/**
+		\brief Compute the time-derivative of a system. 
+		
+		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
+
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\throws std::runtime error if the system does not have a path variable defined.
+		*/
+		template<typename Derived, typename T>
+		Vec<T> TimeDerivative(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+
+			Vec<T> ds_dt(NumTotalFunctions());
+			TimeDerivativeInPlace(ds_dt, variable_values, path_variable_value);
+			return ds_dt;
+		}
+		
+
+
+
+
+
+
+
+		template<typename Derived, typename OtherDerived, typename T>
+		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
+							const Eigen::MatrixBase<OtherDerived> & variable_values) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
+
+			if (!is_differentiated_)
+				Differentiate();
+
+			SetVariables(variable_values.eval()); //TODO: remove this eval()
+			ResetTimeDerivatives();
+			TimeDerivativeInPlace(ds_dt);
+		}
+
+		
+		
+		
+		
+		
+		/**
+		\brief Compute the time-derivative of a system. 
+		
+		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
+
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\throws std::runtime error if the system does not have a path variable defined.
+		*/
+		template<typename Derived, typename T>
+		Vec<T> TimeDerivative(const Eigen::MatrixBase<Derived> & variable_values) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+
+			Vec<T> ds_dt(NumTotalFunctions());
+			TimeDerivativeInPlace(ds_dt, variable_values);
+			return ds_dt;
+		}
+
+
+		template<typename Derived>
+		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt) const
+		{
+			using T = typename Derived::Scalar;
+
+			if(ds_dt.size() < NumFunctions())
+			{
+				std::stringstream ss;
+				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
+				throw std::runtime_error(ss.str());
+			}
+
+			if (!HavePathVariable())
+				throw std::runtime_error("computing time derivative of system with no path variable defined");
+
+
+
+			if (!is_differentiated_)
+				Differentiate();
 
 			switch (jacobian_eval_method_)
 			{
@@ -679,29 +761,23 @@ namespace bertini {
 		
 		
 		/**
-		\brief Compute the time-derivative is a system. 
+		\brief Compute the time-derivative of a system. 
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
 		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
-		template<typename Derived, typename T>
-		Vec<T> TimeDerivative(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
+		template<typename T>
+		Vec<T> TimeDerivative() const
 		{
-			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
 
-
 			Vec<T> ds_dt(NumTotalFunctions());
-			TimeDerivativeInPlace(ds_dt, variable_values, path_variable_value);
+			TimeDerivativeInPlace(ds_dt);
 			return ds_dt;
 		}
-		
-
-
 		
 		/**
 		Homogenize the system, adding new homogenizing variables for each VariableGroup defined for the system.
