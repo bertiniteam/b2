@@ -602,7 +602,7 @@ namespace bertini {
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (!HavePathVariable())
-				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
+				throw std::runtime_error("using a time value for computation of jacobian, but no path variable is defined.");
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
 			JacobianInPlace(J,variable_values,path_variable_value);
