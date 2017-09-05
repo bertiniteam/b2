@@ -346,9 +346,10 @@ namespace bertini{
 					Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
 					
 					Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
-					
-					S.EvalInPlace(f_temp_ref, current_space, current_time);
-					S.JacobianInPlace(J_temp_ref, current_space, current_time);
+
+					S.SetAndReset<ComplexType>(current_space, current_time);
+					S.EvalInPlace(f_temp_ref);
+					S.JacobianInPlace(J_temp_ref);
 					LU_ref = J_temp_ref.lu();
 					
 					if (LUPartialPivotDecompositionSuccessful(LU_ref.matrixLU())!=MatrixSuccessCode::Success)
