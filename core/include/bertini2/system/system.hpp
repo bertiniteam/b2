@@ -209,7 +209,15 @@ namespace bertini {
 			}
 		}
 
-
+		/**
+		\brief A complete reset of the system, so that all of functions, space derivatives, and time derivatives will all be re-evaluated.
+		*/
+		void Reset() const
+		{
+			ResetFunctions();
+			ResetJacobian();
+			ResetTimeDerivatives();
+		}
 		/**
 		 \brief Evaluate the system using the previously set variable (and time) values, in place.
 
@@ -870,8 +878,22 @@ namespace bertini {
 		}
 
 
-		
+		template<typename T>
+		void SetAndReset(Vec<T> const& new_space, T const& new_time) const
+		{
+			SetVariables(new_space);
+			SetPathVariable(new_time);
 
+			Reset();
+		}
+
+		template<typename T>
+		void SetAndReset(Vec<T> const& new_space) const
+		{
+			SetVariables(new_space);
+
+			Reset();
+		}
 
 		/**
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
