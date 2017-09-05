@@ -319,15 +319,6 @@ namespace bertini {
 		{
 			typedef typename Derived::Scalar T;
 
-			if (variable_values.size()!=NumVariables())
-			{
-				std::stringstream ss;
-				ss << "trying to evaluate system, but number of input variables (" << variable_values.size() << ") doesn't match number of system variables (" << NumVariables() << ").";
-				throw std::runtime_error(ss.str());
-			}
-			if (have_path_variable_)
-				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
-
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
 			EvalInPlace(function_values, variable_values);
 			return function_values;
@@ -398,12 +389,6 @@ namespace bertini {
 		template<typename Derived, typename T>
 		Vec<T> Eval(const Eigen::MatrixBase<Derived>& variable_values, const T & path_variable_value) const
 		{
-
-			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
-			if (!have_path_variable_)
-				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
-
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
 			EvalInPlace(function_values, variable_values, path_variable_value);
 			return function_values;
