@@ -309,7 +309,6 @@ namespace bertini{
 		{
 			friend class Tracker<AMPTracker>;
 		public:
-			BERTINI_DEFAULT_VISITABLE()
 			
 			typedef Tracker<AMPTracker> Base;
 			typedef typename TrackerTraits<AMPTracker>::EventEmitterType EmitterType;
