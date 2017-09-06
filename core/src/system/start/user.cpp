@@ -33,59 +33,58 @@ namespace bertini {
 	namespace start_system {
 
 		// constructor for User start system, from any other *suitable* system.
-		User::User(System const& s)
+		User::User(System const& s, SampCont<dbl> const& solns) : user_system_(s), solns_in_dbl_(true)
 		{
-
-			if (s.NumHomVariableGroups() > 0)
-				throw std::runtime_error("a homogeneous variable group is present.  currently unallowed");
-
-
-			if (s.NumTotalFunctions() != s.NumVariables())
-				throw std::runtime_error("attempting to construct total degree start system from non-square target system");
-
-			if (s.HavePathVariable())
-				throw std::runtime_error("attempting to construct total degree start system, but target system has path varible declared already");			
-
-			if (!s.IsPolynomial())
-				throw std::runtime_error("attempting to construct total degree start system from non-polynomial target system");
+			std::get<SampCont<dbl>>(solns_) = solns;
 		}
 
-		
-		User& User::operator*=(Nd const& n)
+		User::User(System const& s, SampCont<mpfr> const& solns) : user_system_(s), solns_in_dbl_(false)
 		{
-			*this *= n;
-			return *this;
+			std::get<SampCont<mpfr>>(solns_) = solns;
 		}
+				
 		
-		
-
 		unsigned long long User::NumStartPoints() const
 		{
-			return 0;
+			if (solns_in_dbl_)
+				return std::get<SampCont<dbl>>(solns_).size();
+			else
+				return std::get<SampCont<mpfr>>(solns_).size();
 		}
 
 
 		
 		Vec<dbl> User::GenerateStartPoint(dbl,unsigned long long index) const
 		{
-			Vec<dbl> start_point(NumVariables());
+			if (solns_in_dbl_)
+				return std::get<SampCont<dbl>>(solns_)[index];
+			else
+			{
+				const auto& r = std::get<SampCont<mpfr>>(solns_)[index];
+				Vec<dbl> pt(r.size());
+				for (unsigned ii=0; ii<r.size(); ++ii)
+					pt(ii) = dbl(r(ii));
 
-			return start_point;
+				return pt;
+			}
 		}
 
 
 		Vec<mpfr> User::GenerateStartPoint(mpfr,unsigned long long index) const
 		{
-			Vec<mpfr> start_point(NumVariables());
+			if (solns_in_dbl_)
+			{
+				const auto& r = std::get<SampCont<dbl>>(solns_)[index];
+				Vec<mpfr> pt(r.size());
+				for (unsigned ii=0; ii<r.size(); ++ii)
+					pt(ii) = static_cast<mpfr>(r(ii));
 
-			return start_point;
-		}
-
-		inline
-		User operator*(User td, std::shared_ptr<node::Node> const& n)
-		{
-			td *= n;
-			return td;
+				return pt;
+			}
+			else
+			{
+				return std::get<SampCont<mpfr>>(solns_)[index];
+			}
 		}
 
 	} // namespace start_system

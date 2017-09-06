@@ -35,6 +35,7 @@ the user provided start system is merely their system, evaluated at the start ti
 #include "bertini2/system/start_base.hpp"
 #include "bertini2/limbo.hpp"
 
+#include "bertini2/common/config.hpp"
 
 namespace bertini 
 {
@@ -55,8 +56,8 @@ namespace bertini
 			/**
 			 Constructor for making a user-provided start system from another.
 			*/
-			User(System const& s);
-
+			User(System const& s, SampCont<dbl> const& solns);
+			User(System const& s, SampCont<mpfr> const& solns);
 
 			
 
@@ -65,7 +66,7 @@ namespace bertini
 			*/
 			unsigned long long NumStartPoints() const override;
 
-			User& operator*=(Nd const& n);
+			User& operator*=(Nd const& n) = delete;
 
 			User& operator+=(System const& sys) = delete;
 			
@@ -87,15 +88,57 @@ namespace bertini
 
 
 			friend class boost::serialization::access;
+			template<class Archive> friend void boost::serialization::save_construct_data(Archive & ar, const User * t, const unsigned int file_version);
 
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned version) {
 				ar & boost::serialization::base_object<StartSystem>(*this);
 			}
 
+			const bertini::System& user_system_;
+			std::tuple<SampCont<dbl>, SampCont<mpfr>> solns_;
+			bool solns_in_dbl_;
 		};
 	}
 }
 
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(
+    Archive & ar, const bertini::start_system::User * t, const unsigned int file_version
+){
+    // save data required to construct instance
+    ar << t->user_system_;
+    ar << t->solns_in_dbl_;
 
+    ar << std::get<0>(t->solns_);
+	ar << std::get<1>(t->solns_);
+
+}
+
+template<class Archive>
+inline void load_construct_data(
+    Archive & ar, bertini::start_system::User * t, const unsigned int file_version
+){
+    // retrieve data from archive required to construct new instance
+    bertini::System sys;
+    ar >> sys;
+
+    bool solns_in_dbl;
+    ar >> solns_in_dbl;
+
+    if (solns_in_dbl)
+    {
+    	bertini::SampCont<bertini::dbl> solns;
+    	ar >> solns;
+    	::new(t)bertini::start_system::User(sys, solns);
+    }
+	else
+	{
+		bertini::SampCont<bertini::mpfr> solns;
+		ar >> solns;
+		::new(t)bertini::start_system::User(sys, solns);
+	}
+}
+}}
 
