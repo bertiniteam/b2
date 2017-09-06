@@ -158,9 +158,66 @@ namespace bertini {
 
 
 		
-		
+		/**
+		\brief Force re-evaluation of the system next eval of functions. If something has changed in the system, call this.
+		*/
+		void ResetFunctions() const
+		{
+			// TODO: it has the unfortunate side effect of resetting constant functions, too.
+			for (const auto& iter : functions_) 
+				iter->Reset();
+		}
 
+		/**
+		\brief Force re-evaluation of the system next eval of Jacobians. If something has changed in the system, call this.
+		*/
+		void ResetJacobian() const
+		{
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+				{
+					for (const auto& iter : jacobian_) 
+						iter->Reset();
+					break;
+				}
+				case JacobianEvalMethod::Derivatives:
+				{
+					for (const auto& iter : space_derivatives_) 
+						iter->Reset();
+					break;
+				}
+			}
+		}
 
+		void ResetTimeDerivatives() const
+		{
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+				{
+					for (const auto& iter : jacobian_) 
+						iter->Reset();
+					break;
+				}
+				case JacobianEvalMethod::Derivatives:
+				{
+					for (const auto& iter : time_derivatives_) 
+						iter->Reset();
+					break;
+				}
+			}
+		}
+
+		/**
+		\brief A complete reset of the system, so that all of functions, space derivatives, and time derivatives will all be re-evaluated.
+		*/
+		void Reset() const
+		{
+			ResetFunctions();
+			ResetJacobian();
+			ResetTimeDerivatives();
+		}
 		/**
 		 \brief Evaluate the system using the previously set variable (and time) values, in place.
 
@@ -179,12 +236,6 @@ namespace bertini {
 				ss << "trying to evaluate system in place, but number of input functions (" << function_values.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
 				throw std::runtime_error(ss.str());
 			}
-
-			// the Reset() function call traverses the entire tree, resetting everything.
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			for (const auto& iter : functions_) 
-				iter->Reset();
-
 
 			unsigned counter(0);
 			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
@@ -246,7 +297,7 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 			
 			SetVariables(variable_values.eval());
-			
+			ResetFunctions();
 			EvalInPlace(function_values);
 		}
 		
@@ -267,15 +318,6 @@ namespace bertini {
 		typename Derived::PlainObject Eval(const Eigen::MatrixBase<Derived>& variable_values) const
 		{
 			typedef typename Derived::Scalar T;
-
-			if (variable_values.size()!=NumVariables())
-			{
-				std::stringstream ss;
-				ss << "trying to evaluate system, but number of input variables (" << variable_values.size() << ") doesn't match number of system variables (" << NumVariables() << ").";
-				throw std::runtime_error(ss.str());
-			}
-			if (have_path_variable_)
-				throw std::runtime_error("not using a time value for evaluation of system, but path variable IS defined.");
 
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
 			EvalInPlace(function_values, variable_values);
@@ -320,6 +362,8 @@ namespace bertini {
 			SetVariables(variable_values.eval());//TODO: remove this eval
 			SetPathVariable(path_variable_value);
 
+			ResetFunctions();
+
 			EvalInPlace(function_values);
 		}
 
@@ -345,12 +389,6 @@ namespace bertini {
 		template<typename Derived, typename T>
 		Vec<T> Eval(const Eigen::MatrixBase<Derived>& variable_values, const T & path_variable_value) const
 		{
-
-			if (variable_values.size()!=NumVariables())
-				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
-			if (!have_path_variable_)
-				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
-
 			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
 			EvalInPlace(function_values, variable_values, path_variable_value);
 			return function_values;
@@ -386,16 +424,11 @@ namespace bertini {
 
 			if (!is_differentiated_)
 				Differentiate();
-			
-			
 
 			switch (jacobian_eval_method_)
 			{
 				case JacobianEvalMethod::JacobianNode:
 				{
-					for (const auto& iter : jacobian_) 
-						iter->Reset();
-
 					for (int ii = 0; ii < NumFunctions(); ++ii)
 						for (int jj = 0; jj < NumVariables(); ++jj)
 							jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
@@ -403,9 +436,6 @@ namespace bertini {
 				}
 				case JacobianEvalMethod::Derivatives:
 				{
-					for (const auto& iter : space_derivatives_) 
-						iter->Reset();
-
 					for (int jj = 0; jj < NumVariables(); ++jj)
 						for (int ii = 0; ii < NumFunctions(); ++ii)
 							space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
@@ -463,7 +493,7 @@ namespace bertini {
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 			
 			SetVariables(variable_values);
-			
+			ResetJacobian();
 			JacobianInPlace(J);
 		}
 
@@ -522,7 +552,7 @@ namespace bertini {
 			
 			SetVariables(variable_values.eval()); // TODO: remove this eval
 			SetPathVariable(path_variable_value);
-
+			ResetJacobian();
 			JacobianInPlace(J);
 		}
 
@@ -565,7 +595,7 @@ namespace bertini {
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (!HavePathVariable())
-				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
+				throw std::runtime_error("using a time value for computation of jacobian, but no path variable is defined.");
 
 			Mat<T> J(NumTotalFunctions(), NumVariables());
 			JacobianInPlace(J,variable_values,path_variable_value);
@@ -574,7 +604,7 @@ namespace bertini {
 
 		
 		/**
-		\brief Compute the time-derivative is a system. 
+		\brief Compute the time-derivative of a system. 
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
@@ -589,37 +619,107 @@ namespace bertini {
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
-			if(ds_dt.size() < NumFunctions())
+			SetVariables(variable_values.eval()); //TODO: remove this eval()
+			SetPathVariable(path_variable_value);
+			ResetTimeDerivatives();
+			TimeDerivativeInPlace(ds_dt);
+		}
+
+		
+		
+		
+		
+		
+		/**
+		\brief Compute the time-derivative of a system. 
+		
+		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
+
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\throws std::runtime error if the system does not have a path variable defined.
+		*/
+		template<typename Derived, typename T>
+		Vec<T> TimeDerivative(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
 		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+
+			Vec<T> ds_dt(NumTotalFunctions());
+			TimeDerivativeInPlace(ds_dt, variable_values, path_variable_value);
+			return ds_dt;
+		}
+		
+
+
+
+
+
+
+
+		template<typename Derived, typename OtherDerived, typename T>
+		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
+							const Eigen::MatrixBase<OtherDerived> & variable_values) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
+
+			SetVariables(variable_values.eval()); //TODO: remove this eval()
+			ResetTimeDerivatives();
+			TimeDerivativeInPlace(ds_dt);
+		}
+
+		
+		
+		
+		
+		
+		/**
+		\brief Compute the time-derivative of a system. 
+		
+		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
+
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\throws std::runtime error if the system does not have a path variable defined.
+		*/
+		template<typename Derived, typename T>
+		Vec<T> TimeDerivative(const Eigen::MatrixBase<Derived> & variable_values) const
+		{
+			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
+
+			Vec<T> ds_dt(NumTotalFunctions());
+			TimeDerivativeInPlace(ds_dt, variable_values);
+			return ds_dt;
+		}
+
+
+		template<typename Derived>
+		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt) const
+		{
+			using T = typename Derived::Scalar;
+
+			if(ds_dt.size() < NumFunctions())
+			{
 				std::stringstream ss;
 				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
 				throw std::runtime_error(ss.str());
 			}
+
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
 
+
 			if (!is_differentiated_)
 				Differentiate();
-
-			SetVariables(variable_values.eval()); //TODO: remove this eval()
-			SetPathVariable(path_variable_value);
 
 			switch (jacobian_eval_method_)
 			{
 				case JacobianEvalMethod::JacobianNode:
 				{
 					for (int ii = 0; ii < NumFunctions(); ++ii)
-						jacobian_[ii]->Reset();
-
-					for (int ii = 0; ii < NumFunctions(); ++ii)
 						jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
 					break;
 				}
 				case JacobianEvalMethod::Derivatives:
 				{
-					for (int ii = 0; ii < NumFunctions(); ++ii)
-						time_derivatives_[ii]->Reset();
-
 					for (int ii = 0; ii < NumFunctions(); ++ii)
 						time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
 					break;
@@ -639,27 +739,24 @@ namespace bertini {
 		
 		
 		/**
-		\brief Compute the time-derivative is a system. 
+		\brief Compute the time-derivative of a system. 
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
 		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
-		template<typename Derived, typename T>
-		Vec<T> TimeDerivative(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
+		template<typename T>
+		Vec<T> TimeDerivative() const
 		{
-			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-
 			if (!HavePathVariable())
 				throw std::runtime_error("computing time derivative of system with no path variable defined");
 
-
 			Vec<T> ds_dt(NumTotalFunctions());
-			TimeDerivativeInPlace(ds_dt, variable_values, path_variable_value);
+			TimeDerivativeInPlace(ds_dt);
 			return ds_dt;
 		}
-	
+		
 		/**
 		Homogenize the system, adding new homogenizing variables for each VariableGroup defined for the system.
 
@@ -835,8 +932,22 @@ namespace bertini {
 		}
 
 
-		
+		template<typename T>
+		void SetAndReset(Vec<T> const& new_space, T const& new_time) const
+		{
+			SetVariables(new_space);
+			SetPathVariable(new_time);
 
+			Reset();
+		}
+
+		template<typename T>
+		void SetAndReset(Vec<T> const& new_space) const
+		{
+			SetVariables(new_space);
+
+			Reset();
+		}
 
 		/**
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.

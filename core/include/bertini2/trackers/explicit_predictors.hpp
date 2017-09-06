@@ -848,8 +848,8 @@ namespace bertini{
 							assert(Precision(dhdxref)==current_precision_);
 							assert(Precision(K)==current_precision_);
 						}
-
-						S.JacobianInPlace(dhdxref, space, time);
+						S.SetAndReset<ComplexType>(space, time);
+						S.JacobianInPlace(dhdxref);
 						LUref = dhdxref.lu();
 						if (!std::is_same<ComplexType,dbl>::value)
 						{
@@ -861,7 +861,7 @@ namespace bertini{
 							return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 						
 						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
-						S.TimeDerivativeInPlace(dhdtref, space, time);
+						S.TimeDerivativeInPlace(dhdtref);
 						K.col(stage) = LUref.solve(-dhdtref);
 						
 						return SuccessCode::Success;
@@ -869,15 +869,17 @@ namespace bertini{
 					}
 					else
 					{
+						S.SetAndReset<ComplexType>(space, time);
+
 						Mat<ComplexType>& dhdxtempref = std::get< Mat<ComplexType> >(dh_dx_temp_);
-						S.JacobianInPlace(dhdxtempref,space, time);
+						S.JacobianInPlace(dhdxtempref);
 						auto LU = dhdxtempref.lu();
 						
 						if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
 						
 						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
-						S.TimeDerivativeInPlace(dhdtref, space, time);
+						S.TimeDerivativeInPlace(dhdtref);
 						K.col(stage) = LU.solve(-dhdtref);
 						
 						return SuccessCode::Success;
