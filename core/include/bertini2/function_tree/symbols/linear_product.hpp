@@ -223,7 +223,7 @@ namespace  bertini {
 			/**
 			 Return SumOperator whose children are derivatives of children_
 			 */
-			std::shared_ptr<Node> Differentiate() const override;
+			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override    ;
 	
 			
 			
@@ -300,7 +300,7 @@ namespace  bertini {
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) const
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);
@@ -314,7 +314,9 @@ namespace  bertini {
 			
 			
 
-			
+            unsigned EliminateZeros() override { return 0;};
+            
+            unsigned EliminateOnes() override {return 0;};
 			
 			
 			
@@ -807,7 +809,7 @@ namespace  bertini {
 			/**
 			 Return SumOperator whose children are derivatives of children_
 			 */
-			std::shared_ptr<Node> Differentiate() const override
+			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override
 			{
 				return MakeInteger(0);
 			}
@@ -866,7 +868,7 @@ namespace  bertini {
 			};
 			
 			
-			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 			{
 				return true;
 			}
@@ -890,7 +892,7 @@ namespace  bertini {
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) const
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);

@@ -61,6 +61,8 @@ using mpfr = bertini::mpfr;
 using bertini::MakeVariable;
 using bertini::MakeFloat;
 
+template<typename NumType> using Mat = bertini::Mat<NumType>;
+
 using namespace bertini;
 
 /////////// Basic Operations Alone ///////////////////

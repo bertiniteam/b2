@@ -39,6 +39,7 @@
 
 
 
+
 BOOST_AUTO_TEST_SUITE(homogenization)
 
 using mpfr_float = bertini::mpfr_float;

@@ -55,7 +55,7 @@ namespace  bertini {
 		//
 		////////////////////////////////////////
 		
-		std::shared_ptr<Node> LinearProduct::Differentiate() const
+		std::shared_ptr<Node> LinearProduct::Differentiate(std::shared_ptr<Variable> const& v) const
 		{
 			std::shared_ptr<SumOperator> ret_sum;
 			std::vector<size_t> indices;
