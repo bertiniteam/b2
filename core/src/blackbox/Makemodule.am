@@ -1,0 +1,31 @@
+#this is src/blackbox/Makemodule.am
+
+bin_PROGRAMS += bertini2
+
+if UNITYBUILD
+blackbox_sources = \
+	src/blackbox/unity/unity.cpp
+else
+blackbox_sources = \
+	src/blackbox/bertini.cpp \
+	src/blackbox/main_mode_switch.cpp \
+	src/blackbox/argc_argv.cpp
+endif
+
+blackbox_headers = \
+	include/bertini2/blackbox/main_mode_switch.hpp \
+	include/bertini2/blackbox/argc_argv.hpp
+
+blackbox = \
+	$(blackbox_sources) \
+	$(blackbox_headers)
+
+bertini2_SOURCES = \
+	$(blackbox) 
+#and nothing else, as the rest is in the core library, and we link to it below
+	
+
+bertini2_LDADD = $(BOOST_LDFLAGS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
+#  ^^^ see the link to libbertini2.la?  yep, the rest of the sources are linked in there
+
+bertini2_CXXFLAGS = $(BOOST_CPPFLAGS)

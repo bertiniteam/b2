@@ -1,42 +1,36 @@
 //This file is part of Bertini 2.
 //
-//tracking/endgame.hpp is free software: you can redistribute it and/or modify
+//b2/core/include/forbid_double.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//tracking/endgame.hpp is distributed in the hope that it will be useful,
+//b2/core/include/forbid_double.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with tracking/endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with b2/core/include/forbid_double.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
-// individual authors of this file include:
-// daniel brake, university of notre dame
-
-
-/**
-\file endgame.hpp
-
-\brief Contains the includes for all Endgame types.
-*/
+#ifndef BERTINI_FORBID_MIXED_ARITHMETIC_WITH_DOUBLES_HPP
+#define BERTINI_FORBID_MIXED_ARITHMETIC_WITH_DOUBLES_HPP
 
 #pragma once
 
-#include "bertini2/endgames/fixed_prec_powerseries.hpp"
-#include "bertini2/endgames/fixed_prec_cauchy.hpp"
+namespace boost{
+	namespace multiprecision
+	{
+template <class Backend>
+struct is_compatible_arithmetic_type<double, number<Backend> > : public mpl::false_ {};
+	}
+}
 
-#include "bertini2/endgames/amp_powerseries.hpp"
-#include "bertini2/endgames/amp_cauchy.hpp"
 
-
-
-
+#endif

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with node.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of notre dame
 // Jeb Collins, West Texas A&M
 
 
@@ -54,3 +54,60 @@ BOOST_CLASS_EXPORT(bertini::node::PowerOperator)
 BOOST_CLASS_EXPORT(bertini::node::IntegerPowerOperator)
 BOOST_CLASS_EXPORT(bertini::node::SqrtOperator)
 BOOST_CLASS_EXPORT(bertini::node::ExpOperator)
+
+
+
+namespace bertini{
+namespace node{
+
+	unsigned Node::ReduceDepth()
+	{
+		return 0;
+	}
+
+
+	template<typename T>
+	void Node::EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const
+	{
+		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
+		if(!val_pair.second)
+		{
+			detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this,diff_variable);
+			val_pair.second = true;
+		}
+		eval_value = val_pair.first;
+	}
+
+	template void Node::EvalInPlace<dbl>(dbl&, std::shared_ptr<Variable> const&) const;
+	template void Node::EvalInPlace<mpfr>(mpfr&, std::shared_ptr<Variable> const&) const;
+
+	unsigned Node::precision() const
+	{
+		return std::get<std::pair<mpfr,bool> >(current_value_).first.precision();
+	}
+
+	bool Node::IsPolynomial(std::shared_ptr<Variable> const&v) const
+	{
+		return Degree(v)>=0;
+	}
+
+	bool Node::IsPolynomial(VariableGroup const&v) const
+	{
+		return Degree(v)>=0;
+	}
+
+	void Node::ResetStoredValues() const
+	{
+		std::get< std::pair<dbl,bool> >(current_value_).second = false;
+		std::get< std::pair<mpfr,bool> >(current_value_).second = false;
+	}
+
+	Node::Node()
+	{
+		std::get<std::pair<dbl,bool> >(current_value_).second = false;
+		std::get<std::pair<mpfr,bool> >(current_value_).second = false;
+	}
+} // namespace node
+} // namespace bertini
+
+

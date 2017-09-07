@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with operator.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
@@ -93,96 +93,43 @@ namespace node{
 		virtual ~UnaryOperator() = default;
 		
 		
-		void Reset() const override
-		{
-			Node::ResetStoredValues();
-			child_->Reset();
-		}
+		void Reset() const override;
 		
 		
-		
-		void SetChild(std::shared_ptr<Node> new_child)
-		{
-			child_ = new_child;
-		}
+		void SetChild(std::shared_ptr<Node> new_child);
 		
 		
 		
 		//Return the only child for the unary operator
-		std::shared_ptr<Node> first_child() const
-		{
-			return child_;
-		}
+		std::shared_ptr<Node> first_child() const;
 		
 		
 		
 		/**
 		 Compute the degree of a node.  For trig functions, the degree is 0 if the argument is constant, otherwise it's undefined, and we return nan.
 		 */
-		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			return child_->Degree(v);
-		}
+		int Degree(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 
-		int Degree(VariableGroup const& vars) const override
-		{
-			auto multideg = MultiDegree(vars);
-			auto deg = 0;
-			std::for_each(multideg.begin(),multideg.end(),[&](int n){
-							if (n < 0)
-								deg = n;
-							else
-								deg += n;
-							});
-			return deg;
-		}
+		int Degree(VariableGroup const& vars) const override;
 
 
 		/**
 		 Compute the multidegree with respect to a variable group.  This is for homogenization, and testing for homogeneity.  
 		*/
-		std::vector<int> MultiDegree(VariableGroup const& vars) const override
-		{
-			
-			std::vector<int> deg(vars.size());
-			for (auto iter = vars.begin(); iter!= vars.end(); ++iter)
-			{
-				*(deg.begin()+(iter-vars.begin())) = this->Degree(*iter);
-			}
-			return deg;
-		}
+		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 
 
-		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
-		{
-			child_->Homogenize(vars, homvar);
-		}
+		void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override;
 
 		
-		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
-		{
-			if (Degree(v)==0)
-			{
-				return true;
-			}
-			else
-				return false;
-		}
+		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override;
 		
 		
 		/**
 		Check for homogeneity, with respect to a variable group.
 		*/
-		bool IsHomogeneous(VariableGroup const& vars) const override
-		{
-			if (Degree(vars)==0)
-			{
-				return true;
-			}
-			else
-				return false;
-		}
+		bool IsHomogeneous(VariableGroup const& vars) const override;
 		
 
 
@@ -191,13 +138,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		void precision(unsigned int prec) const override
-		{
-			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
-
-			child_->precision(prec);
-		}
+		void precision(unsigned int prec) const override;
 
 
 
@@ -232,34 +173,15 @@ namespace node{
 		virtual ~NaryOperator() = default;
 		
 		
-		void Reset() const override
-		{
-			Node::ResetStoredValues();
-			for (auto ii:children_)
-				ii->Reset();
-
-		}
+		void Reset() const override;
 		
 		// Add a child onto the container for this operator
-		virtual void AddChild(std::shared_ptr<Node> child)
-		{
-			children_.push_back(std::move(child));
-		}
+		virtual void AddChild(std::shared_ptr<Node> child);
 		
 		
+		size_t children_size() const;
 		
-		
-		
-		
-		size_t children_size() const
-		{
-			return children_.size();
-		}
-		
-		std::shared_ptr<Node> first_child() const
-		{
-			return children_[0];
-		}
+		std::shared_ptr<Node> first_child() const;
 		
 		
 		
@@ -269,16 +191,7 @@ namespace node{
 		 
 		 \param prec the number of digits to change precision to.
 		 */
-		virtual void precision(unsigned int prec) const override
-		{
-			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
-			val_pair.first.precision(prec);
-			
-			this->PrecisionChangeSpecific(prec);
-
-			for (auto iter : children_)
-				iter->precision(prec);
-		}
+		void precision(unsigned int prec) const override;
 
 		
 		
@@ -287,11 +200,13 @@ namespace node{
 		//Stores all children for this operator node.
 		//This is an NaryOperator and can have any number of children.
 		std::vector< std::shared_ptr<Node> > children_;
+
+		// constructor is protected to help prevent instantiating empty operators
 		NaryOperator(){}
+		
 	private:
 
-		virtual void PrecisionChangeSpecific(unsigned prec) const
-		{}
+		virtual void PrecisionChangeSpecific(unsigned prec) const;
 
 
 		friend class boost::serialization::access;

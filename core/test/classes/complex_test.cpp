@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with complex_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 
@@ -28,15 +28,17 @@
 #include <boost/test/unit_test.hpp>
 #include <fstream>
 
-using mpfr_float = bertini::mpfr_float;
+
 #include "eigen_extensions.hpp"
 #include <Eigen/Dense>
 
 #include "externs.hpp"
 
-using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_SUITE(complex_multiprecision_class)
+
+using mpfr_float = bertini::mpfr_float;
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_CASE(complex_create_default_constructor)
 {
@@ -690,6 +692,10 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(complex_eigen_compatibility)
 
+
+using mpfr_float = bertini::mpfr_float;
+using bertini::DefaultPrecision;
+
 BOOST_AUTO_TEST_CASE(mpfr_complex_eigen_norm_of_vector)
 {
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
@@ -721,7 +727,8 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(miscellaneous_complex_tests_out_of_place)
 
-
+using mpfr_float = bertini::mpfr_float;
+using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_CASE(mpfr_float_serialization)
 {

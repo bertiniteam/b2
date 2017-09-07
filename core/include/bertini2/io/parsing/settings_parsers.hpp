@@ -55,13 +55,13 @@ namespace bertini {
 			 \returns The config struct filled with data from the input file.
 			 */
 			
-			template<typename RT, typename ConfigT>
+			template<typename ConfigT>
 			ConfigT FillConfigStruct(std::string const& config_str)
 			{
 				std::string::const_iterator iter = config_str.begin();
 				std::string::const_iterator end = config_str.end();
 				ConfigT settings;
-				ConfigSettingParser<std::string::const_iterator, ConfigT, RT> parser;
+				ConfigSettingParser<std::string::const_iterator, ConfigT> parser;
 				auto parse_success = phrase_parse(iter, end, parser,boost::spirit::ascii::space, settings);
 				if (!parse_success || iter!=end)
 					throw std::runtime_error("failed to parse into config struct from file");
@@ -80,7 +80,7 @@ namespace bertini {
 			\tparam RT Real number type
 			\tparam Ts Configuration structures to be filled by the parser
 			*/
-			template<typename RT, typename ...Ts>
+			template<typename ...Ts>
 			struct ConfigParser
 			{
 				/**
@@ -97,7 +97,7 @@ namespace bertini {
 				static
 				std::tuple<Ts...> Parse(std::string const& config)
 				{
-					return std::make_tuple<Ts...>(FillConfigStruct<RT, Ts>(config)...);
+					return std::make_tuple<Ts...>(FillConfigStruct<Ts>(config)...);
 				}
 
 			};
@@ -109,8 +109,8 @@ namespace bertini {
 			\tparam ConfigT The config ConfigT type
 			\tparam RT Real number type
 			*/
-			template<typename RT, typename ConfigT>
-			struct ConfigParser <RT, ConfigT>
+			template<typename ConfigT>
+			struct ConfigParser <ConfigT>
 			{	
 
 				/**
@@ -123,7 +123,7 @@ namespace bertini {
 				static
 				ConfigT Parse(std::string const& config)
 				{
-					return FillConfigStruct<RT, ConfigT>(config);
+					return FillConfigStruct<ConfigT>(config);
 				}
 			};
 
@@ -134,13 +134,13 @@ namespace bertini {
 			\tparam ConfigT The config ConfigT type
 			\tparam RT Real number type
 			*/
-			template<typename RT, typename ...Ts>
-			struct ConfigParser<RT, detail::TypeList<Ts...>>
+			template<typename ...Ts>
+			struct ConfigParser<detail::TypeList<Ts...>>
 			{	
 				static
 				auto Parse(std::string const& config)
 				{
-					return ConfigParser<RT, Ts...>::Parse(config);
+					return ConfigParser<Ts...>::Parse(config);
 				}
 			};
 		} // re: namespace classic

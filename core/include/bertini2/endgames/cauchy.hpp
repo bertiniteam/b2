@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -30,7 +30,7 @@
 #include "bertini2/endgames/base_endgame.hpp"
 
 
-namespace bertini{ namespace tracking { namespace endgame{
+namespace bertini{ namespace endgame{
 
 
 /** 
@@ -53,8 +53,8 @@ Below we demonstrate a basic usage of the CauchyEndgame class to find the singul
 The pattern is as described above: create an instance of the class, feeding it the system to be used, and the endgame boundary time and other variable values at the endgame boundary. 
 \code{.cpp}
 using namespace bertini::tracking;
-using RealT = TrackerTraits<TrackerType>::BaseRealType; // Real types
-using ComplexT = TrackerTraits<TrackerType>::BaseComplexType; Complex types
+using RealT = tracking::TrackerTraits<TrackerType>::BaseRealType; // Real types
+using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexType; Complex types
 
 // 1. Define the polynomial system that we wish to solve. 
 System target_sys;
@@ -85,9 +85,9 @@ auto precision_config = PrecisionConfig(my_homotopy);
 AMPTracker tracker(my_homotopy);
 
 //Tracker setup of settings. 
-config::Stepping<RealT> stepping_preferences;
+SteppingConfig<RealT> stepping_preferences;
 stepping_preferences.initial_step_size = RealT(1)/RealT(5);// change a stepping preference
-config::Newton newton_preferences;
+NewtonConfig newton_preferences;
 tracker.Setup(TestedPredictor,
             RealFromString("1e-6"),
             RealFromString("1e5"),
@@ -121,7 +121,7 @@ for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 
 config::Tolerances<RealT> tolerances;
 
-config::Cauchy<RealT> cauchy_settings;
+CauchyConfig<RealT> cauchy_settings;
 cauchy_settings.fail_safe_maximum_cycle_number = 6;
 
 
@@ -158,26 +158,28 @@ File: test/endgames/amp_cauchy_test.cpp
 File: test/endgames/fixed_double_cauchy_test.cpp
 FIle: test/endgames/fixed_multiple_cauchy_test.cpp
 */	
-template<typename TrackerType, typename FinalEGT> 
+template<typename PrecT> 
 class CauchyEndgame : 
-	public EndgameBase<TrackerType, FinalEGT>
+	public EndgameBase<CauchyEndgame<PrecT>, PrecT>
 {
-private:
-	// convert the base endgame into the derived type.
-	const FinalEGT& AsDerived() const
-	{
-		return static_cast<const FinalEGT&>(*this);
-	}
+public:
+	using BaseEGT = EndgameBase<CauchyEndgame<PrecT>, PrecT>;
+	using FinalEGT = CauchyEndgame<PrecT>;
+	using TrackerType = typename PrecT::TrackerType;
+
+	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 
 
 protected:
-	using BaseEG = EndgameBase<TrackerType, FinalEGT>;
 
-	using BaseComplexType = typename BaseEG::BaseComplexType;
-	using BaseRealType = typename BaseEG::BaseRealType;
+	
 
-	using TupleOfTimes = typename BaseEG::TupleOfTimes;
-	using TupleOfSamps = typename BaseEG::TupleOfSamps;
+
+
+
+	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
+	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
@@ -308,7 +310,7 @@ public:
 	/**
 	\brief Setter for the specific settings in tracking_conifg.hpp under Cauchy.
 	*/
-	void SetCauchySettings(config::Cauchy<BRT> const& new_cauchy_settings)
+	void SetCauchySettings(CauchyConfig const& new_cauchy_settings)
 	{
 		this->template Set(new_cauchy_settings);
 	}
@@ -318,13 +320,13 @@ public:
 	*/
 	const auto& GetCauchySettings() const
 	{
-		return this->template Get<config::Cauchy<BRT>>();
+		return this->template Get<CauchyConfig>();
 	}
 	
 
 	explicit CauchyEndgame(TrackerType const& tr, 
                             const ConfigsAsTuple& settings )
-      : EndgameBase<TrackerType, FinalEGT>(tr, settings)
+      : BaseEGT(tr, settings)
    	{ }
 
     template< typename... Ts >
@@ -391,7 +393,7 @@ public:
 			RT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
 
 			auto next_sample = Vec<CT>(num_vars);
-			auto next_time = (ii==this->EndgameSettings().num_sample_points-1) 
+			CT next_time = (ii==this->EndgameSettings().num_sample_points-1) 
 								?
 							  starting_time
 								:
@@ -406,16 +408,17 @@ public:
 				return tracking_success;
 			}
 
-			AsDerived().EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));
+			this->EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));
 
-			auto refinement_success = AsDerived().RefineSample(next_sample, next_sample, next_time);
+			auto refinement_success = this->RefineSample(next_sample, next_sample, next_time, 
+										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
+										this->EndgameSettings().max_num_newton_iterations);
 			if (refinement_success != SuccessCode::Success)
 			{
 				return refinement_success;
-				return refinement_success;
 			}
 
-			AsDerived().EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));
+			this->EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));
 
 			circle_times.push_back(next_time);
 			circle_samples.push_back(next_sample);
@@ -491,13 +494,14 @@ public:
 	template<typename CT>
 	bool CheckForCOverKStabilization(TimeCont<CT> const& c_over_k_array)
 	{	
+		using RT = typename Eigen::NumTraits<CT>::Real;
 		using std::abs;
 
 		assert(c_over_k_array.size()>=GetCauchySettings().num_needed_for_stabilization);
 		for(unsigned ii = 1; ii < GetCauchySettings().num_needed_for_stabilization ; ++ii)
 		{
-			auto a = abs(c_over_k_array[ii-1]);
-			auto b = abs(c_over_k_array[ii]);
+			RT a = abs(c_over_k_array[ii-1]);
+			RT b = abs(c_over_k_array[ii]);
 
 			typename Eigen::NumTraits<CT>::Real divide = a;
 
@@ -590,14 +594,15 @@ public:
 			return true;
 		}
 
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
 			//Ensure all samples are of the same precision.
-			auto new_precision = AsDerived().EnsureAtUniformPrecision(times, samples);
+			auto new_precision = this->EnsureAtUniformPrecision(times, samples);
+			this->GetSystem().precision(new_precision);
 		}
 
-		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),RT(this->FinalTolerance()),this->EndgameSettings().max_num_newton_iterations);
-		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),RT(this->FinalTolerance()),this->EndgameSettings().max_num_newton_iterations);
+		this->GetTracker().Refine(samples.front(),samples.front(),times.front(),this->FinalTolerance(),this->EndgameSettings().max_num_newton_iterations);
+		this->GetTracker().Refine(samples.back(),samples.back(),times.back(),this->FinalTolerance(),this->EndgameSettings().max_num_newton_iterations);
 
 		if((samples.front() - samples.back()).template lpNorm<Eigen::Infinity>() < this->GetTracker().TrackingTolerance())
 		{
@@ -718,7 +723,7 @@ public:
 			cau_samples.push_back(ps_samples.back()); // cauchy samples and times should be empty before this point. 
 			cau_times.push_back(ps_times.back());
 
-			auto next_time = ps_times.back();
+			CT next_time = ps_times.back();
 			auto next_sample = ps_samples.back();
 
 			// track around a circle once.  we'll use it to measure whether we believe we are in the eg operating zone, based on the ratio of norms of sample points around the circle
@@ -767,11 +772,11 @@ public:
 			else 
 			{
 				//compute the time for the next sample point
-				AsDerived().EnsureAtPrecision(next_time,Precision(ps_samples.back()));
+				this->EnsureAtPrecision(next_time,Precision(ps_samples.back()));
 				next_time = (ps_times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor);
 
 				SuccessCode tracking_success = this->GetTracker().TrackPath(next_sample,ps_times.back(),next_time,ps_samples.back());
-				AsDerived().EnsureAtPrecision(next_time,Precision(next_sample));
+				this->EnsureAtPrecision(next_time,Precision(next_sample));
 
 				ps_times.pop_front();
 				ps_samples.pop_front();
@@ -843,7 +848,7 @@ public:
 			if (tracking_success!=SuccessCode::Success)
 				return tracking_success;
 
-			AsDerived().EnsureAtPrecision(next_time, Precision(next_sample));
+			this->EnsureAtPrecision(next_time, Precision(next_sample));
 
 			ps_samples.pop_front();
 			ps_times.pop_front();
@@ -863,7 +868,7 @@ public:
 			if(tracking_success != SuccessCode::Success)
 				return tracking_success;
 
-			AsDerived().EnsureAtPrecision(next_time, Precision(next_sample));
+			this->EnsureAtPrecision(next_time, Precision(next_sample));
 
 			c_over_k.pop_front();
 			ps_samples.pop_front();
@@ -880,7 +885,7 @@ public:
 		auto cauchy_loop_success = InitialCauchyLoops<CT>(target_time);
 		if (cauchy_loop_success != SuccessCode::Success)
 			return cauchy_loop_success;
-
+		Precision(approximation, Precision(target_time));
 		return ComputePSEGApproximationAtT0(approximation, target_time);
 
 	}//end InitialPowerSeriesApproximation
@@ -910,21 +915,15 @@ public:
 		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
 		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
 
-		//Ensure all samples are of the same precision.
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
-			AsDerived().EnsureAtUniformPrecision(ps_times, ps_samples);
 
-
-		for (unsigned ii=0; ii<ps_samples.size(); ++ii)
-		{
-			auto refine_code = AsDerived().RefineSample(ps_samples[ii],ps_samples[ii],ps_times[ii]);
-			if (refine_code != SuccessCode::Success)
-				return refine_code;
-		}
+		this->template RefineAllSamples(ps_samples, ps_times);
 		
 		//Ensure all samples are of the same precision.
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
-			AsDerived().EnsureAtUniformPrecision(ps_times, ps_samples);
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+		{
+			auto max_precision = this->EnsureAtUniformPrecision(ps_times, ps_samples);
+			this->GetSystem().precision(max_precision);
+		}
 		
 
 		auto num_sample_points = this->EndgameSettings().num_sample_points;
@@ -941,16 +940,16 @@ public:
  		//Conversion to S-plane.
 		TimeCont<CT> s_times(num_sample_points);
 		SampCont<CT> s_derivatives(num_sample_points);
-		auto c = static_cast<RT>(this->CycleNumber());
-		auto one_over_c = 1/c;
+		RT c = static_cast<RT>(this->CycleNumber());
+		RT one_over_c = 1/c;
 		for(unsigned ii = 0; ii < num_sample_points; ++ii)
 		{
 			s_derivatives[ii] = pseg_derivatives[ii]*
 			                        (c*pow(ps_times[ii],1-one_over_c));
 			s_times[ii] =  pow(ps_times[ii], one_over_c);
 		}
-
-		result = HermiteInterpolateAndSolve(target_time, num_sample_points, 
+		Precision(result, Precision(s_times.back()));
+		result = HermiteInterpolateAndSolve(pow(target_time,one_over_c), num_sample_points, 
                                             s_times, ps_samples, s_derivatives);
 		return SuccessCode::Success;
 	}//end ComputePSEGApproximationOfXAtT0
@@ -985,17 +984,17 @@ public:
 
 
 		//Ensure all samples are of the same precision.
-		if (TrackerTraits<TrackerType>::IsAdaptivePrec)
-			auto new_precision = AsDerived().EnsureAtUniformPrecision(cau_times, cau_samples);
+		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+		{
+			auto new_precision = this->EnsureAtUniformPrecision(cau_times, cau_samples);
+			this->GetSystem().precision(new_precision);
+		}
 
 
 		auto total_num_pts = this->CycleNumber() * this->EndgameSettings().num_sample_points;
-		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
-		{
-			auto refine_code = AsDerived().RefineSample(cau_samples[ii],cau_samples[ii],cau_times[ii]);
-			if (refine_code!=SuccessCode::Success)
-				return refine_code;
-		}
+		this->template RefineAllSamples(cau_samples, cau_times);
+
+		Precision(result, Precision(cau_samples.back()));
 
 		result = Vec<CT>::Zero(this->GetSystem().NumVariables());
 		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
@@ -1060,16 +1059,7 @@ public:
 	}//end ComputeCauchySamples
 
 
-	/**
-	\brief Run the endgame, shooting for t=0.
-
-	\see Run
-	*/
-	template<typename CT>
-	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point)
-	{
-		return Run(start_time, start_point, static_cast<CT>(0));
-	}
+	
 
 	/**
 	\brief Primary function that runs the Cauchy endgame.
@@ -1093,7 +1083,7 @@ public:
 					Integral Formula. 
 	*/
 	template<typename CT>
-	SuccessCode Run(CT const& start_time, Vec<CT> const& start_point, CT const& target_time)
+	SuccessCode RunImpl(CT const& start_time, Vec<CT> const& start_point, CT const& target_time)
 	{	
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{
@@ -1122,7 +1112,7 @@ public:
 
 		Vec<CT>& latest_approx = std::get<Vec<CT> >(this->final_approximation_);
 		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
-		RT& approx_error = std::get<RT>(this->approximate_error_);
+		NumErrorT& approx_error = this->approximate_error_;
 
 		//Compute the first approximation using the power series approximation technique. 
 		auto initial_ps_success = InitialPowerSeriesApproximation(start_time, start_point, target_time, prev_approx);  // last argument is output here
@@ -1135,6 +1125,7 @@ public:
 
 		if(this->SecuritySettings().level <= 0)
 			norm_of_dehom_prev = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
+		
 		do
 		{
 			//Compute a cauchy approximation.  Uses the previously computed samples, 
@@ -1146,7 +1137,7 @@ public:
 			if (this->SecuritySettings().level <= 0)
 				norm_of_dehom_latest = this->GetSystem().DehomogenizePoint(latest_approx).template lpNorm<Eigen::Infinity>();
 
-			approx_error = (latest_approx - prev_approx).template lpNorm<Eigen::Infinity>();
+			approx_error = static_cast<NumErrorT>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
 
 			if (approx_error < this->FinalTolerance())
 				return SuccessCode::Success;
@@ -1172,7 +1163,7 @@ public:
 			if (time_advance_success != SuccessCode::Success)
 				return time_advance_success;
 
-			AsDerived().EnsureAtPrecision(next_time,Precision(next_sample));
+			this->EnsureAtPrecision(next_time,Precision(next_sample));
 
 			ps_times.push_back(next_time);  ps_times.pop_front();
 			ps_samples.push_back(next_sample); ps_samples.pop_front();
@@ -1189,4 +1180,4 @@ public:
 };
 
 
-}}} // namespaces
+}} // namespaces

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/io/parsing/number_rules.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -154,15 +154,23 @@ namespace bertini{
 					+(qi::char_(L'0',L'9')[_val += _1]) // then at least one number
 					); // finish the rule off
 				
+				rational.name("long_rational");
+				rational =
+				(number_string_
+				|
+				(number_string_ >> char_('/') >> number_string_));
+
 			}
 			
 			
 			
 			// these rules all produce strings which are fed into numbers.
 			qi::rule<Iterator, std::string()> number_string_, integer_string_, long_number_string_, number_with_digits_before_point_,
-			number_with_digits_after_point_, number_with_no_point_, exponent_notation_;
+			number_with_digits_after_point_, number_with_no_point_, exponent_notation_, rational;
 			
+
 		}; //re: LongNum
+
 
 		} // namespace rules
 

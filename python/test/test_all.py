@@ -21,7 +21,7 @@
 
 #  individual authors of this file include:
 # 
-#   Daniel Brake
+#   Dani Brake
 #   University of Notre Dame
 #   Summer 2016
 # 

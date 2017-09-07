@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with base_tracker.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 /**
 \file base_tracker.hpp
@@ -149,15 +149,15 @@ namespace bertini{
 			
 		public:
 			using Config = detail::Configured< typename TrackerTraits< D >::NeededConfigs >;
-			using Stepping = config::Stepping<BaseRealType>;
-			using Newton = config::Newton;
+			using Stepping = SteppingConfig;
+			using Newton = NewtonConfig;
 			using PrecConf = typename TrackerTraits< D >::PrecisionConfig;
 
 			Tracker(System const& sys) : tracked_system_(std::ref(sys))
 			{
 				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), tracked_system_);
 				corrector_ = std::make_shared< correct::NewtonCorrector >(tracked_system_);
-				Predictor(predict::DefaultPredictor());
+				SetPredictor(predict::DefaultPredictor());
 			}
 
 
@@ -168,13 +168,13 @@ namespace bertini{
 
 			Pass the tracker the configuration for tracking, to get it set up.
 			*/
-			void Setup(config::Predictor new_predictor_choice,
-			           RT const& tracking_tolerance,
-						RT const& path_truncation_threshold,
-						config::Stepping<RT> const& stepping,
-						config::Newton const& newton)
+			void Setup(Predictor new_predictor_choice,
+			           double const& tracking_tolerance,
+						double const& path_truncation_threshold,
+						SteppingConfig const& stepping,
+						NewtonConfig const& newton)
 			{
-				Predictor(new_predictor_choice);
+				SetPredictor(new_predictor_choice);
 				corrector_->Settings(newton);
 				
 				SetTrackingTolerance(tracking_tolerance);
@@ -184,7 +184,7 @@ namespace bertini{
 				this->template Set(stepping);
 				this->template Set(newton);
 
-				current_stepsize_ = stepping.initial_step_size;
+				current_stepsize_ = BaseRealType(stepping.initial_step_size);
 			}
 
 
@@ -199,13 +199,13 @@ namespace bertini{
 
 			\param tracking_tolerance The new value.  Newton iterations are performed until the step length is less than this number, or the max number of iterations has been reached, in which case the overall predict-correct step is viewed as a failure, and the step is undone.  This number must be positive.
 			*/
-			void SetTrackingTolerance(RT const& tracking_tolerance)
+			void SetTrackingTolerance(double const& tracking_tolerance)
 			{
 				if (tracking_tolerance <= 0)
-					throw std::runtime_error("tracking tolerance must be positive");
+					throw std::runtime_error("tracking tolerance must be strictly positive");
 
 				tracking_tolerance_ = tracking_tolerance;
-				digits_tracking_tolerance_ = NumTraits<RT>::TolToDigits(tracking_tolerance);
+				digits_tracking_tolerance_ = NumTraits<double>::TolToDigits(tracking_tolerance);
 			}
 
 			/**
@@ -314,14 +314,10 @@ namespace bertini{
 			\param tolerance The tolerance to which to refine.
 			\param max_iterations The maximum number of iterations to use to refine.
 			*/
-			template<typename C, typename R>
+			template<typename C>
 			SuccessCode Refine(Vec<C> & new_space,
-								Vec<C> const& start_point, C const& current_time, R const& tolerance, unsigned max_iterations) const
+								Vec<C> const& start_point, C const& current_time, double const& tolerance, unsigned max_iterations) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<R>::Real, 
-			              				typename Eigen::NumTraits<C>::Real>::value,
-			              				"underlying complex type and the type for comparisons must match");
-
 				static_assert(detail::IsTemplateParameter<C,NeededTypes>::value,"complex type for refinement must be a used type for the tracker");
 
 				return this->AsDerived().RefineImpl(new_space, start_point, current_time, tolerance, max_iterations);
@@ -333,9 +329,9 @@ namespace bertini{
 
 			\param new_predictor_choice The new predictor to be used.
 
-			\see config::Predictor
+			\see Predictor
 			*/
-			void Predictor(config::Predictor new_predictor_choice)
+			void SetPredictor(Predictor new_predictor_choice)
 			{
 				predictor_->PredictorMethod(new_predictor_choice);
 				predictor_order_ = predictor_->Order();
@@ -345,7 +341,7 @@ namespace bertini{
 			/**
 			\brief Query the currently set predictor
 			*/
-			config::Predictor Predictor() const
+			Predictor GetPredictor() const
 			{
 				return predictor_->PredictorMethod();
 			}
@@ -562,16 +558,14 @@ namespace bertini{
 			std::shared_ptr<predict::ExplicitRKPredictor > predictor_; // The predictor to use while tracking
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
-			// config::Stepping<RT> stepping_config_; ///< The stepping configuration.
 			std::shared_ptr<correct::NewtonCorrector> corrector_;
-			// config::Newton newton_config_; ///< The newton configuration.
 
 
 
 			unsigned digits_final_ = 0; ///< The number of digits to track to, due to being in endgame zone.
 			unsigned digits_tracking_tolerance_; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
-			RT tracking_tolerance_; ///< The tracking tolerance.
-			RT path_truncation_threshold_; ///< The threshold for path truncation.
+			NumErrorT tracking_tolerance_; ///< The tracking tolerance.
+			NumErrorT path_truncation_threshold_; ///< The threshold for path truncation.
 
 			mutable CT endtime_; ///< The time we are tracking to.
 			mutable CT current_time_; ///< The current time.
@@ -597,26 +591,35 @@ namespace bertini{
 			mutable TupOfVec temporary_space_; ///< After prediction, the tentative next space value.
 
 
-			mutable TupOfReal condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
-			mutable TupOfReal error_estimate_; ///< An estimate on the error of a step.
-			mutable TupOfReal norm_J_; ///< An estimate on the norm of the Jacobian
-			mutable TupOfReal norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
-			mutable TupOfReal norm_delta_z_; ///< The norm of the change in space resulting from a step.
-			mutable TupOfReal size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
+			mutable NumErrorT condition_number_estimate_; ///< An estimate on the condition number of the Jacobian		
+			mutable NumErrorT error_estimate_; ///< An estimate on the error of a step.
+			mutable NumErrorT norm_J_; ///< An estimate on the norm of the Jacobian
+			mutable NumErrorT norm_J_inverse_;///< An estimate on the norm of the inverse of the Jacobian
+			mutable NumErrorT norm_delta_z_; ///< The norm of the change in space resulting from a step.
+			mutable NumErrorT size_proportion_; ///< The proportion of the space step size, taking into account the order of the predictor.
 
 
 
 
 			public: 
 
-			virtual
-			const BaseRealType LatestConditionNumber() const = 0;
+			
+			NumErrorT LatestConditionNumber() const
+			{
+				return this->condition_number_estimate_;
+			}
 
-			virtual
-			const BaseRealType LatestErrorEstimate() const = 0;
+			
+			NumErrorT LatestErrorEstimate() const
+			{
+				return this->error_estimate_;
+			}
 
-			virtual
-			const BaseRealType LatestNormOfStep() const = 0;
+			
+			NumErrorT LatestNormOfStep() const
+			{
+				return this->norm_delta_z_;
+			}
 
 
 			unsigned NumVariables() const

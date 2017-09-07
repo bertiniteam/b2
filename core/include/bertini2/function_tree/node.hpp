@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with node.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
@@ -166,15 +166,9 @@ public:
 	template<typename T>
 	T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const 
 	{
-		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-		if(!val_pair.second)
-		{
-			val_pair.first = detail::FreshEvalSelector<T>::Run(*this,diff_variable);
-			val_pair.second = true;
-		}
- 
-		
-		return val_pair.first;
+		T result;
+		EvalInPlace(result, diff_variable);
+		return result;
 	}
 	
 
@@ -188,25 +182,42 @@ public:
 	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
 	 */
 	template<typename T>
-	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const
-	{
-		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-		if(!val_pair.second)
-		{
-			detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this,diff_variable);
-			val_pair.second = true;
-		}
-		
-		eval_value = val_pair.first;
-		
-		
-	}
+	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const;
 
 	
-	
-	
-	
 	///////// PUBLIC PURE METHODS /////////////////
+
+
+	/**
+	\brief A transform function, which eliminates nodes from the tree
+
+	A better implementation of this would use a generic Transform.  If you know how to do this, please rewrite the Nodes so they can transform to our whim, and submit a PR.
+
+	\return The number of nodes eliminated
+
+	\see EliminateZeros
+	*/
+	virtual unsigned EliminateOnes() = 0;
+	
+	/**
+	\brief A transform function, which eliminates nodes from the tree
+
+	A better implementation of this would use a generic Transform.  If you know how to do this, please rewrite the Nodes so they can transform to our whim, and submit a PR.
+
+	\return The number of nodes eliminated
+
+	\see EliminateOnes
+	*/
+	virtual unsigned EliminateZeros() = 0;
+
+
+	/**
+	\brief A mutating function which finds ways to reduce the depth of the tree
+
+	\note The default implementation is empty, and does literally nothing.
+	*/
+	virtual unsigned ReduceDepth();
+
 	/**
 	Virtual method for printing Nodes to arbitrary output streams.
 	*/
@@ -214,14 +225,14 @@ public:
 	
 
 	/**
-	Virtual method for differentiating the node.  Produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
+	\brief Compute the derivative with respect to a single variable.
 
-	\return The Jacobian for the node.
+	Virtual method for differentiating the node.  If no variable is passed, produces a Jacobian tree when all is said and done, which is used for evaluating the Jacobian.
+
+	\return The result of differentiation.  Jacobian or regular Node depending on what you passed in.
 	*/
-	virtual std::shared_ptr<Node> Differentiate() const = 0;
-
-
-
+	virtual std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const = 0;
+	
 	/**
 	Compute the degree, optionally with respect to a single variable.
 
@@ -277,10 +288,8 @@ public:
 	 */
 	virtual void precision(unsigned int prec) const = 0;
 
-	unsigned precision() const
-	{
-		return std::get<std::pair<mpfr,bool> >(current_value_).first.precision();
-	}
+	unsigned precision() const;
+
 	///////// PUBLIC PURE METHODS /////////////////
 
 	/**
@@ -288,21 +297,15 @@ public:
 
 	\return True if it is polynomial, false if not.
 	*/
-	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const
-	{
-		return Degree(v)>=0;
-	}
-
+	bool IsPolynomial(std::shared_ptr<Variable> const&v = nullptr) const;
+	
 
 	/**
 	Check if a Node is polynomial -- it has degree at least 0.  Negative degrees indicate non-polynomial.
 
 	\return True if it is polynomial, false if not.
 	*/
-	bool IsPolynomial(VariableGroup const&v) const
-	{
-		return Degree(v)>=0;
-	}
+	bool IsPolynomial(VariableGroup const&v) const;
 
 
 	
@@ -318,8 +321,6 @@ protected:
 	
 	
 	///////// PRIVATE PURE METHODS /////////////////
-//    virtual dbl FreshEval(dbl) = 0;
-//    virtual mpfr FreshEval(mpfr) = 0;
 	
 	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
@@ -359,17 +360,10 @@ protected:
 	/**
 	Set the stored values for the Node to indicate a fresh eval on the next pass.  This is so that Nodes which are referred to more than once, are only evaluated once.  The first evaluation is fresh, and then the indicator for fresh/stored is set to stored.  Subsequent evaluation calls simply return the stored number.
 	*/
-	void ResetStoredValues() const
-	{
-		std::get< std::pair<dbl,bool> >(current_value_).second = false;
-		std::get< std::pair<mpfr,bool> >(current_value_).second = false;
-	}
+	void ResetStoredValues() const;
 
-	Node()
-	{
-		std::get<std::pair<dbl,bool> >(current_value_).second = false;
-		std::get<std::pair<mpfr,bool> >(current_value_).second = false;
-	}
+	Node();
+
 private:
 	friend std::ostream& operator<<(std::ostream & out, const Node& N);
 
@@ -390,6 +384,12 @@ private:
 		return out;
 	}
 	
+	inline std::ostream& operator<<(std::ostream & out, const std::shared_ptr<Node>& N)
+	{
+		N->print(out);
+		return out;
+	}
+
 	} // re: namespace node
 } // re: namespace bertini
 

@@ -1,14 +1,17 @@
 #this is src/pool/Makemodule.am
 
-pool_header_files = \
+pool_headers = \
 	include/bertini2/pool/pool.hpp \
 	include/bertini2/pool/system.hpp 
 
 
-pool = $(pool_header_files)
+pool = $(pool_headers)
 
 
 pool_includedir = $(includedir)/bertini2/pool
 
 pool_include_HEADERS = \
-	$(pool_header_files)
+	$(pool_headers)
+
+core_headers += $(pool_headers)
+core_all += $(pool)

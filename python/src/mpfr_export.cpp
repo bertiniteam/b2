@@ -185,6 +185,27 @@ namespace bertini{
 			.def(self >= self)
 			.def(self == self)
 			.def(self != self)
+
+			.def(self < int())
+			.def(self <= int())
+			.def(self > int())
+			.def(self >= int())
+
+			.def(int() < self)
+			.def(int() <= self)
+			.def(int() > self)
+			.def(int() >= self)
+
+			.def(self < double())
+			.def(self <= double())
+			.def(self > double())
+			.def(self >= double())
+
+			.def(double() < self)
+			.def(double() <= self)
+			.def(double() > self)
+			.def(double() >= self)
+
 			;
 			
 			

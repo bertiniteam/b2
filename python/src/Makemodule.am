@@ -13,7 +13,7 @@ bertini_python_header_files = $(includedir)/bertini_python.hpp \
 				$(includedir)/endgame_export.hpp
 
 
-bertini_python_source_files = src/bertini_python.cpp \
+bertini_python_source_files = \
 				src/tracker_export.cpp \
 				src/endgame_export.cpp \
 				src/mpfr_export.cpp \
@@ -22,6 +22,7 @@ bertini_python_source_files = src/bertini_python.cpp \
 				src/operator_export.cpp \
 				src/root_export.cpp \
 				src/system_export.cpp \
+				src/bertini_python.cpp \
 				minieigen/src/expose-converters.cpp \
 				minieigen/src/double-conversion/bignum-dtoa.cc \
 				minieigen/src/double-conversion/bignum.cc \

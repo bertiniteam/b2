@@ -35,6 +35,7 @@
 			"folder_exclude_patterns": [
 				".deps",
 				".libs",
+				"*.dtps",
 				"autom4te.cache",
 				"generated_documentation"]
 		}

@@ -3,8 +3,8 @@
 
 
 
-#we're building b2, version 2.0-alpha5, and the corresponding email is dani brake's
-AC_INIT([b2], [2.0-alpha5], [danielthebrake@gmail.com],[b2], [http://github.com/bertiniteam/b2])
+#we're building b2, version 2.0-alpha6, and the corresponding email is dani brake's
+AC_INIT([b2], [2.0-alpha6], [brakeda@uwec.edu],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -54,6 +54,15 @@ LT_INIT
 #AC_ARG_ENABLE(option-name, help-string, action-if-present, action-if-not-present)
 # get whether the user wants to disable the use of thread_local for multithreading.
 
+
+AC_ARG_ENABLE([forbid_mixed_arithmetic],
+    AS_HELP_STRING([--disable-forbid_mixed_arithmetic], [Disable the forbidding of mixed type arithmetic between built-in floating point types, and fixed or variable multiple precision types (mpfr, etc).  By default, it is forbidden at compile time to mix doubles and multiprecisions.  If you want to be able to multiply a 60-digit mpfr_float by a 16-digit double (and introduce error around the 17th digit of the double), then disable this.  Feels like a double-negative to disable forbiddence, but hey, it's more unsafe to mix doubles and mpfr_floats than it is to speak a double negative.  Have a nice day!]))
+
+AS_IF([test "x$enable_forbid_mixed_arithmetic" != "xno"],[
+  AC_DEFINE([B2_FORBID_MIXED_ARITHMETIC], [1],[Define if B2_FORBID_MIXED_ARITHMETIC keyword should be used to not forbid mixed double-mpfr arithmetic.  ])
+])
+
+
 AC_ARG_ENABLE([thread_local],
     AS_HELP_STRING([--disable-thread_local], [Disable thread_local storage for fast complex multiple-precision arithmetic, and other places.  OSX and Apple do NOT implement this keyword.  Since this keyword provides the thread-safety mechanism for complex arithmetic, disabling thread_local threatens thread safety.  Disable at your own risk, and do not use in multithreaded environment.  Write Apple a letter asking them to enable this C++ standard language feature, please, and offer your services helping Bertini2 be thread safe on a Mac using Apple's Clang.]))
 
@@ -78,6 +87,16 @@ AC_ARG_ENABLE([copy_and_swap],
 AS_IF([test "x$enable_copy_and_swap" != "xno"],[
 	AC_DEFINE([BERTINI_ENABLE_COPY_AND_SWAP], [1],[Enable copy-and-swap idiom in fundamental types, for exception safety.])
 ])
+
+
+AC_ARG_ENABLE([unity_build],
+[  --enable-unity_build    Turn on unity_build-style building, better for a low-thread environment.  possible values yes and no.],
+[case "${enableval}" in
+  yes) unity_build=true ;;
+  no)  unity_build=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-unity_build]) ;;
+esac],[unity_build=false])
+AM_CONDITIONAL([UNITYBUILD], [test x$unity_build = xtrue])
 
 
 # the form of the following commands --

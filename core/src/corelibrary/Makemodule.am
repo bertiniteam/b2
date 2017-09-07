@@ -1,0 +1,37 @@
+#this is src/corelibrary/Makemodule.am
+
+#
+#  THE primary Makemodule.am file for the computational core of Bertini2
+#
+#  provides source and dependency information for both the library and command-line executable.
+
+
+lib_LTLIBRARIES += libbertini2.la
+
+
+rootinclude_HEADERS += include/bertini2/bertini.hpp
+
+
+if UNITYBUILD
+libbertini2_la_SOURCES = \
+	src/corelibrary/unity/unity.cpp \
+	$(core_headers)
+else
+libbertini2_la_SOURCES = \
+	$(core_all)
+endif
+
+
+
+libbertini2_la_LIBADD = $(BOOST_LDFLAGS) \
+	$(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) 
+
+# see https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html#Updating-version-info
+#                                      c:r:a
+libbertini2_la_LDFLAGS = -version-info 1:0:0
+
+# from that site:
+# If the library source code has changed at all since the last update, then increment revision (‘c:r:a’ becomes ‘c:r+1:a’).
+# If any interfaces have been added, removed, or changed since the last update, increment current, and set revision to 0. (c+1:0:a)
+# If any interfaces have been added since the last public release, then increment age. (a++)
+# If any interfaces have been removed or changed since the last public release, then set age to 0. (a->0)

@@ -177,7 +177,8 @@ namespace bertini{
 
 			// TotalDegree class
 			class_<start_system::TotalDegree, bases<start_system::StartSystem>, std::shared_ptr<start_system::TotalDegree> >("TotalDegree", init<System const&>())
-			.def("random_value", &start_system::TotalDegree::RandomValue)
+			.def("random_value", &start_system::TotalDegree::RandomValue<dbl>)
+			.def("random_value", &start_system::TotalDegree::RandomValue<mpfr>)
 			.def("random_values", &start_system::TotalDegree::RandomValues, return_value_policy<copy_const_reference>())
 			;
 

@@ -33,6 +33,17 @@
 #include "trackers/ode_predictors.hpp"
 
 
+
+
+extern double threshold_clearance_d;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
+
+
+
+
+BOOST_AUTO_TEST_SUITE(heun_predict_tracking_basics)
+
 using System = bertini::System;
 using Variable = bertini::node::Variable;
 using Float = bertini::node::Float;
@@ -52,15 +63,6 @@ using mpfr_float = bertini::mpfr_float;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
-
-
-
-BOOST_AUTO_TEST_SUITE(heun_predict_tracking_basics)
 
 
 BOOST_AUTO_TEST_CASE(circle_line_heun_double)
@@ -91,7 +93,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 	
 	
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	
 	BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 	AMP.coefficient_bound = 5;
@@ -111,7 +113,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
-	std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+	std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 	
 	auto success_code = predictor->Predict(heun_prediction_result,
 										   error_est,
@@ -126,7 +128,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 										   tracking_tolerance,
 										   AMP);
 	
-	BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+	BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 	BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
 	for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 	{
@@ -174,27 +176,27 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x + 5*y) );
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,2);
 		AMP.coefficient_bound = 5;
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		Vec<mpfr> predicted(2);
 		predicted << mpfr("2.38948874619536140814029774733947","0.208678935223681033727262214382917"),
 		mpfr("0.524558056401030798191044945035673", "1.43029356995029310361616395235936");
-		mpfr_float predicted_error = mpfr_float(".197349645229023708608160063982175");
+		double predicted_error = double(.197349645229023708608160063982175);
 		
 		Vec<mpfr> heun_prediction_result;
 		mpfr next_time;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -209,13 +211,13 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 		
-		BOOST_CHECK(abs(error_est - predicted_error) < threshold_clearance_mp);
-		
+		using std::abs;
+		BOOST_CHECK(abs(error_est - predicted_error) < std::numeric_limits<double>::epsilon());	
 	}
 	
 	
@@ -255,7 +257,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -276,7 +278,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -291,7 +293,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 		{
@@ -335,28 +337,28 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		BOOST_CHECK_EQUAL(AMP.degree_bound,3);
 		AMP.coefficient_bound = 2;
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		
 		Vec<mpfr> predicted(2);
 		predicted << mpfr("0.412299156269677938503694812160886"),
 		mpfr("0.731436945256924470273568899877140");
-		mpfr_float predicted_error = mpfr_float("0.00544428757292458409463632380167773");
+		double predicted_error = double(0.00544428757292458409463632380167773);
 		
 		Vec<mpfr> heun_prediction_result;
 		mpfr next_time;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -371,14 +373,15 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code==bertini::tracking::SuccessCode::Success);
+		BOOST_CHECK(success_code==bertini::SuccessCode::Success);
 		BOOST_CHECK_EQUAL(heun_prediction_result.size(),2);
 		for (unsigned ii = 0; ii < heun_prediction_result.size(); ++ii)
 		{
 			BOOST_CHECK(abs(heun_prediction_result(ii)-predicted(ii)) < threshold_clearance_mp);
 		}
 		
-		BOOST_CHECK(abs(error_est / predicted_error - 1) < threshold_clearance_mp);
+		using std::abs;
+		BOOST_CHECK(abs(error_est / predicted_error - 1) < std::numeric_limits<double>::epsilon());
 	}
 	
 	
@@ -410,7 +413,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -425,7 +428,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<dbl> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -440,7 +443,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
+		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 		
 	}
 	
@@ -475,14 +478,14 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_cond_num_est = 1;
 		unsigned freq_of_CN_estimation = 1;
@@ -490,7 +493,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -505,7 +508,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
+		BOOST_CHECK(success_code == bertini::SuccessCode::MatrixSolveFailureFirstPartOfPrediction);
 	}
 	
 	
@@ -537,7 +540,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -553,7 +556,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<dbl> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -568,7 +571,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_a_is_false_mp)
@@ -599,15 +602,15 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_1 = 100;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
@@ -615,7 +618,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -630,7 +633,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_c_is_false_d)
@@ -661,7 +664,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
@@ -678,7 +681,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		
 		Vec<dbl> heun_prediction_result;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -693,7 +696,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	BOOST_AUTO_TEST_CASE(heun_predict_linear_criterion_c_is_false_mp)
@@ -724,15 +727,15 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		mpfr_float norm_J, norm_J_inverse, size_proportion, error_est;
+		double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_2 = 100;
 		
-		mpfr_float tracking_tolerance("1e-5");
-		mpfr_float condition_number_estimate;
+		double tracking_tolerance = 1e-5;
+		double condition_number_estimate;
 		
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
@@ -740,7 +743,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		Vec<mpfr> heun_prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::config::Predictor::HeunEuler,sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::HeunEuler,sys);
 		
 		auto success_code = predictor->Predict(heun_prediction_result,
 											   error_est,
@@ -755,7 +758,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 											   tracking_tolerance,
 											   AMP);
 		
-		BOOST_CHECK(success_code == bertini::tracking::SuccessCode::HigherPrecisionNecessary);
+		BOOST_CHECK(success_code == bertini::SuccessCode::HigherPrecisionNecessary);
 	}
 	
 	

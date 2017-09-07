@@ -1,0 +1,25 @@
+#this is src/parallel/Makemodule.am
+
+
+parallel_sources = \
+	src/parallel/parallel.cpp \
+	src/parallel/initialize_finalize.cpp
+
+parallel_headers = \
+	include/bertini2/parallel.hpp \
+	include/bertini2/parallel/initialize_finalize.hpp
+
+
+parallel = $(parallel_headers) $(parallel_sources)
+
+core_headers += $(parallel_headers)
+core_sources += $(parallel_sources)
+core_all += $(parallel)
+
+rootinclude_HEADERS += \
+	include/bertini2/parallel.hpp
+
+parallelincludedir = $(includedir)/bertini2/parallel/
+
+parallelinclude_HEADERS = \
+	include/bertini2/parallel/initialize_finalize.hpp

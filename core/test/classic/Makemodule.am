@@ -3,16 +3,17 @@
 EXTRA_PROGRAMS += b2_classic_compatibility_test
 TESTS += b2_classic_compatibility_test
 
-classic_compatibility_test_source_files = \
+if UNITYBUILD
+b2_classic_compatibility_test_SOURCES = test/classic/unity/unity.cpp
+else
+b2_classic_compatibility_test_SOURCES = \
 	test/classic/classic_test.cpp \
 	test/classic/classic_parsing_test.cpp
+endif
 
 
-b2_classic_compatibility_test_SOURCES = \
-	$(all_bertini2_sources) \
-	$(classic_compatibility_test_source_files)
 
-b2_classic_compatibility_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB)
+b2_classic_compatibility_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
 
 b2_classic_compatibility_test_CXXFLAGS = $(BOOST_CPPFLAGS)
 

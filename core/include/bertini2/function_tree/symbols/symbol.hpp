@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with symbol.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
@@ -61,6 +61,9 @@ namespace node {
 		
 		virtual ~Symbol() = default;
 
+		unsigned EliminateZeros() override;
+		unsigned EliminateOnes() override;
+		
 	private:
 		friend class boost::serialization::access;
 
@@ -90,27 +93,21 @@ namespace node {
 		/**
 		Get the name of the named symbol
 		*/
-		std::string name() const
-		{
-			return name_;
-		};
+		const std::string & name() const;
 		
 		/**
 		Get the name of the named symbol
 		*/
-		void name(const std::string & new_name){name_ = new_name;};
+		void name(const std::string & new_name);
 		
 		
 		/**
 		Parameterized constructor, sets the name of the symbol
 		*/
-		NamedSymbol(const std::string & new_name) : name_(new_name){};
+		NamedSymbol(const std::string & new_name);
 		
 		
-		void print(std::ostream& target) const override
-		{
-			target << name();
-		}
+		void print(std::ostream& target) const override;
 		
 		virtual ~NamedSymbol() = default;
 		

@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, University of Wisconsin Eau Claire
 // jeb collins, west texas a&m
 
 /**
@@ -52,7 +52,7 @@
 
 #include "bertini2/function_tree/factory.hpp"
 
-
+#include "bertini2/function_tree/simplify.hpp"
 
 #endif
 

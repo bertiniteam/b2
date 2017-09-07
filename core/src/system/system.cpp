@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with system.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 #include "bertini2/system/system.hpp"
@@ -34,6 +34,16 @@ BOOST_CLASS_EXPORT(bertini::System)
 
 namespace bertini 
 {
+
+	JacobianEvalMethod DefaultJacobianEvalMethod()
+	{
+		return JacobianEvalMethod::Derivatives;
+	}
+
+	bool DefaultAutoSimplify()
+	{
+		return true;
+	}
 
 	void swap(System & a, System & b)
 	{
@@ -62,6 +72,12 @@ namespace bertini
 		swap(a.is_differentiated_,b.is_differentiated_);
 		swap(a.jacobian_,b.jacobian_);
 
+		swap(a.space_derivatives_,b.space_derivatives_);
+		swap(a.time_derivatives_,b.time_derivatives_);
+
+		swap(a.assume_uniform_precision_,b.assume_uniform_precision_);
+		swap(a.jacobian_eval_method_,b.jacobian_eval_method_);
+
 		swap(a.precision_,b.precision_);
 		swap(a.is_patched_,b.is_patched_);
 		swap(a.patch_,b.patch_);
@@ -82,8 +98,13 @@ namespace bertini
 		is_patched_ = other.is_patched_;
 
 		jacobian_ = other.jacobian_;
+		space_derivatives_ = other.space_derivatives_;
+		time_derivatives_ = other.time_derivatives_;
+
 		is_differentiated_ = other.is_differentiated_;
 
+		assume_uniform_precision_ = other.assume_uniform_precision_;
+		jacobian_eval_method_ = other.jacobian_eval_method_;
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
 
@@ -202,6 +223,9 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
+		if (this->assume_uniform_precision_ && new_precision == this->precision_)
+			return;
+
 		for (const auto& iter : functions_) {
 			iter->precision(new_precision);
 		}
@@ -224,8 +248,23 @@ namespace bertini
 		}
 
 		if (is_differentiated_)
-			for (const auto& iter : jacobian_)
-				iter->precision(new_precision);
+		{
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+					for (const auto& iter : jacobian_)
+						iter->precision(new_precision);
+					break;
+				case JacobianEvalMethod::Derivatives:
+					for (const auto& iter : space_derivatives_)
+						iter->precision(new_precision);
+					for (const auto& iter : time_derivatives_)
+						iter->precision(new_precision);
+					break;
+				// later, case for straight line program?
+			}
+			
+		}
 
 		if (have_path_variable_)
 			path_variable_->precision(new_precision);
@@ -257,13 +296,45 @@ namespace bertini
 
 	void System::Differentiate() const
 	{
-			jacobian_.resize(NumFunctions());
-			auto num_functions = NumFunctions();
-			for (int ii = 0; ii < num_functions; ++ii)
-				jacobian_[ii] = MakeJacobian(functions_[ii]->Differentiate());
+		switch (jacobian_eval_method_)
+		{
+			case JacobianEvalMethod::JacobianNode:
+			{
+				auto num_functions = NumFunctions();
+				jacobian_.resize(num_functions);
+				for (int ii = 0; ii < num_functions; ++ii)
+					jacobian_[ii] = MakeJacobian(functions_[ii]->Differentiate());
+				break;
+			}
+			case JacobianEvalMethod::Derivatives:
+			{
+				const auto& vars = this->Variables();
+				const auto num_vars = NumVariables();
+				const auto num_functions = NumFunctions();
 
-			is_differentiated_ = true;
+				space_derivatives_.resize(num_functions*num_vars);
+				// again, computing these in column major, so staying with one variable at a time.
+				for (int jj = 0; jj < num_vars; ++jj)
+					for (int ii = 0; ii < num_functions; ++ii)
+						space_derivatives_[ii+jj*num_functions] = functions_[ii]->Differentiate(vars[jj]);
+
+				if (HavePathVariable())
+				{
+					const auto& t = path_variable_;
+					time_derivatives_.resize(num_functions);
+						for (int ii = 0; ii < num_functions; ++ii)
+							time_derivatives_[ii] = functions_[ii]->Differentiate(t);
+				}
+				break;
+			}
 		}
+		is_differentiated_ = true;
+
+		if (auto_simplify_)
+		{
+			this->SimplifyDerivatives();
+		}
+	}
 
 
 
@@ -587,7 +658,7 @@ namespace bertini
 		return have_path_variable_;
 	}
 
-
+	
 
 
 
@@ -753,46 +824,43 @@ namespace bertini
 
 			
 
-    //////////////////////
-    //
-    //  Functions involving coefficients of the system
-    //
-    ///////////////////////
-
-    mpfr_float System::CoefficientBound(unsigned num_evaluations) const
-    {
-    	mpfr_float bound("0");
-
-    	for (unsigned ii=0; ii < num_evaluations; ii++)
-    	{	
-    		Vec<mpfr> randy = RandomOfUnits<mpfr>(NumVariables());
-    		Vec<mpfr> f_vals;
-    		if (HavePathVariable())
-    			f_vals = Eval(randy, mpfr::RandomUnit());
-    		else
-    			f_vals = Eval(randy);
-	    	
-	    	auto dh_dx = Jacobian<mpfr>();
-	    	
-			bound = max(f_vals.array().abs().maxCoeff(),
-				         dh_dx.array().abs().maxCoeff(), bound);
-		}
-    	return bound;
-	}
-
-
-
-
-
-
-
 
 
     /////////////////
 	//
-	// Functions involving the degrees of functions in the systems.
+	// Functions involving the coefficients and degrees of functions in the systems.
 	//
 	///////////////////
+
+	template <typename NumT>
+	typename Eigen::NumTraits<NumT>::Real System::CoefficientBound(unsigned num_evaluations) const
+	{
+		static_assert(Eigen::NumTraits<NumT>::IsComplex,"NumT must be a complex type");
+		
+		using RT = typename Eigen::NumTraits<NumT>::Real;
+		using CT = NumT;
+
+		RT bound(0);
+
+		for (unsigned ii=0; ii < num_evaluations; ii++)
+		{	
+			Vec<CT> randy = RandomOfUnits<CT>(NumVariables());
+			Vec<CT> f_vals;
+			if (HavePathVariable())
+				f_vals = Eval(randy, RandomUnit<CT>());
+			else
+				f_vals = Eval(randy);
+			
+			Mat<CT> dh_dx = Jacobian<CT>();
+			
+			bound = max(f_vals.array().abs().maxCoeff(),
+						 dh_dx.array().abs().maxCoeff(), bound);
+		}
+		return bound;
+	}
+
+	template double System::CoefficientBound<dbl>(unsigned) const;
+	template mpfr_float System::CoefficientBound<mpfr>(unsigned) const;
 
     int System::DegreeBound() const
     {
@@ -900,7 +968,81 @@ namespace bertini
 
 
 
+	void System::SimplifyFunctions()
+	{
+		using bertini::Simplify;
+		for (auto& iter : this->functions_)
+			Simplify(iter);
+	}
 
+
+
+	void System::SimplifyDerivatives() const
+	{
+		using bertini::Simplify;
+
+		auto num_vars = this->NumVariables();
+		std::vector<dbl> old_vals(num_vars);  dbl old_path_var_val;
+
+		auto vars = this->Variables();
+		for (unsigned ii=0; ii<num_vars; ++ii)
+		{
+			old_vals[ii] = vars[ii]->Eval<dbl>();
+			vars[ii]->SetToRandUnit<dbl>();
+		}
+
+		if (HavePathVariable())
+		{
+			old_path_var_val = path_variable_->Eval<dbl>();
+			path_variable_->SetToRandUnit<dbl>();
+		}
+
+
+		for (const auto& n : jacobian_)
+			n->Reset();
+		for (const auto& n : space_derivatives_)
+			n->Reset();
+		for (const auto& n : time_derivatives_)
+			n->Reset();
+
+
+		switch (jacobian_eval_method_)
+		{
+			case JacobianEvalMethod::JacobianNode:
+				for (auto& iter : this->jacobian_)
+					Simplify(iter);
+				break;
+			case JacobianEvalMethod::Derivatives:
+				for (auto& iter : this->space_derivatives_)
+					Simplify(iter);
+				for (auto& iter : this->time_derivatives_)
+					Simplify(iter);
+				break;
+
+		}
+		
+		for (unsigned ii=0; ii<num_vars; ++ii)
+			vars[ii]->set_current_value<dbl>(old_vals[ii]);
+		if (HavePathVariable())
+			path_variable_->set_current_value(old_path_var_val);
+
+
+		for (const auto& n : jacobian_)
+			n->Reset();
+		for (const auto& n : space_derivatives_)
+			n->Reset();
+		for (const auto& n : time_derivatives_)
+			n->Reset();
+
+	}
+
+
+
+	void System::Simplify()
+	{
+		SimplifyFunctions();
+		SimplifyDerivatives();
+	}
 
 
 
@@ -970,8 +1112,27 @@ namespace bertini
 		if (s.is_differentiated_)
 		{
 			out << "system is differentiated; jacobian:\n";
-			for (const auto& iter : s.jacobian_) {
-				out << (iter)->name() << " = " << *iter << "\n";
+			switch (s.jacobian_eval_method_)
+			{
+			case JacobianEvalMethod::JacobianNode:
+				for (const auto& iter : s.jacobian_)
+					out << (iter)->name() << " = " << *iter << "\n";
+				break;
+			case JacobianEvalMethod::Derivatives:
+				for (int jj = 0; jj < s.NumVariables(); ++jj)
+					for (int ii = 0; ii < s.NumFunctions(); ++ii)
+					{
+						const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
+						out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+					}
+
+				if (s.HavePathVariable())
+					for (int ii = 0; ii < s.NumFunctions(); ++ii)
+					{
+						const auto& d = s.time_derivatives_[ii];
+						out << "jac_time_der(" << ii << ") = " << d << "\n";
+					}
+				break;
 			}
 			out << "\n";
 		}
@@ -1159,5 +1320,9 @@ namespace bertini
 		return sys_clone;
 	}
 
+	void Simplify(System & sys)
+	{
+		sys.Simplify();
+	}
 
 }

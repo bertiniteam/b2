@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with fixed_precision_utilities.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 /**
@@ -36,8 +36,7 @@ These definitions are provided for use in tracking and endgames.  This allows a 
 #include "bertini2/trackers/config.hpp"
 
 
-namespace bertini{ namespace tracking { namespace endgame {
-namespace adaptive{
+namespace bertini{ namespace tracking { namespace adaptive{
 
 /**
 \brief Sets the precision of each space sample to be of input precision.
@@ -179,4 +178,4 @@ unsigned EnsureAtUniformPrecision(TimeCont<mpfr> & times, SampCont<mpfr> & sampl
 
 
 
-}}}} // re: namespaces
+}}} // re: namespaces

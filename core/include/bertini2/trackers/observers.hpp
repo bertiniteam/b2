@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with tracking/observers.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license,
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 /**
@@ -64,8 +64,6 @@ namespace bertini {
 						next_precision_ = next;
 						time_of_first_increase_ = t.CurrentTime();
 						t.RemoveObserver(this);
-
-						std::cout << "precision increased to " << next_precision_ << " at time " << time_of_first_increase_ << '\n';
 					}
 
 				}
@@ -240,14 +238,16 @@ namespace bertini {
 
 				if (auto p = dynamic_cast<const Initializing<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing in double, tracking path\nfrom\tt = "
+					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(p->Get().GetSystem().precision())
+						<< "initializing in double, tracking path\nfrom\tt = "
 						<< p->StartTime() << "\nto\tt = " << p->EndTime()
 						<< "\n from\tx = \n" << p->StartPoint()
 						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
 				else if (auto p = dynamic_cast<const Initializing<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::debug) << "initializing in multiprecision, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint()
+					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(p->Get().GetSystem().precision())
+						 << "initializing in multiprecision, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint()
 						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
 
@@ -260,11 +260,12 @@ namespace bertini {
 					BOOST_LOG_TRIVIAL(severity_level::trace) << "Tracker iteration " << t.NumTotalStepsTaken() << "\ncurrent precision: " << t.CurrentPrecision();
 
 
-					BOOST_LOG_TRIVIAL(severity_level::trace)
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(t.CurrentPrecision())
 						<< "t = " << t.CurrentTime()
 						<< "\ncurrent stepsize: " << t.CurrentStepsize()
-						<< "\ndelta_t = " << t.DeltaT() << "\ncurrent x = "
-						<< t.CurrentPoint();
+						<< "\ndelta_t = " << t.DeltaT() 
+						<< "\ncurrent x size = " << t.CurrentPoint().size()
+						<< "\ncurrent x = " << t.CurrentPoint();
 				}
 
 
@@ -294,20 +295,20 @@ namespace bertini {
 
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful (mpfr), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "prediction successful (mpfr), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "prediction successful (dbl), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "prediction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,mpfr>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful (mpfr), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "correction successful (mpfr), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,dbl>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << "correction successful (dbl), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "correction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
 

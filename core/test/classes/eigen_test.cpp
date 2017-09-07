@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with eigen_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 
@@ -39,15 +39,11 @@
 #include "externs.hpp"
 
 
-using mpfr_float = bertini::mpfr_float;
-
-using bertini::KahanMatrix;
-
-
 
 
 BOOST_AUTO_TEST_SUITE(num_traits_checking)
 
+using mpfr_float = bertini::mpfr_float;
 
 // this test assures that the Eigen::NumTraits defined in eigen_extensions.hpp is correctly found during template instantiation, and that the Real type it defines is actually mpfr_float.  If it were not, then we would be unable to make an expression of ::Real type in variable q, because it would be an expression, not a populatable number of type mpfr_float.
 BOOST_AUTO_TEST_CASE(expressions_of_mpfr_floats)
@@ -84,7 +80,8 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 
-
+using mpfr_float = bertini::mpfr_float;
+using bertini::KahanMatrix;
 
 	BOOST_AUTO_TEST_CASE(solve_100x100_kahan_matrix_double) {
 		unsigned int size = 10;
@@ -117,7 +114,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		for (int ii=0; ii<size; ii++)
 			for (int jj=0; jj<size; jj++)
-				jj!=ii? B(ii,jj) = -1.0/(ii+1.0) + bertini::mpfr_float(rand()) /  bertini::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
+				jj!=ii? B(ii,jj) = -bertini::mpfr_float(1)/(ii+1) + bertini::mpfr_float(rand()) /  bertini::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
 
 		C = A.lu().solve(B);
 	}
@@ -139,7 +136,7 @@ BOOST_AUTO_TEST_SUITE(kahan_matrix_solving_LU)
 		
 		for (int ii=0; ii<size; ii++){
 			for (int jj=0; jj<size; jj++){
-				(jj!=ii) ? B(ii,jj) = -1.0/(ii+1) + mpfr(rand()) /  mpfr(RAND_MAX) : B(ii,jj) = mpfr(0.0);
+				(jj!=ii) ? B(ii,jj) = -mpfr(1)/(ii+1) + mpfr(rand()) /  mpfr(RAND_MAX) : B(ii,jj) = mpfr(0.0);
 			}
 		}
 		C = A.lu().solve(B);

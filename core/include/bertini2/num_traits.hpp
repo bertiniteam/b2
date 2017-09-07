@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with num_traits.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 /**
 \file num_traits.hpp 
@@ -79,6 +79,9 @@ namespace bertini
 		{
 			return boost::lexical_cast<double>(s);
 		}
+
+		using Real = double;
+		using Complex = dbl;
 	};
 
 
@@ -105,6 +108,9 @@ namespace bertini
 		{
 			return std::complex<double>(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
 		}
+
+		using Real = double;
+		using Complex = dbl;
 	};
 
 
@@ -187,8 +193,8 @@ namespace bertini
 	{
 		using std::abs;
 		using std::sqrt;
-		std::default_random_engine generator;
-		std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		static std::default_random_engine generator;
+		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
 		std::complex<double> returnme(distribution(generator), distribution(generator));
 		return returnme / sqrt( abs(returnme));
 	}
@@ -196,8 +202,8 @@ namespace bertini
 	template <> inline
 	std::complex<double> RandomUnit<std::complex<double> >()
 	{
-		std::default_random_engine generator;
-		std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		static std::default_random_engine generator;
+		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
 		std::complex<double> returnme(distribution(generator), distribution(generator));
 		return returnme / abs(returnme);
 	}
@@ -249,6 +255,9 @@ namespace bertini {
 		{
 			return mpfr_float(s);
 		}
+
+		using Real = mpfr_float;
+		using Complex = mpfr;
 	};	
 
 
@@ -271,7 +280,20 @@ namespace bertini {
 		{
 			return bertini::complex(s,t);
 		}
+
+		using Real = mpfr_float;
+		using Complex = mpfr;
 	};
+
+	template <> struct NumTraits<mpq_rational> 
+	{
+		inline static 
+		mpq_rational FromString(std::string const& s)
+		{
+			return mpq_rational(s);
+		}
+	};	
+
 }
 
 #endif

@@ -10,7 +10,7 @@
 #
 # LICENSE
 #
-#   Copyright Daniel Brake 2016
+#   Copyright Dani Brake 2016
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice

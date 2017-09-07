@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 /**
 \file system.hpp 
@@ -63,6 +63,22 @@
 namespace bertini {
 
 	
+	enum class JacobianEvalMethod
+	{
+		JacobianNode,
+		Derivatives
+		//StraightLineProgram not yet....
+	};
+
+	/**
+	\brief Gets the default evaluation method for Jacobians.  One might be faster...
+	*/
+	JacobianEvalMethod DefaultJacobianEvalMethod();
+
+	/**
+	\brief Get the default value for whether a system should autosimplify.
+	*/
+	bool DefaultAutoSimplify();
 
 	/**
 	\brief The fundamental polynomial system class for Bertini2.
@@ -352,7 +368,7 @@ namespace bertini {
 		
 		
 		/**
-		 Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
+		 \brief Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
 
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 		*/
@@ -370,14 +386,33 @@ namespace bertini {
 
 			if (!is_differentiated_)
 				Differentiate();
-			else
-				for (const auto& iter : jacobian_) 
-					iter->Reset();
+			
+			
 
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-				for (int jj = 0; jj < NumVariables(); ++jj)
-					jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
-				
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+				{
+					for (const auto& iter : jacobian_) 
+						iter->Reset();
+
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						for (int jj = 0; jj < NumVariables(); ++jj)
+							jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
+					break;
+				}
+				case JacobianEvalMethod::Derivatives:
+				{
+					for (const auto& iter : space_derivatives_) 
+						iter->Reset();
+
+					for (int jj = 0; jj < NumVariables(); ++jj)
+						for (int ii = 0; ii < NumFunctions(); ++ii)
+							space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
+					break;
+				}
+			}
+			
 			if (IsPatched())
 				patch_.JacobianInPlace(J,std::get<Vec<T> >(current_variable_values_));
 			
@@ -548,8 +583,8 @@ namespace bertini {
 		*/
 		template<typename Derived, typename OtherDerived, typename T>
 		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
-		                    const Eigen::MatrixBase<OtherDerived> & variable_values, 
-		                    const T & path_variable_value) const
+							const Eigen::MatrixBase<OtherDerived> & variable_values, 
+							const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
@@ -569,10 +604,29 @@ namespace bertini {
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
 
-			
-			for (int ii = 0; ii < NumFunctions(); ++ii)
-				ds_dt(ii) = jacobian_[ii]->EvalJ<T>(path_variable_);
+			switch (jacobian_eval_method_)
+			{
+				case JacobianEvalMethod::JacobianNode:
+				{
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						jacobian_[ii]->Reset();
 
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
+					break;
+				}
+				case JacobianEvalMethod::Derivatives:
+				{
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						time_derivatives_[ii]->Reset();
+
+					for (int ii = 0; ii < NumFunctions(); ++ii)
+						time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
+					break;
+				}
+			}
+
+			// the patch doesn't move with time.  derivatives 0.
 			if (IsPatched())
 				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
 					ds_dt(ii+NumFunctions()) = T(0);
@@ -965,20 +1019,24 @@ namespace bertini {
 
 
 
-        /**
+		/**
 		 Order the variables, by the order in which the groups were added.
 
 		 This function returns the variables in First In First Out (FIFO) ordering.
 
 		 Homogenizing variables precede affine variable groups, so that groups always are grouped together.
 
+		This function freshly constructs the ordering every time. If you want to use the cached value, \see Variables.
+
 		 \throws std::runtime_error, if there is a mismatch between the number of homogenizing variables and the number of variable_groups.  This would happen if a system is homogenized, and then more stuff is added to it.  
-        */
-        VariableGroup VariableOrdering() const;
+		*/
+		VariableGroup VariableOrdering() const;
 
 
-        /**
+		/**
 		 Get the variables in the problem.
+
+		 Returns the variable ordering, constructing it if necessary.
 		*/
 		const VariableGroup& Variables() const;
 
@@ -999,25 +1057,25 @@ namespace bertini {
 			return VariableGroupSizesFIFO();
 		}
 
-        /**
+		/**
 		\brief Dehomogenize a point, using the variable grouping / structure of the system.
 		
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
 
 		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
-        */
-        template<typename T>
-	    Vec<T> DehomogenizePoint(Vec<T> const& x) const
-	        {
+		*/
+		template<typename T>
+		Vec<T> DehomogenizePoint(Vec<T> const& x) const
+			{
 
-	        	if (x.size()!=NumVariables())
-	        		throw std::runtime_error("dehomogenizing point with incorrect number of coordinates");
+				if (x.size()!=NumVariables())
+					throw std::runtime_error("dehomogenizing point with incorrect number of coordinates");
 
-	        	if (!have_ordering_)
-	    			ConstructOrdering();
+				if (!have_ordering_)
+					ConstructOrdering();
 
-	    		return DehomogenizePointFIFO(x);
-	        }
+				return DehomogenizePointFIFO(x);
+			}
 
 
 
@@ -1050,21 +1108,35 @@ namespace bertini {
 			return hom_variable_groups_;
 		}
 
+
+		const Var& PathVariable() const
+		{
+			return path_variable_;
+		}
+		//////////////////////
+		//
+		//  Functions involving coefficients of the system
+		//
+		///////////////////////
+
+
 		/**
 		Compute an estimate of an upper bound of the absolute values of the coefficients in the system.
 		
 		\param num_evaluations The number of times to compute this estimate.  Default is 1.
 		\returns An upper bound on the absolute values of the coefficients.
 		*/
-        mpfr_float CoefficientBound(unsigned num_evaluations=1) const;
+		template <typename NumT>
+		typename Eigen::NumTraits<NumT>::Real CoefficientBound(unsigned num_evaluations = 1) const;
+		
 
 
-        /**
-         \brief Compute an upper bound on the degree of the system.  
+		/**
+		 \brief Compute an upper bound on the degree of the system.  
 
-         This number will be wrong if the system is non-polynomial, because degree for non-polynomial systems is not defined.
-         */
-        int DegreeBound() const;
+		 This number will be wrong if the system is non-polynomial, because degree for non-polynomial systems is not defined.
+		 */
+		int DegreeBound() const;
 
 		/**
 		 \brief Get the degrees of the functions in the system, with respect to all variables.
@@ -1173,6 +1245,81 @@ namespace bertini {
 		*/ 
 		void CopyVariableStructure(System const& other);
 		
+		/**
+		\brief One of a family of functions indicating whether we can assume the system will always have uniform precision.
+
+		\see PleaseAssumeUniformPrecision AssumeUniformPrecision IsAssumingUniformPrecision
+		*/
+		void DontAssumeUniformPrecision()
+		{
+			AssumeUniformPrecision(false);
+		}
+
+		void PleaseAssumeUniformPrecision()
+		{
+			AssumeUniformPrecision(true);
+		}
+
+		void AssumeUniformPrecision(bool val)
+		{
+			assume_uniform_precision_ = false;
+		}
+
+		/** 
+		\brief yon getter for the obvious thing it gets
+		*/
+		auto IsAssumingUniformPrecision() const
+		{
+			return assume_uniform_precision_;
+		}
+
+		inline
+		void PleaseAutoSimplify()
+		{
+			SetAutoSimplify(true);
+		}
+
+		inline
+		void DontAutoSimplify()
+		{
+			SetAutoSimplify(false);
+		}
+
+		void SetAutoSimplify(bool val)
+		{
+			auto_simplify_ = val;
+		}
+
+
+		/**
+		\brief Query the state of autosimplification
+		*/
+		auto IsAutoSimplifying() const
+		{
+			return auto_simplify_;
+		}
+
+		/**
+		\brief Simplify the functions contained in the system.
+
+		\note This may change any nodes on which the system depends.
+		*/
+		void SimplifyFunctions();
+
+		/**
+		\brief Simplify the derivatives / jacobian / etc contained in the system.
+
+		\note This may change any nodes on which the system depends.
+		*/
+		void SimplifyDerivatives() const;
+
+		/**
+		\brief Simplify as many aspects of the system as possible.  
+
+		\note This may change any nodes on which the system depends.
+		*/
+		void Simplify();
+
 
 		/**
 		\brief Add two systems together.
@@ -1235,67 +1382,67 @@ namespace bertini {
 		\see FIFOVariableOrdering
 		*/
 		template<typename T>
-	    Vec<T> DehomogenizePointFIFO(Vec<T> const& x) const
-        {
-        	#ifndef BERTINI_DISABLE_ASSERTS
-        	assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
-        	#endif
+		Vec<T> DehomogenizePointFIFO(Vec<T> const& x) const
+		{
+			#ifndef BERTINI_DISABLE_ASSERTS
+			assert(homogenizing_variables_.size()==0 || homogenizing_variables_.size()==NumVariableGroups() && "must have either 0 homogenizing variables, or the number of homogenizing variables must match the number of affine variable groups.");
+			#endif
 
-        	bool is_homogenized = homogenizing_variables_.size()!=0;
-        	Vec<T> x_dehomogenized(NumNaturalVariables());
+			bool is_homogenized = homogenizing_variables_.size()!=0;
+			Vec<T> x_dehomogenized(NumNaturalVariables());
 
-        	unsigned affine_group_counter = 0;
-        	unsigned hom_group_counter = 0;
-        	unsigned ungrouped_variable_counter = 0;
+			unsigned affine_group_counter = 0;
+			unsigned hom_group_counter = 0;
+			unsigned ungrouped_variable_counter = 0;
 
-        	unsigned hom_index = 0; // index into x, the point we are dehomogenizing
-        	unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
+			unsigned hom_index = 0; // index into x, the point we are dehomogenizing
+			unsigned dehom_index = 0; // index into x_dehomogenized, the point we are computing
 
-    		for (auto& iter : time_order_of_variable_groups_)
-    		{
-    			switch (iter){
-    				case VariableGroupType::Affine:
-    				{
-    					if (is_homogenized)
-    					{
-	    					auto h = x(hom_index++);
-	    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
-	    						x_dehomogenized(dehom_index++) = x(hom_index++) / h;
-	    					affine_group_counter++;
-	    				}
-	    				else
-	    				{
-	    					for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
-	    						x_dehomogenized(dehom_index++) = x(hom_index++);
-	    				}
-    					break;
-    				}
-    				case VariableGroupType::Homogeneous:
-    				{
-    					for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
-    						x_dehomogenized(dehom_index++) = x(hom_index++);
-    					break;
-    				}
-    				case VariableGroupType::Ungrouped:
-    				{
-    					x_dehomogenized(dehom_index++) = x(hom_index++);
-    					ungrouped_variable_counter++;
-    					break;
-    				}
-    				default:
-    				{
-    					throw std::runtime_error("unacceptable VariableGroupType in FIFOVariableOrdering");
-    				}
-    			}
-    		}
+			for (auto& iter : time_order_of_variable_groups_)
+			{
+				switch (iter){
+					case VariableGroupType::Affine:
+					{
+						if (is_homogenized)
+						{
+							auto h = x(hom_index++);
+							for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+								x_dehomogenized(dehom_index++) = x(hom_index++) / h;
+							affine_group_counter++;
+						}
+						else
+						{
+							for (unsigned ii = 0; ii < variable_groups_[affine_group_counter].size(); ++ii)
+								x_dehomogenized(dehom_index++) = x(hom_index++);
+						}
+						break;
+					}
+					case VariableGroupType::Homogeneous:
+					{
+						for (unsigned ii = 0; ii < hom_variable_groups_[hom_group_counter].size(); ++ii)
+							x_dehomogenized(dehom_index++) = x(hom_index++);
+						break;
+					}
+					case VariableGroupType::Ungrouped:
+					{
+						x_dehomogenized(dehom_index++) = x(hom_index++);
+						ungrouped_variable_counter++;
+						break;
+					}
+					default:
+					{
+						throw std::runtime_error("unacceptable VariableGroupType in FIFOVariableOrdering");
+					}
+				}
+			}
 
-    		return x_dehomogenized;
-        }
+			return x_dehomogenized;
+		}
 
-	    /**
+		/**
 		 Puts together the ordering of variables, and stores it internally.
-	    */
-	    void ConstructOrdering() const;
+		*/
+		void ConstructOrdering() const;
 
 
 		VariableGroup ungrouped_variables_; ///< ungrouped variable nodes.  Not in an affine variable group, not in a projective group.  Just hanging out, being a variable.
@@ -1305,7 +1452,7 @@ namespace bertini {
 		VariableGroup homogenizing_variables_; ///< homogenizing variables for the variable_groups.  
 
 
-		bool have_path_variable_; ///< Whether we have the variable or not.
+		bool have_path_variable_ = false; ///< Whether we have the variable or not.
 		Var path_variable_; ///< the single path variable for this system.  Sometimes called time.
 		
 		VariableGroup implicit_parameters_; ///< Implicit parameters.  These don't depend on anything, and will be moved from one parameter point to another by the tracker.  They should be algebraically constrained by some equations.
@@ -1316,10 +1463,15 @@ namespace bertini {
 		std::vector< Fn > functions_; ///< The system's functions.
 		
 		class Patch patch_; ///< Patch on the variable groups.  Assumed to be in the same order as the time_order_of_variable_groups_ if the system uses FIFO ordering, or in same order as the AffHomUng variable groups if that is set.
-		bool is_patched_;	///< Indicator of whether the system has been patched.
+		bool is_patched_ = false;	///< Indicator of whether the system has been patched.
 
 		mutable std::vector< Jac > jacobian_; ///< The generated functions from differentiation.  Created when first call for a Jacobian matrix evaluation.
-		mutable bool is_differentiated_; ///< indicator for whether the jacobian tree has been populated.
+
+		mutable std::vector< Nd > space_derivatives_; ///< The generated functions from differentiation with respect to space.  in column-major order to be consistent with Eigen default order.  Created when first call for a Jacobian matrix evaluation.
+
+		mutable std::vector< Nd > time_derivatives_; ///< The generated functions from differentiation with respect to time.  in column-major order to be consistent with Eigen default order.  Created when first call for a Jacobian matrix evaluation.
+
+		mutable bool is_differentiated_ = false; ///< indicator for whether the jacobian tree has been populated.
 
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
@@ -1327,10 +1479,15 @@ namespace bertini {
 		mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_variable_values_;
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
-		mutable bool have_ordering_;
+		mutable bool have_ordering_ = false;
 
 		mutable unsigned precision_; ///< the current working precision of the system 
 
+		bool assume_uniform_precision_ = false; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
+
+		JacobianEvalMethod jacobian_eval_method_ = DefaultJacobianEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
+
+		bool auto_simplify_ = DefaultAutoSimplify();
 
 		friend class boost::serialization::access;
 
@@ -1360,9 +1517,15 @@ namespace bertini {
 			ar & is_differentiated_;
 			ar & jacobian_;
 
+			ar & space_derivatives_;
+			ar & time_derivatives_;
+			
 			ar & precision_;
 			ar & is_patched_;
 			ar & patch_;
+
+			ar & assume_uniform_precision_;
+			ar & jacobian_eval_method_;
 		}
 
 	};
@@ -1389,7 +1552,10 @@ namespace bertini {
 	*/
 	System Clone(System const& sys);
 
-
+	/**
+	\brief Free form function for simplifying systems.
+	*/
+	void Simplify(System & sys);
 }
 
 
