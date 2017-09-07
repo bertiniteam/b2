@@ -159,6 +159,8 @@ namespace bertini{ namespace endgame{
 			EndgameConfig,
 			SecurityConfig
 			>;
+
+		using EmitterType = PowerSeriesEndgame<PrecT>;
 	};
 
 

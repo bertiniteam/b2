@@ -76,7 +76,6 @@ using bertini::DefaultPrecision;
 
 
 
-using namespace bertini::tracking;
 using namespace bertini::endgame;
 
 /**
@@ -103,8 +102,8 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -164,8 +163,8 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -233,8 +232,8 @@ BOOST_AUTO_TEST_CASE(circle_track__nonzero_target_time)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -297,8 +296,8 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -390,8 +389,8 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -502,8 +501,8 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -566,8 +565,8 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -637,8 +636,8 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 
 
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -697,8 +696,8 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -757,8 +756,8 @@ BOOST_AUTO_TEST_CASE(initial_cauchy_loops)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -815,8 +814,8 @@ BOOST_AUTO_TEST_CASE(initial_cauchy_loops_nonzero_target_time)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -877,8 +876,8 @@ BOOST_AUTO_TEST_CASE(initial_cauchy_loops_cycle_num_greater_than_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -937,8 +936,8 @@ BOOST_AUTO_TEST_CASE(first_approximation)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -958,7 +957,7 @@ BOOST_AUTO_TEST_CASE(first_approximation)
 	sample << ComplexFromString("0.5","0"); // f(.1) = 5.000000000000001e-01 9.084258952712920e-17 from bertini classic
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -998,8 +997,8 @@ BOOST_AUTO_TEST_CASE(first_approximation_nonzero_target_time)
 
 	TrackerType tracker(sys);
 		
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
 	    1e-5,
@@ -1029,7 +1028,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_nonzero_target_time)
 	my_endgame.SetPSEGTimes(pseg_times);
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1065,8 +1064,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -1091,7 +1090,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 	x_origin << BCT(1,0);
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1136,8 +1135,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -1164,7 +1163,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 	x_origin << BCT(1,0);
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1207,8 +1206,8 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -1229,7 +1228,7 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 	sample << ComplexFromString("7.999999999999999e-01", "2.168404344971009e-19"); // 
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1269,8 +1268,8 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-6,
@@ -1288,7 +1287,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1329,8 +1328,8 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -1356,7 +1355,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 	TestedEGType my_endgame(tracker);
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1392,8 +1391,8 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 	newton_preferences.max_num_newton_iterations = 2;
 	newton_preferences.min_num_newton_iterations = 1;
 
@@ -1419,7 +1418,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1454,8 +1453,8 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 	newton_preferences.max_num_newton_iterations = 2;
 	newton_preferences.min_num_newton_iterations = 1;
 
@@ -1485,7 +1484,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1517,8 +1516,8 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 
 	TrackerType tracker(sys);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-5,
@@ -1544,7 +1543,7 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1580,8 +1579,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
 
 	TrackerType tracker(sys);
 		
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
 	    1e-5,
@@ -1604,7 +1603,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
 
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1645,8 +1644,8 @@ BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
 
 	TrackerType tracker(sys);
 		
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
 	    1e-5,
@@ -1672,7 +1671,7 @@ BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
 
 
 
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 
 	EndgameConfig endgame_settings;
@@ -1733,8 +1732,8 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	TrackerType tracker(final_griewank_osborn_system);
 	
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
                 1e-6,
@@ -1774,7 +1773,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	TestedEGType my_endgame(tracker,cauchy_settings,endgame_settings,security_settings);
 
 #ifdef B2_OBSERVE_TRACKERS
-	GoryDetailLogger<TrackerType> tons_of_detail;
+	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 	tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1880,8 +1879,8 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	auto precision_config = PrecisionConfig(final_system);
 
 	auto tracker = TrackerType(final_system);
-	SteppingConfig stepping_preferences;
-	NewtonConfig newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 	tracker.Setup(TestedPredictor,
 	              	1e-5, 1e5,
 					stepping_preferences, newton_preferences);
@@ -1921,7 +1920,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 					stepping_preferences, newton_preferences);
 
 #ifdef B2_OBSERVE_TRACKERS
-			GoryDetailLogger<TrackerType> tons_of_detail;
+			bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 			tracker.AddObserver(&tons_of_detail);
 #endif
 
@@ -1958,5 +1957,72 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 
 
+
+
+
+
+
+/**
+	Checks that we can do logging of an endgame while running.
+*/
+BOOST_AUTO_TEST_CASE(gory_detail_logging)
+{
+	DefaultPrecision(ambient_precision);
+
+	System sys;
+	Var x = MakeVariable("x");
+	Var t = MakeVariable("t"); 
+
+	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
+
+	VariableGroup vars{x};
+	sys.AddVariableGroup(vars); 
+	sys.AddPathVariable(t);
+
+
+	auto precision_config = PrecisionConfig(sys);
+
+	TrackerType tracker(sys);
+	
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
+	newton_preferences.max_num_newton_iterations = 2;
+	newton_preferences.min_num_newton_iterations = 1;
+
+	tracker.Setup(TestedPredictor,
+                1e-5,
+                1e5,
+                stepping_preferences,
+                newton_preferences);
+	
+	tracker.PrecisionSetup(precision_config);
+
+	tracker.ReinitializeInitialStepSize(false);
+
+
+	BCT time(1);
+	Vec<BCT> sample(1);
+	Vec<BCT> x_origin(1);
+
+
+	time = ComplexFromString("0.1");
+
+	sample << ComplexFromString("9.000000000000001e-01", "4.358898943540673e-01"); // 
+	x_origin << BCT(1,0);
+
+	
+	TestedEGType my_endgame(tracker);
+
+
+	bertini::endgame::GoryDetailLogger<TestedEGType> eg_logger;
+	my_endgame.AddObserver(&eg_logger);
+
+	auto cauchy_endgame_success = my_endgame.Run(time,sample);
+
+
+	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
+	BOOST_CHECK((my_endgame.FinalApproximation<BCT>() - x_origin).template lpNorm<Eigen::Infinity>() < 1e-5);
+	BOOST_CHECK_EQUAL(my_endgame.CycleNumber(), 2);
+}// end cauchy_endgame_test_cycle_num_greater_than_1
 
 

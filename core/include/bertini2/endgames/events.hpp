@@ -30,42 +30,66 @@
 */
 
 #pragma once
+
 #include "bertini2/detail/events.hpp"
-#include "bertini2/limbo.hpp"
 
 namespace bertini {
 
-	namespace endgames{
+	namespace endgame{
 
 
 	
-// 	/**
-// 	\brief Generic event for Endgames
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(EndgamesEvent,ConstEvent);
+	/**
+	\brief Generic event for Endgames
+	*/
+	ADD_BERTINI_EVENT_TYPE(EndgameEvent,ConstEvent);
 
-// 	/**
-// 	\brief Endgame was externally terminated
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(ExternallyTerminated,EndgamesEvent);
+	/**
+	\brief Generic failure event for Endgames
+	*/
+	ADD_BERTINI_EVENT_TYPE(EndgameFailure,ConstEvent);
 
-// 	/**
-// 	\brief MinTrackTime reached during endgame
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(MinTrackTimeReached,EndgamesEvent);
+	/**
+	\brief Generic success event for Endgames
+	*/
+	ADD_BERTINI_EVENT_TYPE(EndgameSuccess,ConstEvent);
 
-// 	/**
-// 	\brief Cycle number computed was too high
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(CycleNumTooHigh,EndgamesEvent);
+	/**
+	\brief MinTrackTime reached during endgame
+	*/
+	ADD_BERTINI_EVENT_TYPE(MinTrackTimeReached,EndgameFailure);
 
-// 	/**
-// 	\brief Security max norm reached. 
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(SecurityMaxNormReached,EndgamesEvent);
+	/**
+	\brief Cycle number computed was too high
+	*/
+	ADD_BERTINI_EVENT_TYPE(CycleNumTooHigh,EndgameFailure);
+
+	/**
+	\brief Security max norm reached. 
+	*/
+	ADD_BERTINI_EVENT_TYPE(SecurityMaxNormReached,EndgameFailure);
+
+	/**
+	\brief Started running the endgame
+	*/
+	ADD_BERTINI_EVENT_TYPE(Initializing,EndgameEvent);
 
 
+	/**
+	\brief Time advancing
+	*/
+	ADD_BERTINI_EVENT_TYPE(TimeAdvanced,EndgameEvent);
 
-	}// re: namespace tracking
+	/**
+	\brief Converged -- endgame is done!
+	*/
+	ADD_BERTINI_EVENT_TYPE(Converged,EndgameSuccess);
+
+	/**
+	\brief Refined a sample
+	*/
+	ADD_BERTINI_EVENT_TYPE(SampleRefined,EndgameEvent);
+
+	}// re: namespace endgames
 }// re: namespace bertini
 

@@ -49,6 +49,7 @@
 #include "bertini2/trackers/config.hpp"
 #include "bertini2/endgames/config.hpp"
 #include "bertini2/endgames/interpolation.hpp"
+#include "bertini2/endgames/events.hpp"
 
 #include "bertini2/logging.hpp"
 
@@ -86,7 +87,8 @@ Also, there are settings that will be kept at this level to not duplicate code.
 template<class FlavorT, class PrecT>
 class EndgameBase : 
 	public detail::Configured< typename AlgoTraits<FlavorT>::NeededConfigs >,
-	public PrecT
+	public PrecT,
+	public Observable
 {
 public:
 	using TrackerType = typename PrecT::TrackerType;

@@ -33,8 +33,7 @@
 #include "bertini2/endgames/fixed_prec_endgame.hpp"
 #include "bertini2/endgames/cauchy.hpp"
 
-//THIS NEEDS TO BE IMPLEMENTED
-// #include "bertini2/endgames/observers.hpp"
+#include "bertini2/endgames/observers.hpp"
 #include "bertini2/trackers/observers.hpp"
 
 
@@ -44,12 +43,12 @@ BOOST_AUTO_TEST_SUITE(fixed_multiple_cauchy_endgame)
 
 BOOST_AUTO_TEST_SUITE(generic_tests_precision_16)
 
-using namespace bertini::tracking;
+
 using namespace bertini::endgame;
 
-using TrackerType = MultiplePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
-auto TestedPredictor = Predictor::HeunEuler;
+auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = bertini::DoublePrecision();
 
 #include "test/endgames/generic_cauchy_test.hpp"
@@ -61,12 +60,12 @@ BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 BOOST_AUTO_TEST_SUITE(generic_tests_precision_30)
 
-using namespace bertini::tracking;
+
 using namespace bertini::endgame;
 
-using TrackerType = MultiplePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
-auto TestedPredictor = Predictor::HeunEuler;
+auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = 30;
 
 #include "test/endgames/generic_cauchy_test.hpp"
@@ -78,12 +77,12 @@ BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 BOOST_AUTO_TEST_SUITE(generic_tests_precision_50)
 
-using namespace bertini::tracking;
+
 using namespace bertini::endgame;
 
-using TrackerType = MultiplePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::MultiplePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
-auto TestedPredictor = Predictor::HeunEuler;
+auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = 50;
 
 #include "test/endgames/generic_cauchy_test.hpp"
