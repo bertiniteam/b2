@@ -98,7 +98,6 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 							public detail::Configured<
 								typename AlgoTraits< ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>::NeededConfigs>
 		{
-			BERTINI_DEFAULT_VISITABLE();
 
 /// a bunch of using statements to reduce typing.
 			using BaseComplexType 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
