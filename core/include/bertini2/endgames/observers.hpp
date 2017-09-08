@@ -78,7 +78,7 @@ virtual void Observe(AnyEvent const& e) override
 		BOOST_LOG_TRIVIAL(severity_level::debug) << "approximated the target root.  approximation " << p->Get().template FinalApproximation<BCT>() << " with error " << p->Get().ApproximateError();
 	}
 
-	else if (auto p = dynamic_cast<const PrecisionChanged<EmitterT>*>(&e))
+	else if (auto p = dynamic_cast<const PrecisionChanged<AMPEndgame>*>(&e))
 	{
 		BOOST_LOG_TRIVIAL(severity_level::debug) << "precision changed from  " << p->Previous() << " to " << p->Next();
 	}
