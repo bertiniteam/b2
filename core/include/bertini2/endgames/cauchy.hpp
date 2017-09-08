@@ -160,7 +160,7 @@ FIle: test/endgames/fixed_multiple_cauchy_test.cpp
 */	
 template<typename PrecT> 
 class CauchyEndgame : 
-	public EndgameBase<CauchyEndgame<PrecT>, PrecT>
+	public virtual EndgameBase<CauchyEndgame<PrecT>, PrecT>
 {
 public:
 	using BaseEGT = EndgameBase<CauchyEndgame<PrecT>, PrecT>;
@@ -170,10 +170,11 @@ public:
 	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
 	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 
+	using EmitterType = CauchyEndgame<PrecT>;
 
 protected:
 
-	
+	using EndgameBase<CauchyEndgame<PrecT>, PrecT>::NotifyObservers;
 
 
 
@@ -326,7 +327,7 @@ public:
 
 	explicit CauchyEndgame(TrackerType const& tr, 
                             const ConfigsAsTuple& settings )
-      : BaseEGT(tr, settings)
+      : BaseEGT(tr, settings), EndgamePrecPolicyBase<TrackerType>(tr)
    	{ }
 
     template< typename... Ts >
@@ -334,7 +335,7 @@ public:
 		{}
 
 
-	~CauchyEndgame() {};
+	virtual ~CauchyEndgame() = default;
 
 	void ValidateConfigs()
 	{
@@ -410,6 +411,9 @@ public:
 				return tracking_success;
 			}
 
+			NotifyObservers(CircleAdvanced<EmitterType>(*this, next_sample, next_time));
+			
+
 			this->EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));
 
 			auto refinement_success = this->RefineSample(next_sample, next_sample, next_time, 
@@ -425,7 +429,7 @@ public:
 
 			AddToCauchyData(next_time, next_sample);
 
-			// down here next_sample and next_time should have the same precision.
+			NotifyObservers(SampleRefined<EmitterType>(*this));
 		}
 
 		return SuccessCode::Success;
@@ -742,6 +746,7 @@ public:
 				{
 					if (CheckClosedLoop<CT>())
 					{//error is small enough, exit the loop with success. 
+						NotifyObservers(ClosedLoop<EmitterType>(*this));
 						initial_cauchy_loop_success = SuccessCode::Success;
 						loop_hasnt_closed = false;
 						break;
@@ -883,6 +888,8 @@ public:
 
 		}//end while
 
+		NotifyObservers(InEGOperatingZone<EmitterType>(*this));
+
 		return SuccessCode::Success;
 	}
 
@@ -980,7 +987,7 @@ public:
 				return SuccessCode::Success;
 			}
 		} 
-
+		NotifyObservers(CycleNumTooHigh<EmitterType>(*this));
 		return SuccessCode::CycleNumTooHigh;
 	}//end ComputeCauchySamples
 
@@ -1018,6 +1025,7 @@ public:
 		this->EnsureAtPrecision(next_time,Precision(next_sample));
 		RotateOntoPS(next_time, next_sample);
 
+		NotifyObservers(TimeAdvanced<EmitterType>(*this));
 		return SuccessCode::Success;
 	}
 
@@ -1061,19 +1069,13 @@ public:
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
-		auto& cau_times = std::get<TimeCont<CT> >(cauchy_times_);
-		auto& cau_samples = std::get<SampCont<CT> >(cauchy_samples_);
-		auto& ps_times = std::get<TimeCont<CT> >(pseg_times_);
-		auto& ps_samples = std::get<SampCont<CT> >(pseg_samples_);
-
-
-		ClearTimesAndSamples<CT>(); //clear times and samples before we begin.
-		this->CycleNumber(0);
-
 		Vec<CT>& latest_approx = std::get<Vec<CT> >(this->final_approximation_);
 		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
 		NumErrorT& approx_error = this->approximate_error_;
 
+
+		ClearTimesAndSamples<CT>(); //clear times and samples before we begin.
+		this->CycleNumber(0);
 		prev_approx = start_point;
 		
 		auto init_success = GetIntoEGZone(start_time, start_point, target_time);
@@ -1098,18 +1100,25 @@ public:
 			if (extrapolation_success!=SuccessCode::Success)
 				return extrapolation_success;
 
-			if (this->SecuritySettings().level <= 0)
-				norm_of_dehom_latest = this->GetSystem().DehomogenizePoint(latest_approx).template lpNorm<Eigen::Infinity>();
-
 			approx_error = static_cast<NumErrorT>((latest_approx - prev_approx).template lpNorm<Eigen::Infinity>());
+			NotifyObservers(ApproximatedRoot<EmitterType>(*this));
 
 			if (approx_error < this->FinalTolerance())
+			{
+				NotifyObservers(Converged<EmitterType>(*this));
 				return SuccessCode::Success;
-			else if (this->SecuritySettings().level <= 0 && 
-			   norm_of_dehom_prev   > this->SecuritySettings().max_norm &&  
-			   norm_of_dehom_latest > this->SecuritySettings().max_norm  )
+			}
+
+			if (this->SecuritySettings().level)
 			{//we are too large, break out of loop to return error.
-				return SuccessCode::SecurityMaxNormReached;
+				norm_of_dehom_latest = this->GetSystem().DehomogenizePoint(latest_approx).template lpNorm<Eigen::Infinity>();
+
+				if (norm_of_dehom_prev   > this->SecuritySettings().max_norm &&  
+					norm_of_dehom_latest > this->SecuritySettings().max_norm  )
+				{
+					NotifyObservers(SecurityMaxNormReached<EmitterType>(*this));
+					return SuccessCode::SecurityMaxNormReached;
+				}
 			}
 
 			prev_approx = latest_approx;

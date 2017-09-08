@@ -167,7 +167,7 @@ FIle: test/endgames/fixed_multiple_powerseries_test.cpp
 
 template<typename PrecT> 
 class PowerSeriesEndgame : 
-	public EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>
+	public virtual EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>
 {
 public:
 	using BaseEGT = EndgameBase<PowerSeriesEndgame<PrecT>, PrecT>;
@@ -289,15 +289,14 @@ public:
 
 	explicit PowerSeriesEndgame(TrackerType const& tr, 
 	                            const ConfigsAsTuple& settings )
-      : BaseEGT(tr, settings)
+      : BaseEGT(tr, settings), EndgamePrecPolicyBase<TrackerType>(tr)
    	{}
 
     template< typename... Ts >
-		PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Configs::Unpermute( ts... ) ) 
+	explicit
+	PowerSeriesEndgame(TrackerType const& tr, const Ts&... ts ) : PowerSeriesEndgame(tr, Configs::Unpermute( ts... ) ) 
 		{}
 
-
-	~PowerSeriesEndgame() {};
 
 
 	/**
@@ -778,6 +777,8 @@ public:
 
 	} //end PSEG
 
+
+	virtual ~PowerSeriesEndgame() = default;
 }; // end powerseries class
 
 
