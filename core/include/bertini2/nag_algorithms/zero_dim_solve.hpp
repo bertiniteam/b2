@@ -36,6 +36,7 @@
 #include "bertini2/io/generators.hpp"
 
 #include "bertini2/detail/configured.hpp"
+#include "bertini2/detail/observable.hpp"
 
 #include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
@@ -92,7 +93,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 					template<typename,typename> class SystemManagementP>
 		struct ZeroDim :
 							public virtual AnyZeroDim,
-							public Observable<>,
+							public Observable,
 							public SystemManagementP<SystemType, StartSystemType>,
 							public detail::Configured<
 								typename AlgoTraits< ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>::NeededConfigs>
