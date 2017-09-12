@@ -26,6 +26,9 @@
  
 #pragma once
 
+#include "bertini2/system/start_systems.hpp"
+#include "bertini2/nag_algorithms/common/policies.hpp"
+
 namespace bertini{
 	namespace algorithm{
 
