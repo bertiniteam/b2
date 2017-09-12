@@ -32,7 +32,7 @@
 
 #ifndef BERTINI_DETAIL_VISITOR_HPP
 #define BERTINI_DETAIL_VISITOR_HPP
-
+#include <boost/type_index.hpp>
 
 namespace bertini{
 

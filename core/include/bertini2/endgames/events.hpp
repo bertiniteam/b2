@@ -30,42 +30,154 @@
 */
 
 #pragma once
+
 #include "bertini2/detail/events.hpp"
-#include "bertini2/limbo.hpp"
 
 namespace bertini {
 
-	namespace endgames{
+	namespace endgame{
 
 
 	
-// 	/**
-// 	\brief Generic event for Endgames
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(EndgamesEvent,ConstEvent);
+	/**
+	\brief Generic event for Endgames
+	*/
+	ADD_BERTINI_EVENT_TYPE(EndgameEvent,ConstEvent);
 
-// 	/**
-// 	\brief Endgame was externally terminated
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(ExternallyTerminated,EndgamesEvent);
+	/**
+	\brief Generic failure event for Endgames
+	*/
+	ADD_BERTINI_EVENT_TYPE(EndgameFailure,ConstEvent);
 
-// 	/**
-// 	\brief MinTrackTime reached during endgame
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(MinTrackTimeReached,EndgamesEvent);
+	/**
+	\brief Generic success event for Endgames
+	*/
+	ADD_BERTINI_EVENT_TYPE(EndgameSuccess,ConstEvent);
 
-// 	/**
-// 	\brief Cycle number computed was too high
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(CycleNumTooHigh,EndgamesEvent);
+	/**
+	\brief MinTrackTime reached during endgame
+	*/
+	ADD_BERTINI_EVENT_TYPE(MinTrackTimeReached,EndgameFailure);
 
-// 	/**
-// 	\brief Security max norm reached. 
-// 	*/
-// 	ADD_BERTINI_EVENT_TYPE(SecurityMaxNormReached,EndgamesEvent);
+	/**
+	\brief Cycle number computed was too high
+	*/
+	ADD_BERTINI_EVENT_TYPE(CycleNumTooHigh,EndgameFailure);
+
+	/**
+	\brief Security max norm reached. 
+	*/
+	ADD_BERTINI_EVENT_TYPE(SecurityMaxNormReached,EndgameFailure);
+
+	/**
+	\brief Started running the endgame
+	*/
+	ADD_BERTINI_EVENT_TYPE(Initializing,EndgameEvent);
 
 
+	/**
+	\brief Time advancing
+	*/
+	ADD_BERTINI_EVENT_TYPE(TimeAdvanced,EndgameEvent);
 
-	}// re: namespace tracking
+	/**
+	\brief Advanced around the circle around target time
+	*/
+	template<class ObservedT>
+	class CircleAdvanced : public EndgameEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+
+		using CT = typename ObservedT::BaseComplexType;
+		/**
+		\brief The constructor for a CircleAdvanced Event.
+
+		\param obs The observable emitting the event.
+		\param previous The precision before changing.
+		\param next The precision after changing.
+		*/
+		CircleAdvanced(const ObservedT & obs, 
+		               Vec<CT> const& new_point,
+		               CT const& new_time) : EndgameEvent<ObservedT>(obs),
+													new_point_(new_point),
+													new_time_(new_time)
+		{}
+
+
+		virtual ~CircleAdvanced() = default;
+		CircleAdvanced() = delete;
+		
+		const auto& NewSample() const {return new_point_;}
+
+		const auto& NewTime() const {return new_time_;}
+
+	private:
+		const Vec<CT>& new_point_;
+		const CT& new_time_;
+	};
+
+
+	/**
+	\brief Walked a complete loop around the target time.
+	*/
+	ADD_BERTINI_EVENT_TYPE(ClosedLoop,EndgameEvent);
+
+	/**
+	\brief Approximated a root at target time.
+	*/
+	ADD_BERTINI_EVENT_TYPE(ApproximatedRoot,EndgameEvent);
+
+	/**
+	\brief Converged -- endgame is done!
+	*/
+	ADD_BERTINI_EVENT_TYPE(Converged,EndgameSuccess);
+
+	/**
+	\brief Refined a sample
+	*/
+	ADD_BERTINI_EVENT_TYPE(SampleRefined,EndgameEvent);
+
+	/**
+	\brief Made it into the EG operating zone, or so we believe
+	*/
+	ADD_BERTINI_EVENT_TYPE(InEGOperatingZone,EndgameEvent);
+	
+
+	template<class ObservedT>
+	class PrecisionChanged : public EndgameEvent<ObservedT>
+	{ BOOST_TYPE_INDEX_REGISTER_CLASS
+	public:
+		/**
+		\brief The constructor for a PrecisionChanged Event.
+
+		\param obs The observable emitting the event.
+		\param previous The precision before changing.
+		\param next The precision after changing.
+		*/
+		PrecisionChanged(const ObservedT & obs, 
+		             unsigned previous, unsigned next) : EndgameEvent<ObservedT>(obs),
+													prev_(previous),
+													next_(next)
+		{}
+
+
+		virtual ~PrecisionChanged() = default;
+		PrecisionChanged() = delete;
+		
+		/**
+		\brief Get the previous precision.
+		*/
+		auto Previous() const {return prev_;}
+
+		/**
+		\brief Get the next precision, what it changed to.
+		*/
+		auto Next() const {return next_;}
+	private:
+		const unsigned prev_, next_;
+	};
+
+
+	}// re: namespace endgames
 }// re: namespace bertini
 

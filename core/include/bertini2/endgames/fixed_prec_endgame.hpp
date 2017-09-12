@@ -44,7 +44,7 @@
 namespace bertini{ namespace endgame {
 
 template<typename TrackerT>
-class FixedPrecEndgame : public EndgamePrecPolicyBase<TrackerT>
+class FixedPrecEndgame : public virtual EndgamePrecPolicyBase<TrackerT>
 {
 public:
 	using TrackerType = TrackerT;
@@ -87,8 +87,11 @@ public:
 		return SuccessCode::Success;
 	}
 
+	explicit
 	FixedPrecEndgame(TrackerT const& new_tracker) : EndgamePrecPolicyBase<TrackerT>(new_tracker)
 	{}
+
+	virtual ~FixedPrecEndgame() = default;
 }; // re: fixed prec endgame policy
 
 template<>

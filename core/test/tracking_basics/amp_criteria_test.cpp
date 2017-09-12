@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 	auto f = sys.Eval(current_space, current_time);
 	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
 	auto LU = dh_dx.lu();
-	auto delta_z = LU.solve(-f);
+	Vec<mpfr> delta_z = LU.solve(-f);
 
 	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
 	Vec<mpfr> temp_soln = LU.solve(randy);

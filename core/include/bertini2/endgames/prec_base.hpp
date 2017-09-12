@@ -42,16 +42,17 @@ namespace bertini{ namespace endgame {
 \brief A common base type for various precision types, fixed and adaptive
 */
 template <typename TrackerT>
-class EndgamePrecPolicyBase
+class EndgamePrecPolicyBase : public virtual Observable
 {
 public:
 
 	using TrackerType = TrackerT;
 
+	explicit
 	EndgamePrecPolicyBase(TrackerT const& new_tracker) : tracker_(std::ref(new_tracker))
 	{}
 
-	~EndgamePrecPolicyBase() = default;
+	virtual ~EndgamePrecPolicyBase() = default;
 	
 	/**
 	Tell the endgame to use the given tracker.  Takes a reference.  
