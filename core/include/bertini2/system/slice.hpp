@@ -77,7 +77,9 @@ namespace bertini {
 		*/
 		static LinearSlice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
-			return Make(v, dim, homogeneous, orthogonal, bertini::RandomReal);
+			typedef void (*funtype) (mpfr&, unsigned); // the type for number generation
+			funtype gen = bertini::RandomReal;
+			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
 		/**
@@ -85,7 +87,9 @@ namespace bertini {
 		*/
 		static LinearSlice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
-			return Make(v, dim, homogeneous, orthogonal, bertini::RandomComplex);
+			typedef void (*funtype) (mpfr&, unsigned); // the type for number generation
+			funtype gen = bertini::RandomComplex;
+			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
 
