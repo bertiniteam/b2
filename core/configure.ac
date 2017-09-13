@@ -19,7 +19,7 @@ AC_CONFIG_AUX_DIR([config])
 # see Recursive Make Considered Harmful, and any number of demos.
 AM_INIT_AUTOMAKE([1.13 subdir-objects])
 
-#the language for b2 is C++
+#the language for Bertini2 is C++
 AC_LANG([C++])
 
 
@@ -52,7 +52,6 @@ LT_INIT
 
 
 #AC_ARG_ENABLE(option-name, help-string, action-if-present, action-if-not-present)
-# get whether the user wants to disable the use of thread_local for multithreading.
 
 
 AC_ARG_ENABLE([forbid_mixed_arithmetic],
@@ -64,7 +63,7 @@ AS_IF([test "x$enable_forbid_mixed_arithmetic" != "xno"],[
 
 
 AC_ARG_ENABLE([thread_local],
-    AS_HELP_STRING([--disable-thread_local], [Disable thread_local storage for fast complex multiple-precision arithmetic, and other places.  OSX and Apple do NOT implement this keyword.  Since this keyword provides the thread-safety mechanism for complex arithmetic, disabling thread_local threatens thread safety.  Disable at your own risk, and do not use in multithreaded environment.  Write Apple a letter asking them to enable this C++ standard language feature, please, and offer your services helping Bertini2 be thread safe on a Mac using Apple's Clang.]))
+    AS_HELP_STRING([--disable-thread_local], [Disable thread_local storage for fast complex multiple-precision arithmetic, and other places.  XCode coming with OSX Mavericks and before do NOT implement this keyword.  Since this keyword provides the thread-safety mechanism for complex arithmetic, disabling thread_local threatens thread safety.  Disable at your own risk.  Moving to a newer OSX and XCode to get `thread_local` is the best solution.]))
 
 AS_IF([test "x$enable_thread_local" != "xno"],[
 	AC_DEFINE([USE_THREAD_LOCAL], [1],[Define if thread_local keyword should be used.  ])
@@ -72,7 +71,7 @@ AS_IF([test "x$enable_thread_local" != "xno"],[
 
 
 AC_ARG_ENABLE([expression_templates],
-    AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates for Boost.Multiprecision.  Versions of Boost.Multiprecision prior to 1.61 are missing min/max for expressions of real numbers, and some operations in Eigen prior to 3.3 (3.2.92) fail to compile.  If you are using Boost prior to 1.61, either patch according to https://github.com/boostorg/multiprecision/commit/f57bd6b31a64787425ec891bd2ceb536c9036f72 or turn expression templates off using this argument.]))
+    AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates, particularly those coming from Boost.Multiprecision.]))
 
 AS_IF([test "x$enable_expression_templates" != "xno"],[
 	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision.])
@@ -103,6 +102,11 @@ AM_CONDITIONAL([UNITYBUILD], [test x$unity_build = xtrue])
 # AC_SEARCH_LIBS(function, libraries-list, action-if-found, action-if-not-found, extra-libraries)
 
 
+#find the math library
+AC_SEARCH_LIBS([cos], [m], [], [
+  AC_MSG_ERROR([unable to find the cos() function])
+  ])
+
 #find gmp
 AC_SEARCH_LIBS([__gmpz_init],[gmp], [],[
 	AC_MSG_ERROR([unable to find gmp])
@@ -113,15 +117,12 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
   AC_MSG_ERROR([unable to find mpfr])
 ])
 
-#find the math library
-AC_SEARCH_LIBS([cos], [m], [], [
-  AC_MSG_ERROR([unable to find the cos() function])
-  ])
+
 
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
 
-AX_BOOST_BASE([1.58],, [AC_MSG_ERROR([bertini2 needs Boost at least 1.58 but it was not found in your system])])
+AX_BOOST_BASE([1.62],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.62 but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO

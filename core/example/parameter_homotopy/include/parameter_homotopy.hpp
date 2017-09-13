@@ -16,13 +16,12 @@ using EndgameConfT = bertini::endgame::EndgameConfig;
 auto StepOne(bertini::System const& sys)
 {
 	using namespace bertini;
-	using namespace tracking;
 	using namespace algorithm;
 
-	
+	using EndgameT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 	
 
-	auto zd = bertini::algorithm::ZeroDim<TrackerT, typename endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>(sys);
+	auto zd = bertini::algorithm::ZeroDim<TrackerT, EndgameT, bertini::System, bertini::start_system::TotalDegree>(sys);
 
 	zd.DefaultSetup();
 	
@@ -34,9 +33,11 @@ auto StepOne(bertini::System const& sys)
 	auto& tr = zd.GetTracker();
 
 	tr.SetPredictor(bertini::tracking::Predictor::HeunEuler);
-	GoryDetailLogger<TrackerT> logger;
-	// tr.AddObserver(&logger);
+	tracking::GoryDetailLogger<TrackerT> tr_logger;
+	// tr.AddObserver(&tr_logger);
 
+	endgame::GoryDetailLogger<EndgameT> eg_logger;
+	zd.GetEndgame().AddObserver(&eg_logger);
 
 	auto eg = zd.GetFromEndgame<EndgameConfT>();
 	eg.final_tolerance = 1e-11;

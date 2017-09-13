@@ -14,7 +14,8 @@ endif
 
 blackbox_headers = \
 	include/bertini2/blackbox/main_mode_switch.hpp \
-	include/bertini2/blackbox/argc_argv.hpp
+	include/bertini2/blackbox/argc_argv.hpp \
+	include/bertini2/blackbox/config.hpp
 
 blackbox = \
 	$(blackbox_sources) \

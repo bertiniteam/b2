@@ -420,8 +420,6 @@ namespace bertini{
 
 			using EmitterType = typename TrackerTraits<DoublePrecisionTracker>::EventEmitterType;
 
-			BERTINI_DEFAULT_VISITABLE()
-
 
 			/**
 			\brief Construct a tracker, associating to it a System.
@@ -481,8 +479,6 @@ namespace bertini{
 			using BaseRealType = mpfr_float;
 
 			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
-
-			BERTINI_DEFAULT_VISITABLE()
 
 
 			/**

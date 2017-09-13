@@ -39,6 +39,8 @@
 #include "bertini2/endgames/config.hpp"
 #include "bertini2/endgames/prec_base.hpp"
 
+#include "bertini2/endgames/events.hpp"
+#include "bertini2/detail/observable.hpp"
 namespace bertini{ namespace endgame {
 
 
@@ -46,11 +48,11 @@ namespace bertini{ namespace endgame {
 /**
 \brief Specifies some necessaries for AMP style endgame implementations, which differ from the fixed precision ones.
 */
-class AMPEndgame : public EndgamePrecPolicyBase<tracking::AMPTracker>
+class AMPEndgame : public virtual EndgamePrecPolicyBase<tracking::AMPTracker>
 {
 public:
 	using TrackerT = tracking::AMPTracker;
-
+	using EmitterType = AMPEndgame;
 
 	template<typename... T>
 	static
@@ -91,7 +93,6 @@ public:
 
 	SuccessCode RefineSampleImpl(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time, NumErrorT tol, unsigned max_iterations) const
 	{
-// BOOST_LOG_TRIVIAL(severity_level::trace) << "initial point\n" << std::setprecision(bertini::Precision(current_sample)) << current_sample << '\n';
 
 		using bertini::Precision;
 		assert(Precision(current_time)==Precision(current_sample) && "precision of sample and time to be refined in AMP endgame must match");
@@ -109,23 +110,24 @@ public:
 		if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
 		    refinement_success==SuccessCode::FailedToConverge)
 		{
-			// BOOST_LOG_TRIVIAL(severity_level::trace) << "trying refining in higher precision";
 			
+
 			using bertini::Precision;
 
 			auto prev_precision = DefaultPrecision();
-			auto temp_higher_prec = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
-			DefaultPrecision(temp_higher_prec);
-			this->GetTracker().ChangePrecision(temp_higher_prec);
+			auto higher_precision = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
+			DefaultPrecision(higher_precision);
+			this->GetTracker().ChangePrecision(higher_precision);
 
+			NotifyObservers(PrecisionChanged<EmitterType>(*this, prev_precision, higher_precision));
 
 			auto next_sample_higher_prec = current_sample;
-			Precision(next_sample_higher_prec, temp_higher_prec);
+			Precision(next_sample_higher_prec, higher_precision);
 
 			auto result_higher_prec = Vec<mpfr>(current_sample.size());
 
 			auto time_higher_precision = current_time;
-			Precision(time_higher_precision,temp_higher_prec);
+			Precision(time_higher_precision,higher_precision);
 
 			assert(time_higher_precision.precision()==DefaultPrecision());
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
@@ -134,63 +136,22 @@ public:
 		                          							tol,
 		                          							max_iterations);
 
-			Precision(result, temp_higher_prec);
+			Precision(result, higher_precision);
 			result = result_higher_prec;
 			
 			assert(Precision(result)==DefaultPrecision());
 		}
-		// BOOST_LOG_TRIVIAL(severity_level::trace) << "refining residual " << this->GetTracker().LatestNormOfStep();
 		return refinement_success;
 	}
 
-	// SuccessCode RefineSampleImpl(Vec<dbl> & result, Vec<dbl> const& current_sample, dbl const& current_time) const
-	// {
-	// 	using RT = double;
-
-	// 	auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
-	// 	                          	static_cast<RT>(this->FinalTolerance()) * this->EndgameSettings().sample_point_refinement_factor,
-	// 	                          	max_iterations);
-
-		
-	// 	if (refinement_success==SuccessCode::HigherPrecisionNecessary ||
-	// 	    refinement_success==SuccessCode::FailedToConverge)
-	// 	{
-	// 		BOOST_LOG_TRIVIAL(severity_level::trace) << "trying refining in higher precision";
-
-	// 		auto prev_precision = DoublePrecision();
-	// 		auto temp_higher_prec = LowestMultiplePrecision();
-	// 		DefaultPrecision(temp_higher_prec);
-	// 		this->GetTracker().ChangePrecision(temp_higher_prec);
-
-
-	// 		auto next_sample_higher_prec = Vec<mpfr>(current_sample.size());
-	// 		for (int ii=0; ii<current_sample.size(); ++ii)
-	// 			next_sample_higher_prec(ii) = mpfr(current_sample(ii));
-
-	// 		auto result_higher_prec = Vec<mpfr>(current_sample.size());
-	// 		mpfr time_higher_precision(current_time);
-
-	// 		double tol = tol;
-	// 		refinement_success = this->GetTracker().Refine(result_higher_prec,
-	// 		                                               next_sample_higher_prec,
-	// 		                                               time_higher_precision,
-	// 	                          							tol,
-	// 	                          							max_iterations);
-
-
-	// 		DefaultPrecision(prev_precision);
-	// 		this->GetTracker().ChangePrecision(prev_precision);
-	// 		for (unsigned ii(0); ii<current_sample.size(); ++ii)
-	// 			result(ii) = dbl(result_higher_prec(ii));
-	// 	}
-	// 	BOOST_LOG_TRIVIAL(severity_level::trace) << "refining residual " << this->GetTracker().LatestNormOfStep();
-	// 	return refinement_success;
-	// }
 
 
 
+	explicit
 	AMPEndgame(TrackerT const& new_tracker) : EndgamePrecPolicyBase<TrackerT>(new_tracker)
 	{}
+
+	virtual ~AMPEndgame() = default;
 
 }; // re: class AMPEndgame
 		

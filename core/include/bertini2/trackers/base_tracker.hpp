@@ -39,7 +39,8 @@
 #include "bertini2/trackers/newton_corrector.hpp"
 #include "bertini2/limbo.hpp"
 #include "bertini2/logging.hpp"
-#include "bertini2/detail/visitable.hpp"
+
+#include "bertini2/detail/observable.hpp"
 
 // Must be at the end of the include list
 #include "bertini2/trackers/events.hpp"
@@ -134,7 +135,7 @@ namespace bertini{
 		*/
 		template<class D>
 		class Tracker : 
-			public Observable<>,
+			public Observable,
 			public detail::Configured<
 				typename TrackerTraits< D >::NeededConfigs
 					>

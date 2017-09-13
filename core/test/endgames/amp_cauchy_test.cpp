@@ -40,8 +40,8 @@
 #include "bertini2/endgames/amp_endgame.hpp"
 #include "bertini2/endgames/cauchy.hpp"
 
-//TODO THIS NEEDS TO BE IMPLEMENTED
-//#include "bertini2/endgames/observers.hpp"
+
+#include "bertini2/endgames/observers.hpp"
 #include "bertini2/trackers/observers.hpp"
 
 // top level test suite for adaptive precision cauchy test

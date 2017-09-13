@@ -32,8 +32,7 @@
 #include "bertini2/endgames/fixed_prec_endgame.hpp"
 #include "bertini2/endgames/cauchy.hpp"
 
-//THIS NEEDS TO BE IMPLEMENTED!
-// #include "bertini2/endgames/observers.hpp"
+#include "bertini2/endgames/observers.hpp"
 #include "bertini2/trackers/observers.hpp"
 
 
@@ -43,10 +42,10 @@ BOOST_AUTO_TEST_SUITE(fixed_double_cauchy_endgame)
 // this first suite tests whether cauchy endgame works correctly when ambient precision of mpfr is essentially double precision
 BOOST_AUTO_TEST_SUITE(generic_tests_precision_16)
 
-using namespace bertini::tracking;
+
 using namespace bertini::endgame;
 
-using TrackerType = DoublePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::DoublePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
 auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = bertini::DoublePrecision();
@@ -63,10 +62,10 @@ BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 // this first suite tests whether cauchy endgame works correctly when ambient precision of mpfr is higher than double precision
 BOOST_AUTO_TEST_SUITE(generic_tests_precision_30)
 
-using namespace bertini::tracking;
+
 using namespace bertini::endgame;
 
-using TrackerType = DoublePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::DoublePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::Cauchy;
 auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = 30;

@@ -34,7 +34,7 @@
 #include "bertini2/endgames/fixed_prec_endgame.hpp"
 #include "bertini2/endgames/powerseries.hpp"
 
-
+#include "bertini2/endgames/observers.hpp"
 
 
 BOOST_AUTO_TEST_SUITE(fixed_multiple_powerseries_endgame_generic_tests_precision16)

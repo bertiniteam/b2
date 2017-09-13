@@ -1161,7 +1161,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	tracker.PrecisionSetup(precision_config);
 
 #ifdef B2_OBSERVE_TRACKERS
-			GoryDetailLogger<TrackerType> tons_of_detail;
+			bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
 			tracker.AddObserver(&tons_of_detail);
 #endif
 

@@ -5,6 +5,8 @@ detail_headers = \
 	include/bertini2/detail/events.hpp \
 	include/bertini2/detail/visitable.hpp \
 	include/bertini2/detail/visitor.hpp \
+	include/bertini2/detail/observer.hpp \
+	include/bertini2/detail/observable.hpp \
 	include/bertini2/detail/is_template_parameter.hpp \
 	include/bertini2/detail/enable_permuted_arguments.hpp \
 	include/bertini2/detail/typelist.hpp
