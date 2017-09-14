@@ -15,15 +15,15 @@
 //
 // Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
 // dani brake, university of wisconsin eau claire
 
 /**
-\file bertini2/system/start/user.hpp 
+\file bertini2/system/start/user.hpp
 
 \brief Defines the User-defined start system type.
 
@@ -37,7 +37,22 @@ the user provided start system is merely their system, evaluated at the start ti
 
 #include "bertini2/common/config.hpp"
 
-namespace bertini 
+// these next two blobs solve a problem of private-ness.
+// see https://stackoverflow.com/questions/4112075/trouble-overriding-save-construct-data-when-serializing-a-pointer-to-a-class-wit
+
+// forward declare the User start system
+namespace bertini{ namespace start_system{
+	class User;
+}}
+
+// forward declare the function, so we can friend it below.
+namespace boost { namespace serialization {
+template<class Archive>
+inline void save_construct_data(Archive & ar, const bertini::start_system::User * t, const unsigned int file_version);
+}}
+// end nonsense for friends.  so lonely, but c++ friends don't solve the irl problem at all.  
+
+namespace bertini
 {
 	namespace start_system{
 
@@ -45,21 +60,21 @@ namespace bertini
 		/**
 		\brief The user-provided start system for Numerical Algebraic Geometry
 
-		
+
 		*/
 		class User : public StartSystem
 		{
 		public:
 			User() = default;
 			virtual ~User() = default;
-			
+
 			/**
 			 Constructor for making a user-provided start system from another.
 			*/
 			User(System const& s, SampCont<dbl> const& solns);
 			User(System const& s, SampCont<mpfr> const& solns);
 
-			
+
 
 			/**
 			Get the number of start points for this start system.
@@ -69,7 +84,7 @@ namespace bertini
 			User& operator*=(Nd const& n) = delete;
 
 			User& operator+=(System const& sys) = delete;
-			
+
 		private:
 
 			/**
@@ -141,4 +156,3 @@ inline void load_construct_data(
 	}
 }
 }}
-

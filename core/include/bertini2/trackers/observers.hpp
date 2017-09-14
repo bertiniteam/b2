@@ -32,6 +32,9 @@
 #pragma once
 
 #include "bertini2/trackers/events.hpp"
+
+#include "bertini2/detail/observer.hpp"
+
 #include "bertini2/trackers/base_tracker.hpp"
 #include "bertini2/logging.hpp"
 #include <boost/type_index.hpp>
@@ -70,9 +73,7 @@ namespace bertini {
 			}
 
 
-			virtual void Visit(TrackerT const& t) override
-			{
-			}
+
 
 		public:
 
@@ -129,8 +130,7 @@ namespace bertini {
 			}
 
 
-			virtual void Visit(TrackerT const& t) override
-			{}
+
 
 		public:
 
@@ -168,15 +168,10 @@ namespace bertini {
 				const TrackingEvent<EmitterT>* p = dynamic_cast<const TrackingEvent<EmitterT>*>(&e);
 				if (p)
 				{
-					Visit(p->Get());
+					precisions_.push_back(p->Get().CurrentPrecision());
 				}
 			}
 
-
-			virtual void Visit(TrackerT const& t) override
-			{
-				precisions_.push_back(t.CurrentPrecision());
-			}
 
 		public:
 			const std::vector<unsigned>& Precisions() const
@@ -203,15 +198,10 @@ namespace bertini {
 				const EventT<EmitterT>* p = dynamic_cast<const EventT<EmitterT>*>(&e);
 				if (p)
 				{
-					Visit(p->Get());
+					path_.push_back(p->Get().CurrentPoint());
 				}
 			}
 
-
-			virtual void Visit(TrackerT const& t) override
-			{
-				path_.push_back(t.CurrentPoint());
-			}
 
 		public:
 			const std::vector<Vec<mpfr> >& Path() const
@@ -334,8 +324,6 @@ namespace bertini {
 					BOOST_LOG_TRIVIAL(severity_level::debug) << "unlogged event, of type: " << boost::typeindex::type_id_runtime(e).pretty_name();
 			}
 
-			virtual void Visit(TrackerT const& t) override
-			{}
 		};
 
 
@@ -353,8 +341,6 @@ namespace bertini {
 					std::cout << "observed step failure" << std::endl;
 			}
 
-			virtual void Visit(TrackerT const& t) override
-			{}
 		};
 
 	} //re: namespace tracking

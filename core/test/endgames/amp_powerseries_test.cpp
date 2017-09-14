@@ -33,7 +33,7 @@
 #include "bertini2/endgames/amp_endgame.hpp"
 #include "bertini2/endgames/powerseries.hpp"
 
-
+#include "bertini2/endgames/observers.hpp"
 #include "bertini2/trackers/observers.hpp"
 #define B2_OBSERVE_TRACKERS
 

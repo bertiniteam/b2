@@ -25,8 +25,8 @@
 
 
 
-#ifndef BERTINI_TRACKING_BASE_ENDGAME_HPP
-#define BERTINI_TRACKING_BASE_ENDGAME_HPP
+#ifndef BERTINI_BASE_ENDGAME_HPP
+#define BERTINI_BASE_ENDGAME_HPP
 
 #pragma once
 /**
@@ -49,6 +49,7 @@
 #include "bertini2/trackers/config.hpp"
 #include "bertini2/endgames/config.hpp"
 #include "bertini2/endgames/interpolation.hpp"
+#include "bertini2/endgames/events.hpp"
 
 #include "bertini2/logging.hpp"
 
@@ -86,7 +87,8 @@ Also, there are settings that will be kept at this level to not duplicate code.
 template<class FlavorT, class PrecT>
 class EndgameBase : 
 	public detail::Configured< typename AlgoTraits<FlavorT>::NeededConfigs >,
-	public PrecT
+	public PrecT,
+	public virtual Observable
 {
 public:
 	using TrackerType = typename PrecT::TrackerType;
@@ -94,6 +96,7 @@ public:
 	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
 	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 
+	using EmitterType = FlavorT;
 
 protected:
 
@@ -131,7 +134,7 @@ protected:
 	*/
 	const FlavorT& AsFlavor() const
 	{
-		return static_cast<const FlavorT&>(*this);
+		return dynamic_cast<const FlavorT&>(*this);
 	}
 
 	/**
@@ -139,7 +142,7 @@ protected:
 	*/
 	FlavorT& AsFlavor()
 	{
-		return static_cast<FlavorT&>(*this);
+		return dynamic_cast<FlavorT&>(*this);
 	}
 
 public:
@@ -176,6 +179,7 @@ public:
 				// BOOST_LOG_TRIVIAL(severity_level::trace) << "refining failed, code " << int(refine_success);
 				return refine_success;
 			}
+			NotifyObservers(SampleRefined<EmitterType>(AsFlavor()));
 		}
 
 		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec) // known at compile time
@@ -219,15 +223,17 @@ public:
 	}
 
 	explicit EndgameBase(TrackerType const& tr, const ConfigsAsTuple& settings ) :
-      	Configured( settings ), PrecT(tr)
+      	Configured( settings ), PrecT(tr), EndgamePrecPolicyBase<TrackerType>(tr)
    	{}
 
+
     template< typename... Ts >
-		EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Configs::Unpermute( ts... ) ) 
-		{}
+    explicit
+	EndgameBase(TrackerType const& tr, const Ts&... ts ) : EndgameBase(tr, Configs::Unpermute( ts... ) ) 
+	{}
 
 
-		inline unsigned CycleNumber() const { return cycle_number_;}
+	inline unsigned CycleNumber() const { return cycle_number_;}
 	inline void CycleNumber(unsigned c) { cycle_number_ = c;}
 	inline void IncrementCycleNumber(unsigned inc) { cycle_number_ += inc;}
 
@@ -365,6 +371,7 @@ public:
 		return SuccessCode::Success;
 	}
 
+	virtual ~EndgameBase() = default;
 };
 			
 } }// end namespaces bertini

@@ -35,14 +35,13 @@
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
 #include "bertini2/endgames.hpp"
 
+#include "bertini2/blackbox/config.hpp"
+
+
 namespace bertini{
 namespace blackbox{
 
-namespace type{
-enum class Start{ TotalDegree, MHom, User};
-enum class Tracker{ FixedDouble, FixedMultiple, Adaptive};
-enum class Endgame{ PowerSeries, Cauchy};
-}
+
 
 struct ZeroDimRT
 {
@@ -52,31 +51,47 @@ struct ZeroDimRT
 };
 
 
-template <typename StartType, typename TrackerType, typename EndgameType, typename ... ConstTs>
-std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecify(ConstTs const& ...ts)
+template <typename StartType, typename TrackerType, typename EndgameType, template<typename,typename> class SystemManagementPol, typename ... ConstTs>
+std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyComplete(ConstTs const& ...ts)
 {
 	return std::make_unique<
 			algorithm::ZeroDim<
 				TrackerType, 
 				EndgameType, 
 				System, 
-				StartType>
+				StartType,
+				SystemManagementPol>
 			>(ts...);
-
 }
+
+template <typename StartType, typename TrackerType, typename EndgameType, typename ... ConstTs>
+std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyShouldClone(std::true_type, ConstTs const& ...ts)
+{
+	return ZeroDimSpecifyComplete<StartType, TrackerType, 
+			typename endgame::EndgameSelector<TrackerType>::Cauchy, policy::CloneGiven>(ts...);
+}
+
+template <typename StartType, typename TrackerType, typename EndgameType, typename ... ConstTs>
+std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyShouldClone(std::false_type, ConstTs const& ...ts)
+{
+	return ZeroDimSpecifyComplete<StartType, TrackerType, 
+			typename endgame::EndgameSelector<TrackerType>::Cauchy, policy::RefToGiven>(ts...);
+}
+
 
 template <typename StartType, typename TrackerType, typename ... ConstTs>
 std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyEndgame(ZeroDimRT const& rt, ConstTs const& ...ts)
 {
+	
 	switch (rt.endgame)
 	{
 		case type::Endgame::PowerSeries:
-			return ZeroDimSpecify<StartType, TrackerType, 
-					typename endgame::EndgameSelector<TrackerType>::PSEG>(ts...);
+			return ZeroDimSpecifyShouldClone<StartType, TrackerType, 
+					typename endgame::EndgameSelector<TrackerType>::PSEG>(typename StorageSelector<StartType>::ShouldClone(), ts...);
 
 		case type::Endgame::Cauchy:
-			return ZeroDimSpecify<StartType, TrackerType, 
-					typename endgame::EndgameSelector<TrackerType>::Cauchy>(ts...);
+			return ZeroDimSpecifyShouldClone<StartType, TrackerType, 
+					typename endgame::EndgameSelector<TrackerType>::Cauchy>(typename StorageSelector<StartType>::ShouldClone(), ts...);
 	}
 }
 
@@ -104,7 +119,7 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyStart(ZeroDimRT const& rt, 
 		case type::Start::MHom:
 			return ZeroDimSpecifyTracker<start_system::MHomogeneous>(rt, ts...);
 		case type::Start::User:
-			return ZeroDimSpecifyTracker<start_system::User>(rt, ts...);
+			throw std::runtime_error("trying to use generic zero dim with user homotopy.  use the specific UserBlaBla instead");
 	}
 }
 

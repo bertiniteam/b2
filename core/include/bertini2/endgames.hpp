@@ -37,6 +37,6 @@
 #include "bertini2/endgames/powerseries.hpp"
 #include "bertini2/endgames/cauchy.hpp"
 
-
+#include "bertini2/endgames/observers.hpp"
 
 

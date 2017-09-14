@@ -10,7 +10,8 @@ else
 blackbox_test_SOURCES = \
 	test/blackbox/blackbox.cpp \
 	test/blackbox/zerodim.cpp \
-	test/blackbox/parsing.cpp
+	test/blackbox/parsing.cpp \
+	test/blackbox/user_homotopy.cpp
 endif
 
 blackbox_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
