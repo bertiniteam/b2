@@ -166,7 +166,7 @@ namespace  bertini {
 			bool is_v_in_vars = false; // Check if at least one v in variables_ is in vars
 			
 			
-			// Is homvar in vars?
+			// Is homvar in vars?  If so erase it from the temporary variable holder temp_vars.
 			VariableGroup temp_vars = vars;
 			temp_vars.erase(std::remove(temp_vars.begin(), temp_vars.end(), homvar), temp_vars.end());
 			
@@ -176,11 +176,13 @@ namespace  bertini {
 			VariableGroup smaller_group;
 			if(variables_.size() > temp_vars.size())
 			{
+//                std::cout << "variables larger\n";
 				larger_group = variables_;
 				smaller_group = temp_vars;
 			}
 			else
 			{
+//                std::cout << "homogenizing variable group larger\n";
 				larger_group = temp_vars;
 				smaller_group = variables_;
 			}

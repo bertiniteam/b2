@@ -108,6 +108,8 @@ namespace  bertini {
 				
 				is_rational_coeffs_ = true;
 				
+                // If we are creating a linear product for variable group that is already homogenized,
+                //   we do not use the constant(last) column in the coefficient matrix
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
@@ -149,6 +151,9 @@ namespace  bertini {
 				SetupVariables(num_factors_, variables);
 				
 				coeffs_mpfr_ref = coeffs_mpfr;
+                
+                // If we are creating a linear product for variable group that is already homogenized,
+                //   we do not use the constant(last) column in the coefficient matrix
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
@@ -502,14 +507,12 @@ namespace  bertini {
 				evaluation_value.SetOne();
 				const Mat<mpfr>& coeffs_ref = std::get< Mat<mpfr> >(coeffs_);
 				
-				
 				// Evaluate all afine variables and store
 				for (int jj = 0; jj < num_variables_; ++jj)
 				{
 					variables_[jj]->EvalInPlace<mpfr>(temp_var_mp_[jj], diff_variable);
 				}
 				hom_variable_->EvalInPlace<mpfr>(temp_var_mp_[num_variables_], diff_variable);
-				
 				
 				
 				
@@ -565,8 +568,8 @@ namespace  bertini {
 			size_t num_factors_;  ///< The number of factors in the linear product.
 			size_t num_variables_;  ///< The number of variables in each linear.
 			bool is_rational_coeffs_; ///< Do we have a rational coefficient to downsample from?
-			bool is_homogenized_;  ///< Have we homogenized the linear product?
-			bool is_hom_vars_;  ///< Is this linear for a homogeneous variable group?
+			bool is_homogenized_ = false;  ///< Have we homogenized the linear product?
+			bool is_hom_vars_ = false;  ///< Is this linear for a homogeneous variable group?
 			
 			
 			mutable std::vector<dbl> temp_var_d_;
