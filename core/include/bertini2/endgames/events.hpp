@@ -60,6 +60,11 @@ namespace bertini {
 	ADD_BERTINI_EVENT_TYPE(MinTrackTimeReached,EndgameFailure);
 
 	/**
+	\brief Refining a sample failed for some reason
+	*/
+	ADD_BERTINI_EVENT_TYPE(RefiningFailed,EndgameFailure);
+
+	/**
 	\brief Cycle number computed was too high
 	*/
 	ADD_BERTINI_EVENT_TYPE(CycleNumTooHigh,EndgameFailure);
