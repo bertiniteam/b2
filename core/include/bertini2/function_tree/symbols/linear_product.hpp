@@ -415,8 +415,7 @@ namespace  bertini {
 
 			
 			
-			
-			
+
 			
 			
 			
@@ -677,7 +676,8 @@ namespace  bertini {
 			 \return LinearProduct node contain the single linear.
 			 */
 			
-			std::shared_ptr<LinearProduct> GetLinears(size_t index) const;
+            std::shared_ptr<LinearProduct> GetLinears(size_t index) const;
+
 			
 			
 			/**
@@ -687,8 +687,8 @@ namespace  bertini {
 			 \return LinearProduct node contain the linears.
 			 */
 			
-			std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices) const;
-			
+            std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices) const;
+
 			
 			
 			void SetupVariables(size_t num_factors, VariableGroup const& variables)
