@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with fixed_double_powerseries_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -30,19 +30,20 @@
 #include "bertini2/system/start_systems.hpp"
 #include "bertini2/num_traits.hpp"
 
-#include "bertini2/endgames/fixed_prec_powerseries.hpp"
+#include "bertini2/endgames/fixed_prec_endgame.hpp"
+#include "bertini2/endgames/powerseries.hpp"
 
+#include "bertini2/endgames/observers.hpp"
 
 BOOST_AUTO_TEST_SUITE(fixed_double_powerseries_endgame)
 
 BOOST_AUTO_TEST_SUITE(generic_tests_ambient_precision_16)
 
-using namespace bertini::tracking;
-using namespace bertini::tracking::endgame;
+using namespace bertini::endgame;
 
-using TrackerType = DoublePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::DoublePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-auto TestedPredictor = config::Predictor::HeunEuler;
+auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = 16;
 #include "test/endgames/generic_pseg_test.hpp"
 
@@ -56,12 +57,11 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(generic_tests_ambient_precision_30)
 
-using namespace bertini::tracking;
-using namespace bertini::tracking::endgame;
+using namespace bertini::endgame;
 
-using TrackerType = DoublePrecisionTracker; // select a tracker type
+using TrackerType = bertini::tracking::DoublePrecisionTracker; // select a tracker type
 using TestedEGType = EndgameSelector<TrackerType>::PSEG;
-auto TestedPredictor = config::Predictor::HeunEuler;
+auto TestedPredictor = bertini::tracking::Predictor::HeunEuler;
 unsigned ambient_precision = 30;
 #include "test/endgames/generic_pseg_test.hpp"
 

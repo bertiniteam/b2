@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 // Jeb Collins, West Texas A&M
 
 
@@ -38,6 +38,131 @@ namespace bertini{
 //  Sum Operator definitions
 //
 //////////////////////
+
+unsigned SumOperator::EliminateZeros()
+{
+	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
+
+	unsigned num_eliminated{0};
+	if (children_size()>1)
+	{	
+		std::vector<std::shared_ptr<Node>> new_children; std::vector<bool> new_ops;
+
+		std::vector<bool> is_zero(children_.size(), false);
+		for (unsigned ii=0; ii<children_.size(); ++ii)
+			if (children_[ii]->Eval<dbl>()==0.)	
+				is_zero[ii] = true;
+
+		for (unsigned ii=0; ii<children_size(); ++ii)
+			if (!is_zero[ii])
+			{
+				new_children.push_back(children_[ii]);
+				new_ops.push_back(children_sign_[ii]);
+			}
+			else
+			{
+				++num_eliminated;
+			}
+
+		if (new_children.empty())
+		{
+			new_children.push_back(MakeInteger(0));
+			new_ops.push_back(true);
+			--num_eliminated;
+		}
+
+		using std::swap;
+		swap(children_, new_children);
+		swap(children_sign_, new_ops);
+	}
+
+	// recurse over the remaining children
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateZeros();
+
+	return num_eliminated;
+}
+
+
+
+unsigned SumOperator::EliminateOnes()
+{
+	unsigned num_eliminated{0};
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateOnes();
+
+	return num_eliminated;
+}
+
+unsigned SumOperator::ReduceSubSums()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
+		if (converted)
+		{ // we have a sum!  reduce it into this one
+			for (unsigned jj=0; jj<converted->children_size(); ++jj)
+			{
+				new_children.push_back(converted->children_[jj]);
+				new_ops.push_back(!(converted->children_sign_[jj] ^ children_sign_[ii]));
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_sign_[ii]);
+		}
+	}
+	swap(this->children_, new_children);
+	swap(this->children_sign_, new_ops);
+	return num_eliminated;
+}
+
+
+unsigned SumOperator::ReduceSubMults()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
+		if (converted && converted->children_size()==1 && converted->children_mult_or_div_[0])
+		{ // we have a multiply node! if its a single node and is mult, not div, then its child can be folded into this sum.
+			new_children.push_back(converted->children_[0]);
+			new_ops.push_back(children_sign_[ii]);
+			num_eliminated++;			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_sign_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_sign_, new_ops);
+
+	return num_eliminated;
+}
+
+
+unsigned SumOperator::ReduceDepth()
+{
+	auto num_eliminated = ReduceSubSums() + ReduceSubMults();
+
+	for (auto& iter : children_)
+		num_eliminated += iter->ReduceDepth();
+
+	return num_eliminated;
+}
 
 void SumOperator::print(std::ostream & target) const
 {
@@ -269,7 +394,6 @@ void SumOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> c
 			evaluation_value -= temp_d_;
 		}
 	}
-	
 }
 
 	
@@ -284,8 +408,15 @@ mpfr SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) c
 
 void SumOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value.SetZero();
-	for(int ii = 0; ii < children_.size(); ++ii)
+	if (children_sign_[0])
+		children_[0]->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	else
+	{
+		children_[0]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+		evaluation_value = -temp_mp_;
+	}
+
+	for(int ii = 1; ii < children_.size(); ++ii)
 	{
 		if(children_sign_[ii])
 		{
@@ -324,6 +455,14 @@ void SumOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable>
 //
 ////////////////////////
 
+unsigned NegateOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned NegateOperator::EliminateOnes()
+{
+	return 0;
+}
 
 void NegateOperator::print(std::ostream & target) const
 {
@@ -387,6 +526,168 @@ void NegateOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variab
 //  Mult Operator definitions
 //
 //////////////////////
+
+unsigned MultOperator::EliminateZeros()
+{
+	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
+
+	// find those zeros in the sum.  then, compress.
+	std::vector<bool> non_zeros_ops;
+
+	bool have_a_zero = false;
+	for (const auto& iter : children_)
+	{
+		if (iter->Eval<dbl>() == 0.)
+		{
+			have_a_zero = true;
+			break;
+		}
+	}
+
+	if (have_a_zero) // if there is a single zero, the whole thing should collapse.
+	{
+		unsigned num_eliminated = children_.size()-1;
+		children_.clear(); children_mult_or_div_.clear();
+		AddChild(MakeInteger(0), true);
+		return num_eliminated;
+	}
+
+	// recurse over the remaining children
+	unsigned num_eliminated{0};
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateZeros();
+
+	return num_eliminated;
+}
+
+
+
+
+
+unsigned MultOperator::EliminateOnes()
+{
+	assert(!children_.empty() && "children_ must not be empty to eliminate ones");
+
+	unsigned num_eliminated{0};
+	if (children_.size()>1)
+	{
+		std::vector<bool> is_one(children_.size(),false);
+		
+
+		for (unsigned ii=0; ii<children_.size(); ++ii)
+			is_one[ii] = children_[ii]->Eval<dbl>()==1.0;
+
+		std::vector<std::shared_ptr<Node>> new_children;
+		std::vector<bool> new_mult_div;
+		for (unsigned ii=0; ii<is_one.size(); ++ii)
+		{
+			if (!is_one[ii])
+			{
+				new_children.push_back(children_[ii]);
+				new_mult_div.push_back(children_mult_or_div_[ii]);
+			}
+			else
+			{
+				++num_eliminated;
+			}
+		}
+
+		if (new_children.empty())
+		{
+			new_children.push_back(children_[0]);
+			new_mult_div.push_back(children_mult_or_div_[0]);
+			--num_eliminated;
+		}
+
+
+		using std::swap;
+		swap(children_, new_children);
+		swap(children_mult_or_div_, new_mult_div);
+	}
+
+	for (auto& iter : children_)
+		num_eliminated += iter->EliminateOnes();
+
+	return num_eliminated;
+}
+
+
+unsigned MultOperator::ReduceSubSums()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
+		if (converted && converted->children_size()==1)
+		{ // we have a sum node! if its a single add node, then its child can be folded into this sum.
+			if (converted->children_sign_[0])
+				new_children.push_back(converted->children_[0]);
+			else
+				new_children.push_back(-converted->children_[0]);
+
+			new_ops.push_back(children_mult_or_div_[ii]);
+			num_eliminated++;
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_mult_or_div_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_mult_or_div_, new_ops);
+
+	return num_eliminated;	
+}
+
+unsigned MultOperator::ReduceSubMults()
+{
+	std::vector<std::shared_ptr<Node>> new_children;
+	std::vector<bool> new_ops;
+	unsigned num_eliminated{0};
+
+	for (unsigned ii=0; ii<children_size(); ++ii)
+	{
+		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
+		if (converted)
+		{ // we have a multiply!  reduce it into this one
+			for (unsigned jj=0; jj<converted->children_size(); ++jj)
+			{
+				new_children.push_back(converted->children_[jj]);
+				new_ops.push_back(!(converted->children_mult_or_div_[jj] ^ this->children_mult_or_div_[ii]));
+				num_eliminated++;
+			}
+			
+		}
+		else
+		{
+			new_children.push_back(this->children_[ii]);
+			new_ops.push_back(this->children_mult_or_div_[ii]);
+		}
+	}
+
+	swap(this->children_, new_children);
+	swap(this->children_mult_or_div_, new_ops);
+
+	return num_eliminated;
+}
+
+
+unsigned MultOperator::ReduceDepth()
+{
+	auto num_eliminated = ReduceSubSums() + ReduceSubMults();
+
+	for (auto& iter : children_)
+		num_eliminated += iter->ReduceDepth();
+
+	return num_eliminated;
+}
+
+
 
 void MultOperator::print(std::ostream & target) const
 {
@@ -599,19 +900,21 @@ mpfr MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) 
 
 void MultOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value.SetOne();
-	for(int ii = 0; ii < children_.size(); ++ii)
+	if (children_mult_or_div_[0])
+		children_[0]->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	else
 	{
+		children_[0]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+		evaluation_value = static_cast<mpfr_float>(1)/temp_mp_;
+	}
+
+	for(int ii = 1; ii < children_.size(); ++ii)
+	{
+		children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
 		if(children_mult_or_div_[ii])
-		{
-			children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
 			evaluation_value *= temp_mp_;
-		}
 		else
-		{
-			children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
 			evaluation_value /= temp_mp_;
-		}
 	}
 	
 }
@@ -623,6 +926,17 @@ void MultOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable
 //  Power Operator definitions
 //
 /////////////////
+
+
+unsigned PowerOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned PowerOperator::EliminateOnes()
+{
+	return 0;
+}
+
 
 void PowerOperator::Reset() const
 {
@@ -637,10 +951,10 @@ void PowerOperator::print(std::ostream & target) const
 }
 
 
-
 std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	auto exp_minus_one = std::make_shared<SumOperator>(exponent_, true, MakeInteger(1),false);
+	
+	auto exp_minus_one = exponent_-1;
 	auto ret_mult = std::make_shared<MultOperator>(base_->Differentiate(v));
 	ret_mult->AddChild(exponent_);
 	ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
@@ -811,6 +1125,15 @@ void PowerOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variabl
 //
 ////////////////////
 
+unsigned IntegerPowerOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned IntegerPowerOperator::EliminateOnes()
+{
+	return 0;
+}
+
 void IntegerPowerOperator::print(std::ostream & target) const
 {
 	target << "(";
@@ -866,6 +1189,15 @@ int IntegerPowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 //  Square Root Operator definitions
 //
 /////////////////
+
+unsigned SqrtOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned SqrtOperator::EliminateOnes()
+{
+	return 0;
+}
 
 void SqrtOperator::print(std::ostream & target) const
 {
@@ -940,6 +1272,15 @@ void SqrtOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable
 //
 //////////////
 
+unsigned ExpOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned ExpOperator::EliminateOnes()
+{
+	return 0;
+}
+
 void ExpOperator::print(std::ostream & target) const
 {
 	target << "exp(";
@@ -1006,6 +1347,15 @@ void ExpOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable>
 //  LogOperator definitions
 //
 //////////////
+
+unsigned LogOperator::EliminateZeros()
+{
+	return 0;
+}
+unsigned LogOperator::EliminateOnes()
+{
+	return 0;
+}
 
 void LogOperator::print(std::ostream & target) const
 {

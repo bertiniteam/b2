@@ -22,6 +22,8 @@
 // individual authors of this file include:
 // daniel brake, university of notre dame
 // Tim Hodges, Colorado State University
+// dani brake, university of wisconsin eau claire
+
 /**
 \file mhom.hpp 
 

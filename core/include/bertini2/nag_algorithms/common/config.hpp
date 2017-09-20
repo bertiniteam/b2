@@ -20,19 +20,20 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 // jeb collins, west texas a&m
  
 #pragma once
+
+#include "bertini2/system/start_systems.hpp"
+#include "bertini2/nag_algorithms/common/policies.hpp"
 
 namespace bertini{
 	namespace algorithm{
 
 template<typename T>
 using SolnCont = std::vector<T>;
-
-		namespace config{
 
 namespace classic{
 
@@ -54,9 +55,11 @@ enum class AlgoChoice
 } // namespace classic
 
 
-template<typename T>
-struct Tolerances
+
+struct TolerancesConfig
 {	
+	using T = NumErrorT;
+
 	T newton_before_endgame = T(1)/T(100000); //E.4.1
 	T newton_during_endgame = T(1)/T(1000000); //E.4.2
 
@@ -65,23 +68,29 @@ struct Tolerances
 	T path_truncation_threshold = T(100000); //E.4.13
 };
 		
-template<typename T>	
-struct MidPath
+	
+struct MidPathConfig
 {
+	using T = NumErrorT;
+
 	T same_point_tolerance = T(1)/T(100000);
 };
 
 
-template<typename T>
-struct AutoRetrack
+
+struct AutoRetrackConfig
 {
+	using T = NumErrorT;
+
 	T midpath_decrease_tolerance_factor = T(1)/T(2);
 };
 
 
-template<typename T>
-struct Sharpening
+
+struct SharpeningConfig
 {
+	using T = NumErrorT;
+
 	unsigned sharpendigits; ///< how many digits should be correct after sharpening.
 	
 	// std::function<Vec<T>> sharpen_method_; ///< function taking a vector, and sharpening it.
@@ -92,9 +101,11 @@ struct Sharpening
 };
 
 
-template<typename T>
-struct Regeneration
+
+struct RegenerationConfig
 {
+	using T = NumErrorT;
+
 	bool remove_infinite_endpoints = true; ///<  Bool indicating whether endpoints during the regeneration start point buildup step which are infinite should be discarded.  If you are not interested in infinite solutions, ensure this is true.  RegenRemoveInf
 
 	bool higher_dimension_check = true; ///< RegenHigherDimTest
@@ -105,8 +116,10 @@ struct Regeneration
 };
 
 
-template<typename T>
-struct PostProcessing{
+
+struct PostProcessingConfig{
+	using T = NumErrorT;
+	
 	T real_threshold = T(1)/T(100000000); ///< threshold on the imaginary part of a solution being 0.  If the imag part exceeds this, the point is considered complex.  Currently, this is the implemented available way in Bertini2 for determining this, but there are other methods.  Smale's alpha theory provides ways to prove that a point is real.  If this is something you need, please consider adding the method to the library, for all to use!  Or, if this is technically beyond your C++ capabilities, add as an issue on the github page, and indicate it as a feature request.
 
 	T endpoint_finite_threshold = T(1)/T(100000);  ///< The threshold on norm of endpoints being considered infinite.  There is another setting in Tolerances, `path_truncation_threshold`, which tells the path tracker to die if exceeded.  Another related setting is in Security, `max_norm` -- the endgame dies if the norm of the computed approximation exceeds this twice.
@@ -115,7 +128,7 @@ struct PostProcessing{
 };
 
 template<typename ComplexT>
-struct ZeroDim
+struct ZeroDimConfig
 {
 	unsigned initial_ambient_precision = DoublePrecision();
 	unsigned max_num_crossed_path_resolve_attempts = 2; ///< The maximum number of times to attempt to re-solve crossed paths at the endgame boundary.
@@ -127,12 +140,11 @@ struct ZeroDim
 	std::string path_variable_name = "ZERO_DIM_PATH_VARIABLE";
 };
 
-struct Meta
+struct MetaConfig
 {
 	classic::AlgoChoice tracktype = classic::AlgoChoice::ZeroDim;
 };
 
-}// config
 
 // a forward declare
 template <typename T>

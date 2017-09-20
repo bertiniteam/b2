@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with start_system_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 #include <boost/test/unit_test.hpp>
@@ -29,6 +29,16 @@
 
 #include "bertini2/system/start_systems.hpp"
 
+
+
+
+#include "externs.hpp"
+
+
+
+BOOST_AUTO_TEST_SUITE(system_class)
+
+using bertini::DefaultPrecision;
 using System = bertini::System;
 
 using Variable = bertini::node::Variable;
@@ -44,16 +54,6 @@ using mpfr = bertini::mpfr;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-
-#include "externs.hpp"
-
-using bertini::DefaultPrecision;
-
-BOOST_AUTO_TEST_SUITE(system_class)
-
-
-
 
 
 BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	auto sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 2; ++ii)
-		BOOST_CHECK( abs(sysvals(ii) - (1.0 - dbl(TD.RandomValue(ii)))) < threshold_clearance_d);
+		BOOST_CHECK( abs(sysvals(ii) - (1.0 - TD.RandomValue<dbl>(ii))) < threshold_clearance_d);
 
 
 
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 	sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 2; ++ii)
-		BOOST_CHECK(abs(sysvals(ii)+dbl(TD.RandomValue(ii))) < threshold_clearance_d);
+		BOOST_CHECK(abs(sysvals(ii)+TD.RandomValue<dbl>(ii)) < threshold_clearance_d);
 	
 
 	J = TD.Jacobian(vals);
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	auto sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 3; ++ii)
-		BOOST_CHECK( abs(sysvals(ii) - (1.0 - dbl(TD.RandomValue(ii)))) < threshold_clearance_d);
+		BOOST_CHECK( abs(sysvals(ii) - (1.0 - TD.RandomValue<dbl>(ii))) < threshold_clearance_d);
 
 	auto J = TD.Jacobian(vals);
 
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 	sysvals = TD.Eval(vals);
 
 	for (unsigned ii = 0; ii < 3; ++ii)
-		BOOST_CHECK(abs(sysvals(ii)+dbl(TD.RandomValue(ii))) < threshold_clearance_d);
+		BOOST_CHECK(abs(sysvals(ii)+TD.RandomValue<dbl>(ii)) < threshold_clearance_d);
 
 	J = TD.Jacobian(vals);
 

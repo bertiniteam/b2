@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with mpfr_extensions.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 /**
 \file mpfr_extensions.hpp 
@@ -36,7 +36,11 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #include "bertini2/config.h"
 
 #include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/random.hpp>
+
+#ifdef B2_FORBID_MIXED_ARITHMETIC
+	#include "bertini2/forbid_double.hpp"
+#endif
+
 #include <boost/random.hpp>
 
 #include <boost/archive/text_oarchive.hpp>
@@ -45,20 +49,12 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 
 #include <string>
 
-
+#include "bertini2/double_extensions.hpp"
 
 
 namespace bertini{
 
-	/**
-	\brief Overload * for unsigned * complex<double>
-	*/
-	inline
-	std::complex<double> operator*(unsigned i, std::complex<double> z)
-	{
-		z*=i;
-		return z;
-	}
+	
 
 #ifdef BMP_EXPRESSION_TEMPLATES
 	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>; 

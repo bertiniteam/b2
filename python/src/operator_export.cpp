@@ -169,7 +169,7 @@ namespace bertini{
 			;
 			
 			// IntegerPowerOperator class
-			class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPowerOperator", init<const Nodeptr&, optional<int> >()  )
+			class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPowerOperator", init<const Nodeptr&, int>()  )
 			
 			.def(PowerOpVisitor<IntegerPowerOperator>())
 			;

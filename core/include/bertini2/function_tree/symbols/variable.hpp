@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with include/bertini2/function_tree/symbols/variable.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
@@ -79,7 +79,24 @@ namespace node{
 		template <typename T>
 		void set_current_value(T const& val);
 
-		
+		/**
+		\brief Changes the value of the variable to be not-a-number.  
+		*/
+		template <typename T>
+		void SetToNan();
+
+		/**
+		\brief Changes the value of the variable to be a random complex number.  
+		*/
+		template <typename T>
+		void SetToRand();
+
+		/**
+		\brief Changes the value of the variable to be a random complex number, of magnitude 1.  
+		*/
+		template <typename T>
+		void SetToRandUnit();
+
 		/**
 		 Differentiates a variable.  
 		 */
@@ -129,7 +146,7 @@ namespace node{
 		
 		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		Variable() = default;
+		Variable();
 	private:
 		
 		friend class boost::serialization::access;

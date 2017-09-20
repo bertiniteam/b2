@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with fixed_prec_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -37,43 +37,28 @@
 #include "bertini2/trackers/fixed_precision_tracker.hpp"
 #include "bertini2/trackers/fixed_precision_utilities.hpp"
 
-namespace bertini{ namespace tracking { namespace endgame {
+#include "bertini2/endgames/config.hpp"
+#include "bertini2/endgames/prec_base.hpp"
+
+
+namespace bertini{ namespace endgame {
 
 template<typename TrackerT>
-class FixedPrecEndgamePolicyBase
+class FixedPrecEndgame : public virtual EndgamePrecPolicyBase<TrackerT>
 {
-	using BaseComplexType = typename TrackerTraits<TrackerT>::BaseComplexType;
-	using BaseRealType = typename TrackerTraits<TrackerT>::BaseRealType;
+public:
+	using TrackerType = TrackerT;
+	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
 
 	using BCT = BaseComplexType;
 	using BRT = BaseRealType;
-
-protected:
-
-	const unsigned precision_;
-
-
-	bool PrecisionSanityCheck() const
-	{
-		return true;
-	}
-
-	SuccessCode ChangePrecision(unsigned) const
-	{
-		return SuccessCode::Success;
-	}
-
-public:
-
-	auto Precision() const
-	{ return precision_; }
-
 
 	template<typename... T>
 	static
 	unsigned EnsureAtUniformPrecision(T& ...args)
 	{
-		return bertini::tracking::endgame::fixed::EnsureAtUniformPrecision(args...);
+		return bertini::tracking::fixed::EnsureAtUniformPrecision(args...);
 	}
 
 	template<typename T>
@@ -89,13 +74,45 @@ public:
 		}
 	}
 
+	SuccessCode RefineSampleImpl(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, double tol, unsigned max_iterations) const
+	{
+		using RT = mpfr_float;
+		using std::max;
+		auto& TR = this->GetTracker();
 
-	FixedPrecEndgamePolicyBase() : precision_(NumTraits<BRT>::NumDigits())
+		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
+		                          	tol,
+		                          	max_iterations);
+
+		return SuccessCode::Success;
+	}
+
+	explicit
+	FixedPrecEndgame(TrackerT const& new_tracker) : EndgamePrecPolicyBase<TrackerT>(new_tracker)
 	{}
+
+	virtual ~FixedPrecEndgame() = default;
 }; // re: fixed prec endgame policy
 
+template<>
+struct EGPrecSelector<tracking::DoublePrecisionTracker>
+{
+	using type = FixedPrecEndgame<tracking::DoublePrecisionTracker>;
+};
 
-}}} //re: namespaces
+template<>
+struct EGPrecSelector<tracking::MultiplePrecisionTracker>
+{
+	using type = FixedPrecEndgame<tracking::MultiplePrecisionTracker>;
+};
+
+template<class D>
+struct EGPrecSelector<tracking::FixedPrecisionTracker<D>>
+{
+	using type = FixedPrecEndgame<tracking::FixedPrecisionTracker<D>>;
+};
+
+}} //re: namespaces
 
 
 

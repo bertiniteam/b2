@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/io/splash.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -29,6 +29,9 @@
 #pragma once
 
 #include "bertini2/config.h"
+
+#include "boost/version.hpp"
+
 #include <sstream>
 
 namespace bertini{
@@ -130,6 +133,25 @@ inline
 std::string GenericHelp()
 {
 	return "";
+}
+
+
+inline 
+std::string BoostHeaderVersion()
+{
+	std::stringstream ss;
+	ss << BOOST_VERSION; 
+	return ss.str();
+}
+
+
+
+inline 
+std::string DependencyVersions()
+{
+	std::stringstream ss;
+	ss << "Compiled against Boost headers " << BoostHeaderVersion() << "\n\n";
+	return ss.str();
 }
 
 

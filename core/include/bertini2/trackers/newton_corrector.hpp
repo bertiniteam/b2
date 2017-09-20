@@ -64,7 +64,7 @@ namespace bertini{
 				 
 				 */
 				
-				void Settings(const config::Newton& newton_settings)
+				void Settings(const NewtonConfig& newton_settings)
 				{
 					newton_config_ = newton_settings;
 				}
@@ -125,7 +125,6 @@ namespace bertini{
 				 \return The SuccessCode indicating what happened.
 				 
 				 \tparam ComplexType The complex type for arithmetic
-				 \tparam RealType The underlying real number type, used for comparitors.
 				 
 				 \param[out] next_space The computed next space point.
 				 \param S The system we are tracking on.
@@ -138,18 +137,15 @@ namespace bertini{
 				 
 				 */
 				
-				template <typename ComplexType, typename RealType, typename Derived>
-				SuccessCode Correct(Eigen::MatrixBase<Derived>& next_space,
+				template <typename ComplexType>
+				SuccessCode Correct(Vec<ComplexType> & next_space,
 									   System const& S,
 									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 									   ComplexType const& current_time,
-									   RealType const& tracking_tolerance,
+									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations)
 				{
-					static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
-
 					#ifndef BERTINI_DISABLE_ASSERTS
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
 					#endif
@@ -166,7 +162,7 @@ namespace bertini{
 						
 						next_space += step_ref;
 						
-						if ( (step_ref.norm() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
+						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 					}
 					
@@ -187,7 +183,6 @@ namespace bertini{
 				 Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
 				 
 				 \tparam ComplexType The complex type for arithmetic
-				 \tparam RealType The underlying real number type, used for comparitors.
 				 
 				 \param[out] next_space The computed next space point.
 				 \param S The system we are tracking on.
@@ -199,20 +194,20 @@ namespace bertini{
 				 \param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
 				 \param AMP_config Adaptive multiple precision settings.  Using this argument is how Bertini2 knows you want to use adaptive precision.
 				 */
-				template <typename ComplexType, typename RealType, typename Derived>
-				SuccessCode Correct(Eigen::MatrixBase<Derived>& next_space,
+				template <typename ComplexType>
+				SuccessCode Correct(Vec<ComplexType> & next_space,
 									   System const& S,
 									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 									   ComplexType const& current_time,
-									   RealType const& tracking_tolerance,
+									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
-									   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									   AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					#ifndef BERTINI_DISABLE_ASSERTS
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
 					#endif
-					
+
 					Vec<ComplexType>& step_ref = std::get< Vec<ComplexType> >(step_temp_);
 					
 					next_space = current_space;
@@ -228,14 +223,15 @@ namespace bertini{
 						Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
 						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
 						
-						if ( (step_ref.norm() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
+						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 						
-						auto norm_J_inverse = LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
-						if (!amp::CriterionB(J_temp_ref.norm(), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, step_ref.norm(), AMP_config))
+						NumErrorT norm_J_inverse(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
+
+						if (!amp::CriterionB<ComplexType>(NumErrorT(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, NumErrorT(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 						
-						if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
+						if (!amp::CriterionC<ComplexType>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 					}
 					
@@ -269,19 +265,19 @@ namespace bertini{
 				 \param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
 				 \param AMP_config Adaptive multiple precision settings.  Using this argument is how Bertini2 knows you want to use adaptive precision.
 				 */
-				template <typename ComplexType, typename RealType, typename Derived>
-				SuccessCode Correct(Eigen::MatrixBase<Derived>& next_space,
-									   RealType & norm_delta_z,
-									   RealType & norm_J,
-									   RealType & norm_J_inverse,
-									   RealType & condition_number_estimate,
+				template <typename ComplexType>
+				SuccessCode Correct(Vec<ComplexType> & next_space,
+									   NumErrorT & norm_delta_z,
+									   NumErrorT & norm_J,
+									   NumErrorT & norm_J_inverse,
+									   NumErrorT & condition_number_estimate,
 									   System const& S,
 									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
 									   ComplexType const& current_time,
-									   RealType const& tracking_tolerance,
+									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
-									   config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+									   AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					#ifndef BERTINI_DISABLE_ASSERTS
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
@@ -303,20 +299,18 @@ namespace bertini{
 						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
 						
 						
-						norm_delta_z = step_ref.norm();
-						norm_J = J_temp_ref.norm();
-						norm_J_inverse = LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
-						condition_number_estimate = norm_J*norm_J_inverse;
-						
-						
-						
+						norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
+						norm_J = NumErrorT(J_temp_ref.norm());
+						norm_J_inverse = NumErrorT(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
+						condition_number_estimate = NumErrorT(norm_J*norm_J_inverse);
+												
 						if ( (norm_delta_z < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 						
-						if (!amp::CriterionB(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
+						if (!amp::CriterionB<ComplexType>(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 						
-						if (!amp::CriterionC(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
+						if (!amp::CriterionC<ComplexType>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 					}
 					
@@ -352,9 +346,10 @@ namespace bertini{
 					Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
 					
 					Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
-					
-					S.EvalInPlace(f_temp_ref, current_space, current_time);
-					S.JacobianInPlace(J_temp_ref, current_space, current_time);
+
+					S.SetAndReset<ComplexType>(current_space, current_time);
+					S.EvalInPlace(f_temp_ref);
+					S.JacobianInPlace(J_temp_ref);
 					LU_ref = J_temp_ref.lu();
 					
 					if (LUPartialPivotDecompositionSuccessful(LU_ref.matrixLU())!=MatrixSuccessCode::Success)
@@ -385,7 +380,7 @@ namespace bertini{
 				
 				unsigned current_precision_;
 
-				config::Newton newton_config_; // Hold the settings of the Newton iteration
+				NewtonConfig newton_config_; // Hold the settings of the Newton iteration
 
 				
 			}; //re: class NewtonCorrector

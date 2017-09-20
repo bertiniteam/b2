@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 //  system_test.cpp
 //
@@ -45,25 +45,16 @@
 #include "bertini2/system/precon.hpp"
 #include "bertini2/io/parsing/system_parsers.hpp"
 
-
-using System = bertini::System;
-using Var = std::shared_ptr<bertini::node::Variable>;
-using VariableGroup = bertini::VariableGroup;
-using bertini::MakeVariable;
-
-using mpfr_float = bertini::mpfr_float;
-using dbl = bertini::dbl;
-using mpfr = bertini::mpfr;
-
 #include "externs.hpp"
 
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+
 
 BOOST_AUTO_TEST_SUITE(system_class)
 
+using Var = std::shared_ptr<bertini::node::Variable>;
 
+using namespace bertini;
 /**
 \class bertini::System
 \test \b system_make_a_system_at_all Confirms that can default construct a System.
@@ -452,6 +443,38 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 }
 
 
+BOOST_AUTO_TEST_CASE(system_jacobian)
+{
+	auto x = MakeVariable("x");
+	auto y = MakeVariable("y");
+	auto z = MakeVariable("z");
+
+	System sys;
+
+	sys.AddVariableGroup(VariableGroup{x, y, z});
+
+	sys.AddFunction(pow(x,2)*pow(y,3)*pow(z,4) + 1);
+	sys.AddFunction(pow(x,3)*pow(y,4)*pow(z,5) + 4);
+
+	auto a = x->Eval<dbl>();
+	auto b = y->Eval<dbl>();
+	auto c = z->Eval<dbl>();
+
+	Vec<dbl> v(3);
+	v << a, b, c;
+
+	auto J = sys.Jacobian(v);
+
+	BOOST_CHECK_SMALL(abs(J(0,0)- 2.*a*pow(b,3)*pow(c,4)), 1e-15);
+	BOOST_CHECK_SMALL(abs(J(0,1)- 3.*pow(a,2)*pow(b,2)*pow(c,4)), 1e-15);
+	BOOST_CHECK_SMALL(abs(J(0,2)- 4.*pow(a,2)*pow(b,3)*pow(c,3)), 1e-15);
+
+	BOOST_CHECK_SMALL(abs(J(1,0)- 3.*pow(a,2)*pow(b,4)*pow(c,5)), 1e-15);
+	BOOST_CHECK_SMALL(abs(J(1,1)- 4.*pow(a,3)*pow(b,3)*pow(c,5)), 1e-15);
+	BOOST_CHECK_SMALL(abs(J(1,2)- 5.*pow(a,3)*pow(b,4)*pow(c,4)), 1e-15);
+
+
+}
 
 
 /**
@@ -761,7 +784,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 	S.AddFunction((1-t)*x + t*(1-x));
 	S.AddFunction(x-t);
 
-	mpfr_float coefficient_bound = S.CoefficientBound();
+	mpfr_float coefficient_bound = S.CoefficientBound<mpfr>();
 	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
 	BOOST_CHECK(coefficient_bound > mpfr_float("0.5"));
 }
@@ -785,7 +808,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	mpfr_float coefficient_bound = sys.CoefficientBound();
+	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
 	BOOST_CHECK(coefficient_bound < mpfr_float("5"));
 	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
 }
@@ -813,7 +836,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	mpfr_float coefficient_bound = sys.CoefficientBound();
+	mpfr_float coefficient_bound = sys.CoefficientBound<mpfr>();
 	BOOST_CHECK(coefficient_bound < mpfr_float("10"));
 	BOOST_CHECK(coefficient_bound > mpfr_float("2"));
 }

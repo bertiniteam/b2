@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with amp_criteria_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 
@@ -33,6 +33,17 @@
 
 #include "trackers/amp_criteria.hpp"
 
+
+
+
+extern double threshold_clearance_d;
+extern bertini::mpfr_float threshold_clearance_mp;
+extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
+
+
+
+
+BOOST_AUTO_TEST_SUITE(amp_criteria_tracking_basics)
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
@@ -50,15 +61,6 @@ using mpfr_float = bertini::mpfr_float;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
-
-extern double threshold_clearance_d;
-extern bertini::mpfr_float threshold_clearance_mp;
-extern unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS;
-
-
-
-
-BOOST_AUTO_TEST_SUITE(amp_criteria_tracking_basics)
 
 
 BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
@@ -94,15 +96,15 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
 	Vec<dbl> temp_soln = LU.solve(randy);
 					
-	auto norm_J = dh_dx.norm();
-	auto norm_J_inverse = temp_soln.norm();
+	auto norm_J = double(dh_dx.norm());
+	auto norm_J_inverse = double(temp_soln.norm());
 
 
 	//Setting up saftety digits to trigger AMP Criterion A failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
-	auto CritA = bertini::tracking::amp::CriterionA(norm_J,norm_J_inverse,AMP);
+	auto CritA = bertini::tracking::amp::CriterionA<dbl>(norm_J,norm_J_inverse,AMP);
 
 
 	//Check to make sure we failed.
@@ -142,15 +144,15 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
 	Vec<mpfr> temp_soln = LU.solve(randy);
 					
-	auto norm_J = dh_dx.norm();
-	auto norm_J_inverse = temp_soln.norm();
+	auto norm_J = double(dh_dx.norm());
+	auto norm_J_inverse = double(temp_soln.norm());
 
 
 	//Setting up saftety digits to trigger AMP Criterion A failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
-	auto CritA = bertini::tracking::amp::CriterionA(norm_J,norm_J_inverse,AMP);
+	auto CritA = bertini::tracking::amp::CriterionA<mpfr>(norm_J,norm_J_inverse,AMP);
 
 
 	//Check to make sure we failed.
@@ -194,18 +196,18 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
 	Vec<dbl> temp_soln = LU.solve(randy);
 					
-	auto norm_J = dh_dx.norm();
-	auto norm_J_inverse = temp_soln.norm();
+	auto norm_J = double(dh_dx.norm());
+	auto norm_J_inverse = double(temp_soln.norm());
 
 
 	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 
 	unsigned int num_newton_iterations_remaining = 1;
-	auto TrackTolBeforeEG = 10e-5; //Obtained from Bertini Book.
+	auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
 
-	auto CritB = bertini::tracking::amp::CriterionB(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,delta_z.norm(),AMP);
+	auto CritB = bertini::tracking::amp::CriterionB<dbl>(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,delta_z.norm(),AMP);
 
 
 	//Check to make sure we failed.
@@ -242,22 +244,22 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 	auto f = sys.Eval(current_space, current_time);
 	Mat<mpfr> dh_dx = sys.Jacobian(current_space, current_time); 
 	auto LU = dh_dx.lu();
-	auto delta_z = LU.solve(-f);
+	Vec<mpfr> delta_z = LU.solve(-f);
 
 	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
 	Vec<mpfr> temp_soln = LU.solve(randy);
 					
-	auto norm_J = dh_dx.norm();
-	auto norm_J_inverse = temp_soln.norm();
+	auto norm_J = double(dh_dx.norm());
+	auto norm_J_inverse = double(temp_soln.norm());
 
 
 	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_1 = 32000;
 	unsigned int num_newton_iterations_remaining = 1;
-	mpfr_float TrackTolBeforeEG = mpfr_float("10e-5"); //Obtained from Bertini Book.
+	double TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
 
-	auto CritB = bertini::tracking::amp::CriterionB(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,delta_z.norm(),AMP);
+	auto CritB = bertini::tracking::amp::CriterionB<mpfr>(norm_J,norm_J_inverse,num_newton_iterations_remaining,TrackTolBeforeEG,double(delta_z.norm()),AMP);
 
 
 	//Check to make sure we failed.
@@ -296,15 +298,15 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 
 	Vec<dbl> randy = Vec<dbl>::Random(sys.NumVariables());
 	Vec<dbl> temp_soln = LU.solve(randy);
-	auto norm_J_inverse = temp_soln.norm();
+	auto norm_J_inverse = double(temp_soln.norm());
 
 
 	//Setting up saftety digits to trigger AMP Criterion C failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_2 = 32000;
-	auto TrackTolBeforeEG = 10e-5; //Obtained from Bertini Book.
+	auto TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
 
-	auto CritC = bertini::tracking::amp::CriterionC(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
+	auto CritC = bertini::tracking::amp::CriterionC<dbl>(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
 
 
 	//Check to make sure we failed.
@@ -343,15 +345,15 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 
 	Vec<mpfr> randy = Vec<mpfr>::Random(sys.NumVariables());
 	Vec<mpfr> temp_soln = LU.solve(randy);
-	auto norm_J_inverse = temp_soln.norm();
+	auto norm_J_inverse = double(temp_soln.norm());
 
 
 	//Setting up saftety digits to trigger AMP Criterion B failure.
-	auto AMP = bertini::tracking::config::AMPConfigFrom(sys);
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
 	AMP.safety_digits_2 = 32000;
-	mpfr_float TrackTolBeforeEG = mpfr_float("10e-5"); //Obtained from Bertini Book.
+	double TrackTolBeforeEG = 1e-5; //Obtained from Bertini Book.
 
-	auto CritC = bertini::tracking::amp::CriterionC(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
+	auto CritC = bertini::tracking::amp::CriterionC<mpfr>(norm_J_inverse,current_space,TrackTolBeforeEG,AMP);
 
 
 	//Check to make sure we failed.

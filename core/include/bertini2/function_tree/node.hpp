@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with node.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Daniel Brake
+// Dani Brake
 // University of Notre Dame
 //
 //  Created by Collins, James B. on 4/30/15.
@@ -166,15 +166,9 @@ public:
 	template<typename T>
 	T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const 
 	{
-		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-		if(!val_pair.second)
-		{
-			val_pair.first = detail::FreshEvalSelector<T>::Run(*this,diff_variable);
-			val_pair.second = true;
-		}
- 
-		
-		return val_pair.first;
+		T result;
+		EvalInPlace(result, diff_variable);
+		return result;
 	}
 	
 
@@ -188,25 +182,42 @@ public:
 	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
 	 */
 	template<typename T>
-	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const
-	{
-		auto& val_pair = std::get< std::pair<T,bool> >(current_value_);
-		if(!val_pair.second)
-		{
-			detail::FreshEvalSelector<T>::RunInPlace(val_pair.first, *this,diff_variable);
-			val_pair.second = true;
-		}
-		
-		eval_value = val_pair.first;
-		
-		
-	}
+	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const;
 
 	
-	
-	
-	
 	///////// PUBLIC PURE METHODS /////////////////
+
+
+	/**
+	\brief A transform function, which eliminates nodes from the tree
+
+	A better implementation of this would use a generic Transform.  If you know how to do this, please rewrite the Nodes so they can transform to our whim, and submit a PR.
+
+	\return The number of nodes eliminated
+
+	\see EliminateZeros
+	*/
+	virtual unsigned EliminateOnes() = 0;
+	
+	/**
+	\brief A transform function, which eliminates nodes from the tree
+
+	A better implementation of this would use a generic Transform.  If you know how to do this, please rewrite the Nodes so they can transform to our whim, and submit a PR.
+
+	\return The number of nodes eliminated
+
+	\see EliminateOnes
+	*/
+	virtual unsigned EliminateZeros() = 0;
+
+
+	/**
+	\brief A mutating function which finds ways to reduce the depth of the tree
+
+	\note The default implementation is empty, and does literally nothing.
+	*/
+	virtual unsigned ReduceDepth();
+
 	/**
 	Virtual method for printing Nodes to arbitrary output streams.
 	*/
@@ -310,8 +321,6 @@ protected:
 	
 	
 	///////// PRIVATE PURE METHODS /////////////////
-//    virtual dbl FreshEval(dbl) = 0;
-//    virtual mpfr FreshEval(mpfr) = 0;
 	
 	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
@@ -375,6 +384,12 @@ private:
 		return out;
 	}
 	
+	inline std::ostream& operator<<(std::ostream & out, const std::shared_ptr<Node>& N)
+	{
+		N->print(out);
+		return out;
+	}
+
 	} // re: namespace node
 } // re: namespace bertini
 

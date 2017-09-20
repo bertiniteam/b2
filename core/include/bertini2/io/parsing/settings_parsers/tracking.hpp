@@ -64,11 +64,11 @@ namespace bertini {
 			 \brief Qi Parser object for parsing config file to determine settings.
 			 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, PrecisionType, T, Skipper> : qi::grammar<Iterator, PrecisionType(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, PrecisionType, Skipper> : qi::grammar<Iterator, PrecisionType(), Skipper>
 			{
 				
-				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::PrecisionType")
+				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "PrecisionType")
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;
@@ -144,8 +144,8 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Predictor, T, Skipper> : qi::grammar<Iterator, config::Predictor(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, Predictor, Skipper> : qi::grammar<Iterator, Predictor(), Skipper>
 			{
 				
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::PredictorType")
@@ -164,24 +164,24 @@ namespace bertini {
 					using boost::spirit::as_string;
 					using boost::spirit::ascii::no_case;
 					
-					predictor_.add("-1", config::Predictor::Constant);
-					predictor_.add("0", config::Predictor::Euler);
-					predictor_.add("1", config::Predictor::Heun);
-					predictor_.add("2", config::Predictor::RK4);
-					predictor_.add("3", config::Predictor::Heun);
-					predictor_.add("4", config::Predictor::RKNorsett34);
-					predictor_.add("5", config::Predictor::RKF45);
-					predictor_.add("6", config::Predictor::RKCashKarp45);
-					predictor_.add("7", config::Predictor::RKDormandPrince56);
-					predictor_.add("8", config::Predictor::RKVerner67);
+					predictor_.add("-1", Predictor::Constant);
+					predictor_.add("0", Predictor::Euler);
+					predictor_.add("1", Predictor::Heun);
+					predictor_.add("2", Predictor::RK4);
+					predictor_.add("3", Predictor::Heun);
+					predictor_.add("4", Predictor::RKNorsett34);
+					predictor_.add("5", Predictor::RKF45);
+					predictor_.add("6", Predictor::RKCashKarp45);
+					predictor_.add("7", Predictor::RKDormandPrince56);
+					predictor_.add("8", Predictor::RKVerner67);
 					
 					
 					std::string setting_name = "odepredictor";
 					
 					
-					root_rule_.name("config::Predictor");
+					root_rule_.name("Predictor");
 					
-					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = config::Predictor::RKF45];
+					root_rule_ = (config_name_[_val = _1] >> -no_setting_) | no_setting_[_val = Predictor::RKF45];
 					
 					config_name_.name("predictor_");
 					config_name_ = *(char_ - (no_case[setting_name] >> ':')) >> (no_case[setting_name] >> ':') >> predictor_[_val = _1] >> ';';
@@ -214,10 +214,10 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::Predictor(), ascii::space_type > root_rule_, config_name_;
+				qi::rule<Iterator, Predictor(), ascii::space_type > root_rule_, config_name_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_;
 				
-				qi::symbols<char,config::Predictor> predictor_;
+				qi::symbols<char,Predictor> predictor_;
 				
 				
 			}; //re: PredictorTypeParser
@@ -242,12 +242,19 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Stepping<T>, T, Skipper> : qi::grammar<Iterator, config::Stepping<T>(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, SteppingConfig, Skipper> : qi::grammar<Iterator, SteppingConfig(), Skipper>
 			{
+
+			private:
+					using T = double;
+					using R = mpq_rational;
+
+			public:
 				
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::SteppingType")
 				{
+					
 					namespace phx = boost::phoenix;
 					using qi::_1;
 					using qi::_2;
@@ -271,25 +278,25 @@ namespace bertini {
 					std::string maxnumsteps_name = "maxnumbersteps";
 					
 					
-					root_rule_.name("config::Stepping");
+					root_rule_.name("SteppingConfig");
 					
-					root_rule_ = ((max_step_size_[phx::bind( [this](config::Stepping<T> & S, T num)
+					root_rule_ = ((max_step_size_[phx::bind( [this](SteppingConfig & S, T num)
 															{
 																S.max_step_size = num;
 															}, _val, _1 )]
-								   ^ stepsize_success_[phx::bind( [this](config::Stepping<T> & S, T num)
+								   ^ stepsize_success_[phx::bind( [this](SteppingConfig & S, R num)
 																 {
 																	 S.step_size_success_factor = num;
 																 }, _val, _1 )]
-								   ^ stepsize_fail_[phx::bind( [this](config::Stepping<T> & S, T num)
+								   ^ stepsize_fail_[phx::bind( [this](SteppingConfig & S, R num)
 															  {
 																  S.step_size_fail_factor = num;
 															  }, _val, _1 )]
-								   ^ steps_increase_[phx::bind( [this](config::Stepping<T> & S, unsigned num)
+								   ^ steps_increase_[phx::bind( [this](SteppingConfig & S, unsigned num)
 																	 {
 																		 S.consecutive_successful_steps_before_stepsize_increase = num;
 																	 }, _val, _1 )]
-								   ^ max_num_steps_[phx::bind( [this](config::Stepping<T> & S, unsigned num)
+								   ^ max_num_steps_[phx::bind( [this](SteppingConfig & S, unsigned num)
 																	{
 																		S.max_num_steps = num;
 																	}, _val, _1 )])
@@ -303,23 +310,23 @@ namespace bertini {
 					
 					max_step_size_.name("max_step_size_");
 					max_step_size_ = *(char_ - all_names_) >> (no_case[maxstep_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.rational[phx::bind( [this](T & num, std::string const& str)
 														   {
 															   num = bertini::NumTraits<T>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					stepsize_success_.name("stepsize_success_");
 					stepsize_success_ = *(char_ - all_names_) >> (no_case[stepsuccess_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<T>::FromString(str);
+															num = bertini::NumTraits<double>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					stepsize_fail_.name("stepsize_fail_");
 					stepsize_fail_ = *(char_ - all_names_) >> (no_case[stepfail_name] >> ':')
-					>> mpfr_rules.number_string_[phx::bind( [this](T & num, std::string str)
+					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<T>::FromString(str);
+															   num = bertini::NumTraits<double>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					steps_increase_.name("steps_increase_");
@@ -357,9 +364,9 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::Stepping<T>(), ascii::space_type > root_rule_;
-				qi::rule<Iterator, T(), ascii::space_type > max_step_size_, stepsize_success_,
-				stepsize_fail_;
+				qi::rule<Iterator, SteppingConfig(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, T(), ascii::space_type > max_step_size_;
+				qi::rule<Iterator, R(), ascii::space_type > stepsize_success_, stepsize_fail_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > steps_increase_, max_num_steps_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 				rules::LongNum<Iterator> mpfr_rules;
@@ -375,8 +382,8 @@ namespace bertini {
 			/**
 
 			 */
-			template<typename Iterator, typename T, typename Skipper> //boost::spirit::unused_type
-			struct ConfigSettingParser<Iterator, config::Newton, T, Skipper> : qi::grammar<Iterator, config::Newton(), Skipper>
+			template<typename Iterator, typename Skipper> //boost::spirit::unused_type
+			struct ConfigSettingParser<Iterator, NewtonConfig, Skipper> : qi::grammar<Iterator, NewtonConfig(), Skipper>
 			{
 				
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::NewtonType")
@@ -400,9 +407,9 @@ namespace bertini {
 					std::string maxits_name = "maxnewtonits";
 					
 					
-					root_rule_.name("config::Newton");
+					root_rule_.name("NewtonConfig");
 					
-					root_rule_ = (max_its_[phx::bind( [this](config::Newton & S, unsigned num)
+					root_rule_ = (max_its_[phx::bind( [this](NewtonConfig & S, unsigned num)
 													 {
 														 S.max_num_newton_iterations = num;
 													 }, _val, _1 )]
@@ -446,7 +453,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::Newton(), Skipper> root_rule_;
+				qi::rule<Iterator, NewtonConfig(), Skipper> root_rule_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > max_its_;
 				qi::rule<Iterator, ascii::space_type, std::string()> no_decl_, no_setting_, all_names_;
 			}; //re: NewtonParser
@@ -458,8 +465,8 @@ namespace bertini {
 			As of this writing, there are no meaningful settings in FixedPrecisionConfig, 
 			so this parser is ... empty
 			*/
-			template<typename Iterator, typename T, typename Skipper>
-			struct ConfigSettingParser<Iterator, config::FixedPrecisionConfig<T>, T, Skipper> : qi::grammar<Iterator, config::FixedPrecisionConfig<T>(), Skipper>
+			template<typename Iterator, typename Skipper>
+			struct ConfigSettingParser<Iterator, FixedPrecisionConfig, Skipper> : qi::grammar<Iterator, FixedPrecisionConfig(), Skipper>
 			{
 				
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "config::FixedPrecision")
@@ -481,7 +488,7 @@ namespace bertini {
 
 					
 					root_rule_.name("config::FixedPrecision");
-					root_rule_ = eps[_val = config::FixedPrecisionConfig<T>()] >> omit[*(char_)];
+					root_rule_ = eps[_val = FixedPrecisionConfig()] >> omit[*(char_)];
 					
 					
 					
@@ -501,7 +508,7 @@ namespace bertini {
 				
 				
 			private:
-				qi::rule<Iterator, config::FixedPrecisionConfig<T>(), ascii::space_type > root_rule_;
+				qi::rule<Iterator, FixedPrecisionConfig(), ascii::space_type > root_rule_;
 			}; //re: FixedPrecisionConfig Parser
 
 			
@@ -510,13 +517,15 @@ namespace bertini {
 
 
 
-			using AdaptiveMultiplePrecisionConfig = config::AdaptiveMultiplePrecisionConfig;
-			template<typename Iterator, typename T, typename Skipper> 
-			struct ConfigSettingParser<Iterator, AdaptiveMultiplePrecisionConfig, T, Skipper> : qi::grammar<Iterator, AdaptiveMultiplePrecisionConfig(), Skipper>
+			using AdaptiveMultiplePrecisionConfig = AdaptiveMultiplePrecisionConfig;
+			template<typename Iterator, typename Skipper> 
+			struct ConfigSettingParser<Iterator, AdaptiveMultiplePrecisionConfig, Skipper> : qi::grammar<Iterator, AdaptiveMultiplePrecisionConfig(), Skipper>
 			{
 				
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "AdaptiveMultiplePrecisionConfig")
 				{
+					using T = double;
+
 					namespace phx = boost::phoenix;
 					using qi::_1;
 					using qi::_2;
@@ -546,43 +555,43 @@ namespace bertini {
 
 					root_rule_.name("config::AMP");
 					
-					root_rule_ = ((coefficient_bound_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, mpfr_float num)
+					root_rule_ = ((coefficient_bound_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
 														   {
 															   S.coefficient_bound = num;
 														   }, _val, _1 )]
-								   ^ degree_bound_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, mpfr_float num)
+								   ^ degree_bound_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
 															 {
 																 S.degree_bound = num;
 															 }, _val, _1 )]
-								   ^ lin_solve_error_bnd_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, mpfr_float num)
+								   ^ lin_solve_error_bnd_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
 															 {
 																 S.epsilon = num;
 															 }, _val, _1 )]
-								   ^ jac_eval_err_bnd_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, mpfr_float num)
+								   ^ jac_eval_err_bnd_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
 															 {
 																 S.Phi = num;
 															 }, _val, _1 )]
-								   ^ func_eval_err_bnd_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, mpfr_float num)
+								   ^ func_eval_err_bnd_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, T num)
 															 {
 																 S.Psi = num;
 															 }, _val, _1 )]
-								   ^ safety_one_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, int num)
+								   ^ safety_one_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, int num)
 															 {
 																 S.safety_digits_1 = num;
 															 }, _val, _1 )]
-								   ^ safety_two_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, int num)
+								   ^ safety_two_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, int num)
 															 {
 																 S.safety_digits_2 = num;
 															 }, _val, _1 )]
-								   ^ max_prec_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, unsigned num)
+								   ^ max_prec_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, unsigned num)
 															 {
 																 S.maximum_precision = num;
 															 }, _val, _1 )]
-								   ^ consec_steps_prec_dec_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, unsigned num)
+								   ^ consec_steps_prec_dec_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, unsigned num)
 															 {
 																 S.consecutive_successful_steps_before_precision_decrease = num;
 															 }, _val, _1 )]
-								   ^ max_num_prec_decs_[phx::bind( [this](config::AdaptiveMultiplePrecisionConfig & S, unsigned num)
+								   ^ max_num_prec_decs_[phx::bind( [this](AdaptiveMultiplePrecisionConfig & S, unsigned num)
 															 {
 																 S.max_num_precision_decreases = num;
 															 }, _val, _1 )]
@@ -602,9 +611,9 @@ namespace bertini {
 								 ;
 					
 
-					auto str_to_T = [this](mpfr_float & num, std::string str)
+					auto str_to_T = [this](T & num, std::string const& str)
 									   {
-									   	std::cout << str << std::endl;
+									   	// std::cout << str << std::endl;
 										   num = bertini::NumTraits<T>::FromString(str);
 									   };
 
@@ -675,7 +684,7 @@ namespace bertini {
 			private:
 				qi::rule<Iterator, AdaptiveMultiplePrecisionConfig(), ascii::space_type > root_rule_;
 
-				qi::rule<Iterator, mpfr_float(), ascii::space_type > degree_bound_, coefficient_bound_, lin_solve_error_bnd_, jac_eval_err_bnd_, func_eval_err_bnd_;
+				qi::rule<Iterator, double(), ascii::space_type > degree_bound_, coefficient_bound_, lin_solve_error_bnd_, jac_eval_err_bnd_, func_eval_err_bnd_;
 				qi::rule<Iterator, int(), ascii::space_type > safety_one_, safety_two_;
 				qi::rule<Iterator, unsigned int(), ascii::space_type > max_prec_, consec_steps_prec_dec_, max_num_prec_decs_;
 

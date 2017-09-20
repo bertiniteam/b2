@@ -1,18 +1,24 @@
 #this is src/detail/Makemodule.am
 
-detail_header_files = \
+detail_headers = \
 	include/bertini2/detail/configured.hpp \
 	include/bertini2/detail/events.hpp \
 	include/bertini2/detail/visitable.hpp \
 	include/bertini2/detail/visitor.hpp \
+	include/bertini2/detail/observer.hpp \
+	include/bertini2/detail/observable.hpp \
 	include/bertini2/detail/is_template_parameter.hpp \
 	include/bertini2/detail/enable_permuted_arguments.hpp \
 	include/bertini2/detail/typelist.hpp
 
-detail = $(detail_header_files)
+detail = $(detail_headers)
 
 
 detail_includedir = $(includedir)/bertini2/detail
 
 detail_include_HEADERS = \
-	$(detail_header_files)
+	$(detail_headers)
+
+core_headers += $(detail_headers)
+core_sources += $(detail_sources)
+core_all += $(detail)

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with slice.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 /**
 \file bertini2/system/slice.hpp 
@@ -77,7 +77,9 @@ namespace bertini {
 		*/
 		static LinearSlice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
-			return Make(v, dim, homogeneous, orthogonal, bertini::RandomReal);
+			typedef void (*funtype) (mpfr&, unsigned); // the type for number generation
+			funtype gen = bertini::RandomReal;
+			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
 		/**
@@ -85,7 +87,9 @@ namespace bertini {
 		*/
 		static LinearSlice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
-			return Make(v, dim, homogeneous, orthogonal, bertini::RandomComplex);
+			typedef void (*funtype) (mpfr&, unsigned); // the type for number generation
+			funtype gen = bertini::RandomComplex;
+			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
 

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with amp_criteria.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 #ifndef BERTINI_AMP_CRITERIA_HPP
@@ -41,8 +41,16 @@ namespace bertini{
 
 
 
-			using AdaptiveMultiplePrecisionConfig = config::AdaptiveMultiplePrecisionConfig;
+			/**
+			\brief THe right hand side of Criterion A, from \cite AMP1, \cite AMP2.
 
+			see CriterionA
+			*/
+			inline
+			double CriterionARHS(double const& norm_J, double const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			{
+				return AMP_config.safety_digits_1 + log10(norm_J_inverse * AMP_config.epsilon * (norm_J + AMP_config.Phi ));
+			}
 
 			/**
 			\brief Check AMP Criterion A.
@@ -55,14 +63,14 @@ namespace bertini{
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param AMP_config The settings for adaptive multiple precision.
 			
-			\tparam RealType The real number type
+			\tparam NumT The real number type
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
-			template<typename RealType>
-			bool CriterionA(RealType const& norm_J, RealType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename NumT>
+			bool CriterionA(double const& norm_J, double const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				return NumTraits<RealType>::NumDigits()  > AMP_config.safety_digits_1 + log10(norm_J_inverse * RealType(AMP_config.epsilon) * (norm_J + RealType(AMP_config.Phi) ) );
+				return NumTraits<NumT>::NumDigits()  >  CriterionARHS(norm_J, norm_J_inverse, AMP_config);
 			}
 			
 
@@ -70,16 +78,14 @@ namespace bertini{
 			/**
 			\brief Compute the expression \f$D\f$ from the AMP papers \cite AMP1, \cite AMP2.
 
-			\tparam RealType The real number type
-
 			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
-			template <typename RealType>
-			RealType D(RealType const& norm_J, RealType const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			inline
+			double D(double const& norm_J, double const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				return log10(norm_J_inverse*( (RealType(2)+RealType(AMP_config.epsilon))*norm_J + RealType(AMP_config.epsilon)*RealType(AMP_config.Phi)) + RealType(1));
+				return log10(norm_J_inverse*( (2+AMP_config.epsilon)*norm_J+AMP_config.epsilon*AMP_config.Phi)+1);
 			}
 
 			/**
@@ -94,12 +100,10 @@ namespace bertini{
 			\param latest_newton_residual The norm of the length of the most recent Newton step.
 			\param AMP_config The settings for adaptive multiple precision.
 			
-			\tparam RealType the real number type.
-
 			\return The value of the right hand side of Criterion B
 			*/
-			template<typename RealType>
-			RealType CriterionBRHS(RealType const& norm_J, RealType const& norm_J_inverse, unsigned num_newton_iterations_remaining, RealType const& tracking_tolerance, RealType const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			inline 
+			double CriterionBRHS(double const& norm_J, double const& norm_J_inverse, unsigned num_newton_iterations_remaining, double const& tracking_tolerance, double const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				return AMP_config.safety_digits_1 + D(norm_J, norm_J_inverse, AMP_config) + (-log10(tracking_tolerance) + log10(norm_of_latest_newton_residual)) / (num_newton_iterations_remaining);
 			}
@@ -118,14 +122,19 @@ namespace bertini{
 			\param latest_newton_residual The norm of the length of the most recent Newton step.
 			\param AMP_config The settings for adaptive multiple precision.
 			
-			\tparam RealType the real number type.
+			\tparam NumT The numeric type.
 
 			\return True if criteria satisfied, false if violated and precision or step length should be adjusted.
 			*/
-			template<typename RealType>
-			bool CriterionB(RealType const& norm_J, RealType const& norm_J_inverse, unsigned num_newton_iterations_remaining, RealType const& tracking_tolerance, RealType const& norm_of_latest_newton_residual, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename NumT>
+			bool CriterionB(double const& norm_J, 
+							double const& norm_J_inverse, 
+							unsigned num_newton_iterations_remaining, 
+							double const& tracking_tolerance, 
+							double const& norm_of_latest_newton_residual, 
+							AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				return NumTraits<RealType>::NumDigits() > CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  norm_of_latest_newton_residual, AMP_config);
+				return NumTraits<NumT>::NumDigits() > CriterionBRHS(norm_J, norm_J_inverse, num_newton_iterations_remaining, tracking_tolerance,  norm_of_latest_newton_residual, AMP_config);
 			}
 
 
@@ -143,14 +152,15 @@ namespace bertini{
 			\param norm_z The norm of the current space point.
 			\param AMP_config The settings for adaptive multiple precision.
 			
-			\tparam RealType the real number type.
-
 			\return The value of the right hand side of the inequality from Criterion C.
 			*/
-			template<typename RealType>
-			RealType CriterionCRHS(RealType const& norm_J_inverse, RealType const& norm_z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			inline
+			double CriterionCRHS(double const& norm_J_inverse, 
+								 double const& norm_z, 
+								 double const& tracking_tolerance, 
+								 AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*RealType(AMP_config.Psi) + norm_z);
+				return AMP_config.safety_digits_2 + -log10(tracking_tolerance) + log10(norm_J_inverse*AMP_config.Psi + norm_z);
 			}
 
 
@@ -168,13 +178,13 @@ namespace bertini{
 
 			\return The value of the right hand side of the inequality from Criterion C.
 			*/
-			template<typename RealType, typename Derived>
-			RealType CriterionCRHS(RealType const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename Derived>
+			double CriterionCRHS(double const& norm_J_inverse, 
+								const Eigen::MatrixBase<Derived>& z, 
+								double tracking_tolerance, 
+								AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				using ComplexType = typename Derived::Scalar;
-				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-
-				return CriterionCRHS(norm_J_inverse, z.norm(), tracking_tolerance, AMP_config);
+				return CriterionCRHS(norm_J_inverse, double(z.norm()), tracking_tolerance, AMP_config);
 			}
 
 
@@ -191,13 +201,10 @@ namespace bertini{
 			\param z The current space point. 
 			\param AMP_config The settings for adaptive multiple precision.
 			*/
-			template<typename RealType, typename Derived>
-			bool CriterionC(RealType const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, RealType tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
+			template<typename NumT, typename Derived>
+			bool CriterionC(double const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, double tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
-				using ComplexType = typename Derived::Scalar;
-				static_assert(std::is_same<typename Eigen::NumTraits<RealType>::Real, typename Eigen::NumTraits<ComplexType>::Real>::value,"underlying complex type and the type for comparisons must match");
-
-				return NumTraits<RealType>::NumDigits() > CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config);
+				return NumTraits<NumT>::NumDigits() > CriterionCRHS(norm_J_inverse, z, tracking_tolerance, AMP_config);
 			}
 		}
 	}

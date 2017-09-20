@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 //
 //  Created by Collins, James B. on 4/30/15.
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
@@ -47,6 +47,15 @@
 #include <Eigen/Dense>
 
 
+
+
+#include "externs.hpp"
+
+
+BOOST_AUTO_TEST_SUITE(differentiate)
+
+
+using bertini::DefaultPrecision;
 using dbl = std::complex<double>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
@@ -57,15 +66,6 @@ using bertini::MakeJacobian;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 using mpfr_float = bertini::mpfr_float;
-
-#include "externs.hpp"
-
-
-
-
-using bertini::DefaultPrecision;
-
-BOOST_AUTO_TEST_SUITE(differentiate)
 
 /////////// Basic Operations Alone ///////////////////
 
@@ -1139,7 +1139,6 @@ BOOST_AUTO_TEST_CASE(integer_power)
 {	
 
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	std::shared_ptr<Variable> x = MakeVariable("x");
 	std::shared_ptr<Variable> t = MakeVariable("t");
@@ -1160,8 +1159,8 @@ BOOST_AUTO_TEST_CASE(integer_power)
     j->Reset();
 	J = j->EvalJ<mpfr>(x);
 
-	BOOST_CHECK(abs( real(J) ) < threshold_clearance_mp);
-	BOOST_CHECK(abs( imag(J) - mpfr_float("0.871779788708134710447396396772")) < threshold_clearance_mp);
+	BOOST_CHECK(abs(real(J)-mpfr_float(0)) < threshold_clearance_mp);
+	BOOST_CHECK_CLOSE(imag(J), mpfr_float("0.871779788708134710447396396772"), 100*threshold_clearance_mp);
 }
 
 
@@ -1172,7 +1171,6 @@ BOOST_AUTO_TEST_CASE(integer_power_system)
 	using System = bertini::System;
 
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-	std::cout.precision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	System sys;
 	std::shared_ptr<Variable> x = MakeVariable("x");
 	std::shared_ptr<Variable> t = MakeVariable("t"); 
@@ -1193,10 +1191,11 @@ BOOST_AUTO_TEST_CASE(integer_power_system)
 
 	curr_x << mpfr("0.900000000000000","0.435889894354067355223698198386");
 	curr_t = mpfr("0.1");
+
 	J = sys.Jacobian(curr_x,curr_t);
 
-	BOOST_CHECK(abs( real(J(0,0)) ) < threshold_clearance_mp);
-	BOOST_CHECK(abs( imag(J(0,0)) - mpfr_float("0.871779788708134710447396396772")) < threshold_clearance_mp);
+	BOOST_CHECK(abs(real(J(0,0))- mpfr_float(0)) < threshold_clearance_mp);
+	BOOST_CHECK_CLOSE(imag(J(0,0)), mpfr_float("0.871779788708134710447396396772"), 100*threshold_clearance_mp);
 }
 
 

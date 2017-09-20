@@ -20,9 +20,13 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
+<<<<<<< HEAD
 // daniel brake, university of notre dame
 // karleigh cameron, colorado state university
 // Tim Hodges, Colorado State University
+=======
+// dani brake, university of wisconsin eau claire
+>>>>>>> Main_Bertini2/develop
 
 #include "bertini2/system/start/mhom.hpp"
 

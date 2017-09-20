@@ -31,7 +31,9 @@ tracking_source_files = \
 
 tracking = $(tracking_header_files) $(tracking_source_files)
 
-
+core_headers += $(tracking_header_files)
+core_sources += $(tracking_source_files)
+core_all += $(tracking)
 
 rootinclude_HEADERS += \
 	include/bertini2/tracking.hpp

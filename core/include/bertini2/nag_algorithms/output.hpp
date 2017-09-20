@@ -80,7 +80,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{
-			if (zd.FinalSolutionMetadata()[ii].endgame_success == tracking::SuccessCode::NeverStarted)
+			if (zd.FinalSolutionMetadata()[ii].endgame_success == SuccessCode::NeverStarted)
 				continue;
 			
 			EndPointMDFull(ii, out, zd);
@@ -103,7 +103,7 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		NumVariables(out, zd,"\n\n");
 		for (decltype(zd.FinalSolutions().size()) ii{0}; ii<n; ++ii)
 		{
-			if (zd.FinalSolutionMetadata()[ii].endgame_success == tracking::SuccessCode::NeverStarted)
+			if (zd.FinalSolutionMetadata()[ii].endgame_success == SuccessCode::NeverStarted)
 				continue;
 			EndPointMDRaw(ii,out,zd,"\n\n");
 		}
@@ -219,6 +219,66 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 
 
 };
+
+
+struct NonsingularSolutions
+{
+
+	
+	template<typename AlgoT>
+	static
+	auto Extract(AlgoT const& alg)
+	{
+		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
+
+		const auto& sys = alg.TargetSystem();
+
+		SampCont<BCT> solns;
+
+		const auto& s = alg.FinalSolutions();
+		const auto& m = alg.FinalSolutionMetadata();
+		const auto n = s.size();
+		for (decltype(s.size()) ii{0}; ii<n; ++ii)
+		{
+			const auto& d = m[ii];
+			if (d.endgame_success == SuccessCode::Success &&
+				d.multiplicity==1)
+			{
+				solns.push_back(sys.DehomogenizePoint(s[ii]));
+			}	
+		}
+
+		return solns;
+	}
+};
+
+
+struct AllSolutions
+{
+
+	
+	template<typename AlgoT>
+	static
+	auto Extract(AlgoT const& alg)
+	{
+		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
+
+		const auto& sys = alg.TargetSystem();
+
+		SampCont<BCT> solns;
+
+		const auto& s = alg.FinalSolutions();
+		const auto& m = alg.FinalSolutionMetadata();
+		const auto n = s.size();
+		for (decltype(s.size()) ii{0}; ii<n; ++ii)
+		{
+			solns.push_back(sys.DehomogenizePoint(s[ii]));
+		}
+
+		return solns;
+	}
+};
+
 
 } // namespace output
 } // namespace algorithm

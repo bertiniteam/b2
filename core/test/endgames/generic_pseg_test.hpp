@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with generic_pseg_test.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 /**
@@ -42,23 +42,25 @@ using Var = std::shared_ptr<Variable>;
 using VariableGroup = bertini::VariableGroup;
 using bertini::MakeVariable;
 
+using SuccessCode = bertini::SuccessCode;
+
 
 using dbl = bertini::dbl;
 using mpfr = bertini::complex;
 using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
-
+using bertini::Precision;
 using bertini::DefaultPrecision;
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
 template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 
 
-using PrecisionConfig = TrackerTraits<TrackerType>::PrecisionConfig;
+using PrecisionConfig = bertini::tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-using BRT = TrackerTraits<TrackerType>::BaseRealType;
-using BCT = TrackerTraits<TrackerType>::BaseComplexType;
+using BRT = bertini::tracking::TrackerTraits<TrackerType>::BaseRealType;
+using BCT = bertini::tracking::TrackerTraits<TrackerType>::BaseComplexType;
 
 template<typename ...T>
 BCT ComplexFromString(T... s)
@@ -83,8 +85,8 @@ BOOST_AUTO_TEST_CASE( basic_hermite_test_case_against_matlab )
 	BCT target_time(0,0); //our target time is the origin.
 	unsigned int num_samples = 3;
 
-	TimeCont<BCT> times; 
-	SampCont<BCT> samples, derivatives;
+	bertini::TimeCont<BCT> times; 
+	bertini::SampCont<BCT> samples, derivatives;
 
 	BCT time;
 	Vec<BCT> sample(1), derivative(1);
@@ -148,8 +150,8 @@ BOOST_AUTO_TEST_CASE(hermite_interpolation)
 	BCT target_time(0,0);
 	unsigned int num_samples = 3;
 
-	TimeCont<BCT> times; 
-	SampCont<BCT> samples, derivatives;
+	bertini::TimeCont<BCT> times; 
+	bertini::SampCont<BCT> samples, derivatives;
 
 	BCT time;
 	Vec<BCT> sample(1), derivative(1);
@@ -253,19 +255,19 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	TimeCont<BCT> times; 
-	SampCont<BCT> samples, derivatives;
+	bertini::TimeCont<BCT> times; 
+	bertini::SampCont<BCT> samples, derivatives;
 
 	BCT time;
 	Vec<BCT> sample(1), derivative(1);
@@ -287,7 +289,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	sample << ComplexFromString("-0.926859375"); // f(.025) = -0.926859375
 	samples.push_back(sample);
 
-	config::Endgame<BRT> endgame_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings);
 	my_endgame.SetTimes(times);
@@ -358,19 +360,19 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
 	tracker.PrecisionSetup(precision_config);
 
-	TimeCont<BCT> times; 
-	SampCont<BCT> samples; 
+	bertini::TimeCont<BCT> times; 
+	bertini::SampCont<BCT> samples; 
 
 
 	BCT time(1);
@@ -403,14 +405,16 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 	samples.push_back(sample);
 
 
-	config::PowerSeries power_series_settings;
+	bertini::endgame::PowerSeriesConfig power_series_settings;
 
 	TestedEGType my_endgame(tracker,power_series_settings);
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
+	my_endgame.ComputeAllDerivatives<BCT>();
+
 	my_endgame.SetRandVec<BCT>(samples.back().size());
-	my_endgame.ComputeCycleNumber<BCT>();
+	my_endgame.ComputeCycleNumber<BCT>(BCT(0));
 
 	BOOST_CHECK(my_endgame.CycleNumber() == 1);
 
@@ -445,12 +449,12 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -459,8 +463,8 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	auto origin = BCT(0,0);
 	Vec<BCT> x_origin(1);
 	x_origin << BCT(1);
-	TimeCont<BCT> times; 
-	SampCont<BCT> samples; 
+	bertini::TimeCont<BCT> times; 
+	bertini::SampCont<BCT> samples; 
 
 
 
@@ -482,7 +486,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	sample << ComplexFromString("0.67729059415987117534436422700325955211292174181447e0", "0.38712848412230230944976856052769427012481164605204e-16"); // f(.025) = 0.67729059415987117534436422700325955211292174181447e0 0.38712848412230230944976856052769427012481164605204e-16 from bertini classic
 	samples.push_back(sample);
 
-	config::Endgame<BRT> endgame_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings);
 	my_endgame.SetTimes(times);
@@ -491,6 +495,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	Vec<BCT> first_approx;
 	Vec<BCT> approx_1(1);
 	my_endgame.SetRandVec<BCT>(samples.back().size());
+
+	my_endgame.ComputeAllDerivatives<BCT>();
+
 	auto code = my_endgame.ComputeApproximationOfXAtT0(first_approx, origin);
 	approx_1 << ComplexFromString("1.04025","6.86403e-14");
 	BOOST_CHECK(code==SuccessCode::Success);
@@ -509,6 +516,9 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 	Vec<BCT> second_approx;
 	Vec<BCT> approx_2(1);
+
+	my_endgame.ComputeAllDerivatives<BCT>();
+
 	code = my_endgame.ComputeApproximationOfXAtT0(second_approx,origin);
 	approx_2 << ComplexFromString("0.69995","2.05044e-16");
 	BOOST_CHECK(code==SuccessCode::Success);
@@ -525,6 +535,8 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 	my_endgame.SetTimes(times);
 	my_endgame.SetSamples(samples);
 
+	my_endgame.ComputeAllDerivatives<BCT>();
+	
 	Vec<BCT> third_approx;
 	Vec<BCT> approx_3(1);
 	code = my_endgame.ComputeApproximationOfXAtT0(third_approx, origin);
@@ -563,12 +575,12 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -578,10 +590,10 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	BCT origin = BCT(0);
 	Vec<BCT> x_origin(1);
 	x_origin << BCT(1);
-	TimeCont<BCT> correct_times; 
-	SampCont<BCT> correct_samples;
+	bertini::TimeCont<BCT> correct_times; 
+	bertini::SampCont<BCT> correct_samples;
 
-	TimeCont<BCT> times; 
+	bertini::TimeCont<BCT> times; 
 	std::deque<Vec<BCT> > samples;
 	BCT time(1);
 	Vec<BCT> sample(1);
@@ -607,8 +619,8 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	current_time = ComplexFromString(".1");
 	current_space << ComplexFromString("5.000000000000001e-01", "9.084258952712920e-17");
 
-	config::Endgame<BRT> endgame_settings;
-	config::PowerSeries power_series_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
+	bertini::endgame::PowerSeriesConfig power_series_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings);
 
@@ -647,12 +659,12 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-5"),
-                RealFromString("1e5"),
+                1e-5,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -661,10 +673,10 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
 	BCT target_time = ComplexFromString(".1",".1");
 	Vec<BCT> x_origin(1);
 	x_origin << BCT(1);
-	TimeCont<BCT> correct_times; 
-	SampCont<BCT> correct_samples;
+	bertini::TimeCont<BCT> correct_times; 
+	bertini::SampCont<BCT> correct_samples;
 
-	TimeCont<BCT> times; 
+	bertini::TimeCont<BCT> times; 
 	std::deque<Vec<BCT> > samples;
 	BCT time(1);
 	Vec<BCT> sample(1);
@@ -690,8 +702,8 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
 	current_time = ComplexFromString(".2");
 	current_space << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18");
 
-	config::Endgame<BRT> endgame_settings;
-	config::PowerSeries power_series_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
+	bertini::endgame::PowerSeriesConfig power_series_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings);
 
@@ -738,12 +750,12 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -758,8 +770,8 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 	Vec<BCT> correct(1);
 	correct << BCT(1);
 
-	config::Endgame<BRT> endgame_settings;
-	config::Security<BRT> security_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
+	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(current_time,current_space);
@@ -794,12 +806,12 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -817,8 +829,8 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 	Vec<BCT> correct(1);
 	correct << ComplexFromString("4.680740395503238e-01", "-1.470429372721208e-01");
 
-	config::Endgame<BRT> endgame_settings;
-	config::Security<BRT> security_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
+	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(current_time,current_space,target_time);
@@ -861,12 +873,12 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -886,8 +898,8 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 	Vec<BCT> correct_root(1);
 	correct_root << BCT(1);
 
-	config::Endgame<BRT> endgame_settings;
-	config::Security<BRT> security_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
+	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,security_settings);
 	my_endgame.Run(t_endgame_boundary,eg_boundary_point);
@@ -927,12 +939,12 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -947,9 +959,9 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 	Vec<BCT> correct(2);
 	correct << BCT(1),BCT(1);
 
-	config::Endgame<BRT> endgame_settings;
-	config::PowerSeries power_series_settings;
-	config::Security<BRT> security_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
+	bertini::endgame::PowerSeriesConfig power_series_settings;
+	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
@@ -1017,12 +1029,12 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 	TrackerType tracker(sys);
 	
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 
 	tracker.Setup(TestedPredictor,
-                RealFromString("1e-6"),
-                RealFromString("1e5"),
+                1e-6,
+                1e5,
                 stepping_settings,
                 newton_settings);
 	
@@ -1059,9 +1071,9 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	Vec<BCT> correct(2);
 	correct << BCT(0), BCT(0);
 
-	config::Endgame<BRT> endgame_settings;
-	config::PowerSeries power_series_settings;
-	config::Security<BRT> security_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
+	bertini::endgame::PowerSeriesConfig power_series_settings;
+	bertini::endgame::SecurityConfig security_settings;
 
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings,security_settings);
 
@@ -1129,8 +1141,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());
 
-
-
+	//auto gamma = bertini::MakeRational(bertini::node::Rational::Rand());
+	//gamma*
+	
 	auto final_system = (1-t)*sys + t*TD;
 	final_system.AddPathVariable(t);
 
@@ -1139,14 +1152,19 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 
 	auto tracker = TrackerType(final_system);
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 	tracker.Setup(TestedPredictor,
-	              	RealFromString("1e-5"), RealFromString("1e5"),
+	              	1e-5, 1e5,
 					stepping_settings, newton_settings);
 
 	tracker.PrecisionSetup(precision_config);
-	
+
+#ifdef B2_OBSERVE_TRACKERS
+			bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
+			tracker.AddObserver(&tons_of_detail);
+#endif
+
 	unsigned num_paths_to_run = 1;
 	BCT t_start(1), t_endgame_boundary(0.1);
 	std::vector<Vec<BCT> > homogenized_solutions;
@@ -1169,33 +1187,28 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	correct << BCT(1),BCT(1);
 
 	tracker.Setup(TestedPredictor,
-	              	RealFromString("1e-6"), RealFromString("1e5"),
+	              	1e-6, 1e5,
 					stepping_settings, newton_settings);
 
 	TestedEGType my_endgame(tracker);
 
 
+
 	std::vector<Vec<BCT> > endgame_solutions;
 
 	unsigned num_successful_occurences = 0;
-	unsigned num_min_track_time_reached = 0;
 	for (auto const& s : homogenized_solutions)
 	{
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{
-				num_successful_occurences++;
+			BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
 
-		}
-		if(endgame_success == SuccessCode::MinStepSizeReached)
-		{
-			num_min_track_time_reached++;
+				num_successful_occurences++;
 		}
 	}
 
  	BOOST_CHECK_EQUAL(num_successful_occurences,num_paths_to_run);
- 	BOOST_CHECK_EQUAL(num_min_track_time_reached,0);
-
 }
 
 
@@ -1230,10 +1243,10 @@ BOOST_AUTO_TEST_CASE(parabola)
 
 
 	auto tracker = TrackerType(sys);
-	config::Stepping<BRT> stepping_settings;
-	config::Newton newton_settings;
+	bertini::tracking::SteppingConfig stepping_settings;
+	bertini::tracking::NewtonConfig newton_settings;
 	tracker.Setup(TestedPredictor,
-	              	RealFromString("1e-5"), RealFromString("1e5"),
+	              	1e-5, 1e5,
 					stepping_settings, newton_settings);
 
 	tracker.PrecisionSetup(precision_config);
@@ -1253,7 +1266,7 @@ BOOST_AUTO_TEST_CASE(parabola)
 	correct_eg_soln << BCT(0);
 
 	tracker.Setup(TestedPredictor,
-	              	RealFromString("1e-6"), RealFromString("1e5"),
+	              	1e-6, 1e5,
 					stepping_settings, newton_settings);
 
 	TestedEGType my_endgame(tracker);
@@ -1263,6 +1276,9 @@ BOOST_AUTO_TEST_CASE(parabola)
 	BOOST_CHECK(endgame_success==SuccessCode::Success);
 
 	auto endgame_solution = my_endgame.FinalApproximation<BCT>();
+
+	BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());
+
 
 	BOOST_CHECK_SMALL( abs(endgame_solution(0)-correct_eg_soln(0)), BRT(1e-10) );
 }
@@ -1290,19 +1306,19 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_nonzero_target_time)
 
 	TrackerType tracker(sys);
 		
-	config::Stepping<BRT> stepping_preferences;
-	config::Newton newton_preferences;
+	bertini::tracking::SteppingConfig stepping_preferences;
+	bertini::tracking::NewtonConfig newton_preferences;
 
 	tracker.Setup(TestedPredictor,
-	    RealFromString("1e-5"),
-	    RealFromString("1e5"),
+	    1e-5,
+	    1e5,
 	    stepping_preferences,
 	    newton_preferences);
 		
 	tracker.PrecisionSetup(precision_config);
 
-	TimeCont<BCT> pseg_times;
-		SampCont<BCT> pseg_samples;
+	bertini::TimeCont<BCT> pseg_times;
+		bertini::SampCont<BCT> pseg_samples;
 
 	auto start_time = ComplexFromString("0.2");
 	Vec<BCT> start_sample(1);
@@ -1313,9 +1329,9 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_nonzero_target_time)
 	start_sample << ComplexFromString("3.603621541081173e-01", "2.859583229930518e-18"); 
 	x_to_check_against << ComplexFromString("4.248924277564006e-01", "1.369835558109531e-02");
 
-	config::Endgame<BRT> endgame_settings;
-	config::Security<BRT> security_settings;
-	config::PowerSeries power_series_settings;
+	bertini::endgame::EndgameConfig endgame_settings;
+	bertini::endgame::SecurityConfig security_settings;
+	bertini::endgame::PowerSeriesConfig power_series_settings;
 	TestedEGType my_endgame(tracker,endgame_settings,power_series_settings, security_settings);
 
 	auto endgame_success = my_endgame.Run(start_time,start_sample,target_time);

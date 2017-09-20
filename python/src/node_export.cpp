@@ -25,7 +25,7 @@
 //  West Texas A&M University
 //  Spring 2016
 //
-//  Daniel Brake
+//  Dani Brake
 //  University of Notre Dame
 //
 //  python/node_export.cpp:  Source file for exposing Node class to python.
@@ -56,7 +56,7 @@ namespace bertini{
 			int Degree(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("Degree")(v); }
 			int Degree(VariableGroup const& vars) const {return this->get_override("Degree")(vars); }
 			
-			std::shared_ptr<Node> Differentiate() {return this->get_override("Differentiate")(); }
+			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const {return this->get_override("Differentiate")(v); }
 			
 			std::vector<int> MultiDegree(VariableGroup const& vars) const {return this->get_override("MultiDegree")(vars); }
 			
@@ -92,7 +92,8 @@ namespace bertini{
 			.def("degree", &Deg0 )
 			.def("degree", Deg1)
 			.def("degree", Deg2 )
-			.def("differentiate", &NodeBaseT::Differentiate )
+			.def("differentiate", Diff0 )
+			.def("differentiate", Diff1 )
 			.def("multidegree", &NodeBaseT::MultiDegree )
 			.def("homogenize", &NodeBaseT::Homogenize )
 			.def("is_homogeneous", IsHom0 )

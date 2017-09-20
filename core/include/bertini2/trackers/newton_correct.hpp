@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with newton_correct.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
+// dani brake, university of wisconsin eau claire
 
 
 /**
@@ -127,7 +127,7 @@ namespace bertini{
 					               RealType const& tracking_tolerance,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
-					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+					               AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
@@ -203,7 +203,7 @@ namespace bertini{
 					               RealType const& tracking_tolerance,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
-					               config::AdaptiveMultiplePrecisionConfig const& AMP_config)
+					               AdaptiveMultiplePrecisionConfig const& AMP_config)
 			{
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
