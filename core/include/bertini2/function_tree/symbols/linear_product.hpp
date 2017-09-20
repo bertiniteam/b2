@@ -108,6 +108,8 @@ namespace  bertini {
 				
 				is_rational_coeffs_ = true;
 				
+                // If we are creating a linear product for variable group that is already homogenized,
+                //   we do not use the constant(last) column in the coefficient matrix
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
@@ -149,6 +151,9 @@ namespace  bertini {
 				SetupVariables(num_factors_, variables);
 				
 				coeffs_mpfr_ref = coeffs_mpfr;
+                
+                // If we are creating a linear product for variable group that is already homogenized,
+                //   we do not use the constant(last) column in the coefficient matrix
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
@@ -223,7 +228,7 @@ namespace  bertini {
 			/**
 			 Return SumOperator whose children are derivatives of children_
 			 */
-			std::shared_ptr<Node> Differentiate() const override;
+			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override    ;
 	
 			
 			
@@ -300,7 +305,7 @@ namespace  bertini {
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) const
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);
@@ -314,7 +319,9 @@ namespace  bertini {
 			
 			
 
-			
+            unsigned EliminateZeros() override { return 0;};
+            
+            unsigned EliminateOnes() override {return 0;};
 			
 			
 			
@@ -408,8 +415,7 @@ namespace  bertini {
 
 			
 			
-			
-			
+
 			
 			
 			
@@ -500,14 +506,12 @@ namespace  bertini {
 				evaluation_value.SetOne();
 				const Mat<mpfr>& coeffs_ref = std::get< Mat<mpfr> >(coeffs_);
 				
-				
 				// Evaluate all afine variables and store
 				for (int jj = 0; jj < num_variables_; ++jj)
 				{
 					variables_[jj]->EvalInPlace<mpfr>(temp_var_mp_[jj], diff_variable);
 				}
 				hom_variable_->EvalInPlace<mpfr>(temp_var_mp_[num_variables_], diff_variable);
-				
 				
 				
 				
@@ -563,8 +567,8 @@ namespace  bertini {
 			size_t num_factors_;  ///< The number of factors in the linear product.
 			size_t num_variables_;  ///< The number of variables in each linear.
 			bool is_rational_coeffs_; ///< Do we have a rational coefficient to downsample from?
-			bool is_homogenized_;  ///< Have we homogenized the linear product?
-			bool is_hom_vars_;  ///< Is this linear for a homogeneous variable group?
+			bool is_homogenized_ = false;  ///< Have we homogenized the linear product?
+			bool is_hom_vars_ = false;  ///< Is this linear for a homogeneous variable group?
 			
 			
 			mutable std::vector<dbl> temp_var_d_;
@@ -672,7 +676,8 @@ namespace  bertini {
 			 \return LinearProduct node contain the single linear.
 			 */
 			
-			std::shared_ptr<LinearProduct> GetLinears(size_t index) const;
+            std::shared_ptr<LinearProduct> GetLinears(size_t index) const;
+
 			
 			
 			/**
@@ -682,8 +687,8 @@ namespace  bertini {
 			 \return LinearProduct node contain the linears.
 			 */
 			
-			std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices) const;
-			
+            std::shared_ptr<LinearProduct> GetLinears(std::vector<size_t> indices) const;
+
 			
 			
 			void SetupVariables(size_t num_factors, VariableGroup const& variables)
@@ -807,7 +812,7 @@ namespace  bertini {
 			/**
 			 Return SumOperator whose children are derivatives of children_
 			 */
-			std::shared_ptr<Node> Differentiate() const override
+			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override
 			{
 				return MakeInteger(0);
 			}
@@ -866,7 +871,7 @@ namespace  bertini {
 			};
 			
 			
-			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const
+			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 			{
 				return true;
 			}
@@ -890,7 +895,7 @@ namespace  bertini {
 			 
 			 \param prec the number of digits to change precision to.
 			 */
-			virtual void precision(unsigned int prec) const
+			virtual void precision(unsigned int prec) const override
 			{
 				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
 				val_pair.first.precision(prec);

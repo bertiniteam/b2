@@ -1250,33 +1250,36 @@ BOOST_AUTO_TEST_CASE(linprod_diff_eval)
 	v0[1]->set_current_value(zval_mp);
 	v1[0]->set_current_value(yval_mp);
 	
-	linprod_node->Differentiate();
-	linprod->Differentiate();
+    auto J_node = bertini::MakeJacobian(linprod_node->Differentiate());
+    auto J = bertini::MakeJacobian(linprod->Differentiate());
 	
-	dbl evalx_d = linprod->Eval<dbl>(x);
-	dbl exactx_d = linprod_node->Eval<dbl>(x);
-	mpfr evalx_mp = linprod->Eval<mpfr>(x);
-	mpfr exactx_mp = linprod_node->Eval<mpfr>(x);
+    dbl evalx_d = J->EvalJ<dbl>(x);
+    dbl exactx_d = J_node->EvalJ<dbl>(x);
+    mpfr evalx_mp = J->EvalJ<mpfr>(x);
+    mpfr exactx_mp = J_node->EvalJ<mpfr>(x);
+    
+    
+    
+    BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
+    BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
+    BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
+    
+    
+    evalx_d = J->EvalJ<dbl>(z);
+    exactx_d = J_node->EvalJ<dbl>(z);
+    evalx_mp = J->EvalJ<mpfr>(z);
+    exactx_mp = J_node->EvalJ<mpfr>(z);
 	
 	BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
 	
-	evalx_d = linprod->Eval<dbl>(y);
-	exactx_d = linprod_node->Eval<dbl>(y);
-	evalx_mp = linprod->Eval<mpfr>(y);
-	exactx_mp = linprod_node->Eval<mpfr>(y);
-	
-	BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
-	BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
-	
-	evalx_d = linprod->Eval<dbl>(z);
-	exactx_d = linprod_node->Eval<dbl>(z);
-	evalx_mp = linprod->Eval<mpfr>(z);
-	exactx_mp = linprod_node->Eval<mpfr>(z);
+    evalx_d = J->EvalJ<dbl>(y);
+    exactx_d = J_node->EvalJ<dbl>(y);
+    evalx_mp = J->EvalJ<mpfr>(y);
+    exactx_mp = J_node->EvalJ<mpfr>(y);
 	
 	BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);

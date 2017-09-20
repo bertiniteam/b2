@@ -55,17 +55,19 @@ namespace  bertini {
 		//
 		////////////////////////////////////////
 		
-		std::shared_ptr<Node> LinearProduct::Differentiate() const
+		std::shared_ptr<Node> LinearProduct::Differentiate(std::shared_ptr<Variable> const& v) const
 		{
 			std::shared_ptr<SumOperator> ret_sum;
-			std::vector<size_t> indices;
+			std::vector<size_t> indices;  //Those factors that are not differentiated in one particular term of the differentiated result.
+            
 			// First term of product rule
 			std::shared_ptr<MultOperator> temp_mult = std::make_shared<MultOperator>(std::make_shared<DiffLinear>(GetLinears(0)));
 			for(int ii = 1; ii < num_factors_; ++ii)
 			{
-				indices.push_back(ii);
+				indices.push_back(ii);  // Indices 1 to num_factors-1
 			}
-			temp_mult *= GetLinears(indices);
+            if(indices.size() > 0)
+                temp_mult *= GetLinears(indices);
 			ret_sum = std::make_shared<SumOperator>(temp_mult, true);
 			
 			
@@ -74,9 +76,10 @@ namespace  bertini {
 			{
 				temp_mult = std::make_shared<MultOperator>(std::make_shared<DiffLinear>(GetLinears(ii)));
 				indices.clear();
-				for(int jj = 0; jj < num_factors_ && jj != ii; ++jj)
+				for(int jj = 0; jj < num_factors_ ; ++jj)
 				{
-					indices.push_back(jj);
+                    if(ii != jj)
+                        indices.push_back(jj);
 				}
 				temp_mult *= GetLinears(indices);
 				ret_sum->AddChild(temp_mult,true);
@@ -166,7 +169,7 @@ namespace  bertini {
 			bool is_v_in_vars = false; // Check if at least one v in variables_ is in vars
 			
 			
-			// Is homvar in vars?
+			// Is homvar in vars?  If so erase it from the temporary variable holder temp_vars.
 			VariableGroup temp_vars = vars;
 			temp_vars.erase(std::remove(temp_vars.begin(), temp_vars.end(), homvar), temp_vars.end());
 			
@@ -176,11 +179,13 @@ namespace  bertini {
 			VariableGroup smaller_group;
 			if(variables_.size() > temp_vars.size())
 			{
+//                std::cout << "variables larger\n";
 				larger_group = variables_;
 				smaller_group = temp_vars;
 			}
 			else
 			{
+//                std::cout << "homogenizing variable group larger\n";
 				larger_group = temp_vars;
 				smaller_group = variables_;
 			}
@@ -204,6 +209,7 @@ namespace  bertini {
 				throw std::runtime_error("attempting to homogenize linear product with respect to part of the variables, but not all");
 			}
 			
+            // If the homogenizing variable group is the same as the variables used in the linear product, then homogenize.
 			if(is_vargroup_same)
 			{
 				hom_variable_ = homvar;
@@ -435,7 +441,7 @@ namespace  bertini {
 			
 			
 			// Set coefficients with rational or mpfr type
-			size_t num_variables_ = variables_.size();
+			num_variables_ = variables_.size();
 			Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
 			Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
 			coeffs_dbl_ref.resize(1, num_variables_+1);
