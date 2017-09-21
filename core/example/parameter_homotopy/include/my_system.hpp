@@ -59,14 +59,14 @@ namespace demo{
 	    auto x4 = MakeVariable("x4");
 
 	    auto f1 = x1*x1*x1*params[0] + x1*x1*x2*params[1] + x1*x2*x2*params[2] + x1*x3*x3*params[3] + x1*x4*x4*params[0]
-	     + x1*params[1]+ x2*x2*x2*params[2] + x2*x3*x3*params[3] + x2*x4*x4*params[0] + x2*params[1];
+	     + x1*params[1]+ x2*x2*x2*params[2] + x2*x3*x3*params[3] + x2*x4*x4*params[0] + x2*params[1] + 1;
 	     
 	    auto f2 = x1*x1*x1*params[2] + x1*x1*x2*params[3] + x1*x2*x2*params[0] + x1*x3*x3*params[1] + x1*x4*x4*params[2]
-	     + x1*params[3] + x2*x2*x2*params[0] + x2*x3*x3*params[1] + x2*x4*x4*params[2] + x2*params[3];
+	     + x1*params[3] + x2*x2*x2*params[0] + x2*x3*x3*params[1] + x2*x4*x4*params[2] + x2*params[3] - 1;
 	     
-	    auto f3 = x1*x1*x3*params[0] + x1*x2*x3*params[1] + x2*x2*x3*params[2] + x3*x3*x3*params[3] + x3*x4*x4*params[0] + x3*params[1];
+	    auto f3 = x1*x1*x3*params[0] + x1*x2*x3*params[1] + x2*x2*x3*params[2] + x3*x3*x3*params[3] + x3*x4*x4*params[0] + x3*params[1] + 2;
 
-	    auto f4 = x1*x1*x4*params[2] + x1*x2*x4*params[3] + x2*x2*x4*params[0] + x3*x3*x4*params[1] + x4*x4*x4*params[2] + x4*params[3];
+	    auto f4 = x1*x1*x4*params[2] + x1*x2*x4*params[3] + x2*x2*x4*params[0] + x3*x3*x4*params[1] + x4*x4*x4*params[2] + x4*params[3] - 3;
 
 	    // make an empty system
 	    bertini::System Sys;
