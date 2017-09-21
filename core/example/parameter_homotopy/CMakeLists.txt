@@ -64,5 +64,5 @@ add_executable(parameter_homotopy_example ${MY_SOURCES})
 target_link_libraries (parameter_homotopy_example ${B2_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES} Eigen3::Eigen ${Boost_LIBRARIES})
 
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
