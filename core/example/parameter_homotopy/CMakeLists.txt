@@ -2,15 +2,20 @@ cmake_minimum_required (VERSION 3.4)
 
 project (parameter_homotopy_example)
 
+
+IF( NOT CMAKE_BUILD_TYPE )
+   SET( CMAKE_BUILD_TYPE debug)
+ENDIF()
+
+message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+
 set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g -O0")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall -g -O2")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -g")
 
 
-IF( NOT CMAKE_BUILD_TYPE )
-   SET( CMAKE_BUILD_TYPE Release FORCE )
-ENDIF()
 
 include_directories (include)
 
@@ -59,5 +64,5 @@ add_executable(parameter_homotopy_example ${MY_SOURCES})
 target_link_libraries (parameter_homotopy_example ${B2_LIBRARIES} ${MPFR_LIBRARIES} ${GMP_LIBRARIES} Eigen3::Eigen ${Boost_LIBRARIES})
 
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
 #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
