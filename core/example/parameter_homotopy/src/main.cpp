@@ -16,10 +16,15 @@ int main()
     std::cout << "your target_system for step 1:\n\n";
     std::cout << target_sys_step1 << '\n';
 
+    std::cout << "\n\nwith parameter values:\n\n";
+    for (const auto& p : step1_params)
+        std::cout << p << " ";
+    std::cout << '\n';
+
     // now to solve the start system.
     auto stepone_solutions = demo::StepOne(target_sys_step1);
 
-    std::cout << "done computing step1 solutions, and here they are: \n";
+    std::cout << "done computing the " << stepone_solutions.size() << " step1 solutions, and here they are: \n";
     for (auto& iter : stepone_solutions)
         std::cout << iter << '\n' << '\n';
 
@@ -53,7 +58,7 @@ int main()
 
     auto steptwo_solutions = demo::StepTwo(target_sys_step2, target_sys_step1, homotopy_sys_step2, stepone_solutions);
     
-    std::cout << "done computing step2 solutions, and here they are: \n";
+    std::cout << "done computing the " << steptwo_solutions.size() << " step2 solutions, and here they are: \n";
     for (auto& iter : steptwo_solutions)
         std::cout << iter << '\n' << '\n';
 
