@@ -43,7 +43,7 @@ namespace bertini{
 		 Abstract Endgame class
 		 */
 		template<typename EndgameT>
-		class EndgameVisitor: public def_visitor<EndgameVisitor<EndgameT> >
+		class EndgameBaseVisitor: public def_visitor<EndgameBaseVisitor<EndgameT> >
 		{
 			friend class def_visitor_access;
 			
@@ -55,26 +55,31 @@ namespace bertini{
 
 			using CT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseComplexType;
 			using RT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseRealType;
+			using BaseEGT = typename EndgameT::BaseEGT;
 
 			template <typename T>
-			using success_time_space = SuccessCode (EndgameT::*)(T const&, Vec<T> const&);
+			using sc_of_time_space = SuccessCode (BaseEGT::*)(T const&, Vec<T> const&);
 			template <typename T>
-			using success_time_space_time = SuccessCode (EndgameT::*)(T const&, Vec<T> const&, T const&);
+			using sc_of_time_space_time = SuccessCode (BaseEGT::*)(T const&, Vec<T> const&, T const&);
 
 			template <typename T>
-			static success_time_space<T> RunDefaultTime()
+			static sc_of_time_space<T> RunDefaultTime()
 			{
-				return &EndgameT::Run;
+				return &BaseEGT::Run;
 			};
 
 			template <typename T>
-			static success_time_space_time<T> RunCustomTime()
+			static sc_of_time_space_time<T> RunCustomTime()
 			{
-				return &EndgameT::Run;
+				return &BaseEGT::Run;
 			};
 			
+			using unsigned_of_void = unsigned (BaseEGT::*)() const;
+			static unsigned_of_void GetCycleNumberFn()
+			{
+				return &BaseEGT::CycleNumber;
+			};
 
-			unsigned (EndgameT::*get_cycle_number_)() const = &EndgameT::CycleNumber;
 		};// EndgameVisitor class
 
 

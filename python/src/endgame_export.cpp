@@ -36,14 +36,14 @@ namespace bertini{
 
 		template<typename EndgameT>
 		template<class PyClass>
-		void EndgameVisitor<EndgameT>::visit(PyClass& cl) const
+		void EndgameBaseVisitor<EndgameT>::visit(PyClass& cl) const
 		{
 			using TrackerT = typename EndgameT::TrackerType;
 			using BCT = typename TrackerTraits<TrackerT>::BaseComplexType;
 			using BRT = typename TrackerTraits<TrackerT>::BaseRealType;
 
 			cl
-			.def("cycle_number", get_cycle_number_)
+			.def("cycle_number", this->GetCycleNumberFn())
 
 			.def("get_endgame_settings",&EndgameT::EndgameSettings,return_internal_reference<>())
 			.def("get_security_settings",&EndgameT::SecuritySettings,return_internal_reference<>())
@@ -140,7 +140,7 @@ namespace bertini{
 			using EGT = typename endgame::EndgameSelector<TrackerT>::PSEG;
 
 			class_<EGT>("AMPPSEG",init<TrackerT const&>())
-			.def(EndgameVisitor<EGT>())
+			.def(EndgameBaseVisitor<EGT>())
 			.def(PowerSeriesVisitor<EGT>());
 		}
 
@@ -151,7 +151,7 @@ namespace bertini{
 			using EGT = typename endgame::EndgameSelector<TrackerT>::PSEG;
 
 			class_<EGT>("FixedMultiplePSEG",init<TrackerT const&>())
-			.def(EndgameVisitor<EGT>())
+			.def(EndgameBaseVisitor<EGT>())
 			.def(PowerSeriesVisitor<EGT>());
 		}
 
@@ -162,7 +162,7 @@ namespace bertini{
 			using EGT = typename endgame::EndgameSelector<TrackerT>::PSEG;
 
 			class_<EGT>("FixedDoublePSEG",init<TrackerT const&>())
-			.def(EndgameVisitor<EGT>())
+			.def(EndgameBaseVisitor<EGT>())
 			.def(PowerSeriesVisitor<EGT>());
 		}
 
@@ -176,7 +176,7 @@ namespace bertini{
 			using EGT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
 			class_<EGT>("FDCauchyEG", init<TrackerT const&>())
-			.def(EndgameVisitor<EGT>())
+			.def(EndgameBaseVisitor<EGT>())
 			.def(CauchyVisitor<EGT>())
 			;
 		}
@@ -187,7 +187,7 @@ namespace bertini{
 			using EGT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
 			class_<EGT>("FMCauchyEG", init<TrackerT const&>())
-			.def(EndgameVisitor<EGT>())
+			.def(EndgameBaseVisitor<EGT>())
 			.def(CauchyVisitor<EGT>())
 			;
 		}
@@ -199,7 +199,7 @@ namespace bertini{
 			using EGT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
 			class_<EGT>("AMPCauchyEG", init<TrackerT const&>())
-			.def(EndgameVisitor<EGT>())
+			.def(EndgameBaseVisitor<EGT>())
 			.def(CauchyVisitor<EGT>())
 			;
 		}
