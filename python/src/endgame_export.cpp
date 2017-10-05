@@ -43,20 +43,20 @@ namespace bertini{
 			using BRT = typename TrackerTraits<TrackerT>::BaseRealType;
 
 			cl
-			.def("cycle_number", this->GetCycleNumberFn())
+			.def("cycle_number", this->GetCycleNumberFn(),"Get the cycle number as currently computed")
 
-			.def("get_endgame_settings",&EndgameT::EndgameSettings,return_internal_reference<>())
-			.def("get_security_settings",&EndgameT::SecuritySettings,return_internal_reference<>())
+			.def("get_endgame_settings",&EndgameT::EndgameSettings,return_internal_reference<>(),"Get the current non-specific endgame settings")
+			.def("get_security_settings",&EndgameT::SecuritySettings,return_internal_reference<>(),"Get the 'security' settings for the endgame (path truncation near infinity)")
 
-			.def("set_endgame_settings",&EndgameT::template Set<endgame::EndgameConfig>)
-			.def("set_security_settings",&EndgameT::template Set<endgame::SecurityConfig>)
+			.def("set_endgame_settings",&EndgameT::template Set<endgame::EndgameConfig>,"Set the values of non-specific endgame settings")
+			.def("set_security_settings",&EndgameT::template Set<endgame::SecurityConfig>,"Set the values of security-level settings")
 
-			.def("get_tracker", &EndgameT::GetTracker, return_internal_reference<>(),"Get the tracker used in this endgame.  This is the same tracker as you feed the endgame object when you make it.")
-			.def("get_system",  &EndgameT::GetSystem,  return_internal_reference<>(),"Get the tracked system")
+			.def("get_tracker", &EndgameT::GetTracker, return_internal_reference<>(),"Get the tracker used in this endgame.  This is the same tracker as you feed the endgame object when you make it.  This is a reference variable")
+			.def("get_system",  &EndgameT::GetSystem,  return_internal_reference<>(),"Get the tracked system.  This is a reference to the internal system.")
 
-			.def("final_approximation", &EndgameT::template FinalApproximation<BCT>, return_internal_reference<>(),"Get the current approximation of the root")
-			.def("run", RunDefaultTime<BCT>(),"Run the endgame, from start point and start time, to t=0")
-			.def("run", RunCustomTime<BCT>(),"Run the endgame, from start point and start time, to your choice of target time t")
+			.def("final_approximation", &EndgameT::template FinalApproximation<BCT>, return_internal_reference<>(),"Get the current approximation of the root, in the ambient numeric type for the tracker being used")
+			.def("run", RunDefaultTime<BCT>(),"Run the endgame, from start point and start time, to t=0.  Expects complex numeric type matching that of the tracker being used.")
+			.def("run", RunCustomTime<BCT>(),"Run the endgame, from start point and start time, to your choice of target time t.  Expects complex numeric type matching that of the tracker being used.")
 			;
 		}
 
@@ -102,7 +102,7 @@ namespace bertini{
 			scope new_submodule_scope = new_submodule;
 			new_submodule_scope.attr("__doc__") = "Endgame configuration structs.";
 
-			
+
 			class_<endgame::SecurityConfig>("Security","Security settings for endgames.  Control things like truncation because estimated root is near infinity",init<>())
 			.def(SecurityVisitor());
 
