@@ -75,4 +75,4 @@ serialization_test*
 .idea
 
 # Sphinx documentation
-docs/_build/
+doc/build/
