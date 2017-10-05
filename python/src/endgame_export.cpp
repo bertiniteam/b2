@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/endgame_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2017 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -22,8 +22,8 @@
 // individual authors of this file include:
 //
 //  Dani Brake
-//  University of Notre Dame
-//  Summer 2016
+//  University of Notre Dame, University of Wisconsin Eau Claire
+//  Summer 2016, Fall 2017
 //
 //
 //  python/endgame_export.cpp:  source file for exposing endgames to python.
