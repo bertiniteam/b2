@@ -73,3 +73,6 @@ serialization_test*
 %src
 *.pyc
 .idea
+
+# Sphinx documentation
+docs/_build/
