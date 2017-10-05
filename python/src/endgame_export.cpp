@@ -97,17 +97,20 @@ namespace bertini{
 			new_submodule_name.append(".config");
 			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
 			current_scope.attr("config") = new_submodule;
+			
 
 			scope new_submodule_scope = new_submodule;
+			new_submodule_scope.attr("__doc__") = "Endgame configuration structs.";
 
-			class_<endgame::SecurityConfig>("Security",init<>())
+			
+			class_<endgame::SecurityConfig>("Security","Security settings for endgames.  Control things like truncation because estimated root is near infinity",init<>())
 			.def(SecurityVisitor());
 
-			class_<endgame::PowerSeriesConfig>("PowerSeriesConfig",init<>())
+			class_<endgame::PowerSeriesConfig>("PowerSeriesConfig","Settings specific to the power series endgame for computing singular endpoints",init<>())
 			.def(PowerSeriesConfigVisitor());
 
 
-			class_<endgame::CauchyConfig>("CauchyConfig",init<>())
+			class_<endgame::CauchyConfig>("CauchyConfig","Settings specific to the Cauchy endgame for computing singular endpoints",init<>())
 			.def(CauchyConfigVisitor());
 
 			
@@ -120,8 +123,10 @@ namespace bertini{
 			new_submodule_name.append(".endgame");
 			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
 			current_scope.attr("endgame") = new_submodule;
+			
 
 			scope new_submodule_scope = new_submodule;
+			new_submodule_scope.attr("__doc__") = "Endgames and associated types and functions.  For tracking around singularities.";
 
 			ExportEndgameSettings();
 
@@ -139,7 +144,9 @@ namespace bertini{
 			using TrackerT = AMPTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::PSEG;
 
-			class_<EGT>("AMPPSEG",init<TrackerT const&>())
+			class_<EGT>("AMPPSEG",
+				"The adaptive precision implementation of the power series endgame.",
+				init<TrackerT const&>())
 			.def(EndgameBaseVisitor<EGT>())
 			.def(PowerSeriesVisitor<EGT>());
 		}
@@ -150,7 +157,9 @@ namespace bertini{
 			using TrackerT = MultiplePrecisionTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::PSEG;
 
-			class_<EGT>("FixedMultiplePSEG",init<TrackerT const&>())
+			class_<EGT>("FixedMultiplePSEG",
+				"The fixed but arbitrary precision implementation of the power series endgame",
+				init<TrackerT const&>())
 			.def(EndgameBaseVisitor<EGT>())
 			.def(PowerSeriesVisitor<EGT>());
 		}
@@ -161,7 +170,9 @@ namespace bertini{
 			using TrackerT = DoublePrecisionTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::PSEG;
 
-			class_<EGT>("FixedDoublePSEG",init<TrackerT const&>())
+			class_<EGT>("FixedDoublePSEG",
+				"The double-precision implementation of the power series endgame",
+				init<TrackerT const&>())
 			.def(EndgameBaseVisitor<EGT>())
 			.def(PowerSeriesVisitor<EGT>());
 		}
@@ -175,7 +186,9 @@ namespace bertini{
 			using TrackerT = DoublePrecisionTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
-			class_<EGT>("FDCauchyEG", init<TrackerT const&>())
+			class_<EGT>("FixedDoubleCauchyEG",
+				"The fixed double precision implementation of the Cauchy endgame",
+				init<TrackerT const&>())
 			.def(EndgameBaseVisitor<EGT>())
 			.def(CauchyVisitor<EGT>())
 			;
@@ -186,7 +199,9 @@ namespace bertini{
 			using TrackerT = MultiplePrecisionTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
-			class_<EGT>("FMCauchyEG", init<TrackerT const&>())
+			class_<EGT>("FixedMultipleCauchyEG",
+				"The fixed multiple precision implementation of the Cauchy endgame",
+				init<TrackerT const&>())
 			.def(EndgameBaseVisitor<EGT>())
 			.def(CauchyVisitor<EGT>())
 			;
@@ -198,7 +213,9 @@ namespace bertini{
 			using TrackerT = AMPTracker;
 			using EGT = typename endgame::EndgameSelector<TrackerT>::Cauchy;
 
-			class_<EGT>("AMPCauchyEG", init<TrackerT const&>())
+			class_<EGT>("AMPCauchyEG",
+				"The adaptive precision implementation of the Cauchy endgame",
+				init<TrackerT const&>())
 			.def(EndgameBaseVisitor<EGT>())
 			.def(CauchyVisitor<EGT>())
 			;
