@@ -4,7 +4,7 @@ project (performance_numbers)
 
 
 IF( NOT CMAKE_BUILD_TYPE )
-   SET( CMAKE_BUILD_TYPE debug)
+   SET( CMAKE_BUILD_TYPE release)
 ENDIF()
 
 message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")

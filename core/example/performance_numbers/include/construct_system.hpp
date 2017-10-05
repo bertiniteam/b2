@@ -4,6 +4,7 @@
 #include <bertini2/system.hpp>
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
+template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr;
 
@@ -56,10 +57,63 @@ namespace demo{
 	    // make an affine variable group
 	    bertini::VariableGroup vg{x1, x2, x3, x4};
 	    Sys.AddVariableGroup(vg);
+        
+        Sys.Differentiate();
 
 	    return Sys;
 	}
+    
+    
+    template<typename CType>
+    auto GenerateSystemInput(bertini::System S, unsigned int prec=16)
+    {
+        int num_variables = S.NumVariables();
+        
+        Vec<CType> v(num_variables);
+        
+        bertini::DefaultPrecision(prec);
+        for(int ii = 0; ii < num_variables; ++ii)
+        {
+            v(ii) = CType(3)*bertini::RandomUnit<CType>();
+        }
+        
+        return v;
+    }
+    
+    
+    template<typename CType>
+    auto GenerateRHS(bertini::System S, unsigned int prec=16)
+    {
+        auto num_functions = S.NumFunctions();
+        
+        Vec<CType> b(num_functions);
+        
+        bertini::DefaultPrecision(prec);
+        for(int ii = 0; ii < num_functions; ++ii)
+        {
+            b(ii) = CType(3)*bertini::RandomUnit<CType>();
+        }
+        
+        return b;
+    }
 
+
+    template<typename CType>
+    auto GenerateMatrix(int N, unsigned int prec=16)
+    {
+        Mat<CType> A(N,N);
+        
+        bertini::DefaultPrecision(prec);
+        for(int ii = 0; ii < N; ++ii)
+        {
+            for(int jj = 0; jj < N; ++jj)
+            {
+                A(ii,jj) = CType(3)*bertini::RandomUnit<CType>();
+            }
+        }
+        
+        return A;
+    }
 
 
 } // namespace demo
