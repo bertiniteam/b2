@@ -183,6 +183,6 @@ html_theme_options = {
 
 
 
-
+html_logo = "images/bpy_logo_96_96.png"
 
 

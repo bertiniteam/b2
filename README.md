@@ -28,7 +28,7 @@ The solution of arbitrary polynomial systems is an area of active research, and 
 
 The theoretical basis for the solution of polynomials with Bertini is "homotopy continuation", the act of "continuing" from one system into another through a "homotopy", as depicted in the below diagram.
 
-![homotopy continuation](core/doc/images/homotopycontinuation_generic_40ppi.png "homotopy continuation")
+![homotopy continuation](doc_resources/images/homotopycontinuation_generic_40ppi.png "homotopy continuation")
 
 ==
 
