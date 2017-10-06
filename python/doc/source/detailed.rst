@@ -1,4 +1,4 @@
-Detailed gory detail documentation
+Gory-detail documentation
 ===================================
 
 Top-level pybertini
