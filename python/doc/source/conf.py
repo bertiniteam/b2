@@ -21,6 +21,10 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+# stuff to get autodoc to work. danielle amethyst
+import sys
+import os
+sys.path.insert(0,os.path.abspath('../../.libs'))
 
 # -- General configuration ------------------------------------------------
 
@@ -154,7 +158,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'PyBertini', 'PyBertini Documentation',
-     author, 'PyBertini', 'One line description of project.',
+     author, 'PyBertini', 'Software for Numerical Algebraic Geometry.',
      'Miscellaneous'),
 ]
 
@@ -176,3 +180,9 @@ html_theme_options = {
     # Set the name of the project to appear in the sidebar
     "project_nav_name": "Project Name",
 }
+
+
+
+
+
+

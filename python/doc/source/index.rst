@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 PyBertini
-=====================================
+************
 
 .. toctree::
    :maxdepth: 2
@@ -12,6 +12,10 @@ PyBertini
 
    intro
    tutorial
+
+   detailed
+
+
 
 Indices and tables
 ==================
