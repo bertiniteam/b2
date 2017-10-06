@@ -51,6 +51,11 @@ namespace bertini{
 			.def("get_newton",&TrackerT::template Get<tracking::NewtonConfig>,return_internal_reference<>(),"Get the tracker's internal configuration for Newton correction")
 			.def("set_stepping",&TrackerT::template Set<tracking::SteppingConfig>,"Set the tracker's internal configuration for things that control stepping behaviour")
 			.def("set_newton",&TrackerT::template Set<tracking::NewtonConfig>,"Set the tracker's internal configuration for Newton correction")
+
+			.def("current_point", &TrackerT::CurrentPoint)
+			.def("current_time", &TrackerT::CurrentTime)
+			.def("current_precision", &TrackerT::CurrentPrecision)
+
 			;
 		}
 
@@ -61,10 +66,8 @@ namespace bertini{
 		{
 			cl
 			.def("precision_setup", &TrackerT::PrecisionSetup)
-			.def("precision_preservation", &TrackerT::PrecisionPreservation)
-			.def("current_point", &TrackerT::CurrentPoint)
-			.def("current_time", &TrackerT::CurrentTime)
-			.def("current_precision", &TrackerT::CurrentPrecision)
+			.def("precision_preservation", &TrackerT::PrecisionPreservation, "Turn on or off the preservation of precision.  That is, if this is on (true), then the precision of the final point will be the precision of the start point.  Generally, you want to let precision drift, methinks.")
+
 			.def("refine", return_Refine3_ptr<dbl>)
 			.def("refine", return_Refine3_ptr<mpfr>)
 			.def("refine", return_Refine4_ptr<dbl>)
@@ -79,10 +82,6 @@ namespace bertini{
 		void FixedDoubleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("current_point", &TrackerT::CurrentPoint)
-			.def("current_time", &TrackerT::CurrentTime)
-			.def("current_precision", &TrackerT::CurrentPrecision)
-			.def("tracker_loop_initialization", &TrackerT::TrackerLoopInitialization)
 			.def("refine", return_Refine3_ptr<dbl>)
 			.def("refine", return_Refine4_ptr<dbl>)
 			;
@@ -94,10 +93,6 @@ namespace bertini{
 		void FixedMultipleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("current_point", &TrackerT::CurrentPoint)
-			.def("current_time", &TrackerT::CurrentTime)
-			.def("current_precision", &TrackerT::CurrentPrecision)
-			.def("tracker_loop_initialization", &TrackerT::TrackerLoopInitialization)
 			.def("refine", return_Refine3_ptr<mpfr>)
 			.def("refine", return_Refine4_ptr<mpfr>)
 			;
@@ -109,17 +104,15 @@ namespace bertini{
 		void SteppingVisitor<T>::visit(PyClass& cl) const
 		{
 			cl
-			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size)
-			.def_readwrite("max_step_size", &tracking::SteppingConfig::max_step_size)
-			.def_readwrite("min_step_size", &tracking::SteppingConfig::min_step_size)
-			.def_readwrite("step_size_success_factor", &tracking::SteppingConfig::step_size_success_factor)
-			.def_readwrite("step_size_fail_factor", &tracking::SteppingConfig::step_size_fail_factor)
-			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::SteppingConfig::consecutive_successful_steps_before_stepsize_increase)
-			.def_readwrite("min_num_steps", &tracking::SteppingConfig::min_num_steps)
-			.def_readwrite("max_num_steps", &tracking::SteppingConfig::max_num_steps)
-			.def_readwrite("frequency_of_CN_estimation", &tracking::SteppingConfig::frequency_of_CN_estimation)
-			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size)
-			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size)
+			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size,"The initial stepsize when tracking is started.  See also tracking.AMPTracker.reinitialize_initial_step_size")
+			.def_readwrite("max_step_size", &tracking::SteppingConfig::max_step_size,"The maximum allowed stepsize during tracking.  See also min_num_steps")
+			.def_readwrite("min_step_size", &tracking::SteppingConfig::min_step_size,"The minimum stepsize the tracker is allowed to take.  See also max_step_size")
+			.def_readwrite("step_size_success_factor", &tracking::SteppingConfig::step_size_success_factor,"The scale factor for stepsize, after some consecutive steps.  See also consecutive_successful_steps_before_stepsize_increase")
+			.def_readwrite("step_size_fail_factor", &tracking::SteppingConfig::step_size_fail_factor, "The scale factor for stepsize, after a fail happens.  See also step_size_success_factor")
+			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::SteppingConfig::consecutive_successful_steps_before_stepsize_increase,"This number of successful steps have to taken consecutively, and then the stepsize is permitted to increase")
+			.def_readwrite("min_num_steps", &tracking::SteppingConfig::min_num_steps, "The minimum number of steps the tracker can take between now and then.  This is useful if you are tracking closely between times, and want to guarantee some number of steps are taken.  Then again, this could be wasteful, too.")
+			.def_readwrite("max_num_steps", &tracking::SteppingConfig::max_num_steps, "The maximum number of steps.  Tracking will die if it tries to take more than this number, sad day.")
+			.def_readwrite("frequency_of_CN_estimation", &tracking::SteppingConfig::frequency_of_CN_estimation, "How frequently the condition number should be updated.  Less frequently is faster (estimation requires an additional linear solve), but may cause precision adjustment to lag behind.")
 			;
 		}
 
