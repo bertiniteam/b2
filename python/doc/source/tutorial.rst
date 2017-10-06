@@ -155,9 +155,7 @@ Since the endgame hasn't been run yet things are empty and default::
 
 The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to.
 
-::
 
-	
 
 A complete zerodim solve
 ========================
