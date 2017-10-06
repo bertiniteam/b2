@@ -38,15 +38,19 @@ namespace bertini{
 		void TrackerVisitor<TrackerT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("setup", &TrackerT::Setup)
-			.def("track_path", &TrackerT::TrackPath)
-			.def("get_system",&TrackerT::GetSystem,return_internal_reference<>())
+			.def("setup", &TrackerT::Setup, (boost::python::arg("predictor"), boost::python::arg("tolerance"), boost::python::arg("truncation"), boost::python::arg("stepping"),boost::python::arg("newton")), "Set values for the internal configuration of the tracker.  tolerance and truncation are both real doubles.  predictor is a valid value for predictor choice.  stepping and newton are the config structs from pybertini.tracking.config.")
+			.def("track_path", &TrackerT::TrackPath, (boost::python::arg("result"), "start_time", boost::python::arg("end_time"), boost::python::arg("start_point")), "The main function of the tracker, once its set up.  Feed it, in (result, start_time, end_time, start_point")
+			.def("get_system",&TrackerT::GetSystem,return_internal_reference<>(), "Gets an internal reference to the tracked system.")
 			.def("predictor",get_predictor_,"Query the current predictor method used by the tracker.")
 			.def("predictor",set_predictor_,"Set the predictor method used by the tracker.")
 			.def("set_stepsize", &TrackerT::SetStepSize)
-			.def("reinitialize_initial_step_size", &TrackerT::ReinitializeInitialStepSize)
-			.def("num_total_steps_taken", &TrackerT::NumTotalStepsTaken)
-			.def("tracking_tolerance", &TrackerT::TrackingTolerance)
+			.def("reinitialize_initial_step_size", &TrackerT::ReinitializeInitialStepSize, "Set whether the tracker should re-set the stepsize to the configured-initial stepsize when it starts tracking.  Feed it a bool")
+			.def("num_total_steps_taken", &TrackerT::NumTotalStepsTaken,"Ask how many steps have been taken so far, including failures")
+			.def("tracking_tolerance", &TrackerT::TrackingTolerance,"A step is labeled as a failure if newton correcting doesn't yield a residual less than this tolerance.  A real number, the smaller the slower tracking, generally speaking")
+			.def("get_stepping",&TrackerT::template Get<tracking::SteppingConfig>,return_internal_reference<>(),"Get the tracker's internal configuration for things that control stepping behaviour")
+			.def("get_newton",&TrackerT::template Get<tracking::NewtonConfig>,return_internal_reference<>(),"Get the tracker's internal configuration for Newton correction")
+			.def("set_stepping",&TrackerT::template Set<tracking::SteppingConfig>,"Set the tracker's internal configuration for things that control stepping behaviour")
+			.def("set_newton",&TrackerT::template Set<tracking::NewtonConfig>,"Set the tracker's internal configuration for Newton correction")
 			;
 		}
 
