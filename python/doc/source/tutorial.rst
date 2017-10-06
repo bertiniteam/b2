@@ -74,10 +74,10 @@ Wonderful, now we have an easy-to-solve system, the structure of which mirrors t
 	
 	# generates the 1th (0-based offsets in python) start point
 	# at double precision
-	td.start_pointd(1) 
+	td.start_point_d(1) 
 
 	# generate the 1th point at current multiple precision
-	sp = td.start_pointmp(1)
+	sp = td.start_point_mp(1)
 	assert(pybertini.default_precision() == sp[1].precision())
 
 Finally, we couple ``sys`` and ``td``::

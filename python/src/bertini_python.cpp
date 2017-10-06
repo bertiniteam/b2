@@ -70,7 +70,7 @@ namespace bertini
 				ExportRoots();
 			}
 
-			ExportSystem();
+			ExportAllSystems();
 			
 			ExportParsers();
 

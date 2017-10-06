@@ -58,10 +58,14 @@ namespace bertini{
 		
 		
 		
+		
+		void ExportAllSystems();
+
+		// some useful subfunctions used in ExportAllSystems
 		void ExportSystem();
-		
-		
-		
+		void ExportStartSystems();
+		void ExportStartSystemBase();
+		void ExportTotalDegree();
 		
 		
 		

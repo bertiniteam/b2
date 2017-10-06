@@ -94,8 +94,8 @@ namespace bertini{
 			
 			.def("add_variable_group", &SystemBaseT::AddVariableGroup,"Add a (affine) variable group to the System")
 			.def("add_hom_variable_group", &SystemBaseT::AddHomVariableGroup,"Add a projective or homogeneous variable group to the System")
-			.def("add_ungrouped_variable", &SystemBaseT::AddUngroupedVariable,"Add an ungrouped variable to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
-			.def("add_ungrouped_variables", &SystemBaseT::AddUngroupedVariables,"Add some ungrouped variables to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
+			// .def("add_ungrouped_variable", &SystemBaseT::AddUngroupedVariable,"Add an ungrouped variable to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
+			// .def("add_ungrouped_variables", &SystemBaseT::AddUngroupedVariables,"Add some ungrouped variables to the system.  I honestly don't know why you'd do that.  This should be removed, and is a holdover from Bertini 1")
 			// .def("add_implicit_parameter", &SystemBaseT::AddImplicitParameter)
 			// .def("add_implicit_parameters", &SystemBaseT::AddImplicitParameters)
 			// .def("add_parameter", &SystemBaseT::AddParameter)
@@ -155,13 +155,20 @@ namespace bertini{
 		{
 			cl
 			.def("num_start_points", &SystemBaseT::NumStartPoints, "Get the number of start points that would be required by the system.  Non-negative, unsigned")
-			.def("start_pointd", return_GenStart_ptr<dbl>(),"Get the k-th start point in double precision")
-			.def("start_pointmp", return_GenStart_ptr<mpfr>(),"Get the k-th start point in current multiple precision")
+			.def("start_point_d", return_GenStart_ptr<dbl>(),"Get the k-th start point in double precision")
+			.def("start_point_mp", return_GenStart_ptr<mpfr>(),"Get the k-th start point in current multiple precision")
 			;
 
 
 		};
 		
+		void ExportAllSystems()
+		{
+			ExportSystem();
+			ExportStartSystems();
+		}
+
+
 		void ExportSystem()
 		{
 			
@@ -170,21 +177,36 @@ namespace bertini{
 			.def(SystemVisitor<System>())
 			;
 			
+		}
+
+		void ExportStartSystems()
+		{
+			ExportStartSystemBase();
+			ExportTotalDegree();
+		}
+
+
+
+		void ExportStartSystemBase()
+		{
+			//
 			// StartSystem class
 			class_<StartSystemWrap, boost::noncopyable, bases<System>, std::shared_ptr<start_system::StartSystem> >("StartSystem", no_init)
 			.def(StartSystemVisitor<start_system::StartSystem>())
 			;
+		}
 
-			// TotalDegree class
-			class_<start_system::TotalDegree, bases<start_system::StartSystem>, std::shared_ptr<start_system::TotalDegree> >("TotalDegree", init<System const&>())
-			.def("random_value", &start_system::TotalDegree::RandomValue<dbl>, "Get the k-th random value in double precision")
-			.def("random_value", &start_system::TotalDegree::RandomValue<mpfr>, "Get the k-th random value in current multiple precision")
+
+
+		void ExportTotalDegree()
+		{
+			class_<start_system::TotalDegree, bases<start_system::StartSystem>, std::shared_ptr<start_system::TotalDegree> >("TotalDegree",init<System const&>())//,"Only constructor for a TotalDegree start system, requires a system.  You cannot construct one without.  If this is a problem, please contact the authors for help.")
+			.def("random_value", &start_system::TotalDegree::RandomValue<dbl>, "Get the k-th random value, in double precision")
+			.def("random_value", &start_system::TotalDegree::RandomValue<mpfr>, "Get the k-th random value, in current multiple precision")
 			.def("random_values", &start_system::TotalDegree::RandomValues, return_value_policy<copy_const_reference>(), "Get (a reference to) the random values for the start system, as Nodes")
 			;
 
 			
 		}
-
-
 	}
 }
