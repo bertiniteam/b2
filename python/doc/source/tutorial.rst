@@ -43,7 +43,9 @@ Let's check that the degrees of our functions are correct::
 	assert(d[0]==2)
 	assert(d[1]==1)
 
-What happens if we add a non-polynomial function to our system?::
+What happens if we add a non-polynomial function to our system?
+
+::
 
 	sys.add_function(x**-1)
 	sys.add_function( pybertini.function_tree.sin(x) )
@@ -59,7 +61,7 @@ A homotopy in Numerical Algebraic Geometry glues together a start system and a t
 
 The most basic, easiest to form and solve, start system is the Total Degree (TD) start system.  It is implemented as a first-class object in Bertini and PyBertini.  It takes in a polynomial system as its argument, and self-forms.::
 	
-	del sys #we mal-formed our system by adding too many functions, and non-polynomial functions to it.
+	del sys #we mal-formed our system above by adding too many functions, and non-polynomial functions to it.
 	# so, we start over
 	sys = pybertini.System()
 	sys.add_variable_group(grp)
@@ -99,8 +101,10 @@ Each brings its own advantages and disadvantages.  And, each has its ambient num
 
 Let's use the adaptive one, since adaptivity is generally a good trait to have.  ``AMPTracker`` uses variable-precision vectors and matrices in its ambient work -- that is, you feed it multiprecisions, and get back multiprecisions.  Internally, it will use double precision when it can, and higher when it has to.
 
-We associate a system with a tracker when we make it.  You cannot make a tracker without telling the tracker which system it will be tracking...::
-	
+We associate a system with a tracker when we make it.  You cannot make a tracker without telling the tracker which system it will be tracking...
+
+::
+
 	tr = pybertini.tracking.AMPTracker(homotopy)
 	tr.set_tolerance(1e-5) # track the path to 5 digits or so
 
@@ -111,15 +115,49 @@ We associate a system with a tracker when we make it.  You cannot make a tracker
 	#then, set the config into the tracker.
 
 
-Once we feel comfortable with the configs (of which there are many, see the book or elsewhere in this site, perhaps), we can track a path.::
-	
+Once we feel comfortable with the configs (of which there are many, see the book or elsewhere in this site, perhaps), we can track a path.
+
+::
+
 	result = pybertini.VectorXmp()
 	tr.track_path(result, pybertini.mpfr_complex(0), pybertini.mpfr_complex(1), td.start_pointmp(0))
 
+Let's generate a log of what was computed along the way, first making an observer, and then attaching it to the tracker.  
 
-Using and endgame to compute singular endpoints
+::
+
+	#make observer
+
+	#attach
+
+Re-running it, you should find the logfile ``bertini#.log``.
+
+Using an endgame to compute singular endpoints
 ===============================================
 
+There are two implemented endgames in Bertini:
+
+#. Power series -- uses `Hermite interpolation <https://en.wikipedia.org/wiki/Hermite_interpolation>`_ across a sequence of geometrically-spaced points (in time) to extrapolate to a target time.
+#. Cauchy -- uses `Cauchy's integral formula <https://en.wikipedia.org/wiki/Cauchy's_integral_formula>`_
+
+Each is provided in the three precision modes, double, fixed multiple, and adaptive.  Since we are using the adaptive tracker in this tutorial, we will of course use the adaptive endgame.  I really like the Cauchy endgame, so we're in the land of the ``pybertini.endgame.AMPCauchyEG``. 
+
+To make an endgame, we need to feed it the tracker that is used to run.  There are also config structs to play with, that control the way things are computed.
+
+::
+
+	eg = pybertini.endgame.AMPCauchyEG(tr)
+
+Since the endgame hasn't been run yet things are empty and default::
+
+	assert(eg.cycle_number()==0)
+	assert(eg.final_approximation()==pybertini.VectorXmp())
+
+The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to.
+
+::
+
+	
 
 A complete zerodim solve
 ========================
