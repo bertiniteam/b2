@@ -1,9 +1,19 @@
 Welcome to PyBertini
 ====================================
 
-We're glad you are here with us.  Bertini is software for numerically solving systems of polynomials.  PyBertini is the Python provided for running Bertini interactively.
+Bertini is software for numerically solving systems of polynomials.  PyBertini is the Python provided for running Bertini.
 
-The main algorithm in Bertini is homotopy continuation.  A homotopy is formed, and the solutions to the start system are continued into the solutions for the target system.
+The main algorithm for numerical algebraic geometry implemented in Bertini is homotopy continuation.  A homotopy is formed, and the solutions to the start system are continued into the solutions for the target system.
+
+
+.. figure:: images_common/homotopycontinuation_generic_40ppi.png
+   :scale: 100 %
+   :alt: Homotopy continuation
+
+   Predictor-corrector methods with optional adaptive precision track paths from 1 to 0, solving :math:`f`.
+
+
+
 
 Source
 ------
