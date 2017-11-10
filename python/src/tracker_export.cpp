@@ -127,7 +127,8 @@ namespace bertini{
 			current_scope.attr("tracking") = new_submodule;
 
 			scope new_submodule_scope = new_submodule;
-			
+			new_submodule_scope.attr("__doc__") = "Tracking things for PyBertini.  Includes the three fundamental trackers, and utility functions.";
+
 			ExportConfigSettings();
 			ExportAMPTracker();
 			ExportFixedTrackers();
@@ -135,7 +136,7 @@ namespace bertini{
 
 		void ExportAMPTracker()
 		{
-			class_<AMPTracker, std::shared_ptr<AMPTracker> >("AMPTracker", init<const System&>())
+			class_<AMPTracker, std::shared_ptr<AMPTracker> >("AMPTracker", "The adaptive multiple precision (AMP) tracker.  Ambient numeric type is multiple-precision (mpfr_complex).  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
 			.def(TrackerVisitor<AMPTracker>())
 			.def(AMPTrackerVisitor<AMPTracker>())
 			;
@@ -149,7 +150,7 @@ namespace bertini{
 
 		void ExportFixedDoubleTracker()
 		{
-			class_<DoublePrecisionTracker, std::shared_ptr<DoublePrecisionTracker> >("DoublePrecisionTracker", init<const System&>())
+			class_<DoublePrecisionTracker, std::shared_ptr<DoublePrecisionTracker> >("DoublePrecisionTracker", "The double precision tracker.  Tracks using only complex doubles.  Ambient numeric type is double.  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
 			.def(TrackerVisitor<DoublePrecisionTracker>())
 			.def(FixedDoubleTrackerVisitor<DoublePrecisionTracker>())
 			;
@@ -157,7 +158,7 @@ namespace bertini{
 
 		void ExportFixedMultipleTracker()
 		{
-			class_<MultiplePrecisionTracker, std::shared_ptr<MultiplePrecisionTracker> >("MultiplePrecisionTracker", init<const System&>())
+			class_<MultiplePrecisionTracker, std::shared_ptr<MultiplePrecisionTracker> >("MultiplePrecisionTracker", "The fixed multiple precision tracker.  Ambient numeric type is multiple-precision (mpfr_complex).  Precision is the value of pybertini.default_precision() at contruction.  Errors if you try to feed it things not at that precision.  Contruct one by feeding it a system -- cannot be constructed without feeding it a system.  Adjust its settings via configs and the `setup` function.  Then, call method `track_path`.", init<const System&>())
 			.def(TrackerVisitor<MultiplePrecisionTracker>())
 			.def(FixedMultipleTrackerVisitor<MultiplePrecisionTracker>())
 			;
