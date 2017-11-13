@@ -39,10 +39,10 @@ namespace bertini
 		
 
 
-		BOOST_PYTHON_MODULE(pybertini) // this name must match the name of the generated .so file.
+		BOOST_PYTHON_MODULE(_pybertini) // this name must match the name of the generated .so file.
 		{
 			object package = scope();
-		    package.attr("__path__") = "pybertini";
+		    package.attr("__path__") = "_pybertini";
 
 			ExportContainers();
 			
