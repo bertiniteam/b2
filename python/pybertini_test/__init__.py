@@ -16,4 +16,6 @@ version = __version__
 
 # put stuff in the pybertini namespace
 
-from .system import System
+from .system import *
+
+from .function_tree import function_tree
