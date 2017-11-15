@@ -181,8 +181,19 @@ namespace bertini{
 
 		void ExportStartSystems()
 		{
-			ExportStartSystemBase();
-			ExportTotalDegree();
+
+			{ // enter a scope for config types
+				scope current_scope;
+				std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+				new_submodule_name.append(".start_system");
+				object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+				current_scope.attr("start_system") = new_submodule;
+
+				scope new_submodule_scope = new_submodule;
+
+				ExportStartSystemBase();
+				ExportTotalDegree();
+			}
 		}
 
 
@@ -191,7 +202,7 @@ namespace bertini{
 		{
 			//
 			// StartSystem class
-			class_<StartSystemWrap, boost::noncopyable, bases<System>, std::shared_ptr<start_system::StartSystem> >("StartSystem", no_init)
+			class_<StartSystemWrap, boost::noncopyable, bases<System>, std::shared_ptr<start_system::StartSystem> >("AbstractStartSystem", no_init)
 			.def(StartSystemVisitor<start_system::StartSystem>())
 			;
 		}
