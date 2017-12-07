@@ -103,10 +103,10 @@ namespace bertini{
 			.def("is_polynomial", IsPoly1 )
 			.def("is_polynomial", IsPoly2 )
 
-			.def("evald", &Eval0<dbl> )
-			.def("evald", return_Eval1_ptr<dbl>() )
-			.def("evalmp", &Eval0<mpfr> )
-			.def("evalmp", return_Eval1_ptr<mpfr>() )
+			.def("eval_d", &Eval0<dbl> )
+			.def("eval_d", return_Eval1_ptr<dbl>() )
+			.def("eval_mp", &Eval0<mpfr> )
+			.def("eval_mp", return_Eval1_ptr<mpfr>() )
 			
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))
