@@ -47,6 +47,7 @@ namespace bertini{
 		template<typename T>
 		class PrecisionVisitor: public def_visitor<PrecisionVisitor<T>>
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -62,8 +63,9 @@ namespace bertini{
 		 \brief Exposes str, repr, and precision
 		*/
 		template<typename T>
-		class NumericBaseVisitor: public def_visitor<NumericBaseVisitor<T>>
+		class RealStrVisitor: public def_visitor<RealStrVisitor<T>>
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -98,7 +100,7 @@ namespace bertini{
 		class RingVisitor: public def_visitor<RingVisitor<T, S> >
 		{
 			static_assert(!std::is_same<T,S>::value, "RingVisitor is to define T-S operations.  for T-T operations, use RingSelfVisitor");
-
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -124,6 +126,7 @@ namespace bertini{
 		template<typename T>
 		class RingSelfVisitor: public def_visitor<RingSelfVisitor<T> >
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -150,6 +153,7 @@ namespace bertini{
 		template<typename T, typename S>
 		class FieldVisitor: public def_visitor<FieldVisitor<T, S> >
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -164,14 +168,15 @@ namespace bertini{
 		template<typename T>
 		class FieldSelfVisitor: public def_visitor<FieldSelfVisitor<T> >
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
 			
 			
 		private:
-			static T __div__(const T& a, const T& b){ return a/b; };
-			static T __idiv__(T& a, const T& b){ a/=b; return a; };
+			static T div(const T& a, const T& b){ return a/b; };
+			static T idiv(T& a, const T& b){ a/=b; return a; };
 		}; // FieldSelfVisitor
 
 
@@ -179,6 +184,7 @@ namespace bertini{
 		template<typename T, typename S>
 		class PowVisitor: public def_visitor<PowVisitor<T,S>>
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -191,6 +197,7 @@ namespace bertini{
 		template<typename T, typename S>
 		class GreatLessVisitor: public def_visitor<GreatLessVisitor<T,S>>
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -203,6 +210,7 @@ namespace bertini{
 		template<typename T>
 		class GreatLessSelfVisitor: public def_visitor<GreatLessSelfVisitor<T>>
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -216,6 +224,7 @@ namespace bertini{
 		template<typename T>
 		class TranscendentalVisitor: public def_visitor<TranscendentalVisitor<T>>
 		{
+			friend class def_visitor_access;
 		public:
 			template<class PyClass>
 			void visit(PyClass& cl) const;
@@ -262,6 +271,25 @@ namespace bertini{
 			
 			static void set_imag(T &c, mpfr_float const& r) { c.imag(r);}
 			static mpfr_float get_imag(T const&c) { return c.imag();}
+
+			static std::string __str__(const object& obj)
+			{
+				std::ostringstream oss;
+				const T& self=extract<T>(obj)();
+				std::stringstream ss;
+				ss << self;
+				return ss.str();
+			}
+			
+			static std::string __repr__(const object& obj)
+			{
+				std::ostringstream oss;
+				const T& self=extract<T>(obj)();
+				std::stringstream ss;
+				ss << "(" << real(self).str(0,std::ios::scientific) << ", " << imag(self).str(0,std::ios::scientific) << ")";
+				return ss.str();
+			}
+
 		};
 		// /**
 		//  A base visitor exposing methods common to all multiprecision data types.  Mostly arithmetic and printing methods.
@@ -348,21 +376,21 @@ namespace bertini{
 		
 		
 		
-		/**
-		 Visitor exposing important methods from the boost::multiprecision::mpz_int class
-		*/
-		template<typename T>
-		class IntVisitor: public def_visitor<IntVisitor<T>>
-		{
-			friend class def_visitor_access;
+		// /**
+		//  Visitor exposing important methods from the boost::multiprecision::mpz_int class
+		// */
+		// template<typename T>
+		// class IntVisitor: public def_visitor<IntVisitor<T>>
+		// {
+		// 	friend class def_visitor_access;
 			
-		public:
-			template<class PyClass>
-			void visit(PyClass& cl) const;
+		// public:
+		// 	template<class PyClass>
+		// 	void visit(PyClass& cl) const;
 			
-		private:
+		// private:
 			
-		};
+		// };
 
 	
 		

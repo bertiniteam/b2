@@ -52,11 +52,11 @@ namespace bertini{
 
 		template<typename T>
 		template<typename PyClass>
-		void NumericBaseVisitor<T>::visit(PyClass& cl) const
+		void RealStrVisitor<T>::visit(PyClass& cl) const
 		{
 			cl
-			.def("__str__", &NumericBaseVisitor::__str__)
-			.def("__repr__", &NumericBaseVisitor::__repr__)
+			.def("__str__", &RealStrVisitor::__str__)
+			.def("__repr__", &RealStrVisitor::__repr__)
 			.def(self == self)
 			.def(self != self)
 			;
@@ -112,11 +112,11 @@ namespace bertini{
 		template<typename PyClass>
 		void FieldVisitor<T,S>::visit(PyClass& cl) const
 		{
-			RingVisitor<T,S>().visit(cl);
 			cl
 			.def("__div__",&FieldVisitor::__div__)
 			.def("__idiv__",&FieldVisitor::__idiv__)
 			.def("__rdiv__",&FieldVisitor::__rdiv__)
+			.def(RingVisitor<T,S>())
 			;
 		}
 
@@ -125,10 +125,11 @@ namespace bertini{
 		template<typename PyClass>
 		void FieldSelfVisitor<T>::visit(PyClass& cl) const
 		{
-			RingSelfVisitor<T>().visit(cl);
 			cl
-			.def("__div__",&FieldSelfVisitor::__div__)
-			.def("__idiv__",&FieldSelfVisitor::__idiv__)
+			.def("__div__",&FieldSelfVisitor::div)
+			.def("__idiv__",&FieldSelfVisitor::idiv)
+
+			.def(RingSelfVisitor<T>())
 			;
 		}
 
@@ -146,10 +147,15 @@ namespace bertini{
 		void GreatLessVisitor<T,S>::visit(PyClass& cl) const
 		{
 			cl
-			.def(self < S())
-			.def(self <= S())
-			.def(self > S())
-			.def(self >= S())
+			.def(self < other<S>())
+			.def(self <= other<S>())
+			.def(self > other<S>())
+			.def(self >= other<S>())
+
+			.def(other<S>() < self)
+			.def(other<S>() <= self)
+			.def(other<S>() > self)
+			.def(other<S>() >= self)
 			;
 		}
 
@@ -201,6 +207,12 @@ namespace bertini{
 			cl			
 			.add_property("real", &ComplexVisitor::get_real, &ComplexVisitor::set_real)
 			.add_property("imag", &ComplexVisitor::get_imag, &ComplexVisitor::set_imag)
+			
+			.def("__str__", &ComplexVisitor::__str__)
+			.def("__repr__", &ComplexVisitor::__repr__)
+
+			.def(self == self)
+			.def(self != self)
 			;
 			
 			
@@ -242,10 +254,11 @@ namespace bertini{
 			class_<mpz_int>("int", init<>())
 			.def(init<int>())
 			.def(init<T>())
-			.def(NumericBaseVisitor<T>())
+			.def(RealStrVisitor<T>())
 			.def(RingSelfVisitor<T>())
 			.def(PowVisitor<T,int>())
 			.def(GreatLessSelfVisitor<T>())
+			.def(GreatLessVisitor<T,int>())
 			;
 		}
 
@@ -328,7 +341,7 @@ namespace bertini{
 			.def(init<int, int>())
 			.def(init<mpz_int,mpz_int>())
 			.def(init<mpq_rational>())
-			.def(NumericBaseVisitor<T>())
+			.def(RealStrVisitor<T>())
 			.def(FieldSelfVisitor<T>())
 			.def(FieldVisitor<T, mpz_int>())
 			// .def(PowVisitor<T,int>()) // not defined for rationals...
@@ -404,14 +417,19 @@ namespace bertini{
 		{
 			using T = bmp;
 
-			class_<bmp>("float", init<>())
+			class_<T>("float", init<>())
 			.def(init<std::string>())
 			.def(init<int>())
 			.def(init<long int>())
-			.def(init<bmp>())
-			.def(NumericBaseVisitor<bmp>())
+			.def(init<T>())
+			.def(RealStrVisitor<T>())
+			.def(PrecisionVisitor<T>())
+
+			// .def(FieldSelfVisitor<T>())
+			
 			.def(FieldVisitor<T, mpz_int>())
-			.def(FieldSelfVisitor<T>())
+			.def(FieldVisitor<T, mpq_rational>())
+			
 			.def(PowVisitor<T,T>())
 			.def(PowVisitor<T,int>())
 			.def(PowVisitor<T,unsigned>())
@@ -492,6 +510,7 @@ namespace bertini{
 			.def(init<mpfr_float, std::string>())
 			.def(init<std::string, std::string>())
 			.def(init<T>())
+
 			.def(ComplexVisitor<T>())
 
 			.def(FieldSelfVisitor<T>())
