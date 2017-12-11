@@ -116,6 +116,10 @@ namespace bertini{
 			.def("__div__",&FieldVisitor::__div__)
 			.def("__idiv__",&FieldVisitor::__idiv__)
 			.def("__rdiv__",&FieldVisitor::__rdiv__)
+
+			.def("__truediv__",&FieldVisitor::__div__)
+			.def("__itruediv__",&FieldVisitor::__idiv__)
+			.def("__rtruediv__",&FieldVisitor::__rdiv__)
 			.def(RingVisitor<T,S>())
 			;
 		}
@@ -128,6 +132,9 @@ namespace bertini{
 			cl
 			.def("__div__",&FieldSelfVisitor::div)
 			.def("__idiv__",&FieldSelfVisitor::idiv)
+
+			.def("__truediv__",&FieldSelfVisitor::div)
+			.def("__itruediv__",&FieldSelfVisitor::idiv)
 
 			.def(RingSelfVisitor<T>())
 			;
@@ -425,7 +432,7 @@ namespace bertini{
 			.def(RealStrVisitor<T>())
 			.def(PrecisionVisitor<T>())
 
-			// .def(FieldSelfVisitor<T>())
+			.def(FieldSelfVisitor<T>())
 			
 			.def(FieldVisitor<T, mpz_int>())
 			.def(FieldVisitor<T, mpq_rational>())
