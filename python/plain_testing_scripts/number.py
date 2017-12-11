@@ -37,9 +37,6 @@ for ii in fields:
 # then mixed products
 for ii in rings:
 	for jj in fields:
-		print(ii)
-		print(jj)
-		print(type(jj))
 		exercise_field(ii,jj)
 
 
