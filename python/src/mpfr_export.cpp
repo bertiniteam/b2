@@ -278,7 +278,14 @@ namespace bertini{
 
 
 
+		void ExposeFreeNumFns()
+		{
+			unsigned (*def_prec1)() = &bertini::DefaultPrecision;
+			void (*def_prec2)(unsigned) = &bertini::DefaultPrecision;
 
+			def("default_precision", def_prec1);
+			def("default_precision", def_prec2);
+		}
 
 
 
@@ -607,7 +614,9 @@ namespace bertini{
 			ExposeInt();
 			ExposeFloat();
 			ExposeRational();
-			ExposeComplex();		
+			ExposeComplex();	
+
+			ExposeFreeNumFns();	
 		};
 
 		
