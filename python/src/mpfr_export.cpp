@@ -490,12 +490,12 @@ namespace bertini{
 
 			.def(FieldSelfVisitor<T>())
 			
+			.def(FieldVisitor<T, int>())
 			.def(FieldVisitor<T, mpz_int>())
 			.def(FieldVisitor<T, mpq_rational>())
 			
 			.def(PowVisitor<T,T>())
 			.def(PowVisitor<T,int>())
-			.def(PowVisitor<T,unsigned>())
 			.def(TranscendentalVisitor<T>())
 
 			.def(GreatLessSelfVisitor<T>())
@@ -592,11 +592,10 @@ namespace bertini{
 			.def(FieldVisitor<T, mpfr_float>())
 
 			.def(FieldVisitor<T, int>())
-			.def(FieldVisitor<T, unsigned>())
 
 			.def(PowVisitor<T,T>())
 			.def(PowVisitor<T,int>())
-			.def(PowVisitor<T,unsigned>())
+			.def(PowVisitor<T,mpfr_float>())
 
 			.def(TranscendentalVisitor<T>())
 			;
