@@ -29,7 +29,7 @@ from .function_tree import function_tree
 from .function_tree import Variable
 
 
-from .numbers import *
+from .multiprec import *
 
 
 
