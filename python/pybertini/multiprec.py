@@ -1,3 +1,3 @@
 import _pybertini
 
-from _pybertini import mpfr
+from _pybertini import mpfr as multiprec
