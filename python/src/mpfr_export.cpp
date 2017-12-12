@@ -126,7 +126,15 @@ namespace bertini{
 			.def("__neg__",&RingSelfVisitor::__neg__)
 			;
 
-			def("abs", &RingSelfVisitor::__abs__); // free
+			
+		}
+
+
+		template<typename T>
+		template<typename PyClass>
+		void RealFreeVisitor<T>::visit(PyClass& cl) const
+		{
+			def("abs", &RealFreeVisitor::__abs__); // free
 		}
 
 
@@ -257,6 +265,8 @@ namespace bertini{
 			def("square",&square);
 			def("cube",&cube);
 			def("inverse", &inverse);
+
+			def("abs", &ComplexVisitor::__abs__); // free
 		}
 
 
@@ -289,6 +299,8 @@ namespace bertini{
 
 			.def(EqualitySelfVisitor<T>())
 			.def(EqualityVisitor<T, int>())
+
+			.def(RealFreeVisitor<T>())
 			;
 		}
 
@@ -383,6 +395,8 @@ namespace bertini{
 			.def(EqualitySelfVisitor<T>())
 			.def(EqualityVisitor<T, int>())
 			.def(EqualityVisitor<T, mpz_int>())
+
+			.def(RealFreeVisitor<T>())
 			;
 		}
 
@@ -475,6 +489,8 @@ namespace bertini{
 			.def(GreatLessSelfVisitor<T>())
 			.def(GreatLessVisitor<T,int>())
 			.def(GreatLessVisitor<T,double>())
+
+			.def(RealFreeVisitor<T>())
 			;
 		}
 

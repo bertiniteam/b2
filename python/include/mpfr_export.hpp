@@ -172,9 +172,25 @@ namespace bertini{
 			static T __imul__(T& a, const T& b){ a*=b; return a; };
 
 			static T __neg__(const T& a){ return -a; };
-
+		}; // RingSelfVisitor
+		
+		/**
+		 \brief Exposes +, - and *
+		*/
+		template<typename T>
+		class RealFreeVisitor: public def_visitor<RealFreeVisitor<T> >
+		{
+			friend class def_visitor_access;
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+			
+			
+		private:
 			static T __abs__(T const& x){ return abs(x);}
 		}; // RingSelfVisitor
+		
+
 
 		/**
 		 \brief Exposes +,-,*,/
@@ -293,14 +309,17 @@ namespace bertini{
 			template<class PyClass>
 			void visit(PyClass& cl) const;
 			
+			using RealT = typename NumTraits<T>::Real;
 			
 		private:
 			static void set_real(T &c, mpfr_float const& r) { c.real(r);}
-			static mpfr_float get_real(T const&c) { return c.real();}
+			static RealT get_real(T const&c) { return c.real();}
 			
-			static void set_imag(T &c, mpfr_float const& r) { c.imag(r);}
-			static mpfr_float get_imag(T const&c) { return c.imag();}
+			static void set_imag(T &c, RealT const& r) { c.imag(r);}
+			static RealT get_imag(T const&c) { return c.imag();}
 
+			static RealT __abs__(T const& x){ return abs(x);}
+			
 			static std::string __str__(const object& obj)
 			{
 				std::ostringstream oss;
