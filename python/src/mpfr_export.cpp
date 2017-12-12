@@ -380,7 +380,9 @@ namespace bertini{
 			using T = mpq_rational;
 
 			class_<mpq_rational>("rational", init<>())
+			.def(init<int>())
 			.def(init<int, int>())
+			.def(init<mpz_int>())
 			.def(init<mpz_int,mpz_int>())
 			.def(init<mpq_rational>())
 			.def(RealStrVisitor<T>())
