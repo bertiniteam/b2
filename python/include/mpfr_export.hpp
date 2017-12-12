@@ -92,7 +92,32 @@ namespace bertini{
 
 
 
-		
+		/**
+		 \brief Exposes == and != for homogeneous comparison
+		*/
+		template<typename T>
+		class EqualitySelfVisitor: public def_visitor<EqualitySelfVisitor<T>>
+		{
+			friend class def_visitor_access;
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+		private:
+		};
+
+		/**
+		 \brief Exposes == and != for inhomogeneous comparison
+		*/
+		template<typename T, typename S>
+		class EqualityVisitor: public def_visitor<EqualityVisitor<T,S>>
+		{
+			friend class def_visitor_access;
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+		private:
+		};
+
 		/**
 		 \brief Exposes +, - and *
 		*/

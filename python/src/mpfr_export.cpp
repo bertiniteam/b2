@@ -57,12 +57,31 @@ namespace bertini{
 			cl
 			.def("__str__", &RealStrVisitor::__str__)
 			.def("__repr__", &RealStrVisitor::__repr__)
+			;
+		}
+
+		template<typename T>
+		template<typename PyClass>
+		void EqualitySelfVisitor<T>::visit(PyClass& cl) const
+		{
+			cl
 			.def(self == self)
 			.def(self != self)
 			;
 		}
 
+		template<typename T, typename S>
+		template<typename PyClass>
+		void EqualityVisitor<T,S>::visit(PyClass& cl) const
+		{
+			cl
+			.def(self == other<S>())
+			.def(self != other<S>())
 
+			.def(other<S>() == self)
+			.def(other<S>() != self)
+			;
+		}
 
 
 		template<typename T, typename S>
@@ -217,9 +236,6 @@ namespace bertini{
 			
 			.def("__str__", &ComplexVisitor::__str__)
 			.def("__repr__", &ComplexVisitor::__repr__)
-
-			.def(self == self)
-			.def(self != self)
 			;
 			
 			
@@ -266,6 +282,9 @@ namespace bertini{
 			.def(PowVisitor<T,int>())
 			.def(GreatLessSelfVisitor<T>())
 			.def(GreatLessVisitor<T,int>())
+
+			.def(EqualitySelfVisitor<T>())
+			.def(EqualityVisitor<T, int>())
 			;
 		}
 
@@ -351,8 +370,15 @@ namespace bertini{
 			.def(RealStrVisitor<T>())
 			.def(FieldSelfVisitor<T>())
 			.def(FieldVisitor<T, mpz_int>())
-			// .def(PowVisitor<T,int>()) // not defined for rationals...
+			// .def(PowVisitor<T,int>()) // deliberately commented out... 
+										 // pow(Q,Z) not defined...
 			.def(GreatLessSelfVisitor<T>())
+			.def(GreatLessVisitor<T,int>())
+			.def(GreatLessVisitor<T,mpz_int>())
+
+			.def(EqualitySelfVisitor<T>())
+			.def(EqualityVisitor<T, int>())
+			.def(EqualityVisitor<T, mpz_int>())
 			;
 		}
 
@@ -441,6 +467,10 @@ namespace bertini{
 			.def(PowVisitor<T,int>())
 			.def(PowVisitor<T,unsigned>())
 			.def(TranscendentalVisitor<T>())
+
+			.def(GreatLessSelfVisitor<T>())
+			.def(GreatLessVisitor<T,int>())
+			.def(GreatLessVisitor<T,double>())
 			;
 		}
 
