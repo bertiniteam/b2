@@ -475,6 +475,9 @@ namespace bertini{
 			.def(init<int>())
 			.def(init<long int>())
 			.def(init<T>())
+
+			.def(init<mpz_int>())
+
 			.def(RealStrVisitor<T>())
 			.def(PrecisionVisitor<T>())
 
@@ -570,6 +573,9 @@ namespace bertini{
 			.def(init<std::string, std::string>())
 			.def(init<T>())
 
+			.def(init<mpz_int>())
+			.def(init<mpz_int, mpz_int>())
+			
 			.def(ComplexVisitor<T>())
 
 			.def(FieldSelfVisitor<T>())
