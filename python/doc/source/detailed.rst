@@ -4,25 +4,25 @@ Gory-detail documentation
 Top-level pybertini
 -------------------
 
-.. automodule:: pybertini
+.. automodule:: _pybertini
    :members:
 
 function_tree
 ---------------
 
-.. automodule:: pybertini.function_tree
+.. automodule:: _pybertini.function_tree
    :members:
 
 
 tracking
 ---------
 
-.. automodule:: pybertini.tracking
+.. automodule:: _pybertini.tracking
    :members:
 
 
 endgames
 ---------
 
-.. automodule:: pybertini.endgame
+.. automodule:: _pybertini.endgame
    :members:
