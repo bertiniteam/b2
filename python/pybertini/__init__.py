@@ -27,9 +27,10 @@ from .function_tree import function_tree
 
 #bring some things to the front namespace, because they are nested several deep
 from .function_tree import Variable
+from .function_tree import VariableGroup
 
+from .multiprec import multiprec
 
-from .multiprec import *
-
-
-
+import pybertini.tracking
+import pybertini.endgame
+# 

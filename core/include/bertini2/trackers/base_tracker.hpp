@@ -209,6 +209,16 @@ namespace bertini{
 				digits_tracking_tolerance_ = NumTraits<double>::TolToDigits(tracking_tolerance);
 			}
 
+
+			void SetInfiniteTruncationTolerance(double const& tol)
+			{
+				if (tol <= 0)
+					throw std::runtime_error("truncation threshold must be strictly positive");
+
+				path_truncation_threshold_ = tol;
+			}
+
+
 			/**
 			\brief Track a start point through time, from a start time to a target time.
 
@@ -402,6 +412,11 @@ namespace bertini{
 			auto TrackingTolerance() const
 			{
 				return tracking_tolerance_;
+			}
+
+			auto InfiniteTruncationTolerance() const
+			{
+				return path_truncation_threshold_;
 			}
 
 		private:
@@ -622,6 +637,15 @@ namespace bertini{
 				return this->norm_delta_z_;
 			}
 
+			void SetInfiniteTruncation(bool b)
+			{
+				infinite_path_truncation_ = b;
+			}
+	
+			auto InfiniteTruncation()
+			{
+				return infinite_path_truncation_;
+			}
 
 			unsigned NumVariables() const
 			{
