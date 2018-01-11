@@ -36,6 +36,15 @@ namespace bertini{
 
 		void ExportDetails()
 		{
+			scope current_scope;
+			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+			new_submodule_name.append(".detail");
+			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+			current_scope.attr("detail") = new_submodule;
+
+			scope new_submodule_scope = new_submodule;
+			new_submodule_scope.attr("__doc__") = "Hidden things.  Keep them secret.  Keep them safe...";
+
 			ExportObserver();
 		}
 	}

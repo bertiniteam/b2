@@ -34,6 +34,22 @@
 namespace bertini{
 	namespace python{
 
+template <typename ObsT>
+class ObservableVisitor : public def_visitor<ObservableVisitor<ObsT>>
+{
+	friend class def_visitor_access;
 
+public:
+
+	template<class PyClass>
+	void visit(PyClass& cl) const{
+		cl
+		.def("add_observer", &ObsT::AddObserver)
+		.def("remove_observer", &ObsT::RemoveObserver)
+		;
+	}
+};
+
+	
 
 }} // namespaces

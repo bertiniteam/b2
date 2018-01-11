@@ -72,6 +72,7 @@ namespace bertini{
 			.def("current_time", &TrackerT::CurrentTime)
 			.def("current_precision", &TrackerT::CurrentPrecision)
 
+			.def(ObservableVisitor<TrackerT>());
 			;
 		}
 

@@ -75,6 +75,7 @@ namespace bertini
 			ExportParsers();
 
 			ExportTrackers();
+			ExportTrackerObservers();
 
 			ExportEndgames();
 
