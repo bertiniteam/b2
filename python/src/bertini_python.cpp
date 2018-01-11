@@ -77,6 +77,8 @@ namespace bertini
 			ExportTrackers();
 
 			ExportEndgames();
+
+			ExportDetails();
 		}
 	
 	}

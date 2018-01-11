@@ -29,32 +29,14 @@
 //  python/generic_observers.cpp:  source file for exposing trackers to python.
 
 
-#include "generic_observer.hpp"
+#include "detail.hpp"
 
 namespace bertini{
 	namespace python{
 
-		// Wrapper struct to allow derived classes to overide methods in python
-		struct ObserverWrapper : AnyObserver, wrapper<AnyObserver>
+		void ExportDetails()
 		{
-
-			void Observe(AnyEvent const& e) { this->get_override("Observe")(e);}
-			
-		}; // re: ObserverWrapper
-
-
-		void ExportObserver()
-		{
-			// scope current_scope;
-			// std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			// new_submodule_name.append(".symbol");
-			// object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-			// current_scope.attr("symbol") = new_submodule;
-
-			// scope new_submodule_scope = new_submodule;
-
-			class_<ObserverWrapper, boost::noncopyable>("AbstractObserver", no_init)
-			// .def(NodeVisitor<Node>())
-			;
+			ExportObserver();
 		}
-}} // namespaces
+	}
+}

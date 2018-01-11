@@ -12,11 +12,13 @@ bertini_python_header_files = $(includedir)/bertini_python.hpp \
 				$(includedir)/tracker_export.hpp \
 				$(includedir)/endgame_export.hpp \
 				$(includedir)/generic_observer.hpp \
-				$(includedir)/tracker_observers.hpp
+				$(includedir)/tracker_observers.hpp \
+				$(includedir)/detail.hpp
 
 
 
 bertini_python_source_files = \
+				src/detail.cpp \
 				src/tracker_export.cpp \
 				src/endgame_export.cpp \
 				src/mpfr_export.cpp \
