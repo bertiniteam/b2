@@ -579,9 +579,9 @@ namespace bertini{
 
 
 			unsigned digits_final_ = 0; ///< The number of digits to track to, due to being in endgame zone.
-			unsigned digits_tracking_tolerance_; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
-			NumErrorT tracking_tolerance_; ///< The tracking tolerance.
-			NumErrorT path_truncation_threshold_; ///< The threshold for path truncation.
+			unsigned digits_tracking_tolerance_ = 5; ///< The number of digits required for tracking to given tolerance, condition number notwithstanding.
+			NumErrorT tracking_tolerance_ = 1e-5; ///< The tracking tolerance.
+			NumErrorT path_truncation_threshold_ = 1e5; ///< The threshold for path truncation.
 
 			mutable CT endtime_; ///< The time we are tracking to.
 			mutable CT current_time_; ///< The current time.
