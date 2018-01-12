@@ -66,7 +66,7 @@ namespace bertini {
 						precision_increased_ = true;
 						next_precision_ = next;
 						time_of_first_increase_ = t.CurrentTime();
-						t.RemoveObserver(this);
+						t.RemoveObserver(*this);
 					}
 
 				}
@@ -96,6 +96,8 @@ namespace bertini {
 			{
 				return time_of_first_increase_;
 			}
+
+			virtual ~FirstPrecisionRecorder() = default;
 
 		private:
 
@@ -150,6 +152,8 @@ namespace bertini {
 			void MaxPrecision(unsigned m)
 			{ max_precision_ = m;}
 
+			virtual ~MinMaxPrecisionRecorder() = default;
+
 		private:
 
 			unsigned min_precision_ = std::numeric_limits<unsigned>::max();
@@ -178,6 +182,8 @@ namespace bertini {
 			{
 				return precisions_;
 			}
+
+			virtual ~PrecisionAccumulator() = default;
 
 		private:
 			std::vector<unsigned> precisions_;
@@ -209,6 +215,8 @@ namespace bertini {
 				return path_;
 			}
 
+			virtual ~AMPPathAccumulator() = default;
+
 		private:
 			std::vector<Vec<mpfr> > path_;
 		};
@@ -221,6 +229,8 @@ namespace bertini {
 		public:
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
+			virtual ~GoryDetailLogger() = default;
 
 			virtual void Observe(AnyEvent const& e) override
 			{
@@ -341,6 +351,7 @@ namespace bertini {
 					std::cout << "observed step failure" << std::endl;
 			}
 
+			virtual ~StepFailScreenPrinter() = default;
 		};
 
 	} //re: namespace tracking

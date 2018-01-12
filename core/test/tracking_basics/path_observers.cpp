@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	AMPPathAccumulator<AMPTracker> path_accumulator;
 	PrecisionAccumulator<AMPTracker> precision_accumulator;
 
-	tracker.AddObserver(&path_accumulator);
-	tracker.AddObserver(&precision_accumulator);
+	tracker.AddObserver(path_accumulator);
+	tracker.AddObserver(precision_accumulator);
 
 	start_point << mpfr(1), mpfr(1);
 	tracking_success = tracker.TrackPath(end_point,
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 
 	GoryDetailLogger<AMPTracker> tons_of_detail;
 
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 
 	start_point << mpfr(1), mpfr(1);
 	tracking_success = tracker.TrackPath(end_point,
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 
 	bertini::MultiObserver<AMPTracker, GoryDetailLogger> agglomeration;
 
-	tracker.AddObserver(&agglomeration);
+	tracker.AddObserver(agglomeration);
 
 	start_point << mpfr(1), mpfr(1);
 	tracking_success = tracker.TrackPath(end_point,

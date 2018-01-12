@@ -52,6 +52,8 @@ struct GoryDetailLogger : public Observer<EndgameT>
 using EmitterT = EndgameT;
 using BCT = typename EndgameT::BaseComplexType;
 
+virtual ~GoryDetailLogger() = default;
+
 virtual void Observe(AnyEvent const& e) override
 {
 	if(auto p = dynamic_cast<const TimeAdvanced<EmitterT>*>(&e))

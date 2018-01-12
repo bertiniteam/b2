@@ -527,8 +527,8 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 					// if you can think of a way to replace this `if` with something meta, please do so.
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
-						GetTracker().AddObserver(&first_prec_rec_);
-						GetTracker().AddObserver(&min_max_prec_);
+						GetTracker().AddObserver(first_prec_rec_);
+						GetTracker().AddObserver(min_max_prec_);
 					}
 
 					auto& smd = solution_final_metadata_[soln_ind];
@@ -557,8 +557,8 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 							smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
 						}
 						else
-						GetTracker().RemoveObserver(&first_prec_rec_);
-						GetTracker().RemoveObserver(&min_max_prec_);
+						GetTracker().RemoveObserver(first_prec_rec_);
+						GetTracker().RemoveObserver(min_max_prec_);
 						using std::max;
 						smd.max_precision_used =
 							max(smd.max_precision_used, min_max_prec_.MaxPrecision());
@@ -631,8 +631,8 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
 						if (!smd.precision_changed)
-							GetTracker().AddObserver(&first_prec_rec_);
-						GetTracker().AddObserver(&min_max_prec_);
+							GetTracker().AddObserver(first_prec_rec_);
+						GetTracker().AddObserver(min_max_prec_);
 					}
 
 				const auto& bdry_point = solutions_at_endgame_boundary_[soln_ind].path_point;
@@ -664,8 +664,8 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 								smd.time_of_first_prec_increase = first_prec_rec_.TimeOfIncrease();
 							}
 						}
-						GetTracker().RemoveObserver(&first_prec_rec_);
-						GetTracker().RemoveObserver(&min_max_prec_);
+						GetTracker().RemoveObserver(first_prec_rec_);
+						GetTracker().RemoveObserver(min_max_prec_);
 						using std::max;
 						smd.max_precision_used =
 							max(smd.max_precision_used, min_max_prec_.MaxPrecision());

@@ -34,6 +34,15 @@
 namespace bertini{
 	namespace python{
 
-		void ExportObserver();
+// Wrapper struct to allow derived classes to overide methods in python
+template<typename ObsT>
+struct ObserverWrapper : ObsT, wrapper<ObsT>
+{
+
+	void Observe(AnyEvent const& e) { this->get_override("Observe")(e);}
+	
+}; // re: ObserverWrapper
+
+void ExportObserver();
 
 }} // namespaces

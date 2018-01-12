@@ -30,7 +30,7 @@
 
 
 #include "tracker_observers.hpp"
-
+#include "generic_observer.hpp"
 
 namespace bertini{
 	namespace python{
@@ -66,14 +66,18 @@ void ExportTrackerObservers()
 			scope_C.attr("amp") = submodule_C;
 			scope new_submodule_scope_C = submodule_C;
 
-			class_<FirstPrecisionRecorder<AMPTracker>>("FirstPrecisionRecorder", init< >())
+			class_<ObserverWrapper<Observer<AMPTracker>>, bases<AnyObserver>, boost::noncopyable>("Abstract", init< >())
+			// .def(TrackingObserverVisitor<Observer<AMPTracker>>())
+			;
+
+			class_< FirstPrecisionRecorder<AMPTracker>, bases<Observer<AMPTracker>> >("FirstPrecisionRecorder", init< >())
 			.def(TrackingObserverVisitor<FirstPrecisionRecorder<AMPTracker>>())
 			;
 
-
-			class_<GoryDetailLogger<AMPTracker>>("GoryDetailLogger", init< >())
+			class_<GoryDetailLogger<AMPTracker>, bases<Observer<AMPTracker>> >("GoryDetailLogger", init< >())
 			.def(TrackingObserverVisitor<GoryDetailLogger<AMPTracker>>())
 			;
+			
 		}
 		
 	}

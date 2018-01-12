@@ -46,7 +46,13 @@ using namespace bertini::tracking;
 template<typename ObsT>
 struct TrackingObserverVisitor: public def_visitor<TrackingObserverVisitor<ObsT> >
 {
-	
+	friend class def_visitor_access;
+
+public:
+
+	template<class PyClass>
+	void visit(PyClass& cl) const{
+	}
 };
 
 
