@@ -193,6 +193,7 @@ stepping = pybertini.tracking.config.SteppingConfig()
 result = pybertini.multiprec.Vector()
 tr.track_path(result=result, start_time=pybertini.multiprec.complex(1), end_time=pybertini.multiprec.complex(0), start_point=td.start_point_mp(0))
 
+tr.remove_observer(g)
 
 Footnotes
 ---------

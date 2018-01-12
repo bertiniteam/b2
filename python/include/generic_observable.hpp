@@ -46,13 +46,20 @@ class ObservableVisitor : public def_visitor<ObservableVisitor<ObsT>>
 		self.AddObserver(observer);
 	};
 
+	static void RemoveObserver(object& obj, object& obs)
+	{
+		ObsT& self=extract<ObsT&>(obj)();
+		AnyObserver& observer=extract<AnyObserver&>(obs)();
+		self.RemoveObserver(observer);
+	};
+
 public:
 
 	template<class PyClass>
 	void visit(PyClass& cl) const{
 		cl
-		.def("add_observer", &ObservableVisitor::AddObserver)
-		.def("remove_observer", &ObsT::RemoveObserver)
+		.def("add_observer", 	&ObservableVisitor::AddObserver)
+		.def("remove_observer", &ObservableVisitor::RemoveObserver)
 		;
 	}
 };
