@@ -104,6 +104,17 @@ namespace bertini{
 			// Addition operators
 			Nodeptr(*addNodeNode)(Nodeptr, const Nodeptr&) = &(operator+);
 			Nodeptr(*addNodeMpfr)(Nodeptr, const mpfr&) = &(operator+);
+			
+			static Nodeptr raddNodeMpfr(Nodeptr  y, const mpfr & x)
+			{
+				return x+y;
+			}
+
+			static Nodeptr raddNodeInt(Nodeptr  y, const int & x)
+			{
+				return x+y;
+			}
+
 			Nodeptr(*addNodeInt)(Nodeptr, int) = &(operator+);
 			static Nodeptr iaddNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
@@ -133,6 +144,16 @@ namespace bertini{
 			}
 
 
+			static Nodeptr rsubNodeMpfr(Nodeptr  y, const mpfr & x)
+			{
+				return x-y;
+			}
+
+			static Nodeptr rsubNodeInt(Nodeptr  y, const int & x)
+			{
+				return x-y;
+			}
+
 			// Negate operator
 			Nodeptr(*negNode)(const Nodeptr &) = &(operator-);
 
@@ -150,6 +171,20 @@ namespace bertini{
 
 			Nodeptr(*imultMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &(operator*=);
 
+
+			static Nodeptr rmultNodeMpfr(Nodeptr  y, const mpfr & x)
+			{
+				return x*y;
+			}
+
+			static Nodeptr rmultNodeInt(Nodeptr  y, const int & x)
+			{
+				return x*y;
+			}
+
+
+
+
 			// Division operators
 			Nodeptr(*divNodeNode)(Nodeptr, const Nodeptr&) = &(operator/);
 			Nodeptr(*divNodeMpfr)(Nodeptr, mpfr) = &(operator/);
@@ -160,6 +195,19 @@ namespace bertini{
 			}
 
 			Nodeptr(*idivMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &(operator/=);
+
+
+			static Nodeptr rdivNodeMpfr(Nodeptr  y, const mpfr & x)
+			{
+				return x/y;
+			}
+
+			static Nodeptr rdivNodeInt(Nodeptr  y, const int & x)
+			{
+				return x/y;
+			}
+
+
 
 			// Power operators
 			Nodeptr(*powNodeNode)(const Nodeptr &, const Nodeptr&) = &pow;
