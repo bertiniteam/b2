@@ -28,6 +28,7 @@
 //
 //  python/detail.hpp:  source file for exposing b2 c++ details to python
 
+#pragma once
 #include "generic_observer.hpp"
 
 namespace bertini{

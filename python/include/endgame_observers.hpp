@@ -28,6 +28,7 @@
 //
 //  python/endgame_observers.hpp:  source file for exposing endgame observers to python.
 
+#pragma once
 #include "python_common.hpp"
 #include "endgame_export.hpp"
 

@@ -28,6 +28,7 @@
 //
 //  python/generic_observer.hpp:  source file for exposing trackers to python.
 
+#pragma once
 #include "python_common.hpp"
 #include <bertini2/detail/observer.hpp>
 

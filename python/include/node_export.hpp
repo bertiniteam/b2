@@ -28,6 +28,7 @@
 //
 //  python/node_export.hpp:  Header file for exposing Node class to python.
 
+#pragma once
 #ifndef BERTINI_PYTHON_NODE_EXPORT_HPP
 #define BERTINI_PYTHON_NODE_EXPORT_HPP
 

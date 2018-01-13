@@ -30,7 +30,7 @@
 
 
 
-
+#pragma once
 #ifndef BERTINI_PYTHON_PARSER_EXPORT_HPP
 #define BERTINI_PYTHON_PARSER_EXPORT_HPP
 #include <boost/spirit/include/qi.hpp>
