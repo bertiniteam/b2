@@ -37,6 +37,29 @@ namespace bertini{
 
 
 
+
+template <typename TrackerT>
+void ExportSpecificObservers(std::string scope_name)
+{
+	scope scope_C;
+	std::string submodule_name_C(extract<const char*>(scope_C.attr("__name__")));
+	submodule_name_C.append("." + scope_name);
+	object submodule_C(borrowed(PyImport_AddModule(submodule_name_C.c_str())));
+	scope_C.attr(scope_name.c_str()) = submodule_C;
+	scope new_submodule_scope_C = submodule_C;
+
+	class_<ObserverWrapper<Observer<TrackerT>>, bases<AnyObserver>, boost::noncopyable>("Abstract", init< >())
+	;
+
+	class_< FirstPrecisionRecorder<TrackerT>, bases<Observer<TrackerT>> >("FirstPrecisionRecorder", init< >())
+	.def(TrackingObserverVisitor<FirstPrecisionRecorder<TrackerT>>())
+	;
+
+	class_<GoryDetailLogger<TrackerT>, bases<Observer<TrackerT>> >("GoryDetailLogger", init< >())
+	.def(TrackingObserverVisitor<GoryDetailLogger<TrackerT>>())
+	;
+}
+
 void ExportTrackerObservers()
 {
 
@@ -58,27 +81,9 @@ void ExportTrackerObservers()
 		scope_B.attr("observers") = submodule_B;
 		scope new_submodule_scope_B = submodule_B;
 
-		{
-			scope scope_C;
-			std::string submodule_name_C(extract<const char*>(scope_C.attr("__name__")));
-			submodule_name_C.append(".amp");
-			object submodule_C(borrowed(PyImport_AddModule(submodule_name_C.c_str())));
-			scope_C.attr("amp") = submodule_C;
-			scope new_submodule_scope_C = submodule_C;
-
-			class_<ObserverWrapper<Observer<AMPTracker>>, bases<AnyObserver>, boost::noncopyable>("Abstract", init< >())
-			;
-
-			class_< FirstPrecisionRecorder<AMPTracker>, bases<Observer<AMPTracker>> >("FirstPrecisionRecorder", init< >())
-			.def(TrackingObserverVisitor<FirstPrecisionRecorder<AMPTracker>>())
-			;
-
-			class_<GoryDetailLogger<AMPTracker>, bases<Observer<AMPTracker>> >("GoryDetailLogger", init< >())
-			.def(TrackingObserverVisitor<GoryDetailLogger<AMPTracker>>())
-			;
-			
-		}
-		
+		ExportSpecificObservers<AMPTracker>("amp");
+		ExportSpecificObservers<DoublePrecisionTracker>("double");
+		ExportSpecificObservers<MultiplePrecisionTracker>("multiple");
 	}
 }
 
