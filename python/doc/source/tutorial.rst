@@ -152,48 +152,51 @@ The endgames are used by invoking ``run``, feeding it the point we are tracking 
 
 
 
-A complete zerodim solve
+A complete tracking of paths
 ========================
 
 ::
+	
+	import pybertini
 
-import pybertini
+	x = pybertini.function_tree.symbol.Variable("x") #yes, you can make a variable not match its name...
+	y = pybertini.function_tree.symbol.Variable("y")
+	f = x**2 + y**2 -1
+	g = x+y
 
-x = pybertini.function_tree.symbol.Variable("x") #yes, you can make a variable not match its name...
-y = pybertini.function_tree.symbol.Variable("y")
-f = x**2 + y**2 -1
-g = x+y
+	sys = pybertini.System()
+	sys.add_function(f)
+	sys.add_function(g)
 
-sys = pybertini.System()
-sys.add_function(f)
-sys.add_function(g)
+	grp = pybertini.VariableGroup()
+	grp.append(x)
+	grp.append(y)
+	sys.add_variable_group(grp)
 
-grp = pybertini.VariableGroup()
-grp.append(x)
-grp.append(y)
-sys.add_variable_group(grp)
+	td = pybertini.start_system.TotalDegree(sys)
 
-td = pybertini.start_system.TotalDegree(sys)
+	t = pybertini.function_tree.symbol.Variable("t")
+	homotopy = (1-t)*sys + t*td
+	homotopy.add_path_variable(t)
 
-t = pybertini.function_tree.symbol.Variable("t")
-homotopy = (1-t)*sys + t*td
-homotopy.add_path_variable(t)
+	tr = pybertini.tracking.AMPTracker(homotopy)
 
-tr = pybertini.tracking.AMPTracker(homotopy)
+	g = pybertini.tracking.observers.amp.GoryDetailLogger()
 
-g = pybertini.tracking.observers.amp.GoryDetailLogger()
+	tr.add_observer(g)
+	tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
+	tr.infinite_truncation_tolerance(1e5)
+	# tr.predictor(pybertini.tracking.Predictor.RK4)
+	stepping = pybertini.tracking.config.SteppingConfig()
+	# stepping.max_step_size = pybertini.multiprec.rational(1,13)
 
-tr.add_observer(g)
-tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
-tr.infinite_truncation_tolerance(1e5)
-# tr.predictor(pybertini.tracking.Predictor.RK4)
-stepping = pybertini.tracking.config.SteppingConfig()
-# stepping.max_step_size = pybertini.multiprec.rational(1,13)
+	results = []
 
-result = pybertini.multiprec.Vector()
-tr.track_path(result=result, start_time=pybertini.multiprec.complex(1), end_time=pybertini.multiprec.complex(0), start_point=td.start_point_mp(0))
+	for ii in range(td.num_start_points()):
+		results.append(pybertini.multiprec.Vector())
+		tr.track_path(result=results[-1], start_time=pybertini.multiprec.complex(1), end_time=pybertini.multiprec.complex(0), start_point=td.start_point_mp(ii))
 
-tr.remove_observer(g)
+	tr.remove_observer(g)
 
 Footnotes
 ---------
