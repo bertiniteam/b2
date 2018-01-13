@@ -33,6 +33,8 @@
 
 #include "bertini2/endgames/events.hpp"
 #include "bertini2/logging.hpp"
+#include "bertini2/detail/observer.hpp"
+
 #include <boost/type_index.hpp>
 
 namespace bertini {

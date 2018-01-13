@@ -14,6 +14,7 @@ bertini_python_header_files = $(includedir)/bertini_python.hpp \
 				$(includedir)/generic_observer.hpp \
 				$(includedir)/generic_observable.hpp \
 				$(includedir)/tracker_observers.hpp \
+				$(includedir)/endgame_observers.hpp \
 				$(includedir)/detail.hpp
 
 
@@ -31,6 +32,7 @@ bertini_python_source_files = \
 				src/generic_observable.cpp \
 				src/generic_observer.cpp \
 				src/tracker_observers.cpp \
+				src/endgame_observers.cpp \
 				src/bertini_python.cpp \
 				minieigen/src/expose-converters.cpp \
 				minieigen/src/double-conversion/bignum-dtoa.cc \

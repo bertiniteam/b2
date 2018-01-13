@@ -47,7 +47,7 @@ namespace bertini
 			ExportContainers();
 			
 			ExportDetails();
-			
+
 			ExportMpfr();
 			
 			ExportMinieigen();
@@ -80,6 +80,7 @@ namespace bertini
 			ExportTrackerObservers();
 
 			ExportEndgames();
+			ExportEndgameObservers();
 
 			
 		}

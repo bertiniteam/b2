@@ -32,6 +32,7 @@
 //
 //  python/bertini_python.hpp:  the main header file for the python interface for bertini.
 
+#pragma once
 #ifndef BERTINI_PYTHON_HPP
 #define BERTINI_PYTHON_HPP
 
@@ -45,6 +46,8 @@
 #include "tracker_export.hpp"
 #include "tracker_observers.hpp"
 #include "endgame_export.hpp"
+#include "tracker_observers.hpp"
+#include "endgame_observers.hpp"
 #include "detail.hpp"
 
 #endif
