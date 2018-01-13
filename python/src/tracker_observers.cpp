@@ -67,7 +67,6 @@ void ExportTrackerObservers()
 			scope new_submodule_scope_C = submodule_C;
 
 			class_<ObserverWrapper<Observer<AMPTracker>>, bases<AnyObserver>, boost::noncopyable>("Abstract", init< >())
-			// .def(TrackingObserverVisitor<Observer<AMPTracker>>())
 			;
 
 			class_< FirstPrecisionRecorder<AMPTracker>, bases<Observer<AMPTracker>> >("FirstPrecisionRecorder", init< >())
