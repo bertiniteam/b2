@@ -76,3 +76,9 @@ serialization_test*
 
 # Sphinx documentation
 doc/build/
+
+# Setuptools distribution folder.
+/dist/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
