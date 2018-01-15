@@ -9,3 +9,6 @@ setup(name='pybertini',
       license='GPL3 with permitted additional clauses',
       packages=['pybertini'],
       zip_safe=False)
+
+# dependencies to add
+# sphinxcontrib-bibtex
