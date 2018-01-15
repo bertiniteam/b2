@@ -20,11 +20,11 @@ This is a stub page, which merely acts to point you to more specific places in t
 
 
 
-.. Top-level pybertini namespace
-.. -------------------------------
+Top-level pybertini namespace
+-------------------------------
 
-.. .. automodule:: pybertini
-.. 	:members:
-.. 	:undoc-members:
-.. 	:show-inheritance:
+.. automodule:: pybertini
+	:members:
+	:undoc-members:
+	:show-inheritance:
 	
