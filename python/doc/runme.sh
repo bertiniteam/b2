@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sphinx-build -b html source build
+sphinx-build -a -b html source build
