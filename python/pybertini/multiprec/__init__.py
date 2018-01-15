@@ -1,5 +1,5 @@
 """
-Mutliprecision types
+Multiprecision types
 
 
 """
