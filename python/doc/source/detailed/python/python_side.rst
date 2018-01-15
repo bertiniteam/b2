@@ -9,6 +9,7 @@ This is a stub page, which merely acts to point you to more specific places in t
    :maxdepth: 1
    :caption: pybertini submodules
 
+   top_level
    configs
    function_tree
    tracking
@@ -16,15 +17,12 @@ This is a stub page, which merely acts to point you to more specific places in t
 
 
 
+Things lifted to the top-level namespace
+-----------------------------------------
+
+For your convenience, these things have been placed in the root level `pybertini` namespace:
+
+* :class:`~pybertini.system.System`
+* :class:`~pybertini.function_tree.symbol.Variable`
 
 
-
-
-Top-level pybertini namespace
--------------------------------
-
-.. automodule:: pybertini
-	:members:
-	:undoc-members:
-	:show-inheritance:
-	
