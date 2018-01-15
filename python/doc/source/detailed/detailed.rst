@@ -3,10 +3,10 @@ Detailed documentation
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Available tutorials
+   :maxdepth: 2
+   :caption: Doc sets
 
 
-   python_side
-   cpp_side
+   python/python_side
+   cpp/cpp_side
 

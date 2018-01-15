@@ -18,8 +18,6 @@ PyBertini
    :caption: Reference materials
 
 
-   configs
-
    detailed/detailed
 
    building
