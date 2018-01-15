@@ -1,17 +1,17 @@
 Configurations for algorithms, trackers, endgames, etc
 ========================================================
 
-Trackers
+Tracking configs
 -------------------
 
 See :class:`pybertini.tracking.AMPConfig`
 
 
-Endgames
------------
+Endgame configs
+-----------------
 
 
 
-Algorithms
-------------
+Algorithm configs
+-------------------
 

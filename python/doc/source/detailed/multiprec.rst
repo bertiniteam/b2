@@ -1,4 +1,4 @@
-Multiprecision
+pybertini.multiprec
 ---------------------
 
 .. automodule:: pybertini.multiprec

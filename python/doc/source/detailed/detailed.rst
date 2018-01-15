@@ -1,12 +1,31 @@
-Detailed documentation
+Detailed
 ***********
 
 
+This is a stub page, which merely acts to point you to more specific places in the documentation.  Table of contents below 🔽.  
+
+Modules
+-------------
+
 .. toctree::
    :maxdepth: 2
-   :caption: Doc sets
+
+   top_level
+   multiprec
+   function_tree
+   tracking
+   endgame
+   configs
+
+.. toctree::
+  :maxdepth: 1
+
+  cpp_side
 
 
-   python/python_side
-   cpp/cpp_side
+
+
+
+
+
 
