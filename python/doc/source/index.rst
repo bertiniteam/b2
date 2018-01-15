@@ -7,15 +7,24 @@ PyBertini
 ************
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   :caption: Introductory materials
 
    intro
-   tutorial
+   tracking_tutorial
+   evaluation_tutorial
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference materials
 
    detailed
 
+   configs
 
+   building
+
+   bib
 
 Indices and tables
 ==================
@@ -23,3 +32,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+

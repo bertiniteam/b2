@@ -1,10 +1,10 @@
-Tutorial
-********
+Tutorial - Tracking to nonsingular endpoints
+**********************************************
 
 PyBertini works by setting up systems, setting up algorithms to use those systems, and doing something with the output.
 
 Forming a system
-================
+=================
 
 
 Let's make a couple of variables::
@@ -153,7 +153,7 @@ The endgames are used by invoking ``run``, feeding it the point we are tracking 
 
 
 A complete tracking of paths
-========================
+=============================
 
 ::
 	

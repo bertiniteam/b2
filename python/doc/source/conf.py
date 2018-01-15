@@ -25,6 +25,7 @@
 import sys
 import os
 sys.path.insert(0,os.path.abspath('../../.libs'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -40,7 +41,11 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    'sphinx.ext.githubpages']
+    'sphinx.ext.githubpages',
+    'sphinx.ext.autosectionlabel',
+    'sphinxcontrib.bibtex']
+#    'sphinx.ext.autosectionlabel_prefix_document',
+autoclass_content = 'both'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -78,7 +83,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = ['test']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
