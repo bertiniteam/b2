@@ -45,6 +45,10 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.bibtex']
 #    'sphinx.ext.autosectionlabel_prefix_document',
+autodoc_default_flags = ['members', 'undoc-members', 'inherited-members','show-inheritance'] 
+#, 'special-members'
+
+# see http://www.sphinx-doc.org/en/stable/ext/autodoc.html#confval-autoclass_content
 autoclass_content = 'both'
 
 # Add any paths that contain templates here, relative to this directory.
