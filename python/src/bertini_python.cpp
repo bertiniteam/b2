@@ -41,6 +41,12 @@ namespace bertini
 
 		BOOST_PYTHON_MODULE(_pybertini) // this name must match the name of the generated .so file.
 		{
+			// see https://stackoverflow.com/questions/6114462/how-to-override-the-automatically-created-docstring-data-for-boostpython
+			// docstring_options d(true, true, false); // local_
+			docstring_options docopt;
+			docopt.enable_all();
+			docopt.disable_cpp_signatures();
+
 			object package = scope();
 		    package.attr("__path__") = "_pybertini";
 
