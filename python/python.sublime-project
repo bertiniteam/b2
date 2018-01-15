@@ -27,7 +27,8 @@
 				".deps",
 				".libs",
 				"autom4te.cache",
-				"__pycache__"]
+				"__pycache__",
+				"pybertini.egg-info"]
 		}
 	],
 
