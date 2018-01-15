@@ -61,7 +61,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'PyBertini'
-copyright = '2017, Bertini Team'
+copyright = '2015-2018, Bertini Team'
 author = 'Bertini Team'
 
 # The version info for the project you're documenting, acts as replacement for
