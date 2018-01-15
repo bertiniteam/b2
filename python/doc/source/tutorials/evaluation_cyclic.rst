@@ -1,4 +1,4 @@
-Evaluation of the cyclic-:math:`n` polynomials
+Tutorial - Evaluation of cyclic-:math:`n` polynomials
 *******************************************************
 
 Bertini is software for algebraic geometry.  This means we work with systems of polynomials, a critical component of which is system and function evaluation.

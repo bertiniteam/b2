@@ -1,4 +1,4 @@
-Tracking to nonsingular endpoints
+Tutorial - Tracking to nonsingular endpoints
 **********************************************
 
 PyBertini works by setting up systems, setting up algorithms to use those systems, and doing something with the output.

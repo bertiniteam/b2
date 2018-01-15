@@ -7,20 +7,20 @@ PyBertini
 ************
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Introductory materials
 
    intro
-   tracking_tutorial
-   evaluation_tutorial
+   tutorials/tutorials
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Reference materials
 
-   detailed
 
    configs
+
+   detailed/detailed
 
    building
 
