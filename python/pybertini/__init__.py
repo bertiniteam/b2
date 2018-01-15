@@ -18,25 +18,14 @@ version = __version__
 
 
 # put stuff in the pybertini namespace
-
-# from .system import System
 import pybertini.system as system
-# from .system import start_system
-
-
 import pybertini.function_tree as function_tree
-
-# #bring some things to the front namespace, because they are nested several deep
-# from .function_tree import Variable
-# from .function_tree import VariableGroup
-
-from .multiprec import multiprec
-
+import pybertini.multiprec as multiprec
 import pybertini.tracking as tracking
 import pybertini.endgame as endgame
 
+__all__ = ['tracking','endgame','multiprec','function_tree','system']
 
-__all__ = ['tracking','endgame','multiprec','function_tree','system','start_system']
 
 # some convenience assignments
 Variable = function_tree.symbol.Variable

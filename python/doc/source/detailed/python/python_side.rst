@@ -10,6 +10,7 @@ This is a stub page, which merely acts to point you to more specific places in t
    :caption: pybertini submodules
 
    top_level
+   multiprec
    configs
    function_tree
    tracking
