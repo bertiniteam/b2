@@ -164,10 +164,25 @@ namespace bertini{
 		
 		void ExportAllSystems()
 		{
+
+			scope current_scope;
+			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+			new_submodule_name.append(".system");
+			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+			current_scope.attr("system") = new_submodule;
+			
+
+			scope new_submodule_scope = new_submodule;
+			new_submodule_scope.attr("__doc__") = "Systems of functions, for tracking &c.";
+
 			ExportSystem();
 			ExportStartSystems();
 		}
 
+		void call_simplify(object obj){
+				System& sys=extract<System&>(obj)();
+				Simplify(sys);
+			};
 
 		void ExportSystem()
 		{
@@ -176,6 +191,15 @@ namespace bertini{
 			class_<System, std::shared_ptr<System> >("System", init<>())
 			.def(SystemVisitor<System>())
 			;
+
+			// free functions
+			def("concatenate", &Concatenate, "concatenate two Systems to produce a new one.  Appends the second onto what was the first.");
+			def("clone", &Clone, "Make a complete clone of a System.  Includes all functions, variables, etc.  Truly and genuinely distinct.");
+
+			
+
+
+			def("simplify", &call_simplify, "Perform all possible simplifications.  Has side effects of modifying your functions, if held separately.  Shared nodes between multiple systems may have adverse effects");
 			
 		}
 

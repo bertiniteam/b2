@@ -52,6 +52,40 @@ Now we will make a System, and put the cyclic polynomials into it.
 	    
 	print(sys) # long screen output, i know
 
+We also need to associate the variables with the system.  Unassociated variables are left unknown, and retain their value until elsewhere set.
+
+::
+	
+	vg = pybertini.VariableGroup()
+	for var in x:
+		vg.append(var)
+	sys.add_variable_group(vg)
+
+Let's simplify this.  It will modify elements of the constructed function tree, even those held externally -- Bertini uses shared pointers under the hood, so pay attention to where you re-use parts of your functions, because later modification of them without deep cloning will cause ... modification elsewhere, too.  
+
+::
+
+	pybertini.system.simplify(sys)
+
+Now, let's evaluate it at the origin -- all zero's (0 is the default value for multiprecision complex numbers in Bertini2).  The returned value should be all zero's except the last entry, which should be -1.
+
+::
+
+	s = pybertini.multiprec.Vector() # todo allow int in constructor
+	s.resize(num_vars)
+	sys.eval(s)
+
+Yay, all zeros, except the last one is -1.  Huzzah.
+
+Let's change the values of our vector, and re-evaluate.
+
+::
+
+	for ii in range(num_vars):
+		s[ii] = pybertini.multiprec.complex(ii)
+	sys.eval(s)
+
+
+There is much more one can do, too!  Please write the authors, particularly Dani Brake, for more.
 
 .. [1] This is one of the reasons we wrote Bertini2's symbolic C++ core and exposed it to Python.
-.. [2] https://www.sciencedirect.com/science/article/pii/S0377042702006982
