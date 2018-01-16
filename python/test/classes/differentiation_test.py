@@ -35,8 +35,8 @@ import unittest
 import pdb
 
 import pybertini.multiprec as mp
-from pybertini.multiprec import float as mpfr_float
-from pybertini.multiprec import complex as mpfr_complex
+from pybertini.multiprec import Float as mpfr_float
+from pybertini.multiprec import Complex as mpfr_complex
 
 
 class DiffTest(unittest.TestCase):

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/mpfr_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016-2017 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -23,7 +23,7 @@
 //
 //  Danielle Brake
 //  University of Wisconsin - Eau Claire
-//  Fall 2017
+//  Fall 2017, Spring 2018
 // 
 //  James Collins
 //  West Texas A&M University
@@ -295,7 +295,7 @@ namespace bertini{
 		{
 			using T = mpz_int;
 
-			class_<mpz_int>("int", init<>())
+			class_<mpz_int>("Int", init<>())
 			.def(init<int>())
 			.def(init<T>())
 			.def(RealStrVisitor<T>())
@@ -313,80 +313,13 @@ namespace bertini{
 
 
 		
-		
-
-		
-
-		
-		// template<typename MPFRBaseT>
-		// template<class PyClass>
-		// void MPFRIntVisitor<MPFRBaseT>::visit(PyClass& cl) const
-		// {
-		// 	MPFRBaseVisitor<MPFRBaseT>().visit(cl);
-			
-		// 	cl
-		// 	.def("__add__",&MPFRIntVisitor::__add_int).def("__iadd__",&MPFRIntVisitor::__iadd_int)
-		// 	.def("__radd__",&MPFRIntVisitor::__radd_int)
-		// 	.def("__sub__",&MPFRIntVisitor::__sub_int).def("__isub__",&MPFRIntVisitor::__isub_int)
-		// 	.def("__rsub__",&MPFRIntVisitor::__rsub_int)
-		// 	.def("__mul__",&MPFRIntVisitor::__mul_int).def("__imul__",&MPFRIntVisitor::__imul_int)
-		// 	.def("__rmul__",&MPFRIntVisitor::__rmul_int)
-		// 	.def("__pow__",&MPFRIntVisitor::__pow__)
-		// 	.def("__repr__", &MPFRIntVisitor::__repr__)
-
-		// 	.def(self < self)
-		// 	.def(self <= self)
-		// 	.def(self > self)
-		// 	.def(self >= self)
-		// 	.def(self == self)
-		// 	.def(self != self)
-		// 	;
-
-		// };
-
-		
-		// template<typename MPFRBaseT>
-		// template<class PyClass>
-		// void MPFRRationalVisitor<MPFRBaseT>::visit(PyClass& cl) const
-		// {
-		// 	MPFRBaseVisitor<MPFRBaseT>().visit(cl);
-			
-		// 	cl
-		// 	.def("__add__",&MPFRRationalVisitor::__add_int).def("__iadd__",&MPFRRationalVisitor::__iadd_int)
-		// 	.def("__radd__",&MPFRRationalVisitor::__radd_int)
-		// 	.def("__sub__",&MPFRRationalVisitor::__sub_int).def("__isub__",&MPFRRationalVisitor::__isub_int)
-		// 	.def("__rsub__",&MPFRRationalVisitor::__rsub_int)
-		// 	.def("__mul__",&MPFRRationalVisitor::__mul_int).def("__imul__",&MPFRRationalVisitor::__imul_int)
-		// 	.def("__rmul__",&MPFRRationalVisitor::__rmul_int)
-		// 	.def("__div__",&MPFRRationalVisitor::__div_int).def("__idiv__",&MPFRRationalVisitor::__idiv_int)
-		// 	.def("__rdiv__",&MPFRRationalVisitor::__rdiv_int)
-			
-		// 	.def("__div__",&MPFRRationalVisitor::__div__).def("__idiv__",&MPFRRationalVisitor::__idiv__)
-
-		// 	.def("__add__",&MPFRRationalVisitor::__add_mpint).def("__iadd__",&MPFRRationalVisitor::__iadd_mpint)
-		// 	.def("__radd__",&MPFRRationalVisitor::__radd_mpint)
-		// 	.def("__sub__",&MPFRRationalVisitor::__sub_mpint).def("__isub__",&MPFRRationalVisitor::__isub_mpint)
-		// 	.def("__rsub__",&MPFRRationalVisitor::__rsub_int)
-		// 	.def("__mul__",&MPFRRationalVisitor::__mul_mpint).def("__imul__",&MPFRRationalVisitor::__imul_mpint)
-		// 	.def("__rmul__",&MPFRRationalVisitor::__rmul_mpint)
-		// 	.def("__div__",&MPFRRationalVisitor::__div_mpint).def("__idiv__",&MPFRRationalVisitor::__idiv_mpint)
-
-		// 	.def("__repr__", &MPFRRationalVisitor::__repr__)
-			
-		// 	.def(self < self)
-		// 	.def(self <= self)
-		// 	.def(self > self)
-		// 	.def(self >= self)
-		// 	;
-			
-		// };
 
 		
 		void ExposeRational()
 		{
 			using T = mpq_rational;
 
-			class_<mpq_rational>("rational", init<>())
+			class_<mpq_rational>("Rational", init<>())
 			.def(init<int>())
 			.def(init<int, int>())
 			.def(init<mpz_int>())
@@ -412,72 +345,11 @@ namespace bertini{
 
 
 
-
-
-
-
-
-		
-		// template<typename MPFRBaseT>
-		// template<class PyClass>
-		// void MPFRFloatVisitor<MPFRBaseT>::visit(PyClass& cl) const
-		// {
-		// 	MPFRFloatBaseVisitor<MPFRBaseT>().visit(cl);
-			
-		// 	cl
-		// 	.def("__add__",&MPFRFloatVisitor::__add_int).def("__iadd__",&MPFRFloatVisitor::__iadd_int)
-		// 	.def("__radd__",&MPFRFloatVisitor::__radd_int)
-		// 	.def("__sub__",&MPFRFloatVisitor::__sub_int).def("__isub__",&MPFRFloatVisitor::__isub_int)
-		// 	.def("__rsub__",&MPFRFloatVisitor::__rsub_int)
-		// 	.def("__mul__",&MPFRFloatVisitor::__mul_int).def("__imul__",&MPFRFloatVisitor::__imul_int)
-		// 	.def("__rmul__",&MPFRFloatVisitor::__rmul_int)
-		// 	.def("__div__",&MPFRFloatVisitor::__div_int).def("__idiv__",&MPFRFloatVisitor::__idiv_int)
-		// 	.def("__rdiv__",&MPFRFloatVisitor::__rdiv_int)
-		// 	.def("__pow__",&MPFRFloatVisitor::__pow_int)
-			
-		// 	.def("__repr__", &MPFRFloatVisitor::__repr__)
-			
-		// 	.def(self < self)
-		// 	.def(self <= self)
-		// 	.def(self > self)
-		// 	.def(self >= self)
-		// 	.def(self == self)
-		// 	.def(self != self)
-
-		// 	.def(self < int())
-		// 	.def(self <= int())
-		// 	.def(self > int())
-		// 	.def(self >= int())
-
-		// 	.def(int() < self)
-		// 	.def(int() <= self)
-		// 	.def(int() > self)
-		// 	.def(int() >= self)
-
-		// 	.def(self < double())
-		// 	.def(self <= double())
-		// 	.def(self > double())
-		// 	.def(self >= double())
-
-		// 	.def(double() < self)
-		// 	.def(double() <= self)
-		// 	.def(double() > self)
-		// 	.def(double() >= self)
-
-		// 	;
-			
-			
-		// 	// default_precision are defined as free functions in python
-		// 	def("default_precision", MPFRFloatVisitor<bmp>::def_prec1);
-		// 	def("default_precision", MPFRFloatVisitor<bmp>::def_prec2);
-
-		// };
-
 		void ExposeFloat()
 		{
 			using T = bmp;
 
-			class_<T>("float", init<>())
+			class_<T>("Float", init<>())
 			.def(init<std::string>())
 			.def(init<int>())
 			.def(init<long int>())
@@ -509,67 +381,12 @@ namespace bertini{
 
 
 
-
-
-
-
-
-		// template<typename MPFRBaseT>
-		// template<class PyClass>
-		// void MPFRComplexVisitor<MPFRBaseT>::visit(PyClass& cl) const
-		// {
-		// 	MPFRFloatBaseVisitor<MPFRBaseT>().visit(cl);
-			
-		// 	cl
-		// 	.def("__add__",&MPFRComplexVisitor::template __add_float<mpfr_float>)
-		// 	.def("__iadd__",&MPFRComplexVisitor::__iadd_float)
-		// 	.def("__radd__",&MPFRComplexVisitor::__radd_float)
-
-		// 	.def("__sub__",&MPFRComplexVisitor::__sub_float).def("__isub__",&MPFRComplexVisitor::__isub_float)
-		// 	.def("__rsub__",&MPFRComplexVisitor::__rsub_float)
-
-		// 	.def("__mul__",&MPFRComplexVisitor::__mul_float).def("__imul__",&MPFRComplexVisitor::__imul_float)
-		// 	.def("__rmul__",&MPFRComplexVisitor::__rmul_float)
-
-		// 	.def("__div__",&MPFRComplexVisitor::__div_float).def("__idiv__",&MPFRComplexVisitor::__idiv_float)
-		// 	.def("__rdiv__",&MPFRComplexVisitor::__rdiv_float)
-
-		// 	.def("__pow__",&MPFRComplexVisitor::__pow_int)
-		// 	.def("__pow__",&MPFRComplexVisitor::__pow_float)
-			
-		// 	.def("__repr__", MPFRComplexVisitor::__repr__)
-			
-		// 	.add_property("real", &MPFRComplexVisitor::get_real, &MPFRComplexVisitor::set_real)
-		// 	.add_property("imag", &MPFRComplexVisitor::get_imag, &MPFRComplexVisitor::set_imag)
-		// 	;
-			
-			
-		// 	// these complex-specific functions are free in python
-		// 	def("real",&real,return_value_policy<copy_const_reference>());
-		// 	def("imag",&imag,return_value_policy<copy_const_reference>());
-			
-		// 	def("abs2",&MPFRBaseT::abs2);
-		// 	def("polar",&polar);
-		// 	def("norm",&MPFRBaseT::norm);
-		// 	def("conj",&MPFRBaseT::conj);
-		// 	def("arg",&arg);
-			
-		// 	def("square",&square);
-		// 	def("cube",&cube);
-		// 	def("inverse", &inverse);
-		// 	def("asinh",&asinh);
-		// 	def("acosh",&acosh);
-		// 	def("atanh",&atanh);
-			
-		// }
-
-
 		void ExposeComplex()
 		{
 
 			using T = bertini::complex;
 
-			class_<T>("complex", init<>())
+			class_<T>("Complex", init<>())
 			.def(init<double>())
 			.def(init<mpfr_float>())
 			.def(init<std::string>())
@@ -607,9 +424,9 @@ namespace bertini{
 		{
 			scope current_scope;
 			std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-			new_submodule_name.append(".mpfr");
+			new_submodule_name.append(".multiprec");
 			object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-			current_scope.attr("mpfr") = new_submodule;
+			current_scope.attr("multiprec") = new_submodule;
 			scope new_submodule_scope = new_submodule;
 
 			ExposeInt();
