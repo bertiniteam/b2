@@ -37,6 +37,8 @@ import unittest
 import numpy as np
 import pdb
 
+import pybertini as pb
+import pybertini.minieigen as mi
 
 class SystemTest(unittest.TestCase):
     def setUp(self):
@@ -71,7 +73,7 @@ class SystemTest(unittest.TestCase):
         s.add_function(self.f)
         s.add_function(self.g)
         #
-        v = VectorXd.Zero(3);
+        v = mi.VectorXd.Zero(3);
         v[0] = complex(3.5,2.89); v[1] = complex(-9.32,.0765); v[2] = complex(5.4,-2.13);
         #
         e = s.eval(v)
@@ -82,12 +84,12 @@ class SystemTest(unittest.TestCase):
         self.assertTrue(np.abs(e[1].imag - exact_imag[1]) < self.toldbl*np.abs(exact_imag[1]));
         #
         #
-        s = parse_system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
+        s = pb.parse.system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
         self.toldbl = mpfr_float('1e-27');
         exact_real = (mpfr_float('-32.841085'), mpfr_float('-62.9317230'))
         exact_imag = (mpfr_float('-26.66705'), mpfr_float('-196.39641065'))
         self.a = mpfr_complex('4.897', '1.23')
-        v = VectorXmp((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
+        v = mi.VectorXmp((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
         #
         e = s.eval(v)
         #
@@ -113,7 +115,7 @@ class SystemTest(unittest.TestCase):
         s.add_function(self.f)
         s.add_function(self.g)
         #
-        v = VectorXd.Zero(3);
+        v = mi.VectorXd.Zero(3);
         v[0] = complex(3.5,2.89); v[1] = complex(-9.32,.0765); v[2] = complex(5.4,-2.13);
         #
         s.differentiate();
@@ -135,13 +137,13 @@ class SystemTest(unittest.TestCase):
         #
         #
         #
-        s = parse_system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
+        s = pb.parse.system('function f1, f2; variable_group x,y,z; f1 = x*y; f2 = x^2*y - z*x;')
         self.toldbl = mpfr_float('1e-27');
         exact_real = ((mpfr_float('-9.32'), mpfr_float('3.5'), mpfr_float('0')), \
                       (mpfr_float('-71.082170'),mpfr_float('3.8979'),mpfr_float('-3.5')))
         exact_imag = ((mpfr_float('.0765'), mpfr_float('2.89'), mpfr_float('0')),\
                       (mpfr_float('-51.20410'),mpfr_float('20.230'),mpfr_float('-2.89')))
-        v = VectorXmp((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
+        v = mi.VectorXmp((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
         #
         s.differentiate();
         e = s.jacobian(v);
@@ -177,7 +179,7 @@ class SystemTest(unittest.TestCase):
         s2.add_function(-x*y)
         #
         s1 += s2;
-        values = VectorXd((2,3))
+        values = mi.VectorXd((2,3))
         v = s1.eval(values)
         #
         self.assertEqual(v[0], 0.0)
@@ -192,12 +194,12 @@ class SystemTest(unittest.TestCase):
 
     def test_mult_system_node(self):
         tol_d = self.toldbl;
-        sys = parse_system('function f1, f2; variable_group x,y,z; f1 = x+2; f2 = y*y;')
+        sys = pb.parse.system('function f1, f2; variable_group x,y,z; f1 = x+2; f2 = y*y;')
         #
         z = Variable("z");
         sys *= Integer(2);
         #
-        vals = VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
+        vals = mi.VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
         sysEval = sys.eval(vals);
         #
         self.assertLessEqual(np.abs(sysEval[0].real / (-.86)-1), tol_d)

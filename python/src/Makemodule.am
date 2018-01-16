@@ -13,6 +13,7 @@ bertini_python_header_files = \
 				$(includedir)/system_export.hpp \
 				$(includedir)/tracker_export.hpp \
 				$(includedir)/endgame_export.hpp \
+				$(includedir)/parser_export.hpp \
 				$(includedir)/generic_observer.hpp \
 				$(includedir)/generic_observable.hpp \
 				$(includedir)/tracker_observers.hpp \
@@ -32,6 +33,7 @@ bertini_python_source_files = \
 				src/operator_export.cpp \
 				src/root_export.cpp \
 				src/system_export.cpp \
+				src/parser_export.cpp \
 				src/generic_observable.cpp \
 				src/generic_observer.cpp \
 				src/tracker_observers.cpp \
