@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/endgame_observers.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2017 by Bertini2 Development Team
+// Copyright(C) 2017-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -21,9 +21,10 @@
 
 // individual authors of this file include:
 //
-//  Dani Brake
+//  Danielle Brake
 //  UWEC
-//  Fall 2017
+//  Spring 2018
+//
 //
 //
 //  python/endgame_observers.cpp:  source file for exposing endgames to python.

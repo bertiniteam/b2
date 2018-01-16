@@ -28,7 +28,9 @@
 				".libs",
 				"autom4te.cache",
 				"__pycache__",
-				"pybertini.egg-info"]
+				"pybertini.egg-info",
+				"_static",
+				"_templates"]
 		}
 	],
 

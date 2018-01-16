@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/tracker_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -21,9 +21,9 @@
 
 // individual authors of this file include:
 //
-//  Dani Brake
+//  Danielle Brake
 //  University of Notre Dame
-//  Summer 2016
+//  Summer 2016, Spring 2018
 //
 //
 //  python/tracker_export.cpp:  source file for exposing trackers to python.
