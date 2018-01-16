@@ -1,6 +1,8 @@
 C++-flavored gory-detail documentation
 ========================================
 
+go up to :ref:`pybertini`
+
 _pybertini
 -------------------
 
