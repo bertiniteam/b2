@@ -3,29 +3,31 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-PyBertini
-************
+PyBertini Main
+****************
+
+
+Introductory materials
+=========================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Introductory materials
 
    intro
    tutorials/tutorials
 
+Reference materials
+====================
+
 .. toctree::
    :maxdepth: 2
-   :caption: Reference materials
-
 
    detailed/detailed
-
    building
-
    bib
 
 Indices and tables
-==================
+===================
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -45,8 +45,9 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.bibtex']
 #    'sphinx.ext.autosectionlabel_prefix_document',
-autodoc_default_flags = ['members', 'undoc-members', 'inherited-members','show-inheritance'] 
+autodoc_default_flags = ['members', 'undoc-members','show-inheritance'] 
 #, 'special-members'
+#, , 'inherited-members'
 
 # see http://www.sphinx-doc.org/en/stable/ext/autodoc.html#confval-autoclass_content
 autoclass_content = 'both'
