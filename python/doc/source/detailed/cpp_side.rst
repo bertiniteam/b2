@@ -1,7 +1,7 @@
 C++-flavored gory-detail documentation
 ========================================
 
-go up to :ref:`pybertini`
+.. include:: common_doc_nav.incl
 
 _pybertini
 -------------------

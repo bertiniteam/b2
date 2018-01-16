@@ -1,6 +1,7 @@
 Detailed
 ***********
 
+.. include:: common_doc_nav.incl
 
 This is a stub page, which merely acts to point you to more specific places in the documentation.  Table of contents below 🔽.  
 

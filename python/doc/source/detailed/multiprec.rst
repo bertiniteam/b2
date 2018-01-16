@@ -1,7 +1,7 @@
 pybertini.multiprec
-==================
+=====================
 
-go up to :ref:`pybertini`
+.. include:: common_doc_nav.incl
 
 Notes
 --------
