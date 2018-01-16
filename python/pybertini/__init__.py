@@ -26,10 +26,13 @@ import pybertini.multiprec as multiprec
 import pybertini.tracking as tracking
 import pybertini.endgame as endgame
 
-__all__ = ['tracking','endgame','multiprec','function_tree','system']
+
 
 
 # some convenience assignments
 Variable = function_tree.symbol.Variable
 VariableGroup = function_tree.VariableGroup
 System = system.System
+default_precision = multiprec.default_precision
+
+__all__ = ['tracking','endgame','multiprec','function_tree','system','default_precision','System','Variable','VariableGroup']
