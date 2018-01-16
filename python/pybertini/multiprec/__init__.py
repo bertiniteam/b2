@@ -8,8 +8,10 @@ import _pybertini.mpfr
 
 from _pybertini.mpfr import *
 
-Vector = _pybertini.VectorXmp
-Matrix = _pybertini.MatrixXmp
+import _pybertini.minieigen
+
+Vector = _pybertini.minieigen.VectorXmp
+Matrix = _pybertini.minieigen.MatrixXmp
 
 
 __all__ = dir(_pybertini.mpfr)

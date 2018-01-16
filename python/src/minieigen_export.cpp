@@ -37,6 +37,17 @@ namespace bertini{
 
 void ExportMinieigen()
 {
+
+	scope current_scope;
+	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
+	new_submodule_name.append(".minieigen");
+	object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
+	current_scope.attr("minieigen") = new_submodule;
+
+	scope new_submodule_scope = new_submodule;
+	new_submodule_scope.attr("__doc__") = "A home for Eigen functionality exposed to PyBertini through Minieigen";
+
+
 	// minieigen methods for converting python sequence into Eigen vector or matrix
 	custom_VectorAnyAny_from_sequence<Eigen::Matrix<dbl,Eigen::Dynamic,1>>();
 	custom_VectorAnyAny_from_sequence<Eigen::Matrix<mpfr,Eigen::Dynamic,1>>();
