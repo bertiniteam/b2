@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with python/test/system_test.py.  If not, see <http://www.gnu.org/licenses/>.
 # 
-#  Copyright(C) 2016 by Bertini2 Development Team
+#  Copyright(C) 2016-2018 by Bertini2 Development Team
 # 
 #  See <http://www.gnu.org/licenses/> for a copy of the license, 
 #  as well as COPYING.  Bertini2 is provided with permitted 
@@ -25,6 +25,11 @@
 #   West Texas A&M University
 #   Spring 2016
 # 
+#  Danielle Brake
+#  UWEC
+#  Spring 2018
+#
+
 
 
 __author__ = 'jcollins'
@@ -42,8 +47,8 @@ import pybertini.minieigen as mi
 
 
 import pybertini.multiprec as mp
-from pybertini.multiprec import float as mpfr_float
-from pybertini.multiprec import complex as mpfr_complex
+from pybertini.multiprec import Float as mpfr_float
+from pybertini.multiprec import Complex as mpfr_complex
 
 class SystemTest(unittest.TestCase):
     def setUp(self):
