@@ -20,11 +20,11 @@ Reference materials
 ====================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    detailed/detailed
    building
-   bib
+   zbib
 
 Indices and tables
 ===================
