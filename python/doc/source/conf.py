@@ -176,6 +176,7 @@ texinfo_documents = [
 
 
 
-html_logo = "images/bpy_icon_96_96.png"
-
+# html_logo = "images/bpy_icon_96_96.png"
+html_logo = "images/bpy_icon_.svg"
+# html_logo = "images_common/b2_icon.svg"
 
