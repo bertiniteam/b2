@@ -20,6 +20,7 @@ Modules
    :maxdepth: 1
 
    top_level
+   minieigen
    doubleprec
    multiprec
    function_tree
