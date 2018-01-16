@@ -1,7 +1,9 @@
 #this is src/python/Makemodule.am
 
 
-bertini_python_header_files = $(includedir)/bertini_python.hpp \
+bertini_python_header_files = \
+				$(includedir)/minieigen_export.hpp \
+				$(includedir)/bertini_python.hpp \
 				$(includedir)/function_tree_export.hpp \
 				$(includedir)/mpfr_export.hpp \
 				$(includedir)/node_export.hpp \
@@ -20,6 +22,7 @@ bertini_python_header_files = $(includedir)/bertini_python.hpp \
 
 
 bertini_python_source_files = \
+				src/minieigen_export.cpp \
 				src/detail.cpp \
 				src/tracker_export.cpp \
 				src/endgame_export.cpp \
