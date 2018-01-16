@@ -40,6 +40,11 @@ import pdb
 import pybertini as pb
 import pybertini.minieigen as mi
 
+
+import pybertini.multiprec as mp
+from pybertini.multiprec import float as mpfr_float
+from pybertini.multiprec import complex as mpfr_complex
+
 class SystemTest(unittest.TestCase):
     def setUp(self):
         self.toldbl = 1e-15;
@@ -57,8 +62,13 @@ class SystemTest(unittest.TestCase):
         self.f = Function(self.x*self.y);
         #
         s = System();
-        s.add_ungrouped_variable(self.x);
-        s.add_ungrouped_variable(self.y);
+
+        vg = pb.VariableGroup()
+        vg.append(self.x)
+        vg.append(self.y)
+
+        s.add_variable_group(vg)
+
         s.add_function(self.f)
 
 
@@ -67,9 +77,13 @@ class SystemTest(unittest.TestCase):
         exact_imag = (-26.66705, -258.97936865)
         #
         s = System();
-        s.add_ungrouped_variable(self.x);
-        s.add_ungrouped_variable(self.y);
-        s.add_ungrouped_variable(self.z);
+
+        vg = pb.VariableGroup()
+        vg.append(self.x)
+        vg.append(self.y)
+        vg.append(self.z)
+        s.add_variable_group(vg)
+
         s.add_function(self.f)
         s.add_function(self.g)
         #
@@ -93,10 +107,10 @@ class SystemTest(unittest.TestCase):
         #
         e = s.eval(v)
         #
-        self.assertLessEqual(abs(e[0].real / exact_real[0]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[0].imag / exact_imag[0]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[1].real / exact_real[1]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[1].imag / exact_imag[1]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[0].real / exact_real[0]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[0].imag / exact_imag[0]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[1].real / exact_real[1]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[1].imag / exact_imag[1]-1) , self.toldbl);
 
 
 
@@ -109,9 +123,13 @@ class SystemTest(unittest.TestCase):
                       (-49.54549,20.230,-18.45733))
         #
         s = System();
-        s.add_ungrouped_variable(self.x);
-        s.add_ungrouped_variable(self.y);
-        s.add_ungrouped_variable(self.z);
+
+        vg = pb.VariableGroup()
+        vg.append(self.x)
+        vg.append(self.y)
+        vg.append(self.z)
+        s.add_variable_group(vg)
+
         s.add_function(self.f)
         s.add_function(self.g)
         #
@@ -148,18 +166,18 @@ class SystemTest(unittest.TestCase):
         s.differentiate();
         e = s.jacobian(v);
         #
-        self.assertLessEqual(abs(e[0][0].real / exact_real[0][0]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[0][0].imag / exact_imag[0][0]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[0][1].real / exact_real[0][1]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[0][1].imag / exact_imag[0][1]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[0][2].real ) , self.toldbl);
-        self.assertLessEqual(abs(e[0][2].imag ) , self.toldbl);
-        self.assertLessEqual(abs(e[1][0].real / exact_real[1][0]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[1][0].imag / exact_imag[1][0]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[1][1].real / exact_real[1][1]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[1][1].imag / exact_imag[1][1]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[1][2].real / exact_real[1][2]-1) , self.toldbl);
-        self.assertLessEqual(abs(e[1][2].imag / exact_imag[1][2]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[0][0].real / exact_real[0][0]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[0][0].imag / exact_imag[0][0]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[0][1].real / exact_real[0][1]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[0][1].imag / exact_imag[0][1]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[0][2].real ) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[0][2].imag ) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[1][0].real / exact_real[1][0]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[1][0].imag / exact_imag[1][0]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[1][1].real / exact_real[1][1]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[1][1].imag / exact_imag[1][1]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[1][2].real / exact_real[1][2]-1) , self.toldbl);
+        self.assertLessEqual(mp.abs(e[1][2].imag / exact_imag[1][2]-1) , self.toldbl);
 
 
 

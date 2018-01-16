@@ -34,6 +34,9 @@ import unittest
 import numpy as np
 import pdb
 
+import pybertini.parse as pp
+import pybertini.minieigen as mi
+
 
 class ParserTest(unittest.TestCase):
     def setUp(self):
@@ -44,9 +47,9 @@ class ParserTest(unittest.TestCase):
     def test_create_system(self):
         tol_d = self.tol_d;
         input = 'function f, g; variable_group x,y,z; f = 3*x*y*z; g = x^2 + y^2 + z^2 - 1;';
-        sys = parse_system(input);
+        sys = pp.system(input);
         #
-        vals = VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
+        vals = mi.VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
         sysEval = sys.eval(vals);
         #
         self.assertLessEqual(np.abs(sysEval[0].real / (233.2850778)-1), tol_d)
