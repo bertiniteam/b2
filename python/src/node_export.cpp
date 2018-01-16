@@ -135,13 +135,32 @@ namespace bertini{
 			.def("__imul__",&NodeVisitor::imultNodeNode)
 			.def("__imul__",imultMultNode)
 			
+
 			.def("__div__",divNodeNode)
+			.def("__truediv__",divNodeNode)
+			.def("__itruediv__",&NodeVisitor::idivNodeNode)
+
+
+
+			
 			.def("__div__",divNodeMpfr)
+			.def("__truediv__",divNodeMpfr)
+
 			.def("__rdiv__",rdivNodeMpfr)
+			.def("__rtruediv__",rdivNodeMpfr)
+
+
 			.def("__div__",divNodeInt)
+			.def("__truediv__",divNodeInt)
+
 			.def("__rdiv__",rdivNodeInt)
+			.def("__rtruediv__",rdivNodeInt)
+
 			.def("__idiv__",&NodeVisitor::idivNodeNode)
+			.def("__itruediv__",&NodeVisitor::idivNodeNode)
+			
 			.def("__idiv__",idivMultNode)
+			.def("__itruediv__",idivMultNode)
 			
 			.def("__neg__", negNode)
 			
