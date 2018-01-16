@@ -598,6 +598,8 @@ namespace bertini{
 			.def(PowVisitor<T,mpfr_float>())
 
 			.def(TranscendentalVisitor<T>())
+
+			.def(PrecisionVisitor<T>())
 			;
 		}
 
