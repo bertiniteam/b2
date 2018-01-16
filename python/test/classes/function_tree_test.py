@@ -70,8 +70,8 @@ class SymbolTest(unittest.TestCase):
         self.assertLessEqual(np.abs(x.eval_d().real/(-2.43)-1), tol_d);
         self.assertLessEqual(np.abs(x.eval_d().imag/(.21)-1), tol_d);
         #
-        self.assertLessEqual(abs(y.eval_mp().real/mpfr_float("4.84")-1), tol_mp);
-        self.assertLessEqual(abs(y.eval_mp().imag/mpfr_float("-1.94")-1), tol_mp);
+        self.assertLessEqual(mp.abs(y.eval_mp().real/mpfr_float("4.84")-1), tol_mp);
+        self.assertLessEqual(mp.abs(y.eval_mp().imag/mpfr_float("-1.94")-1), tol_mp);
 
     def test_Float_funcs(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
@@ -80,8 +80,8 @@ class SymbolTest(unittest.TestCase):
         #
         self.assertEqual(x.degree(), 0)
         d = y.differentiate();
-        self.assertLessEqual(abs(d.eval_mp().real-mpfr_float("0")), tol_mp)
-        self.assertLessEqual(abs(d.eval_mp().imag-mpfr_float("0")), tol_mp)
+        self.assertLessEqual(mp.abs(d.eval_mp().real-mpfr_float("0")), tol_mp)
+        self.assertLessEqual(mp.abs(d.eval_mp().imag-mpfr_float("0")), tol_mp)
         self.assertTrue(y.is_homogeneous());
         self.assertTrue(y.is_polynomial());
 
@@ -104,8 +104,8 @@ class SymbolTest(unittest.TestCase):
         self.assertLessEqual(np.abs(x.eval_d().real/(-2.43)-1), tol_d)
         self.assertLessEqual(np.abs(x.eval_d().imag/(.21)-1), tol_d)
         #
-        self.assertLessEqual(abs(x.eval_mp().real/mpfr_float("-2.43")-1), tol_mp)
-        self.assertLessEqual(abs(x.eval_mp().imag/mpfr_float(".21")-1), tol_mp)
+        self.assertLessEqual(mp.abs(x.eval_mp().real/mpfr_float("-2.43")-1), tol_mp)
+        self.assertLessEqual(mp.abs(x.eval_mp().imag/mpfr_float(".21")-1), tol_mp)
 
     def test_Variable_funcs(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
@@ -130,14 +130,14 @@ class SymbolTest(unittest.TestCase):
         self.assertLessEqual(np.abs(x.eval_d().real/(3.1415926535897932384626433832795028841971693994)-1), tol_d)
         self.assertLessEqual(np.abs(x.eval_d().imag - (0)), tol_d)
         #
-        self.assertLessEqual(abs(x.eval_mp().real/mpfr_float("3.1415926535897932384626433832795028841971693994")-1), tol_mp)
-        self.assertLessEqual(abs(x.eval_mp().imag - mpfr_float("0")), tol_mp)
+        self.assertLessEqual(mp.abs(x.eval_mp().real/mpfr_float("3.1415926535897932384626433832795028841971693994")-1), tol_mp)
+        self.assertLessEqual(mp.abs(x.eval_mp().imag - mpfr_float("0")), tol_mp)
         #
         self.assertLessEqual(np.abs(y.eval_d().real/(3.1415926535897932384626433832795028841971693994)-1), tol_d)
         self.assertLessEqual(np.abs(y.eval_d().imag - (0)), tol_d)
         #
-        self.assertLessEqual(abs(y.eval_mp().real/mpfr_float("3.1415926535897932384626433832795028841971693994")-1), tol_mp)
-        self.assertLessEqual(abs(y.eval_mp().imag - mpfr_float("0")), tol_mp)
+        self.assertLessEqual(mp.abs(y.eval_mp().real/mpfr_float("3.1415926535897932384626433832795028841971693994")-1), tol_mp)
+        self.assertLessEqual(mp.abs(y.eval_mp().imag - mpfr_float("0")), tol_mp)
 
 
     def test_E_construct(self):
@@ -149,14 +149,14 @@ class SymbolTest(unittest.TestCase):
         self.assertLessEqual(np.abs(x.eval_d().real/(2.7182818284590452353602874713526624977572470937)-1), tol_d)
         self.assertLessEqual(np.abs(x.eval_d().imag - (0)), tol_d)
         #
-        self.assertLessEqual(abs(x.eval_mp().real - mpfr_float("2.7182818284590452353602874713526624977572470937")), tol_mp)
-        self.assertLessEqual(abs(x.eval_mp().imag - mpfr_float("0")), tol_mp)
+        self.assertLessEqual(mp.abs(x.eval_mp().real - mpfr_float("2.7182818284590452353602874713526624977572470937")), tol_mp)
+        self.assertLessEqual(mp.abs(x.eval_mp().imag - mpfr_float("0")), tol_mp)
         #
         self.assertLessEqual(np.abs(y.eval_d().real/(2.7182818284590452353602874713526624977572470937)-1), tol_d)
         self.assertLessEqual(np.abs(y.eval_d().imag - (0)), tol_d)
         #
-        self.assertLessEqual(abs(y.eval_mp().real/mpfr_float("2.7182818284590452353602874713526624977572470937")-1), tol_mp)
-        self.assertLessEqual(abs(y.eval_mp().imag - mpfr_float("0")), tol_mp)
+        self.assertLessEqual(mp.abs(y.eval_mp().real/mpfr_float("2.7182818284590452353602874713526624977572470937")-1), tol_mp)
+        self.assertLessEqual(mp.abs(y.eval_mp().imag - mpfr_float("0")), tol_mp)
 
 
     def test_I_construct(self):
@@ -167,8 +167,8 @@ class SymbolTest(unittest.TestCase):
         self.assertLessEqual(np.abs(y.eval_d().real - (0)), tol_d)
         self.assertLessEqual(np.abs(y.eval_d().imag/(1.0)-1), tol_d)
         #
-        self.assertLessEqual(abs(y.eval_mp().real - mpfr_float("0")), tol_mp)
-        self.assertLessEqual(abs(y.eval_mp().imag/mpfr_float("1.0")-1), tol_mp)
+        self.assertLessEqual(mp.abs(y.eval_mp().real - mpfr_float("0")), tol_mp)
+        self.assertLessEqual(mp.abs(y.eval_mp().imag/mpfr_float("1.0")-1), tol_mp)
 
 
 
