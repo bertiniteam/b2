@@ -58,8 +58,8 @@ namespace bertini{
 		void JacobianVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("evalJd", &Jacobian::template EvalJ<dbl>)
-			.def("evalJmp", &Jacobian::template EvalJ<mpfr>)
+			.def("evalJ_d", &Jacobian::template EvalJ<dbl>)
+			.def("evalJ_mp", &Jacobian::template EvalJ<mpfr>)
 			;
 		}
 

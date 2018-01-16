@@ -36,6 +36,7 @@
 #pragma once
 
 #include "python_common.hpp"
+#include "generic_observable.hpp"
 
 #include <bertini2/trackers/tracker.hpp>
 

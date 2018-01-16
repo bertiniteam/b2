@@ -29,7 +29,7 @@
 //  python/root_export.hpp:  Header file for exposing root nodes to python.
 
 
-
+#pragma once
 
 #ifndef BERTINI_PYTHON_ROOT_EXPORT_HPP
 #define BERTINI_PYTHON_ROOT_EXPORT_HPP

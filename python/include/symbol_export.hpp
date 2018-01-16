@@ -29,7 +29,7 @@
 //  python/symbol_export.hpp:  Header file for exposing symbol nodes to python.
 
 
-
+#pragma once
 
 #ifndef BERTINI_PYTHON_SYMBOLS_EXPORT_HPP
 #define BERTINI_PYTHON_SYMBOLS_EXPORT_HPP

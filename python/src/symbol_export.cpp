@@ -101,15 +101,15 @@ namespace bertini{
 
 
 			// Symbol class
-			class_<Symbol, boost::noncopyable, bases<Node>, std::shared_ptr<Symbol> >("Symbol", no_init)
+			class_<Symbol, boost::noncopyable, bases<Node>, std::shared_ptr<Symbol> >("AbstractSymbol", no_init)
 			;
 			
 			// NamedSymbol class
-			class_<NamedSymbol, boost::noncopyable, bases<Symbol>, std::shared_ptr<NamedSymbol> >("NamedSymbol", no_init)
+			class_<NamedSymbol, boost::noncopyable, bases<Symbol>, std::shared_ptr<NamedSymbol> >("AbstractNamedSymbol", no_init)
 			;
 			
 			// Number class
-			class_<Number, boost::noncopyable, bases<Symbol>, std::shared_ptr<Number> >("Number", no_init)
+			class_<Number, boost::noncopyable, bases<Symbol>, std::shared_ptr<Number> >("AbstractNumber", no_init)
 			;
 			
 			// Float class

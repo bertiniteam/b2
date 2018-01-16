@@ -28,6 +28,7 @@
 //
 //  python/containers_export.hpp:  Exports all needed containers from Bertini 2.0 to python.
 
+#pragma once
 #ifndef BERTINI_PYTHON_CONTAINERS_EXPORT_HPP
 #define BERTINI_PYTHON_CONTAINERS_EXPORT_HPP
 

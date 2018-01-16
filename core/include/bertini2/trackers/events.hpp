@@ -31,6 +31,7 @@
 
 #pragma once
 #include "bertini2/detail/events.hpp"
+#include "bertini2/eigen_extensions.hpp"
 #include "bertini2/limbo.hpp"
 
 namespace bertini {

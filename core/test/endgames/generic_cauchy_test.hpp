@@ -958,7 +958,7 @@ BOOST_AUTO_TEST_CASE(first_approximation)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	TestedEGType my_endgame(tracker);
@@ -1029,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(first_approximation_nonzero_target_time)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 
@@ -1091,7 +1091,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	TestedEGType my_endgame(tracker);
@@ -1164,7 +1164,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	TestedEGType my_endgame(tracker);
@@ -1229,7 +1229,7 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	TestedEGType my_endgame(tracker);
@@ -1288,7 +1288,7 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	TestedEGType my_endgame(tracker);
@@ -1356,7 +1356,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
@@ -1419,7 +1419,7 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
@@ -1485,7 +1485,7 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	BOOST_CHECK(cauchy_endgame_success==SuccessCode::Success);
@@ -1544,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	auto code = my_endgame.Run(current_time,current_space);
@@ -1604,7 +1604,7 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	EndgameConfig endgame_settings;
@@ -1672,7 +1672,7 @@ BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
 
 
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 
 	EndgameConfig endgame_settings;
 	CauchyConfig cauchy_settings;
@@ -1774,7 +1774,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 
 #ifdef B2_OBSERVE_TRACKERS
 	bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 #endif
 
 	unsigned num_paths_diverging = 0;
@@ -1921,7 +1921,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 
 #ifdef B2_OBSERVE_TRACKERS
 			bertini::tracking::GoryDetailLogger<TrackerType> tons_of_detail;
-			tracker.AddObserver(&tons_of_detail);
+			tracker.AddObserver(tons_of_detail);
 #endif
 
 	std::vector<Vec<BCT> > endgame_solutions;
@@ -2015,7 +2015,7 @@ BOOST_AUTO_TEST_CASE(gory_detail_logging)
 
 
 	bertini::endgame::GoryDetailLogger<TestedEGType> eg_logger;
-	my_endgame.AddObserver(&eg_logger);
+	my_endgame.AddObserver(eg_logger);
 
 	auto cauchy_endgame_success = my_endgame.Run(time,sample);
 

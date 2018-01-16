@@ -28,7 +28,7 @@
 //
 //  python/python_common.hpp:  A common header file for all python exposure files
 
-
+#pragma once
 #ifndef BERTINI_PYTHON_COMMON_HPP
 #define BERTINI_PYTHON_COMMON_HPP
 

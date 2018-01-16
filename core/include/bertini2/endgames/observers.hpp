@@ -33,6 +33,8 @@
 
 #include "bertini2/endgames/events.hpp"
 #include "bertini2/logging.hpp"
+#include "bertini2/detail/observer.hpp"
+
 #include <boost/type_index.hpp>
 
 namespace bertini {
@@ -51,6 +53,8 @@ struct GoryDetailLogger : public Observer<EndgameT>
 
 using EmitterT = EndgameT;
 using BCT = typename EndgameT::BaseComplexType;
+
+virtual ~GoryDetailLogger() = default;
 
 virtual void Observe(AnyEvent const& e) override
 {

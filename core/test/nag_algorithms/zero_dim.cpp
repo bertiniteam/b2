@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(can_run_griewank_osborn)
 
 	auto& tr = zd.GetTracker();
 	GoryDetailLogger<TrackerT> logger;
-	tr.AddObserver(&logger);
+	tr.AddObserver(logger);
 
 
 	auto eg = zd.GetFromEndgame<EndgameConfT>();
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(can_run_change_some_settings)
 	
 	auto& tr = zd.GetTracker();
 	GoryDetailLogger<TrackerT> logger;
-	tr.AddObserver(&logger);
+	tr.AddObserver(logger);
 
 	
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 
 	auto& tr = zd.GetTracker();
 	GoryDetailLogger<TrackerT> logger;
-	tr.AddObserver(&logger);
+	tr.AddObserver(logger);
 	
 	zd.Solve();
 

@@ -28,7 +28,7 @@
 //
 //  python/system_export.hpp:  Header file for exposing systems to python, including start systems.
 
-
+#pragma once
 
 
 #ifndef BERTINI_PYTHON_SYSTEM_EXPORT_HPP
@@ -58,10 +58,14 @@ namespace bertini{
 		
 		
 		
+		
+		void ExportAllSystems();
+
+		// some useful subfunctions used in ExportAllSystems
 		void ExportSystem();
-		
-		
-		
+		void ExportStartSystems();
+		void ExportStartSystemBase();
+		void ExportTotalDegree();
 		
 		
 		

@@ -28,6 +28,7 @@
 //
 //  python/function_tree.hpp:  Header file for all node types.
 
+#pragma once
 #ifndef BERTINI_PYTHON_FUNCTION_TREE_HPP
 #define BERTINI_PYTHON_FUNCTION_TREE_HPP
 
