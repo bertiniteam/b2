@@ -53,18 +53,28 @@ namespace bertini{
 		/**
 		\brief Add an observer, to observe this observable.
 		*/
-		void AddObserver(AnyObserver* new_observer) const
+		void AddObserver(AnyObserver& new_observer) const
 		{
-			if (find(begin(current_watchers_), end(current_watchers_), new_observer)==end(current_watchers_))
-				current_watchers_.push_back(new_observer);
+			if (find_if(begin(current_watchers_), end(current_watchers_), [&](const auto& held_obs)
+			                              { return &held_obs.get() == &new_observer; })==end(current_watchers_))
+				
+				current_watchers_.push_back(std::ref(new_observer));
 		}
 
 		/**
 		\brief Remove an observer from this observable.
 		*/
-		void RemoveObserver(AnyObserver* observer) const
+		void RemoveObserver(AnyObserver& observer) const
 		{
-			current_watchers_.erase(std::remove(current_watchers_.begin(), current_watchers_.end(), observer), current_watchers_.end());
+
+			auto new_end = std::remove_if(current_watchers_.begin(), current_watchers_.end(),
+			                              [&](const auto& held_obs)
+			                              { return &held_obs.get() == &observer; });
+
+			current_watchers_.erase(new_end, current_watchers_.end());
+
+
+			// current_watchers_.erase(std::remove(current_watchers_.begin(), current_watchers_.end(), std::ref(observer)), current_watchers_.end());
 		}
 
 	protected:
@@ -80,7 +90,7 @@ namespace bertini{
 		{
 
 			for (auto& obs : current_watchers_)
-				obs->Observe(e);
+				obs.get().Observe(e);
 
 		}
 
@@ -88,13 +98,13 @@ namespace bertini{
 		{
 
 			for (auto& obs : current_watchers_)
-				obs->Observe(e);
+				obs.get().Observe(e);
 		}
 
 
 	private:
 
-		using ObserverContainer = std::vector<AnyObserver*>;
+		using ObserverContainer = std::vector<std::reference_wrapper<AnyObserver>>;
 
 		mutable ObserverContainer current_watchers_;
 	};

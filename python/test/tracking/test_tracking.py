@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with python/test/b2_class_test.py.  If not, see <http://www.gnu.org/licenses/>.
 # 
-#  Copyright(C) 2016 by Bertini2 Development Team
+#  Copyright(C) 2016-2018 by Bertini2 Development Team
 # 
 #  See <http://www.gnu.org/licenses/> for a copy of the license, 
 #  as well as COPYING.  Bertini2 is provided with permitted 

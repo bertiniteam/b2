@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/node_export.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license,
 // as well as COPYING.  Bertini2 is provided with permitted
@@ -25,9 +25,13 @@
 //  West Texas A&M University
 //  Spring 2016
 //
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
 //
 //  python/node_export.hpp:  Header file for exposing Node class to python.
 
+#pragma once
 #ifndef BERTINI_PYTHON_NODE_EXPORT_HPP
 #define BERTINI_PYTHON_NODE_EXPORT_HPP
 
@@ -104,6 +108,17 @@ namespace bertini{
 			// Addition operators
 			Nodeptr(*addNodeNode)(Nodeptr, const Nodeptr&) = &(operator+);
 			Nodeptr(*addNodeMpfr)(Nodeptr, const mpfr&) = &(operator+);
+			
+			static Nodeptr raddNodeMpfr(Nodeptr  y, const mpfr & x)
+			{
+				return x+y;
+			}
+
+			static Nodeptr raddNodeInt(Nodeptr  y, const int & x)
+			{
+				return x+y;
+			}
+
 			Nodeptr(*addNodeInt)(Nodeptr, int) = &(operator+);
 			static Nodeptr iaddNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
@@ -133,6 +148,16 @@ namespace bertini{
 			}
 
 
+			static Nodeptr rsubNodeMpfr(Nodeptr  y, const mpfr & x)
+			{
+				return x-y;
+			}
+
+			static Nodeptr rsubNodeInt(Nodeptr  y, const int & x)
+			{
+				return x-y;
+			}
+
 			// Negate operator
 			Nodeptr(*negNode)(const Nodeptr &) = &(operator-);
 
@@ -150,6 +175,20 @@ namespace bertini{
 
 			Nodeptr(*imultMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &(operator*=);
 
+
+			static Nodeptr rmultNodeMpfr(Nodeptr  y, const mpfr & x)
+			{
+				return x*y;
+			}
+
+			static Nodeptr rmultNodeInt(Nodeptr  y, const int & x)
+			{
+				return x*y;
+			}
+
+
+
+
 			// Division operators
 			Nodeptr(*divNodeNode)(Nodeptr, const Nodeptr&) = &(operator/);
 			Nodeptr(*divNodeMpfr)(Nodeptr, mpfr) = &(operator/);
@@ -160,6 +199,19 @@ namespace bertini{
 			}
 
 			Nodeptr(*idivMultNode)(std::shared_ptr<node::MultOperator> &, const Nodeptr &) = &(operator/=);
+
+
+			static Nodeptr rdivNodeMpfr(Nodeptr  y, const mpfr & x)
+			{
+				return x/y;
+			}
+
+			static Nodeptr rdivNodeInt(Nodeptr  y, const int & x)
+			{
+				return x/y;
+			}
+
+
 
 			// Power operators
 			Nodeptr(*powNodeNode)(const Nodeptr &, const Nodeptr&) = &pow;

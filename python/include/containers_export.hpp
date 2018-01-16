@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/containers_export.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -28,6 +28,7 @@
 //
 //  python/containers_export.hpp:  Exports all needed containers from Bertini 2.0 to python.
 
+#pragma once
 #ifndef BERTINI_PYTHON_CONTAINERS_EXPORT_HPP
 #define BERTINI_PYTHON_CONTAINERS_EXPORT_HPP
 

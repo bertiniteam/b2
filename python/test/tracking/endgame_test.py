@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with python/test/endgame_test.py.  If not, see <http://www.gnu.org/licenses/>.
 #
-#  Copyright(C) 2016 by Bertini2 Development Team
+#  Copyright(C) 2016-2018 by Bertini2 Development Team
 #
 #  See <http://www.gnu.org/licenses/> for a copy of the license,
 #  as well as COPYING.  Bertini2 is provided with permitted
@@ -24,6 +24,11 @@
 #   Dani Brake
 #   University of Notre Dame
 #
+#  Danielle Brake
+#  UWEC
+#  Spring 2018
+#
+
 
 
 __author__ = 'ofloveandhate'
@@ -41,6 +46,12 @@ import unittest
 import numpy as np
 import pdb
 
+import pybertini.system.start_system as ss
+import pybertini.multiprec as mp
+from pybertini.multiprec import Float as mpfr_float
+from pybertini.multiprec import Complex as mpfr_complex
+
+import pybertini.minieigen as mi
 
 class EndgameTest(unittest.TestCase):
     def setUp(self):
@@ -70,7 +81,7 @@ class EndgameTest(unittest.TestCase):
         self.assertEqual(sys.is_patched(), 1)
         self.assertEqual(sys.is_homogeneous(), 1)
 
-        td = TotalDegree(sys);
+        td = ss.TotalDegree(sys);
 
         self.assertEqual(td.is_patched(), 1)
         self.assertEqual(td.is_homogeneous(), 1)
@@ -101,13 +112,13 @@ class EndgameTest(unittest.TestCase):
         t_endgame_boundary = mpfr_complex("0.1");
         t_final = mpfr_complex(0);
 
-        bdry_points = [VectorXmp() for i in range(n)]
+        bdry_points = [mi.VectorXmp() for i in range(n)]
         for i in range(n):
             default_precision(self.ambient_precision);
             final_system.precision(self.ambient_precision);
-            start_point = td.start_pointmp(i);
+            start_point = td.start_point_mp(i);
 
-            bdry_pt = VectorXmp();
+            bdry_pt = mi.VectorXmp();
             track_success_code = tracker.track_path(bdry_pt,t_start, t_endgame_boundary, start_point);
             bdry_points[i] = bdry_pt;
 
@@ -119,7 +130,7 @@ class EndgameTest(unittest.TestCase):
         my_endgame = AMPCauchyEG(tracker);
 
 
-        final_homogenized_solutions = [VectorXmp() for i in range(n)]
+        final_homogenized_solutions = [mi.VectorXmp() for i in range(n)]
         for i in range(n):
             default_precision(bdry_points[i][0].precision());
             final_system.precision(bdry_points[i][0].precision());

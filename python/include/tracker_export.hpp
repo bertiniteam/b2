@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/tracker.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -23,7 +23,7 @@
 //
 //  Dani Brake
 //  University of Notre Dame
-//  Summer 2016
+//  Summer 2016, Spring 2018
 //
 //  James Collins
 //  West Texas A&M University
@@ -36,6 +36,7 @@
 #pragma once
 
 #include "python_common.hpp"
+#include "generic_observable.hpp"
 
 #include <bertini2/trackers/tracker.hpp>
 

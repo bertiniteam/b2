@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/operator_export.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -25,12 +25,16 @@
 //  West Texas A&M University
 //  Spring 2016
 //
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
+//
 //
 //  python/operator_export.hpp:  Header file for exposing operator nodes to python.
 
 
 
-
+#pragma once
 #ifndef BERTINI_PYTHON_OPERATOR_EXPORT_HPP
 #define BERTINI_PYTHON_OPERATOR_EXPORT_HPP
 

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/symbol_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -101,15 +101,15 @@ namespace bertini{
 
 
 			// Symbol class
-			class_<Symbol, boost::noncopyable, bases<Node>, std::shared_ptr<Symbol> >("Symbol", no_init)
+			class_<Symbol, boost::noncopyable, bases<Node>, std::shared_ptr<Symbol> >("AbstractSymbol", no_init)
 			;
 			
 			// NamedSymbol class
-			class_<NamedSymbol, boost::noncopyable, bases<Symbol>, std::shared_ptr<NamedSymbol> >("NamedSymbol", no_init)
+			class_<NamedSymbol, boost::noncopyable, bases<Symbol>, std::shared_ptr<NamedSymbol> >("AbstractNamedSymbol", no_init)
 			;
 			
 			// Number class
-			class_<Number, boost::noncopyable, bases<Symbol>, std::shared_ptr<Number> >("Number", no_init)
+			class_<Number, boost::noncopyable, bases<Symbol>, std::shared_ptr<Number> >("AbstractNumber", no_init)
 			;
 			
 			// Float class

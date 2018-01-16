@@ -66,7 +66,7 @@ namespace bertini {
 		mpfr_float real_, imag_;
 		
 		#ifdef USE_THREAD_LOCAL
-			static thread_local mpfr_float temp_[8]; //OSX clang does NOT implement this. Use ./configure --disable-thread_local.  Also, send Apple a letter telling them to implement this keyword.
+			static thread_local mpfr_float temp_[8];
 		#else
 			static mpfr_float temp_[8];
 		#endif
@@ -182,6 +182,7 @@ namespace bertini {
 		/**
 		 Two-parameter constructor for building a complex from two high precision numbers
 		 */
+		explicit
 		complex(const mpfr_float & re, const mpfr_float & im) : real_(re), imag_(im)
 		{}
 		
@@ -506,6 +507,19 @@ namespace bertini {
 			return *this;
 		}
 
+		complex& operator+=(const mpq_rational & rhs)
+		{
+			real_+=rhs;
+			return *this;
+		}
+
+		complex& operator+=(const mpfr_float & rhs)
+		{
+			real_+=rhs;
+			return *this;
+		}
+
+
 		/**
 		 Complex addition, by an integral type.
 		 */
@@ -531,6 +545,24 @@ namespace bertini {
 		 Complex subtraction
 		 */
 		complex& operator-=(const mpz_int & rhs)
+		{
+			real_-=rhs;
+			return *this;
+		}
+
+		/**
+		 Complex subtraction
+		 */
+		complex& operator-=(const mpq_rational & rhs)
+		{
+			real_-=rhs;
+			return *this;
+		}
+
+		/**
+		 Complex subtraction
+		 */
+		complex& operator-=(const mpfr_float & rhs)
 		{
 			real_-=rhs;
 			return *this;
@@ -575,8 +607,7 @@ namespace bertini {
 			return *this;
 		}
 
-		template<typename T, typename S, typename R, 
-		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+		template<typename T, typename S, typename R> // ,  typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type
 		complex& operator*=(const boost::multiprecision::detail::expression<T,S,R> & rhs)
 		{
 			real_ *= rhs;
@@ -584,6 +615,26 @@ namespace bertini {
 			return *this;
 		}
 
+		complex& operator*=(const mpz_int & rhs)
+		{
+			real_ *= rhs;
+			imag_ *= rhs;
+			return *this;
+		}
+
+		complex& operator*=(const mpq_rational & rhs)
+		{
+			real_ *= rhs;
+			imag_ *= rhs;
+			return *this;
+		}
+
+		complex& operator*=(const mpfr_float & rhs)
+		{
+			real_ *= rhs;
+			imag_ *= rhs;
+			return *this;
+		}
 
 		/**
 		 Complex division.  implemented using two temporary variables
@@ -601,8 +652,7 @@ namespace bertini {
 			return *this;
 		}
 		
-		template<typename T, typename S, typename R, 
-		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
+		template<typename T, typename S, typename R> // ,  typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type
 		complex& operator/=(const boost::multiprecision::detail::expression<T,S,R> & rhs)
 		{
 			real_ /= rhs;
@@ -622,6 +672,28 @@ namespace bertini {
 			return *this;
 		}
 		
+		/**
+		 Complex division, by a real mpz_int.
+		 */
+		complex& operator/=(const mpz_int & rhs)
+		{
+			real_ /= rhs;
+			imag_ /= rhs;
+			
+			return *this;
+		}
+
+		/**
+		 Complex division, by a real mpq.
+		 */
+		complex& operator/=(const mpq_rational & rhs)
+		{
+			real_ /= rhs;
+			imag_ /= rhs;
+			
+			return *this;
+		}
+
 
 		/**
 		 Complex division, by an integral type.
@@ -862,10 +934,11 @@ namespace bertini {
 
 
 		friend complex operator/(const mpfr_float & lhs, const complex & rhs);
+		// friend complex operator/(const complex & lhs, const mpfr_float & rhs);
 		friend complex operator/(const mpz_int & lhs, const complex & rhs);
-
-		template<typename T, typename std::enable_if<std::is_integral<T>::value >::type>
-		friend complex operator/(T const& lhs, const complex & rhs);
+		// friend complex operator/(const complex & lhs, const mpz_int & rhs);
+		friend complex operator/(const mpq_rational & lhs, const complex & rhs);
+		// friend complex operator/(const complex & lhs, const mpq_rational & rhs);
 
 		friend complex inverse(const complex & z);
 
@@ -1146,21 +1219,46 @@ namespace bertini {
 	 */
 	inline complex operator/(complex lhs, const mpz_int & rhs)
 	{
-		lhs.real(lhs.real()/rhs);
-		lhs.imag(lhs.imag()/rhs);
+		lhs/=rhs;
 		return lhs;
 	}
 	
+	/**
+	 Rational-complex division
+	 */
+	inline complex operator/(const mpq_rational & lhs, const complex & rhs)
+	{
+		complex::temp_[4].precision(DefaultPrecision());
+		complex::temp_[4] = rhs.abs2();
+		return complex(lhs*rhs.real()/complex::temp_[4], -lhs*rhs.imag()/complex::temp_[4]);
+	}
+	
+	/**
+	 Complex-Rational division
+	 */
+	inline complex operator/(complex lhs, const mpq_rational & rhs)
+	{
+		lhs/=rhs;
+		return lhs;
+	}
 
 	/**
 	 Integer-complex division
 	 */
-	template<typename T, typename>
+	template<typename T, typename  = typename std::enable_if<std::is_integral<T>::value >::type>
 	inline complex operator/(T const& lhs, const complex & rhs)
 	{
-		complex::temp_[5].precision(DefaultPrecision());
-		complex::temp_[5] = rhs.abs2();
-		return complex(lhs*rhs.real()/complex::temp_[5], -lhs*rhs.imag()/complex::temp_[5]);
+		static 
+#ifdef USE_THREAD_LOCAL
+		thread_local 
+#endif
+		mpfr_float temp;
+
+
+		temp.precision(DefaultPrecision()); // this precision change disconcerts me.  does it interrupt the cache pipeline a bunch to do it?  
+		
+		temp = rhs.abs2();
+		return complex(lhs*rhs.real()/temp, -lhs*rhs.imag()/temp);
 	}
 	
 	/**

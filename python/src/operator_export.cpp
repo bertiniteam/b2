@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/operator_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,6 +24,10 @@
 //  James Collins
 //  West Texas A&M University
 //  Spring 2016
+//
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
 //
 //
 //
@@ -131,85 +135,85 @@ namespace bertini{
 			scope new_submodule_scope = new_submodule;
 
 			// Operator class
-			class_<Operator, boost::noncopyable, bases<Node>, std::shared_ptr<Operator> >("Operator", no_init)
+			class_<Operator, boost::noncopyable, bases<Node>, std::shared_ptr<Operator> >("AbstractOp", no_init)
 			;
 
 			// UnaryOperator class
-			class_<UnaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<UnaryOperator> >("UnaryOperator", no_init)
+			class_<UnaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<UnaryOperator> >("Unary", no_init)
 			.def(UnaryOpVisitor<UnaryOperator>())
 			;
 
 			// NaryOperator class
-			class_<NaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<NaryOperator> >("NaryOperator", no_init)
+			class_<NaryOpWrap, boost::noncopyable, bases<Operator>, std::shared_ptr<NaryOperator> >("Nary", no_init)
 			.def(NaryOpVisitor<NaryOperator>())
 			;
 
 			// SumOperator class
-			class_<SumOperator, bases<NaryOperator>, std::shared_ptr<SumOperator> >("SumOperator", init<const Nodeptr&, const Nodeptr &>() )
+			class_<SumOperator, bases<NaryOperator>, std::shared_ptr<SumOperator> >("Sum", init<const Nodeptr&, const Nodeptr &>() )
 			.def(init<const Nodeptr&, bool, const Nodeptr&, bool>() )
 			
 			.def(SumMultOpVisitor<SumOperator>())
 			;
 
 			// NegateOperator class
-			class_<NegateOperator, bases<UnaryOperator>, std::shared_ptr<NegateOperator> >("NegateOperator", init<const Nodeptr&>() )
+			class_<NegateOperator, bases<UnaryOperator>, std::shared_ptr<NegateOperator> >("Negate", init<const Nodeptr&>() )
 			;
 
 			// MultOperator class
-			class_<MultOperator, bases<NaryOperator>, std::shared_ptr<MultOperator> >("MultOperator", init<const Nodeptr&, const Nodeptr &>() )
+			class_<MultOperator, bases<NaryOperator>, std::shared_ptr<MultOperator> >("Mult", init<const Nodeptr&, const Nodeptr &>() )
 			.def(init<const Nodeptr&, bool, const Nodeptr&, bool>() )
 			
 			.def(SumMultOpVisitor<MultOperator>())
 			;
 			
 			// PowerOperator class
-			class_<PowerOperator, bases<Operator>, std::shared_ptr<PowerOperator> >("PowerOperator", init<const Nodeptr&, const Nodeptr &>() )
+			class_<PowerOperator, bases<Operator>, std::shared_ptr<PowerOperator> >("Power", init<const Nodeptr&, const Nodeptr &>() )
 			
 			.def(PowerOpVisitor<PowerOperator>())
 			;
 			
 			// IntegerPowerOperator class
-			class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPowerOperator", init<const Nodeptr&, int>()  )
+			class_<IntegerPowerOperator, bases<UnaryOperator>, std::shared_ptr<IntegerPowerOperator> >("IntegerPower", init<const Nodeptr&, int>()  )
 			
 			.def(PowerOpVisitor<IntegerPowerOperator>())
 			;
 
 			// SqrtOperator class
-			class_<SqrtOperator, bases<UnaryOperator>, std::shared_ptr<SqrtOperator> >("SqrtOperator", init<const Nodeptr&>() )
+			class_<SqrtOperator, bases<UnaryOperator>, std::shared_ptr<SqrtOperator> >("Sqrt", init<const Nodeptr&>() )
 			;
 
 			// ExpOperator class
-			class_<ExpOperator, bases<UnaryOperator>, std::shared_ptr<ExpOperator> >("ExpOperator", init<const Nodeptr&>() )
+			class_<ExpOperator, bases<UnaryOperator>, std::shared_ptr<ExpOperator> >("Exp", init<const Nodeptr&>() )
 			;
 
 			// LogOperator class
-			class_<LogOperator, bases<UnaryOperator>, std::shared_ptr<LogOperator> >("LogOperator", init<const Nodeptr&>() )
+			class_<LogOperator, bases<UnaryOperator>, std::shared_ptr<LogOperator> >("Log", init<const Nodeptr&>() )
 			;
 			
 			
 
 			// TrigOperator class
-			class_<TrigOperator, boost::noncopyable, bases<Node>, std::shared_ptr<TrigOperator> >("TrigOperator", no_init)
+			class_<TrigOperator, boost::noncopyable, bases<Node>, std::shared_ptr<TrigOperator> >("Trig", no_init)
 			;
 
 			// SinOperator class
-			class_<SinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<SinOperator> >("SinOperator", init<const Nodeptr&>() )
+			class_<SinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<SinOperator> >("Sin", init<const Nodeptr&>() )
 			;
 			// CosOperator class
-			class_<CosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<CosOperator> >("CosOperator", init<const Nodeptr&>() )
+			class_<CosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<CosOperator> >("Cos", init<const Nodeptr&>() )
 			;
 			// TanOperator class
-			class_<TanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<TanOperator> >("TanOperator", init<const Nodeptr&>() )
+			class_<TanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<TanOperator> >("Tan", init<const Nodeptr&>() )
 			;
 
 			// ArcSinOperator class
-			class_<ArcSinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcSinOperator> >("ArcSinOperator", init<const Nodeptr&>() )
+			class_<ArcSinOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcSinOperator> >("ArcSin", init<const Nodeptr&>() )
 			;
 			// ArcCosOperator class
-			class_<ArcCosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcCosOperator> >("ArcCosOperator", init<const Nodeptr&>() )
+			class_<ArcCosOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcCosOperator> >("ArcCos", init<const Nodeptr&>() )
 			;
 			// ArcTanOperator class
-			class_<ArcTanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcTanOperator> >("ArcTanOperator", init<const Nodeptr&>() )
+			class_<ArcTanOperator, bases<TrigOperator, UnaryOperator>, std::shared_ptr<ArcTanOperator> >("ArcTan", init<const Nodeptr&>() )
 			;
 
 

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/root_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,6 +24,10 @@
 //  James Collins
 //  West Texas A&M University
 //  Spring 2016
+//
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
 //
 //
 //
@@ -58,8 +62,8 @@ namespace bertini{
 		void JacobianVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("evalJd", &Jacobian::template EvalJ<dbl>)
-			.def("evalJmp", &Jacobian::template EvalJ<mpfr>)
+			.def("evalJ_d", &Jacobian::template EvalJ<dbl>)
+			.def("evalJ_mp", &Jacobian::template EvalJ<mpfr>)
 			;
 		}
 
