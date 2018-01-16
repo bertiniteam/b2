@@ -12,3 +12,10 @@ Auto-generated docs
 
 .. automodule:: pybertini.endgame
 
+
+pybertini.endgame.config
+===========================
+
+.. automodule:: pybertini.endgame.config
+
+

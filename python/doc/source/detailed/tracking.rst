@@ -25,3 +25,8 @@ Auto-generated docs
 
 .. automodule:: pybertini.tracking
 
+
+pybertini.tracking.config
+==========================
+
+.. automodule:: pybertini.tracking.config

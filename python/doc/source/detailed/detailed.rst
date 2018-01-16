@@ -25,8 +25,10 @@ Modules
    multiprec
    function_tree
    system
+   start_system
    tracking
    endgame
+   parse
    
 
 Things you probably don't need
