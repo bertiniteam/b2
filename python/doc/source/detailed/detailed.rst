@@ -18,6 +18,9 @@ Modules
    endgame
    configs
 
+Things you probably don't need
+-------------------------------
+
 .. toctree::
   :maxdepth: 1
 
