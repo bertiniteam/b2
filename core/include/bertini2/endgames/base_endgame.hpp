@@ -203,7 +203,7 @@ public:
 	void ChangePrecision(unsigned p)
 	{
 		AsFlavor().ChangePrecision(p);
-		PrecT::ChangePrecision();
+		PrecT::ChangePrecision(p);
 	}
 
 
