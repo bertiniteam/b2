@@ -1,3 +1,6 @@
+default branch status: <img src="http://doc.bertini2.org/status.png" width="100">
+
+
 ### Important note on cloning
 
 The recommended method for getting the code for Bertini 2 is to clone from command line using git:
