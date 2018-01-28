@@ -654,8 +654,8 @@ public:
 		auto& samples = std::get<SampCont<CT> >(samples_);
 		auto& times   = std::get<TimeCont<CT> >(times_);
 		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
-		Vec<CT>& latest_approx = std::get<Vec<CT> >(this->final_approximation_);
-		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
+		Vec<CT>& latest_approx = this->final_approximation_;
+		Vec<CT>& prev_approx = this->previous_approximation_;
 
 
 		SetRandVec<CT>(start_point.size());	 	

@@ -1069,8 +1069,8 @@ public:
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
-		Vec<CT>& latest_approx = std::get<Vec<CT> >(this->final_approximation_);
-		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
+		Vec<CT>& latest_approx = this->final_approximation_;
+		Vec<CT>& prev_approx = this->previous_approximation_;
 		NumErrorT& approx_error = this->approximate_error_;
 
 

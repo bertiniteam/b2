@@ -39,6 +39,7 @@
 
 #include "bertini2/function_tree/operators/arithmetic.hpp"
 #include "bertini2/function_tree/operators/trig.hpp"
+#include "bertini2/function_tree/symbols/linear_product.hpp"
 
 
 #include "bertini2/function_tree/symbols/symbol.hpp"

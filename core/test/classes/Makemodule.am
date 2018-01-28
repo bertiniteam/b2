@@ -20,6 +20,8 @@ b2_class_test_SOURCES = \
 	test/classes/node_serialization_test.cpp \
 	test/classes/patch_test.cpp \
 	test/classes/complex_test.cpp \
+	test/classes/slice_test.cpp \
+	test/classes/m_hom_start_system.cpp
 	test/classes/slice_test.cpp
 endif
 
