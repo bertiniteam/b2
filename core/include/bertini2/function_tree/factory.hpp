@@ -45,6 +45,7 @@ namespace bertini {
 		class Function;
 		class Jacobian;
 		class Differential;
+		class LinearProduct;
 	}
 
 	/**
@@ -88,6 +89,12 @@ namespace bertini {
 	std::shared_ptr<node::Float> MakeFloat(T const& ...t)
 	{
 		return std::make_shared<node::Float>(t...);
+	}
+
+	template<typename ... T>
+	std::shared_ptr<node::LinearProduct> MakeLinearProduct(T const& ...t)
+	{
+		return std::make_shared<node::LinearProduct>(t...);
 	}
 
 	template<typename ... T>

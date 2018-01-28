@@ -61,6 +61,8 @@ using mpfr = bertini::mpfr;
 using bertini::MakeVariable;
 using bertini::MakeFloat;
 
+template<typename NumType> using Mat = bertini::Mat<NumType>;
+
 using namespace bertini;
 
 /////////// Basic Operations Alone ///////////////////
@@ -1885,6 +1887,274 @@ BOOST_AUTO_TEST_CASE(long_arithmetic_chain)
 	std::shared_ptr<Node> N = 2*m12_2/sin2b - v*v * polytypes[9-1] / 16;
 
 }
+
+BOOST_AUTO_TEST_CASE(make_linear_product)
+{
+	using namespace bertini::node;
+	
+	bertini::VariableGroup vargp;
+	std::shared_ptr<Variable> x = bertini::MakeVariable("x");
+	std::shared_ptr<Variable> y = bertini::MakeVariable("y");
+	std::shared_ptr<Variable> z = bertini::MakeVariable("z");
+	std::shared_ptr<Variable> U = bertini::MakeVariable("U");
+	vargp.push_back(x);
+	vargp.push_back(y);
+	vargp.push_back(z);
+	
+	// Make with automatically genearted coefficients
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp,4);
+	
+	// Make with user defined coefficients
+	Mat<mpfr> coeff_mpfr(3,4);
+	for(int ii = 0; ii < 3; ++ii)
+	{
+		for(int jj = 0; jj < 4; ++jj)
+		{
+			coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
+		}
+	}
+	
+	std::shared_ptr<LinearProduct> linprod2 = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
+	
+}
+
+
+
+BOOST_AUTO_TEST_CASE(eval_linear_product)
+{
+	using namespace bertini::node;
+	
+    auto x = MakeVariable("x");
+    auto y = MakeVariable("y");
+    auto z = MakeVariable("z");
+    auto w = MakeVariable("w");
+    
+    
+    
+    VariableGroup v0{x,z,y};
+    VariableGroup v1{w};
+    Mat<dbl> coeff_dbl(3,4);
+    Mat<mpfr> coeff_mpfr(3,4);
+    
+    for(int ii = 0; ii < 3; ++ii)
+    {
+        for(int jj = 0; jj < 4; ++jj)
+        {
+            coeff_dbl(ii,jj) = dbl(ii+1, jj+1);
+            coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
+        }
+    }
+    
+    std::shared_ptr<bertini::node::Node> linprod1 = bertini::MakeLinearProduct(v0, coeff_mpfr);
+    
+    coeff_dbl = Mat<dbl>(1,2);
+    coeff_mpfr = Mat<mpfr>(1,2);
+    
+    for(int ii = 0; ii < 1; ++ii)
+    {
+        for(int jj = 0; jj < 2; ++jj)
+        {
+            coeff_dbl(ii,jj) = dbl(ii+3, jj+3);
+            coeff_mpfr(ii,jj) = mpfr(ii+3, jj+3);
+        }
+    }
+    
+    std::shared_ptr<bertini::node::Node> linprod2 = bertini::MakeLinearProduct(v1, coeff_mpfr);
+    
+    
+    
+    std::shared_ptr<bertini::node::Node> linprod_node = (mpfr(1,1)*x + mpfr(1,2)*z + mpfr(1,3)*y+ mpfr(1,4)) * (mpfr(2,1)*x + mpfr(2,2)*z + mpfr(2,3)*y+ mpfr(2,4))*(mpfr(3,1)*x + mpfr(3,2)*z + mpfr(3,3)*y+ mpfr(3,4))*
+    (mpfr(3,3)*w + mpfr(3,4));
+    std::shared_ptr<bertini::node::Node> linprod = linprod1*linprod2;
+    
+    dbl xval_d = dbl(.5,1);
+    dbl yval_d = dbl(.6,1);
+    dbl zval_d = dbl(.7,1);
+    dbl wval_d = dbl(2.1, -.03);
+    mpfr xval_mp = mpfr(".5", "1");
+    mpfr yval_mp = mpfr(".6", "1");
+    mpfr zval_mp = mpfr(".7", "1");
+    mpfr wval_mp = mpfr(".22", "1.11");
+    
+    v0[0]->set_current_value(xval_d);
+    v0[1]->set_current_value(zval_d);
+    v0[2]->set_current_value(yval_d);
+    v0[0]->set_current_value(xval_mp);
+    v0[1]->set_current_value(zval_mp);
+    v0[2]->set_current_value(yval_mp);
+    
+    v1[0]->set_current_value(wval_d);
+    v1[0]->set_current_value(wval_mp);
+    
+    
+    dbl eval_d = linprod->Eval<dbl>();
+    dbl exact_d = linprod_node->Eval<dbl>();
+    mpfr eval_mp = linprod->Eval<mpfr>();
+    mpfr exact_mp = linprod_node->Eval<mpfr>();
+	
+	
+	BOOST_CHECK(fabs(eval_d.real()/exact_d.real() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(eval_d.imag()/exact_d.imag() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(eval_mp.real()/exact_mp.real() - 1) < threshold_clearance_mp);
+	BOOST_CHECK(fabs(eval_mp.imag()/exact_mp.imag() - 1) < threshold_clearance_mp);
+	
+}
+
+
+BOOST_AUTO_TEST_CASE(linear_product_degree)
+{
+	using namespace bertini::node;
+	
+	bertini::VariableGroup vargp, vargp2, vargp3;
+	std::shared_ptr<Variable> x = bertini::MakeVariable("x");
+	std::shared_ptr<Variable> y = bertini::MakeVariable("y");
+	std::shared_ptr<Variable> z = bertini::MakeVariable("z");
+	std::shared_ptr<Variable> w = bertini::MakeVariable("w");
+	vargp.push_back(x);
+	vargp.push_back(y);
+	vargp.push_back(z);
+	
+	vargp2.push_back(x);
+	vargp2.push_back(z);
+	vargp2.push_back(w);
+	
+	vargp3.push_back(w);
+	
+	
+	
+	// Make with automatically genearted coefficients
+	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp,4);
+	
+	BOOST_CHECK_EQUAL(linprod->Degree(x), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(y), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(z), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(w), 0);
+	
+	BOOST_CHECK_EQUAL(linprod->Degree(vargp), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(vargp2), 4);
+	BOOST_CHECK_EQUAL(linprod->Degree(vargp3), 0);
+	
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp)[0], 4);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp)[1], 4);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp)[2], 4);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp2)[0], 4);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp2)[2], 0);
+	BOOST_CHECK_EQUAL(linprod->MultiDegree(vargp3)[0], 0);
+	
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(linear_prod_get_linears)
+{
+	using namespace bertini::node;
+	
+    auto x = MakeVariable("x");
+    auto y = MakeVariable("y");
+    auto z = MakeVariable("z");
+    auto w = MakeVariable("w");
+    
+    int num_vars = 3;
+    
+    
+    
+    VariableGroup v0{x,z,y};
+    VariableGroup v1{w};
+    Mat<dbl> coeff_dbl(3,4);
+    Mat<mpfr> coeff_mpfr(3,4);
+    
+    for(int ii = 0; ii < 3; ++ii)
+    {
+        for(int jj = 0; jj < 4; ++jj)
+        {
+            coeff_dbl(ii,jj) = dbl(ii+1, jj+1);
+            coeff_mpfr(ii,jj) = mpfr(ii+1, jj+1);
+        }
+    }
+    
+    std::shared_ptr<bertini::node::LinearProduct> linprod = bertini::MakeLinearProduct(v0, coeff_mpfr);
+    
+    
+    
+    std::shared_ptr<bertini::node::Node> linprod_node1 = (mpfr(1,1)*x + mpfr(1,2)*z + mpfr(1,3)*y+ mpfr(1,4));
+    std::shared_ptr<bertini::node::Node> linprod_node2 = (mpfr(2,1)*x + mpfr(2,2)*z + mpfr(2,3)*y+ mpfr(2,4));
+    std::shared_ptr<bertini::node::Node> linprod_node3 = (mpfr(3,1)*x + mpfr(3,2)*z + mpfr(3,3)*y+ mpfr(3,4));
+    std::shared_ptr<bertini::node::Node> linprod_node12 = linprod_node1 * linprod_node3;
+    std::shared_ptr<bertini::node::Node> linprod_node = linprod_node1 * linprod_node2 * linprod_node3;
+
+    
+    dbl xval_d = dbl(.5,1);
+    dbl yval_d = dbl(.6,1);
+    dbl zval_d = dbl(.7,1);
+    dbl wval_d = dbl(2.1, -.03);
+    mpfr xval_mp = mpfr(".5", "1");
+    mpfr yval_mp = mpfr(".6", "1");
+    mpfr zval_mp = mpfr(".7", "1");
+    mpfr wval_mp = mpfr(".22", "1.11");
+    
+    v0[0]->set_current_value(xval_d);
+    v0[1]->set_current_value(zval_d);
+    v0[2]->set_current_value(yval_d);
+    v0[0]->set_current_value(xval_mp);
+    v0[1]->set_current_value(zval_mp);
+    v0[2]->set_current_value(yval_mp);
+    
+    v1[0]->set_current_value(wval_d);
+    v1[0]->set_current_value(wval_mp);
+    
+	bertini::Vec<dbl> coeff_d = linprod->GetCoeffs<dbl>(1);
+	bertini::Vec<mpfr> coeff_mp = linprod->GetCoeffs<mpfr>(2);
+	
+	
+	
+	for(int ii = 0; ii < num_vars+1; ++ii)
+	{
+		BOOST_CHECK(fabs(coeff_d[ii].real()/coeff_dbl(1,ii).real() - 1) < threshold_clearance_d);
+		BOOST_CHECK(fabs(coeff_d[ii].imag()/coeff_dbl(1,ii).imag() - 1) < threshold_clearance_d);
+		BOOST_CHECK(fabs(coeff_mp[ii].real()/coeff_mpfr(2,ii).real() - 1) < threshold_clearance_mp);
+		BOOST_CHECK(fabs(coeff_mp[ii].imag()/coeff_mpfr(2,ii).imag() - 1) < threshold_clearance_mp);
+	}
+    
+    std::vector<size_t> ind{0,2};
+    
+//    std::shared_ptr<bertini::node::Node> linprod12 = linprod->GetLinears(ind);
+//	std::shared_ptr<bertini::node::Node> linprod2 = linprod->GetLinears(1);
+//    std::shared_ptr<bertini::node::Node> linprod3 = linprod->GetLinears(2);
+//
+//    
+//    dbl evalx_d = linprod12->Eval<dbl>();
+//    dbl exactx_d = linprod_node12->Eval<dbl>();
+//    mpfr evalx_mp = linprod12->Eval<mpfr>();
+//    mpfr exactx_mp = linprod_node12->Eval<mpfr>();
+//    
+//    BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
+//    BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
+//    BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
+//    BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
+//
+//     evalx_d = linprod2->Eval<dbl>();
+//     exactx_d = linprod_node2->Eval<dbl>();
+//     evalx_mp = linprod2->Eval<mpfr>();
+//     exactx_mp = linprod_node2->Eval<mpfr>();
+//    
+//    BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
+//    BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
+//    BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
+//    BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
+//
+//     evalx_d = linprod3->Eval<dbl>();
+//     exactx_d = linprod_node3->Eval<dbl>();
+//     evalx_mp = linprod3->Eval<mpfr>();
+//     exactx_mp = linprod_node3->Eval<mpfr>();
+//    
+//    BOOST_CHECK(fabs(evalx_d.real()/exactx_d.real() - 1) < threshold_clearance_d);
+//    BOOST_CHECK(fabs(evalx_d.imag()/exactx_d.imag() - 1) < threshold_clearance_d);
+//    BOOST_CHECK(fabs(evalx_mp.real()/exactx_mp.real() - 1) < threshold_clearance_mp);
+//    BOOST_CHECK(fabs(evalx_mp.imag()/exactx_mp.imag() - 1) < threshold_clearance_mp);
+
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
