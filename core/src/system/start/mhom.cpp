@@ -410,7 +410,7 @@ namespace bertini
 			var_groups_[0][1]->set_current_value(start_point(1));
 			
 			std::shared_ptr<node::Node> f = Function(0);
-			
+			// !!! superfluous line?
 			
 			
 
