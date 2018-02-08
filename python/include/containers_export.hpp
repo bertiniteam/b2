@@ -43,6 +43,88 @@
 
 namespace bertini{ namespace python{
 
+template< typename T>
+inline std::ostream& operator<<(std::ostream & out, const std::vector<T> & t)
+{
+	out << "[";
+	for (int ii = 0; ii < t.size(); ++ii)
+	{
+		out << t[ii];
+		if (ii!=t.size()-1)
+		{
+			out << ", ";
+		}
+	}
+	out << "]";
+
+	return out;
+}
+
+
+template< typename T>
+inline std::ostream& operator<<(std::ostream & out, const std::deque<T> & t)
+{
+	out << "[";
+	for (int ii = 0; ii < t.size(); ++ii)
+	{
+		out << t[ii];
+		if (ii!=t.size()-1)
+		{
+			out << ", ";
+		}
+	}
+	out << "]";
+
+	return out;
+}
+
+
+/**
+Adds functionality to iterable types
+ */
+template<typename ContT>
+class ListVisitor: public def_visitor<ListVisitor<ContT> >
+{
+	friend class def_visitor_access;
+	
+public:
+	template<class PyClass>
+	void visit(PyClass& cl) const;
+	
+private:
+
+
+	static std::string __str__(const object& obj)
+	{
+		std::ostringstream oss;
+		const ContT& self=extract<ContT>(obj)();
+		std::stringstream ss;
+		ss << "[";
+		for (int ii = 0; ii < self.size(); ++ii)
+		{
+			ss << self[ii];
+			if (ii!=self.size()-1)
+			{
+				ss << ", ";
+			}
+		}
+		ss << "]";
+		return ss.str();
+	};
+
+	static std::string __repr__(const object& obj)
+	{
+		return __str__(obj);
+		// std::ostringstream oss;
+		// const ContT& self=extract<ContT>(obj)();
+		// std::stringstream ss;
+		// ss << self.str(0,std::ios::scientific);
+		// return ss.str();
+	};	
+
+};// ListVisitor class
+
+
 
 void ExportContainers();
 

@@ -29,6 +29,7 @@ Modules
    tracking
    endgame
    parse
+   containers
    
 
 Things you probably don't need

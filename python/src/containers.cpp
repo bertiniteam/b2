@@ -38,6 +38,17 @@
 namespace bertini{
 	namespace python{
 
+template<typename T>
+template<typename PyClass>
+void ListVisitor<T>::visit(PyClass& cl) const
+{
+	cl
+	.def(vector_indexing_suite< T , true >())
+	.def("__str__", &ListVisitor::__str__)
+	.def("__repr__", &ListVisitor::__repr__)
+	;
+}
+
 
 void ExportContainers()
 {
@@ -52,33 +63,42 @@ void ExportContainers()
 
 
 	// std::vector of Rational Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Rational > > >("Rational")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Rational> > , true >())
+	using T1 = std::vector<std::shared_ptr< bertini::node::Rational > >;
+	class_< T1 >("Rational")
+	.def(ListVisitor<T1>())
 	;
 
 	// The VariableGroup deque container
-	class_< bertini::VariableGroup >("VariableGroup")
-	.def(vector_indexing_suite< bertini::VariableGroup, true >())
+	using T2 = bertini::VariableGroup;
+	class_< T2 >("VariableGroup")
+	.def(ListVisitor<T2>())
 	;
 	
 	// std::vector of ints
-	class_< std::vector<int> >("int")
-	.def(vector_indexing_suite< std::vector<int> , true >())
+	using T3 = std::vector<int>;
+	class_< T3 >("int")
+	.def(ListVisitor<T3>())
 	;
+
 
 	// std::vector of VariableGroups
-	class_< std::vector<bertini::VariableGroup> >("VariableGroup")
-	.def(vector_indexing_suite< std::vector<bertini::VariableGroup> , true >())
+	using T4 = std::vector<bertini::VariableGroup>;
+	class_< T4 >("OfVariableGroup")
+	.def(ListVisitor<T4>())
 	;
+
 
 	// std::vector of Function Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Function > > >("Function")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Function> > , true >())
+	using T5 = std::vector<std::shared_ptr< bertini::node::Function > >;
+	class_< T5 >("Function")
+	.def(ListVisitor<T5>())
 	;
 
+
 	// std::vector of Jacobian Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Jacobian > > >("Jacobian")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Jacobian> > , true >())
+	using T6 = std::vector<std::shared_ptr< bertini::node::Jacobian > >;
+	class_< T6 >("Jacobian")
+	.def(ListVisitor<T6>())
 	;
 
 };
