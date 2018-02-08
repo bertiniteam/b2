@@ -6,6 +6,9 @@ PyBertini works by setting up systems, setting up algorithms to use those system
 Forming a system
 =================
 
+First, gain access to pybertini::
+
+    import pybertini
 
 Let's make a couple of variables::
 
@@ -63,7 +66,7 @@ The most basic, easiest to form and solve, start system is the Total Degree (TD)
 	sys.add_function(f)
 	sys.add_function(g)
 
-	td = pybertini.TotalDegree(sys)
+	td = pybertini.system.start_system.TotalDegree(sys)
 
 Wonderful, now we have an easy-to-solve system, the structure of which mirrors that of our target system.  Every start system comes with a method for generating its start points, by integer index.::
 
@@ -101,21 +104,22 @@ We associate a system with a tracker when we make it.  You cannot make a tracker
 ::
 
 	tr = pybertini.tracking.AMPTracker(homotopy)
-	tr.set_tolerance(1e-5) # track the path to 5 digits or so
+	tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
 
 	# adjust some stepping settings
 	stepping = pybertini.tracking.config.SteppingConfig()
-	stepping.max_step_size = pybertini.multiprec.rational(1,13)
+	stepping.max_step_size = pybertini.multiprec.Rational(1,13)
 
 	#then, set the config into the tracker.
+	#TODO HERE
 
 
 Once we feel comfortable with the configs (of which there are many, see the book or elsewhere in this site, perhaps), we can track a path.
 
 ::
 
-	result = pybertini.VectorXmp()
-	tr.track_path(result, pybertini.multiprec.complex(1), pybertini.multiprec.complex(0), td.start_point_mp(0))
+	result = pybertini.multiprec.Vector()
+	tr.track_path(result, pybertini.multiprec.Complex(1), pybertini.multiprec.Complex(0), td.start_point_mp(0))
 
 Let's generate a log of what was computed along the way, first making an observer, and then attaching it to the tracker.
 
