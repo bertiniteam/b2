@@ -1,4 +1,6 @@
-from setuptools import setup
+from setuptools import find_packages, setup
+
+EXCLUDE_FROM_PACKAGES = []
 
 setup(name='pybertini',
       version='1.0.alpha2',
@@ -7,7 +9,8 @@ setup(name='pybertini',
       author='Bertini Team',
       author_email='brakeda@uwec.edu',
       license='GPL3 with permitted additional clauses',
-      packages=['pybertini'],
+      packages=find_packages(exclude=EXCLUDE_FROM_PACKAGES),
+      package_dir = {'pybertini': 'pybertini'},
       zip_safe=False)
 
 # dependencies to add
