@@ -1,3 +1,5 @@
+# coding : utf-8
+#
 # This file is part of Bertini 2.
 # 
 # python/pybertini/system/__init__.py is free software: you can redistribute it and/or modify
