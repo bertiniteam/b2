@@ -1,17 +1,17 @@
 # This file is part of Bertini 2.
 # 
-# python/pybertini/function_tree/__init__.py is free software: you can redistribute it and/or modify
+# python/pybertini/list/__init__.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# python/pybertini/function_tree/__init__.py is distributed in the hope that it will be useful,
+# python/pybertini/list/__init__.py is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with python/pybertini/function_tree/__init__.py.  If not, see <http://www.gnu.org/licenses/>.
+# along with python/pybertini/list/__init__.py.  If not, see <http://www.gnu.org/licenses/>.
 # 
 #  Copyright(C) 2018 by Bertini2 Development Team
 # 
@@ -28,15 +28,16 @@
 
 
 
-import _pybertini
-import _pybertini.function_tree
 
-# from _pybertini import function_tree
-from _pybertini.list import VariableGroup
 
-from _pybertini.function_tree import *
+"""
+List types, coming from C++
 
-# import pybertini.function_tree.symbol as symbol
 
-__all__ = dir(_pybertini.function_tree)
+"""
 
+import _pybertini.list
+
+from _pybertini.list import *
+
+__all__ = dir(_pybertini.list)

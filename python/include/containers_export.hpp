@@ -25,6 +25,9 @@
 //  West Texas A&M University
 //  Spring 2016
 //
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
 //
 //  python/containers_export.hpp:  Exports all needed containers from Bertini 2.0 to python.
 
@@ -38,47 +41,10 @@
 #include "python_common.hpp"
 
 
+namespace bertini{ namespace python{
 
 
-void ExportContainers()
-{
-	// std::vector of Rational Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Rational > > >("ListRational")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Rational> > , true >())
-	;
+void ExportContainers();
 
-	// The VariableGroup deque container
-	class_< bertini::VariableGroup >("VariableGroup")
-	.def(vector_indexing_suite< bertini::VariableGroup, true >())
-	;
-	
-	// std::vector of ints
-	class_< std::vector<int> >("ListInt")
-	.def(vector_indexing_suite< std::vector<int> , true >())
-	;
-
-	// std::vector of VariableGroups
-	class_< std::vector<bertini::VariableGroup> >("ListVariableGroup")
-	.def(vector_indexing_suite< std::vector<bertini::VariableGroup> , true >())
-	;
-
-	// std::vector of Function Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Function > > >("ListFunction")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Function> > , true >())
-	;
-
-	// std::vector of Jacobian Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Jacobian > > >("ListJacobian")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Jacobian> > , true >())
-	;
-
-};
-
-
-
-
-
-
-
-
+}} // namespaces
 #endif
