@@ -16,7 +16,7 @@ Let's start by making some variables, programmatically [1]_.
 	import numpy
 
 	num_vars = 10
-	x = [None] * num_vars
+	x = [None] * num_vars # preallocate the list
 	for ii in range(num_vars):
 	    x[ii] = pybertini.Variable('x' + str(ii))
 
@@ -71,7 +71,7 @@ Now, let's evaluate it at the origin -- all zero's (0 is the default value for m
 
 ::
 
-	s = pybertini.multiprec.Vector() # todo allow int in constructor
+	s = pybertini.multiprec.Vector() 
 	s.resize(num_vars)
 	sys.eval(s)
 
@@ -82,7 +82,7 @@ Let's change the values of our vector, and re-evaluate.
 ::
 
 	for ii in range(num_vars):
-		s[ii] = pybertini.multiprec.complex(ii)
+		s[ii] = pybertini.multiprec.Complex(ii)
 	sys.eval(s)
 
 
