@@ -1,4 +1,4 @@
-pybertini.system
+🏙 pybertini.system
 ==================
 
 .. include:: common_doc_nav.incl

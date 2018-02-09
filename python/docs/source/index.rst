@@ -7,7 +7,7 @@ PyBertini Main
 ****************
 
 
-Introductory materials
+1️⃣ Introductory materials
 =========================
 
 .. toctree::
@@ -16,7 +16,7 @@ Introductory materials
    intro
    tutorials/tutorials
 
-Reference materials
+🏛 Reference materials
 ====================
 
 .. toctree::
@@ -26,10 +26,10 @@ Reference materials
    building
    zbib
 
-Indices and tables
+🔀 Indices and tables
 ===================
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
+* 🔍 :ref:`search`
 

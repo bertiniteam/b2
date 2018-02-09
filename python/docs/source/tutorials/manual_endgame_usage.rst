@@ -1,5 +1,5 @@
-Using an endgame to compute singular endpoints
-***************************************************
+🎮 Using an endgame to compute singular endpoints 
+*********************************************************
 
 
 

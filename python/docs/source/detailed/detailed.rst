@@ -1,11 +1,11 @@
-Detailed
-***********
+👩‍🔧 Detailed
+*******************
 
 .. include:: common_doc_nav.incl
 
 This is a stub page, which merely acts to point you to more specific places in the documentation.  Table of contents below 🔽.  
 
-Highlights
+🖍 Highlights
 ------------
 
 .. toctree::
@@ -13,7 +13,7 @@ Highlights
 
    configs
 
-Modules
+⚙️ Modules
 -------------
 
 .. toctree::
@@ -32,7 +32,7 @@ Modules
    containers
    
 
-Things you probably don't need
+🎱 Things you probably don't need
 -------------------------------
 
 .. toctree::

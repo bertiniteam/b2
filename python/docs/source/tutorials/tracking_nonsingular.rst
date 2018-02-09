@@ -1,4 +1,4 @@
-Tracking to nonsingular endpoints
+🛤 Tracking to nonsingular endpoints 
 **********************************************
 
 PyBertini works by setting up systems, setting up algorithms to use those systems, and doing something with the output.
@@ -165,7 +165,7 @@ Logging to inspect the path that was tracked
 ---------------------------------------------
 
 
-Let's generate a log of what was computed along the way, first making an :mod:`pybertini.tracking.observers`, and then attaching it to the tracker.
+Let's generate a log of what was computed along the way, first making an :mod:`observer <pybertini.tracking.observers>`, and then attaching it to the tracker.
 
 ::
 

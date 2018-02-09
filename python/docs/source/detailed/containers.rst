@@ -1,4 +1,4 @@
-pybertini.list
+🕳 pybertini.list
 =====================
 
 .. include:: common_doc_nav.incl
