@@ -1078,8 +1078,9 @@ namespace bertini {
 		 Add a function to the system.
 
 		 \param F The function to add.
+		 \param name The name of the function
 		 */
-		void AddFunction(Nd const& F);
+		void AddFunction(Nd const& F, std::string const& name = "unnamed_function");
 
 
 		/**

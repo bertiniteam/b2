@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with src/function_tree/roots/jacobian.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -22,6 +22,10 @@
 // individual authors of this file include:
 // dani brake, university of notre dame
 // Jeb Collins, West Texas A&M
+// 
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
 
 
 #include "function_tree/roots/jacobian.hpp"
@@ -32,11 +36,11 @@
 namespace bertini{
 namespace node{
 
-Function::Function(std::string new_name) : NamedSymbol(new_name)
+Function::Function(std::string const& new_name) : NamedSymbol(new_name)
 { }
 
 
-Function::Function(const std::shared_ptr<Node> & entry) : NamedSymbol("unnamed_function"), entry_node_(entry)
+Function::Function(const std::shared_ptr<Node> & entry, std::string const& name) : NamedSymbol(name), entry_node_(entry)
 {
 }
 
