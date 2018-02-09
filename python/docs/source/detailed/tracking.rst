@@ -1,5 +1,5 @@
 🛤 pybertini.tracking
-====================
+===========================
 
 .. include:: common_doc_nav.incl
 
@@ -30,13 +30,13 @@ Auto-generated docs
 
 
 🛤 pybertini.tracking.config
-==========================
+=====================================
 
 .. automodule:: pybertini.tracking.config
 
 
 🛤 pybertini.tracking.observers
-================================
+===================================
 
 📝 All of these are available for all trackers, though you should use the ones for your tracker type.  Look in ``pybertini.tracking.AMPTracker.observers``, etc.
 

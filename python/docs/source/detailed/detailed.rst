@@ -6,7 +6,7 @@
 This is a stub page, which merely acts to point you to more specific places in the documentation.  Table of contents below 🔽.  
 
 🖍 Highlights
-------------
+--------------------
 
 .. toctree::
    :maxdepth: 2
@@ -33,7 +33,7 @@ This is a stub page, which merely acts to point you to more specific places in t
    
 
 🎱 Things you probably don't need
--------------------------------
+----------------------------------------
 
 .. toctree::
   :maxdepth: 1

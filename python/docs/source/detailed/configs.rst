@@ -1,10 +1,10 @@
 🎛 Configurations for algorithms, trackers, endgames, etc
-========================================================
+===================================================================
 
 .. include:: common_doc_nav.incl
 
 🛤 Tracking configs
--------------------
+---------------------------
 
 * :class:`pybertini.tracking.config.SteppingConfig`
 * :class:`pybertini.tracking.config.NewtonConfig`
@@ -21,10 +21,10 @@
 
 
 🎮 Endgame configs
------------------
+-------------------------
 
 .. autoclass:: pybertini.endgame.config.Endgame
 
 Algorithm configs
--------------------
+---------------------------
 

@@ -1,5 +1,5 @@
 🃏 pybertini.multiprec
-=====================
+============================
 
 .. include:: common_doc_nav.incl
 

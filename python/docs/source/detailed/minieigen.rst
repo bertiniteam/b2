@@ -1,5 +1,5 @@
 💠 pybertini.minieigen
-=====================
+=============================
 
 .. include:: common_doc_nav.incl
 
