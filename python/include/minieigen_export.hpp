@@ -39,7 +39,7 @@
 #ifndef BERTINI_PYTHON_MINIEIGEN_EXPORT_HPP
 #define BERTINI_PYTHON_MINIEIGEN_EXPORT_HPP
 
-#include <bertini2/function_tree.hpp>
+
 #include <bertini2/eigen_extensions.hpp>
 
 #include "python_common.hpp"

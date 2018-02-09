@@ -25,6 +25,7 @@ bertini_python_header_files = \
 bertini_python_source_files = \
 				src/minieigen_export.cpp \
 				src/detail.cpp \
+				src/containers.cpp \
 				src/tracker_export.cpp \
 				src/endgame_export.cpp \
 				src/mpfr_export.cpp \

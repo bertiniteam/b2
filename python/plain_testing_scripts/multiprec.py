@@ -46,13 +46,13 @@ def eq(a,b):
 
 	print('{} {} passed eq checks'.format(type(a),type(b)))
 
-rings = [pybertini.numbers.int(2)]
+rings = [pybertini.multiprec.Int(2)]
 
-fields = [pybertini.numbers.float(3),pybertini.numbers.rational(3,4),pybertini.numbers.complex(5,6)]
+fields = [pybertini.multiprec.Float(3),pybertini.multiprec.Rational(3,4),pybertini.multiprec.Complex(5,6)]
 
-ordereds = [pybertini.numbers.int(2), pybertini.numbers.float(3),pybertini.numbers.rational(3,4)]
+ordereds = [pybertini.multiprec.Int(2), pybertini.multiprec.Float(3),pybertini.multiprec.Rational(3,4)]
 
-all_types = [pybertini.numbers.int(2), pybertini.numbers.float(3),pybertini.numbers.rational(3,4), pybertini.numbers.complex(5,6)]
+all_types = [pybertini.multiprec.Int(2), pybertini.multiprec.Float(3),pybertini.multiprec.Rational(3,4), pybertini.multiprec.Complex(5,6)]
 
 
 for ii in rings:

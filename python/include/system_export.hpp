@@ -91,8 +91,20 @@ namespace bertini{
 			void (bertini::System::*set_prec_)(unsigned) const = &bertini::System::precision;
 			unsigned (bertini::System::*get_prec_)(void) const = &bertini::System::precision;
 
+
+
+			// using just_fn = void (bertini::System::*)(std::shared_ptr<node::Node> const&);
+			using fn_and_name = void (bertini::System::*)(std::shared_ptr<node::Node> const&, std::string const&);
+
+
+			static fn_and_name AddFnAndName()
+			{
+				return &System::AddFunction;
+			};
+
+			static void AddJustFn(bertini::System& self, std::shared_ptr<node::Node> const& f) { return self.AddFunction(f);}
 			void (bertini::System::*sysAddFunc1)(std::shared_ptr<node::Function> const&) = &bertini::System::AddFunction;
-			void (bertini::System::*sysAddFunc2)(std::shared_ptr<node::Node> const&) = &bertini::System::AddFunction;
+			// void (bertini::System::*sysAddFunc2)(std::shared_ptr<node::Node> const&, std::string const&) = &bertini::System::AddFunction;
 			
 
 //			Vec<dbl> (System::*sysEval1)(const Vec<dbl> &) = &System::template Eval<dbl>;

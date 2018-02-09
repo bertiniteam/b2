@@ -1,4 +1,4 @@
-pybertini.parse
+💬 pybertini.parse
 =====================
 
 .. include:: common_doc_nav.incl
