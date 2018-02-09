@@ -416,20 +416,20 @@ public:
 
 			this->EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));
 
-			auto refinement_success = this->RefineSample(next_sample, next_sample, next_time, 
-										this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
-										this->EndgameSettings().max_num_newton_iterations);
-			if (refinement_success != SuccessCode::Success)
-			{
-				return refinement_success;
-			}
+			// auto refinement_success = this->RefineSample(next_sample, next_sample, next_time, 
+			// 							this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
+			// 							this->EndgameSettings().max_num_newton_iterations);
+			// if (refinement_success != SuccessCode::Success)
+			// {
+			// 	return refinement_success;
+			// }
 
-			this->EnsureAtPrecision(next_time,Precision(next_sample)); 
-			assert(Precision(next_time)==Precision(next_sample));
+			// this->EnsureAtPrecision(next_time,Precision(next_sample)); 
+			// assert(Precision(next_time)==Precision(next_sample));
 
 			AddToCauchyData(next_time, next_sample);
 
-			NotifyObservers(SampleRefined<EmitterType>(*this));
+			// NotifyObservers(SampleRefined<EmitterType>(*this));
 		}
 
 		return SuccessCode::Success;
@@ -1069,8 +1069,8 @@ public:
 
 		using RT = typename Eigen::NumTraits<CT>::Real;
 
-		Vec<CT>& latest_approx = std::get<Vec<CT> >(this->final_approximation_);
-		Vec<CT>& prev_approx = std::get<Vec<CT> >(this->previous_approximation_);
+		Vec<CT>& latest_approx = this->final_approximation_;
+		Vec<CT>& prev_approx = this->previous_approximation_;
 		NumErrorT& approx_error = this->approximate_error_;
 
 

@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 	Vec<dbl> y_end;
 
 	auto obs = GoryDetailLogger<DoublePrecisionTracker>();
-		tracker.AddObserver(&obs);
+		tracker.AddObserver(obs);
 
 	auto code = tracker.TrackPath(y_end, t_start, t_end, y_start);
 	BOOST_CHECK(code==bertini::SuccessCode::Success);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 					newton_preferences);
 
 	GoryDetailLogger<MultiplePrecisionTracker> tons_of_detail;
-	tracker.AddObserver(&tons_of_detail);
+	tracker.AddObserver(tons_of_detail);
 
 	
 	mpfr t_start(1);

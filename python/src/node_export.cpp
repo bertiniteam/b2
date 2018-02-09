@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/node_export.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -25,8 +25,10 @@
 //  West Texas A&M University
 //  Spring 2016
 //
-//  Dani Brake
-//  University of Notre Dame
+//  Danielle Brake
+//  UWEC
+//  2017, Spring 2018
+//
 //
 //  python/node_export.cpp:  Source file for exposing Node class to python.
 
@@ -103,45 +105,64 @@ namespace bertini{
 			.def("is_polynomial", IsPoly1 )
 			.def("is_polynomial", IsPoly2 )
 
-			.def("evald", &Eval0<dbl> )
-			.def("evald", return_Eval1_ptr<dbl>() )
-			.def("evalmp", &Eval0<mpfr> )
-			.def("evalmp", return_Eval1_ptr<mpfr>() )
+			.def("eval_d", &Eval0<dbl> )
+			.def("eval_d", return_Eval1_ptr<dbl>() )
+			.def("eval_mp", &Eval0<mpfr> )
+			.def("eval_mp", return_Eval1_ptr<mpfr>() )
 			
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))
 			
 			.def("__add__",addNodeNode)
 			.def("__add__",addNodeMpfr)
-			.def("__radd__",addNodeMpfr)
+			.def("__radd__",&raddNodeMpfr)
 			.def("__add__",addNodeInt)
-			.def("__radd__",addNodeInt)
+			.def("__radd__",raddNodeInt)
 			.def("__iadd__",&NodeVisitor::iaddNodeNode)
 			.def("__iadd__", &NodeVisitor::iaddSumNode)
 			
 			.def("__sub__",subNodeNode)
 			.def("__sub__",subNodeMpfr)
-			.def("__rsub__",subNodeMpfr)
+			.def("__rsub__",rsubNodeMpfr)
 			.def("__sub__",subNodeInt)
-			.def("__rsub__",subNodeInt)
+			.def("__rsub__",rsubNodeInt)
 			.def("__isub__",&NodeVisitor::isubNodeNode)
 			.def("__isub__", &NodeVisitor::isubSumNode)
 			
 			.def("__mul__",multNodeNode)
 			.def("__mul__",multNodeMpfr)
-			.def("__rmul__",multNodeMpfr)
+			.def("__rmul__",rmultNodeMpfr)
 			.def("__mul__",multNodeInt)
-			.def("__rmul__",multNodeInt)
+			.def("__rmul__",rmultNodeInt)
 			.def("__imul__",&NodeVisitor::imultNodeNode)
 			.def("__imul__",imultMultNode)
 			
+
 			.def("__div__",divNodeNode)
+			.def("__truediv__",divNodeNode)
+			.def("__itruediv__",&NodeVisitor::idivNodeNode)
+
+
+
+			
 			.def("__div__",divNodeMpfr)
-			.def("__rdiv__",divNodeMpfr)
+			.def("__truediv__",divNodeMpfr)
+
+			.def("__rdiv__",rdivNodeMpfr)
+			.def("__rtruediv__",rdivNodeMpfr)
+
+
 			.def("__div__",divNodeInt)
-			.def("__rdiv__",divNodeInt)
+			.def("__truediv__",divNodeInt)
+
+			.def("__rdiv__",rdivNodeInt)
+			.def("__rtruediv__",rdivNodeInt)
+
 			.def("__idiv__",&NodeVisitor::idivNodeNode)
+			.def("__itruediv__",&NodeVisitor::idivNodeNode)
+			
 			.def("__idiv__",idivMultNode)
+			.def("__itruediv__",idivMultNode)
 			
 			.def("__neg__", negNode)
 			

@@ -118,8 +118,8 @@ protected:
 
 
 	// universal endgame state variables
-	mutable TupOfVec final_approximation_; 
-	mutable TupOfVec previous_approximation_; 
+	mutable Vec<BCT> final_approximation_; 
+	mutable Vec<BCT> previous_approximation_; 
 	mutable unsigned int cycle_number_ = 0; 
 	mutable NumErrorT approximate_error_;
 
@@ -203,7 +203,9 @@ public:
 	void ChangePrecision(unsigned p)
 	{
 		AsFlavor().ChangePrecision(p);
-		PrecT::ChangePrecision();
+		PrecT::ChangePrecision(p);
+		ChangePrecision(this->final_approximation_,p);
+		ChangePrecision(this->previous_approximation_,p);
 	}
 
 
@@ -265,7 +267,7 @@ public:
 	inline
 	const Vec<CT>& FinalApproximation() const 
 	{
-		return std::get<Vec<CT> >(final_approximation_);
+		return final_approximation_;
 	}
 
 	/**
@@ -275,7 +277,7 @@ public:
 	inline
 	const Vec<CT>& PreviousApproximation() const 
 	{
-		return std::get<Vec<CT> >(final_approximation_);
+		return previous_approximation_;
 	}
 
 	/**

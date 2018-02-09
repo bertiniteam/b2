@@ -1,7 +1,9 @@
 #this is src/python/Makemodule.am
 
 
-bertini_python_header_files = $(includedir)/bertini_python.hpp \
+bertini_python_header_files = \
+				$(includedir)/minieigen_export.hpp \
+				$(includedir)/bertini_python.hpp \
 				$(includedir)/function_tree_export.hpp \
 				$(includedir)/mpfr_export.hpp \
 				$(includedir)/node_export.hpp \
@@ -9,11 +11,20 @@ bertini_python_header_files = $(includedir)/bertini_python.hpp \
 				$(includedir)/operator_export.hpp \
 				$(includedir)/root_export.hpp \
 				$(includedir)/system_export.hpp \
-				$(includedir)/tracker_export.hpp
-				$(includedir)/endgame_export.hpp
+				$(includedir)/tracker_export.hpp \
+				$(includedir)/endgame_export.hpp \
+				$(includedir)/parser_export.hpp \
+				$(includedir)/generic_observer.hpp \
+				$(includedir)/generic_observable.hpp \
+				$(includedir)/tracker_observers.hpp \
+				$(includedir)/endgame_observers.hpp \
+				$(includedir)/detail.hpp
+
 
 
 bertini_python_source_files = \
+				src/minieigen_export.cpp \
+				src/detail.cpp \
 				src/tracker_export.cpp \
 				src/endgame_export.cpp \
 				src/mpfr_export.cpp \
@@ -22,6 +33,11 @@ bertini_python_source_files = \
 				src/operator_export.cpp \
 				src/root_export.cpp \
 				src/system_export.cpp \
+				src/parser_export.cpp \
+				src/generic_observable.cpp \
+				src/generic_observer.cpp \
+				src/tracker_observers.cpp \
+				src/endgame_observers.cpp \
 				src/bertini_python.cpp \
 				minieigen/src/expose-converters.cpp \
 				minieigen/src/double-conversion/bignum-dtoa.cc \
@@ -39,21 +55,21 @@ bertini_python = \
 	$(bertini_python_source_files)
 
 
-pyexec_LTLIBRARIES += pybertini.la 
+pyexec_LTLIBRARIES += _pybertini.la 
 # we are building a PYTHON library.  
 # so this is explicitly NOT lib_LTLIBRARIES
 
-pybertini_ladir = $(DESTDIR)/$(bindir)
-pybertini_la_HEADERS =
-pybertini_la_SOURCES = $(bertini_python_header_files) $(bertini_python_source_files)
+_pybertini_ladir = $(DESTDIR)/$(bindir)
+_pybertini_la_HEADERS =
+_pybertini_la_SOURCES = $(bertini_python_header_files) $(bertini_python_source_files)
 
 
 # removed this variable -- $(PYTHON_EXTRA_LIBS) 
-pybertini_la_LIBADD = $(BOOST_LDFLAGS) $(PYTHON_LDFLAGS) $(PYTHON_LIBS) $(BOOST_PYTHON_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) $(BERTINI_LDFLAGS)
+_pybertini_la_LIBADD = $(BOOST_LDFLAGS) $(PYTHON_LDFLAGS) $(PYTHON_LIBS) $(BOOST_PYTHON_LIB) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) $(BERTINI_LDFLAGS)
 
-pybertini_la_LDFLAGS = -module -avoid-version -shared
+_pybertini_la_LDFLAGS = -module -avoid-version -shared
 #the above -module is so that the .so file is generated.  it also allows to not use the 'lib' prefix.
 
-pybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS) $(BERTINI_CPPFLAGS)
+_pybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS) $(BERTINI_CPPFLAGS)
 
 

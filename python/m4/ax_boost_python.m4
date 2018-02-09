@@ -112,6 +112,9 @@ BOOST_PYTHON_MODULE(test) { throw "Boost::Python test."; }]], [])],
     AS_VAR_IF([ax_Lib], [yes], [BOOST_PYTHON_LIB=-l$ax_lib break], [])
     AS_VAR_POPDEF([ax_Lib])dnl
   done
+  if test "x$BOOST_PYTHON_LIB" == "x"; then
+    AC_MSG_ERROR(Failed to find correct version of Boost.Python!)
+  fi
   AC_SUBST(BOOST_PYTHON_LIB)
 fi
 CPPFLAGS="$ax_boost_python_save_CPPFLAGS"

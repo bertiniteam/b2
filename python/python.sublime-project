@@ -19,7 +19,6 @@
 										"lt~obsolete.m4",
 										"libtool.m4",
 										"bertini_*.log",
-										"config.log",
 										"config.status",
 										"configure",
 										"*.trs",
@@ -27,7 +26,11 @@
 			"folder_exclude_patterns": [
 				".deps",
 				".libs",
-				"autom4te.cache"]
+				"autom4te.cache",
+				"__pycache__",
+				"pybertini.egg-info",
+				"_static",
+				"_templates"]
 		}
 	],
 

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with python/system_export.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2016 by Bertini2 Development Team
+// Copyright(C) 2016-2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -25,10 +25,14 @@
 //  West Texas A&M University
 //  Spring 2016
 //
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
+//
 //
 //  python/system_export.hpp:  Header file for exposing systems to python, including start systems.
 
-
+#pragma once
 
 
 #ifndef BERTINI_PYTHON_SYSTEM_EXPORT_HPP
@@ -58,10 +62,14 @@ namespace bertini{
 		
 		
 		
+		
+		void ExportAllSystems();
+
+		// some useful subfunctions used in ExportAllSystems
 		void ExportSystem();
-		
-		
-		
+		void ExportStartSystems();
+		void ExportStartSystemBase();
+		void ExportTotalDegree();
 		
 		
 		
