@@ -34,11 +34,11 @@ Write a function to produce the cyclic :math:`n` polynomials :cite:`cyclic_n`.
 	        for x in vars:
 	            y.append(x)
 	        
-	    for ii in range(n):
+	    for ii in range(n-1):
 	        f[ii] = numpy.sum( [numpy.prod(y[jj:jj+ii+1]) for jj in range(n)] ) 
 	    
 	    # the last one is minus one
-	    f[-1] = f[-1]-1
+	    f[-1] = numpy.prod(vars)-1
 	    return f
 
 Now we will make a System, and put the cyclic polynomials into it.
