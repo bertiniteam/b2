@@ -9,4 +9,5 @@ Tutorials
 
    evaluation_cyclic
    tracking_nonsingular
+   manual_endgame_usage
 
