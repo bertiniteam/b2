@@ -7,9 +7,9 @@ int main()
 
     int num_evaluations = 1; ///> Number of times to evaluate the Jacobian in each run
     int num_test_runs = 5000; ///> number of times to run the test for average
-    int num_precisions = 10;  ///> number of different precisions to use
+    int num_precisions = 20  ;  ///> number of different precisions to use
     int max_precision = 308; ///> maximum precision used for testing
-    int matrix_N = 100; ///> size of matrix for matrix multiplication
+    int matrix_N = 500; ///> size of matrix for matrix multiplication
     
     std::vector<int> precisions(num_precisions-1);
     for(int P = 0; P < num_precisions-1; ++P)
@@ -38,7 +38,7 @@ int main()
     
     
     //Get base number for double precision
-    std::cout << "\n\n\nTesting system Jacobian evaluation...:\n\n";
+    std::cout << "\n\n\nTesting Jacobian evaluation, matrix multiplication, and LU decomposition in double precision:\n\n";
     double time_delta_d = 0;
     for(int ii = 0; ii < num_test_runs; ++ii)
     {
@@ -51,12 +51,12 @@ int main()
     time_delta_d = time_delta_d/num_test_runs;
 
     
-    std::cout << "Average time taken:\n\n";
-    std::cout << time_delta_d << std::endl;
+    std::cout << "Average time taken:\n";
+    std::cout << time_delta_d << std::endl << std::endl;
 
     
     // Now work with various precisions for mpfr
-    std::cout << "Evaluating Jacobian in multiple precision:\n\n";
+    std::cout << "Testing Jacobian evaluation, matrix multiplication, and LU decomposition in multiple precision:\n\n";
     Vec<double> time_delta_mp(num_precisions);
     for(int PP = 0; PP < num_precisions; ++PP)
     {
@@ -103,7 +103,7 @@ int main()
     Vec<double> x = M.lu().solve(b);
     
 //    std::cout << x(0) << std::endl;
-    std::cout << "y(P) = "<< x(1)<<"x + "<< x(0) << std::endl;
+    std::cout << "y(P) = "<< x(1)<<"*P + "<< x(0) << std::endl;
     
     
 	return 0;
