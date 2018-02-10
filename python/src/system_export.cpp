@@ -108,7 +108,9 @@ namespace bertini{
 			// .def("add_subfunction", &SystemBaseT::AddSubfunction)
 			// .def("add_subfunctions", &SystemBaseT::AddSubfunctions)
 			.def("add_function", sysAddFunc1,"Add a function to the System")
-			.def("add_function", sysAddFunc2,"Add a function to the System")
+			.def("add_function", AddFnAndName(),"Add a function to the System, naming it too")
+			.def("add_function", AddJustFn,"Add a function to the System, giving it the default name")
+			
 			.def("add_functions", &SystemBaseT::AddFunctions,"Add some functions to the System.  Expects a list of functions")
 			// .def("add_constant", &SystemBaseT::AddConstant)
 			// .def("add_constants", &SystemBaseT::AddConstants)

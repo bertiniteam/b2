@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/function_tree/roots/function.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -26,6 +26,10 @@
 //
 // Dani Brake
 // University of Notre Dame
+//
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
 //
 //  Created by Collins, James B. on 4/30/15.
 //
@@ -60,13 +64,13 @@ namespace node{
 	{
 	public:
 		
-		Function(std::string new_name);
+		Function(std::string const& new_name);
 		
 		
 		/**
 		 Constructor defines entry node at construct time.
 		 */
-		Function(const std::shared_ptr<Node> & entry);
+		Function(const std::shared_ptr<Node> & entry, std::string const& name = "unnamed_function");
 		
 		
 		

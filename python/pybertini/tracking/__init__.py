@@ -38,3 +38,7 @@ from _pybertini.tracking import *
 
 __all__ = dir(_pybertini.tracking)
 
+
+AMPTracker.observers = _pybertini.tracking.observers.amp
+DoublePrecisionTracker.observers = _pybertini.tracking.observers.double
+MultiplePrecisionTracker.observers = _pybertini.tracking.observers.multiple

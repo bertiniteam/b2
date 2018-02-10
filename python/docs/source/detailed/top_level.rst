@@ -1,5 +1,5 @@
-pybertini
-============
+🔝 pybertini
+==================
 
 .. include:: common_doc_nav.incl
 

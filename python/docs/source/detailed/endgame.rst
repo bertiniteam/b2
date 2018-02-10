@@ -1,5 +1,5 @@
-pybertini.endgame
-==================
+🎮 pybertini.endgame
+==========================
 
 .. include:: common_doc_nav.incl
 
@@ -13,8 +13,8 @@ Auto-generated docs
 .. automodule:: pybertini.endgame
 
 
-pybertini.endgame.config
-===========================
+🎮 pybertini.endgame.config
+=====================================
 
 .. automodule:: pybertini.endgame.config
 

@@ -25,6 +25,9 @@
 //  West Texas A&M University
 //  Spring 2016
 //
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
 //
 //  python/containers_export.hpp:  Exports all needed containers from Bertini 2.0 to python.
 
@@ -38,47 +41,92 @@
 #include "python_common.hpp"
 
 
+namespace bertini{ namespace python{
 
-
-void ExportContainers()
+template< typename T>
+inline std::ostream& operator<<(std::ostream & out, const std::vector<T> & t)
 {
-	// std::vector of Rational Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Rational > > >("ListRational")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Rational> > , true >())
-	;
+	out << "[";
+	for (int ii = 0; ii < t.size(); ++ii)
+	{
+		out << t[ii];
+		if (ii!=t.size()-1)
+		{
+			out << ", ";
+		}
+	}
+	out << "]";
 
-	// The VariableGroup deque container
-	class_< bertini::VariableGroup >("VariableGroup")
-	.def(vector_indexing_suite< bertini::VariableGroup, true >())
-	;
+	return out;
+}
+
+
+template< typename T>
+inline std::ostream& operator<<(std::ostream & out, const std::deque<T> & t)
+{
+	out << "[";
+	for (int ii = 0; ii < t.size(); ++ii)
+	{
+		out << t[ii];
+		if (ii!=t.size()-1)
+		{
+			out << ", ";
+		}
+	}
+	out << "]";
+
+	return out;
+}
+
+
+/**
+Adds functionality to iterable types
+ */
+template<typename ContT>
+class ListVisitor: public def_visitor<ListVisitor<ContT> >
+{
+	friend class def_visitor_access;
 	
-	// std::vector of ints
-	class_< std::vector<int> >("ListInt")
-	.def(vector_indexing_suite< std::vector<int> , true >())
-	;
-
-	// std::vector of VariableGroups
-	class_< std::vector<bertini::VariableGroup> >("ListVariableGroup")
-	.def(vector_indexing_suite< std::vector<bertini::VariableGroup> , true >())
-	;
-
-	// std::vector of Function Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Function > > >("ListFunction")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Function> > , true >())
-	;
-
-	// std::vector of Jacobian Node ptrs
-	class_< std::vector<std::shared_ptr< bertini::node::Jacobian > > >("ListJacobian")
-	.def(vector_indexing_suite< std::vector<std::shared_ptr< bertini::node::Jacobian> > , true >())
-	;
-
-};
+public:
+	template<class PyClass>
+	void visit(PyClass& cl) const;
+	
+private:
 
 
+	static std::string __str__(const object& obj)
+	{
+		std::ostringstream oss;
+		const ContT& self=extract<ContT>(obj)();
+		std::stringstream ss;
+		ss << "[";
+		for (int ii = 0; ii < self.size(); ++ii)
+		{
+			ss << self[ii];
+			if (ii!=self.size()-1)
+			{
+				ss << ", ";
+			}
+		}
+		ss << "]";
+		return ss.str();
+	};
+
+	static std::string __repr__(const object& obj)
+	{
+		return __str__(obj);
+		// std::ostringstream oss;
+		// const ContT& self=extract<ContT>(obj)();
+		// std::stringstream ss;
+		// ss << self.str(0,std::ios::scientific);
+		// return ss.str();
+	};	
+
+};// ListVisitor class
 
 
 
+void ExportContainers();
 
-
-
+}} // namespaces
 #endif

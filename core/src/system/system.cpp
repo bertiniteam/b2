@@ -606,10 +606,9 @@ namespace bertini
 
 
 
-	void System::AddFunction(Nd const& N)
+	void System::AddFunction(Nd const& N, std::string const& name)
 	{
-		Fn F = MakeFunction(N);
-		functions_.push_back(F);
+		functions_.push_back(MakeFunction(N, name));
 		is_differentiated_ = false;
 	}
 

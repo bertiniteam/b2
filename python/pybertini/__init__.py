@@ -57,7 +57,7 @@ import pybertini.multiprec as multiprec
 import pybertini.tracking as tracking
 import pybertini.endgame as endgame
 import pybertini.parse as parse
-
+import pybertini.list as list
 
 
 

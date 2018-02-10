@@ -1,5 +1,5 @@
-C++-flavored gory-detail documentation
-========================================
+🗡 C++-flavored gory-detail documentation
+===============================================
 
 .. include:: common_doc_nav.incl
 

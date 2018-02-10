@@ -1,17 +1,17 @@
 # This file is part of Bertini 2.
 # 
-# python/pybertini/tracking/config/__init__.py is free software: you can redistribute it and/or modify
+# python/pybertini/tracking/observers/multiple/__init__.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# python/pybertini/tracking/config/__init__.py is distributed in the hope that it will be useful,
+# python/pybertini/tracking/observers/multiple/__init__.py is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with python/pybertini/tracking/config/__init__.py.  If not, see <http://www.gnu.org/licenses/>.
+# along with python/pybertini/tracking/observers/multiple/__init__.py.  If not, see <http://www.gnu.org/licenses/>.
 # 
 #  Copyright(C) 2018 by Bertini2 Development Team
 # 
@@ -30,10 +30,10 @@
 
 
 """
-Tracking-specific configs
+Observers built to watch a fixed-multiple precision tracker
 """
-import _pybertini.tracking.config
-from _pybertini.tracking.config import *
+import _pybertini.tracking.observers.multiple
+from _pybertini.tracking.observers.multiple import *
 
-__all__ = dir(_pybertini.tracking.config)
+__all__ = dir(_pybertini.tracking.observers.multiple)
 

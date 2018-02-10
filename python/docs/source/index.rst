@@ -3,12 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-PyBertini Main
-****************
+PyBertini -- the Python bindings for Bertini
+*************************************************
 
 
-Introductory materials
-=========================
+1️⃣ Introductory materials
+==================================
 
 .. toctree::
    :maxdepth: 2
@@ -16,8 +16,8 @@ Introductory materials
    intro
    tutorials/tutorials
 
-Reference materials
-====================
+🏛 Reference materials
+============================
 
 .. toctree::
    :maxdepth: 3
@@ -26,10 +26,10 @@ Reference materials
    building
    zbib
 
-Indices and tables
-===================
+🔀 Indices and tables
+=============================
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
+* 🔍 :ref:`search`
 
