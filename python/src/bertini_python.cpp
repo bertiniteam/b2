@@ -92,6 +92,7 @@ namespace bertini
 			ExportEndgames();
 			ExportEndgameObservers();
 
+			ExportLogging();
 			
 		}
 	
