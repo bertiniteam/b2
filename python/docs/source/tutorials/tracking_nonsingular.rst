@@ -224,8 +224,11 @@ Now that we've tracked a single path, you might want to loop over all start poin
 
 	tr = pybertini.tracking.AMPTracker(homotopy)
 
-	g = pybertini.tracking.observers.amp.GoryDetailLogger()
-	tr.add_observer(g)
+	#commented out for screen-saving.
+	#g = pybertini.tracking.observers.amp.GoryDetailLogger()
+	#tr.add_observer(g)  
+	# one could also pybertini.logging.init() and set a file name, 
+	# so it gets piped there instead of wherever Boost.Log goes by default.
 
 	tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
 	tr.infinite_truncation_tolerance(1e5)

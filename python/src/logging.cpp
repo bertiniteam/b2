@@ -36,7 +36,7 @@ namespace bertini{ namespace python{
 
 void ExportSeverityLevels()
 {
-	enum_<logging::severity_level>("SeverityLevel")
+	enum_<logging::severity_level>("severity_level")
 		.value("Debug", logging::severity_level::debug)
 		.value("Trace", logging::severity_level::trace)
 		.value("Info", logging::severity_level::info)
@@ -61,8 +61,17 @@ void ExportLogging()
 	ExportSeverityLevels();
 
 
-	def("Init", &bertini::logging::Logging::Init, 
-		(boost::python::arg("pattern") = "pybertini_%N.log", boost::python::arg("format") = "%Message%", boost::python::arg("size") = 10*1024*1024, boost::python::arg("level") = logging::severity_level::info));
+	def("init", &bertini::logging::Logging::Init, 
+		(boost::python::arg("pattern") = "pybertini_%N.log", boost::python::arg("format") = "%Message%", boost::python::arg("rotation_size") = 10*1024*1024, boost::python::arg("level") = logging::severity_level::info), "Initialize logging. See set_level and add_file.");
+
+	def("set_level", &bertini::logging::Logging::SetLevel, (boost::python::arg("level")), "Set the threshold severity level.  Events with lower-than-this level will be ignored.  All messages are written to files.  Writing to strings back into Python is not currently enabled.  If this is a problem, please file an issue on GitHub at github.com/bertiniteam/b2/issues .  YAGNI");
+
+	def("add_file", &bertini::logging::Logging::AddFile, 
+		((boost::python::arg("pattern")), boost::python::arg("format"), boost::python::arg("rotation_size")), 
+		"Add a file-name pattern to be written to, with a given formatting, and a threshold rotation size.  See Boost.Log for more information on these strings.  This part of PyBertini is a direct shunt to Boost.Log.");
+	
+
+
 }
 
 

@@ -96,7 +96,7 @@ namespace logging{
 				severity_level const& new_level = severity_level::error)
 		{
 			AddFile(name_pattern, format, rotation_size);
-			SetFilter(new_level);
+			SetLevel(new_level);
 
 			BOOST_LOG_TRIVIAL(info) << "initialized logging";
 		}
@@ -120,7 +120,7 @@ namespace logging{
 		 trace, debug, info, warning, error, fatal
 		*/
 		static
-		void SetFilter(severity_level const& new_level)
+		void SetLevel(severity_level const& new_level)
 		{
 			blog::core::get()->set_filter
 			(
