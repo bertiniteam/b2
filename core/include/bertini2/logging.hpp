@@ -44,57 +44,96 @@
 #include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
 
-namespace bertini
-{
+namespace bertini{
+namespace logging{
 
-
-	namespace logging = boost::log;
-	namespace src = boost::log::sources;
-	namespace sinks = boost::log::sinks;
-	namespace keywords = boost::log::keywords;
 	
+
+	namespace blog = boost::log;
+
+	using severity_level = blog::trivial::severity_level;
+	namespace src = blog::sources;
+	namespace sinks = blog::sinks;
+	namespace keywords = blog::keywords;
+	
+
 	// the following is adapted from https://stackoverflow.com/questions/11421432/
 	// question answered by user James Adkison, asked by Adi, edited by James McNellis.
-	// the adaptation is the replacement of std::ostream with the blos type.  why the unmodified code still fails
-	// for blos types is a mystery.
-	using blos = boost::log::record_ostream;
+	// the adaptation is the replacement of std::ostream with the blros type.  why the unmodified code still fails
+	// for blros types is a mystery.
+	using blros = blog::record_ostream;
 	template<typename T>
-	blos& operator<<(typename std::enable_if<std::is_enum<T>::value, blos>::type& stream, const T& e)
+	blros& operator<<(typename std::enable_if<std::is_enum<T>::value, blros>::type& stream, const T& e)
 	{
 		return stream << static_cast<typename std::underlying_type<T>::type>(e);
 	}
 
 
-	struct LoggingInit
+	/**
+	\class Logging
+
+	Provided as an interface to the underlying logging library.
+
+	Highlight functions:
+	
+	* Init -- a "call-it-once" kinda function
+	* SetFilter
+	* AddFile
+
+	I have no idea how to remove a file, once you have done AddFile.  If this is something you need, contact Danielle Brake, and ask her to provide such a function.  She practices YAGNI, and she hadn't NI yet.
+
+	There is Init, with all defaults, so you should totally call it to initialize all logging facilities for Bertini2.  Failure to do so produces pure screen output.
+
+	//[%TimeStamp%]: 
+	*/
+	struct Logging
 	{
-		
-		// trivial logger-provided severity levels are  
-		//
-		//  trace, debug, info, warning, error, fatal
-		LoggingInit(logging::trivial::severity_level desired_level = logging::trivial::severity_level::trace, unsigned desired_rotation_size = 10*1024*1024)
+
+		static 
+		void Init(std::string const& name_pattern = "bertini_%N.log", 
+				std::string const& format = "%Message%", 
+				unsigned rotation_size = 10*1024*1024,
+				severity_level const& new_level = severity_level::error)
 		{
-			logging::add_file_log
-			(
-			    keywords::file_name = "bertini_%N.log",
-			    keywords::rotation_size = desired_rotation_size,
-			    keywords::format = "%Message%" //[%TimeStamp%]: 
-			);
+			AddFile(name_pattern, format, rotation_size);
+			SetFilter(new_level);
 
-			logging::core::get()->set_filter
-			(
-			    logging::trivial::severity >= desired_level
-			);
-
-			BOOST_LOG_TRIVIAL(trace) << "initialized logging";
-
+			BOOST_LOG_TRIVIAL(info) << "initialized logging";
 		}
 
-		~LoggingInit(){}
+
+		static
+		void AddFile(std::string const& name_pattern, std::string const& format, unsigned rotation_size)
+		{
+			blog::add_file_log
+			(
+			    keywords::file_name = name_pattern,
+			    keywords::rotation_size = rotation_size,
+			    keywords::format = format 
+			);
+		}
+
+
+		/**
+		 trivial logger-provided severity levels are  
+
+		 trace, debug, info, warning, error, fatal
+		*/
+		static
+		void SetFilter(severity_level const& new_level)
+		{
+			blog::core::get()->set_filter
+			(
+			    blog::trivial::severity >= new_level
+			);
+		}
+		
 	    
 	};
 
-	using severity_level = logging::trivial::severity_level;
+	
 
+} // namespace logging
 } // re: namespace bertini
 
 

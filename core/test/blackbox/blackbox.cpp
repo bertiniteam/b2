@@ -34,16 +34,8 @@
 #define BOOST_TEST_MODULE "Bertini 2 Blackbox Testing"
 #include <boost/test/unit_test.hpp>
 
-
-#include "logging.hpp"
-
-
-using sec_level = boost::log::trivial::severity_level;
-
-using LoggingInit = bertini::LoggingInit;
-
-
-BOOST_GLOBAL_FIXTURE( LoggingInit );
+#define BERTINI_TEST_MODULE "blackbox"
+#include "test/utility/enable_logging.hpp"
 
 
 
