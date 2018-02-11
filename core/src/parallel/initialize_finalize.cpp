@@ -50,6 +50,8 @@ namespace bertini{
 		{
 			std::cout << "\n\n\n" << SplashScreen() << "\n\n\n";
 			std::cout << "\n\n" << DependencyVersions() << "\n\n";
+
+			logging::Logging::Init();
 		}
 
 		void Finalize()

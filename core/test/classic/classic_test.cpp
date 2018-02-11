@@ -43,7 +43,8 @@
 #define BOOST_TEST_MODULE "Bertini 2 Classic Compatibility Testing"
 #include <boost/test/unit_test.hpp>
 
-
+#define BERTINI_TEST_MODULE "classic"
+#include "test/utility/enable_logging.hpp"
 
 
 

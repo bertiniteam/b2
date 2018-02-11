@@ -31,16 +31,9 @@
 #define BOOST_TEST_MODULE "Bertini 2 Tracking Basics Testing"
 #include <boost/test/unit_test.hpp>
 
+#define BERTINI_TEST_MODULE "tracking_basics"
+#include "test/utility/enable_logging.hpp"
 
-#include "logging.hpp"
-
-
-using sec_level = boost::log::trivial::severity_level;
-
-using LoggingInit = bertini::LoggingInit;
-
-
-BOOST_GLOBAL_FIXTURE( LoggingInit );
 
 
 #include "mpfr_extensions.hpp"
