@@ -1,3 +1,0 @@
-/Users/jebcollins/Documents/Research/Bertini/JebsFork_b2/core/example/CMakeFiles/rebuild_cache.dir
-/Users/jebcollins/Documents/Research/Bertini/JebsFork_b2/core/example/CMakeFiles/edit_cache.dir
-/Users/jebcollins/Documents/Research/Bertini/JebsFork_b2/core/example/CMakeFiles/performance_numbers.dir
