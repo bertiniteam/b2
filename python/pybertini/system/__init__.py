@@ -45,8 +45,6 @@ Making a new `System` is the starting point you want, probably:
 
 There are also things available in the `start_system` submodule.
 
-🏞
-
 """
 
 import _pybertini.system
