@@ -54,7 +54,7 @@ The following three papers laid the foundation for endgames and computation of s
 
 * Computing singular solutions to nonlinear analytic systems :cite:`morgan1990computing`
 * Computing singular solutions to polynomial systems :cite:`morgan1992computing` 
-* A power series method for computing singular solutions to nonlinear analytic systems:cite:`morgan1992power`.
+* A power series method for computing singular solutions to nonlinear analytic systems :cite:`morgan1992power`.
 
 Footnotes
 ---------
