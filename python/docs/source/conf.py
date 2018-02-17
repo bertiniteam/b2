@@ -80,7 +80,7 @@ try:
     version = last_commit[:7]
     release = last_commit # full version
 except:
-    last_commit = 'not_from_git'
+    last_commit = 'gitpython not installed'
     version = last_commit # The short X.Y version.
     release = version # The full version, including alpha/beta/rc tags.
 
