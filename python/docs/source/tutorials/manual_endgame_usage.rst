@@ -28,6 +28,10 @@ Each is provided in the three precision modes, double, fixed multiple, and adapt
 Example
 ----------
 
+
+Form a system
+~~~~~~~~~~~~~~~~
+
 The Griewank-Osborne system has singular solutions.  It comes pre-built for us as part of Bertini2's C++ core, and is accessible by peeking into the `precon` module.  \todo expose the precon namespace.  it's a 1-hour task, and danielle 😈 should do it.
 
 Let's build it from scratch, for the practice.
@@ -44,6 +48,7 @@ Let's build it from scratch, for the practice.
 	vg = pybertini.VariableGroup()
 	vg.append(x)
 	vg.append(y)
+	gw.add_variable_group(vg)
 
 	#	griewank_osborn_sys.AddFunction((mpq_rational(29,16))*pow(x,3)-2*x*y);
 	#	griewank_osborn_sys.AddFunction((y - pow(x,2)));
@@ -51,24 +56,45 @@ Let's build it from scratch, for the practice.
 	gw.add_function(y - x**2)
 
 
+Form a start system and homotopy 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Form a system
-------------------
+Next, we make the total degree start system for `gw`, and couple it using the gamma trick \cite{} and a path variable.
 
+::
 
-
-
-
-
-Track to the endgame boundary
-----------------------------------
-
-
-
+	t = pybertini.Variable('t')
+	td = pybertini.system.start_system.TotalDegree(gw)
+	gamma = pybertini.function_tree.symbol.Rational.rand()
+	hom = (1-t)*gw + t*gamma*td
+	hom.add_path_variable(t)
 
 
-Use the endgame
-----------------------------------------
+
+🛤 Track to the endgame boundary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Make a tracker.  I use adaptive precision a lot, so we'll roll with that.  There are also double and fixed-multiple versions.  See the other tutorials or the detailed documentation.
+
+::
+
+	tr = pybertini.tracking.AMPTracker(hom)
+
+	start_time = pybertini.multiprec.Complex("1")
+	eg_boundary = pybertini.multiprec.Complex("0.1")
+
+	midpath_points = [None]*td.num_start_points()
+	for ii in range(td.num_start_points()):
+		midpath_points[ii] = pybertini.multiprec.Vector()
+		code = tr.track_path(result=midpath_points[ii], start_time=start_time, end_time=eg_boundary, start_point=td.start_point_mp(ii))
+		if code != pybertini.tracking.SuccessCode.Success:
+			print('uh oh, tracking a path before the endgame boundary failed, successcode ' + code)
+
+
+
+
+🎮 Use the endgame
+~~~~~~~~~~~~~~~~~~~~
 
 
 To make an endgame, we need to feed it the tracker that is used to run.  There are also config structs to play with, that control the way things are computed.
@@ -82,13 +108,24 @@ Since the endgame hasn't been run yet things are empty and default::
 	assert(eg.cycle_number()==0)
 	assert(eg.final_approximation()==pybertini.VectorXmp())
 
-The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to.
+The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to. ::
 
+	final_points = [None]*td.num_start_points() # still have this many points,
+						# because they are guaranteed not to cross before the endgame
+						# practically speaking, this is not true.  
+						# but it is with infinite precision!
 
+	target_time = pybertini.multiprec.Complex(0)
+	for ii in range(td.num_start_points()):
+		eg_boundary.precision( midpath_points[ii][0].precision())
+		target_time.precision( midpath_points[ii][0].precision())
+		print('before {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
+		eg.run(start_time=eg_boundary, target_time=target_time, start_point=midpath_points[ii])
+		print('after {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
 
 
 Conclusion
---------------------
+============
 
 
 
@@ -97,8 +134,8 @@ Conclusion
 
 
 
-Further reading
-=================
+📚 Further reading
+========================
 
 The following three papers laid the foundation for endgames and computation of singular endpoints:
 
@@ -106,8 +143,8 @@ The following three papers laid the foundation for endgames and computation of s
 * Computing singular solutions to polynomial systems :cite:`morgan1992computing` 
 * A power series method for computing singular solutions to nonlinear analytic systems :cite:`morgan1992power`.
 
-Footnotes
----------
+👣 Footnotes
+-------------
 
 .. [#]  No, we don't actually invert the Jacobian in practice while solving the Davidenko differential equation, but numerical issues exist no matter which method you use to solve the system.
 
