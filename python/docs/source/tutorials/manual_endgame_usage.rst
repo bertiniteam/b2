@@ -28,6 +28,30 @@ Each is provided in the three precision modes, double, fixed multiple, and adapt
 Example
 ----------
 
+The Griewank-Osborne system has singular solutions.  It comes pre-built for us as part of Bertini2's C++ core, and is accessible by peeking into the `precon` module.  \todo expose the precon namespace.  it's a 1-hour task, and danielle 😈 should do it.
+
+Let's build it from scratch, for the practice.
+
+:: 
+
+	import pybertini
+
+	gw = pybertini.System()
+
+	x = pybertini.Variable("x")
+	y = pybertini.Variable("y")
+
+	vg = pybertini.VariableGroup()
+	vg.append(x)
+	vg.append(y)
+
+	#	griewank_osborn_sys.AddFunction((mpq_rational(29,16))*pow(x,3)-2*x*y);
+	#	griewank_osborn_sys.AddFunction((y - pow(x,2)));
+	gw.add_function(pybertini.multiprec.Rational(29,16)*x**3 - 2*x*y)
+	gw.add_function(y - x**2)
+
+
+
 Form a system
 ------------------
 
