@@ -29,6 +29,8 @@
 //  python/endgame_export.cpp:  source file for exposing endgames to python.
 
 #include "endgame_export.hpp"
+#include "generic_observable.hpp"
+
 
 namespace bertini{
 	namespace python{
@@ -61,6 +63,7 @@ namespace bertini{
 			.def("run", RunCustomTime<BCT>(),
 				 (boost::python::arg("start_time"), "start_point", "target_time"),
 				 "Run the endgame, from start point and start time, to your choice of target time t.  Expects complex numeric type matching that of the tracker being used.")
+			.def(ObservableVisitor<EndgameT>());
 			;
 		}
 

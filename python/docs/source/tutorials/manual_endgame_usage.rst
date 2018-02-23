@@ -103,6 +103,11 @@ To make an endgame, we need to feed it the tracker that is used to run.  There a
 
 	eg = pybertini.endgame.AMPCauchyEG(tr)
 
+	# make an observer to be able to see what's going on inside
+	ob = pybertini.endgame.observers.amp_cauchy.GoryDetailLogger()
+
+	eg.add_observer(ob)
+
 Since the endgame hasn't been run yet things are empty and default::
 
 	assert(eg.cycle_number()==0)
@@ -115,12 +120,14 @@ The endgames are used by invoking ``run``, feeding it the point we are tracking 
 						# practically speaking, this is not true.  
 						# but it is with infinite precision!
 
+
 	target_time = pybertini.multiprec.Complex(0)
 	for ii in range(td.num_start_points()):
 		eg_boundary.precision( midpath_points[ii][0].precision())
 		target_time.precision( midpath_points[ii][0].precision())
 		print('before {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
 		eg.run(start_time=eg_boundary, target_time=target_time, start_point=midpath_points[ii])
+		final_points[ii] = eg.final_approximation()
 		print('after {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
 
 
