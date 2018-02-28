@@ -132,6 +132,9 @@ The endgames are used by invoking ``run``, feeding it the point we are tracking 
 		# final_points.append(copy.deep_copy(eg.final_approximation()))
 		print('after {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
 
+.. todo::
+
+	the endgame returns its `final_approximation` by reference, so capturing its value into a list makes many references to this internal variable, not copies of the point.  so, one should take deepcopy's of the vector, but they are not currently pickleable due to the complex multiprecision class.  an issue has been filed (#148) and this issue will be solved shortly (danielle, 20180227)
 
 Conclusion
 ============
