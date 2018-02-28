@@ -49,6 +49,7 @@
 #include "tracker_observers.hpp"
 #include "endgame_observers.hpp"
 #include "detail.hpp"
+#include "logging.hpp"
 
 #endif
 

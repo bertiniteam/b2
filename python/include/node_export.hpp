@@ -114,6 +114,12 @@ namespace bertini{
 				return x+y;
 			}
 
+
+			Nodeptr(*addNodeRat)(Nodeptr, const bertini::mpq_rational&) = &(operator+);
+			static Nodeptr raddNodeRat(Nodeptr  y, const bertini::mpq_rational& x)
+			{ return x+y; }
+
+
 			static Nodeptr raddNodeInt(Nodeptr  y, const int & x)
 			{
 				return x+y;
@@ -153,6 +159,10 @@ namespace bertini{
 				return x-y;
 			}
 
+			Nodeptr(*subNodeRat)(Nodeptr, const bertini::mpq_rational&) = &(operator-);
+			static Nodeptr rsubNodeRat(Nodeptr  y, const bertini::mpq_rational& x)
+			{ return x-y; }
+
 			static Nodeptr rsubNodeInt(Nodeptr  y, const int & x)
 			{
 				return x-y;
@@ -167,6 +177,7 @@ namespace bertini{
 			// Multiplication operators
 			Nodeptr(*multNodeNode)(Nodeptr, const Nodeptr&) = &(operator*);
 			Nodeptr(*multNodeMpfr)(Nodeptr, mpfr) = &(operator*);
+			Nodeptr(*multNodeRat)(Nodeptr, const mpq_rational&) = &(operator*);
 			Nodeptr(*multNodeInt)(Nodeptr, int) = &(operator*);
 			static Nodeptr imultNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
@@ -181,6 +192,11 @@ namespace bertini{
 				return x*y;
 			}
 
+			static Nodeptr rmultNodeRat(Nodeptr  y, const mpq_rational & x)
+			{
+				return x*y;
+			}
+
 			static Nodeptr rmultNodeInt(Nodeptr  y, const int & x)
 			{
 				return x*y;
@@ -191,6 +207,7 @@ namespace bertini{
 
 			// Division operators
 			Nodeptr(*divNodeNode)(Nodeptr, const Nodeptr&) = &(operator/);
+			Nodeptr(*divNodeRat)(Nodeptr, const mpq_rational&) = &(operator/);
 			Nodeptr(*divNodeMpfr)(Nodeptr, mpfr) = &(operator/);
 			Nodeptr(*divNodeInt)(Nodeptr, int) = &(operator/);
 			static Nodeptr idivNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
@@ -206,6 +223,11 @@ namespace bertini{
 				return x/y;
 			}
 
+			static Nodeptr rdivNodeRat(Nodeptr  y, const mpq_rational & x)
+			{
+				return x/y;
+			}
+
 			static Nodeptr rdivNodeInt(Nodeptr  y, const int & x)
 			{
 				return x/y;
@@ -216,6 +238,7 @@ namespace bertini{
 			// Power operators
 			Nodeptr(*powNodeNode)(const Nodeptr &, const Nodeptr&) = &pow;
 			Nodeptr(*powNodeMpfr)(const Nodeptr&, mpfr) = &pow;
+			Nodeptr(*powNodeRat)(const Nodeptr&, const mpq_rational&) = &pow;
 			Nodeptr(*powNodeInt)( Nodeptr const&, int) = &pow;
 
 			// Transcendental operators

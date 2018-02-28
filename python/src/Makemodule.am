@@ -19,11 +19,13 @@ bertini_python_header_files = \
 				$(includedir)/tracker_observers.hpp \
 				$(includedir)/endgame_observers.hpp \
 				$(includedir)/detail.hpp
+				$(includedir)/logging.hpp
 
 
-
+# as a reminder, these are compiled from top down, yo.
 bertini_python_source_files = \
 				src/minieigen_export.cpp \
+				src/logging.cpp \
 				src/detail.cpp \
 				src/containers.cpp \
 				src/tracker_export.cpp \

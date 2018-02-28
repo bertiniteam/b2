@@ -31,6 +31,10 @@
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
 #define BOOST_TEST_MODULE "Bertini 2 Settings Testing"
 
+#define BERTINI_TEST_MODULE "pools"
+
+#include <boost/test/unit_test.hpp>
+#include "test/utility/enable_logging.hpp"
 
 #include <iostream>
 
@@ -44,7 +48,7 @@
 
 
 #include <boost/spirit/include/qi.hpp>
-#include <boost/test/unit_test.hpp>
+
 
 using mpfr = bertini::mpfr;
 using mpfr_float = bertini::mpfr_float;

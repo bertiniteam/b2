@@ -37,12 +37,8 @@
 #include "bertini2/logging.hpp"
 
 
-using sec_level = boost::log::trivial::severity_level;
-
-using LoggingInit = bertini::LoggingInit;
-
-
-BOOST_GLOBAL_FIXTURE( LoggingInit );
+#define BERTINI_TEST_MODULE "nag_datatypes"
+#include "test/utility/enable_logging.hpp"
 
 
 

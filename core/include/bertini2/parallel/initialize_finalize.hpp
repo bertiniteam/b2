@@ -31,6 +31,7 @@
 
 #include <iostream>
 
+#include "bertini2/logging.hpp"
 #include "bertini2/io/splash.hpp"
 
 namespace bertini{

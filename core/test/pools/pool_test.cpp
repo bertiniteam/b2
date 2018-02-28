@@ -34,19 +34,11 @@
 #define BOOST_TEST_MODULE "Bertini 2 Object Pool Testing"
 #include <boost/test/unit_test.hpp>
 
-
-#include "logging.hpp"
-
-
-using sec_level = boost::log::trivial::severity_level;
-
-using LoggingInit = bertini::LoggingInit;
+#define BERTINI_TEST_MODULE "pools"
+#include "test/utility/enable_logging.hpp"
 
 
 #include "bertini2/pool/system.hpp"
-
-
-BOOST_GLOBAL_FIXTURE( LoggingInit );
 
 BOOST_AUTO_TEST_SUITE(system_pool)
 

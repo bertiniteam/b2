@@ -30,6 +30,7 @@ This is a stub page, which merely acts to point you to more specific places in t
    endgame
    parse
    containers
+   logging
    
 
 🎱 Things you probably don't need
@@ -39,7 +40,7 @@ This is a stub page, which merely acts to point you to more specific places in t
   :maxdepth: 1
 
   cpp_side
-
+  🕸 PyBertini doc archives <https://doc.bertini2.org/pybertini_archives>
 
 
 

@@ -1,6 +1,10 @@
 🛤 Tracking to nonsingular endpoints 
 **********************************************
 
+.. testsetup:: *
+
+   import pybertini
+
 PyBertini works by setting up systems, setting up algorithms to use those systems, and doing something with the output.
 
 Forming a system
@@ -193,7 +197,8 @@ A complete tracking of paths
 
 Now that we've tracked a single path, you might want to loop over all start points.  Awesome!  The next blob takes all the above, and puts it into a single blob.  Enjoy!
 
-::
+
+.. testcode:: tracking_nonsingular_main
 	
 	import pybertini
 
@@ -219,8 +224,11 @@ Now that we've tracked a single path, you might want to loop over all start poin
 
 	tr = pybertini.tracking.AMPTracker(homotopy)
 
-	g = pybertini.tracking.observers.amp.GoryDetailLogger()
-	tr.add_observer(g)
+	#commented out for screen-saving.
+	#g = pybertini.tracking.observers.amp.GoryDetailLogger()
+	#tr.add_observer(g)  
+	# one could also pybertini.logging.init() and set a file name, 
+	# so it gets piped there instead of wherever Boost.Log goes by default.
 
 	tr.tracking_tolerance(1e-5) # track the path to 5 digits or so
 	tr.infinite_truncation_tolerance(1e5)
@@ -232,12 +240,23 @@ Now that we've tracked a single path, you might want to loop over all start poin
 	tr.set_stepping(stepping)
 
 	results = [] # make an empty list into which to put the results
-
+	expected_code = pybertini.tracking.SuccessCode.Success
+	codes = []
 	for ii in range(td.num_start_points()):
 		results.append(pybertini.multiprec.Vector())
-		tr.track_path(result=results[-1], start_time=pybertini.multiprec.Complex(1), end_time=pybertini.multiprec.Complex(0), start_point=td.start_point_mp(ii))
+		codes.append(tr.track_path(result=results[-1], start_time=pybertini.multiprec.Complex(1), end_time=pybertini.multiprec.Complex(0), start_point=td.start_point_mp(ii)))
 
 	tr.remove_observer(g)
+
+	print(codes == [expected_code]*2)
+
+.. testoutput:: tracking_nonsingular_main
+
+	True
+
+
+
+
 
 Footnotes
 ---------

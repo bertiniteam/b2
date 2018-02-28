@@ -33,18 +33,15 @@
 
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
 #define BOOST_TEST_MODULE "Bertini 2 Endgames Testing"
+
+
+#define BERTINI_TEST_MODULE "endgames"
 #include <boost/test/unit_test.hpp>
-#include "bertini2/logging.hpp"
+
+#include "test/utility/enable_logging.hpp"
 
 
 #include <boost/multiprecision/mpfr.hpp>
-
-using sec_level = boost::log::trivial::severity_level;
-
-using LoggingInit = bertini::LoggingInit;
-
-
-BOOST_GLOBAL_FIXTURE( LoggingInit );
 
 double threshold_clearance_d(1e-15);
 boost::multiprecision::mpfr_float threshold_clearance_mp("1e-28");

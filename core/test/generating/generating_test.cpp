@@ -33,15 +33,9 @@
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
 #define BOOST_TEST_MODULE "Bertini 2 Generator Testing"
 #include <boost/test/unit_test.hpp>
-#include "bertini2/logging.hpp"
 
-
-using sec_level = boost::log::trivial::severity_level;
-
-using LoggingInit = bertini::LoggingInit;
-
-
-BOOST_GLOBAL_FIXTURE( LoggingInit );
+#define BERTINI_TEST_MODULE "generating"
+#include "test/utility/enable_logging.hpp"
 
 
 
