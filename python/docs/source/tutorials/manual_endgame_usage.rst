@@ -32,7 +32,11 @@ Example
 Form a system
 ~~~~~~~~~~~~~~~~
 
-The Griewank-Osborne system has singular solutions.  It comes pre-built for us as part of Bertini2's C++ core, and is accessible by peeking into the `precon` module.  \todo expose the precon namespace.  it's a 1-hour task, and danielle 😈 should do it.
+The Griewank-Osborne system has one multiplicity-three singular solution at the origin :cite:`griewank1983analysis`.  It comes pre-built for us as part of Bertini2's C++ core, and is accessible by peeking into the `precon` module.  
+
+.. todo::
+
+	expose the precon namespace.  it's a 1-hour task, and danielle 😈 should do it.
 
 Let's build it from scratch, for the practice.
 
@@ -50,8 +54,6 @@ Let's build it from scratch, for the practice.
 	vg.append(y)
 	gw.add_variable_group(vg)
 
-	#	griewank_osborn_sys.AddFunction((mpq_rational(29,16))*pow(x,3)-2*x*y);
-	#	griewank_osborn_sys.AddFunction((y - pow(x,2)));
 	gw.add_function(pybertini.multiprec.Rational(29,16)*x**3 - 2*x*y)
 	gw.add_function(y - x**2)
 
@@ -59,7 +61,7 @@ Let's build it from scratch, for the practice.
 Form a start system and homotopy 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Next, we make the total degree start system for `gw`, and couple it using the gamma trick \cite{} and a path variable.
+Next, we make the total degree start system for `gw`, and couple it using the gamma trick :cite:`morgan1987homotopy` and a path variable.
 
 ::
 
@@ -115,19 +117,19 @@ Since the endgame hasn't been run yet things are empty and default::
 
 The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to. ::
 
-	final_points = [None]*td.num_start_points() # still have this many points,
-						# because they are guaranteed not to cross before the endgame
-						# practically speaking, this is not true.  
-						# but it is with infinite precision!
+	final_points = []
 
 
 	target_time = pybertini.multiprec.Complex(0)
+	codes = []
 	for ii in range(td.num_start_points()):
 		eg_boundary.precision( midpath_points[ii][0].precision())
 		target_time.precision( midpath_points[ii][0].precision())
 		print('before {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
-		eg.run(start_time=eg_boundary, target_time=target_time, start_point=midpath_points[ii])
-		final_points[ii] = eg.final_approximation()
+		codes.append(eg.run(start_time=eg_boundary, target_time=target_time, start_point=midpath_points[ii]))
+		print('path {} -- code {}'.format(ii,codes[-1]))
+		print(eg.final_approximation())
+		# final_points.append(copy.deep_copy(eg.final_approximation()))
 		print('after {} {} {}'.format(eg_boundary.precision(), target_time.precision(), midpath_points[ii][0].precision()))
 
 
@@ -135,7 +137,7 @@ Conclusion
 ============
 
 
-
+Using a singular endgame, we can compute singular endpoints of homotopy paths.  What an age to live in!  🌌
 
 
 
@@ -144,7 +146,7 @@ Conclusion
 📚 Further reading
 ========================
 
-The following three papers laid the foundation for endgames and computation of singular endpoints:
+The following three papers (cited above) laid the foundation for endgames and computation of singular endpoints:
 
 * Computing singular solutions to nonlinear analytic systems :cite:`morgan1990computing`
 * Computing singular solutions to polynomial systems :cite:`morgan1992computing` 
