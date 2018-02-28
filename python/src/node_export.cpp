@@ -116,6 +116,8 @@ namespace bertini{
 			.def("__add__",addNodeNode)
 			.def("__add__",addNodeMpfr)
 			.def("__radd__",&raddNodeMpfr)
+			.def("__add__",addNodeRat)
+			.def("__radd__",&raddNodeRat)
 			.def("__add__",addNodeInt)
 			.def("__radd__",raddNodeInt)
 			.def("__iadd__",&NodeVisitor::iaddNodeNode)
@@ -124,6 +126,8 @@ namespace bertini{
 			.def("__sub__",subNodeNode)
 			.def("__sub__",subNodeMpfr)
 			.def("__rsub__",rsubNodeMpfr)
+			.def("__sub__",subNodeRat)
+			.def("__rsub__",rsubNodeRat)
 			.def("__sub__",subNodeInt)
 			.def("__rsub__",rsubNodeInt)
 			.def("__isub__",&NodeVisitor::isubNodeNode)
@@ -132,6 +136,8 @@ namespace bertini{
 			.def("__mul__",multNodeNode)
 			.def("__mul__",multNodeMpfr)
 			.def("__rmul__",rmultNodeMpfr)
+			.def("__mul__",multNodeRat)
+			.def("__rmul__",rmultNodeRat)
 			.def("__mul__",multNodeInt)
 			.def("__rmul__",rmultNodeInt)
 			.def("__imul__",&NodeVisitor::imultNodeNode)
@@ -151,6 +157,8 @@ namespace bertini{
 			.def("__rdiv__",rdivNodeMpfr)
 			.def("__rtruediv__",rdivNodeMpfr)
 
+			.def("__rdiv__",rdivNodeRat)
+			.def("__rtruediv__",rdivNodeRat)
 
 			.def("__div__",divNodeInt)
 			.def("__truediv__",divNodeInt)
@@ -168,6 +176,7 @@ namespace bertini{
 			
 			.def("__pow__",powNodeNode)
 			.def("__pow__",powNodeMpfr)
+			.def("__pow__",powNodeRat)
 			.def("__pow__",powNodeInt)
 			;
 			
