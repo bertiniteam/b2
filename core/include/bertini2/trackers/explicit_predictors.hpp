@@ -62,14 +62,14 @@ namespace bertini{
 			/**
 			 \brief Get the Bertini2 default predictor.
 			 
-			 Currently set to Euler, though this will change in future versions.
+			 Currently set to RKF45.
 
 			 \return The default predictor method to use.
 			 */
 			inline
 			Predictor DefaultPredictor()
 			{
-				return Predictor::Euler;
+				return Predictor::RKF45;
 			}
 			
 			
