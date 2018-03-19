@@ -48,6 +48,17 @@ namespace bertini{
 		namespace predict{
 			
 			
+		// Constant,
+		// Euler,
+		// Heun,
+		// RK4,
+		// HeunEuler,
+		// RKNorsett34,
+		// RKF45,
+		// RKCashKarp45,
+		// RKDormandPrince56,
+		// RKVerner67
+
 			/**
 			 \brief Get the Bertini2 default predictor.
 			 
@@ -79,8 +90,12 @@ namespace bertini{
 						return 0;
 					case (Predictor::Euler):
 						return 1;
+					case (Predictor::Heun):
+						return 2;
 					case (Predictor::HeunEuler):
-						return 1;
+						return 2;
+					case (Predictor::RKNorsett34):
+						return 3;
 					case (Predictor::RK4):
 						return 4;
 					case (Predictor::RKF45):
@@ -112,7 +127,11 @@ namespace bertini{
 						return false;
 					case (Predictor::Euler):
 						return false;
+					case (Predictor::Heun):
+						return false;
 					case (Predictor::HeunEuler):
+						return true;
+					case (Predictor::RKNorsett34):
 						return true;
 					case (Predictor::RK4):
 						return false;

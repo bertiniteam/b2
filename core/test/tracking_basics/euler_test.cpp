@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 	unsigned num_steps_since_last_condition_number_computation = 1;
 	unsigned frequency_of_CN_estimation = 1;
 	
-	std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+	std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 	
 	auto success_code = predictor->Predict(euler_prediction_result,
 										   size_proportion,
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(euler_prediction_result,
 											   size_proportion,
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(euler_prediction_result,
 											   sys,
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(euler_prediction_result,
 											   sys,
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		Vec<dbl> prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(prediction_result,
 											   sys,
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		Vec<mpfr> prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(prediction_result,
 											   sys,
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		Vec<dbl> prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(prediction_result,
 											   size_proportion,
@@ -562,7 +562,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		Vec<mpfr> prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(prediction_result,
 											   size_proportion,
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		Vec<dbl> prediction_result;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(prediction_result,
 											   size_proportion,
@@ -685,7 +685,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		Vec<mpfr> prediction_result;
 		
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(prediction_result,
 											   size_proportion,
@@ -751,7 +751,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		unsigned num_steps_since_last_condition_number_computation = 1;
 		unsigned frequency_of_CN_estimation = 1;
 		
-		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(sys);
+		std::shared_ptr<ExplicitRKPredictor> predictor = std::make_shared< ExplicitRKPredictor >(bertini::tracking::Predictor::Euler,sys);
 		
 		auto success_code = predictor->Predict(euler_prediction_result,
 											   size_proportion,
