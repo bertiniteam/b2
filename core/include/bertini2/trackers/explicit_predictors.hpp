@@ -167,10 +167,10 @@ namespace bertini{
 				};
 
 				template<>
-				struct LUSelector<mpfr>
+				struct LUSelector<mpfr_complex>
 				{
 					template<typename N>
-					static Eigen::PartialPivLU<Mat<mpfr>>& Run(N & n)
+					static Eigen::PartialPivLU<Mat<mpfr_complex>>& Run(N & n)
 					{
 						return n.GetLU_mp();
 					}
@@ -202,7 +202,7 @@ namespace bertini{
 			class ExplicitRKPredictor
 			{
 				friend LUSelector<dbl>;
-				friend LUSelector<mpfr>;
+				friend LUSelector<mpfr_complex>;
 			public:
 				
 				/**
@@ -361,11 +361,11 @@ namespace bertini{
 					numVariables_ = S.NumVariables();
 					// you cannot set K_ here, because s_ may not have been set
 					std::get< Mat<dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr_complex> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
 					std::get< Mat<dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr_complex> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
 					std::get< Vec<dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<mpfr_complex> >(dh_dt_temp_).resize(numTotalFunctions_);
 
 					ResizeK();
 				}
@@ -374,7 +374,7 @@ namespace bertini{
 				void ResizeK()
 				{
 					std::get< Mat<dbl> >(K_).resize(numTotalFunctions_, s_);
-					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<mpfr_complex> >(K_).resize(numTotalFunctions_, s_);
 				}
 				
 				
@@ -394,11 +394,11 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					Precision(std::get< Mat<mpfr> >(K_),new_precision);
+					Precision(std::get< Mat<mpfr_complex> >(K_),new_precision);
 
-					Precision(std::get< Vec<mpfr> >(dh_dt_temp_),new_precision);
-					Precision(std::get< Mat<mpfr> >(dh_dx_0_),new_precision);
-					Precision(std::get< Mat<mpfr> >(dh_dx_temp_),new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(dh_dt_temp_),new_precision);
+					Precision(std::get< Mat<mpfr_complex> >(dh_dx_0_),new_precision);
+					Precision(std::get< Mat<mpfr_complex> >(dh_dx_temp_),new_precision);
 
 					Precision(std::get< Mat<mpfr_float> >(a_),new_precision);
 					Precision(std::get< Vec<mpfr_float> >(b_),new_precision);
@@ -416,9 +416,9 @@ namespace bertini{
 				{
 					assert(current_precision_==DefaultPrecision());
 
-					Vec<mpfr>& dhdttemp = std::get< Vec<mpfr> >(dh_dt_temp_);
-					Mat<mpfr>& dhdx0 = std::get< Mat<mpfr> >(dh_dx_0_); 
-					Mat<mpfr>& dhdxtemp = std::get< Mat<mpfr> >(dh_dx_temp_); 
+					Vec<mpfr_complex>& dhdttemp = std::get< Vec<mpfr_complex> >(dh_dt_temp_);
+					Mat<mpfr_complex>& dhdx0 = std::get< Mat<mpfr_complex> >(dh_dx_0_); 
+					Mat<mpfr_complex>& dhdxtemp = std::get< Mat<mpfr_complex> >(dh_dx_temp_); 
 
 					Mat<mpfr_float>& a = std::get< Mat<mpfr_float> >(a_); 
 					Vec<mpfr_float>& b = std::get< Vec<mpfr_float> >(b_); 
@@ -667,7 +667,7 @@ namespace bertini{
 					return LU_d_;
 				}
 
-				Eigen::PartialPivLU<Mat<mpfr>>& GetLU_mp()
+				Eigen::PartialPivLU<Mat<mpfr_complex>>& GetLU_mp()
 				{
 					assert(current_precision_==DefaultPrecision());
 					return LU_mp_[current_precision_];
@@ -742,7 +742,7 @@ namespace bertini{
 					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
 					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
 
-					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr!
+					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr_complex!
 					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(numVariables_);
 					Vec<ComplexType> temp_soln = LUref.solve(randy);
 					
@@ -850,7 +850,7 @@ namespace bertini{
 				{
 					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
-					if (std::is_same<typename Derived::Scalar, mpfr>::value)
+					if (std::is_same<typename Derived::Scalar, mpfr_complex>::value)
 						PrecisionSanityCheck();
 
 					if(stage == 0)
@@ -1031,16 +1031,16 @@ namespace bertini{
 				
 				unsigned numTotalFunctions_; // Number of total functions for the current system
 				unsigned numVariables_;  // Number of variables for the current system
-				mutable std::tuple< Mat<dbl>, Mat<mpfr> > K_;  // All the stage variables.  Each column represents a different stage.
+				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > K_;  // All the stage variables.  Each column represents a different stage.
 				Predictor predictor_;  // Method for prediction
 				unsigned p_;  //Order of the prediction method
-				mutable std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
-				mutable std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_temp_;  // Temporary jacobian for all other stages
-				mutable std::tuple< Vec<dbl>, Vec<mpfr> > dh_dt_temp_;  // Temporary time derivative used for all stages
-				// std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_0_;  // LU from the intial stage used for AMP testing
+				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
+				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > dh_dx_temp_;  // Temporary jacobian for all other stages
+				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > dh_dt_temp_;  // Temporary time derivative used for all stages
+				// std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_0_;  // LU from the intial stage used for AMP testing
 
 				mutable Eigen::PartialPivLU<Mat<dbl>> LU_d_;
-				mutable std::map<unsigned,Eigen::PartialPivLU<Mat<mpfr>>> LU_mp_;
+				mutable std::map<unsigned,Eigen::PartialPivLU<Mat<mpfr_complex>>> LU_mp_;
 				
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods )

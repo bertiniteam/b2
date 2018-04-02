@@ -46,14 +46,14 @@ void Pi::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& dif
 }
 
 
-mpfr Pi::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Pi::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return mpfr(mpfr_float(acos(mpfr_float(-1))));
+	return mpfr_complex(mpfr_float(acos(mpfr_float(-1))));
 }
 
-void Pi::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Pi::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value = mpfr(mpfr_float(acos(mpfr_float(-1))));
+	evaluation_value = mpfr_complex(mpfr_float(acos(mpfr_float(-1))));
 }
 
 
@@ -71,14 +71,14 @@ void E::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff
 }
 
 
-mpfr E::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const 
+mpfr_complex E::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const 
 {
-	return mpfr(mpfr_float(exp(mpfr_float(1))));
+	return mpfr_complex(mpfr_float(exp(mpfr_float(1))));
 }
 
-void E::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const 
+void E::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const 
 {
-	evaluation_value = mpfr(mpfr_float(exp(mpfr_float(1))));
+	evaluation_value = mpfr_complex(mpfr_float(exp(mpfr_float(1))));
 }
 			}// special number namespace
 std::shared_ptr<Node> Pi()

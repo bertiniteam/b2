@@ -64,7 +64,7 @@ namespace bertini
 			
 		private:
 			virtual Vec<dbl> GenerateStartPoint(dbl,unsigned long long index) const = 0;
-			virtual Vec<mpfr> GenerateStartPoint(mpfr,unsigned long long index) const = 0;
+			virtual Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const = 0;
 
 			friend class boost::serialization::access;
 

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with differential.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -125,9 +125,9 @@ namespace node{
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 

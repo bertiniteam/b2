@@ -38,9 +38,9 @@ namespace bertini {
 			std::get<SampCont<dbl>>(solns_) = solns;
 		}
 
-		User::User(System const& s, SampCont<mpfr> const& solns) : user_system_(s), solns_in_dbl_(false)
+		User::User(System const& s, SampCont<mpfr_complex> const& solns) : user_system_(s), solns_in_dbl_(false)
 		{
-			std::get<SampCont<mpfr>>(solns_) = solns;
+			std::get<SampCont<mpfr_complex>>(solns_) = solns;
 		}
 				
 		
@@ -49,7 +49,7 @@ namespace bertini {
 			if (solns_in_dbl_)
 				return std::get<SampCont<dbl>>(solns_).size();
 			else
-				return std::get<SampCont<mpfr>>(solns_).size();
+				return std::get<SampCont<mpfr_complex>>(solns_).size();
 		}
 
 
@@ -60,7 +60,7 @@ namespace bertini {
 				return std::get<SampCont<dbl>>(solns_)[index];
 			else
 			{
-				const auto& r = std::get<SampCont<mpfr>>(solns_)[index];
+				const auto& r = std::get<SampCont<mpfr_complex>>(solns_)[index];
 				Vec<dbl> pt(r.size());
 				for (unsigned ii=0; ii<r.size(); ++ii)
 					pt(ii) = dbl(r(ii));
@@ -70,20 +70,20 @@ namespace bertini {
 		}
 
 
-		Vec<mpfr> User::GenerateStartPoint(mpfr,unsigned long long index) const
+		Vec<mpfr_complex> User::GenerateStartPoint(mpfr_complex,unsigned long long index) const
 		{
 			if (solns_in_dbl_)
 			{
 				const auto& r = std::get<SampCont<dbl>>(solns_)[index];
-				Vec<mpfr> pt(r.size());
+				Vec<mpfr_complex> pt(r.size());
 				for (unsigned ii=0; ii<r.size(); ++ii)
-					pt(ii) = static_cast<mpfr>(r(ii));
+					pt(ii) = static_cast<mpfr_complex>(r(ii));
 
 				return pt;
 			}
 			else
 			{
-				return std::get<SampCont<mpfr>>(solns_)[index];
+				return std::get<SampCont<mpfr_complex>>(solns_)[index];
 			}
 		}
 

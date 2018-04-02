@@ -102,7 +102,7 @@ bool Differential::IsHomogeneous(VariableGroup const& vars) const
  */
 void Differential::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 }
 
@@ -132,27 +132,27 @@ void Differential::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> 
 }
 
 
-mpfr Differential::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Differential::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
 	if(differential_variable_ == diff_variable)
 	{
-		return mpfr(1);
+		return mpfr_complex(1);
 	}
 	else
 	{
-		return mpfr(0);
+		return mpfr_complex(0);
 	}
 }
 
-void Differential::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Differential::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	if(differential_variable_ == diff_variable)
 	{
-		evaluation_value.SetOne();
+		evaluation_value = 1;
 	}
 	else
 	{
-		evaluation_value.SetZero();
+		evaluation_value = 0;
 	}
 }
 	} // re: namespace node

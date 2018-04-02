@@ -67,8 +67,8 @@ namespace bertini {
 
 	Patch p(s);
 
-	Vec<mpfr> v(5);
-	v << mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1),  mpfr(1);
+	Vec<mpfr_complex> v(5);
+	v << mpfr_complex(1),  mpfr_complex(1),  mpfr_complex(1),  mpfr_complex(1),  mpfr_complex(1);
 
 	auto v_rescaled = p.RescalePoint(v);
 
@@ -105,7 +105,7 @@ namespace bertini {
 			precision_ = DefaultPrecision();
 
 			// a little shorthand unpacking the tuple
-			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(this->coefficients_working_);
+			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(this->coefficients_working_);
 			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(this->coefficients_working_);
 
 			coefficients_highest_precision_.resize(other.NumVariableGroups());
@@ -127,7 +127,7 @@ namespace bertini {
 					coefficients_highest_precision_[ii](jj) = other.coefficients_highest_precision_[ii](jj);
 
 					coefficients_dbl[ii](jj) = dbl(coefficients_highest_precision_[ii](jj));
-					coefficients_mpfr[ii](jj) = mpfr(coefficients_highest_precision_[ii](jj));
+					coefficients_mpfr[ii](jj) = mpfr_complex(coefficients_highest_precision_[ii](jj));
 
 					assert(coefficients_highest_precision_[ii](jj) == other.coefficients_highest_precision_[ii](jj));
 				}
@@ -147,9 +147,9 @@ namespace bertini {
 		Patch(std::vector<unsigned> const& sizes) : variable_group_sizes_(sizes), coefficients_highest_precision_(sizes.size()), precision_(DefaultPrecision())
 		{
 			using bertini::Precision;
-			using bertini::RandomComplex;
+			using bertini::multiprecision::RandomComplex;
 
-			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(coefficients_working_);
+			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(coefficients_working_);
 			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(coefficients_working_);
 
 			coefficients_highest_precision_.resize(sizes.size());
@@ -189,7 +189,7 @@ namespace bertini {
 		*/
 		static Patch RandomReal(std::vector<unsigned> const& sizes)
 		{	
-			using bertini::RandomReal;
+			using bertini::multiprecision::RandomReal;
 			using bertini::Precision;
 
 			Patch p;
@@ -198,7 +198,7 @@ namespace bertini {
 
 			
 
-			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(p.coefficients_working_);
+			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(p.coefficients_working_);
 			std::vector<Vec<dbl> >& coefficients_dbl = std::get<std::vector<Vec<dbl> > >(p.coefficients_working_);
 
 			p.coefficients_highest_precision_.resize(sizes.size());
@@ -244,7 +244,7 @@ namespace bertini {
 		void Precision(unsigned new_precision) const
 		{
 			using bertini::Precision;
-			std::vector<Vec<mpfr> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr> > >(coefficients_working_);
+			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(coefficients_working_);
 
 			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
 			{
@@ -491,9 +491,9 @@ namespace bertini {
 		//
 		//////////////////
 
-		std::vector< Vec< mpfr > > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
+		std::vector< Vec< mpfr_complex > > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
 
-		mutable std::tuple< std::vector< Vec< mpfr > >, std::vector< Vec< dbl > > > coefficients_working_; ///< the current working coefficients of the patch.  changing precision affects these, particularly the mpfr coefficients, which are down-sampled from the highest_precision coefficients.  the doubles are only down-sampled at time of creation or modification.
+		mutable std::tuple< std::vector< Vec< mpfr_complex > >, std::vector< Vec< dbl > > > coefficients_working_; ///< the current working coefficients of the patch.  changing precision affects these, particularly the mpfr_complex coefficients, which are down-sampled from the highest_precision coefficients.  the doubles are only down-sampled at time of creation or modification.
 
 		std::vector<unsigned> variable_group_sizes_; ///< the sizes of the groups.  In principle, these must be at least 2.
 

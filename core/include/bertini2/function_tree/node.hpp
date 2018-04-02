@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with node.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -26,6 +26,10 @@
 //
 // Dani Brake
 // University of Notre Dame
+//
+// Danielle Brake
+// University of Wisconsin - Eau Claire
+// Spring 2018
 //
 //  Created by Collins, James B. on 4/30/15.
 
@@ -106,17 +110,17 @@ namespace detail{
 	};
 
 	template<>
-	struct FreshEvalSelector<mpfr>
+	struct FreshEvalSelector<mpfr_complex>
 	{
 		template<typename N>
-		static mpfr Run(N const& n, std::shared_ptr<Variable> const& diff_variable)
+		static mpfr_complex Run(N const& n, std::shared_ptr<Variable> const& diff_variable)
 		{
 			return n.FreshEval_mp(diff_variable);
 		}
 		
 		
 		template<typename N>
-		static void RunInPlace(mpfr& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
+		static void RunInPlace(mpfr_complex& evaluation_value, N const& n, std::shared_ptr<Variable> const& diff_variable)
 		{
 			n.FreshEval_mp(evaluation_value, diff_variable);
 		}
@@ -135,7 +139,7 @@ An interface for all nodes in a function tree, and for a function object as well
 class Node
 {
 	friend detail::FreshEvalSelector<dbl>;
-	friend detail::FreshEvalSelector<mpfr>;
+	friend detail::FreshEvalSelector<mpfr_complex>;
 public:
 	
 	virtual ~Node() = default;
@@ -161,7 +165,7 @@ public:
 	 Template type is type of value you want returned.
 
 	 \return The value of the node.
-	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
+	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr_complex.
 	 */
 	template<typename T>
 	T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const 
@@ -179,7 +183,7 @@ public:
 	 Template type is type of value you want returned.
 	 
 	 \return The value of the node.
-	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr.
+	 \tparam T The number type for return.  Must be one of the types stored in the Node class, currently dbl and mpfr_complex.
 	 */
 	template<typename T>
 	void EvalInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable = nullptr) const;
@@ -316,7 +320,7 @@ protected:
 	//Stores the current value of the node in all required types
 	//We must hard code in all types that we want here.
 	//TODO: Initialize this to some default value, second = false
-	mutable std::tuple< std::pair<dbl,bool>, std::pair<mpfr,bool> > current_value_;
+	mutable std::tuple< std::pair<dbl,bool>, std::pair<mpfr_complex,bool> > current_value_;
 	
 	
 	
@@ -325,14 +329,14 @@ protected:
 	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
 
-	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
+	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr_complex.
 	*/
 	virtual dbl FreshEval_d(std::shared_ptr<Variable> const&) const = 0;
 
 	/**
 	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper EvalInPlace<>() call from Node, if so required (by resetting, etc).
 	 
-	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
+	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr_complex.
 	 */
 	virtual void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
 
@@ -340,16 +344,16 @@ protected:
 	/**
 	Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
 
-	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
+	If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr_complex.
 	*/
-	virtual mpfr FreshEval_mp(std::shared_ptr<Variable> const&) const = 0;
+	virtual mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const&) const = 0;
 	
 	/**
 	 Overridden code for specific node types, for how to evaluate themselves.  Called from the wrapper Eval<>() call from Node, if so required (by resetting, etc).
 	 
-	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr.
+	 If we had the ability to use template virtual functions, we would have.  However, this is impossible with current C++ without using experimental libraries, so we have two copies -- because there are two number types for Nodes, dbl and mpfr_complex.
 	 */
-	virtual void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
+	virtual void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const&) const = 0;
 
 	
 	

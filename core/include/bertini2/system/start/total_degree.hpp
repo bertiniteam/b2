@@ -126,7 +126,7 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr> GenerateStartPoint(mpfr,unsigned long long index) const override;
+			Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const override;
 
 			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.

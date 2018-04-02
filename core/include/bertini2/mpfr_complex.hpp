@@ -43,6 +43,156 @@
 #include <string>
 #include <assert.h>
 
+#include <boost/multiprecision/mpc.hpp>
+
+
+namespace bertini{
+namespace multiprecision{
+
+namespace bmp = boost::multiprecision;
+using bmp::backends::mpc_complex_backend;
+using complex = bmp::number<mpc_complex_backend<0>, bmp::et_on >;
+
+/** 
+\brief Get the precision of a number.
+
+For bertini::complex, this calls the precision member method for bertini::complex.
+*/
+inline
+unsigned Precision(complex const& num)
+{
+	return num.precision();
+}
+
+inline void Precision(complex & num, unsigned prec)
+{
+	num.precision(prec);
+}
+
+// inline 
+// bool isnan(complex const& num)
+// {
+// 	return num.isnan();
+// }
+
+inline 
+void RandomReal(complex & a, unsigned num_digits)
+{
+	a.precision(num_digits);
+	RandomMp(a.real(),num_digits);
+	a.imag() = 0;
+}
+
+inline 
+void rand(complex & a, unsigned num_digits)
+{
+	a.precision(num_digits);
+	RandomMp(a.real(),num_digits);
+	RandomMp(a.imag(),num_digits);
+}
+
+inline 
+void RandomComplex(complex & a, unsigned num_digits)
+{
+	rand(a,num_digits);
+}
+
+
+		/**
+		 Produce a random complex number, to default precision.
+		 */
+		inline complex rand()
+		{
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
+			returnme /= sqrt( abs(returnme));
+			return returnme;
+		}
+		
+		inline complex RandomUnit()
+		{
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
+			returnme /= abs(returnme);
+			return returnme;
+		}
+		/**
+		 Produce a random real number \f$\in [-1,\,1]\f$, to current default precision. 
+		 */
+		inline complex RandomReal()
+		{
+			using std::sqrt;
+			complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
+			returnme /= sqrt( abs(returnme));
+			return returnme;
+		}
+		
+
+
+inline 
+complex RandomComplex(unsigned num_digits)
+{
+	complex z;
+	RandomComplex(z, num_digits);
+	return z;
+}
+
+inline 
+void RandomUnit(complex & a, unsigned num_digits)
+{
+	auto prev_precision = DefaultPrecision();
+
+	a.precision(num_digits);
+	RandomMp(a.real(),num_digits);
+	RandomMp(a.imag(),num_digits);
+	a /= abs(a);
+
+	DefaultPrecision(prev_precision);
+}
+
+inline 
+complex RandomUnit(unsigned num_digits)
+{
+	complex a;
+	RandomUnit(a,num_digits);
+	return a;
+}
+
+
+
+
+
+}  // namespace multiprecision
+
+using mpfr_complex = multiprecision::complex;
+
+	/** 
+	\brief Get the precision of a number.
+
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline
+	auto Precision(mpfr_complex const& num)
+	{
+		return num.precision();
+	}
+
+
+	/** 
+	\brief Change the precision of a number.
+
+	For mpfr_floats, this calls the precision member method for mpfr_float.
+	*/
+	inline void Precision(mpfr_complex & num, unsigned prec)
+	{
+		num.precision(prec);
+	}
+
+
+} // namespaces
+// }
+
+
+
+#if 0
 
 namespace bertini {
 
@@ -1676,7 +1826,7 @@ namespace bertini {
 
 
 
-
+#endif // temporary to disable the entire interior of the file
 
 
 

@@ -426,9 +426,9 @@ namespace bertini
 		}
 
 
-		Vec<mpfr> MHomogeneous::GenerateStartPoint(mpfr,unsigned long long index) const
+		Vec<mpfr_complex> MHomogeneous::GenerateStartPoint(mpfr_complex,unsigned long long index) const
 		{
-			Vec<mpfr> start_point(NumVariables());
+			Vec<mpfr_complex> start_point(NumVariables());
 			GenerateStartPointT(start_point, index);
 
 			return start_point;	

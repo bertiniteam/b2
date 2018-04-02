@@ -36,6 +36,7 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #include "bertini2/config.h"
 
 #include <boost/multiprecision/mpfr.hpp>
+#include <boost/multiprecision/mpc.hpp>
 
 #ifdef B2_FORBID_MIXED_ARITHMETIC
 	#include "bertini2/forbid_double.hpp"
@@ -50,7 +51,6 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #include <string>
 
 #include "bertini2/double_extensions.hpp"
-
 
 namespace bertini{
 
@@ -82,10 +82,12 @@ namespace bertini{
 	For mpfr_floats, this calls the precision member method for mpfr_float.
 	*/
 	inline
-	unsigned Precision(mpfr_float const& num)
+	auto Precision(mpfr_float const& num)
 	{
 		return num.precision();
 	}
+
+
 
 	/** 
 	\brief Change the precision of a number.
@@ -96,6 +98,9 @@ namespace bertini{
 	{
 		num.precision(prec);
 	}
+
+
+
 }
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
@@ -126,6 +131,33 @@ namespace boost { namespace serialization {
 		r = tmp.c_str();
 	}
 	
+
+	/**
+	 Save a mpfr_float type to a boost archive.
+	 */
+	template <typename Archive>
+	void save(Archive& ar, ::boost::multiprecision::backends::mpc_complex_backend<0> const& r, unsigned /*version*/)
+	{
+		unsigned num_digits(r.precision());
+		ar & num_digits;
+		std::string tmp = r.str(0,std::ios::scientific);
+		ar & tmp;
+	}
+	
+	/**
+	 Load a mpfr_float type from a boost archive.
+	 */
+	template <typename Archive>
+	void load(Archive& ar, ::boost::multiprecision::backends::mpc_complex_backend<0>& r, unsigned /*version*/)
+	{
+		unsigned num_digits;
+		ar & num_digits;
+		r.precision(num_digits);
+		std::string tmp;
+		ar & tmp;
+		r = tmp.c_str();
+	}
+
 
 	/**
 	 Save a gmp_rational type to a boost archive.
@@ -172,6 +204,8 @@ namespace boost { namespace serialization {
 
 
 } } // re: namespaces
+
+BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpc_complex_backend<0>)
 
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpfr_float_backend<0>)
 

@@ -59,11 +59,11 @@ namespace bertini {
 	{
 
 
-		mutable std::tuple<Mat<dbl>, Mat<mpfr> > coefficients_working_;
-		Mat< mpfr > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
+		mutable std::tuple<Mat<dbl>, Mat<mpfr_complex> > coefficients_working_;
+		Mat< mpfr_complex > coefficients_highest_precision_; ///< the highest-precision coefficients for the patch
 
-		mutable std::tuple<Vec<dbl>, Vec<mpfr> > constants_working_;
-		Vec< mpfr > constants_highest_precision_; ///< the highest-precision coefficients for the patch
+		mutable std::tuple<Vec<dbl>, Vec<mpfr_complex> > constants_working_;
+		Vec< mpfr_complex > constants_highest_precision_; ///< the highest-precision coefficients for the patch
 
 		VariableGroup sliced_vars_;
 		unsigned num_dims_sliced_;
@@ -77,8 +77,8 @@ namespace bertini {
 		*/
 		static LinearSlice RandomReal(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
-			typedef void (*funtype) (mpfr&, unsigned); // the type for number generation
-			funtype gen = bertini::RandomReal;
+			typedef void (*funtype) (mpfr_complex&, unsigned); // the type for number generation
+			funtype gen = bertini::multiprecision::RandomReal;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
@@ -87,8 +87,8 @@ namespace bertini {
 		*/
 		static LinearSlice RandomComplex(VariableGroup const& v, unsigned dim, bool homogeneous = false, bool orthogonal = true)
 		{
-			typedef void (*funtype) (mpfr&, unsigned); // the type for number generation
-			funtype gen = bertini::RandomComplex;
+			typedef void (*funtype) (mpfr_complex&, unsigned); // the type for number generation
+			funtype gen = bertini::multiprecision::RandomComplex;
 			return Make(v, dim, homogeneous, orthogonal, gen);
 		}
 
@@ -160,8 +160,8 @@ namespace bertini {
 		{
 			if (new_precision > DoublePrecision())
 			{
-				Mat<mpfr>& coefficients_mpfr = std::get<Mat<mpfr> >(coefficients_working_);
-				Vec<mpfr>& constants_mpfr = std::get<Vec<mpfr> >(constants_working_);
+				Mat<mpfr_complex>& coefficients_mpfr = std::get<Mat<mpfr_complex> >(coefficients_working_);
+				Vec<mpfr_complex>& constants_mpfr = std::get<Vec<mpfr_complex> >(constants_working_);
 				for (unsigned ii = 0; ii < Dimension(); ++ii)
 				{
 					for (unsigned jj=0; jj<NumVariables(); ++jj)
@@ -214,10 +214,10 @@ namespace bertini {
 			constants_highest_precision_(static_cast<unsigned>(0))
 		{ 
 			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
-			std::get<Mat<mpfr> >(coefficients_working_).resize(Dimension(), NumVariables());
+			std::get<Mat<mpfr_complex> >(coefficients_working_).resize(Dimension(), NumVariables());
 
 			std::get<Vec<dbl> > (constants_working_).resize(Dimension());
-			std::get<Vec<mpfr> >(constants_working_).resize(Dimension());
+			std::get<Vec<mpfr_complex> >(constants_working_).resize(Dimension());
 		}
 
 		/**
@@ -226,12 +226,12 @@ namespace bertini {
 		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : sliced_vars_(v), precision_(DefaultPrecision()), num_dims_sliced_(dim), coefficients_highest_precision_(dim, v.size()), is_homogeneous_(homogeneous), constants_highest_precision_(dim)
 		{ 
 			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
-			std::get<Mat<mpfr> >(coefficients_working_).resize(Dimension(), NumVariables());
+			std::get<Mat<mpfr_complex> >(coefficients_working_).resize(Dimension(), NumVariables());
 
 			if (!homogeneous)
 			{
 				std::get<Vec<dbl> > (constants_working_).resize(Dimension());
-				std::get<Vec<mpfr> >(constants_working_).resize(Dimension());
+				std::get<Vec<mpfr_complex> >(constants_working_).resize(Dimension());
 			}
 		}
 
@@ -240,7 +240,7 @@ namespace bertini {
 		\brief factory function for generating slices
 		*/
 		static
-		LinearSlice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, std::function<void(mpfr&, unsigned)> gen)
+		LinearSlice Make(VariableGroup const& v, unsigned dim, bool homogeneous, bool orthogonal, std::function<void(mpfr_complex&, unsigned)> gen)
 		{
 			LinearSlice s(v, dim, homogeneous);
 
@@ -265,8 +265,8 @@ namespace bertini {
 				auto prev_precision = DefaultPrecision();
 				DefaultPrecision(MaxPrecisionAllowed());
 
-				auto QR_factorization = Eigen::HouseholderQR<Mat<mpfr> >(s.coefficients_highest_precision_);
-				s.coefficients_highest_precision_ = QR_factorization.householderQ()*Mat<mpfr>::Identity(maxdim, mindim);
+				auto QR_factorization = Eigen::HouseholderQR<Mat<mpfr_complex> >(s.coefficients_highest_precision_);
+				s.coefficients_highest_precision_ = QR_factorization.householderQ()*Mat<mpfr_complex>::Identity(maxdim, mindim);
 				
 				if (need_transpose)
 					s.coefficients_highest_precision_.transposeInPlace();
@@ -284,20 +284,20 @@ namespace bertini {
 				for (unsigned jj(0); jj<s.NumVariables(); ++jj)
 				{
 					std::get<Mat<dbl> >(s.coefficients_working_)(ii,jj) = dbl(s.coefficients_highest_precision_(ii,jj));
-					std::get<Mat<mpfr> >(s.coefficients_working_)(ii,jj) = s.coefficients_highest_precision_(ii,jj);
+					std::get<Mat<mpfr_complex> >(s.coefficients_working_)(ii,jj) = s.coefficients_highest_precision_(ii,jj);
 				}
 
 			if (!homogeneous)
 			{
 				s.constants_highest_precision_.resize(s.Dimension());
 				std::get<Vec<dbl> >(s.constants_working_).resize(s.Dimension());
-				std::get<Vec<mpfr> >(s.constants_working_).resize(s.Dimension());
+				std::get<Vec<mpfr_complex> >(s.constants_working_).resize(s.Dimension());
 
 				for (unsigned ii(0); ii<s.Dimension(); ++ii)
 				{
 					gen(s.constants_highest_precision_(ii), MaxPrecisionAllowed());
 					std::get<Vec<dbl> >(s.constants_working_)(ii) = dbl(s.constants_highest_precision_(ii));
-					std::get<Vec<mpfr> >(s.constants_working_)(ii) = s.constants_highest_precision_(ii);
+					std::get<Vec<mpfr_complex> >(s.constants_working_)(ii) = s.constants_highest_precision_(ii);
 				}
 			}
 

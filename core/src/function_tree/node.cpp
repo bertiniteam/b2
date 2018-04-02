@@ -79,11 +79,11 @@ namespace node{
 	}
 
 	template void Node::EvalInPlace<dbl>(dbl&, std::shared_ptr<Variable> const&) const;
-	template void Node::EvalInPlace<mpfr>(mpfr&, std::shared_ptr<Variable> const&) const;
+	template void Node::EvalInPlace<mpfr_complex>(mpfr_complex&, std::shared_ptr<Variable> const&) const;
 
 	unsigned Node::precision() const
 	{
-		return std::get<std::pair<mpfr,bool> >(current_value_).first.precision();
+		return std::get<std::pair<mpfr_complex,bool> >(current_value_).first.precision();
 	}
 
 	bool Node::IsPolynomial(std::shared_ptr<Variable> const&v) const
@@ -99,13 +99,13 @@ namespace node{
 	void Node::ResetStoredValues() const
 	{
 		std::get< std::pair<dbl,bool> >(current_value_).second = false;
-		std::get< std::pair<mpfr,bool> >(current_value_).second = false;
+		std::get< std::pair<mpfr_complex,bool> >(current_value_).second = false;
 	}
 
 	Node::Node()
 	{
 		std::get<std::pair<dbl,bool> >(current_value_).second = false;
-		std::get<std::pair<mpfr,bool> >(current_value_).second = false;
+		std::get<std::pair<mpfr_complex,bool> >(current_value_).second = false;
 	}
 } // namespace node
 } // namespace bertini

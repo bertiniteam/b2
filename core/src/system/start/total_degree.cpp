@@ -91,24 +91,24 @@ namespace bertini {
 		}
 
 
-		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,unsigned long long index) const
+		Vec<mpfr_complex> TotalDegree::GenerateStartPoint(mpfr_complex,unsigned long long index) const
 		{
-			Vec<mpfr> start_point(NumVariables());
+			Vec<mpfr_complex> start_point(NumVariables());
 			auto indices = IndexToSubscript(index, degrees_);
 
 			unsigned offset = 0;
 			if (IsPatched())
 			{
-				start_point(0) = mpfr(1);
+				start_point(0) = mpfr_complex(1);
 				offset = 1;
 			}
 
 			
-			auto one = mpfr(1);
-			auto two_i_pi = mpfr(0,2) * acos( mpfr_float(-1) );
+			auto one = mpfr_complex(1);
+			auto two_i_pi = mpfr_complex(0,2) * acos( mpfr_float(-1) );
 
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( two_i_pi * mpfr_float(indices[ii]) / degrees_[ii]  ) * pow(random_values_[ii]->Eval<mpfr>(), one / degrees_[ii]);
+				start_point(ii+offset) = exp( two_i_pi * mpfr_float(indices[ii]) / degrees_[ii]  ) * pow(random_values_[ii]->Eval<mpfr_complex>(), one / degrees_[ii]);
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);

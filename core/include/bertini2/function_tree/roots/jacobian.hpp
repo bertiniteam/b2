@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with jacobian.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -26,6 +26,10 @@
 //
 // Dani Brake
 // University of Notre Dame
+//
+//  Danielle Brake
+//  UWEC
+//  Spring 2018
 //
 //  Created by Collins, James B. on 6/11/15.
 //
@@ -61,7 +65,7 @@ namespace node{
 		class Jacobian : public virtual Function
 		{
 			friend detail::FreshEvalSelector<dbl>;
-			friend detail::FreshEvalSelector<mpfr>;
+			friend detail::FreshEvalSelector<mpfr_complex>;
 		public:
 				/**
 				 */

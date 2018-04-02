@@ -36,14 +36,14 @@ namespace bertini{
 		
 Variable::Variable(std::string new_name) : NamedSymbol(new_name)
 { 
-	SetToRandUnit<mpfr>();
-	set_current_value(dbl(Eval<mpfr>()));
+	SetToRandUnit<mpfr_complex>();
+	set_current_value(dbl(Eval<mpfr_complex>()));
 }
 
 Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
 { 
-	SetToRandUnit<mpfr>();
-	set_current_value(dbl(Eval<mpfr>()));
+	SetToRandUnit<mpfr_complex>();
+	set_current_value(dbl(Eval<mpfr_complex>()));
 }
 
 template <typename T>
@@ -61,7 +61,7 @@ void Variable::set_current_value(T const& val)
 template void Variable::set_current_value<double>(double const&);
 template void Variable::set_current_value<dbl>(dbl const&);
 template void Variable::set_current_value<mpfr_float>(mpfr_float const&);
-template void Variable::set_current_value<mpfr>(mpfr const&);
+template void Variable::set_current_value<mpfr_complex>(mpfr_complex const&);
 
 
 template <typename T>
@@ -71,7 +71,7 @@ void Variable::SetToNan()
 }
 
 template void Variable::SetToNan<dbl>();
-template void Variable::SetToNan<mpfr>();
+template void Variable::SetToNan<mpfr_complex>();
 
 
 template <typename T>
@@ -80,7 +80,7 @@ void Variable::SetToRand()
 	set_current_value<T>(RandomUnit<T>());
 }
 template void Variable::SetToRand<dbl>();
-template void Variable::SetToRand<mpfr>();
+template void Variable::SetToRand<mpfr_complex>();
 
 
 template <typename T>
@@ -89,7 +89,7 @@ void Variable::SetToRandUnit()
 	set_current_value<T>(RandomUnit<T>());
 }
 template void Variable::SetToRandUnit<dbl>();
-template void Variable::SetToRandUnit<mpfr>();
+template void Variable::SetToRandUnit<mpfr_complex>();
 
 std::shared_ptr<Node> Variable::Differentiate(std::shared_ptr<Variable> const& v) const
 {
@@ -169,7 +169,7 @@ bool Variable::IsHomogeneous(VariableGroup const& vars) const
  */
 void Variable::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 }
 
@@ -186,14 +186,14 @@ void Variable::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> cons
 }
 
 
-mpfr Variable::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Variable::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return std::get< std::pair<mpfr,bool> >(current_value_).first;
+	return std::get< std::pair<mpfr_complex,bool> >(current_value_).first;
 }
 
-void Variable::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Variable::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value = std::get< std::pair<mpfr,bool> >(current_value_).first;
+	evaluation_value = std::get< std::pair<mpfr_complex,bool> >(current_value_).first;
 }
 
 

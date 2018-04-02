@@ -41,7 +41,7 @@ void Number::Reset() const
 
 void Number::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 	val_pair.second = false; // false indicates to re-evaluate 
 }
@@ -76,12 +76,12 @@ void Integer::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const
 }
 
 
-mpfr Integer::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Integer::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return mpfr(true_value_,0);
+	return mpfr_complex(true_value_,0);
 }
 
-void Integer::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Integer::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	evaluation_value = true_value_;
 }
@@ -111,14 +111,14 @@ void Float::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& 
 }
 
 
-mpfr Float::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Float::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return mpfr(highest_precision_value_);
+	return mpfr_complex(highest_precision_value_);
 }
 
-void Float::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Float::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value = mpfr(highest_precision_value_);
+	evaluation_value = mpfr_complex(highest_precision_value_);
 }
 
 
@@ -145,14 +145,14 @@ void Rational::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> cons
 }
 
 
-mpfr Rational::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Rational::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
+	return mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
 }
 
-void Rational::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Rational::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value = mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
+	evaluation_value = mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
 }
 
 

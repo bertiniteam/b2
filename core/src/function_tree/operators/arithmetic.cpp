@@ -399,20 +399,20 @@ void SumOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> c
 	
 	
 
-mpfr SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	mpfr retval;
+	mpfr_complex retval;
 	this->FreshEval_mp(retval, diff_variable);
 	return retval;
 }
 
-void SumOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void SumOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	if (children_sign_[0])
-		children_[0]->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		children_[0]->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	else
 	{
-		children_[0]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+		children_[0]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 		evaluation_value = -temp_mp_;
 	}
 
@@ -420,12 +420,12 @@ void SumOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable>
 	{
 		if(children_sign_[ii])
 		{
-			children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+			children_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 			evaluation_value += temp_mp_;
 		}
 		else
 		{
-			children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+			children_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 			evaluation_value -= temp_mp_;
 		}
 	}
@@ -488,14 +488,14 @@ void NegateOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable
 }
 
 
-mpfr NegateOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex NegateOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return -child_->Eval<mpfr>(diff_variable);
+	return -child_->Eval<mpfr_complex>(diff_variable);
 }
 
-void NegateOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void NegateOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	evaluation_value = -evaluation_value;
 }
 
@@ -891,26 +891,26 @@ void MultOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> 
 }
 
 
-mpfr MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	mpfr retval;
+	mpfr_complex retval;
 	this->FreshEval_mp(retval, diff_variable);
 	return retval;
 }
 
-void MultOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void MultOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	if (children_mult_or_div_[0])
-		children_[0]->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		children_[0]->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	else
 	{
-		children_[0]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+		children_[0]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 		evaluation_value = static_cast<mpfr_float>(1)/temp_mp_;
 	}
 
 	for(int ii = 1; ii < children_.size(); ++ii)
 	{
-		children_[ii]->EvalInPlace<mpfr>(temp_mp_, diff_variable);
+		children_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 		if(children_mult_or_div_[ii])
 			evaluation_value *= temp_mp_;
 		else
@@ -1090,16 +1090,16 @@ void PowerOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable>
 }
 
 
-mpfr PowerOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex PowerOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return pow( base_->Eval<mpfr>(diff_variable), exponent_->Eval<mpfr>());
+	return pow( base_->Eval<mpfr_complex>(diff_variable), exponent_->Eval<mpfr_complex>());
 }
 
-void PowerOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void PowerOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	mpfr temp_mp;
-	exponent_->EvalInPlace<mpfr>(temp_mp);
-	base_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	mpfr_complex temp_mp;
+	exponent_->EvalInPlace<mpfr_complex>(temp_mp);
+	base_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	
 	evaluation_value = pow(evaluation_value, temp_mp);
 }
@@ -1241,14 +1241,14 @@ void SqrtOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> 
 }
 
 
-mpfr SqrtOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex SqrtOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return sqrt(child_->Eval<mpfr>(diff_variable));
+	return sqrt(child_->Eval<mpfr_complex>(diff_variable));
 }
 
-void SqrtOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void SqrtOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	evaluation_value = sqrt(evaluation_value);
 }
 
@@ -1321,14 +1321,14 @@ void ExpOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> c
 }
 
 
-mpfr ExpOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex ExpOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return exp(child_->Eval<mpfr>(diff_variable));
+	return exp(child_->Eval<mpfr_complex>(diff_variable));
 }
 
-void ExpOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void ExpOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	evaluation_value = exp(evaluation_value);
 }
 
@@ -1396,14 +1396,14 @@ void LogOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> c
 }
 
 
-mpfr LogOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex LogOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return log(child_->Eval<mpfr>(diff_variable));
+	return log(child_->Eval<mpfr_complex>(diff_variable));
 }
 
-void LogOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void LogOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	evaluation_value = log(evaluation_value);
 }
 

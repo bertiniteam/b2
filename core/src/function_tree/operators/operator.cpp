@@ -121,7 +121,7 @@ bool UnaryOperator::IsHomogeneous(VariableGroup const& vars) const
  */
 void UnaryOperator::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 
 	child_->precision(prec);
@@ -174,7 +174,7 @@ std::shared_ptr<Node> NaryOperator::first_child() const
  */
 void NaryOperator::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 	
 	this->PrecisionChangeSpecific(prec);

@@ -57,7 +57,7 @@ T Jacobian::EvalJ(std::shared_ptr<Variable> const& diff_variable) const
 }
 
 template dbl Jacobian::EvalJ(std::shared_ptr<Variable> const& diff_variable) const;
-template mpfr Jacobian::EvalJ(std::shared_ptr<Variable> const& diff_variable) const;
+template mpfr_complex Jacobian::EvalJ(std::shared_ptr<Variable> const& diff_variable) const;
 
 
 
@@ -79,7 +79,7 @@ void Jacobian::EvalJInPlace(T& eval_value, std::shared_ptr<Variable> const& diff
 }
 
 template void Jacobian::EvalJInPlace( dbl&, std::shared_ptr<Variable> const& diff_variable) const;
-template void Jacobian::EvalJInPlace( mpfr&, std::shared_ptr<Variable> const& diff_variable) const;
+template void Jacobian::EvalJInPlace( mpfr_complex&, std::shared_ptr<Variable> const& diff_variable) const;
 
 
 void Jacobian::Reset() const

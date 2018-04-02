@@ -164,12 +164,12 @@ namespace node{
 		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		/**
 		 Calls FreshEval in place on the entry node to the tree.
 		 */
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		

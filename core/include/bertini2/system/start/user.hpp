@@ -72,7 +72,7 @@ namespace bertini
 			 Constructor for making a user-provided start system from another.
 			*/
 			User(System const& s, SampCont<dbl> const& solns);
-			User(System const& s, SampCont<mpfr> const& solns);
+			User(System const& s, SampCont<mpfr_complex> const& solns);
 
 
 
@@ -99,7 +99,7 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr> GenerateStartPoint(mpfr,unsigned long long index) const override;
+			Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const override;
 
 
 			friend class boost::serialization::access;
@@ -111,7 +111,7 @@ namespace bertini
 			}
 
 			const bertini::System& user_system_;
-			std::tuple<SampCont<dbl>, SampCont<mpfr>> solns_;
+			std::tuple<SampCont<dbl>, SampCont<mpfr_complex>> solns_;
 			bool solns_in_dbl_;
 		};
 	}
@@ -150,7 +150,7 @@ inline void load_construct_data(
     }
 	else
 	{
-		bertini::SampCont<bertini::mpfr> solns;
+		bertini::SampCont<bertini::mpfr_complex> solns;
 		ar >> solns;
 		::new(t)bertini::start_system::User(sys, solns);
 	}

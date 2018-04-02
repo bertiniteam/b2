@@ -207,13 +207,13 @@ namespace node{
 		 Specific implementation of FreshEval for add and subtract.
 		 If child_sign_ = true, then add, else subtract
 		 */
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 
 		/**
 		 Specific implementation of FreshEval for add and subtract.
 		 If child_sign_ = true, then add, else subtract
 		 */
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 		// Stores the sign of the particular term.  There is a one-one
@@ -241,7 +241,7 @@ namespace node{
 			temp_mp_.precision(prec);
 		}
 
-		mutable mpfr temp_mp_;
+		mutable mpfr_complex temp_mp_;
 		mutable dbl temp_d_;
 
 		friend MultOperator;
@@ -308,8 +308,8 @@ namespace node{
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 	private:
@@ -442,8 +442,8 @@ namespace node{
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
 		
@@ -477,7 +477,7 @@ namespace node{
 			temp_mp_.precision(prec);
 		}
 
-		mutable mpfr temp_mp_;
+		mutable mpfr_complex temp_mp_;
 		mutable dbl temp_d_;
 
 		friend SumOperator;
@@ -565,7 +565,7 @@ namespace node{
 		 */
 		virtual void precision(unsigned int prec) const override
 		{
-			auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+			auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 			val_pair.first.precision(prec);
 
 			base_->precision(prec);
@@ -579,8 +579,8 @@ namespace node{
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		void FreshEval_d(dbl& evaulation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr& evaulation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaulation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 				
@@ -710,14 +710,14 @@ namespace node{
 		}
 
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return pow(child_->Eval<mpfr>(diff_variable),exponent_);
+			return pow(child_->Eval<mpfr_complex>(diff_variable),exponent_);
 		}
 
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+			child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 			evaluation_value = pow(evaluation_value, exponent_);
 		}
 
@@ -797,8 +797,8 @@ namespace node{
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 	private:
@@ -866,8 +866,8 @@ namespace node{
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 	private:
 		ExpOperator() = default;
@@ -923,8 +923,8 @@ namespace node{
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 	private:
 		LogOperator() = default;
@@ -970,7 +970,7 @@ namespace node{
 		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
 	}
 
-	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr p)
+	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr_complex p)
 	{
 		return std::make_shared<PowerOperator>(N,std::make_shared<Float>(p));
 	}
@@ -1021,7 +1021,7 @@ namespace node{
 		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
 	}
 
-	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr const& rhs)
+	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
 		return std::make_shared<SumOperator>(lhs,std::make_shared<Float>(rhs));
 	}
@@ -1031,7 +1031,7 @@ namespace node{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 
-	inline std::shared_ptr<Node> operator+(mpfr const& lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator+(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), rhs);
 	}
@@ -1098,12 +1098,12 @@ namespace node{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr rhs)
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_complex rhs)
 	{
 		return std::make_shared<SumOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
 	
-	inline std::shared_ptr<Node> operator-(mpfr lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator-(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<SumOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
@@ -1155,7 +1155,7 @@ namespace node{
 		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
 	}
 
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr rhs)
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_complex rhs)
 	{
 		return std::make_shared<MultOperator>(lhs,std::make_shared<Float>(rhs));
 	}
@@ -1165,7 +1165,7 @@ namespace node{
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
 	}
 
-	inline std::shared_ptr<Node> operator*(mpfr lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator*(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), rhs);
 	}
@@ -1284,7 +1284,7 @@ namespace node{
 		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
 
-	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr rhs)
+	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr_complex rhs)
 	{
 		return std::make_shared<MultOperator>(lhs, true, std::make_shared<Float>(rhs), false);
 	}
@@ -1294,7 +1294,7 @@ namespace node{
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
 
-	inline std::shared_ptr<Node> operator/(mpfr lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator/(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
 	{
 		return std::make_shared<MultOperator>(std::make_shared<Float>(lhs), true, rhs, false);
 	}
