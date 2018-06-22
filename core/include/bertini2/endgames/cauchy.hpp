@@ -1124,7 +1124,9 @@ public:
 			prev_approx = latest_approx;
 			norm_of_dehom_prev = norm_of_dehom_latest;
 
-			AdvanceTime<CT>(target_time);
+			auto advance_code = AdvanceTime<CT>(target_time);
+			if (advance_code != SuccessCode::Success)
+				return advance_code;
 
 			// then compute the next set of cauchy samples used for extrapolating the point at target time
 			auto cauchy_samples_success = ComputeCauchySamples(target_time);
