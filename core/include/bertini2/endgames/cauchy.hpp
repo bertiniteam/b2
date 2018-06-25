@@ -282,7 +282,7 @@ public:
 	\brief Setter for the time values for the Cauchy endgame. 
 	*/
 	template<typename CT>
-	void SetCauchyTimes(TimeCont<CT> cauchy_times_to_set) 
+	void SetCauchyTimes(TimeCont<CT> const& cauchy_times_to_set) 
 	{ 
 		std::get<TimeCont<CT> >(cauchy_times_) = cauchy_times_to_set;
 	}
