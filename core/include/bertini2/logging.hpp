@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with logging.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// danielle brake, university of wisconsin eau claire
 
 /**
 \file logging.hpp 
@@ -103,13 +103,14 @@ namespace logging{
 
 
 		static
-		void AddFile(std::string const& name_pattern, std::string const& format, unsigned rotation_size)
+		void AddFile(std::string const& name_pattern, std::string const& format, unsigned rotation_size, bool auto_flush = true)
 		{
 			blog::add_file_log
 			(
 			    keywords::file_name = name_pattern,
 			    keywords::rotation_size = rotation_size,
-			    keywords::format = format 
+			    keywords::format = format,
+			    keywords::auto_flush = auto_flush 
 			);
 		}
 
