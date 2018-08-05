@@ -61,6 +61,7 @@ BOOST_AUTO_TEST_CASE(complex_addition)
 	bertini::mpfr_complex v("0.2","1.3");
 	
 	bertini::mpfr_complex r = z+v;
+	std::cout << abs(r.real()-bertini::mpfr_float("0.3")) << '\n';
 	BOOST_CHECK(abs(r.real()-bertini::mpfr_float("0.3")) < threshold_clearance_mp);
 	BOOST_CHECK(abs(r.imag()-bertini::mpfr_float("2.5")) < threshold_clearance_mp);
 }

@@ -6,7 +6,7 @@ basics_headers = \
 	include/bertini2/mpfr_complex.hpp \
 	include/bertini2/forbid_double.hpp \
 	include/bertini2/double_extensions.hpp \
-	include/bertini2/mpfr_extensions.hpp \
+	include/bertini2/random.hpp \
 	include/bertini2/num_traits.hpp \
 	include/bertini2/classic.hpp \
 	include/bertini2/eigen_extensions.hpp \
@@ -14,7 +14,7 @@ basics_headers = \
 	include/bertini2/config.h
 
 basics_sources = \
-	src/basics/mpfr_extensions.cpp \
+	src/basics/random.cpp \
 	src/basics/mpfr_complex.cpp \
 	src/basics/limbo.cpp
 	

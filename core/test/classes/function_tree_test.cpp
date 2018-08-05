@@ -132,6 +132,7 @@ BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_nan){
 	
 	std::shared_ptr<Variable> x = MakeVariable("x");
 	
+	using std::isnan;
 	using bertini::isnan;
 	BOOST_CHECK(!isnan(x->Eval<dbl>()));
 	BOOST_CHECK(!isnan(x->Eval<mpfr>()));

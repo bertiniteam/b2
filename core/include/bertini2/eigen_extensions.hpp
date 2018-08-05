@@ -326,12 +326,14 @@ namespace bertini {
 
 	/**
 	\brief Set the precision of an Eigen object.
+
+	\param v the matrix to change
+	\param prec the new precision
 	*/
 	template<typename Derived>
 	void Precision(Eigen::MatrixBase<Derived> & v, unsigned prec)
 	{
 		using bertini::Precision;
-
 		for (int ii=0; ii<v.cols(); ++ii)
 			for (int jj=0; jj<v.rows(); ++jj)
 				Precision(v(jj,ii),prec);

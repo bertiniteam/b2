@@ -53,9 +53,6 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #include "bertini2/double_extensions.hpp"
 
 namespace bertini{
-
-	
-
 #ifdef BMP_EXPRESSION_TEMPLATES
 	using mpfr_float = boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<0>, boost::multiprecision::et_on>; 
 	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_on>;
@@ -65,16 +62,6 @@ namespace bertini{
 	using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::gmp_int, boost::multiprecision::et_off>;
 	using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_off>;
 #endif
-
-	inline auto DefaultPrecision()
-	{
-		return mpfr_float::default_precision();
-	}
-
-	inline void DefaultPrecision(unsigned prec)
-	{
-		mpfr_float::default_precision(prec);
-	}
 
 	/** 
 	\brief Get the precision of a number.
@@ -228,111 +215,6 @@ using boost::multiprecision::max; //3 options: ./configure --disable-expression_
 		}
 	#endif
 #endif
-
-namespace bertini
-{
-	/**
-	Generate a random integer number between -10^digits and 10^digits
-	*/
-	template <unsigned long digits = 50>
-	inline
-	mpz_int RandomInt()
-	{
-		using namespace boost::random;
-   		static mt19937 mt;
-	    static uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
-	    return ui(mt);
-	}
-	
-	
-	/**
-	Generate a random rational number with numerator and denomenator between -10^digits and 10^digits
-	*/
-	template <unsigned long digits = 50>
-	mpq_rational RandomRat()
-	{
-   		using namespace boost::random;
-   		static mt19937 mt;
-	    static uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
-	    return mpq_rational(ui(mt),ui(mt));
-	}
-
-
-	/**
-	 Produce a random number with at length_in_digits non-zero digits.
-	 
-	 \tparam length_in_digits The length of the desired random number
-	 */
-	template <unsigned int length_in_digits>
-	mpfr_float RandomMp()
-	{	
-
-		using namespace boost::multiprecision;
-   		using namespace boost::random;
-
-   		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
-   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
-
-		return ur(gen);
-	}
-	
-	/**
-	 a templated function for producing random numbers in the unit interval, of a given number of digits.
-	 
-	 \tparam length_in_digits The length of the desired random number
-	 */
-	template <unsigned int length_in_digits>
-	void RandomMp(mpfr_float & a)
-	{	
-
-		using namespace boost::multiprecision;
-   		using namespace boost::random;
-
-   		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
-   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
-
-		a = ur(gen);
-	}
-
-	/**
-	 a templated function for producing random numbers in a specified interval, of a given number of digits.
-	 
-	 \tparam length_in_digits The length of the desired random number
-	 
-	 \param a The left bound.
-	 \param b The right bound.
-	 */
-	template <unsigned int length_in_digits>
-	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
-	{
-		return (b-a)*RandomMp<length_in_digits>()+a;
-	}
-
-
-
-	/**
-	 \brief create a random number, at the current default precision
-	 */
-	mpfr_float RandomMp();
-
-	/**
-	 \brief create a random number in a given interval, at the current default precision
-	*/
-	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b);
-
-
-
-	/**
-	 \brief Set an existing mpfr_float to a random number, to a given precision.  
-
-	 This function is how to get random numbers at a precision different from the current default.
-	 */
-	void RandomMp(mpfr_float & a, unsigned num_digits);
-
-	
-
-	
-} // re: namespace bertini
 
 
 

@@ -38,7 +38,7 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #include <cmath>
 #include "bertini2/mpfr_complex.hpp"
 #include "bertini2/mpfr_extensions.hpp"
-
+#include "bertini2/random.hpp"
 
 
 namespace bertini

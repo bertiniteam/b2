@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//mpfr_extensions.cpp is free software: you can redistribute it and/or modify
+//random.cpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//mpfr_extensions.cpp is distributed in the hope that it will be useful,
+//random.cpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with mpfr_extensions.cpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with random.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015 - 2017 by Bertini2 Development Team
 //
@@ -23,20 +23,18 @@
 // dani brake, university of wisconsin eau claire
 
 /**
-\file mpfr_extensions.cpp 
+\file random.cpp 
 
-\brief Extensions to the Boost.Multiprecision library.
-
-Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and gmp_int types.
+\brief stuff to make random numbers in bertini2
 */
 
-#include "bertini2/mpfr_extensions.hpp"
+#include "bertini2/random.hpp"
 
 namespace bertini {
 
 	mpfr_float RandomMp()
 	{
-		auto num_digits = DefaultPrecision();
+		auto num_digits = bertini::DefaultPrecision();
 
 		if (num_digits<=50)
 			return RandomMp<50>();
@@ -79,7 +77,7 @@ namespace bertini {
 
 	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
 	{
-		auto num_digits = DefaultPrecision();
+		auto num_digits = bertini::DefaultPrecision();
 
 		if (num_digits<=50)
 			return RandomMp<50>(a,b);
