@@ -68,7 +68,7 @@ using bertini::MakeVariable;
 using bertini::MakeFloat;
 
 using dbl = bertini::dbl;
-using mpfr = bertini::mpfr;
+using mpfr = bertini::mpfr_complex;
 
 using System = bertini::System;
 

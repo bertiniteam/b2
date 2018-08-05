@@ -54,6 +54,8 @@ BOOST_AUTO_TEST_SUITE(system_class)
 
 using Var = std::shared_ptr<bertini::node::Variable>;
 
+using mpfr = bertini::mpfr_complex;
+
 using namespace bertini;
 /**
 \class bertini::System
@@ -1046,8 +1048,8 @@ BOOST_AUTO_TEST_CASE(clone_system_new_variables_evaluation)
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	auto sys = bertini::system::Precon::GriewankOsborn();
 	Vec<mpfr> x1(2), x2(2);
-	x1(0) = bertini::RandomUnit(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-	x1(1) = bertini::RandomUnit(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	x1(0) = bertini::multiprecision::RandomUnit(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	x1(1) = bertini::multiprecision::RandomUnit(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	auto f = sys.Eval(x1);
 

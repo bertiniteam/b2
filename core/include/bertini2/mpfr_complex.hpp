@@ -56,7 +56,7 @@ using complex = bmp::number<mpc_complex_backend<0>, bmp::et_on >;
 /** 
 \brief Get the precision of a number.
 
-For bertini::complex, this calls the precision member method for bertini::complex.
+For bertini::mpfr_complex, this calls the precision member method for bertini::mpfr_complex.
 */
 inline
 unsigned Precision(complex const& num)
@@ -186,6 +186,8 @@ using mpfr_complex = multiprecision::complex;
 		num.precision(prec);
 	}
 
+	inline
+	bool isnan(bertini::mpfr_complex const& num){return isnan(num.real()) || isnan(num.imag());};
 
 } // namespaces
 // }
@@ -205,7 +207,7 @@ namespace bertini {
 	This class currently uses Boost.Multiprecision -- namely, the mpfr_float type for variable precision.
 	This class is serializable using Boost.Serialize.
 	
-	The precision of a newly-made bertini::complex is whatever current default is, set by DefaultPrecision(...).
+	The precision of a newly-made bertini::mpfr_complex is whatever current default is, set by DefaultPrecision(...).
 
 	\todo{Implement MPI send/receive commands using Boost.MPI or alternative.}
 	*/
@@ -225,13 +227,13 @@ namespace bertini {
 		friend class boost::serialization::access;
 		
 		/**
-		 \brief Save method for archiving a bertini::complex
+		 \brief Save method for archiving a bertini::mpfr_complex
 		 */
 		template<class Archive>
 		void save(Archive & ar, const unsigned int version) const
 		{
 			#ifndef BERTINI_DISABLE_ASSERTS
-			assert(real_.precision()==imag_.precision() && "real and imaginary parts at different precision at save time for Boost serialization of bertini::complex");
+			assert(real_.precision()==imag_.precision() && "real and imaginary parts at different precision at save time for Boost serialization of bertini::mpfr_complex");
 			#endif
 
 			// note, version is always the latest when saving
@@ -243,7 +245,7 @@ namespace bertini {
 		
 		
 		/**
-		 \brief Load method for archiving a bertini::complex
+		 \brief Load method for archiving a bertini::mpfr_complex
 		 */
 		template<class Archive>
 		void load(Archive & ar, const unsigned int version)
@@ -1069,17 +1071,17 @@ namespace bertini {
 		}
 
 		/**
-		When explicitly asked, you can convert a bertini::complex into a std::complex<double>.  But only explicitly.  This conversion is narrowing, and should be avoided.
+		When explicitly asked, you can convert a bertini::mpfr_complex into a std::complex<double>.  But only explicitly.  This conversion is narrowing, and should be avoided.
 		*/
 		explicit operator std::complex<double> () const
 		{
 			return std::complex<double>(double(real_), double(imag_));
 		}
 		
-		friend void rand(bertini::complex & a, unsigned num_digits);
-		friend void RandomReal(bertini::complex & a, unsigned num_digits);
-		friend void RandomComplex(bertini::complex & a, unsigned num_digits);
-		friend void RandomUnit(bertini::complex & a, unsigned num_digits);
+		friend void rand(bertini::mpfr_complex & a, unsigned num_digits);
+		friend void RandomReal(bertini::mpfr_complex & a, unsigned num_digits);
+		friend void RandomComplex(bertini::mpfr_complex & a, unsigned num_digits);
+		friend void RandomUnit(bertini::mpfr_complex & a, unsigned num_digits);
 
 
 
@@ -1093,7 +1095,7 @@ namespace bertini {
 		friend complex inverse(const complex & z);
 
 		friend complex exp(const complex & z);
-	}; // end declaration of the bertini::complex number class
+	}; // end declaration of the bertini::mpfr_complex number class
 	
 	
 	
@@ -1747,27 +1749,27 @@ namespace bertini {
 	/** 
 	\brief Get the precision of a number.
 
-	For bertini::complex, this calls the precision member method for bertini::complex.
+	For bertini::mpfr_complex, this calls the precision member method for bertini::mpfr_complex.
 	*/
 	inline
-	unsigned Precision(bertini::complex const& num)
+	unsigned Precision(bertini::mpfr_complex const& num)
 	{
 		return num.precision();
 	}
 
-	inline void Precision(bertini::complex & num, unsigned prec)
+	inline void Precision(bertini::mpfr_complex & num, unsigned prec)
 	{
 		num.precision(prec);
 	}
 
 	inline 
-	bool isnan(bertini::complex const& num)
+	bool isnan(bertini::mpfr_complex const& num)
 	{
 		return num.isnan();
 	}
 
 	inline 
-	void RandomReal(bertini::complex & a, unsigned num_digits)
+	void RandomReal(bertini::mpfr_complex & a, unsigned num_digits)
 	{
 		a.precision(num_digits);
 		RandomMp(a.real_,num_digits);
@@ -1775,7 +1777,7 @@ namespace bertini {
 	}
 
 	inline 
-	void rand(bertini::complex & a, unsigned num_digits)
+	void rand(bertini::mpfr_complex & a, unsigned num_digits)
 	{
 		a.precision(num_digits);
 		RandomMp(a.real_,num_digits);
@@ -1783,21 +1785,21 @@ namespace bertini {
 	}
 
 	inline 
-	void RandomComplex(bertini::complex & a, unsigned num_digits)
+	void RandomComplex(bertini::mpfr_complex & a, unsigned num_digits)
 	{
 		rand(a,num_digits);
 	}
 
 	inline 
-	bertini::complex RandomComplex(unsigned num_digits)
+	bertini::mpfr_complex RandomComplex(unsigned num_digits)
 	{
-		bertini::complex z;
+		bertini::mpfr_complex z;
 		RandomComplex(z, num_digits);
 		return z;
 	}
 
 	inline 
-	void RandomUnit(bertini::complex & a, unsigned num_digits)
+	void RandomUnit(bertini::mpfr_complex & a, unsigned num_digits)
 	{
 		auto prev_precision = DefaultPrecision();
 
@@ -1810,13 +1812,13 @@ namespace bertini {
 	}
 
 	inline 
-	bertini::complex RandomUnit(unsigned num_digits)
+	bertini::mpfr_complex RandomUnit(unsigned num_digits)
 	{
-		bertini::complex a;
+		bertini::mpfr_complex a;
 		RandomUnit(a,num_digits);
 		return a;
 	}
-	using mpfr = bertini::complex;
+	using mpfr = bertini::mpfr_complex;
 } // re: namespace bertini
 
 

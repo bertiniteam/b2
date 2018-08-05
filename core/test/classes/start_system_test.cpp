@@ -50,7 +50,7 @@ using mpq_rational = bertini::mpq_rational;
 using mpfr_float = bertini::mpfr_float;
 using mpz_int = bertini::mpz_int;
 using dbl = bertini::dbl;
-using mpfr = bertini::mpfr;
+using mpfr = bertini::mpfr_complex;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -351,10 +351,10 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 	Vec<mpfr> v(4);
 	v << mpfr(1), mpfr(1), mpfr(1), mpfr(1);
 
-	auto f = final_mixed_sum.Eval(v,mpfr::rand());
+	auto f = final_mixed_sum.Eval(v,bertini::multiprecision::rand());
 	BOOST_CHECK_EQUAL(f.size(), 4);
 
-	auto J = final_mixed_sum.Jacobian(v,mpfr::rand());
+	auto J = final_mixed_sum.Jacobian(v,bertini::multiprecision::rand());
 	BOOST_CHECK_EQUAL(J.rows(), 4);
 	BOOST_CHECK_EQUAL(J.cols(), 4);	
 }

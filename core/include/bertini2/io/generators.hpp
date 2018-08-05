@@ -61,7 +61,7 @@ BOOST_MATH_STD_USING
 
 
 // BOOST_FUSION_ADAPT_ADT(
-//     bertini::complex,
+//     bertini::mpfr_complex,
 //     (bool, bool, obj.imag() != 0, /**/)
 //     (bertini::mpfr_float, bertini::mpfr_float, obj.real(), /**/)
 //     (bertini::mpfr_float, bertini::mpfr_float, obj.imag(), /**/)

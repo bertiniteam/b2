@@ -117,7 +117,10 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
   AC_MSG_ERROR([unable to find mpfr])
 ])
 
-
+#find mpc
+AC_SEARCH_LIBS([mpc_clear],[mpc], [],[
+  AC_MSG_ERROR([unable to find `mpc` for complex arithmetic. should have come with mpfr?])
+])
 
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN

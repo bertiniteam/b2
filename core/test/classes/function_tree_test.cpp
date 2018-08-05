@@ -56,7 +56,7 @@ using Node = bertini::node::Node;
 using Float = bertini::node::Float;
 
 using dbl = bertini::dbl;
-using mpfr = bertini::mpfr;
+using mpfr = bertini::mpfr_complex;
 
 using bertini::MakeVariable;
 using bertini::MakeFloat;
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 	N *= N;
 	
 	x->set_current_value<dbl>(std::complex<double>(xnum_dbl));
-	x->set_current_value<mpfr>(bertini::complex(xnum_mpfr));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xnum_mpfr));
 	
 	BOOST_CHECK(N->IsPolynomial());
 
@@ -125,6 +125,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 
 
 BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_nan){
+	
+
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
@@ -177,7 +179,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 	std::shared_ptr<Node> N = pow(x, mpq_rational(1,2));
 	
 	x->set_current_value<dbl>(std::complex<double>(xnum_dbl));
-	x->set_current_value<mpfr>(bertini::complex(xnum_mpfr));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xnum_mpfr));
 	
 	BOOST_CHECK_EQUAL(N->Degree(),-1);
 	BOOST_CHECK_EQUAL(N->Degree(x),-1);
@@ -201,8 +203,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = xnum_dbl+ynum_dbl+anum_dbl;
 	mpfr exact_mpfr = xnum_mpfr+ynum_mpfr+anum_mpfr;
@@ -290,8 +292,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = xnum_dbl-ynum_dbl-anum_dbl;
 	mpfr exact_mpfr = xnum_mpfr-ynum_mpfr-anum_mpfr;
@@ -383,8 +385,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_times_number){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = xnum_dbl*ynum_dbl*anum_dbl;
 	mpfr exact_mpfr = xnum_mpfr*ynum_mpfr*anum_mpfr;
@@ -471,8 +473,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = xnum_dbl/ynum_dbl;
 	mpfr exact_mpfr = xnum_mpfr/ynum_mpfr;
@@ -515,7 +517,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x){
 	std::shared_ptr<Variable> x = MakeVariable("x");
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = -xnum_dbl;
 	mpfr exact_mpfr = -xnum_mpfr;
@@ -552,8 +554,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl+ynum_dbl+anum_dbl,pnum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr+ynum_mpfr+anum_mpfr,pnum_mpfr);
@@ -593,8 +595,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_minus_y_minus_num1l_pow_num2){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl-ynum_dbl-anum_dbl,pnum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr-ynum_mpfr-anum_mpfr,pnum_mpfr);
@@ -626,8 +628,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl*ynum_dbl*anum_dbl,pnum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr*ynum_mpfr*anum_mpfr,pnum_mpfr);
@@ -675,8 +677,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_over_yl_pow_num2){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl/ynum_dbl,pnum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr/ynum_mpfr,pnum_mpfr);
@@ -714,7 +716,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lnegative_xl_pow_num2){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(-xnum_dbl,pnum_dbl);
 	mpfr exact_mpfr = pow(-xnum_mpfr,pnum_mpfr);
@@ -744,8 +746,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_plus_y_plus_num1){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = -(xnum_dbl+ynum_dbl+anum_dbl);
 	mpfr exact_mpfr = -(xnum_mpfr+ynum_mpfr+anum_mpfr);
@@ -784,8 +786,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_minus_y_minus_num1){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = -(xnum_dbl-ynum_dbl-anum_dbl);
 	mpfr exact_mpfr = -(xnum_mpfr-ynum_mpfr-anum_mpfr);
@@ -826,8 +828,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_times_y_times_num1){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = -(xnum_dbl*ynum_dbl*anum_dbl);
 	mpfr exact_mpfr = -(xnum_mpfr*ynum_mpfr*anum_mpfr);
@@ -888,8 +890,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_over_y){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = -(xnum_dbl/ynum_dbl);
 	mpfr exact_mpfr = -(xnum_mpfr/ynum_mpfr);
@@ -941,7 +943,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_pow_num2){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = -pow(xnum_dbl,pnum_dbl);
 	mpfr exact_mpfr = -pow(xnum_mpfr,pnum_mpfr);
@@ -977,8 +979,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_over_num){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = xnum_dbl*ynum_dbl/anum_dbl;
 	mpfr exact_mpfr = xnum_mpfr*ynum_mpfr/anum_mpfr;
@@ -1030,8 +1032,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_times_ly_plus_num2l){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = (xnum_dbl+anum_dbl)*(ynum_dbl+bnum_dbl);
 	mpfr exact_mpfr = (xnum_mpfr+anum_mpfr)*(ynum_mpfr+bnum_mpfr);
@@ -1062,8 +1064,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_times_y_plus_num2){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = xnum_dbl+anum_dbl*ynum_dbl+bnum_dbl;
 	mpfr exact_mpfr = xnum_mpfr+anum_mpfr*ynum_mpfr+bnum_mpfr;
@@ -1093,8 +1095,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_over_ly_plus_num2l){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = (xnum_dbl+anum_dbl)/(ynum_dbl+bnum_dbl);
 	mpfr exact_mpfr = (xnum_mpfr+anum_mpfr)/(ynum_mpfr+bnum_mpfr);
@@ -1124,8 +1126,8 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_over_y_plus_num2){
 	
 	x->set_current_value<dbl>(xnum_dbl);
 	y->set_current_value<dbl>(ynum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
-	y->set_current_value<mpfr>(bertini::complex(ystr_real,ystr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
+	y->set_current_value<mpfr>(bertini::mpfr_complex(ystr_real,ystr_imag));
 	
 	dbl exact_dbl = xnum_dbl+anum_dbl/ynum_dbl+bnum_dbl;
 	mpfr exact_mpfr = xnum_mpfr+anum_mpfr/ynum_mpfr+bnum_mpfr;
@@ -1153,7 +1155,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_plus_num1){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl,pnum_dbl)+anum_dbl;
 	mpfr exact_mpfr = pow(xnum_mpfr,pnum_mpfr)+anum_mpfr;
@@ -1180,7 +1182,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_lnum1_pow_num2l){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(anum_dbl,pnum_dbl)+xnum_dbl;
 	mpfr exact_mpfr = pow(anum_mpfr,pnum_mpfr)+xnum_mpfr;
@@ -1207,7 +1209,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_lnum1_pow_num2l){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(anum_dbl,pnum_dbl)*xnum_dbl;
 	mpfr exact_mpfr = pow(anum_mpfr,pnum_mpfr)*xnum_mpfr;
@@ -1234,7 +1236,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl,pnum_dbl)*anum_dbl;
 	mpfr exact_mpfr = pow(xnum_mpfr,pnum_mpfr)*anum_mpfr;
@@ -1261,7 +1263,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_over_num1){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl,pnum_dbl)/anum_dbl;
 	mpfr exact_mpfr = pow(xnum_mpfr,pnum_mpfr)/anum_mpfr;
@@ -1284,7 +1286,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_pow_lsqrt_xl_num)
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	auto exact_dbl = pow(sqrt(xnum_dbl),anum_dbl);
-	auto exact_mpfr = pow(sqrt(xnum_mpfr),anum_mpfr);
+	bertini::mpfr_complex exact_mpfr = pow(sqrt(xnum_mpfr),anum_mpfr);
 
 	std::shared_ptr<Variable> x = MakeVariable("x");
 	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
@@ -1325,7 +1327,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_over_lnum1_pow_num2l){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = xnum_dbl/pow(anum_dbl,pnum_dbl);
 	mpfr exact_mpfr = xnum_mpfr/pow(anum_mpfr,pnum_mpfr);
@@ -1352,7 +1354,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl,anum_dbl+pnum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr,anum_mpfr+pnum_mpfr);
@@ -1379,7 +1381,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_times_num2l){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl,anum_dbl*pnum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr,anum_mpfr*pnum_mpfr);
@@ -1406,7 +1408,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_over_num2l){
 	std::shared_ptr<Float> p = MakeFloat(pstr_real, pstr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = pow(xnum_dbl,pnum_dbl/anum_dbl);
 	mpfr exact_mpfr = pow(xnum_mpfr,pnum_mpfr/anum_mpfr);
@@ -1572,7 +1574,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
 	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = sin(xnum_dbl+anum_dbl);
 	mpfr exact_mpfr = sin(xnum_mpfr+anum_mpfr);
@@ -1598,7 +1600,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_cos_of_lx_times_numl){
 	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = cos(xnum_dbl*anum_dbl);
 	mpfr exact_mpfr = cos(xnum_mpfr*anum_mpfr);
@@ -1624,7 +1626,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_of_lx_over_numl){
 	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = tan(xnum_dbl/anum_dbl);
 	mpfr exact_mpfr = tan(xnum_mpfr/anum_mpfr);
@@ -1671,7 +1673,7 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
 	std::shared_ptr<Float> a = MakeFloat(astr_real, astr_imag);
 	
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 	
 	dbl exact_dbl = sqrt(pow(xnum_dbl,anum_dbl));
 	mpfr exact_mpfr = sqrt(pow(xnum_mpfr,anum_mpfr));
@@ -1711,10 +1713,10 @@ BOOST_AUTO_TEST_CASE(arcsine_evaluate)
 	auto N = asin(pow(x,2)+1);
 
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 
 	dbl exact_dbl = asin(pow(xnum_dbl,2)+1.0);
-	mpfr exact_mpfr = asin(pow(xnum_mpfr,2)+bertini::complex(1.0));
+	mpfr exact_mpfr = asin(pow(xnum_mpfr,2)+bertini::mpfr_complex(1.0));
 
 	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1731,10 +1733,10 @@ BOOST_AUTO_TEST_CASE(arccosine_evaluate)
 	auto N = acos(pow(x,2)+1);
 
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 
 	dbl exact_dbl = acos(pow(xnum_dbl,2)+1.0);
-	mpfr exact_mpfr = acos(pow(xnum_mpfr,2)+bertini::complex(1.0));
+	mpfr exact_mpfr = acos(pow(xnum_mpfr,2)+bertini::mpfr_complex(1.0));
 
 	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1750,10 +1752,10 @@ BOOST_AUTO_TEST_CASE(arctangent_evaluate)
 	auto N = atan(pow(x,2)+1);
 
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 
 	dbl exact_dbl = atan(pow(xnum_dbl,2)+1.0);
-	mpfr exact_mpfr = atan(pow(xnum_mpfr,2)+bertini::complex(1.0));
+	mpfr exact_mpfr = atan(pow(xnum_mpfr,2)+bertini::mpfr_complex(1.0));
 
 	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
@@ -1770,10 +1772,10 @@ BOOST_AUTO_TEST_CASE(log_evaluate)
 	auto N = log(pow(x,2)+1);
 
 	x->set_current_value<dbl>(xnum_dbl);
-	x->set_current_value<mpfr>(bertini::complex(xstr_real,xstr_imag));
+	x->set_current_value<mpfr>(bertini::mpfr_complex(xstr_real,xstr_imag));
 
 	dbl exact_dbl = log(pow(xnum_dbl,2)+1.0);
-	mpfr exact_mpfr = log(pow(xnum_mpfr,2)+bertini::complex(1.0));
+	mpfr exact_mpfr = log(pow(xnum_mpfr,2)+bertini::mpfr_complex(1.0));
 
 	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);

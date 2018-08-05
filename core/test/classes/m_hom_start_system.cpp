@@ -37,7 +37,7 @@ using mpq_rational = bertini::mpq_rational;
 using mpfr_float = bertini::mpfr_float;
 using mpz_int = bertini::mpz_int;
 using dbl = bertini::dbl;
-using mpfr = bertini::mpfr;
+using mpfr = bertini::mpfr_complex;
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
 

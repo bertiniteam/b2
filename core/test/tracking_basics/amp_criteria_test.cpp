@@ -55,7 +55,7 @@ using bertini::MakeVariable;
 
 using mpq_rational = bertini::mpq_rational;
 using dbl = std::complex<double>;
-using mpfr = bertini::complex;
+using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
 
 
