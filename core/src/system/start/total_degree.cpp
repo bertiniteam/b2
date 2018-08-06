@@ -105,8 +105,7 @@ namespace bertini {
 
 			
 			auto one = mpfr_complex(1);
-			auto two_i_pi = mpfr_complex(0,2) * acos( mpfr_float(-1) );
-
+			mpfr_complex two_i_pi = mpfr_complex(0,2) * acos( mpfr_float(-1) );
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
 				start_point(ii+offset) = exp( two_i_pi * mpfr_float(indices[ii]) / degrees_[ii]  ) * pow(random_values_[ii]->Eval<mpfr_complex>(), one / degrees_[ii]);
 
