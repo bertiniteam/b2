@@ -25,7 +25,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/random.hpp>
+
 #include <iostream>
 
 #include "bertini2/limbo.hpp"

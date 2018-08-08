@@ -64,7 +64,7 @@ using mpfr_float = bertini::mpfr_float;
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
 using bertini::DefaultPrecision;
-
+using bertini::Precision;
 
 BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 {

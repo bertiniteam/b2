@@ -275,8 +275,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	bertini::System sys;
 	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
 
-	VariableGroup vars;
-	vars.push_back(x); vars.push_back(y); vars.push_back(z);
+	VariableGroup vars{x,y,z};
 
 	sys.AddVariableGroup(vars);  
 	sys.AddFunction(y+x*y + mpfr_float("0.5"));
@@ -285,26 +284,24 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 
 	bertini::start_system::TotalDegree TD(sys);
 
-	for (unsigned long long ii = 0; ii < TD.NumStartPoints(); ++ii)
+	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		auto start = TD.StartPoint<dbl>(ii);
 		auto function_values = TD.Eval(start);
+
 		const auto& vs = TD.RandomValues();
 
-		for (size_t jj = 0; jj < function_values.size(); ++jj)
+		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 			BOOST_CHECK(abs(function_values(jj)) < 
 				abs(vs[jj]->Eval<dbl>())*relaxed_threshold_clearance_d);
 	}
-	
 
-	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
-
-	for (unsigned long long ii = 0; ii < TD.NumStartPoints(); ++ii)
+	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		auto start = TD.StartPoint<mpfr>(ii);
 		auto function_values = TD.Eval(start);
 
-		for (size_t jj = 0; jj < function_values.size(); ++jj)
+		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 		{
 			BOOST_CHECK(abs(function_values(jj)) < threshold_clearance_mp);
 		}

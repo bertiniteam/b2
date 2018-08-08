@@ -61,7 +61,6 @@ BOOST_AUTO_TEST_CASE(complex_addition)
 	bertini::mpfr_complex v("0.2","1.3");
 	
 	bertini::mpfr_complex r = z+v;
-	std::cout << abs(r.real()-bertini::mpfr_float("0.3")) << '\n';
 	BOOST_CHECK(abs(r.real()-bertini::mpfr_float("0.3")) < threshold_clearance_mp);
 	BOOST_CHECK(abs(r.imag()-bertini::mpfr_float("2.5")) < threshold_clearance_mp);
 }
@@ -568,6 +567,35 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable)
 
 	a = b;
 	BOOST_CHECK_EQUAL(Precision(a),50);
+
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_precision_predictable2)
+{
+	mpfr_complex::default_precision(50);
+	mpfr_float::default_precision(50);
+	mpfr_complex a;
+	BOOST_CHECK_EQUAL(a.real().precision(),50);
+	mpfr_complex::default_precision(40);
+	mpfr_float::default_precision(40);
+	BOOST_CHECK_EQUAL(a.real().precision(),50);
+
+	mpfr_complex::default_precision(50);
+	mpfr_float::default_precision(50);
+	mpfr_complex b;
+	BOOST_CHECK_EQUAL(b.real().precision(),50);
+	mpfr_float::default_precision(40);
+	BOOST_CHECK_EQUAL(b.real().precision(),50);
+
+
+
+	mpfr_complex::default_precision(50);
+	mpfr_float::default_precision(50);
+	mpfr_complex c;
+	BOOST_CHECK_EQUAL(c.real().precision(),50);
+	mpfr_complex::default_precision(40);
+	BOOST_CHECK_EQUAL(c.real().precision(),50);
 }
 
 
