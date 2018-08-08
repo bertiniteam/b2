@@ -42,6 +42,7 @@
 
 #include <boost/type_index.hpp>
 
+#include "bertini2/eigen_extensions.hpp"
 
 namespace bertini{
 	namespace tracking{
@@ -457,17 +458,16 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename Derived>
+				template<typename ComplexType>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									System const& S,
-									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
+									const Vec<ComplexType>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									NumErrorT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
 									NumErrorT const& tracking_tolerance)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					auto step_success = FullStep(next_space, S, current_space, current_time, delta_t);
 
@@ -501,13 +501,13 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename Derived>
+				template<typename ComplexType>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									NumErrorT & size_proportion,
 									NumErrorT & norm_J,
 									NumErrorT & norm_J_inverse,
 									System const& S,
-									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
+									const Vec<ComplexType>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									NumErrorT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
@@ -515,7 +515,6 @@ namespace bertini{
 									NumErrorT const& tracking_tolerance,
 									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					
 					auto success_code = Predict<ComplexType>(next_space, S, current_space, current_time, delta_t,
@@ -570,14 +569,14 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename Derived>
+				template<typename ComplexType>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									NumErrorT & error_estimate,
 									NumErrorT & size_proportion,
 									NumErrorT & norm_J,
 									NumErrorT & norm_J_inverse,
 									System const& S,
-									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
+									const Vec<ComplexType>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									NumErrorT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
@@ -585,7 +584,6 @@ namespace bertini{
 									NumErrorT const& tracking_tolerance,
 									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
 					
@@ -685,13 +683,12 @@ namespace bertini{
 				 \return SuccessCode determining result of the computation
 				 */
 				
-				template<typename ComplexType, typename Derived>
-				SuccessCode FullStep(Vec<typename Derived::Scalar> & next_space,
+				template<typename ComplexType>
+				SuccessCode FullStep(Vec<ComplexType> & next_space,
 									System const& S,
-									 Eigen::MatrixBase<Derived> const& current_space, ComplexType const& current_time,
+									 Vec<ComplexType> const& current_space, ComplexType const& current_time,
 									 ComplexType const& delta_t)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 					
 					// If using constant predictor
 					if(s_ == 0)
@@ -720,7 +717,8 @@ namespace bertini{
 						for(int jj = 0; jj < ii; ++jj)
 							temp += aref(ii,jj)*Kref.col(jj);
 
-						if(EvalRHS(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
+						// Vec<ComplexType> wfp = 
+						if(EvalRHS<ComplexType>(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
 					}
 					
@@ -844,13 +842,12 @@ namespace bertini{
 				 \return Success code of this computation
 				 */
 				
-				template< typename Derived, typename ComplexType>
+				template<typename ComplexType>
 				SuccessCode EvalRHS(System const& S,
-									const Eigen::MatrixBase<Derived>& space, const ComplexType& time, Mat<ComplexType> & K, unsigned stage)
+									const Vec<ComplexType>& space, const ComplexType& time, Mat<ComplexType> & K, unsigned stage)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
-					if (std::is_same<typename Derived::Scalar, mpfr_complex>::value)
+					if (std::is_same<ComplexType, mpfr_complex>::value)
 						PrecisionSanityCheck();
 
 					if(stage == 0)

@@ -475,7 +475,7 @@ namespace bertini{
 		class MultiplePrecisionTracker : public FixedPrecisionTracker<MultiplePrecisionTracker>
 		{
 		public:
-			using BaseComplexType = mpfr;
+			using BaseComplexType = mpfr_complex;
 			using BaseRealType = mpfr_float;
 
 			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
@@ -555,9 +555,9 @@ namespace bertini{
 			{	
 				return GetSystem().precision() == precision_ &&
 						DefaultPrecision()==precision_ && 
-						std::get<Vec<mpfr> >(current_space_)(0).precision() == precision_ &&
-						std::get<Vec<mpfr> >(tentative_space_)(0).precision() == precision_ &&
-						std::get<Vec<mpfr> >(temporary_space_)(0).precision() == precision_ &&
+						std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == precision_ &&
+						std::get<Vec<mpfr_complex> >(tentative_space_)(0).precision() == precision_ &&
+						std::get<Vec<mpfr_complex> >(temporary_space_)(0).precision() == precision_ &&
 						Precision(this->endtime_)==precision_
 						        ;				
 			}

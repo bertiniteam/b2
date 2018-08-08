@@ -81,11 +81,11 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					Precision(std::get< Vec<mpfr> >(f_temp_), new_precision);
-					Precision(std::get< Vec<mpfr> >(step_temp_), new_precision);
-					Precision(std::get< Mat<mpfr> >(J_temp_), new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(f_temp_), new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(step_temp_), new_precision);
+					Precision(std::get< Mat<mpfr_complex> >(J_temp_), new_precision);
 
-					std::get< Eigen::PartialPivLU<Mat<mpfr>> >(LU_) = Eigen::PartialPivLU<Mat<mpfr>>(numTotalFunctions_);
+					std::get< Eigen::PartialPivLU<Mat<mpfr_complex>> >(LU_) = Eigen::PartialPivLU<Mat<mpfr_complex>>(numTotalFunctions_);
 
 					current_precision_ = new_precision;				
 				}
@@ -107,11 +107,11 @@ namespace bertini{
 					numTotalFunctions_ = S.NumTotalFunctions();
 					numVariables_ = S.NumVariables();
 					std::get< Mat<dbl> >(J_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr> >(J_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr_complex> >(J_temp_).resize(numTotalFunctions_, numVariables_);
 					std::get< Vec<dbl> >(f_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr> >(f_temp_).resize(numTotalFunctions_);
+					std::get< Vec<mpfr_complex> >(f_temp_).resize(numTotalFunctions_);
 					std::get< Vec<dbl> >(step_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<mpfr_complex> >(step_temp_).resize(numTotalFunctions_);
 				}
 
 				
@@ -372,11 +372,11 @@ namespace bertini{
 				unsigned numTotalFunctions_; // Number of total functions for the current system
 				unsigned numVariables_;  // Number of variables for the current system
 				
-				std::tuple< Vec<dbl>, Vec<mpfr> > f_temp_; // Variable to hold temporary evaluation of the system
-				std::tuple< Vec<dbl>, Vec<mpfr> > step_temp_; // Variable to hold temporary evaluation of the newton step
-				std::tuple< Mat<dbl>, Mat<mpfr> > J_temp_; // Variable to hold temporary evaluation of the Jacobian
+				std::tuple< Vec<dbl>, Vec<mpfr_complex> > f_temp_; // Variable to hold temporary evaluation of the system
+				std::tuple< Vec<dbl>, Vec<mpfr_complex> > step_temp_; // Variable to hold temporary evaluation of the newton step
+				std::tuple< Mat<dbl>, Mat<mpfr_complex> > J_temp_; // Variable to hold temporary evaluation of the Jacobian
 				
-				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_; // The LU factorization from the Newton iterates
+				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_; // The LU factorization from the Newton iterates
 				
 				unsigned current_precision_;
 
