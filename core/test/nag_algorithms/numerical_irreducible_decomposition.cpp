@@ -24,7 +24,7 @@
 */
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// danielle brake, university of notre dame
 
 #include "bertini2/system/precon.hpp"
 #include "bertini2/nag_algorithms/numerical_irreducible_decomposition.hpp"

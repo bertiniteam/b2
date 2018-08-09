@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, University of Wisconsin Eau Claire
+// danielle brake, University of Wisconsin Eau Claire
 // jeb collins, west texas a&m
 
 /**

@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// danielle brake, university of wisconsin eau claire
 //
 //
 //  generating_test.cpp:  main source file for the testing of generators for Bertini2

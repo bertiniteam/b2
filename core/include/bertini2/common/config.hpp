@@ -21,7 +21,7 @@
 
 
 // individual authors of this file include:
-// dani brake, university of notre dame, university of wisconsin eau claire
+// danielle brake, university of notre dame, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 #ifndef BERITNI2_COMMON_CONFIG

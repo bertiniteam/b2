@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// danielle brake, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 // this file in intended to be included into other test files, with blanks filled in above.

@@ -21,7 +21,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// danielle brake, university of wisconsin eau claire
 
 /**
 \file predict.hpp 

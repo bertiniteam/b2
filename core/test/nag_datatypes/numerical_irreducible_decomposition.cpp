@@ -24,7 +24,7 @@
 */
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// danielle brake, university of notre dame
 
 #include <boost/test/unit_test.hpp>
 #include "bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp"

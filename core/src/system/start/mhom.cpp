@@ -23,7 +23,7 @@
 // daniel brake, university of notre dame
 // karleigh cameron, colorado state university
 // Tim Hodges, Colorado State University
-// dani brake, university of wisconsin eau claire
+// danielle brake, university of wisconsin eau claire
 
 #include "bertini2/system/start/mhom.hpp"
 

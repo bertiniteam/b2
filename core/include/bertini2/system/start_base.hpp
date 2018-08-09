@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// danielle brake, university of notre dame
 
 /**
 \file b2/core/include/bertini2/system/start_base.hpp 

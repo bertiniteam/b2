@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// danielle brake, university of wisconsin eau claire
 // additionally, this file contains code
 // based on and refined from SO post 
 // https://stackoverflow.com/questions/19329297/constructor-permutations-for-passing-parameters-in-arbitrary-order
