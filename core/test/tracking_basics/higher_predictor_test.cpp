@@ -65,6 +65,7 @@ template<typename NumType> using Mat = bertini::Mat<NumType>;
 
 using bertini::MakeFloat;
 using bertini::MakeVariable;
+using bertini::Precision;
 using bertini::DefaultPrecision;
 
 
@@ -1064,6 +1065,7 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp)
 
 BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 {
+
 	DefaultPrecision(TRACKING_TEST_MPFR_DEFAULT_DIGITS);
 	
 	// Starting point in spacetime step
@@ -1145,6 +1147,10 @@ BOOST_AUTO_TEST_CASE(monodromy_RKCK45_mp_change_precision)
 	
 	DefaultPrecision(50);
 	
+	Precision(current_space, 50);
+	Precision(current_time, 50);
+	Precision(delta_t, 50);
+
 	// Starting point in spacetime step
 	current_space << mpfr("0.464158883361277585510862309093"), mpfr("0.74161984870956629487113974408");
 	
@@ -1457,6 +1463,9 @@ BOOST_AUTO_TEST_CASE(circle_line_RKDP56_mp_change_precision)
 	
 	
 	bertini::DefaultPrecision(50);
+	Precision(current_space, 50);
+	Precision(current_time, 50);
+	Precision(delta_t, 50);
 	
 	// Starting point in spacetime step
 	current_space << mpfr("2.3","0.2"), mpfr("1.1", "1.87");
