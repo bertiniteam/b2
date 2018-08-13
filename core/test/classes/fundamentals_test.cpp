@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
 	DefaultPrecision(100);
 	mpfr_float a;
 
-	RandomMp(a,500);
+	RandomMpAssign(a,500);
 
 	BOOST_CHECK_EQUAL(a.precision(), 500);
 	BOOST_CHECK_EQUAL(100, DefaultPrecision());
@@ -299,10 +299,9 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	
 
 	mpfr_float z = x;
-	BOOST_CHECK_EQUAL(z.precision(), 30);
+	BOOST_CHECK_EQUAL(z.precision(), 50);
 
-	BOOST_CHECK(fabs(z - mpfr_float("0.012345678901234567890123456789")) < 1e-30);
-
+	BOOST_CHECK(fabs(z - x) < 1e-50);
 
 
 	DefaultPrecision(70);
@@ -310,7 +309,7 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	z = x;
 
 	BOOST_CHECK_EQUAL(z.precision(),50);
-	BOOST_CHECK(fabs(z - mpfr_float("0.01234567890123456789012345678901234567890123456789")) < 1e-50);
+	BOOST_CHECK(fabs(z - x) < 1e-50);
 
 
 	y.precision(70);

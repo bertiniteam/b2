@@ -79,28 +79,23 @@ namespace bertini
 		using namespace boost::multiprecision;
    		using namespace boost::random;
 
-   		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
-   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
+   		static uniform_real_distribution<number<mpfr_float_backend<length_in_digits>, et_on> > distribution(0,1);
+   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> bit_generator;
 
-		return ur(gen);
+		mpfr_float a{distribution(bit_generator)};
+		return a;
 	}
 	
 	/**
 	 a templated function for producing random numbers in the unit interval, of a given number of digits.
 	 
 	 \tparam length_in_digits The length of the desired random number
+	 \param a the number which will be assigned in this call
 	 */
 	template <unsigned int length_in_digits>
-	void RandomMp(mpfr_float & a)
+	void RandomMpAssign(mpfr_float & a)
 	{	
-
-		using namespace boost::multiprecision;
-   		using namespace boost::random;
-
-   		static uniform_real_distribution<boost::multiprecision::number<boost::multiprecision::mpfr_float_backend<length_in_digits>, boost::multiprecision::et_off> > ur(0,1);
-   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> gen;
-
-		a = ur(gen);
+		a = RandomMp<length_in_digits>();
 	}
 
 	/**
@@ -112,9 +107,9 @@ namespace bertini
 	 \param b The right bound.
 	 */
 	template <unsigned int length_in_digits>
-	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
+	mpfr_float RandomMp(const mpfr_float & left, const mpfr_float & right)
 	{
-		return (b-a)*RandomMp<length_in_digits>()+a;
+		return (right-left)*RandomMp<length_in_digits>()+left;
 	}
 
 
@@ -125,18 +120,28 @@ namespace bertini
 	mpfr_float RandomMp();
 
 	/**
+	 \brief create a random number, at the specified precision
+
+	 \param num_digits the precision that you desire.  
+	 */
+	mpfr_float RandomMp(unsigned num_digits);
+
+	/**
 	 \brief create a random number in a given interval, at the current default precision
 	*/
 	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b);
 
-
+	/**
+	 \brief create a random number in a given interval, at the specified precision
+	*/
+	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b, unsigned num_digits);
 
 	/**
 	 \brief Set an existing mpfr_float to a random number, to a given precision.  
 
 	 This function is how to get random numbers at a precision different from the current default.
 	 */
-	void RandomMp(mpfr_float & a, unsigned num_digits);
+	void RandomMpAssign(mpfr_float & a, unsigned num_digits);
 
 	
 
@@ -156,28 +161,43 @@ using bertini::RandomMp;
 
 
 
-
+	/**
+	 Assign to a random real number \f$\in [-1,\,1]\f$, to current default precision. 
+	 */
 	inline 
-	void RandomReal(complex & a, unsigned num_digits)
+	void RandomRealAssign(complex & a, unsigned num_digits)
 	{
-		a.precision(num_digits);
-		RandomMp(a.real(),num_digits);
-		a.imag() = 0;
+		auto cached = DefaultPrecision();
+		DefaultPrecision(num_digits);
+		complex temp(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits),0);
+		a.swap(temp);
+		DefaultPrecision(cached);
 	}
 
-	inline 
-	void rand(complex & a, unsigned num_digits)
+	/**
+	 Produce a random real number \f$\in [-1,\,1]\f$, to current default precision. 
+	 */
+	inline complex RandomReal()
 	{
-		a.precision(num_digits);
-		RandomMp(a.real(),num_digits);
-		RandomMp(a.imag(),num_digits);
+		return complex(RandomMp(mpfr_float(-1),mpfr_float(1)), 0);
+	}
+	
+	/**
+	 Produce a random real number \f$\in [-1,\,1]\f$, to specified precision. 
+	 */
+	inline complex RandomReal(unsigned num_digits)
+	{
+		auto cached = DefaultPrecision();
+		DefaultPrecision(num_digits);
+		auto result = complex(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits), 0);
+		DefaultPrecision(cached);
+		return result;
 	}
 
-	inline 
-	void RandomComplex(complex & a, unsigned num_digits)
-	{
-		rand(a,num_digits);
-	}
+
+
+	
+		
 
 
 	/**
@@ -185,56 +205,66 @@ using bertini::RandomMp;
 	 */
 	inline complex rand()
 	{
-		complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
-		returnme /= sqrt( abs(returnme));
-		return returnme;
+		return complex( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
 	}
-	
+
+
+	/**
+	 Produce a random unit complex number, to default precision.
+	 */
+	inline complex rand_unit()
+	{
+		complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
+		return returnme / sqrt( abs(returnme));
+	}
+
 	inline complex RandomUnit()
 	{
-		complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
-		returnme /= abs(returnme);
-		return returnme;
+		return rand_unit();
 	}
-	/**
-	 Produce a random real number \f$\in [-1,\,1]\f$, to current default precision. 
-	 */
-	inline complex RandomReal()
-	{
-		using std::sqrt;
-		complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
-		returnme /= sqrt( abs(returnme));
-		return returnme;
-	}
-		
 
+	inline 
+	void rand_assign(complex & a, unsigned num_digits)
+	{
+		auto cached = DefaultPrecision();
+		DefaultPrecision(num_digits);
+		using std::move;
+		mpfr_complex temp( RandomMp(num_digits), RandomMp(num_digits) );
+		a = move(temp);
+		DefaultPrecision(cached);
+	}
+
+	inline 
+	void RandomComplexAssign(complex & a, unsigned num_digits)
+	{
+		rand_assign(a,num_digits);
+	}
 
 	inline 
 	complex RandomComplex(unsigned num_digits)
 	{
 		complex z;
-		RandomComplex(z, num_digits);
+		RandomComplexAssign(z, num_digits);
 		return z;
 	}
 
 	inline 
-	void RandomUnit(complex & a, unsigned num_digits)
+	void RandomUnitAssign(complex & a, unsigned num_digits)
 	{
-		auto prev_precision = DefaultPrecision();
-
+		auto cached = DefaultPrecision();
+		DefaultPrecision(num_digits);
 		a.precision(num_digits);
-		RandomMp(a.real(),num_digits);
-		RandomMp(a.imag(),num_digits);
-		a /= abs(a);
-
-		DefaultPrecision(prev_precision);
+		using std::move;
+		complex temp(RandomMp(num_digits),RandomMp(num_digits));
+		a = move(temp/sqrt(abs(temp)));
+		DefaultPrecision(cached);
 	}
 
 	inline 
 	complex RandomUnit(unsigned num_digits)
 	{
 		complex a;
-		RandomUnit(a,num_digits);
+		RandomUnitAssign(a,num_digits);
 		return a;
 	}
 

@@ -34,42 +34,59 @@ namespace bertini {
 
 	mpfr_float RandomMp()
 	{
-		auto num_digits = bertini::DefaultPrecision();
+		return RandomMp(bertini::DefaultPrecision());
+	}
 
+	mpfr_float RandomMp(unsigned num_digits)
+	{
+		using std::move;
+		mpfr_float a;
 		if (num_digits<=50)
-			return RandomMp<50>();
+			a = move(RandomMp<50>());
 		else if (num_digits<=100)
-			return RandomMp<100>();
+			a = move(RandomMp<100>());
 		else if (num_digits<=200)
-			return RandomMp<200>();
+			a = move(RandomMp<200>());
 		else if (num_digits<=400)
-			return RandomMp<400>();
+			a = move(RandomMp<400>());
 		else if (num_digits<=800)
-			return RandomMp<800>();
+			a = move(RandomMp<800>());
 		else if (num_digits<=1600)
-			return RandomMp<1600>();
+			a = move(RandomMp<1600>());
 		else if (num_digits<=3200)
-			return RandomMp<3200>();
+			a = move(RandomMp<3200>());
 		else if (num_digits<=6400)
-			return RandomMp<6400>();
+			a = move(RandomMp<6400>());
 		else if (num_digits<=8000)
-			return RandomMp<8000>();
+			a = move(RandomMp<8000>());
 		else if (num_digits<=10000)
-			return RandomMp<10000>();
+			a = move(RandomMp<10000>());
 		else if (num_digits<=12000)
-			return RandomMp<12000>();
+			a = move(RandomMp<12000>());
 		else if (num_digits<=14000)
-			return RandomMp<14000>();
+			a = move(RandomMp<14000>());
 		else if (num_digits<=16000)
-			return RandomMp<16000>();
+			a = move(RandomMp<16000>());
 		else if (num_digits<=18000)
-			return RandomMp<18000>();
+			a = move(RandomMp<18000>());
 		else if (num_digits<=20000)
-			return RandomMp<20000>();
+			a = move(RandomMp<20000>());
 		else if (num_digits<=40000)
-			return RandomMp<40000>();
+			a = move(RandomMp<40000>());
 		else
-			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.  If you have a better solution to this problem, please write the authors of this software.");
+			throw std::out_of_range("requesting random long number of digits -- higher than 40000.  this throw can be remedied by adding more cases to the generating function RandomMp in random.cpp.  If you have a better solution to this problem, please write the authors of this software.");
+		a.precision(num_digits);
+		return a;
+	}
+
+
+	void RandomMpAssign(mpfr_float & a, unsigned num_digits)
+	{
+		using std::move;
+
+		mpfr_float temp;
+		temp = RandomMp(num_digits);
+		a = move(temp);
 	}
 
 
@@ -77,89 +94,57 @@ namespace bertini {
 
 	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
 	{
-		auto num_digits = bertini::DefaultPrecision();
-
-		if (num_digits<=50)
-			return RandomMp<50>(a,b);
-		else if (num_digits<=100)
-			return RandomMp<100>(a,b);
-		else if (num_digits<=200)
-			return RandomMp<200>(a,b);
-		else if (num_digits<=400)
-			return RandomMp<400>(a,b);
-		else if (num_digits<=800)
-			return RandomMp<800>(a,b);
-		else if (num_digits<=1600)
-			return RandomMp<1600>(a,b);
-		else if (num_digits<=3200)
-			return RandomMp<3200>(a,b);
-		else if (num_digits<=6400)
-			return RandomMp<6400>(a,b);
-		else if (num_digits<=8000)
-			return RandomMp<8000>(a,b);
-		else if (num_digits<=10000)
-			return RandomMp<10000>(a,b);
-		else if (num_digits<=12000)
-			return RandomMp<12000>(a,b);
-		else if (num_digits<=14000)
-			return RandomMp<14000>(a,b);
-		else if (num_digits<=16000)
-			return RandomMp<16000>(a,b);
-		else if (num_digits<=18000)
-			return RandomMp<18000>(a,b);
-		else if (num_digits<=20000)
-			return RandomMp<20000>(a,b);
-		else if (num_digits<=40000)
-			return RandomMp<40000>(a,b);
-		else
-			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.  If you have a better solution to this problem, please write the authors of this software.");
+		return RandomMp(a,b,bertini::DefaultPrecision());
 	}
 
-
-
-
-
-
-
-	void RandomMp(mpfr_float & a, unsigned num_digits)
+	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b, unsigned num_digits)
 	{
+		using std::move;
+		mpfr_float result;
 		if (num_digits<=50)
-			RandomMp<50>(a);
+			result = move(RandomMp<50>(a,b));
 		else if (num_digits<=100)
-			RandomMp<100>(a);
+			result = move(RandomMp<100>(a,b));
 		else if (num_digits<=200)
-			RandomMp<200>(a);
+			result = move(RandomMp<200>(a,b));
 		else if (num_digits<=400)
-			RandomMp<400>(a);
+			result = move(RandomMp<400>(a,b));
 		else if (num_digits<=800)
-			RandomMp<800>(a);
+			result = move(RandomMp<800>(a,b));
 		else if (num_digits<=1600)
-			RandomMp<1600>(a);
+			result = move(RandomMp<1600>(a,b));
 		else if (num_digits<=3200)
-			RandomMp<3200>(a);
+			result = move(RandomMp<3200>(a,b));
 		else if (num_digits<=6400)
-			RandomMp<6400>(a);
+			result = move(RandomMp<6400>(a,b));
 		else if (num_digits<=8000)
-			RandomMp<8000>(a);
+			result = move(RandomMp<8000>(a,b));
 		else if (num_digits<=10000)
-			RandomMp<10000>(a);
+			result = move(RandomMp<10000>(a,b));
 		else if (num_digits<=12000)
-			RandomMp<12000>(a);
+			result = move(RandomMp<12000>(a,b));
 		else if (num_digits<=14000)
-			RandomMp<14000>(a);
+			result = move(RandomMp<14000>(a,b));
 		else if (num_digits<=16000)
-			RandomMp<16000>(a);
+			result = move(RandomMp<16000>(a,b));
 		else if (num_digits<=18000)
-			RandomMp<18000>(a);
+			result = move(RandomMp<18000>(a,b));
 		else if (num_digits<=20000)
-			RandomMp<20000>(a);
+			result = move(RandomMp<20000>(a,b));
 		else if (num_digits<=40000)
-			RandomMp<40000>(a);
+			result = move(RandomMp<40000>(a,b));
 		else
-			throw std::out_of_range("requesting random long number of number of digits higher than 40000.  this can be remedied by adding more cases to the generating function RandomMp.  If you have a better solution to this problem, please write the authors of this software.");
-
-		a.precision(num_digits);
+			throw std::out_of_range("requesting random long number of digits -- higher than 40000.  this throw can be remedied by adding more cases to the generating function RandomMp in random.cpp.  If you have a better solution to this problem, please write the authors of this software.");
+		result.precision(num_digits);
+		return result;
 	}
+
+
+
+
+
+
+	
 
 
 } // namespace bertini

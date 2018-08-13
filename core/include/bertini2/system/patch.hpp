@@ -159,16 +159,22 @@ namespace bertini {
 			for (size_t ii=0; ii<sizes.size(); ++ii)
 			{
 				coefficients_highest_precision_[ii].resize(sizes[ii]);
-				coefficients_dbl[ii].resize(sizes[ii]);
-
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 				{
-					RandomComplex(coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
+					multiprecision::RandomComplexAssign(coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
+				}
+
+				coefficients_dbl[ii].resize(sizes[ii]);
+				for (unsigned jj=0; jj<sizes[ii]; ++jj)
+				{
 					coefficients_dbl[ii](jj) = dbl(coefficients_highest_precision_[ii](jj));
 				}
 
-				coefficients_mpfr[ii] = coefficients_highest_precision_[ii]; // copy into current default precision
-				Precision(coefficients_mpfr[ii],precision_);
+				coefficients_mpfr[ii].resize(sizes[ii]);
+				for (unsigned jj=0; jj<sizes[ii]; ++jj)
+				{
+					coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
+				}
 
 				assert(Precision(coefficients_mpfr[ii](0))==precision_);
 			}
@@ -209,7 +215,7 @@ namespace bertini {
 			{
 				p.coefficients_highest_precision_[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
-					RandomReal(p.coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
+					multiprecision::RandomRealAssign(p.coefficients_highest_precision_[ii](jj), MaxPrecisionAllowed());
 
 				coefficients_mpfr[ii] = p.coefficients_highest_precision_[ii]; 
 				Precision(coefficients_mpfr[ii],DefaultPrecision());
@@ -243,6 +249,9 @@ namespace bertini {
 		*/
 		void Precision(unsigned new_precision) const
 		{
+			if (precision_==new_precision)
+				return;
+
 			using bertini::Precision;
 			std::vector<Vec<mpfr_complex> >& coefficients_mpfr = std::get<std::vector<Vec<mpfr_complex> > >(coefficients_working_);
 
@@ -459,7 +468,7 @@ namespace bertini {
 
 		\return true If have the same variable structure and coefficients.  Otherwise, false.
 		*/
-		bool operator==(Patch const rhs) const
+		bool operator==(Patch const& rhs) const
 		{
 			if (NumVariableGroups()!=rhs.NumVariableGroups())
 				return false;
@@ -471,6 +480,7 @@ namespace bertini {
 			for (unsigned ii=0; ii<NumVariableGroups(); ii++)
 				if (coefficients_highest_precision_[ii]!=rhs.coefficients_highest_precision_[ii])
 					return false;
+
 
 			return true;
 		}
