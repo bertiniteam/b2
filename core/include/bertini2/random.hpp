@@ -156,7 +156,7 @@ namespace bertini{
 namespace multiprecision{
 
 
-using complex = bmp::number<mpc_complex_backend<0>, bmp::et_on >;
+using complex = bertini::mpfr_complex;
 using bertini::RandomMp;
 
 
@@ -169,7 +169,7 @@ using bertini::RandomMp;
 	{
 		auto cached = DefaultPrecision();
 		DefaultPrecision(num_digits);
-		complex temp(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits),0);
+		complex temp(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits)); // ,0
 		a.swap(temp);
 		DefaultPrecision(cached);
 	}
@@ -179,7 +179,7 @@ using bertini::RandomMp;
 	 */
 	inline complex RandomReal()
 	{
-		return complex(RandomMp(mpfr_float(-1),mpfr_float(1)), 0);
+		return complex(RandomMp(mpfr_float(-1),mpfr_float(1))); // ,0
 	}
 	
 	/**
@@ -189,7 +189,7 @@ using bertini::RandomMp;
 	{
 		auto cached = DefaultPrecision();
 		DefaultPrecision(num_digits);
-		auto result = complex(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits), 0);
+		auto result = complex(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits));// ,0
 		DefaultPrecision(cached);
 		return result;
 	}

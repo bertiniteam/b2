@@ -70,6 +70,15 @@ AS_IF([test "x$enable_thread_local" != "xno"],[
 ])
 
 
+AC_ARG_WITH([bmp_complex],
+    AS_HELP_STRING([--with-bmp_complex], [Enable the use of Boost.Multiprecision's mpc_complex numeric type.  Requires *very* recent boost, probably at least 1.69.]),[],[bmp_complex=no])
+
+AS_IF([test "x$bmp_complex" != "xno"],[
+  AC_DEFINE([USE_BMP_COMPLEX], [1],[Define if USE_BMP_COMPLEX should be used.])
+])
+
+
+
 AC_ARG_ENABLE([expression_templates],
     AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates, particularly those coming from Boost.Multiprecision.]))
 

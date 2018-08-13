@@ -571,6 +571,7 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable)
 }
 
 
+#if USE_BMP_COMPLEX
 BOOST_AUTO_TEST_CASE(complex_precision_predictable2)
 {
 	mpfr_complex::default_precision(50);
@@ -597,7 +598,7 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable2)
 	mpfr_complex::default_precision(40);
 	BOOST_CHECK_EQUAL(c.real().precision(),50);
 }
-
+#endif
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable3)
 {
@@ -636,6 +637,24 @@ BOOST_AUTO_TEST_CASE(complex_precision_move2)
 
 	a = move(b);
 	BOOST_CHECK_EQUAL(a.precision(),100);
+}
+
+BOOST_AUTO_TEST_CASE(real_precision_increase)
+{
+	DefaultPrecision(50);
+	mpfr_float a(2);
+	a.precision(100);
+	std::cout << a << '\n';
+	BOOST_CHECK(abs(mpfr_float(2)-a) < 1e-50);
+}
+
+BOOST_AUTO_TEST_CASE(complex_precision_increase)
+{
+	DefaultPrecision(50);
+	mpfr_complex a(2,3);
+	a.precision(100);
+	std::cout << a << '\n';
+	BOOST_CHECK(abs(mpfr_complex(2,3)-a) < 1e-50);
 }
 
 BOOST_AUTO_TEST_CASE(construct_from_nondefault_reals)
