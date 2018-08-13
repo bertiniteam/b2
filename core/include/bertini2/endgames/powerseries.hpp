@@ -112,7 +112,7 @@ Vec<ComplexT> result;
 //4. Track all points to 0.1
 for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 {
-    mpfr_float::default_precision(ambient_precision);
+    DefaultPrecision(ambient_precision);
     my_homotopy.precision(ambient_precision); // making sure our precision is all set up 
     auto start_point = TD_start_sys.StartPoint<ComplexT>(ii);
 
