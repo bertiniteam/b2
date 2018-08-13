@@ -537,6 +537,56 @@ using bertini::KahanMatrix;
 		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
 	}
 
+
+
+	BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex2)
+	{
+		bertini::DefaultPrecision(50);
+
+		using bertini::Precision;
+		using data_type = bertini::mpfr_complex;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+		Precision(A,100);
+		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+
+		auto new_prec = 50-10;
+
+		bertini::DefaultPrecision(new_prec);
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B(2,2);
+		
+		B = A;
+		std::cout << (A-B).norm() << '\n';
+		BOOST_CHECK((A-B).norm() < 1e-38);
+		BOOST_CHECK_EQUAL(Precision(B),new_prec);
+
+	} 
+
+	BOOST_AUTO_TEST_CASE(copy_matrix)
+	{
+		bertini::DefaultPrecision(50);
+
+		using bertini::Precision;
+		using data_type = bertini::mpfr_complex;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, 1> A(4);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		Precision(A,100);
+		BOOST_CHECK_EQUAL(A(0).precision(),100);
+
+		auto new_prec = 50-10;
+
+		bertini::DefaultPrecision(new_prec);
+		Eigen::Matrix<data_type, Eigen::Dynamic, 1> B(4);
+
+		B = A;
+		BOOST_CHECK((A-B).norm() < 1e-38);
+		BOOST_CHECK_EQUAL(Precision(B),new_prec);
+
+	} 
+
 BOOST_AUTO_TEST_SUITE_END()
 
 	
