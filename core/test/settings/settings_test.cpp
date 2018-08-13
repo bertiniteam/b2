@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(read_tolerances)
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
 	using T = double;
-	bertini::mpfr_float::default_precision(30);
+	bertini::DefaultPrecision(30);
 	
 	
 	double tol = 1e-15;
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(read_endgame)
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
 	using T = double;
-	bertini::mpfr_float::default_precision(30);
+	bertini::DefaultPrecision(30);
 	
 	
 	double tol = 1e-15;
