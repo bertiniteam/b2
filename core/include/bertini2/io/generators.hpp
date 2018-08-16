@@ -165,7 +165,7 @@ namespace bertini{
 
 
 			template <typename OutputIterator>
-			static bool generate(OutputIterator sink, mpfr const& c)
+			static bool generate(OutputIterator sink, mpfr_complex const& c)
 			{
 	            using boost::spirit::karma::omit;
 	            using boost::spirit::karma::generate;
