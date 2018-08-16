@@ -307,8 +307,12 @@ namespace bertini {
 		/**
 		 The copy constructor
 		 */
-		custom_complex(const custom_complex & other) : real_(other.real_), imag_(other.imag_)
-		{}
+		custom_complex(const custom_complex & other)
+		{
+			precision(other.precision());
+			real_ = other.real_;
+			imag_ = other.imag_;
+		}
 		
 		/**
 		 Enable swapping

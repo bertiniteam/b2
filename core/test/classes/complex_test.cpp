@@ -624,7 +624,11 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable3)
 	DefaultPrecision(40);
 	mpfr_complex b(a);
 
+	mpfr_complex c = a;
+
+	BOOST_CHECK_EQUAL(c.precision(), 50);
 	BOOST_CHECK_EQUAL(b.precision(), 50);
+	BOOST_CHECK_EQUAL(a.precision(), 50);
 }
 
 BOOST_AUTO_TEST_CASE(complex_precision_move)

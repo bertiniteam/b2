@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with mpfr_extensions.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// danielle brake, university of wisconsin eau claire
+// danielle brake, university of wisconsin - eau claire
 
 /**
 \file mpfr_extensions.hpp 
@@ -36,7 +36,6 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #include "bertini2/config.h"
 
 #include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/mpc.hpp>
 
 #ifdef B2_FORBID_MIXED_ARITHMETIC
 	#include "bertini2/forbid_double.hpp"
@@ -119,8 +118,9 @@ namespace boost { namespace serialization {
 	}
 	
 
+#if USE_BMP_COMPLEX
 	/**
-	 Save a mpfr_float type to a boost archive.
+	 Save a mpc_complex type to a boost archive.
 	 */
 	template <typename Archive>
 	void save(Archive& ar, ::boost::multiprecision::backends::mpc_complex_backend<0> const& r, unsigned /*version*/)
@@ -132,7 +132,7 @@ namespace boost { namespace serialization {
 	}
 	
 	/**
-	 Load a mpfr_float type from a boost archive.
+	 Load a mpc_complex type from a boost archive.
 	 */
 	template <typename Archive>
 	void load(Archive& ar, ::boost::multiprecision::backends::mpc_complex_backend<0>& r, unsigned /*version*/)
@@ -144,7 +144,7 @@ namespace boost { namespace serialization {
 		ar & tmp;
 		r = tmp.c_str();
 	}
-
+#endif
 
 	/**
 	 Save a gmp_rational type to a boost archive.
@@ -192,7 +192,9 @@ namespace boost { namespace serialization {
 
 } } // re: namespaces
 
+#if USE_BMP_COMPLEX
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpc_complex_backend<0>)
+#endif
 
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpfr_float_backend<0>)
 

@@ -299,7 +299,9 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	
 
 	mpfr_float z = x;
+	mpfr_float q(x);
 	BOOST_CHECK_EQUAL(z.precision(), 50);
+	BOOST_CHECK_EQUAL(q.precision(), 50);
 
 	BOOST_CHECK(fabs(z - x) < 1e-50);
 
@@ -325,6 +327,32 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	BOOST_CHECK_EQUAL(y.precision(), 70);
 }
 
+
+BOOST_AUTO_TEST_CASE(precision_in_construction)
+{
+	DefaultPrecision(50);
+
+	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	BOOST_CHECK_EQUAL(x.precision(), 50);
+
+	DefaultPrecision(30);
+	
+	mpfr_float a = x;
+	mpfr_float b(x);
+	BOOST_CHECK_EQUAL(a.precision(), 50);
+	BOOST_CHECK_EQUAL(b.precision(), 50);
+	BOOST_CHECK_EQUAL(a,x);
+	BOOST_CHECK_EQUAL(b,x);
+
+	DefaultPrecision(70);
+
+	mpfr_float c = x;
+	mpfr_float d(x);
+	BOOST_CHECK_EQUAL(c.precision(), 50);
+	BOOST_CHECK_EQUAL(d.precision(), 50);
+	BOOST_CHECK_EQUAL(c,x);
+	BOOST_CHECK_EQUAL(d,x);
+}
 
 
 BOOST_AUTO_TEST_CASE(precision_through_arithemetic2)
