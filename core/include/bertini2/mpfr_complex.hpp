@@ -329,13 +329,6 @@ namespace bertini {
 		/**
 		 Assignment operator
 		 */
-#if BERTINI_ENABLE_COPY_AND_SWAP
-		custom_complex& operator=(custom_complex other)
-		{	
-			swap(*this,other);
-			return *this;
-		}
-#else
 		custom_complex& operator=(custom_complex const& other)
 		{	
 
@@ -348,7 +341,6 @@ namespace bertini {
 		}
 
 		custom_complex& operator=(custom_complex && other) = default;
-#endif
 		
 		template<typename T, typename S, typename R, 
 		 			typename Q = typename std::enable_if<boost::is_convertible<R, mpfr_float>::value, mpfr_float>::type>
@@ -423,25 +415,25 @@ namespace bertini {
 		 Set the value of the real part of the complex number
 		 */
 		inline
-		void real(mpz_int new_real){real_ = new_real;}
+		void real(mpz_int const& new_real){real_ = new_real;}
 		
 		/**
 		 Set the value of the imaginary part of the complex number
 		 */
 		inline
-		void imag(mpz_int new_imag){imag_ = new_imag;}
+		void imag(mpz_int const& new_imag){imag_ = new_imag;}
 		
 		/**
 		 Set the value of the real part of the complex number
 		 */
 		inline
-		void real(mpq_rational new_real){real_ = new_real;}
+		void real(mpq_rational const& new_real){real_ = new_real;}
 		
 		/**
 		 Set the value of the imaginary part of the complex number
 		 */
 		inline
-		void imag(mpq_rational new_imag){imag_ = new_imag;}
+		void imag(mpq_rational const& new_imag){imag_ = new_imag;}
 
 		
 
@@ -1070,24 +1062,22 @@ namespace bertini {
 	/**
 	 Complex-complex addition.
 	 */
-	inline custom_complex operator+(custom_complex lhs, const custom_complex & rhs){
-		lhs += rhs;
-		return lhs;
+	inline custom_complex operator+(custom_complex const& lhs, const custom_complex & rhs){
+		return custom_complex(lhs.real()+rhs.real(), lhs.imag()+rhs.imag());
 	}
 	
 	/**
 	 Complex-real addition.
 	 */
-	inline custom_complex operator+(custom_complex lhs, const mpfr_float & rhs)
+	inline custom_complex operator+(custom_complex const& lhs, const mpfr_float & rhs)
 	{
-		lhs.real(lhs.real()+rhs);
-		return lhs;
+		return custom_complex(lhs.real()+rhs, lhs.imag());
 	}
 	
 	/**
 	 Real-complex addition.
 	 */
-	inline custom_complex operator+(const mpfr_float & lhs, custom_complex rhs)
+	inline custom_complex operator+(const mpfr_float & lhs, custom_complex const& rhs)
 	{
 		return rhs+lhs;
 	}
@@ -1097,7 +1087,7 @@ namespace bertini {
 	 */
 	inline custom_complex operator+(custom_complex lhs, const mpz_int & rhs)
 	{
-		lhs.real(lhs.real()+rhs);
+		custom_complex(lhs.real()+rhs, lhs.imag());
 		return lhs;
 	}
 	
@@ -1707,7 +1697,7 @@ namespace bertini {
 } // namespace bertini
 
 
-
+#endif // temporary to disable the entire interior of the file
 
 
 
@@ -1804,7 +1794,7 @@ namespace bertini{
 
 
 
-#endif // temporary to disable the entire interior of the file
+
 
 
 

@@ -173,6 +173,22 @@ BOOST_AUTO_TEST_CASE(complex_log)
 }
 
 
+BOOST_AUTO_TEST_CASE(complex_pow_expressionofreal)
+{
+	using mpfr_float = bertini::mpfr_float;
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	
+	bertini::mpfr_complex z("1.5", "2.25");
+	mpfr_float v("-3.1");
+	bertini::mpfr_complex w = pow(z,2*v);
+		
+	//	0.0020583559161721337087583598028377697763165142184117220013738 + 0.000395572868694696378274143631981503385520868787960481823572936
+	BOOST_CHECK(abs(real(w)- mpfr_float("0.0020583559161721337087583598028377697763165142184117220013738")) < threshold_clearance_mp);
+	// this value computed with matlab's vpa.
+	BOOST_CHECK(abs(imag(w)- mpfr_float("-0.000395572868694696378274143631981503385520868787960481823572936")) < threshold_clearance_mp);
+	// this value computed with matlab's vpa.
+	
+}
 
 
 
@@ -663,10 +679,13 @@ BOOST_AUTO_TEST_CASE(construct_from_nondefault_reals)
 	mpfr_float a(1);
 	mpfr_float b(2);
 
+
 	DefaultPrecision(50);
 
 	mpfr_complex z(a,b);
 
+	BOOST_CHECK_EQUAL(a.precision(), 100);
+	BOOST_CHECK_EQUAL(b.precision(), 100);
 	BOOST_CHECK_EQUAL(z.precision(), 100);
 }
 

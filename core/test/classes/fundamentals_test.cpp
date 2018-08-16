@@ -325,6 +325,28 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	BOOST_CHECK_EQUAL(y.precision(), 70);
 }
 
+
+
+BOOST_AUTO_TEST_CASE(precision_through_arithemetic2)
+{
+	DefaultPrecision(50);
+	mpfr_float a(1);
+
+	DefaultPrecision(400);
+	mpfr_float b(2);
+
+	DefaultPrecision(600);
+	mpfr_float c(3);
+
+	a = b;
+	BOOST_CHECK_EQUAL(a.precision(),50);
+
+	a = b+c;
+	BOOST_CHECK_EQUAL(a.precision(),50);
+}
+
+
+
 BOOST_AUTO_TEST_CASE(precision_mpfr_constructed_from_string)
 {
 	DefaultPrecision(30);
