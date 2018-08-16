@@ -143,6 +143,15 @@ AX_BOOST_LOG
 AX_BOOST_LOG_SETUP
 AX_BOOST_THREAD
 
+AS_IF([test "x$bmp_complex" != "xno"],[
+  #find mpc
+  AC_CHECK_HEADERS([boost/multiprecision/mpc.hpp],[],[
+      AC_MSG_ERROR([unable to find `boost/multiprecision/mpc.hpp`, the header for Boost.Multiprecision's mpc complex implementation. you either need a *very* new Boost (probably at least 1.69) or an up-to-date clone of the official repo (https://github.com/boostorg/multiprecision/).])
+    ]
+  )
+  ] 
+)
+
 
 
 
