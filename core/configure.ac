@@ -79,6 +79,8 @@ AS_IF([test "x$bmp_complex" != "xno"],[
 
 
 
+
+
 AC_ARG_ENABLE([expression_templates],
     AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates, particularly those coming from Boost.Multiprecision.]))
 
@@ -117,10 +119,13 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
   AC_MSG_ERROR([unable to find mpfr])
 ])
 
-#find mpc
-AC_SEARCH_LIBS([mpc_clear],[mpc], [],[
-  AC_MSG_ERROR([unable to find `mpc` for complex arithmetic. should have come with mpfr?])
+AS_IF([test "x$bmp_complex" != "xno"],[
+  #find mpc
+  AC_SEARCH_LIBS([mpc_clear],[mpc], [],[
+    AC_MSG_ERROR([unable to find `libmpc` for complex arithmetic. should have come with mpfr? you need it for bmp_complex.])
+  ])
 ])
+
 
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
