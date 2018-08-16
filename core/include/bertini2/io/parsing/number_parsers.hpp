@@ -59,10 +59,9 @@ namespace bertini{
 												auto prev_prec = DefaultPrecision();
 												auto asdf = max(prev_prec,LowestMultiplePrecision());
 												auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
-												DefaultPrecision(digits);
-												B = mpfr_float{P};
-												DefaultPrecision(prev_prec);
-												assert(B.precision() == digits);
+
+												B.precision(digits);
+												B = mpfr_float(P,digits);
 											},
 											_val,_1
 										)
@@ -107,12 +106,10 @@ namespace bertini{
 									auto prev_prec = DefaultPrecision();
 									auto digits = max(P.precision(),Q.precision());
 									
-									DefaultPrecision(digits);
+									B.precision(digits);
+
 									B.real(P);
 									B.imag(Q);
-									B.precision(digits);
-									DefaultPrecision(prev_prec);
-									assert(B.precision() == digits);
 								},
 								_val,_1,_2
 								)
@@ -195,7 +192,7 @@ namespace bertini{
 				
 				if (!r || first != last) // fail if we did not get a full match
 					return false;
-				
+				c.precision(rN.precision());
 				c = rN;
 				return r;
 			}
@@ -221,10 +218,9 @@ namespace bertini{
 									  space,
 									  rN);
 				
-				std::cout << rN.real().str() << std::endl;
 				if (!r || first != last) // fail if we did not get a full match
 					return false;
-				
+				c.precision(rN.precision());
 				c = rN;
 				return r;
 			}

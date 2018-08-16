@@ -66,16 +66,15 @@ BOOST_AUTO_TEST_CASE(one)
 
     BOOST_CHECK(bertini::generators::Classic::generate(sink, z));
 
-    std::cout << result << std::endl;
     mpfr rt;
 	BOOST_CHECK(bertini::parsing::classic::parse(result.begin(), result.end(), rt));
     BOOST_CHECK_EQUAL(rt,z);
 }
 
-BOOST_AUTO_TEST_CASE(sqrt_2)
+BOOST_AUTO_TEST_CASE(two_comma_three)
 {   
     bertini::DefaultPrecision(30);
-    auto z = sqrt(mpfr(2,3));
+    mpfr z = sqrt(mpfr(2,3));
 
 
     std::string result;
