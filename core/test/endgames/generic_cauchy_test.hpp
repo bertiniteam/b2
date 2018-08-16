@@ -1787,8 +1787,10 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		auto init_prec = Precision(s(0));
 		DefaultPrecision(init_prec);
 		final_griewank_osborn_system.precision(init_prec);
+		BCT time_at_correct_prec = t_endgame_boundary;
+		Precision(time_at_correct_prec,init_prec);
 
-		SuccessCode endgame_success = my_endgame.Run(BCT(t_endgame_boundary),s);
+		SuccessCode endgame_success = my_endgame.Run(time_at_correct_prec,s);
 
 // i took this check out jan 27, 2018.  the tracker's precision literally cannot be adjusted as currently written.  hence, there's no way to correct a failing test like this.  i do hope there isn't something nasty lurking about causing it to fail, but causing other problems as well.  i guess it would be nice if the tracker came back in the same precision as the endgame result, but ... do i really care?  if i did, i would have to add a ChangePrecision(p) method to all flavors of trackers, but that's not really what they do...  they're a tool, and adjust precision according to the input they receive, just like the endgames, and other things.
 		// BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());

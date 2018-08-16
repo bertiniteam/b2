@@ -403,11 +403,12 @@ public:
 		auto offset = samples.size() - num_pts - 1; // -1 here to shift away from the back of the container
 		for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 		{			
+			using std::pow;
 
 			std::tie(s_times, s_derivatives) = TransformToSPlane(candidate, t0, num_pts, ContStart::Front);
-
-			RT curr_diff = (HermiteInterpolateAndSolve(
-								  pow((most_recent_time-t0)/(times[0]-t0), 1/static_cast<RT>(candidate)), // the target time
+			RT cand_power{1/static_cast<RT>(candidate)};
+			RT curr_diff = (HermiteInterpolateAndSolve<CT>(
+								  pow((most_recent_time-t0)/(times[0]-t0),cand_power), // the target time
 			                      num_pts,s_times,samples,s_derivatives, ContStart::Front) // the input data
 			                 - 
 			                 most_recent_sample).template lpNorm<Eigen::Infinity>();

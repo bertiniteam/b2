@@ -1389,11 +1389,15 @@ namespace bertini{
 
 				current_time_.precision(new_precision);
 
-				if (std::get<Vec<mpfr_complex> >(current_space_).size()!=source_point.size())
-					std::get<Vec<mpfr_complex> >(current_space_).resize(source_point.size());
+				auto& space = std::get<Vec<mpfr_complex> >(current_space_);
+
+				if (space.size()!=source_point.size())
+					space.resize(source_point.size());
+
+				Precision(space, new_precision);
 
 				for (unsigned ii=0; ii<source_point.size(); ii++)
-					std::get<Vec<mpfr_complex> >(current_space_)(ii) = mpfr_complex(source_point(ii));
+					space(ii) = mpfr_complex(source_point(ii));
 
 				AdjustTemporariesPrecision(new_precision);
 
@@ -1447,16 +1451,20 @@ namespace bertini{
 
 				current_time_.precision(new_precision);
 
-				if (std::get<Vec<mpfr_complex> >(current_space_).size()!=source_point.size())
-					std::get<Vec<mpfr_complex> >(current_space_).resize(source_point.size());
+				auto& space = std::get<Vec<mpfr_complex> >(current_space_);
+				if (space.size()!=source_point.size())
+					space.resize(source_point.size());
 
-				for (unsigned ii=0; ii<source_point.size(); ii++)
-					std::get<Vec<mpfr_complex> >(current_space_)(ii) = mpfr_complex(source_point(ii));
+				Precision(space,new_precision);
+				space = source_point;
+
+				// for (unsigned ii=0; ii<source_point.size(); ii++)
+				// 	space(ii) = source_point(ii);
 
 				AdjustTemporariesPrecision(new_precision);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == current_precision_ && "precision of time in mpfr_complex doesn't match tracker");
+				assert(space(0).precision() == current_precision_ && "precision of current space in mpfr_complex doesn't match tracker");
 				#endif
 			}
 
@@ -1483,16 +1491,14 @@ namespace bertini{
 			*/
 			void AdjustTemporariesPrecision(unsigned new_precision) const
 			{
-				unsigned num_vars = GetSystem().NumVariables();
+				const auto num_vars = GetSystem().NumVariables();
 
 				//  the current_space value is adjusted in the appropriate ChangePrecision function
 				std::get<Vec<mpfr_complex> >(tentative_space_).resize(num_vars);
-				for (unsigned ii = 0; ii < num_vars; ++ii)
-					std::get<Vec<mpfr_complex> >(tentative_space_)(ii).precision(new_precision);
+				Precision(std::get<Vec<mpfr_complex> >(tentative_space_), new_precision);
 
 				std::get<Vec<mpfr_complex> >(temporary_space_).resize(num_vars);
-				for (unsigned ii = 0; ii < num_vars; ++ii)
-					std::get<Vec<mpfr_complex> >(temporary_space_)(ii).precision(new_precision);
+				Precision(std::get<Vec<mpfr_complex> >(temporary_space_), new_precision);
 			}
 
 

@@ -32,7 +32,7 @@ namespace bertini{ namespace tracking {
 namespace fixed{
 
 inline
-void SetPrecision(SampCont<mpfr> & samples, unsigned prec)
+void SetPrecision(SampCont<mpfr_complex> & samples, unsigned prec)
 {
 	for (auto& s : samples)
 		for (unsigned ii=0; ii<s.size(); ii++)
@@ -40,14 +40,14 @@ void SetPrecision(SampCont<mpfr> & samples, unsigned prec)
 }
 
 inline
-void SetPrecision(TimeCont<mpfr> & times, unsigned prec)
+void SetPrecision(TimeCont<mpfr_complex> & times, unsigned prec)
 {
 	for (auto& t : times)
 		t.precision(prec);
 }
 
 inline
-unsigned MaxPrecision(SampCont<mpfr> const& samples)
+unsigned MaxPrecision(SampCont<mpfr_complex> const& samples)
 {
 	unsigned max_precision = 0;
 	for (auto& s : samples)
@@ -57,7 +57,7 @@ unsigned MaxPrecision(SampCont<mpfr> const& samples)
 }
 
 inline
-unsigned MaxPrecision(TimeCont<mpfr> const& times)
+unsigned MaxPrecision(TimeCont<mpfr_complex> const& times)
 {
 	unsigned max_precision = 0;
 	for (auto& t : times)
@@ -81,9 +81,9 @@ unsigned EnsureAtUniformPrecision(TimeCont<dbl> const & times, SampCont<dbl> con
 }
 
 
-//changes precision of mpfr to highest needed precision for the samples.
+//changes precision of mpfr_complex to highest needed precision for the samples.
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<mpfr> const & times, SampCont<mpfr> const & samples)
+unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> const & times, SampCont<mpfr_complex> const & samples)
 {
 	return MaxPrecision(samples);
 }
@@ -91,7 +91,7 @@ unsigned EnsureAtUniformPrecision(TimeCont<mpfr> const & times, SampCont<mpfr> c
 
 //returns max precision of all samples.
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<mpfr> const & times, SampCont<mpfr> const & samples, SampCont<mpfr> const & derivatives)
+unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> const & times, SampCont<mpfr_complex> const & samples, SampCont<mpfr_complex> const & derivatives)
 {
 	return max(MaxPrecision(samples),
 	           MaxPrecision(derivatives)); 

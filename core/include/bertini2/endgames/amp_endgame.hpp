@@ -83,7 +83,7 @@ public:
 	}
 
 	static
-	void EnsureAtPrecision(mpfr & obj, unsigned prec)
+	void EnsureAtPrecision(mpfr_complex & obj, unsigned prec)
 	{
 		using bertini::Precision;
 		Precision(obj,prec);
@@ -91,7 +91,7 @@ public:
 
 
 
-	SuccessCode RefineSampleImpl(Vec<mpfr> & result, Vec<mpfr> const& current_sample, mpfr const& current_time, NumErrorT tol, unsigned max_iterations) const
+	SuccessCode RefineSampleImpl(Vec<mpfr_complex> & result, Vec<mpfr_complex> const& current_sample, mpfr_complex const& current_time, NumErrorT tol, unsigned max_iterations) const
 	{
 
 		using bertini::Precision;
@@ -124,7 +124,7 @@ public:
 			auto next_sample_higher_prec = current_sample;
 			Precision(next_sample_higher_prec, higher_precision);
 
-			auto result_higher_prec = Vec<mpfr>(current_sample.size());
+			auto result_higher_prec = Vec<mpfr_complex>(current_sample.size());
 
 			auto time_higher_precision = current_time;
 			Precision(time_higher_precision,higher_precision);

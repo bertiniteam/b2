@@ -390,7 +390,6 @@ public:
 
 			//set up the time value for the next sample. 
 			using std::polar;
-			using bertini::polar;
 
 			//Generalized since we could have a nonzero target time. 
 			RT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
