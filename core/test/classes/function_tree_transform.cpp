@@ -881,8 +881,7 @@ BOOST_AUTO_TEST_CASE(complicated4)
 
 	f->Reset();
 	auto f_val_after = f->Eval<dbl>();
-	BOOST_CHECK_SMALL(abs(f_val_init - actual_val), 1e-15);
-	BOOST_CHECK_SMALL(abs(f_val_after- actual_val), 1e-15);
+	BOOST_CHECK_EQUAL(f_val_init,f_val_after);
 }
 
 //((0*((x-(HOM_VAR_0*1))^3))+((3*((x-(HOM_VAR_0*1))^2)*(-((1*1)+(0*HOM_VAR_0))))*(1-t)))
