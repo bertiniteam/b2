@@ -65,7 +65,7 @@ struct Configs
 
 
 struct Defaults : 
-detail::Configured<Configs::All<bertini::dbl>, Configs::All<bertini::mpfr>>
+detail::Configured<Configs::All<bertini::dbl>, Configs::All<bertini::mpfr_complex>>
 {
 
 

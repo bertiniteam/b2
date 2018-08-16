@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_SUITE(blackbox_test)
 BOOST_AUTO_TEST_SUITE(user_hom)
 
 using namespace bertini;
-
+using mpfr = bertini::mpfr_complex;
 
 
 

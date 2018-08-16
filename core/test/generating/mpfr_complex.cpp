@@ -31,7 +31,7 @@
 
 
 
-using mpfr = bertini::mpfr;
+using mpfr = bertini::mpfr_complex;
 
 BOOST_AUTO_TEST_SUITE(mpfr_complex_generating)
 

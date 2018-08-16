@@ -187,9 +187,9 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 			auto n_vars = sys->NumVariables();
 			const auto vars = sys->VariableGroups()[0];
 
-			nag_datatype::PointCont< sp<Vec<complex>> > points;
+			nag_datatype::PointCont< sp<Vec<mpfr_complex>> > points;
 			for (unsigned ii = 0; ii < 3; ++ii)
-				points.push_back(std::make_shared<Vec<complex>>(n_vars));
+				points.push_back(std::make_shared<Vec<mpfr_complex>>(n_vars));
 
 
 			auto slice = std::make_shared<LinearSlice>(LinearSlice::RandomComplex(vars, 1));

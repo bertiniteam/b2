@@ -35,12 +35,14 @@ BOOST_AUTO_TEST_SUITE(blackbox_test)
 BOOST_AUTO_TEST_SUITE(parsing_configs)
 
 using namespace bertini;
-
+using mpfr = bertini::mpfr_complex;
+using dbl = bertini::dbl;
+ 
 BOOST_AUTO_TEST_CASE(parse1)
 {
 	
-	using AllConfsD = blackbox::config::Configs::All<bertini::dbl>::type;
-	using AllConfsMP = blackbox::config::Configs::All<bertini::mpfr>::type;
+	using AllConfsD = blackbox::config::Configs::All<dbl>::type;
+	using AllConfsMP = blackbox::config::Configs::All<mpfr>::type;
 
 std::string config = 
 R"(outputlevel: 0;
