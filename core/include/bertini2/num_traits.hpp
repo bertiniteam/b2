@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with num_traits.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -37,16 +37,11 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #include <complex>
 #include <cmath>
 #include "bertini2/mpfr_complex.hpp"
-#include "bertini2/mpfr_extensions.hpp"
 #include "bertini2/random.hpp"
 
 
 namespace bertini
 {
-
-	using dbl_complex = std::complex<double>;
-	using mpfr_complex = bertini::multiprecision::complex;
-
 	template<typename T>
 	T RandomUnit();
 

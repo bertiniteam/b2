@@ -39,6 +39,9 @@
 
 namespace bertini{
 
+	using dbl = std::complex<double>;
+	using dbl_complex = std::complex<double>;
+
 	/**
 	\brief Overload * for unsigned * complex<double>
 	*/

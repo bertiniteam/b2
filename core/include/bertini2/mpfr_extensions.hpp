@@ -118,33 +118,6 @@ namespace boost { namespace serialization {
 	}
 	
 
-#if USE_BMP_COMPLEX
-	/**
-	 Save a mpc_complex type to a boost archive.
-	 */
-	template <typename Archive>
-	void save(Archive& ar, ::boost::multiprecision::backends::mpc_complex_backend<0> const& r, unsigned /*version*/)
-	{
-		unsigned num_digits(r.precision());
-		ar & num_digits;
-		std::string tmp = r.str(0,std::ios::scientific);
-		ar & tmp;
-	}
-	
-	/**
-	 Load a mpc_complex type from a boost archive.
-	 */
-	template <typename Archive>
-	void load(Archive& ar, ::boost::multiprecision::backends::mpc_complex_backend<0>& r, unsigned /*version*/)
-	{
-		unsigned num_digits;
-		ar & num_digits;
-		r.precision(num_digits);
-		std::string tmp;
-		ar & tmp;
-		r = tmp.c_str();
-	}
-#endif
 
 	/**
 	 Save a gmp_rational type to a boost archive.
@@ -192,9 +165,7 @@ namespace boost { namespace serialization {
 
 } } // re: namespaces
 
-#if USE_BMP_COMPLEX
-BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpc_complex_backend<0>)
-#endif
+
 
 BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpfr_float_backend<0>)
 

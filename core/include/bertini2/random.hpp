@@ -32,10 +32,10 @@
 #define BERTINI_RANDOM_HPP
 
 
-#include <boost/random.hpp>
+
 
 #include "bertini2/mpfr_complex.hpp"
-
+#include <boost/random.hpp>
 
 
 namespace bertini

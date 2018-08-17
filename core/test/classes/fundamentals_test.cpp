@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with fundamentals_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -28,12 +28,12 @@
 
 #include <iostream>
 
+#include "bertini2/double_extensions.hpp"
 #include "bertini2/limbo.hpp"
 #include "bertini2/num_traits.hpp"
 
-#include <boost/random.hpp>
 
-#include "bertini2/double_extensions.hpp"
+
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 

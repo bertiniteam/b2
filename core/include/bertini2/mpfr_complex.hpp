@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with mpfr_complex.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2018 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -47,9 +47,6 @@
 
 #include "bertini2/mpfr_extensions.hpp"
 
-namespace bertini{
-	using dbl = std::complex<double>;
-}
 
 
 #if USE_BMP_COMPLEX
@@ -80,14 +77,46 @@ using bmp::backends::mpc_complex_backend;
 		mpfr_float::default_precision(prec);
 		mpfr_complex::default_precision(prec);
 	}
+
+
 }
 
 
+namespace boost { namespace serialization {
+	/**
+	 Save a mpc_complex type to a boost archive.
+	 */
+	template <typename Archive>
+	void save(Archive& ar, ::boost::multiprecision::backends::mpc_complex_backend<0> const& r, unsigned /*version*/)
+	{
+		unsigned num_digits(r.precision());
+		ar & num_digits;
+		std::string tmp = r.str(0,std::ios::scientific);
+		ar & tmp;
+	}
+
+	/**
+	 Load a mpc_complex type from a boost archive.
+	 */
+	template <typename Archive>
+	void load(Archive& ar, ::boost::multiprecision::backends::mpc_complex_backend<0>& r, unsigned /*version*/)
+	{
+		unsigned num_digits;
+		ar & num_digits;
+		r.precision(num_digits);
+		std::string tmp;
+		ar & tmp;
+		r = tmp.c_str();
+	}
+
+}} // re: namespace boost::serialization
 
 
-
+BOOST_SERIALIZATION_SPLIT_FREE(::boost::multiprecision::backends::mpc_complex_backend<0>);
 
 #else // the not-boost-provided complex case, !USE_BMP_COMPLEX
+
+
 
 namespace bertini {
 
