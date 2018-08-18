@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 
 	bertini::TimeCont<BCT> pseg_times;
 	bertini::SampCont<BCT> pseg_samples;
-	bertini::TimeCont<BCT> c_over_k_array;
+	bertini::TimeCont<BRT> c_over_k_array;
 
 	BCT time;
 	Vec<BCT> sample(1);

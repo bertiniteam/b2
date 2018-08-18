@@ -63,7 +63,7 @@ namespace bertini{
 #endif
 
 	/** 
-	\brief Get the precision of a number.
+	\brief Get the precision of a real number.
 
 	For mpfr_floats, this calls the precision member method for mpfr_float.
 	*/
@@ -73,10 +73,8 @@ namespace bertini{
 		return num.precision();
 	}
 
-
-
 	/** 
-	\brief Change the precision of a number.
+	\brief Change the precision of a real number.
 
 	For mpfr_floats, this calls the precision member method for mpfr_float.
 	*/
@@ -84,9 +82,6 @@ namespace bertini{
 	{
 		num.precision(prec);
 	}
-
-
-
 }
 
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision

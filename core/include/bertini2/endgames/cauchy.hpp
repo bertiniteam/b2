@@ -391,6 +391,10 @@ public:
 			//set up the time value for the next sample. 
 			using std::polar;
 
+#ifndef USE_BMP_COMPLEX 
+			using bertini::polar;
+#endif
+
 			//Generalized since we could have a nonzero target time. 
 			RT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
 
@@ -938,7 +942,7 @@ public:
 		result = Vec<CT>::Zero(this->GetSystem().NumVariables());
 		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
 			result += cau_samples[ii];
-		result /= static_cast<RT>(this->CycleNumber() * this->EndgameSettings().num_sample_points);
+		result /= this->CycleNumber() * this->EndgameSettings().num_sample_points;
 
 		return SuccessCode::Success;
 

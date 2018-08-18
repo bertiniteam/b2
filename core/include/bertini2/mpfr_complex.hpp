@@ -553,34 +553,6 @@ namespace bertini {
 		}
 		
 		
-		// /**
-		//  Produce a random complex number, to default precision.
-		//  */
-		// inline static custom_complex rand()
-		// {
-		// 	custom_complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
-		// 	returnme /= sqrt( returnme.abs());
-		// 	return returnme;
-		// }
-		
-		// inline static custom_complex RandomUnit()
-		// {
-		// 	custom_complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
-		// 	returnme /= returnme.abs();
-		// 	return returnme;
-		// }
-		// /**
-		//  Produce a random real number \f$\in [-1,\,1]\f$, to current default precision. 
-		//  */
-		// inline static custom_complex RandomReal()
-		// {
-		// 	using std::sqrt;
-		// 	custom_complex returnme( RandomMp(mpfr_float(-1),mpfr_float(1)), RandomMp(mpfr_float(-1),mpfr_float(1)) );
-		// 	returnme /= sqrt( returnme.abs());
-		// 	return returnme;
-		// }
-		
-		
 		
 		
 		

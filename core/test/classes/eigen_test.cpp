@@ -558,7 +558,6 @@ using bertini::KahanMatrix;
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B(2,2);
 		
 		B = A;
-		std::cout << (A-B).norm() << '\n';
 		BOOST_CHECK((A-B).norm() < 1e-38);
 		BOOST_CHECK_EQUAL(Precision(B),new_prec);
 

@@ -555,7 +555,27 @@ BOOST_AUTO_TEST_CASE(complex_serialization)
 
 
 
-BOOST_AUTO_TEST_CASE(complex_precision_predictable)
+BOOST_AUTO_TEST_CASE(complex_precision_predictable_add)
+{
+	DefaultPrecision(30);
+	bertini::mpfr_complex a(1,2);
+
+	DefaultPrecision(50);
+	bertini::mpfr_complex b(3,4);
+
+	DefaultPrecision(70);
+	bertini::mpfr_complex c(5,6);
+
+	a = b+c;
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(90);
+	a = b+c;
+	BOOST_CHECK_EQUAL(Precision(a),30);
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_precision_predictable_sub)
 {
 	DefaultPrecision(30);
 	bertini::mpfr_complex a(1,2);
@@ -569,21 +589,130 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable)
 	bertini::mpfr_complex c(5,6);
 	BOOST_CHECK_EQUAL(Precision(c),70);
 
-	a = b;
+	a = b-c;
 	BOOST_CHECK_EQUAL(Precision(a),30);
-
-	a = b+c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
-
 
 	DefaultPrecision(90);
-	a = b+c;
+	a = b-c;
 	BOOST_CHECK_EQUAL(Precision(a),30);
-
-	a = b;
-	BOOST_CHECK_EQUAL(Precision(a),30);
-
 }
+
+
+BOOST_AUTO_TEST_CASE(complex_precision_predictable_mul)
+{
+	DefaultPrecision(30);
+	bertini::mpfr_complex a(1,2);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(50);
+	bertini::mpfr_complex b(3,4);
+	BOOST_CHECK_EQUAL(Precision(b),50);
+
+	DefaultPrecision(70);
+	bertini::mpfr_complex c(5,6);
+	BOOST_CHECK_EQUAL(Precision(c),70);
+
+	a = b*c;
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(90);
+	a = b*c;
+	BOOST_CHECK_EQUAL(Precision(a),30);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(complex_precision_predictable_div)
+{
+	DefaultPrecision(30);
+	bertini::mpfr_complex a(1,2);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(50);
+	bertini::mpfr_complex b(3,4);
+	BOOST_CHECK_EQUAL(Precision(b),50);
+
+	DefaultPrecision(70);
+	bertini::mpfr_complex c(5,6);
+	BOOST_CHECK_EQUAL(Precision(c),70);
+
+	a = b/c;
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(90);
+	a = b/c;
+	BOOST_CHECK_EQUAL(Precision(a),30);
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_precision_predictable_pow)
+{
+	DefaultPrecision(30);
+	bertini::mpfr_complex a(1,2);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(50);
+	bertini::mpfr_complex b(3,4);
+	BOOST_CHECK_EQUAL(Precision(b),50);
+
+	DefaultPrecision(70);
+	bertini::mpfr_complex c(5,6);
+	BOOST_CHECK_EQUAL(Precision(c),70);
+
+	a = pow(b,c);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(90);
+	a = pow(b,c);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+}
+
+BOOST_AUTO_TEST_CASE(complex_precision_predictable_trig)
+{
+	DefaultPrecision(30);
+	bertini::mpfr_complex a(1,2);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(50);
+	bertini::mpfr_complex b(3,4);
+	BOOST_CHECK_EQUAL(Precision(b),50);
+
+	DefaultPrecision(70);
+	bertini::mpfr_complex c(5,6);
+	BOOST_CHECK_EQUAL(Precision(c),70);
+
+	a = tan(b);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(90);
+	a = tan(b);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+}
+
+
+BOOST_AUTO_TEST_CASE(complex_precision_predictable_arg)
+{
+	DefaultPrecision(30);
+	bertini::mpfr_complex a(1,2);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(50);
+	bertini::mpfr_complex b(3,4);
+	BOOST_CHECK_EQUAL(Precision(b),50);
+
+	DefaultPrecision(70);
+	bertini::mpfr_complex c(5,6);
+	BOOST_CHECK_EQUAL(Precision(c),70);
+
+	a = arg(b);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+
+	DefaultPrecision(90);
+	a = arg(b);
+	BOOST_CHECK_EQUAL(Precision(a),30);
+}
+
+
 
 
 #if USE_BMP_COMPLEX
@@ -663,7 +792,6 @@ BOOST_AUTO_TEST_CASE(real_precision_increase)
 	DefaultPrecision(50);
 	mpfr_float a(2);
 	a.precision(100);
-	std::cout << a << '\n';
 	BOOST_CHECK(abs(mpfr_float(2)-a) < 1e-50);
 }
 
@@ -672,7 +800,6 @@ BOOST_AUTO_TEST_CASE(complex_precision_increase)
 	DefaultPrecision(50);
 	mpfr_complex a(2,3);
 	a.precision(100);
-	std::cout << a << '\n';
 	BOOST_CHECK(abs(mpfr_complex(2,3)-a) < 1e-50);
 }
 
