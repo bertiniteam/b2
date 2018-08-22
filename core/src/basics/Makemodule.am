@@ -3,6 +3,7 @@
 
 basics_headers = \
 	include/bertini2/limbo.hpp \
+	include/bertini2/mpfr_extensions.hpp \
 	include/bertini2/mpfr_complex.hpp \
 	include/bertini2/forbid_double.hpp \
 	include/bertini2/double_extensions.hpp \
