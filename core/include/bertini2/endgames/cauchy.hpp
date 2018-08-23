@@ -396,6 +396,7 @@ public:
 #endif
 
 			//Generalized since we could have a nonzero target time. 
+			using std::arg;
 			RT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
 
 			auto next_sample = Vec<CT>(num_vars);

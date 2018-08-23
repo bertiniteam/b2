@@ -210,6 +210,36 @@ class MPFRComplex(unittest.TestCase):
         self.assertLessEqual(mp.abs(res.real - mp.Float("6.48")), tol)
         self.assertLessEqual(mp.abs(res.imag - mp.Float(".731")), tol)
 
+    def test_mp_complex_precision(self):
+        mp.default_precision(30);
+        
+        x = mp.Complex(1);
+
+        mp.default_precision(40);
+
+        y = x;
+
+        a = mp.Complex(4)
+        b = mp.Complex(5)
+
+        self.assertEqual(y.precision(),30)
+
+
+        mp.default_precision(50);
+        z = mp.Complex(3);
+        
+
+        mp.default_precision(60)
+
+        c = mp.Complex(6)
+        d = mp.Complex(7)
+        w = x+y
+        self.assertEqual(w.precision(),60)
+
+        c = a
+        self.assertEqual(c.precision(),40) # even though the source is 40, target is 60, and APPoT.
+        d = a+b
+        self.assertEqual(d.precision(),60) # even though the source is 30, target is 60, and APPoT.
 
 
     def test_arith_mp_complex(self):
@@ -302,12 +332,14 @@ class MPFRComplex(unittest.TestCase):
         res = mp.tanh(z)
         self.assertLessEqual(mp.abs(res.real - mp.Float("-.99999948909538256503828034023523935671055767287")), tol)
         self.assertLessEqual(mp.abs(res.imag - mp.Float("-0.0000046773288796255165542679839050497228616710086412")), tol)
-        res = mp.square(z)
-        self.assertLessEqual(mp.abs(res.real - mp.Float("41.456039")), tol)
-        self.assertLessEqual(mp.abs(res.imag - mp.Float("9.47376")), tol)
-        res = mp.cube(z)
-        self.assertLessEqual(mp.abs(res.real - mp.Float("-261.70981416")), tol)
-        self.assertLessEqual(mp.abs(res.imag - mp.Float("-91.694329309")), tol)
+
+        # taken out since move to bmp::mpc_complex
+        # res = mp.square(z)
+        # self.assertLessEqual(mp.abs(res.real - mp.Float("41.456039")), tol)
+        # self.assertLessEqual(mp.abs(res.imag - mp.Float("9.47376")), tol)
+        # res = mp.cube(z)
+        # self.assertLessEqual(mp.abs(res.real - mp.Float("-261.70981416")), tol)
+        # self.assertLessEqual(mp.abs(res.imag - mp.Float("-91.694329309")), tol)
 
 
 
@@ -316,7 +348,7 @@ class MPFRComplex(unittest.TestCase):
     def test_misc_funcs(self):
         x = self.x; y = self.y; z = self.z; p = self.p; tol = self.tol;
         #
-        res = mp.norm(x)
+        res = mp.abs(x)
         self.assertLessEqual(mp.abs(res - mp.Float("5.949")), tol)
         res = mp.abs2(x)
         self.assertLessEqual(mp.abs(res - mp.Float("5.949")), tol)

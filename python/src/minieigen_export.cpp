@@ -37,7 +37,8 @@ namespace bertini{
 
 void ExportMinieigen()
 {
-
+	using mpfr = mpfr_complex;
+	
 	scope current_scope;
 	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
 	new_submodule_name.append(".minieigen");
