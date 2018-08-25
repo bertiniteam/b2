@@ -513,10 +513,16 @@ BOOST_AUTO_TEST_CASE(complex_make_random_100)
 	using mpfr_float = bertini::mpfr_float;
 	DefaultPrecision(100);  
 	bertini::mpfr_complex z = bertini::multiprecision::rand();
-
-
 }
 
+
+BOOST_AUTO_TEST_CASE(interoperability_with_rational)
+{
+	mpfr_complex z;
+	bertini::mpq_rational r;
+
+	mpfr_complex w = z*r;
+}
 
 
 BOOST_AUTO_TEST_CASE(complex_serialization)
