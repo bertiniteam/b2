@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_doub_exp)
 {
 	DefaultPrecision(50);
 
-	mpfr_float result = pow(mpfr_float(10), -5.0);
+	mpfr_float result = pow(mpfr_float(10), -5);
 	mpfr_float expected("1e-5");
 
 	BOOST_CHECK_CLOSE(expected, result, 1e-50);
