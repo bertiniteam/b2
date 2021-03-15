@@ -43,6 +43,8 @@ using dbl = bertini::dbl;
 using bertini::DefaultPrecision;
 #include <limits>
 
+
+
 BOOST_AUTO_TEST_CASE(complex_pow)
 {
 	auto x = bertini::rand_complex();
@@ -293,9 +295,14 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
+// https://github.com/boostorg/multiprecision/issues/60
+// 
+// "Copying or move-assignment copies the precision of the source.
+// Assignment keeps the precision of the target."
+
 	DefaultPrecision(30);
 	mpfr_float y = pow(x,2);
-	BOOST_CHECK_EQUAL(y.precision(), 30);
+	BOOST_CHECK_EQUAL(y.precision(), 50);
 	
 
 	mpfr_float z = x;
@@ -323,8 +330,11 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 
 	y = z*x;
 
-	// y is of precision 70 because it's a pre-existing variable.
-	BOOST_CHECK_EQUAL(y.precision(), 70);
+	// y is of precision 50, because the max of the precision
+	// of x and z is 50.  Even though y had precision 70
+	// before the assignment, it overrode the precision 
+	// of y.
+	BOOST_CHECK_EQUAL(y.precision(), 50);
 }
 
 
@@ -367,10 +377,10 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic2)
 	mpfr_float c(3);
 
 	a = b;
-	BOOST_CHECK_EQUAL(a.precision(),50);
+	BOOST_CHECK_EQUAL(a.precision(),400); // the precision of source
 
 	a = b+c;
-	BOOST_CHECK_EQUAL(a.precision(),50);
+	BOOST_CHECK_EQUAL(a.precision(),600); // the bigger of 400,600 is 600
 }
 
 

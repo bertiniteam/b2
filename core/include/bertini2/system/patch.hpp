@@ -158,6 +158,7 @@ namespace bertini {
 
 			for (size_t ii=0; ii<sizes.size(); ++ii)
 			{
+				// this produces coefficients at maximum precision.
 				coefficients_highest_precision_[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 				{
@@ -170,10 +171,13 @@ namespace bertini {
 					coefficients_dbl[ii](jj) = dbl(coefficients_highest_precision_[ii](jj));
 				}
 
+				// assignment preserves precision of source.  
+				// https://github.com/boostorg/multiprecision/issues/75
 				coefficients_mpfr[ii].resize(sizes[ii]);
 				for (unsigned jj=0; jj<sizes[ii]; ++jj)
 				{
 					coefficients_mpfr[ii](jj) = coefficients_highest_precision_[ii](jj);
+					coefficients_mpfr[ii](jj).precision(precision_);
 				}
 
 				assert(Precision(coefficients_mpfr[ii](0))==precision_);

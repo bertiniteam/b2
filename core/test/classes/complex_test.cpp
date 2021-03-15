@@ -573,11 +573,11 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_add)
 	bertini::mpfr_complex c(5,6);
 
 	a = b+c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 
 	DefaultPrecision(90);
 	a = b+c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 }
 
 
@@ -596,11 +596,11 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_sub)
 	BOOST_CHECK_EQUAL(Precision(c),70);
 
 	a = b-c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 
 	DefaultPrecision(90);
 	a = b-c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 }
 
 
@@ -619,11 +619,11 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_mul)
 	BOOST_CHECK_EQUAL(Precision(c),70);
 
 	a = b*c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 
 	DefaultPrecision(90);
 	a = b*c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 }
 
 
@@ -643,11 +643,11 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_div)
 	BOOST_CHECK_EQUAL(Precision(c),70);
 
 	a = b/c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 
 	DefaultPrecision(90);
 	a = b/c;
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 }
 
 
@@ -666,11 +666,11 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_pow)
 	BOOST_CHECK_EQUAL(Precision(c),70);
 
 	a = pow(b,c);
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 
 	DefaultPrecision(90);
 	a = pow(b,c);
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
 }
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable_trig)
@@ -688,11 +688,11 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_trig)
 	BOOST_CHECK_EQUAL(Precision(c),70);
 
 	a = tan(b);
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),Precision(b));
 
 	DefaultPrecision(90);
 	a = tan(b);
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),Precision(b));
 }
 
 
@@ -711,11 +711,11 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_arg)
 	BOOST_CHECK_EQUAL(Precision(c),70);
 
 	a = arg(b);
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),Precision(b));
 
 	DefaultPrecision(90);
 	a = arg(b);
-	BOOST_CHECK_EQUAL(Precision(a),30);
+	BOOST_CHECK_EQUAL(Precision(a),Precision(b));
 }
 
 

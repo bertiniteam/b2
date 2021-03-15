@@ -557,9 +557,9 @@ using bertini::KahanMatrix;
 		bertini::DefaultPrecision(new_prec);
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B(2,2);
 		
-		B = A;
+		B = A; // assignment preserves precision of source
 		BOOST_CHECK((A-B).norm() < 1e-38);
-		BOOST_CHECK_EQUAL(Precision(B),new_prec);
+		BOOST_CHECK_EQUAL(Precision(B),100);
 
 	} 
 
@@ -582,7 +582,7 @@ using bertini::KahanMatrix;
 
 		B = A;
 		BOOST_CHECK((A-B).norm() < 1e-38);
-		BOOST_CHECK_EQUAL(Precision(B),new_prec);
+		BOOST_CHECK_EQUAL(Precision(B),100);
 
 	} 
 
