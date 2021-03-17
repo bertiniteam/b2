@@ -681,11 +681,11 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 					smd.condition_number = GetTracker().LatestConditionNumber();
 					smd.newton_residual = GetTracker().LatestNormOfStep();
 
-					smd.accuracy_estimate = GetEndgame().template ApproximateError();
+					smd.accuracy_estimate = GetEndgame().ApproximateError();
 					smd.accuracy_estimate_user_coords =
 						static_cast<NumErrorT>( (TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
 						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>() );
-					smd.cycle_num = GetEndgame().template CycleNumber();
+					smd.cycle_num = GetEndgame().CycleNumber();
 					// end metadata gathering
 			}
 
