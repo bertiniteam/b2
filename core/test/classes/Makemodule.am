@@ -7,6 +7,7 @@ if UNITYBUILD
 b2_class_test_SOURCES = test/classes/unity/unity.cpp
 else
 b2_class_test_SOURCES = \
+	test/classes/boost_multiprecision_test.cpp \
 	test/classes/fundamentals_test.cpp \
 	test/classes/eigen_test.cpp \
 	test/classes/complex_test.cpp \
