@@ -109,7 +109,8 @@ namespace logging{
 			(
 			    keywords::file_name = name_pattern,
 			    keywords::rotation_size = rotation_size,
-			    keywords::format = format 
+			    keywords::format = format,
+            	keywords::auto_flush = true
 			);
 		}
 

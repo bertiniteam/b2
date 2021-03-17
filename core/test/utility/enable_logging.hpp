@@ -39,7 +39,7 @@ struct LogInitter
 {
 	LogInitter()
 	{
-		bertini::logging::Logging::Init("bertini2_tests_" + std::string(BERTINI_TEST_MODULE) + "_%N.log","%Message%",10*1024*1024, bertini::logging::severity_level::info);
+		bertini::logging::Logging::Init("bertini2_tests_" + std::string(BERTINI_TEST_MODULE) + "_%N.log","%Message%",10*1024*1024, bertini::logging::severity_level::trace);
 	}
 };
 
