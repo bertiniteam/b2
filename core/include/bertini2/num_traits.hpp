@@ -75,6 +75,12 @@ namespace bertini
 			return boost::lexical_cast<double>(s);
 		}
 
+		inline static
+		double FromRational(mpq_rational const& n, unsigned /* precision */)
+		{
+			return double(n);
+		}
+
 		using Real = double;
 		using Complex = dbl_complex;
 	};
@@ -102,6 +108,12 @@ namespace bertini
 		dbl_complex FromString(std::string const& s, std::string const& t)
 		{
 			return dbl_complex(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
+		}
+
+		inline static
+		dbl_complex FromRational(mpq_rational const& n, unsigned /* precision */)
+		{
+			return dbl_complex(static_cast<double>(n),0);
 		}
 
 		using Real = double;
@@ -251,6 +263,12 @@ namespace bertini {
 			return mpfr_float(s);
 		}
 
+		inline static
+		mpfr_float FromRational(mpq_rational const& n, unsigned precision)
+		{
+			return mpfr_float(n,precision);
+		}
+
 		using Real = mpfr_float;
 		using Complex = mpfr_complex;
 	};	
@@ -274,6 +292,12 @@ namespace bertini {
 		mpfr_complex FromString(std::string const& s, std::string const& t)
 		{
 			return mpfr_complex(s,t);
+		}
+
+		inline static
+		mpfr_complex FromRational(mpq_rational const& n, unsigned precision)
+		{
+			return mpfr_complex(n,0,precision);
 		}
 
 		using Real = mpfr_float;
