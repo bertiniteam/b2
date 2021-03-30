@@ -103,7 +103,6 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	bertini::SuccessCode tracking_success;
 
 	AMPPathAccumulator<AMPTracker> path_accumulator;
 	PrecisionAccumulator<AMPTracker> precision_accumulator;
@@ -112,7 +111,7 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	tracker.AddObserver(precision_accumulator);
 
 	start_point << mpfr(1), mpfr(1);
-	tracking_success = tracker.TrackPath(end_point,
+	bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);	
 }
 
@@ -213,16 +212,15 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 	mpfr t_end(0);
 	
 	Vec<mpfr> start_point(2);
+	start_point << mpfr(1), mpfr(1);
+
 	Vec<mpfr> end_point;
 
-	bertini::SuccessCode tracking_success;
-
 	bertini::MultiObserver<AMPTracker, GoryDetailLogger> agglomeration;
-
 	tracker.AddObserver(agglomeration);
 
-	start_point << mpfr(1), mpfr(1);
-	tracking_success = tracker.TrackPath(end_point,
+	
+	bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
 }
