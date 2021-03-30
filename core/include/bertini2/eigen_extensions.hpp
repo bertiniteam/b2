@@ -48,7 +48,6 @@ using mpfr_complex = bertini::mpfr_complex;
 
 namespace Eigen {
 
-	using mpfr_real = mpfr_real;
 	template<> struct NumTraits<mpfr_real> : GenericNumTraits<mpfr_real> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
 
@@ -119,8 +118,6 @@ namespace Eigen {
 	 */
 	template<> struct NumTraits<mpfr_complex> : NumTraits<mpfr_real>
 	{
-		using mpfr_real = mpfr_real;
-
 		typedef mpfr_real Real;
 		typedef mpfr_real NonInteger;
 		typedef mpfr_complex Nested;// Nested;
