@@ -31,12 +31,14 @@
 #define BOOST_TEST_MODULE "Bertini 2 Tracking Basics Testing"
 #include <boost/test/unit_test.hpp>
 
+#include "mpfr_extensions.hpp"
+
 #define BERTINI_TEST_MODULE "tracking_basics"
 #include "test/utility/enable_logging.hpp"
 
 
 
-#include "mpfr_extensions.hpp"
+
 
 double threshold_clearance_d(1e-15);
 bertini::mpfr_float threshold_clearance_mp("1e-28");
