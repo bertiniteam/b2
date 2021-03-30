@@ -96,7 +96,8 @@ serialization_test*
 
 *.rej
 
-
+# trace objects from xcrun / instruments
+*.trace
 
 # Maple files
 test/tracking_basics/*.bak
