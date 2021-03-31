@@ -16,7 +16,6 @@ basics_headers = \
 
 basics_sources = \
 	src/basics/random.cpp \
-	src/basics/mpfr_complex.cpp \
 	src/basics/limbo.cpp
 	
 

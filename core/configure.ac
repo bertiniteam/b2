@@ -70,13 +70,6 @@ AS_IF([test "x$enable_thread_local" != "xno"],[
 ])
 
 
-AC_ARG_WITH([bmp_complex],
-    AS_HELP_STRING([--with-bmp_complex], [Enable the use of Boost.Multiprecision's mpc_complex numeric type.  Requires *very* recent boost, probably at least 1.69.]),[],[bmp_complex=no])
-
-AS_IF([test "x$bmp_complex" != "xno"],[
-  AC_DEFINE([USE_BMP_COMPLEX], [1],[Define if USE_BMP_COMPLEX should be used.])
-])
-
 
 
 
@@ -85,7 +78,7 @@ AC_ARG_ENABLE([expression_templates],
     AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates, particularly those coming from Boost.Multiprecision.]))
 
 AS_IF([test "x$enable_expression_templates" != "xno"],[
-	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision.])
+	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision; default is enabled.])
 ])
 
 
@@ -130,7 +123,7 @@ AS_IF([test "x$bmp_complex" != "xno"],[
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
 
-AX_BOOST_BASE([1.65],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.65 but it was not found in your system])])
+AX_BOOST_BASE([1.71],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.71 but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
@@ -143,14 +136,11 @@ AX_BOOST_LOG
 AX_BOOST_LOG_SETUP
 AX_BOOST_THREAD
 
-AS_IF([test "x$bmp_complex" != "xno"],[
-  #find mpc
-  AC_CHECK_HEADERS([boost/multiprecision/mpc.hpp],[],[
-      AC_MSG_ERROR([unable to find `boost/multiprecision/mpc.hpp`, the header for Boost.Multiprecision's mpc complex implementation. you either need a *very* new Boost (probably at least 1.69) or an up-to-date clone of the official repo (https://github.com/boostorg/multiprecision/).])
+
+AC_CHECK_HEADERS([boost/multiprecision/mpc.hpp],[],[
+      AC_MSG_ERROR([unable to find `boost/multiprecision/mpc.hpp`, the header for Boost.Multiprecision's mpc complex implementation. you either need Boost >=1.71 or an up-to-date clone of the official repo (https://github.com/boostorg/multiprecision/).])
     ]
   )
-  ] 
-)
 
 
 
