@@ -405,14 +405,16 @@ namespace bertini{
 				initial_precision_ = Precision(start_point(0));
 				DefaultPrecision(initial_precision_);
 				// set up the master current time and the current step size
-				current_time_.precision(initial_precision_);
+				
 				current_time_ = start_time;
+				current_time_.precision(initial_precision_);
 
-				endtime_highest_precision_.precision(initial_precision_);
+				
 				endtime_highest_precision_ = end_time;
+				endtime_highest_precision_.precision(initial_precision_);
 
-				endtime_.precision(initial_precision_);
 				endtime_ = end_time;
+				endtime_.precision(initial_precision_);
 
 				current_stepsize_.precision(initial_precision_);
 				if (reinitialize_stepsize_)
@@ -433,7 +435,14 @@ namespace bertini{
 
 				ChangePrecision<upsample_refine_off>(start_point(0).precision());
 
-				return InitialRefinement();
+
+				auto initial_refinement_code = InitialRefinement();
+
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
+				#endif
+
+				return initial_refinement_code;
 			}
 
 
@@ -583,6 +592,13 @@ namespace bertini{
 				ComplexType current_time = ComplexType(current_time_);
 				ComplexType delta_t = ComplexType(delta_t_);
 
+				#ifndef BERTINI_DISABLE_ASSERTS
+				// assignment preserves precision of source  APPoS
+				assert(Precision(delta_t)==Precision(delta_t_) && "precision sanity check failed.");
+				assert(Precision(delta_t_)<=MaxPrecisionAllowed() && "precision sanity check failed.");
+				assert(Precision(current_time)==Precision(current_time_) && "precision sanity check failed.");
+				#endif
+
 				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
 				if (predictor_code==SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
 				{
@@ -613,6 +629,10 @@ namespace bertini{
 				SuccessCode corrector_code = Correct<ComplexType, RealType>(tentative_next_space,
 													 predicted_space,
 													 tentative_next_time);
+
+				#ifndef BERTINI_DISABLE_ASSERTS
+				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
+				#endif
 
 				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
 				{
@@ -755,8 +775,8 @@ namespace bertini{
 			void NewtonConvergenceError() const
 			{
 				next_precision_ = current_precision_;
-				next_stepsize_ = Get<Stepping>().step_size_fail_factor*current_stepsize_;
 
+				next_stepsize_ = mpfr_float(Get<Stepping>().step_size_fail_factor, CurrentPrecision())*current_stepsize_;
 				while (next_stepsize_ < MinStepSizeForPrecision(next_precision_, abs(current_time_ - endtime_)))
 				{
 					if (next_precision_==DoublePrecision())
@@ -796,14 +816,14 @@ namespace bertini{
 
 
 				mpfr_float min_stepsize = MinStepSizeForPrecision(current_precision_, abs(current_time_ - endtime_));
-				mpfr_float max_stepsize = current_stepsize_ * Get<Stepping>().step_size_fail_factor;  // Stepsize decreases.
+				mpfr_float max_stepsize = current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor,current_precision_);  // Stepsize decreases.
 
 				if (min_stepsize > max_stepsize)
 				{
 					// stepsizes are incompatible, must increase precision
 					next_precision_ = min_next_precision;
 					// decrease stepsize somewhat less than the fail factor
-					next_stepsize_ = max(current_stepsize_ * (1+Get<Stepping>().step_size_fail_factor)/2, min_stepsize);
+					next_stepsize_ = max(current_stepsize_ * (1+NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor,current_precision_))/2, min_stepsize);
 				}
 				else
 				{
@@ -1357,8 +1377,6 @@ namespace bertini{
 				MultipleToDouble(std::get<Vec<mpfr_complex> >(current_space_));
 			}
 
-			//, std::get<mpfr_complex>(current_time_), std::get<mpfr_complex>(delta_t_)
-
 
 
 			/**
@@ -1455,8 +1473,8 @@ namespace bertini{
 				if (space.size()!=source_point.size())
 					space.resize(source_point.size());
 
-				Precision(space,new_precision);
 				space = source_point;
+				Precision(space,new_precision);
 
 				// for (unsigned ii=0; ii<source_point.size(); ii++)
 				// 	space(ii) = source_point(ii);
@@ -1525,7 +1543,8 @@ namespace bertini{
 							std::get<Vec<mpfr_complex> >(tentative_space_)(0).precision() == current_precision_ &&
 							std::get<Vec<mpfr_complex> >(temporary_space_)(0).precision() == current_precision_ &&
 							Precision(endtime_) == current_precision_ && 
-							Precision(current_time_) == current_precision_
+							Precision(current_time_) == current_precision_ &&
+							current_precision_ <= MaxPrecisionAllowed()
 							        ;
 				}
 				
@@ -1564,6 +1583,8 @@ namespace bertini{
 
 			unsigned CurrentPrecision() const override
 			{
+				PrecisionSanityCheck();
+
 				return current_precision_;
 			}
 		}; // re: class Tracker
