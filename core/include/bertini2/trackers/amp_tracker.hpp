@@ -705,8 +705,8 @@ namespace bertini{
 			SuccessCode AdjustAMPStepSuccess() const
 			{
 				// TODO: think about why we consider reducing the stepsize?  this is despite documentation stating that it can only increase
-				mpfr_float min_stepsize = current_stepsize_ * Get<Stepping>().step_size_fail_factor;
-				mpfr_float max_stepsize = min( current_stepsize_ * Get<Stepping>().step_size_success_factor,  mpfr_float(Get<Stepping>().max_step_size));
+				mpfr_float min_stepsize = current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor, current_precision_);
+				mpfr_float max_stepsize = min( current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_success_factor, current_precision_),  NumTraits<mpfr_float>::FromRational(Get<Stepping>().max_step_size, current_precision_));
 
 
 				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexType>();
