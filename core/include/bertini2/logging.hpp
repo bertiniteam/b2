@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with logging.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// danielle brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 /**
 \file logging.hpp 
@@ -80,7 +80,7 @@ namespace logging{
 	* SetFilter
 	* AddFile
 
-	I have no idea how to remove a file, once you have done AddFile.  If this is something you need, contact Danielle Brake, and ask her to provide such a function.  She practices YAGNI, and she hadn't NI yet.
+	I have no idea how to remove a file, once you have done AddFile.  If this is something you need, contact silviana amethyst, and ask her to provide such a function.  She practices YAGNI, and she hadn't NI yet.
 
 	There is Init, with all defaults, so you should totally call it to initialize all logging facilities for Bertini2.  Failure to do so produces pure screen output.
 

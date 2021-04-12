@@ -13,17 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with b2/core/test/classes/function_tree_transform.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2017 by Bertini2 Development Team
+// Copyright(C) 2017-2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-//  Dani Brake
-//  University of Wisconsin Eau Claire
-//  ACMS
-//  Fall 2017
+//  silviana amethyst, university of wisconsin-eau claire
 
 /**
 \file Testing suite for transforms applied to the function tree.  In this suite, we content ourselves to evaluation in double precision, exercising multiple precision evaluation elsewhere.

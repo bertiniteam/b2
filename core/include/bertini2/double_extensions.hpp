@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// danielle brake, University of Wisconsin Eau Claire
+// silviana amethyst, University of Wisconsin Eau Claire
 
 /**
 \file bertini2/double_extensions.hpp 

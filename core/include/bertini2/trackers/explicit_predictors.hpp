@@ -19,10 +19,8 @@
 //  Department of Mathematics
 //  Spring 2016
 //
-// 2017
-// Dani Brake
-// University of Wisconsin Eau Claire
-// Department of Mathematics
+// silviana amethyst, university of wisconsin-eau claire
+
 
 
 /**

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with variable.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2018 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license,
 // as well as COPYING.  Bertini2 is provided with permitted
@@ -25,9 +25,8 @@
 //  Spring, Summer 2017
 //
 //
-// Danielle Brake
+// silviana amethyst
 // University of Wisconsin - Eau Claire
-// Spring 2018
 //
 //  Created by Collins, James B. on 3/6/2017.
 
