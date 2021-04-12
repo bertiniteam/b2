@@ -516,6 +516,7 @@ BOOST_AUTO_TEST_CASE(complex_make_random_100)
 }
 
 
+#ifndef B2_FORBID_MIXED_ARITHMETIC
 BOOST_AUTO_TEST_CASE(interoperability_with_rational)
 {
 	mpfr_complex z;
@@ -523,6 +524,7 @@ BOOST_AUTO_TEST_CASE(interoperability_with_rational)
 
 	mpfr_complex w = z*r;
 }
+#endif
 
 
 BOOST_AUTO_TEST_CASE(complex_serialization)
