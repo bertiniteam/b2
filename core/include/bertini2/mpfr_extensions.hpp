@@ -38,7 +38,7 @@ Particularly includes Boost.Serialize code for the mpfr_float, gmp_rational, and
 #include <boost/multiprecision/mpfr.hpp>
 
 #ifdef B2_FORBID_MIXED_ARITHMETIC
-	#include "bertini2/forbid_double.hpp"
+	#include "bertini2/forbid_mixed_arithmetic.hpp"
 #endif
 
 #include <boost/random.hpp>
