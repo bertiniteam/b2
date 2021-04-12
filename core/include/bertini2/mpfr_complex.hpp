@@ -147,61 +147,7 @@ namespace bertini{
 
 
 
-
-// moved to random.hpp.  delete this commented-out code
-	// inline 
-	// void RandomReal(bertini::mpfr_complex & a, unsigned num_digits)
-	// {
-	// 	a.precision(num_digits);
-	// 	RandomMp(a.real_,num_digits);
-	// 	a.imag_ = 0;
-	// }
-
-	// inline 
-	// void rand(bertini::mpfr_complex & a, unsigned num_digits)
-	// {
-	// 	a.precision(num_digits);
-	// 	RandomMp(a.real_,num_digits);
-	// 	RandomMp(a.imag_,num_digits);
-	// }
-
-	// inline 
-	// void RandomComplex(bertini::mpfr_complex & a, unsigned num_digits)
-	// {
-	// 	rand(a,num_digits);
-	// }
-
-	// inline 
-	// bertini::mpfr_complex RandomComplex(unsigned num_digits)
-	// {
-	// 	bertini::mpfr_complex z;
-	// 	RandomComplex(z, num_digits);
-	// 	return z;
-	// }
-
-	// inline 
-	// void RandomUnit(bertini::mpfr_complex & a, unsigned num_digits)
-	// {
-	// 	auto prev_precision = DefaultPrecision();
-
-	// 	a.precision(num_digits);
-	// 	RandomMp(a.real_,num_digits);
-	// 	RandomMp(a.imag_,num_digits);
-	// 	a /= abs(a);
-
-	// 	DefaultPrecision(prev_precision);
-	// }
-
-	// inline 
-	// bertini::mpfr_complex RandomUnit(unsigned num_digits)
-	// {
-	// 	bertini::mpfr_complex a;
-	// 	RandomUnit(a,num_digits);
-	// 	return a;
-	// }
-
-
-	
+	using std::polar;
 } // re: namespace bertini
 
 
