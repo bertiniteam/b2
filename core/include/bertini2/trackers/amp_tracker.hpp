@@ -594,9 +594,11 @@ namespace bertini{
 
 				#ifndef BERTINI_DISABLE_ASSERTS
 				// assignment preserves precision of source  APPoS
-				assert(Precision(delta_t)==Precision(delta_t_) && "precision sanity check failed.");
+				if (std::is_same<ComplexType, mpfr_complex>::value){
+					assert(Precision(delta_t)==Precision(delta_t_) && "precision sanity check failed.");
+					assert(Precision(current_time)==Precision(current_time_) && "precision sanity check failed.");
+				}
 				assert(Precision(delta_t_)<=MaxPrecisionAllowed() && "precision sanity check failed.");
-				assert(Precision(current_time)==Precision(current_time_) && "precision sanity check failed.");
 				#endif
 
 				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
