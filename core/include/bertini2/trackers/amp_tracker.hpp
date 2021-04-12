@@ -427,7 +427,7 @@ namespace bertini{
 
 				// populate the current space value with the start point, in appropriate precision
 				if (initial_precision_==DoublePrecision())
-					MultipleToDouble( start_point);
+					MultipleToDouble(start_point);
 				else
 					MultipleToMultiple(initial_precision_, start_point);
 				
@@ -441,7 +441,12 @@ namespace bertini{
 				auto initial_refinement_code = InitialRefinement();
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck<mpfr_complex>() && "precision sanity check failed.  some internal variable is not in correct precision");
+				if (initial_precision_==DoublePrecision()){
+					PrecisionSanityCheck<dbl>();
+				}
+				else{
+					PrecisionSanityCheck<mpfr_complex>();
+				}
 				#endif
 
 				return initial_refinement_code;
