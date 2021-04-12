@@ -6,6 +6,7 @@ using mpz_int = boost::multiprecision::number<boost::multiprecision::backends::g
 using mpq_rational = boost::multiprecision::number<boost::multiprecision::backends::gmp_rational, boost::multiprecision::et_on>;
 using mpc_complex = boost::multiprecision::number<boost::multiprecision::backends::mpc_complex_backend<0>, boost::multiprecision::et_on>;
 
+namespace utf = boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(boost_multiprecision)
 
@@ -22,7 +23,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_add)
 }
 
 
-BOOST_AUTO_TEST_CASE(precision_complex_rational_add_other_order)
+BOOST_AUTO_TEST_CASE(precision_complex_rational_add_other_order, *utf::depends_on("boost_multiprecision/precision_complex_rational_add"))
 {
 	mpc_complex::default_precision(30);
 
@@ -36,7 +37,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_add_other_order)
 
 
 
-BOOST_AUTO_TEST_CASE(precision_complex_rational_sub)
+BOOST_AUTO_TEST_CASE(precision_complex_rational_sub, *utf::depends_on("boost_multiprecision/precision_complex_rational_add"))
 {
 	mpc_complex::default_precision(30);
 
@@ -49,7 +50,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_sub)
 }
 
 
-BOOST_AUTO_TEST_CASE(precision_complex_rational_sub_other_order)
+BOOST_AUTO_TEST_CASE(precision_complex_rational_sub_other_order, *utf::depends_on("boost_multiprecision/precision_complex_rational_add"))
 {
 	mpc_complex::default_precision(30);
 
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_sub_other_order)
 
 
 
-BOOST_AUTO_TEST_CASE(precision_complex_rational_mul)
+BOOST_AUTO_TEST_CASE(precision_complex_rational_mul, *utf::depends_on("boost_multiprecision/precision_complex_rational_add"))
 {
 	mpc_complex::default_precision(30);
 
@@ -75,7 +76,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_mul)
 	BOOST_CHECK_EQUAL(c.precision(),30);
 }
 
-BOOST_AUTO_TEST_CASE(precision_complex_rational_mul_other_order)
+BOOST_AUTO_TEST_CASE(precision_complex_rational_mul_other_order, *utf::depends_on("boost_multiprecision/precision_complex_rational_add"))
 {
 	mpc_complex::default_precision(30);
 
@@ -88,7 +89,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_mul_other_order)
 }
 
 
-BOOST_AUTO_TEST_CASE(precision_complex_rational_div)
+BOOST_AUTO_TEST_CASE(precision_complex_rational_div, *utf::depends_on("boost_multiprecision/precision_complex_rational_add"))
 {
 	mpc_complex::default_precision(30);
 
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_div)
 }
 
 
-BOOST_AUTO_TEST_CASE(precision_complex_rational_div_other_order)
+BOOST_AUTO_TEST_CASE(precision_complex_rational_div_other_order, *utf::depends_on("boost_multiprecision/precision_complex_rational_add"))
 {
 	mpc_complex::default_precision(30);
 
