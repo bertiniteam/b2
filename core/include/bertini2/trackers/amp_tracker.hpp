@@ -34,6 +34,8 @@
 #ifndef BERTINI_AMP_TRACKER_HPP
 #define BERTINI_AMP_TRACKER_HPP
 
+#include <assert.h>
+
 #pragma once 
 
 #include "bertini2/trackers/base_tracker.hpp"
@@ -420,7 +422,7 @@ namespace bertini{
 				if (reinitialize_stepsize_)
 				{
 					mpfr_float segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
-					SetStepSize(min(mpfr_float(Get<Stepping>().initial_step_size),segment_length));
+					SetStepSize(min(NumTraits<mpfr_float>::FromRational(Get<Stepping>().initial_step_size, current_precision_),segment_length));
 				}
 
 				// populate the current space value with the start point, in appropriate precision
@@ -439,7 +441,7 @@ namespace bertini{
 				auto initial_refinement_code = InitialRefinement();
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
+				assert(PrecisionSanityCheck<mpfr_complex>() && "precision sanity check failed.  some internal variable is not in correct precision");
 				#endif
 
 				return initial_refinement_code;
@@ -543,8 +545,8 @@ namespace bertini{
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
 					{
-						solution_at_endtime(ii).precision(current_precision_);
 						solution_at_endtime(ii) = std::get<Vec<mpfr_complex> >(current_space_)(ii);
+						solution_at_endtime(ii).precision(current_precision_);
 					}
 				}
 			}
@@ -582,7 +584,7 @@ namespace bertini{
 				using RealType = typename Eigen::NumTraits<ComplexType>::Real;
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
+				assert(PrecisionSanityCheck<ComplexType>() && "precision sanity check failed.  some internal variable is not in correct precision");
 				#endif
 
 				NotifyObservers(NewStep<EmitterType>(*this));
@@ -593,12 +595,7 @@ namespace bertini{
 				ComplexType delta_t = ComplexType(delta_t_);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				// assignment preserves precision of source  APPoS
-				if (std::is_same<ComplexType, mpfr_complex>::value){
-					assert(Precision(delta_t)==Precision(delta_t_) && "precision sanity check failed.");
-					assert(Precision(current_time)==Precision(current_time_) && "precision sanity check failed.");
-				}
-				assert(Precision(delta_t_)<=MaxPrecisionAllowed() && "precision sanity check failed.");
+				PrecisionSanityCheck<ComplexType>();
 				#endif
 
 				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
@@ -633,7 +630,7 @@ namespace bertini{
 													 tentative_next_time);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
+				assert(PrecisionSanityCheck<ComplexType>() && "precision sanity check failed.  some internal variable is not in correct precision");
 				#endif
 
 				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
@@ -1284,18 +1281,17 @@ namespace bertini{
 				{
 					// convert from double to multiple precision
 					DoubleToMultiple(new_precision);
+					#ifndef BERTINI_DISABLE_ASSERTS
+					assert(PrecisionSanityCheck<mpfr_complex>() && "precision sanity check failed.  some internal variable is not in correct precision");
+					#endif
 				}
 				else
 				{
 					MultipleToMultiple(new_precision);
+					#ifndef BERTINI_DISABLE_ASSERTS
+					assert(PrecisionSanityCheck<mpfr_complex>() && "precision sanity check failed.  some internal variable is not in correct precision");
+					#endif
 				}
-
-
-
-				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck() && "precision sanity check failed.  some internal variable is not in correct precision");
-				#endif
-
 
 				if (refine_if_necessary && upsampling_needed)
 					return RefineStoredPoint();
@@ -1354,19 +1350,19 @@ namespace bertini{
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				#endif
-				previous_precision_ = current_precision_;
-				current_precision_ = DoublePrecision();
-				DefaultPrecision(DoublePrecision());
 
-				GetSystem().precision(DoublePrecision());
+				AdjustCurrentPrecision(DoublePrecision());
 
+				GetSystem().precision(DoublePrecision()); 
+
+				// copy the current space in.
 				if (std::get<Vec<dbl> >(current_space_).size()!=source_point.size())
 					std::get<Vec<dbl> >(current_space_).resize(source_point.size());
 
 				for (unsigned ii=0; ii<source_point.size(); ii++)
 					std::get<Vec<dbl> >(current_space_)(ii) = dbl(source_point(ii));
 
-				endtime_.precision(DoublePrecision());
+				endtime_.precision(DoublePrecision()); // i question this one  2021-04-12
 			}
 
 			/**
@@ -1397,32 +1393,14 @@ namespace bertini{
 				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
-				previous_precision_ = current_precision_;
-				current_precision_ = new_precision;
-				DefaultPrecision(new_precision);
-				GetSystem().precision(new_precision);
-				predictor_->ChangePrecision(new_precision);
-				corrector_->ChangePrecision(new_precision);
-
-				endtime_ = endtime_highest_precision_;
-				endtime_.precision(new_precision);
-
-				current_time_.precision(new_precision);
-
-				auto& space = std::get<Vec<mpfr_complex> >(current_space_);
-
-				if (space.size()!=source_point.size())
-					space.resize(source_point.size());
-
-				Precision(space, new_precision);
-
-				for (unsigned ii=0; ii<source_point.size(); ii++)
-					space(ii) = mpfr_complex(source_point(ii));
-
+				
+				AdjustCurrentPrecision(new_precision);
+				CopyToCurrentSpace(source_point);
+				AdjustInternalsPrecision(new_precision);
 				AdjustTemporariesPrecision(new_precision);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == current_precision_ && "precision of time in mpfr_complex doesn't match tracker");
+				PrecisionSanityCheck<mpfr_complex>();
 				#endif
 			}
 
@@ -1459,32 +1437,14 @@ namespace bertini{
 				assert(source_point.size() == GetSystem().NumVariables() && "source point for converting to multiple precision is not the same size as the number of variables in the system being solved.");
 				assert(new_precision > DoublePrecision() && "must convert to precision higher than DoublePrecision when converting to multiple precision");
 				#endif
-				previous_precision_ = current_precision_;
-				current_precision_ = new_precision;
-				DefaultPrecision(new_precision);
-				GetSystem().precision(new_precision);
-				predictor_->ChangePrecision(new_precision);
-				corrector_->ChangePrecision(new_precision);
 
-				endtime_ = endtime_highest_precision_;
-				endtime_.precision(new_precision);
-
-				current_time_.precision(new_precision);
-
-				auto& space = std::get<Vec<mpfr_complex> >(current_space_);
-				if (space.size()!=source_point.size())
-					space.resize(source_point.size());
-
-				space = source_point;
-				Precision(space,new_precision);
-
-				// for (unsigned ii=0; ii<source_point.size(); ii++)
-				// 	space(ii) = source_point(ii);
-
+				AdjustCurrentPrecision(new_precision);
+				CopyToCurrentSpace(source_point);
+				AdjustInternalsPrecision(new_precision);
 				AdjustTemporariesPrecision(new_precision);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(space(0).precision() == current_precision_ && "precision of current space in mpfr_complex doesn't match tracker");
+				PrecisionSanityCheck<mpfr_complex>();
 				#endif
 			}
 
@@ -1501,6 +1461,50 @@ namespace bertini{
 				MultipleToMultiple( new_precision, std::get<Vec<mpfr_complex> >(current_space_));
 			}
 
+
+
+
+
+			void AdjustCurrentPrecision(unsigned new_precision) const
+			{
+				previous_precision_ = current_precision_;
+				current_precision_ = new_precision;
+				DefaultPrecision(new_precision);
+			}
+
+			
+			void CopyToCurrentSpace(Vec<dbl> const& source_point) const
+			{
+				auto& space = std::get<Vec<mpfr_complex> >(current_space_);
+				if (space.size()!=source_point.size())
+					space.resize(source_point.size());
+				for (unsigned ii=0; ii<source_point.size(); ii++)
+					space(ii) = mpfr_complex(source_point(ii));
+			}
+
+			void CopyToCurrentSpace(Vec<mpfr_complex> const& source_point) const
+			{
+				auto& space = std::get<Vec<mpfr_complex> >(current_space_);
+				if (space.size()!=source_point.size())
+					space.resize(source_point.size());
+				space = source_point;
+			}
+
+			void AdjustInternalsPrecision(unsigned new_precision) const
+			{
+				GetSystem().precision(new_precision);
+				predictor_->ChangePrecision(new_precision);
+				corrector_->ChangePrecision(new_precision);
+
+				endtime_ = endtime_highest_precision_;
+
+				endtime_.precision(new_precision);
+				current_stepsize_.precision(new_precision);
+				delta_t_.precision(new_precision);
+				current_time_.precision(new_precision);
+
+				Precision(std::get<Vec<mpfr_complex> >(current_space_),new_precision);
+			}
 
 			/**
 			\brief Change precision of all temporary internal state variables.
@@ -1527,29 +1531,32 @@ namespace bertini{
 			/**
 			\brief Ensure that all internal state is in uniform precision.
 
-			\return True if all internal state variables are in the same precision as current_precision_, false otherwise.
+			\return True if all internal state variables are in the same precision as current_precision_, will fail on assertion otherwise.
 			*/
+			template<typename ComplexType>
 			bool PrecisionSanityCheck() const
 			{	
-				if (current_precision_==DoublePrecision())
-				{
+
+				if constexpr (std::is_same<ComplexType, dbl>::value){
 					return true;
 				}
-				else
-				{
-					assert(DefaultPrecision()==current_precision_ && "current precision differs from the default precision");
 
-					return GetSystem().precision() == current_precision_ &&
-							predictor_->precision() == current_precision_ &&
-							std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == current_precision_ &&
-							std::get<Vec<mpfr_complex> >(tentative_space_)(0).precision() == current_precision_ &&
-							std::get<Vec<mpfr_complex> >(temporary_space_)(0).precision() == current_precision_ &&
-							Precision(endtime_) == current_precision_ && 
-							Precision(current_time_) == current_precision_ &&
-							current_precision_ <= MaxPrecisionAllowed()
-							        ;
+				if constexpr (std::is_same<ComplexType, mpfr_complex>::value){
+					assert(DefaultPrecision()==current_precision_ && "current precision differs from the default precision");
+					assert(GetSystem().precision() == current_precision_ && "tracked system is out of precision");
+					
+					assert(std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == current_precision_ && "current space out of precision");
+					assert(std::get<Vec<mpfr_complex> >(tentative_space_)(0).precision() == current_precision_ && "tentative space out of precision");
+					assert(std::get<Vec<mpfr_complex> >(temporary_space_)(0).precision() == current_precision_ && "temporary space out of precision");
+					assert(Precision(current_stepsize_) == current_precision_ && "current_stepsize_ out of precision");
+					assert(Precision(delta_t_) == current_precision_ && "delta_t_ out of precision");
+					assert(Precision(endtime_) == current_precision_ && "endtime_ out of precision");
+					assert(Precision(current_time_) == current_precision_ && "current_time_ out of precision");
+					assert(current_precision_ <= MaxPrecisionAllowed() && "current_precision_ exceeds max precision");
+					assert(predictor_->precision() == current_precision_ && "predictor_ out of precision");
+					return  true;
 				}
-				
+
 			}
 
 
@@ -1585,8 +1592,6 @@ namespace bertini{
 
 			unsigned CurrentPrecision() const override
 			{
-				PrecisionSanityCheck();
-
 				return current_precision_;
 			}
 		}; // re: class Tracker
