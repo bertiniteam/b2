@@ -257,9 +257,9 @@ using bertini::KahanMatrix;
 	BOOST_AUTO_TEST_CASE(small_value_multiprecision)
 	{
 
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(30);
 
-		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
+		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(30));
 
 		BOOST_CHECK( bertini::IsSmallValue(bertini::mpfr_complex(p,mpfr_float(0))));
 		BOOST_CHECK( bertini::IsSmallValue(bertini::mpfr_complex(-p,mpfr_float(0))));
@@ -276,9 +276,9 @@ using bertini::KahanMatrix;
 
 	BOOST_AUTO_TEST_CASE(large_change_multiprecision)
 	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(30);
 
-		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
+		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(30));
 
 		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(1.0),p));
 
