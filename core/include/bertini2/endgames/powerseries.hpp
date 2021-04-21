@@ -253,7 +253,7 @@ public:
 	\brief Function to set the times used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	void SetTimes(TimeCont<CT> times_to_set) { std::get<TimeCont<CT> >(times_) = times_to_set;}
+	void SetTimes(TimeCont<CT> const& times_to_set) { std::get<TimeCont<CT> >(times_) = times_to_set;}
 
 	/**
 	\brief Function to get the times used for the Power Series endgame.
@@ -271,7 +271,7 @@ public:
 	\brief Function to set the space values used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	void SetSamples(SampCont<CT> samples_to_set) { std::get<SampCont<CT> >(samples_) = samples_to_set;}
+	void SetSamples(SampCont<CT> const& samples_to_set) { std::get<SampCont<CT> >(samples_) = samples_to_set;}
 
 	/**
 	\brief Function to get the space values used for the Power Series endgame.
@@ -329,6 +329,7 @@ public:
 		const Vec<CT> & sample2 = samples[num_samples-1]; // most recent sample.  oldest samples at front of the container
 
 
+// should this only be if the system is homogenized?
 		CT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector_).sum();
 		CT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector_).sum();
 
@@ -652,13 +653,15 @@ public:
 		//Set up for the endgame.
 		ClearTimesAndSamples<CT>();
 
+
+		// unpack some references for easy use
 		auto& samples = std::get<SampCont<CT> >(samples_);
 		auto& times   = std::get<TimeCont<CT> >(times_);
 		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 		Vec<CT>& latest_approx = this->final_approximation_;
 		Vec<CT>& prev_approx = this->previous_approximation_;
 
-
+		// this is for estimating a ... norm?
 		SetRandVec<CT>(start_point.size());	 	
 		
 		
