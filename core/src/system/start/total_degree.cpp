@@ -93,25 +93,35 @@ namespace bertini {
 
 		Vec<mpfr_complex> TotalDegree::GenerateStartPoint(mpfr_complex,unsigned long long index) const
 		{
-			Vec<mpfr_complex> start_point(NumVariables());
-			auto indices = IndexToSubscript(index, degrees_);
+			using bertini::DefaultPrecision;
+
+			Vec<mpfr_complex> start_point(NumVariables()); // make the value we're returning
+			auto indices = IndexToSubscript(index, degrees_); // get the position of it -- used in the angle of the coordinates of the produced point.
 
 			unsigned offset = 0;
 			if (IsPatched())
 			{
-				start_point(0) = mpfr_complex(1);
+				start_point(0) = mpfr_complex(1,0,DefaultPrecision());
 				offset = 1;
 			}
 
-			
-			auto one = mpfr_complex(1);
+// TODO: this code should be cleaned up after issue 308 is solved -- namely, the two precision adjustment calls should be removed.  They're only necessary because prec16 / ulonglog = prec19.
+
+			auto one = mpfr_float(1);
 			mpfr_complex two_i_pi = mpfr_complex(0,2) * acos( mpfr_float(-1) );
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( two_i_pi * mpfr_float(indices[ii]) / degrees_[ii]  ) * pow(random_values_[ii]->Eval<mpfr_complex>(), one / degrees_[ii]);
+			{
+				mpfr_complex a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
+				mpfr_complex b = pow(random_values_[ii]->Eval<mpfr_complex>(), one / degrees_[ii]);
+
+				Precision(a,DefaultPrecision());
+				Precision(b,DefaultPrecision());
+
+				start_point(ii+offset) = a*b;
+			}
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
-
 
 			return start_point;
 		}
