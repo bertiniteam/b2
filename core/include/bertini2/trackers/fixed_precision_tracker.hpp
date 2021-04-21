@@ -522,17 +522,17 @@ namespace bertini{
 					throw std::runtime_error(err_msg.str());
 				}
 
-				if (start_point(0).precision()!=CurrentPrecision())
+				if (start_point(0).precision()!=this->CurrentPrecision())
 				{
 					std::stringstream err_msg;
-					err_msg << "start point for fixed multiple precision tracker has differing precision from tracker's precision (" << start_point(0).precision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					err_msg << "start point for fixed multiple precision tracker has differing precision from tracker's precision (" << start_point(0).precision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
 					throw std::runtime_error(err_msg.str());
 				}
 
-				if (DefaultPrecision()!=CurrentPrecision())
+				if (DefaultPrecision()!=this->CurrentPrecision())
 				{
 					std::stringstream err_msg;
-					err_msg << "current default precision differs from tracker's precision (" << DefaultPrecision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					err_msg << "current default precision differs from tracker's precision (" << DefaultPrecision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
 					throw std::runtime_error(err_msg.str());
 				}
 
