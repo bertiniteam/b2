@@ -299,6 +299,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
 	{
 		auto start = TD.StartPoint<mpfr>(ii);
+		BOOST_CHECK_EQUAL(bertini::Precision(start), CLASS_TEST_MPFR_DEFAULT_DIGITS);
 		auto function_values = TD.Eval(start);
 
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
@@ -308,6 +309,163 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	}
 
 }
+
+// this one differs from the above only in that the target system was homogenized and patched
+BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
+{
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+	
+	bertini::System sys;
+	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+
+	VariableGroup vars{x,y,z};
+
+	sys.AddVariableGroup(vars);  
+	sys.AddFunction(y+x*y + mpfr_float("0.5"));
+	sys.AddFunction(pow(x,3)+x*y+bertini::node::E());
+	sys.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
+
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	bertini::start_system::TotalDegree TD(sys);
+	TD.Homogenize();
+
+	BOOST_CHECK(TD.IsHomogeneous());
+	BOOST_CHECK(TD.IsPatched());
+
+
+	// generate each start point, and 
+	// evaluate the start system at that point.
+	//
+	// the function values must be near 0
+	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
+	{
+		auto start = TD.StartPoint<dbl>(ii);
+		auto function_values = TD.Eval(start);
+
+		const auto& vs = TD.RandomValues();
+		BOOST_CHECK_EQUAL(vs.size(), function_values.size()-1);
+
+		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
+			BOOST_CHECK(abs(function_values(jj)) < 
+				100*relaxed_threshold_clearance_d);
+	}
+
+	for (decltype(TD.NumStartPoints()) ii = 0; ii < TD.NumStartPoints(); ++ii)
+	{
+		auto start = TD.StartPoint<mpfr>(ii);
+		BOOST_CHECK_EQUAL(bertini::Precision(start), CLASS_TEST_MPFR_DEFAULT_DIGITS);
+		auto function_values = TD.Eval(start);
+
+		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
+		{
+			BOOST_CHECK(abs(function_values(jj)) < threshold_clearance_mp);
+		}
+	}
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(total_degree_start_system_precision_16)
+{
+	int this_test_precision{16};
+
+	DefaultPrecision(this_test_precision);
+
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddVariableGroup(v);
+
+	sys.AddFunction(pow(x-1,3));
+	sys.AddFunction(pow(y-1,2));
+
+	auto TD = bertini::start_system::TotalDegree(sys);
+	
+	BOOST_CHECK(!sys.IsHomogeneous()); 
+	BOOST_CHECK(!sys.IsPatched());	
+	BOOST_CHECK(!TD.IsHomogeneous());  
+	BOOST_CHECK(!TD.IsPatched());
+
+	
+	auto final_system = (1-t)*sys + t*TD;
+	final_system.AddPathVariable(t);
+
+
+	// test whether all start points have correct precision
+	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
+	{
+		DefaultPrecision(this_test_precision);
+		final_system.precision(this_test_precision);
+		TD.precision(this_test_precision);
+		auto start_point = TD.StartPoint<mpfr_complex>(ii);
+		BOOST_CHECK_EQUAL(bertini::Precision(start_point), this_test_precision);
+	}
+
+}
+
+
+
+BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
+{
+	int this_test_precision{16};
+
+	DefaultPrecision(this_test_precision);
+
+	Var x = MakeVariable("x");
+	Var y = MakeVariable("y");
+	Var t = MakeVariable("t");
+
+	System sys;
+
+	VariableGroup v{x,y};
+
+	sys.AddVariableGroup(v);
+
+	sys.AddFunction(pow(x-1,3));
+	sys.AddFunction(pow(y-1,2));
+
+	sys.Homogenize();
+	sys.AutoPatch();
+
+	BOOST_CHECK(sys.IsHomogeneous());
+	BOOST_CHECK(sys.IsPatched());	
+
+	auto TD = bertini::start_system::TotalDegree(sys);
+	TD.Homogenize();
+	BOOST_CHECK(TD.IsHomogeneous());
+	BOOST_CHECK(TD.IsPatched());
+
+	
+	auto final_system = (1-t)*sys + t*TD;
+	final_system.AddPathVariable(t);
+
+
+	// test whether all start points have correct precision
+	for (unsigned ii = 0; ii < TD.NumStartPoints(); ++ii)
+	{
+		DefaultPrecision(this_test_precision);
+		final_system.precision(this_test_precision);
+		TD.precision(this_test_precision);
+		auto start_point = TD.StartPoint<mpfr_complex>(ii);
+		BOOST_CHECK_EQUAL(bertini::Precision(start_point), this_test_precision);
+	}
+
+}
+
+
+
+
+
+
+
 
 
 
