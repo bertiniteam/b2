@@ -53,7 +53,7 @@ Details:
 
 \param[out] endgame_tracker_ The tracker used to compute the samples we need to start an endgame. 
 \param endgame_time The time value at which we start the endgame. 
-\param x_endgame The current space point at endgame_time.
+\param x_endgame_start The current space point at endgame_time.
 \param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 \param samples a deque that will hold all the samples corresponding to the time values in times. 
 
