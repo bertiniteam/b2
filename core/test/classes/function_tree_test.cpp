@@ -162,6 +162,27 @@ BOOST_AUTO_TEST_CASE(self_multiplication){
 }
 
 
+BOOST_AUTO_TEST_CASE(rational_node_eval_sane_precision_random_rat){
+
+	DefaultPrecision(16);
+
+	std::shared_ptr<Node> frac = bertini::MakeRational(bertini::node::Rational::Rand());
+	mpfr_complex result = frac->Eval<mpfr_complex>();
+
+	BOOST_CHECK_EQUAL(Precision(result),16);
+}
+
+BOOST_AUTO_TEST_CASE(rational_node_eval_sane_precision_one_half){
+
+	DefaultPrecision(16);
+
+	std::shared_ptr<Node> frac = bertini::MakeRational(mpq_rational(1,2));
+	mpfr_complex result = frac->Eval<mpfr_complex>();
+
+	BOOST_CHECK_EQUAL(Precision(result),16);
+}
+
+
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
