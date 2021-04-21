@@ -116,4 +116,89 @@ BOOST_AUTO_TEST_CASE(precision_complex_rational_div_other_order, *utf::depends_o
 
 
 
-BOOST_AUTO_TEST_SUITE_END() // numtraits tests
+BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float_16digits)
+{
+	mpfr_float::default_precision(16);
+
+	mpc_complex b(1,0);
+
+	unsigned long long d{13};
+
+	mpc_complex result{b/d};
+	BOOST_CHECK_EQUAL(result.precision(),16);
+}
+
+BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_complex_16digits, *utf::depends_on("boost_multiprecision/precision_complex_longlong_div_set_float_16digits"))
+{
+	mpc_complex::default_precision(16);
+
+	mpc_complex b(1,0);
+
+	unsigned long long d{13};
+
+	mpc_complex result{b/d};
+	BOOST_CHECK_EQUAL(result.precision(),16);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_both_16digits, *utf::depends_on("boost_multiprecision/precision_complex_longlong_div_set_complex_16digits"))
+{
+	mpfr_float::default_precision(16);
+	mpc_complex::default_precision(16);
+
+	mpc_complex b(1,0);
+
+	unsigned long long d{13};
+
+	mpc_complex result{b/d};
+	BOOST_CHECK_EQUAL(result.precision(),16);
+}
+
+BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float20_complex16, *utf::depends_on("boost_multiprecision/precision_complex_longlong_div_set_both_16digits"))
+{
+	mpfr_float::default_precision(20);
+	mpc_complex::default_precision(16);
+
+	mpc_complex b(1,0);
+
+	unsigned long long d{13};
+
+	mpc_complex result{b/d};
+	BOOST_CHECK_EQUAL(result.precision(),16);
+}
+
+
+
+
+BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float16_complex20, *utf::depends_on("boost_multiprecision/precision_complex_longlong_div_set_float20_complex16"))
+{
+	mpfr_float::default_precision(16);
+	mpc_complex::default_precision(20);
+
+	mpc_complex b(1,0);
+
+	unsigned long long d{13};
+
+	mpc_complex result{b/d};
+	BOOST_CHECK_EQUAL(result.precision(),20);
+}
+
+
+
+BOOST_AUTO_TEST_CASE(precision_complex_longlong_div_set_float20_complex20)
+{
+	mpfr_float::default_precision(20);
+	mpc_complex::default_precision(20);
+
+	mpc_complex b(1,0);
+
+	unsigned long long d{13};
+
+	mpc_complex result{b/d};
+	BOOST_CHECK_EQUAL(result.precision(),20);
+}
+
+
+
+BOOST_AUTO_TEST_SUITE_END() // boost_multiprecision tests
