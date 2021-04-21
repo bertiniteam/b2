@@ -38,7 +38,7 @@
 #define BERTINI_TEST_MODULE "endgames"
 #include <boost/test/unit_test.hpp>
 
-#include "test/utility/enable_logging.hpp"
+//#include "test/utility/enable_logging.hpp"
 
 
 #include <boost/multiprecision/mpfr.hpp>
@@ -47,7 +47,6 @@ double threshold_clearance_d(1e-15);
 boost::multiprecision::mpfr_float threshold_clearance_mp("1e-28");
 unsigned TRACKING_TEST_MPFR_DEFAULT_DIGITS(30);
 
+#include "test/utility/enable_logging.hpp"
 
-
-// deliberately left blank.  link other files with this one.
 

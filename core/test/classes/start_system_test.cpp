@@ -344,7 +344,6 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 		auto start = TD.StartPoint<dbl>(ii);
 		auto function_values = TD.Eval(start);
 
-std::cout << function_values << std::endl;
 		for (decltype(function_values.size()) jj = 0; jj < function_values.size(); ++jj)
 			BOOST_CHECK(abs(function_values(jj)) < 
 				1000*relaxed_threshold_clearance_d);

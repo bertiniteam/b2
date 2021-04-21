@@ -34,14 +34,17 @@
 #define BERTINI_TEST_MODULE "pools"
 
 #include <boost/test/unit_test.hpp>
-#include "test/utility/enable_logging.hpp"
+
 
 #include <iostream>
 
 #include <cstdlib>
 #include <cmath>
 
+#include "bertini2/mpfr_extensions.hpp"
+
 #include "bertini2/bertini.hpp"
+
 #include "bertini2/function_tree.hpp"
 #include <bertini2/io/parsing/settings_parsers.hpp>
 #include <bertini2/io/parsing/classic_utilities.hpp>
@@ -49,6 +52,7 @@
 
 #include <boost/spirit/include/qi.hpp>
 
+#include "test/utility/enable_logging.hpp"
 
 using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;

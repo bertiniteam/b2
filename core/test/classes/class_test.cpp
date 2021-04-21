@@ -39,7 +39,7 @@
 
 
 #define BERTINI_TEST_MODULE "classes"
-#include "test/utility/enable_logging.hpp"
+//#include "test/utility/enable_logging.hpp"
 
 #include "bertini2/num_traits.hpp"
 

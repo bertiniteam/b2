@@ -34,6 +34,8 @@
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
 #define BOOST_TEST_MODULE "Bertini 2 NAG Datatype Testing"
 #include <boost/test/unit_test.hpp>
+
+#include "bertini2/mpfr_extensions.hpp"
 #include "bertini2/logging.hpp"
 
 

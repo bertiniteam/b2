@@ -37,6 +37,7 @@
 #include <boost/test/unit_test.hpp>
 
 #define BERTINI_TEST_MODULE "nag_algorithms"
+#include "bertini2/mpfr_extensions.hpp"
 #include "test/utility/enable_logging.hpp"
 
 

@@ -35,10 +35,12 @@
 #include <boost/test/unit_test.hpp>
 
 #define BERTINI_TEST_MODULE "pools"
-#include "test/utility/enable_logging.hpp"
+
 
 
 #include "bertini2/pool/system.hpp"
+#include "test/utility/enable_logging.hpp"
+
 
 BOOST_AUTO_TEST_SUITE(system_pool)
 
