@@ -103,14 +103,14 @@ namespace logging{
 
 
 		static
-		void AddFile(std::string const& name_pattern, std::string const& format, unsigned rotation_size)
+		void AddFile(std::string const& name_pattern, std::string const& format, unsigned rotation_size, bool auto_flush = true)
 		{
 			blog::add_file_log
 			(
 			    keywords::file_name = name_pattern,
 			    keywords::rotation_size = rotation_size,
 			    keywords::format = format,
-            	keywords::auto_flush = true
+			    keywords::auto_flush = auto_flush 
 			);
 		}
 

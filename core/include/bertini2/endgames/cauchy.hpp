@@ -282,7 +282,7 @@ public:
 	\brief Setter for the time values for the Cauchy endgame. 
 	*/
 	template<typename CT>
-	void SetCauchyTimes(TimeCont<CT> cauchy_times_to_set) 
+	void SetCauchyTimes(TimeCont<CT> const& cauchy_times_to_set) 
 	{ 
 		std::get<TimeCont<CT> >(cauchy_times_) = cauchy_times_to_set;
 	}
@@ -418,22 +418,12 @@ public:
 			NotifyObservers(CircleAdvanced<EmitterType>(*this, next_sample, next_time));
 			
 
-			this->EnsureAtPrecision(next_time,Precision(next_sample)); assert(Precision(next_time)==Precision(next_sample));
-
-			// auto refinement_success = this->RefineSample(next_sample, next_sample, next_time, 
-			// 							this->FinalTolerance() * this->EndgameSettings().sample_point_refinement_factor,
-			// 							this->EndgameSettings().max_num_newton_iterations);
-			// if (refinement_success != SuccessCode::Success)
-			// {
-			// 	return refinement_success;
-			// }
-
-			// this->EnsureAtPrecision(next_time,Precision(next_sample)); 
-			// assert(Precision(next_time)==Precision(next_sample));
+			this->EnsureAtPrecision(next_time,Precision(next_sample)); 
+			assert(Precision(next_time)==Precision(next_sample));
 
 			AddToCauchyData(next_time, next_sample);
 
-			// NotifyObservers(SampleRefined<EmitterType>(*this));
+
 		}
 
 		return SuccessCode::Success;
@@ -1023,12 +1013,15 @@ public:
 		// advance in time
 		Vec<CT> next_sample;
 		auto time_advance_success = this->GetTracker().TrackPath(next_sample,current_time, next_time, current_sample);
-		if (time_advance_success != SuccessCode::Success)
-			return time_advance_success;
 
 		this->EnsureAtPrecision(next_time,Precision(next_sample));
-		RotateOntoPS(next_time, next_sample);
+		assert(Precision(next_time)==Precision(next_sample));
 
+		if (time_advance_success != SuccessCode::Success)
+			NotifyObservers(EndgameFailure<EmitterType>(*this));
+			return time_advance_success;
+
+		RotateOntoPS(next_time, next_sample);
 		NotifyObservers(TimeAdvanced<EmitterType>(*this));
 		return SuccessCode::Success;
 	}
@@ -1128,7 +1121,9 @@ public:
 			prev_approx = latest_approx;
 			norm_of_dehom_prev = norm_of_dehom_latest;
 
-			AdvanceTime<CT>(target_time);
+			auto advance_code = AdvanceTime<CT>(target_time);
+			if (advance_code != SuccessCode::Success)
+				return advance_code;
 
 			// then compute the next set of cauchy samples used for extrapolating the point at target time
 			auto cauchy_samples_success = ComputeCauchySamples(target_time);
