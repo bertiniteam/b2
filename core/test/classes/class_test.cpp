@@ -29,12 +29,8 @@
 
 
 
-// the purpose of this file is the three non-comment lines.  it has no other purpose than to provide a place for them.
-
-
-
 //TODO: make the DYN_LINK change depending on the targeted architecture.  some need it, others don't.
-//if used, this BOOST_TEST_DYN_LINK appear before #include <boost/test/unit_test.hpp>
+//if used, BOOST_TEST_DYN_LINK must appear before #include <boost/test/unit_test.hpp>
 #define BOOST_TEST_DYN_LINK
 
 //this #define MUST appear before #include <boost/test/unit_test.hpp>
