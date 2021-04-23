@@ -20,8 +20,7 @@
 										"bertini_*.log",
 										"config.status",
 										"configure",
-										"*.trs",
-										"*.log"],
+										"*.trs"],
 			"folder_exclude_patterns": [
 				".deps",
 				".libs",
