@@ -13,15 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with test/utility/enable_logging.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2018 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// danielle amethyst brake, 
-// university of wisconsin eau claire
+// silviana amethyst, university of wisconsin-eau claire
 // spring 2018
 
 /**
@@ -39,7 +38,7 @@ struct LogInitter
 {
 	LogInitter()
 	{
-		bertini::logging::Logging::Init("bertini2_tests_" + std::string(BERTINI_TEST_MODULE) + "_%N.log","%Message%",10*1024*1024, bertini::logging::severity_level::info);
+		bertini::logging::Logging::Init("bertini2_tests_" + std::string(BERTINI_TEST_MODULE) + "_%N.log","%Message%",10*1024*1024, bertini::logging::severity_level::trace);
 	}
 };
 

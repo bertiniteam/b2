@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with src/system/precon.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2017 by Bertini2 Development Team
+// Copyright(C) 2017-2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst, university of notre dame
 
 
 #include "bertini2/system/precon.hpp"

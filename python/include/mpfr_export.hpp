@@ -321,6 +321,8 @@ namespace bertini{
 
 			static RealT __abs__(T const& x){ return abs(x);}
 			
+			static T conj(T const& x){ return conj(x);}
+
 			static std::string __str__(const object& obj)
 			{
 				std::ostringstream oss;

@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with number.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,8 +24,9 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Dani Brake
-// University of Notre Dame
+//
+// silviana amethyst
+// University of Wisconsin - Eau Claire
 //
 //  Created by Collins, James B. on 4/30/15.
 //
@@ -203,9 +204,9 @@ namespace node{
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpz_int true_value_;
@@ -234,7 +235,7 @@ namespace node{
 	public:
 
 		explicit
-		Float(mpfr const& val) : highest_precision_value_(val)
+		Float(mpfr_complex const& val) : highest_precision_value_(val)
 		{}
 
 		explicit
@@ -268,19 +269,19 @@ namespace node{
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr highest_precision_value_;
+		mpfr_complex highest_precision_value_;
 
 		friend class boost::serialization::access;
 		Float() = default;
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Number>(*this);
-			ar & const_cast<mpfr &>(highest_precision_value_);
+			ar & const_cast<mpfr_complex &>(highest_precision_value_);
 		}
 	};
 
@@ -292,7 +293,7 @@ namespace node{
 	/**
 	\brief The Rational number type for Bertini2 expression trees.
 
-	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a mpfr at evaluate time.
+	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a mpfr_complex at evaluate time.
 	*/
 	class Rational : public virtual Number
 	{
@@ -367,9 +368,9 @@ namespace node{
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		mpq_rational true_value_real_, true_value_imag_;

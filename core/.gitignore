@@ -36,6 +36,7 @@ nag_datatypes_test
 blackbox_test
 
 cachegrind.out.*
+callgrind.out.*
 
 m4/libtool.m4
 m4/ltoptions.m4
@@ -96,7 +97,8 @@ serialization_test*
 
 *.rej
 
-
+# trace objects from xcrun / instruments
+*.trace
 
 # Maple files
 test/tracking_basics/*.bak

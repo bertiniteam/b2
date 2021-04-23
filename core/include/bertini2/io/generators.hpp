@@ -13,12 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/io/generators.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
+// individual authors of this file include:
+// silviana amethyst, university of wisconsin-eau claire
 
 /**
 \file bertini2/io/generators.hpp 
@@ -61,7 +63,7 @@ BOOST_MATH_STD_USING
 
 
 // BOOST_FUSION_ADAPT_ADT(
-//     bertini::complex,
+//     bertini::mpfr_complex,
 //     (bool, bool, obj.imag() != 0, /**/)
 //     (bertini::mpfr_float, bertini::mpfr_float, obj.real(), /**/)
 //     (bertini::mpfr_float, bertini::mpfr_float, obj.imag(), /**/)
@@ -165,7 +167,7 @@ namespace bertini{
 
 
 			template <typename OutputIterator>
-			static bool generate(OutputIterator sink, mpfr const& c)
+			static bool generate(OutputIterator sink, mpfr_complex const& c)
 			{
 	            using boost::spirit::karma::omit;
 	            using boost::spirit::karma::generate;

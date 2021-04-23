@@ -3,8 +3,8 @@
 
 
 
-#we're building b2, version 2.0-alpha6, and the corresponding email is dani brake's
-AC_INIT([b2], [2.0-alpha6], [brakeda@uwec.edu],[b2], [http://github.com/bertiniteam/b2])
+#we're building b2, version 2.0-alpha6, and the corresponding email is silviana's
+AC_INIT([b2], [2.0-alpha6], [amethyst@uwec.edu],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -70,22 +70,17 @@ AS_IF([test "x$enable_thread_local" != "xno"],[
 ])
 
 
+
+
+
+
 AC_ARG_ENABLE([expression_templates],
     AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates, particularly those coming from Boost.Multiprecision.]))
 
 AS_IF([test "x$enable_expression_templates" != "xno"],[
-	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision.])
+	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision; default is enabled.])
 ])
 
-
-AC_ARG_ENABLE([copy_and_swap],
-    AS_HELP_STRING([--enable-copy_and_swap], [Enable the use of copy-and-swap for exception safety of the library.]),
-    [],
-    [enable_copy_and_swap=no])
-
-AS_IF([test "x$enable_copy_and_swap" != "xno"],[
-	AC_DEFINE([BERTINI_ENABLE_COPY_AND_SWAP], [1],[Enable copy-and-swap idiom in fundamental types, for exception safety.])
-])
 
 
 AC_ARG_ENABLE([unity_build],
@@ -117,12 +112,18 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
   AC_MSG_ERROR([unable to find mpfr])
 ])
 
+AS_IF([test "x$bmp_complex" != "xno"],[
+  #find mpc
+  AC_SEARCH_LIBS([mpc_clear],[mpc], [],[
+    AC_MSG_ERROR([unable to find `libmpc` for complex arithmetic. should have come with mpfr? you need it for bmp_complex.])
+  ])
+])
 
 
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
 
-AX_BOOST_BASE([1.65],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.65 but it was not found in your system])])
+AX_BOOST_BASE([1.71],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.71 but it was not found in your system])])
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
@@ -134,6 +135,12 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_LOG
 AX_BOOST_LOG_SETUP
 AX_BOOST_THREAD
+
+
+AC_CHECK_HEADERS([boost/multiprecision/mpc.hpp],[],[
+      AC_MSG_ERROR([unable to find `boost/multiprecision/mpc.hpp`, the header for Boost.Multiprecision's mpc complex implementation. you either need Boost >=1.71 or an up-to-date clone of the official repo (https://github.com/boostorg/multiprecision/).])
+    ]
+  )
 
 
 

@@ -17,10 +17,7 @@
 //  newton_correct.hpp
 //
 //  copyright 2015
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Summer 2015
+//  silviana amethyst
 
 /**
 \file ode_predictors.hpp 

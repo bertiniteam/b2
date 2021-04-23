@@ -7,11 +7,12 @@ if UNITYBUILD
 b2_class_test_SOURCES = test/classes/unity/unity.cpp
 else
 b2_class_test_SOURCES = \
+	test/classes/boost_multiprecision_test.cpp \
 	test/classes/fundamentals_test.cpp \
 	test/classes/eigen_test.cpp \
+	test/classes/complex_test.cpp \
 	test/classes/function_tree_test.cpp \
 	test/classes/function_tree_transform.cpp \
-	test/classes/class_test.cpp \
 	test/classes/system_test.cpp \
 	test/classes/differentiate_test.cpp \
 	test/classes/differentiate_wrt_var.cpp \
@@ -19,10 +20,9 @@ b2_class_test_SOURCES = \
 	test/classes/start_system_test.cpp \
 	test/classes/node_serialization_test.cpp \
 	test/classes/patch_test.cpp \
-	test/classes/complex_test.cpp \
 	test/classes/slice_test.cpp \
-	test/classes/m_hom_start_system.cpp
-	test/classes/slice_test.cpp
+	test/classes/m_hom_start_system.cpp \
+	test/classes/class_test.cpp
 endif
 
 b2_class_test_LDADD = $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(BOOST_SERIALIZATION_LIB) libbertini2.la

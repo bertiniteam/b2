@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with total_degree.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 /**
 \file total_degree.hpp 
@@ -126,7 +126,7 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr> GenerateStartPoint(mpfr,unsigned long long index) const override;
+			Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const override;
 
 			std::vector<std::shared_ptr<node::Rational> > random_values_; ///< stores the random values for the start functions.  x^d-r, where r is stored in this vector.
 			std::vector<unsigned long long> degrees_; ///< stores the degrees of the functions.

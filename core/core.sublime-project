@@ -27,7 +27,6 @@
 										"endgames_test",
 										"pool_test",
 										"generating_test",
-										"config.log",
 										"config.status",
 										"configure",
 										"*.trs",
@@ -37,7 +36,8 @@
 				".libs",
 				"*.dtps",
 				"autom4te.cache",
-				"generated_documentation"]
+				"generated_documentation",
+				"Launch*"]
 		}
 	],
 

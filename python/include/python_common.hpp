@@ -59,7 +59,7 @@
 
 
 using namespace boost::python;
-typedef bertini::mpfr_float bmp;
-
+using bmp = bertini::mpfr_float;
+using mpfr = bertini::mpfr_complex;
 
 #endif

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with cauchy_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -107,7 +107,7 @@ Vec<ComplexT> result;
 //4. Track all points to 0.1
 for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 {
-    mpfr_float::default_precision(ambient_precision);
+    DefaultPrecision(ambient_precision);
     my_homotopy.precision(ambient_precision); // making sure our precision is all set up 
     auto start_point = TD_start_sys.StartPoint<ComplexT>(ii);
 
@@ -390,9 +390,13 @@ public:
 
 			//set up the time value for the next sample. 
 			using std::polar;
+
+#ifndef USE_BMP_COMPLEX 
 			using bertini::polar;
+#endif
 
 			//Generalized since we could have a nonzero target time. 
+			using std::arg;
 			RT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
 
 			auto next_sample = Vec<CT>(num_vars);
@@ -929,7 +933,7 @@ public:
 		result = Vec<CT>::Zero(this->GetSystem().NumVariables());
 		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
 			result += cau_samples[ii];
-		result /= static_cast<RT>(this->CycleNumber() * this->EndgameSettings().num_sample_points);
+		result /= this->CycleNumber() * this->EndgameSettings().num_sample_points;
 
 		return SuccessCode::Success;
 

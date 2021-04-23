@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with operator.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Jeb Collins, West Texas A&M
 
 
@@ -121,7 +121,7 @@ bool UnaryOperator::IsHomogeneous(VariableGroup const& vars) const
  */
 void UnaryOperator::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 
 	child_->precision(prec);
@@ -174,7 +174,7 @@ std::shared_ptr<Node> NaryOperator::first_child() const
  */
 void NaryOperator::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 	
 	this->PrecisionChangeSpecific(prec);

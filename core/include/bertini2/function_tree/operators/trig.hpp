@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with trig.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,10 +24,8 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Dani Brake
-// University of Notre Dame
+// silviana amethyst, university of wisconsin-eau claire
 //
-//  Created by daniel brake
 //
 //
 // trig.hpp:  Declares the trigonometric operator classes.
@@ -122,10 +120,10 @@ namespace node{
 		// Specific implementation of FreshEval for negate.
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
@@ -174,10 +172,10 @@ namespace node{
 		// Specific implementation of FreshEval for negate.
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
@@ -238,10 +236,10 @@ namespace node{
 		// Specific implementation of FreshEval for negate.
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
@@ -295,10 +293,10 @@ namespace node{
 		// Specific implementation of FreshEval for negate.
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
@@ -357,10 +355,10 @@ namespace node{
 		// Specific implementation of FreshEval for negate.
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
@@ -413,10 +411,10 @@ namespace node{
 		// Specific implementation of FreshEval for arctangent.
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 		

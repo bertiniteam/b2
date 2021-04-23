@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with src/function_tree/symbols/number.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst, university of notre dame
 // Jeb Collins, West Texas A&M
 
 
@@ -41,7 +41,7 @@ void Number::Reset() const
 
 void Number::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 	val_pair.second = false; // false indicates to re-evaluate 
 }
@@ -76,14 +76,14 @@ void Integer::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const
 }
 
 
-mpfr Integer::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Integer::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return mpfr(true_value_,0);
+	return mpfr_complex(true_value_,0,DefaultPrecision());
 }
 
-void Integer::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Integer::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value = true_value_;
+	evaluation_value = mpfr_complex(true_value_,0,DefaultPrecision());
 }
 
 
@@ -111,14 +111,14 @@ void Float::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& 
 }
 
 
-mpfr Float::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Float::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return mpfr(highest_precision_value_);
+	return mpfr_complex(highest_precision_value_,DefaultPrecision());
 }
 
-void Float::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Float::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value = mpfr(highest_precision_value_);
+	evaluation_value = mpfr_complex(highest_precision_value_,DefaultPrecision());
 }
 
 
@@ -145,14 +145,14 @@ void Rational::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> cons
 }
 
 
-mpfr Rational::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Rational::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
+	return mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_,DefaultPrecision()),boost::multiprecision::mpfr_float(true_value_imag_,DefaultPrecision()));
 }
 
-void Rational::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Rational::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	evaluation_value = mpfr(boost::multiprecision::mpfr_float(true_value_real_),boost::multiprecision::mpfr_float(true_value_imag_));
+	evaluation_value = mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_,DefaultPrecision()),boost::multiprecision::mpfr_float(true_value_imag_,DefaultPrecision()));
 }
 
 

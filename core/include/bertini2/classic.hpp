@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, University of Wisconsin Eau Claire
+// silviana amethyst, University of Wisconsin Eau Claire
 
 /**
 \file classic.hpp 

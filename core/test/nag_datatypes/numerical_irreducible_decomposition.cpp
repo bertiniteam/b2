@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with test/nag_algorithms/numerical_irreducible_decomposition.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2017 by Bertini2 Development Team
+// Copyright(C) 2017-2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 */
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst
 
 #include <boost/test/unit_test.hpp>
 #include "bertini2/nag_datatypes/numerical_irreducible_decomposition.hpp"
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_SUITE(nid)
 		using sp = std::shared_ptr<T>;
 
 		using NID = bertini::nag_datatype::NumericalIrreducibleDecomposition<
-			bertini::complex>;
+			bertini::mpfr_complex>;
 
 		BOOST_AUTO_TEST_CASE(something)
 		{	

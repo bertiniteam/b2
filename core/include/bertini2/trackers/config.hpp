@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with tracking/include/bertini2/trackers/config.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 #ifndef BERTINI_TRACKING_CONFIG_HPP
@@ -294,7 +294,7 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<MultiplePrecisionTracker>
 	{
-		using BaseComplexType = mpfr;
+		using BaseComplexType = mpfr_complex;
 		using BaseRealType = mpfr_float;
 		using EventEmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 		using PrecisionConfig = FixedPrecisionConfig;
@@ -304,7 +304,7 @@ namespace tracking{
 			IsAdaptivePrec = 0
 		};
 
-		using NeededTypes = detail::TypeList<mpfr>;
+		using NeededTypes = detail::TypeList<mpfr_complex>;
 
 		using NeededConfigs = detail::TypeList<
 			SteppingConfig, 
@@ -318,7 +318,7 @@ namespace tracking{
 	template<>
 	struct TrackerTraits<AMPTracker>
 	{
-		using BaseComplexType = mpfr;
+		using BaseComplexType = mpfr_complex;
 		using BaseRealType = mpfr_float;
 		using EventEmitterType = AMPTracker;
 		using PrecisionConfig = AdaptiveMultiplePrecisionConfig;
@@ -328,7 +328,7 @@ namespace tracking{
 			IsAdaptivePrec = 1
 		};
 
-		using NeededTypes = detail::TypeList<dbl, mpfr>;
+		using NeededTypes = detail::TypeList<dbl, mpfr_complex>;
 
 		using NeededConfigs = detail::TypeList<
 			SteppingConfig, 

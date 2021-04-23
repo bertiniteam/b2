@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/function_tree/roots/function.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2018 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,10 +24,9 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Dani Brake
-// University of Notre Dame
+// silviana amethyst, university of wisconsin-eau claire
 //
-//  Danielle Brake
+//  silviana amethyst
 //  UWEC
 //  Spring 2018
 //
@@ -164,12 +163,12 @@ namespace node{
 		/**
 		 Calls FreshEval on the entry node to the tree.
 		 */
-		mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 		
 		/**
 		 Calls FreshEval in place on the entry node to the tree.
 		 */
-		void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 		

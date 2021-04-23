@@ -57,7 +57,7 @@ namespace bertini{
 		using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
 		
 		using dbl = std::complex<double>;
-		using mpfr = bertini::complex;
+		using mpfr = bertini::mpfr_complex;
 		
 		
 		

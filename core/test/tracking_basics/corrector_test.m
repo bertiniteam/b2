@@ -21,7 +21,7 @@
 
 // individual authors of this file include:
 // jeb collins, west texas A&M
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 
 

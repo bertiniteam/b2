@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with symbol.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,8 +24,7 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Dani Brake
-// University of Notre Dame
+// silviana amethyst, university of wisconsin-eau claire
 //
 //  Created by Collins, James B. on 4/30/15.
 //

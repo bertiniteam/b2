@@ -13,17 +13,17 @@
 //You should have received a copy of the GNU General Public License
 //along with src/function_tree/roots/jacobian.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2018 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst, university of notre dame
 // Jeb Collins, West Texas A&M
 // 
-//  Danielle Brake
+//  silviana amethyst
 //  UWEC
 //  Spring 2018
 
@@ -135,7 +135,7 @@ bool Function::IsHomogeneous(VariableGroup const& vars) const
  */
 void Function::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	if (val_pair.first.precision()==prec)
 		return;
 	else{
@@ -166,17 +166,17 @@ void Function::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> cons
 /**
  Calls FreshEval on the entry node to the tree.
  */
-mpfr Function::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Function::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return entry_node_->Eval<mpfr>(diff_variable);
+	return entry_node_->Eval<mpfr_complex>(diff_variable);
 }
 
 /**
  Calls FreshEval in place on the entry node to the tree.
  */
-void Function::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Function::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	entry_node_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+	entry_node_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 }
 
 

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with tracking/observers.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license,
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 
 /**
@@ -210,7 +210,7 @@ namespace bertini {
 
 
 		public:
-			const std::vector<Vec<mpfr> >& Path() const
+			const std::vector<Vec<mpfr_complex> >& Path() const
 			{
 				return path_;
 			}
@@ -218,7 +218,7 @@ namespace bertini {
 			virtual ~AMPPathAccumulator() = default;
 
 		private:
-			std::vector<Vec<mpfr> > path_;
+			std::vector<Vec<mpfr_complex> > path_;
 		};
 
 
@@ -244,7 +244,7 @@ namespace bertini {
 						<< "\n from\tx = \n" << p->StartPoint()
 						<< "\n tracking system " << p->Get().GetSystem() << "\n\n";
 				}
-				else if (auto p = dynamic_cast<const Initializing<EmitterT,mpfr>*>(&e))
+				else if (auto p = dynamic_cast<const Initializing<EmitterT,mpfr_complex>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::debug) << std::setprecision(p->Get().GetSystem().precision())
 						 << "initializing in multiprecision, tracking path\nfrom\tt = " << p->StartTime() << "\nto\tt = " << p->EndTime() << "\n from\tx = \n" << p->StartPoint()
@@ -293,18 +293,18 @@ namespace bertini {
 
 
 
-				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,mpfr>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,mpfr_complex>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "prediction successful (mpfr), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "prediction successful (mpfr_complex), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulPredict<EmitterT,dbl>*>(&e))
 				{
 					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "prediction successful (dbl), result:\n" << p->ResultingPoint();
 				}
 
-				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,mpfr>*>(&e))
+				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,mpfr_complex>*>(&e))
 				{
-					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "correction successful (mpfr), result:\n" << p->ResultingPoint();
+					BOOST_LOG_TRIVIAL(severity_level::trace) << std::setprecision(Precision(p->ResultingPoint())) << "correction successful (mpfr_complex), result:\n" << p->ResultingPoint();
 				}
 				else if (auto p = dynamic_cast<const SuccessfulCorrect<EmitterT,dbl>*>(&e))
 				{

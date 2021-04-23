@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with amp_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -29,9 +29,9 @@
 
 
 /**
-\file base_endgame.hpp
+\file prec_endgame.hpp
 
-\brief Contains parent class, Endgame, the parent class for all endgames.
+\brief Contains a parent class, EndgamePrecPolicyBase (an observable), from which the fixed double, fixed multiple, or adaptive precision endgames are derived.
 */
 
 
@@ -39,7 +39,7 @@ namespace bertini{ namespace endgame {
 
 
 /**
-\brief A common base type for various precision types, fixed and adaptive
+\brief A common base type for various precision types, fixed and adaptive.  The purpose of this is to maintain a uniform interface to the tracker that's being used, across endgame types.
 */
 template <typename TrackerT>
 class EndgamePrecPolicyBase : public virtual Observable
@@ -70,7 +70,7 @@ public:
 	\brief Getter for the tracker used inside an instance of the endgame. 
 	*/
 	inline
-	const TrackerT & GetTracker() const
+	const TrackerT& GetTracker() const
 	{
 		return tracker_.get();
 	}

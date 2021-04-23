@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with start_base.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst, university of notre dame
 
 /**
 \file b2/core/include/bertini2/system/start_base.hpp 
@@ -64,7 +64,7 @@ namespace bertini
 			
 		private:
 			virtual Vec<dbl> GenerateStartPoint(dbl,unsigned long long index) const = 0;
-			virtual Vec<mpfr> GenerateStartPoint(mpfr,unsigned long long index) const = 0;
+			virtual Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const = 0;
 
 			friend class boost::serialization::access;
 

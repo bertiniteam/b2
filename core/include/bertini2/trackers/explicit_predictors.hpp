@@ -19,10 +19,8 @@
 //  Department of Mathematics
 //  Spring 2016
 //
-// 2017
-// Dani Brake
-// University of Wisconsin Eau Claire
-// Department of Mathematics
+// silviana amethyst, university of wisconsin-eau claire
+
 
 
 /**
@@ -42,6 +40,7 @@
 
 #include <boost/type_index.hpp>
 
+#include "bertini2/eigen_extensions.hpp"
 
 namespace bertini{
 	namespace tracking{
@@ -167,10 +166,10 @@ namespace bertini{
 				};
 
 				template<>
-				struct LUSelector<mpfr>
+				struct LUSelector<mpfr_complex>
 				{
 					template<typename N>
-					static Eigen::PartialPivLU<Mat<mpfr>>& Run(N & n)
+					static Eigen::PartialPivLU<Mat<mpfr_complex>>& Run(N & n)
 					{
 						return n.GetLU_mp();
 					}
@@ -202,7 +201,7 @@ namespace bertini{
 			class ExplicitRKPredictor
 			{
 				friend LUSelector<dbl>;
-				friend LUSelector<mpfr>;
+				friend LUSelector<mpfr_complex>;
 			public:
 				
 				/**
@@ -361,11 +360,11 @@ namespace bertini{
 					numVariables_ = S.NumVariables();
 					// you cannot set K_ here, because s_ may not have been set
 					std::get< Mat<dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr_complex> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
 					std::get< Mat<dbl> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
-					std::get< Mat<mpfr> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
+					std::get< Mat<mpfr_complex> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
 					std::get< Vec<dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
-					std::get< Vec<mpfr> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<mpfr_complex> >(dh_dt_temp_).resize(numTotalFunctions_);
 
 					ResizeK();
 				}
@@ -374,7 +373,7 @@ namespace bertini{
 				void ResizeK()
 				{
 					std::get< Mat<dbl> >(K_).resize(numTotalFunctions_, s_);
-					std::get< Mat<mpfr> >(K_).resize(numTotalFunctions_, s_);
+					std::get< Mat<mpfr_complex> >(K_).resize(numTotalFunctions_, s_);
 				}
 				
 				
@@ -394,11 +393,11 @@ namespace bertini{
 				 */
 				void ChangePrecision(unsigned new_precision)
 				{
-					Precision(std::get< Mat<mpfr> >(K_),new_precision);
+					Precision(std::get< Mat<mpfr_complex> >(K_),new_precision);
 
-					Precision(std::get< Vec<mpfr> >(dh_dt_temp_),new_precision);
-					Precision(std::get< Mat<mpfr> >(dh_dx_0_),new_precision);
-					Precision(std::get< Mat<mpfr> >(dh_dx_temp_),new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(dh_dt_temp_),new_precision);
+					Precision(std::get< Mat<mpfr_complex> >(dh_dx_0_),new_precision);
+					Precision(std::get< Mat<mpfr_complex> >(dh_dx_temp_),new_precision);
 
 					Precision(std::get< Mat<mpfr_float> >(a_),new_precision);
 					Precision(std::get< Vec<mpfr_float> >(b_),new_precision);
@@ -416,9 +415,9 @@ namespace bertini{
 				{
 					assert(current_precision_==DefaultPrecision());
 
-					Vec<mpfr>& dhdttemp = std::get< Vec<mpfr> >(dh_dt_temp_);
-					Mat<mpfr>& dhdx0 = std::get< Mat<mpfr> >(dh_dx_0_); 
-					Mat<mpfr>& dhdxtemp = std::get< Mat<mpfr> >(dh_dx_temp_); 
+					Vec<mpfr_complex>& dhdttemp = std::get< Vec<mpfr_complex> >(dh_dt_temp_);
+					Mat<mpfr_complex>& dhdx0 = std::get< Mat<mpfr_complex> >(dh_dx_0_); 
+					Mat<mpfr_complex>& dhdxtemp = std::get< Mat<mpfr_complex> >(dh_dx_temp_); 
 
 					Mat<mpfr_float>& a = std::get< Mat<mpfr_float> >(a_); 
 					Vec<mpfr_float>& b = std::get< Vec<mpfr_float> >(b_); 
@@ -457,17 +456,16 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename Derived>
+				template<typename ComplexType>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									System const& S,
-									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
+									const Vec<ComplexType>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									NumErrorT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
 									NumErrorT const& tracking_tolerance)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					auto step_success = FullStep(next_space, S, current_space, current_time, delta_t);
 
@@ -501,13 +499,13 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename Derived>
+				template<typename ComplexType>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									NumErrorT & size_proportion,
 									NumErrorT & norm_J,
 									NumErrorT & norm_J_inverse,
 									System const& S,
-									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
+									const Vec<ComplexType>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									NumErrorT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
@@ -515,7 +513,6 @@ namespace bertini{
 									NumErrorT const& tracking_tolerance,
 									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					
 					auto success_code = Predict<ComplexType>(next_space, S, current_space, current_time, delta_t,
@@ -570,14 +567,14 @@ namespace bertini{
 				 \return SuccessCode indicating how the prediction went.
 				 */
 				
-				template<typename ComplexType, typename Derived>
+				template<typename ComplexType>
 				SuccessCode Predict(Vec<ComplexType> & next_space,
 									NumErrorT & error_estimate,
 									NumErrorT & size_proportion,
 									NumErrorT & norm_J,
 									NumErrorT & norm_J_inverse,
 									System const& S,
-									const Eigen::MatrixBase<Derived>& current_space, ComplexType current_time,
+									const Vec<ComplexType>& current_space, ComplexType current_time,
 									ComplexType const& delta_t,
 									NumErrorT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
@@ -585,7 +582,6 @@ namespace bertini{
 									NumErrorT const& tracking_tolerance,
 									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
 					
@@ -667,7 +663,7 @@ namespace bertini{
 					return LU_d_;
 				}
 
-				Eigen::PartialPivLU<Mat<mpfr>>& GetLU_mp()
+				Eigen::PartialPivLU<Mat<mpfr_complex>>& GetLU_mp()
 				{
 					assert(current_precision_==DefaultPrecision());
 					return LU_mp_[current_precision_];
@@ -685,13 +681,12 @@ namespace bertini{
 				 \return SuccessCode determining result of the computation
 				 */
 				
-				template<typename ComplexType, typename Derived>
-				SuccessCode FullStep(Vec<typename Derived::Scalar> & next_space,
+				template<typename ComplexType>
+				SuccessCode FullStep(Vec<ComplexType> & next_space,
 									System const& S,
-									 Eigen::MatrixBase<Derived> const& current_space, ComplexType const& current_time,
+									 Vec<ComplexType> const& current_space, ComplexType const& current_time,
 									 ComplexType const& delta_t)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 					
 					// If using constant predictor
 					if(s_ == 0)
@@ -720,7 +715,8 @@ namespace bertini{
 						for(int jj = 0; jj < ii; ++jj)
 							temp += aref(ii,jj)*Kref.col(jj);
 
-						if(EvalRHS(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
+						// Vec<ComplexType> wfp = 
+						if(EvalRHS<ComplexType>(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
 					}
 					
@@ -742,7 +738,7 @@ namespace bertini{
 					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
 					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
 
-					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr!
+					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr_complex!
 					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(numVariables_);
 					Vec<ComplexType> temp_soln = LUref.solve(randy);
 					
@@ -844,13 +840,12 @@ namespace bertini{
 				 \return Success code of this computation
 				 */
 				
-				template< typename Derived, typename ComplexType>
+				template<typename ComplexType>
 				SuccessCode EvalRHS(System const& S,
-									const Eigen::MatrixBase<Derived>& space, const ComplexType& time, Mat<ComplexType> & K, unsigned stage)
+									const Vec<ComplexType>& space, const ComplexType& time, Mat<ComplexType> & K, unsigned stage)
 				{
-					static_assert(std::is_same<typename Derived::Scalar, ComplexType>::value, "scalar types must match");
 
-					if (std::is_same<typename Derived::Scalar, mpfr>::value)
+					if (std::is_same<ComplexType, mpfr_complex>::value)
 						PrecisionSanityCheck();
 
 					if(stage == 0)
@@ -1031,16 +1026,16 @@ namespace bertini{
 				
 				unsigned numTotalFunctions_; // Number of total functions for the current system
 				unsigned numVariables_;  // Number of variables for the current system
-				mutable std::tuple< Mat<dbl>, Mat<mpfr> > K_;  // All the stage variables.  Each column represents a different stage.
+				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > K_;  // All the stage variables.  Each column represents a different stage.
 				Predictor predictor_;  // Method for prediction
 				unsigned p_;  //Order of the prediction method
-				mutable std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
-				mutable std::tuple< Mat<dbl>, Mat<mpfr> > dh_dx_temp_;  // Temporary jacobian for all other stages
-				mutable std::tuple< Vec<dbl>, Vec<mpfr> > dh_dt_temp_;  // Temporary time derivative used for all stages
-				// std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr>> > LU_0_;  // LU from the intial stage used for AMP testing
+				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > dh_dx_0_;  // Jacobian for the initial stage.  Use for AMP testing
+				mutable std::tuple< Mat<dbl>, Mat<mpfr_complex> > dh_dx_temp_;  // Temporary jacobian for all other stages
+				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > dh_dt_temp_;  // Temporary time derivative used for all stages
+				// std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_0_;  // LU from the intial stage used for AMP testing
 
 				mutable Eigen::PartialPivLU<Mat<dbl>> LU_d_;
-				mutable std::map<unsigned,Eigen::PartialPivLU<Mat<mpfr>>> LU_mp_;
+				mutable std::map<unsigned,Eigen::PartialPivLU<Mat<mpfr_complex>>> LU_mp_;
 				
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods )

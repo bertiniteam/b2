@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with generic_pseg_test.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 /**
@@ -46,7 +46,7 @@ using SuccessCode = bertini::SuccessCode;
 
 
 using dbl = bertini::dbl;
-using mpfr = bertini::complex;
+using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
@@ -1165,13 +1165,16 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 			tracker.AddObserver(tons_of_detail);
 #endif
 
+
+// track to the endgame boundary
 	unsigned num_paths_to_run = 1;
 	BCT t_start(1), t_endgame_boundary(0.1);
-	std::vector<Vec<BCT> > homogenized_solutions;
+	std::vector<Vec<BCT> > endgame_boundary_solutions;
 	for (unsigned ii = 0; ii < num_paths_to_run; ++ii)
 	{
 		DefaultPrecision(ambient_precision);
 		final_system.precision(ambient_precision);
+		TD.precision(ambient_precision);
 		auto start_point = TD.StartPoint<BCT>(ii);
 
 		Vec<BCT> result;
@@ -1180,25 +1183,31 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 		tracking_success = tracker.TrackPath(result,t_start,t_endgame_boundary,start_point);
 		BOOST_CHECK(tracking_success==SuccessCode::Success);
 
-		homogenized_solutions.push_back(result);
+		endgame_boundary_solutions.push_back(result);
 	}
+
+
+
+// track during the endgames -- this is the main goal of this test -- the above is setup and sanity checking.
+
 
 	Vec<BCT> correct(2);
 	correct << BCT(1),BCT(1);
 
 	tracker.Setup(TestedPredictor,
-	              	1e-6, 1e5,
+	              	1e-6, 1e5, // the tracking tolerances
 					stepping_settings, newton_settings);
 
-	TestedEGType my_endgame(tracker);
+	TestedEGType my_endgame(tracker); // carries with it the system/homotopy we're tracking -- `final_system`, in this blob of code.  we set it above, before tracking to the endgame boundary
 
 
 
 	std::vector<Vec<BCT> > endgame_solutions;
 
 	unsigned num_successful_occurences = 0;
-	for (auto const& s : homogenized_solutions)
+	for (auto const& s : endgame_boundary_solutions)
 	{
+		Precision(t_endgame_boundary, Precision(s));
 		SuccessCode endgame_success = my_endgame.Run(t_endgame_boundary,s);
 		if(endgame_success == SuccessCode::Success)
 		{

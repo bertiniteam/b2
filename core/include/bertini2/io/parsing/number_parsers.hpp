@@ -59,10 +59,9 @@ namespace bertini{
 												auto prev_prec = DefaultPrecision();
 												auto asdf = max(prev_prec,LowestMultiplePrecision());
 												auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
-												DefaultPrecision(digits);
-												B = mpfr_float{P};
-												DefaultPrecision(prev_prec);
-												assert(B.precision() == digits);
+
+												B.precision(digits);
+												B = mpfr_float(P,digits);
 											},
 											_val,_1
 										)
@@ -88,7 +87,7 @@ namespace bertini{
 
 
 			template<typename Iterator, typename Skipper = ascii::space_type>
-			struct MpfrComplexParser : qi::grammar<Iterator, mpfr(), boost::spirit::ascii::space_type>
+			struct MpfrComplexParser : qi::grammar<Iterator, mpfr_complex(), boost::spirit::ascii::space_type>
 			{
 				MpfrComplexParser() : MpfrComplexParser::base_type(root_rule_,"MpfrComplexParser")
 				{
@@ -102,24 +101,22 @@ namespace bertini{
 					(mpfr_float_ >> mpfr_float_)
 					[ phx::bind(
 								[]
-								(mpfr & B, mpfr_float const& P, mpfr_float const& Q)
+								(mpfr_complex & B, mpfr_float const& P, mpfr_float const& Q)
 								{
 									auto prev_prec = DefaultPrecision();
 									auto digits = max(P.precision(),Q.precision());
 									
-									DefaultPrecision(digits);
+									B.precision(digits);
+
 									B.real(P);
 									B.imag(Q);
-									B.precision(digits);
-									DefaultPrecision(prev_prec);
-									assert(B.precision() == digits);
 								},
 								_val,_1,_2
 								)
 					 ];
 				}
 				
-				qi::rule<Iterator, mpfr(), Skipper > root_rule_;
+				qi::rule<Iterator, mpfr_complex(), Skipper > root_rule_;
 				MpfrFloatParser<Iterator> mpfr_float_;
 			};
 
@@ -195,7 +192,7 @@ namespace bertini{
 				
 				if (!r || first != last) // fail if we did not get a full match
 					return false;
-				
+				c.precision(rN.precision());
 				c = rN;
 				return r;
 			}
@@ -205,7 +202,7 @@ namespace bertini{
 			
 			
 			template <typename Iterator>
-			static bool parse(Iterator first, Iterator last, mpfr& c)
+			static bool parse(Iterator first, Iterator last, mpfr_complex& c)
 			{
 				using boost::spirit::qi::double_;
 				using boost::spirit::qi::_1;
@@ -215,16 +212,15 @@ namespace bertini{
 				
 				MpfrComplexParser<Iterator> S;
 				
-				mpfr rN {};
+				mpfr_complex rN {};
 				bool r = phrase_parse(first, last,
 									  S,
 									  space,
 									  rN);
 				
-				std::cout << rN.real().str() << std::endl;
 				if (!r || first != last) // fail if we did not get a full match
 					return false;
-				
+				c.precision(rN.precision());
 				c = rN;
 				return r;
 			}

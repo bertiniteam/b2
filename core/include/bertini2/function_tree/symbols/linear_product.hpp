@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with variable.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015, 2016 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license,
 // as well as COPYING.  Bertini2 is provided with permitted
@@ -22,13 +22,13 @@
 // individual authors of this file include:
 //  James Collins
 //  West Texas A&M University
-//  Spring, Summer 2015
+//  Spring, Summer 2017
 //
+//
+// silviana amethyst
+// University of Wisconsin - Eau Claire
 //
 //  Created by Collins, James B. on 3/6/2017.
-//
-//
-// linear_product.hpp:  Declares the class LinearProduct.
 
 
 /**
@@ -78,13 +78,13 @@ namespace  bertini {
 				//				// Resize coeffs matrix
 				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
 				//				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex>& coeffs_mpfr_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				//				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
 				//				// Resize temporary variable holders and fill constant with 1
 				//				temp_var_d_.resize(num_variables_ + 1);
 				//				temp_var_d_[num_variables_] = dbl(1);
 				//				temp_var_mp_.resize(num_variables_ + 1);
-				//				temp_var_mp_[num_variables_].SetOne();
+				//				temp_var_mp_[num_variables_] = mpfr_complex(1);
 				
 				SetupVariables(num_factors, variables);
 				coeffs_rat_real_.resize(num_factors_, num_variables_+1);
@@ -95,7 +95,7 @@ namespace  bertini {
 				{
 					for (int jj = 0; jj < num_variables_+1; ++jj)
 					{
-						// Generate random constants as mpq_rationals.  Then downsample to mpfr and dbl.
+						// Generate random constants as mpq_rationals.  Then downsample to mpfr_complex and dbl.
 						// TODO: RandomRat() does not generate random numbers.  Same each run.
 						coeffs_rat_real_(ii,jj) = RandomRat();
 						coeffs_rat_imag_(ii,jj) = RandomRat();
@@ -119,7 +119,7 @@ namespace  bertini {
 						coeffs_rat_real_(ii,num_variables_) = mpq_rational(0);
 						coeffs_rat_imag_(ii,num_variables_) = mpq_rational(0);
 						coeffs_dbl_ref(ii,num_variables_) = dbl(0);
-						coeffs_mpfr_ref(ii,num_variables_) = mpfr(0);
+						coeffs_mpfr_ref(ii,num_variables_) = mpfr_complex(0);
 					}
 				}
 
@@ -134,10 +134,10 @@ namespace  bertini {
 			 \param variables A deque of variable nodes that are used in each linear factor.  This does not have to be an actual system variable group.
 			 \param num_factors The number of linear factors in the product.
 			 \param coeffs_real A matrix of dbl data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
-			 \param coeffs_mpfr A matrix of mpfr data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
+			 \param coeffs_mpfr A matrix of mpfr_complex data types for all the coefficients in the linear factors.  Matrix must be of size num_factors x (num_variables + 1) with constant coefficient in last column.
 			 
 			 */
-			LinearProduct(VariableGroup const& variables, Mat<mpfr> const& coeffs_mpfr, bool is_hom_vars = false)
+			LinearProduct(VariableGroup const& variables, Mat<mpfr_complex> const& coeffs_mpfr, bool is_hom_vars = false)
 			: variables_(variables), num_factors_(coeffs_mpfr.rows()), is_hom_vars_(is_hom_vars)
 			{
 				if(variables.size()+1 != coeffs_mpfr.cols())
@@ -146,7 +146,7 @@ namespace  bertini {
 				
 				// Resize coeffs matrix
 				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex>& coeffs_mpfr_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				
 				SetupVariables(num_factors_, variables);
 				
@@ -160,7 +160,7 @@ namespace  bertini {
 					hom_variable_ = MakeInteger(0);
 					for(int ii = 0; ii < coeffs_mpfr_ref.rows(); ++ii)
 					{
-						coeffs_mpfr_ref(ii,num_variables_) = mpfr(0);
+						coeffs_mpfr_ref(ii,num_variables_) = mpfr_complex(0);
 					}
 				}
 				
@@ -307,7 +307,7 @@ namespace  bertini {
 			 */
 			virtual void precision(unsigned int prec) const override
 			{
-				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+				auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 				val_pair.first.precision(prec);
 				
 				this->PrecisionChangeSpecific(prec);
@@ -371,11 +371,11 @@ namespace  bertini {
 			}
 			
 			/**
-			 \brief Getter for mpfr coefficients
+			 \brief Getter for mpfr_complex coefficients
 			*/
-			void GetMPFRCoeffs(Mat<mpfr>& coeffs) const
+			void GetMPFRCoeffs(Mat<mpfr_complex>& coeffs) const
 			{
-				auto& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				auto& coeffs_mpfr_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				coeffs = coeffs_mpfr_ref;
 			}
 			
@@ -486,9 +486,9 @@ namespace  bertini {
 			 
 			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
 			 */
-			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
+			mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				mpfr eval_value;
+				mpfr_complex eval_value;
 				
 				this->FreshEval_mp(eval_value, diff_variable);
 				return eval_value;
@@ -501,17 +501,17 @@ namespace  bertini {
 			 \param evaluation_value The in place variable that stores the evaluation.
 			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
 			 */
-			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				evaluation_value.SetOne();
-				const Mat<mpfr>& coeffs_ref = std::get< Mat<mpfr> >(coeffs_);
+				evaluation_value = mpfr_complex(1);
+				const Mat<mpfr_complex>& coeffs_ref = std::get< Mat<mpfr_complex> >(coeffs_);
 				
 				// Evaluate all afine variables and store
 				for (int jj = 0; jj < num_variables_; ++jj)
 				{
-					variables_[jj]->EvalInPlace<mpfr>(temp_var_mp_[jj], diff_variable);
+					variables_[jj]->EvalInPlace<mpfr_complex>(temp_var_mp_[jj], diff_variable);
 				}
-				hom_variable_->EvalInPlace<mpfr>(temp_var_mp_[num_variables_], diff_variable);
+				hom_variable_->EvalInPlace<mpfr_complex>(temp_var_mp_[num_variables_], diff_variable);
 				
 				
 				
@@ -520,7 +520,7 @@ namespace  bertini {
 				for (int ii = 0; ii < num_factors_; ++ii)
 				{
 					// Add all terms in one linear factor and store in temp_sum_d_
-					temp_sum_mp_.SetZero();
+					temp_sum_mp_ = mpfr_complex(0);
 					for (int jj = 0; jj < num_variables_ + 1; ++jj)
 					{
 						temp_sum_mp_ += coeffs_ref(ii,jj)*temp_var_mp_[jj];
@@ -557,7 +557,7 @@ namespace  bertini {
 			
 			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
 			
-			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
+			std::tuple< Mat<dbl>, Mat<mpfr_complex> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
 			
 			VariableGroup variables_; ///< Variables to be used in each linear factor.  Does not have to correspond directly to a variable group from the system.
 			
@@ -572,8 +572,8 @@ namespace  bertini {
 			
 			
 			mutable std::vector<dbl> temp_var_d_;
-			mutable std::vector<mpfr> temp_var_mp_;
-			mutable mpfr temp_sum_mp_;
+			mutable std::vector<mpfr_complex> temp_var_mp_;
+			mutable mpfr_complex temp_sum_mp_;
 			mutable dbl temp_sum_d_;
 			
 			
@@ -595,14 +595,14 @@ namespace  bertini {
 				// Resize coeffs matrix
 				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
 				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex>& coeffs_mpfr_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
 				
 				// Resize temporary variable holders
 				temp_var_d_.resize(num_variables_ + 1);
 				temp_var_d_[num_variables_] = dbl(1);
 				temp_var_mp_.resize(num_variables_ + 1);
-				temp_var_mp_[num_variables_].SetOne();
+				temp_var_mp_[num_variables_] = mpfr_complex(1);
 				
 				
 				coeffs_rat_real_ = coeffs_real;
@@ -631,7 +631,7 @@ namespace  bertini {
 
 			
 			
-			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var, Mat<mpfr> const& coeffs, bool is_hom_vars) :
+			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var, Mat<mpfr_complex> const& coeffs, bool is_hom_vars) :
 			variables_(variables), num_factors_(coeffs.rows()), hom_variable_(hom_var), is_hom_vars_(is_hom_vars)
 			{
 				num_variables_ = variables.size();
@@ -639,14 +639,14 @@ namespace  bertini {
 				// Resize coeffs matrix
 				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
 				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex>& coeffs_mpfr_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
 				
 				// Resize temporary variable holders
 				temp_var_d_.resize(num_variables_ + 1);
 				temp_var_d_[num_variables_] = dbl(1);
 				temp_var_mp_.resize(num_variables_ + 1);
-				temp_var_mp_[num_variables_].SetOne();
+				temp_var_mp_[num_variables_] = mpfr_complex(1);
 				
 				coeffs_mpfr_ref = coeffs;
 				
@@ -698,14 +698,14 @@ namespace  bertini {
 				// Resize coeffs matrix
 				Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
 				coeffs_dbl_ref.resize(num_factors_, num_variables_+1);
-				Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex>& coeffs_mpfr_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				coeffs_mpfr_ref.resize(num_factors_, num_variables_+1);
 				
 				// Resize temporary variable holders
 				temp_var_d_.resize(num_variables_ + 1);
 				temp_var_d_[num_variables_] = dbl(1);
 				temp_var_mp_.resize(num_variables_ + 1);
-				temp_var_mp_[num_variables_].SetOne();
+				temp_var_mp_[num_variables_] = mpfr_complex(1);
 				
 				hom_variable_ = MakeInteger(1);
 			}
@@ -729,7 +729,7 @@ namespace  bertini {
 					v.precision(prec);
 				}
 				
-				Mat<mpfr> coeffs_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex> coeffs_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				for(int ii = 0; ii < coeffs_ref.rows(); ++ii)
 				{
 					for(int jj = 0; jj < coeffs_ref.cols(); ++jj)
@@ -897,7 +897,7 @@ namespace  bertini {
 			 */
 			virtual void precision(unsigned int prec) const override
 			{
-				auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+				auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 				val_pair.first.precision(prec);
 				
 				this->PrecisionChangeSpecific(prec);
@@ -981,9 +981,9 @@ namespace  bertini {
 			 
 			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
 			 */
-			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
+			mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				mpfr eval_value;
+				mpfr_complex eval_value;
 				
 				this->FreshEval_mp(eval_value, diff_variable);
 				return eval_value;
@@ -996,13 +996,13 @@ namespace  bertini {
 			 \param evaluation_value The in place variable that stores the evaluation.
 			 \param diff_variable Variable that we are differentiating with respect to.  Only for evaluating Jacobians.
 			 */
-			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
+			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
 				for(int ii = 0; ii < variables_.size(); ++ii)
 				{
 					if(diff_variable == variables_[ii])
 					{
-						auto& coeff_ref = std::get<Mat<mpfr>>(coeffs_);
+						auto& coeff_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 						evaluation_value = coeff_ref(0,ii);
 						return;
 					}
@@ -1011,14 +1011,14 @@ namespace  bertini {
 				// If not one of the affine variables
 				if(diff_variable == hom_variable_)
 				{
-					auto& coeff_ref = std::get<Mat<mpfr>>(coeffs_);
+					auto& coeff_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 					evaluation_value = coeff_ref(0,variables_.size()-1);
 					return;
 				}
 				
 				
 				// If none of the variables
-				evaluation_value.SetZero();
+				evaluation_value = mpfr_complex(0);
 				return;
 			}
 			
@@ -1043,12 +1043,12 @@ namespace  bertini {
 			
 			
 		private:
-			//			std::vector< std::vector< std::tuple<mpq_rational, dbl, mpfr> > > coeffs_;
+			//			std::vector< std::vector< std::tuple<mpq_rational, dbl, mpfr_complex> > > coeffs_;
 			Mat<mpq_rational> coeffs_rat_real_;   ///< Matrix of real rational coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor, with the final column being the constant coefficient.  These rationals can then be downsampled for each data type.
 			
 			Mat<mpq_rational> coeffs_rat_imag_;   ///< Same as coeffs_rat_real_ but for imaginary portion of the coefficients.
 			
-			std::tuple< Mat<dbl>, Mat<mpfr> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
+			std::tuple< Mat<dbl>, Mat<mpfr_complex> > coeffs_;   ///< Matrix of coefficients that define the linear product.  Each row corresponds to a factor in the product, columns correspond to the terms in each factor with the final column being the constant coefficient.  This is a tuple with one matrix for each data type.
 			
 			VariableGroup variables_; ///< Differentials of variables used in the linear.
 			
@@ -1081,7 +1081,7 @@ namespace  bertini {
 			
 			void PrecisionChangeSpecific(unsigned prec) const
 			{
-				Mat<mpfr> coeffs_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex> coeffs_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				for(int ii = 0; ii < coeffs_ref.rows(); ++ii)
 				{
 					for(int jj = 0; jj < coeffs_ref.cols(); ++jj)

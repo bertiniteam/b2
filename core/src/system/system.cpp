@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with system.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 
 #include "bertini2/system/system.hpp"
@@ -285,7 +285,7 @@ namespace bertini
 			iter->precision(new_precision);
 
 		using bertini::Precision;
-		Precision(std::get<Vec<mpfr> >(current_variable_values_),new_precision);
+		Precision(std::get<Vec<mpfr_complex> >(current_variable_values_),new_precision);
 
 		if (IsPatched())
 			patch_.Precision(new_precision);
@@ -859,7 +859,7 @@ namespace bertini
 	}
 
 	template double System::CoefficientBound<dbl>(unsigned) const;
-	template mpfr_float System::CoefficientBound<mpfr>(unsigned) const;
+	template mpfr_float System::CoefficientBound<mpfr_complex>(unsigned) const;
 
     int System::DegreeBound() const
     {

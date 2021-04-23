@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with powerseries_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -112,7 +112,7 @@ Vec<ComplexT> result;
 //4. Track all points to 0.1
 for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 {
-    mpfr_float::default_precision(ambient_precision);
+    DefaultPrecision(ambient_precision);
     my_homotopy.precision(ambient_precision); // making sure our precision is all set up 
     auto start_point = TD_start_sys.StartPoint<ComplexT>(ii);
 
@@ -253,7 +253,7 @@ public:
 	\brief Function to set the times used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	void SetTimes(TimeCont<CT> times_to_set) { std::get<TimeCont<CT> >(times_) = times_to_set;}
+	void SetTimes(TimeCont<CT> const& times_to_set) { std::get<TimeCont<CT> >(times_) = times_to_set;}
 
 	/**
 	\brief Function to get the times used for the Power Series endgame.
@@ -271,7 +271,7 @@ public:
 	\brief Function to set the space values used for the Power Series endgame.
 	*/	
 	template<typename CT>
-	void SetSamples(SampCont<CT> samples_to_set) { std::get<SampCont<CT> >(samples_) = samples_to_set;}
+	void SetSamples(SampCont<CT> const& samples_to_set) { std::get<SampCont<CT> >(samples_) = samples_to_set;}
 
 	/**
 	\brief Function to get the space values used for the Power Series endgame.
@@ -329,6 +329,7 @@ public:
 		const Vec<CT> & sample2 = samples[num_samples-1]; // most recent sample.  oldest samples at front of the container
 
 
+// should this only be if the system is homogenized?
 		CT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector_).sum();
 		CT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector_).sum();
 
@@ -403,11 +404,12 @@ public:
 		auto offset = samples.size() - num_pts - 1; // -1 here to shift away from the back of the container
 		for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
 		{			
+			using std::pow;
 
 			std::tie(s_times, s_derivatives) = TransformToSPlane(candidate, t0, num_pts, ContStart::Front);
-
-			RT curr_diff = (HermiteInterpolateAndSolve(
-								  pow((most_recent_time-t0)/(times[0]-t0), 1/static_cast<RT>(candidate)), // the target time
+			RT cand_power{1/static_cast<RT>(candidate)};
+			RT curr_diff = (HermiteInterpolateAndSolve<CT>(
+								  pow((most_recent_time-t0)/(times[0]-t0),cand_power), // the target time
 			                      num_pts,s_times,samples,s_derivatives, ContStart::Front) // the input data
 			                 - 
 			                 most_recent_sample).template lpNorm<Eigen::Infinity>();
@@ -651,13 +653,15 @@ public:
 		//Set up for the endgame.
 		ClearTimesAndSamples<CT>();
 
+
+		// unpack some references for easy use
 		auto& samples = std::get<SampCont<CT> >(samples_);
 		auto& times   = std::get<TimeCont<CT> >(times_);
 		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
 		Vec<CT>& latest_approx = this->final_approximation_;
 		Vec<CT>& prev_approx = this->previous_approximation_;
 
-
+		// this is for estimating a ... norm?
 		SetRandVec<CT>(start_point.size());	 	
 		
 		

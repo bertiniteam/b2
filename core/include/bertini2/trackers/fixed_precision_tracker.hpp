@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with fixed_precision_tracker.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 
 /**
@@ -475,7 +475,7 @@ namespace bertini{
 		class MultiplePrecisionTracker : public FixedPrecisionTracker<MultiplePrecisionTracker>
 		{
 		public:
-			using BaseComplexType = mpfr;
+			using BaseComplexType = mpfr_complex;
 			using BaseRealType = mpfr_float;
 
 			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
@@ -522,17 +522,17 @@ namespace bertini{
 					throw std::runtime_error(err_msg.str());
 				}
 
-				if (start_point(0).precision()!=CurrentPrecision())
+				if (start_point(0).precision()!=this->CurrentPrecision())
 				{
 					std::stringstream err_msg;
-					err_msg << "start point for fixed multiple precision tracker has differing precision from tracker's precision (" << start_point(0).precision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					err_msg << "start point for fixed multiple precision tracker has differing precision from tracker's precision (" << start_point(0).precision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
 					throw std::runtime_error(err_msg.str());
 				}
 
-				if (DefaultPrecision()!=CurrentPrecision())
+				if (DefaultPrecision()!=this->CurrentPrecision())
 				{
 					std::stringstream err_msg;
-					err_msg << "current default precision differs from tracker's precision (" << DefaultPrecision() << "!=" << CurrentPrecision() << "), tracking cannot start";
+					err_msg << "current default precision differs from tracker's precision (" << DefaultPrecision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
 					throw std::runtime_error(err_msg.str());
 				}
 
@@ -555,9 +555,9 @@ namespace bertini{
 			{	
 				return GetSystem().precision() == precision_ &&
 						DefaultPrecision()==precision_ && 
-						std::get<Vec<mpfr> >(current_space_)(0).precision() == precision_ &&
-						std::get<Vec<mpfr> >(tentative_space_)(0).precision() == precision_ &&
-						std::get<Vec<mpfr> >(temporary_space_)(0).precision() == precision_ &&
+						std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == precision_ &&
+						std::get<Vec<mpfr_complex> >(tentative_space_)(0).precision() == precision_ &&
+						std::get<Vec<mpfr_complex> >(temporary_space_)(0).precision() == precision_ &&
 						Precision(this->endtime_)==precision_
 						        ;				
 			}
