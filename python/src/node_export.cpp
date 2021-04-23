@@ -25,7 +25,7 @@
 //  West Texas A&M University
 //  Spring 2016
 //
-//  Danielle Brake
+//  silviana amethyst
 //  UWEC
 //  2017, Spring 2018
 //

@@ -21,7 +21,7 @@
 
 // individual authors of this file include:
 //
-//  Dani Brake
+//  silviana amethyst
 //  UWEC
 //  Fall 2017, Spring 2018
 //

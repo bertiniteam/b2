@@ -21,7 +21,7 @@
 
 // individual authors of this file include:
 //
-//  Dani Brake
+//  silviana amethyst
 //  University of Notre Dame, University of Wisconsin Eau Claire
 //  Summer 2016, Fall 2017
 //

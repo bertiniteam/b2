@@ -21,7 +21,7 @@
 
 // individual authors of this file include:
 //
-//  Danielle Brake
+//  silviana amethyst
 //  University of Notre Dame
 //  Summer 2016, Spring 2018
 //
