@@ -49,7 +49,7 @@ AC_PROG_MKDIR_P
 LT_INIT
 
 #query python's install location.
-AM_PATH_PYTHON
+AM_PATH_PYTHON([3])
 
 
 # the form of the following commands --
@@ -75,8 +75,14 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
 
+AX_PYTHON_DEVEL([>= '3.0.0'])
 
 AX_BOOST_BASE([1.65],, [AC_MSG_ERROR([PyBertini needs Boost at least 1.65, but it was not found in your system])])
+AX_BOOST_PYTHON
+
+
+AX_BERTINI2
+
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
@@ -88,10 +94,9 @@ AX_BOOST_LOG
 AX_BOOST_LOG_SETUP
 AX_BOOST_THREAD
 
-AX_PYTHON_DEVEL
-AX_BOOST_PYTHON
 
-AX_BERTINI2
+
+
 
 
 AM_CONFIG_HEADER(config.h)
