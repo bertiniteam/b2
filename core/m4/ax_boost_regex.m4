@@ -46,7 +46,7 @@ AC_DEFUN([AX_BOOST_REGEX],
             ax_boost_user_regex_lib=""
         else
 		    want_boost="yes"
-		ax_boost_user_regex_lib="$withval"
+		    ax_boost_user_regex_lib="$withval"
 		fi
         ],
         [want_boost="yes"]
