@@ -40,7 +40,8 @@ AC_ARG_WITH([eigen],
 
 
 if test "x$want_eigen" = "xyes"; then
-    
+    AC_SUBST(EIGEN_CPPFLAGS)
+
     CPPFLAGS_SAVED="$CPPFLAGS"
 
     AC_REQUIRE([AC_PROG_CXX])
@@ -82,7 +83,9 @@ if test "x$want_eigen" = "xyes"; then
     AC_CHECK_HEADERS([Eigen/Dense],
         [
         succeeded=yes;
+        CPPFLAGS="$CPPFLAGS_SAVED";
         export CPPFLAGS;
+        export EIGEN_CPPFLAGS;
         ],
         [
         CPPFLAGS="$CPPFLAGS_SAVED";

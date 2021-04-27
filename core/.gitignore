@@ -102,3 +102,6 @@ serialization_test*
 
 # Maple files
 test/tracking_basics/*.bak
+
+# temporary files
+*.tmp

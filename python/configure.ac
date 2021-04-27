@@ -1,5 +1,5 @@
-#we're building pybertini, version 1.0.alpha2, and the corresponding email is dani brake's
-AC_INIT([pybertini], [1.0.alpha2], [brakeda@uwec.edu],[pybertini], [http://github.com/bertiniteam/b2])
+#we're building pybertini, version 1.0.alpha3, and the corresponding email is silviana's
+AC_INIT([pybertini], [1.0.alpha3], [amethyst@uwec.edu],[pybertini], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -49,7 +49,7 @@ AC_PROG_MKDIR_P
 LT_INIT
 
 #query python's install location.
-AM_PATH_PYTHON
+AM_PATH_PYTHON([3])
 
 
 # the form of the following commands --
@@ -75,8 +75,13 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
 
+AX_PYTHON_DEVEL([>= '3.0.0'])
 
 AX_BOOST_BASE([1.65],, [AC_MSG_ERROR([PyBertini needs Boost at least 1.65, but it was not found in your system])])
+AX_BOOST_PYTHON
+
+AX_BOOST_MULTIPRECISION
+
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
@@ -88,10 +93,10 @@ AX_BOOST_LOG
 AX_BOOST_LOG_SETUP
 AX_BOOST_THREAD
 
-AX_PYTHON_DEVEL
-AX_BOOST_PYTHON
 
 AX_BERTINI2
+
+
 
 
 AM_CONFIG_HEADER(config.h)
