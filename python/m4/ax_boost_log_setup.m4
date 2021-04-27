@@ -1,5 +1,5 @@
 # ===========================================================================
-#    http://www.gnu.org/software/autoconf-archive/ax_boost_log_setup.html
+#    https://www.gnu.org/software/autoconf-archive/ax_boost_log_setup.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -31,7 +31,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 1
+#serial 3
 
 AC_DEFUN([AX_BOOST_LOG_SETUP],
 [
@@ -100,7 +100,7 @@ AC_DEFUN([AX_BOOST_LOG_SETUP],
 		fi
 
 		if test "x$ax_lib" = "x"; then
-			AC_MSG_ERROR(Could not find a version of the Boost.LogSetup library!)
+			AC_MSG_ERROR(Could not find a version of the Boost::Log_Setup library!)
 		fi
 
 		if test "x$link_log_setup" = "xno"; then

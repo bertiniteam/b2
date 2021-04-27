@@ -80,8 +80,7 @@ AX_PYTHON_DEVEL([>= '3.0.0'])
 AX_BOOST_BASE([1.65],, [AC_MSG_ERROR([PyBertini needs Boost at least 1.65, but it was not found in your system])])
 AX_BOOST_PYTHON
 
-
-AX_BERTINI2
+AX_BOOST_MULTIPRECISION
 
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
@@ -95,6 +94,7 @@ AX_BOOST_LOG_SETUP
 AX_BOOST_THREAD
 
 
+AX_BERTINI2
 
 
 
