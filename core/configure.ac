@@ -117,7 +117,12 @@ AS_IF([test "x$bmp_complex" != "xno"],[
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
 
+
+
 AX_BOOST_BASE([1.71],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.71 but it was not found in your system])])
+
+AX_BOOST_MULTIPRECISION
+
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO
@@ -130,11 +135,12 @@ AX_BOOST_LOG
 AX_BOOST_LOG_SETUP
 AX_BOOST_THREAD
 
+ 
 
-AC_CHECK_HEADERS([boost/multiprecision/mpc.hpp],[],[
-      AC_MSG_ERROR([unable to find `boost/multiprecision/mpc.hpp`, the header for Boost.Multiprecision's mpc complex implementation. you either need Boost >=1.71 or an up-to-date clone of the official repo (https://github.com/boostorg/multiprecision/).])
-    ]
-  )
+AC_MSG_NOTICE([CPPFLAGS = $CPPFLAGS])
+AC_MSG_NOTICE([BOOST_CPPFLAGS = $BOOST_CPPFLAGS])
+AC_MSG_NOTICE([EIGEN_CPPFLAGS = $EIGEN_CPPFLAGS])
+
 
 
 
