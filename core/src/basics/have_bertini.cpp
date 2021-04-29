@@ -27,12 +27,12 @@
 
 #include "bertini2/have_bertini.hpp"
 
-namespace bertini{
-	char HaveBertini2()
-	{
-		return 'y';
-	}
+
+char HaveBertini2()
+{
+	return 'y';
 }
+
 
 
 

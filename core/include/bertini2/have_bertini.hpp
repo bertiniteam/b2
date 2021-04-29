@@ -33,16 +33,16 @@
 #ifndef BERTINI2_HAVE_BERTINI_HPP
 #define BERTINI2_HAVE_BERTINI_HPP
 
-namespace bertini{
-	/**
-	\brief Check for presence of the Bertini 2 library.
 
-	This function's sole purpose is for checking for the presence of the Bertini 2 library.
+/**
+\brief Check for presence of the Bertini 2 library.
 
-	\return The character 'y'.
-	*/
-	char HaveBertini2();
-}
+This function's sole purpose is for checking for the presence of the Bertini 2 library.
+
+\return The character 'y'.
+*/
+extern "C"
+char HaveBertini2();
 
 #endif
 
