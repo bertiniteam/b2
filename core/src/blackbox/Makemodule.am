@@ -29,4 +29,4 @@ bertini2_SOURCES = \
 bertini2_LDADD = $(BOOST_LDFLAGS) $(BOOST_FILESYSTEM_LIB) $(BOOST_SYSTEM_LIB)  $(BOOST_CHRONO_LIB) $(BOOST_REGEX_LIB) $(BOOST_TIMER_LIB) $(MPI_CXXLDFLAGS) $(BOOST_SERIALIZATION_LIB) $(BOOST_LOG_LIB) $(BOOST_LOG_SETUP_LIB) $(BOOST_THREAD_LIB) libbertini2.la
 #  ^^^ see the link to libbertini2.la?  yep, the rest of the sources are linked in there
 
-bertini2_CXXFLAGS = -I$(top_srcdir)/include $(BOOST_CPPFLAGS) $(EIGEN_CPPFLAGS)
+bertini2_CPPFLAGS = -I$(top_srcdir)/include $(BOOST_CPPFLAGS) $(EIGEN_CPPFLAGS)
