@@ -2,7 +2,7 @@
 
 
 basics_headers = \
-	include/bertini2/limbo.hpp \
+	include/bertini2/have_bertini.hpp \
 	include/bertini2/mpfr_extensions.hpp \
 	include/bertini2/mpfr_complex.hpp \
 	include/bertini2/forbid_mixed_arithmetic.hpp \
@@ -16,7 +16,7 @@ basics_headers = \
 
 basics_sources = \
 	src/basics/random.cpp \
-	src/basics/limbo.cpp
+	src/basics/have_bertini.cpp
 	
 
 

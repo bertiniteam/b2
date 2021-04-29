@@ -84,6 +84,59 @@ namespace bertini{
 	}
 }
 
+
+// overloads of the `max` function.
+namespace bertini{
+	/**
+	\brief Three-argument form of `max`.
+
+	\param a Input one
+	\param b Input two
+	\param c Input three
+	*/
+	template <typename T>
+	T max(T const& a, T const& b, T const& c)
+	{
+		using std::max;
+		return max(max(a,b),c);
+	}
+
+	/**
+	\brief Four-argument form of `max`.
+
+	\param a Input one
+	\param b Input two
+	\param c Input three
+	\param d Input four
+	*/
+	template <typename T>
+	T max(T const& a, T const& b, T const& c, T const& d)
+	{
+		using std::max;
+		using bertini::max;
+		return max(max(a,b,c),d);
+	}
+
+	/**
+	\brief Five-argument form of `max`.
+
+	\param a Input one
+	\param b Input two
+	\param c Input three
+	\param d Input four
+	\param e Input five
+	*/
+	template <typename T>
+	T max(T const& a, T const& b, T const& c, T const& d, T const& e)
+	{
+		using std::max;
+		using bertini::max;
+		return max(max(a,b,c,d),e);
+	}
+}
+
+
+
 // the following code block extends serialization to the mpfr_float class from boost::multiprecision
 namespace boost { namespace serialization {
 	/**

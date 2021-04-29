@@ -29,7 +29,6 @@
 #include <iostream>
 
 #include "bertini2/double_extensions.hpp"
-#include "bertini2/limbo.hpp"
 #include "bertini2/num_traits.hpp"
 
 
@@ -391,70 +390,6 @@ BOOST_AUTO_TEST_CASE(precision_mpfr_constructed_from_string)
 	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(),30);
 }
-
-	
-BOOST_AUTO_TEST_CASE(index_and_subscript_generation1)
-{
-
-	std::vector<size_t> dimensions{2,2};
-	std::vector<size_t> v;
-
-	std::vector<size_t> solution{0,0};
-	v = bertini::IndexToSubscript(0ul,dimensions);
-	BOOST_CHECK(v==solution);
-
-	solution[0] = 1; solution[1] = 0;
-	v = bertini::IndexToSubscript(1ul,dimensions);
-	BOOST_CHECK(v==solution);
-
-	solution[0] = 0; solution[1] = 1;
-	v = bertini::IndexToSubscript(2ul,dimensions);
-	BOOST_CHECK(v==solution);
-
-	solution[0] = 1; solution[1] = 1;
-	v = bertini::IndexToSubscript(3ul,dimensions);
-	BOOST_CHECK(v==solution);
-
-}
-
-
-
-BOOST_AUTO_TEST_CASE(index_and_subscript_generation2)
-{
-
-	size_t index = 20;
-
-	std::vector<size_t> dimensions{2,3,4,5};
-
-	std::vector<size_t> v = bertini::IndexToSubscript(index,dimensions);
-
-	std::vector<size_t> solution{0,1,3,0};
-	BOOST_CHECK(v==solution);
-}
-
-BOOST_AUTO_TEST_CASE(index_and_subscript_generation3)
-{
-
-	size_t index = 119;
-
-	std::vector<size_t> dimensions{2,3,4,5};
-
-	std::vector<size_t> v = bertini::IndexToSubscript(index,dimensions);
-
-	std::vector<size_t> solution{1,2,3,4};
-	BOOST_CHECK(v==solution);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(index_and_subscript_generation_out_of_range)
-{
-
-
-	std::vector<size_t> dimensions{2,3,4,5};
-	BOOST_CHECK_THROW(bertini::IndexToSubscript(120ul,dimensions),std::out_of_range);
-}
-
 
 
 BOOST_AUTO_TEST_CASE(precision_of_double_is_16)

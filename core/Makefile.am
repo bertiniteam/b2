@@ -9,8 +9,6 @@
 AM_YFLAGS = -d -p `basename $* | sed 's,y$$,,'`
 AM_LFLAGS = -s -P`basename $* | sed 's,l$$,,'` -olex.yy.c
 
-AM_CPPFLAGS = -I$(top_srcdir)/include $(BOOST_CPPFLAGS) $(EIGEN_CPPFLAGS)
-
 ACLOCAL_AMFLAGS = -I m4
 
 ####################################

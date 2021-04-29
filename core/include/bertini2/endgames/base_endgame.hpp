@@ -40,7 +40,6 @@
 
 
 #include "bertini2/mpfr_complex.hpp"
-#include "bertini2/limbo.hpp"
 
 #include "bertini2/system/system.hpp"
 

@@ -1,7 +1,8 @@
 #this is src/common/Makemodule.am
 
 common_header_files = \
-	include/bertini2/common/config.hpp
+	include/bertini2/common/config.hpp \
+	include/bertini2/common/stream_enum.hpp
 
 common_includedir = $(includedir)/bertini2/common
 common_include_HEADERS = \

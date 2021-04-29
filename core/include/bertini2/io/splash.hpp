@@ -103,7 +103,7 @@ inline
 std::string Owners()
 {
 	std::stringstream ss;
-	ss << "D.J. Bates, D.A. Brake, J.D. Hauenstein,\nA.J. Sommese, C.W. Wampler";
+	ss << "D.J. Bates, S. Amethyst, J.D. Hauenstein,\nA.J. Sommese, C.W. Wampler";
 	return ss.str();
 }
 
@@ -111,7 +111,7 @@ inline
 std::string Authors()
 {
 	std::stringstream ss;
-	ss << "D. Brake, J. Collins, T. Hodges";
+	ss << "S. Amethyst, J. Collins, T. Hodges";
 	return ss.str();
 }
 

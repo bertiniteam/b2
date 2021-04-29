@@ -102,13 +102,13 @@ if test "x$want_bertini" = "xyes"; then
     fi
 
 
-    AC_CHECK_HEADERS([bertini2/mpfr_complex.hpp],
+    AC_CHECK_HEADERS([bertini2/have_bertini.hpp],
         [
             succeeded=yes;
             AC_SUBST(BERTINI_CPPFLAGS)
         ],
         [
-        AC_MSG_ERROR([unable to find required file mpfr_complex.hpp in include for Bertini2])
+        AC_MSG_ERROR([unable to find required file have_bertini.hpp in include for Bertini2])
         ])
 
     AC_SEARCH_LIBS(

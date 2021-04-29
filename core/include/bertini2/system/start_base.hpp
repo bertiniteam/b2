@@ -32,7 +32,6 @@
 #pragma once
 
 #include "bertini2/system/system.hpp"
-#include "bertini2/limbo.hpp"
 
 
 namespace bertini 
