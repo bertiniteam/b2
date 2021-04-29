@@ -37,7 +37,6 @@
 //#include "bertini2/tracking/step.hpp"
 #include "bertini2/trackers/ode_predictors.hpp"
 #include "bertini2/trackers/newton_corrector.hpp"
-#include "bertini2/limbo.hpp"
 #include "bertini2/logging.hpp"
 
 #include "bertini2/detail/observable.hpp"

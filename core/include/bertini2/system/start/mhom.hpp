@@ -32,8 +32,7 @@
 #pragma once
 
 #include "bertini2/system/start_base.hpp"
-#include "bertini2/limbo.hpp"
-
+#include "bertini2/system/start/utility.hpp"
 
 namespace bertini 
 {

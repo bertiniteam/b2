@@ -29,7 +29,6 @@
 #include <iostream>
 
 #include "bertini2/double_extensions.hpp"
-#include "bertini2/limbo.hpp"
 #include "bertini2/num_traits.hpp"
 
 

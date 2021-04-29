@@ -1,11 +1,11 @@
 //This file is part of Bertini 2.
 //
-//bertini2/common/config.hpp is free software: you can redistribute it and/or modify
+//bertini2/common/stream_enum.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//bertini2/common/config.hpp is distributed in the hope that it will be useful,
+//bertini2/common/stream_enum.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
@@ -24,47 +24,33 @@
 // silviana amethyst, university of notre dame, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
-#ifndef BERTINI2_COMMON_CONFIG
-#define BERTINI2_COMMON_CONFIG
+#ifndef BERTINI2_STREAM_ENUM
+#define BERTINI2_STREAM_ENUM
 
 #pragma once
 
 
 namespace bertini
 {
-
-	// aliases for the types used to contain space and time samples, and random vectors for the endgames.
-	template<typename T> using SampCont = std::deque<Vec<T> >;
-	template<typename T> using TimeCont = std::deque<T>;
 	
-	enum class ContStart{
-		Front,
-		Back
-	};
+	/**
+	\brief Method for printing class enums to streams.
 
-	enum class SuccessCode
+	This was adapted from https://stackoverflow.com/questions/11421432/how-can-i-output-the-value-of-an-enum-class-in-c11
+	asked by user Adi, answered by James Adkison.  This code was provided CC-BY-SA 3.
+
+	This code does NOT work for streaming enum classes to Boost.Log streams.
+
+	\param stream The stream to print to.
+	\param e The enum value to print
+	\return The stream you are writing to.
+	*/
+	template<typename T>
+	std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::ostream>::type& stream, const T& e)
 	{
-		NeverStarted = -1,
-		Success = 0,
-		HigherPrecisionNecessary,
-		ReduceStepSize,
-		GoingToInfinity,
-		FailedToConverge,
-		MatrixSolveFailure,
-		MatrixSolveFailureFirstPartOfPrediction,
-		MaxNumStepsTaken,
-		MaxPrecisionReached,
-		MinStepSizeReached,
-		Failure,
-		SingularStartPoint,
-		ExternallyTerminated,
-		MinTrackTimeReached,
-		SecurityMaxNormReached,
-		CycleNumTooHigh,
+	    return stream << static_cast<typename std::underlying_type<T>::type>(e);
+	}
 
-	};
-
-	using NumErrorT = double;
 } // namespace bertini
 
 

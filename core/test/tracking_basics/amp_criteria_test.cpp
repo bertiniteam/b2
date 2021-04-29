@@ -28,7 +28,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/multiprecision/mpfr.hpp>
-#include "limbo.hpp"
 #include "mpfr_complex.hpp"
 
 #include "trackers/amp_criteria.hpp"
