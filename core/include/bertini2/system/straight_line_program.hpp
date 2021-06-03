@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with system.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2021 by Bertini2 Development Team
+// Copyright(C) 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -129,35 +129,31 @@ typedef struct {
 
 
 namespace bertini {
+  class System; // a forward declaration, solving the circular inclusion problem
 
 	class StraightLineProgram{
 	public:
 
+    /**
+    The constructor -- how to make a SLP from a System.
+    */
+    StraightLineProgram(System const & sys);
+
+
+    /**
+     Evaluate the functions for the system, and put them into the function's parameter `function_values`.
+     */
 		template<typename Derived>
 		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values) const
 		{
-			typedef typename Derived::Scalar T;
+			typedef typename Derived::Scalar T; // the numeric type we're working with.
 
-			if(function_values.size() < NumFunctions())
-			{
-				std::stringstream ss;
-				ss << "trying to evaluate system in place, but number of input functions (" << function_values.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
-				throw std::runtime_error(ss.str());
-			}
-
-			unsigned counter(0);
-			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-				(*iter)->EvalInPlace<T>(function_values(counter));
-			}
-
-			if (IsPatched())
-				patch_.EvalInPlace(function_values,
-									std::get<Vec<T> >(current_variable_values_));
-									// .segment(NumFunctions(),NumTotalVariableGroups())
 			
 		}
 
-
+    /**
+    Evaluate and return the function values for the system.
+    */
 		template<typename T>
 		Vec<T> Eval() const
 		{
@@ -166,6 +162,12 @@ namespace bertini {
 
 			return function_values;
 		}
+
+
+
+
+    inline unsigned NumTotalFunctions() const{ return num_total_functions_;}
+
 
 		/**
 		\brief Get the current precision of a system.
@@ -176,10 +178,14 @@ namespace bertini {
 			return precision_;
 		}
 
-
+    /*
+    change the precision of the SLP
+    */
 		void precision(unsigned new_precision) const;
 
 	private:
+    unsigned precision_;
+    unsigned num_total_functions_ = 0;
 
 	};
 	
