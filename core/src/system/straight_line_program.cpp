@@ -23,14 +23,16 @@
 // silviana amethyst, university of wisconsin eau claire
 
 #include "bertini2/system/straight_line_program.hpp"
-
+#include "bertini2/system/system.hpp"
 
 namespace bertini{
 	
 
 	// the constructor
 	StraightLineProgram::StraightLineProgram(System const& sys){
+		this->num_total_functions_ = sys.NumTotalFunctions();
 
+		std::cout << sys.NumTotalFunctions();
 	}
 
 	void StraightLineProgram::precision(unsigned new_precision) const{

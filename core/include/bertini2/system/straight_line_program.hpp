@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//system.hpp is free software: you can redistribute it and/or modify
+//straight_line_program.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//system.hpp is distributed in the hope that it will be useful,
+//straight_line_program.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with system.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with straight_line_program.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2021 by Bertini2 Development Team
 //
@@ -23,13 +23,13 @@
 // silviana amethyst, university of wisconsin eau claire
 
 /**
-\file system.hpp 
+\file straight_line_program.hpp 
 
-\brief Provides the bertini::System class.
+\brief Provides the bertini::StraightLineProgram class.
 */
 
-#ifndef BERTINI_SYSTEM_HPP
-#define BERTINI_SYSTEM_HPP
+#ifndef BERTINI_SLP_HPP
+#define BERTINI_SLP_HPP
 
 #include <assert.h>
 #include <vector>
