@@ -14,6 +14,7 @@ b2_class_test_SOURCES = \
 	test/classes/function_tree_test.cpp \
 	test/classes/function_tree_transform.cpp \
 	test/classes/system_test.cpp \
+	test/classes/slp_test.cpp \
 	test/classes/differentiate_test.cpp \
 	test/classes/differentiate_wrt_var.cpp \
 	test/classes/homogenization_test.cpp \
