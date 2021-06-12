@@ -140,30 +140,18 @@ namespace bertini {
     StraightLineProgram(System const & sys);
 
 
-    /**
-     Evaluate the functions for the system, and put them into the function's parameter `function_values`.
-     */
 		template<typename Derived>
-		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values) const
+		void Eval(Eigen::MatrixBase<Derived> & variable_values) const
 		{
-			typedef typename Derived::Scalar T; // the numeric type we're working with.
 
-			
-		}
-
-    /**
-    Evaluate and return the function values for the system.
-    */
-		template<typename T>
-		Vec<T> Eval() const
-		{
-			Vec<T> function_values(NumTotalFunctions()); // create vector with correct number of entries.
-			EvalInPlace(function_values);
-
-			return function_values;
 		}
 
 
+    template<typename T>
+    Vec<T> GetFuncVals(){}
+
+    template<typename T>
+    Mat<T> GetJacobian(){}
 
 
     inline unsigned NumTotalFunctions() const{ return num_total_functions_;}
