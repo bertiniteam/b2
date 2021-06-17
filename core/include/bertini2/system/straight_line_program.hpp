@@ -129,7 +129,14 @@ typedef struct {
 
 
 namespace bertini {
+
   class System; // a forward declaration, solving the circular inclusion problem
+
+
+
+
+
+
 
 	class StraightLineProgram{
 	public:
@@ -158,7 +165,7 @@ namespace bertini {
 
 
 		/**
-		\brief Get the current precision of a system.
+		\brief Get the current precision of the SLP.
 		*/
 		inline
 		unsigned precision() const
@@ -167,17 +174,36 @@ namespace bertini {
 		}
 
     /*
-    change the precision of the SLP
+    change the precision of the SLP.  Downsamples from the true values.
     */
-		void precision(unsigned new_precision) const;
+		void precision(unsigned new_precision) const
+    {
+      // for each number, downsample from the true value.
+    }
 
 	private:
-    unsigned precision_;
+    unsigned precision_ = 0;
     unsigned num_total_functions_ = 0;
 
+    std::vector<int> instructions_;
+    std::tuple<std::vector<dbl_complex, mpfr_complex>> memory_;
+    std::vector<Node> true values_;
 	};
 	
-}
+
+  class SLPCompiler : public Visitor<Node, void>{
+    public:
+
+      SLP Compile(System const& sys);
+
+    private:
+      virtual void Visit(Function const &){}
+      virtual void Visit(SumOperator const &){}
+  };
+
+
+
+} // namespace bertini
 
 
 
