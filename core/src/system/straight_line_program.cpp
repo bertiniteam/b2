@@ -25,6 +25,9 @@
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/system.hpp"
 
+
+
+// SLP Stuff
 namespace bertini{
 	
 
@@ -33,9 +36,33 @@ namespace bertini{
 		this->num_total_functions_ = sys.NumTotalFunctions();
 
 		std::cout << sys.NumTotalFunctions();
+
+		SLPCompiler compiler;
+		compiler.Compile(sys);
 	}
 
 	void StraightLineProgram::precision(unsigned new_precision) const{
 
 	}
+}
+
+
+
+// stuff for SLPCompiler
+namespace bertini{
+
+
+	void SLPCompiler::Visit(node::Function const &){
+		std::cout << "visiting Function: " << std::endl;
+	}
+
+
+    void SLPCompiler::Visit(node::SumOperator const &){
+    	std::cout << "visiting SumOperator: " << std::endl;
+    }
+
+    void SLPCompiler::Visit(node::Node const &){
+    	std::cout << "visiting generic Node: " << std::endl;
+    }
+
 }

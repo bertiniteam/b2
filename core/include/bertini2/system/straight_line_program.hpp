@@ -38,8 +38,8 @@
 #include "bertini2/mpfr_complex.hpp"
 #include "bertini2/mpfr_extensions.hpp"
 #include "bertini2/eigen_extensions.hpp"
-
-
+#include "bertini2/function_tree/forward_declares.hpp"
+#include "bertini2/detail/visitor.hpp"
 
 // code copied from Bertini1's file include/bertini.h
 
@@ -139,6 +139,9 @@ namespace bertini {
 
 
 	class StraightLineProgram{
+  private:
+    using Nd = std::shared_ptr<node::Node>;
+
 	public:
 
     /**
@@ -176,29 +179,29 @@ namespace bertini {
     /*
     change the precision of the SLP.  Downsamples from the true values.
     */
-		void precision(unsigned new_precision) const
-    {
-      // for each number, downsample from the true value.
-    }
+		void precision(unsigned new_precision) const;
 
 	private:
     unsigned precision_ = 0;
     unsigned num_total_functions_ = 0;
 
     std::vector<int> instructions_;
-    std::tuple<std::vector<dbl_complex, mpfr_complex>> memory_;
-    std::vector<Node> true values_;
+    std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_;
+    // std::vector<Nd> true values_;
 	};
 	
 
-  class SLPCompiler : public Visitor<Node, void>{
+  class SLPCompiler : public Visitor<node::Node, void>{
+  private:
+    using SLP = StraightLineProgram;
+
     public:
 
       SLP Compile(System const& sys);
 
-    private:
-      virtual void Visit(Function const &){}
-      virtual void Visit(SumOperator const &){}
+      virtual void Visit(node::Function const &);
+      virtual void Visit(node::SumOperator const &);
+      virtual void Visit(node::Node const &);
   };
 
 

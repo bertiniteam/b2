@@ -34,7 +34,7 @@
 /**
  \file linear_product.hpp
  
- \brief Provides the LinearProduct Node class.
+ \brief Provides the LinearProduct and DiffLinear Node classes.
  
  */
 #ifndef BERTINI_FUNCTION_TREE_LINPRODUCT_HPP
@@ -59,6 +59,8 @@ namespace  bertini {
 		class LinearProduct : public virtual Symbol
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE()
+
 			virtual ~LinearProduct() = default;
 			
 			
@@ -768,6 +770,8 @@ namespace  bertini {
 		class DiffLinear : public virtual Symbol
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE()
+			
 			virtual ~DiffLinear() = default;
 			
 			

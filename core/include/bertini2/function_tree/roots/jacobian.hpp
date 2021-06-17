@@ -66,43 +66,45 @@ namespace node{
 			friend detail::FreshEvalSelector<dbl>;
 			friend detail::FreshEvalSelector<mpfr_complex>;
 		public:
-				/**
-				 */
-				Jacobian(const std::shared_ptr<Node> & entry);
-				
-				
-				/**
-				 Jacobians must be evaluated with EvalJ, so that when current_diff_variable changes
-				 the Jacobian is reevaluated.
-				 */
-				template<typename T>
-				T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const = delete;
-				
-				
-				// Evaluate the node.  If flag false, just return value, if flag true
-				//  run the specific FreshEval of the node, then set flag to false.
-				template<typename T>
-				T EvalJ(std::shared_ptr<Variable> const& diff_variable) const;				
+			BERTINI_DEFAULT_VISITABLE()
+			
+			/**
+			 */
+			Jacobian(const std::shared_ptr<Node> & entry);
+			
+			
+			/**
+			 Jacobians must be evaluated with EvalJ, so that when current_diff_variable changes
+			 the Jacobian is reevaluated.
+			 */
+			template<typename T>
+			T Eval(std::shared_ptr<Variable> const& diff_variable = nullptr) const = delete;
+			
+			
+			// Evaluate the node.  If flag false, just return value, if flag true
+			//  run the specific FreshEval of the node, then set flag to false.
+			template<typename T>
+			T EvalJ(std::shared_ptr<Variable> const& diff_variable) const;				
 
 
-				// Evaluate the node.  If flag false, just return value, if flag true
-				//  run the specific FreshEval of the node, then set flag to false.
-				template<typename T>
-				void EvalJInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const;
+			// Evaluate the node.  If flag false, just return value, if flag true
+			//  run the specific FreshEval of the node, then set flag to false.
+			template<typename T>
+			void EvalJInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const;
 
 
-				/**
-				 The function which flips the fresh eval bit back to fresh.
-				 */
-				void Reset() const override;
+			/**
+			 The function which flips the fresh eval bit back to fresh.
+			 */
+			void Reset() const override;
 
-				
-				virtual ~Jacobian() = default;
-				
-				/**
-				\brief Default construction of a Jacobian node is forbidden
-				*/
-				Jacobian() = default;
+			
+			virtual ~Jacobian() = default;
+			
+			/**
+			\brief Default construction of a Jacobian node is forbidden
+			*/
+			Jacobian() = default;
 
 		private:
 

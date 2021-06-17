@@ -78,6 +78,8 @@ namespace node{
 	class SumOperator : public virtual NaryOperator
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
+
 		virtual ~SumOperator() = default;
 		
 		unsigned EliminateZeros() override;
@@ -267,7 +269,8 @@ namespace node{
 	class NegateOperator : public virtual UnaryOperator
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
@@ -348,6 +351,7 @@ namespace node{
 	class MultOperator : public virtual NaryOperator
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -498,7 +502,8 @@ namespace node{
 	{
 		
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 
@@ -628,7 +633,7 @@ namespace node{
 	class IntegerPowerOperator : public virtual UnaryOperator
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -765,7 +770,8 @@ namespace node{
 	class SqrtOperator : public  virtual UnaryOperator
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
@@ -831,6 +837,7 @@ namespace node{
 	class ExpOperator : public  virtual UnaryOperator
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -887,6 +894,7 @@ namespace node{
 	class LogOperator : public  virtual UnaryOperator
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;

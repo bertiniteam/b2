@@ -61,8 +61,7 @@ namespace node{
 	class Differential : public virtual NamedSymbol
 	{
 	public:
-		
-
+		BERTINI_DEFAULT_VISITABLE()
 
 		/**
 		 Input shared_ptr to a Variable.

@@ -66,6 +66,8 @@ namespace node{
 		class Pi : public virtual Number, public virtual NamedSymbol
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE()
+
 			Pi() : NamedSymbol("pi")
 			{}
 
@@ -101,6 +103,8 @@ namespace node{
 		class E : public virtual Number, public virtual NamedSymbol
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE()
+			
 			E() : NamedSymbol("e")
 			{}
 

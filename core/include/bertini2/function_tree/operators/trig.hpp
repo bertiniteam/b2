@@ -55,7 +55,7 @@ namespace node{
 	class TrigOperator: public virtual UnaryOperator
 	{
 	public:
-
+		BERTINI_DEFAULT_VISITABLE()
 		
 		TrigOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
@@ -94,7 +94,8 @@ namespace node{
 	class SinOperator : public virtual TrigOperator
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 
@@ -148,7 +149,8 @@ namespace node{
 	class ArcSinOperator : public  virtual TrigOperator
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 		
@@ -206,7 +208,7 @@ namespace node{
 	class CosOperator : public  virtual TrigOperator
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -265,7 +267,8 @@ namespace node{
 	class ArcCosOperator : public  virtual TrigOperator
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 		
@@ -329,6 +332,7 @@ namespace node{
 	class TanOperator : public  virtual TrigOperator
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -384,7 +388,7 @@ namespace node{
 	class ArcTanOperator : public  virtual TrigOperator
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;

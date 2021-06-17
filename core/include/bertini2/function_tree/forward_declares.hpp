@@ -32,7 +32,10 @@
 #pragma once
 
 namespace bertini {
-
+	namespace node{
+		class Node;
+	}
+	
 	namespace node{ 
 		class Variable;
 		class Integer;

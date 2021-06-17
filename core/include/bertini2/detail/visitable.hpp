@@ -76,9 +76,9 @@ namespace bertini{
 	class VisitableBase
 	{
 	public:
-		typedef RetT ReturnType;
+		typedef RetT VisitReturnType;
 		virtual ~VisitableBase() = default;
-		virtual ReturnType Accept(VisitorBase&) = 0; // the implementation will either be provided by a macro, or by hand, for each class which is visitable.
+		virtual VisitReturnType Accept(VisitorBase&) = 0; // the implementation will either be provided by a macro, or by hand, for each class which is visitable.
 
 	protected:
 
@@ -94,7 +94,7 @@ namespace bertini{
 		*/
 		template<typename T>
 		static
-		ReturnType AcceptBase(T& visited, VisitorBase& guest)
+		VisitReturnType AcceptBase(T& visited, VisitorBase& guest)
 		{
 			if (auto p = dynamic_cast<Visitor<T>*>(&guest))
 				return p->Visit(visited);
@@ -108,7 +108,7 @@ namespace bertini{
 	\brief macro for classes which want default Accept implementation, having nothing fancy to do when accepting.
 	*/
 	#define BERTINI_DEFAULT_VISITABLE() \
-		virtual ReturnType Accept(VisitorBase& guest) override \
+		virtual VisitReturnType Accept(VisitorBase& guest) override \
 		{ return AcceptBase(*this, guest); }
 
 } // namespace bertini
