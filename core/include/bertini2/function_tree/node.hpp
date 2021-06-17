@@ -133,7 +133,7 @@ An interface for all nodes in a function tree, and for a function object as well
 
  \brief Abstract base class for the Bertini hybrid-precision (double-multiple) expression tree. 
  */
-class Node
+class Node : VisitableBase<>
 {
 	friend detail::FreshEvalSelector<dbl>;
 	friend detail::FreshEvalSelector<mpfr_complex>;
