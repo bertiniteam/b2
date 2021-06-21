@@ -35,10 +35,10 @@ namespace bertini{
 	StraightLineProgram::StraightLineProgram(System const& sys){
 		this->num_total_functions_ = sys.NumTotalFunctions();
 
-		std::cout << sys.NumTotalFunctions();
+		std::cout << sys.NumTotalFunctions() << std::endl;
 
 		SLPCompiler compiler;
-		compiler.Compile(sys);
+		*this = compiler.Compile(sys);
 	}
 
 	void StraightLineProgram::precision(unsigned new_precision) const{
@@ -50,19 +50,35 @@ namespace bertini{
 
 // stuff for SLPCompiler
 namespace bertini{
+	using SLP = StraightLineProgram;
 
-
-	void SLPCompiler::Visit(node::Function const &){
-		std::cout << "visiting Function: " << std::endl;
+	void SLPCompiler::Visit(node::Function const & f){
+		std::cout << "visiting Function: " << f << std::endl;
+		f.entry_node()->Accept(*this);
 	}
 
 
-    void SLPCompiler::Visit(node::SumOperator const &){
+    void SLPCompiler::Visit(node::SumOperator const & op){
     	std::cout << "visiting SumOperator: " << std::endl;
     }
 
-    void SLPCompiler::Visit(node::Node const &){
+    void SLPCompiler::Visit(node::Node const & n){
     	std::cout << "visiting generic Node: " << std::endl;
     }
 
+    SLP SLPCompiler::Compile(System const& sys){
+    	std::cout << "Compiling system" << std::endl;
+
+    	std::cout << "visiting functions" << std::endl;
+
+    	for (int ii = 0; ii < sys.NumTotalFunctions(); ++ii)
+    	{
+    		std::cout << *(sys.Function(ii)) << std::endl;
+    		sys.Function(ii)->Accept(*this);
+    		std::cout << "post visit function" << std::endl;
+    		/* code */
+    	}
+
+    	return SLP();
+    }
 }

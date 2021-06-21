@@ -44,21 +44,21 @@ BOOST_AUTO_TEST_CASE(evaluate_simple_system)
 	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
 
 	// x = 2, and the function is f=x+1
-	BOOST_CHECK_EQUAL(f(0), 3);
+	BOOST_CHECK_EQUAL(f(0), 3.);
 
 	//the system is [f] = [x+1] = [1]
 
 	// so J = matrix of partial derivatives
 	//    J = [df/dx] = []
 
-	BOOST_CHECK_EQUAL(J(0,0), 1);
+	BOOST_CHECK_EQUAL(J(0,0), 1.);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(evaluate_system2)
 {
-	std::string str = "function f,g; variable_group x,y; f = x^2+y^2-1; g = x-y";
+	std::string str = "function f,g; variable_group x,y; f = x^2+y^2-1; g = x-y;";
 	bertini::System sys;
 	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
@@ -81,14 +81,14 @@ BOOST_AUTO_TEST_CASE(evaluate_system2)
 
 	dbl x{values(0)}, y{values(1)};
 
-	BOOST_CHECK_EQUAL(f(0), pow(x,2)+pow(y,2)-1); // x^2+y^2-1
+	BOOST_CHECK_EQUAL(f(0), pow(x,2)+pow(y,2)-1.); // x^2+y^2-1
 	BOOST_CHECK_EQUAL(f(1), x-y);
 
 
-	BOOST_CHECK_EQUAL(J(0,0), 2*x); // df1/dx = 2x
-	BOOST_CHECK_EQUAL(J(0,1), 2*y); // df1/dy = 2y
-	BOOST_CHECK_EQUAL(J(1,0), 1);   // df2/dx = 1
-	BOOST_CHECK_EQUAL(J(1,1), -1);  // df2/dy = -1 
+	BOOST_CHECK_EQUAL(J(0,0), 2.*x); // df1/dx = 2x
+	BOOST_CHECK_EQUAL(J(0,1), 2.*y); // df1/dy = 2y
+	BOOST_CHECK_EQUAL(J(1,0), 1.);   // df2/dx = 1
+	BOOST_CHECK_EQUAL(J(1,1), -1.);  // df2/dy = -1 
 }
 
 

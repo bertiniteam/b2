@@ -149,19 +149,30 @@ namespace bertini {
     */
     StraightLineProgram(System const & sys);
 
+    StraightLineProgram() = default;
 
 		template<typename Derived>
-		void Eval(Eigen::MatrixBase<Derived> & variable_values) const
+		void Eval(Eigen::MatrixBase<Derived> const& variable_values) const
 		{
-
+      // 1. copy variable values into memory locations they're supposed to go in
+      CopyVariableValues(variable_values);
 		}
 
+
+    template<typename Derived, typename ComplexT>
+    void Eval(Eigen::MatrixBase<Derived> const& variable_values, ComplexT const& time) const
+    {
+      // 1. copy variable values into memory locations they're supposed to go in
+      CopyVariableValues(variable_values);
+      CopyPathVariable(time);
+    }
 
     template<typename T>
     Vec<T> GetFuncVals(){}
 
     template<typename T>
     Mat<T> GetJacobian(){}
+
 
 
     inline unsigned NumTotalFunctions() const{ return num_total_functions_;}
@@ -181,18 +192,37 @@ namespace bertini {
     */
 		void precision(unsigned new_precision) const;
 
+
+    bool HavePathVariable() const {
+      throw std::runtime_error("calling unimplemented function HavePathVariable");
+      return false;
+    }
 	private:
+
+    template<typename Derived>
+    void CopyVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
+      throw std::runtime_error("calling unimplemented function CopyVariableValues");
+    }
+
+    template<typename ComplexT>
+    void CopyPathVariable(ComplexT const& time) const{
+      if (!this->HavePathVariable())
+        throw std::runtime_error("calling Eval with path variable, but system doesn't have one.");
+      // then actually copy the path variable into where it goes in memory
+    }
+
+
     unsigned precision_ = 0;
     unsigned num_total_functions_ = 0;
 
     std::vector<int> instructions_;
     std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_;
-    // std::vector<Nd> true values_;
 	};
 	
 
-  class SLPCompiler : public Visitor<node::Node, void>{
+  class SLPCompiler : public VisitorBase, public Visitor<node::Node, void>{
   private:
+    using Nd = std::shared_ptr<node::Node>;
     using SLP = StraightLineProgram;
 
     public:
@@ -202,6 +232,11 @@ namespace bertini {
       virtual void Visit(node::Function const &);
       virtual void Visit(node::SumOperator const &);
       virtual void Visit(node::Node const &);
+
+
+    private:
+
+      std::map<Nd, int> locations_encountered_symbols;
   };
 
 
