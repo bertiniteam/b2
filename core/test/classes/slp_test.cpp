@@ -28,6 +28,17 @@ BOOST_AUTO_TEST_CASE(can_make_from_system)
 }
 
 
+BOOST_AUTO_TEST_CASE(has_correct_size)
+{
+	auto sys = SimpleTestSystem();
+
+	auto slp = SLP(sys);
+
+	BOOST_CHECK_EQUAL(slp.NumTotalFunctions(), sys.NumTotalFunctions());
+}
+
+
+
 BOOST_AUTO_TEST_CASE(evaluate_simple_system)
 {
 	auto sys = SimpleTestSystem();
