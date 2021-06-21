@@ -11,7 +11,7 @@ using dbl = bertini::dbl;
 
 BOOST_AUTO_TEST_SUITE(SLP_tests)
 
-bertini::System SimpleTestSystem(){
+bertini::System SingleVariableTestSystem(){
 	std::string str = "function f; variable_group x; f = x+1;";
 
 	bertini::System sys;
@@ -22,7 +22,7 @@ bertini::System SimpleTestSystem(){
 
 BOOST_AUTO_TEST_CASE(can_make_from_system)
 {
-	auto sys = SimpleTestSystem();
+	auto sys = SingleVariableTestSystem();
 
 	auto slp = SLP(sys);
 }
@@ -30,18 +30,19 @@ BOOST_AUTO_TEST_CASE(can_make_from_system)
 
 BOOST_AUTO_TEST_CASE(has_correct_size)
 {
-	auto sys = SimpleTestSystem();
+	auto sys = SingleVariableTestSystem();
 
 	auto slp = SLP(sys);
 
 	BOOST_CHECK_EQUAL(slp.NumTotalFunctions(), sys.NumTotalFunctions());
+	BOOST_CHECK_EQUAL(slp.NumVariables(), sys.NumVariables());
 }
 
 
 
 BOOST_AUTO_TEST_CASE(evaluate_simple_system)
 {
-	auto sys = SimpleTestSystem();
+	auto sys = SingleVariableTestSystem();
 
 	auto slp = SLP(sys);
 

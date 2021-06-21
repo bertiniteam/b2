@@ -73,8 +73,13 @@ namespace bertini{
 
     	for (int ii = 0; ii < sys.NumTotalFunctions(); ++ii)
     	{
-    		std::cout << *(sys.Function(ii)) << std::endl;
-    		sys.Function(ii)->Accept(*this);
+    		auto f = sys.Function(ii);
+
+    		std::cout << *(f) << std::endl;
+    		f->Accept(*this);
+
+    		locations_encountered_symbols_[f] = 0; // this is obviously wrong
+
     		std::cout << "post visit function" << std::endl;
     		/* code */
     	}

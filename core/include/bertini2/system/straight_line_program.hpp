@@ -177,6 +177,8 @@ namespace bertini {
 
     inline unsigned NumTotalFunctions() const{ return num_total_functions_;}
 
+    inline unsigned NumVariables() const{ return num_variables_;}
+
 
 		/**
 		\brief Get the current precision of the SLP.
@@ -214,6 +216,7 @@ namespace bertini {
 
     unsigned precision_ = 0;
     unsigned num_total_functions_ = 0;
+    unsigned num_variables_ = 0;
 
     std::vector<int> instructions_;
     std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_;
@@ -236,7 +239,7 @@ namespace bertini {
 
     private:
 
-      std::map<Nd, int> locations_encountered_symbols;
+      std::map<Nd, int> locations_encountered_symbols_;
   };
 
 
