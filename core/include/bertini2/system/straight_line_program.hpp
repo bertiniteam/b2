@@ -133,9 +133,37 @@ namespace bertini {
   class System; // a forward declaration, solving the circular inclusion problem
 
 
+  enum Operation { // we'll start with the binary ones
+    Add=      1 << 0,
+    Subtract= 1 << 1,
+    Multiply= 1 << 2,
+    Divide=   1 << 3,
+    Power=    1 << 4,
+    Exp=      1 << 5,
+    Log=      1 << 6,
+    Negate=   1 << 7,
+    Sin=      1 << 8,
+    Cos=      1 << 9,
+    Tan=      1 << 10,
+    Asin=     1 << 11,
+    Acos=     1 << 12,
+    Atan=     1 << 13,
+    Assign=   1 << 14,
+  };
 
+  const int BinaryOperations = Add|Subtract | Multiply|Divide | Power;
+  const int TrigOperations   = Sin|Cos|Tan | Asin|Acos|Atan;
+  const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations;
 
+  constexpr bool IsUnary(Operation op)
+  {
+    return op & UnaryOperations;
+  }
 
+  constexpr bool IsBinary(Operation op)
+  {
+    return op & BinaryOperations;
+  }
 
 
 	class StraightLineProgram{
@@ -238,7 +266,11 @@ namespace bertini {
 
 
     private:
+      void Reset(){
+        next_available_mem_ = 0; locations_encountered_symbols_.clear();
+      }
 
+      size_t next_available_mem_ = 0;
       std::map<Nd, int> locations_encountered_symbols_;
   };
 

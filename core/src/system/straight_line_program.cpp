@@ -62,6 +62,8 @@ namespace bertini{
     	std::cout << "visiting SumOperator: " << std::endl;
     	for (auto& n : op.Operands()){
     		n->Accept(*this);
+    		// add the nodes together.  we should do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.
+    		// op is add
     	}
     }
 
@@ -70,8 +72,9 @@ namespace bertini{
     }
 
     SLP SLPCompiler::Compile(System const& sys){
-    	std::cout << "Compiling system" << std::endl;
+    	this->Reset();
 
+    	std::cout << "Compiling system" << std::endl;
     	std::cout << "visiting functions" << std::endl;
 
     	for (int ii = 0; ii < sys.NumTotalFunctions(); ++ii)
@@ -81,7 +84,7 @@ namespace bertini{
     		std::cout << *(f) << std::endl;
     		f->Accept(*this);
 
-    		locations_encountered_symbols_[f] = 0; // this is obviously wrong
+    		locations_encountered_symbols_[f] = next_available_mem_++; // this is obviously wrong
 
     		std::cout << "post visit function" << std::endl;
     		/* code */

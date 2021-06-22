@@ -4,6 +4,7 @@
 #include "bertini2/io/parsing/system_parsers.hpp"
 
 using bertini::MakeVariable;
+using bertini::Operation;
 using SLP = bertini::StraightLineProgram;
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -18,6 +19,19 @@ bertini::System SingleVariableTestSystem(){
 	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	return sys;
+}
+
+BOOST_AUTO_TEST_CASE(opcodes)
+{
+	BOOST_CHECK(IsUnary(Operation::Negate));
+	BOOST_CHECK(IsUnary(Operation::Assign));
+
+
+	BOOST_CHECK(!IsUnary(Operation::Add));
+	BOOST_CHECK(!IsUnary(Operation::Subtract));
+	BOOST_CHECK(!IsUnary(Operation::Multiply));
+	BOOST_CHECK(!IsUnary(Operation::Divide));
+	BOOST_CHECK(!IsUnary(Operation::Power));
 }
 
 BOOST_AUTO_TEST_CASE(can_make_from_system)
