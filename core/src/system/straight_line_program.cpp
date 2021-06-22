@@ -44,7 +44,15 @@ namespace bertini{
 	void StraightLineProgram::precision(unsigned new_precision) const{
 
 	}
+
+
+
+
 }
+
+
+
+
 
 
 
@@ -52,27 +60,108 @@ namespace bertini{
 namespace bertini{
 	using SLP = StraightLineProgram;
 
+
+    void SLPCompiler::Visit(node::Variable const& n){
+		std::cout << "unimplemented visit to node of type Variable" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::Integer const& n){
+		std::cout << "unimplemented visit to node of type Integer" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::Float const& n){
+		std::cout << "unimplemented visit to node of type Float" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::Rational const& n){
+		std::cout << "unimplemented visit to node of type Rational" << std::endl;
+	}
+
 	void SLPCompiler::Visit(node::Function const & f){
-		std::cout << "visiting Function: " << f << std::endl;
+		std::cout << "unimplemented visit to node of type Function: " << f << std::endl;
 		f.entry_node()->Accept(*this);
 	}
 
+	void SLPCompiler::Visit(node::Jacobian const& n){
+		std::cout << "unimplemented visit to node of type Jacobian" << std::endl;
+	}
 
-    void SLPCompiler::Visit(node::SumOperator const & op){
+	void SLPCompiler::Visit(node::Differential const& n){
+		std::cout << "unimplemented visit to node of type Differential" << std::endl;
+	}
+
+
+	// arithmetic
+	void SLPCompiler::Visit(node::SumOperator const & op){
     	std::cout << "visiting SumOperator: " << std::endl;
     	for (auto& n : op.Operands()){
     		n->Accept(*this);
-    		// add the nodes together.  we should do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.
-    		// op is add
+    		// add/subtract the nodes together.  
+
+    		// naive method: just loop over all operands, add/sub them up.
+
+    		// improved option?: we could do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.  instead, use Pairwise summation
+    		// do pairs (0,1), (2,3), etc, 
+    		// *then* add those temp vals together, until get to end.  
+    		// see https://en.wikipedia.org/wiki/Pairwise_summation    	
     	}
     }
 
-    void SLPCompiler::Visit(node::Node const & n){
-    	std::cout << "visiting generic Node: " << std::endl;
+	void SLPCompiler::Visit(node::MultOperator const & op){
+    	std::cout << "visiting MultOperator: " << std::endl;
+    	for (auto& n : op.Operands()){
+    		n->Accept(*this);
+    		// multiply/divide the nodes together.  
+    		
+    	}
     }
 
+	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
+		std::cout << "unimplemented visit to node of type IntegerPowerOperator" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::PowerOperator const& n){
+		std::cout << "unimplemented visit to node of type PowerOperator" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::ExpOperator const& n){
+		std::cout << "unimplemented visit to node of type ExpOperator" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::LogOperator const& n){
+		std::cout << "unimplemented visit to node of type LogOperator" << std::endl;
+	}
+
+
+	// the trig operators
+	void SLPCompiler::Visit(node::SinOperator const& n){
+		std::cout << "unimplemented visit to node of type SinOperator" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::ArcSinOperator const& n){
+		std::cout << "unimplemented visit to node of type ArcSinOperator" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::CosOperator const& n){
+		std::cout << "unimplemented visit to node of type CosOperator" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::ArcCosOperator const& n){
+		std::cout << "unimplemented visit to node of type ArcCosOperator" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::TanOperator const& n){
+		std::cout << "unimplemented visit to node of type TanOperator" << std::endl;
+	}
+
+	void SLPCompiler::Visit(node::ArcTanOperator const& n){
+		std::cout << "unimplemented visit to node of type ArcTanOperator" << std::endl;
+	}
+
+
+
     SLP SLPCompiler::Compile(System const& sys){
-    	this->Reset();
+    	this->Clear();
 
     	std::cout << "Compiling system" << std::endl;
     	std::cout << "visiting functions" << std::endl;
@@ -92,4 +181,10 @@ namespace bertini{
 
     	return SLP();
     }
+
+    void SLPCompiler::Clear(){
+        next_available_mem_ = 0; 
+        locations_encountered_symbols_.clear();
+    }
 }
+

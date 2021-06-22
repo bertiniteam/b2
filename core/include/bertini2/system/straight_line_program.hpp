@@ -172,10 +172,17 @@ namespace bertini {
 
 	public:
     struct OutputLocations{
-      size_t Functions;
-      size_t Variables;
-      size_t Jacobian;
-      size_t TimeDeriv;
+      size_t Functions{0};
+      size_t Variables{0};
+      size_t Jacobian{0};
+      size_t TimeDeriv{0};
+    };
+
+    struct NumberOf{
+      size_t Functions{0};
+      size_t Variables{0};
+      size_t Jacobian{0};
+      size_t TimeDeriv{0};
     };
 
     /**
@@ -291,13 +298,46 @@ namespace bertini {
     unsigned num_total_functions_ = 0;
     unsigned num_variables_ = 0;
 
+    NumberOf number_of_;
     OutputLocations output_locations_;
     std::vector<int> instructions_;
     std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_;
 	};
 	
 
-  class SLPCompiler : public VisitorBase, public Visitor<node::Node, void>{
+  class SLPCompiler : public VisitorBase, 
+      // symbols and roots
+      public Visitor<node::Variable>,
+      public Visitor<node::Integer>,
+      public Visitor<node::Float>,
+      public Visitor<node::Rational>,
+      public Visitor<node::Function>,
+      public Visitor<node::Jacobian>,
+      public Visitor<node::Differential>,
+
+      // arithmetic
+      public Visitor<node::SumOperator>,
+      public Visitor<node::MultOperator>,
+      public Visitor<node::IntegerPowerOperator>,
+      public Visitor<node::PowerOperator>,
+      public Visitor<node::ExpOperator>,
+      public Visitor<node::LogOperator>,
+
+      // the trig operators
+      public Visitor<node::SinOperator>,
+      public Visitor<node::ArcSinOperator>,
+      public Visitor<node::CosOperator>,
+      public Visitor<node::ArcCosOperator>,
+      public Visitor<node::TanOperator>,
+      public Visitor<node::ArcTanOperator>
+
+      // these abstract base types left out, 
+      // but commented here to explain why
+      //    public Visitor<node::Operator>,// abstract
+      //    public Visitor<node::UnaryOperator>,// abstract
+      //    public Visitor<node::NaryOperator>,// abstract
+      //    public Visitor<node::TrigOperator>,// abstract
+  {
   private:
     using Nd = std::shared_ptr<node::Node>;
     using SLP = StraightLineProgram;
@@ -306,15 +346,34 @@ namespace bertini {
 
       SLP Compile(System const& sys);
 
-      virtual void Visit(node::Function const &);
-      virtual void Visit(node::SumOperator const &);
-      virtual void Visit(node::Node const &);
+      // symbols and roots
+      virtual void Visit(node::Variable const& n);
+      virtual void Visit(node::Integer const& n);
+      virtual void Visit(node::Float const& n);
+      virtual void Visit(node::Rational const& n);
+      virtual void Visit(node::Function const& n);
+      virtual void Visit(node::Jacobian const& n);
+      virtual void Visit(node::Differential const& n);
+
+      // arithmetic
+      virtual void Visit(node::SumOperator const& n);
+      virtual void Visit(node::MultOperator const& n);
+      virtual void Visit(node::IntegerPowerOperator const& n);
+      virtual void Visit(node::PowerOperator const& n);
+      virtual void Visit(node::ExpOperator const& n);
+      virtual void Visit(node::LogOperator const& n);
+
+      // the trig operators
+      virtual void Visit(node::SinOperator const& n);
+      virtual void Visit(node::ArcSinOperator const& n);
+      virtual void Visit(node::CosOperator const& n);
+      virtual void Visit(node::ArcCosOperator const& n);
+      virtual void Visit(node::TanOperator const& n);
+      virtual void Visit(node::ArcTanOperator const& n);
 
 
     private:
-      void Reset(){
-        next_available_mem_ = 0; locations_encountered_symbols_.clear();
-      }
+      void Clear();
 
       size_t next_available_mem_ = 0;
       std::map<Nd, int> locations_encountered_symbols_;

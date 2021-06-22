@@ -51,6 +51,7 @@ namespace bertini{
 		{
 			static RetT OnUnknownVisitor(VisitedT&, VisitorBase&)
 			{
+				std::cout << "unknown visitor"<< std::endl;
 				return RetT();
 			}
 		};
