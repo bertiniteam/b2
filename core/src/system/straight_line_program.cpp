@@ -60,6 +60,9 @@ namespace bertini{
 
     void SLPCompiler::Visit(node::SumOperator const & op){
     	std::cout << "visiting SumOperator: " << std::endl;
+    	for (auto& n : op.Operands()){
+    		n->Accept(*this);
+    	}
     }
 
     void SLPCompiler::Visit(node::Node const & n){

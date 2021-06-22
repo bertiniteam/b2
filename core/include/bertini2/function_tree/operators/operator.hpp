@@ -180,7 +180,9 @@ namespace node{
 		
 		size_t NumOperands() const;
 		
-		std::shared_ptr<Node> Operands() const;
+		inline auto const& Operands() const{
+			return operands_;
+		}
 		
 		
 		std::shared_ptr<Node> FirstOperand() const;
