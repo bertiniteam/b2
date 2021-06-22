@@ -171,6 +171,12 @@ namespace bertini {
     using Nd = std::shared_ptr<node::Node>;
 
 	public:
+    struct OutputLocations{
+      size_t Functions;
+      size_t Variables;
+      size_t Jacobian;
+      size_t TimeDeriv;
+    };
 
     /**
     The constructor -- how to make a SLP from a System.
@@ -195,12 +201,51 @@ namespace bertini {
       CopyPathVariable(time);
     }
 
-    template<typename T>
-    Vec<T> GetFuncVals(){}
 
-    template<typename T>
-    Mat<T> GetJacobian(){}
 
+    template<typename NumT>
+    void GetFuncVals(Vec<NumT> & result) const{
+      // 1. make container, size correctly.
+      // 2. copy content
+      // 3. return
+    }
+
+    template<typename NumT>
+    void GetJacobian(Mat<NumT> & result) const{
+      // 1. make container, size correctly.
+      // 2. copy content
+      // 3. return
+    }
+
+
+    template<typename NumT>
+    void GetTimeDeriv(Vec<NumT> & result) const{
+      // 1. make container, size correctly.
+      // 2. copy content
+      // 3. return
+    }
+
+
+    template<typename NumT>
+    Vec<NumT> GetFuncVals() const{
+      Vec<NumT> return_me;
+      GetFuncVals(return_me);
+      return return_me;
+    }
+
+    template<typename NumT>
+    Mat<NumT> GetJacobian() const{
+      Mat<NumT> return_me;
+      GetJacobian(return_me);
+      return return_me;
+    }
+
+    template<typename NumT>
+    Vec<NumT> GetTimeDeriv() const{
+      Vec<NumT> return_me;
+      GetTimeDeriv(return_me);
+      return return_me;
+    }
 
 
     inline unsigned NumTotalFunctions() const{ return num_total_functions_;}
@@ -246,6 +291,7 @@ namespace bertini {
     unsigned num_total_functions_ = 0;
     unsigned num_variables_ = 0;
 
+    OutputLocations output_locations_;
     std::vector<int> instructions_;
     std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_;
 	};
