@@ -33,26 +33,26 @@ namespace node{
 void UnaryOperator::Reset() const
 {
 	Node::ResetStoredValues();
-	child_->Reset();
+	operand_->Reset();
 }
 
-void UnaryOperator::SetChild(std::shared_ptr<Node> new_child)
+void UnaryOperator::SetOperand(std::shared_ptr<Node> n)
 {
-	child_ = new_child;
+	operand_ = n;
 }
 
 
 //Return the only child for the unary operator
-std::shared_ptr<Node> UnaryOperator::first_child() const
+std::shared_ptr<Node> UnaryOperator::Operand() const
 {
-	return child_;
+	return operand_;
 }
 
 
 
 int UnaryOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
-	return child_->Degree(v);
+	return operand_->Degree(v);
 }
 
 
@@ -84,7 +84,7 @@ std::vector<int> UnaryOperator::MultiDegree(VariableGroup const& vars) const
 
 void UnaryOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
 {
-	child_->Homogenize(vars, homvar);
+	operand_->Homogenize(vars, homvar);
 }
 
 
@@ -124,7 +124,7 @@ void UnaryOperator::precision(unsigned int prec) const
 	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 
-	child_->precision(prec);
+	operand_->precision(prec);
 }
 
 
@@ -138,15 +138,15 @@ void UnaryOperator::precision(unsigned int prec) const
 void NaryOperator::Reset() const
 {
 	Node::ResetStoredValues();
-	for (const auto& ii : children_)
+	for (const auto& ii : operands_)
 		ii->Reset();
 
 }
 
-// Add a child onto the container for this operator
-void NaryOperator::AddChild(std::shared_ptr<Node> child)
+// Add an operand onto the container for this operator
+void NaryOperator::AddOperand(std::shared_ptr<Node> n)
 {
-	children_.push_back(std::move(child));
+	operands_.push_back(std::move(n));
 }
 
 
@@ -154,14 +154,14 @@ void NaryOperator::AddChild(std::shared_ptr<Node> child)
 
 
 
-size_t NaryOperator::children_size() const
+size_t NaryOperator::NumOperands() const
 {
-	return children_.size();
+	return operands_.size();
 }
 
-std::shared_ptr<Node> NaryOperator::first_child() const
+std::shared_ptr<Node> NaryOperator::FirstOperand() const
 {
-	return children_[0];
+	return operands_[0];
 }
 
 
@@ -179,7 +179,7 @@ void NaryOperator::precision(unsigned int prec) const
 	
 	this->PrecisionChangeSpecific(prec);
 
-	for (const auto& iter : children_)
+	for (const auto& iter : operands_)
 		iter->precision(prec);
 }
 

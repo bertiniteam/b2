@@ -84,7 +84,7 @@ namespace  bertini {
                         indices.push_back(jj);
 				}
 				temp_mult *= GetLinears(indices);
-				ret_sum->AddChild(temp_mult,true);
+				ret_sum->AddOperand(temp_mult,true);
 			}
 			
 			
