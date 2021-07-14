@@ -94,8 +94,15 @@ namespace bertini{
 	// arithmetic
 	void SLPCompiler::Visit(node::SumOperator const & op){
     	std::cout << "visiting SumOperator: " << std::endl;
+
+    	// loop over pairs of operands, not one by one as is currently done.
     	for (auto& n : op.Operands()){
-    		n->Accept(*this);
+    		// for each pair, look up the node in the memory structure in SLP
+
+    		n->Accept(*this); // essentially, an alias for calling the appropriate Visit() in this file, depending on the type of n.
+
+    		// add a SUM op to the instructions.
+    		
     		// add/subtract the nodes together.  
 
     		// naive method: just loop over all operands, add/sub them up.
@@ -111,7 +118,7 @@ namespace bertini{
     	std::cout << "visiting MultOperator: " << std::endl;
     	for (auto& n : op.Operands()){
     		n->Accept(*this);
-    		// multiply/divide the nodes together.  
+    		// multiply/divide the nodes together.  naive method is fine.  
     		
     	}
     }
