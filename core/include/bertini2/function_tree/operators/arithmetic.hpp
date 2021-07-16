@@ -169,7 +169,8 @@ namespace node{
 		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
-
+		inline
+		const auto& GetSigns() const{ return this-> signs_;}
 
 
 

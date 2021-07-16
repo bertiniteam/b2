@@ -167,6 +167,8 @@ namespace bertini {
 
 
 	class StraightLineProgram{
+    friend SLPCompiler;
+    
   private:
     using Nd = std::shared_ptr<node::Node>;
 
@@ -294,14 +296,21 @@ namespace bertini {
     }
 
 
+    void AddInstruction(Operation binary_op, size_t in_loc1, size_t in_loc2, size_t out_loc);
+    void AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc);
+
     unsigned precision_ = 0;
     unsigned num_total_functions_ = 0;
     unsigned num_variables_ = 0;
 
     NumberOf number_of_;
     OutputLocations output_locations_;
-    std::vector<int> instructions_;
+    OutputLocations input_locations_;
+
+    std::vector<size_t> instructions_;
     std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_;
+
+    std::vector< mpfr_complex > true_values_;
 	};
 	
 
@@ -376,7 +385,7 @@ namespace bertini {
       void Clear();
 
       size_t next_available_mem_ = 0;
-      std::map<Nd, int> locations_encountered_symbols_;
+      std::map<Nd, size_t> locations_encountered_symbols_;
   };
 
 

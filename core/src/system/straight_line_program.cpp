@@ -48,6 +48,25 @@ namespace bertini{
 
 
 
+	void StraightLineProgram::AddInstruction(Operation binary_op, size_t in_loc1, size_t in_loc2, size_t out_loc){
+		this->instructions_.push_back(binary_op);
+		this->instructions_.push_back(in_loc1);
+		this->instructions_.push_back(in_loc2);
+		this->instructions_.push_back(out_loc);
+	}
+
+
+
+    void StraightLineProgram::AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc){
+    	this->instructions_.push_back(binary_op);
+		this->instructions_.push_back(in_loc);
+		this->instructions_.push_back(out_loc);
+    }
+
+
+
+
+
 }
 
 
@@ -77,17 +96,32 @@ namespace bertini{
 		std::cout << "unimplemented visit to node of type Rational" << std::endl;
 	}
 
+
+
+
+
+
+
+
+
+
+
 	void SLPCompiler::Visit(node::Function const & f){
 		std::cout << "unimplemented visit to node of type Function: " << f << std::endl;
-		f.entry_node()->Accept(*this);
-	}
 
-	void SLPCompiler::Visit(node::Jacobian const& n){
-		std::cout << "unimplemented visit to node of type Jacobian" << std::endl;
-	}
+		// put the location of the accepted node into memory, and copy into an output location.
 
-	void SLPCompiler::Visit(node::Differential const& n){
-		std::cout << "unimplemented visit to node of type Differential" << std::endl;
+		auto& n = f.entry_node();
+		size_t location_entry;
+
+		if (n not in this->locations_encountered_symbols_)
+			location_entry = n->Accept(*this); // think of calling Compile(n)
+		else
+			location_entry = this->locations_encountered_symbols_[n];
+
+		size_t location_this_node = next_available_mem_++;  //this->slp_under_construction.AddToMemory(f);
+
+		slp_under_construction.AddInstruction(Assign, location_entry, location_this_node);
 	}
 
 
@@ -95,11 +129,44 @@ namespace bertini{
 	void SLPCompiler::Visit(node::SumOperator const & op){
     	std::cout << "visiting SumOperator: " << std::endl;
 
-    	// loop over pairs of operands, not one by one as is currently done.
+    	// this loop
+    	// gets the locations of all the things we're going to add up.
+    	std::vector<size_t> operand_locations;
     	for (auto& n : op.Operands()){
-    		// for each pair, look up the node in the memory structure in SLP
 
-    		n->Accept(*this); // essentially, an alias for calling the appropriate Visit() in this file, depending on the type of n.
+	    	if (n not in this->locations_encountered_symbols_)
+				operand_locations.push_back(n->Accept(*this)); // think of calling Compile(n)
+			else
+				operand_locations.push_back(this->locations_encountered_symbols_[n]);
+		}
+
+		const auto& signs = op->GetSigns();
+
+		// seed the loop by adding together the first two things, which must exist by hypothesis
+		assert(op.Operands().size() >=2);
+
+		size_t prev_result_loc = next_available_mem_;
+
+		if (signs[0])
+			slp_under_construction.AddInstruction(Add,operand_locations[0],operand_locations[1], next_available_mem_++);
+		else
+			slp_under_construction.AddInstruction(Subtract,operand_locations[0],operand_locations[1], next_available_mem_++);
+
+		// this loop 
+		// actually does the additions for the rest of the operands
+		
+		for (size_t ii{2}; ii<op.Operands().size()-1; ++ii){
+			if (signs[ii-1])
+				slp_under_construction.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_++)
+			else
+				slp_under_construction.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_++)
+		}
+
+		size_t location_this_node = next_available_mem_++; // this->slp_under_construction.AddToMemory(op);
+
+    	// for each pair, look up the node in the memory structure in SLP
+
+
 
     		// add a SUM op to the instructions.
     		
@@ -111,8 +178,30 @@ namespace bertini{
     		// do pairs (0,1), (2,3), etc, 
     		// *then* add those temp vals together, until get to end.  
     		// see https://en.wikipedia.org/wiki/Pairwise_summation    	
-    	}
+    	
+
+    	// loop over pairs of operands, not one by one as is currently done.
     }
+
+
+
+
+
+
+
+
+
+	void SLPCompiler::Visit(node::Jacobian const& n){
+		std::cout << "unimplemented visit to node of type Jacobian" << std::endl;
+
+		this->slp_under_construction.AddToMemory(n);
+	}
+
+	void SLPCompiler::Visit(node::Differential const& n){
+		std::cout << "unimplemented visit to node of type Differential" << std::endl;
+	}
+
+
 
 	void SLPCompiler::Visit(node::MultOperator const & op){
     	std::cout << "visiting MultOperator: " << std::endl;
