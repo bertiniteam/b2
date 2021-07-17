@@ -114,10 +114,10 @@ namespace bertini{
 		auto& n = f.entry_node();
 		size_t location_entry;
 
-		if (n not in this->locations_encountered_symbols_)
+		if (*n not in this->locations_encountered_symbols_)
 			location_entry = n->Accept(*this); // think of calling Compile(n)
 		else
-			location_entry = this->locations_encountered_symbols_[n];
+			location_entry = this->locations_encountered_symbols_[*n];
 
 		size_t location_this_node = next_available_mem_++;  //this->slp_under_construction.AddToMemory(f);
 
@@ -134,10 +134,10 @@ namespace bertini{
     	std::vector<size_t> operand_locations;
     	for (auto& n : op.Operands()){
 
-	    	if (n not in this->locations_encountered_symbols_)
+	    	if (*n not in this->locations_encountered_symbols_)
 				operand_locations.push_back(n->Accept(*this)); // think of calling Compile(n)
 			else
-				operand_locations.push_back(this->locations_encountered_symbols_[n]);
+				operand_locations.push_back(this->locations_encountered_symbols_[*n]);
 		}
 
 		const auto& signs = op->GetSigns();
