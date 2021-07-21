@@ -7,6 +7,7 @@ system_header_files = \
 	include/bertini2/system/slice.hpp \
 	include/bertini2/system/start_base.hpp \
 	include/bertini2/system/start_systems.hpp \
+	include/bertini2/system/straight_line_program.hpp \
 	include/bertini2/system/system.hpp \
 	include/bertini2/system/start/total_degree.hpp \
 	include/bertini2/system/start/mhom.hpp \
@@ -19,6 +20,7 @@ system_source_files = \
 	src/system/slice.cpp \
 	src/system/start_base.cpp \
 	src/system/system.cpp \
+	src/system/straight_line_program.cpp \
 	src/system/start/total_degree.cpp \
 	src/system/start/mhom.cpp \
 	src/system/start/user.cpp
@@ -41,6 +43,7 @@ systeminclude_HEADERS = \
 	include/bertini2/system/start_base.hpp \
 	include/bertini2/system/start_systems.hpp \
 	include/bertini2/system/system.hpp \
+	include/bertini2/system/straight_line_program.hpp \
 	include/bertini2/system/start/mhom.hpp \
 	include/bertini2/system/start/user.hpp \
 	include/bertini2/system/start/utility.hpp

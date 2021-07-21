@@ -62,6 +62,7 @@ namespace node{
 	class Function : public virtual NamedSymbol
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 		
 		Function(std::string const& new_name);
 		

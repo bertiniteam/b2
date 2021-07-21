@@ -41,23 +41,23 @@ namespace bertini{
 
 unsigned SumOperator::EliminateZeros()
 {
-	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
+	assert(!operands_.empty() && "operands_ must not be empty to eliminate zeros");
 
 	unsigned num_eliminated{0};
-	if (children_size()>1)
+	if (NumOperands()>1)
 	{	
 		std::vector<std::shared_ptr<Node>> new_children; std::vector<bool> new_ops;
 
-		std::vector<bool> is_zero(children_.size(), false);
-		for (unsigned ii=0; ii<children_.size(); ++ii)
-			if (children_[ii]->Eval<dbl>()==0.)	
+		std::vector<bool> is_zero(operands_.size(), false);
+		for (unsigned ii=0; ii<operands_.size(); ++ii)
+			if (operands_[ii]->Eval<dbl>()==0.)	
 				is_zero[ii] = true;
 
-		for (unsigned ii=0; ii<children_size(); ++ii)
+		for (unsigned ii=0; ii<NumOperands(); ++ii)
 			if (!is_zero[ii])
 			{
-				new_children.push_back(children_[ii]);
-				new_ops.push_back(children_sign_[ii]);
+				new_children.push_back(operands_[ii]);
+				new_ops.push_back(signs_[ii]);
 			}
 			else
 			{
@@ -72,12 +72,12 @@ unsigned SumOperator::EliminateZeros()
 		}
 
 		using std::swap;
-		swap(children_, new_children);
-		swap(children_sign_, new_ops);
+		swap(operands_, new_children);
+		swap(signs_, new_ops);
 	}
 
 	// recurse over the remaining children
-	for (auto& iter : children_)
+	for (auto& iter : operands_)
 		num_eliminated += iter->EliminateZeros();
 
 	return num_eliminated;
@@ -88,7 +88,7 @@ unsigned SumOperator::EliminateZeros()
 unsigned SumOperator::EliminateOnes()
 {
 	unsigned num_eliminated{0};
-	for (auto& iter : children_)
+	for (auto& iter : operands_)
 		num_eliminated += iter->EliminateOnes();
 
 	return num_eliminated;
@@ -100,27 +100,27 @@ unsigned SumOperator::ReduceSubSums()
 	std::vector<bool> new_ops;
 	unsigned num_eliminated{0};
 
-	for (unsigned ii=0; ii<children_size(); ++ii)
+	for (unsigned ii=0; ii<NumOperands(); ++ii)
 	{
-		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
+		auto converted = std::dynamic_pointer_cast<SumOperator>(operands_[ii]);
 		if (converted)
 		{ // we have a sum!  reduce it into this one
-			for (unsigned jj=0; jj<converted->children_size(); ++jj)
+			for (unsigned jj=0; jj<converted->NumOperands(); ++jj)
 			{
-				new_children.push_back(converted->children_[jj]);
-				new_ops.push_back(!(converted->children_sign_[jj] ^ children_sign_[ii]));
+				new_children.push_back(converted->operands_[jj]);
+				new_ops.push_back(!(converted->signs_[jj] ^ signs_[ii]));
 				num_eliminated++;
 			}
 			
 		}
 		else
 		{
-			new_children.push_back(this->children_[ii]);
-			new_ops.push_back(this->children_sign_[ii]);
+			new_children.push_back(this->operands_[ii]);
+			new_ops.push_back(this->signs_[ii]);
 		}
 	}
-	swap(this->children_, new_children);
-	swap(this->children_sign_, new_ops);
+	swap(this->operands_, new_children);
+	swap(this->signs_, new_ops);
 	return num_eliminated;
 }
 
@@ -131,24 +131,24 @@ unsigned SumOperator::ReduceSubMults()
 	std::vector<bool> new_ops;
 	unsigned num_eliminated{0};
 
-	for (unsigned ii=0; ii<children_size(); ++ii)
+	for (unsigned ii=0; ii<NumOperands(); ++ii)
 	{
-		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
-		if (converted && converted->children_size()==1 && converted->children_mult_or_div_[0])
-		{ // we have a multiply node! if its a single node and is mult, not div, then its child can be folded into this sum.
-			new_children.push_back(converted->children_[0]);
-			new_ops.push_back(children_sign_[ii]);
+		auto converted = std::dynamic_pointer_cast<MultOperator>(operands_[ii]);
+		if (converted && converted->NumOperands()==1 && converted->mult_or_div_[0])
+		{ // we have a multiply node! if its a single node and is mult, not div, then its operand can be folded into this sum.
+			new_children.push_back(converted->operands_[0]);
+			new_ops.push_back(signs_[ii]);
 			num_eliminated++;			
 		}
 		else
 		{
-			new_children.push_back(this->children_[ii]);
-			new_ops.push_back(this->children_sign_[ii]);
+			new_children.push_back(this->operands_[ii]);
+			new_ops.push_back(this->signs_[ii]);
 		}
 	}
 
-	swap(this->children_, new_children);
-	swap(this->children_sign_, new_ops);
+	swap(this->operands_, new_children);
+	swap(this->signs_, new_ops);
 
 	return num_eliminated;
 }
@@ -158,7 +158,7 @@ unsigned SumOperator::ReduceDepth()
 {
 	auto num_eliminated = ReduceSubSums() + ReduceSubMults();
 
-	for (auto& iter : children_)
+	for (auto& iter : operands_)
 		num_eliminated += iter->ReduceDepth();
 
 	return num_eliminated;
@@ -167,15 +167,15 @@ unsigned SumOperator::ReduceDepth()
 void SumOperator::print(std::ostream & target) const
 {
 	target << "(";
-	for (auto iter = children_.begin(); iter!= children_.end(); iter++) {
-		if (iter==children_.begin()) {
+	for (auto iter = operands_.begin(); iter!= operands_.end(); iter++) {
+		if (iter==operands_.begin()) {
 			// on the first iteration, no need to put a + if a +
-			if ( !(*(children_sign_.begin()+(iter-children_.begin()))) )
+			if ( !(*(signs_.begin()+(iter-operands_.begin()))) )
 				target << "-";
 		}
 		else
 		{
-			if ( !(*(children_sign_.begin()+(iter-children_.begin()))) )
+			if ( !(*(signs_.begin()+(iter-operands_.begin()))) )
 				target << "-";
 			else
 				target << "+";
@@ -191,13 +191,13 @@ std::shared_ptr<Node> SumOperator::Differentiate(std::shared_ptr<Variable> const
 {
 	unsigned int counter = 0;
 	std::shared_ptr<Node> ret_sum = Zero();
-	for (int ii = 0; ii < children_.size(); ++ii)
+	for (int ii = 0; ii < operands_.size(); ++ii)
 	{
-		auto converted = std::dynamic_pointer_cast<Number>(children_[ii]);
+		auto converted = std::dynamic_pointer_cast<Number>(operands_[ii]);
 		if (converted)
 			continue;
 		
-		auto temp_node = children_[ii]->Differentiate(v);
+		auto temp_node = operands_[ii]->Differentiate(v);
 		converted = std::dynamic_pointer_cast<Number>(temp_node);
 		if (converted)
 			if (converted->Eval<dbl>()==dbl(0.0))
@@ -205,9 +205,9 @@ std::shared_ptr<Node> SumOperator::Differentiate(std::shared_ptr<Variable> const
 		
 		counter++;
 		if (counter==1)
-			ret_sum = std::make_shared<SumOperator>(temp_node,children_sign_[ii]);
+			ret_sum = std::make_shared<SumOperator>(temp_node,signs_[ii]);
 		else
-			std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddChild(temp_node,children_sign_[ii]);
+			std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddOperand(temp_node,signs_[ii]);
 		
 	}
 	
@@ -218,7 +218,7 @@ int SumOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
 	int deg = 0;
 	
-	for (auto iter: children_)
+	for (auto iter: operands_)
 	{
 		auto curr_deg = iter->Degree(v);
 		if (curr_deg<0)
@@ -232,7 +232,7 @@ int SumOperator::Degree(std::shared_ptr<Variable> const& v) const
 int SumOperator::Degree(VariableGroup const& vars) const 
 {
 	auto deg = 0;
-	for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+	for (auto iter = operands_.begin(); iter!=operands_.end(); iter++)
 	{
 		auto term_degree = (*iter)->Degree(vars);
 		if (term_degree<0)
@@ -249,7 +249,7 @@ int SumOperator::Degree(VariableGroup const& vars) const
 std::vector<int> SumOperator::MultiDegree(VariableGroup const& vars) const
 {
 	std::vector<int> deg(vars.size(),0);
-	for (auto iter : children_)
+	for (auto iter : operands_)
 	{
 		auto term_deg = iter->MultiDegree(vars);
 
@@ -267,7 +267,7 @@ void SumOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable
 	
 	
 	// first homogenize each summand.
-	for (auto iter: children_)
+	for (auto iter: operands_)
 	{
 		iter->Homogenize(vars, homvar);
 	}
@@ -278,7 +278,7 @@ void SumOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable
 	int maxdegree = 0;
 	std::vector<int> term_degrees;
 	// first homogenize each summand.
-	for (auto iter: children_)
+	for (auto iter: operands_)
 	{
 		auto local_degree = iter->Degree(vars);
 		if (local_degree<0)
@@ -289,13 +289,13 @@ void SumOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable
 		maxdegree = std::max(maxdegree, local_degree);
 	}
 	
-	for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+	for (auto iter = operands_.begin(); iter!=operands_.end(); iter++)
 	{
-		auto degree_deficiency = maxdegree - *(term_degrees.begin() + (iter-children_.begin()));
+		auto degree_deficiency = maxdegree - *(term_degrees.begin() + (iter-operands_.begin()));
 		if ( degree_deficiency > 0)
 		{
 
-			// hold the child temporarily.
+			// hold the operand temporarily.
 			if (degree_deficiency==1)
 			{
 				std::shared_ptr<Node> M = std::make_shared<MultOperator>(homvar,std::dynamic_pointer_cast<Node>(*iter));
@@ -317,7 +317,7 @@ void SumOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable
 bool SumOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 {
 	
-	for (auto iter : children_)
+	for (auto iter : operands_)
 	{
 		if (!iter->IsHomogeneous(v))
 			return false;
@@ -326,12 +326,12 @@ bool SumOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 	// the only hope this has of being homogeneous, is that each factor is homogeneous
 	int deg;
 
-	deg = (*(children_.begin()))->Degree(v) ;
+	deg = (*(operands_.begin()))->Degree(v) ;
 
 	if (deg < 0) 
 		return false;
 
-	for (auto iter = children_.begin()+1; iter!= children_.end(); iter++)
+	for (auto iter = operands_.begin()+1; iter!= operands_.end(); iter++)
 	{
 		auto local_degree = (*iter)->Degree(v);
 		if (local_degree!=deg)
@@ -344,7 +344,7 @@ bool SumOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 bool SumOperator::IsHomogeneous(VariableGroup const& v) const
 {
 	
-	for (auto iter : children_)
+	for (auto iter : operands_)
 	{
 		if (!iter->IsHomogeneous(v))
 			return false;
@@ -353,12 +353,12 @@ bool SumOperator::IsHomogeneous(VariableGroup const& v) const
 	// the only hope this has of being homogeneous, is that each factor is homogeneous
 	int deg;
 
-	deg = (*(children_.begin()))->Degree(v) ;
+	deg = (*(operands_.begin()))->Degree(v) ;
 
 	if (deg < 0) 
 		return false;
 
-	for (auto iter = children_.begin()+1; iter!= children_.end(); iter++)
+	for (auto iter = operands_.begin()+1; iter!= operands_.end(); iter++)
 	{
 		auto local_degree = (*iter)->Degree(v);
 		if (local_degree!=deg)
@@ -381,16 +381,16 @@ dbl SumOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) con
 void SumOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	evaluation_value = dbl(0);
-	for(int ii = 0; ii < children_.size(); ++ii)
+	for(int ii = 0; ii < operands_.size(); ++ii)
 	{
-		if(children_sign_[ii])
+		if(signs_[ii])
 		{
-			children_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
+			operands_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
 			evaluation_value += temp_d_;
 		}
 		else
 		{
-			children_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
+			operands_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
 			evaluation_value -= temp_d_;
 		}
 	}
@@ -408,24 +408,24 @@ mpfr_complex SumOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_var
 
 void SumOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	if (children_sign_[0])
-		children_[0]->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
+	if (signs_[0])
+		operands_[0]->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	else
 	{
-		children_[0]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
+		operands_[0]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 		evaluation_value = -temp_mp_;
 	}
 
-	for(int ii = 1; ii < children_.size(); ++ii)
+	for(int ii = 1; ii < operands_.size(); ++ii)
 	{
-		if(children_sign_[ii])
+		if(signs_[ii])
 		{
-			children_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
+			operands_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 			evaluation_value += temp_mp_;
 		}
 		else
 		{
-			children_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
+			operands_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 			evaluation_value -= temp_mp_;
 		}
 	}
@@ -467,35 +467,35 @@ unsigned NegateOperator::EliminateOnes()
 void NegateOperator::print(std::ostream & target) const
 {
 	target << "-(";
-	child_->print(target);
+	operand_->print(target);
 	target << ")";
 }
 
 std::shared_ptr<Node> NegateOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return std::make_shared<NegateOperator>(child_->Differentiate(v));
+	return std::make_shared<NegateOperator>(operand_->Differentiate(v));
 }
 
 dbl NegateOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return -(child_->Eval<dbl>(diff_variable));
+	return -(operand_->Eval<dbl>(diff_variable));
 }
 
 void NegateOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+	operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
 	evaluation_value = -evaluation_value;
 }
 
 
 mpfr_complex NegateOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return -child_->Eval<mpfr_complex>(diff_variable);
+	return -operand_->Eval<mpfr_complex>(diff_variable);
 }
 
 void NegateOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
+	operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	evaluation_value = -evaluation_value;
 }
 
@@ -529,13 +529,13 @@ void NegateOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_pt
 
 unsigned MultOperator::EliminateZeros()
 {
-	assert(!children_.empty() && "children_ must not be empty to eliminate zeros");
+	assert(!operands_.empty() && "operands_ must not be empty to eliminate zeros");
 
 	// find those zeros in the sum.  then, compress.
 	std::vector<bool> non_zeros_ops;
 
 	bool have_a_zero = false;
-	for (const auto& iter : children_)
+	for (const auto& iter : operands_)
 	{
 		if (iter->Eval<dbl>() == 0.)
 		{
@@ -546,15 +546,15 @@ unsigned MultOperator::EliminateZeros()
 
 	if (have_a_zero) // if there is a single zero, the whole thing should collapse.
 	{
-		unsigned num_eliminated = children_.size()-1;
-		children_.clear(); children_mult_or_div_.clear();
-		AddChild(MakeInteger(0), true);
+		unsigned num_eliminated = operands_.size()-1;
+		operands_.clear(); mult_or_div_.clear();
+		AddOperand(MakeInteger(0), true);
 		return num_eliminated;
 	}
 
 	// recurse over the remaining children
 	unsigned num_eliminated{0};
-	for (auto& iter : children_)
+	for (auto& iter : operands_)
 		num_eliminated += iter->EliminateZeros();
 
 	return num_eliminated;
@@ -566,16 +566,16 @@ unsigned MultOperator::EliminateZeros()
 
 unsigned MultOperator::EliminateOnes()
 {
-	assert(!children_.empty() && "children_ must not be empty to eliminate ones");
+	assert(!operands_.empty() && "operands_ must not be empty to eliminate ones");
 
 	unsigned num_eliminated{0};
-	if (children_.size()>1)
+	if (operands_.size()>1)
 	{
-		std::vector<bool> is_one(children_.size(),false);
+		std::vector<bool> is_one(operands_.size(),false);
 		
 
-		for (unsigned ii=0; ii<children_.size(); ++ii)
-			is_one[ii] = children_[ii]->Eval<dbl>()==1.0;
+		for (unsigned ii=0; ii<operands_.size(); ++ii)
+			is_one[ii] = operands_[ii]->Eval<dbl>()==1.0;
 
 		std::vector<std::shared_ptr<Node>> new_children;
 		std::vector<bool> new_mult_div;
@@ -583,8 +583,8 @@ unsigned MultOperator::EliminateOnes()
 		{
 			if (!is_one[ii])
 			{
-				new_children.push_back(children_[ii]);
-				new_mult_div.push_back(children_mult_or_div_[ii]);
+				new_children.push_back(operands_[ii]);
+				new_mult_div.push_back(mult_or_div_[ii]);
 			}
 			else
 			{
@@ -594,18 +594,18 @@ unsigned MultOperator::EliminateOnes()
 
 		if (new_children.empty())
 		{
-			new_children.push_back(children_[0]);
-			new_mult_div.push_back(children_mult_or_div_[0]);
+			new_children.push_back(operands_[0]);
+			new_mult_div.push_back(mult_or_div_[0]);
 			--num_eliminated;
 		}
 
 
 		using std::swap;
-		swap(children_, new_children);
-		swap(children_mult_or_div_, new_mult_div);
+		swap(operands_, new_children);
+		swap(mult_or_div_, new_mult_div);
 	}
 
-	for (auto& iter : children_)
+	for (auto& iter : operands_)
 		num_eliminated += iter->EliminateOnes();
 
 	return num_eliminated;
@@ -618,28 +618,28 @@ unsigned MultOperator::ReduceSubSums()
 	std::vector<bool> new_ops;
 	unsigned num_eliminated{0};
 
-	for (unsigned ii=0; ii<children_size(); ++ii)
+	for (unsigned ii=0; ii<NumOperands(); ++ii)
 	{
-		auto converted = std::dynamic_pointer_cast<SumOperator>(children_[ii]);
-		if (converted && converted->children_size()==1)
-		{ // we have a sum node! if its a single add node, then its child can be folded into this sum.
-			if (converted->children_sign_[0])
-				new_children.push_back(converted->children_[0]);
+		auto converted = std::dynamic_pointer_cast<SumOperator>(operands_[ii]);
+		if (converted && converted->NumOperands()==1)
+		{ // we have a sum node! if its a single add node, then its operand can be folded into this sum.
+			if (converted->signs_[0])
+				new_children.push_back(converted->operands_[0]);
 			else
-				new_children.push_back(-converted->children_[0]);
+				new_children.push_back(-converted->operands_[0]);
 
-			new_ops.push_back(children_mult_or_div_[ii]);
+			new_ops.push_back(mult_or_div_[ii]);
 			num_eliminated++;
 		}
 		else
 		{
-			new_children.push_back(this->children_[ii]);
-			new_ops.push_back(this->children_mult_or_div_[ii]);
+			new_children.push_back(this->operands_[ii]);
+			new_ops.push_back(this->mult_or_div_[ii]);
 		}
 	}
 
-	swap(this->children_, new_children);
-	swap(this->children_mult_or_div_, new_ops);
+	swap(this->operands_, new_children);
+	swap(this->mult_or_div_, new_ops);
 
 	return num_eliminated;	
 }
@@ -650,28 +650,28 @@ unsigned MultOperator::ReduceSubMults()
 	std::vector<bool> new_ops;
 	unsigned num_eliminated{0};
 
-	for (unsigned ii=0; ii<children_size(); ++ii)
+	for (unsigned ii=0; ii<NumOperands(); ++ii)
 	{
-		auto converted = std::dynamic_pointer_cast<MultOperator>(children_[ii]);
+		auto converted = std::dynamic_pointer_cast<MultOperator>(operands_[ii]);
 		if (converted)
 		{ // we have a multiply!  reduce it into this one
-			for (unsigned jj=0; jj<converted->children_size(); ++jj)
+			for (unsigned jj=0; jj<converted->NumOperands(); ++jj)
 			{
-				new_children.push_back(converted->children_[jj]);
-				new_ops.push_back(!(converted->children_mult_or_div_[jj] ^ this->children_mult_or_div_[ii]));
+				new_children.push_back(converted->operands_[jj]);
+				new_ops.push_back(!(converted->mult_or_div_[jj] ^ this->mult_or_div_[ii]));
 				num_eliminated++;
 			}
 			
 		}
 		else
 		{
-			new_children.push_back(this->children_[ii]);
-			new_ops.push_back(this->children_mult_or_div_[ii]);
+			new_children.push_back(this->operands_[ii]);
+			new_ops.push_back(this->mult_or_div_[ii]);
 		}
 	}
 
-	swap(this->children_, new_children);
-	swap(this->children_mult_or_div_, new_ops);
+	swap(this->operands_, new_children);
+	swap(this->mult_or_div_, new_ops);
 
 	return num_eliminated;
 }
@@ -681,7 +681,7 @@ unsigned MultOperator::ReduceDepth()
 {
 	auto num_eliminated = ReduceSubSums() + ReduceSubMults();
 
-	for (auto& iter : children_)
+	for (auto& iter : operands_)
 		num_eliminated += iter->ReduceDepth();
 
 	return num_eliminated;
@@ -692,13 +692,13 @@ unsigned MultOperator::ReduceDepth()
 void MultOperator::print(std::ostream & target) const
 {
 	target << "(";
-	for (auto iter = children_.begin(); iter!= children_.end(); iter++) {
-		if (iter==children_.begin())
-			if (! *children_mult_or_div_.begin()  )
+	for (auto iter = operands_.begin(); iter!= operands_.end(); iter++) {
+		if (iter==operands_.begin())
+			if (! *mult_or_div_.begin()  )
 				target << "1/";
 		(*iter)->print(target);
-		if (iter!=(children_.end()-1)){
-			if (*(children_mult_or_div_.begin() + (iter-children_.begin())+1)) { // TODO i think this +1 is wrong... dab
+		if (iter!=(operands_.end()-1)){
+			if (*(mult_or_div_.begin() + (iter-operands_.begin())+1)) { // TODO i think this +1 is wrong... dab
 				target << "*";
 			}
 			else{
@@ -719,9 +719,9 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
 	
 	unsigned term_counter {0};
 	// this loop implements the generic product rule, perhaps inefficiently.
-	for (int ii = 0; ii < children_.size(); ++ii)
+	for (int ii = 0; ii < operands_.size(); ++ii)
 	{
-		auto local_derivative = children_[ii]->Differentiate(v);
+		auto local_derivative = operands_[ii]->Differentiate(v);
 		
 		// if the derivative of the current term is 0, then stop 
 		auto is_it_a_number = std::dynamic_pointer_cast<Float>(local_derivative);
@@ -733,10 +733,10 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
 		
 		// create the product of the remaining terms
 		auto term_ii = std::make_shared<MultOperator>(local_derivative);
-		for (int jj = 0; jj < children_.size(); ++jj)
+		for (int jj = 0; jj < operands_.size(); ++jj)
 		{
 			if(jj != ii)
-				term_ii->AddChild(children_[jj],children_mult_or_div_[jj]);
+				term_ii->AddOperand(operands_[jj],mult_or_div_[jj]);
 		}
 		
 		// and then either 1. multiply it against the current derivative, or 2. invoke the quotient rule.
@@ -747,14 +747,14 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
 		// if the derivative of the term under consideration is equal to 1, no need to go on.  already have the product we need.
 		
 		// if is division, need this for the quotient rule
-		if ( !(children_mult_or_div_[ii]) )
-			term_ii->AddChild(pow(children_[ii],2),false); // draw a line and square below
+		if ( !(mult_or_div_[ii]) )
+			term_ii->AddOperand(pow(operands_[ii],2),false); // draw a line and square below
 		
 		term_counter++;
 		if (term_counter==1)
-			ret_sum = std::make_shared<SumOperator>(term_ii,children_mult_or_div_[ii]);
+			ret_sum = std::make_shared<SumOperator>(term_ii,mult_or_div_[ii]);
 		else
-			std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddChild(term_ii,children_mult_or_div_[ii]);
+			std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddOperand(term_ii,mult_or_div_[ii]);
 	} // re: for ii
 	
 	return ret_sum;
@@ -763,9 +763,9 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
 int MultOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
 	int deg = 0;
-	for (auto iter = children_.begin(); iter!= children_.end(); iter++)
+	for (auto iter = operands_.begin(); iter!= operands_.end(); iter++)
 	{
-		// if the child node is a differential coming from another variable, then this degree should be 0, end of story.
+		// if the operand node is a differential coming from another variable, then this degree should be 0, end of story.
 		
 		auto factor_deg = (*iter)->Degree(v);
 		
@@ -782,7 +782,7 @@ int MultOperator::Degree(std::shared_ptr<Variable> const& v) const
 		
 		if (factor_deg<0)
 			return factor_deg;
-		else if (factor_deg!=0 && !*(children_mult_or_div_.begin() + (iter-children_.begin()) ) )
+		else if (factor_deg!=0 && !*(mult_or_div_.begin() + (iter-operands_.begin()) ) )
 			return -1;
 		else
 			deg+=factor_deg;
@@ -796,13 +796,13 @@ int MultOperator::Degree(VariableGroup const& vars) const
 	
 	auto deg = 0;
 
-	for (auto iter = children_.begin(); iter!=children_.end(); iter++)
+	for (auto iter = operands_.begin(); iter!=operands_.end(); iter++)
 	{
 		auto factor_deg = (*iter)->Degree(vars);  
 
 		if (factor_deg<0)
 			return factor_deg;
-		else if (factor_deg!=0 && !*(children_mult_or_div_.begin() + (iter-children_.begin()) ) )
+		else if (factor_deg!=0 && !*(mult_or_div_.begin() + (iter-operands_.begin()) ) )
 			return -1;
 		else
 			deg+=factor_deg;
@@ -815,7 +815,7 @@ int MultOperator::Degree(VariableGroup const& vars) const
 std::vector<int> MultOperator::MultiDegree(VariableGroup const& vars) const
 {
 	std::vector<int> deg(vars.size(),0);
-	for (auto iter : children_)
+	for (auto iter : operands_)
 	{
 		auto term_deg = iter->MultiDegree(vars);
 
@@ -831,7 +831,7 @@ std::vector<int> MultOperator::MultiDegree(VariableGroup const& vars) const
 
 void MultOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
 {
-	for (auto iter: children_)
+	for (auto iter: operands_)
 	{
 		iter->Homogenize(vars, homvar);
 	}
@@ -841,7 +841,7 @@ void MultOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variabl
 bool MultOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 {
 	// the only hope this has of being homogeneous, is that each factor is homogeneous
-	for (auto iter : children_)
+	for (auto iter : operands_)
 	{
 		if (! iter->IsHomogeneous(v))
 		{
@@ -854,7 +854,7 @@ bool MultOperator::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 bool MultOperator::IsHomogeneous(VariableGroup const& v) const
 {
 	// the only hope this has of being homogeneous, is that each factor is homogeneous
-	for (auto iter : children_)
+	for (auto iter : operands_)
 	{
 		if (! iter->IsHomogeneous(v))
 		{
@@ -874,16 +874,16 @@ dbl MultOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) co
 void MultOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	evaluation_value = dbl(1);
-	for(int ii = 0; ii < children_.size(); ++ii)
+	for(int ii = 0; ii < operands_.size(); ++ii)
 	{
-		if(children_mult_or_div_[ii])
+		if(mult_or_div_[ii])
 		{
-			children_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
+			operands_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
 			evaluation_value *= temp_d_;
 		}
 		else
 		{
-			children_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
+			operands_[ii]->EvalInPlace<dbl>(temp_d_, diff_variable);
 			evaluation_value /= temp_d_;
 		}
 	}
@@ -900,18 +900,18 @@ mpfr_complex MultOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_va
 
 void MultOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	if (children_mult_or_div_[0])
-		children_[0]->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
+	if (mult_or_div_[0])
+		operands_[0]->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	else
 	{
-		children_[0]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
+		operands_[0]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
 		evaluation_value = static_cast<mpfr_float>(1)/temp_mp_;
 	}
 
-	for(int ii = 1; ii < children_.size(); ++ii)
+	for(int ii = 1; ii < operands_.size(); ++ii)
 	{
-		children_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
-		if(children_mult_or_div_[ii])
+		operands_[ii]->EvalInPlace<mpfr_complex>(temp_mp_, diff_variable);
+		if(mult_or_div_[ii])
 			evaluation_value *= temp_mp_;
 		else
 			evaluation_value /= temp_mp_;
@@ -956,8 +956,8 @@ std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> con
 	
 	auto exp_minus_one = exponent_-1;
 	auto ret_mult = std::make_shared<MultOperator>(base_->Differentiate(v));
-	ret_mult->AddChild(exponent_);
-	ret_mult->AddChild(std::make_shared<PowerOperator>(base_, exp_minus_one));
+	ret_mult->AddOperand(exponent_);
+	ret_mult->AddOperand(std::make_shared<PowerOperator>(base_, exp_minus_one));
 	return ret_mult;
 }
 
@@ -1137,7 +1137,7 @@ unsigned IntegerPowerOperator::EliminateOnes()
 void IntegerPowerOperator::print(std::ostream & target) const
 {
 	target << "(";
-	child_->print(target);
+	operand_->print(target);
 	target << "^" << exponent() << ")";
 }
 
@@ -1148,16 +1148,16 @@ std::shared_ptr<Node> IntegerPowerOperator::Differentiate(std::shared_ptr<Variab
 	if (exponent_==0)
 		return MakeInteger(0);
 	else if (exponent_==1)
-		return child_->Differentiate(v);
+		return operand_->Differentiate(v);
 	else if (exponent_==2){
-		auto M = std::make_shared<MultOperator>(MakeInteger(2), child_);
-		M->AddChild(child_->Differentiate(v));
+		auto M = std::make_shared<MultOperator>(MakeInteger(2), operand_);
+		M->AddOperand(operand_->Differentiate(v));
 		return M;
 	}
 	else{
 		auto M = std::make_shared<MultOperator>(MakeInteger(exponent_),
-												std::make_shared<IntegerPowerOperator>(child_, exponent_-1) );
-		M->AddChild(child_->Differentiate(v));
+												std::make_shared<IntegerPowerOperator>(operand_, exponent_-1) );
+		M->AddOperand(operand_->Differentiate(v));
 		return M;
 	}
 }
@@ -1165,7 +1165,7 @@ std::shared_ptr<Node> IntegerPowerOperator::Differentiate(std::shared_ptr<Variab
 
 int IntegerPowerOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
-	auto base_deg = child_->Degree(v);
+	auto base_deg = operand_->Degree(v);
 	if (base_deg<0)
 		return base_deg;
 	else
@@ -1202,7 +1202,7 @@ unsigned SqrtOperator::EliminateOnes()
 void SqrtOperator::print(std::ostream & target) const
 {
 	target << "sqrt(";
-	child_->print(target);
+	operand_->print(target);
 	target << ")";
 }
 
@@ -1210,15 +1210,15 @@ void SqrtOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> SqrtOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(child_, MakeRational(mpq_rational(-1,2),0)));
-	ret_mult->AddChild(child_->Differentiate(v));
-	ret_mult->AddChild(MakeRational(mpq_rational(1,2),0));
+	auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(operand_, MakeRational(mpq_rational(-1,2),0)));
+	ret_mult->AddOperand(operand_->Differentiate(v));
+	ret_mult->AddOperand(MakeRational(mpq_rational(1,2),0));
 	return ret_mult;
 }
 
 int SqrtOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
-	if (child_->Degree(v)==0)
+	if (operand_->Degree(v)==0)
 	{
 		return 0;
 	}
@@ -1231,24 +1231,24 @@ int SqrtOperator::Degree(std::shared_ptr<Variable> const& v) const
 
 dbl SqrtOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return sqrt(child_->Eval<dbl>(diff_variable));
+	return sqrt(operand_->Eval<dbl>(diff_variable));
 }
 
 void SqrtOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+	operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
 	evaluation_value = sqrt(evaluation_value);
 }
 
 
 mpfr_complex SqrtOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return sqrt(child_->Eval<mpfr_complex>(diff_variable));
+	return sqrt(operand_->Eval<mpfr_complex>(diff_variable));
 }
 
 void SqrtOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
+	operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	evaluation_value = sqrt(evaluation_value);
 }
 
@@ -1284,7 +1284,7 @@ unsigned ExpOperator::EliminateOnes()
 void ExpOperator::print(std::ostream & target) const
 {
 	target << "exp(";
-	child_->print(target);
+	operand_->print(target);
 	target << ")";
 }
 
@@ -1293,13 +1293,13 @@ void ExpOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> ExpOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return exp(child_)*child_->Differentiate(v);
+	return exp(operand_)*operand_->Differentiate(v);
 }
 
 
 int ExpOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
-	if (child_->Degree(v)==0)
+	if (operand_->Degree(v)==0)
 	{
 		return 0;
 	}
@@ -1311,24 +1311,24 @@ int ExpOperator::Degree(std::shared_ptr<Variable> const& v) const
 
 dbl ExpOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return exp(child_->Eval<dbl>(diff_variable));
+	return exp(operand_->Eval<dbl>(diff_variable));
 }
 
 void ExpOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+	operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
 	evaluation_value = exp(evaluation_value);
 }
 
 
 mpfr_complex ExpOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return exp(child_->Eval<mpfr_complex>(diff_variable));
+	return exp(operand_->Eval<mpfr_complex>(diff_variable));
 }
 
 void ExpOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
+	operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	evaluation_value = exp(evaluation_value);
 }
 
@@ -1360,7 +1360,7 @@ unsigned LogOperator::EliminateOnes()
 void LogOperator::print(std::ostream & target) const
 {
 	target << "log(";
-	child_->print(target);
+	operand_->print(target);
 	target << ")";
 }
 
@@ -1368,13 +1368,13 @@ void LogOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> LogOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return std::make_shared<MultOperator>(child_,false,child_->Differentiate(v),true);
+	return std::make_shared<MultOperator>(operand_,false,operand_->Differentiate(v),true);
 }
 
 
 int LogOperator::Degree(std::shared_ptr<Variable> const& v) const
 {
-	if (child_->Degree(v)==0)
+	if (operand_->Degree(v)==0)
 	{
 		return 0;
 	}
@@ -1386,24 +1386,24 @@ int LogOperator::Degree(std::shared_ptr<Variable> const& v) const
 
 dbl LogOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return log(child_->Eval<dbl>(diff_variable));
+	return log(operand_->Eval<dbl>(diff_variable));
 }
 
 void LogOperator::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+	operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
 	evaluation_value = log(evaluation_value);
 }
 
 
 mpfr_complex LogOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
-	return log(child_->Eval<mpfr_complex>(diff_variable));
+	return log(operand_->Eval<mpfr_complex>(diff_variable));
 }
 
 void LogOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
-	child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
+	operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 	evaluation_value = log(evaluation_value);
 }
 

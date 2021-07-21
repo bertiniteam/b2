@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(level_two_variable_set_to_zero_eliminated)
 
 	x->set_current_value(dbl(2.0));
 
-	BOOST_CHECK_EQUAL(as_op->children_size(), 1);
+	BOOST_CHECK_EQUAL(as_op->NumOperands(), 1);
 	BOOST_CHECK_EQUAL(n->Eval<dbl>(), 0.0);
 }
 
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(double_sum_signs_distribute)
 		unsigned num_eliminated = r->ReduceDepth();
 		BOOST_CHECK(num_eliminated > 0);
 		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
-		BOOST_CHECK_EQUAL(R->children_size(), 4);
+		BOOST_CHECK_EQUAL(R->NumOperands(), 4);
 
 		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
 		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(double_sum_signs_distribute)
 		unsigned num_eliminated = r->ReduceDepth();
 		BOOST_CHECK(num_eliminated > 0);
 		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
-		BOOST_CHECK_EQUAL(R->children_size(), 4);
+		BOOST_CHECK_EQUAL(R->NumOperands(), 4);
 
 		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
 		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE(double_sum_signs_distribute2)
 		unsigned num_eliminated = r->ReduceDepth();
 		BOOST_CHECK(num_eliminated > 0);
 		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
-		BOOST_CHECK_EQUAL(R->children_size(), 4);
+		BOOST_CHECK_EQUAL(R->NumOperands(), 4);
 
 		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
 		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(double_sum_signs_distribute2)
 		unsigned num_eliminated = r->ReduceDepth();
 		BOOST_CHECK(num_eliminated > 0);
 		auto R = std::dynamic_pointer_cast<bertini::node::SumOperator>(r);
-		BOOST_CHECK_EQUAL(R->children_size(), 4);
+		BOOST_CHECK_EQUAL(R->NumOperands(), 4);
 
 		dbl a(4.1203847861962345182734, -5.1234768951256847623781614314);
 		dbl b(-8.98798649152356714919234, 0.49879892634876018735619234);
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(a_nested_one)
 		; //deliberately empty statement
 
 	auto as_op = std::dynamic_pointer_cast<bertini::node::MultOperator>(n);
-	BOOST_CHECK_EQUAL(as_op->children_size(), 5);
+	BOOST_CHECK_EQUAL(as_op->NumOperands(), 5);
 
 	auto a = x->Eval<dbl>();
 	auto b = y->Eval<dbl>();
@@ -727,9 +727,9 @@ BOOST_AUTO_TEST_CASE(many_nested_singletons)
 		; //deliberately empty statement
 
 	auto as_op = std::dynamic_pointer_cast<bertini::node::MultOperator>(n5);
-	BOOST_CHECK_EQUAL(as_op->children_size(), 1);
+	BOOST_CHECK_EQUAL(as_op->NumOperands(), 1);
 
-	BOOST_CHECK_EQUAL(as_op->first_child(), x);
+	BOOST_CHECK_EQUAL(as_op->FirstOperand(), x);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // prod

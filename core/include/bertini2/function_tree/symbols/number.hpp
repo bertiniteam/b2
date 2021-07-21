@@ -172,7 +172,8 @@ namespace node{
 	class Integer : public virtual Number
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		explicit
 		Integer(int val) : true_value_(val)
 		{}
@@ -233,6 +234,7 @@ namespace node{
 	class Float : public virtual Number
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 
 		explicit
 		Float(mpfr_complex const& val) : highest_precision_value_(val)
@@ -298,7 +300,8 @@ namespace node{
 	class Rational : public virtual Number
 	{
 	public:
-
+		BERTINI_DEFAULT_VISITABLE()
+		
 		using mpq_rational = bertini::mpq_rational;
 
 		

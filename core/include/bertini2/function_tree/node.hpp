@@ -51,7 +51,7 @@
 #include <boost/type_index.hpp>
 
 #include "bertini2/num_traits.hpp"
-
+#include "bertini2/detail/visitable.hpp"
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -133,7 +133,7 @@ An interface for all nodes in a function tree, and for a function object as well
 
  \brief Abstract base class for the Bertini hybrid-precision (double-multiple) expression tree. 
  */
-class Node
+class Node : public virtual VisitableBase<>
 {
 	friend detail::FreshEvalSelector<dbl>;
 	friend detail::FreshEvalSelector<mpfr_complex>;
