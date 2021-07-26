@@ -130,6 +130,7 @@ typedef struct {
 
 namespace bertini {
 
+  class SLPCompiler;
   class System; // a forward declaration, solving the circular inclusion problem
 
 
@@ -302,6 +303,7 @@ namespace bertini {
     unsigned precision_ = 0;
     unsigned num_total_functions_ = 0;
     unsigned num_variables_ = 0;
+    bool has_path_variable_ = false;
 
     NumberOf number_of_;
     OutputLocations output_locations_;
@@ -386,6 +388,7 @@ namespace bertini {
 
       size_t next_available_mem_ = 0;
       std::map<Nd, size_t> locations_encountered_symbols_;
+      SLP slp_under_construction_; //< the under-construction SLP.  will be returned at end of `compile`
   };
 
 
