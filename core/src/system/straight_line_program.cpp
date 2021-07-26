@@ -21,6 +21,8 @@
 
 // individual authors of this file include:
 // silviana amethyst, university of wisconsin eau claire
+//
+// written with the help of UWEC student Mike Mumm, summer 2021
 
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/system.hpp"
