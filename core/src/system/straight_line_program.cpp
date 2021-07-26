@@ -113,14 +113,14 @@ namespace bertini{
 		auto& n = f.entry_node();
 		size_t location_entry;
 
-		if (this->locations_encountered_symbols_.find(*n) != this->locations_encountered_symbols_.begin())
+		if (this->locations_encountered_symbols_.find(n) == this->locations_encountered_symbols_.end())
 			n->Accept(*this); // think of calling Compile(n)
 
-		location_entry = this->locations_encountered_symbols_[*n];
+		location_entry = this->locations_encountered_symbols_[n];
 
-		size_t location_this_node = next_available_mem_++;  //this->slp_under_construction.AddToMemory(f);
+		size_t location_this_node = next_available_mem_++;  //this->slp_under_construction_.AddToMemory(f);
 
-		slp_under_construction.AddInstruction(Assign, location_entry, location_this_node);
+		slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
 	}
 
 
@@ -133,13 +133,13 @@ namespace bertini{
     	std::vector<size_t> operand_locations;
     	for (auto& n : op.Operands()){
 
-	    if (*n not in this->locations_encountered_symbols_)
-				operand_locations.push_back(n->Accept(*this)); // think of calling Compile(n)
-			else
-				operand_locations.push_back(this->locations_encountered_symbols_[*n]);
+			if (this->locations_encountered_symbols_.find(n)!=this->locations_encountered_symbols_.end())
+				n->Accept(*this); // think of calling Compile(n)
+
+			operand_locations.push_back(this->locations_encountered_symbols_[n]);
 		}
 
-		const auto& signs = op->GetSigns();
+		const auto& signs = op.GetSigns();
 
 		// seed the loop by adding together the first two things, which must exist by hypothesis
 		assert(op.Operands().size() >=2);
@@ -156,12 +156,12 @@ namespace bertini{
 
 		for (size_t ii{2}; ii<op.Operands().size()-1; ++ii){
 			if (signs[ii-1])
-				slp_under_construction_.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_++)
+				slp_under_construction_.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_++);
 			else
-				slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_++)
+				slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_++);
 		}
 
-		size_t location_this_node = next_available_mem_++; // this->slp_under_construction.AddToMemory(op);
+		size_t location_this_node = next_available_mem_++; // this->slp_under_construction_.AddToMemory(op);
 
     	// for each pair, look up the node in the memory structure in SLP
 
@@ -193,7 +193,7 @@ namespace bertini{
 	void SLPCompiler::Visit(node::Jacobian const& n){
 		std::cout << "unimplemented visit to node of type Jacobian" << std::endl;
 
-		this->slp_under_construction.AddToMemory(n);
+	
 	}
 
 	void SLPCompiler::Visit(node::Differential const& n){
@@ -232,10 +232,11 @@ namespace bertini{
 	void SLPCompiler::Visit(node::SinOperator const& n){
 		std::cout << "unimplemented visit to node of type SinOperator" << std::endl;
 
-		if (this->locations_encountered_symbols_.find(*n) != this->locations_encountered_symbols_.begin())
-			n->Accept(*this); // think of calling Compile(n)
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
 
-		auto location_operand = locations_encountered_symbols_[n->Operand()];
+		auto location_operand = locations_encountered_symbols_[operand];
 		slp_under_construction_.AddInstruction(Sin,location_operand, next_available_mem_++);
 	}
 
@@ -277,8 +278,8 @@ namespace bertini{
 
 			unsigned variable_counter{0};
 			for (int ii=0; ii<variable_group_sizes.size(); ++ii){
-				vg = variable_groups[ii];
-				s = variable_group_sizes[ii];
+				auto vg = variable_groups[ii];
+				auto s = variable_group_sizes[ii];
 
 				for (int jj=0; jj<s; ++jj){
 					locations_encountered_symbols_[ vg[jj] ] = next_available_mem_++;
