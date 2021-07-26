@@ -57,11 +57,11 @@ namespace bertini{
 
 
 
-    void StraightLineProgram::AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc){
-    	this->instructions_.push_back(unary_op);
+	void StraightLineProgram::AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc){
+		this->instructions_.push_back(unary_op);
 		this->instructions_.push_back(in_loc);
 		this->instructions_.push_back(out_loc);
-    }
+	}
 
 
 
@@ -80,7 +80,7 @@ namespace bertini{
 	using SLP = StraightLineProgram;
 
 
-  void SLPCompiler::Visit(node::Variable const& n){
+	void SLPCompiler::Visit(node::Variable const& n){
 		std::cout << "unimplemented visit to node of type Variable" << std::endl;
 	}
 
@@ -126,12 +126,12 @@ namespace bertini{
 
 	// arithmetic
 	void SLPCompiler::Visit(node::SumOperator const & op){
-    	std::cout << "visiting SumOperator: " << std::endl;
+		std::cout << "visiting SumOperator: " << std::endl;
 
-    	// this loop
-    	// gets the locations of all the things we're going to add up.
-    	std::vector<size_t> operand_locations;
-    	for (auto& n : op.Operands()){
+		// this loop
+		// gets the locations of all the things we're going to add up.
+		std::vector<size_t> operand_locations;
+		for (auto& n : op.Operands()){
 
 			if (this->locations_encountered_symbols_.find(n)!=this->locations_encountered_symbols_.end())
 				n->Accept(*this); // think of calling Compile(n)
@@ -163,24 +163,24 @@ namespace bertini{
 
 		size_t location_this_node = next_available_mem_++; // this->slp_under_construction_.AddToMemory(op);
 
-    	// for each pair, look up the node in the memory structure in SLP
+		// for each pair, look up the node in the memory structure in SLP
 
 
 
-    		// add a SUM op to the instructions.
+			// add a SUM op to the instructions.
 
-    		// add/subtract the nodes together.
+			// add/subtract the nodes together.
 
-    		// naive method: just loop over all operands, add/sub them up.
+			// naive method: just loop over all operands, add/sub them up.
 
-    		// improved option?: we could do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.  instead, use Pairwise summation
-    		// do pairs (0,1), (2,3), etc,
-    		// *then* add those temp vals together, until get to end.
-    		// see https://en.wikipedia.org/wiki/Pairwise_summation
+			// improved option?: we could do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.  instead, use Pairwise summation
+			// do pairs (0,1), (2,3), etc,
+			// *then* add those temp vals together, until get to end.
+			// see https://en.wikipedia.org/wiki/Pairwise_summation
 
 
-    	// loop over pairs of operands, not one by one as is currently done.
-    }
+		// loop over pairs of operands, not one by one as is currently done.
+	}
 
 
 
@@ -193,7 +193,7 @@ namespace bertini{
 	void SLPCompiler::Visit(node::Jacobian const& n){
 		std::cout << "unimplemented visit to node of type Jacobian" << std::endl;
 
-	
+
 	}
 
 	void SLPCompiler::Visit(node::Differential const& n){
@@ -203,13 +203,13 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::MultOperator const & op){
-    	std::cout << "visiting MultOperator: " << std::endl;
-    	for (auto& n : op.Operands()){
-    		n->Accept(*this);
-    		// multiply/divide the nodes together.  naive method is fine.
+		std::cout << "visiting MultOperator: " << std::endl;
+		for (auto& n : op.Operands()){
+			n->Accept(*this);
+			// multiply/divide the nodes together.  naive method is fine.
 
-    	}
-    }
+		}
+	}
 
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
 		std::cout << "unimplemented visit to node of type IntegerPowerOperator" << std::endl;
@@ -262,77 +262,77 @@ namespace bertini{
 
 
 
-    SLP SLPCompiler::Compile(System const& sys){
-    	this->Clear();
+	SLP SLPCompiler::Compile(System const& sys){
+		this->Clear();
 
-    	std::cout << "Compiling system" << std::endl;
+		std::cout << "Compiling system" << std::endl;
 
 
 			// deal with variables
 
-			std::cout << "dealing with variables" << std::endl;
+		std::cout << "dealing with variables" << std::endl;
 
 			// 1. ADD VARIABLES
-			auto variable_groups = sys.VariableGroups();
-			auto variable_group_sizes = sys.VariableGroupSizes();
+		auto variable_groups = sys.VariableGroups();
+		auto variable_group_sizes = sys.VariableGroupSizes();
 
-			unsigned variable_counter{0};
-			for (int ii=0; ii<variable_group_sizes.size(); ++ii){
-				auto vg = variable_groups[ii];
-				auto s = variable_group_sizes[ii];
+		unsigned variable_counter{0};
+		for (int ii=0; ii<variable_group_sizes.size(); ++ii){
+			auto vg = variable_groups[ii];
+			auto s = variable_group_sizes[ii];
 
-				for (int jj=0; jj<s; ++jj){
-					locations_encountered_symbols_[ vg[jj] ] = next_available_mem_++;
-					variable_counter += s;
-				}
+			for (int jj=0; jj<s; ++jj){
+				locations_encountered_symbols_[ vg[jj] ] = next_available_mem_++;
+				variable_counter += s;
 			}
+		}
 
-			slp_under_construction_.num_variables_ = variable_counter;
+		slp_under_construction_.num_variables_ = variable_counter;
 
 			// deal with path variable
-			if (sys.HavePathVariable())
-			{
+		if (sys.HavePathVariable())
+		{
 				// do this action only if the system has a path variable defined
-				locations_encountered_symbols_[ sys.GetPathVariable() ] = next_available_mem_++;
-				slp_under_construction_.has_path_variable_ = true;
-			}
+			locations_encountered_symbols_[ sys.GetPathVariable() ] = next_available_mem_++;
+			slp_under_construction_.has_path_variable_ = true;
+		}
 
 
-			std::cout << "dealing with setup for functions" << std::endl;
+		std::cout << "dealing with setup for functions" << std::endl;
 			// make space for functions and derivatives
 			// 3. ADD FUNCTIONS
 
 
-			std::cout << "dealing with setup for derivatives" << std::endl;
+		std::cout << "dealing with setup for derivatives" << std::endl;
 			// always do derivatives with respect to space variables
 			// 4. ADD SPACE VARIABLE DERIVATIVES
 
-			if (sys.HavePathVariable())
-			{
+		if (sys.HavePathVariable())
+		{
 				// we need derivatives with respect to time only if the system has a path variable defined
 				// 5. ADD TIME VARIABLE DERIVATIVES
-			}
+		}
 
-			std::cout << "visiting functions" << std::endl;
-    	for (int ii = 0; ii < sys.NumTotalFunctions(); ++ii)
-    	{
-    		auto f = sys.Function(ii);
+		std::cout << "visiting functions" << std::endl;
+		for (int ii = 0; ii < sys.NumTotalFunctions(); ++ii)
+		{
+			auto f = sys.Function(ii);
 
-    		std::cout << *(f) << std::endl;
-    		f->Accept(*this);
+			std::cout << *(f) << std::endl;
+			f->Accept(*this);
 
-    		locations_encountered_symbols_[f] = next_available_mem_++; // this is obviously wrong
+			locations_encountered_symbols_[f] = next_available_mem_++; // this is obviously wrong
 
-    		std::cout << "post visit function" << std::endl;
-    		/* code */
-    	}
+			std::cout << "post visit function" << std::endl;
+			/* code */
+		}
 
-    	return slp_under_construction_;
-    }
+		return slp_under_construction_;
+	}
 
-    void SLPCompiler::Clear(){
-        next_available_mem_ = 0;
-        locations_encountered_symbols_.clear();
-				slp_under_construction_ = SLP();
-    }
+	void SLPCompiler::Clear(){
+		next_available_mem_ = 0;
+		locations_encountered_symbols_.clear();
+		slp_under_construction_ = SLP();
+	}
 }
