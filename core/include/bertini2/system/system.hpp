@@ -1127,7 +1127,12 @@ namespace bertini {
 		*/
 		bool HavePathVariable() const;
 
-
+		auto& GetPathVariable() const{
+			if (this->HavePathVariable())
+				return this->path_variable_;
+			else
+				throw std::runtime_error("trying to get path variable for a system which doesn't have a path variable defined");
+		}
 
 		/**
 		 Order the variables, by the order in which the groups were added.
