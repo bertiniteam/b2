@@ -44,6 +44,26 @@ namespace bertini{
 	}
 
 	void StraightLineProgram::precision(unsigned new_precision) const{
+		if (new_precision==DoublePrecision()){
+			// nothing
+		}
+		else{
+			auto& mem = std::get<std::vector<mpfr_complex>>(memory_);
+
+
+
+			for (auto& p: true_values_of_numbers_)
+			{
+				auto& n = std::get<Nd>(p);
+				auto& loc = std::get<size_t>(p);
+
+				mem[loc] = n->Eval<mpfr_complex>();
+			}
+
+			for (auto& n : mem)
+				Precision(n, new_precision);
+		}
+
 
 	}
 
@@ -65,7 +85,9 @@ namespace bertini{
 		this->instructions_.push_back(out_loc);
 	}
 
-
+	void StraightLineProgram::AddNumber(Nd num, size_t loc){
+		this->true_values_of_numbers_.push_back(std::pair<Nd,size_t>(num, loc));
+	}
 
 
 
@@ -86,16 +108,18 @@ namespace bertini{
 		std::cout << "unimplemented visit to node of type Variable" << std::endl;
 	}
 
+
+	// wtb: factor out this pattern
 	void SLPCompiler::Visit(node::Integer const& n){
-		std::cout << "unimplemented visit to node of type Integer" << std::endl;
+		this->DealWithNumber(n); // that sweet template magic.  see slp.hpp for the definition of this template function
 	}
 
 	void SLPCompiler::Visit(node::Float const& n){
-		std::cout << "unimplemented visit to node of type Float" << std::endl;
+		this->DealWithNumber(n);
 	}
 
 	void SLPCompiler::Visit(node::Rational const& n){
-		std::cout << "unimplemented visit to node of type Rational" << std::endl;
+		this->DealWithNumber(n);
 	}
 
 
@@ -109,8 +133,6 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Function const & f){
-		std::cout << "unimplemented visit to node of type Function: " << f << std::endl;
-
 		// put the location of the accepted node into memory, and copy into an output location.
 		auto& n = f.entry_node();
 		size_t location_entry;
