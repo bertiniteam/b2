@@ -21,7 +21,7 @@
 //
 // individual authors of this file include:
 //
-//  Danielle Brake
+//  silviana amethyst
 //  University of Wisconsin - Eau Claire
 //  Fall 2017, Spring 2018
 //
@@ -321,6 +321,8 @@ namespace bertini{
 
 			static RealT __abs__(T const& x){ return abs(x);}
 			
+			static T conj(T const& x){ return conj(x);}
+
 			static std::string __str__(const object& obj)
 			{
 				std::ostringstream oss;

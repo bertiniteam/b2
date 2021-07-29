@@ -39,7 +39,7 @@
 
 
 BOOST_FUSION_ADAPT_ADT(
-		    bertini::complex,
+		    bertini::mpfr_complex,
 		    (obj.real(), obj.real(val))
 		    (obj.imag(), obj.imag(val)))
 

@@ -21,10 +21,10 @@
 
 #  individual authors of this file include:
 #
-#   Dani Brake
+#   silviana amethyst
 #   University of Notre Dame
 #
-#  Danielle Brake
+#  silviana amethyst
 #  UWEC
 #  Spring 2018
 #

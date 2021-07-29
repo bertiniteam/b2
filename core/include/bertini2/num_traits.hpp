@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with num_traits.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 /**
 \file num_traits.hpp 
@@ -37,16 +37,11 @@ The bertini::NumTraits struct provides NumDigits and NumFuzzyDigits functions.
 #include <complex>
 #include <cmath>
 #include "bertini2/mpfr_complex.hpp"
-#include "bertini2/mpfr_extensions.hpp"
-
+#include "bertini2/random.hpp"
 
 
 namespace bertini
 {
-
-	using dbl = std::complex<double>;
-	using mpfr = bertini::complex;
-
 	template<typename T>
 	T RandomUnit();
 
@@ -80,12 +75,18 @@ namespace bertini
 			return boost::lexical_cast<double>(s);
 		}
 
+		inline static
+		double FromRational(mpq_rational const& n, unsigned /* precision */)
+		{
+			return double(n);
+		}
+
 		using Real = double;
-		using Complex = dbl;
+		using Complex = dbl_complex;
 	};
 
 
-	template <> struct NumTraits<std::complex<double> > 
+	template <> struct NumTraits<dbl_complex > 
 	{
 		inline static unsigned NumDigits()
 		{
@@ -98,19 +99,25 @@ namespace bertini
 		}
 
 		inline static 
-		std::complex<double> FromString(std::string const& s)
+		dbl_complex FromString(std::string const& s)
 		{
-			return boost::lexical_cast<std::complex<double>>(s);
+			return boost::lexical_cast<dbl_complex>(s);
 		}
 
 		inline static 
-		std::complex<double> FromString(std::string const& s, std::string const& t)
+		dbl_complex FromString(std::string const& s, std::string const& t)
 		{
-			return std::complex<double>(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
+			return dbl_complex(boost::lexical_cast<double>(s),boost::lexical_cast<double>(t));
+		}
+
+		inline static
+		dbl_complex FromRational(mpq_rational const& n, unsigned /* precision */)
+		{
+			return dbl_complex(static_cast<double>(n),0);
 		}
 
 		using Real = double;
-		using Complex = dbl;
+		using Complex = dbl_complex;
 	};
 
 
@@ -169,7 +176,7 @@ namespace bertini
 	For complex doubles, this is trivially 16.
 	*/
 	inline
-	unsigned Precision(std::complex<double>)
+	unsigned Precision(dbl_complex)
 	{
 		return DoublePrecision();
 	}
@@ -178,7 +185,7 @@ namespace bertini
 	For complex doubles, throw if the requested precision is not DoublePrecision.
 	*/
 	inline
-	void Precision(std::complex<double>, unsigned prec)
+	void Precision(dbl_complex, unsigned prec)
 	{
 		if (prec!=DoublePrecision())
 		{
@@ -189,30 +196,30 @@ namespace bertini
 	}
 
 	inline
-	std::complex<double> rand_complex()
+	dbl_complex rand_complex()
 	{
 		using std::abs;
 		using std::sqrt;
 		static std::default_random_engine generator;
 		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		std::complex<double> returnme(distribution(generator), distribution(generator));
+		dbl_complex returnme(distribution(generator), distribution(generator));
 		return returnme / sqrt( abs(returnme));
 	}
 
 	template <> inline
-	std::complex<double> RandomUnit<std::complex<double> >()
+	dbl_complex RandomUnit<dbl_complex >()
 	{
 		static std::default_random_engine generator;
 		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		std::complex<double> returnme(distribution(generator), distribution(generator));
+		dbl_complex returnme(distribution(generator), distribution(generator));
 		return returnme / abs(returnme);
 	}
 
 	template <> 
 	inline 
-	bertini::complex RandomUnit<bertini::complex>()
+	mpfr_complex RandomUnit<mpfr_complex>()
 	{
-		return bertini::complex::RandomUnit();
+		return multiprecision::RandomUnit();
 	}
 }// re: namespace bertini
 
@@ -256,13 +263,19 @@ namespace bertini {
 			return mpfr_float(s);
 		}
 
+		inline static
+		mpfr_float FromRational(mpq_rational const& n, unsigned precision)
+		{
+			return mpfr_float(n,precision);
+		}
+
 		using Real = mpfr_float;
-		using Complex = mpfr;
+		using Complex = mpfr_complex;
 	};	
 
 
 
-	template <> struct NumTraits<bertini::complex> 
+	template <> struct NumTraits<mpfr_complex> 
 	{
 		inline static unsigned NumDigits()
 		{
@@ -270,19 +283,25 @@ namespace bertini {
 		}
 
 		inline static 
-		bertini::complex FromString(std::string const& s)
+		mpfr_complex FromString(std::string const& s)
 		{
-			return bertini::complex(s);
+			return mpfr_complex(s);
 		}
 
 		inline static 
-		bertini::complex FromString(std::string const& s, std::string const& t)
+		mpfr_complex FromString(std::string const& s, std::string const& t)
 		{
-			return bertini::complex(s,t);
+			return mpfr_complex(s,t);
+		}
+
+		inline static
+		mpfr_complex FromRational(mpq_rational const& n, unsigned precision)
+		{
+			return mpfr_complex(n,0,precision);
 		}
 
 		using Real = mpfr_float;
-		using Complex = mpfr;
+		using Complex = mpfr_complex;
 	};
 
 	template <> struct NumTraits<mpq_rational> 

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with system.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 /**
 \file system.hpp 
@@ -50,8 +50,6 @@
 
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system/patch.hpp"
-
-#include "bertini2/limbo.hpp"
 
 
 #include <boost/archive/binary_oarchive.hpp>
@@ -139,7 +137,7 @@ namespace bertini {
 		/**
 		Change the precision of the entire system's functions, subfunctions, and all other nodes.
 
-		\param new_precision The new precision, in digits, to work in.  This only affects the mpfr types, not double.  To use low-precision (doubles), use that number type in the templated functions.
+		\param new_precision The new precision, in digits, to work in.  This only affects the mpfr_complex types, not double.  To use low-precision (doubles), use that number type in the templated functions.
 		*/
 		void precision(unsigned new_precision) const;
 
@@ -279,7 +277,7 @@ namespace bertini {
 		 
 		 
 		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
 		template<typename Derived, typename OtherDerived>
@@ -311,7 +309,7 @@ namespace bertini {
 
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		\param variable_values The values of the variables, for the evaluation.
 		*/
 		template<typename Derived>
@@ -341,7 +339,7 @@ namespace bertini {
 		 Evaluate the system, provided a path variable is defined for the system, in place.
 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
@@ -379,7 +377,7 @@ namespace bertini {
 		 Evaluate the system, provided a path variable is defined for the system.
 
 		 \throws std::runtime_error, if a path variable is NOT defined, and you passed it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
@@ -408,7 +406,7 @@ namespace bertini {
 		/**
 		 \brief Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
 
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		*/
 		template<typename Derived>
 		void JacobianInPlace(Eigen::MatrixBase<Derived> & J) const
@@ -458,7 +456,7 @@ namespace bertini {
 		/**
 		Evaluate the Jacobian matrix of the system, using the previous space and time values.
 
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		*/
 		template<typename T>
 		Mat<T> Jacobian() const
@@ -477,7 +475,7 @@ namespace bertini {
 		 Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 		 
 		 \throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
@@ -506,7 +504,7 @@ namespace bertini {
 		Evaluate the Jacobian matrix of the system, provided the system has no path variable defined.
 
 		\throws std::runtime_error, if a path variable IS defined, but you didn't pass it a value.  Also throws if the number of variables doesn't match.
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		
 		\param variable_values The values of the variables, for the evaluation.
 		*/
@@ -536,7 +534,7 @@ namespace bertini {
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 */
 		template<typename Derived, typename OtherDerived, typename T>
 		void JacobianInPlace(Eigen::MatrixBase<Derived> & J, const Eigen::MatrixBase<OtherDerived> & variable_values, const T & path_variable_value) const
@@ -569,7 +567,7 @@ namespace bertini {
 		 \param variable_values The values of the variables, for the evaluation.
 		 \param path_variable_value The current value of the path variable.
 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 */
 		template<typename Derived, typename T>
 		Mat<T> Jacobian(const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
@@ -608,7 +606,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename OtherDerived, typename T>
@@ -635,7 +633,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename T>
@@ -677,7 +675,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename Derived, typename T>
@@ -743,7 +741,7 @@ namespace bertini {
 		
 		If \f$S\f$ is the system, and \f$t\f$ is the path variable this computes \f$\frac{dS}{dt}\f$.
 
-		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
 		template<typename T>
@@ -872,7 +870,7 @@ namespace bertini {
 		/**
 		 Set the values of the variables to be equal to the input values
 
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 \throws std::runtime_error if the number of variables doesn't match.
 
 		 The ordering of the variables matters.  
@@ -918,7 +916,7 @@ namespace bertini {
 		 Set the current value of the path variable.
 		
 		 \throws std::runtime_error, if a path variable is not defined.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 
 		 \param new_value The new updated values for the path variable.
 		 */
@@ -951,7 +949,7 @@ namespace bertini {
 
 		/**
 		 For a system with implicitly defined parameters, set their values.  The values are determined externally to the system, and are tracked along with the variables.
-		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 \param new_values The new updated values for the implicit parameters.
 		 */
 		template<typename T>
@@ -1172,7 +1170,7 @@ namespace bertini {
 		/**
 		\brief Dehomogenize a point, using the variable grouping / structure of the system.
 		
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 
 		\throws std::runtime_error, if there is a mismatch between the number of variables in the input point, and the total number of var
 		*/
@@ -1489,7 +1487,7 @@ namespace bertini {
 		/**
 		\brief Dehomogenize a point according to the FIFO variable ordering.
 	
-		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr=bertini::complex.
+		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 
 		\see FIFOVariableOrdering
 		*/
@@ -1588,7 +1586,7 @@ namespace bertini {
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
-		mutable std::tuple< Vec<dbl>, Vec<mpfr> > current_variable_values_;
+		mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > current_variable_values_;
 
 		mutable VariableGroup variable_ordering_; ///< The assembled ordering of the variables in the system.
 		mutable bool have_ordering_ = false;

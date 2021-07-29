@@ -13,12 +13,13 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/blackbox/global_configs.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2017 by Bertini2 Development Team
+// Copyright(C) 2017-2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
-
+//
+// silviana amethyst, university of wisconsin-eau claire
 
 /**
 \file bertini2/blackbox/global_configs.hpp 
@@ -65,7 +66,7 @@ struct Configs
 
 
 struct Defaults : 
-detail::Configured<Configs::All<bertini::dbl>, Configs::All<bertini::mpfr>>
+detail::Configured<Configs::All<bertini::dbl>, Configs::All<bertini::mpfr_complex>>
 {
 
 

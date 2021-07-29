@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with cauchy_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -107,7 +107,7 @@ Vec<ComplexT> result;
 //4. Track all points to 0.1
 for (unsigned ii = 0; ii < TD_start_sys.NumStartPoints(); ++ii)
 {
-    mpfr_float::default_precision(ambient_precision);
+    DefaultPrecision(ambient_precision);
     my_homotopy.precision(ambient_precision); // making sure our precision is all set up 
     auto start_point = TD_start_sys.StartPoint<ComplexT>(ii);
 
@@ -244,7 +244,7 @@ public:
 	\brief Setter for the space values for the power series approximation of the Cauchy endgame. 
 	*/
 	template<typename CT>
-	void SetPSEGSamples(SampCont<CT> pseg_samples_to_set) { std::get<SampCont<CT> >(pseg_samples_) = pseg_samples_to_set;}
+	void SetPSEGSamples(SampCont<CT> const& pseg_samples_to_set) { std::get<SampCont<CT> >(pseg_samples_) = pseg_samples_to_set;}
 
 	/**
 	\brief Getter for the space values for the power series approximation of the Cauchy endgame. 
@@ -259,7 +259,7 @@ public:
 	\brief Setter for the space values for the Cauchy endgame. 
 	*/
 	template<typename CT>
-	void SetCauchySamples(SampCont<CT> cauchy_samples_to_set) 
+	void SetCauchySamples(SampCont<CT> const& cauchy_samples_to_set) 
 	{ 
 		std::get<SampCont<CT> >(cauchy_samples_) = cauchy_samples_to_set;
 	}
@@ -282,7 +282,7 @@ public:
 	\brief Setter for the time values for the Cauchy endgame. 
 	*/
 	template<typename CT>
-	void SetCauchyTimes(TimeCont<CT> cauchy_times_to_set) 
+	void SetCauchyTimes(TimeCont<CT> const& cauchy_times_to_set) 
 	{ 
 		std::get<TimeCont<CT> >(cauchy_times_) = cauchy_times_to_set;
 	}
@@ -390,9 +390,13 @@ public:
 
 			//set up the time value for the next sample. 
 			using std::polar;
+
+#ifndef USE_BMP_COMPLEX 
 			using bertini::polar;
+#endif
 
 			//Generalized since we could have a nonzero target time. 
+			using std::arg;
 			RT radius = abs(starting_time - target_time), angle = arg(starting_time - target_time); // generalized for nonzero target_time.
 
 			auto next_sample = Vec<CT>(num_vars);
@@ -939,7 +943,7 @@ public:
 		result = Vec<CT>::Zero(this->GetSystem().NumVariables());
 		for(unsigned int ii = 0; ii < total_num_pts; ++ii)
 			result += cau_samples[ii];
-		result /= static_cast<RT>(this->CycleNumber() * this->EndgameSettings().num_sample_points);
+		result /= this->CycleNumber() * this->EndgameSettings().num_sample_points;
 
 		return SuccessCode::Success;
 
@@ -1020,7 +1024,10 @@ public:
 		Vec<CT> next_sample;
 		auto time_advance_success = this->GetTracker().TrackPath(next_sample,current_time, next_time, current_sample);
 		if (time_advance_success != SuccessCode::Success)
+		{
+			NotifyObservers(EndgameFailure<EmitterType>(*this));
 			return time_advance_success;
+		}
 
 		this->EnsureAtPrecision(next_time,Precision(next_sample));
 		RotateOntoPS(next_time, next_sample);
@@ -1124,9 +1131,9 @@ public:
 			prev_approx = latest_approx;
 			norm_of_dehom_prev = norm_of_dehom_latest;
 
-			auto advance_code = AdvanceTime<CT>(target_time);
-			if (advance_code != SuccessCode::Success)
-				return advance_code;
+			auto advance_success = AdvanceTime<CT>(target_time);
+			if (advance_success != SuccessCode::Success)
+				return advance_success; 
 
 			// then compute the next set of cauchy samples used for extrapolating the point at target time
 			auto cauchy_samples_success = ComputeCauchySamples(target_time);

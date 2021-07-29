@@ -13,24 +13,18 @@
 //You should have received a copy of the GNU General Public License
 //along with is_template_parameter.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// Dani Brake
-// University of Notre Dame
+// silviana amethyst, university of wisconsin-eau claire
 //
 
 //  detail/is_template_parameter.hpp
-//
-//  copyright 2016
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring 2016
+
 
 /**
 \file detail/is_template_parameter.hpp

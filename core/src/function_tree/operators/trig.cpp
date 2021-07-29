@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with trig.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Jeb Collins, West Texas A&M
 
 
@@ -71,15 +71,15 @@ namespace node{
 		return sin(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr SinOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	mpfr_complex SinOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
-		return sin(child_->Eval<mpfr>(diff_variable));
+		return sin(child_->Eval<mpfr_complex>(diff_variable));
 	}
 	
 	
-	void SinOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	void SinOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 	{
-		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 		evaluation_value = sin(evaluation_value);
 	}
 	
@@ -117,15 +117,15 @@ namespace node{
 		return asin(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr ArcSinOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	mpfr_complex ArcSinOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
-		return asin(child_->Eval<mpfr>(diff_variable));
+		return asin(child_->Eval<mpfr_complex>(diff_variable));
 	}
 
 	
-	void ArcSinOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	void ArcSinOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 	{
-		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 		evaluation_value = asin(evaluation_value);
 	}
 	
@@ -161,15 +161,15 @@ namespace node{
 		return cos(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr CosOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	mpfr_complex CosOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
-		return cos(child_->Eval<mpfr>(diff_variable));
+		return cos(child_->Eval<mpfr_complex>(diff_variable));
 	}
 	
 	
-	void CosOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	void CosOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 	{
-		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 		evaluation_value = cos(evaluation_value);
 	}
 	
@@ -208,15 +208,15 @@ namespace node{
 		return acos(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr ArcCosOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	mpfr_complex ArcCosOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
-		return acos(child_->Eval<mpfr>(diff_variable));
+		return acos(child_->Eval<mpfr_complex>(diff_variable));
 	}
 	
 	
-	void ArcCosOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	void ArcCosOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 	{
-		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 		evaluation_value = acos(evaluation_value);
 	}
 	
@@ -253,15 +253,15 @@ namespace node{
 		return tan(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr TanOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	mpfr_complex TanOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
-		return tan(child_->Eval<mpfr>(diff_variable));
+		return tan(child_->Eval<mpfr_complex>(diff_variable));
 	}
 	
 	
-	void TanOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	void TanOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 	{
-		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 		evaluation_value = tan(evaluation_value);
 	}
 	
@@ -299,15 +299,15 @@ namespace node{
 		return atan(child_->Eval<dbl>(diff_variable));
 	}
 	
-	mpfr ArcTanOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+	mpfr_complex ArcTanOperator::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 	{
-		return atan(child_->Eval<mpfr>(diff_variable));
+		return atan(child_->Eval<mpfr_complex>(diff_variable));
 	}
 	
 	
-	void ArcTanOperator::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+	void ArcTanOperator::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 	{
-		child_->EvalInPlace<mpfr>(evaluation_value, diff_variable);
+		child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 		evaluation_value = atan(evaluation_value);
 	}
 	

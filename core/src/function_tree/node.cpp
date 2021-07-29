@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with node.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst, university of notre dame
 // Jeb Collins, West Texas A&M
 
 
@@ -79,11 +79,11 @@ namespace node{
 	}
 
 	template void Node::EvalInPlace<dbl>(dbl&, std::shared_ptr<Variable> const&) const;
-	template void Node::EvalInPlace<mpfr>(mpfr&, std::shared_ptr<Variable> const&) const;
+	template void Node::EvalInPlace<mpfr_complex>(mpfr_complex&, std::shared_ptr<Variable> const&) const;
 
 	unsigned Node::precision() const
 	{
-		return std::get<std::pair<mpfr,bool> >(current_value_).first.precision();
+		return std::get<std::pair<mpfr_complex,bool> >(current_value_).first.precision();
 	}
 
 	bool Node::IsPolynomial(std::shared_ptr<Variable> const&v) const
@@ -99,13 +99,13 @@ namespace node{
 	void Node::ResetStoredValues() const
 	{
 		std::get< std::pair<dbl,bool> >(current_value_).second = false;
-		std::get< std::pair<mpfr,bool> >(current_value_).second = false;
+		std::get< std::pair<mpfr_complex,bool> >(current_value_).second = false;
 	}
 
 	Node::Node()
 	{
 		std::get<std::pair<dbl,bool> >(current_value_).second = false;
-		std::get<std::pair<mpfr,bool> >(current_value_).second = false;
+		std::get<std::pair<mpfr_complex,bool> >(current_value_).second = false;
 	}
 } // namespace node
 } // namespace bertini

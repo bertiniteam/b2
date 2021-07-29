@@ -25,7 +25,7 @@
 //  West Texas A&M University
 //  Spring 2016
 //
-//  Danielle Brake
+//  silviana amethyst
 //  UWEC
 //  Spring 2018
 //
@@ -57,7 +57,7 @@ namespace bertini{
 		using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
 		
 		using dbl = std::complex<double>;
-		using mpfr = bertini::complex;
+		using mpfr = bertini::mpfr_complex;
 		
 		
 		

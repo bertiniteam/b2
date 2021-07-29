@@ -3,8 +3,8 @@
 
 
 
-#we're building b2, version 2.0-alpha6, and the corresponding email is dani brake's
-AC_INIT([b2], [2.0-alpha6], [brakeda@uwec.edu],[b2], [http://github.com/bertiniteam/b2])
+#we're building b2, version 2.0-alpha6, and the corresponding email is silviana's
+AC_INIT([b2], [2.0-alpha6], [amethyst@uwec.edu],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
@@ -55,37 +55,26 @@ LT_INIT
 
 
 AC_ARG_ENABLE([forbid_mixed_arithmetic],
-    AS_HELP_STRING([--disable-forbid_mixed_arithmetic], [Disable the forbidding of mixed type arithmetic between built-in floating point types, and fixed or variable multiple precision types (mpfr, etc).  By default, it is forbidden at compile time to mix doubles and multiprecisions.  If you want to be able to multiply a 60-digit mpfr_float by a 16-digit double (and introduce error around the 17th digit of the double), then disable this.  Feels like a double-negative to disable forbiddence, but hey, it's more unsafe to mix doubles and mpfr_floats than it is to speak a double negative.  Have a nice day!]))
+    AS_HELP_STRING([--enable-forbid_mixed_arithmetic], [Turn on the forbidding of mixed type arithmetic between built-in floating point types, and fixed or variable multiple precision types (mpfr, rationals, etc).  This will make it forbidden at compile time to mix doubles and multiprecisions, and multiprec and rationals.  If you don't want to be able to multiply a 60-digit mpfr_float by a 16-digit double (and introduce error around the 17th digit of the double), then enable this.]),
+    [AC_DEFINE([B2_FORBID_MIXED_ARITHMETIC], [1],[Define if B2_FORBID_MIXED_ARITHMETIC keyword should be used to forbid mixed type arithmetic involving multiprecision numbers.   ])])
 
-AS_IF([test "x$enable_forbid_mixed_arithmetic" != "xno"],[
-  AC_DEFINE([B2_FORBID_MIXED_ARITHMETIC], [1],[Define if B2_FORBID_MIXED_ARITHMETIC keyword should be used to not forbid mixed double-mpfr arithmetic.  ])
-])
+#AS_IF([test "x$enable_forbid_mixed_arithmetic" != "xno"],[
+#  AC_DEFINE([B2_FORBID_MIXED_ARITHMETIC], [1],[Define if B2_FORBID_MIXED_ARITHMETIC keyword should be used to forbid mixed type arithmetic involving multiprecision numbers.   ])
+#])
 
 
-AC_ARG_ENABLE([thread_local],
-    AS_HELP_STRING([--disable-thread_local], [Disable thread_local storage for fast complex multiple-precision arithmetic, and other places.  XCode coming with OSX Mavericks and before do NOT implement this keyword.  Since this keyword provides the thread-safety mechanism for complex arithmetic, disabling thread_local threatens thread safety.  Disable at your own risk.  Moving to a newer OSX and XCode to get `thread_local` is the best solution.]))
 
-AS_IF([test "x$enable_thread_local" != "xno"],[
-	AC_DEFINE([USE_THREAD_LOCAL], [1],[Define if thread_local keyword should be used.  ])
-])
+
+
 
 
 AC_ARG_ENABLE([expression_templates],
     AS_HELP_STRING([--disable-expression_templates], [Disable the use of expression templates, particularly those coming from Boost.Multiprecision.]))
 
 AS_IF([test "x$enable_expression_templates" != "xno"],[
-	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision.])
+	AC_DEFINE([BMP_EXPRESSION_TEMPLATES], [1],[Use expression templates from Boost.Multiprecision; default is enabled.])
 ])
 
-
-AC_ARG_ENABLE([copy_and_swap],
-    AS_HELP_STRING([--enable-copy_and_swap], [Enable the use of copy-and-swap for exception safety of the library.]),
-    [],
-    [enable_copy_and_swap=no])
-
-AS_IF([test "x$enable_copy_and_swap" != "xno"],[
-	AC_DEFINE([BERTINI_ENABLE_COPY_AND_SWAP], [1],[Enable copy-and-swap idiom in fundamental types, for exception safety.])
-])
 
 
 AC_ARG_ENABLE([unity_build],
@@ -117,12 +106,23 @@ AC_SEARCH_LIBS([mpfr_get_version],[mpfr], [],[
   AC_MSG_ERROR([unable to find mpfr])
 ])
 
+AS_IF([test "x$bmp_complex" != "xno"],[
+  #find mpc
+  AC_SEARCH_LIBS([mpc_clear],[mpc], [],[
+    AC_MSG_ERROR([unable to find `libmpc` for complex arithmetic. should have come with mpfr? you need it for bmp_complex.])
+  ])
+])
 
 
 # look for a header file in Eigen, and croak if fail to find.
 AX_EIGEN
 
-AX_BOOST_BASE([1.65],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.65 but it was not found in your system])])
+
+
+AX_BOOST_BASE([1.71],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.71 but it was not found in your system])])
+
+AX_BOOST_MULTIPRECISION
+
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 AX_BOOST_CHRONO

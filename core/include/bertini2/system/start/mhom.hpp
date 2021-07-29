@@ -13,16 +13,15 @@
 //You should have received a copy of the GNU General Public License
 //along with mhom.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
 // Tim Hodges, Colorado State University
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 /**
 \file mhom.hpp 
@@ -33,8 +32,7 @@
 #pragma once
 
 #include "bertini2/system/start_base.hpp"
-#include "bertini2/limbo.hpp"
-
+#include "bertini2/system/start/utility.hpp"
 
 namespace bertini 
 {
@@ -113,7 +111,7 @@ namespace bertini
 
 			Called by the base StartSystem's StartPoint(index) method.
 			*/
-			Vec<mpfr> GenerateStartPoint(mpfr,unsigned long long index) const override;
+			Vec<mpfr_complex> GenerateStartPoint(mpfr_complex,unsigned long long index) const override;
 			
 			/**
 			 A local version of GenerateStartPoint that can be templated
@@ -129,7 +127,7 @@ namespace bertini
 			Mat<std::shared_ptr<node::LinearProduct>> linprod_matrix_; ///< All the linear products for each entry in the degree matrix.
 			std::vector< std::vector<size_t> > variable_cols_; ///< The columns associated with each variable.  The first index is the variable group, the second index is the particular variable in the group.
 
-			mutable Vec<mpfr> temp_v_mp_;
+			mutable Vec<mpfr_complex> temp_v_mp_;
 
 			friend class boost::serialization::access;
 

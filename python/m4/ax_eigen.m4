@@ -10,7 +10,7 @@
 #
 # LICENSE
 #
-#   Copyright Dani Brake 2016
+#   Copyright Silviana Amethyst 2016-2018
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice
@@ -40,7 +40,8 @@ AC_ARG_WITH([eigen],
 
 
 if test "x$want_eigen" = "xyes"; then
-    
+    AC_SUBST(EIGEN_CPPFLAGS)
+
     CPPFLAGS_SAVED="$CPPFLAGS"
 
     AC_REQUIRE([AC_PROG_CXX])
@@ -65,6 +66,10 @@ if test "x$want_eigen" = "xyes"; then
                 EIGEN_CPPFLAGS="-I$ac_eigen_path_tmp/include/eigen3"
                 found_eigen_dir=yes;
                 break;
+            elif test -d "$ac_eigen_path_tmp/include/Eigen"; then
+                EIGEN_CPPFLAGS="-I$ac_eigen_path_tmp/include"
+                found_eigen_dir=yes;
+                break;
             fi
         done
     fi
@@ -78,7 +83,9 @@ if test "x$want_eigen" = "xyes"; then
     AC_CHECK_HEADERS([Eigen/Dense],
         [
         succeeded=yes;
+        CPPFLAGS="$CPPFLAGS_SAVED";
         export CPPFLAGS;
+        export EIGEN_CPPFLAGS;
         ],
         [
         CPPFLAGS="$CPPFLAGS_SAVED";

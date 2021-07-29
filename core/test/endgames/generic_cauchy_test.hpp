@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with generic_cauchy_test.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 /**
@@ -45,7 +45,7 @@ using VariableGroup = bertini::VariableGroup;
 
 
 using dbl = bertini::dbl;
-using mpfr = bertini::complex;
+using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 
 	bertini::TimeCont<BCT> pseg_times;
 	bertini::SampCont<BCT> pseg_samples;
-	bertini::TimeCont<BCT> c_over_k_array;
+	bertini::TimeCont<BRT> c_over_k_array;
 
 	BCT time;
 	Vec<BCT> sample(1);
@@ -1787,8 +1787,10 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 		auto init_prec = Precision(s(0));
 		DefaultPrecision(init_prec);
 		final_griewank_osborn_system.precision(init_prec);
+		BCT time_at_correct_prec = t_endgame_boundary;
+		Precision(time_at_correct_prec,init_prec);
 
-		SuccessCode endgame_success = my_endgame.Run(BCT(t_endgame_boundary),s);
+		SuccessCode endgame_success = my_endgame.Run(time_at_correct_prec,s);
 
 // i took this check out jan 27, 2018.  the tracker's precision literally cannot be adjusted as currently written.  hence, there's no way to correct a failing test like this.  i do hope there isn't something nasty lurking about causing it to fail, but causing other problems as well.  i guess it would be nice if the tracker came back in the same precision as the endgame result, but ... do i really care?  if i did, i would have to add a ChangePrecision(p) method to all flavors of trackers, but that's not really what they do...  they're a tool, and adjust precision according to the input they receive, just like the endgames, and other things.
 		// BOOST_CHECK_EQUAL(Precision(my_endgame.FinalApproximation<BCT>()), tracker.CurrentPrecision());

@@ -10,7 +10,8 @@ system_header_files = \
 	include/bertini2/system/system.hpp \
 	include/bertini2/system/start/total_degree.hpp \
 	include/bertini2/system/start/mhom.hpp \
-	include/bertini2/system/start/user.hpp
+	include/bertini2/system/start/user.hpp \
+	include/bertini2/system/start/utility.hpp
 
 
 system_source_files = \
@@ -41,7 +42,8 @@ systeminclude_HEADERS = \
 	include/bertini2/system/start_systems.hpp \
 	include/bertini2/system/system.hpp \
 	include/bertini2/system/start/mhom.hpp \
-	include/bertini2/system/start/user.hpp
+	include/bertini2/system/start/user.hpp \
+	include/bertini2/system/start/utility.hpp
 	
 	
 	
@@ -51,7 +53,8 @@ startincludedir = $(includedir)/bertini2/system/start/
 startinclude_HEADERS = \
 	include/bertini2/system/start/total_degree.hpp \
 	include/bertini2/system/start/mhom.hpp \
-	include/bertini2/system/start/user.hpp
+	include/bertini2/system/start/user.hpp \
+	include/bertini2/system/start/utility.hpp
 
 
 

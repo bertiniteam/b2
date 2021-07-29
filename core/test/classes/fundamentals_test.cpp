@@ -13,27 +13,26 @@
 //You should have received a copy of the GNU General Public License
 //along with fundamentals_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 
 #include <boost/test/unit_test.hpp>
 #include <boost/multiprecision/mpfr.hpp>
-#include <boost/multiprecision/random.hpp>
+
 #include <iostream>
 
-#include "bertini2/limbo.hpp"
+#include "bertini2/double_extensions.hpp"
 #include "bertini2/num_traits.hpp"
 
-#include <boost/random.hpp>
 
-#include "bertini2/double_extensions.hpp"
+
 
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
@@ -42,6 +41,8 @@ using mpq_rational = bertini::mpq_rational;
 using dbl = bertini::dbl;
 using bertini::DefaultPrecision;
 #include <limits>
+
+
 
 BOOST_AUTO_TEST_CASE(complex_pow)
 {
@@ -190,6 +191,8 @@ BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_doub_exp)
 {
 	DefaultPrecision(50);
 
+using boost::multiprecision::pow;
+
 	mpfr_float result = pow(mpfr_float(10), -5);
 	mpfr_float expected("1e-5");
 
@@ -273,7 +276,7 @@ BOOST_AUTO_TEST_CASE(RandomMP_nondefault_precision_100)
 	DefaultPrecision(100);
 	mpfr_float a;
 
-	RandomMp(a,500);
+	RandomMpAssign(a,500);
 
 	BOOST_CHECK_EQUAL(a.precision(), 500);
 	BOOST_CHECK_EQUAL(100, DefaultPrecision());
@@ -293,16 +296,22 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
 
+// https://github.com/boostorg/multiprecision/issues/60
+// 
+// "Copying or move-assignment copies the precision of the source.
+// Assignment keeps the precision of the target."
+
 	DefaultPrecision(30);
 	mpfr_float y = pow(x,2);
-	BOOST_CHECK_EQUAL(y.precision(), 30);
+	BOOST_CHECK_EQUAL(y.precision(), 50);
 	
 
 	mpfr_float z = x;
-	BOOST_CHECK_EQUAL(z.precision(), 30);
+	mpfr_float q(x);
+	BOOST_CHECK_EQUAL(z.precision(), 50);
+	BOOST_CHECK_EQUAL(q.precision(), 50);
 
-	BOOST_CHECK(fabs(z - mpfr_float("0.012345678901234567890123456789")) < 1e-30);
-
+	BOOST_CHECK(fabs(z - x) < 1e-50);
 
 
 	DefaultPrecision(70);
@@ -310,7 +319,7 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	z = x;
 
 	BOOST_CHECK_EQUAL(z.precision(),50);
-	BOOST_CHECK(fabs(z - mpfr_float("0.01234567890123456789012345678901234567890123456789")) < 1e-50);
+	BOOST_CHECK(fabs(z - x) < 1e-50);
 
 
 	y.precision(70);
@@ -322,9 +331,60 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 
 	y = z*x;
 
-	// y is of precision 70 because it's a pre-existing variable.
-	BOOST_CHECK_EQUAL(y.precision(), 70);
+	// y is of precision 50, because the max of the precision
+	// of x and z is 50.  Even though y had precision 70
+	// before the assignment, it overrode the precision 
+	// of y.
+	BOOST_CHECK_EQUAL(y.precision(), 50);
 }
+
+
+BOOST_AUTO_TEST_CASE(precision_in_construction)
+{
+	DefaultPrecision(50);
+
+	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
+	BOOST_CHECK_EQUAL(x.precision(), 50);
+
+	DefaultPrecision(30);
+	
+	mpfr_float a = x;
+	mpfr_float b(x);
+	BOOST_CHECK_EQUAL(a.precision(), 50);
+	BOOST_CHECK_EQUAL(b.precision(), 50);
+	BOOST_CHECK_EQUAL(a,x);
+	BOOST_CHECK_EQUAL(b,x);
+
+	DefaultPrecision(70);
+
+	mpfr_float c = x;
+	mpfr_float d(x);
+	BOOST_CHECK_EQUAL(c.precision(), 50);
+	BOOST_CHECK_EQUAL(d.precision(), 50);
+	BOOST_CHECK_EQUAL(c,x);
+	BOOST_CHECK_EQUAL(d,x);
+}
+
+
+BOOST_AUTO_TEST_CASE(precision_through_arithemetic2)
+{
+	DefaultPrecision(50);
+	mpfr_float a(1);
+
+	DefaultPrecision(400);
+	mpfr_float b(2);
+
+	DefaultPrecision(600);
+	mpfr_float c(3);
+
+	a = b;
+	BOOST_CHECK_EQUAL(a.precision(),400); // the precision of source
+
+	a = b+c;
+	BOOST_CHECK_EQUAL(a.precision(),600); // the bigger of 400,600 is 600
+}
+
+
 
 BOOST_AUTO_TEST_CASE(precision_mpfr_constructed_from_string)
 {
@@ -332,70 +392,6 @@ BOOST_AUTO_TEST_CASE(precision_mpfr_constructed_from_string)
 	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(),30);
 }
-
-	
-BOOST_AUTO_TEST_CASE(index_and_subscript_generation1)
-{
-
-	std::vector<size_t> dimensions{2,2};
-	std::vector<size_t> v;
-
-	std::vector<size_t> solution{0,0};
-	v = bertini::IndexToSubscript(0ul,dimensions);
-	BOOST_CHECK(v==solution);
-
-	solution[0] = 1; solution[1] = 0;
-	v = bertini::IndexToSubscript(1ul,dimensions);
-	BOOST_CHECK(v==solution);
-
-	solution[0] = 0; solution[1] = 1;
-	v = bertini::IndexToSubscript(2ul,dimensions);
-	BOOST_CHECK(v==solution);
-
-	solution[0] = 1; solution[1] = 1;
-	v = bertini::IndexToSubscript(3ul,dimensions);
-	BOOST_CHECK(v==solution);
-
-}
-
-
-
-BOOST_AUTO_TEST_CASE(index_and_subscript_generation2)
-{
-
-	size_t index = 20;
-
-	std::vector<size_t> dimensions{2,3,4,5};
-
-	std::vector<size_t> v = bertini::IndexToSubscript(index,dimensions);
-
-	std::vector<size_t> solution{0,1,3,0};
-	BOOST_CHECK(v==solution);
-}
-
-BOOST_AUTO_TEST_CASE(index_and_subscript_generation3)
-{
-
-	size_t index = 119;
-
-	std::vector<size_t> dimensions{2,3,4,5};
-
-	std::vector<size_t> v = bertini::IndexToSubscript(index,dimensions);
-
-	std::vector<size_t> solution{1,2,3,4};
-	BOOST_CHECK(v==solution);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(index_and_subscript_generation_out_of_range)
-{
-
-
-	std::vector<size_t> dimensions{2,3,4,5};
-	BOOST_CHECK_THROW(bertini::IndexToSubscript(120ul,dimensions),std::out_of_range);
-}
-
 
 
 BOOST_AUTO_TEST_CASE(precision_of_double_is_16)
@@ -468,7 +464,7 @@ BOOST_AUTO_TEST_CASE(num_digits_mpfr_float)
 
 BOOST_AUTO_TEST_CASE(num_digits_mpfr_complex)
 {
-	using T = bertini::mpfr;
+	using T = bertini::mpfr_complex;
 	
 	DefaultPrecision(16);
 	BOOST_CHECK_EQUAL(NumTraits<T>::NumDigits(), 16);

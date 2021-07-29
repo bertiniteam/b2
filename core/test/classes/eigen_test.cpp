@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with eigen_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 
 
@@ -173,12 +173,12 @@ using bertini::KahanMatrix;
 		
 		srand(2);  rand();
 		
-		Eigen::Matrix<bertini::complex, Eigen::Dynamic, Eigen::Dynamic> A =
-		KahanMatrix(size, bertini::complex("0.285","0.0")), B(size,size), C;
+		Eigen::Matrix<bertini::mpfr_complex, Eigen::Dynamic, Eigen::Dynamic> A =
+		KahanMatrix(size, bertini::mpfr_complex("0.285","0.0")), B(size,size), C;
 		
 		for (int ii=0; ii<size; ii++)
 			for (int jj=0; jj<size; jj++)
-				jj!=ii? B(ii,jj) = bertini::complex( bertini::complex(-1)/bertini::complex(ii+1) + bertini::complex(rand()) / bertini::complex(RAND_MAX)) : B(ii,jj) = bertini::complex(0);
+				jj!=ii? B(ii,jj) = bertini::mpfr_complex( bertini::mpfr_complex(-1)/bertini::mpfr_complex(ii+1) + bertini::mpfr_complex(rand()) / bertini::mpfr_complex(RAND_MAX)) : B(ii,jj) = bertini::mpfr_complex(0);
 		
 		C = A.lu().solve(B);
 	}
@@ -257,28 +257,28 @@ using bertini::KahanMatrix;
 	BOOST_AUTO_TEST_CASE(small_value_multiprecision)
 	{
 
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(30);
 
-		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
+		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(30));
 
-		BOOST_CHECK( bertini::IsSmallValue(bertini::complex(p,mpfr_float(0))));
-		BOOST_CHECK( bertini::IsSmallValue(bertini::complex(-p,mpfr_float(0))));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(1e-15,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(1e-14,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(1e-10,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(1e2,0.0)));
+		BOOST_CHECK( bertini::IsSmallValue(bertini::mpfr_complex(p,mpfr_float(0))));
+		BOOST_CHECK( bertini::IsSmallValue(bertini::mpfr_complex(-p,mpfr_float(0))));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::mpfr_complex(1e-15,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::mpfr_complex(1e-14,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::mpfr_complex(1e-10,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::mpfr_complex(1e2,0.0)));
 
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(-1e-15,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(-1e-14,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(-1e-10,0.0)));
-		BOOST_CHECK(!bertini::IsSmallValue(bertini::complex(-1e2,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::mpfr_complex(-1e-15,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::mpfr_complex(-1e-14,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::mpfr_complex(-1e-10,0.0)));
+		BOOST_CHECK(!bertini::IsSmallValue(bertini::mpfr_complex(-1e2,0.0)));
 	}
 
 	BOOST_AUTO_TEST_CASE(large_change_multiprecision)
 	{
-		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+		bertini::DefaultPrecision(30);
 
-		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(CLASS_TEST_MPFR_DEFAULT_DIGITS));
+		bertini::mpfr_float p = pow(mpfr_float(10),-mpfr_float(30));
 
 		BOOST_CHECK( bertini::IsLargeChange(mpfr_float(1.0),p));
 
@@ -319,7 +319,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		Eigen::Matrix<data_type, 3, 1> v(data_type(2),data_type(4),data_type(3));
 		Eigen::Matrix<data_type, 3, 1> w(data_type(1),data_type(2),data_type(-1));
@@ -336,7 +336,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
@@ -354,7 +354,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
@@ -370,7 +370,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		data_type q(1);
 		int a(1);
@@ -391,7 +391,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		data_type q(1);
 		long a(1);
@@ -411,7 +411,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		data_type q(1);
 		bertini::mpz_int a(1);
@@ -450,7 +450,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
@@ -465,7 +465,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		data_type q(1);
 		int a(1);
@@ -483,7 +483,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		data_type q(1);
 		long a(1);
@@ -498,7 +498,7 @@ using bertini::KahanMatrix;
 	{
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		data_type q(1);
 		bertini::mpz_int a(1);
@@ -528,7 +528,7 @@ using bertini::KahanMatrix;
 		bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 		using bertini::Precision;
-		using data_type = bertini::mpfr;
+		using data_type = bertini::mpfr_complex;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
@@ -536,6 +536,55 @@ using bertini::KahanMatrix;
 		Precision(A,100);
 		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
 	}
+
+
+
+	BOOST_AUTO_TEST_CASE(change_precision_mpfr_complex2)
+	{
+		bertini::DefaultPrecision(50);
+
+		using bertini::Precision;
+		using data_type = bertini::mpfr_complex;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+
+		Precision(A,100);
+		BOOST_CHECK_EQUAL(A(0,0).precision(),100);
+
+		auto new_prec = 50-10;
+
+		bertini::DefaultPrecision(new_prec);
+		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> B(2,2);
+		
+		B = A; // assignment preserves precision of source
+		BOOST_CHECK((A-B).norm() < 1e-38);
+		BOOST_CHECK_EQUAL(Precision(B),100);
+
+	} 
+
+	BOOST_AUTO_TEST_CASE(copy_matrix)
+	{
+		bertini::DefaultPrecision(50);
+
+		using bertini::Precision;
+		using data_type = bertini::mpfr_complex;
+		
+		Eigen::Matrix<data_type, Eigen::Dynamic, 1> A(4);
+		A << data_type(2), data_type(1), data_type(1), data_type(2);
+		Precision(A,100);
+		BOOST_CHECK_EQUAL(A(0).precision(),100);
+
+		auto new_prec = 50-10;
+
+		bertini::DefaultPrecision(new_prec);
+		Eigen::Matrix<data_type, Eigen::Dynamic, 1> B(4);
+
+		B = A;
+		BOOST_CHECK((A-B).norm() < 1e-38);
+		BOOST_CHECK_EQUAL(Precision(B),100);
+
+	} 
 
 BOOST_AUTO_TEST_SUITE_END()
 

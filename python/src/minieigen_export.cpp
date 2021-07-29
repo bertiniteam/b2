@@ -25,7 +25,7 @@
 //  West Texas A&M University
 //  Spring 2016
 //
-//  Danielle Brake
+//  silviana amethyst
 //  University of Wisconsin - Eau Claire
 //  Spring 2018
 //
@@ -37,7 +37,8 @@ namespace bertini{
 
 void ExportMinieigen()
 {
-
+	using mpfr = mpfr_complex;
+	
 	scope current_scope;
 	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
 	new_submodule_name.append(".minieigen");

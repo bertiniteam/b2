@@ -20,18 +20,12 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 //  node_serialization.cpp
 //
 //  Created by Collins, James B. on 4/30/15.
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
-//
-// also modified by
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
 
 
 #include <iostream>
@@ -68,7 +62,7 @@ using bertini::MakeVariable;
 using bertini::MakeFloat;
 
 using dbl = bertini::dbl;
-using mpfr = bertini::mpfr;
+using mpfr = bertini::mpfr_complex;
 
 using System = bertini::System;
 

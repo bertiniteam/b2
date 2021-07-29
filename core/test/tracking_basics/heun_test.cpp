@@ -27,7 +27,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/multiprecision/mpfr.hpp>
-#include "limbo.hpp"
 #include "mpfr_complex.hpp"
 
 #include "trackers/ode_predictors.hpp"
@@ -57,7 +56,7 @@ using VariableGroup = bertini::VariableGroup;
 
 
 using dbl = std::complex<double>;
-using mpfr = bertini::complex;
+using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
 
 

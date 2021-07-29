@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with src/function_tree/symbols/differential.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst, university of notre dame
 // Jeb Collins, West Texas A&M
 
 
@@ -102,7 +102,7 @@ bool Differential::IsHomogeneous(VariableGroup const& vars) const
  */
 void Differential::precision(unsigned int prec) const
 {
-	auto& val_pair = std::get< std::pair<mpfr,bool> >(current_value_);
+	auto& val_pair = std::get< std::pair<mpfr_complex,bool> >(current_value_);
 	val_pair.first.precision(prec);
 }
 
@@ -132,27 +132,27 @@ void Differential::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> 
 }
 
 
-mpfr Differential::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Differential::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
 {
 	if(differential_variable_ == diff_variable)
 	{
-		return mpfr(1);
+		return mpfr_complex(1);
 	}
 	else
 	{
-		return mpfr(0);
+		return mpfr_complex(0);
 	}
 }
 
-void Differential::FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Differential::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
 {
 	if(differential_variable_ == diff_variable)
 	{
-		evaluation_value.SetOne();
+		evaluation_value = 1;
 	}
 	else
 	{
-		evaluation_value.SetZero();
+		evaluation_value = 0;
 	}
 }
 	} // re: namespace node

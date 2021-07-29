@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with test/nag_algorithms/witness_set.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2017 by Bertini2 Development Team
+// Copyright(C) 2017-2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,7 +24,7 @@
 */
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst, university of notre dame
 
 #include <boost/test/unit_test.hpp>
 #include "bertini2/nag_datatypes/witness_set.hpp"
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 
 	BOOST_AUTO_TEST_SUITE(default_storage_policy)
 
-		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex>;
+		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::mpfr_complex>;
 
 		BOOST_AUTO_TEST_CASE(make_a_witness_set)
 		{
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			WitnessSet w;
 
-			bertini::Vec<bertini::complex> p;
+			bertini::Vec<bertini::mpfr_complex> p;
 
 			w.AddPoint(p);
 
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			auto sys = bertini::system::Precon::GriewankOsborn();
 
-			bertini::Vec<bertini::complex> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex>> points;
+			bertini::Vec<bertini::mpfr_complex> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<bertini::Vec<bertini::mpfr_complex>> points;
 			for (unsigned ii = 0; ii < 3; ++ii)
 				points.push_back(p);
 
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			auto sys = bertini::system::Precon::Sphere();
 
-			bertini::Vec<bertini::complex> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<bertini::Vec<bertini::complex>> points;
+			bertini::Vec<bertini::mpfr_complex> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<bertini::Vec<bertini::mpfr_complex>> points;
 			for (unsigned ii = 0; ii < 2; ++ii)
 				points.push_back(p);
 
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 
 	BOOST_AUTO_TEST_SUITE(policy_by_reference)
 
-		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::complex, bertini::System, bertini::nag_datatype::policy::Reference>;
+		using WitnessSet = bertini::nag_datatype::WitnessSet<bertini::mpfr_complex, bertini::System, bertini::nag_datatype::policy::Reference>;
 
 
 		// check whether can construct a witness set from a set of points, a slice, and a system
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		{
 			auto sys = bertini::system::Precon::GriewankOsborn();
 
-			bertini::Vec<bertini::complex> p(sys.NumVariables());
-			bertini::nag_datatype::PointCont<std::reference_wrapper<bertini::Vec<bertini::complex>>> points;
+			bertini::Vec<bertini::mpfr_complex> p(sys.NumVariables());
+			bertini::nag_datatype::PointCont<std::reference_wrapper<bertini::Vec<bertini::mpfr_complex>>> points;
 			for (unsigned ii = 0; ii < 3; ++ii)
 				points.push_back(p);
 
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 		using sp = std::shared_ptr<T>;
 
 		using WitnessSet = bertini::nag_datatype::WitnessSet<
-			bertini::complex, 
+			bertini::mpfr_complex, 
 			bertini::System, 
 			bertini::nag_datatype::policy::SharedPtr>;
 
@@ -187,9 +187,9 @@ BOOST_AUTO_TEST_SUITE(witness_set)
 			auto n_vars = sys->NumVariables();
 			const auto vars = sys->VariableGroups()[0];
 
-			nag_datatype::PointCont< sp<Vec<complex>> > points;
+			nag_datatype::PointCont< sp<Vec<mpfr_complex>> > points;
 			for (unsigned ii = 0; ii < 3; ++ii)
-				points.push_back(std::make_shared<Vec<complex>>(n_vars));
+				points.push_back(std::make_shared<Vec<mpfr_complex>>(n_vars));
 
 
 			auto slice = std::make_shared<LinearSlice>(LinearSlice::RandomComplex(vars, 1));

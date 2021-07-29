@@ -20,7 +20,7 @@
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, University of Wisconsin Eau Claire
+// silviana amethyst, University of Wisconsin Eau Claire
 
 /**
 \file bertini2/double_extensions.hpp 
@@ -38,6 +38,9 @@
 
 
 namespace bertini{
+
+	using dbl = std::complex<double>;
+	using dbl_complex = std::complex<double>;
 
 	/**
 	\brief Overload * for unsigned * complex<double>

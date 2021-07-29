@@ -13,12 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with bertini2/io/splash.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
+// individual authors of this file include:
+// silviana amethyst, university of wisconsin-eau claire
 
 /**
 \file bertini2/io/splash.hpp 
@@ -101,7 +103,7 @@ inline
 std::string Owners()
 {
 	std::stringstream ss;
-	ss << "D.J. Bates, D.A. Brake, J.D. Hauenstein,\nA.J. Sommese, C.W. Wampler";
+	ss << "D.J. Bates, S. Amethyst, J.D. Hauenstein,\nA.J. Sommese, C.W. Wampler";
 	return ss.str();
 }
 
@@ -109,7 +111,7 @@ inline
 std::string Authors()
 {
 	std::stringstream ss;
-	ss << "D. Brake, J. Collins, T. Hodges";
+	ss << "S. Amethyst, J. Collins, T. Hodges";
 	return ss.str();
 }
 

@@ -13,25 +13,20 @@
 //You should have received a copy of the GNU General Public License
 //along with patch_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 //  patch_test.cpp
 //
 //  Created by Collins, James B. on 4/30/15.
 //  Copyright (c) 2015 West Texas A&M University. All rights reserved.
-//
-// also modified by
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
+
 
 /**
 \file patch_test.cpp Unit testing for the bertini::Patch class.
@@ -59,7 +54,7 @@ template<typename NumType> using Mat = bertini::Mat<NumType>;
 using Patch = bertini::Patch;
 
 using dbl = bertini::dbl;
-using mpfr = bertini::mpfr;
+using mpfr = bertini::mpfr_complex;
 
 using mpfr_float = bertini::mpfr_float;
 

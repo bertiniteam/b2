@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with b2/test/endgames/interpolation.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2017 by Bertini2 Development Team
+// Copyright(C) 2017-2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -55,20 +55,20 @@ BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 
 BOOST_AUTO_TEST_SUITE(generic_tests_mpfr_16)
-using BaseComplexType = bertini::mpfr;
+using BaseComplexType = bertini::mpfr_complex;
 unsigned ambient_precision = bertini::DoublePrecision();
 #include "test/endgames/generic_interpolation.hpp"
 BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 
 BOOST_AUTO_TEST_SUITE(generic_tests_mpfr_30)
-using BaseComplexType = bertini::mpfr;
+using BaseComplexType = bertini::mpfr_complex;
 unsigned ambient_precision = 30;
 #include "test/endgames/generic_interpolation.hpp"
 BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision
 
 BOOST_AUTO_TEST_SUITE(generic_tests_mpfr_100)
-using BaseComplexType = bertini::mpfr;
+using BaseComplexType = bertini::mpfr_complex;
 unsigned ambient_precision = 100;
 #include "test/endgames/generic_interpolation.hpp"
 BOOST_AUTO_TEST_SUITE_END() // generic tests at some precision

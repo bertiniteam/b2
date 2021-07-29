@@ -23,9 +23,9 @@ extern const bertini::dbl anum_dbl;
 extern const bertini::dbl bnum_dbl;
 extern const bertini::dbl pnum_dbl;
 
-extern bertini::mpfr xnum_mpfr;
-extern bertini::mpfr ynum_mpfr;
-extern bertini::mpfr znum_mpfr;
-extern bertini::mpfr anum_mpfr;
-extern bertini::mpfr bnum_mpfr;
-extern bertini::mpfr pnum_mpfr;
+extern bertini::mpfr_complex xnum_mpfr;
+extern bertini::mpfr_complex ynum_mpfr;
+extern bertini::mpfr_complex znum_mpfr;
+extern bertini::mpfr_complex anum_mpfr;
+extern bertini::mpfr_complex bnum_mpfr;
+extern bertini::mpfr_complex pnum_mpfr;

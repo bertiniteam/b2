@@ -13,19 +13,15 @@
 //You should have received a copy of the GNU General Public License
 //along with classic_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 //
-//  Daniel Brake
-//  University of Notre Dame
-//  ACMS
-//  Spring, Summer 2015
 //
 //
 // classic_test.cpp:  main source file for the classic compatibility testing executable for Bertini2

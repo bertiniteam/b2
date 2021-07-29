@@ -21,7 +21,7 @@
 
 // individual authors of this file include:
 //
-//  Danielle Brake
+//  silviana amethyst
 //  University of Wisconsin - Eau Claire
 //  Fall 2017, Spring 2018
 // 
@@ -252,19 +252,30 @@ namespace bertini{
 			
 			
 			// these complex-specific functions are free in python
-			def("real",&real,return_value_policy<copy_const_reference>());
-			def("imag",&imag,return_value_policy<copy_const_reference>());
+			using boost::multiprecision::real;
+			using boost::multiprecision::imag;
+
+			mpfr_float (*reeeal)(const T&) = &boost::multiprecision::real;
+			mpfr_float (*imaaag)(const T&) = &boost::multiprecision::real;
+			def("real",reeeal); //,return_value_policy<copy_const_reference>()
+			def("imag",imaaag); //,return_value_policy<copy_const_reference>()
 			
 			// and then a few more free functions
-			def("abs2",&T::abs2);
-			def("polar",&polar);
-			def("norm",&T::norm);
-			def("conj",&T::conj);
-			def("arg",&arg);
+			// def("abs2",&T::abs2);
+
+			mpfr_complex (*pooolar)(const mpfr_float&,const mpfr_float&) = &boost::multiprecision::polar;
+
+			def("polar",pooolar);
+			// def("norm",&T::norm);
+
+			def("conj",&ComplexVisitor::conj);
+
+			mpfr_float (*aaaarg)(const T&) = &boost::multiprecision::arg;
+			def("arg",aaaarg);
 			
-			def("square",&square);
-			def("cube",&cube);
-			def("inverse", &inverse);
+			// def("square",&square);
+			// def("cube",&cube);
+			// def("inverse", &inverse);
 
 			def("abs", &ComplexVisitor::__abs__); // free
 		}
@@ -347,7 +358,7 @@ namespace bertini{
 
 		void ExposeFloat()
 		{
-			using T = bmp;
+			using T = mpfr_float;
 
 			class_<T>("Float", init<>())
 			.def(init<std::string>())
@@ -384,7 +395,7 @@ namespace bertini{
 		void ExposeComplex()
 		{
 
-			using T = bertini::complex;
+			using T = bertini::mpfr_complex;
 
 			class_<T>("Complex", init<>())
 			.def(init<double>())

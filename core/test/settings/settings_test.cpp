@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with test/settings/settings_test.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -22,7 +22,7 @@
 //  Created by Collins, James B. on 8/27/15.
 //  Copyright (c) 2015 West Texas A&M University.
 //
-// additionally authored by Dani Brake, University of Notre Dame
+// additionally authored by silviana amethyst, University of Wisconsin - Eau Claire
 
 //TODO: make the DYN_LINK change depending on the targeted architecture.  some need it, others don't.
 //if used, this BOOST_TEST_DYN_LINK appear before #include <boost/test/unit_test.hpp>
@@ -34,14 +34,17 @@
 #define BERTINI_TEST_MODULE "pools"
 
 #include <boost/test/unit_test.hpp>
-#include "test/utility/enable_logging.hpp"
+
 
 #include <iostream>
 
 #include <cstdlib>
 #include <cmath>
 
+#include "bertini2/mpfr_extensions.hpp"
+
 #include "bertini2/bertini.hpp"
+
 #include "bertini2/function_tree.hpp"
 #include <bertini2/io/parsing/settings_parsers.hpp>
 #include <bertini2/io/parsing/classic_utilities.hpp>
@@ -49,8 +52,9 @@
 
 #include <boost/spirit/include/qi.hpp>
 
+#include "test/utility/enable_logging.hpp"
 
-using mpfr = bertini::mpfr;
+using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
@@ -273,7 +277,7 @@ BOOST_AUTO_TEST_CASE(read_tolerances)
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
 	using T = double;
-	bertini::mpfr_float::default_precision(30);
+	bertini::DefaultPrecision(30);
 	
 	
 	double tol = 1e-15;
@@ -407,7 +411,7 @@ BOOST_AUTO_TEST_CASE(read_endgame)
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
 	using T = double;
-	bertini::mpfr_float::default_precision(30);
+	bertini::DefaultPrecision(30);
 	
 	
 	double tol = 1e-15;

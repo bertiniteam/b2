@@ -13,17 +13,16 @@
 //You should have received a copy of the GNU General Public License
 //along with mhom.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// daniel brake, university of notre dame
 // karleigh cameron, colorado state university
 // Tim Hodges, Colorado State University
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 #include "bertini2/system/start/mhom.hpp"
 
@@ -426,9 +425,9 @@ namespace bertini
 		}
 
 
-		Vec<mpfr> MHomogeneous::GenerateStartPoint(mpfr,unsigned long long index) const
+		Vec<mpfr_complex> MHomogeneous::GenerateStartPoint(mpfr_complex,unsigned long long index) const
 		{
-			Vec<mpfr> start_point(NumVariables());
+			Vec<mpfr_complex> start_point(NumVariables());
 			GenerateStartPointT(start_point, index);
 
 			return start_point;	

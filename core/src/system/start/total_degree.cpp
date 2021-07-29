@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with total_degree.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 
 #include "bertini2/system/start/total_degree.hpp"
 
@@ -91,28 +91,37 @@ namespace bertini {
 		}
 
 
-		Vec<mpfr> TotalDegree::GenerateStartPoint(mpfr,unsigned long long index) const
+		Vec<mpfr_complex> TotalDegree::GenerateStartPoint(mpfr_complex,unsigned long long index) const
 		{
-			Vec<mpfr> start_point(NumVariables());
-			auto indices = IndexToSubscript(index, degrees_);
+			using bertini::DefaultPrecision;
+
+			Vec<mpfr_complex> start_point(NumVariables()); // make the value we're returning
+			auto indices = IndexToSubscript(index, degrees_); // get the position of it -- used in the angle of the coordinates of the produced point.
 
 			unsigned offset = 0;
 			if (IsPatched())
 			{
-				start_point(0) = mpfr(1);
+				start_point(0) = mpfr_complex(1,0,DefaultPrecision());
 				offset = 1;
 			}
 
-			
-			auto one = mpfr(1);
-			auto two_i_pi = mpfr(0,2) * acos( mpfr_float(-1) );
+// TODO: this code should be cleaned up after issue 308 is solved -- namely, the two precision adjustment calls should be removed.  They're only necessary because prec16 / ulonglog = prec19.
 
+			auto one = mpfr_float(1);
+			mpfr_complex two_i_pi = mpfr_complex(0,2) * acos( mpfr_float(-1) );
 			for (size_t ii = 0; ii< NumNaturalVariables(); ++ii)
-				start_point(ii+offset) = exp( two_i_pi * mpfr_float(indices[ii]) / degrees_[ii]  ) * pow(random_values_[ii]->Eval<mpfr>(), one / degrees_[ii]);
+			{
+				mpfr_complex a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
+				mpfr_complex b = pow(random_values_[ii]->Eval<mpfr_complex>(), one / degrees_[ii]);
+
+				Precision(a,DefaultPrecision());
+				Precision(b,DefaultPrecision());
+
+				start_point(ii+offset) = a*b;
+			}
 
 			if (IsPatched())
 				RescalePointToFitPatchInPlace(start_point);
-
 
 			return start_point;
 		}

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with base_endgame.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of wisconsin eau claire
+// silviana amethyst, university of wisconsin eau claire
 // Tim Hodges, Colorado State University
 
 
@@ -40,7 +40,6 @@
 
 
 #include "bertini2/mpfr_complex.hpp"
-#include "bertini2/limbo.hpp"
 
 #include "bertini2/system/system.hpp"
 
@@ -315,7 +314,7 @@ public:
 	## Input
 
 	  		start_time: is the time when we start the endgame process usually this is .1
-			x_endgame: is the space value at start_time
+			x_endgame_start: is the space value at start_time
 			times: a deque of time values. These values will be templated to be CT 
 			samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of CT. 
 
@@ -326,34 +325,34 @@ public:
 
 	## Details
 
-		The first sample will be (x_endgame) and the first time is start_time.
+		The first sample will be (x_endgame_start) and the first time is start_time.
 		From there we do a geometric progression using the sample factor (which by default is 1/2).
 		Hence, next_time = start_time * sample_factor.
 		We track then to the next_time and construct the next_sample.
 
 	\param start_time The time value at which we start the endgame. 
 	\param target_time The time value that we are trying to find a solution to. 
-	\param x_endgame The current space point at start_time.
+	\param x_endgame_start The current space point at start_time.
 	\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 	\param samples a deque that will hold all the samples corresponding to the time values in times. 
 
 	\tparam CT The complex number type.
 	*/	
 	template<typename CT>
-	SuccessCode ComputeInitialSamples(const CT & start_time,const CT & target_time, const Vec<CT> & x_endgame, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
+	SuccessCode ComputeInitialSamples(const CT & start_time,const CT & target_time, const Vec<CT> & x_endgame_start, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
 	{	
 		using RT = typename Eigen::NumTraits<CT>::Real;
 		assert(this->template Get<EndgameConfig>().num_sample_points>0 && "number of sample points must be positive");
 
 		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 		{
-			assert(Precision(start_time)==Precision(x_endgame) && "Computing initial samples requires input time and space with uniform precision");
+			assert(Precision(start_time)==Precision(x_endgame_start) && "Computing initial samples requires input time and space with uniform precision");
 		}
 
 		samples.clear();
 		times.clear();
 
-		samples.push_back(x_endgame);
+		samples.push_back(x_endgame_start);
 		times.push_back(start_time);
 
 		auto num_vars = this->GetSystem().NumVariables();

@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with eigen_extensions.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license,
 // as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, University of Wisconsin Eau Claire
+// silviana amethyst, University of Wisconsin Eau Claire
 
 /**
 \file eigen_extensions.hpp
@@ -41,15 +41,19 @@
 
 #include <Eigen/Core>
 
+namespace {
+using mpfr_real = bertini::mpfr_float;
+using mpfr_complex = bertini::mpfr_complex;
+}
+
 namespace Eigen {
 
-	using mpfr_float = bertini::mpfr_float;
-	template<> struct NumTraits<mpfr_float> : GenericNumTraits<mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+	template<> struct NumTraits<mpfr_real> : GenericNumTraits<mpfr_real> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
 
-		typedef mpfr_float Real;
-		typedef mpfr_float NonInteger;
-		typedef mpfr_float Nested;
+		typedef mpfr_real Real;
+		typedef mpfr_real NonInteger;
+		typedef mpfr_real Nested;
 		enum {
 			IsComplex = 0,
 			IsInteger = 0,
@@ -63,7 +67,7 @@ namespace Eigen {
 
 		inline static Real highest() {
 
-			return (mpfr_float(1) - epsilon()) * pow(mpfr_float(2),mpfr_get_emax()-1);//);//DefaultPrecision());
+			return (mpfr_real(1) - epsilon()) * pow(mpfr_real(2),mpfr_get_emax()-1);//);//DefaultPrecision());
 		}
 
 		inline static Real lowest() {
@@ -73,13 +77,13 @@ namespace Eigen {
 		inline static Real dummy_precision()
 		{
 			using bertini::DefaultPrecision;
-			return pow( mpfr_float(10),-int(DefaultPrecision()-3));
+			return pow( mpfr_real(10),-int(DefaultPrecision()-3));
 		}
 
 		inline static Real epsilon()
 		{
 			using bertini::DefaultPrecision;
-			return pow(mpfr_float(10),-int(DefaultPrecision()));
+			return pow(mpfr_real(10),-int(DefaultPrecision()));
 		}
 
 		static inline int digits10()
@@ -95,12 +99,12 @@ namespace Eigen {
 	struct NumTraits<
 		boost::multiprecision::detail::expression<Expr1,
       	Expr2, Expr3, void, void>
-      		> : NumTraits<mpfr_float> // permits to get the epsilon, dummy_precision, lowest, highest functions
+      		> : NumTraits<mpfr_real> // permits to get the epsilon, dummy_precision, lowest, highest functions
 	{
 
-		typedef mpfr_float Real;
-		typedef mpfr_float NonInteger;
-		typedef mpfr_float Nested;
+		typedef mpfr_real Real;
+		typedef mpfr_real NonInteger;
+		typedef mpfr_real Nested;
 
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php
 	};
@@ -108,17 +112,15 @@ namespace Eigen {
 
 
 	/**
-	 \brief This templated struct permits us to use the bertini::complex type in Eigen matrices.
+	 \brief This templated struct permits us to use the mpfr_complex type in Eigen matrices.
 
-	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_float> contained in mpfr_extensions.
+	 Provides methods to get the epsilon, dummy_precision, lowest, highest functions, largely by inheritance from the NumTraits<mpfr_real> contained in mpfr_extensions.
 	 */
-	template<> struct NumTraits<bertini::complex> : NumTraits<bertini::mpfr_float>
+	template<> struct NumTraits<mpfr_complex> : NumTraits<mpfr_real>
 	{
-		using mpfr_float = bertini::mpfr_float;
-
-		typedef mpfr_float Real;
-		typedef mpfr_float NonInteger;
-		typedef bertini::complex Nested;// Nested;
+		typedef mpfr_real Real;
+		typedef mpfr_real NonInteger;
+		typedef mpfr_complex Nested;// Nested;
 		enum {
 			IsComplex = 1,
 			IsInteger = 0,
@@ -133,164 +135,124 @@ namespace Eigen {
 
 	namespace internal {
 		template<>
-		struct abs2_impl<bertini::complex>
+		struct abs2_impl<mpfr_complex>
 		{
-			static inline mpfr_float run(const bertini::complex& x)
+			static inline mpfr_real run(const mpfr_complex& x)
 			{
 				return real(x)*real(x) + imag(x)*imag(x);
 			}
 		};
 
 
-		template<> inline bertini::complex random<bertini::complex>()
+		template<> inline mpfr_complex random<mpfr_complex>()
 		{
-			return bertini::complex::rand();
+			return bertini::multiprecision::rand();
 		}
 
-		template<> inline bertini::complex random<bertini::complex>(const bertini::complex& a, const bertini::complex& b)
+		template<> inline mpfr_complex random<mpfr_complex>(const mpfr_complex& a, const mpfr_complex& b)
 		{
-			return a + (b-a) * random<bertini::complex>();
+			return a + (b-a) * random<mpfr_complex>();
 		}
 
 		template<>
-		struct conj_helper<bertini::complex, bertini::complex, false, true>
+		struct conj_helper<mpfr_complex, mpfr_complex, false, true>
 		{
-			typedef bertini::complex Scalar;
+			typedef mpfr_complex Scalar;
 			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
 			{ return c + pmul(x,y); }
 
 			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
-			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::imag(x)*numext::real(y) - numext::real(x)*numext::imag(y)); }
+			{ return Scalar(real(x)*real(y) + imag(x)*imag(y), imag(x)*real(y) - real(x)*imag(y)); }
 		};
 
 		template<>
-		struct conj_helper<bertini::complex, bertini::complex, true, false>
+		struct conj_helper<mpfr_complex, mpfr_complex, true, false>
 		{
-			typedef bertini::complex Scalar;
+			typedef mpfr_complex Scalar;
 			EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const Scalar& y, const Scalar& c) const
 			{ return c + pmul(x,y); }
 
 			EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const Scalar& y) const
-			{ return Scalar(numext::real(x)*numext::real(y) + numext::imag(x)*numext::imag(y), numext::real(x)*numext::imag(y) - numext::imag(x)*numext::real(y)); }
+			{ return Scalar(real(x)*real(y) + imag(x)*imag(y), real(x)*imag(y) - imag(x)*real(y)); }
 		};
 
 		// see https://forum.kde.org/viewtopic.php?f=74&t=111176
 
 		//int
 		template<>
-		struct scalar_product_traits<int,bertini::complex>
+		struct scalar_product_traits<int,mpfr_complex>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<bertini::complex, int>
+		struct scalar_product_traits<mpfr_complex, int>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 		//long
 		template<>
-		struct scalar_product_traits<long,bertini::complex>
+		struct scalar_product_traits<long,mpfr_complex>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<bertini::complex, long>
+		struct scalar_product_traits<mpfr_complex, long>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 		//long long
 		template<>
-		struct scalar_product_traits<long long,bertini::complex>
+		struct scalar_product_traits<long long,mpfr_complex>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<bertini::complex, long long>
+		struct scalar_product_traits<mpfr_complex, long long>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 
-		//mpfr_float
+		//mpfr_real
 		template<>
-		struct scalar_product_traits<bertini::mpfr_float,bertini::complex>
+		struct scalar_product_traits<mpfr_real,mpfr_complex>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<bertini::complex, bertini::mpfr_float>
+		struct scalar_product_traits<mpfr_complex, mpfr_real>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 		//mpz_int
 		template<>
-		struct scalar_product_traits<bertini::mpz_int,bertini::complex>
+		struct scalar_product_traits<bertini::mpz_int,mpfr_complex>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
 
 		template<>
-		struct scalar_product_traits<bertini::complex, bertini::mpz_int>
+		struct scalar_product_traits<mpfr_complex, bertini::mpz_int>
 		{
 	    	enum { Defined = 1 };
-	    	typedef bertini::complex ReturnType;
+	    	typedef mpfr_complex ReturnType;
 		};
-		// template<>
-		// struct scalar_product_traits<long,bertini::complex>
-		// {
-	 //    	enum { Defined = 1 };
-	 //    	typedef bertini::complex ReturnType;
-		// };
-
-		// template<>
-		// struct scalar_product_traits<bertini::complex, long>
-		// {
-	 //    	enum { Defined = 1 };
-	 //    	typedef bertini::complex ReturnType;
-		// };
-
-		// template<>
-		// struct scalar_product_traits<bertini::mpz_int,bertini::complex>
-		// {
-	 //    	enum { Defined = 1 };
-	 //    	typedef bertini::complex ReturnType;
-		// };
-
-		// template<>
-		// struct scalar_product_traits<bertini::complex, bertini::mpz_int>
-		// {
-	 //    	enum { Defined = 1 };
-	 //    	typedef bertini::complex ReturnType;
-		// };
-
-		// now provide unary ops definitions using the above templates
-
-		// template<typename Derived>
-		// CwiseUnaryOp<internal::scalar_multiple2_op<int,bertini::complex>, const Derived>
-		// operator*(int& lhs, const DenseBase<Derived>& rhs)
-		// {
-		// 	return CwiseUnaryOp<internal::scalar_multiple2_op<int,bertini::complex>, const Derived>
-		// 		(internal::scalar_multiple2_op<bertini::complex,int>(lhs), rhs.derived());
-		// }
-
-
-
 
 	} // re: namespace internal
 } // re: namespace Eigen
@@ -361,12 +323,14 @@ namespace bertini {
 
 	/**
 	\brief Set the precision of an Eigen object.
+
+	\param v the matrix to change
+	\param prec the new precision
 	*/
 	template<typename Derived>
 	void Precision(Eigen::MatrixBase<Derived> & v, unsigned prec)
 	{
 		using bertini::Precision;
-
 		for (int ii=0; ii<v.cols(); ++ii)
 			for (int jj=0; jj<v.rows(); ++jj)
 				Precision(v(jj,ii),prec);
@@ -379,7 +343,7 @@ namespace bertini {
 
 	 Compares the number against machine epsilon (or software epsilon if a multiple precision type), times 100.
 
-	 \note Machine epsilon for doubles is about 1e-16, for mpfr_float, it's 10^-current precision.
+	 \note Machine epsilon for doubles is about 1e-16, for mpfr_real, it's 10^-current precision.
 
 	 \param testme The number to test
 
@@ -416,7 +380,7 @@ namespace bertini {
 
 	 The basis for comparison is Eigen's fuzzy precision, Eigen::NumTraits<T>::dummy_precision();
 
-	 \note For doubles, the threshold is 1e-12, for mpfr_float is 1e3*current precision.
+	 \note For doubles, the threshold is 1e-12, for mpfr_real is 1e3*current precision.
 
 	 \param numerator The numerator for the ratio.
 	 \param denomenator The denomenator for the ratio.

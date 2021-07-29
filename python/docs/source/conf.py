@@ -21,7 +21,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-# stuff to get autodoc to work. danielle amethyst
+# stuff to get autodoc to work. silviana amethyst
 import sys
 import os
 sys.path.insert(0,os.path.abspath('../../.libs'))
@@ -44,6 +44,9 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.githubpages',
     'sphinx.ext.autosectionlabel',
     'sphinxcontrib.bibtex']
+
+bibtex_bibfiles = ['../../../doc_resources/bertini2.bib']
+
 #    'sphinx.ext.autosectionlabel_prefix_document',
 autodoc_default_flags = ['members', 'undoc-members','show-inheritance'] 
 #, 'special-members'
@@ -66,7 +69,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'PyBertini'
-copyright = '2015-2018, Bertini Team'
+copyright = '2015-2021, Bertini Team'
 author = 'Bertini Team'
 
 

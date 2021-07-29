@@ -332,8 +332,8 @@ namespace  bertini {
 			}
 			else
 			{
-				Mat<mpfr> temp_mpfr(1,num_variables_+1);
-				auto& coeffs_mp_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex> temp_mpfr(1,num_variables_+1);
+				auto& coeffs_mp_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				for(int jj = 0; jj < num_variables_+1; ++jj)
 				{
 					temp_mpfr(0,jj) = coeffs_mp_ref(index,jj);
@@ -368,8 +368,8 @@ namespace  bertini {
 			}
 			else
 			{
-				Mat<mpfr> temp_mpfr(indices.size(),num_variables_+1);
-				auto& coeffs_mp_ref = std::get<Mat<mpfr>>(coeffs_);
+				Mat<mpfr_complex> temp_mpfr(indices.size(),num_variables_+1);
+				auto& coeffs_mp_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 				for(int ii = 0; ii < indices.size(); ++ii)
 				{
 					for(int jj = 0; jj < num_variables_+1; ++jj)
@@ -440,10 +440,10 @@ namespace  bertini {
 			linear->GetHomVariable(hom_variable_);
 			
 			
-			// Set coefficients with rational or mpfr type
+			// Set coefficients with rational or mpfr_complex type
 			num_variables_ = variables_.size();
 			Mat<dbl>& coeffs_dbl_ref = std::get<Mat<dbl>>(coeffs_);
-			Mat<mpfr>& coeffs_mpfr_ref = std::get<Mat<mpfr>>(coeffs_);
+			Mat<mpfr_complex>& coeffs_mpfr_ref = std::get<Mat<mpfr_complex>>(coeffs_);
 			coeffs_dbl_ref.resize(1, num_variables_+1);
 			coeffs_mpfr_ref.resize(1, num_variables_+1);
 			

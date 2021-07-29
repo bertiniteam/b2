@@ -13,14 +13,14 @@
 //You should have received a copy of the GNU General Public License
 //along with src/function_tree/roots/jacobian.cpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
-// dani brake, university of notre dame
+// silviana amethyst, university of notre dame
 // Jeb Collins, West Texas A&M
 
 
@@ -57,7 +57,7 @@ T Jacobian::EvalJ(std::shared_ptr<Variable> const& diff_variable) const
 }
 
 template dbl Jacobian::EvalJ(std::shared_ptr<Variable> const& diff_variable) const;
-template mpfr Jacobian::EvalJ(std::shared_ptr<Variable> const& diff_variable) const;
+template mpfr_complex Jacobian::EvalJ(std::shared_ptr<Variable> const& diff_variable) const;
 
 
 
@@ -79,7 +79,7 @@ void Jacobian::EvalJInPlace(T& eval_value, std::shared_ptr<Variable> const& diff
 }
 
 template void Jacobian::EvalJInPlace( dbl&, std::shared_ptr<Variable> const& diff_variable) const;
-template void Jacobian::EvalJInPlace( mpfr&, std::shared_ptr<Variable> const& diff_variable) const;
+template void Jacobian::EvalJInPlace( mpfr_complex&, std::shared_ptr<Variable> const& diff_variable) const;
 
 
 void Jacobian::Reset() const

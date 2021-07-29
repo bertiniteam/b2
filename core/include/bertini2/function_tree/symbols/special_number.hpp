@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with special_number.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2017 by Bertini2 Development Team
+// Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -24,8 +24,9 @@
 //  West Texas A&M University
 //  Spring, Summer 2015
 //
-// Dani Brake
-// University of Notre Dame
+//
+// silviana amethyst
+// University of Wisconsin - Eau Claire
 //
 //  Created by Collins, James B. on 4/30/15.
 //
@@ -77,9 +78,9 @@ namespace node{
 			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+			mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 			friend class boost::serialization::access;
@@ -114,9 +115,9 @@ namespace node{
 			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-			mpfr FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
+			mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override;
 			
-			void FreshEval_mp(mpfr& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
+			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
 			friend class boost::serialization::access;
