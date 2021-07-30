@@ -96,6 +96,7 @@ namespace bertini{
 
 	void SLPCompiler::Visit(node::Rational const& n){
 		std::cout << "unimplemented visit to node of type Rational" << std::endl;
+		//here is a change
 	}
 
 
@@ -232,7 +233,6 @@ namespace bertini{
 
 	// the trig operators
 	void SLPCompiler::Visit(node::SinOperator const& n){
-		std::cout << "unimplemented visit to node of type SinOperator" << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -243,23 +243,53 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ArcSinOperator const& n){
-		std::cout << "unimplemented visit to node of type ArcSinOperator" << std::endl;
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		slp_under_construction_.AddInstruction(Asin,location_operand, next_available_mem_++);
 	}
 
 	void SLPCompiler::Visit(node::CosOperator const& n){
-		std::cout << "unimplemented visit to node of type CosOperator" << std::endl;
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		slp_under_construction_.AddInstruction(Cos,location_operand, next_available_mem_++);
 	}
 
 	void SLPCompiler::Visit(node::ArcCosOperator const& n){
-		std::cout << "unimplemented visit to node of type ArcCosOperator" << std::endl;
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		slp_under_construction_.AddInstruction(Acos,location_operand, next_available_mem_++);
 	}
 
 	void SLPCompiler::Visit(node::TanOperator const& n){
-		std::cout << "unimplemented visit to node of type TanOperator" << std::endl;
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		slp_under_construction_.AddInstruction(Tan,location_operand, next_available_mem_++);
 	}
 
 	void SLPCompiler::Visit(node::ArcTanOperator const& n){
-		std::cout << "unimplemented visit to node of type ArcTanOperator" << std::endl;
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		slp_under_construction_.AddInstruction(Atan,location_operand, next_available_mem_++);
 	}
 
 
