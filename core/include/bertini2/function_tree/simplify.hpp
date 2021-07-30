@@ -23,7 +23,11 @@
 //  silviana amethyst, university of wisconsin-eau claire
 
 /**
-\file General methods exploting polymorphism, for simplifying a Node, and all subnodes
+\file include/bertini2/function_tree/simplify.hpp 
+
+\brief simplification methods for nodal functions
+
+General methods exploting polymorphism, for simplifying a Node, and all subnodes
 */
 
 
