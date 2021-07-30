@@ -439,6 +439,15 @@ namespace node{
 		Check for homogeneity, with respect to a variable group.
 		*/
 		bool IsHomogeneous(VariableGroup const& vars) const override;
+
+		/**
+		 Get the indicator for which operation is being performed.  Remember this is an NaryOperator, so can hold arbitrary things.
+
+		 True is multiply, false is divide.
+		 * */
+		inline
+		const auto& GetMultOrDiv() const{ return this->mult_or_div_;}
+
 	protected:
 		
 		// Specific implementation of FreshEval for mult and divide.
