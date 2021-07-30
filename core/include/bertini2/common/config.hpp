@@ -67,7 +67,7 @@ namespace bertini
 	using NumErrorT = double;
 } // namespace bertini
 
-
+#include "bertini2/common/stream_enum.hpp"
 
 
 #endif // include guard

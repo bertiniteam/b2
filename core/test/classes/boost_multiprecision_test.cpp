@@ -8,109 +8,109 @@ using mpc_complex = boost::multiprecision::number<boost::multiprecision::backend
 
 namespace utf = boost::unit_test;
 
-BOOST_AUTO_TEST_SUITE(boost_multiprecision_tutorial)
+// BOOST_AUTO_TEST_SUITE(boost_multiprecision_tutorial)
 
 
-using mp_t = boost::multiprecision::debug_adaptor_t<boost::multiprecision::mpfr_float>;
+// using mp_t = boost::multiprecision::debug_adaptor_t<boost::multiprecision::mpfr_float>;
 
-struct scoped_mpfr_precision
-{
-	unsigned saved_digits10;
-	scoped_mpfr_precision(unsigned digits10) : saved_digits10(mp_t::thread_default_precision())
-	{
-		mp_t::thread_default_precision(digits10);
-	}
+// struct scoped_mpfr_precision
+// {
+// 	unsigned saved_digits10;
+// 	scoped_mpfr_precision(unsigned digits10) : saved_digits10(mp_t::thread_default_precision())
+// 	{
+// 		mp_t::thread_default_precision(digits10);
+// 	}
 
-	~scoped_mpfr_precision()
-	{
-		mp_t::thread_default_precision(saved_digits10);
-	}
+// 	~scoped_mpfr_precision()
+// 	{
+// 		mp_t::thread_default_precision(saved_digits10);
+// 	}
 
-	void reset(unsigned digits10)
-	{
-		mp_t::thread_default_precision(digits10);
-	}
+// 	void reset(unsigned digits10)
+// 	{
+// 		mp_t::thread_default_precision(digits10);
+// 	}
 
-	void reset()
-	{
-		mp_t::thread_default_precision(saved_digits10);
-	}
-};
+// 	void reset()
+// 	{
+// 		mp_t::thread_default_precision(saved_digits10);
+// 	}
+// };
 
-struct scoped_mpfr_precision_options
-{
+// struct scoped_mpfr_precision_options
+// {
 
-	boost::multiprecision::variable_precision_options saved_options;
+// 	boost::multiprecision::variable_precision_options saved_options;
 
-	scoped_mpfr_precision_options(boost::multiprecision::variable_precision_options opts) : saved_options(mp_t::thread_default_variable_precision_options())
-	{
-		mp_t::thread_default_variable_precision_options(opts);
-	}
+// 	scoped_mpfr_precision_options(boost::multiprecision::variable_precision_options opts) : saved_options(mp_t::thread_default_variable_precision_options())
+// 	{
+// 		mp_t::thread_default_variable_precision_options(opts);
+// 	}
 
-	~scoped_mpfr_precision_options()
-	{
-		mp_t::thread_default_variable_precision_options(saved_options);
-	}
+// 	~scoped_mpfr_precision_options()
+// 	{
+// 		mp_t::thread_default_variable_precision_options(saved_options);
+// 	}
 
-	void reset(boost::multiprecision::variable_precision_options opts)
-	{
-		mp_t::thread_default_variable_precision_options(opts);
-	}
-};
-
-
-
-BOOST_AUTO_TEST_CASE(precision_2_to_the_1000_minus_1_preserve_source)
-{
-	scoped_mpfr_precision scope_1(mp_t::thread_default_precision());
-	scoped_mpfr_precision_options scope_2(boost::multiprecision::variable_precision_options::preserve_source_precision);
+// 	void reset(boost::multiprecision::variable_precision_options opts)
+// 	{
+// 		mp_t::thread_default_variable_precision_options(opts);
+// 	}
+// };
 
 
-	// calculate 2^1000 - 1:
-	mpz_int i(1);
-	i = i << 1000;
-	i -= 1;
-	std::cout << i << std::endl;
-	mp_t f = i;
 
-	BOOST_CHECK(f.precision()>mp_t::thread_default_precision());
-}
+// BOOST_AUTO_TEST_CASE(precision_2_to_the_1000_minus_1_preserve_source)
+// {
+// 	scoped_mpfr_precision scope_1(mp_t::thread_default_precision());
+// 	scoped_mpfr_precision_options scope_2(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 
-BOOST_AUTO_TEST_CASE(precision_2_to_the_1000_minus_1_preserve_target)
-{
-	scoped_mpfr_precision scope_1(mp_t::thread_default_precision());
-	scoped_mpfr_precision_options scope_2(boost::multiprecision::variable_precision_options::preserve_target_precision);
+// 	// calculate 2^1000 - 1:
+// 	mpz_int i(1);
+// 	i = i << 1000;
+// 	i -= 1;
+// 	std::cout << i << std::endl;
+// 	mp_t f = i;
+
+// 	BOOST_CHECK(f.precision()>mp_t::thread_default_precision());
+// }
 
 
-	// calculate 2^1000 - 1:
-	mpz_int i(1);
-	i = i << 1000;
-	i -= 1;
-
-	mp_t f(0);
-	f = i;
-
-	BOOST_CHECK_EQUAL(f.precision(),mp_t::default_precision());
-}
+// BOOST_AUTO_TEST_CASE(precision_2_to_the_1000_minus_1_preserve_target)
+// {
+// 	scoped_mpfr_precision scope_1(mp_t::thread_default_precision());
+// 	scoped_mpfr_precision_options scope_2(boost::multiprecision::variable_precision_options::preserve_target_precision);
 
 
-BOOST_AUTO_TEST_CASE(precision_2_to_the_1000_minus_1_preserve_all)
-{
-	scoped_mpfr_precision scope_1(mp_t::thread_default_precision());
-	scoped_mpfr_precision_options scope_2(boost::multiprecision::variable_precision_options::preserve_all_precision);
+// 	// calculate 2^1000 - 1:
+// 	mpz_int i(1);
+// 	i = i << 1000;
+// 	i -= 1;
 
-	// calculate 2^1000 - 1:
-	mpz_int i(1);
-	i = i << 1000;
-	i -= 1;
+// 	mp_t f(0);
+// 	f = i;
 
-	mp_t f = i;
+// 	BOOST_CHECK_EQUAL(f.precision(),mp_t::default_precision());
+// }
 
-	BOOST_CHECK(f.precision()>mp_t::thread_default_precision());
-}
 
-BOOST_AUTO_TEST_SUITE_END() // boost_multiprecision_tutorial
+// BOOST_AUTO_TEST_CASE(precision_2_to_the_1000_minus_1_preserve_all)
+// {
+// 	scoped_mpfr_precision scope_1(mp_t::thread_default_precision());
+// 	scoped_mpfr_precision_options scope_2(boost::multiprecision::variable_precision_options::preserve_all_precision);
+
+// 	// calculate 2^1000 - 1:
+// 	mpz_int i(1);
+// 	i = i << 1000;
+// 	i -= 1;
+
+// 	mp_t f = i;
+
+// 	BOOST_CHECK(f.precision()>mp_t::thread_default_precision());
+// }
+
+// BOOST_AUTO_TEST_SUITE_END() // boost_multiprecision_tutorial
 
 
 

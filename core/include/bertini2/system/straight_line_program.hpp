@@ -300,6 +300,9 @@ namespace bertini {
     void AddInstruction(Operation binary_op, size_t in_loc1, size_t in_loc2, size_t out_loc);
     void AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc);
 
+    void AddNumber(Nd num, size_t loc);
+
+
     unsigned precision_ = 0;
     unsigned num_total_functions_ = 0;
     unsigned num_variables_ = 0;
@@ -309,10 +312,10 @@ namespace bertini {
     OutputLocations output_locations_;
     OutputLocations input_locations_;
 
-    std::vector<size_t> instructions_;
-    std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_;
+    mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_; 
 
-    std::vector< mpfr_complex > true_values_;
+    std::vector<size_t> instructions_;
+    std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; // the size_t is where in memory to downsample to.
 	};
 	
 
@@ -384,6 +387,14 @@ namespace bertini {
 
 
     private:
+
+      template<typename NodeT>
+      void DealWithNumber(NodeT const& n){
+            auto nd = std::make_shared<NodeT>(n); // make a shared pointer to the node, so that it survives, and we get polymorphism
+            this->slp_under_construction_.AddNumber(nd, next_available_mem_); // register the number with the SLP
+            this->locations_encountered_symbols_[nd] = next_available_mem_++; // add to found symbols in the compiler, increment counter.
+      }
+
       void Clear();
 
       size_t next_available_mem_ = 0;

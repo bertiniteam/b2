@@ -524,6 +524,15 @@ namespace node{
 			exponent_ = new_exponent;
 		}
 		
+		std::shared_ptr<Node> GetBase() const
+		{
+			return base_;
+		}
+		
+		std::shared_ptr<Node> GetExponent() const
+		{
+			return exponent_;
+		}
 		
 		void Reset() const override;
 		
