@@ -237,18 +237,22 @@ namespace bertini{
 
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
 		std::cout << "unimplemented visit to node of type IntegerPowerOperator" << std::endl;
+		//no node, just integer.
 	}
 
 	void SLPCompiler::Visit(node::PowerOperator const& n){
 		std::cout << "unimplemented visit to node of type PowerOperator" << std::endl;
+		//get location of base and power then add instruction
 	}
 
 	void SLPCompiler::Visit(node::ExpOperator const& n){
 		std::cout << "unimplemented visit to node of type ExpOperator" << std::endl;
+		//similar to trig
 	}
 
 	void SLPCompiler::Visit(node::LogOperator const& n){
 		std::cout << "unimplemented visit to node of type LogOperator" << std::endl;
+		//similar to trig
 	}
 
 
