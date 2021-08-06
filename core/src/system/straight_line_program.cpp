@@ -105,7 +105,7 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Variable const& n){
-		std::cout << "unimplemented visit to node of type Variable" << std::endl;
+		std::cout << "Variables were added  to memory at the beginning of compilation" << std::endl;
 	}
 
 
@@ -142,7 +142,7 @@ namespace bertini{
 
 		location_entry = this->locations_encountered_symbols_[n];
 
-		size_t location_this_node = next_available_mem_++;  //this->slp_under_construction_.AddToMemory(f);
+		size_t location_this_node = locations_encountered_symbols_[std::make_shared<node::Function>(f)];
 
 		slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
 	}
@@ -178,14 +178,13 @@ namespace bertini{
 		// this loop
 		// actually does the additions for the rest of the operands
 
-		for (size_t ii{2}; ii<op.Operands().size()-1; ++ii){
+		for (size_t ii{2}; ii<op.Operands().size(); ++ii){
 			if (signs[ii-1])
 				slp_under_construction_.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_++);
 			else
 				slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_++);
 		}
-
-		size_t location_this_node = next_available_mem_++; // this->slp_under_construction_.AddToMemory(op);
+		this->locations_encountered_symbols_[std::make_shared<node::SumOperator>(op)] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
 
 		// for each pair, look up the node in the memory structure in SLP
 
@@ -228,11 +227,37 @@ namespace bertini{
 
 	void SLPCompiler::Visit(node::MultOperator const & op){
 		std::cout << "visiting MultOperator: " << std::endl;
+		std::vector<size_t> operand_locations;
 		for (auto& n : op.Operands()){
-			n->Accept(*this);
-			// multiply/divide the nodes together.  naive method is fine.
 
+			if (this->locations_encountered_symbols_.find(n)!=this->locations_encountered_symbols_.end())
+				n->Accept(*this); // think of calling Compile(n)
+
+			operand_locations.push_back(this->locations_encountered_symbols_[n]);
 		}
+		// multiply/divide the nodes together.  naive method is fine.
+		const auto& MultOrDiv = op.GetMultOrDiv();// true is multiply and false is divide
+
+		assert(op.Operands().size() >=2);
+
+		size_t prev_result_loc = next_available_mem_;
+
+		if (MultOrDiv[0])
+			slp_under_construction_.AddInstruction(Multiply,operand_locations[0],operand_locations[1], next_available_mem_++);
+		else
+			slp_under_construction_.AddInstruction(Divide,operand_locations[0],operand_locations[1], next_available_mem_++);
+
+		// this loop
+		// actually does the additions for the rest of the operands
+
+		for (size_t ii{2}; ii<op.Operands().size(); ++ii){
+			if (MultOrDiv[ii-1])
+				slp_under_construction_.AddInstruction(Multiply,operand_locations[ii],prev_result_loc,next_available_mem_++);
+			else
+				slp_under_construction_.AddInstruction(Divide,operand_locations[ii],prev_result_loc,next_available_mem_++);
+		}
+		this->locations_encountered_symbols_[std::make_shared<node::MultOperator>(op)] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
+
 	}
 
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
@@ -241,18 +266,47 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::PowerOperator const& n){
-		std::cout << "unimplemented visit to node of type PowerOperator" << std::endl;
 		//get location of base and power then add instruction
+
+		const auto& base = n.GetBase();
+		const auto& exponent = n.GetExponent();
+
+		if (this->locations_encountered_symbols_.find(base) == this->locations_encountered_symbols_.end())
+			base->Accept(*this); // think of calling Compile(n)
+
+		if (this->locations_encountered_symbols_.find(exponent) == this->locations_encountered_symbols_.end())
+			exponent->Accept(*this); // think of calling Compile(n)
+
+		auto loc_base = locations_encountered_symbols_[base];
+		auto loc_exponent = locations_encountered_symbols_[exponent];
+
+		this->locations_encountered_symbols_[std::make_shared<node::PowerOperator>(n)] =  next_available_mem_;
+		slp_under_construction_.AddInstruction(Power, loc_base, loc_exponent, next_available_mem_++);
+
+
+
 	}
 
 	void SLPCompiler::Visit(node::ExpOperator const& n){
-		std::cout << "unimplemented visit to node of type ExpOperator" << std::endl;
-		//similar to trig
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[std::make_shared<node::ExpOperator>(n)] =  next_available_mem_;
+		slp_under_construction_.AddInstruction(Exp,location_operand, next_available_mem_++);
 	}
 
 	void SLPCompiler::Visit(node::LogOperator const& n){
-		std::cout << "unimplemented visit to node of type LogOperator" << std::endl;
-		//similar to trig
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[std::make_shared<node::LogOperator>(n)] =  next_available_mem_;
+		slp_under_construction_.AddInstruction(Log,location_operand, next_available_mem_++);
 	}
 
 
@@ -264,6 +318,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[std::make_shared<node::SinOperator>(n)] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Sin,location_operand, next_available_mem_++);
 	}
 
@@ -274,6 +329,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[std::make_shared<node::ArcSinOperator>(n)] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Asin,location_operand, next_available_mem_++);
 	}
 
@@ -284,6 +340,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[std::make_shared<node::CosOperator>(n)] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Cos,location_operand, next_available_mem_++);
 	}
 
@@ -294,6 +351,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[std::make_shared<node::ArcCosOperator>(n)] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Acos,location_operand, next_available_mem_++);
 	}
 
@@ -304,6 +362,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[std::make_shared<node::TanOperator>(n)] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Tan,location_operand, next_available_mem_++);
 	}
 
@@ -314,6 +373,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[std::make_shared<node::ArcTanOperator>(n)] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Atan,location_operand, next_available_mem_++);
 	}
 
@@ -358,7 +418,10 @@ namespace bertini{
 		std::cout << "dealing with setup for functions" << std::endl;
 			// make space for functions and derivatives
 			// 3. ADD FUNCTIONS
-
+		for  (int ii = 0; ii < sys.NumTotalFunctions(); ++ii) {
+			auto f = sys.Function(ii);
+			locations_encountered_symbols_[f] = next_available_mem_++;
+		}
 
 		std::cout << "dealing with setup for derivatives" << std::endl;
 			// always do derivatives with respect to space variables
@@ -378,7 +441,6 @@ namespace bertini{
 			std::cout << *(f) << std::endl;
 			f->Accept(*this);
 
-			locations_encountered_symbols_[f] = next_available_mem_++; // this is obviously wrong
 
 			std::cout << "post visit function" << std::endl;
 			/* code */
