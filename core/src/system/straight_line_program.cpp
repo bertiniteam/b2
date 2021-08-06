@@ -262,6 +262,20 @@ namespace bertini{
 
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
 		std::cout << "unimplemented visit to node of type IntegerPowerOperator" << std::endl;
+		auto expo = n.exponent(); //integer
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		auto e = std::make_shared<node::Integer>(expo);
+		this->DealWithNumber(*e);
+		auto location_exponent  = locations_encountered_symbols_[e];
+
+
+		this->locations_encountered_symbols_[std::make_shared<node::IntegerPowerOperator>(n)] =  next_available_mem_;
+		slp_under_construction_.AddInstruction(Power,location_operand,location_exponent, next_available_mem_++);
 		//no node, just integer.
 	}
 
