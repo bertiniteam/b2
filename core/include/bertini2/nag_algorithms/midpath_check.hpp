@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//bertini2/nag_algorithms/midpath_check.hpp is free software: you can redistribute it and/or modify
+//include/bertini2/nag_algorithms/midpath_check.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//bertini2/nag_algorithms/midpath_check.hpp is distributed in the hope that it will be useful,
+//include/bertini2/nag_algorithms/midpath_check.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with bertini2/nag_algorithms/midpath_check.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with include/bertini2/nag_algorithms/midpath_check.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
@@ -25,7 +25,7 @@
 
 
 /**
-\file bertini2/nag_algorithms/midpath_check.hpp 
+\file include/bertini2/nag_algorithms/midpath_check.hpp 
 
 \brief Provides methods for checking for path crossings.  
 
@@ -56,7 +56,7 @@ namespace bertini{
 			/**
 			\brief Construct a MidpathChecker, given the system it is checking, and the tolerance which should be used to tell whether two points are the same.  
 
-			\note The tolerance should be *lower* than the tracking tolerance used to compute these points.
+			\note The tolerance should be *relaxed* compared to the tracking tolerance used to compute these points.
 			*/
 			template<typename ...T>
 			MidpathChecker( T const& ...config) : AlgConf(config...)
@@ -66,7 +66,9 @@ namespace bertini{
 			
 			
 			/**
-			 \struct Stores data for each path that crosses, including the index of the path, all paths that it crosses with, and whether it has the same
+			 \struct CrossedPath
+
+			 Stores data for each path that crosses, including the index of the path, all paths that it crosses with, and whether it has the same
 				starting point as a path it crosses with.
 			 */
 			struct CrossedPath{

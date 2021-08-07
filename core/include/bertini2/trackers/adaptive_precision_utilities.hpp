@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//fixed_precision_utilities.hpp is free software: you can redistribute it and/or modify
+//include/bertini2/trackers/adaptive_precision_utilities.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//fixed_precision_utilities.hpp is distributed in the hope that it will be useful,
+//include/bertini2/trackers/adaptive_precision_utilities.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with fixed_precision_utilities.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with include/bertini2/trackers/adaptive_precision_utilities.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
@@ -24,11 +24,11 @@
 // Tim Hodges, Colorado State University
 
 /**
-\file tracking/adaptive_precision_utilities.hpp 
+\file include/bertini2/trackers/adaptive_precision_utilities.hpp 
 
 \brief Functions for dealing with precisions of objects, particularly in the context of adaptive precision.
 
-These definitions are provided for use in tracking and endgames.  This allows a uniform interface regardless of tracker details.
+These definitions are provided for use in trackers and endgames.  This allows a uniform interface regardless of tracker details.
 */
 
 #pragma once
@@ -111,7 +111,7 @@ Cannot change precision of fixed precision hardware doubles.  This function is p
 \return The precision, which is now uniform.
 */
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & derivatives)
+unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & samples)
 {
 	return DoublePrecision();
 }

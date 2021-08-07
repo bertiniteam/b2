@@ -24,7 +24,7 @@
 // silviana amethyst, university of wisconsin-eau claire
 
 /**
-\file bertini2/blackbox/algorithm_builder.hpp 
+\file include/bertini2/blackbox/algorithm_builder.hpp 
 
 \brief A type which determines which algorithms etc, to run, and sets them up.
 */

@@ -32,6 +32,9 @@ namespace bertini{
 
 /**
 Main initial function for doing stuff to interpret the command-line arguments for invokation of the program.
+
+\param argc The number of arguments to the program.  Must be at least one.
+\param argv array of character arrays, the arguments to the program when called.
 */
 void ParseArgcArgv(int argc, char** argv);
 
