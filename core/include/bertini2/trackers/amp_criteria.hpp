@@ -42,7 +42,7 @@ namespace bertini{
 
 
 			/**
-			\brief THe right hand side of Criterion A, from \cite AMP1, \cite AMP2.
+			\brief The right hand side of Criterion A, from \cite AMP1, \cite AMP2.
 
 			see CriterionA
 			*/
@@ -59,7 +59,7 @@ namespace bertini{
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
-			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J The matrix norm of the Jacobian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param AMP_config The settings for adaptive multiple precision.
 			
@@ -78,9 +78,11 @@ namespace bertini{
 			/**
 			\brief Compute the expression \f$D\f$ from the AMP papers \cite AMP1, \cite AMP2.
 
-			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J The matrix norm of the Jacobian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param AMP_config The settings for adaptive multiple precision.
+
+			\return a double scalar, the quantity \f$D\f$ from the AMP papers \cite AMP1, \cite AMP2.
 			*/
 			inline
 			double D(double const& norm_J, double const& norm_J_inverse, AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -93,11 +95,11 @@ namespace bertini{
 
 			From \cite AMP1, \cite AMP2.
 			
-			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J The matrix norm of the Jacobian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param num_newton_iterations_remaining The number of iterations which have yet to perform.
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance (for now)
-			\param latest_newton_residual The norm of the length of the most recent Newton step.
+			\param norm_of_latest_newton_residual The norm of the length of the most recent Newton step.
 			\param AMP_config The settings for adaptive multiple precision.
 			
 			\return The value of the right hand side of Criterion B
@@ -115,11 +117,11 @@ namespace bertini{
 			This is Criterion B from \cite AMP1, \cite AMP2.
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
-			\param norm_J The matrix norm of the Jacoabian matrix
+			\param norm_J The matrix norm of the Jacobian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param num_newton_iterations_remaining The number of iterations which have yet to perform.
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance (for now)
-			\param latest_newton_residual The norm of the length of the most recent Newton step.
+			\param norm_of_latest_newton_residual The norm of the length of the most recent Newton step.
 			\param AMP_config The settings for adaptive multiple precision.
 			
 			\tparam NumT The numeric type.
@@ -146,7 +148,6 @@ namespace bertini{
 
 			This is Criterion C, from \cite AMP1, \cite AMP2.
 
-			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
 			\param norm_z The norm of the current space point.
@@ -170,7 +171,6 @@ namespace bertini{
 
 			This is Criterion C from \cite AMP1, \cite AMP2.
 
-			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
 			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
 			\param z The current space point. 
@@ -195,11 +195,12 @@ namespace bertini{
 
 			True means the check passed, and the precision is all good.  False means something's gotta change, stepsize or precision.
 			
-			\param norm_J The matrix norm of the Jacoabian matrix
 			\param norm_J_inverse An estimate on the norm of the inverse of the Jacobian matrix.
-			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
 			\param z The current space point. 
+			\param tracking_tolerance The tightness to which the path should be tracked.  This is the raw tracking tolerance
 			\param AMP_config The settings for adaptive multiple precision.
+
+			\return A boolean indicating whether the criterion is satisfied.  True means path tracking can continue without modifying tracking settings.  False means that corrective action should be taken. 
 			*/
 			template<typename NumT, typename Derived>
 			bool CriterionC(double const& norm_J_inverse, const Eigen::MatrixBase<Derived>& z, double tracking_tolerance, AdaptiveMultiplePrecisionConfig const& AMP_config)

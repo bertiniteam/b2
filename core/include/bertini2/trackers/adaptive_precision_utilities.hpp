@@ -111,7 +111,7 @@ Cannot change precision of fixed precision hardware doubles.  This function is p
 \return The precision, which is now uniform.
 */
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & derivatives)
+unsigned EnsureAtUniformPrecision(TimeCont<dbl> & times, SampCont<dbl> & samples)
 {
 	return DoublePrecision();
 }
