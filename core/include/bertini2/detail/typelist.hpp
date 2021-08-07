@@ -62,19 +62,28 @@ struct TypeList {
 
 
 /**
-\brief Concatenate two typelists, get via ::type
+\brief Concatenate two typelists
+
+Get resulting TypeList via something like `ListCat< TypeList<int>,TypeList<double> >::type`
 */
 template <typename ...Ts>
 struct ListCat {};
 
 
-
+/**
+ \brief A specialization of ListCat for joining two lists
+ */
 template <typename ...Ts, typename ... Rs>
 struct ListCat <TypeList<Ts...>, TypeList<Rs...>>
 {
 	using type = TypeList<Ts..., Rs...>;
 };
 
+/**
+ \brief A specialization of ListCat for joining 3+ lists
+
+ This specialization works via recursion
+ */
 template <typename ...Ps, typename ... Qs, typename ... Rs>
 struct ListCat <TypeList<Ps...>, TypeList<Qs...>, TypeList<Rs...>>
 {
