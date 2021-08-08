@@ -432,18 +432,15 @@ namespace bertini{
 		std::cout << "making space in memory for functions" << std::endl;
 			// make space for functions and derivatives
 			// 3. ADD FUNCTIONS
-		for  (int ii = 0; ii < sys.NumTotalFunctions(); ++ii) {
-			auto f = sys.Function(ii);
+		for (auto f: sys.GetFunctions()) 
 			locations_encountered_symbols_[f] = next_available_mem_++;
-		}
+		
 
 
 
 		std::cout << "making space in memory for space derivatives" << std::endl;
-		auto ds_dx = sys.GetSpaceDerivatives(); // a linear object, so can just run down the object
-		
-
 		// always have space derivatives
+		auto ds_dx = sys.GetSpaceDerivatives(); // a linear object, so can just run down the object
 		for (auto n: ds_dx)
 			locations_encountered_symbols_[n] = next_available_mem_++;
 
@@ -462,9 +459,9 @@ namespace bertini{
 
 
 		std::cout << "visiting functions" << std::endl;
-		for (auto f : sys.GetFunctions())
+		for (auto f: sys.GetFunctions())
 		{
-			std::cout << *(f) << std::endl;
+			std::cout << "compiling function " << *(f) << std::endl;
 			f->Accept(*this);
 
 			// post visit function
