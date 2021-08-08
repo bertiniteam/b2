@@ -169,7 +169,7 @@ namespace node{
 
 	Signed real Integer storage in an expression tree. Consider using a Rational type.
 	*/
-	class Integer : public virtual Number
+	class Integer : public virtual Number, public std::enable_shared_from_this<Integer>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -231,7 +231,7 @@ namespace node{
 
 	 Number type for storing floating point numbers within an expression tree.  The number passed in at construct time is stored as the true value, and evaluation down or up samples from this 'true value'.  Consider using a Rational or Integer if possible.
 	*/
-	class Float : public virtual Number
+	class Float : public virtual Number, public std::enable_shared_from_this<Float>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -297,7 +297,7 @@ namespace node{
 
 	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a mpfr_complex at evaluate time.
 	*/
-	class Rational : public virtual Number
+	class Rational : public virtual Number, public std::enable_shared_from_this<Rational>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()

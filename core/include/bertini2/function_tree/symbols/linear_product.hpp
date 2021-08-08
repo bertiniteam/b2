@@ -56,7 +56,7 @@ namespace  bertini {
 		 
 		 When differentiated, produces a differential referring to it.
 		 */
-		class LinearProduct : public virtual Symbol
+		class LinearProduct : public virtual Symbol, public std::enable_shared_from_this<LinearProduct>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -767,7 +767,7 @@ namespace  bertini {
 		 This class represents a linear of differentials.  This is the result of differentiating a single linear node.
 		 
 		 */
-		class DiffLinear : public virtual Symbol
+		class DiffLinear : public virtual Symbol, public std::enable_shared_from_this<DiffLinear>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
