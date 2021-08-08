@@ -191,7 +191,7 @@ namespace bertini {
     friend SLPCompiler;
     
   private:
-    using Nd = std::shared_ptr<node::Node>;
+    using Nd = std::shared_ptr<const node::Node>;
 
 	public:
 
@@ -383,7 +383,7 @@ namespace bertini {
     /**
      \brief Add a number to the memory at location, and memoize it for precision changing later.
      */
-    void AddNumber(Nd num, size_t loc);
+    void AddNumber(Nd const num, size_t loc);
 
 
     unsigned precision_ = 0; //< The current working number of digits
@@ -440,7 +440,7 @@ namespace bertini {
       //    public Visitor<node::TrigOperator>,// abstract
   {
   private:
-    using Nd = std::shared_ptr<node::Node>;
+    using Nd = std::shared_ptr<const node::Node>;
     using SLP = StraightLineProgram;
 
     public:
@@ -475,17 +475,24 @@ namespace bertini {
       // missing -- linear and difflinear
     private:
 
+
+      /**
+       \brief Provides a uniform interface for dealing with all numeric node types.
+       */
       template<typename NodeT>
       void DealWithNumber(NodeT const& n){
-            auto nd = std::make_shared<NodeT>(n); // make a shared pointer to the node, so that it survives, and we get polymorphism
+            auto nd=n.shared_from_this(); // make a shared pointer to the node, so that it survives, and we get polymorphism
             this->slp_under_construction_.AddNumber(nd, next_available_mem_); // register the number with the SLP
             this->locations_encountered_symbols_[nd] = next_available_mem_++; // add to found symbols in the compiler, increment counter.
       }
 
+      /**
+       \brief Reset the compiler to compile another SLP from another system.
+       */
       void Clear();
 
-      size_t next_available_mem_ = 0;
-      std::map<Nd, size_t> locations_encountered_symbols_;
+      size_t next_available_mem_ = 0; //< Where should the next thing in memory go?
+      std::map<Nd, size_t> locations_encountered_symbols_; //< A registry of pointers-to-nodes and location in memory on where to find *their results*
       SLP slp_under_construction_; //< the under-construction SLP.  will be returned at end of `compile`
   };
 

@@ -85,7 +85,7 @@ namespace bertini{
 		this->instructions_.push_back(out_loc);
 	}
 
-	void StraightLineProgram::AddNumber(Nd num, size_t loc){
+	void StraightLineProgram::AddNumber(Nd const num, size_t loc){
 		this->true_values_of_numbers_.push_back(std::pair<Nd,size_t>(num, loc));
 	}
 
@@ -429,7 +429,7 @@ namespace bertini{
 		}
 
 
-		std::cout << "dealing with setup for functions" << std::endl;
+		std::cout << "making space in memory for functions" << std::endl;
 			// make space for functions and derivatives
 			// 3. ADD FUNCTIONS
 		for  (int ii = 0; ii < sys.NumTotalFunctions(); ++ii) {
@@ -437,7 +437,9 @@ namespace bertini{
 			locations_encountered_symbols_[f] = next_available_mem_++;
 		}
 
-		std::cout << "dealing with setup for derivatives" << std::endl;
+
+		
+		std::cout << "making space in memory for derivatives" << std::endl;
 			// always do derivatives with respect to space variables
 			// 4. ADD SPACE VARIABLE DERIVATIVES
 
