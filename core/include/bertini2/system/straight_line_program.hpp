@@ -169,7 +169,24 @@ namespace bertini {
     return op & BinaryOperations;
   }
 
+  /**
+   \class StraightLineProgram
 
+   An implementation of straight-line programs, implemented with strong inspiration from Bertini1's implementation.
+
+   One constructs a SLP from a system, like
+
+   ```
+   System my_system();
+   StraightLineProgram slp(my_system);
+   ```
+
+   Maybe you don't need to know this, but in construction the SLP uses a helper class, the SLPCompiler
+
+   Patches are just functions in this framework.  The variables appear at the front of the memory, then functions, then derivatives.  This should make copying data out easy, because it's all in one place.  
+
+   In contrast to Bertini1 SLP's, we don't put all the numbers at the front -- they just get scattered through the SLP's memory.
+   */
 	class StraightLineProgram{
     friend SLPCompiler;
     
@@ -177,6 +194,12 @@ namespace bertini {
     using Nd = std::shared_ptr<node::Node>;
 
 	public:
+
+    /**
+     \struct OutputLocations
+
+     A struct encapsulating the starting locations of things in the SLP
+     */
     struct OutputLocations{
       size_t Functions{0};
       size_t Variables{0};
@@ -184,6 +207,21 @@ namespace bertini {
       size_t TimeDeriv{0};
     };
 
+    /**
+     \struct InputLocations
+     
+     A struct encapsulating the starting locations of things in the SLP
+     */
+    struct InputLocations{
+      size_t Variables{0};
+      size_t Time{0};
+    };
+
+    /**
+     \struct NumberOf
+     
+     A struct encapsulating the numbers of things appearing in the SLP
+     */
     struct NumberOf{
       size_t Functions{0};
       size_t Variables{0};
@@ -268,6 +306,8 @@ namespace bertini {
 
 		/**
 		\brief Get the current precision of the SLP.
+
+    \return The number of digits
 		*/
 		inline
 		unsigned precision() const
@@ -275,23 +315,44 @@ namespace bertini {
 			return precision_;
 		}
 
-    /*
-    change the precision of the SLP.  Downsamples from the true values.
+    /**
+    \brief change the precision of the SLP.  
+
+    Downsamples from the true values.
+
+    \param new_precision The new number of digits
     */
 		void precision(unsigned new_precision) const;
 
+    /**
+     \brief Does this SLP have a path variable?
 
+     \return Well, does it?
+     */
     bool HavePathVariable() const {
       throw std::runtime_error("calling unimplemented function HavePathVariable");
       return false;
     }
 	private:
 
+    /**
+     \brief Copy the values of the variables from the passed in vector to memory
+
+     \param variable_values The vector of current variable values.
+     */
     template<typename Derived>
     void CopyVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
       throw std::runtime_error("calling unimplemented function CopyVariableValues");
     }
 
+    /**
+     \brief Copy the current time value to memory
+
+     \param time The current time
+     \tparam ComplexT the complex numeric type.  
+
+     If the SLP doesn't have a path variable, then this will throw.
+     */
     template<typename ComplexT>
     void CopyPathVariable(ComplexT const& time) const{
       if (!this->HavePathVariable())
@@ -299,26 +360,47 @@ namespace bertini {
       // then actually copy the path variable into where it goes in memory
     }
 
+    /**
+     \brief Add an instruction to memory.  This one's for binary operations
 
+     \param binary_op The opcode, from the enum.
+     \param in_loc1 The location of the first operand
+     \param in_loc2 The locatiion in memory of the second operand
+     \param out_loc Where in memory to put the result of the operation.
+     */
     void AddInstruction(Operation binary_op, size_t in_loc1, size_t in_loc2, size_t out_loc);
+
+    /**
+     \brief Add an instruction to memory.  This one's for unary operations
+
+     \param unary_op The opcode, from the enum.
+     \param in_loc The location of the one and only operand
+     \param out_loc Where in memory to put the result of the operation.
+     */
     void AddInstruction(Operation unary_op, size_t in_loc, size_t out_loc);
 
+
+    /**
+     \brief Add a number to the memory at location, and memoize it for precision changing later.
+     */
     void AddNumber(Nd num, size_t loc);
 
 
-    unsigned precision_ = 0;
-    unsigned num_total_functions_ = 0;
-    unsigned num_variables_ = 0;
-    bool has_path_variable_ = false;
+    unsigned precision_ = 0; //< The current working number of digits
+    unsigned num_total_functions_ = 0; //< How many total functions?  Including patches.
+    unsigned num_variables_ = 0; //< How many variables?  Including homogenizing variables.
+    bool has_path_variable_ = false; //< Does this SLP have a path variable?
 
-    NumberOf number_of_;
-    OutputLocations output_locations_;
-    OutputLocations input_locations_;
+    NumberOf number_of_;  //< Quantities of things
+    OutputLocations output_locations_; //< Where to find outputs, like functions and derivatives
+    InputLocations input_locations_; //< Where to find inputs, like variables and time
 
-    mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_; 
 
-    std::vector<size_t> instructions_;
-    std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; // the size_t is where in memory to downsample to.
+
+    mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_; //< The memory of the object.  Numbers and variables, plus temp results and output locations.  It's all one block.  That's why it's called a SLP!
+
+    std::vector<size_t> instructions_; //< The instructions.  The opcodes are  stored as size_t's, as well as the locations of operands and results.
+    std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; //< the size_t is where in memory to downsample to.
 	};
 	
 
@@ -347,6 +429,8 @@ namespace bertini {
       public Visitor<node::ArcCosOperator>,
       public Visitor<node::TanOperator>,
       public Visitor<node::ArcTanOperator>
+
+      // also missing -- linears and difflinears.
 
       // these abstract base types left out, 
       // but commented here to explain why
@@ -388,7 +472,7 @@ namespace bertini {
       virtual void Visit(node::TanOperator const& n);
       virtual void Visit(node::ArcTanOperator const& n);
 
-
+      // missing -- linear and difflinear
     private:
 
       template<typename NodeT>
