@@ -1,3 +1,4 @@
+
 //This file is part of Bertini 2.
 //
 //straight_line_program.hpp is free software: you can redistribute it and/or modify
@@ -30,6 +31,8 @@
 
 #ifndef BERTINI_SLP_HPP
 #define BERTINI_SLP_HPP
+
+#pragma once
 
 #include <assert.h>
 #include <vector>
