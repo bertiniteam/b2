@@ -27,6 +27,7 @@
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
+using Nd = std::shared_ptr<bertini::node::Node>;
 
 BOOST_CLASS_EXPORT(bertini::System)
 
@@ -300,45 +301,69 @@ namespace bertini
 		{
 			case JacobianEvalMethod::JacobianNode:
 			{
-				auto num_functions = NumFunctions();
-				jacobian_.resize(num_functions);
-				for (int ii = 0; ii < num_functions; ++ii)
-					jacobian_[ii] = MakeJacobian(functions_[ii]->Differentiate());
+				DifferentiateUsingJacobianNode();
 				break;
 			}
 			case JacobianEvalMethod::Derivatives:
 			{
-				const auto& vars = this->Variables();
-				const auto num_vars = NumVariables();
-				const auto num_functions = NumFunctions();
-
-				space_derivatives_.resize(num_functions*num_vars);
-				// again, computing these in column major, so staying with one variable at a time.
-				for (int jj = 0; jj < num_vars; ++jj)
-					for (int ii = 0; ii < num_functions; ++ii)
-						space_derivatives_[ii+jj*num_functions] = functions_[ii]->Differentiate(vars[jj]);
-
-				if (HavePathVariable())
-				{
-					const auto& t = path_variable_;
-					time_derivatives_.resize(num_functions);
-						for (int ii = 0; ii < num_functions; ++ii)
-							time_derivatives_[ii] = functions_[ii]->Differentiate(t);
-				}
+				DifferentiateUsingDerivatives();
 				break;
 			}
 		}
-		is_differentiated_ = true;
-
+		
 		if (auto_simplify_)
-		{
 			this->SimplifyDerivatives();
-		}
+
 	}
 
+	void System::DifferentiateUsingJacobianNode() const
+	{
+		auto num_functions = NumFunctions();
+		jacobian_.resize(num_functions);
+		for (int ii = 0; ii < num_functions; ++ii)
+			jacobian_[ii] = MakeJacobian(functions_[ii]->Differentiate());
 
+		is_differentiated_ = true;
+	}
 
+	void System::DifferentiateUsingDerivatives() const
+	{
+		const auto& vars = this->Variables();
+		const auto num_vars = NumVariables();
+		const auto num_functions = NumFunctions();
 
+		space_derivatives_.resize(num_functions*num_vars);
+		// again, computing these in column major, so staying with one variable at a time.
+		for (int jj = 0; jj < num_vars; ++jj)
+			for (int ii = 0; ii < num_functions; ++ii)
+				space_derivatives_[ii+jj*num_functions] = functions_[ii]->Differentiate(vars[jj]);
+
+		if (HavePathVariable())
+		{
+			const auto& t = path_variable_;
+			time_derivatives_.resize(num_functions);
+				for (int ii = 0; ii < num_functions; ++ii)
+					time_derivatives_[ii] = functions_[ii]->Differentiate(t);
+		}
+
+		is_differentiated_ = true;
+	}
+
+	std::vector< Nd > System::GetSpaceDerivatives() const
+	{
+		if ( (jacobian_eval_method_==JacobianEvalMethod::JacobianNode) || (!is_differentiated_) )
+			DifferentiateUsingDerivatives();
+
+		return space_derivatives_;
+	}
+
+	std::vector< Nd > System::GetTimeDerivatives() const
+	{
+		if ( (jacobian_eval_method_==JacobianEvalMethod::JacobianNode) || (!is_differentiated_) )
+			DifferentiateUsingDerivatives();
+		
+		return time_derivatives_;
+	}
 
 	void System::Homogenize()
 	{

@@ -30,7 +30,8 @@
 										"config.status",
 										"configure",
 										"*.trs",
-										"ltmain.sh"],
+										"ltmain.sh",
+										"*.tmp"],
 			"folder_exclude_patterns": [
 				".deps",
 				".libs",

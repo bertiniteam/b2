@@ -1228,6 +1228,29 @@ namespace bertini {
 		{
 			return path_variable_;
 		}
+
+
+		/**
+		 \brief Get the space derivatives
+
+		 These are as computed using the Derivatives method, not Jacobian nodes.  They are stored in column-major order, so stride over variables first.
+
+		 ```
+		 for (int jj = 0; jj < num_vars; ++jj)
+			for (int ii = 0; ii < num_functions; ++ii)
+				space_derivatives_[ii+jj*num_functions] = functions_[ii]->Differentiate(vars[jj]);
+		```		
+		 */
+		std::vector< Nd > GetSpaceDerivatives() const;
+
+		/**
+		 \brief Get the time derivatives of all functions
+
+		 These are as computed using the Derivatives method, not Jacobian nodes.  Stored in order of functions.
+		 */
+		std::vector< Nd > GetTimeDerivatives() const;
+
+
 		//////////////////////
 		//
 		//  Functions involving coefficients of the system
@@ -1553,6 +1576,9 @@ namespace bertini {
 
 			return x_dehomogenized;
 		}
+
+		void DifferentiateUsingDerivatives() const;
+		void DifferentiateUsingJacobianNode() const;
 
 		/**
 		 Puts together the ordering of variables, and stores it internally.
