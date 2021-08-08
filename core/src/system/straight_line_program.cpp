@@ -462,13 +462,10 @@ namespace bertini{
 
 
 		std::cout << "visiting functions" << std::endl;
-		for (int ii = 0; ii < sys.NumTotalFunctions(); ++ii)
+		for (auto f : sys.GetFunctions())
 		{
-			auto f = sys.Function(ii);
-
 			std::cout << *(f) << std::endl;
 			f->Accept(*this);
-
 
 			// post visit function
 			/* code */

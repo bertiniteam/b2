@@ -1194,9 +1194,9 @@ namespace bertini {
 
 
 
-		/////////////// TESTING ////////////////////
+
 		/**
-		 Get a function by its index.  
+		 \brief Get a function by its index.  
 
 		 This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
 		*/
@@ -1206,6 +1206,15 @@ namespace bertini {
 		}
 
 		
+		/**
+		 \brief Get the functions.  
+		*/
+		auto GetFunctions() const
+		{
+			return functions_;
+		}
+
+
 
 		/**
 		 Get the affine variable groups in the problem.
