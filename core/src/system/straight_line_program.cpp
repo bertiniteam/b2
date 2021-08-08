@@ -438,16 +438,28 @@ namespace bertini{
 		}
 
 
-		
-		std::cout << "making space in memory for derivatives" << std::endl;
-			// always do derivatives with respect to space variables
-			// 4. ADD SPACE VARIABLE DERIVATIVES
 
-		if (sys.HavePathVariable())
-		{
-				// we need derivatives with respect to time only if the system has a path variable defined
-				// 5. ADD TIME VARIABLE DERIVATIVES
+		std::cout << "making space in memory for space derivatives" << std::endl;
+		auto ds_dx = sys.GetSpaceDerivatives(); // a linear object, so can just run down the object
+		
+
+		// always have space derivatives
+		for (auto n: ds_dx)
+			locations_encountered_symbols_[n] = next_available_mem_++;
+
+
+		// sometimes have time derivatives
+		if (sys.HavePathVariable()) {
+			std::cout << "making space in memory for time derivatives" << std::endl;
+			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
+			for (auto n: ds_dt)
+				locations_encountered_symbols_[n] = next_available_mem_++;
 		}
+
+
+			
+
+
 
 		std::cout << "visiting functions" << std::endl;
 		for (int ii = 0; ii < sys.NumTotalFunctions(); ++ii)
@@ -458,8 +470,30 @@ namespace bertini{
 			f->Accept(*this);
 
 
-			std::cout << "post visit function" << std::endl;
+			// post visit function
 			/* code */
+		}
+
+
+
+		std::cout << "visiting space derivatives" << std::endl;
+		// always do derivatives with respect to space variables
+		// 4. ADD SPACE VARIABLE DERIVATIVES
+		for (auto n: ds_dx)
+			n->Accept(*this);
+
+
+
+
+		// sometimes have time derivatives
+		if (sys.HavePathVariable()) {
+			std::cout << "visiting time derivatives" << std::endl;
+			// we need derivatives with respect to time only if the system has a path variable defined
+			// 5. ADD TIME VARIABLE DERIVATIVES
+
+			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
+			for (auto n: ds_dt)
+				n->Accept(*this);
 		}
 
 		return slp_under_construction_;
