@@ -15,15 +15,15 @@
 //
 // Copyright(C) 2021 by Bertini2 Development Team
 //
-// See <http://www.gnu.org/licenses/> for a copy of the license, 
-// as well as COPYING.  Bertini2 is provided with permitted 
+// See <http://www.gnu.org/licenses/> for a copy of the license,
+// as well as COPYING.  Bertini2 is provided with permitted
 // additional terms in the b2/licenses/ directory.
 
 // individual authors of this file include:
 // silviana amethyst, university of wisconsin eau claire
 
 /**
-\file straight_line_program.hpp 
+\file straight_line_program.hpp
 
 \brief Provides the bertini::StraightLineProgram class.
 */
@@ -77,52 +77,52 @@ typedef struct
 
 The straight-line program structure.  This is the way that polynomials are stored internally.
 typedef struct {
-  int *prog;     //  The program instructions. (a big integer array)  
-  int  size;     //  size of the instruction program.      
-  int  memSize;  // Amount of memory it needs in workspace (for temp and final results).   
-  num_t *nums;   // The array of real numbers. 
-  int precision; // The precision at which evaluation should occur 
-  
-  // INFO NEEDED FOR M-HOM: 
-  int num_var_gps;  // The total number of variable groups (i.e., m from m-hom).
-  int *var_gp_sizes;  // The size of each of the groups. 
-  int index_of_first_number_for_proj_trans;  // The address of the first number used in the projective transformation polynomials. 
-                                                                                    
-  // STOP LOCATIONS: 
-  int  numInstAtEndUpdate; // instruction number at end of update. i.e. i = 0; while (i < numInstAtEndUpdate) .. 
-  int  numInstAtEndParams; // instruction number at end of params. i.e. i = numInstAtEndUpdate; while (i < numInstAtEndParams) .. 
-  int  numInstAtEndFnEval; // instruction number at end of function eval. i.e. i = numInstAtEndParams; while (i < numInstAtEndFnEval) .. 
-  int  numInstAtEndPDeriv; // instruction number at end of param diff. i.e. i = numInstAtEndFnEval; while (i < numInstAtEndPDeriv) .. 
-  int  numInstAtEndJvEval; // instruction number at end of Jv eval. i.e. i = numInstAtEndPDeriv; while (i < numInstAtEndJvEval) .. 
-                           // for Jp eval: i = numInstAtEndJvEval; while (i < size) ..  
+  int *prog;     //  The program instructions. (a big integer array)
+  int  size;     //  size of the instruction program.
+  int  memSize;  // Amount of memory it needs in workspace (for temp and final results).
+  num_t *nums;   // The array of real numbers.
+  int precision; // The precision at which evaluation should occur
 
-  // INPUT AMOUNTS: 
-  int  numVars;  //  Number of variables in the function being computed.   
-  int  numPathVars;  //  Number of path variables.  Ought to be 1 usually.   
-  int  numNums;  //  Number of real numbers used in evaluation.  
-  int  numConsts;  //  Number of constants.     
-                                                                                   
-  // OUTPUT AMOUNTS: 
-  int  numPars;  //  Number of parameters   
-  int  numFuncs; //  Number of coordinate functions in the homotopy.   
-  int  numSubfuncs;  //  Number of subfunctions.  
-                                                                                      
-  // INPUT LOCATIONS: 
-  int  inpVars;  //  Where the input variable values are stored.   
-  int  inpPathVars;  //  Where the values of the path variables are stored.   
-  int  IAddr;  //  Where the constant I is stored.  
-  int  numAddr;  //  Where the first num_t is stored.  
-  int  constAddr;  //  Where the first constant is stored.  
-                                                                                      
-  // OUTPUT LOCATIONS: 
-  int  evalPars;  //  Where U(t), for given t, is stored.   
-  int  evalDPars;  //  Where the derivatives of the parameters are stored.   
-  int  evalFuncs;  //  Where H(x,t) is stored.   
-  int  evalJVars;  //  Where the Jacobian w.r.t. vars is stored.   
-  int  evalJPars;  //  Where the Jacobian w.r.t. pars is stored.   
-  int  evalSubs;  //  Where the subfunctions are stored 
-  int  evalJSubsV;  //  Where the derivatives of the subfunctions w.r.t. vars are stored.  
-  int  evalJSubsP;  //  Where the derivatives of the subfunctions w.r.t. pars are stored.  
+  // INFO NEEDED FOR M-HOM:
+  int num_var_gps;  // The total number of variable groups (i.e., m from m-hom).
+  int *var_gp_sizes;  // The size of each of the groups.
+  int index_of_first_number_for_proj_trans;  // The address of the first number used in the projective transformation polynomials.
+
+  // STOP LOCATIONS:
+  int  numInstAtEndUpdate; // instruction number at end of update. i.e. i = 0; while (i < numInstAtEndUpdate) ..
+  int  numInstAtEndParams; // instruction number at end of params. i.e. i = numInstAtEndUpdate; while (i < numInstAtEndParams) ..
+  int  numInstAtEndFnEval; // instruction number at end of function eval. i.e. i = numInstAtEndParams; while (i < numInstAtEndFnEval) ..
+  int  numInstAtEndPDeriv; // instruction number at end of param diff. i.e. i = numInstAtEndFnEval; while (i < numInstAtEndPDeriv) ..
+  int  numInstAtEndJvEval; // instruction number at end of Jv eval. i.e. i = numInstAtEndPDeriv; while (i < numInstAtEndJvEval) ..
+                           // for Jp eval: i = numInstAtEndJvEval; while (i < size) ..
+
+  // INPUT AMOUNTS:
+  int  numVars;  //  Number of variables in the function being computed.
+  int  numPathVars;  //  Number of path variables.  Ought to be 1 usually.
+  int  numNums;  //  Number of real numbers used in evaluation.
+  int  numConsts;  //  Number of constants.
+
+  // OUTPUT AMOUNTS:
+  int  numPars;  //  Number of parameters
+  int  numFuncs; //  Number of coordinate functions in the homotopy.
+  int  numSubfuncs;  //  Number of subfunctions.
+
+  // INPUT LOCATIONS:
+  int  inpVars;  //  Where the input variable values are stored.
+  int  inpPathVars;  //  Where the values of the path variables are stored.
+  int  IAddr;  //  Where the constant I is stored.
+  int  numAddr;  //  Where the first num_t is stored.
+  int  constAddr;  //  Where the first constant is stored.
+
+  // OUTPUT LOCATIONS:
+  int  evalPars;  //  Where U(t), for given t, is stored.
+  int  evalDPars;  //  Where the derivatives of the parameters are stored.
+  int  evalFuncs;  //  Where H(x,t) is stored.
+  int  evalJVars;  //  Where the Jacobian w.r.t. vars is stored.
+  int  evalJPars;  //  Where the Jacobian w.r.t. pars is stored.
+  int  evalSubs;  //  Where the subfunctions are stored
+  int  evalJSubsV;  //  Where the derivatives of the subfunctions w.r.t. vars are stored.
+  int  evalJSubsP;  //  Where the derivatives of the subfunctions w.r.t. pars are stored.
 } prog_t;
 */
 
@@ -169,7 +169,7 @@ namespace bertini {
 
 	class StraightLineProgram{
     friend SLPCompiler;
-    
+
   private:
     using Nd = std::shared_ptr<node::Node>;
 
@@ -198,20 +198,36 @@ namespace bertini {
 		template<typename Derived>
 		void Eval(Eigen::MatrixBase<Derived> const& variable_values) const
 		{
-      // 1. copy variable values into memory locations they're supposed to go in
+
+      using NumT = typename Derived::Scalar;
       CopyVariableValues(variable_values);
+
+      Eval<NumT>();
+
+
 		}
 
 
     template<typename Derived, typename ComplexT>
     void Eval(Eigen::MatrixBase<Derived> const& variable_values, ComplexT const& time) const
     {
+      using NumT = typename Derived::Scalar;
+      static_assert(std::is_same<NumT, ComplexT>::value, "scalar types must be the same");
+
       // 1. copy variable values into memory locations they're supposed to go in
       CopyVariableValues(variable_values);
       CopyPathVariable(time);
+      Eval<NumT>();
     }
 
 
+    template<typename NumT>
+    void Eval() const{
+      auto& memory =  std::get<std::vector<T>>(memory_);
+      for (auto n : instructions_) { //change to index loop
+
+      }
+    }
 
     template<typename NumT>
     void GetFuncVals(Vec<NumT> & result) const{
@@ -286,7 +302,11 @@ namespace bertini {
 
     template<typename Derived>
     void CopyVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
-      throw std::runtime_error("calling unimplemented function CopyVariableValues");
+      for (auto n : variable_values) {
+        //add  to memory
+        //add to value  locations?
+
+      }
     }
 
     template<typename ComplexT>
@@ -312,14 +332,14 @@ namespace bertini {
     OutputLocations output_locations_;
     OutputLocations input_locations_;
 
-    mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_; 
+    mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_;
 
     std::vector<size_t> instructions_;
     std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; // the size_t is where in memory to downsample to.
 	};
-	
 
-  class SLPCompiler : public VisitorBase, 
+
+  class SLPCompiler : public VisitorBase,
       // symbols and roots
       public Visitor<node::Variable>,
       public Visitor<node::Integer>,
@@ -345,7 +365,7 @@ namespace bertini {
       public Visitor<node::TanOperator>,
       public Visitor<node::ArcTanOperator>
 
-      // these abstract base types left out, 
+      // these abstract base types left out,
       // but commented here to explain why
       //    public Visitor<node::Operator>,// abstract
       //    public Visitor<node::UnaryOperator>,// abstract
@@ -415,6 +435,3 @@ namespace bertini {
 
 
 #endif // for the ifndef include guards
-
-
-
