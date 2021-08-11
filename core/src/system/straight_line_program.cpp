@@ -21,8 +21,7 @@
 
 // individual authors of this file include:
 // silviana amethyst, university of wisconsin eau claire
-//
-// written with the help of UWEC student Mike Mumm, summer 2021
+// michael mumm, university of wisconsin eau claire
 
 #include "bertini2/system/straight_line_program.hpp"
 #include "bertini2/system/system.hpp"
@@ -406,7 +405,7 @@ namespace bertini{
 			// 1. ADD VARIABLES
 		auto variable_groups = sys.VariableGroups();
 		auto variable_group_sizes = sys.VariableGroupSizes();
-
+		slp_under_construction_.input_locations_.Variables = next_available_mem_;
 		unsigned variable_counter{0};
 		for (int ii=0; ii<variable_group_sizes.size(); ++ii){
 			auto vg = variable_groups[ii];
@@ -419,6 +418,7 @@ namespace bertini{
 		}
 
 		slp_under_construction_.num_variables_ = variable_counter;
+		slp_under_construction_.input_locations_.Variables = variable_counter;
 
 			// deal with path variable
 		if (sys.HavePathVariable())
@@ -432,15 +432,21 @@ namespace bertini{
 		std::cout << "making space in memory for functions" << std::endl;
 			// make space for functions and derivatives
 			// 3. ADD FUNCTIONS
-		for (auto f: sys.GetFunctions()) 
+		slp_under_construction_.number_of_.Functions = sys.NumFunctions();
+		slp_under_construction_.output_locations_.Functions = next_available_mem_;
+		for (auto f: sys.GetFunctions())
 			locations_encountered_symbols_[f] = next_available_mem_++;
-		
+
+
 
 
 
 		std::cout << "making space in memory for space derivatives" << std::endl;
 		// always have space derivatives
+
 		auto ds_dx = sys.GetSpaceDerivatives(); // a linear object, so can just run down the object
+		slp_under_construction_.number_of_.Jacobian = ds_dx.size();
+		slp_under_construction_.output_locations_.Jacobian = next_available_mem_;
 		for (auto n: ds_dx)
 			locations_encountered_symbols_[n] = next_available_mem_++;
 
@@ -449,12 +455,14 @@ namespace bertini{
 		if (sys.HavePathVariable()) {
 			std::cout << "making space in memory for time derivatives" << std::endl;
 			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
+			slp_under_construction_.number_of_.TimeDeriv = ds_dt.size();
+			slp_under_construction_.output_locations_.TimeDeriv = next_available_mem_;
 			for (auto n: ds_dt)
 				locations_encountered_symbols_[n] = next_available_mem_++;
 		}
 
 
-			
+
 
 
 

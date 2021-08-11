@@ -22,6 +22,7 @@
 
 // individual authors of this file include:
 // silviana amethyst, university of wisconsin eau claire
+// michael mumm, university of wisconsin eau claire
 
 /**
 \file straight_line_program.hpp
@@ -183,7 +184,7 @@ namespace bertini {
 
 	 Maybe you don't need to know this, but in construction the SLP uses a helper class, the SLPCompiler
 
-	 Patches are just functions in this framework.  The variables appear at the front of the memory, then functions, then derivatives.  This should make copying data out easy, because it's all in one place.  
+	 Patches are just functions in this framework.  The variables appear at the front of the memory, then functions, then derivatives.  This should make copying data out easy, because it's all in one place.
 
 	 In contrast to Bertini1 SLP's, we don't put all the numbers at the front -- they just get scattered through the SLP's memory.
 	 */
@@ -209,7 +210,7 @@ namespace bertini {
 
 		/**
 		 \struct InputLocations
-		 
+
 		 A struct encapsulating the starting locations of things in the SLP
 		 */
 		struct InputLocations{
@@ -219,7 +220,7 @@ namespace bertini {
 
 		/**
 		 \struct NumberOf
-		 
+
 		 A struct encapsulating the numbers of things appearing in the SLP
 		 */
 		struct NumberOf{
@@ -264,32 +265,61 @@ namespace bertini {
 
 		template<typename NumT>
 		void Eval() const{
-			auto& memory =  std::get<std::vector<T>>(memory_);
-			for (auto n : instructions_) { //change to index loop
+			auto& memory =  std::get<std::vector<NumT>>(memory_);
+			auto memCounter = 0;
+			for (int ii = 0; ii<instructions_.size();/*the increment is done depending on unary/binary */) {
+				//in the  unary case the loop will increment by 3
+				auto opBool = IsUnary(instructions_[ii]);
+				switch (instructions_[ii]) {
+					case Log:
+						memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
+						break;
+				}
+				if (opBool) {
+					ii = ii+3;
 
+				}
+				//in the binary  case the loop will increment by 4
+				else {
+					ii = ii+4;
+				}
+				//use IsUnary and IsBinary
 			}
 		}
 
 		template<typename NumT>
 		void GetFuncVals(Vec<NumT> & result) const{
+			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			// 1. make container, size correctly.
+			result.resize(number_of_.Functions);
 			// 2. copy content
-			// 3. return
+			for (int ii = 0; ii < number_of_.Functions; ++ii) {
+				result(ii) = memory[ii + output_locations_.Functions];
+			}
 		}
 
 		template<typename NumT>
 		void GetJacobian(Mat<NumT> & result) const{
+			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			// 1. make container, size correctly.
+			result.resize(number_of_.Functions, number_of_.Variables);
 			// 2. copy content
-			// 3. return
+			for (int jj =0; jj < number_of_.Variables; ++jj) {
+				for (int ii = 0; ii < number_of_.Functions; ++ii) {
+					result(ii, jj) = memory[ii+jj*number_of_.Functions + output_locations_.Jacobian];
+				}
+			}
 		}
-
 
 		template<typename NumT>
 		void GetTimeDeriv(Vec<NumT> & result) const{
+			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			// 1. make container, size correctly.
+			result.resize(number_of_.Functions);
 			// 2. copy content
-			// 3. return
+			for (int ii = 0; ii < number_of_.Functions; ++ii) {
+				result(ii) = memory[ii + output_locations_.TimeDeriv];
+			}
 		}
 
 
@@ -332,7 +362,7 @@ namespace bertini {
 		}
 
 		/**
-		\brief change the precision of the SLP.  
+		\brief change the precision of the SLP.
 
 		Downsamples from the true values.
 
@@ -369,7 +399,7 @@ namespace bertini {
 		 \brief Copy the current time value to memory
 
 		 \param time The current time
-		 \tparam ComplexT the complex numeric type.  
+		 \tparam ComplexT the complex numeric type.
 
 		 If the SLP doesn't have a path variable, then this will throw.
 		 */
