@@ -345,9 +345,9 @@ namespace bertini {
 		}
 
 
-		inline unsigned NumTotalFunctions() const{ return num_total_functions_;}
+		inline unsigned NumFunctions() const{ return number_of_.Functions;}
 
-		inline unsigned NumVariables() const{ return num_variables_;}
+		inline unsigned NumVariables() const{ return number_of_.Variables;}
 
 
 		/**
@@ -437,8 +437,6 @@ namespace bertini {
 
 
 		unsigned precision_ = 0; //< The current working number of digits
-		unsigned num_total_functions_ = 0; //< How many total functions?  Including patches.
-		unsigned num_variables_ = 0; //< How many variables?  Including homogenizing variables.
 		bool has_path_variable_ = false; //< Does this SLP have a path variable?
 
 		NumberOf number_of_;  //< Quantities of things

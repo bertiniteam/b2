@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(has_correct_size)
 
 	auto slp = SLP(sys);
 
-	BOOST_CHECK_EQUAL(slp.NumTotalFunctions(), sys.NumTotalFunctions());
+	BOOST_CHECK_EQUAL(slp.NumFunctions(), sys.NumFunctions());
 	BOOST_CHECK_EQUAL(slp.NumVariables(), sys.NumVariables());
 }
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(evaluate_simple_system)
 	values(0) = dbl(2.0);
 
 	slp.Eval(values);
-	
+
 	Vec<dbl> f = slp.GetFuncVals<dbl>();
 	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
 
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(evaluate_system2)
 	BOOST_CHECK_EQUAL(J(0,0), 2.*x); // df1/dx = 2x
 	BOOST_CHECK_EQUAL(J(0,1), 2.*y); // df1/dy = 2y
 	BOOST_CHECK_EQUAL(J(1,0), 1.);   // df2/dx = 1
-	BOOST_CHECK_EQUAL(J(1,1), -1.);  // df2/dy = -1 
+	BOOST_CHECK_EQUAL(J(1,1), -1.);  // df2/dy = -1
 }
 
 

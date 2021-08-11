@@ -34,10 +34,6 @@ namespace bertini{
 
 	// the constructor
 	StraightLineProgram::StraightLineProgram(System const& sys){
-		this->num_total_functions_ = sys.NumTotalFunctions();
-
-		std::cout << sys.NumTotalFunctions() << std::endl;
-
 		SLPCompiler compiler;
 		*this = compiler.Compile(sys);
 	}
@@ -416,8 +412,6 @@ namespace bertini{
 				variable_counter += s;
 			}
 		}
-
-		slp_under_construction_.num_variables_ = variable_counter;
 		slp_under_construction_.input_locations_.Variables = variable_counter;
 
 			// deal with path variable
