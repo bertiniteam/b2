@@ -269,13 +269,59 @@ namespace bertini {
 			auto memCounter = 0;
 			for (int ii = 0; ii<instructions_.size();/*the increment is done depending on unary/binary */) {
 				//in the  unary case the loop will increment by 3
-				auto opBool = IsUnary(instructions_[ii]);
+
 				switch (instructions_[ii]) {
 					case Log:
 						memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
 						break;
+					case Add:
+						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] + memory[instructions_[ii+2]];
+						break;
+					case Subtract:
+						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] - memory[instructions_[ii+2]];
+						break;
+					case Multiply:
+						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] * memory[instructions_[ii+2]];
+						break;
+					case Divide:
+						memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
+						break;
+					case Power:
+						memory[this->instructions_[ii+2]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
+						break;
+					case Exp:
+						memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
+						break;
+					case Negate:
+						memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
+						break;
+					case Sin:
+						memory[this->instructions_[ii+2]] = sin(memory[instructions_[ii+1]]);
+						break;
+					case Cos:
+						memory[this->instructions_[ii+2]] = cos(memory[instructions_[ii+1]]);
+						break;
+					case Tan:
+						memory[this->instructions_[ii+2]] = tan(memory[instructions_[ii+1]]);
+						break;
+					case Asin:
+						memory[this->instructions_[ii+2]] = asin(memory[instructions_[ii+1]]);
+						break;
+					case Acos:
+						memory[this->instructions_[ii+2]] = acos(memory[instructions_[ii+1]]);
+						break;
+					case Atan:
+						memory[this->instructions_[ii+2]] = atan(memory[instructions_[ii+1]]);
+						break;
+					case Assign:
+						memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
+						break;
+
+
 				}
-				if (opBool) {
+
+
+				if (IsUnary(instructions_[ii])) {
 					ii = ii+3;
 
 				}
@@ -283,7 +329,6 @@ namespace bertini {
 				else {
 					ii = ii+4;
 				}
-				//use IsUnary and IsBinary
 			}
 		}
 
