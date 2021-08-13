@@ -321,7 +321,7 @@ namespace bertini {
 				}
 
 
-				if (IsUnary(instructions_[ii])) {
+				if (IsUnary(static_cast<Operation>(instructions_[ii]))) {
 					ii = ii+3;
 
 				}
@@ -433,10 +433,11 @@ namespace bertini {
 		 */
 		template<typename Derived>
 		void CopyVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
-			for (auto n : variable_values) {
+			using NumT = typename Derived::Scalar;
+			auto& memory =  std::get<std::vector<NumT>>(memory_);
+			for (int ii = 0; ii < number_of_.Variables; ++ii) {
 				//add  to memory
-				//add to value  locations?
-
+				memory[ii + output_locations_.Variables] = variable_values(ii);
 			}
 		}
 

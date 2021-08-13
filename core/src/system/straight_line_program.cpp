@@ -156,12 +156,25 @@ namespace bertini{
 				n->Accept(*this); // think of calling Compile(n)
 
 			operand_locations.push_back(this->locations_encountered_symbols_[n]);
+			std::cout << "did the thing " << n << std::endl;
 		}
 
 		const auto& signs = op.GetSigns();
 
+
+		std::cout << op.Operands().size() << std::endl;
+
+
+
 		// seed the loop by adding together the first two things, which must exist by hypothesis
-		assert(op.Operands().size() >=2);
+
+		if (op.Operands().size() == 1) {
+			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_;
+			slp_under_construction_.AddInstruction(Assign, operand_locations[0], next_available_mem_++);
+			return;
+		}
+
+		//assert(op.Operands().size() >=2);
 
 		size_t prev_result_loc = next_available_mem_;
 
@@ -179,7 +192,7 @@ namespace bertini{
 			else
 				slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_++);
 		}
-		this->locations_encountered_symbols_[std::make_shared<node::SumOperator>(op)] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
+		this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
 
 		// for each pair, look up the node in the memory structure in SLP
 
@@ -412,6 +425,7 @@ namespace bertini{
 				variable_counter += s;
 			}
 		}
+		slp_under_construction_.number_of_.Variables = variable_counter;
 		slp_under_construction_.input_locations_.Variables = variable_counter;
 
 			// deal with path variable
