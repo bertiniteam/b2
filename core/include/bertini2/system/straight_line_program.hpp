@@ -332,6 +332,18 @@ namespace bertini {
 			}
 		}
 
+
+
+		/**
+		\brief retrieves the computed values of functions
+
+		\tparam NumT numeric type
+
+		\param result The vector you're going to store the values into
+
+		the function will automatically resize your vector for you to be the correct size
+
+		 */
 		template<typename NumT>
 		void GetFuncVals(Vec<NumT> & result) const{
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
