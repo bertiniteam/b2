@@ -506,6 +506,8 @@ namespace bertini{
 				n->Accept(*this);
 		}
 
+		slp_under_construction_.GetMemory<dbl_complex>().resize(next_available_mem_);
+		slp_under_construction_.GetMemory<mpfr_complex>().resize(next_available_mem_);
 		return slp_under_construction_;
 	}
 
