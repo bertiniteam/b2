@@ -422,7 +422,7 @@ namespace bertini{
 
 			for (int jj=0; jj<s; ++jj){
 				locations_encountered_symbols_[ vg[jj] ] = next_available_mem_++;
-				variable_counter += s;
+				variable_counter += 1;
 			}
 		}
 		slp_under_construction_.number_of_.Variables = variable_counter;

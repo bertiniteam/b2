@@ -21,6 +21,17 @@ bertini::System SingleVariableTestSystem(){
 	return sys;
 }
 
+
+bertini::System TwoVariableTestSystem(){
+	std::string str = "function f,g; variable_group x,y; f = x^2+y^2-1; g = x-y;";
+
+	bertini::System sys;
+	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	return sys;
+}
+
+
 BOOST_AUTO_TEST_CASE(opcodes)
 {
 	BOOST_CHECK(IsUnary(Operation::Negate));
@@ -81,13 +92,20 @@ BOOST_AUTO_TEST_CASE(evaluate_simple_system)
 }
 
 
+BOOST_AUTO_TEST_CASE(number_variables_system2)
+{
+	bertini::System sys = TwoVariableTestSystem();
+	auto slp = SLP(sys);
+
+	std::cout << sys << std::endl;
+	BOOST_CHECK_EQUAL(slp.NumVariables(), sys.NumVariables());
+
+}
+
 
 BOOST_AUTO_TEST_CASE(evaluate_system2)
 {
-	std::string str = "function f,g; variable_group x,y; f = x^2+y^2-1; g = x-y;";
-	bertini::System sys;
-	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
-
+	bertini::System sys = TwoVariableTestSystem();
 	auto slp = SLP(sys);
 
 	Vec<dbl> values(2);
