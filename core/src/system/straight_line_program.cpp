@@ -196,58 +196,39 @@ namespace bertini{
 			std::cout << "did the thing " << n << std::endl;
 		}
 
-		const auto& signs = op.GetSigns();
+		
 
-
-		std::cout << op.Operands().size() << std::endl;
-
-
-
-		// seed the loop by adding together the first two things, which must exist by hypothesis
-
+		//assert(op.Operands().size() >=2);
 		if (op.Operands().size() == 1) {
 			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_;
 			slp_under_construction_.AddInstruction(Assign, operand_locations[0], next_available_mem_++);
-			return;
 		}
+		else{
+			// seed the loop by adding together the first two things, which must exist by hypothesis
+			const auto& signs = op.GetSigns();
+			size_t prev_result_loc = next_available_mem_;
 
-		//assert(op.Operands().size() >=2);
-
-		size_t prev_result_loc = next_available_mem_;
-
-		if (signs[0])
-			slp_under_construction_.AddInstruction(Add,operand_locations[0],operand_locations[1], next_available_mem_++);
-		else
-			slp_under_construction_.AddInstruction(Subtract,operand_locations[0],operand_locations[1], next_available_mem_++);
-
-		// this loop
-		// actually does the additions for the rest of the operands
-
-		for (size_t ii{2}; ii<op.Operands().size(); ++ii){
-			if (signs[ii-1])
-				slp_under_construction_.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_++);
+			if (signs[0])
+				slp_under_construction_.AddInstruction(Add,operand_locations[0],operand_locations[1], next_available_mem_++);
 			else
-				slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_++);
+				slp_under_construction_.AddInstruction(Subtract,operand_locations[0],operand_locations[1], next_available_mem_++);
+
+			// this loop
+			// actually does the additions for the rest of the operands
+
+			for (size_t ii{2}; ii<op.Operands().size(); ++ii){
+				if (signs[ii-1])
+					slp_under_construction_.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_++);
+				else
+					slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_++);
+			}
+			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
 		}
-		this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
-
-		// for each pair, look up the node in the memory structure in SLP
-
-
-
-			// add a SUM op to the instructions.
-
-			// add/subtract the nodes together.
-
-			// naive method: just loop over all operands, add/sub them up.
 
 			// improved option?: we could do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.  instead, use Pairwise summation
 			// do pairs (0,1), (2,3), etc,
 			// *then* add those temp vals together, until get to end.
 			// see https://en.wikipedia.org/wiki/Pairwise_summation
-
-
-		// loop over pairs of operands, not one by one as is currently done.
 	}
 
 
