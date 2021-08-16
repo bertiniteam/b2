@@ -355,6 +355,17 @@ namespace bertini {
 			}
 		}
 
+		/**
+		\brief retrieves the computed values of jacobians
+
+		\tparam NumT numeric type
+
+		\param result The vector you're going to store the values into
+
+		the function will automatically resize your vector for you to be the correct size
+
+		 */
+
 		template<typename NumT>
 		void GetJacobian(Mat<NumT> & result) const{
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
@@ -367,6 +378,17 @@ namespace bertini {
 				}
 			}
 		}
+
+		/**
+		\brief retrieves the output locations of time derivatives
+
+		\tparam NumT numeric type
+
+		\param result The vector you're going to store the values into
+
+		the function will automatically resize your vector for you to be the correct size
+
+		 */
 
 		template<typename NumT>
 		void GetTimeDeriv(Vec<NumT> & result) const{
