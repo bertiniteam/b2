@@ -206,21 +206,23 @@ namespace bertini{
 		else{
 			// seed the loop by adding together the first two things, which must exist by hypothesis
 			const auto& signs = op.GetSigns();
-			size_t prev_result_loc = next_available_mem_;
+			
 
 			if (signs[0])
-				slp_under_construction_.AddInstruction(Add,operand_locations[0],operand_locations[1], next_available_mem_++);
+				slp_under_construction_.AddInstruction(Add,operand_locations[0],operand_locations[1], next_available_mem_);
 			else
-				slp_under_construction_.AddInstruction(Subtract,operand_locations[0],operand_locations[1], next_available_mem_++);
+				slp_under_construction_.AddInstruction(Subtract,operand_locations[0],operand_locations[1], next_available_mem_);
+			size_t prev_result_loc = next_available_mem_;
 
 			// this loop
 			// actually does the additions for the rest of the operands
 
 			for (size_t ii{2}; ii<op.Operands().size(); ++ii){
 				if (signs[ii-1])
-					slp_under_construction_.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_++);
+					slp_under_construction_.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_);
 				else
-					slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_++);
+					slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_);
+				prev_result_loc = next_available_mem_++;
 			}
 			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
 		}
@@ -264,23 +266,24 @@ namespace bertini{
 		// multiply/divide the nodes together.  naive method is fine.
 		const auto& MultOrDiv = op.GetMultOrDiv();// true is multiply and false is divide
 
-		assert(op.Operands().size() >=2);
+		// assert(op.Operands().size() ==2);
 
-		size_t prev_result_loc = next_available_mem_;
+		
 
 		if (MultOrDiv[0])
-			slp_under_construction_.AddInstruction(Multiply,operand_locations[0],operand_locations[1], next_available_mem_++);
+			slp_under_construction_.AddInstruction(Multiply,operand_locations[0],operand_locations[1], next_available_mem_);
 		else
-			slp_under_construction_.AddInstruction(Divide,operand_locations[0],operand_locations[1], next_available_mem_++);
-
+			slp_under_construction_.AddInstruction(Divide,operand_locations[0],operand_locations[1], next_available_mem_);
+		size_t prev_result_loc = next_available_mem_++;
 		// this loop
 		// actually does the additions for the rest of the operands
 
 		for (size_t ii{2}; ii<op.Operands().size(); ++ii){
 			if (MultOrDiv[ii-1])
-				slp_under_construction_.AddInstruction(Multiply,operand_locations[ii],prev_result_loc,next_available_mem_++);
+				slp_under_construction_.AddInstruction(Multiply,operand_locations[ii],prev_result_loc,next_available_mem_);
 			else
-				slp_under_construction_.AddInstruction(Divide,operand_locations[ii],prev_result_loc,next_available_mem_++);
+				slp_under_construction_.AddInstruction(Divide,operand_locations[ii],prev_result_loc,next_available_mem_);
+			prev_result_loc = next_available_mem_++;
 		}
 		this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
 
