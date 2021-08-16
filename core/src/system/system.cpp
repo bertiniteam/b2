@@ -336,14 +336,14 @@ namespace bertini
 		// again, computing these in column major, so staying with one variable at a time.
 		for (int jj = 0; jj < num_vars; ++jj)
 			for (int ii = 0; ii < num_functions; ++ii)
-				space_derivatives_[ii+jj*num_functions] = functions_[ii]->Differentiate(vars[jj]);
+				space_derivatives_[ii+jj*num_functions] = MakeFunction(functions_[ii]->Differentiate(vars[jj]));
 
 		if (HavePathVariable())
 		{
 			const auto& t = path_variable_;
 			time_derivatives_.resize(num_functions);
 				for (int ii = 0; ii < num_functions; ++ii)
-					time_derivatives_[ii] = functions_[ii]->Differentiate(t);
+					time_derivatives_[ii] = MakeFunction(functions_[ii]->Differentiate(t));
 		}
 
 		is_differentiated_ = true;
