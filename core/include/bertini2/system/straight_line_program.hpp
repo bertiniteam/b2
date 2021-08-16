@@ -284,10 +284,10 @@ namespace bertini {
 						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] * memory[instructions_[ii+2]];
 						break;
 					case Divide:
-						memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
+						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
 						break;
 					case Power:
-						memory[this->instructions_[ii+2]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
+						memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
 						break;
 					case Exp:
 						memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
