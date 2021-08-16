@@ -437,8 +437,9 @@ namespace bertini{
 		std::cout << "Compiling system" << std::endl;
 
 
-			// deal with variables
+		this->slp_under_construction_.precision_ = DefaultPrecision();
 
+		// deal with variables
 		std::cout << "dealing with variables" << std::endl;
 
 			// 1. ADD VARIABLES
@@ -538,6 +539,10 @@ namespace bertini{
 
 		slp_under_construction_.GetMemory<dbl_complex>().resize(next_available_mem_);
 		slp_under_construction_.GetMemory<mpfr_complex>().resize(next_available_mem_);
+
+		slp_under_construction_.CopyNumbersIntoMemory<dbl_complex>();
+		slp_under_construction_.CopyNumbersIntoMemory<mpfr_complex>();
+
 		return slp_under_construction_;
 	}
 
