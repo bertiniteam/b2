@@ -501,9 +501,14 @@ namespace bertini {
 		void AddNumber(Nd const num, size_t loc);
 
 		template<typename NumT>
-		auto& GetMemory(){
+		auto& GetMemory() const{
 			return std::get<std::vector<NumT>>(this->memory_);
 		}
+
+
+		template<typename NumT>
+		void CopyNumbersIntoMemory() const;
+
 
 		unsigned precision_ = 0; //< The current working number of digits
 		bool has_path_variable_ = false; //< Does this SLP have a path variable?

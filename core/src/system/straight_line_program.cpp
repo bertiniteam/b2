@@ -102,6 +102,20 @@ namespace bertini{
 		return out;
 	}
 
+
+	template<typename NumT>
+	void StraightLineProgram::CopyNumbersIntoMemory() const
+	{
+		for (auto const& x: true_values_of_numbers_){
+			GetMemory<NumT>()[x.second] = (x.first)->Eval<NumT>();
+			if (std::is_same<NumT,mpfr_complex>::value)
+				Precision(GetMemory<NumT>()[x.second], this->precision_);
+		}
+	}
+
+	template void StraightLineProgram::CopyNumbersIntoMemory<dbl_complex>() const;
+	template void StraightLineProgram::CopyNumbersIntoMemory<mpfr_complex>() const;
+
 }
 
 
