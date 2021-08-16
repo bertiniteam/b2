@@ -159,7 +159,15 @@ namespace bertini{
 
 
 
+	void SLPCompiler::Visit(node::Jacobian const& n){
+		std::cout << "unimplemented visit to node of type Jacobian" << std::endl;
 
+
+	}
+
+	void SLPCompiler::Visit(node::Differential const& n){
+		std::cout << "unimplemented visit to node of type Differential" << std::endl;
+	}
 
 
 
@@ -192,7 +200,7 @@ namespace bertini{
 
 	// arithmetic
 	void SLPCompiler::Visit(node::SumOperator const & op){
-		std::cout << "visiting SumOperator: " << std::endl;
+		std::cout << "visiting SumOperator: " << op << std::endl;
 
 		// this loop
 		// gets the locations of all the things we're going to add up.
@@ -206,37 +214,31 @@ namespace bertini{
 			std::cout << "operand is: " << n << std::endl;
 		}
 
+		  
+		const auto& signs = op.GetSigns();
+		size_t prev_result_loc; // for tracking where the output of the previous iteration went
+
+		// seed the loop.
+		if (signs[0])
+			prev_result_loc = operand_locations[0];
+		else{
+			slp_under_construction_.AddInstruction(Negate, operand_locations[0], next_available_mem_);
+			prev_result_loc = next_available_mem_++;
+		}
 		
 
-		//assert(op.Operands().size() >=2);
-		if (op.Operands().size() == 1) {
-			std::cout << "one operand in this op: " << op << std::endl;
-			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_;
-			slp_under_construction_.AddInstruction(Assign, operand_locations[0], next_available_mem_++);
-		}
-		else{
-			// seed the loop by adding together the first two things, which must exist by hypothesis
-			const auto& signs = op.GetSigns();
-			
-
-			if (signs[0])
-				slp_under_construction_.AddInstruction(Add,operand_locations[0],operand_locations[1], next_available_mem_);
+		// this loop
+		// does the additions for the rest of the operands
+		for (size_t ii{1}; ii<op.Operands().size(); ++ii){
+			if (signs[ii])
+				slp_under_construction_.AddInstruction(Add,prev_result_loc,operand_locations[ii],next_available_mem_);
 			else
-				slp_under_construction_.AddInstruction(Subtract,operand_locations[0],operand_locations[1], next_available_mem_);
-			size_t prev_result_loc = next_available_mem_++;
+				slp_under_construction_.AddInstruction(Subtract,prev_result_loc,operand_locations[ii],next_available_mem_);
 
-			// this loop
-			// actually does the additions for the rest of the operands
-
-			for (size_t ii{2}; ii<op.Operands().size(); ++ii){
-				if (signs[ii-1])
-					slp_under_construction_.AddInstruction(Add,operand_locations[ii],prev_result_loc,next_available_mem_);
-				else
-					slp_under_construction_.AddInstruction(Subtract,operand_locations[ii],prev_result_loc,next_available_mem_);
-				prev_result_loc = next_available_mem_++;
-			}
-			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
+			prev_result_loc = next_available_mem_++;
 		}
+
+		this->locations_encountered_symbols_[op.shared_from_this()] =  prev_result_loc;
 
 			// improved option?: we could do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.  instead, use Pairwise summation
 			// do pairs (0,1), (2,3), etc,
@@ -250,22 +252,8 @@ namespace bertini{
 
 
 
-
-
-	void SLPCompiler::Visit(node::Jacobian const& n){
-		std::cout << "unimplemented visit to node of type Jacobian" << std::endl;
-
-
-	}
-
-	void SLPCompiler::Visit(node::Differential const& n){
-		std::cout << "unimplemented visit to node of type Differential" << std::endl;
-	}
-
-
-
 	void SLPCompiler::Visit(node::MultOperator const & op){
-		std::cout << "visiting MultOperator: " << std::endl;
+		std::cout << "visiting MultOperator: " << op << std::endl;
 		std::vector<size_t> operand_locations;
 		for (auto& n : op.Operands()){
 
@@ -280,28 +268,33 @@ namespace bertini{
 		// assert(op.Operands().size() ==2);
 
 		
-
-		if (MultOrDiv[0])
-			slp_under_construction_.AddInstruction(Multiply,operand_locations[0],operand_locations[1], next_available_mem_);
-		else
-			slp_under_construction_.AddInstruction(Divide,operand_locations[0],operand_locations[1], next_available_mem_);
-		size_t prev_result_loc = next_available_mem_++;
-		// this loop
-		// actually does the additions for the rest of the operands
-
-		for (size_t ii{2}; ii<op.Operands().size(); ++ii){
-			if (MultOrDiv[ii-1])
-				slp_under_construction_.AddInstruction(Multiply,operand_locations[ii],prev_result_loc,next_available_mem_);
-			else
-				slp_under_construction_.AddInstruction(Divide,operand_locations[ii],prev_result_loc,next_available_mem_);
-			prev_result_loc = next_available_mem_++;
+		if (op.Operands().size() == 1) {
+			std::cout << "one operand in this Mult: " << op << std::endl;
+			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_;
+			slp_under_construction_.AddInstruction(Assign, operand_locations[0], next_available_mem_++);
 		}
-		this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
+		else{
+			if (MultOrDiv[0])
+				slp_under_construction_.AddInstruction(Multiply,operand_locations[0],operand_locations[1], next_available_mem_);
+			else
+				slp_under_construction_.AddInstruction(Divide,operand_locations[0],operand_locations[1], next_available_mem_);
+			size_t prev_result_loc = next_available_mem_++;
+			// this loop
+			// actually does the additions for the rest of the operands
 
+			for (size_t ii{2}; ii<op.Operands().size(); ++ii){
+				if (MultOrDiv[ii-1])
+					slp_under_construction_.AddInstruction(Multiply,operand_locations[ii],prev_result_loc,next_available_mem_);
+				else
+					slp_under_construction_.AddInstruction(Divide,operand_locations[ii],prev_result_loc,next_available_mem_);
+				prev_result_loc = next_available_mem_++;
+			}
+			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
+		} // else
 	}
 
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
-		std::cout << "unimplemented visit to node of type IntegerPowerOperator" << std::endl;
+		std::cout << "visiting IntegerPowerOperator" << n << std::endl;
 		auto expo = n.exponent(); //integer
 
 		auto operand = n.Operand();
@@ -320,6 +313,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::PowerOperator const& n){
+		std::cout << "visiting PowerOperator" << n << std::endl;
 		//get location of base and power then add instruction
 
 		const auto& base = n.GetBase();
@@ -342,6 +336,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ExpOperator const& n){
+		std::cout << "visiting ExpOperator" << n << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -353,6 +348,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::LogOperator const& n){
+		std::cout << "visiting LogOperator" << n << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -366,6 +362,7 @@ namespace bertini{
 
 	// the trig operators
 	void SLPCompiler::Visit(node::SinOperator const& n){
+		std::cout << "visiting SinOperator" << n << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -377,6 +374,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ArcSinOperator const& n){
+		std::cout << "visiting ArcSinOperator" << n << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -388,6 +386,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::CosOperator const& n){
+		std::cout << "visiting CosOperator" << n << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -399,6 +398,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ArcCosOperator const& n){
+		std::cout << "visiting ArcCosOperator" << n << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -410,6 +410,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::TanOperator const& n){
+		std::cout << "visiting TanOperator" << n << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -421,6 +422,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ArcTanOperator const& n){
+		std::cout << "visiting ArcTanOperator" << n << std::endl;
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -436,13 +438,13 @@ namespace bertini{
 	SLP SLPCompiler::Compile(System const& sys){
 		this->Clear();
 
-		std::cout << "Compiling system" << std::endl;
+		std::cout << "Compiling system" << sys << std::endl;
 
 
 		this->slp_under_construction_.precision_ = DefaultPrecision();
 
 		// deal with variables
-		std::cout << "dealing with variables" << std::endl;
+		std::cout << "adding variables to memory" << std::endl;
 
 			// 1. ADD VARIABLES
 		auto variable_groups = sys.VariableGroups();
