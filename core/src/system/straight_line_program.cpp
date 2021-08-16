@@ -168,7 +168,7 @@ namespace bertini{
 		std::vector<size_t> operand_locations;
 		for (auto& n : op.Operands()){
 
-			if (this->locations_encountered_symbols_.find(n)!=this->locations_encountered_symbols_.end())
+			if (this->locations_encountered_symbols_.find(n)==this->locations_encountered_symbols_.end())
 				n->Accept(*this); // think of calling Compile(n)
 
 			operand_locations.push_back(this->locations_encountered_symbols_[n]);
@@ -254,7 +254,7 @@ namespace bertini{
 		std::vector<size_t> operand_locations;
 		for (auto& n : op.Operands()){
 
-			if (this->locations_encountered_symbols_.find(n)!=this->locations_encountered_symbols_.end())
+			if (this->locations_encountered_symbols_.find(n)==this->locations_encountered_symbols_.end())
 				n->Accept(*this); // think of calling Compile(n)
 
 			operand_locations.push_back(this->locations_encountered_symbols_[n]);
