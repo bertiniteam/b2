@@ -153,7 +153,7 @@ namespace bertini{
 
 		location_entry = this->locations_encountered_symbols_[n];
 
-		size_t location_this_node = locations_encountered_symbols_[std::make_shared<node::Function>(f)];
+		size_t location_this_node = locations_encountered_symbols_[f.shared_from_this()];
 
 		slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
 	}
