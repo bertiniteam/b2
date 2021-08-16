@@ -271,10 +271,7 @@ namespace bertini {
 				//in the  unary case the loop will increment by 3
 
 				switch (instructions_[ii]) {
-					case Log:
-						std::cout << memory[instructions_[ii+2]] << " = log(" << memory[instructions_[ii+1]] << ")" << std::endl;
-						memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
-						break;
+
 					case Add:
 						std::cout << memory[instructions_[ii+3]] << " = " << memory[instructions_[ii+1]] << " + " << memory[instructions_[ii+2]] << std::endl;
 						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] + memory[instructions_[ii+2]];
@@ -295,13 +292,21 @@ namespace bertini {
 						std::cout << memory[instructions_[ii+3]] << " = pow(" << memory[instructions_[ii+1]] << ", " << memory[instructions_[ii+2]] << ")" << std::endl;
 						memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
 						break;
-					case Exp:
-						std::cout << memory[instructions_[ii+2]] << " = exp( " << memory[instructions_[ii+1]] << ")" << std::endl;
-						memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
+					case Assign:
+						std::cout << "copying " << memory[instructions_[ii+2]] << " = " << memory[instructions_[ii+1]] << std::endl;
+						memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
 						break;
 					case Negate:
 						std::cout << memory[instructions_[ii+2]] << " = -( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
+						break;
+					case Log:
+						std::cout << memory[instructions_[ii+2]] << " = log(" << memory[instructions_[ii+1]] << ")" << std::endl;
+						memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
+						break;
+					case Exp:
+						std::cout << memory[instructions_[ii+2]] << " = exp( " << memory[instructions_[ii+1]] << ")" << std::endl;
+						memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
 						break;
 					case Sin:
 						std::cout << memory[instructions_[ii+2]] << " = sin( " << memory[instructions_[ii+1]] << ")" << std::endl;
@@ -326,10 +331,6 @@ namespace bertini {
 					case Atan:
 						std::cout << memory[instructions_[ii+2]] << " = atan( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = atan(memory[instructions_[ii+1]]);
-						break;
-					case Assign:
-						std::cout << "copying " << memory[instructions_[ii+2]] << " = " << memory[instructions_[ii+1]] << std::endl;
-						memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
 						break;
 
 
