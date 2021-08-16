@@ -436,6 +436,13 @@ namespace bertini {
 			throw std::runtime_error("calling unimplemented function HavePathVariable");
 			return false;
 		}
+
+		/**
+		 \brief Overloaded operator for printing to an arbirtary out stream.
+		 */
+		friend std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s);
+
+
 	private:
 
 		/**

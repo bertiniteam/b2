@@ -86,6 +86,22 @@ namespace bertini{
 
 
 
+	std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s){
+		out << "\n\n#fns: " << s.NumFunctions() << " #vars: " << s.NumVariables() << std::endl;
+
+		out << "instructions: " << std::endl;
+		for (auto i: s.instructions_)
+			out << i << " ";
+		out << std::endl;
+
+		out << "numbers: " << std::endl;
+		for (auto const& x : s.true_values_of_numbers_)
+		    out << *(x.first)  << ':' << x.second << std::endl;
+		out << std::endl << std::endl;
+
+		return out;
+	}
+
 }
 
 
