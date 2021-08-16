@@ -127,14 +127,14 @@ BOOST_AUTO_TEST_CASE(evaluate_system2)
 
 	dbl x{values(0)}, y{values(1)};
 
-	BOOST_CHECK_EQUAL(f(0), pow(x,2)+pow(y,2)-1.); // x^2+y^2-1
-	BOOST_CHECK_EQUAL(f(1), x-y);
+	BOOST_CHECK_SMALL(abs(f(0) - (pow(x,2)+pow(y,2)-1.)),1e-10); // x^2+y^2-1
+	BOOST_CHECK_SMALL(abs(f(1) - (x-y)),1e-10);
 
 
-	BOOST_CHECK_EQUAL(J(0,0), 2.*x); // df1/dx = 2x
-	BOOST_CHECK_EQUAL(J(0,1), 2.*y); // df1/dy = 2y
-	BOOST_CHECK_EQUAL(J(1,0), 1.);   // df2/dx = 1
-	BOOST_CHECK_EQUAL(J(1,1), -1.);  // df2/dy = -1
+	BOOST_CHECK_SMALL(abs(J(0,0) - (2.*x)),1e-10); // df1/dx = 2x
+	BOOST_CHECK_SMALL(abs(J(0,1) - (2.*y)),1e-10); // df1/dy = 2y
+	BOOST_CHECK_SMALL(abs(J(1,0) - (1.)),1e-10);   // df2/dx = 1
+	BOOST_CHECK_SMALL(abs(J(1,1) - (-1.)),1e-10);  // df2/dy = -1
 }
 
 
