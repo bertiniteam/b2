@@ -264,7 +264,7 @@ namespace bertini{
 			else
 				slp_under_construction_.AddInstruction(Divide,operand_locations[ii],prev_result_loc,next_available_mem_++);
 		}
-		this->locations_encountered_symbols_[std::make_shared<node::MultOperator>(op)] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
+		this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
 
 	}
 
@@ -282,7 +282,7 @@ namespace bertini{
 		auto location_exponent  = locations_encountered_symbols_[e];
 
 
-		this->locations_encountered_symbols_[std::make_shared<node::IntegerPowerOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Power,location_operand,location_exponent, next_available_mem_++);
 		//no node, just integer.
 	}
@@ -302,7 +302,7 @@ namespace bertini{
 		auto loc_base = locations_encountered_symbols_[base];
 		auto loc_exponent = locations_encountered_symbols_[exponent];
 
-		this->locations_encountered_symbols_[std::make_shared<node::PowerOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Power, loc_base, loc_exponent, next_available_mem_++);
 
 
@@ -316,7 +316,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
-		this->locations_encountered_symbols_[std::make_shared<node::ExpOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Exp,location_operand, next_available_mem_++);
 	}
 
@@ -327,7 +327,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
-		this->locations_encountered_symbols_[std::make_shared<node::LogOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Log,location_operand, next_available_mem_++);
 	}
 
@@ -340,7 +340,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
-		this->locations_encountered_symbols_[std::make_shared<node::SinOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Sin,location_operand, next_available_mem_++);
 	}
 
@@ -351,7 +351,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
-		this->locations_encountered_symbols_[std::make_shared<node::ArcSinOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Asin,location_operand, next_available_mem_++);
 	}
 
@@ -362,7 +362,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
-		this->locations_encountered_symbols_[std::make_shared<node::CosOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Cos,location_operand, next_available_mem_++);
 	}
 
@@ -373,7 +373,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
-		this->locations_encountered_symbols_[std::make_shared<node::ArcCosOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Acos,location_operand, next_available_mem_++);
 	}
 
@@ -384,7 +384,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
-		this->locations_encountered_symbols_[std::make_shared<node::TanOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Tan,location_operand, next_available_mem_++);
 	}
 
@@ -395,7 +395,7 @@ namespace bertini{
 			operand->Accept(*this); // think of calling Compile(n)
 
 		auto location_operand = locations_encountered_symbols_[operand];
-		this->locations_encountered_symbols_[std::make_shared<node::ArcTanOperator>(n)] =  next_available_mem_;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Atan,location_operand, next_available_mem_++);
 	}
 
