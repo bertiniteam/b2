@@ -223,7 +223,7 @@ namespace bertini{
 				slp_under_construction_.AddInstruction(Add,operand_locations[0],operand_locations[1], next_available_mem_);
 			else
 				slp_under_construction_.AddInstruction(Subtract,operand_locations[0],operand_locations[1], next_available_mem_);
-			size_t prev_result_loc = next_available_mem_;
+			size_t prev_result_loc = next_available_mem_++;
 
 			// this loop
 			// actually does the additions for the rest of the operands
