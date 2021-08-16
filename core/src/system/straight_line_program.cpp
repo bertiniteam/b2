@@ -199,23 +199,23 @@ namespace bertini{
 
 
 	// arithmetic
-	void SLPCompiler::Visit(node::SumOperator const & op){
-		std::cout << "visiting SumOperator: " << op << std::endl;
+	void SLPCompiler::Visit(node::SumOperator const & n){
+		std::cout << "visiting SumOperator: " << n << std::endl;
 
 		// this loop
 		// gets the locations of all the things we're going to add up.
 		std::vector<size_t> operand_locations;
-		for (auto& n : op.Operands()){
+		for (auto& n : n.Operands()){
 
 			if (this->locations_encountered_symbols_.find(n)==this->locations_encountered_symbols_.end())
 				n->Accept(*this); // think of calling Compile(n)
 
 			operand_locations.push_back(this->locations_encountered_symbols_[n]);
-			std::cout << "operand is: " << n << std::endl;
+			std::cout << "sum operand is: " << n << std::endl;
 		}
 
 		  
-		const auto& signs = op.GetSigns();
+		const auto& signs = n.GetSigns();
 		size_t prev_result_loc; // for tracking where the output of the previous iteration went
 
 		// seed the loop.
@@ -229,7 +229,7 @@ namespace bertini{
 
 		// this loop
 		// does the additions for the rest of the operands
-		for (size_t ii{1}; ii<op.Operands().size(); ++ii){
+		for (size_t ii{1}; ii<n.Operands().size(); ++ii){
 			if (signs[ii])
 				slp_under_construction_.AddInstruction(Add,prev_result_loc,operand_locations[ii],next_available_mem_);
 			else
@@ -238,7 +238,7 @@ namespace bertini{
 			prev_result_loc = next_available_mem_++;
 		}
 
-		this->locations_encountered_symbols_[op.shared_from_this()] =  prev_result_loc;
+		this->locations_encountered_symbols_[n.shared_from_this()] =  prev_result_loc;
 
 			// improved option?: we could do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.  instead, use Pairwise summation
 			// do pairs (0,1), (2,3), etc,
@@ -252,46 +252,61 @@ namespace bertini{
 
 
 
-	void SLPCompiler::Visit(node::MultOperator const & op){
-		std::cout << "visiting MultOperator: " << op << std::endl;
+	void SLPCompiler::Visit(node::MultOperator const & n){
+		std::cout << "visiting MultOperator: " << n << std::endl;
+
+
+		// this loop
+		// gets the locations of all the things we're going to add up.
 		std::vector<size_t> operand_locations;
-		for (auto& n : op.Operands()){
+		for (auto& n : n.Operands()){
 
 			if (this->locations_encountered_symbols_.find(n)==this->locations_encountered_symbols_.end())
 				n->Accept(*this); // think of calling Compile(n)
 
 			operand_locations.push_back(this->locations_encountered_symbols_[n]);
+			std::cout << "mult operand is: " << n << std::endl;
 		}
-		// multiply/divide the nodes together.  naive method is fine.
-		const auto& MultOrDiv = op.GetMultOrDiv();// true is multiply and false is divide
 
-		// assert(op.Operands().size() ==2);
+		  
+		const auto& mult_or_div = n.GetMultOrDiv();// true is multiply and false is divide
 
+		size_t prev_result_loc; // for tracking where the output of the previous iteration went
+
+		// seed the loop.
+		if (mult_or_div[0])
+			prev_result_loc = operand_locations[0];
+		else{ 
+			// this case is reciprocation of the first operand
+
+			// this code sucks.  really, there should be a bank of integers that we pull from, instead of many copies of the same integer.
+			auto one = std::make_shared<node::Integer>(1);
+			this->DealWithNumber(*one);
+			auto location_one  = locations_encountered_symbols_[one];
+
+			slp_under_construction_.AddInstruction(Divide, location_one, operand_locations[0], next_available_mem_);
+			prev_result_loc = next_available_mem_++;
+		}
 		
-		if (op.Operands().size() == 1) {
-			std::cout << "one operand in this Mult: " << op << std::endl;
-			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_;
-			slp_under_construction_.AddInstruction(Assign, operand_locations[0], next_available_mem_++);
-		}
-		else{
-			if (MultOrDiv[0])
-				slp_under_construction_.AddInstruction(Multiply,operand_locations[0],operand_locations[1], next_available_mem_);
-			else
-				slp_under_construction_.AddInstruction(Divide,operand_locations[0],operand_locations[1], next_available_mem_);
-			size_t prev_result_loc = next_available_mem_++;
-			// this loop
-			// actually does the additions for the rest of the operands
 
-			for (size_t ii{2}; ii<op.Operands().size(); ++ii){
-				if (MultOrDiv[ii-1])
-					slp_under_construction_.AddInstruction(Multiply,operand_locations[ii],prev_result_loc,next_available_mem_);
-				else
-					slp_under_construction_.AddInstruction(Divide,operand_locations[ii],prev_result_loc,next_available_mem_);
-				prev_result_loc = next_available_mem_++;
-			}
-			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_ - 1; //the loop before this made the current available memory available so that is why  we have the -1
-		} // else
+		// this loop
+		// does the additions for the rest of the operands
+		for (size_t ii{1}; ii<n.Operands().size(); ++ii){
+			if (mult_or_div[ii])
+				slp_under_construction_.AddInstruction(Multiply,prev_result_loc,operand_locations[ii],next_available_mem_);
+			else
+				slp_under_construction_.AddInstruction(Divide,prev_result_loc,operand_locations[ii],next_available_mem_);
+
+			prev_result_loc = next_available_mem_++;
+		}
+
+		this->locations_encountered_symbols_[n.shared_from_this()] =  prev_result_loc;
+
 	}
+
+
+
+
 
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
 		std::cout << "visiting IntegerPowerOperator" << n << std::endl;
@@ -301,6 +316,9 @@ namespace bertini{
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
 			operand->Accept(*this); // think of calling Compile(n)
 
+
+		// this code sucks, because it results in many copies of the same few integers over and over.  
+		// instead, we should add a bank of integers, and only add a new one if needed.
 		auto location_operand = locations_encountered_symbols_[operand];
 		auto e = std::make_shared<node::Integer>(expo);
 		this->DealWithNumber(*e);
@@ -311,6 +329,7 @@ namespace bertini{
 		slp_under_construction_.AddInstruction(Power,location_operand,location_exponent, next_available_mem_++);
 		//no node, just integer.
 	}
+
 
 	void SLPCompiler::Visit(node::PowerOperator const& n){
 		std::cout << "visiting PowerOperator" << n << std::endl;
