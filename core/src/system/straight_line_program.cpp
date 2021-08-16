@@ -35,6 +35,7 @@ namespace bertini{
 	// the constructor
 	StraightLineProgram::StraightLineProgram(System const& sys){
 		SLPCompiler compiler;
+
 		*this = compiler.Compile(sys);
 	}
 
@@ -70,6 +71,7 @@ namespace bertini{
 		this->instructions_.push_back(in_loc1);
 		this->instructions_.push_back(in_loc2);
 		this->instructions_.push_back(out_loc);
+		std::cout << "added binary instruction, op " << binary_op << " args: " << in_loc1 << ", " << in_loc2 << " dest: " << out_loc << std::endl;
 	}
 
 
@@ -78,10 +80,13 @@ namespace bertini{
 		this->instructions_.push_back(unary_op);
 		this->instructions_.push_back(in_loc);
 		this->instructions_.push_back(out_loc);
+		std::cout << "added unary instruction, op " << unary_op << " arg: " << in_loc << " dest: " << out_loc <<  std::endl;
+
 	}
 
 	void StraightLineProgram::AddNumber(Nd const num, size_t loc){
 		this->true_values_of_numbers_.push_back(std::pair<Nd,size_t>(num, loc));
+		std::cout << "added number " << *num << " at " << loc << std::endl;
 	}
 
 
@@ -130,20 +135,23 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Variable const& n){
-		std::cout << "Variables were added  to memory at the beginning of compilation" << std::endl;
+		std::cout << "visiting variable " << n << " at location " << locations_encountered_symbols_[n.shared_from_this()] << std::endl;
 	}
 
 
 	// wtb: factor out this pattern
 	void SLPCompiler::Visit(node::Integer const& n){
+		std::cout << "visiting Integer " << n << std::endl;
 		this->DealWithNumber(n); // that sweet template magic.  see slp.hpp for the definition of this template function
 	}
 
 	void SLPCompiler::Visit(node::Float const& n){
+		std::cout << "visiting Float " << n << std::endl;
 		this->DealWithNumber(n);
 	}
 
 	void SLPCompiler::Visit(node::Rational const& n){
+		std::cout << "visiting Integer " << n << std::endl;
 		this->DealWithNumber(n);
 	}
 
@@ -158,6 +166,7 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Function const & f){
+		std::cout << "visiting function " << f << std::endl;
 		// put the location of the accepted node into memory, and copy into an output location.
 		auto& n = f.entry_node();
 		size_t location_entry;
@@ -177,6 +186,7 @@ namespace bertini{
 
 
 		slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
+		std::cout << "added function node, " << f << ", copying from " << location_entry << " to " << location_this_node << std::endl;
 	}
 
 
@@ -193,13 +203,14 @@ namespace bertini{
 				n->Accept(*this); // think of calling Compile(n)
 
 			operand_locations.push_back(this->locations_encountered_symbols_[n]);
-			std::cout << "did the thing " << n << std::endl;
+			std::cout << "operand is: " << n << std::endl;
 		}
 
 		
 
 		//assert(op.Operands().size() >=2);
 		if (op.Operands().size() == 1) {
+			std::cout << "one operand in this op: " << op << std::endl;
 			this->locations_encountered_symbols_[op.shared_from_this()] =  next_available_mem_;
 			slp_under_construction_.AddInstruction(Assign, operand_locations[0], next_available_mem_++);
 		}
@@ -499,7 +510,6 @@ namespace bertini{
 		std::cout << "visiting functions" << std::endl;
 		for (auto f: sys.GetFunctions())
 		{
-			std::cout << "compiling function " << *(f) << std::endl;
 			f->Accept(*this);
 
 			// post visit function

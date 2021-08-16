@@ -74,8 +74,10 @@ BOOST_AUTO_TEST_CASE(evaluate_simple_system)
 	Vec<dbl> values(1);
 
 	values(0) = dbl(2.0);
-
+	
+	std::cout << slp;
 	slp.Eval(values);
+	std::cout << slp;
 
 	Vec<dbl> f = slp.GetFuncVals<dbl>();
 	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
