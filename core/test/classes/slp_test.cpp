@@ -32,6 +32,18 @@ bertini::System TwoVariableTestSystem(){
 }
 
 
+
+bertini::System ThreeVariableTestSystem(){
+	std::string str = "function f, g, h; variable_group x, y, z; f = x+1; g =; h =;";
+
+
+	bertini::System sys;
+	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+
+	return sys;
+}
+
+
 BOOST_AUTO_TEST_CASE(opcodes)
 {
 	BOOST_CHECK(IsUnary(Operation::Negate));
@@ -154,5 +166,47 @@ BOOST_AUTO_TEST_CASE(evaluate_system2)
 // 	BOOST_CHECK_EQUAL(J(0,1), x1*x1*2*x2);
 // 	BOOST_CHECK_EQUAL(v(0), 36.0);
 // }
+
+
+
+BOOST_AUTO_TEST_CASE(has_correct_size_for_three_variable)
+{
+	auto sys = ThreeVariableTestSystem();
+
+	auto slp = SLP(sys);
+
+	BOOST_CHECK_EQUAL(slp.NumFunctions(), sys.NumFunctions());
+	BOOST_CHECK_EQUAL(slp.NumVariables(), sys.NumVariables());
+}
+
+
+
+BOOST_AUTO_TEST_CASE(evaluate_three_variable_system)
+{
+	auto sys = ThreeVariableTestSystem();
+
+	auto slp = SLP(sys);
+
+	Vec<dbl> values(1);
+
+	values(0) = dbl(2.0);
+
+	slp.Eval(values);
+
+	Vec<dbl> f = slp.GetFuncVals<dbl>();
+	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
+
+	// x = 2, and the function is f=x+1
+	BOOST_CHECK_EQUAL(f(0), 3.);
+
+	//the system is [f] = [x+1] = [1]
+
+	// so J = matrix of partial derivatives
+	//    J = [df/dx] = []
+
+	BOOST_CHECK_EQUAL(J(0,0), 1.);
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
