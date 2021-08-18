@@ -249,7 +249,18 @@ namespace bertini {
 
 		}
 
+		/**
+		\brief copies the variable values into the Matrix base and the path variables into the complex type time
 
+		\tparam Derived derived type
+
+		\tparam ComplexT complex type
+
+		\param variable_values dervied matrixBase of variable values
+
+		\param  time complex type for time
+
+		 */
 		template<typename Derived, typename ComplexT>
 		void Eval(Eigen::MatrixBase<Derived> const& variable_values, ComplexT const& time) const
 		{
@@ -263,10 +274,17 @@ namespace bertini {
 		}
 
 
+		/**
+		\brief loops through the instructions in memory and evaluates each operation
+
+		\tparam NumT numeric type
+
+		uses a switch to find different operations from memory to make sure its performing the correct evaluations
+
+		 */
 		template<typename NumT>
 		void Eval() const{
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
-			auto memCounter = 0;
 			for (int ii = 0; ii<instructions_.size();/*the increment is done depending on unary/binary */) {
 				//in the  unary case the loop will increment by 3
 
@@ -401,21 +419,36 @@ namespace bertini {
 			}
 		}
 
+		/**
+		\brief creates the Vec<NumT> to be used in the overloaded function
 
+		\tparam NumT numeric type
+
+		 */
 		template<typename NumT>
 		Vec<NumT> GetFuncVals() const{
 			Vec<NumT> return_me;
 			GetFuncVals(return_me);
 			return return_me;
 		}
+		/**
+		\brief creates the Vec<NumT> to be used in the overloaded function
 
+		\tparam NumT numeric type
+
+		 */
 		template<typename NumT>
 		Mat<NumT> GetJacobian() const{
 			Mat<NumT> return_me;
 			GetJacobian(return_me);
 			return return_me;
 		}
+		/**
+		\brief creates the Vec<NumT> to be used in the overloaded function
 
+		\tparam NumT numeric type
+
+		 */
 		template<typename NumT>
 		Vec<NumT> GetTimeDeriv() const{
 			Vec<NumT> return_me;
