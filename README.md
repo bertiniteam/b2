@@ -1,4 +1,4 @@
-default branch status: <img src="http://bertini2.org/status.png" width="100">
+default branch status: <img src="https://bertini2.org/status.png" width="100">
 
 ### Important note on cloning
 
