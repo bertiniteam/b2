@@ -30,6 +30,7 @@ m4/lt~obsolete.m4
 /config
 
 # Python folders
+python/build/
 /python/test/.idea
 /.deps/*
 
