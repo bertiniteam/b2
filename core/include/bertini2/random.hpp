@@ -228,9 +228,9 @@ using bertini::RandomMp;
 	{
 		auto cached = DefaultPrecision();
 		DefaultPrecision(num_digits);
-		using std::move;
+		
 		mpfr_complex temp( RandomMp(num_digits), RandomMp(num_digits) );
-		a = move(temp);
+		a = std::move(temp);
 		DefaultPrecision(cached);
 	}
 
@@ -254,9 +254,9 @@ using bertini::RandomMp;
 		auto cached = DefaultPrecision();
 		DefaultPrecision(num_digits);
 		a.precision(num_digits);
-		using std::move;
+		
 		complex temp(RandomMp(num_digits),RandomMp(num_digits));
-		a = move(temp/sqrt(abs(temp)));
+		a = std::move(temp/sqrt(abs(temp)));
 		DefaultPrecision(cached);
 	}
 
