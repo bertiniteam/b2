@@ -71,7 +71,6 @@ namespace bertini{
 		this->instructions_.push_back(in_loc1);
 		this->instructions_.push_back(in_loc2);
 		this->instructions_.push_back(out_loc);
-		std::cout << "added binary instruction, op " << binary_op << " args: " << in_loc1 << ", " << in_loc2 << " dest: " << out_loc << std::endl;
 	}
 
 
@@ -80,13 +79,11 @@ namespace bertini{
 		this->instructions_.push_back(unary_op);
 		this->instructions_.push_back(in_loc);
 		this->instructions_.push_back(out_loc);
-		std::cout << "added unary instruction, op " << unary_op << " arg: " << in_loc << " dest: " << out_loc <<  std::endl;
 
 	}
 
 	void StraightLineProgram::AddNumber(Nd const num, size_t loc){
 		this->true_values_of_numbers_.push_back(std::pair<Nd,size_t>(num, loc));
-		std::cout << "added number " << *num << " at " << loc << std::endl;
 	}
 
 
@@ -141,17 +138,14 @@ namespace bertini{
 
 	// wtb: factor out this pattern
 	void SLPCompiler::Visit(node::Integer const& n){
-		std::cout << "visiting Integer " << n << std::endl;
 		this->DealWithNumber(n); // that sweet template magic.  see slp.hpp for the definition of this template function
 	}
 
 	void SLPCompiler::Visit(node::Float const& n){
-		std::cout << "visiting Float " << n << std::endl;
 		this->DealWithNumber(n);
 	}
 
 	void SLPCompiler::Visit(node::Rational const& n){
-		std::cout << "visiting Integer " << n << std::endl;
 		this->DealWithNumber(n);
 	}
 
@@ -174,7 +168,7 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Function const & f){
-		std::cout << "visiting function " << f << std::endl;
+
 		// put the location of the accepted node into memory, and copy into an output location.
 		auto& n = f.entry_node();
 		size_t location_entry;
@@ -194,13 +188,11 @@ namespace bertini{
 
 
 		slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
-		std::cout << "added function node, " << f << ", copying from " << location_entry << " to " << location_this_node << std::endl;
 	}
 
 
 	// arithmetic
 	void SLPCompiler::Visit(node::SumOperator const & n){
-		std::cout << "visiting SumOperator: " << n << std::endl;
 
 		// this loop
 		// gets the locations of all the things we're going to add up.
@@ -211,7 +203,6 @@ namespace bertini{
 				n->Accept(*this); // think of calling Compile(n)
 
 			operand_locations.push_back(this->locations_encountered_symbols_[n]);
-			std::cout << "sum operand is: " << n << std::endl;
 		}
 
 		  
@@ -253,7 +244,7 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::MultOperator const & n){
-		std::cout << "visiting MultOperator: " << n << std::endl;
+		
 
 
 		// this loop
@@ -265,7 +256,7 @@ namespace bertini{
 				n->Accept(*this); // think of calling Compile(n)
 
 			operand_locations.push_back(this->locations_encountered_symbols_[n]);
-			std::cout << "mult operand is: " << n << std::endl;
+			
 		}
 
 		  
@@ -309,7 +300,7 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
-		std::cout << "visiting IntegerPowerOperator" << n << std::endl;
+		
 		auto expo = n.exponent(); //integer
 
 		auto operand = n.Operand();
@@ -332,7 +323,7 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::PowerOperator const& n){
-		std::cout << "visiting PowerOperator" << n << std::endl;
+		
 		//get location of base and power then add instruction
 
 		const auto& base = n.GetBase();
@@ -355,7 +346,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ExpOperator const& n){
-		std::cout << "visiting ExpOperator" << n << std::endl;
+		
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -367,7 +358,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::LogOperator const& n){
-		std::cout << "visiting LogOperator" << n << std::endl;
+		
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -381,7 +372,7 @@ namespace bertini{
 
 	// the trig operators
 	void SLPCompiler::Visit(node::SinOperator const& n){
-		std::cout << "visiting SinOperator" << n << std::endl;
+		
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -393,7 +384,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ArcSinOperator const& n){
-		std::cout << "visiting ArcSinOperator" << n << std::endl;
+		
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -405,7 +396,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::CosOperator const& n){
-		std::cout << "visiting CosOperator" << n << std::endl;
+		
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -417,7 +408,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ArcCosOperator const& n){
-		std::cout << "visiting ArcCosOperator" << n << std::endl;
+		
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -429,7 +420,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::TanOperator const& n){
-		std::cout << "visiting TanOperator" << n << std::endl;
+		
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -441,7 +432,7 @@ namespace bertini{
 	}
 
 	void SLPCompiler::Visit(node::ArcTanOperator const& n){
-		std::cout << "visiting ArcTanOperator" << n << std::endl;
+		
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
@@ -457,13 +448,13 @@ namespace bertini{
 	SLP SLPCompiler::Compile(System const& sys){
 		this->Clear();
 
-		std::cout << "Compiling system" << sys << std::endl;
+		
 
 
 		this->slp_under_construction_.precision_ = DefaultPrecision();
 
 		// deal with variables
-		std::cout << "adding variables to memory" << std::endl;
+		
 
 			// 1. ADD VARIABLES
 		auto variable_groups = sys.VariableGroups();
@@ -491,7 +482,7 @@ namespace bertini{
 		}
 
 
-		std::cout << "making space in memory for functions" << std::endl;
+		
 			// make space for functions and derivatives
 			// 3. ADD FUNCTIONS
 		slp_under_construction_.number_of_.Functions = sys.NumFunctions();
@@ -503,7 +494,7 @@ namespace bertini{
 
 
 
-		std::cout << "making space in memory for space derivatives" << std::endl;
+		
 		// always have space derivatives
 
 		auto ds_dx = sys.GetSpaceDerivatives(); // a linear object, so can just run down the object
@@ -515,7 +506,7 @@ namespace bertini{
 
 		// sometimes have time derivatives
 		if (sys.HavePathVariable()) {
-			std::cout << "making space in memory for time derivatives" << std::endl;
+			
 			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
 			slp_under_construction_.number_of_.TimeDeriv = ds_dt.size();
 			slp_under_construction_.output_locations_.TimeDeriv = next_available_mem_;
@@ -528,7 +519,7 @@ namespace bertini{
 
 
 
-		std::cout << "visiting functions" << std::endl;
+		
 		for (auto f: sys.GetFunctions())
 		{
 			f->Accept(*this);
@@ -539,7 +530,7 @@ namespace bertini{
 
 
 
-		std::cout << "visiting space derivatives" << std::endl;
+		
 		// always do derivatives with respect to space variables
 		// 4. ADD SPACE VARIABLE DERIVATIVES
 		for (auto n: ds_dx)
@@ -550,7 +541,7 @@ namespace bertini{
 
 		// sometimes have time derivatives
 		if (sys.HavePathVariable()) {
-			std::cout << "visiting time derivatives" << std::endl;
+			
 			// we need derivatives with respect to time only if the system has a path variable defined
 			// 5. ADD TIME VARIABLE DERIVATIVES
 

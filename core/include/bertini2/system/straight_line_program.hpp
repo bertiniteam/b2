@@ -292,66 +292,64 @@ namespace bertini {
 				switch (instructions_[ii]) {
 
 					case Add:
-						std::cout << memory[instructions_[ii+3]] << " = " << memory[instructions_[ii+1]] << " + " << memory[instructions_[ii+2]] << std::endl;
 						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] + memory[instructions_[ii+2]];
 						break;
+
 					case Subtract:
-						std::cout << memory[instructions_[ii+3]] << " = " << memory[instructions_[ii+1]] << " - " << memory[instructions_[ii+2]] << std::endl;
 						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] - memory[instructions_[ii+2]];
 						break;
+
 					case Multiply:
-						std::cout << memory[instructions_[ii+3]] << " = " << memory[instructions_[ii+1]] << " * " << memory[instructions_[ii+2]] << std::endl;
 						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] * memory[instructions_[ii+2]];
 						break;
+
 					case Divide:
-						std::cout << memory[instructions_[ii+3]] << " = " << memory[instructions_[ii+1]] << " / " << memory[instructions_[ii+2]] << std::endl;
 						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
 						break;
+
 					case Power:
-						std::cout << memory[instructions_[ii+3]] << " = pow(" << memory[instructions_[ii+1]] << ", " << memory[instructions_[ii+2]] << ")" << std::endl;
 						memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
 						break;
+
 					case Assign:
-						std::cout << "copying " << memory[instructions_[ii+2]] << " = " << memory[instructions_[ii+1]] << std::endl;
 						memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
 						break;
+
 					case Negate:
-						std::cout << memory[instructions_[ii+2]] << " = -( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
 						break;
+
 					case Log:
-						std::cout << memory[instructions_[ii+2]] << " = log(" << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
 						break;
+
 					case Exp:
-						std::cout << memory[instructions_[ii+2]] << " = exp( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
 						break;
+
 					case Sin:
-						std::cout << memory[instructions_[ii+2]] << " = sin( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = sin(memory[instructions_[ii+1]]);
 						break;
+
 					case Cos:
-						std::cout << memory[instructions_[ii+2]] << " = cos( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = cos(memory[instructions_[ii+1]]);
 						break;
+
 					case Tan:
-						std::cout << memory[instructions_[ii+2]] << " = tan( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = tan(memory[instructions_[ii+1]]);
 						break;
+
 					case Asin:
-						std::cout << memory[instructions_[ii+2]] << " = asin( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = asin(memory[instructions_[ii+1]]);
 						break;
+
 					case Acos:
-						std::cout << memory[instructions_[ii+2]] << " = acos( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = acos(memory[instructions_[ii+1]]);
 						break;
+
 					case Atan:
-						std::cout << memory[instructions_[ii+2]] << " = atan( " << memory[instructions_[ii+1]] << ")" << std::endl;
 						memory[this->instructions_[ii+2]] = atan(memory[instructions_[ii+1]]);
 						break;
-
 
 				}
 
@@ -360,7 +358,7 @@ namespace bertini {
 					ii = ii+3;
 
 				}
-				//in the binary  case the loop will increment by 4
+				//in the binary case the loop will increment by 4
 				else {
 					ii = ii+4;
 				}
@@ -370,7 +368,7 @@ namespace bertini {
 
 
 		/**
-		\brief retrieves the computed values of functions
+		\brief assignts the computed values of functions into the given vector
 
 		\tparam NumT numeric type
 
@@ -415,7 +413,7 @@ namespace bertini {
 		}
 
 		/**
-		\brief retrieves the output locations of time derivatives
+		\brief copies the values of the time derivatives into your given vector
 
 		\tparam NumT numeric type
 
@@ -525,12 +523,10 @@ namespace bertini {
 		template<typename Derived>
 		void CopyVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
 			using NumT = typename Derived::Scalar;
-			auto& memory =  std::get<std::vector<NumT>>(memory_);
-			std::cout << memory.size() << std::endl;
-			std::cout << number_of_.Variables << std::endl;
-			std::cout << variable_values << std::endl;
+			auto& memory =  std::get<std::vector<NumT>>(memory_); // unpack for local reference
+
 			for (int ii = 0; ii < number_of_.Variables; ++ii) {
-				//add  to memory
+				//assign  to memory
 				memory[ii + output_locations_.Variables] = variable_values(ii);
 			}
 		}
