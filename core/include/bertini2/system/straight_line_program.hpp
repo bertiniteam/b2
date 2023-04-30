@@ -285,8 +285,9 @@ namespace bertini {
 		template<typename NumT>
 		void Eval() const{
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
-			for (int ii = 0; ii<instructions_.size();/*the increment is done depending on unary/binary */) {
-				//in the  unary case the loop will increment by 3
+			for (int ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
+				//in the unary case the loop will increment by 3
+				//binary: by 4
 
 				switch (instructions_[ii]) {
 
