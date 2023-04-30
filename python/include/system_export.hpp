@@ -54,7 +54,6 @@ namespace bertini{
 		
 		template<typename T> using Vec = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 		template<typename T> using Mat = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
-		using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
 		
 		using dbl = std::complex<double>;
 		using mpfr = bertini::mpfr_complex;
