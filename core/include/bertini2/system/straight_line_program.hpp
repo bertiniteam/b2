@@ -37,7 +37,7 @@
 
 #include <assert.h>
 #include <vector>
-
+#include <map>
 
 #include "bertini2/mpfr_complex.hpp"
 #include "bertini2/mpfr_extensions.hpp"
