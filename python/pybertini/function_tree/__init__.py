@@ -36,7 +36,8 @@ from _pybertini.list import VariableGroup
 
 from _pybertini.function_tree import *
 
-# import pybertini.function_tree.symbol as symbol
+
+VariableGroup.__str__ = lambda vg: '[{}]'.format( ','.join([str(v) for v in vg]) )
 
 __all__ = dir(_pybertini.function_tree)
 

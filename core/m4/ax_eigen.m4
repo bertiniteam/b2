@@ -50,14 +50,16 @@ if test "x$want_eigen" = "xyes"; then
     found_eigen_dir=no
     if test "$ac_eigen_path" != ""; then
         
+        
         if test -d "$ac_eigen_path/Eigen"; then
             EIGEN_CPPFLAGS="-I$ac_eigen_path"
             found_eigen_dir=yes;
-        else
-            if test -d "$ac_eigen_path/eigen3/Eigen"; then
-                EIGEN_CPPFLAGS="-I$ac_eigen_path/eigen3"
+        elif test -d "$ac_eigen_path/eigen3/Eigen"; then
+                EIGEN_CPPFLAGS="-I$ac_eigen_path/eigen3/"
                 found_eigen_dir=yes;
-            fi
+        elif test -d "$ac_eigen_path/include/eigen3/Eigen"; then
+                EIGEN_CPPFLAGS="-I$ac_eigen_path/include/eigen3"
+                found_eigen_dir=yes;
         fi
 
     else 

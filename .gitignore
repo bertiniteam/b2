@@ -30,6 +30,7 @@ m4/lt~obsolete.m4
 /config
 
 # Python folders
+python/build/
 /python/test/.idea
 /.deps/*
 
@@ -76,3 +77,4 @@ m4/lt~obsolete.m4
 *.app
 python/autom4te.cache
 *.bak
+python/temp.py

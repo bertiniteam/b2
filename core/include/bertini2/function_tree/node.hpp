@@ -59,7 +59,6 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
 
-#include <deque>
 
 
 
@@ -70,7 +69,7 @@ namespace bertini {
 		class Variable;
 	}
 
-using VariableGroup = std::deque< std::shared_ptr<node::Variable> >;
+using VariableGroup = std::vector< std::shared_ptr<node::Variable> >;
 
 enum class VariableGroupType
 {
