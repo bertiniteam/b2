@@ -160,13 +160,13 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Jacobian const& n){
-		std::cout << "unimplemented visit to node of type Jacobian" << std::endl;
+		throw std::runtime_error("unimplemented visit to node of type Jacobian");
 
 
 	}
 
 	void SLPCompiler::Visit(node::Differential const& n){
-		std::cout << "unimplemented visit to node of type Differential" << std::endl;
+		throw std::runtime_error("unimplemented visit to node of type Differential");
 	}
 
 
