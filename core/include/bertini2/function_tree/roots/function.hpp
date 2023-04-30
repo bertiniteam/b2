@@ -59,9 +59,10 @@ namespace node{
 
 	This class defines a function.  It stores the entry node for a particular functions tree.
 	 */
-	class Function : public virtual NamedSymbol
+	class Function : public virtual NamedSymbol, public std::enable_shared_from_this<Function>
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 		
 		Function(std::string const& new_name);
 		

@@ -84,7 +84,7 @@ namespace node{
 	{
 	public:
 		
-		UnaryOperator(const std::shared_ptr<Node> & N) : child_(N)
+		UnaryOperator(const std::shared_ptr<Node> & n) : operand_(n)
 		{}
 		
 		
@@ -95,12 +95,12 @@ namespace node{
 		void Reset() const override;
 		
 		
-		void SetChild(std::shared_ptr<Node> new_child);
+		void SetOperand(std::shared_ptr<Node> n);
 		
 		
 		
 		//Return the only child for the unary operator
-		std::shared_ptr<Node> first_child() const;
+		std::shared_ptr<Node> Operand() const;
 		
 		
 		
@@ -143,7 +143,7 @@ namespace node{
 
 	protected:
 		//Stores the single child of the unary operator
-		std::shared_ptr<Node> child_;
+		std::shared_ptr<Node> operand_;
 		UnaryOperator(){}
 	private:
 		friend class boost::serialization::access;
@@ -151,7 +151,7 @@ namespace node{
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Operator>(*this);
-			ar & child_;
+			ar & operand_;
 		}
 	};
 	
@@ -162,7 +162,7 @@ namespace node{
 	\brief Abstract interface for n-ary Operator types.
 
 	This class is an interface for all n-ary operators, such as summation and multiplication.
-	Children of the operator are stored in a vector and methods to add and access children are available
+	Operands of the operator are stored in a vector and methods to add and access operands are available
 	in this interface.
 	*/
 	class NaryOperator : public virtual Operator
@@ -174,16 +174,18 @@ namespace node{
 		
 		void Reset() const override;
 		
-		// Add a child onto the container for this operator
-		virtual void AddChild(std::shared_ptr<Node> child);
+		// Add an operand onto the container for this operator
+		virtual void AddOperand(std::shared_ptr<Node> n);
 		
 		
-		size_t children_size() const;
+		size_t NumOperands() const;
 		
-		std::shared_ptr<Node> first_child() const;
+		inline auto const& Operands() const{
+			return operands_;
+		}
 		
 		
-		
+		std::shared_ptr<Node> FirstOperand() const;
 		
 		 /**
 		 Change the precision of this variable-precision tree node.
@@ -198,7 +200,7 @@ namespace node{
 		
 		//Stores all children for this operator node.
 		//This is an NaryOperator and can have any number of children.
-		std::vector< std::shared_ptr<Node> > children_;
+		std::vector< std::shared_ptr<Node> > operands_;
 
 		// constructor is protected to help prevent instantiating empty operators
 		NaryOperator(){}
@@ -213,7 +215,7 @@ namespace node{
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<Operator>(*this);
-			ar & children_;
+			ar & operands_;
 		}
 		
 	};

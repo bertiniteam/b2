@@ -34,18 +34,18 @@
 #include <boost/fusion/include/adapted.hpp>
 
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_core.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/phoenix/core.hpp>
+#include <boost/phoenix/operator.hpp>
 #include <boost/fusion/include/std_pair.hpp>
 
 #include <boost/phoenix/bind/bind_function.hpp>
 #include <boost/phoenix/object/construct.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <boost/fusion/adapted/adt/adapt_adt.hpp>
 #include <boost/fusion/include/adapt_adt.hpp>

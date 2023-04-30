@@ -34,7 +34,7 @@
 /**
  \file linear_product.hpp
  
- \brief Provides the LinearProduct Node class.
+ \brief Provides the LinearProduct and DiffLinear Node classes.
  
  */
 #ifndef BERTINI_FUNCTION_TREE_LINPRODUCT_HPP
@@ -56,9 +56,11 @@ namespace  bertini {
 		 
 		 When differentiated, produces a differential referring to it.
 		 */
-		class LinearProduct : public virtual Symbol
+		class LinearProduct : public virtual Symbol, public std::enable_shared_from_this<LinearProduct>
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE()
+
 			virtual ~LinearProduct() = default;
 			
 			
@@ -765,9 +767,11 @@ namespace  bertini {
 		 This class represents a linear of differentials.  This is the result of differentiating a single linear node.
 		 
 		 */
-		class DiffLinear : public virtual Symbol
+		class DiffLinear : public virtual Symbol, public std::enable_shared_from_this<DiffLinear>
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE()
+			
 			virtual ~DiffLinear() = default;
 			
 			

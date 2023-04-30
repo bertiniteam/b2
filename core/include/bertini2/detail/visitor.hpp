@@ -38,7 +38,7 @@ namespace bertini{
 	/**
 	\brief A strawman class for implementing the visitor pattern.  
 
-	Deliberately empty, the non-base visitors must derive from it.  Don't directly derive from this class, use Visitor.
+	Deliberately empty, the non-base visitors must derive from it.
 
 	\see Visitor, Observer, AnyObserver, MultiObserver
 	*/

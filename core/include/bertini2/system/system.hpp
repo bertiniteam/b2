@@ -1127,7 +1127,12 @@ namespace bertini {
 		*/
 		bool HavePathVariable() const;
 
-
+		auto& GetPathVariable() const{
+			if (this->HavePathVariable())
+				return this->path_variable_;
+			else
+				throw std::runtime_error("trying to get path variable for a system which doesn't have a path variable defined");
+		}
 
 		/**
 		 Order the variables, by the order in which the groups were added.
@@ -1189,9 +1194,9 @@ namespace bertini {
 
 
 
-		/////////////// TESTING ////////////////////
+
 		/**
-		 Get a function by its index.  
+		 \brief Get a function by its index.  
 
 		 This is just as scary as you think it is.  It is up to you to make sure the function at this index exists.
 		*/
@@ -1201,6 +1206,15 @@ namespace bertini {
 		}
 
 		
+		/**
+		 \brief Get the functions.  
+		*/
+		auto GetFunctions() const
+		{
+			return functions_;
+		}
+
+
 
 		/**
 		 Get the affine variable groups in the problem.
@@ -1223,6 +1237,29 @@ namespace bertini {
 		{
 			return path_variable_;
 		}
+
+
+		/**
+		 \brief Get the space derivatives
+
+		 These are as computed using the Derivatives method, not Jacobian nodes.  They are stored in column-major order, so stride over variables first.
+
+		 ```
+		 for (int jj = 0; jj < num_vars; ++jj)
+			for (int ii = 0; ii < num_functions; ++ii)
+				space_derivatives_[ii+jj*num_functions] = functions_[ii]->Differentiate(vars[jj]);
+		```		
+		 */
+		std::vector< Nd > GetSpaceDerivatives() const;
+
+		/**
+		 \brief Get the time derivatives of all functions
+
+		 These are as computed using the Derivatives method, not Jacobian nodes.  Stored in order of functions.
+		 */
+		std::vector< Nd > GetTimeDerivatives() const;
+
+
 		//////////////////////
 		//
 		//  Functions involving coefficients of the system
@@ -1548,6 +1585,9 @@ namespace bertini {
 
 			return x_dehomogenized;
 		}
+
+		void DifferentiateUsingDerivatives() const;
+		void DifferentiateUsingJacobianNode() const;
 
 		/**
 		 Puts together the ordering of variables, and stores it internally.

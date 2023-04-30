@@ -75,9 +75,11 @@ namespace node{
 	in a single vector, and a vector of bools is used to determine the sign of each term.  FreshEval method
 	is defined for summation and difference.
 	*/
-	class SumOperator : public virtual NaryOperator
+	class SumOperator : public virtual NaryOperator, public std::enable_shared_from_this<SumOperator>
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
+
 		virtual ~SumOperator() = default;
 		
 		unsigned EliminateZeros() override;
@@ -88,32 +90,32 @@ namespace node{
 
 		SumOperator(const std::shared_ptr<Node> & s, bool add_or_sub)
 		{
-			AddChild(s, add_or_sub);
+			AddOperand(s, add_or_sub);
 		}
 		
 		SumOperator(const std::shared_ptr<Node> & left, const std::shared_ptr<Node> & right)
 		{
-			AddChild(left);
-			AddChild(right);
+			AddOperand(left);
+			AddOperand(right);
 		}
 		
 		
 		SumOperator(const std::shared_ptr<Node> & left, bool add_or_sub_left, const std::shared_ptr<Node> & right, bool add_or_sub_right)
 		{
-			AddChild(left, add_or_sub_left);
-			AddChild(right, add_or_sub_right);
+			AddOperand(left, add_or_sub_left);
+			AddOperand(right, add_or_sub_right);
 		}
 		
 		
 		SumOperator& operator+=(const std::shared_ptr<Node> & rhs)
 		{
-			this->AddChild(rhs);
+			this->AddOperand(rhs);
 			return *this;
 		}
 		
 		SumOperator& operator-=(const std::shared_ptr<Node> & rhs)
 		{
-			this->AddChild(rhs,false);
+			this->AddOperand(rhs,false);
 			return *this;
 		}
 		
@@ -124,20 +126,20 @@ namespace node{
 		/**
 		\note: Special Behaviour: by default all terms added are positive
 		*/
-		void AddChild(std::shared_ptr<Node> child) override
+		void AddOperand(std::shared_ptr<Node> child) override
 		{
-			NaryOperator::AddChild(std::move(child));
-			children_sign_.push_back(true);
+			NaryOperator::AddOperand(std::move(child));
+			signs_.push_back(true);
 		}
 		
 		
 		/**
 		\note Special Behaviour: Pass bool to set sign of term: true = add, false = subtract
 		*/
-		void AddChild(std::shared_ptr<Node> child, bool sign) // not an override
+		void AddOperand(std::shared_ptr<Node> child, bool sign) // not an override
 		{
-			NaryOperator::AddChild(std::move(child));
-			children_sign_.push_back(sign);
+			NaryOperator::AddOperand(std::move(child));
+			signs_.push_back(sign);
 		}
 		
 		
@@ -167,7 +169,8 @@ namespace node{
 		*/
 		std::vector<int> MultiDegree(VariableGroup const& vars) const override;
 		
-
+		inline
+		const auto& GetSigns() const{ return this-> signs_;}
 
 
 
@@ -216,11 +219,11 @@ namespace node{
 
 	private:
 		// Stores the sign of the particular term.  There is a one-one
-		// correspondence between elements of children_sign_ and children_.  This
-		// is enforced by the AddChild method below, redefined in SumOperator.
+		// correspondence between elements of signs_ and operand_.  This
+		// is enforced by the AddOperand method below, redefined in SumOperator.
 		
-		// TODO(JBC): If we add method to delete child, must also delete children_sign_ entry.
-		std::vector<bool> children_sign_;
+		// TODO(JBC): If we add method to delete child, must also delete signs_ entry.
+		std::vector<bool> signs_;
 		
 	private:
 
@@ -231,7 +234,7 @@ namespace node{
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<NaryOperator>(*this);
-			ar & children_sign_;
+			ar & signs_;
 		}
 
 
@@ -264,10 +267,11 @@ namespace node{
 	 This class represents the negation Operator.  FreshEval method
 	 is defined for negation and multiplies the value by -1.
 	 */
-	class NegateOperator : public virtual UnaryOperator
+	class NegateOperator : public virtual UnaryOperator, public std::enable_shared_from_this<NegateOperator>
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		NegateOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
@@ -288,7 +292,7 @@ namespace node{
 
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
-			return child_->IsHomogeneous(v);
+			return operand_->IsHomogeneous(v);
 		}
 
 		/**
@@ -296,7 +300,7 @@ namespace node{
 		*/
 		bool IsHomogeneous(VariableGroup const& vars) const override
 		{
-			return child_->IsHomogeneous(vars);
+			return operand_->IsHomogeneous(vars);
 		}
 
 		virtual ~NegateOperator() = default;
@@ -345,9 +349,10 @@ namespace node{
 	This class represents the Operator for multiplication and division.  All children are factors and are stored
 	in a vector.  FreshEval method is defined for multiplication.
 	*/
-	class MultOperator : public virtual NaryOperator
+	class MultOperator : public virtual NaryOperator, public std::enable_shared_from_this<MultOperator>
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -362,20 +367,20 @@ namespace node{
 		 */
 		MultOperator(std::shared_ptr<Node> const& s)
 		{
-			AddChild(s);
+			AddOperand(s);
 		}
 		
 		MultOperator(std::shared_ptr<Node> const& left, std::shared_ptr<Node> const& right)
 		{
-			AddChild(left);
-			AddChild(right);
+			AddOperand(left);
+			AddOperand(right);
 		}
 		
 		
 		MultOperator(const std::shared_ptr<Node> & left, bool mult_or_div_left, const std::shared_ptr<Node> & right, bool mult_or_div_right)
 		{
-			AddChild(left, mult_or_div_left);
-			AddChild(right, mult_or_div_right);
+			AddOperand(left, mult_or_div_left);
+			AddOperand(right, mult_or_div_right);
 		}
 		
 		
@@ -386,19 +391,19 @@ namespace node{
 		
 		
 		//Special Behaviour: by default all factors are in numerator
-		void AddChild(std::shared_ptr<Node> child) override
+		void AddOperand(std::shared_ptr<Node> child) override
 		{
-			NaryOperator::AddChild(std::move(child));
-			children_mult_or_div_.push_back(true);
+			NaryOperator::AddOperand(std::move(child));
+			mult_or_div_.push_back(true);
 		}
 		
 		
 		
 		//Special Behaviour: Pass bool to set sign of term: true = mult, false = divide
-		void AddChild(std::shared_ptr<Node> child, bool mult) // not an override
+		void AddOperand(std::shared_ptr<Node> child, bool mult) // not an override
 		{
-			NaryOperator::AddChild(std::move(child));
-			children_mult_or_div_.push_back(mult);
+			NaryOperator::AddOperand(std::move(child));
+			mult_or_div_.push_back(mult);
 		}
 		
 		
@@ -434,6 +439,15 @@ namespace node{
 		Check for homogeneity, with respect to a variable group.
 		*/
 		bool IsHomogeneous(VariableGroup const& vars) const override;
+
+		/**
+		 Get the indicator for which operation is being performed.  Remember this is an NaryOperator, so can hold arbitrary things.
+
+		 True is multiply, false is divide.
+		 * */
+		inline
+		const auto& GetMultOrDiv() const{ return this->mult_or_div_;}
+
 	protected:
 		
 		// Specific implementation of FreshEval for mult and divide.
@@ -454,11 +468,11 @@ namespace node{
 		MultOperator() = default;
 
 		// Stores the mult/div of a factor.  There is a one-one
-		// correspondence between elements of children_sign_ and children_.  This
-		// is enforced by the AddChild method, redefined in MultOperator.
+		// correspondence between elements of signs_ and operand_.  This
+		// is enforced by the AddOperand method, redefined in MultOperator.
 		
 		// TODO(JBC): If we add method to delete child, must also delete children_mult_ entry.
-		std::vector<bool> children_mult_or_div_;
+		std::vector<bool> mult_or_div_;
 		
 
 	private:
@@ -468,7 +482,7 @@ namespace node{
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<NaryOperator>(*this);
-			ar & children_mult_or_div_;
+			ar & mult_or_div_;
 		}
 
 		void PrecisionChangeSpecific(unsigned prec) const override
@@ -494,11 +508,12 @@ namespace node{
 	 
 	 \see IntegerPowerOperator
 	 */
-	class PowerOperator : public virtual Operator
+	class PowerOperator : public virtual Operator, public std::enable_shared_from_this<PowerOperator>
 	{
 		
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 
@@ -518,6 +533,15 @@ namespace node{
 			exponent_ = new_exponent;
 		}
 		
+		std::shared_ptr<Node> GetBase() const
+		{
+			return base_;
+		}
+		
+		std::shared_ptr<Node> GetExponent() const
+		{
+			return exponent_;
+		}
 		
 		void Reset() const override;
 		
@@ -622,13 +646,13 @@ namespace node{
 
 
 	 This class represents the exponentiation operator.  The base is stored in
-	 children_, and an extra variable(exponent_) stores the exponent.  FreshEval is
+	 operand_, and an extra variable(exponent_) stores the exponent.  FreshEval is
 	 defined as the exponention operation.
 	 */
-	class IntegerPowerOperator : public virtual UnaryOperator
+	class IntegerPowerOperator : public virtual UnaryOperator, public std::enable_shared_from_this<IntegerPowerOperator>
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -670,7 +694,7 @@ namespace node{
 		
 		bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
 		{
-			return child_->IsHomogeneous(v);
+			return operand_->IsHomogeneous(v);
 		}
 		
 
@@ -679,7 +703,7 @@ namespace node{
 		*/
 		bool IsHomogeneous(VariableGroup const& vars) const override
 		{
-			return child_->IsHomogeneous(vars);
+			return operand_->IsHomogeneous(vars);
 		}
 
 
@@ -699,24 +723,24 @@ namespace node{
 		
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return pow(child_->Eval<dbl>(diff_variable), exponent_);
+			return pow(operand_->Eval<dbl>(diff_variable), exponent_);
 		}
 
 		void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			child_->EvalInPlace<dbl>(evaluation_value, diff_variable);
+			operand_->EvalInPlace<dbl>(evaluation_value, diff_variable);
 			evaluation_value = pow(evaluation_value, exponent_);
 		}
 
 		
 		mpfr_complex FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			return pow(child_->Eval<mpfr_complex>(diff_variable),exponent_);
+			return pow(operand_->Eval<mpfr_complex>(diff_variable),exponent_);
 		}
 
 		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 		{
-			child_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
+			operand_->EvalInPlace<mpfr_complex>(evaluation_value, diff_variable);
 			evaluation_value = pow(evaluation_value, exponent_);
 		}
 
@@ -762,10 +786,11 @@ namespace node{
 	 This class represents the square root function.  FreshEval method
 	 is defined for square root and takes the square root of the child node.
 	 */
-	class SqrtOperator : public  virtual UnaryOperator
+	class SqrtOperator : public  virtual UnaryOperator, public std::enable_shared_from_this<SqrtOperator>
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
+
 		SqrtOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N)
 		{};
 		
@@ -828,9 +853,10 @@ namespace node{
 	This class represents the exponential function.  FreshEval method
 	is defined for exponential and takes the exponential of the child node.
 	*/
-	class ExpOperator : public  virtual UnaryOperator
+	class ExpOperator : public  virtual UnaryOperator, public std::enable_shared_from_this<ExpOperator>
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -884,9 +910,10 @@ namespace node{
 
 	This class represents the natural logarithm function.
 	*/
-	class LogOperator : public  virtual UnaryOperator
+	class LogOperator : public  virtual UnaryOperator, public std::enable_shared_from_this<LogOperator>
 	{
 	public:
+		BERTINI_DEFAULT_VISITABLE()
 		
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
@@ -1144,7 +1171,7 @@ namespace node{
 	 */
 	inline std::shared_ptr<Node> operator*=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		lhs->AddChild(rhs);
+		lhs->AddOperand(rhs);
 		return lhs;
 	}
 	
@@ -1209,13 +1236,14 @@ namespace node{
 		if (std::dynamic_pointer_cast<IntegerPowerOperator>(lhs) && std::dynamic_pointer_cast<IntegerPowerOperator>(rhs))
 		{
 
-			auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs);
+			auto lhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(lhs); // ugh, doing this cast twice?!?!?  fix this.
 			auto rhs_as_intpow = std::dynamic_pointer_cast<IntegerPowerOperator>(rhs);
-			if (lhs_as_intpow->first_child()==rhs_as_intpow->first_child())
+
+			if (lhs_as_intpow->Operand()==rhs_as_intpow->Operand())
 			{
 				if (lhs_as_intpow->exponent()>=0 && rhs_as_intpow->exponent()>=0)
 				{
-					std::shared_ptr<Node> temp = pow(lhs_as_intpow->first_child(),lhs_as_intpow->exponent() + rhs_as_intpow->exponent());
+					std::shared_ptr<Node> temp = pow(lhs_as_intpow->Operand(),lhs_as_intpow->exponent() + rhs_as_intpow->exponent());
 					lhs.swap(temp);
 					return lhs;
 				}
@@ -1267,7 +1295,7 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator/=(std::shared_ptr<MultOperator> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		lhs->AddChild(rhs,false);
+		lhs->AddOperand(rhs,false);
 		return lhs;
 	}
 	

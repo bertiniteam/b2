@@ -59,7 +59,7 @@ namespace node{
 	class Variable : public virtual NamedSymbol, public std::enable_shared_from_this<Variable>
 	{
 	public:
-		
+		BERTINI_DEFAULT_VISITABLE()
 		
 		Variable(std::string new_name);
 		

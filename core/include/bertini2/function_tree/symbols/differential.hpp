@@ -58,11 +58,10 @@ namespace node{
 
 	This class represents differentials.  These are produced in the course of differentiation of a non-constant expression tree.
 	*/
-	class Differential : public virtual NamedSymbol
+	class Differential : public virtual NamedSymbol, public std::enable_shared_from_this<Differential>
 	{
 	public:
-		
-
+		BERTINI_DEFAULT_VISITABLE()
 
 		/**
 		 Input shared_ptr to a Variable.

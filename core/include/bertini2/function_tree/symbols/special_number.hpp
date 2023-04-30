@@ -63,9 +63,11 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public virtual Number, public virtual NamedSymbol
+		class Pi : public virtual Number, public virtual NamedSymbol, public std::enable_shared_from_this<Pi>
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE()
+
 			Pi() : NamedSymbol("pi")
 			{}
 
@@ -98,9 +100,11 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public virtual Number, public virtual NamedSymbol
+		class E : public virtual Number, public virtual NamedSymbol, public std::enable_shared_from_this<E>
 		{
 		public:
+			BERTINI_DEFAULT_VISITABLE()
+			
 			E() : NamedSymbol("e")
 			{}
 
