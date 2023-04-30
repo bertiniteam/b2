@@ -77,3 +77,4 @@ python/build/
 *.app
 python/autom4te.cache
 *.bak
+python/temp.py

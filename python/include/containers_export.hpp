@@ -35,10 +35,13 @@
 #ifndef BERTINI_PYTHON_CONTAINERS_EXPORT_HPP
 #define BERTINI_PYTHON_CONTAINERS_EXPORT_HPP
 
+#include <deque>
+#include "python_common.hpp"
 
 #include <bertini2/function_tree.hpp>
+#include <boost/python/stl_iterator.hpp>
 
-#include "python_common.hpp"
+
 
 
 namespace bertini{ namespace python{
@@ -123,6 +126,84 @@ private:
 	};	
 
 };// ListVisitor class
+
+
+
+
+
+
+// This block of code lets us construct a container in C++ from a list of things in Python.
+// i found this problem difficult.  
+//
+// fortunately, there were a number of questions and answers of varying quality about it, and the below
+// worked readily.
+//
+// derived from https://stackoverflow.com/questions/56290774/boost-python-exposing-c-class-with-constructor-taking-a-stdlist
+
+template<typename ContT>
+std::shared_ptr<ContT> create_MyClass(boost::python::list const& l)
+{	
+	using ContainedT = typename ContT::value_type;
+
+    ContT temp{ boost::python::stl_input_iterator<ContainedT>(l)
+        , boost::python::stl_input_iterator<ContainedT>() };
+    return std::make_shared<ContT>(temp);
+}
+
+
+template<typename ContT>
+struct std_list_to_python
+{
+    static PyObject* convert(ContT const& l)
+    {
+        boost::python::list result;
+        for (auto const& value : l) {
+            result.append(value);
+        }
+        return boost::python::incref(result.ptr());
+    }
+};
+
+
+template<typename ContT>
+struct pylist_converter
+{	
+	using ContainedT = typename ContT::value_type;
+
+    static void* convertible(PyObject* object)
+    {
+        if (!PyList_Check(object)) {
+            return nullptr;
+        }
+
+        int sz = PySequence_Size(object);
+        for (int i = 0; i < sz; ++i) {
+            if (!(PyList_GetItem(object, i))) { // silviana sez: i removed a string checking call here.
+                return nullptr;
+            }
+        }
+
+        return object;
+    }
+
+    static void construct(PyObject* object, boost::python::converter::rvalue_from_python_stage1_data* data)
+    {
+        typedef boost::python::converter::rvalue_from_python_storage<ContT> storage_type;
+        void* storage = reinterpret_cast<storage_type*>(data)->storage.bytes;
+
+        data->convertible = new (storage) ContT();
+
+        ContT* l = (ContT*)(storage);
+
+        int sz = PySequence_Size(object);
+        for (int i = 0; i < sz; ++i) {
+            l->push_back(boost::python::extract<ContainedT>(PyList_GetItem(object, i)));
+        }
+    }
+};
+
+
+
 
 
 
