@@ -12,6 +12,8 @@ using dbl = bertini::dbl;
 
 BOOST_AUTO_TEST_SUITE(SLP_tests)
 
+
+// set up some systems for testing
 bertini::System SingleVariableTestSystem(){
 	std::string str = "function f; variable_group x; f = x+1;";
 
@@ -34,7 +36,7 @@ bertini::System TwoVariableTestSystem(){
 
 
 bertini::System ThreeVariableTestSystem(){
-	std::string str = "function f, g, h; variable_group x, y, z; f = x+1; g =; h =;";
+	std::string str = "function f, g, h; variable_group x, y, z; f = x+1; g = y-1; h =z/3;";
 
 
 	bertini::System sys;
@@ -44,7 +46,21 @@ bertini::System ThreeVariableTestSystem(){
 }
 
 
-BOOST_AUTO_TEST_CASE(opcodes)
+
+
+
+
+
+
+
+
+
+
+// begin the actual tests
+
+
+// super basic -- tests of arities
+BOOST_AUTO_TEST_CASE(operation_arities)
 {
 	BOOST_CHECK(IsUnary(Operation::Negate));
 	BOOST_CHECK(IsUnary(Operation::Assign));
@@ -56,6 +72,11 @@ BOOST_AUTO_TEST_CASE(opcodes)
 	BOOST_CHECK(!IsUnary(Operation::Divide));
 	BOOST_CHECK(!IsUnary(Operation::Power));
 }
+
+
+
+
+
 
 BOOST_AUTO_TEST_CASE(can_make_from_system)
 {
@@ -87,9 +108,9 @@ BOOST_AUTO_TEST_CASE(evaluate_simple_system)
 
 	values(0) = dbl(2.0);
 	
-	std::cout << slp;
+
 	slp.Eval(values);
-	std::cout << slp;
+
 
 	Vec<dbl> f = slp.GetFuncVals<dbl>();
 	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
@@ -111,7 +132,6 @@ BOOST_AUTO_TEST_CASE(number_variables_system2)
 	bertini::System sys = TwoVariableTestSystem();
 	auto slp = SLP(sys);
 
-	std::cout << sys << std::endl;
 	BOOST_CHECK_EQUAL(slp.NumVariables(), sys.NumVariables());
 
 }
@@ -187,17 +207,22 @@ BOOST_AUTO_TEST_CASE(evaluate_three_variable_system)
 
 	auto slp = SLP(sys);
 
-	Vec<dbl> values(1);
+	Vec<dbl> values(3);
 
 	values(0) = dbl(2.0);
+	values(1) = dbl(3.0);
+	values(2) = dbl(3.0);
+
 
 	slp.Eval(values);
 
 	Vec<dbl> f = slp.GetFuncVals<dbl>();
 	bertini::Mat<dbl> J = slp.GetJacobian<dbl>();
 
-	// x = 2, and the function is f=x+1
-	BOOST_CHECK_EQUAL(f(0), 3.);
+
+	BOOST_CHECK_EQUAL(f(0), 3.); // f=x+1, x=2 ==> f=3
+	BOOST_CHECK_EQUAL(f(1), 2.); // g = y-1
+	BOOST_CHECK_EQUAL(f(2), 1.0); // h =z/3
 
 	//the system is [f] = [x+1] = [1]
 
