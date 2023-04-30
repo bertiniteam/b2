@@ -3,8 +3,8 @@
 
 
 
-#we're building b2, version 2.0-alpha6, and the corresponding email is silviana's
-AC_INIT([b2], [2.0-alpha6], [amethyst@uwec.edu],[b2], [http://github.com/bertiniteam/b2])
+#we're building b2, version 2.0-alpha7, and the corresponding email is silviana's
+AC_INIT([b2], [2.0-alpha7], [amethyst@uwec.edu],[b2], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
