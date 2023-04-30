@@ -190,7 +190,9 @@ BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_str_base)
 BOOST_AUTO_TEST_CASE(making_mpfr_from_pow_doub_exp)
 {
 	DefaultPrecision(50);
+
 using boost::multiprecision::pow;
+
 	mpfr_float result = pow(mpfr_float(10), -5);
 	mpfr_float expected("1e-5");
 

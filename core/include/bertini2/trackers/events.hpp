@@ -24,9 +24,11 @@
 
 
 /**
-\file tracking/events.hpp
+\file include/bertini2/trackers/events.hpp
 
-\brief Contains the tracking/events base types
+\brief Contains the tracker/events base types.
+
+Derived from these types to make new event types.
 */
 
 #pragma once

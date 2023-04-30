@@ -43,7 +43,11 @@ template<typename PyClass>
 void ListVisitor<T>::visit(PyClass& cl) const
 {
 	cl
+
 	.def(vector_indexing_suite< T , true >())
+	// By default indexed elements are returned by proxy. This can be
+    // disabled by supplying *true* in the NoProxy template parameter.
+
 	.def("__str__", &ListVisitor::__str__)
 	.def("__repr__", &ListVisitor::__repr__)
 	;
@@ -60,6 +64,12 @@ void ExportContainers()
 
 	scope new_submodule_scope = new_submodule;
 	new_submodule_scope.attr("__doc__") = "List types for PyBertini";
+ 
+
+	boost::python::converter::registry::push_back(&pylist_converter<bertini::VariableGroup>::convertible
+	    , &pylist_converter<bertini::VariableGroup>::construct
+	    , boost::python::type_id<bertini::VariableGroup>());
+
 
 
 	// std::vector of Rational Node ptrs
@@ -68,10 +78,11 @@ void ExportContainers()
 	.def(ListVisitor<T1>())
 	;
 
-	// The VariableGroup deque container
+	// The VariableGroup vector container
 	using T2 = bertini::VariableGroup;
 	class_< T2 >("VariableGroup")
 	.def(ListVisitor<T2>())
+	.def("__init__", boost::python::make_constructor(&create_MyClass<T2>))
 	;
 	
 	// std::vector of ints
@@ -101,7 +112,10 @@ void ExportContainers()
 	.def(ListVisitor<T6>())
 	;
 
-};
+
+
+
+}; // export containers
 
 	}
 }

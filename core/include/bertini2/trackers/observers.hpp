@@ -1,17 +1,17 @@
 //This file is part of Bertini 2.
 //
-//tracking/observers.hpp is free software: you can redistribute it and/or modify
+//trackers/observers.hpp is free software: you can redistribute it and/or modify
 //it under the terms of the GNU General Public License as published by
 //the Free Software Foundation, either version 3 of the License, or
 //(at your option) any later version.
 //
-//tracking/observers.hpp is distributed in the hope that it will be useful,
+//trackers/observers.hpp is distributed in the hope that it will be useful,
 //but WITHOUT ANY WARRANTY; without even the implied warranty of
 //MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //GNU General Public License for more details.
 //
 //You should have received a copy of the GNU General Public License
-//along with tracking/observers.hpp.  If not, see <http://www.gnu.org/licenses/>.
+//along with trackers/observers.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
 // Copyright(C) 2015 - 2021 by Bertini2 Development Team
 //
@@ -24,9 +24,9 @@
 
 
 /**
-\file tracking/observers.hpp
+\file include/bertini2/trackers/observers.hpp
 
-\brief Contains the tracking/observers base types
+\brief Contains the trackers/observers base types
 */
 
 #pragma once

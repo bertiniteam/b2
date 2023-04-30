@@ -54,6 +54,14 @@ namespace bertini{
 
 		/**
 		The minimum time that can be represented effectively using a given precision
+
+		\param precision The number of digits you want to use
+		\param time_to_go The duration of remaining time to track
+		\param safety_digits A buffer of extra digits to use
+
+		\return The smallest permissible stepsize
+
+		\todo This function has a hardcoded value which should be replaced
 		*/
 		inline
 		mpfr_float MinTimeForCurrentPrecision(unsigned precision, mpfr_float const& time_to_go, int safety_digits = 3)
@@ -67,6 +75,12 @@ namespace bertini{
 
 		/**
 		\brief Just another name for MinTimeForCurrentPrecision
+
+		\param precision The number of digits you want to use
+		\param time_to_go The duration of remaining time to track
+		\param safety_digits A buffer of extra digits to use
+
+		\return The smallest permissible stepsize
 		*/
 		inline
 		mpfr_float MinStepSizeForPrecision(unsigned precision, mpfr_float const& time_to_go, int safety_digits = 3)
@@ -79,11 +93,14 @@ namespace bertini{
 		 \brief Compute the cost function for arithmetic versus precision.
 
 		 From \cite AMP2, \f$C(P)\f$.  As currently implemented, this is 
-		 \f$ 10.35 + 0.13 P \f$, where P is the precision.
+		 \f$ 10.35 + 0.13 P \f$, where P is the precision.  These numbers are stale, and need to be recomputed.  Badly.  Please do this.
 		
 		 This function tells you the relative cost of arithmetic at a given precision. 
 
 		 \todo Recompute this cost function for boost::multiprecision::mpfr_float
+
+		 \param precision An integral number of digits -- then this gives the cost for arithmetic
+		 \return A double indicating how expensive arithmetic at a given precision is.  1 is the base-line for double-precision.  
 		*/
 		inline
 		double ArithmeticCost(unsigned precision)
@@ -98,7 +115,16 @@ namespace bertini{
 
 
 		/**
-		 \Compute a stepsize satisfying AMP Criterion B with a given precision
+		 \brief Compute a stepsize satisfying AMP Criterion B with a given precision
+
+		 \param precision The current working precision
+		 \param digits_B The number of digits from Criterion B
+		 \param num_newton_iterations The number of remaining newton iterations allowed in the correction
+		 \param predictor_order The order of the predictor
+
+		 \return The stepsize
+
+		 \todo Remove the default value of the predictor order, as that seems weird to have
 		*/
 		inline
 		mpfr_float StepsizeSatisfyingCriterionB(unsigned precision,
@@ -115,6 +141,9 @@ namespace bertini{
 
 		\param log_of_stepsize log10 of a stepsize
 		\param time_to_go How much time you have left to track.
+		\param safety_digits A buffer of extra digits to use, over the computed min.  Yes, this is added in, in this function.
+
+		\return An integral number of necessary digits to use
 		*/
 		inline
 		unsigned MinDigitsForLogOfStepsize(mpfr_float const& log_of_stepsize, mpfr_float const& time_to_go, unsigned safety_digits = 3)
@@ -123,7 +152,14 @@ namespace bertini{
 		}
 
 		/**
-		\todo this function assumes you are going to 0.
+		 \brief For a given range of stepsizes under consideration, gives the minimum number of digits
+
+		 \param min_stepsize The smallest stepsize under consideration
+		 \param max_stepsize The largest stepsize under consideration
+		 \param time_to_go How much time is left to track.
+		 \return The min number of digits. 
+
+		This function assumes you are going to time=0, or that you have taken care of that difference.  That is, time_to_go should be a duration, not the current time, unless you are tracking to t=0, in which case current time is the duration left to go.  Dig it?
 		*/
 		inline
 		unsigned MinDigitsForStepsizeInterval(mpfr_float const& min_stepsize, mpfr_float const& max_stepsize, mpfr_float const& time_to_go)
@@ -147,11 +183,10 @@ namespace bertini{
 		 \param[in] min_stepsize The minimum permitted stepsize.
 		 \param[in] max_precision The maximum considered precision.
 		 \param[in] max_stepsize The maximum permitted stepsize.  
-		 \param[in] criterion_B_rhs The right hand side of CriterionB from \cite AMP1, \cite AMP2
-		 \param num_newton_iterations The number of allowed Newton corrector iterations.
-		 \param AMP_config The configuration of AMP settings for tracking.
-		 \param predictor_order The order of the predictor being used.  This is the order itself, not the order of the error estimate.
-
+		 \param[in] digits_B The number of digits required, according to CriterionB from \cite AMP1, \cite AMP2
+		 \param[in] num_newton_iterations The number of allowed Newton corrector iterations.
+		 \param[in] predictor_order The order of the predictor being used.  This is the order itself, not the order of the error estimate.
+	
 		 \see ArithmeticCost
 		*/
 		template<typename RealT>

@@ -399,6 +399,16 @@ namespace bertini
 		}
 
 
+
+
+		auto PushFront = [&](auto & container, auto item){
+			container.push_back(item);
+			std::rotate(container.rbegin(), container.rbegin() + 1, container.rend());
+		};
+
+
+
+
 		auto group_counter = 0;
 		for (auto curr_var_gp = variable_groups_.begin(); curr_var_gp!=variable_groups_.end(); curr_var_gp++)
 		{
@@ -408,7 +418,10 @@ namespace bertini
 			if (already_had_homvars){
 				Var hom_var = homogenizing_variables_[group_counter];
 				VariableGroup temp_group = *curr_var_gp;
-				temp_group.push_front(hom_var);
+
+				PushFront(temp_group, hom_var);
+
+				// temp_group.push_front(hom_var);
 				for (const auto& curr_function : functions_)
 					curr_function->Homogenize(temp_group, hom_var);
 			}
@@ -436,6 +449,12 @@ namespace bertini
 
 	bool System::IsHomogeneous() const
 	{
+		auto PushFront = [&](auto & container, auto item){
+			container.push_back(item);
+			std::rotate(container.rbegin(), container.rbegin() + 1, container.rend());
+		};
+
+
 		bool have_homvars = NumHomVariables()!=0;
 
 		if (NumHomVariables()!=NumVariableGroups())
@@ -448,7 +467,7 @@ namespace bertini
 			{
 				auto tempvars = vars;
 				if (have_homvars)
-					tempvars.push_front(homogenizing_variables_[counter]);
+					PushFront(tempvars, homogenizing_variables_[counter]);
 				counter++;
 
 				if (!iter->IsHomogeneous(tempvars))
@@ -468,7 +487,15 @@ namespace bertini
 
 
 	bool System::IsPolynomial() const
-	{
+	{	
+
+		auto PushFront = [&](auto & container, auto item){
+			container.push_back(item);
+			std::rotate(container.rbegin(), container.rbegin() + 1, container.rend());
+		};
+
+
+
 		bool have_homvars = NumHomVariables()!=0;
 		if (have_homvars && NumHomVariables()!=NumVariableGroups())
 			throw std::runtime_error("trying to check polynomiality on a partially-formed system.  mismatch between number of homogenizing variables, and number of variable groups");
@@ -481,7 +508,7 @@ namespace bertini
 			{
 				auto tempvars = vars;
 				if (have_homvars)
-					tempvars.push_front(homogenizing_variables_[counter]);
+					PushFront(tempvars,homogenizing_variables_[counter]);
 
 				counter++;
 
