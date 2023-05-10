@@ -566,7 +566,7 @@ BOOST_AUTO_TEST_CASE(complex_serialization)
 BOOST_AUTO_TEST_CASE(complex_precision_predictable_add)
 {
 
-	bertini::scoped_mpfr_precision_options_this_thread precision_options(bertini::DefaultPrecisionPolicy());
+	bertini::scoped_mpfr_precision_options_this_thread precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 
 	DefaultPrecision(30);
@@ -583,13 +583,13 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_add)
 
 	DefaultPrecision(90);
 	a = b+c;
-	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
+	BOOST_CHECK_EQUAL(Precision(a),90);
 }
 
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable_sub)
 {
-	bertini::scoped_mpfr_precision_options_this_thread precision_options(bertini::DefaultPrecisionPolicy());
+	bertini::scoped_mpfr_precision_options_this_thread precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 
 	DefaultPrecision(30);
@@ -609,13 +609,13 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_sub)
 
 	DefaultPrecision(90);
 	a = b-c;
-	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
+	BOOST_CHECK_EQUAL(Precision(a),90);
 }
 
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable_mul)
 {
-	bertini::scoped_mpfr_precision_options_this_thread precision_options(bertini::DefaultPrecisionPolicy());
+	bertini::scoped_mpfr_precision_options_this_thread precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 	DefaultPrecision(30);
 	bertini::mpfr_complex a(1,2);
@@ -634,14 +634,14 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_mul)
 
 	DefaultPrecision(90);
 	a = b*c;
-	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
+	BOOST_CHECK_EQUAL(Precision(a),90);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable_div)
 {
-	bertini::scoped_mpfr_precision_options_this_thread precision_options(bertini::DefaultPrecisionPolicy());
+	bertini::scoped_mpfr_precision_options_this_thread precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 	DefaultPrecision(30);
 	bertini::mpfr_complex a(1,2);
@@ -660,13 +660,13 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_div)
 
 	DefaultPrecision(90);
 	a = b/c;
-	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
+	BOOST_CHECK_EQUAL(Precision(a),90);
 }
 
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable_pow)
 {
-	bertini::scoped_mpfr_precision_options_this_thread precision_options(bertini::DefaultPrecisionPolicy());
+	bertini::scoped_mpfr_precision_options_this_thread precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 	DefaultPrecision(30);
 	bertini::mpfr_complex a(1,2);
@@ -685,12 +685,12 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_pow)
 
 	DefaultPrecision(90);
 	a = pow(b,c);
-	BOOST_CHECK_EQUAL(Precision(a),std::max(Precision(b),Precision(c)));
+	BOOST_CHECK_EQUAL(Precision(a),90);
 }
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable_trig)
 {
-	bertini::scoped_mpfr_precision_options_this_thread precision_options(bertini::DefaultPrecisionPolicy());
+	bertini::scoped_mpfr_precision_options_this_thread precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 	DefaultPrecision(30);
 	bertini::mpfr_complex a(1,2);
@@ -702,20 +702,20 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_trig)
 
 	DefaultPrecision(70);
 	bertini::mpfr_complex c(5,6);
-	BOOST_CHECK_EQUAL(Precision(c),70);
+	BOOST_CHECK_EQUAL(Precision(c),DefaultPrecision());
 
 	a = tan(b);
-	BOOST_CHECK_EQUAL(Precision(a),Precision(b));
+	BOOST_CHECK_EQUAL(Precision(a),DefaultPrecision());
 
 	DefaultPrecision(90);
 	a = tan(b);
-	BOOST_CHECK_EQUAL(Precision(a),Precision(b));
+	BOOST_CHECK_EQUAL(Precision(a),DefaultPrecision());
 }
 
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable_arg)
 {
-	bertini::scoped_mpfr_precision_options_this_thread precision_options(bertini::DefaultPrecisionPolicy());
+	bertini::scoped_mpfr_precision_options_this_thread precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 	DefaultPrecision(30);
 	bertini::mpfr_complex a(1,2);
@@ -730,20 +730,19 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable_arg)
 	BOOST_CHECK_EQUAL(Precision(c),70);
 
 	a = arg(b);
-	BOOST_CHECK_EQUAL(Precision(a),Precision(b));
+	BOOST_CHECK_EQUAL(Precision(a),DefaultPrecision());
 
 	DefaultPrecision(90);
 	a = arg(b);
-	BOOST_CHECK_EQUAL(Precision(a),Precision(b));
+	BOOST_CHECK_EQUAL(Precision(a),DefaultPrecision());
 }
 
 
 
 
-#if USE_BMP_COMPLEX
 BOOST_AUTO_TEST_CASE(complex_precision_predictable2)
 {
-	bertini::scoped_mpfr_precision_options_this_thread precision_options(bertini::DefaultPrecisionPolicy());
+	bertini::scoped_mpfr_precision_options_this_thread precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
 
 	mpfr_complex::default_precision(50);
 	mpfr_float::default_precision(50);
@@ -769,7 +768,7 @@ BOOST_AUTO_TEST_CASE(complex_precision_predictable2)
 	mpfr_complex::default_precision(40);
 	BOOST_CHECK_EQUAL(c.real().precision(),50);
 }
-#endif
+
 
 BOOST_AUTO_TEST_CASE(complex_precision_predictable3)
 {
