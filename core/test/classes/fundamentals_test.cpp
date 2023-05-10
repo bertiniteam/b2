@@ -49,24 +49,10 @@ using bertini::DefaultPrecision;
 
 
 
-// shamelessly taken from the documentation for Boost.Multiprecision
-// https://www.boost.org/doc/libs/1_82_0/libs/multiprecision/doc/html/boost_multiprecision/tut/variable.html
-struct scoped_mpfr_precision_options
-{
-   boost::multiprecision::variable_precision_options saved_options;
-   scoped_mpfr_precision_options(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::thread_default_variable_precision_options())
-   {
-      mpfr_float::thread_default_variable_precision_options(opts);
-   }
-   ~scoped_mpfr_precision_options()
-   {
-      mpfr_float::thread_default_variable_precision_options(saved_options);
-   }
-   void reset(boost::multiprecision::variable_precision_options opts)
-   {
-      mpfr_float::thread_default_variable_precision_options(opts);
-   }
-};
+
+
+
+
 
 
 
@@ -317,70 +303,48 @@ BOOST_AUTO_TEST_CASE(max_et_on)
 }
 
 
-BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+struct scoped_mpfr_precision_options_all_threads
 {
-
-
-
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-
-
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123");
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-
-
-
-	mpfr_float::default_precision(30);
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_target_precision);
-	
-	mpfr_float z1 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z1.precision(), 30);
-	
-
-
-
-
-	mpfr_float::default_precision(30);
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
-	
-	mpfr_float z2 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z2.precision(), 30);
-
-
-
-
-
-	mpfr_float::default_precision(30);
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_component_precision);
-	
-	mpfr_float z3 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z3.precision(), 30);
-
-
-
-
-
-
-	mpfr_float::default_precision(30);
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_related_precision);
-	
-	mpfr_float z4 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z4.precision(), 30);
+   boost::multiprecision::variable_precision_options saved_options;
+   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::default_variable_precision_options())
+   {
+      mpfr_float::default_variable_precision_options(opts);
+   }
+   ~scoped_mpfr_precision_options_all_threads()
+   {
+      mpfr_float::default_variable_precision_options(saved_options);
+   }
+   void reset(boost::multiprecision::variable_precision_options opts)
+   {
+      mpfr_float::default_variable_precision_options(opts);
+   }
+};
 
 
 
@@ -388,329 +352,23 @@ BOOST_AUTO_TEST_CASE(arithmetic_precision_fresh_variable)
 
 
 
-	mpfr_float::default_precision(30);
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_all_precision);
-	
-	mpfr_float z5 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z5.precision(), 30);
-}
-
-
-
-
-BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_all_threads)
+struct scoped_mpfr_precision_options_this_thread
 {
+   boost::multiprecision::variable_precision_options saved_options;
+   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::thread_default_variable_precision_options())
+   {
+      mpfr_float::thread_default_variable_precision_options(opts);
+   }
+   ~scoped_mpfr_precision_options_this_thread()
+   {
+      mpfr_float::thread_default_variable_precision_options(saved_options);
+   }
+   void reset(boost::multiprecision::variable_precision_options opts)
+   {
+      mpfr_float::thread_default_variable_precision_options(opts);
+   }
+};
 
-
-
-	mpfr_float::default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-
-
-	mpfr_float::default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-
-
-	// make a variable at precision 70
-	mpfr_float::default_precision(70);
-	mpfr_float z1("0"), z2("0"), z3("0"), z4("0"), z5("0");
-
-
-	mpfr_float::default_precision(30);
-	// then try to write into this existing variable with various policies
-
-
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and then rounded to the precision of the target variable upon assignment. The precision of other types (including related or component types - see preserve_component_precision/preserve_related_precision) contained within the expression are ignored. This option has the unfortunate side effect, that moves may become full deep copies. 
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_target_precision);
-	
-	z1 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z1.precision(), 70);
-	
-
-
-
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. The precision of other types (including related or component types - see preserve_component_precision/preserve_related_precision) contained within the expression are ignored. Moves, are true moves not copies. 
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_source_precision);
-	
-	z2 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z2.precision(), 60);
-
-
-
-
-
-	//All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. If the expression contains component types then these are also considered when calculating the precision of the expression. Component types are the types which make up the two components of the number when dealing with interval or complex numbers. They are the same type as Num::value_type. Moves, are true moves not copies. 
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_component_precision);
-	
-	z3 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z3.precision(), 60);
-
-
-
-
-
-
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. If the expression contains component types then these are also considered when calculating the precision of the expression. In addition to component types, all related types are considered when evaluating the precision of the expression. Related types are considered to be instantiations of the same template, but with different parameters. So for example mpfr_float_100 would be a related type to mpfr_float, and all expressions containing an mpfr_float_100 variable would have at least 100 decimal digits of precision when evaluated as an mpfr_float expression. Moves, are true moves not copies. 
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_related_precision);
-	
-	z4 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z4.precision(), 60);
-
-
-
-
-
-
-
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. In addition to component and related types, all types are considered when evaluating the precision of the expression. For example, if the expression contains an mpz_int, then the precision of the expression will be sufficient to store all of the digits in the integer unchanged. This option should generally be used with extreme caution, as it can easily cause unintentional precision inflation. Moves, are true moves not copies. 
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_all_precision);
-	
-	z5 = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z5.precision(), 60);
-}
-
-
-
-
-
-
-
-BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve_target_precision)
-{
-
-
-
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-
-
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-
-
-	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 70);
-
-
-	mpfr_float::thread_default_precision(30);
-	// then try to write into this existing variable with various policies
-
-
-	// // All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. The precision of other types (including related or component types - see preserve_component_precision/preserve_related_precision) contained within the expression are ignored. Moves, are true moves not copies. 
-
-	scoped_mpfr_precision_options   scoped_opts(boost::multiprecision::variable_precision_options::preserve_target_precision);
-
-	mpfr_float::thread_default_variable_precision_options();
-	
-	z = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 70);
-}
-	
-
-
-
-
-BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve_source_precision)
-{
-
-
-
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-
-
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-
-
-	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
-
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 70);
-
-
-
-	mpfr_float::thread_default_precision(30);
-	// then try to write into this existing variable with various policies
-
-
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and then rounded to the precision of the target variable upon assignment. The precision of other types (including related or component types - see preserve_component_precision/preserve_related_precision) contained within the expression are ignored. This option has the unfortunate side effect, that moves may become full deep copies. 
-
-	scoped_mpfr_precision_options   scoped_opts(boost::multiprecision::variable_precision_options::preserve_source_precision);
-
-	
-	z = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 60);
-}
-
-
-
-
-BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve_component_precision)
-{
-
-
-
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-
-
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-
-
-	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 70);
-
-
-	mpfr_float::thread_default_precision(30);
-	// then try to write into this existing variable with various policies
-
-
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. If the expression contains component types then these are also considered when calculating the precision of the expression. Component types are the types which make up the two components of the number when dealing with interval or complex numbers. They are the same type as Num::value_type. Moves, are true moves not copies. 
-
-	scoped_mpfr_precision_options   scoped_opts(boost::multiprecision::variable_precision_options::preserve_component_precision);
-
-	
-	z = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 60);
-}
-
-
-
-
-
-
-BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve_related_precision)
-{
-
-
-
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-
-
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-
-
-	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 70);
-
-
-	mpfr_float::thread_default_precision(30);
-	// then try to write into this existing variable with various policies
-
-
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. If the expression contains component types then these are also considered when calculating the precision of the expression. In addition to component types, all related types are considered when evaluating the precision of the expression. Related types are considered to be instantiations of the same template, but with different parameters. So for example mpfr_float_100 would be a related type to mpfr_float, and all expressions containing an mpfr_float_100 variable would have at least 100 decimal digits of precision when evaluated as an mpfr_float expression. Moves, are true moves not copies.  
-
-	scoped_mpfr_precision_options   scoped_opts(boost::multiprecision::variable_precision_options::preserve_related_precision);
-
-	
-	z = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 60);
-}
-
-
-
-BOOST_AUTO_TEST_CASE(arithmetic_precision_existing_variable_this_thread_preserve_all_precision)
-{
-
-
-
-	mpfr_float::thread_default_precision(50);
-	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-
-
-	mpfr_float::thread_default_precision(60);
-	mpfr_float y("0.12345678901234567890123456789012345678901234567890123456789");
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-
-
-	// make a variable at precision 70
-	mpfr_float::thread_default_precision(70);
-	mpfr_float z("0");
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 70);
-
-	
-	mpfr_float::thread_default_precision(30);
-	// then try to write into this existing variable with various policies
-
-
-	// All expressions are evaluated at the precision of the highest precision variable within the expression, and that precision is preserved upon assignment. In addition to component and related types, all types are considered when evaluating the precision of the expression. For example, if the expression contains an mpz_int, then the precision of the expression will be sufficient to store all of the digits in the integer unchanged. This option should generally be used with extreme caution, as it can easily cause unintentional precision inflation. Moves, are true moves not copies. 
-
-	scoped_mpfr_precision_options   scoped_opts(boost::multiprecision::variable_precision_options::preserve_all_precision);
-
-	
-	z = x*y;
-
-	BOOST_CHECK_EQUAL(x.precision(), 50);
-	BOOST_CHECK_EQUAL(y.precision(), 60);
-	BOOST_CHECK_EQUAL(z.precision(), 60);
-}
 
 
 
@@ -725,7 +383,7 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	DefaultPrecision(50);
 
 
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_related_precision);
+	scoped_mpfr_precision_options_this_thread scoped_opts1(boost::multiprecision::variable_precision_options::preserve_related_precision);
 
 	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
@@ -763,20 +421,20 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	BOOST_CHECK_EQUAL(z.precision(),30);
 	BOOST_CHECK_EQUAL(x.precision(),50);
 
-	mpfr_float::default_variable_precision_options(boost::multiprecision::variable_precision_options::preserve_target_precision);
+
+
+	scoped_mpfr_precision_options_this_thread scoped_opts2(boost::multiprecision::variable_precision_options::preserve_target_precision);
 
 	y = z*x;
 
-	// y is of precision 50, because the max of the precision
-	// of x and z is 50.  Even though y had precision 70
-	// before the assignment, it overrode the precision 
-	// of y.
 
 	BOOST_CHECK_EQUAL(z.precision(),30);
 	BOOST_CHECK_EQUAL(x.precision(),50);
-	BOOST_CHECK_EQUAL(y.precision(), 50);
+	BOOST_CHECK_EQUAL(y.precision(), 70);
 
 }
+
+
 
 
 BOOST_AUTO_TEST_CASE(precision_in_construction)
