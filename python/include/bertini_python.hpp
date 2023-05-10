@@ -50,6 +50,7 @@
 #include "endgame_observers.hpp"
 #include "detail.hpp"
 #include "logging.hpp"
+#include "zero_dim_export.hpp"
 
 #endif
 

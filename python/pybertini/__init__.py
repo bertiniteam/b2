@@ -59,6 +59,7 @@ import pybertini.endgame as endgame
 import pybertini.parse as parse
 import pybertini.list as list
 import pybertini.logging as logging
+import pybertini.nag_algorithms as nag_algorithms
 
 
 

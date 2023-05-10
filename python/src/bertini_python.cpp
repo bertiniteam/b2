@@ -94,6 +94,7 @@ namespace bertini
 
 			ExportLogging();
 			
+			ExportZeroDimAlgorithms();
 		}
 	
 	}
