@@ -34,6 +34,11 @@
 
 
 
+
+
+
+
+
 BOOST_AUTO_TEST_SUITE(super_fundamentals)
 
 using mpfr_float = bertini::mpfr_float;
@@ -41,6 +46,14 @@ using mpq_rational = bertini::mpq_rational;
 using dbl = bertini::dbl;
 using bertini::DefaultPrecision;
 #include <limits>
+
+
+
+
+
+
+
+
 
 
 
@@ -289,9 +302,88 @@ BOOST_AUTO_TEST_CASE(max_et_on)
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+struct scoped_mpfr_precision_options_all_threads
+{
+   boost::multiprecision::variable_precision_options saved_options;
+   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::default_variable_precision_options())
+   {
+      mpfr_float::default_variable_precision_options(opts);
+   }
+   ~scoped_mpfr_precision_options_all_threads()
+   {
+      mpfr_float::default_variable_precision_options(saved_options);
+   }
+   void reset(boost::multiprecision::variable_precision_options opts)
+   {
+      mpfr_float::default_variable_precision_options(opts);
+   }
+};
+
+
+
+
+
+
+
+struct scoped_mpfr_precision_options_this_thread
+{
+   boost::multiprecision::variable_precision_options saved_options;
+   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::thread_default_variable_precision_options())
+   {
+      mpfr_float::thread_default_variable_precision_options(opts);
+   }
+   ~scoped_mpfr_precision_options_this_thread()
+   {
+      mpfr_float::thread_default_variable_precision_options(saved_options);
+   }
+   void reset(boost::multiprecision::variable_precision_options opts)
+   {
+      mpfr_float::thread_default_variable_precision_options(opts);
+   }
+};
+
+
+
+
+
+
+
+
+
+
 BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 {
 	DefaultPrecision(50);
+
+
+	scoped_mpfr_precision_options_this_thread scoped_opts1(boost::multiprecision::variable_precision_options::preserve_related_precision);
 
 	mpfr_float x("0.01234567890123456789012345678901234567890123456789");
 	BOOST_CHECK_EQUAL(x.precision(), 50);
@@ -329,14 +421,20 @@ BOOST_AUTO_TEST_CASE(precision_through_arithemetic)
 	BOOST_CHECK_EQUAL(z.precision(),30);
 	BOOST_CHECK_EQUAL(x.precision(),50);
 
+
+
+	scoped_mpfr_precision_options_this_thread scoped_opts2(boost::multiprecision::variable_precision_options::preserve_target_precision);
+
 	y = z*x;
 
-	// y is of precision 50, because the max of the precision
-	// of x and z is 50.  Even though y had precision 70
-	// before the assignment, it overrode the precision 
-	// of y.
-	BOOST_CHECK_EQUAL(y.precision(), 50);
+
+	BOOST_CHECK_EQUAL(z.precision(),30);
+	BOOST_CHECK_EQUAL(x.precision(),50);
+	BOOST_CHECK_EQUAL(y.precision(), 70);
+
 }
+
+
 
 
 BOOST_AUTO_TEST_CASE(precision_in_construction)

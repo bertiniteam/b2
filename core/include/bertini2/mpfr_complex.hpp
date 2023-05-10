@@ -63,6 +63,68 @@ using bmp::backends::mpc_complex_backend;
 	using mpfr_complex = bmp::number<mpc_complex_backend<0>, bmp::et_off >;
 #endif
 
+	inline auto DefaultPrecisionPolicy(){
+		return bmp::variable_precision_options::preserve_source_precision;
+	}
+
+	
+
+	// shamelessly adapted from the documentation for variable precision in Boost.Multiprecision.
+	// see https://www.boost.org/doc/libs/1_82_0/libs/multiprecision/doc/html/boost_multiprecision/tut/variable.html
+	struct scoped_mpfr_precision_options_this_thread
+	{
+	   boost::multiprecision::variable_precision_options saved_options;
+
+	   scoped_mpfr_precision_options_this_thread(boost::multiprecision::variable_precision_options opts) : saved_options(mpfr_float::thread_default_variable_precision_options())
+	   {
+	      mpfr_float::thread_default_variable_precision_options(opts);
+	   }
+
+	   ~scoped_mpfr_precision_options_this_thread()
+	   {
+	      mpfr_float::thread_default_variable_precision_options(saved_options);
+	   }
+
+	   void reset(boost::multiprecision::variable_precision_options opts)
+	   {
+	      mpfr_float::thread_default_variable_precision_options(opts);
+	   }
+
+	};
+
+
+
+	struct scoped_mpfr_precision_options_all_threads
+	{
+	   boost::multiprecision::variable_precision_options saved_options_all_threads;
+	   boost::multiprecision::variable_precision_options saved_options_this_thread;
+
+	   scoped_mpfr_precision_options_all_threads(boost::multiprecision::variable_precision_options opts) : 
+	   		saved_options_all_threads(mpfr_float::default_variable_precision_options()), 
+	   		saved_options_this_thread(mpfr_float::default_variable_precision_options())
+	   {
+	      mpfr_float::default_variable_precision_options(opts);
+	      mpfr_float::thread_default_variable_precision_options(opts);
+	   }
+
+	   ~scoped_mpfr_precision_options_all_threads()
+	   {
+	      mpfr_float::default_variable_precision_options(saved_options_all_threads);
+	      mpfr_float::thread_default_variable_precision_options(saved_options_this_thread);
+	   }
+
+	   void reset(boost::multiprecision::variable_precision_options opts)
+	   {
+	      mpfr_float::default_variable_precision_options(opts);
+	      mpfr_float::thread_default_variable_precision_options(opts);
+	   }
+
+	};
+
+
+
+
+
 
 	inline auto DefaultPrecision()
 	{

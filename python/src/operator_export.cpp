@@ -45,27 +45,27 @@ namespace bertini{
 
 		struct UnaryOpWrap : UnaryOperator, wrapper<UnaryOperator>
 		{
-			void SetChild(std::shared_ptr<Node> new_child)
+			void SetOperand(std::shared_ptr<Node> new_child)
 			{
-				if (override SetChild = this->get_override("SetChild"))
-					SetChild(new_child); // *note*
+				if (override SetOperand = this->get_override("SetOperand"))
+					SetOperand(new_child); // *note*
 				
-				UnaryOperator::SetChild(new_child);
+				UnaryOperator::SetOperand(new_child);
 			}
-			void default_SetChild(std::shared_ptr<Node> new_child){ return this->UnaryOperator::SetChild(new_child);}
+			void default_SetChild(std::shared_ptr<Node> new_child){ return this->UnaryOperator::SetOperand(new_child);}
 		}; // re: NodeWrap
 
 		
 		struct NaryOpWrap : NaryOperator, wrapper<NaryOperator>
 		{
-			void AddChild(std::shared_ptr<Node> child)
+			void AddOperand(std::shared_ptr<Node> child)
 			{
-				if (override AddChild = this->get_override("AddChild"))
-					AddChild(child); // *note*
+				if (override AddOperand = this->get_override("AddOperand"))
+					AddOperand(child); // *note*
 				
-				NaryOperator::AddChild(child);
+				NaryOperator::AddOperand(child);
 			}
-			void default_AddChild(std::shared_ptr<Node> child){ return this->NaryOperator::AddChild(child);}
+			void default_AddOperand(std::shared_ptr<Node> child){ return this->NaryOperator::AddOperand(child);}
 		}; // re: NodeWrap
 
 		
@@ -76,8 +76,8 @@ namespace bertini{
 		void UnaryOpVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("set_child", &NodeBaseT::SetChild )
-			.def("first_child", &NodeBaseT::first_child )
+			.def("set_operand", &NodeBaseT::SetOperand )
+			.def("operand", &NodeBaseT::Operand )
 			;
 		}
 		
@@ -86,9 +86,9 @@ namespace bertini{
 		void NaryOpVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("add_child", &NodeBaseT::AddChild )
-			.def("first_child", &NodeBaseT::first_child )
-			.def("children_size", &NodeBaseT::children_size )
+			.def("add_operand", &NodeBaseT::AddOperand )
+			.def("first_operand", &NodeBaseT::FirstOperand )
+			.def("num_operands", &NodeBaseT::NumOperands )
 			;
 		}
 
@@ -98,7 +98,7 @@ namespace bertini{
 		{
 			
 			cl
-			.def("add_child", addChild2)
+			.def("add_operand", AddOperand2)
 			;
 		}
 
