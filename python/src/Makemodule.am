@@ -74,6 +74,6 @@ _pybertini_la_LIBADD = $(BOOST_LDFLAGS) $(PYTHON_LDFLAGS) $(PYTHON_LIBS) $(BOOST
 _pybertini_la_LDFLAGS = -module -avoid-version -shared
 #the above -module is so that the .so file is generated.  it also allows to not use the 'lib' prefix.
 
-_pybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS) $(EIGEN_CPPFLAGS) $(BERTINI_CPPFLAGS)
+_pybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS) $(EIGEN_CPPFLAGS) $(NUMPY_CPPFLAGS) $(BERTINI_CPPFLAGS)
 
 
