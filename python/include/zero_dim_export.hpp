@@ -62,6 +62,7 @@ class ZDVisitor: public def_visitor<ZDVisitor<AlgoT> >
 {
 
 
+
 	friend class def_visitor_access;
 		
 	public:
@@ -70,7 +71,26 @@ class ZDVisitor: public def_visitor<ZDVisitor<AlgoT> >
 		
 	private:
 
+		using MutableTrackerGetter = typename AlgoT::TrackerT& (AlgoT::*)();
+		static MutableTrackerGetter GetTrackerMutable()
+		{
+			return &AlgoT::GetTracker;
+		};
 
+
+
+
+		using MutableEndgameGetter = typename AlgoT::EndgameT& (AlgoT::*)();
+		static MutableEndgameGetter GetEndgameMutable()
+		{
+			return &AlgoT::GetEndgame;
+		};
+
+
+		// pattern:
+		// returned type.  name.  argument types.
+
+		// typename AlgoT::TrackerT& (*GetTrackerMutable)() = &AlgoT::GetTracker;
 
 };
 
