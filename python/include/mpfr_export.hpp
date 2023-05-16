@@ -37,6 +37,7 @@
 #define BERTINI_PYTHON_MPFR_EXPORT_HPP
 
 #include "python_common.hpp"
+#include "eigenpy_interaction.hpp"
 
 namespace bertini{
 	namespace python{

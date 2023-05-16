@@ -287,6 +287,9 @@ namespace bertini{
 
 
 
+#define IMPLICITLY_CONVERTIBLE(T1,T2) \
+  boost::python::implicitly_convertible<T1,T2>();
+
 
 
 		void ExposeFreeNumFns()
@@ -387,6 +390,22 @@ namespace bertini{
 
 			.def(RealFreeVisitor<T>())
 			;
+
+
+			eigenpy::registerNewType<T>();
+			eigenpy::registerCommonUfunc<T>();
+
+			eigenpy::registerCast<T,long>(false);
+			eigenpy::registerCast<long,T>(true);
+			eigenpy::registerCast<T,int>(false);
+			eigenpy::registerCast<int,T>(true);;
+			eigenpy::registerCast<T,int64_t>(false);
+			eigenpy::registerCast<int64_t,T>(true);
+
+			IMPLICITLY_CONVERTIBLE(int,T);
+			IMPLICITLY_CONVERTIBLE(long,T);
+			IMPLICITLY_CONVERTIBLE(int64_t,T);
+
 		}
 
 
@@ -429,6 +448,25 @@ namespace bertini{
 
 			.def(PrecisionVisitor<T>())
 			;
+
+
+			eigenpy::registerNewType<T>();
+			eigenpy::registerUfunct_without_comparitors<T>();
+
+
+			// eigenpy::registerCast<T,long>(false);
+			eigenpy::registerCast<long,T>(true);
+			// eigenpy::registerCast<T,int>(false);
+			eigenpy::registerCast<int,T>(true);
+			// eigenpy::registerCast<T,int64_t>(false);
+			eigenpy::registerCast<int64_t,T>(true);
+
+			
+
+
+			IMPLICITLY_CONVERTIBLE(int,T);
+			IMPLICITLY_CONVERTIBLE(long,T);
+			IMPLICITLY_CONVERTIBLE(int64_t,T);
 		}
 
 		void ExportMpfr()
@@ -440,6 +478,8 @@ namespace bertini{
 			current_scope.attr("multiprec") = new_submodule;
 			scope new_submodule_scope = new_submodule;
 
+
+
 			ExposeInt();
 			ExposeFloat();
 			ExposeRational();
@@ -448,6 +488,8 @@ namespace bertini{
 			ExposeFreeNumFns();	
 		};
 
+
+#undef IMPLICITLY_CONVERTIBLE
 		
 	} //namespace python
 } // namespace bertini

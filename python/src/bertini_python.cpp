@@ -54,14 +54,15 @@ namespace bertini
 			object package = scope();
 		    package.attr("__path__") = "_pybertini";
 
+		    // do this one first, so that the later calls into EigenPy work :)
+		    ExportEigenPy();
+
+
 			ExportContainers();
 			
 			ExportDetails();
 
 			ExportMpfr();
-			
-			ExportEigenPy();
-			// ExportMinieigen();
 		
 			SetupFunctionTree();
 
