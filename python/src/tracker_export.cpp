@@ -86,9 +86,9 @@ namespace bertini{
 			.def("precision_preservation", &TrackerT::PrecisionPreservation, "Turn on or off the preservation of precision.  That is, if this is on (true), then the precision of the final point will be the precision of the start point.  Generally, you want to let precision drift, methinks.")
 
 			.def("refine", return_Refine3_ptr<dbl>)
-			.def("refine", return_Refine3_ptr<mpfr>)
+			.def("refine", return_Refine3_ptr<mpfr_complex>)
 			.def("refine", return_Refine4_ptr<dbl>)
-			.def("refine", return_Refine4_ptr<mpfr>)
+			.def("refine", return_Refine4_ptr<mpfr_complex>)
 			;
 		}
 
@@ -110,8 +110,8 @@ namespace bertini{
 		void FixedMultipleTrackerVisitor<TrackerT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("refine", return_Refine3_ptr<mpfr>)
-			.def("refine", return_Refine4_ptr<mpfr>)
+			.def("refine", return_Refine3_ptr<mpfr_complex>)
+			.def("refine", return_Refine4_ptr<mpfr_complex>)
 			;
 		}
 

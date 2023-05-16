@@ -60,7 +60,8 @@ namespace bertini
 
 			ExportMpfr();
 			
-			ExportMinieigen();
+			ExportEigenPy();
+			// ExportMinieigen();
 		
 			SetupFunctionTree();
 

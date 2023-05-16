@@ -32,9 +32,9 @@ Double precision types, beyond those built in.
 
 """
 
-import _pybertini.minieigen
+# import _pybertini.minieigen
 
-Vector = _pybertini.minieigen.VectorXd
-Matrix = _pybertini.minieigen.MatrixXd
+# Vector = _pybertini.minieigen.VectorXd
+# Matrix = _pybertini.minieigen.MatrixXd
 
-__all__ = ['Vector','Matrix']
+# __all__ = ['Vector','Matrix']

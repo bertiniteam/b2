@@ -49,11 +49,11 @@ version = __version__
 
 
 # put stuff in the pybertini namespace
-import pybertini.system as system
+
 import pybertini.function_tree as function_tree
-import pybertini.minieigen as minieigen
 import pybertini.doubleprec as doubleprec
 import pybertini.multiprec as multiprec
+import pybertini.system as system
 import pybertini.tracking as tracking
 import pybertini.endgame as endgame
 import pybertini.parse as parse
