@@ -100,6 +100,14 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 							public detail::Configured<
 								typename AlgoTraits< ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>::NeededConfigs>
 		{
+			// these usings are for getters in python
+			using TrackerT          = TrackerType;
+			using EndgameT          = EndgameType;
+			using SystemT           = SystemType;
+			using StartSystemT       = StartSystemType;
+
+
+
 
 /// a bunch of using statements to reduce typing.
 			using BaseComplexType 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
@@ -108,8 +116,6 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			using PrecisionConfig 	= typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
 			using SolnIndT 			= typename SolnCont<BaseComplexType>::size_type;
-
-
 
 			using SystemManagementPolicy = SystemManagementP<SystemType, StartSystemType>;
 
