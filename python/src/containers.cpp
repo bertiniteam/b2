@@ -113,7 +113,17 @@ void ExportContainers()
 	;
 
 
+	// std::vector of Eigen::matrix
+	using T7 = std::vector<bertini::Vec<dbl_complex>>;
+	class_< T7 >("VectorOfComplexDoublePrecision")
+	.def(ListVisitor<T7>())
+	;
 
+	// std::vector of Eigen::matrix
+	using T8 = std::vector<bertini::Vec<mpfr_complex>>;
+	class_< T8 >("VectorOfComplexVariablePrecision")
+	.def(ListVisitor<T8>())
+	;
 
 }; // export containers
 
