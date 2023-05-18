@@ -41,4 +41,4 @@ from _pybertini.nag_algorithms import *
 __all__ = dir(_pybertini.nag_algorithms)
 
 
-DoublePrecisionTotalDegree = _pybertini.nag_algorithms.ZeroDimDoublePrecisionTotalDegree
+# DoublePrecisionTotalDegree = _pybertini.nag_algorithms.ZeroDimCauchyDoublePrecisionTotalDegree

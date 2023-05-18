@@ -53,6 +53,17 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 
 
 
+template<typename TrackerT, typename EndgameT, typename SystemT, typename StartSystemT>
+void ExportZeroDim(std::string const& class_name){
+
+	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, SystemT, StartSystemT>;
+
+	class_<ZeroDimT, std::shared_ptr<ZeroDimT> >(class_name.c_str(), init<SystemT>())
+	.def(ZDVisitor<ZeroDimT>())
+	;
+}
+
+
 void ExportZeroDimAlgorithms(){
 
 	scope current_scope;
@@ -65,14 +76,24 @@ void ExportZeroDimAlgorithms(){
 	scope new_submodule_scope = new_submodule;
 	new_submodule_scope.attr("__doc__") = "Algorithms for computing things, like point solutions to square systems (zerodim algorithm).";
 
+	{
+		using TrackerT = bertini::tracking::DoublePrecisionTracker;
+		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesDoublePrecisionTotalDegree");
+		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyDoublePrecisionTotalDegree");
+	}
 
-	using TrackerT = bertini::tracking::DoublePrecisionTracker;
+	{
+		using TrackerT = bertini::tracking::MultiplePrecisionTracker;
+		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesFixedMultiplePrecisionTotalDegree");
+		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyFixedMultiplePrecisionTotalDegree");
+	}
 
-	using ZeroDimTotalDegree = algorithm::ZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, start_system::TotalDegree>;
+	{
+		using TrackerT = bertini::tracking::AMPTracker;
+		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesAdaptivePrecisionTotalDegree");
+		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyAdaptivePrecisionTotalDegree");
+	}
 
-	class_<ZeroDimTotalDegree, std::shared_ptr<ZeroDimTotalDegree> >("ZeroDimDoublePrecisionTotalDegree", init<bertini::System>())
-	.def(ZDVisitor<ZeroDimTotalDegree>())
-	;
 }
 
 

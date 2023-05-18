@@ -467,6 +467,12 @@ namespace bertini{
 			IMPLICITLY_CONVERTIBLE(int,T);
 			IMPLICITLY_CONVERTIBLE(long,T);
 			IMPLICITLY_CONVERTIBLE(int64_t,T);
+
+
+
+			eigenpy::enableEigenPySpecific<bertini::Mat<T>>();
+			eigenpy::enableEigenPySpecific<bertini::Vec<T>>();
+
 		}
 
 		void ExportMpfr()

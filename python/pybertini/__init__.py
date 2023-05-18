@@ -69,4 +69,4 @@ VariableGroup = function_tree.VariableGroup
 System = system.System
 default_precision = multiprec.default_precision
 
-__all__ = ['tracking','endgame','multiprec','function_tree','system','default_precision','System','Variable','VariableGroup']
+__all__ = ['tracking','endgame','multiprec','function_tree','system','default_precision','System','Variable','VariableGroup','nag_algorithms']
