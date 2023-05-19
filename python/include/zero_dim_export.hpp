@@ -51,9 +51,13 @@ namespace bertini{
 
 
 
-void ExportZeroDimAlgorithms();
+void ExportZeroDim();
 
 
+
+// some sub-functions to help
+void ExportZDAlgorithms();
+void ExportZDConfigs();
 
 
 

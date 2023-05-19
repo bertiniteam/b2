@@ -53,19 +53,10 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 
 
 
-template<typename TrackerT, typename EndgameT, typename SystemT, typename StartSystemT>
-void ExportZeroDim(std::string const& class_name){
-
-	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, SystemT, StartSystemT>;
-
-	class_<ZeroDimT, std::shared_ptr<ZeroDimT> >(class_name.c_str(), init<SystemT>())
-	.def(ZDVisitor<ZeroDimT>())
-	;
-}
 
 
-void ExportZeroDimAlgorithms(){
 
+void ExportZeroDim(){
 	scope current_scope;
 	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
 	new_submodule_name.append(".nag_algorithms");
@@ -76,25 +67,114 @@ void ExportZeroDimAlgorithms(){
 	scope new_submodule_scope = new_submodule;
 	new_submodule_scope.attr("__doc__") = "Algorithms for computing things, like point solutions to square systems (zerodim algorithm).";
 
+
+	ExportZDConfigs();
+	ExportZDAlgorithms();
+
+}
+
+
+
+
+// a helper function used immediately below.  There is no declaration in the header file...
+template<typename TrackerT, typename EndgameT, typename SystemT, typename StartSystemT>
+void ExportZeroDimSpecific(std::string const& class_name){
+
+	using ZeroDimT = algorithm::ZeroDim<TrackerT, EndgameT, SystemT, StartSystemT>;
+
+	class_<ZeroDimT, std::shared_ptr<ZeroDimT> >(class_name.c_str(), init<SystemT>())
+	.def(ZDVisitor<ZeroDimT>())
+	;
+}
+
+
+
+
+
+void ExportZDAlgorithms(){
+
+
+
 	{
 		using TrackerT = bertini::tracking::DoublePrecisionTracker;
-		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesDoublePrecisionTotalDegree");
-		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyDoublePrecisionTotalDegree");
+		ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesDoublePrecisionTotalDegree");
+		ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyDoublePrecisionTotalDegree");
 	}
 
 	{
 		using TrackerT = bertini::tracking::MultiplePrecisionTracker;
-		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesFixedMultiplePrecisionTotalDegree");
-		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyFixedMultiplePrecisionTotalDegree");
+		ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesFixedMultiplePrecisionTotalDegree");
+		ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyFixedMultiplePrecisionTotalDegree");
 	}
 
 	{
 		using TrackerT = bertini::tracking::AMPTracker;
-		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesAdaptivePrecisionTotalDegree");
-		ExportZeroDim<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyAdaptivePrecisionTotalDegree");
+		ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::PSEG, bertini::System, bertini::start_system::TotalDegree>("ZeroDimPowerSeriesAdaptivePrecisionTotalDegree");
+		ExportZeroDimSpecific<TrackerT, bertini::endgame::EndgameSelector<TrackerT>::Cauchy, bertini::System, bertini::start_system::TotalDegree>("ZeroDimCauchyAdaptivePrecisionTotalDegree");
 	}
 
 }
+
+
+
+void ExportZDConfigs()
+{
+	using namespace bertini::algorithm;
+	
+	class_<TolerancesConfig>("TolerancesConfig", init<>())
+	.def_readwrite("newton_before_endgame", &TolerancesConfig::newton_before_endgame)
+	.def_readwrite("newton_during_endgame", &TolerancesConfig::newton_during_endgame)
+	.def_readwrite("final_tolerance", &TolerancesConfig::final_tolerance)
+	.def_readwrite("path_truncation_threshold", &TolerancesConfig::path_truncation_threshold)
+	;
+
+
+	class_<MidPathConfig>("MidPathConfig", init<>())
+	.def_readwrite("same_point_tolerance", &MidPathConfig::same_point_tolerance)
+	;
+
+
+	class_<AutoRetrackConfig>("AutoRetrackConfig", init<>())
+	.def_readwrite("midpath_decrease_tolerance_factor", &AutoRetrackConfig::midpath_decrease_tolerance_factor)
+	;
+
+
+	class_<SharpeningConfig>("SharpeningConfig", init<>())
+	.def_readwrite("sharpendigits", &SharpeningConfig::sharpendigits)
+	.def_readwrite("function_residual_tolerance", &SharpeningConfig::function_residual_tolerance)
+	.def_readwrite("ratio_tolerance", &SharpeningConfig::ratio_tolerance)
+	;
+
+	class_<RegenerationConfig>("RegenerationConfig", init<>())
+	.def_readwrite("remove_infinite_endpoints", &RegenerationConfig::remove_infinite_endpoints)
+	.def_readwrite("higher_dimension_check", &RegenerationConfig::higher_dimension_check)
+	.def_readwrite("start_level", &RegenerationConfig::start_level)
+	.def_readwrite("newton_before_endgame", &RegenerationConfig::newton_before_endgame)
+	.def_readwrite("newton_during_endgame", &RegenerationConfig::newton_during_endgame)
+	.def_readwrite("final_tolerance", &RegenerationConfig::final_tolerance)
+	;
+
+
+	class_<PostProcessingConfig>("PostProcessingConfig", init<>())
+	.def_readwrite("real_threshold", &PostProcessingConfig::real_threshold)
+	.def_readwrite("endpoint_finite_threshold", &PostProcessingConfig::endpoint_finite_threshold)
+	.def_readwrite("same_point_tolerance", &PostProcessingConfig::same_point_tolerance)
+	;
+
+	class_<ZeroDimConfig<dbl_complex>>("ZeroDimConfigDoublePrec", init<>())
+	.def_readwrite("start_time", &ZeroDimConfig<dbl_complex>::start_time)
+	.def_readwrite("target_time", &ZeroDimConfig<dbl_complex>::target_time)
+	.def_readwrite("endgame_boundary", &ZeroDimConfig<dbl_complex>::endgame_boundary)
+	;
+
+	class_<ZeroDimConfig<mpfr_complex>>("ZeroDimConfigMultiprec", init<>())
+	.def_readwrite("start_time", &ZeroDimConfig<mpfr_complex>::start_time)
+	.def_readwrite("target_time", &ZeroDimConfig<mpfr_complex>::target_time)
+	.def_readwrite("endgame_boundary", &ZeroDimConfig<mpfr_complex>::endgame_boundary)
+	;
+
+}
+
 
 
 
