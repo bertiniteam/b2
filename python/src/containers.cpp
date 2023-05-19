@@ -125,6 +125,10 @@ void ExportContainers()
 	.def(ListVisitor<T8>())
 	;
 
+	using T9 = std::vector<bertini::algorithm::SolutionMetaData<mpfr_complex>>;
+	class_< T9 >("VectorOfSolutionMetaData")
+	.def(ListVisitor<T9>())
+	;
 }; // export containers
 
 	}

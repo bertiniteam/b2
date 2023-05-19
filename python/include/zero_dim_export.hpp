@@ -58,7 +58,7 @@ void ExportZeroDim();
 // some sub-functions to help
 void ExportZDAlgorithms();
 void ExportZDConfigs();
-
+void ExposeZDMetaData();
 
 
 template<typename AlgoT>

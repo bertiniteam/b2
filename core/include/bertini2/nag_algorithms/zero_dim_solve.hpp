@@ -120,13 +120,8 @@ struct SolutionMetaData
 	ComplexType time_of_first_prec_increase;    // time value of the first increase in precision
 	decltype(DefaultPrecision()) max_precision_used = 0;
 
-
-
 	///// things computed in pre-endgame only
 	SuccessCode pre_endgame_success = SuccessCode::NeverStarted;     // success code
-
-
-
 
 
 	///// things computed in endgame only
@@ -139,8 +134,6 @@ struct SolutionMetaData
 	SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
 
 
-
-
 	///// things added by post-processing
 	NumErrorT function_residual; 	// the latest function residual
 
@@ -148,10 +141,61 @@ struct SolutionMetaData
 	bool is_real;       		// real flag:  0 - not real, 1 - real
 	bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
 	bool is_singular;       		// singular flag: 0 - non-sigular, 1 - singular
+
+	bool operator==(const SolutionMetaData<ComplexType> & other){ 
+		bool result = 
+			this->path_index == other.path_index
+			 && this->solution_index == other.solution_index
+			 && this->precision_changed == other.precision_changed
+			 && this->time_of_first_prec_increase == other.time_of_first_prec_increase
+			 && this->max_precision_used == other.max_precision_used
+			 && this->pre_endgame_success == other.pre_endgame_success
+			 && this->condition_number == other.condition_number
+			 && this->newton_residual == other.newton_residual
+			 && this->final_time_used == other.final_time_used
+			 && this->accuracy_estimate == other.accuracy_estimate
+			 && this->accuracy_estimate_user_coords == other.accuracy_estimate_user_coords
+			 && this->cycle_num == other.cycle_num
+			 && this->endgame_success == other.endgame_success
+			 && this->function_residual == other.function_residual
+			 && this->multiplicity == other.multiplicity
+			 && this->is_real == other.is_real
+			 && this->is_finite == other.is_finite
+			 && this->is_singular == other.is_singular
+		;
+
+		return result; }
 };
 
+// this is for interoperability with vectors of these in the Python bindings, for better or for worse.
+template<typename NumT>
+std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta){
+	out << "path_index = " << meta.path_index << std::endl;
+	out << "solution_index = " << meta.solution_index << std::endl;
 
+	out << "precision_changed = " << meta.precision_changed << std::endl;
+	out << "time_of_first_prec_increase = " << meta.time_of_first_prec_increase << std::endl;
+	out << "max_precision_used = " << meta.max_precision_used << std::endl;
 
+	out << "pre_endgame_success = " << meta.pre_endgame_success << std::endl;
+
+	out << "condition_number = " << meta.condition_number << std::endl;
+	out << "newton_residual = " << meta.newton_residual << std::endl;
+	out << "final_time_used = " << meta.final_time_used << std::endl;
+	out << "accuracy_estimate = " << meta.accuracy_estimate << std::endl;
+	out << "accuracy_estimate_user_coords = " << meta.accuracy_estimate_user_coords << std::endl;
+	out << "cycle_num = " << meta.cycle_num << std::endl;
+	out << "endgame_success = " << meta.endgame_success << std::endl;
+
+	out << "function_residual = " << meta.function_residual << std::endl;
+
+	out << "multiplicity = " << meta.multiplicity << std::endl;
+	out << "is_real = " << meta.is_real << std::endl;
+	out << "is_finite = " << meta.is_finite << std::endl;
+	out << "is_singular = " << meta.is_singular << std::endl;
+
+	return out;
+}
 
 
 template<typename ComplexType>
@@ -170,6 +214,15 @@ struct EGBoundaryMetaData
 	{}
 		
 };
+
+// this is for interoperability with vectors of these in the Python bindings, for better or for worse.
+template<typename NumT>
+std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & meta){
+	out << "path_point = " << meta.path_point << std::endl;
+	out << "success_code = " << meta.success_code << std::endl;
+	out << "last_used_stepsize = " << meta.last_used_stepsize << std::endl;
+	return out;
+}
 
 /**
 \brief the basic zero dim algorithm, which solves a system.
