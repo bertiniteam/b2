@@ -87,6 +87,90 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 };
 
 
+
+
+using SolnIndT = typename SolnCont<dbl_complex>::size_type;
+
+
+/// metadata structs
+
+struct AlgorithmMetaData
+{	
+	
+	SolnIndT number_path_failures = 0;
+	SolnIndT number_path_successes = 0;
+	SolnIndT number_paths_tracked = 0;
+
+	std::chrono::system_clock::time_point start_time;
+	std::chrono::microseconds elapsed_time;
+};
+
+
+template<typename ComplexType>
+struct SolutionMetaData
+{
+	using SolnIndT = typename SolnCont<ComplexType>::size_type;
+
+	// only vaguely metadata.  artifacts of randomness or ordering
+	SolnIndT path_index;     		// path number of the solution
+	SolnIndT solution_index;      	// solution number
+
+	///// things computed across all of the solve
+	bool precision_changed = false;
+	ComplexType time_of_first_prec_increase;    // time value of the first increase in precision
+	decltype(DefaultPrecision()) max_precision_used = 0;
+
+
+
+	///// things computed in pre-endgame only
+	SuccessCode pre_endgame_success = SuccessCode::NeverStarted;     // success code
+
+
+
+
+
+	///// things computed in endgame only
+	NumErrorT condition_number; 				// the latest estimate on the condition number
+	NumErrorT newton_residual; 				// the latest newton residual
+	ComplexType final_time_used;   			// the final value of time tracked to
+	NumErrorT accuracy_estimate; 			// accuracy estimate between extrapolations
+	NumErrorT accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
+	unsigned cycle_num;    						// cycle number used in extrapolations
+	SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
+
+
+
+
+	///// things added by post-processing
+	NumErrorT function_residual; 	// the latest function residual
+
+	int multiplicity = 1; 		// multiplicity
+	bool is_real;       		// real flag:  0 - not real, 1 - real
+	bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
+	bool is_singular;       		// singular flag: 0 - non-sigular, 1 - singular
+};
+
+
+
+
+
+template<typename ComplexType>
+struct EGBoundaryMetaData
+{	
+	using RealType = typename NumTraits<ComplexType>::Real;
+
+	Vec<ComplexType> path_point;
+	SuccessCode success_code = SuccessCode::NeverStarted;
+	RealType last_used_stepsize;
+
+	EGBoundaryMetaData() = default;
+	EGBoundaryMetaData(EGBoundaryMetaData const&) = default;
+	EGBoundaryMetaData(Vec<ComplexType> const& pt, SuccessCode const& code, RealType const& ss) :
+		path_point(pt), success_code(code), last_used_stepsize(ss)
+	{}
+		
+};
+
 /**
 \brief the basic zero dim algorithm, which solves a system.
 */
@@ -133,82 +217,14 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 			using ZeroDimConf = ZeroDimConfig<BaseComplexType>;
 			using AutoRetrack = AutoRetrackConfig;
 
-/// metadata structs
 
-			struct AlgorithmMetaData
-			{
-				SolnIndT number_path_failures = 0;
-				SolnIndT number_path_successes = 0;
-				SolnIndT number_paths_tracked = 0;
-
-				std::chrono::system_clock::time_point start_time;
-				std::chrono::microseconds elapsed_time;
-			};
-
-
-
-			struct SolutionMetaData
-			{
-
-				// only vaguely metadata.  artifacts of randomness or ordering
-				SolnIndT path_index;     		// path number of the solution
-				SolnIndT solution_index;      	// solution number
-
-				///// things computed across all of the solve
-				bool precision_changed = false;
-				BaseComplexType time_of_first_prec_increase;    // time value of the first increase in precision
-				decltype(DefaultPrecision()) max_precision_used = 0;
-
-
-
-				///// things computed in pre-endgame only
-				SuccessCode pre_endgame_success = SuccessCode::NeverStarted;     // success code
-
-
-
-
-
-				///// things computed in endgame only
-				NumErrorT condition_number; 				// the latest estimate on the condition number
-				NumErrorT newton_residual; 				// the latest newton residual
-				BaseComplexType final_time_used;   			// the final value of time tracked to
-				NumErrorT accuracy_estimate; 			// accuracy estimate between extrapolations
-				NumErrorT accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
-				unsigned cycle_num;    						// cycle number used in extrapolations
-				SuccessCode endgame_success = SuccessCode::NeverStarted;      // success code
-
-
-
-
-				///// things added by post-processing
-				NumErrorT function_residual; 	// the latest function residual
-
-				int multiplicity = 1; 		// multiplicity
-				bool is_real;       		// real flag:  0 - not real, 1 - real
-				bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
-				bool is_singular;       		// singular flag: 0 - non-sigular, 1 - singular
-			};
-
-
-			struct EGBoundaryMetaData
-			{
-				Vec<BaseComplexType> path_point;
-				SuccessCode success_code = SuccessCode::NeverStarted;
-				BaseRealType last_used_stepsize;
-
-				EGBoundaryMetaData() = default;
-				EGBoundaryMetaData(EGBoundaryMetaData const&) = default;
-				EGBoundaryMetaData(Vec<BaseComplexType> const& pt, SuccessCode const& code, BaseRealType const& ss) :
-					path_point(pt), success_code(code), last_used_stepsize(ss)
-				{}
-					
-			};
-
+			using EGBoundaryMetaDataT = EGBoundaryMetaData<BaseComplexType>;
+			using SolutionMetaDataT = SolutionMetaData<BaseComplexType>;
 
 
 // a few more using statements
 
-			using MidpathType = MidpathChecker<BaseRealType, BaseComplexType, EGBoundaryMetaData>;
+			using MidpathType = MidpathChecker<BaseRealType, BaseComplexType, EGBoundaryMetaData<BaseComplexType>>;
 
 			using SystemManagementPolicy::TargetSystem;
 			using SystemManagementPolicy::StartSystem;
@@ -552,7 +568,7 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 				Vec<BaseComplexType> result;
 				auto tracking_success = GetTracker().TrackPath(result, t_start, t_endgame_boundary, start_point);
 
-				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaData({ result, tracking_success, GetTracker().CurrentStepsize() });
+				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaDataT({ result, tracking_success, GetTracker().CurrentStepsize() });
 
 					smd.pre_endgame_success = tracking_success;
 
@@ -765,9 +781,9 @@ struct AnyZeroDim : public virtual AnyAlgorithm
 
 
 			/// computed data
-			SolnCont< EGBoundaryMetaData > solutions_at_endgame_boundary_; // the BaseRealType is the last used stepsize
+			SolnCont< EGBoundaryMetaDataT > solutions_at_endgame_boundary_; // the BaseRealType is the last used stepsize
 			SolnCont<Vec<BaseComplexType> > solutions_post_endgame_;
-			SolnCont<SolutionMetaData> solution_final_metadata_;
+			SolnCont<SolutionMetaDataT> solution_final_metadata_;
 
 
 		}; // struct ZeroDim
