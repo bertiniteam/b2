@@ -125,9 +125,24 @@ void ExportContainers()
 	.def(ListVisitor<T8>())
 	;
 
-	using T9 = std::vector<bertini::algorithm::SolutionMetaData<mpfr_complex>>;
-	class_< T9 >("VectorOfSolutionMetaData")
+	using T9 = std::vector<bertini::algorithm::SolutionMetaData<dbl_complex>>;
+	class_< T9 >("VectorOfSolutionMetaData_DoublePrec")
 	.def(ListVisitor<T9>())
+	;
+
+	using T10 = std::vector<bertini::algorithm::SolutionMetaData<mpfr_complex>>;
+	class_< T10 >("VectorOfSolutionMetaData_MultiPrec")
+	.def(ListVisitor<T10>())
+	;
+
+	using T11 = std::vector<bertini::algorithm::EGBoundaryMetaData<dbl_complex>>;
+	class_< T11 >("VectorOfEGBoundaryMetaData_DoublePrec")
+	.def(ListVisitor<T11>())
+	;
+
+	using T12 = std::vector<bertini::algorithm::EGBoundaryMetaData<mpfr_complex>>;
+	class_< T12 >("VectorOfEGBoundaryMetaData_MultiPrec")
+	.def(ListVisitor<T12>())
 	;
 }; // export containers
 

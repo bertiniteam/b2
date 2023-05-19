@@ -212,7 +212,16 @@ struct EGBoundaryMetaData
 	EGBoundaryMetaData(Vec<ComplexType> const& pt, SuccessCode const& code, RealType const& ss) :
 		path_point(pt), success_code(code), last_used_stepsize(ss)
 	{}
-		
+	
+	bool operator==(const EGBoundaryMetaData<ComplexType> & other){
+		bool result = 
+			this->path_point == other.path_point
+			&& this->success_code == other.success_code
+			&& this->last_used_stepsize == other.last_used_stepsize
+		;
+
+		return result;
+	}
 };
 
 // this is for interoperability with vectors of these in the Python bindings, for better or for worse.
