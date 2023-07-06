@@ -102,7 +102,7 @@ class AMPTrackingTest(unittest.TestCase):
 
     def test_tracker_quad(self):
         default_precision(30);
-        x = self.x;  y = self.y; t = self.t;
+        y = self.y; t = self.t;
         s = System();
 
         vars = VariableGroup();
