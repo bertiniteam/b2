@@ -345,7 +345,7 @@ class MPFRComplex(unittest.TestCase):
 
 
 
-    def test_misc_funcs(self):
+    def test_complex_abs(self):
         x = self.x; y = self.y; z = self.z; p = self.p; tol = self.tol;
         #
 
@@ -357,13 +357,15 @@ class MPFRComplex(unittest.TestCase):
         # res = mp.abs2(x)
         # self.assertLessEqual(mp.abs(res - mp.Float("5.949")), tol)
 
-
-        res = mp.conj(x)
+    def test_complex_conj(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; tol = self.tol;
+        # res = mp.conj(x)
         # self.assertLessEqual(mp.abs(res.real - x.real), tol)
         # self.assertLessEqual(mp.abs(res.imag - (-x.imag)), tol)
 
 
-
+    def test_complex_construct_from_polar(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; tol = self.tol;
         # test construction of complex from polar coordinates
         res = mp.polar(mp.Float("3.21"), mp.Float("-5.62"))
 
@@ -371,7 +373,8 @@ class MPFRComplex(unittest.TestCase):
         self.assertLessEqual(mp.abs(res.imag - mp.Float("1.9761726378527774897831544771425943545375239972")), tol)
 
 
-
+    def test_complex_arg(self):
+        x = self.x; y = self.y; z = self.z; p = self.p; tol = self.tol;
         # compute the argument of a complex number
         res = mp.arg(y)
         self.assertLessEqual(mp.abs(res - mp.Float("-.38121862770417378405072154507774424569831993182")), tol)
