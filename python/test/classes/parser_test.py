@@ -53,7 +53,7 @@ class ParserTest(unittest.TestCase):
         input = 'function f, g; variable_group x,y,z; f = 3*x*y*z; g = x^2 + y^2 + z^2 - 1;';
         sys = pp.system(input);
         #
-        vals = mi.VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
+        vals = np.array((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
         sysEval = sys.eval(vals);
         #
         self.assertLessEqual(np.abs(sysEval[0].real / (233.2850778)-1), tol_d)

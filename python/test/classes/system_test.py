@@ -91,7 +91,7 @@ class SystemTest(unittest.TestCase):
         s.add_function(self.f)
         s.add_function(self.g)
         #
-        v = pb.list.VectorOfComplexDoublePrecision.Zero(3);
+        v = np.array([complex(0),complex(0),complex(0)])
         v[0] = complex(3.5,2.89); v[1] = complex(-9.32,.0765); v[2] = complex(5.4,-2.13);
         #
         e = s.eval(v)
@@ -137,7 +137,7 @@ class SystemTest(unittest.TestCase):
         s.add_function(self.f)
         s.add_function(self.g)
         #
-        v = pb.list.VectorOfComplexDoublePrecision.Zero(3);
+        v = np.array([complex(0),complex(0),complex(0)])
         v[0] = complex(3.5,2.89); v[1] = complex(-9.32,.0765); v[2] = complex(5.4,-2.13);
         #
         s.differentiate();
@@ -201,7 +201,7 @@ class SystemTest(unittest.TestCase):
         s2.add_function(-x*y)
         #
         s1 += s2;
-        values = pb.list.VectorOfComplexDoublePrecision((2,3))
+        values = np.array((2,3))
         v = s1.eval(values)
         #
         self.assertEqual(v[0], 0.0)
@@ -221,7 +221,7 @@ class SystemTest(unittest.TestCase):
         z = Variable("z");
         sys *= Integer(2);
         #
-        vals = pb.list.VectorOfComplexDoublePrecision((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
+        vals = np.array((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
         sysEval = sys.eval(vals);
         #
         self.assertLessEqual(np.abs(sysEval[0].real / (-.86)-1), tol_d)

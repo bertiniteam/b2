@@ -113,7 +113,7 @@ To make an endgame, we need to feed it the tracker that is used to run.  There a
 Since the endgame hasn't been run yet things are empty and default::
 
 	assert(eg.cycle_number()==0)
-	assert(eg.final_approximation()==np.array())
+	assert(eg.final_approximation()==np.array([]))
 
 The endgames are used by invoking ``run``, feeding it the point we are tracking on, the time we are at, and the time we want to track to. ::
 
