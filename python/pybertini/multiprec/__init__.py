@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with python/pybertini/multiprec/__init__.py.  If not, see <http://www.gnu.org/licenses/>.
 # 
-#  Copyright(C) 2018 by Bertini2 Development Team
+#  Copyright(C) 2018-2023 by Bertini2 Development Team
 # 
 #  See <http://www.gnu.org/licenses/> for a copy of the license, 
 #  as well as COPYING.  Bertini2 is provided with permitted 
@@ -23,7 +23,7 @@
 # 
 #  silviana amethyst
 #  UWEC
-#  Spring 2018
+#  Spring 2018, summer 2023
 # 
 
 
@@ -40,11 +40,5 @@ import _pybertini.multiprec
 
 from _pybertini.multiprec import *
 
-# import _pybertini.minieigen
 
-# Vector = _pybertini.minieigen.VectorXmp
-# Matrix = _pybertini.minieigen.MatrixXmp
-
-
-# __all__ = dir(_pybertini.multiprec)
-# __all__.extend(['Vector','Matrix'])
+__all__ = dir(_pybertini.multiprec)

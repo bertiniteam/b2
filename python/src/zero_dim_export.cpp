@@ -198,7 +198,7 @@ void ExposeSolutionMetaData(std::string const& class_name){
 	.def_readwrite("accuracy_estimate",&MDT::accuracy_estimate)
 	.def_readwrite("accuracy_estimate_user_coords",&MDT::accuracy_estimate_user_coords)
 	.def_readwrite("cycle_num",&MDT::cycle_num)
-	.def_readwrite("endgame_success",&MDT::endgame_success)
+	.def_readwrite("endgame_success",&MDT::endgame_success, "this is a SuccessCode.  0 means Success.  Anything other than 0 means something happened.")
 
 	.def_readwrite("function_residual",&MDT::function_residual)
 

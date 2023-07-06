@@ -8,7 +8,7 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/minieigen/src
+AM_CPPFLAGS = -I$(top_srcdir)/include
 
 ACLOCAL_AMFLAGS = -I m4
 

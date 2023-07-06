@@ -44,13 +44,3 @@ and
 https://docs.python.org/3/license.html
 
 Copies of the Python licenses have not been included in Bertini 2 at this time.
-
-==
-Minieigen
---
-Minieigen is available at 
-https://launchpad.net/minieigen/
-and
-https://github.com/eudoxos/minieigen
-
-It is released under LGPL 3, included in Bertini 2 as b2/licenses.

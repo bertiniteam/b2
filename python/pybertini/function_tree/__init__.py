@@ -32,7 +32,7 @@ import _pybertini
 import _pybertini.function_tree
 
 # from _pybertini import function_tree
-from _pybertini.list import VariableGroup
+from _pybertini.container import VariableGroup
 
 from _pybertini.function_tree import *
 

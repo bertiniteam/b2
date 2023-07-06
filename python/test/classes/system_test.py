@@ -43,7 +43,6 @@ import numpy as np
 import pdb
 
 import pybertini as pb
-import pybertini.minieigen as mi
 
 
 import pybertini.multiprec as mp
@@ -92,7 +91,7 @@ class SystemTest(unittest.TestCase):
         s.add_function(self.f)
         s.add_function(self.g)
         #
-        v = mi.VectorXd.Zero(3);
+        v = pb.list.VectorOfComplexDoublePrecision.Zero(3);
         v[0] = complex(3.5,2.89); v[1] = complex(-9.32,.0765); v[2] = complex(5.4,-2.13);
         #
         e = s.eval(v)
@@ -108,7 +107,7 @@ class SystemTest(unittest.TestCase):
         exact_real = (mpfr_float('-32.841085'), mpfr_float('-62.9317230'))
         exact_imag = (mpfr_float('-26.66705'), mpfr_float('-196.39641065'))
         self.a = mpfr_complex('4.897', '1.23')
-        v = mi.VectorXmp((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
+        v = np.array((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
         #
         e = s.eval(v)
         #
@@ -138,7 +137,7 @@ class SystemTest(unittest.TestCase):
         s.add_function(self.f)
         s.add_function(self.g)
         #
-        v = mi.VectorXd.Zero(3);
+        v = pb.list.VectorOfComplexDoublePrecision.Zero(3);
         v[0] = complex(3.5,2.89); v[1] = complex(-9.32,.0765); v[2] = complex(5.4,-2.13);
         #
         s.differentiate();
@@ -166,7 +165,7 @@ class SystemTest(unittest.TestCase):
                       (mpfr_float('-71.082170'),mpfr_float('3.8979'),mpfr_float('-3.5')))
         exact_imag = ((mpfr_float('.0765'), mpfr_float('2.89'), mpfr_float('0')),\
                       (mpfr_float('-51.20410'),mpfr_float('20.230'),mpfr_float('-2.89')))
-        v = mi.VectorXmp((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
+        v = np.array((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
         #
         s.differentiate();
         e = s.jacobian(v);
@@ -202,7 +201,7 @@ class SystemTest(unittest.TestCase):
         s2.add_function(-x*y)
         #
         s1 += s2;
-        values = mi.VectorXd((2,3))
+        values = pb.list.VectorOfComplexDoublePrecision((2,3))
         v = s1.eval(values)
         #
         self.assertEqual(v[0], 0.0)
@@ -222,7 +221,7 @@ class SystemTest(unittest.TestCase):
         z = Variable("z");
         sys *= Integer(2);
         #
-        vals = mi.VectorXd((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
+        vals = pb.list.VectorOfComplexDoublePrecision((complex(-2.43,.21 ),complex(4.84, -1.94),complex(-6.48, -.731)))
         sysEval = sys.eval(vals);
         #
         self.assertLessEqual(np.abs(sysEval[0].real / (-.86)-1), tol_d)

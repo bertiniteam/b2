@@ -38,7 +38,7 @@ namespace bertini{
 
 
 
-void ExportEigenPy(){
+void EnableEigenPy(){
 	eigenpy::enableEigenPy();
 }
 

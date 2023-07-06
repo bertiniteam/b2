@@ -20,7 +20,6 @@ This is a stub page, which merely acts to point you to more specific places in t
    :maxdepth: 1
 
    top_level
-   minieigen
    doubleprec
    multiprec
    function_tree

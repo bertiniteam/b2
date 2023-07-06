@@ -32,7 +32,7 @@ Let's make an empty :class:`~pybertini.system.System`, then build into it::
 	sys.add_function(f, 'f')  # name the function
 	sys.add_function(g)       # or not...
 
-``sys`` doesn't know its variables yet, so let's group them into an affine :class:`~pybertini.list.VariableGroup` [#]_, and stuff it into ``sys``::
+``sys`` doesn't know its variables yet, so let's group them into an affine :class:`~pybertini.container.ListOfVariableGroup` [#]_, and stuff it into ``sys``::
 
 	grp = pybertini.VariableGroup()
 	grp.append(x)

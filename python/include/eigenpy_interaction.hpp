@@ -149,7 +149,7 @@ void registerUfunct_without_comparitors(){
 namespace bertini{
 	namespace python{
 
-void ExportEigenPy();
+void EnableEigenPy();
 	
 }} // namespaces
 

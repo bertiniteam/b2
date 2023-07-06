@@ -40,7 +40,6 @@ import numpy as np
 import pdb
 
 import pybertini.parse as pp
-import pybertini.minieigen as mi
 
 
 class ParserTest(unittest.TestCase):

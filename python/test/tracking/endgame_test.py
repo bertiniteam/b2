@@ -51,7 +51,6 @@ import pybertini.multiprec as mp
 from pybertini.multiprec import Float as mpfr_float
 from pybertini.multiprec import Complex as mpfr_complex
 
-import pybertini.minieigen as mi
 
 class EndgameTest(unittest.TestCase):
     def setUp(self):
