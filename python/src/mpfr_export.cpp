@@ -420,11 +420,11 @@ namespace bertini{
 			using T = bertini::mpfr_complex;
 
 			class_<T>("Complex", init<>())
-			.def(init<double>())
+			.def(init<double>()) // this should probably be made an explicit constructor rather than implicit
 			.def(init<mpfr_float>())
 			.def(init<std::string>())
 			.def(init<mpfr_float,mpfr_float>())
-			.def(init<double, double>())
+			.def(init<double, double>()) // this should probably be made an explicit constructor rather than implicit
 			.def(init<std::string, mpfr_float>())
 			.def(init<mpfr_float, std::string>())
 			.def(init<std::string, std::string>())
