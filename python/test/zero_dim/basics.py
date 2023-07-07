@@ -1,6 +1,6 @@
 import pybertini as pb
 
-
+import unittest
 
 class ZeroDimBasicsTest(unittest.TestCase):
     def setUp(self):
@@ -18,7 +18,9 @@ class ZeroDimBasicsTest(unittest.TestCase):
 
         solver = pb.nag_algorithm.ZeroDimCauchyAdaptivePrecisionTotalDegree(sys)
 
-
+        self.sys = sys
+        
+        self.solver = solver
     def test_can_solve_multiple_times(self):
         """
         This test is here because multiple calls to solver.solve() during 
