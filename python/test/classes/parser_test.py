@@ -62,7 +62,7 @@ class ParserTest(unittest.TestCase):
         self.assertLessEqual(np.abs(sysEval[1].imag / (-10.32604)-1), tol_d)
         #
         sys.differentiate()
-        sysJac = sys.jacobian(vals)
+        sysJac = sys.eval_jacobian(vals)
 
 
 if __name__ == '__main__':

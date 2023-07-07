@@ -69,12 +69,12 @@ namespace bertini{
 			.def("eval", return_Eval2_ptr<dbl>() ,"Evaluate the system in double precision using space and time values passed into this function.  Throws if doesn't use a time variable")
 			.def("eval", return_Eval2_ptr<mpfr>() ,"Evaluate the system in multiple precision using space and time values passed into this function.  Throws if doesn't use a time variable")
 			
-			.def("jacobian", return_Jac0_ptr<dbl>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
-			.def("jacobian", return_Jac0_ptr<mpfr>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
-			.def("jacobian", return_Jac1_ptr<dbl>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function")
-			.def("jacobian", return_Jac1_ptr<mpfr>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function")
-			.def("jacobian", return_Jac2_ptr<dbl>() , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
-			.def("jacobian", return_Jac2_ptr<mpfr>() , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
+			.def("eval_jacobian", return_Jac0_ptr<dbl>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
+			.def("eval_jacobian", return_Jac0_ptr<mpfr>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
+			.def("eval_jacobian", return_Jac1_ptr<dbl>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function")
+			.def("eval_jacobian", return_Jac1_ptr<mpfr>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function")
+			.def("eval_jacobian", return_Jac2_ptr<dbl>() , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
+			.def("eval_jacobian", return_Jac2_ptr<mpfr>() , "Evaluate the Jacobian (martix of partial derivatives) of the system, using time and space values passed into this function.  Throws if doesn't use a time variable")
 
 			.def("homogenize", &SystemBaseT::Homogenize,"Homogenize the system, adding new homogenizing variables if necessary.  This may change your polynomials; that is, it has side effects.")
 			.def("is_homogeneous", &SystemBaseT::IsHomogeneous, "Determines whether all polynomials in the system have the same degree.  Non-polynomial functions are not homogeneous.")

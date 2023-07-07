@@ -141,7 +141,7 @@ class SystemTest(unittest.TestCase):
         v[0] = complex(3.5,2.89); v[1] = complex(-9.32,.0765); v[2] = complex(5.4,-2.13);
         #
         s.differentiate();
-        e = s.jacobian(v)
+        e = s.eval_jacobian(v)
         #
         self.assertTrue(np.abs(e[0][0].real - exact_real[0][0]) <= self.toldbl*np.abs(exact_real[0][0]));
         self.assertTrue(np.abs(e[0][0].imag - exact_imag[0][0]) <= self.toldbl*np.abs(exact_imag[0][0]));
@@ -168,7 +168,7 @@ class SystemTest(unittest.TestCase):
         v = np.array((mpfr_complex('3.5', '2.89'), mpfr_complex('-9.32', '.0765'), mpfr_complex('5.4', '-2.13')));
         #
         s.differentiate();
-        e = s.jacobian(v);
+        e = s.eval_jacobian(v);
         #
         self.assertLessEqual(mp.abs(e[0][0].real / exact_real[0][0]-1) , self.toldbl);
         self.assertLessEqual(mp.abs(e[0][0].imag / exact_imag[0][0]-1) , self.toldbl);
