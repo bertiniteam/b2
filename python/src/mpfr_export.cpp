@@ -406,6 +406,9 @@ namespace bertini{
 			IMPLICITLY_CONVERTIBLE(long,T);
 			IMPLICITLY_CONVERTIBLE(int64_t,T);
 
+			eigenpy::EigenFromPyConverter<Vec<T>>::registration();
+  		eigenpy::EigenFromPyConverter<Mat<T>>::registration();
+
 		}
 
 
@@ -472,6 +475,9 @@ namespace bertini{
 
 			eigenpy::enableEigenPySpecific<bertini::Mat<T>>();
 			eigenpy::enableEigenPySpecific<bertini::Vec<T>>();
+
+			eigenpy::EigenFromPyConverter<Vec<T>>::registration();
+  		eigenpy::EigenFromPyConverter<Mat<T>>::registration();
 
 		}
 
