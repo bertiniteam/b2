@@ -32,6 +32,6 @@
 
 import classes.test_classes
 import tracking.test_tracking
-import tracking.test_zero_dim
+import zero_dim.test_zero_dim
 
 import unittest
