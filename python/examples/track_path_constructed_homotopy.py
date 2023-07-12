@@ -36,7 +36,8 @@ tracker = pb.tracking.AMPTracker(homotopy);
 
 print(tracker)
 
-result = np.empty((3,),dtype=C)
+result = np.empty((3,),dtype=C)  # right now, if i don't preset to the correct size, i get abort traps.
+# there's something deeper wrong with the wrapper i wrote, cuz it should allow resizing, but it's not.
 
 start_point = g.start_point_mp(0)
 
