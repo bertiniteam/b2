@@ -137,7 +137,8 @@ namespace bertini{
 
 			.def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<dbl>,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
 
-			.def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<mpfr>,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
+			// .def("rescale_point_to_fit_patch_in_place",&SystemBaseT::template RescalePointToFitPatchInPlace<mpfr>,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
+			.def("rescale_point_to_fit_patch_in_place",&rescale_wrap_inplace_mpfr,"Re-scale the input point, in place, to fit the patch for the system.  This assumes you have properly set the variable groups and auto-patched the system.")
 
 			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<dbl>, "Dehomogenize a vector of doubles (complex), using the variable structure in this System")
 			.def("dehomogenize_point",&SystemBaseT::template DehomogenizePoint<mpfr>, "Dehomogenize a vector of mpfr's (complex), using the variable structure in this System")
