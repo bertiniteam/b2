@@ -111,13 +111,13 @@ class EndgameTest(unittest.TestCase):
         t_endgame_boundary = mpfr_complex("0.1");
         t_final = mpfr_complex(0);
 
-        bdry_points = [np.empty(dtype=mpfr_complex, shape=(0,)) for i in range(n)]
+        bdry_points = [np.empty(dtype=mpfr_complex, shape=(3,)) for i in range(n)]
         for i in range(n):
             default_precision(self.ambient_precision);
             final_system.precision(self.ambient_precision);
             start_point = td.start_point_mp(i);
 
-            bdry_pt = np.empty(dtype=mpfr_complex, shape=(0,));
+            bdry_pt = np.empty(dtype=mpfr_complex, shape=(3,));
             track_success_code = tracker.track_path(bdry_pt,t_start, t_endgame_boundary, start_point);
             bdry_points[i] = bdry_pt;
 
@@ -129,7 +129,7 @@ class EndgameTest(unittest.TestCase):
         my_endgame = AMPCauchyEG(tracker);
 
 
-        final_homogenized_solutions = [np.empty(dtype=mpfr_complex, shape=(0,)) for i in range(n)]
+        final_homogenized_solutions = [np.empty(dtype=mpfr_complex, shape=(3,)) for i in range(n)]
         for i in range(n):
             default_precision(bdry_points[i][0].precision());
             final_system.precision(bdry_points[i][0].precision());
