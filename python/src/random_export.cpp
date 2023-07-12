@@ -17,8 +17,12 @@ void ExportRandom(){
 
 
 
-	def("complex_in_minus_one_to_one", bertini::multiprecision::rand);
+	def("complex_in_minus_one_to_one", bertini::multiprecision::rand,"Make a random complex number uniformly distributed in [-1,1]x[-1,1], in the current default precision");
+	def("complex_unit", bertini::multiprecision::rand_unit,"Make a random complex number of magnitude 1, in the current default precision");
 
+	
+	mpfr_complex (*RandRealNoArgs)() = &bertini::multiprecision::RandomReal;
+	def("real_as_complex", RandRealNoArgs, "Make a random real number in [-1,1], as a complex number with imaginary part 0, in the current default precision");
 }
 
 
