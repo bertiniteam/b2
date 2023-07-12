@@ -473,11 +473,10 @@ namespace bertini{
 
 
 
-			eigenpy::enableEigenPySpecific<bertini::Mat<T>>();
-			eigenpy::enableEigenPySpecific<bertini::Vec<T>>();
-
+			eigenpy::EigenToPyConverter<Vec<T>>::registration();
+			eigenpy::EigenToPyConverter<Mat<T>>::registration();
 			eigenpy::EigenFromPyConverter<Vec<T>>::registration();
-  		eigenpy::EigenFromPyConverter<Mat<T>>::registration();
+			eigenpy::EigenFromPyConverter<Mat<T>>::registration();
 
 		}
 
