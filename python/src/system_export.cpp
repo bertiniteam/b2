@@ -69,6 +69,11 @@ namespace bertini{
 			.def("eval", return_Eval2_ptr<dbl>() ,"Evaluate the system in double precision using space and time values passed into this function.  Throws if doesn't use a time variable")
 			.def("eval", return_Eval2_ptr<mpfr>() ,"Evaluate the system in multiple precision using space and time values passed into this function.  Throws if doesn't use a time variable")
 			
+			// these two commented out because i don't need in-place Eigen::Ref wrapping here. 
+			// but if you did, you'd use two lines like this, ha.
+			// .def("eval", &eval_wrap_1<mpfr>)
+			// .def("eval", &eval_wrap_1<dbl>)
+
 			.def("eval_jacobian", return_Jac0_ptr<dbl>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
 			.def("eval_jacobian", return_Jac0_ptr<mpfr>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using already-set time and space value.")
 			.def("eval_jacobian", return_Jac1_ptr<dbl>() ,"Evaluate the Jacobian (martix of partial derivatives) of the system, using space values you pass in to this function")
