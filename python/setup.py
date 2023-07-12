@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 EXCLUDE_FROM_PACKAGES = []
 
 setup(name='pybertini',
-      version='1.0.alpha3',
+      version='1.0.alpha4',
       description='Software for numerical algebraic geometry',
       url='http://github.com/bertiniteam/b2',
       author='Bertini Team',
