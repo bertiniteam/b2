@@ -68,8 +68,14 @@ namespace bertini{
 			void (TrackerT::*set_predictor_)(Predictor)= &TrackerT::SetPredictor;
 			Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::GetPredictor;
 			
-
-
+			static
+			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<CT>> result, CT const& start_time, CT const& end_time, Vec<CT> const& start_point)
+			{
+				Vec<CT> temp_result;
+				auto code = self.TrackPath(temp_result, start_time, end_time, start_point);
+				result = temp_result;
+				return code;
+			}
 
 
 
