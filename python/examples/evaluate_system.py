@@ -17,8 +17,10 @@ sys.add_variable_group(vg)
 
 C = pb.multiprec.Complex # unpack a type for convenience
 
-gen = lambda : pb.random.complex_in_minus_one_to_one
+gen = lambda : pb.random.complex_in_minus_one_to_one()
 variable_values = np.array([gen(), gen(), gen()])
+
+print(variable_values)
 
 result = sys.eval(variable_values)
 
