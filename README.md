@@ -6,7 +6,9 @@ The recommended method for getting the code for Bertini 2 is to clone from comma
 
 `git clone https://github.com/bertiniteam/b2 --recursive`
 
-This ensures that any other repo's we depend on get cloned into their correct locations.  We have at least one for the Python bindings -- [MiniEigen](https://github.com/eudoxos/minieigen).
+This ensures that any other repo's we depend on get cloned into their correct locations.  
+
+(As of 2023, we removed the dependency that required this, but it's still good practice.)
 
 ---
 

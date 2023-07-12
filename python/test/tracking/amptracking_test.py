@@ -49,7 +49,6 @@ import pybertini.multiprec as mp
 from pybertini.multiprec import Float as mpfr_float
 from pybertini.multiprec import Complex as mpfr_complex
 
-import pybertini.minieigen as mi
 
 class AMPTrackingTest(unittest.TestCase):
     def setUp(self):
@@ -89,9 +88,9 @@ class AMPTrackingTest(unittest.TestCase):
         t_start = mpfr_complex(1)
         t_end = mpfr_complex(0)
 
-        y_start = mi.VectorXmp([mpfr_complex(1)]);
+        y_start = np.array([mpfr_complex(1)]);
 
-        y_end = mi.VectorXmp();
+        y_end = np.array([]);
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
@@ -103,7 +102,7 @@ class AMPTrackingTest(unittest.TestCase):
 
     def test_tracker_quad(self):
         default_precision(30);
-        x = self.x;  y = self.y; t = self.t;
+        y = self.y; t = self.t;
         s = System();
 
         vars = VariableGroup();
@@ -127,9 +126,9 @@ class AMPTrackingTest(unittest.TestCase):
         t_start = mpfr_complex(1)
         t_end = mpfr_complex(-1)
 
-        y_start = mi.VectorXmp([mpfr_complex(1)]);
+        y_start = np.array([mpfr_complex(1)]);
 
-        y_end = mi.VectorXmp();
+        y_end = np.array([]);
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
@@ -163,9 +162,9 @@ class AMPTrackingTest(unittest.TestCase):
         t_start = mpfr_complex(1)
         t_end = mpfr_complex(0)
 
-        y_start = mi.VectorXmp([mpfr_complex(1), mpfr_complex(1)]);
+        y_start = np.array([mpfr_complex(1), mpfr_complex(1)]);
 
-        y_end = mi.VectorXmp();
+        y_end = np.array([]);
 
         track_success = tracker.track_path(y_end, t_start, t_end, y_start);
 
@@ -174,7 +173,7 @@ class AMPTrackingTest(unittest.TestCase):
         self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
         self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
 
-        y_start = mi.VectorXmp([mpfr_complex(1), mpfr_complex(-1)]);
+        y_start = np.array([mpfr_complex(1), mpfr_complex(-1)]);
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
@@ -183,7 +182,7 @@ class AMPTrackingTest(unittest.TestCase):
         self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
 
 
-        y_start = mi.VectorXmp([mpfr_complex(-1), mpfr_complex(-1)]);
+        y_start = np.array([mpfr_complex(-1), mpfr_complex(-1)]);
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
@@ -192,7 +191,7 @@ class AMPTrackingTest(unittest.TestCase):
         self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
 
 
-        y_start = mi.VectorXmp([mpfr_complex(-1), mpfr_complex(0,1)]);
+        y_start = np.array([mpfr_complex(-1), mpfr_complex(0,1)]);
 
         track_success = tracker.track_path(y_end, t_start, t_end, y_start);
 
@@ -228,9 +227,9 @@ class AMPTrackingTest(unittest.TestCase):
         t_start = mpfr_complex(1)
         t_end = mpfr_complex(0)
 
-        y_start = mi.VectorXmp([mpfr_complex(0), mpfr_complex(0)]);
+        y_start = np.array([mpfr_complex(0), mpfr_complex(0)]);
 
-        y_end = mi.VectorXmp();
+        y_end = np.array([]);
 
         track_success = tracker.track_path(y_end, t_start, t_end, y_start);
 

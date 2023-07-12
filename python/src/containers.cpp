@@ -58,12 +58,12 @@ void ExportContainers()
 {
 	scope current_scope;
 	std::string new_submodule_name(extract<const char*>(current_scope.attr("__name__")));
-	new_submodule_name.append(".list");
+	new_submodule_name.append(".container");
 	object new_submodule(borrowed(PyImport_AddModule(new_submodule_name.c_str())));
-	current_scope.attr("list") = new_submodule;
+	current_scope.attr("container") = new_submodule;
 
 	scope new_submodule_scope = new_submodule;
-	new_submodule_scope.attr("__doc__") = "List types for PyBertini";
+	new_submodule_scope.attr("__doc__") = "Various container types for PyBertini";
  
 
 	boost::python::converter::registry::push_back(&pylist_converter<bertini::VariableGroup>::convertible
@@ -74,7 +74,7 @@ void ExportContainers()
 
 	// std::vector of Rational Node ptrs
 	using T1 = std::vector<std::shared_ptr< bertini::node::Rational > >;
-	class_< T1 >("Rational")
+	class_< T1 >("ListOfRational")
 	.def(ListVisitor<T1>())
 	;
 
@@ -87,34 +87,63 @@ void ExportContainers()
 	
 	// std::vector of ints
 	using T3 = std::vector<int>;
-	class_< T3 >("int")
+	class_< T3 >("ListOfInt")
 	.def(ListVisitor<T3>())
 	;
 
 
 	// std::vector of VariableGroups
 	using T4 = std::vector<bertini::VariableGroup>;
-	class_< T4 >("OfVariableGroup")
+	class_< T4 >("ListOfVariableGroup")
 	.def(ListVisitor<T4>())
 	;
 
 
 	// std::vector of Function Node ptrs
 	using T5 = std::vector<std::shared_ptr< bertini::node::Function > >;
-	class_< T5 >("Function")
+	class_< T5 >("ListOfFunction")
 	.def(ListVisitor<T5>())
 	;
 
 
 	// std::vector of Jacobian Node ptrs
 	using T6 = std::vector<std::shared_ptr< bertini::node::Jacobian > >;
-	class_< T6 >("Jacobian")
+	class_< T6 >("ListOfJacobian")
 	.def(ListVisitor<T6>())
 	;
 
 
+	// std::vector of Eigen::matrix
+	using T7 = std::vector<bertini::Vec<dbl_complex>>;
+	class_< T7 >("ListOfVectorComplexDoublePrecision")
+	.def(ListVisitor<T7>())
+	;
 
+	// std::vector of Eigen::matrix
+	using T8 = std::vector<bertini::Vec<mpfr_complex>>;
+	class_< T8 >("ListOfVectorComplexVariablePrecision")
+	.def(ListVisitor<T8>())
+	;
 
+	using T9 = std::vector<bertini::algorithm::SolutionMetaData<dbl_complex>>;
+	class_< T9 >("ListOfSolutionMetaData_DoublePrec")
+	.def(ListVisitor<T9>())
+	;
+
+	using T10 = std::vector<bertini::algorithm::SolutionMetaData<mpfr_complex>>;
+	class_< T10 >("ListOfSolutionMetaData_MultiPrec")
+	.def(ListVisitor<T10>())
+	;
+
+	using T11 = std::vector<bertini::algorithm::EGBoundaryMetaData<dbl_complex>>;
+	class_< T11 >("ListOfEGBoundaryMetaData_DoublePrec")
+	.def(ListVisitor<T11>())
+	;
+
+	using T12 = std::vector<bertini::algorithm::EGBoundaryMetaData<mpfr_complex>>;
+	class_< T12 >("ListOfEGBoundaryMetaData_MultiPrec")
+	.def(ListVisitor<T12>())
+	;
 }; // export containers
 
 	}

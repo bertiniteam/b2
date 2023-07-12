@@ -1183,8 +1183,14 @@ namespace bertini {
 		Vec<T> DehomogenizePoint(Vec<T> const& x) const
 			{
 
-				if (x.size()!=NumVariables())
-					throw std::runtime_error("dehomogenizing point with incorrect number of coordinates");
+				if (x.size()!=NumVariables()){
+					std::stringstream message;
+					message << "dehomogenizing point with incorrect number of coordinates. input has ";
+					message << x.size();
+					message << " but system expects ";
+					message << NumVariables();
+					throw std::runtime_error(message.str());
+				}
 
 				if (!have_ordering_)
 					ConstructOrdering();

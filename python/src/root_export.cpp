@@ -63,7 +63,7 @@ namespace bertini{
 		{
 			cl
 			.def("evalJ_d", &Jacobian::template EvalJ<dbl>)
-			.def("evalJ_mp", &Jacobian::template EvalJ<mpfr>)
+			.def("evalJ_mp", &Jacobian::template EvalJ<mpfr_complex>)
 			;
 		}
 

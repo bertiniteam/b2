@@ -88,3 +88,5 @@ docs/build/
 
 # temporary files
 *.tmp
+
+build/

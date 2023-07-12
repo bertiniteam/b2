@@ -9,8 +9,6 @@ AC_PREREQ([2.68])
 #
 AC_CONFIG_AUX_DIR([config])
 
-#ensure that minieigen got cloned...  i wish git recursed by default, but it doesn't.
-AC_CHECK_FILE([./minieigen/src/common.hpp],[],[AC_MSG_ERROR([it appears you didn't recurse when cloning b2, so you don't have minieigen in this directory.  to get it, simply run `git submodule update --init'.])])
 
 # turn on the keeping of produced objects in their folders.  this is for non-recursive make
 # and autotools
@@ -80,6 +78,11 @@ AX_PYTHON_DEVEL([>= '3.0.0'])
 AX_BOOST_BASE([1.65],, [AC_MSG_ERROR([PyBertini needs Boost at least 1.65, but it was not found in your system])])
 AX_BOOST_PYTHON
 
+
+AX_NUMPY
+
+
+
 AX_BOOST_MULTIPRECISION
 
 AX_BOOST_SYSTEM
@@ -93,9 +96,9 @@ AX_BOOST_LOG
 AX_BOOST_LOG_SETUP
 AX_BOOST_THREAD
 
+AX_EIGENPY
 
 AX_BERTINI2
-
 
 
 

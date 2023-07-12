@@ -27,7 +27,7 @@
 //
 //  silviana amethyst
 //  UWEC
-//  Spring 2018
+//  Spring 2018, Summer 2023
 //
 //
 //  python/bertini_python.cpp:  the main source file for the python interface for bertini.
@@ -54,13 +54,15 @@ namespace bertini
 			object package = scope();
 		    package.attr("__path__") = "_pybertini";
 
+		    // do this one first, so that the later calls into EigenPy work :)
+		    EnableEigenPy();
+
+
 			ExportContainers();
 			
 			ExportDetails();
 
 			ExportMpfr();
-			
-			ExportMinieigen();
 		
 			SetupFunctionTree();
 
@@ -94,6 +96,7 @@ namespace bertini
 
 			ExportLogging();
 			
+			ExportZeroDim();
 		}
 	
 	}

@@ -49,18 +49,19 @@ version = __version__
 
 
 # put stuff in the pybertini namespace
-import pybertini.system as system
+
 import pybertini.function_tree as function_tree
-import pybertini.minieigen as minieigen
-import pybertini.doubleprec as doubleprec
-import pybertini.multiprec as multiprec
+
+import pybertini.system as system
 import pybertini.tracking as tracking
 import pybertini.endgame as endgame
 import pybertini.parse as parse
-import pybertini.list as list
+import pybertini.container as container
 import pybertini.logging as logging
+import pybertini.nag_algorithm as nag_algorithm
 
 
+import pybertini.multiprec as multiprec
 
 # some convenience assignments
 Variable = function_tree.symbol.Variable
@@ -68,4 +69,12 @@ VariableGroup = function_tree.VariableGroup
 System = system.System
 default_precision = multiprec.default_precision
 
-__all__ = ['tracking','endgame','multiprec','function_tree','system','default_precision','System','Variable','VariableGroup']
+
+
+# https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
+# "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
+__all__ = ['Variable','VariableGroup','system','System','nag_algorithm','container','default_precision','tracking','endgame','logging','function_tree','parse','multiprec']
+
+
+
+

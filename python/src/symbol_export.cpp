@@ -72,7 +72,7 @@ namespace bertini{
 		{
 			cl
 			.def("set_current_value", &NodeBaseT::template set_current_value<dbl>)
-			.def("set_current_value", &NodeBaseT::template set_current_value<mpfr>)
+			.def("set_current_value", &NodeBaseT::template set_current_value<mpfr_complex>)
 			;
 		}
 
@@ -114,7 +114,7 @@ namespace bertini{
 			
 			// Float class
 			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", init< mpfr_float, mpfr_float >())
-			.def(init<mpfr>())
+			.def(init<mpfr_complex>())
 			.def(init< std::string>())
 			.def(init< std::string, std::string >())
 			;

@@ -163,6 +163,12 @@ namespace bertini{
 				return &SystemBaseT::template Jacobian<T>;
 			};
 
+			static
+			void rescale_wrap_inplace_mpfr(SystemBaseT const& self, Eigen::Ref<Vec<mpfr>> x){
+				Vec<mpfr> result(x);
+				self.RescalePointToFitPatchInPlace(result);
+				x = result;}
+
 		};
 		
 		

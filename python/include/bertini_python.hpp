@@ -39,7 +39,7 @@
 #include "python_common.hpp"
 #include "containers_export.hpp"
 #include "mpfr_export.hpp"
-#include "minieigen_export.hpp"
+#include "eigenpy_interaction.hpp"
 #include "function_tree_export.hpp"
 #include "system_export.hpp"
 #include "parser_export.hpp"
@@ -50,6 +50,7 @@
 #include "endgame_observers.hpp"
 #include "detail.hpp"
 #include "logging.hpp"
+#include "zero_dim_export.hpp"
 
 #endif
 

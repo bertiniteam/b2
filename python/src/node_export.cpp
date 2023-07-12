@@ -107,8 +107,8 @@ namespace bertini{
 
 			.def("eval_d", &Eval0<dbl> )
 			.def("eval_d", return_Eval1_ptr<dbl>() )
-			.def("eval_mp", &Eval0<mpfr> )
-			.def("eval_mp", return_Eval1_ptr<mpfr>() )
+			.def("eval_mp", &Eval0<mpfr_complex> )
+			.def("eval_mp", return_Eval1_ptr<mpfr_complex>() )
 			
 			.def(self_ns::str(self_ns::self))
 			.def(self_ns::repr(self_ns::self))

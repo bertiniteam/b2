@@ -38,6 +38,7 @@
 #include <deque>
 #include "python_common.hpp"
 
+#include <bertini2/nag_algorithms/zero_dim_solve.hpp>
 #include <bertini2/function_tree.hpp>
 #include <boost/python/stl_iterator.hpp>
 

@@ -287,6 +287,9 @@ namespace bertini{
 
 
 
+#define IMPLICITLY_CONVERTIBLE(T1,T2) \
+  boost::python::implicitly_convertible<T1,T2>();
+
 
 
 		void ExposeFreeNumFns()
@@ -387,6 +390,25 @@ namespace bertini{
 
 			.def(RealFreeVisitor<T>())
 			;
+
+
+			eigenpy::registerNewType<T>();
+			eigenpy::registerCommonUfunc<T>();
+
+			eigenpy::registerCast<T,long>(false);
+			eigenpy::registerCast<long,T>(true);
+			eigenpy::registerCast<T,int>(false);
+			eigenpy::registerCast<int,T>(true);;
+			eigenpy::registerCast<T,int64_t>(false);
+			eigenpy::registerCast<int64_t,T>(true);
+
+			IMPLICITLY_CONVERTIBLE(int,T);
+			IMPLICITLY_CONVERTIBLE(long,T);
+			IMPLICITLY_CONVERTIBLE(int64_t,T);
+
+			eigenpy::EigenFromPyConverter<Vec<T>>::registration();
+  		eigenpy::EigenFromPyConverter<Mat<T>>::registration();
+
 		}
 
 
@@ -398,11 +420,11 @@ namespace bertini{
 			using T = bertini::mpfr_complex;
 
 			class_<T>("Complex", init<>())
-			.def(init<double>())
+			.def(init<double>()) // this should probably be made an explicit constructor rather than implicit
 			.def(init<mpfr_float>())
 			.def(init<std::string>())
 			.def(init<mpfr_float,mpfr_float>())
-			.def(init<double, double>())
+			.def(init<double, double>()) // this should probably be made an explicit constructor rather than implicit
 			.def(init<std::string, mpfr_float>())
 			.def(init<mpfr_float, std::string>())
 			.def(init<std::string, std::string>())
@@ -429,6 +451,34 @@ namespace bertini{
 
 			.def(PrecisionVisitor<T>())
 			;
+
+
+			eigenpy::registerNewType<T>();
+			eigenpy::registerUfunct_without_comparitors<T>();
+
+
+			// eigenpy::registerCast<T,long>(false);
+			eigenpy::registerCast<long,T>(true);
+			// eigenpy::registerCast<T,int>(false);
+			eigenpy::registerCast<int,T>(true);
+			// eigenpy::registerCast<T,int64_t>(false);
+			eigenpy::registerCast<int64_t,T>(true);
+
+			
+
+
+			IMPLICITLY_CONVERTIBLE(int,T);
+			IMPLICITLY_CONVERTIBLE(long,T);
+			IMPLICITLY_CONVERTIBLE(int64_t,T);
+
+
+
+			eigenpy::enableEigenPySpecific<bertini::Mat<T>>();
+			eigenpy::enableEigenPySpecific<bertini::Vec<T>>();
+
+			eigenpy::EigenFromPyConverter<Vec<T>>::registration();
+  		eigenpy::EigenFromPyConverter<Mat<T>>::registration();
+
 		}
 
 		void ExportMpfr()
@@ -440,6 +490,8 @@ namespace bertini{
 			current_scope.attr("multiprec") = new_submodule;
 			scope new_submodule_scope = new_submodule;
 
+
+
 			ExposeInt();
 			ExposeFloat();
 			ExposeRational();
@@ -448,6 +500,8 @@ namespace bertini{
 			ExposeFreeNumFns();	
 		};
 
+
+#undef IMPLICITLY_CONVERTIBLE
 		
 	} //namespace python
 } // namespace bertini
