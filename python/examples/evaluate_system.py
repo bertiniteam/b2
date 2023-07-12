@@ -22,7 +22,7 @@ result = sys.eval(variable_values)
 sys.homogenize()
 sys.auto_patch()
 
-variable_values = np.array([C(1), C(1)])
+variable_values = np.array([C(1), C(1), C(1)])
 
 sys.rescale_point_to_fit_patch_in_place(variable_values) # failing due to non-const reference
 
