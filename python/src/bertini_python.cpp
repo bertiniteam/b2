@@ -63,7 +63,9 @@ namespace bertini
 			ExportDetails();
 
 			ExportMpfr();
-		
+			
+			ExportRandom();
+
 			SetupFunctionTree();
 
 			{

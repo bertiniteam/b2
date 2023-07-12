@@ -59,6 +59,7 @@ import pybertini.parse as parse
 import pybertini.container as container
 import pybertini.logging as logging
 import pybertini.nag_algorithm as nag_algorithm
+import pybertini.random as random
 
 
 import pybertini.multiprec as multiprec
@@ -73,7 +74,9 @@ default_precision = multiprec.default_precision
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
-__all__ = ['Variable','VariableGroup','system','System','nag_algorithm','container','default_precision','tracking','endgame','logging','function_tree','parse','multiprec']
+__all__ = ['Variable','VariableGroup','system','System',
+           'nag_algorithm','container','default_precision',
+           'tracking','endgame','logging','function_tree','parse','multiprec','random']
 
 
 
