@@ -6,6 +6,7 @@ bertini_python_header_files = \
 				$(includedir)/eigenpy_interaction.hpp \
 				$(includedir)/function_tree_export.hpp \
 				$(includedir)/mpfr_export.hpp \
+				$(includedir)/random_export.hpp \
 				$(includedir)/node_export.hpp \
 				$(includedir)/symbol_export.hpp \
 				$(includedir)/operator_export.hpp \
@@ -30,6 +31,7 @@ bertini_python_source_files = \
 				src/containers.cpp \
 				src/tracker_export.cpp \
 				src/endgame_export.cpp \
+				src/random_export.cpp \
 				src/mpfr_export.cpp \
 				src/node_export.cpp \
 				src/symbol_export.cpp \

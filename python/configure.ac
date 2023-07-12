@@ -1,5 +1,5 @@
-#we're building pybertini, version 1.0.alpha3, and the corresponding email is silviana's
-AC_INIT([pybertini], [1.0.alpha3], [amethyst@uwec.edu],[pybertini], [http://github.com/bertiniteam/b2])
+#we're building pybertini, version 1.0.alpha4, and the corresponding email is silviana's
+AC_INIT([pybertini], [1.0.alpha4], [amethyst@uwec.edu],[pybertini], [http://github.com/bertiniteam/b2])
 
 
 # Force autoconf to be at least this version number:
