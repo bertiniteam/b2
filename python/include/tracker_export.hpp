@@ -71,7 +71,7 @@ namespace bertini{
 			static
 			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<CT>> result, CT const& start_time, CT const& end_time, Vec<CT> const& start_point)
 			{
-				Vec<CT> temp_result;
+				Vec<CT> temp_result(self.GetSystem().NumVariables());
 				auto code = self.TrackPath(temp_result, start_time, end_time, start_point);
 				result = temp_result;
 				return code;
