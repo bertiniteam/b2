@@ -56,7 +56,9 @@ namespace bertini{
 			.def("get_tracker", &EndgameT::GetTracker, return_internal_reference<>(),"Get the tracker used in this endgame.  This is the same tracker as you feed the endgame object when you make it.  This is a reference variable")
 			.def("get_system",  &EndgameT::GetSystem,  return_internal_reference<>(),"Get the tracked system.  This is a reference to the internal system.")
 
-			.def("final_approximation", &EndgameT::template FinalApproximation<BCT>, return_internal_reference<>(),"Get the current approximation of the root, in the ambient numeric type for the tracker being used")
+			// .def("final_approximation", &EndgameT::template FinalApproximation<BCT>, return_internal_reference<>(),"Get the current approximation of the root, in the ambient numeric type for the tracker being used")
+			.def("final_approximation", &return_final_approximation<BCT>,"get")
+
 			.def("run", RunDefaultTime<BCT>(),
 				 (boost::python::arg("start_time"), "start_point"), 
 				 "Run the endgame, from start point and start time, to t=0.  Expects complex numeric type matching that of the tracker being used.")

@@ -80,6 +80,13 @@ namespace bertini{
 				return &BaseEGT::CycleNumber;
 			};
 
+			template <typename T>
+			static 
+			Vec<T> return_final_approximation(EndgameT const& self)
+			{
+				return self.template FinalApproximation<T>();
+			}
+
 		};// EndgameVisitor class
 
 
