@@ -40,9 +40,9 @@ namespace bertini{
 			cl
 			.def("setup", &TrackerT::Setup, (boost::python::arg("predictor"), boost::python::arg("tolerance"), boost::python::arg("truncation"), boost::python::arg("stepping"),boost::python::arg("newton")), "Set values for the internal configuration of the tracker.  tolerance and truncation are both real doubles.  predictor is a valid value for predictor choice.  stepping and newton are the config structs from pybertini.tracking.config.")
 
-			.def("track_path", &TrackerT::TrackPath, 
+			.def("track_path", &track_path_wrap, 
 				 (boost::python::arg("result"), "start_time", "end_time", "start_point"), 
-				 "The main function of the tracker, once its set up.  Feed it, in (result, start_time, end_time, start_point")
+				 "The main function of the tracker, once its set up.  The first argument is the output.  Feed it, in (result, start_time, end_time, start_point")
 
 			.def("get_system",&TrackerT::GetSystem,return_internal_reference<>(), "Gets an internal reference to the tracked system.")
 

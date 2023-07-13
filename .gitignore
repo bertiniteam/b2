@@ -37,7 +37,7 @@ python/build/
 # Python files
 *.pyc
 
-
+python/pybertini_*.log
 
 *.dirstamp
 *.deps

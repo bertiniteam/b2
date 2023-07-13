@@ -90,11 +90,11 @@ class AMPTrackingTest(unittest.TestCase):
 
         y_start = np.array([mpfr_complex(1)]);
 
-        y_end = np.array([]);
+        y_end = np.empty(shape=(s.num_variables()),dtype=mpfr_complex);
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
-        self.assertEqual(y_end.rows(), 1)
+        self.assertEqual(y_end.shape, (s.num_variables(),))
         self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
 
 
@@ -128,11 +128,11 @@ class AMPTrackingTest(unittest.TestCase):
 
         y_start = np.array([mpfr_complex(1)]);
 
-        y_end = np.array([]);
+        y_end = np.empty(shape=(s.num_variables()),dtype=mpfr_complex);
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
-        self.assertEqual(y_end.rows(), 1)
+        self.assertEqual(y_end.shape, (s.num_variables(),))
         self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(1)), 1e-5)
 
 
@@ -164,12 +164,12 @@ class AMPTrackingTest(unittest.TestCase):
 
         y_start = np.array([mpfr_complex(1), mpfr_complex(1)]);
 
-        y_end = np.array([]);
+        y_end = np.empty(shape=(s.num_variables()),dtype=mpfr_complex);
 
         track_success = tracker.track_path(y_end, t_start, t_end, y_start);
 
         self.assertTrue(track_success == SuccessCode.Success)
-        self.assertEqual(y_end.rows(), 2)
+        self.assertEqual(y_end.shape, (s.num_variables(),))
         self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
         self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
 
@@ -177,7 +177,7 @@ class AMPTrackingTest(unittest.TestCase):
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
-        self.assertEqual(y_end.rows(), 2)
+        self.assertEqual(y_end.shape, (s.num_variables(),))
         self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
         self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
 
@@ -186,7 +186,7 @@ class AMPTrackingTest(unittest.TestCase):
 
         tracker.track_path(y_end, t_start, t_end, y_start);
 
-        self.assertEqual(y_end.rows(), 2)
+        self.assertEqual(y_end.shape, (s.num_variables(),))
         self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
         self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
 
@@ -197,7 +197,7 @@ class AMPTrackingTest(unittest.TestCase):
 
 
         self.assertTrue(track_success == SuccessCode.Success)
-        self.assertEqual(y_end.rows(), 2)
+        self.assertEqual(y_end.shape, (s.num_variables(),))
         self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
         self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
 
@@ -229,12 +229,13 @@ class AMPTrackingTest(unittest.TestCase):
 
         y_start = np.array([mpfr_complex(0), mpfr_complex(0)]);
 
-        y_end = np.array([]);
+
+        y_end = np.empty(shape=(s.num_variables(),),dtype=mpfr_complex);
 
         track_success = tracker.track_path(y_end, t_start, t_end, y_start);
 
         self.assertTrue(track_success == SuccessCode.SingularStartPoint)
-        self.assertEqual(y_end.rows(), 0)
+        self.assertEqual(y_end.shape, (s.num_variables(),))
 
 
 

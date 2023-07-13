@@ -121,6 +121,17 @@ namespace bertini{
 				return &SystemBaseT::template Eval<T>;
 			};
 
+
+			// evaluate at arguments passed in, return a vector
+			// in case you wondered how it's done, this is how you enable wrapping of in-place using a Ref.  
+			// this ended up being unnecessary, lol.   but i kept it because it might be useful 
+			// for future reference.
+			template<typename T>
+			static
+			Vec<T> eval_wrap_1(SystemBaseT const& self,  Eigen::Ref<  Vec<T>> x){
+				return self.template Eval<T>(x);
+			}
+
 			template <typename T>
 			using Eval1_ptr = Vec<T> (SystemBaseT::*)(const Vec<T>&) const;
 			template <typename T>
