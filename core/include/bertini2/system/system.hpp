@@ -64,14 +64,15 @@ namespace bertini {
 	
 	enum class EvalMethod
 	{
-		FunctionTree,
-		SLP // now!  20230714, Eindhoven, Netherlands
+		FunctionTree, // using virtual methods and recursion
+		SLP // using straight line programs
+		    // now!  20230714, Eindhoven, Netherlands
 	};
 
-	enum class DifferentiationMethod
+	enum class DerivMethod
 	{
-		JacobianNode,
-		Derivatives
+		JacobianNode, // using Jacobian nodes, which are either 1 or 0 when evaluated based on the variable of differentiation
+		Derivatives // classic differentiation, using more space in memory but not requiring a variable of differentation when evaluatiing
 	};
 
 
@@ -79,6 +80,9 @@ namespace bertini {
 	\brief Gets the default evaluation method for Jacobians.  One might be faster...
 	*/
 	EvalMethod DefaultEvalMethod();
+
+	DerivMethod DefaultDerivMethod();
+
 
 	/**
 	\brief Get the default value for whether a system should autosimplify.

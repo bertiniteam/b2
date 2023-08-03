@@ -36,9 +36,14 @@ BOOST_CLASS_EXPORT(bertini::System)
 namespace bertini 
 {
 
-	EvalMethod DefaultJacobianEvalMethod()
+	EvalMethod DefaultEvalMethod()
 	{
-		return EvalMethod::Derivatives;
+		return EvalMethod::SLP;
+	}
+
+	DerivMethod DefaultDerivMethod()
+	{
+		return DerivMethod::Derivatives;
 	}
 
 	bool DefaultAutoSimplify()
