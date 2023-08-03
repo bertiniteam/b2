@@ -173,8 +173,16 @@ namespace bertini {
 		void ResetFunctions() const
 		{
 			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			for (const auto& iter : functions_) 
-				iter->Reset();
+			switch (eval_method_){
+			case EvalMethod::FunctionTree:
+				for (const auto& iter : functions_) 
+					iter->Reset();
+				break;
+			case EvalMethod::SLP:
+				// nothing
+				break;
+			}	
+			
 		}
 
 		/**
@@ -184,16 +192,23 @@ namespace bertini {
 		{
 			switch (eval_method_)
 			{
-				case EvalMethod::JacobianNode:
-				{
-					for (const auto& iter : jacobian_) 
-						iter->Reset();
-					break;
-				}
-				case EvalMethod::Derivatives:
-				{
-					for (const auto& iter : space_derivatives_) 
-						iter->Reset();
+				case EvalMethod::FunctionTree:{
+
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:
+						{
+							for (const auto& iter : jacobian_) 
+								iter->Reset();
+							break;
+						}
+						case DerivMethod::Derivatives:
+						{
+							for (const auto& iter : space_derivatives_) 
+								iter->Reset();
+							break;
+						}
+					}
+
 					break;
 				}
 				case EvalMethod::SLP:
@@ -209,16 +224,23 @@ namespace bertini {
 		{
 			switch (eval_method_)
 			{
-				case EvalMethod::JacobianNode:
-				{
-					for (const auto& iter : jacobian_) 
-						iter->Reset();
-					break;
-				}
-				case EvalMethod::Derivatives:
-				{
-					for (const auto& iter : time_derivatives_) 
-						iter->Reset();
+				case EvalMethod::FunctionTree:{
+					
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:
+						{
+							for (const auto& iter : jacobian_) 
+								iter->Reset();
+							break;
+						}
+						case DerivMethod::Derivatives:
+						{
+							for (const auto& iter : time_derivatives_) 
+								iter->Reset();
+							break;
+						}
+					}
+
 					break;
 				}
 				case EvalMethod::SLP:
@@ -226,6 +248,7 @@ namespace bertini {
 					// nothing to do, it's not a resetting kind of thing.
 					break;					
 				}
+
 			}
 		}
 
@@ -447,20 +470,26 @@ namespace bertini {
 
 			switch (eval_method_)
 			{
-				case EvalMethod::JacobianNode:
+				case EvalMethod::FunctionTree:
 				{
-					for (int ii = 0; ii < NumFunctions(); ++ii)
-						for (int jj = 0; jj < NumVariables(); ++jj)
-							jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:{
+							for (int ii = 0; ii < NumFunctions(); ++ii)
+								for (int jj = 0; jj < NumVariables(); ++jj)
+									jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
+							break;
+						}
+						case DerivMethod::Derivatives:
+						{
+							for (int jj = 0; jj < NumVariables(); ++jj)
+								for (int ii = 0; ii < NumFunctions(); ++ii)
+									space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
+							break;
+						}
+					}
 					break;
-				}
-				case EvalMethod::Derivatives:
-				{
-					for (int jj = 0; jj < NumVariables(); ++jj)
-						for (int ii = 0; ii < NumFunctions(); ++ii)
-							space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
-					break;
-				}
+				} // function tree branch
+
 				case EvalMethod::SLP:
 				{
 					J = this->slp_.GetJacobian<T>(); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
@@ -636,13 +665,12 @@ namespace bertini {
 		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
-		template<typename Derived, typename OtherDerived, typename T>
-		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
-							const Eigen::MatrixBase<OtherDerived> & variable_values, 
+		template<typename Derived, typename T>
+		void TimeDerivativeInPlace(Vec<T> & ds_dt, 
+							const Eigen::MatrixBase<Derived> & variable_values, 
 							const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
@@ -680,12 +708,11 @@ namespace bertini {
 
 
 
-		template<typename Derived, typename OtherDerived, typename T>
-		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
-							const Eigen::MatrixBase<OtherDerived> & variable_values) const
+		template<typename Derived, typename T>
+		void TimeDerivativeInPlace(Vec<T> & ds_dt, 
+							const Eigen::MatrixBase<Derived> & variable_values) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			ResetTimeDerivatives();
@@ -716,10 +743,9 @@ namespace bertini {
 		}
 
 
-		template<typename Derived>
-		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt) const
+		template<typename T>
+		void TimeDerivativeInPlace(Vec<T> & ds_dt) const
 		{
-			using T = typename Derived::Scalar;
 
 			if(ds_dt.size() < NumFunctions())
 			{
@@ -737,21 +763,27 @@ namespace bertini {
 
 			switch (eval_method_)
 			{
-				case EvalMethod::JacobianNode:
-				{
-					for (int ii = 0; ii < NumFunctions(); ++ii)
-						jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
-					break;
-				}
-				case EvalMethod::Derivatives:
-				{
-					for (int ii = 0; ii < NumFunctions(); ++ii)
-						time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
-					break;
-				}
+				case EvalMethod::FunctionTree:{
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:
+						{
+							for (int ii = 0; ii < NumFunctions(); ++ii)
+								jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
+							break;
+						}
+						case DerivMethod::Derivatives:
+						{
+							for (int ii = 0; ii < NumFunctions(); ++ii)
+								time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
+							break;
+						}
+					}
+				break;
+				} // function tree branch
+
 				case EvalMethod::SLP:
 				{
-					this->slp_.GetTimeDeriv(ds_dt); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
+					this->slp_.GetTimeDerivInPlace(ds_dt); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
 					break;					
 				}
 			}
@@ -1525,7 +1557,21 @@ namespace bertini {
 
 
 
+		/**  
+		 \brief Set  method being used for differentiation
+		 * */
+		void SetDerivMethod(DerivMethod method)
+		{
+			deriv_method_ = method;
+		}
 
+		/**  
+		 \brief Query the current method used for differentiation
+		 * */
+		DerivMethod  GetDerivMethod() const
+		{
+			return deriv_method_;
+		}
 
 
 		/**

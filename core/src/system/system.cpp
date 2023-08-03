@@ -257,16 +257,22 @@ namespace bertini
 		{
 			switch (eval_method_)
 			{
-				case EvalMethod::JacobianNode:{
-					for (const auto& iter : jacobian_)
-						iter->precision(new_precision);
-					break;
-				}
-				case EvalMethod::Derivatives:{
-					for (const auto& iter : space_derivatives_)
-						iter->precision(new_precision);
-					for (const auto& iter : time_derivatives_)
-						iter->precision(new_precision);
+				case EvalMethod::FunctionTree:{
+
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:{
+							for (const auto& iter : jacobian_)
+								iter->precision(new_precision);
+							break;
+						}
+						case DerivMethod::Derivatives:{
+							for (const auto& iter : space_derivatives_)
+								iter->precision(new_precision);
+							for (const auto& iter : time_derivatives_)
+								iter->precision(new_precision);
+							break;
+						}
+					}
 					break;
 				}
 				case EvalMethod::SLP:
@@ -310,14 +316,19 @@ namespace bertini
 	{
 		switch (eval_method_)
 		{
-			case EvalMethod::JacobianNode:
-			{
-				DifferentiateUsingJacobianNode();
-				break;
-			}
-			case EvalMethod::Derivatives:
-			{
-				DifferentiateUsingDerivatives();
+			case EvalMethod::FunctionTree:{
+				switch (deriv_method_){
+					case DerivMethod::JacobianNode:
+					{
+						DifferentiateUsingJacobianNode();
+						break;
+					}
+					case DerivMethod::Derivatives:
+					{
+						DifferentiateUsingDerivatives();
+						break;
+					}
+				}
 				break;
 			}
 			case EvalMethod::SLP:
@@ -368,7 +379,7 @@ namespace bertini
 
 	std::vector< Nd > System::GetSpaceDerivatives() const
 	{
-		if ( (eval_method_==EvalMethod::JacobianNode) || (!is_differentiated_) )
+		if ( (deriv_method_==DerivMethod::JacobianNode) || (!is_differentiated_) )
 			DifferentiateUsingDerivatives();
 
 		return space_derivatives_;
@@ -376,7 +387,7 @@ namespace bertini
 
 	std::vector< Nd > System::GetTimeDerivatives() const
 	{
-		if ( (eval_method_==EvalMethod::JacobianNode) || (!is_differentiated_) )
+		if ( (deriv_method_==DerivMethod::JacobianNode) || (!is_differentiated_) )
 			DifferentiateUsingDerivatives();
 		
 		return time_derivatives_;
@@ -1076,17 +1087,22 @@ namespace bertini
 
 		switch (eval_method_)
 		{
-			case EvalMethod::JacobianNode:{
-				for (auto& iter : this->jacobian_)
-					Simplify(iter);
+			case EvalMethod::FunctionTree:{
+				switch (deriv_method_){
+					case DerivMethod::JacobianNode:{
+						for (auto& iter : this->jacobian_)
+							Simplify(iter);
+						break;
+					}
+					case DerivMethod::Derivatives:{
+						for (auto& iter : this->space_derivatives_)
+							Simplify(iter);
+						for (auto& iter : this->time_derivatives_)
+							Simplify(iter);
+						break;
+					}
 				break;
-			}
-			case EvalMethod::Derivatives:{
-				for (auto& iter : this->space_derivatives_)
-					Simplify(iter);
-				for (auto& iter : this->time_derivatives_)
-					Simplify(iter);
-				break;
+				}
 			}
 			case EvalMethod::SLP:
 			{
@@ -1189,29 +1205,35 @@ namespace bertini
 			out << "system is differentiated; jacobian:\n";
 			switch (s.eval_method_)
 			{
+				case EvalMethod::FunctionTree:{
 
-				case EvalMethod::JacobianNode:{
-					for (const auto& iter : s.jacobian_)
-						out << (iter)->name() << " = " << *iter << "\n";
-					break;
-				}
-
-				case EvalMethod::Derivatives:{
-					for (int jj = 0; jj < s.NumVariables(); ++jj)
-						for (int ii = 0; ii < s.NumFunctions(); ++ii)
-						{
-							const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
-							out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+					switch (s.deriv_method_){
+						case DerivMethod::JacobianNode:{
+							for (const auto& iter : s.jacobian_)
+								out << (iter)->name() << " = " << *iter << "\n";
+							break;
 						}
 
-					if (s.HavePathVariable())
-						for (int ii = 0; ii < s.NumFunctions(); ++ii)
-						{
-							const auto& d = s.time_derivatives_[ii];
-							out << "jac_time_der(" << ii << ") = " << d << "\n";
+						case DerivMethod::Derivatives:{
+							for (int jj = 0; jj < s.NumVariables(); ++jj)
+								for (int ii = 0; ii < s.NumFunctions(); ++ii)
+								{
+									const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
+									out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+								}
+
+							if (s.HavePathVariable())
+								for (int ii = 0; ii < s.NumFunctions(); ++ii)
+								{
+									const auto& d = s.time_derivatives_[ii];
+									out << "jac_time_der(" << ii << ") = " << d << "\n";
+								}
+							break;
 						}
+					}
 					break;
-				}
+				} // end FunctionTree branch
+
 
 				case EvalMethod::SLP:
 				{
