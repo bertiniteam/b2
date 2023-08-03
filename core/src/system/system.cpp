@@ -36,9 +36,9 @@ BOOST_CLASS_EXPORT(bertini::System)
 namespace bertini 
 {
 
-	JacobianEvalMethod DefaultJacobianEvalMethod()
+	EvalMethod DefaultJacobianEvalMethod()
 	{
-		return JacobianEvalMethod::Derivatives;
+		return EvalMethod::Derivatives;
 	}
 
 	bool DefaultAutoSimplify()
@@ -77,7 +77,7 @@ namespace bertini
 		swap(a.time_derivatives_,b.time_derivatives_);
 
 		swap(a.assume_uniform_precision_,b.assume_uniform_precision_);
-		swap(a.jacobian_eval_method_,b.jacobian_eval_method_);
+		swap(a.eval_method_,b.eval_method_);
 
 		swap(a.precision_,b.precision_);
 		swap(a.is_patched_,b.is_patched_);
@@ -105,7 +105,7 @@ namespace bertini
 		is_differentiated_ = other.is_differentiated_;
 
 		assume_uniform_precision_ = other.assume_uniform_precision_;
-		jacobian_eval_method_ = other.jacobian_eval_method_;
+		eval_method_ = other.eval_method_;
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
 
@@ -250,19 +250,25 @@ namespace bertini
 
 		if (is_differentiated_)
 		{
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
+				case EvalMethod::JacobianNode:{
 					for (const auto& iter : jacobian_)
 						iter->precision(new_precision);
 					break;
-				case JacobianEvalMethod::Derivatives:
+				}
+				case EvalMethod::Derivatives:{
 					for (const auto& iter : space_derivatives_)
 						iter->precision(new_precision);
 					for (const auto& iter : time_derivatives_)
 						iter->precision(new_precision);
 					break;
-				// later, case for straight line program?
+				}
+				case EvalMethod::SLP:
+				{
+					this->slp_.precision(new_precision);
+					break;					
+				}
 			}
 			
 		}
@@ -297,16 +303,22 @@ namespace bertini
 
 	void System::Differentiate() const
 	{
-		switch (jacobian_eval_method_)
+		switch (eval_method_)
 		{
-			case JacobianEvalMethod::JacobianNode:
+			case EvalMethod::JacobianNode:
 			{
 				DifferentiateUsingJacobianNode();
 				break;
 			}
-			case JacobianEvalMethod::Derivatives:
+			case EvalMethod::Derivatives:
 			{
 				DifferentiateUsingDerivatives();
+				break;
+			}
+			case EvalMethod::SLP:
+			{	
+				SLPCompiler compiler;
+				this->slp_ = compiler.Compile(*this);
 				break;
 			}
 		}
@@ -351,7 +363,7 @@ namespace bertini
 
 	std::vector< Nd > System::GetSpaceDerivatives() const
 	{
-		if ( (jacobian_eval_method_==JacobianEvalMethod::JacobianNode) || (!is_differentiated_) )
+		if ( (eval_method_==EvalMethod::JacobianNode) || (!is_differentiated_) )
 			DifferentiateUsingDerivatives();
 
 		return space_derivatives_;
@@ -359,7 +371,7 @@ namespace bertini
 
 	std::vector< Nd > System::GetTimeDerivatives() const
 	{
-		if ( (jacobian_eval_method_==JacobianEvalMethod::JacobianNode) || (!is_differentiated_) )
+		if ( (eval_method_==EvalMethod::JacobianNode) || (!is_differentiated_) )
 			DifferentiateUsingDerivatives();
 		
 		return time_derivatives_;
@@ -1057,18 +1069,25 @@ namespace bertini
 			n->Reset();
 
 
-		switch (jacobian_eval_method_)
+		switch (eval_method_)
 		{
-			case JacobianEvalMethod::JacobianNode:
+			case EvalMethod::JacobianNode:{
 				for (auto& iter : this->jacobian_)
 					Simplify(iter);
 				break;
-			case JacobianEvalMethod::Derivatives:
+			}
+			case EvalMethod::Derivatives:{
 				for (auto& iter : this->space_derivatives_)
 					Simplify(iter);
 				for (auto& iter : this->time_derivatives_)
 					Simplify(iter);
 				break;
+			}
+			case EvalMethod::SLP:
+			{
+				// i don't know how to simplify a SLP.  it should be simplified before compiling, yo.  that's not currently done.
+				break;					
+			}
 
 		}
 		
@@ -1163,27 +1182,37 @@ namespace bertini
 		if (s.is_differentiated_)
 		{
 			out << "system is differentiated; jacobian:\n";
-			switch (s.jacobian_eval_method_)
+			switch (s.eval_method_)
 			{
-			case JacobianEvalMethod::JacobianNode:
-				for (const auto& iter : s.jacobian_)
-					out << (iter)->name() << " = " << *iter << "\n";
-				break;
-			case JacobianEvalMethod::Derivatives:
-				for (int jj = 0; jj < s.NumVariables(); ++jj)
-					for (int ii = 0; ii < s.NumFunctions(); ++ii)
-					{
-						const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
-						out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
-					}
 
-				if (s.HavePathVariable())
-					for (int ii = 0; ii < s.NumFunctions(); ++ii)
-					{
-						const auto& d = s.time_derivatives_[ii];
-						out << "jac_time_der(" << ii << ") = " << d << "\n";
-					}
-				break;
+				case EvalMethod::JacobianNode:{
+					for (const auto& iter : s.jacobian_)
+						out << (iter)->name() << " = " << *iter << "\n";
+					break;
+				}
+
+				case EvalMethod::Derivatives:{
+					for (int jj = 0; jj < s.NumVariables(); ++jj)
+						for (int ii = 0; ii < s.NumFunctions(); ++ii)
+						{
+							const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
+							out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+						}
+
+					if (s.HavePathVariable())
+						for (int ii = 0; ii < s.NumFunctions(); ++ii)
+						{
+							const auto& d = s.time_derivatives_[ii];
+							out << "jac_time_der(" << ii << ") = " << d << "\n";
+						}
+					break;
+				}
+
+				case EvalMethod::SLP:
+				{
+					out << s.slp_;
+					break;					
+				}
 			}
 			out << "\n";
 		}

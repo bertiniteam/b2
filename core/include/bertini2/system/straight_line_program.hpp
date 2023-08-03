@@ -284,6 +284,11 @@ namespace bertini {
 		 */
 		template<typename NumT>
 		void Eval() const{
+
+			if (is_evaluated_)
+				return;
+			
+
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			for (int ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
 				//in the unary case the loop will increment by 3
@@ -378,7 +383,10 @@ namespace bertini {
 
 		 */
 		template<typename NumT>
-		void GetFuncVals(Vec<NumT> & result) const{
+		void GetFuncValsInPlace(Vec<NumT> & result) const{
+			if (!is_evaluated_)
+				throw std::runtime_error("trying to get values, but SLP is not evaluated");
+
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			// 1. make container, size correctly.
 			result.resize(number_of_.Functions);
@@ -400,7 +408,10 @@ namespace bertini {
 		 */
 
 		template<typename NumT>
-		void GetJacobian(Mat<NumT> & result) const{
+		void GetJacobianInPlace(Mat<NumT> & result) const{
+			if (!is_evaluated_)
+				throw std::runtime_error("trying to get values, but SLP is not evaluated");
+
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			// 1. make container, size correctly.
 			result.resize(number_of_.Functions, number_of_.Variables);
@@ -424,7 +435,10 @@ namespace bertini {
 		 */
 
 		template<typename NumT>
-		void GetTimeDeriv(Vec<NumT> & result) const{
+		void GetTimeDerivInPlace(Vec<NumT> & result) const{
+			if (!is_evaluated_)
+				throw std::runtime_error("trying to get values, but SLP is not evaluated");
+
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			// 1. make container, size correctly.
 			result.resize(number_of_.Functions);
@@ -443,7 +457,7 @@ namespace bertini {
 		template<typename NumT>
 		Vec<NumT> GetFuncVals() const{
 			Vec<NumT> return_me;
-			GetFuncVals(return_me);
+			GetFuncValsInPlace(return_me);
 			return return_me;
 		}
 		/**
@@ -455,7 +469,7 @@ namespace bertini {
 		template<typename NumT>
 		Mat<NumT> GetJacobian() const{
 			Mat<NumT> return_me;
-			GetJacobian(return_me);
+			GetJacobianInPlace(return_me);
 			return return_me;
 		}
 		/**
@@ -467,7 +481,7 @@ namespace bertini {
 		template<typename NumT>
 		Vec<NumT> GetTimeDeriv() const{
 			Vec<NumT> return_me;
-			GetTimeDeriv(return_me);
+			GetTimeDerivInPlace(return_me);
 			return return_me;
 		}
 
@@ -529,6 +543,7 @@ namespace bertini {
 				//assign  to memory
 				memory[ii + output_locations_.Variables] = variable_values(ii);
 			}
+			is_evaluated_ = false;
 		}
 
 		/**
@@ -544,6 +559,11 @@ namespace bertini {
 			if (!this->HavePathVariable())
 				throw std::runtime_error("calling Eval with path variable, but system doesn't have one.");
 			// then actually copy the path variable into where it goes in memory
+
+			auto& memory =  std::get<std::vector<ComplexT>>(memory_); // unpack for local reference
+
+			memory[input_locations_.Time] = time;
+			is_evaluated_ = false;
 		}
 
 		/**
@@ -592,6 +612,8 @@ namespace bertini {
 
 		std::vector<size_t> instructions_; //< The instructions.  The opcodes are  stored as size_t's, as well as the locations of operands and results.
 		std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; //< the size_t is where in memory to downsample to.
+
+		mutable bool is_evaluated_ = false;
 	};
 
 

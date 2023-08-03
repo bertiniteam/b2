@@ -51,6 +51,7 @@
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system/patch.hpp"
 
+#include "bertini2/system/straight_line_program.hpp"
 
 #include <boost/archive/binary_oarchive.hpp>
 	#include <boost/archive/binary_iarchive.hpp>
@@ -61,17 +62,23 @@
 namespace bertini {
 
 	
-	enum class JacobianEvalMethod
+	enum class EvalMethod
+	{
+		FunctionTree,
+		SLP // now!  20230714, Eindhoven, Netherlands
+	};
+
+	enum class DifferentiationMethod
 	{
 		JacobianNode,
 		Derivatives
-		//StraightLineProgram not yet....
 	};
+
 
 	/**
 	\brief Gets the default evaluation method for Jacobians.  One might be faster...
 	*/
-	JacobianEvalMethod DefaultJacobianEvalMethod();
+	EvalMethod DefaultEvalMethod();
 
 	/**
 	\brief Get the default value for whether a system should autosimplify.
@@ -171,38 +178,49 @@ namespace bertini {
 		*/
 		void ResetJacobian() const
 		{
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
+				case EvalMethod::JacobianNode:
 				{
 					for (const auto& iter : jacobian_) 
 						iter->Reset();
 					break;
 				}
-				case JacobianEvalMethod::Derivatives:
+				case EvalMethod::Derivatives:
 				{
 					for (const auto& iter : space_derivatives_) 
 						iter->Reset();
 					break;
 				}
+				case EvalMethod::SLP:
+				{
+					// nothing to do, it's not a resetting kind of thing.
+					break;					
+				}
+
 			}
 		}
 
 		void ResetTimeDerivatives() const
 		{
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
+				case EvalMethod::JacobianNode:
 				{
 					for (const auto& iter : jacobian_) 
 						iter->Reset();
 					break;
 				}
-				case JacobianEvalMethod::Derivatives:
+				case EvalMethod::Derivatives:
 				{
 					for (const auto& iter : time_derivatives_) 
 						iter->Reset();
 					break;
+				}
+				case EvalMethod::SLP:
+				{
+					// nothing to do, it's not a resetting kind of thing.
+					break;					
 				}
 			}
 		}
@@ -423,21 +441,26 @@ namespace bertini {
 			if (!is_differentiated_)
 				Differentiate();
 
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
+				case EvalMethod::JacobianNode:
 				{
 					for (int ii = 0; ii < NumFunctions(); ++ii)
 						for (int jj = 0; jj < NumVariables(); ++jj)
 							jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
 					break;
 				}
-				case JacobianEvalMethod::Derivatives:
+				case EvalMethod::Derivatives:
 				{
 					for (int jj = 0; jj < NumVariables(); ++jj)
 						for (int ii = 0; ii < NumFunctions(); ++ii)
 							space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
 					break;
+				}
+				case EvalMethod::SLP:
+				{
+					J = this->slp_.GetJacobian<T>(); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
+					break;					
 				}
 			}
 			
@@ -708,19 +731,24 @@ namespace bertini {
 			if (!is_differentiated_)
 				Differentiate();
 
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
+				case EvalMethod::JacobianNode:
 				{
 					for (int ii = 0; ii < NumFunctions(); ++ii)
 						jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
 					break;
 				}
-				case JacobianEvalMethod::Derivatives:
+				case EvalMethod::Derivatives:
 				{
 					for (int ii = 0; ii < NumFunctions(); ++ii)
 						time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
 					break;
+				}
+				case EvalMethod::SLP:
+				{
+					this->slp_.GetTimeDeriv(ds_dt); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
+					break;					
 				}
 			}
 
@@ -1474,6 +1502,28 @@ namespace bertini {
 		void Simplify();
 
 
+		/**  
+		 \brief Set  method being used for evaluation
+		 * */
+		void SetEvalMethod(EvalMethod method)
+		{
+			eval_method_ = method;
+		}
+
+		/**  
+		 \brief Query the current method used for evaluation
+		 * */
+		EvalMethod  GetEvalMethod() const
+		{
+			return eval_method_;
+		}
+
+
+
+
+
+
+
 		/**
 		\brief Add two systems together.
 
@@ -1629,6 +1679,7 @@ namespace bertini {
 
 		mutable bool is_differentiated_ = false; ///< indicator for whether the jacobian tree has been populated.
 
+		mutable StraightLineProgram slp_; ///< The straight line program.  Is mutable since  it's a has-a, not is-a relationship.
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
@@ -1641,7 +1692,7 @@ namespace bertini {
 
 		bool assume_uniform_precision_ = false; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
 
-		JacobianEvalMethod jacobian_eval_method_ = DefaultJacobianEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
+		EvalMethod eval_method_ = DefaultEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
 
 		bool auto_simplify_ = DefaultAutoSimplify();
 
@@ -1681,7 +1732,7 @@ namespace bertini {
 			ar & patch_;
 
 			ar & assume_uniform_precision_;
-			ar & jacobian_eval_method_;
+			ar & eval_method_;
 		}
 
 	};
