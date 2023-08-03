@@ -41,7 +41,8 @@
 				".libs",
 				"*.dtps",
 				"autom4te.cache",
-				"generated_documentation"]
+				"generated_documentation",
+				".pytest_cache"]
 		}
 
 
