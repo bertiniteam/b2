@@ -49,10 +49,11 @@ namespace bertini{
 		template<class VisitedT, typename RetT>
 		struct DefaultConstruct
 		{
-			static RetT OnUnknownVisitor(VisitedT&, VisitorBase&)
+			static RetT OnUnknownVisitor(VisitedT&a, VisitorBase&)
 			{
-				std::cout << "unknown visitor"<< std::endl;
-				return RetT();
+				std::stringstream err_msg;
+				err_msg << "unknown visitor: " << a << " " << std::endl;
+				throw std::runtime_error(err_msg.str());
 			}
 		};
 
