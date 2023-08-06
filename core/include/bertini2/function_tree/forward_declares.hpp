@@ -59,6 +59,8 @@ namespace bertini {
 		class PowerOperator;
 		class ExpOperator;
 		class LogOperator;
+		class NegateOperator;
+		class SqrtOperator;
 	}
 
 	namespace node{
@@ -70,5 +72,12 @@ namespace bertini {
 		class ArcCosOperator;
 		class TanOperator;
 		class ArcTanOperator;
+	}
+
+	namespace node{
+		namespace special_number{
+			class Pi;
+			class E;
+		}
 	}
 }// namespace bertini

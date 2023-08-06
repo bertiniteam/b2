@@ -147,18 +147,19 @@ namespace bertini {
 		Exp=      1 << 5,
 		Log=      1 << 6,
 		Negate=   1 << 7,
-		Sin=      1 << 8,
-		Cos=      1 << 9,
-		Tan=      1 << 10,
-		Asin=     1 << 11,
-		Acos=     1 << 12,
-		Atan=     1 << 13,
-		Assign=   1 << 14,
+		Sqrt=     1 << 8,
+		Sin=      1 << 9,
+		Cos=      1 << 10,
+		Tan=      1 << 11,
+		Asin=     1 << 12,
+		Acos=     1 << 13,
+		Atan=     1 << 14,
+		Assign=   1 << 15,
 	};
 
 	const int BinaryOperations = Add|Subtract | Multiply|Divide | Power;
 	const int TrigOperations   = Sin|Cos|Tan | Asin|Acos|Atan;
-	const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations;
+	const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations | Sqrt;
 
 	constexpr bool IsUnary(Operation op)
 	{
@@ -324,6 +325,10 @@ namespace bertini {
 
 					case Negate:
 						memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
+						break;
+
+					case Sqrt:
+						memory[this->instructions_[ii+2]] = sqrt(memory[instructions_[ii+1]]);
 						break;
 
 					case Log:
@@ -644,6 +649,10 @@ namespace bertini {
 
 
 	class SLPCompiler : public VisitorBase,
+
+			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
+
+
 			// symbols and roots
 			public Visitor<node::Variable>,
 			public Visitor<node::Integer>,
@@ -660,6 +669,8 @@ namespace bertini {
 			public Visitor<node::PowerOperator>,
 			public Visitor<node::ExpOperator>,
 			public Visitor<node::LogOperator>,
+			public Visitor<node::NegateOperator>,
+			public Visitor<node::SqrtOperator>,
 
 			// the trig operators
 			public Visitor<node::SinOperator>,
@@ -667,8 +678,10 @@ namespace bertini {
 			public Visitor<node::CosOperator>,
 			public Visitor<node::ArcCosOperator>,
 			public Visitor<node::TanOperator>,
-			public Visitor<node::ArcTanOperator>
+			public Visitor<node::ArcTanOperator>,
 
+			public Visitor<node::special_number::Pi>,
+			public Visitor<node::special_number::E>
 
 			// also missing -- linears and difflinears.
 
@@ -688,6 +701,9 @@ namespace bertini {
 
 			SLP Compile(System const& sys);
 
+
+			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
+
 			// symbols and roots
 			virtual void Visit(node::Variable const& n);
 			virtual void Visit(node::Integer const& n);
@@ -704,6 +720,9 @@ namespace bertini {
 			virtual void Visit(node::PowerOperator const& n);
 			virtual void Visit(node::ExpOperator const& n);
 			virtual void Visit(node::LogOperator const& n);
+			virtual void Visit(node::NegateOperator const& n);
+			virtual void Visit(node::SqrtOperator const& n); 
+
 
 			// the trig operators
 			virtual void Visit(node::SinOperator const& n);
@@ -713,6 +732,8 @@ namespace bertini {
 			virtual void Visit(node::TanOperator const& n);
 			virtual void Visit(node::ArcTanOperator const& n);
 
+			virtual void Visit(node::special_number::Pi const& n);
+			virtual void Visit(node::special_number::E const& n);
 			// missing -- linear and difflinear
 		private:
 

@@ -42,6 +42,7 @@ namespace bertini{
 		case Exp: return "Exp";
 		case Log: return "Log";
 		case Negate: return "Negate";
+		case Sqrt: return "Sqrt";
 		case Sin: return "Sin";
 		case Cos: return "Cos";
 		case Tan: return "Tan";
@@ -191,6 +192,16 @@ namespace bertini{
 	}
 
 
+	//
+	//
+	//  implementer note:
+	//
+	// if you add another type to be visited, you must list it in TWO locations in the SLPCompiler type in the .hpp.   
+	// 
+	//
+
+
+
 	// wtb: factor out this pattern
 	void SLPCompiler::Visit(node::Integer const& n){
 		this->DealWithNumber(n); // that sweet template magic.  see slp.hpp for the definition of this template function
@@ -204,8 +215,13 @@ namespace bertini{
 		this->DealWithNumber(n);
 	}
 
+	void SLPCompiler::Visit(node::special_number::Pi const& n){
+		this->DealWithNumber(n);
+	}
 
-
+	void SLPCompiler::Visit(node::special_number::E const& n){
+		this->DealWithNumber(n);
+	}
 
 
 	void SLPCompiler::Visit(node::Jacobian const& n){
@@ -422,6 +438,30 @@ namespace bertini{
 		auto location_operand = locations_encountered_symbols_[operand];
 		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
 		slp_under_construction_.AddInstruction(Log,location_operand, next_available_mem_++);
+	}
+
+	void SLPCompiler::Visit(node::NegateOperator const& n){
+		
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
+		slp_under_construction_.AddInstruction(Negate,location_operand, next_available_mem_++);
+	}
+
+	void SLPCompiler::Visit(node::SqrtOperator const& n){
+		
+
+		auto operand = n.Operand();
+		if (this->locations_encountered_symbols_.find(operand) == this->locations_encountered_symbols_.end())
+			operand->Accept(*this); // think of calling Compile(n)
+
+		auto location_operand = locations_encountered_symbols_[operand];
+		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
+		slp_under_construction_.AddInstruction(Sqrt,location_operand, next_available_mem_++);
 	}
 
 
