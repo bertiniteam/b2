@@ -1172,11 +1172,18 @@ namespace bertini
 			out << "\n";
 			counter++;
 		}
+		out << "\n";
 
 		out << s.NumHomVariables() << " homogenizing variables:\n";
 		for (const auto& iter : s.homogenizing_variables_)
 			out << (*iter) << " ";
-		out << "\n";
+		out << "\n\n";
+
+
+		out << s.ungrouped_variables_.size() << " ungrouped variables:\n";
+		for (const auto& v :s.ungrouped_variables_)
+			out << (*v) << " ";
+		out << "\n\n";
 
 
 		out << s.NumNaturalFunctions() << " functions:\n";
