@@ -275,7 +275,7 @@ namespace bertini {
 			if (function_values.size() != NumTotalFunctions()) 
 			{
 				std::stringstream ss;
-				ss << "trying to evaluate system in-place, but number length of vector into which to write the values (" << function_values.size() << ") doesn't match number of system user-defined functions plus patches (" << NumTotalFunctions() << ").  Use System.NumTotalFunctions().";
+				ss << "trying to evaluate system in-place, but number length of vector into which to write the values (" << function_values.size() << ") doesn't match number of system user-defined functions plus patches ( " << NumNaturalFunctions() << "+" << NumPatches() << ") = " << NumTotalFunctions() << ").  Use System.NumTotalFunctions() to make the container for in-place evaluation";
 				throw std::runtime_error(ss.str());
 			}
 
