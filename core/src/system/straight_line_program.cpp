@@ -31,6 +31,27 @@
 // SLP Stuff
 namespace bertini{
 
+	std::string OpcodeToString(Operation op)
+	{
+		switch (op){
+		case Add: return "Add";
+		case Subtract: return "Subtract";
+		case Multiply: return "Multiply";
+		case Divide: return "Divide";
+		case Power: return "Power";
+		case Exp: return "Exp";
+		case Log: return "Log";
+		case Negate: return "Negate";
+		case Sin: return "Sin";
+		case Cos: return "Cos";
+		case Tan: return "Tan";
+		case Asin: return "Asin";
+		case Acos: return "Acos";
+		case Atan: return "Atan";
+		case Assign: return "Assign";
+		}
+	}
+
 
 	// the constructor
 	StraightLineProgram::StraightLineProgram(System const& sys){
@@ -91,15 +112,49 @@ namespace bertini{
 	std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s){
 		out << "\n\n#fns: " << s.NumFunctions() << " #vars: " << s.NumVariables() << std::endl;
 
-		out << "instructions: " << std::endl;
-		for (auto i: s.instructions_)
-			out << i << " ";
-		out << std::endl;
+		out << std::endl << "numbers of things:" << std::endl;
+		out << "Functions: " << s.number_of_.Functions << std::endl;
+		out << "Variables: " << s.number_of_.Variables << std::endl;
+		out << "Jacobian: " << s.number_of_.Jacobian << std::endl;
+		out << "TimeDeriv: " << s.number_of_.TimeDeriv << std::endl;
 
-		out << "numbers: " << std::endl;
+
+		out << std::endl << " output locations:" << std::endl;
+		out << "Functions " << s.output_locations_.Functions << std::endl;
+		out << "Jacobian " << s.output_locations_.Jacobian << std::endl;
+		out << "TimeDeriv " << s.output_locations_.TimeDeriv << std::endl;
+
+
+		out << std::endl << " input locations:" << std::endl;
+		out << "Variables " << s.input_locations_.Variables << std::endl;
+		out << "Time " << s.input_locations_.Time << std::endl;
+
+		out << std::endl << "have path variable: " << s.HavePathVariable() << std::endl;
+
+		out << std::endl << "true values of numbers: (number, location to downsample to)" << std::endl;
 		for (auto const& x : s.true_values_of_numbers_)
 		    out << *(x.first)  << ':' << x.second << std::endl;
 		out << std::endl << std::endl;
+
+
+		out << std::endl << "instructions: " << std::endl;
+		for (size_t ii(0); ii<s.instructions_.size(); /*it's in the loop at access time*/){
+			auto op = static_cast<Operation>(s.instructions_[ii++]);
+			out << OpcodeToString(op) << "(";
+			if (IsUnary(op))
+				out << s.instructions_[ii++] << ") --> " << s.instructions_[ii++] << std::endl;
+
+			else
+				out << s.instructions_[ii++] << "," << s.instructions_[ii++] << ") --> " << s.instructions_[ii++] << std::endl;
+		}
+
+		auto& memory_dbl =  std::get<std::vector<dbl>>(s.memory_);
+		out << std::endl << "memory:" << std::endl;
+		for (auto v: memory_dbl)
+			out << v << ",";
+		out << std::endl;
+
+
 
 		return out;
 	}
@@ -457,21 +512,15 @@ namespace bertini{
 		
 
 			// 1. ADD VARIABLES
-		auto variable_groups = sys.VariableGroups();
-		auto variable_group_sizes = sys.VariableGroupSizes();
-		slp_under_construction_.input_locations_.Variables = next_available_mem_;
-		unsigned variable_counter{0};
-		for (int ii=0; ii<variable_group_sizes.size(); ++ii){
-			auto vg = variable_groups[ii];
-			auto s = variable_group_sizes[ii];
 
-			for (int jj=0; jj<s; ++jj){
-				locations_encountered_symbols_[ vg[jj] ] = next_available_mem_++;
-				variable_counter += 1;
-			}
+		slp_under_construction_.input_locations_.Variables = next_available_mem_;
+
+		auto variable_ordering = sys.VariableOrdering();
+		for (auto v: variable_ordering){
+			locations_encountered_symbols_[ v ] = next_available_mem_++;
 		}
-		slp_under_construction_.number_of_.Variables = variable_counter;
-		slp_under_construction_.input_locations_.Variables = variable_counter;
+		slp_under_construction_.number_of_.Variables = variable_ordering.size();
+		// slp_under_construction_.input_locations_.Variables = variable_counter;
 
 			// deal with path variable
 		if (sys.HavePathVariable())

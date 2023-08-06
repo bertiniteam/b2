@@ -314,21 +314,23 @@ namespace bertini
 
 	void System::Differentiate() const
 	{
+		switch (deriv_method_){
+			case DerivMethod::JacobianNode:
+			{
+				DifferentiateUsingJacobianNode();
+				break;
+			}
+			case DerivMethod::Derivatives:
+			{
+				DifferentiateUsingDerivatives();
+				break;
+			}
+		}
+
+
 		switch (eval_method_)
 		{
 			case EvalMethod::FunctionTree:{
-				switch (deriv_method_){
-					case DerivMethod::JacobianNode:
-					{
-						DifferentiateUsingJacobianNode();
-						break;
-					}
-					case DerivMethod::Derivatives:
-					{
-						DifferentiateUsingDerivatives();
-						break;
-					}
-				}
 				break;
 			}
 			case EvalMethod::SLP:

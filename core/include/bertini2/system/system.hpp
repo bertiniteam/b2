@@ -268,26 +268,36 @@ namespace bertini {
 
 		\return The function values of the system
 		*/ 
-		template<typename Derived>
-		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values) const
+		template<typename T>
+		void EvalInPlace(Vec<T> & function_values) const
 		{
-			typedef typename Derived::Scalar T;
-
-			if(function_values.size() < NumFunctions())
+			
+			if (function_values.size() < NumFunctions()) // todo: i question this.  should it be != ?  sca 20230804
 			{
 				std::stringstream ss;
 				ss << "trying to evaluate system in place, but number of input functions (" << function_values.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
 				throw std::runtime_error(ss.str());
 			}
 
-			unsigned counter(0);
-			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-				(*iter)->EvalInPlace<T>(function_values(counter));
+			switch (eval_method_){
+				case EvalMethod::FunctionTree:
+				{
+					unsigned counter(0);
+					for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+						(*iter)->EvalInPlace<T>(function_values(counter));
+					}
+				}
+
+				case EvalMethod::SLP:
+					{
+						slp_.GetFuncValsInPlace<T>(function_values);
+					}
 			}
+
 
 			if (IsPatched())
 				patch_.EvalInPlace(function_values,
-									std::get<Vec<T> >(current_variable_values_));
+									std::get<Vec<T> >(current_variable_values_)); // does a patch not have a caching mechanism?
 									// .segment(NumFunctions(),NumTotalVariableGroups())
 			
 		}
@@ -325,10 +335,10 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
-		template<typename Derived, typename OtherDerived>
-		void EvalInPlace(Eigen::MatrixBase<Derived>& function_values, const Eigen::MatrixBase<OtherDerived>& variable_values) const
+		template<typename T, typename Derived>
+		void EvalInPlace(Vec<T>& function_values, const Eigen::MatrixBase<Derived>& variable_values) const
 		{
-			static_assert(std::is_same<typename Derived::Scalar,typename OtherDerived::Scalar>::value,"scalar types must match");
+			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
 
 			if (variable_values.size()!=NumVariables())
 			{
@@ -391,11 +401,10 @@ namespace bertini {
 
 		 \todo The Eval() function for systems has the unfortunate side effect of resetting constant functions.  Modify the System class so that only certain parts of the tree get reset.
 		 */
-		template<typename Derived, typename OtherDerived, typename T>
-		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values, const Eigen::MatrixBase<OtherDerived>& variable_values, const T & path_variable_value) const
+		template<typename Derived, typename T>
+		void EvalInPlace(Vec<T> & function_values, const Eigen::MatrixBase<Derived>& variable_values, const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
@@ -405,7 +414,7 @@ namespace bertini {
 			SetVariables(variable_values.eval());//TODO: remove this eval
 			SetPathVariable(path_variable_value);
 
-			ResetFunctions();
+			ResetFunctions(); // todo, elimiante this.  i feel like setting the variables or path variable should be enough to set the flag/ take the action
 
 			EvalInPlace(function_values);
 		}
@@ -452,11 +461,15 @@ namespace bertini {
 		 \brief Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
 
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+
+		This is analogous to J = sys.JacobianInPlace();
+
+		The input matrix must have the correct size already
 		*/
-		template<typename Derived>
-		void JacobianInPlace(Eigen::MatrixBase<Derived> & J) const
+		template <typename T>
+		void JacobianInPlace(Mat<T> & J) const
 		{
-			typedef typename Derived::Scalar T;
+		
 
 			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
 			{
@@ -492,7 +505,7 @@ namespace bertini {
 
 				case EvalMethod::SLP:
 				{
-					J = this->slp_.GetJacobian<T>(); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
+					this->slp_.GetJacobianInPlace<T>(J); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
 					break;					
 				}
 			}
@@ -535,10 +548,9 @@ namespace bertini {
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
-		template<typename Derived, typename T>
-		void JacobianInPlace(Eigen::MatrixBase<Derived> & J, const Vec<T> &  variable_values) const
+		template<typename T>
+		void JacobianInPlace(Mat<T> & J, const Vec<T> &  variable_values) const
 		{
-			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must match");
 
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
@@ -546,8 +558,8 @@ namespace bertini {
 			if (HavePathVariable())
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 			
-			SetVariables(variable_values);
-			ResetJacobian();
+			SetAndReset(variable_values);
+			
 			JacobianInPlace(J);
 		}
 
@@ -592,11 +604,10 @@ namespace bertini {
 
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 */
-		template<typename Derived, typename OtherDerived, typename T>
-		void JacobianInPlace(Eigen::MatrixBase<Derived> & J, const Eigen::MatrixBase<OtherDerived> & variable_values, const T & path_variable_value) const
+		template<typename Derived, typename T>
+		void JacobianInPlace(Mat<T> & J, const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
@@ -965,13 +976,24 @@ namespace bertini {
 					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
 			#endif
 
-			auto counter = 0;
+			switch (eval_method_){
+				case EvalMethod::FunctionTree:{
+					auto counter = 0;
 
-			for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
-				(*iter)->set_current_value(new_values(counter));
-			}
+					for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
+						(*iter)->set_current_value(new_values(counter));
+					}
 
-			std::get<Vec<T> >(current_variable_values_) = new_values;
+					std::get<Vec<T> >(current_variable_values_) = new_values;
+					break;
+				}
+				case EvalMethod::SLP:{
+					slp_.SetVariableValues(new_values);
+					break;
+				}
+			} // switch
+
+			
 		}
 
 
@@ -990,7 +1012,15 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
 
-			path_variable_->set_current_value(new_value);
+			switch (eval_method_){
+				case EvalMethod::FunctionTree:{
+					path_variable_->set_current_value(new_value);
+					break;
+				}
+				case EvalMethod::SLP:{
+					slp_.SetPathVariable(new_value);
+				}
+			}
 		}
 
 
