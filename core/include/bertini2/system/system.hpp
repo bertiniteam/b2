@@ -988,7 +988,7 @@ namespace bertini {
 					break;
 				}
 				case EvalMethod::SLP:{
-					std::get<Vec<T> >(current_variable_values_) = new_values;
+					std::get<Vec<T> >(current_variable_values_) = new_values; // if this isn't here, then patch evaluation breaks.
 					slp_.SetVariableValues(new_values);
 					break;
 				}
