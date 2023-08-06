@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(has_correct_size)
 
 	auto slp = SLP(sys);
 
-	BOOST_CHECK_EQUAL(slp.NumFunctions(), sys.NumFunctions());
+	BOOST_CHECK_EQUAL(slp.NumFunctions(), sys.NumNaturalFunctions());
 	BOOST_CHECK_EQUAL(slp.NumVariables(), sys.NumVariables());
 }
 
@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_CASE(has_correct_size_for_three_variable)
 
 	auto slp = SLP(sys);
 
-	BOOST_CHECK_EQUAL(slp.NumFunctions(), sys.NumFunctions());
+	BOOST_CHECK_EQUAL(slp.NumFunctions(), sys.NumNaturalFunctions());
 	BOOST_CHECK_EQUAL(slp.NumVariables(), sys.NumVariables());
 }
 

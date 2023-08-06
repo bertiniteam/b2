@@ -154,7 +154,7 @@ namespace bertini
 	/////////////////
 
 
-	size_t System::NumFunctions() const
+	size_t System::NumNaturalFunctions() const
 	{
 		return functions_.size();
 	}
@@ -223,7 +223,7 @@ namespace bertini
 
 	size_t System::NumTotalFunctions() const
 	{
-		return NumFunctions() + NumPatches();
+		return NumNaturalFunctions() + NumPatches();
 	}
 
 
@@ -348,7 +348,7 @@ namespace bertini
 
 	void System::DifferentiateUsingJacobianNode() const
 	{
-		auto num_functions = NumFunctions();
+		auto num_functions = NumNaturalFunctions();
 		jacobian_.resize(num_functions);
 		for (int ii = 0; ii < num_functions; ++ii)
 			jacobian_[ii] = MakeJacobian(functions_[ii]->Differentiate());
@@ -360,7 +360,7 @@ namespace bertini
 	{
 		const auto& vars = this->Variables();
 		const auto num_vars = NumVariables();
-		const auto num_functions = NumFunctions();
+		const auto num_functions = NumNaturalFunctions();
 
 		space_derivatives_.resize(num_functions*num_vars);
 		// again, computing these in column major, so staying with one variable at a time.
@@ -1176,7 +1176,7 @@ namespace bertini
 		out << "\n";
 
 
-		out << s.NumFunctions() << " functions:\n";
+		out << s.NumNaturalFunctions() << " functions:\n";
 		for (const auto& iter : s.functions_) 
 			out << (iter)->name() << " = " << *iter << "\n";
 		out << "\n";
@@ -1218,14 +1218,14 @@ namespace bertini
 
 						case DerivMethod::Derivatives:{
 							for (int jj = 0; jj < s.NumVariables(); ++jj)
-								for (int ii = 0; ii < s.NumFunctions(); ++ii)
+								for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
 								{
-									const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
+									const auto& d = s.space_derivatives_[ii+jj*s.NumNaturalFunctions()];
 									out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
 								}
 
 							if (s.HavePathVariable())
-								for (int ii = 0; ii < s.NumFunctions(); ++ii)
+								for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
 								{
 									const auto& d = s.time_derivatives_[ii];
 									out << "jac_time_der(" << ii << ") = " << d << "\n";
@@ -1277,7 +1277,7 @@ namespace bertini
 
 	System& System::operator+=(System const& rhs)
 	{
-		if (this->NumFunctions()!=rhs.NumFunctions())
+		if (this->NumTotalFunctions()!=rhs.NumTotalFunctions())
 			throw std::runtime_error("cannot add two Systems with differing numbers of functions");
 
 		if (this->NumVariables()!=rhs.NumVariables())
@@ -1354,7 +1354,7 @@ namespace bertini
 			sys1.CopyPatches(sys1);
 		// the other cases are automatically covered.  sys1 already patched, or neither patched.
 
-		for (unsigned ii(0); ii<sys2.NumFunctions(); ++ii)
+		for (unsigned ii(0); ii<sys2.NumNaturalFunctions(); ++ii)
 			sys1.AddFunction(sys2.Function(ii));
 
 		return sys1;

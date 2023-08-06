@@ -38,7 +38,7 @@ namespace bertini {
 			SanityChecks(s);
 			CopyDegrees(s);
 			CopyVariableStructure(s);
-			SeedRandomValues(s.NumFunctions());
+			SeedRandomValues(s.NumNaturalFunctions());
 			GenerateFunctions();
 
 			if (s.IsHomogeneous())

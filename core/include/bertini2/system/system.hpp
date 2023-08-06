@@ -272,10 +272,10 @@ namespace bertini {
 		void EvalInPlace(Vec<T> & function_values) const
 		{
 			
-			if (function_values.size() < NumFunctions()) // todo: i question this.  should it be != ?  sca 20230804
+			if (function_values.size() != NumTotalFunctions()) 
 			{
 				std::stringstream ss;
-				ss << "trying to evaluate system in place, but number of input functions (" << function_values.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
+				ss << "trying to evaluate system in-place, but number length of vector into which to write the values (" << function_values.size() << ") doesn't match number of system user-defined functions plus patches (" << NumTotalFunctions() << ").  Use System.NumTotalFunctions().";
 				throw std::runtime_error(ss.str());
 			}
 
@@ -298,7 +298,7 @@ namespace bertini {
 			if (IsPatched())
 				patch_.EvalInPlace(function_values,
 									std::get<Vec<T> >(current_variable_values_)); // does a patch not have a caching mechanism?
-									// .segment(NumFunctions(),NumTotalVariableGroups())
+									// .segment(NumNaturalFunctions(),NumTotalVariableGroups())
 			
 		}
 		
@@ -487,7 +487,7 @@ namespace bertini {
 				{
 					switch (deriv_method_){
 						case DerivMethod::JacobianNode:{
-							for (int ii = 0; ii < NumFunctions(); ++ii)
+							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
 								for (int jj = 0; jj < NumVariables(); ++jj)
 									jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
 							break;
@@ -495,8 +495,8 @@ namespace bertini {
 						case DerivMethod::Derivatives:
 						{
 							for (int jj = 0; jj < NumVariables(); ++jj)
-								for (int ii = 0; ii < NumFunctions(); ++ii)
-									space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
+								for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
+									space_derivatives_[ii+jj*NumNaturalFunctions()]->EvalInPlace<T>(J(ii,jj));
 							break;
 						}
 					}
@@ -758,10 +758,10 @@ namespace bertini {
 		void TimeDerivativeInPlace(Vec<T> & ds_dt) const
 		{
 
-			if(ds_dt.size() < NumFunctions())
+			if(ds_dt.size() < NumNaturalFunctions())
 			{
 				std::stringstream ss;
-				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
+				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumNaturalFunctions() << ").";
 				throw std::runtime_error(ss.str());
 			}
 
@@ -778,13 +778,13 @@ namespace bertini {
 					switch (deriv_method_){
 						case DerivMethod::JacobianNode:
 						{
-							for (int ii = 0; ii < NumFunctions(); ++ii)
+							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
 								jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
 							break;
 						}
 						case DerivMethod::Derivatives:
 						{
-							for (int ii = 0; ii < NumFunctions(); ++ii)
+							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
 								time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
 							break;
 						}
@@ -802,7 +802,7 @@ namespace bertini {
 			// the patch doesn't move with time.  derivatives 0.
 			if (IsPatched())
 				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
-					ds_dt(ii+NumFunctions()) = T(0);
+					ds_dt(ii+NumNaturalFunctions()) = T(0);
 			
 		}
 
@@ -864,7 +864,7 @@ namespace bertini {
 		/**
 		 Get the number of functions in this system, excluding patches.
 		 */
-		size_t NumFunctions() const;
+		size_t NumNaturalFunctions() const;
 
 		/**
 		Get the number of patches in this system.
@@ -1310,7 +1310,7 @@ namespace bertini {
 		/**
 		 \brief Get the functions.  
 		*/
-		auto GetFunctions() const
+		auto GetNaturalFunctions() const
 		{
 			return functions_;
 		}

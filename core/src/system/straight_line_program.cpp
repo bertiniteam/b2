@@ -532,11 +532,11 @@ namespace bertini{
 
 
 		
-			// make space for functions and derivatives
+			// make space for natural functions and derivatives.  we omit the patches.
 			// 3. ADD FUNCTIONS
-		slp_under_construction_.number_of_.Functions = sys.NumFunctions();
+		slp_under_construction_.number_of_.Functions = sys.NumNaturalFunctions();
 		slp_under_construction_.output_locations_.Functions = next_available_mem_;
-		for (auto f: sys.GetFunctions())
+		for (auto f: sys.GetNaturalFunctions())
 			locations_encountered_symbols_[f] = next_available_mem_++;
 
 
@@ -569,7 +569,7 @@ namespace bertini{
 
 
 		
-		for (auto f: sys.GetFunctions())
+		for (auto f: sys.GetNaturalFunctions())
 		{
 			f->Accept(*this);
 

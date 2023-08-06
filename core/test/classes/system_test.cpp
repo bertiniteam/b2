@@ -941,7 +941,7 @@ BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 
 	auto sys3 = Concatenate(sys1, sys2);
 
-	BOOST_CHECK_EQUAL(sys3.NumFunctions(),6);
+	BOOST_CHECK_EQUAL(sys3.NumNaturalFunctions(),6);
 }
 
 /**

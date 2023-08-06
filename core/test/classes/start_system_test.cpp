@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 
 	BOOST_CHECK_EQUAL(final_mixed_sum.NumVariables(),4);
 	BOOST_CHECK_EQUAL(final_mixed_sum.NumNaturalVariables(),3);
-	BOOST_CHECK_EQUAL(final_mixed_sum.NumFunctions(),3);
+	BOOST_CHECK_EQUAL(final_mixed_sum.NumNaturalFunctions(),3);
 	BOOST_CHECK_EQUAL(final_mixed_sum.NumTotalFunctions(),4);
 
 	BOOST_CHECK(final_mixed_sum.IsHomogeneous());
