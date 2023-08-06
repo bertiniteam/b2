@@ -976,6 +976,10 @@ namespace bertini {
 					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
 			#endif
 
+			if (!is_differentiated_)
+				Differentiate();
+
+
 			switch (eval_method_){
 				case EvalMethod::FunctionTree:{
 					auto counter = 0;
@@ -1013,12 +1017,16 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
 
+			if (!is_differentiated_)
+				Differentiate();
+			
 			switch (eval_method_){
 				case EvalMethod::FunctionTree:{
 					path_variable_->set_current_value(new_value);
 					break;
 				}
 				case EvalMethod::SLP:{
+					path_variable_->set_current_value(new_value);
 					slp_.SetPathVariable(new_value);
 				}
 			}
