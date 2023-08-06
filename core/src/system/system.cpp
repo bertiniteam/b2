@@ -1090,32 +1090,22 @@ namespace bertini
 			n->Reset();
 
 
-		switch (eval_method_)
-		{
-			case EvalMethod::FunctionTree:{
-				switch (deriv_method_){
-					case DerivMethod::JacobianNode:{
-						for (auto& iter : this->jacobian_)
-							Simplify(iter);
-						break;
-					}
-					case DerivMethod::Derivatives:{
-						for (auto& iter : this->space_derivatives_)
-							Simplify(iter);
-						for (auto& iter : this->time_derivatives_)
-							Simplify(iter);
-						break;
-					}
-				break;
-				}
-			}
-			case EvalMethod::SLP:
-			{
-				// i don't know how to simplify a SLP.  it should be simplified before compiling, yo.  that's not currently done.
-				break;					
-			}
 
+		switch (deriv_method_){
+			case DerivMethod::JacobianNode:{
+				for (auto& iter : this->jacobian_)
+					Simplify(iter);
+				break;
+			}
+			case DerivMethod::Derivatives:{
+				for (auto& iter : this->space_derivatives_)
+					Simplify(iter);
+				for (auto& iter : this->time_derivatives_)
+					Simplify(iter);
+				break;
+			}
 		}
+
 		
 		for (unsigned ii=0; ii<num_vars; ++ii)
 			vars[ii]->set_current_value<dbl>(old_vals[ii]);
@@ -1215,44 +1205,44 @@ namespace bertini
 		if (s.is_differentiated_)
 		{
 			out << "system is differentiated; jacobian:\n";
-			switch (s.eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
 
-					switch (s.deriv_method_){
-						case DerivMethod::JacobianNode:{
-							for (const auto& iter : s.jacobian_)
-								out << (iter)->name() << " = " << *iter << "\n";
-							break;
-						}
+				switch (s.deriv_method_){
+					case DerivMethod::JacobianNode:{
+						out << "using the JacobianNode method of differentiation:" << std::endl;
 
-						case DerivMethod::Derivatives:{
-							for (int jj = 0; jj < s.NumVariables(); ++jj)
-								for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
-								{
-									const auto& d = s.space_derivatives_[ii+jj*s.NumNaturalFunctions()];
-									out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
-								}
-
-							if (s.HavePathVariable())
-								for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
-								{
-									const auto& d = s.time_derivatives_[ii];
-									out << "jac_time_der(" << ii << ") = " << d << "\n";
-								}
-							break;
-						}
+						for (const auto& iter : s.jacobian_)
+							out << (iter)->name() << " = " << *iter << "\n";
+						break;
 					}
-					break;
-				} // end FunctionTree branch
+
+					case DerivMethod::Derivatives:{
+						out << "using the Derivatives method of differentiation:" << std::endl;
+
+						for (int jj = 0; jj < s.NumVariables(); ++jj)
+							for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
+							{
+								const auto& d = s.space_derivatives_[ii+jj*s.NumNaturalFunctions()];
+								out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+							}
+
+						if (s.HavePathVariable())
+							for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
+							{
+								const auto& d = s.time_derivatives_[ii];
+								out << "jac_time_der(" << ii << ") = " << d << "\n";
+							}
+						break;
+					}
+				} // switch on deriv method
 
 
-				case EvalMethod::SLP:
+
+				if (s.eval_method_ == EvalMethod::SLP)
 				{
-					out << s.slp_;
-					break;					
+					out << "since using SLP for evaluation, here's the SLP:" << std::endl;
+					out << s.slp_;				
 				}
-			}
+
 			out << "\n";
 		}
 		else{
@@ -1266,6 +1256,10 @@ namespace bertini
 		else{
 			out << "system not patched\n";
 		}
+
+		out << "\ncurrent variable values:\n";
+		out << std::get< Vec<dbl> > (s.current_variable_values_) << "\n";
+		out << std::get< Vec<mpfr_complex> > (s.current_variable_values_) << "\n";
 
 		return out;
 	}

@@ -541,8 +541,8 @@ BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 	dbl time(0.5,0.2);
 	auto dS_dt = S.TimeDerivative(v,time);
 
-	BOOST_CHECK( abs(dS_dt(0) - dbl(-1) ) < threshold_clearance_d);
-	BOOST_CHECK( abs(dS_dt(1) - dbl(-1) ) < threshold_clearance_d);
+	BOOST_CHECK_CLOSE( dS_dt(0).real(), dbl(-1).real(), threshold_clearance_d);
+	BOOST_CHECK_CLOSE( dS_dt(1).imag(), dbl(-1).imag(), threshold_clearance_d);
 
 
 }

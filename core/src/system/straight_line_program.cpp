@@ -149,9 +149,39 @@ namespace bertini{
 				out << s.instructions_[ii++] << "," << s.instructions_[ii++] << ") --> " << s.instructions_[ii++] << std::endl;
 		}
 
-		auto& memory_dbl =  std::get<std::vector<dbl>>(s.memory_);
-		out << std::endl << "memory:" << std::endl;
+
+
+
+		auto& memory_dbl =  std::get<std::vector<dbl_complex>>(s.memory_);
+		auto& memory_mpfr =  std::get<std::vector<mpfr_complex>>(s.memory_);
+
+		out << "\nvariable values in dbl memory:\n";
+		for (unsigned ii=0; ii<s.number_of_.Variables; ++ii){
+			out << memory_dbl[s.input_locations_.Variables + ii] << " ";
+		} 
+
+
+		out << "\nvariable values in mpfr memory:\n";
+		for (unsigned ii=0; ii<s.number_of_.Variables; ++ii){
+			out << memory_mpfr[s.input_locations_.Variables + ii] << " ";
+		} 
+
+		out << "\ntime value in dbl memory:\n";
+			out << memory_dbl[s.input_locations_.Time] << " ";
+
+
+		out << "\ntime value in mpfr memory:\n";
+			out << memory_mpfr[s.input_locations_.Time] << " ";
+
+
+		out << std::endl << "full memory (double precision):" << std::endl;
 		for (auto v: memory_dbl)
+			out << v << ",";
+		out << std::endl;
+
+		
+		out << std::endl << "full memory (mpfr precision):" << std::endl;
+		for (auto v: memory_mpfr)
 			out << v << ",";
 		out << std::endl;
 
@@ -566,6 +596,7 @@ namespace bertini{
 		if (sys.HavePathVariable())
 		{
 				// do this action only if the system has a path variable defined
+			slp_under_construction_.input_locations_.Time = next_available_mem_;
 			locations_encountered_symbols_[ sys.GetPathVariable() ] = next_available_mem_++;
 			slp_under_construction_.has_path_variable_ = true;
 		}

@@ -541,20 +541,20 @@ BOOST_AUTO_TEST_CASE(diff_sin_x){
 	std::vector<dbl> exact_dbl = {cos(xnum_dbl), 0.0, 0.0};
 	std::vector<mpfr> exact_mpfr = {cos(xnum_mpfr),mpfr("0.0"),mpfr("0.0")};
 
-	BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).real() - exact_dbl[0].real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[0]).imag() - exact_dbl[0].imag()) < threshold_clearance_d);
-	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).real() - exact_mpfr[0].real() ) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[0]).imag() - exact_mpfr[0].imag() ) < threshold_clearance_mp);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<dbl>(vars[0]).real(), exact_dbl[0].real(),  threshold_clearance_d);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<dbl>(vars[0]).imag(), exact_dbl[0].imag(),  threshold_clearance_d);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<mpfr>(vars[0]).real(), exact_mpfr[0].real(),  threshold_clearance_mp);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<mpfr>(vars[0]).imag(), exact_mpfr[0].imag(),  threshold_clearance_mp);
 
-	BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).real() - exact_dbl[1].real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[1]).imag() - exact_dbl[1].imag()) < threshold_clearance_d);
-	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).real() - exact_mpfr[1].real() ) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[1]).imag() - exact_mpfr[1].imag() ) < threshold_clearance_mp);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<dbl>(vars[1]).real(), exact_dbl[1].real(),  threshold_clearance_d);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<dbl>(vars[1]).imag(), exact_dbl[1].imag(),  threshold_clearance_d);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<mpfr>(vars[1]).real(), exact_mpfr[1].real(),  threshold_clearance_mp);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<mpfr>(vars[1]).imag(), exact_mpfr[1].imag(),  threshold_clearance_mp);
 
-	BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).real() - exact_dbl[2].real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[2]).imag() - exact_dbl[2].imag()) < threshold_clearance_d);
-	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).real() - exact_mpfr[2].real() ) < threshold_clearance_mp);
-	BOOST_CHECK(fabs(JFunc->EvalJ<mpfr>(vars[2]).imag() - exact_mpfr[2].imag() ) < threshold_clearance_mp);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<dbl>(vars[2]).real(), exact_dbl[2].real(),  threshold_clearance_d);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<dbl>(vars[2]).imag(), exact_dbl[2].imag(),  threshold_clearance_d);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<mpfr>(vars[2]).real(), exact_mpfr[2].real(),  threshold_clearance_mp);
+	BOOST_CHECK_CLOSE( JFunc->EvalJ<mpfr>(vars[2]).imag(), exact_mpfr[2].imag(),  threshold_clearance_mp);
 }
 
 
@@ -1198,15 +1198,15 @@ BOOST_AUTO_TEST_CASE(integer_power_system)
 
 	auto J = sys.Jacobian(curr_x,curr_t);
 
-	BOOST_CHECK(abs(real(J(0,0)) - mpfr_float("-2.129232")) < threshold_clearance_mp);
-	BOOST_CHECK(abs(imag(J(0,0)) - mpfr_float("0.354138")) < threshold_clearance_mp);
+	BOOST_CHECK_CLOSE( real(J(0,0)), mpfr_float("-2.129232"), threshold_clearance_mp);
+	BOOST_CHECK_CLOSE( imag(J(0,0)), mpfr_float("0.354138"), threshold_clearance_mp);
 
 	curr_x << mpfr("0.900000000000000","0.435889894354067355223698198386");
 	curr_t = mpfr("0.1");
 
 	J = sys.Jacobian(curr_x,curr_t);
 
-	BOOST_CHECK(abs(real(J(0,0))- mpfr_float(0)) < threshold_clearance_mp);
+	BOOST_CHECK_SMALL(real(J(0,0)), threshold_clearance_mp); // target value is 0, so relative is not useful
 	BOOST_CHECK_CLOSE(imag(J(0,0)), mpfr_float("0.871779788708134710447396396772"), 100*threshold_clearance_mp);
 }
 
