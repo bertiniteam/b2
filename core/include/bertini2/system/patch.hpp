@@ -299,7 +299,12 @@ namespace bertini {
 			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
 
 			#ifndef BERTINI_DISABLE_ASSERTS
-			assert(function_values.size()>=NumVariableGroups() && "function values must be of length at least as long as the number of variable groups");
+			if (! (function_values.size()>=NumVariableGroups()) )
+			{
+				std::stringstream ss;
+				ss << "container for function values must be of length at least as long as the number of variable groups.  the input vector into which to write is of length " << function_values.size();
+				throw std::runtime_error(ss.str());
+			}
 //			assert((bertini::Precision(x(0))==DoublePrecision() || bertini::Precision(x(0)) == Precision())
 //			 		&& "precision of input vector must match current working precision of patch during evaluation"
 //			 	  );
