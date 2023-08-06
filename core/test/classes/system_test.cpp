@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 	Vec<dbl> v(1);
 	v << 1.0;
 	dbl time(0.5,0.2);
-	auto J = S.Jacobian(v,time);
+	bertini::Mat<dbl> J = S.Jacobian(v,time);
 
 	BOOST_CHECK_THROW(S.Jacobian(v), std::runtime_error);
 }
