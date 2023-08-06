@@ -49,19 +49,28 @@ namespace bertini{
 		template<class VisitedT, typename RetT>
 		struct DefaultConstruct
 		{
-			static RetT OnUnknownVisitor(VisitedT&a, VisitorBase&)
+			static RetT OnUnknownVisitor(VisitedT&a, VisitorBase&) // VisitorBase is inherited from using CRTP -- it's not a template parameter to this function, so its typeid name is useless.
 			{
-				std::stringstream err_msg;
-				err_msg << "unknown visitor: " << a << " " << std::endl;
-				throw std::runtime_error(err_msg.str());
+				std::cout << "unknown visitor: " << a << " of type " << typeid(VisitedT).name() << ".  Make sure you've added it in all three places!  two in the class definition (type inheritance listing as visiting, and virtual function declaration), and one in cpp source (function definition)." << std::endl;
+				return VisitedT();
 			}
 		};
 
+		template<class VisitedT, typename RetT>
+		struct RaiseExceptionWithTypeNamesInMessage
+		{
+			static RetT OnUnknownVisitor(VisitedT&a, VisitorBase&)
+			{
+				std::stringstream err_msg;
+				err_msg << "unknown visitor: " << a << " of type " << typeid(VisitedT).name() << ".  Make sure you've added it in all three places!  two in the class definition (type inheritance listing as visiting, and virtual function declaration), and one in cpp source (function definition)." << std::endl;
+				throw std::runtime_error(err_msg.str());
+			}
+		};
 		/**
 		The default policy for what to do when a visitable is visited by an unknown visitor.
 		*/
 		template<class VisitedT, typename RetT>
-		using DefaultCatchAll = DefaultConstruct<VisitedT, RetT>;
+		using DefaultCatchAll = RaiseExceptionWithTypeNamesInMessage<VisitedT, RetT>;
 	} // namespace policy
 
 	
