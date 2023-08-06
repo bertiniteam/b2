@@ -961,7 +961,7 @@ BOOST_AUTO_TEST_CASE(parsed_system_evaluates_correctly)
 	values(0) = dbl(2.0);
 	values(1) = dbl(3.0);
 	
-	Vec<dbl> v(2);
+	Vec<dbl> v(sys.NumNaturalFunctions());
 	sys.EvalInPlace(v, values);
 	
 	BOOST_CHECK_EQUAL(v(0), 36.0);
