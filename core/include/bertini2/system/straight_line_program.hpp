@@ -45,6 +45,8 @@
 #include "bertini2/function_tree/forward_declares.hpp"
 #include "bertini2/detail/visitor.hpp"
 
+#include <boost/serialization/utility.hpp>
+
 // code copied from Bertini1's file include/bertini.h
 
 
@@ -208,6 +210,16 @@ namespace bertini {
 			size_t Functions{0};
 			size_t Jacobian{0};
 			size_t TimeDeriv{0};
+
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & Functions;
+				ar & Jacobian;
+				ar & TimeDeriv;
+			}
+
 		};
 
 		/**
@@ -218,6 +230,14 @@ namespace bertini {
 		struct InputLocations{
 			size_t Variables{0};
 			size_t Time{0};
+
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & Variables;
+				ar & Time;
+			}
 		};
 
 		/**
@@ -230,6 +250,16 @@ namespace bertini {
 			size_t Variables{0};
 			size_t Jacobian{0};
 			size_t TimeDeriv{0};
+
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & Functions;
+				ar & Variables;
+				ar & Jacobian;
+				ar & TimeDeriv;
+			}
 		};
 
 		/**
@@ -645,6 +675,30 @@ namespace bertini {
 		std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; //< the size_t is where in memory to downsample to.
 
 		mutable bool is_evaluated_ = false;
+
+
+
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+
+			ar & precision_;
+			ar & has_path_variable_;
+
+			ar & number_of_;
+			ar & output_locations_;
+			ar & input_locations_;
+
+			ar & std::get<std::vector<dbl_complex>>(memory_);
+			ar & std::get<std::vector<mpfr_complex>>(memory_);
+
+			ar & instructions_;
+			ar & true_values_of_numbers_;
+
+			ar & is_evaluated_;
+		}
+
 	};
 
 

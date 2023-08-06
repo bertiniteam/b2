@@ -1019,7 +1019,7 @@ namespace bertini {
 
 			if (!is_differentiated_)
 				Differentiate();
-			
+
 			switch (eval_method_){
 				case EvalMethod::FunctionTree:{
 					path_variable_->set_current_value(new_value);
@@ -1786,6 +1786,11 @@ namespace bertini {
 
 		bool auto_simplify_ = DefaultAutoSimplify();
 
+
+
+
+
+
 		friend class boost::serialization::access;
 
 		template <typename Archive>
@@ -1794,15 +1799,11 @@ namespace bertini {
 			ar & ungrouped_variables_;
 			ar & variable_groups_;
 			ar & hom_variable_groups_;
-			ar & homogenizing_variables_;
 
-			ar & time_order_of_variable_groups_;
+			ar & homogenizing_variables_;
 
 			ar & have_path_variable_;
 			ar & path_variable_;			
-
-			ar & variable_ordering_;
-			ar & have_ordering_;
 
 			ar & implicit_parameters_;
 			ar & explicit_parameters_;
@@ -1811,18 +1812,40 @@ namespace bertini {
 			ar & subfunctions_;
 			ar & functions_;
 
-			ar & is_differentiated_;
-			ar & jacobian_;
 
+			ar & patch_;
+			ar & is_patched_;
+
+			ar & jacobian_;
 			ar & space_derivatives_;
 			ar & time_derivatives_;
-			
+			ar & is_differentiated_;
+
+			ar & slp_; // does this need to be re-constructed after de-serialization?
+
+
+
+
+
+			ar & time_order_of_variable_groups_;
+
+			ar & std::get<Vec<dbl>>(current_variable_values_);
+			ar & std::get<Vec<mpfr_complex>>(current_variable_values_);
+
+			ar & variable_ordering_;
+			ar & have_ordering_;
+
+
 			ar & precision_;
-			ar & is_patched_;
-			ar & patch_;
 
 			ar & assume_uniform_precision_;
+
 			ar & eval_method_;
+			ar & deriv_method_;
+
+			ar & auto_simplify_;
+
+
 		}
 
 	};
