@@ -405,6 +405,8 @@ namespace bertini {
 					ii = ii+4;
 				}
 			} // for loop around operations
+
+			is_evaluated_ = true;
 		}
 
 		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
