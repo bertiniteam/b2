@@ -575,7 +575,7 @@ namespace bertini {
 		template<typename ComplexT>
 		void SetPathVariable(ComplexT const& time) const{
 			if (!this->HavePathVariable())
-				throw std::runtime_error("calling Eval with path variable, but system doesn't have one.");
+				throw std::runtime_error("calling Eval with path variable, but this StraightLineProgram doesn't have one.");
 			// then actually copy the path variable into where it goes in memory
 
 			auto& memory =  std::get<std::vector<ComplexT>>(memory_); // unpack for local reference
