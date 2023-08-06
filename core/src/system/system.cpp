@@ -328,6 +328,10 @@ namespace bertini
 		}
 
 
+		if (auto_simplify_)
+			this->SimplifyDerivatives();
+
+
 		switch (eval_method_)
 		{
 			case EvalMethod::FunctionTree:{
@@ -341,8 +345,7 @@ namespace bertini
 			}
 		}
 		
-		if (auto_simplify_)
-			this->SimplifyDerivatives();
+
 
 	}
 
