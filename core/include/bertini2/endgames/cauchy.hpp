@@ -386,7 +386,12 @@ public:
 		{
 			const Vec<CT>& current_sample = circle_samples.back();
 			const CT& current_time = circle_times.back();
-			assert(Precision(current_time)==Precision(current_sample) && "current time and sample for circle track must be of same precision");
+
+			if (Precision(current_time)!=Precision(current_sample)){
+				std::stringstream err_msg;
+				err_msg << "current time and sample for circle track must be of same precision.  respective precisions: " << Precision(current_time) << " " << Precision(current_sample) << std::endl;
+				throw std::runtime_error(err_msg.str());
+			}
 
 			//set up the time value for the next sample. 
 			using std::polar;
