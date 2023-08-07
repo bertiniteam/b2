@@ -63,13 +63,12 @@ namespace bertini{
 	}
 
 	void StraightLineProgram::precision(unsigned new_precision) const{
-		if (new_precision==DoublePrecision()){
-			// nothing
+
+		if (new_precision==this->precision_){
+			return;
 		}
 		else{
 			auto& mem = std::get<std::vector<mpfr_complex>>(memory_);
-
-
 
 			for (auto& p: true_values_of_numbers_)
 			{
@@ -197,11 +196,19 @@ namespace bertini{
 	template<typename NumT>
 	void StraightLineProgram::Eval() const{
 
+		auto& memory =  std::get<std::vector<NumT>>(memory_);
+
+
+#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+		if (! std::is_same<NumT,dbl_complex>::value && Precision(memory[0])!=this->precision_){
+			throw std::runtime_error("memory and SLP are out-of-sync WRT precision");
+		}
+#endif
+
+
 		if (is_evaluated_)
 			return;
-		
 
-		auto& memory =  std::get<std::vector<NumT>>(memory_);
 		for (int ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
 			//in the unary case the loop will increment by 3
 			//binary: by 4

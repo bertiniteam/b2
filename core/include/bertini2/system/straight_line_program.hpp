@@ -504,6 +504,16 @@ namespace bertini {
 		template<typename Derived>
 		void SetVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
 			using NumT = typename Derived::Scalar;
+
+#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+			if (!std::is_same<NumT,dbl_complex>::value && Precision(variable_values)!=this->precision_){
+				std::stringstream err_msg;
+				err_msg << "variable_values and SLP must be of same precision.  respective precisions: " << Precision(variable_values) << " " << this->precision_ << std::endl;
+				throw std::runtime_error(err_msg.str());
+			}
+#endif
+
+			using NumT = typename Derived::Scalar;
 			auto& memory =  std::get<std::vector<NumT>>(memory_); // unpack for local reference
 
 			for (int ii = 0; ii < number_of_.Variables; ++ii) {
@@ -523,6 +533,15 @@ namespace bertini {
 		 */
 		template<typename ComplexT>
 		void SetPathVariable(ComplexT const& time) const{
+
+#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+			if (Precision(time)!= DoublePrecision() && Precision(time)!=this->precision_){
+				std::stringstream err_msg;
+				err_msg << "time value and SLP must be of same precision.  respective precisions: " << Precision(time) << " " << this->precision_ << std::endl;
+				throw std::runtime_error(err_msg.str());
+			}
+#endif
+
 			if (!this->HavePathVariable())
 				throw std::runtime_error("calling Eval with path variable, but this StraightLineProgram doesn't have one.");
 			// then actually copy the path variable into where it goes in memory
