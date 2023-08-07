@@ -157,9 +157,10 @@ namespace bertini {
 		Acos=     1 << 13,
 		Atan=     1 << 14,
 		Assign=   1 << 15,
+		IntPower= 1 << 16,
 	};
 
-	const int BinaryOperations = Add|Subtract | Multiply|Divide | Power;
+	const int BinaryOperations = Add|Subtract | Multiply|Divide | Power | IntPower;
 	const int TrigOperations   = Sin|Cos|Tan | Asin|Acos|Atan;
 	const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations | Sqrt;
 
@@ -316,98 +317,9 @@ namespace bertini {
 		todo: implement a compile-time version of this using Boost.Hana
 		 */
 		template<typename NumT>
-		void Eval() const{
-
-			if (is_evaluated_)
-				return;
-			
-
-			auto& memory =  std::get<std::vector<NumT>>(memory_);
-			for (int ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
-				//in the unary case the loop will increment by 3
-				//binary: by 4
-
-				switch (instructions_[ii]) {
-
-					case Add:
-						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] + memory[instructions_[ii+2]];
-						break;
-
-					case Subtract:
-						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] - memory[instructions_[ii+2]];
-						break;
-
-					case Multiply:
-						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] * memory[instructions_[ii+2]];
-						break;
-
-					case Divide:
-						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
-						break;
-
-					case Power:
-						memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
-						break;
-
-					case Assign:
-						memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
-						break;
-
-					case Negate:
-						memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
-						break;
-
-					case Sqrt:
-						memory[this->instructions_[ii+2]] = sqrt(memory[instructions_[ii+1]]);
-						break;
-
-					case Log:
-						memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
-						break;
-
-					case Exp:
-						memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
-						break;
-
-					case Sin:
-						memory[this->instructions_[ii+2]] = sin(memory[instructions_[ii+1]]);
-						break;
-
-					case Cos:
-						memory[this->instructions_[ii+2]] = cos(memory[instructions_[ii+1]]);
-						break;
-
-					case Tan:
-						memory[this->instructions_[ii+2]] = tan(memory[instructions_[ii+1]]);
-						break;
-
-					case Asin:
-						memory[this->instructions_[ii+2]] = asin(memory[instructions_[ii+1]]);
-						break;
-
-					case Acos:
-						memory[this->instructions_[ii+2]] = acos(memory[instructions_[ii+1]]);
-						break;
-
-					case Atan:
-						memory[this->instructions_[ii+2]] = atan(memory[instructions_[ii+1]]);
-						break;
-
-				} // switch for operation
+		void Eval() const;  // this definition is in cpp, along with the lines that instantiate the needed versions.
 
 
-				if (IsUnary(static_cast<Operation>(instructions_[ii]))) {
-					ii = ii+3;
-
-				}
-				//in the binary case the loop will increment by 4
-				else {
-					ii = ii+4;
-				}
-			} // for loop around operations
-
-			is_evaluated_ = true;
-		}
 
 		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
 		template <typename T>
@@ -664,7 +576,7 @@ namespace bertini {
 		void CopyNumbersIntoMemory() const;
 
 
-		unsigned precision_ = 0; //< The current working number of digits
+		mutable unsigned precision_ = 16; //< The current working number of digits
 		bool has_path_variable_ = false; //< Does this SLP have a path variable?
 
 		NumberOf number_of_;  //< Quantities of things

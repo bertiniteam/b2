@@ -50,6 +50,7 @@ namespace bertini{
 		case Acos: return "Acos";
 		case Atan: return "Atan";
 		case Assign: return "Assign";
+		case IntPower: return "IntPower";
 		}
 	}
 
@@ -80,6 +81,8 @@ namespace bertini{
 
 			for (auto& n : mem)
 				Precision(n, new_precision);
+
+			this->precision_ = new_precision;
 		}
 
 
@@ -189,6 +192,111 @@ namespace bertini{
 
 		return out;
 	}
+
+
+	template<typename NumT>
+	void StraightLineProgram::Eval() const{
+
+		if (is_evaluated_)
+			return;
+		
+
+		auto& memory =  std::get<std::vector<NumT>>(memory_);
+		for (int ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
+			//in the unary case the loop will increment by 3
+			//binary: by 4
+
+			switch (instructions_[ii]) {
+
+				case Add:
+					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] + memory[instructions_[ii+2]];
+					break;
+
+				case Subtract:
+					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] - memory[instructions_[ii+2]];
+					break;
+
+				case Multiply:
+					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] * memory[instructions_[ii+2]];
+					break;
+
+				case Divide:
+					memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
+					break;
+
+				case Power:
+					memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
+					break;
+
+				case IntPower:
+					{
+					int p(memory[instructions_[ii+2]].real());
+					memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], p);
+					break;
+					}
+
+				case Assign:
+					memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
+					break;
+
+				case Negate:
+					memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
+					break;
+
+				case Sqrt:
+					memory[this->instructions_[ii+2]] = sqrt(memory[instructions_[ii+1]]);
+					break;
+
+				case Log:
+					memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
+					break;
+
+				case Exp:
+					memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
+					break;
+
+				case Sin:
+					memory[this->instructions_[ii+2]] = sin(memory[instructions_[ii+1]]);
+					break;
+
+				case Cos:
+					memory[this->instructions_[ii+2]] = cos(memory[instructions_[ii+1]]);
+					break;
+
+				case Tan:
+					memory[this->instructions_[ii+2]] = tan(memory[instructions_[ii+1]]);
+					break;
+
+				case Asin:
+					memory[this->instructions_[ii+2]] = asin(memory[instructions_[ii+1]]);
+					break;
+
+				case Acos:
+					memory[this->instructions_[ii+2]] = acos(memory[instructions_[ii+1]]);
+					break;
+
+				case Atan:
+					memory[this->instructions_[ii+2]] = atan(memory[instructions_[ii+1]]);
+					break;
+
+			} // switch for operation
+
+
+			if (IsUnary(static_cast<Operation>(instructions_[ii]))) {
+				ii = ii+3;
+
+			}
+			//in the binary case the loop will increment by 4
+			else {
+				ii = ii+4;
+			}
+		} // for loop around operations
+
+		is_evaluated_ = true;
+	}
+
+	template void StraightLineProgram::Eval<dbl_complex>() const;
+	template void StraightLineProgram::Eval<mpfr_complex>() const;
 
 
 	template<typename NumT>
@@ -418,7 +526,7 @@ namespace bertini{
 
 
 		this->locations_encountered_symbols_[n.shared_from_this()] =  next_available_mem_;
-		slp_under_construction_.AddInstruction(Power,location_operand,location_exponent, next_available_mem_++);
+		slp_under_construction_.AddInstruction(IntPower,location_operand,location_exponent, next_available_mem_++);
 		//no node, just integer.
 	}
 
