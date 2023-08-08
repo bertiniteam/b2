@@ -557,6 +557,7 @@ namespace bertini {
 
 
 
+		using IntT = int;  // this needs to co-vary on the stored type inside the node.  node should stop using mpz, it's slow.
 
 		private:
 
@@ -603,6 +604,7 @@ namespace bertini {
 		InputLocations input_locations_; //< Where to find inputs, like variables and time
 
 		mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_; //< The memory of the object.  Numbers and variables, plus temp results and output locations.  It's all one block.  That's why it's called a SLP!
+		std::vector<IntT> integers_;
 
 		std::vector<size_t> instructions_; //< The instructions.  The opcodes are  stored as size_t's, as well as the locations of operands and results.
 		std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; //< the size_t is where in memory to downsample to.
@@ -731,8 +733,8 @@ namespace bertini {
 			template<typename NodeT>
 			void DealWithNumber(NodeT const& n){
 						auto nd=n.shared_from_this(); // make a shared pointer to the node, so that it survives, and we get polymorphism
-						this->slp_under_construction_.AddNumber(nd, next_available_mem_); // register the number with the SLP
-						this->locations_encountered_symbols_[nd] = next_available_mem_++; // add to found symbols in the compiler, increment counter.
+						this->slp_under_construction_.AddNumber(nd, next_available_complex_); // register the number with the SLP
+						this->locations_encountered_nodes_[nd] = next_available_complex_++; // add to found symbols in the compiler, increment counter.
 			}
 
 			/**
@@ -740,8 +742,14 @@ namespace bertini {
 			 */
 			void Clear();
 
-			size_t next_available_mem_ = 0; //< Where should the next thing in memory go?
-			std::map<Nd, size_t> locations_encountered_symbols_; //< A registry of pointers-to-nodes and location in memory on where to find *their results*
+			size_t next_available_complex_ = 0; //< Where should the next complex number go in memory?
+			size_t next_available_int_ = 0; //< Where should the next integer go?
+
+			using IntT = int;  // this needs to co-vary on the stored type inside the node.  node should stop using mpz, it's slow.
+
+			std::map<Nd, size_t> locations_encountered_nodes_; //< A registry of pointers-to-nodes and location in memory on where to find *their results*
+			std::map<IntT, size_t> locations_integers_;
+
 			SLP slp_under_construction_; //< the under-construction SLP.  will be returned at end of `compile`
 	};
 

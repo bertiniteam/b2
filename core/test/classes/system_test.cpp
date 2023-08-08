@@ -461,13 +461,22 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 
 	auto J = sys.Jacobian(v);
 
-	BOOST_CHECK_SMALL(abs(J(0,0)- 2.*a*pow(b,3)*pow(c,4)), 1e-15);
-	BOOST_CHECK_SMALL(abs(J(0,1)- 3.*pow(a,2)*pow(b,2)*pow(c,4)), 1e-15);
-	BOOST_CHECK_SMALL(abs(J(0,2)- 4.*pow(a,2)*pow(b,3)*pow(c,3)), 1e-15);
 
-	BOOST_CHECK_SMALL(abs(J(1,0)- 3.*pow(a,2)*pow(b,4)*pow(c,5)), 1e-15);
-	BOOST_CHECK_SMALL(abs(J(1,1)- 4.*pow(a,3)*pow(b,3)*pow(c,5)), 1e-15);
-	BOOST_CHECK_SMALL(abs(J(1,2)- 5.*pow(a,3)*pow(b,4)*pow(c,4)), 1e-15);
+	BOOST_CHECK_SMALL(J(0,0).real() - (2.*a*pow(b,3)*pow(c,4)).real(),        1e-15);
+	BOOST_CHECK_SMALL(J(0,1).real() - (3.*pow(a,2)*pow(b,2)*pow(c,4)).real(), 1e-15);
+	BOOST_CHECK_SMALL(J(0,2).real() - (4.*pow(a,2)*pow(b,3)*pow(c,3)).real(), 1e-15);
+
+	BOOST_CHECK_SMALL(J(1,0).real() - (3.*pow(a,2)*pow(b,4)*pow(c,5)).real(), 1e-15);
+	BOOST_CHECK_SMALL(J(1,1).real() - (4.*pow(a,3)*pow(b,3)*pow(c,5)).real(), 1e-15);
+	BOOST_CHECK_SMALL(J(1,2).real() - (5.*pow(a,3)*pow(b,4)*pow(c,4)).real(), 1e-15);
+
+	BOOST_CHECK_SMALL(J(0,0).imag() - (2.*a*pow(b,3)*pow(c,4)).imag(),        1e-15);
+	BOOST_CHECK_SMALL(J(0,1).imag() - (3.*pow(a,2)*pow(b,2)*pow(c,4)).imag(), 1e-15);
+	BOOST_CHECK_SMALL(J(0,2).imag() - (4.*pow(a,2)*pow(b,3)*pow(c,3)).imag(), 1e-15);
+
+	BOOST_CHECK_SMALL(J(1,0).imag() - (3.*pow(a,2)*pow(b,4)*pow(c,5)).imag(), 1e-15);
+	BOOST_CHECK_SMALL(J(1,1).imag() - (4.*pow(a,3)*pow(b,3)*pow(c,5)).imag(), 1e-15);
+	BOOST_CHECK_SMALL(J(1,2).imag() - (5.*pow(a,3)*pow(b,4)*pow(c,4)).imag(), 1e-15);
 
 
 }
