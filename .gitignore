@@ -80,3 +80,4 @@ python/autom4te.cache
 python/temp.py
 core/serialization_basic
 core/test/classes/serialization_basic
+python/conftest.cpp
