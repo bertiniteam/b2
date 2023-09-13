@@ -1920,7 +1920,7 @@ BOOST_AUTO_TEST_CASE(make_linear_product)
 	vargp.push_back(z);
 	
 	// Make with automatically genearted coefficients
-	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp,4);
+	std::shared_ptr<LinearProduct> linprod = MakeLinearProduct(vargp,4);
 	
 	// Make with user defined coefficients
 	Mat<mpfr> coeff_mpfr(3,4);
@@ -1932,7 +1932,7 @@ BOOST_AUTO_TEST_CASE(make_linear_product)
 		}
 	}
 	
-	std::shared_ptr<LinearProduct> linprod2 = std::make_shared<LinearProduct>(vargp, coeff_mpfr);
+	std::shared_ptr<LinearProduct> linprod2 = MakeLinearProduct(vargp, coeff_mpfr);
 	
 }
 
@@ -2041,7 +2041,7 @@ BOOST_AUTO_TEST_CASE(linear_product_degree)
 	
 	
 	// Make with automatically genearted coefficients
-	std::shared_ptr<LinearProduct> linprod = std::make_shared<LinearProduct>(vargp,4);
+	std::shared_ptr<LinearProduct> linprod = MakeLinearProduct(vargp,4);
 	
 	BOOST_CHECK_EQUAL(linprod->Degree(x), 4);
 	BOOST_CHECK_EQUAL(linprod->Degree(y), 4);

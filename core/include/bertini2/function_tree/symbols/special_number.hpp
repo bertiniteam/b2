@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with special_number.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2021 by Bertini2 Development Team
+// Copyright(C) 2015 - 2023 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -63,7 +63,7 @@ namespace node{
 
 		The number \f$\pi\f$.  Gets its own class because it is such an important number.
 		*/
-		class Pi : public virtual Number, public virtual NamedSymbol, public std::enable_shared_from_this<Pi>
+		class Pi : public virtual Number, public virtual NamedSymbol, public virtual EnableSharedFromThisVirtual<Pi>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -89,6 +89,7 @@ namespace node{
 
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned version) {
+				ar & boost::serialization::base_object<Number>(*this);
 				ar & boost::serialization::base_object<NamedSymbol>(*this);
 			}
 		};
@@ -100,7 +101,7 @@ namespace node{
 
 		The number \f$e\f$.  Gets its own class because it is such an important number.
 		*/
-		class E : public virtual Number, public virtual NamedSymbol, public std::enable_shared_from_this<E>
+		class E : public virtual Number, public virtual NamedSymbol, public virtual EnableSharedFromThisVirtual<E>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -128,6 +129,7 @@ namespace node{
 
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned version) {
+				ar & boost::serialization::base_object<Number>(*this);
 				ar & boost::serialization::base_object<NamedSymbol>(*this);
 			}
 

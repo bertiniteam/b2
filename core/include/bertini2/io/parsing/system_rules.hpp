@@ -347,7 +347,7 @@ namespace bertini {
 				 */
 				void MakeAndAddFunction(Fn & F, std::string str)
 				{
-					F = std::make_shared<Function>(str);
+					F = MakeFunction(str);
 					encountered_symbols_.add(str, F);
 					encountered_functions_.add(str,F);
 				}

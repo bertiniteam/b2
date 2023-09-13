@@ -63,20 +63,20 @@ namespace  bertini {
 			std::vector<size_t> indices;  //Those factors that are not differentiated in one particular term of the differentiated result.
             
 			// First term of product rule
-			std::shared_ptr<MultOperator> temp_mult = std::make_shared<MultOperator>(std::make_shared<DiffLinear>(GetLinears(0)));
+			std::shared_ptr<MultOperator> temp_mult = MakeMultOperator(MakeDiffLinear(GetLinears(0)));
 			for(int ii = 1; ii < num_factors_; ++ii)
 			{
 				indices.push_back(ii);  // Indices 1 to num_factors-1
 			}
             if(indices.size() > 0)
                 temp_mult *= GetLinears(indices);
-			ret_sum = std::make_shared<SumOperator>(temp_mult, true);
+			ret_sum = MakeSumOperator(temp_mult, true);
 			
 			
 			// Rest of the factors
 			for(int ii = 1; ii < num_factors_; ++ii)
 			{
-				temp_mult = std::make_shared<MultOperator>(std::make_shared<DiffLinear>(GetLinears(ii)));
+				temp_mult = MakeMultOperator(MakeDiffLinear(GetLinears(ii)));
 				indices.clear();
 				for(int jj = 0; jj < num_factors_ ; ++jj)
 				{
@@ -330,7 +330,7 @@ namespace  bertini {
 				}
 				
 				LinearProduct temp(variables_, hom_variable_, temp_real, temp_imag, is_hom_vars_);
-				return std::make_shared<LinearProduct>(temp);
+				return MakeLinearProduct(temp);
 			}
 			else
 			{
@@ -342,7 +342,7 @@ namespace  bertini {
 				}
 				
 				LinearProduct temp(variables_, hom_variable_, temp_mpfr, is_hom_vars_);
-				return std::make_shared<LinearProduct>(temp);
+				return MakeLinearProduct(temp);
 
 			}
 			
@@ -366,7 +366,7 @@ namespace  bertini {
 				}
 				
 				LinearProduct temp(variables_, hom_variable_, temp_real, temp_imag, is_hom_vars_);
-				return std::make_shared<LinearProduct>(temp);
+				return MakeLinearProduct(temp);
 			}
 			else
 			{
@@ -381,7 +381,7 @@ namespace  bertini {
 				}
 				
 				LinearProduct temp(variables_, hom_variable_, temp_mpfr, is_hom_vars_);
-				return std::make_shared<LinearProduct>(temp);
+				return MakeLinearProduct(temp);
 			}
 			
 		}

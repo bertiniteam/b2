@@ -29,6 +29,7 @@
 namespace bertini{
 	namespace system {
 
+using namespace bertini::node;
 // has multiplicity 3 root at origin, and 3 infinite roots
 System Precon::GriewankOsborn()
 {

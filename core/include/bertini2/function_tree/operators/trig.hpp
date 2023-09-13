@@ -91,7 +91,7 @@ namespace node{
 	This class represents the sine function.  FreshEval method
 	is defined for sine and takes the sine of the child node.
 	*/
-	class SinOperator : public virtual TrigOperator, public std::enable_shared_from_this<SinOperator>
+	class SinOperator : public virtual TrigOperator, public virtual EnableSharedFromThisVirtual<SinOperator>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -99,9 +99,17 @@ namespace node{
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<SinOperator> Make(Ts&& ...ts){ 
+			return std::shared_ptr<SinOperator>( new SinOperator(ts...) );
+		}
+
+	private:
 		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
 		
+	public:
 		
 		
 		
@@ -146,7 +154,7 @@ namespace node{
 	This class represents the inverse sine function.  FreshEval method
 	is defined for arcsine and takes the sine of the child node.
 	*/
-	class ArcSinOperator : public  virtual TrigOperator, public std::enable_shared_from_this<ArcSinOperator>
+	class ArcSinOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcSinOperator>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -154,9 +162,17 @@ namespace node{
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 		
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<ArcSinOperator> Make(Ts&& ...ts){ 
+			return std::shared_ptr<ArcSinOperator>( new ArcSinOperator(ts...) );
+		}
+
+	private:
 		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
-		
+
+	public:
 		
 		void print(std::ostream & target) const override;
 		
@@ -205,7 +221,7 @@ namespace node{
 	This class represents the cosine function.  FreshEval method
 	is defined for cosine and takes the cosine of the child node.
 	*/
-	class CosOperator : public  virtual TrigOperator, public std::enable_shared_from_this<CosOperator>
+	class CosOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<CosOperator>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -213,10 +229,17 @@ namespace node{
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<CosOperator> Make(Ts&& ...ts){ 
+			return std::shared_ptr<CosOperator>( new CosOperator(ts...) );
+		}
 
+	private:
 		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
 		
+	public:
 		
 		
 		
@@ -264,7 +287,7 @@ namespace node{
 	This class represents the inverse cosine function.  FreshEval method
 	is defined for arccosine and takes the arccosine of the child node.
 	*/
-	class ArcCosOperator : public  virtual TrigOperator, public std::enable_shared_from_this<ArcCosOperator>
+	class ArcCosOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcCosOperator>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -272,9 +295,16 @@ namespace node{
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 		
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<ArcCosOperator> Make(Ts&& ...ts){ 
+			return std::shared_ptr<ArcCosOperator>( new ArcCosOperator(ts...) );
+		}
+
+	private:
 		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
-		
+	public:
 		
 		
 		
@@ -329,7 +359,7 @@ namespace node{
 	This class represents the tangent function.  FreshEval method
 	is defined for tangent and takes the tangent of the child node.
 	*/
-	class TanOperator : public  virtual TrigOperator, public std::enable_shared_from_this<TanOperator>
+	class TanOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<TanOperator>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -337,9 +367,16 @@ namespace node{
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 		
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<TanOperator> Make(Ts&& ...ts){ 
+			return std::shared_ptr<TanOperator>( new TanOperator(ts...) );
+		}
+
+	private:
 		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
-		
+	public:
 		
 		
 		
@@ -385,7 +422,7 @@ namespace node{
 	This class represents the inverse tangent function.  FreshEval method
 	is defined for arctangent and takes the arc tangent of the child node.
 	*/
-	class ArcTanOperator : public  virtual TrigOperator, public std::enable_shared_from_this<ArcTanOperator>
+	class ArcTanOperator : public  virtual TrigOperator, public virtual EnableSharedFromThisVirtual<ArcTanOperator>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -393,9 +430,16 @@ namespace node{
 		unsigned EliminateZeros() override;
 		unsigned EliminateOnes() override;
 		
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<ArcTanOperator> Make(Ts&& ...ts){ 
+			return std::shared_ptr<ArcTanOperator>( new ArcTanOperator(ts...) );
+		}
+
+	private:
 		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
 		{};
-		
+	public:
 		
 		
 		
@@ -437,40 +481,40 @@ namespace node{
 
 	inline std::shared_ptr<Node> sin(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<SinOperator>(N);
+		return Factory::Make<SinOperator>(N);
 	}
 	
 	inline std::shared_ptr<Node> asin(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<ArcSinOperator>(N);
+		return Factory::Make<ArcSinOperator>(N);
 	}
 	
 
 
 	inline std::shared_ptr<Node> cos(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<CosOperator>(N);
+		return Factory::Make<CosOperator>(N);
 	}
 
 
 
 	inline std::shared_ptr<Node> acos(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<ArcCosOperator>(N);
+		return Factory::Make<ArcCosOperator>(N);
 	}
 
 
 
 	inline std::shared_ptr<Node> tan(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<TanOperator>(N);
+		return Factory::Make<TanOperator>(N);
 	}
 
 
 	
 	inline std::shared_ptr<Node> atan(const std::shared_ptr<Node> & N)
 	{
-		return std::make_shared<ArcTanOperator>(N);
+		return Factory::Make<ArcTanOperator>(N);
 	}
 	
 	

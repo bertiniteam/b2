@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with number.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2021 by Bertini2 Development Team
+// Copyright(C) 2015 - 2023 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -169,11 +169,32 @@ namespace node{
 
 	Signed real Integer storage in an expression tree. Consider using a Rational type.
 	*/
-	class Integer : public virtual Number, public std::enable_shared_from_this<Integer>
+	class Integer : public virtual Number, public virtual EnableSharedFromThisVirtual<Integer>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
+
+
+		Integer(Integer const&) = default;
+
+		~Integer() = default;
+		
+
+
+
+		void print(std::ostream & target) const override;
+
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<Integer> Make(Ts&& ...ts){ 
+			return std::shared_ptr<Integer>( new Integer(ts...) );
+		}
+
+	private:
+		// https://stackoverflow.com/questions/33933550/exception-bad-weak-ptr-while-shared-from-this
+		// struct MakeConstructorPublic;
+		
 		explicit
 		Integer(int val) : true_value_(val)
 		{}
@@ -187,17 +208,6 @@ namespace node{
 		{}
 
 
-		Integer(Integer const&) = default;
-
-		~Integer() = default;
-		
-
-
-
-		void print(std::ostream & target) const override;
-
-
-	private:
 
 		// Return value of constant
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
@@ -223,6 +233,11 @@ namespace node{
 		}
 	};
 
+	// struct Integer::MakeConstructorPublic : public Integer {
+	// 	template <typename... Args> 
+	// 	MakeConstructorPublic(Args&& ...args) : Integer(std::forward<Args>(args)...)
+	// 	{} 
+	// };
 
 
 
@@ -231,10 +246,31 @@ namespace node{
 
 	 Number type for storing floating point numbers within an expression tree.  The number passed in at construct time is stored as the true value, and evaluation down or up samples from this 'true value'.  Consider using a Rational or Integer if possible.
 	*/
-	class Float : public virtual Number, public std::enable_shared_from_this<Float>
+	class Float : public virtual Number, public virtual EnableSharedFromThisVirtual<Float>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
+
+
+
+		~Float() = default;
+		
+
+
+
+
+		void print(std::ostream & target) const override;
+
+
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<Float> Make(Ts&& ...ts){ 
+			return std::shared_ptr<Float>( new Float(ts...) );
+		}
+
+
+
+	private:
 
 		explicit
 		Float(mpfr_complex const& val) : highest_precision_value_(val)
@@ -251,20 +287,6 @@ namespace node{
 		explicit
 		Float(std::string const& rval, std::string const& ival) : highest_precision_value_(rval,ival)
 		{}
-
-		~Float() = default;
-		
-
-
-
-
-		void print(std::ostream & target) const override;
-
-
-
-
-
-	private:
 
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 		
@@ -297,7 +319,7 @@ namespace node{
 
 	The Rational number type for Bertini2 expression trees.  The `true value' is stored using two mpq_rational numbers from the Boost.Multiprecision library, and the ratio is converted into a double or a mpfr_complex at evaluate time.
 	*/
-	class Rational : public virtual Number, public std::enable_shared_from_this<Rational>
+	class Rational : public virtual Number, public virtual EnableSharedFromThisVirtual<Rational>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
@@ -305,28 +327,7 @@ namespace node{
 		using mpq_rational = bertini::mpq_rational;
 
 		
-		explicit
-		Rational(int val) : true_value_real_(val), true_value_imag_(0)
-		{}
 
-		explicit
-		Rational(int val_real_numerator, int val_real_denomenator,
-				 int val_imag_numerator, int val_imag_denomenator) 
-					:
-					 true_value_real_(val_real_numerator,val_real_denomenator), true_value_imag_(val_imag_numerator,val_imag_denomenator)
-		{}
-
-		explicit
-		Rational(std::string val) : true_value_real_(val), true_value_imag_(0)
-		{}
-
-		explicit
-		Rational(std::string val_real, std::string val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
-		{}
-
-		explicit
-		Rational(mpq_rational const& val_real, mpq_rational const& val_imag = 0) : true_value_real_(val_real), true_value_imag_(val_imag)
-		{}
 
 		Rational(int, int) = delete;
 
@@ -361,9 +362,39 @@ namespace node{
 
 
 
+		
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<Rational> Make(Ts&& ...ts){ 
+			return std::shared_ptr<Rational>( new Rational(ts...) );
+		}
 
 
 	private:
+
+		explicit
+		Rational(int val) : true_value_real_(val), true_value_imag_(0)
+		{}
+
+		explicit
+		Rational(int val_real_numerator, int val_real_denomenator,
+				 int val_imag_numerator, int val_imag_denomenator) 
+					:
+					 true_value_real_(val_real_numerator,val_real_denomenator), true_value_imag_(val_imag_numerator,val_imag_denomenator)
+		{}
+
+		explicit
+		Rational(std::string val) : true_value_real_(val), true_value_imag_(0)
+		{}
+
+		explicit
+		Rational(std::string val_real, std::string val_imag) : true_value_real_(val_real), true_value_imag_(val_imag)
+		{}
+
+		explicit
+		Rational(mpq_rational const& val_real, mpq_rational const& val_imag = 0) : true_value_real_(val_real), true_value_imag_(val_imag)
+		{}
+
 
 		// Return value of constant
 		dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
@@ -387,6 +418,7 @@ namespace node{
 			ar & const_cast<mpq_rational &>(true_value_imag_);
 		}
 	};
+
 
 
 } // re: namespace node

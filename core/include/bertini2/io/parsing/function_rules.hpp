@@ -68,7 +68,7 @@ namespace {
 		template <typename... A>
 		typename result<A...>::type operator()(A&&... a) const
 		{
-			return std::make_shared<T>(std::forward<A>(a)...);
+			return bertini::Factory::Make<T>(std::forward<A>(a)...);
 		}
 	};
 	

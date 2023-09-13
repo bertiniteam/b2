@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(linprod_ishom)
 	VariableGroup hom{x,w,z};
 	
 	std::shared_ptr<Node> linprod_node = (2 + 3*x + 2*w) * (4 - 2*x - 6*w)*(4+8*y);
-	std::shared_ptr<Node> linprod = std::make_shared<LinearProduct>(v1,2)*std::make_shared<LinearProduct>(v2,1);
+	std::shared_ptr<Node> linprod = MakeLinearProduct(v1,2)*MakeLinearProduct(v2,1);
 	
 	BOOST_CHECK_EQUAL(linprod->IsHomogeneous(v1), linprod_node->IsHomogeneous(v1));
 	BOOST_CHECK_EQUAL(linprod->IsHomogeneous(v2), linprod_node->IsHomogeneous(v2));
@@ -527,15 +527,15 @@ BOOST_AUTO_TEST_CASE(linprod_ishom)
 	BOOST_CHECK_EQUAL(linprod->IsHomogeneous(y), linprod_node->IsHomogeneous(y));
 	BOOST_CHECK_EQUAL(linprod->IsHomogeneous(badgp), linprod_node->IsHomogeneous(badgp));
 	
-    linprod = std::make_shared<LinearProduct>(v1,2)*std::make_shared<LinearProduct>(v2,1);
+    linprod = MakeLinearProduct(v1,2)*MakeLinearProduct(v2,1);
     BOOST_CHECK_THROW(linprod->Homogenize(badgp,y), std::exception);
 	
 	linprod_node = (2 + 3*x + 2*w) * (4 - 2*x - 6*w)*(4+8*y);
-	linprod = std::make_shared<LinearProduct>(v1,2)*std::make_shared<LinearProduct>(v2,1);
+	linprod = MakeLinearProduct(v1,2)*MakeLinearProduct(v2,1);
 	
 	BOOST_CHECK_THROW(linprod->Homogenize(badgp,y), std::exception);
 	
-	linprod = std::make_shared<LinearProduct>(v1,2)*std::make_shared<LinearProduct>(v2,1);
+	linprod = MakeLinearProduct(v1,2)*MakeLinearProduct(v2,1);
 	
 	linprod_node->Homogenize(hom, z);
 	linprod->Homogenize(hom,z);

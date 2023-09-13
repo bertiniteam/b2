@@ -121,22 +121,28 @@ namespace bertini
 
 		precision_ = other.precision_;
 
-		// now to do the members which are not simply copied
-		constant_subfunctions_.resize(other.constant_subfunctions_.size());
-		for (unsigned ii = 0; ii < constant_subfunctions_.size(); ++ii)
-			constant_subfunctions_[ii] = MakeFunction(other.constant_subfunctions_[ii]->entry_node());
 
-		subfunctions_.resize(other.subfunctions_.size());
-		for (unsigned ii = 0; ii < subfunctions_.size(); ++ii)
-			subfunctions_[ii] = MakeFunction(other.subfunctions_[ii]->entry_node());
+		constant_subfunctions_ = other.constant_subfunctions_;
+		subfunctions_ = other .subfunctions_;
+		functions_ = other .functions_;
+		explicit_parameters_  = other .explicit_parameters_;
 
-		functions_.resize(other.functions_.size());
-		for (unsigned ii = 0; ii < functions_.size(); ++ii)
-			functions_[ii] = MakeFunction(other.functions_[ii]->entry_node());
+		// // now to do the members which are not simply copied
+		// constant_subfunctions_.resize(other.constant_subfunctions_.size());
+		// for (unsigned ii = 0; ii < constant_subfunctions_.size(); ++ii)
+		// 	constant_subfunctions_[ii] = MakeFunction(other.constant_subfunctions_[ii]->EntryNode());
 
-		explicit_parameters_.resize(other.explicit_parameters_.size());
-		for (unsigned ii = 0; ii < explicit_parameters_.size(); ++ii)
-			explicit_parameters_[ii] = MakeFunction(other.explicit_parameters_[ii]->entry_node());
+		// subfunctions_.resize(other.subfunctions_.size());
+		// for (unsigned ii = 0; ii < subfunctions_.size(); ++ii)
+		// 	subfunctions_[ii] = MakeFunction(other.subfunctions_[ii]->EntryNode());
+
+		// functions_.resize(other.functions_.size());
+		// for (unsigned ii = 0; ii < functions_.size(); ++ii)
+		// 	functions_[ii] = MakeFunction(other.functions_[ii]->EntryNode());
+
+		// explicit_parameters_.resize(other.explicit_parameters_.size());
+		// for (unsigned ii = 0; ii < explicit_parameters_.size(); ++ii)
+		// 	explicit_parameters_[ii] = MakeFunction(other.explicit_parameters_[ii]->EntryNode());
 	}
 
 	// the assignment operator
@@ -806,7 +812,12 @@ namespace bertini
 		}
 		
 		#ifndef BERTINI_DISABLE_ASSERTS
-		assert(constructed_ordering.size()==NumVariables() && "resulting constructed ordering has differing size from the number of variables in the problem.");
+		if (constructed_ordering.size()!=NumVariables()){
+			std::stringstream err_msg;
+			err_msg << "resulting constructed ordering has differing size (" << constructed_ordering.size() << ") from the number of variables in the problem (" << NumVariables() << ").";
+			throw std::runtime_error(err_msg.str());
+		}
+
 		#endif
 
 		return constructed_ordering;	
@@ -1307,7 +1318,7 @@ namespace bertini
 				throw std::runtime_error("System+=System cannot combine two patched systems whose patches differ.");
 
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
-			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->entry_node() + (*iter)->entry_node());
+			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode());
 
 		return *this;
 	}
@@ -1322,7 +1333,7 @@ namespace bertini
 	{
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
 		{
-			(*iter)->SetRoot( N * (*iter)->entry_node());
+			(*iter)->SetRoot( N * (*iter)->EntryNode());
 		}
 		return *this;
 	}
@@ -1432,6 +1443,7 @@ namespace bertini
 
 		return sys_clone;
 	}
+
 
 	void Simplify(System & sys)
 	{

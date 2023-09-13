@@ -86,7 +86,7 @@ namespace node {
 	*/
 	class NamedSymbol : public virtual Symbol
 	{
-		std::string name_;
+
 	public:
 		
 		/**
@@ -112,6 +112,9 @@ namespace node {
 		
 	protected:
 		NamedSymbol() = default;
+
+		std::string name_;
+
 	private:
 
 		friend class boost::serialization::access;

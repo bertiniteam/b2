@@ -58,16 +58,26 @@ namespace node{
 
 	This class represents differentials.  These are produced in the course of differentiation of a non-constant expression tree.
 	*/
-	class Differential : public virtual NamedSymbol, public std::enable_shared_from_this<Differential>
+	class Differential : public virtual NamedSymbol, public virtual EnableSharedFromThisVirtual<Differential>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 
+
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<Differential> Make(Ts&& ...ts){ 
+			return std::shared_ptr<Differential>( new Differential(ts...) );
+		}
+
+
+	private:
 		/**
 		 Input shared_ptr to a Variable.
 		 */
 		Differential(std::shared_ptr<const Variable> diff_variable, std::string var_name);
 
+	public:
 
 		void Reset() const override;
 

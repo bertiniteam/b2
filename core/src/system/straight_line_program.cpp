@@ -28,6 +28,8 @@
 
 
 
+BOOST_CLASS_EXPORT(bertini::StraightLineProgram);
+
 // SLP Stuff
 namespace bertini{
 
@@ -339,7 +341,7 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Variable const& n){
-		std::cout << "visiting variable " << n << " at location " << locations_encountered_symbols_[n.shared_from_this()] << std::endl;
+
 	}
 
 
@@ -355,14 +357,17 @@ namespace bertini{
 
 	// wtb: factor out this pattern
 	void SLPCompiler::Visit(node::Integer const& n){
+		auto as_ptr = n.shared_from_this();
 		this->DealWithNumber(n); // that sweet template magic.  see slp.hpp for the definition of this template function
 	}
 
 	void SLPCompiler::Visit(node::Float const& n){
+		auto as_ptr = n.shared_from_this();
 		this->DealWithNumber(n);
 	}
 
 	void SLPCompiler::Visit(node::Rational const& n){
+		auto as_ptr = n.shared_from_this();
 		this->DealWithNumber(n);
 	}
 
@@ -390,31 +395,37 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Function const & f){
-
 		// put the location of the accepted node into memory, and copy into an output location.
-		auto& n = f.entry_node();
-		size_t location_entry;
+		const std::shared_ptr<node::Node>& n = f.EntryNode();
+		const std::shared_ptr<const node::Function> f_as_ptr = std::dynamic_pointer_cast<node::Function const>(f.shared_from_this());
+
 
 		if (this->locations_encountered_nodes_.find(n) == this->locations_encountered_nodes_.end())
-			n->Accept(*this); // think of calling Compile(n)
+			n->Accept(*this); 
+		size_t location_entry = this->locations_encountered_nodes_[n];
 
-		location_entry = this->locations_encountered_nodes_[n];
 
 		size_t location_this_node;
-		if (this->locations_encountered_nodes_.find(f.shared_from_this()) == this->locations_encountered_nodes_.end()){
+		if (this->locations_encountered_nodes_.find(f_as_ptr) == this->locations_encountered_nodes_.end()){
 			location_this_node = next_available_complex_;
-			locations_encountered_nodes_[f.shared_from_this()] = next_available_complex_++;
+			locations_encountered_nodes_[f_as_ptr] = next_available_complex_++;
 		}
 		else
-			location_this_node = locations_encountered_nodes_[f.shared_from_this()];
+			location_this_node = locations_encountered_nodes_[f_as_ptr];
 
 
-		slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
+		if (locations_top_level_functions_and_derivatives_.find(f_as_ptr)!= locations_top_level_functions_and_derivatives_.end()){ // top-level
+			slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
+		}
+		else{ // not a top-level
+			slp_under_construction_.AddInstruction(Assign, location_entry, location_this_node);
+		}
 	}
 
 
 	// arithmetic
 	void SLPCompiler::Visit(node::SumOperator const & n){
+		const std::shared_ptr<const node::SumOperator> as_ptr = std::dynamic_pointer_cast<node::SumOperator const>(n.shared_from_this());
 
 		// this loop
 		// gets the locations of all the things we're going to add up.
@@ -422,7 +433,7 @@ namespace bertini{
 		for (auto& n : n.Operands()){
 
 			if (this->locations_encountered_nodes_.find(n)==this->locations_encountered_nodes_.end())
-				n->Accept(*this); // think of calling Compile(n)
+				n->Accept(*this); 
 
 			operand_locations.push_back(this->locations_encountered_nodes_[n]);
 		}
@@ -451,7 +462,7 @@ namespace bertini{
 			prev_result_loc = next_available_complex_++;
 		}
 
-		this->locations_encountered_nodes_[n.shared_from_this()] =  prev_result_loc;
+		this->locations_encountered_nodes_[as_ptr] =  prev_result_loc;
 
 			// improved option?: we could do this in a way to minimize numerical error.  the obvious loop is not good for accumulation of error.  instead, use Pairwise summation
 			// do pairs (0,1), (2,3), etc,
@@ -466,19 +477,20 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::MultOperator const & n){
-		
 
+		const std::shared_ptr<const node::MultOperator> as_ptr = std::dynamic_pointer_cast<node::MultOperator const>(n.shared_from_this());
 
 		// this loop
 		// gets the locations of all the things we're going to add up.
 		std::vector<size_t> operand_locations;
-		for (auto& n : n.Operands()){
+		for (auto& operand : n.Operands()){
 
-			if (this->locations_encountered_nodes_.find(n)==this->locations_encountered_nodes_.end())
-				n->Accept(*this); // think of calling Compile(n)
+			if (this->locations_encountered_nodes_.find(operand)==this->locations_encountered_nodes_.end())
+			{
+				operand->Accept(*this); 
+			}
 
-			
-			operand_locations.push_back(this->locations_encountered_nodes_[n]);
+			operand_locations.push_back(this->locations_encountered_nodes_[operand]);
 		}
 
 		  
@@ -493,7 +505,7 @@ namespace bertini{
 			// this case is reciprocation of the first operand
 
 			// this code sucks.  really, there should be a bank of integers that we pull from, instead of many copies of the same integer.
-			auto one = std::make_shared<node::Integer>(1);
+			auto one = MakeInteger(1);
 			this->DealWithNumber(*one);
 			auto location_one  = locations_encountered_nodes_[one];
 
@@ -513,7 +525,7 @@ namespace bertini{
 			prev_result_loc = next_available_complex_++;
 		}
 
-		this->locations_encountered_nodes_[n.shared_from_this()] =  prev_result_loc;
+		this->locations_encountered_nodes_[as_ptr] =  prev_result_loc;
 
 	}
 
@@ -522,13 +534,17 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::IntegerPowerOperator const& n){
-		
+		auto as_ptr = std::dynamic_pointer_cast<node::IntegerPowerOperator const>(n.shared_from_this());
+
 		IntT expo = n.exponent(); //integer
 
 		// ensure we have the location of the base of the power operation.  it's a node at this point.
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+		{
+			operand->Accept(*this); 
+		}
+
 		auto location_operand = locations_encountered_nodes_[operand];
 
 
@@ -539,31 +555,32 @@ namespace bertini{
 			slp_under_construction_.integers_.push_back(expo);
 		}
 
+
 		auto location_exponent  = locations_integers_[expo]; // this is a map lookup
 
 		
-		this->locations_encountered_nodes_[n.shared_from_this()] = next_available_complex_;
+		this->locations_encountered_nodes_[as_ptr] = next_available_complex_;
 		slp_under_construction_.AddInstruction(IntPower,location_operand,location_exponent, next_available_complex_++);
 	}
 
 
 	void SLPCompiler::Visit(node::PowerOperator const& n){
-		
+		auto as_ptr = std::dynamic_pointer_cast<node::PowerOperator const>(n.shared_from_this());
 		//get location of base and power then add instruction
 
 		const auto& base = n.GetBase();
 		const auto& exponent = n.GetExponent();
 
 		if (this->locations_encountered_nodes_.find(base) == this->locations_encountered_nodes_.end())
-			base->Accept(*this); // think of calling Compile(n)
+			base->Accept(*this); 
 
 		if (this->locations_encountered_nodes_.find(exponent) == this->locations_encountered_nodes_.end())
-			exponent->Accept(*this); // think of calling Compile(n)
+			exponent->Accept(*this); 
 
 		auto loc_base = locations_encountered_nodes_[base];
 		auto loc_exponent = locations_encountered_nodes_[exponent];
 
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[as_ptr] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Power, loc_base, loc_exponent, next_available_complex_++);
 
 
@@ -575,10 +592,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ExpOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Exp,location_operand, next_available_complex_++);
 	}
 
@@ -587,10 +604,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::LogOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Log,location_operand, next_available_complex_++);
 	}
 
@@ -599,10 +616,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::NegateOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Negate,location_operand, next_available_complex_++);
 	}
 
@@ -611,10 +628,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SqrtOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Sqrt,location_operand, next_available_complex_++);
 	}
 
@@ -625,10 +642,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::SinOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Sin,location_operand, next_available_complex_++);
 	}
 
@@ -637,10 +654,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcSinOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Asin,location_operand, next_available_complex_++);
 	}
 
@@ -649,10 +666,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::CosOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Cos,location_operand, next_available_complex_++);
 	}
 
@@ -661,10 +678,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcCosOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Acos,location_operand, next_available_complex_++);
 	}
 
@@ -673,10 +690,10 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::TanOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Tan,location_operand, next_available_complex_++);
 	}
 
@@ -685,20 +702,41 @@ namespace bertini{
 
 		auto operand = n.Operand();
 		if (this->locations_encountered_nodes_.find(operand) == this->locations_encountered_nodes_.end())
-			operand->Accept(*this); // think of calling Compile(n)
+			operand->Accept(*this); 
 
 		auto location_operand = locations_encountered_nodes_[operand];
-		this->locations_encountered_nodes_[n.shared_from_this()] =  next_available_complex_;
+		this->locations_encountered_nodes_[std::dynamic_pointer_cast<node::ArcTanOperator const>(n.shared_from_this())] =  next_available_complex_;
 		slp_under_construction_.AddInstruction(Atan,location_operand, next_available_complex_++);
 	}
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	SLP SLPCompiler::Compile(System const& sys){
 		this->Clear();
-
-		
-
 
 		this->slp_under_construction_.precision_ = DefaultPrecision();
 
@@ -707,7 +745,7 @@ namespace bertini{
 
 			// 1. ADD VARIABLES
 
-		slp_under_construction_.input_locations_.Variables = next_available_mem_;
+		slp_under_construction_.input_locations_.Variables = next_available_complex_;
 
 		auto variable_ordering = sys.VariableOrdering();
 		for (auto v: variable_ordering){
@@ -732,7 +770,21 @@ namespace bertini{
 		slp_under_construction_.number_of_.Functions = sys.NumNaturalFunctions();
 		slp_under_construction_.output_locations_.Functions = next_available_complex_;
 		for (auto f: sys.GetNaturalFunctions())
+		{
+			locations_top_level_functions_and_derivatives_[f] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
 			locations_encountered_nodes_[f] = next_available_complex_++;
+
+			#ifndef BERTINI_DISABLE_FUNCTION_TREE_SANITY_CHECKS
+						try{
+							f->shared_from_this();
+						}
+						catch (std::exception){
+							throw std::runtime_error("top level function is not a function");
+						}
+			#endif
+
+
+		}
 
 
 
@@ -745,7 +797,12 @@ namespace bertini{
 		slp_under_construction_.number_of_.Jacobian = ds_dx.size();
 		slp_under_construction_.output_locations_.Jacobian = next_available_complex_;
 		for (auto n: ds_dx)
+		{
+			locations_top_level_functions_and_derivatives_[n] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
 			locations_encountered_nodes_[n] = next_available_complex_++;
+		}
+
+
 
 
 		// sometimes have time derivatives
@@ -753,19 +810,23 @@ namespace bertini{
 			
 			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
 			slp_under_construction_.number_of_.TimeDeriv = ds_dt.size();
-			slp_under_construction_.output_locations_.TimeDeriv = next_available_complex_;
+			slp_under_construction_.output_locations_.TimeDeriv = next_available_complex_; // note the start of the block in memory.  the size was also recorded in the previous line.
 			for (auto n: ds_dt)
+			{
+				locations_top_level_functions_and_derivatives_[n] = next_available_complex_; // don't increment yet, we're listing it a few places. this is for an optimization that elides a copy for assignment.
 				locations_encountered_nodes_[n] = next_available_complex_++;
+			}
 		}
 
 
 
 
 
-
+		// now we're actually ready to start visiting using recursion, since we've recorded the locations of inputs and outputs.
 		
-		for (auto f: sys.GetNaturalFunctions())
+		for (auto& f: sys.GetNaturalFunctions())
 		{
+			f->shared_from_this();
 			f->Accept(*this);
 
 			// post visit function
@@ -776,7 +837,6 @@ namespace bertini{
 
 		
 		// always do derivatives with respect to space variables
-		// 4. ADD SPACE VARIABLE DERIVATIVES
 		for (auto n: ds_dx)
 			n->Accept(*this);
 
@@ -787,18 +847,21 @@ namespace bertini{
 		if (sys.HavePathVariable()) {
 			
 			// we need derivatives with respect to time only if the system has a path variable defined
-			// 5. ADD TIME VARIABLE DERIVATIVES
-
 			auto ds_dt = sys.GetTimeDerivatives();  // a linear object, so can just run down the object
 			for (auto n: ds_dt)
 				n->Accept(*this);
 		}
 
+
+		// adjust the sizes of the memory blocks to match the number expected via compilation
 		slp_under_construction_.GetMemory<dbl_complex>().resize(next_available_complex_);
 		slp_under_construction_.GetMemory<mpfr_complex>().resize(next_available_complex_);
 
+
+		// downsample to get ready for evaluation
 		slp_under_construction_.CopyNumbersIntoMemory<dbl_complex>();
 		slp_under_construction_.CopyNumbersIntoMemory<mpfr_complex>();
+
 
 		return slp_under_construction_;
 	}
@@ -810,4 +873,5 @@ namespace bertini{
 		locations_encountered_nodes_.clear();
 		slp_under_construction_ = SLP();
 	}
+
 }

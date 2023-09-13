@@ -1793,9 +1793,9 @@ namespace bertini {
 
 		friend class boost::serialization::access;
 
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
-
+		/*definition of serialize function*/
+		template<class Archive>
+		void serialize(Archive & ar, const unsigned int version){
 			ar & ungrouped_variables_;
 			ar & variable_groups_;
 			ar & hom_variable_groups_;
@@ -1816,27 +1816,6 @@ namespace bertini {
 			ar & patch_;
 			ar & is_patched_;
 
-			ar & jacobian_;
-			ar & space_derivatives_;
-			ar & time_derivatives_;
-			ar & is_differentiated_;
-
-			ar & slp_; // does this need to be re-constructed after de-serialization?
-
-
-
-
-
-			ar & time_order_of_variable_groups_;
-
-			ar & std::get<Vec<dbl>>(current_variable_values_);
-			ar & std::get<Vec<mpfr_complex>>(current_variable_values_);
-
-			ar & variable_ordering_;
-			ar & have_ordering_;
-
-
-			ar & precision_;
 
 			ar & assume_uniform_precision_;
 
@@ -1845,14 +1824,51 @@ namespace bertini {
 
 			ar & auto_simplify_;
 
+			// now for the cached / mutable things
+			ar & precision_;
+
+
+			// if (Archive::is_loading::value == true){
+			// 	is_differentiated_ = false;}
+			// // else
+			// // {
+				ar & is_differentiated_;
+				ar & jacobian_;
+				ar & space_derivatives_;
+				ar & time_derivatives_;
+			// }
+
+
+			ar & slp_; // does this need to be re-constructed after de-serialization?
+
+			ar & time_order_of_variable_groups_;
+
+			// if (Archive::is_loading::value == true){
+				// have_ordering_ = false;}
+			// else
+			// {
+				ar & have_ordering_;
+				ar & variable_ordering_;
+			// }
+
+
+			// if (Archive::is_loading::value == true){
+        	// 	std::get<Vec<dbl>>(current_variable_values_).resize(NumVariables());
+        	// 	std::get<Vec<mpfr_complex>>(current_variable_values_).resize(NumVariables());
+			// }
+			// // next two lines no matter what
+			// ar & std::get<Vec<dbl>>(current_variable_values_);
+			// ar & std::get<Vec<mpfr_complex>>(current_variable_values_);
 
 		}
+
+
 
 	};
 
 
 	/**
-	\brief Contcatenate two compatible systems.
+	\brief Concatenate two compatible systems.
 
 	Two systems are compatible for concatenation if they have the same variable structure, and if they have the same patch (if patched).
 

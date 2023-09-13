@@ -34,10 +34,11 @@
 
 #include "bertini2/num_traits.hpp"
 
-
 #include <boost/serialization/complex.hpp>
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
+
+#define EIGEN_DENSEBASE_PLUGIN "bertini2/eigen_serialization_addon.hpp"
 
 #include <Eigen/Core>
 
@@ -521,74 +522,74 @@ namespace bertini {
 }
 
 
-// the following code comes from
-// https://stackoverflow.com/questions/18382457/eigen-and-boostserialize
-// and adds support for serialization of Eigen types
-//
-// question asked by user Gabriel and answered by Shmuel Levine
-// answer code repeated here verbatim.
-// please update this comment if this code is changed,
-// and post the modifications to the above referenced post on SO.
-namespace boost{
-    namespace serialization{
+// // the following code comes from
+// // https://stackoverflow.com/questions/18382457/eigen-and-boostserialize
+// // and adds support for serialization of Eigen types
+// //
+// // question asked by user Gabriel and answered by Shmuel Levine
+// // answer code repeated here verbatim.
+// // please update this comment if this code is changed,
+// // and post the modifications to the above referenced post on SO.
+// namespace boost{
+//     namespace serialization{
 
-        template<   class Archive,
-                    class S,
-                    int Rows_,
-                    int Cols_,
-                    int Ops_,
-                    int MaxRows_,
-                    int MaxCols_>
-        inline void save(
-            Archive & ar,
-            const Eigen::Matrix<S, Rows_, Cols_, Ops_, MaxRows_, MaxCols_> & g,
-            const unsigned int version)
-            {
-                int rows = g.rows();
-                int cols = g.cols();
+//         template<   class Archive,
+//                     class S,
+//                     int Rows_,
+//                     int Cols_,
+//                     int Ops_,
+//                     int MaxRows_,
+//                     int MaxCols_>
+//         inline void save(
+//             Archive & ar,
+//             const Eigen::Matrix<S, Rows_, Cols_, Ops_, MaxRows_, MaxCols_> & g,
+//             const unsigned int version)
+//             {
+//                 int rows = g.rows();
+//                 int cols = g.cols();
 
-                ar & rows;
-                ar & cols;
-                ar & boost::serialization::make_array(g.data(), rows * cols);
-            }
+//                 ar & rows;
+//                 ar & cols;
+//                 ar & boost::serialization::make_array(g.data(), rows * cols);
+//             }
 
-        template<   class Archive,
-                    class S,
-                    int Rows_,
-                    int Cols_,
-                    int Ops_,
-                    int MaxRows_,
-                    int MaxCols_>
-        inline void load(
-            Archive & ar,
-            Eigen::Matrix<S, Rows_, Cols_, Ops_, MaxRows_, MaxCols_> & g,
-            const unsigned int version)
-        {
-            int rows, cols;
-            ar & rows;
-            ar & cols;
-            g.resize(rows, cols);
-            ar & boost::serialization::make_array(g.data(), rows * cols);
-        }
+//         template<   class Archive,
+//                     class S,
+//                     int Rows_,
+//                     int Cols_,
+//                     int Ops_,
+//                     int MaxRows_,
+//                     int MaxCols_>
+//         inline void load(
+//             Archive & ar,
+//             Eigen::Matrix<S, Rows_, Cols_, Ops_, MaxRows_, MaxCols_> & g,
+//             const unsigned int version)
+//         {
+//             int rows, cols;
+//             ar & rows;
+//             ar & cols;
+//             g.resize(rows, cols);
+//             ar & boost::serialization::make_array(g.data(), rows * cols);
+//         }
 
-        template<   class Archive,
-                    class S,
-                    int Rows_,
-                    int Cols_,
-                    int Ops_,
-                    int MaxRows_,
-                    int MaxCols_>
-        inline void serialize(
-            Archive & ar,
-            Eigen::Matrix<S, Rows_, Cols_, Ops_, MaxRows_, MaxCols_> & g,
-            const unsigned int version)
-        {
-            split_free(ar, g, version);
-        }
+//         template<   class Archive,
+//                     class S,
+//                     int Rows_,
+//                     int Cols_,
+//                     int Ops_,
+//                     int MaxRows_,
+//                     int MaxCols_>
+//         inline void serialize(
+//             Archive & ar,
+//             Eigen::Matrix<S, Rows_, Cols_, Ops_, MaxRows_, MaxCols_> & g,
+//             const unsigned int version)
+//         {
+//             split_free(ar, g, version);
+//         }
 
 
-    } // namespace serialization
-} // namespace boost
+//     } // namespace serialization
+// } // namespace boost
 
 
 

@@ -56,7 +56,7 @@ namespace  bertini {
 		 
 		 When differentiated, produces a differential referring to it.
 		 */
-		class LinearProduct : public virtual Symbol, public std::enable_shared_from_this<LinearProduct>
+		class LinearProduct : public virtual Symbol, public virtual EnableSharedFromThisVirtual<LinearProduct>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -64,7 +64,14 @@ namespace  bertini {
 			virtual ~LinearProduct() = default;
 			
 			
-			
+			template<typename... Ts> 
+			static 
+			std::shared_ptr<LinearProduct> Make(Ts&& ...ts){ 
+				return std::shared_ptr<LinearProduct>( new LinearProduct(ts...) );
+			}
+
+
+		private:
 			/**
 			 /brief Constructor for a linear product node that generates random coefficients automatically.
 			 
@@ -181,7 +188,9 @@ namespace  bertini {
 				
 			}
 			
-			
+		
+
+		public:
 			
 			
 			
@@ -719,7 +728,7 @@ namespace  bertini {
 			
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned version) {
-				ar & boost::serialization::base_object<NaryOperator>(*this);
+				ar & boost::serialization::base_object<Symbol>(*this);
 			}
 			
 			
@@ -767,13 +776,20 @@ namespace  bertini {
 		 This class represents a linear of differentials.  This is the result of differentiating a single linear node.
 		 
 		 */
-		class DiffLinear : public virtual Symbol, public std::enable_shared_from_this<DiffLinear>
+		class DiffLinear : public virtual Symbol, public virtual EnableSharedFromThisVirtual<DiffLinear>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
 			virtual ~DiffLinear() = default;
 			
+			template<typename... Ts> 
+			static 
+			std::shared_ptr<DiffLinear> Make(Ts&& ...ts){ 
+				return std::shared_ptr<DiffLinear>( new DiffLinear(ts...) );
+			}
+
+		private:
 			
 			/**
 			 \brief Create a linear differential node. Only a linear, not a product.
@@ -783,7 +799,7 @@ namespace  bertini {
 			 */
 			DiffLinear(std::shared_ptr<LinearProduct> const& linear);
 			
-			
+		public:
 			
 			
 			

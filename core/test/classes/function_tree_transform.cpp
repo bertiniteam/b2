@@ -430,8 +430,8 @@ BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
-	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
+	Nd m = MakeSumOperator(x, true);
+	Nd n = MakeSumOperator(y, true);
 
 	auto p = m+n;
 
@@ -454,8 +454,8 @@ BOOST_AUTO_TEST_CASE(double_sum_signs_distribute)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
-	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
+	Nd m = MakeSumOperator(x, true);
+	Nd n = MakeSumOperator(y, true);
 
 	auto p = m+n;
 	auto q = m-n;
@@ -499,8 +499,8 @@ BOOST_AUTO_TEST_CASE(double_sum_signs_distribute2)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
-	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
+	Nd m = MakeSumOperator(x, true);
+	Nd n = MakeSumOperator(y, true);
 
 	auto p = m+n;
 	auto q = m-n;
@@ -545,8 +545,8 @@ BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::MultOperator>(x);
-	Nd n = std::make_shared<bertini::node::MultOperator>(y);
+	Nd m = MakeMultOperator(x);
+	Nd n = MakeMultOperator(y);
 
 	auto p = m+n;
 
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(eliminates_mult_single_regular)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::MultOperator>(x);
+	Nd m = MakeMultOperator(x);
 
 	auto p = m+y;
 
@@ -591,8 +591,8 @@ BOOST_AUTO_TEST_CASE(eliminates_mult_single_regular2)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::MultOperator>(x);
-	Nd n = std::make_shared<bertini::node::MultOperator>(y);
+	Nd m = MakeMultOperator(x);
+	Nd n = MakeMultOperator(y);
 
 	auto p = x+n;
 
@@ -625,8 +625,8 @@ BOOST_AUTO_TEST_CASE(eliminates_sum_of_single)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
-	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
+	Nd m = MakeSumOperator(x, true);
+	Nd n = MakeSumOperator(y, true);
 
 	auto p = m*n;
 
@@ -649,8 +649,8 @@ BOOST_AUTO_TEST_CASE(eliminates_mult_of_single)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::MultOperator>(x);
-	Nd n = std::make_shared<bertini::node::MultOperator>(y);
+	Nd m = MakeMultOperator(x);
+	Nd n = MakeMultOperator(y);
 
 	auto p = m*n;
 
@@ -717,11 +717,11 @@ BOOST_AUTO_TEST_CASE(many_nested_singletons)
 {
 	auto x = MakeVariable("x");
 
-	Nd n1 = std::make_shared<bertini::node::MultOperator>(x);
-	Nd n2 = std::make_shared<bertini::node::MultOperator>(n1);
-	Nd n3 = std::make_shared<bertini::node::MultOperator>(n2);
-	Nd n4 = std::make_shared<bertini::node::MultOperator>(n3);
-	Nd n5 = std::make_shared<bertini::node::MultOperator>(n4);
+	Nd n1 = MakeMultOperator(x);
+	Nd n2 = MakeMultOperator(n1);
+	Nd n3 = MakeMultOperator(n2);
+	Nd n4 = MakeMultOperator(n3);
+	Nd n5 = MakeMultOperator(n4);
 
 	while(n5->ReduceDepth())
 		; //deliberately empty statement
@@ -772,8 +772,8 @@ BOOST_AUTO_TEST_CASE(flattens_completely)
 	auto x = MakeVariable("x");
 	auto y = MakeVariable("y");
 
-	Nd m = std::make_shared<bertini::node::SumOperator>(x, true);
-	Nd n = std::make_shared<bertini::node::SumOperator>(y, true);
+	Nd m = MakeSumOperator(x, true);
+	Nd n = MakeSumOperator(y, true);
 
 	auto p = m+n+0;
 	auto q = 0+m-n*1;
