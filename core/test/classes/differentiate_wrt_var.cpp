@@ -57,8 +57,8 @@ using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Function = bertini::node::Function;
 using Jacobian = bertini::node::Jacobian;
-using bertini::MakeVariable;
-using bertini::MakeJacobian;
+using bertini::Variable::Make;
+using bertini::Jacobian::Make;
 using dbl = bertini::dbl;
 using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
@@ -974,7 +974,7 @@ BOOST_AUTO_TEST_CASE(diff_tan_lx_over_zl){
 
 BOOST_AUTO_TEST_CASE(arcsine_differentiate)
 {
-	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> x = Variable::Make("x");
 	auto N = asin(pow(x,2)+1);
 	auto dx = N->Differentiate(x);
 
@@ -994,7 +994,7 @@ BOOST_AUTO_TEST_CASE(arcsine_differentiate)
 
 BOOST_AUTO_TEST_CASE(arccosine_differentiate)
 {
-	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> x = Variable::Make("x");
 	auto N = acos(pow(x,2)+1);
 	auto dx = N->Differentiate(x);
 
@@ -1012,7 +1012,7 @@ BOOST_AUTO_TEST_CASE(arccosine_differentiate)
 
 BOOST_AUTO_TEST_CASE(arctangent_differentiate)
 {
-	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> x = Variable::Make("x");
 	auto N = atan(pow(x,2)+1);
 	auto dx = N->Differentiate(x);
 
@@ -1037,8 +1037,8 @@ BOOST_AUTO_TEST_CASE(integer_power)
 
 	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	std::shared_ptr<Variable> x = MakeVariable("x");
-	std::shared_ptr<Variable> t = MakeVariable("t");
+	std::shared_ptr<Variable> x = Variable::Make("x");
+	std::shared_ptr<Variable> t = Variable::Make("t");
 
 	auto f = pow(x - 1,2)*(1-t) + (pow(x,2) + 1)*t;
 	auto dx = f->Differentiate(x);

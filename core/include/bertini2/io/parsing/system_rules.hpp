@@ -347,7 +347,7 @@ namespace bertini {
 				 */
 				void MakeAndAddFunction(Fn & F, std::string str)
 				{
-					F = MakeFunction(str);
+					F = Function::Make(str);
 					encountered_symbols_.add(str, F);
 					encountered_functions_.add(str,F);
 				}
@@ -358,7 +358,7 @@ namespace bertini {
 				 */
 				void MakeAndAddVariable(Var & V, std::string str)
 				{
-					V = MakeVariable(str);
+					V = Variable::Make(str);
 					encountered_symbols_.add(str, V);
 				}
 				

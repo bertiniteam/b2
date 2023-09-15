@@ -29,7 +29,8 @@ BOOST_CLASS_EXPORT(bertini::start_system::TotalDegree);
 
 
 namespace bertini {
-
+	using namespace bertini::node;
+	
 	namespace start_system {
 
 		// constructor for TotalDegree start system, from any other *suitable* system.
@@ -163,7 +164,7 @@ namespace bertini {
 		{
 			random_values_.resize(num_functions);
 			for (unsigned ii = 0; ii < num_functions; ++ii)
-				random_values_[ii] = MakeRational(node::Rational::Rand());
+				random_values_[ii] = Rational::Make(node::Rational::Rand());
 		}
 
 		void TotalDegree::GenerateFunctions()

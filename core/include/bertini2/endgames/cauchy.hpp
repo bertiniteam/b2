@@ -58,7 +58,7 @@ using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexType; Complex 
 
 // 1. Define the polynomial system that we wish to solve. 
 System target_sys;
-Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
+Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
 
 VariableGroup vars{x,y};
 target_sys.AddVariableGroup(vars); 

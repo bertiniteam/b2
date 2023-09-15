@@ -32,7 +32,8 @@ BOOST_CLASS_EXPORT(bertini::start_system::MHomogeneous);
 
 namespace bertini 
 {
-
+	using namespace bertini::node;
+	
 	namespace start_system 
 	{
 
@@ -62,14 +63,14 @@ namespace bertini
 			std::shared_ptr<node::Node> func;
 			for (int ii = 0; ii < degree_matrix_.rows(); ++ii)
 			{
-				func = MakeInteger(1);
+				func = Integer::Make(1);
 				
 				for (int jj = 0; jj < s.NumHomVariableGroups(); ++jj)
 				{
 					if(degree_matrix_(ii,jj) != 0)
 					{
 						// Fill the linear product matrix
-						linprod_matrix_(ii,jj) = MakeLinearProduct(var_groups_[jj], degree_matrix_(ii,jj), true);
+						linprod_matrix_(ii,jj) = LinearProduct::Make(var_groups_[jj], degree_matrix_(ii,jj), true);
 						
 						func *= linprod_matrix_(ii,jj);
 					}
@@ -79,7 +80,7 @@ namespace bertini
 					if(degree_matrix_(ii,jj) != 0)
 					{
 						// Fill the linear product matrix
-						linprod_matrix_(ii,jj) = MakeLinearProduct(var_groups_[jj], degree_matrix_(ii,jj));
+						linprod_matrix_(ii,jj) = LinearProduct::Make(var_groups_[jj], degree_matrix_(ii,jj));
 						
 						func *= linprod_matrix_(ii,jj);
 					}

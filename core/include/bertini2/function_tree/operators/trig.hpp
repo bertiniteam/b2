@@ -481,40 +481,40 @@ namespace node{
 
 	inline std::shared_ptr<Node> sin(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<SinOperator>(N);
+		return SinOperator::Make(N);
 	}
 	
 	inline std::shared_ptr<Node> asin(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<ArcSinOperator>(N);
+		return ArcSinOperator::Make(N);
 	}
 	
 
 
 	inline std::shared_ptr<Node> cos(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<CosOperator>(N);
+		return CosOperator::Make(N);
 	}
 
 
 
 	inline std::shared_ptr<Node> acos(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<ArcCosOperator>(N);
+		return ArcCosOperator::Make(N);
 	}
 
 
 
 	inline std::shared_ptr<Node> tan(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<TanOperator>(N);
+		return TanOperator::Make(N);
 	}
 
 
 	
 	inline std::shared_ptr<Node> atan(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<ArcTanOperator>(N);
+		return ArcTanOperator::Make(N);
 	}
 	
 	

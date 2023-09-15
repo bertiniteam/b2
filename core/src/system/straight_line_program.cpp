@@ -32,6 +32,7 @@ BOOST_CLASS_EXPORT(bertini::StraightLineProgram);
 
 // SLP Stuff
 namespace bertini{
+	using namespace bertini::node;
 
 	std::string OpcodeToString(Operation op)
 	{
@@ -505,7 +506,7 @@ namespace bertini{
 			// this case is reciprocation of the first operand
 
 			// this code sucks.  really, there should be a bank of integers that we pull from, instead of many copies of the same integer.
-			auto one = MakeInteger(1);
+			auto one = Integer::Make(1);
 			this->DealWithNumber(*one);
 			auto location_one  = locations_encountered_nodes_[one];
 

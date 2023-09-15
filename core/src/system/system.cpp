@@ -36,6 +36,8 @@ BOOST_CLASS_EXPORT(bertini::System)
 namespace bertini 
 {
 
+	using namespace bertini::node;
+	
 	EvalMethod DefaultEvalMethod()
 	{
 		return EvalMethod::SLP;
@@ -130,19 +132,19 @@ namespace bertini
 		// // now to do the members which are not simply copied
 		// constant_subfunctions_.resize(other.constant_subfunctions_.size());
 		// for (unsigned ii = 0; ii < constant_subfunctions_.size(); ++ii)
-		// 	constant_subfunctions_[ii] = MakeFunction(other.constant_subfunctions_[ii]->EntryNode());
+		// 	constant_subfunctions_[ii] = Function::Make(other.constant_subfunctions_[ii]->EntryNode());
 
 		// subfunctions_.resize(other.subfunctions_.size());
 		// for (unsigned ii = 0; ii < subfunctions_.size(); ++ii)
-		// 	subfunctions_[ii] = MakeFunction(other.subfunctions_[ii]->EntryNode());
+		// 	subfunctions_[ii] = Function::Make(other.subfunctions_[ii]->EntryNode());
 
 		// functions_.resize(other.functions_.size());
 		// for (unsigned ii = 0; ii < functions_.size(); ++ii)
-		// 	functions_[ii] = MakeFunction(other.functions_[ii]->EntryNode());
+		// 	functions_[ii] = Function::Make(other.functions_[ii]->EntryNode());
 
 		// explicit_parameters_.resize(other.explicit_parameters_.size());
 		// for (unsigned ii = 0; ii < explicit_parameters_.size(); ++ii)
-		// 	explicit_parameters_[ii] = MakeFunction(other.explicit_parameters_[ii]->EntryNode());
+		// 	explicit_parameters_[ii] = Function::Make(other.explicit_parameters_[ii]->EntryNode());
 	}
 
 	// the assignment operator
@@ -360,7 +362,7 @@ namespace bertini
 		auto num_functions = NumNaturalFunctions();
 		jacobian_.resize(num_functions);
 		for (int ii = 0; ii < num_functions; ++ii)
-			jacobian_[ii] = MakeJacobian(functions_[ii]->Differentiate());
+			jacobian_[ii] = Jacobian::Make(functions_[ii]->Differentiate());
 
 		is_differentiated_ = true;
 	}
@@ -375,14 +377,14 @@ namespace bertini
 		// again, computing these in column major, so staying with one variable at a time.
 		for (int jj = 0; jj < num_vars; ++jj)
 			for (int ii = 0; ii < num_functions; ++ii)
-				space_derivatives_[ii+jj*num_functions] = MakeFunction(functions_[ii]->Differentiate(vars[jj]));
+				space_derivatives_[ii+jj*num_functions] = Function::Make(functions_[ii]->Differentiate(vars[jj]));
 
 		if (HavePathVariable())
 		{
 			const auto& t = path_variable_;
 			time_derivatives_.resize(num_functions);
 				for (int ii = 0; ii < num_functions; ++ii)
-					time_derivatives_[ii] = MakeFunction(functions_[ii]->Differentiate(t));
+					time_derivatives_[ii] = Function::Make(functions_[ii]->Differentiate(t));
 		}
 
 		is_differentiated_ = true;
@@ -466,7 +468,7 @@ namespace bertini
 			}
 			else
 			{
-				Var hom_var = MakeVariable(converter.str());
+				Var hom_var = Variable::Make(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
 				for (const auto& curr_function : functions_)
 					curr_function->Homogenize(*curr_var_gp, hom_var);
@@ -699,7 +701,7 @@ namespace bertini
 
 	void System::AddFunction(Nd const& N, std::string const& name)
 	{
-		functions_.push_back(MakeFunction(N, name));
+		functions_.push_back(Function::Make(N, name));
 		is_differentiated_ = false;
 	}
 

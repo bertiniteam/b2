@@ -50,7 +50,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 
 using mpq_rational = bertini::mpq_rational;
 using dbl = std::complex<double>;
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_double)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaA_mp)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_double)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaB_mp)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_double)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(AMP_criteriaC_mp)
 
 	//Defining the system and variables. 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 	VariableGroup vars{x,y};
 
 	sys.AddVariableGroup(vars);

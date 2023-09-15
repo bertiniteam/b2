@@ -56,7 +56,6 @@
 #include "bertini2/function_tree/symbols/differential.hpp"
 
 #include "bertini2/function_tree/forward_declares.hpp"
-#include "bertini2/function_tree/factory.hpp"
 
 #include <cmath>
 
@@ -339,19 +338,6 @@ namespace node{
 
 		NegateOperator() = default;
 
-		friend class Factory;
-
-		// friend std::shared_ptr<NegateOperator> Factory::Make<NegateOperator>(const std::shared_ptr<Node> & N);
-		// 
-		// 
-
-		// friend FactoryT;
-
-		// template<>
-		// template <typename... T>
-		// friend FactoryT::HeldType FactoryT::Make(T&&...t);
-
-
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
@@ -363,7 +349,7 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator-(const std::shared_ptr<Node> & rhs)
 	{
-		return Factory::Make<NegateOperator>(rhs);
+		return NegateOperator::Make(rhs);
 	}
 	
 	
@@ -909,7 +895,7 @@ namespace node{
 	
 	inline std::shared_ptr<Node> sqrt(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<SqrtOperator>(N);
+		return SqrtOperator::Make(N);
 	}
 	
 	
@@ -1054,22 +1040,22 @@ namespace node{
 
 	inline std::shared_ptr<Node> exp(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<ExpOperator>(N);
+		return ExpOperator::Make(N);
 	}
 	
 	inline std::shared_ptr<Node> log(const std::shared_ptr<Node> & N)
 	{
-		return Factory::Make<LogOperator>(N);
+		return LogOperator::Make(N);
 	}
 	
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, const std::shared_ptr<Node> & p)
 	{
-		return Factory::Make<PowerOperator>(N,p);
+		return PowerOperator::Make(N,p);
 	}
 
 	inline std::shared_ptr<Node> pow(std::shared_ptr<Node> const& base, int power)
 	{
-		return Factory::Make<IntegerPowerOperator>(base,power);
+		return IntegerPowerOperator::Make(base,power);
 	}
 
 	std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, double p) = delete;
@@ -1078,17 +1064,17 @@ namespace node{
 
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr_float p)
 	{
-		return Factory::Make<PowerOperator>(N,Factory::Make<Float>(p));
+		return PowerOperator::Make(N,Float::Make(p));
 	}
 
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpfr_complex p)
 	{
-		return Factory::Make<PowerOperator>(N,Factory::Make<Float>(p));
+		return PowerOperator::Make(N,Float::Make(p));
 	}
 
 	inline std::shared_ptr<Node> pow(const std::shared_ptr<Node> & N, mpq_rational const& p)
 	{
-		return Factory::Make<PowerOperator>(N,Factory::Make<Rational>(p,0));
+		return PowerOperator::Make(N,Rational::Make(p,0));
 	}
 
 
@@ -1113,7 +1099,7 @@ namespace node{
 	
 	inline std::shared_ptr<Node>& operator+=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		std::shared_ptr<Node> temp = Factory::Make<SumOperator>(lhs,rhs);		
+		std::shared_ptr<Node> temp = SumOperator::Make(lhs,rhs);		
 		lhs.swap(temp);
 		return lhs;
 	}
@@ -1124,57 +1110,57 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
-		return Factory::Make<SumOperator>(lhs,rhs);
+		return SumOperator::Make(lhs,rhs);
 	}
 	
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
 	{
-		return Factory::Make<SumOperator>(lhs,Factory::Make<Float>(rhs));
+		return SumOperator::Make(lhs,Float::Make(rhs));
 	}
 
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
-		return Factory::Make<SumOperator>(lhs,Factory::Make<Float>(rhs));
+		return SumOperator::Make(lhs,Float::Make(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator+(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Float>(lhs), rhs);
+		return SumOperator::Make(Float::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator+(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Float>(lhs), rhs);
+		return SumOperator::Make(Float::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, int rhs)
 	{
-		return Factory::Make<SumOperator>(lhs,Factory::Make<Integer>(rhs));
+		return SumOperator::Make(lhs,Integer::Make(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator+(int lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Integer>(lhs), rhs);
+		return SumOperator::Make(Integer::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpz_int const& rhs)
 	{
-		return Factory::Make<SumOperator>(lhs,Factory::Make<Integer>(rhs));
+		return SumOperator::Make(lhs,Integer::Make(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator+(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Integer>(lhs), rhs);
+		return SumOperator::Make(Integer::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator+(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
-		return Factory::Make<SumOperator>(lhs,Factory::Make<Rational>(rhs,0));
+		return SumOperator::Make(lhs,Rational::Make(rhs,0));
 	}
 	
 	inline std::shared_ptr<Node> operator+(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Rational>(lhs,0), rhs);
+		return SumOperator::Make(Rational::Make(lhs,0), rhs);
 	}
 	
 	
@@ -1188,7 +1174,7 @@ namespace node{
 	
 	inline std::shared_ptr<Node>& operator-=(std::shared_ptr<Node> & lhs, const std::shared_ptr<Node> & rhs)
 	{
-		std::shared_ptr<Node> temp = Factory::Make<SumOperator>(lhs,true,rhs,false);
+		std::shared_ptr<Node> temp = SumOperator::Make(lhs,true,rhs,false);
 		lhs.swap(temp);
 		return lhs;
 	}
@@ -1196,57 +1182,57 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, const std::shared_ptr<Node> & rhs)
 	{
-		return Factory::Make<SumOperator>(lhs,true,rhs,false);
+		return SumOperator::Make(lhs,true,rhs,false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_float rhs)
 	{
-		return Factory::Make<SumOperator>(lhs, true, Factory::Make<Float>(rhs), false);
+		return SumOperator::Make(lhs, true, Float::Make(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(mpfr_float lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Float>(lhs), true, rhs, false);
+		return SumOperator::Make(Float::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_complex rhs)
 	{
-		return Factory::Make<SumOperator>(lhs, true, Factory::Make<Float>(rhs), false);
+		return SumOperator::Make(lhs, true, Float::Make(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Float>(lhs), true, rhs, false);
+		return SumOperator::Make(Float::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, int rhs)
 	{
-		return Factory::Make<SumOperator>(lhs, true, Factory::Make<Integer>(rhs), false);
+		return SumOperator::Make(lhs, true, Integer::Make(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(int lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Integer>(lhs), true, rhs, false);
+		return SumOperator::Make(Integer::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpz_int const& rhs)
 	{
-		return Factory::Make<SumOperator>(lhs, true, Factory::Make<Integer>(rhs), false);
+		return SumOperator::Make(lhs, true, Integer::Make(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Integer>(lhs), true, rhs, false);
+		return SumOperator::Make(Integer::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
-		return Factory::Make<SumOperator>(lhs, true, Factory::Make<Rational>(rhs,0), false);
+		return SumOperator::Make(lhs, true, Rational::Make(rhs,0), false);
 	}
 	
 	inline std::shared_ptr<Node> operator-(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<SumOperator>(Factory::Make<Rational>(lhs,0), true, rhs, false);
+		return SumOperator::Make(Rational::Make(lhs,0), true, rhs, false);
 	}
 
 
@@ -1263,52 +1249,52 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_float rhs)
 	{
-		return Factory::Make<MultOperator>(lhs,Factory::Make<Float>(rhs));
+		return MultOperator::Make(lhs,Float::Make(rhs));
 	}
 
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_complex rhs)
 	{
-		return Factory::Make<MultOperator>(lhs,Factory::Make<Float>(rhs));
+		return MultOperator::Make(lhs,Float::Make(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator*(mpfr_float lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Float>(lhs), rhs);
+		return MultOperator::Make(Float::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator*(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Float>(lhs), rhs);
+		return MultOperator::Make(Float::Make(lhs), rhs);
 	}
 
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, int rhs)
 	{
-		return Factory::Make<MultOperator>(lhs,Factory::Make<Integer>(rhs));
+		return MultOperator::Make(lhs,Integer::Make(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator*(int lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Integer>(lhs), rhs);
+		return MultOperator::Make(Integer::Make(lhs), rhs);
 	}
 	
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpz_int const& rhs)
 	{
-		return Factory::Make<MultOperator>(lhs,Factory::Make<Integer>(rhs));
+		return MultOperator::Make(lhs,Integer::Make(rhs));
 	}
 	
 	inline std::shared_ptr<Node> operator*(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Integer>(lhs), rhs);
+		return MultOperator::Make(Integer::Make(lhs), rhs);
 	}
 	
 	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
-		return Factory::Make<MultOperator>(lhs,Factory::Make<Rational>(rhs,0));
+		return MultOperator::Make(lhs,Rational::Make(rhs,0));
 	}
 	
 	inline std::shared_ptr<Node> operator*(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Rational>(lhs,0), rhs);
+		return MultOperator::Make(Rational::Make(lhs,0), rhs);
 	}
 
 
@@ -1335,7 +1321,7 @@ namespace node{
 			}
 		}
 
-		std::shared_ptr<Node> temp = Factory::Make<MultOperator>(lhs,rhs);
+		std::shared_ptr<Node> temp = MultOperator::Make(lhs,rhs);
 		lhs.swap(temp);
 		return lhs;
 
@@ -1373,7 +1359,7 @@ namespace node{
 		// }
 
 
-		std::shared_ptr<Node> temp = Factory::Make<MultOperator>(lhs,true,rhs,false);
+		std::shared_ptr<Node> temp = MultOperator::Make(lhs,true,rhs,false);
 		lhs.swap(temp);
 		return lhs;
 	}
@@ -1393,52 +1379,52 @@ namespace node{
 	
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr_float rhs)
 	{
-		return Factory::Make<MultOperator>(lhs, true, Factory::Make<Float>(rhs), false);
+		return MultOperator::Make(lhs, true, Float::Make(rhs), false);
 	}
 
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpfr_complex rhs)
 	{
-		return Factory::Make<MultOperator>(lhs, true, Factory::Make<Float>(rhs), false);
+		return MultOperator::Make(lhs, true, Float::Make(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator/(mpfr_float lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Float>(lhs), true, rhs, false);
+		return MultOperator::Make(Float::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator/(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Float>(lhs), true, rhs, false);
+		return MultOperator::Make(Float::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, int rhs)
 	{
-		return Factory::Make<MultOperator>(lhs, true, Factory::Make<Integer>(rhs), false);
+		return MultOperator::Make(lhs, true, Integer::Make(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator/(int lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Integer>(lhs), true, rhs, false);
+		return MultOperator::Make(Integer::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpz_int const& rhs)
 	{
-		return Factory::Make<MultOperator>(lhs, true, Factory::Make<Integer>(rhs), false);
+		return MultOperator::Make(lhs, true, Integer::Make(rhs), false);
 	}
 	
 	inline std::shared_ptr<Node> operator/(mpz_int const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Integer>(lhs), true, rhs, false);
+		return MultOperator::Make(Integer::Make(lhs), true, rhs, false);
 	}
 
 	inline std::shared_ptr<Node> operator/(std::shared_ptr<Node> lhs, mpq_rational const& rhs)
 	{
-		return Factory::Make<MultOperator>(lhs, true, Factory::Make<Rational>(rhs,0), false);
+		return MultOperator::Make(lhs, true, Rational::Make(rhs,0), false);
 	}
 	
 	inline std::shared_ptr<Node> operator/(mpq_rational const& lhs,  std::shared_ptr<Node> rhs)
 	{
-		return Factory::Make<MultOperator>(Factory::Make<Rational>(lhs,0), true, rhs, false);
+		return MultOperator::Make(Rational::Make(lhs,0), true, rhs, false);
 	}
 
 

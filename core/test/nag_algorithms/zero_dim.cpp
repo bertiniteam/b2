@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO_nonhom)
 	auto sys = system::Precon::GriewankOsborn();
 	auto TD = start_system::TotalDegree(sys);
 
-	auto t = MakeVariable("t");
+	auto t = Variable::Make("t");
 	auto h = (1-t)* sys + t*TD;
 	h.AddPathVariable(t);
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(reference_managed_systems_GO)
 
 	auto TD = start_system::TotalDegree(sys);
 
-	auto t = MakeVariable("t");
+	auto t = Variable::Make("t");
 	auto h = (1-t)* sys + t*TD;
 	h.AddPathVariable(t);
 

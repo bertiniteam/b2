@@ -50,8 +50,6 @@
 #include "bertini2/function_tree/roots/function.hpp"
 #include "bertini2/function_tree/roots/jacobian.hpp"
 
-#include "bertini2/function_tree/factory.hpp"
-
 #include "bertini2/function_tree/simplify.hpp"
 
 

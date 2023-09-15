@@ -58,7 +58,7 @@ template<typename NumType> using Mat = bertini::Mat<NumType>;
 using Variable = bertini::node::Variable;
 using Node = bertini::node::Node;
 using Float = bertini::node::Float;
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 using bertini::MakeFloat;
 
 using dbl = bertini::dbl;
@@ -69,7 +69,7 @@ using System = bertini::System;
 
 BOOST_AUTO_TEST_CASE(serialize_variable)
 {
-	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> x = Variable::Make("x");
 
 
 	{
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(serialize_float)
 
 BOOST_AUTO_TEST_CASE(serialize_complicated_expression)
 {
-	std::shared_ptr<Variable> x = MakeVariable("x");
+	std::shared_ptr<Variable> x = Variable::Make("x");
 
 	auto f = exp(sqrt(pow(pow(x*x+ (-x) -sin(x)+cos(x)+tan(x),x),3)))/x;
 
@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(system_serialize_scopes)
 	{ // to create a scope
 
 		bertini::System sys;
-		auto x = MakeVariable("x");
-		auto y = MakeVariable("y");
+		auto x = Variable::Make("x");
+		auto y = Variable::Make("y");
 
 		bertini::VariableGroup vg{x,y};
 

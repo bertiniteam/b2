@@ -47,17 +47,17 @@ namespace node{
 
 	std::shared_ptr<Node> Two()
 	{
-		return MakeInteger(2);
+		return Integer::Make(2);
 	}
 
 	std::shared_ptr<Node> One()
 	{
-		return MakeInteger(1);
+		return Integer::Make(1);
 	}
 
 	std::shared_ptr<Node> Zero()
 	{
-		return MakeInteger(0);
+		return Integer::Make(0);
 	}
 
 }

@@ -41,7 +41,7 @@
 #define BERTINI_FUNCTION_TREE_LINPRODUCT_HPP
 
 #include "bertini2/function_tree.hpp"
-#include "bertini2/function_tree/factory.hpp"
+
 #include "bertini2/eigen_extensions.hpp"
 
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -122,7 +122,7 @@ namespace  bertini {
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
-					hom_variable_ = MakeInteger(0);
+					hom_variable_ = Integer::Make(0);
 					for(int ii = 0; ii < coeffs_mpfr_ref.rows(); ++ii)
 					{
 						coeffs_rat_real_(ii,num_variables_) = mpq_rational(0);
@@ -166,7 +166,7 @@ namespace  bertini {
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
-					hom_variable_ = MakeInteger(0);
+					hom_variable_ = Integer::Make(0);
 					for(int ii = 0; ii < coeffs_mpfr_ref.rows(); ++ii)
 					{
 						coeffs_mpfr_ref(ii,num_variables_) = mpfr_complex(0);
@@ -635,7 +635,7 @@ namespace  bertini {
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
-					hom_variable_ = MakeInteger(0);
+					hom_variable_ = Integer::Make(0);
 				}
 
 			}
@@ -674,7 +674,7 @@ namespace  bertini {
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
-					hom_variable_ = MakeInteger(0);
+					hom_variable_ = Integer::Make(0);
 				}
 
 			}
@@ -718,7 +718,7 @@ namespace  bertini {
 				temp_var_mp_.resize(num_variables_ + 1);
 				temp_var_mp_[num_variables_] = mpfr_complex(1);
 				
-				hom_variable_ = MakeInteger(1);
+				hom_variable_ = Integer::Make(1);
 			}
 
 			
@@ -834,7 +834,7 @@ namespace  bertini {
 			 */
 			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override
 			{
-				return MakeInteger(0);
+				return Integer::Make(0);
 			}
 			
 			

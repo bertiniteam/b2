@@ -52,8 +52,7 @@
 
 #include "bertini2/num_traits.hpp"
 #include "bertini2/detail/visitable.hpp"
-
-#include "bertini2/function_tree/factory.hpp"
+#include "bertini2/function_tree/forward_declares.hpp"
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>

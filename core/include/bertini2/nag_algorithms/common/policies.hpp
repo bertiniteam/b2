@@ -197,9 +197,9 @@ public:
 			static
 			void FormHomotopy(SystemType & homotopy, SystemType const& target, StartSystemType const& start, std::string const& path_variable_name)
 			{
-				auto t = MakeVariable(path_variable_name); 
+				auto t = node::Variable::Make(path_variable_name); 
 
-				homotopy = (1-t)*target + MakeRational(node::Rational::Rand())*t*start;
+				homotopy = (1-t)*target + node::Rational::Make(node::Rational::Rand())*t*start;
 				homotopy.AddPathVariable(t);
 			}
 

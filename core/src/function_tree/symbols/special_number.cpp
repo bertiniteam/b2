@@ -95,23 +95,23 @@ std::shared_ptr<Node> E()
 
 std::shared_ptr<Node> I()
 {
-	return MakeFloat(0,1);
+	return Float::Make(0,1);
 }
 
 
 std::shared_ptr<Node> Two()
 {
-	return MakeInteger(2);
+	return Integer::Make(2);
 }
 
 std::shared_ptr<Node> One()
 {
-	return MakeInteger(1);
+	return Integer::Make(1);
 }
 
 std::shared_ptr<Node> Zero()
 {
-	return MakeInteger(0);
+	return Integer::Make(0);
 }
 	} // re: namespace node
 } // re: namespace bertini

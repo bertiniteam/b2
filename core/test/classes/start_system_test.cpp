@@ -45,7 +45,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 using mpq_rational = bertini::mpq_rational;
 using mpfr_float = bertini::mpfr_float;
 using mpz_int = bertini::mpz_int;
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(index_and_subscript_generation_out_of_range)
 BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
 
 	VariableGroup v;
 	v.push_back(x); v.push_back(y);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_linear)
 BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
 
 	VariableGroup v;
 	v.push_back(x); v.push_back(y);
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(make_total_degree_system_quadratic)
 BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
 
 	VariableGroup vars{x,y};
 
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(linear_total_degree_start_system)
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_total_degree_start_system)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars;
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points)
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_start_points_homogenized_patched)
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -439,9 +439,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_precision_16)
 
 	DefaultPrecision(this_test_precision);
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -484,9 +484,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 
 	DefaultPrecision(this_test_precision);
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_homogenized_patched_precision_16)
 BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 
 	bertini::start_system::TotalDegree TD(sys);
 
-	Var t = MakeVariable("t");
+	Var t = Variable::Make("t");
 
 	auto final_mixed_sum = (1-t) * sys + t * TD;
 	final_mixed_sum.AddPathVariable(t);
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(quadratic_cubic_quartic_all_the_way_to_final_system)
 BOOST_AUTO_TEST_CASE(start_system_total_degree_nonpolynomial_should_throw)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars;
 	vars.push_back(x); vars.push_back(y); vars.push_back(z);
@@ -607,9 +607,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system_coefficient_bound_degree_bound)
 	*/
 	DefaultPrecision(30);
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 

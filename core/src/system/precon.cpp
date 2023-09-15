@@ -36,7 +36,7 @@ System Precon::GriewankOsborn()
 	using Var = std::shared_ptr<node::Variable>;
 
 	bertini::System griewank_osborn_sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
 	VariableGroup vars{x,y};
 	griewank_osborn_sys.AddVariableGroup(vars); 
 
@@ -53,9 +53,9 @@ System Precon::CrossedPaths()
 	using Var = std::shared_ptr<node::Variable>;
 	
 	bertini::System crossed_paths_sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
-	auto two = MakeInteger(2);
-	auto half = MakeRational("1/2");
+	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
+	auto two = Integer::Make(2);
+	auto half = Rational::Make("1/2");
 	VariableGroup vars{x,y};
 	crossed_paths_sys.AddVariableGroup(vars);
 	
@@ -71,8 +71,8 @@ System Precon::Sphere()
 	using Var = std::shared_ptr<node::Variable>;
 	
 	bertini::System sphere_sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
-	auto one = MakeInteger(1);
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
+	auto one = Integer::Make(1);
 
 	VariableGroup vars{x,y,z};
 	sphere_sys.AddVariableGroup(vars);

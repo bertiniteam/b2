@@ -4,7 +4,7 @@
 #include "bertini2/io/parsing/system_parsers.hpp"
 #include "bertini2/system/start_systems.hpp"
 
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 using bertini::Operation;
 using SLP = bertini::StraightLineProgram;
 template<typename NumType> using Vec = bertini::Vec<NumType>;
@@ -58,11 +58,11 @@ bertini::System HomotopyTotalDegreeTestSystem(){
 	sys.Homogenize();
 	sys.AutoPatch();
 
-	using bertini::MakeVariable;
+	using bertini::Variable::Make;
 	using Variable = bertini::node::Variable;
 	using Var = std::shared_ptr<Variable>;
 
-	Var t = MakeVariable("t");
+	Var t = Variable::Make("t");
 
 	bertini::start_system::TotalDegree start(sys);
 

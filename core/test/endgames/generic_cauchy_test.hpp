@@ -49,7 +49,7 @@ using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
 using mpq_rational = bertini::mpq_rational;
 
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 using bertini::Precision;
 
 template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(circle_track_cycle_num_greater_than_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
@@ -218,8 +218,8 @@ BOOST_AUTO_TEST_CASE(circle_track__nonzero_target_time)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(compute_c_over_k_for_cauchy_class)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x");
+	Var x = Variable::Make("x");
 	sys.AddFunction(pow(x-1,3));  //f(x) = (x-1)^3
 
 	VariableGroup vars{x};
@@ -378,8 +378,8 @@ BOOST_AUTO_TEST_CASE(stabilization_of_C_over_K)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
 	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3) + 1)*t);
 
 	VariableGroup vars{x};
@@ -487,8 +487,8 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
@@ -550,8 +550,8 @@ BOOST_AUTO_TEST_CASE(check_closed_loop_for_cycle_num_greater_than_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
@@ -620,8 +620,8 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
@@ -682,8 +682,8 @@ BOOST_AUTO_TEST_CASE(compare_cauchy_ratios_cycle_num_greater_than_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
@@ -742,8 +742,8 @@ BOOST_AUTO_TEST_CASE(initial_cauchy_loops)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
@@ -800,8 +800,8 @@ BOOST_AUTO_TEST_CASE(initial_cauchy_loops_nonzero_target_time)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
@@ -862,8 +862,8 @@ BOOST_AUTO_TEST_CASE(initial_cauchy_loops_cycle_num_greater_than_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
@@ -925,7 +925,7 @@ BOOST_AUTO_TEST_CASE(first_approximation)
 
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), t = Variable::Make("t");
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
@@ -983,8 +983,8 @@ BOOST_AUTO_TEST_CASE(first_approximation_nonzero_target_time)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
@@ -1050,8 +1050,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
@@ -1121,8 +1121,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_approximation_cycle_num_greater_than_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
@@ -1192,8 +1192,8 @@ BOOST_AUTO_TEST_CASE(cauchy_samples_cycle_num_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
@@ -1254,8 +1254,8 @@ BOOST_AUTO_TEST_CASE(find_cauchy_samples_cycle_num_greater_than_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
@@ -1314,8 +1314,8 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction((x-1)*(1-t) + (x+1)*t);
 
@@ -1377,8 +1377,8 @@ BOOST_AUTO_TEST_CASE(full_test_cycle_num_greater_than_1)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
@@ -1439,8 +1439,8 @@ BOOST_AUTO_TEST_CASE(cauchy_endgame_test_cycle_num_greater_than_1_base)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 
@@ -1504,7 +1504,7 @@ BOOST_AUTO_TEST_CASE(cauchy_multiple_variables)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
 	VariableGroup vars{x,y};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
@@ -1565,8 +1565,8 @@ BOOST_AUTO_TEST_CASE(compute_cauchy_samples_nonzero_target_time)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
@@ -1630,8 +1630,8 @@ BOOST_AUTO_TEST_CASE(cauchy_full_run_nonzero_target_time)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
@@ -1707,7 +1707,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System griewank_osborn_sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
 	VariableGroup vars{x,y};
 	griewank_osborn_sys.AddVariableGroup(vars); 
 
@@ -1849,9 +1849,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 {
 	DefaultPrecision(ambient_precision);
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -1973,8 +1973,8 @@ BOOST_AUTO_TEST_CASE(gory_detail_logging)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2) + 1)*t);
 

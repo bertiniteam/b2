@@ -40,7 +40,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 
 using SuccessCode = bertini::SuccessCode;
 
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(compute_bound_on_cycle_num)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x");
+	Var x = Variable::Make("x");
 	sys.AddFunction(pow(x-1,3));  //f(x) = (x-1)^3
 
 	VariableGroup vars{x};
@@ -347,8 +347,8 @@ BOOST_AUTO_TEST_CASE(compute_cycle_number)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
 	sys.AddFunction( pow(x-1,3) );  //f(x) = (x-1)^3 
 
 	VariableGroup vars{x};
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(compute_approximation_of_x_at_t0)
 
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), t = Variable::Make("t");
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars);
 	sys.AddPathVariable(t);
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), t = Variable::Make("t");
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); sys.AddPathVariable(t);
 	// Define homotopy system
@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(compute_initial_samples_non_zero_target_time)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), t = Variable::Make("t");
 	VariableGroup vars{x};
 	sys.AddVariableGroup(vars); sys.AddPathVariable(t);
 	// Define homotopy system
@@ -738,7 +738,7 @@ BOOST_AUTO_TEST_CASE(pseg_full_run)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), t = Variable::Make("t");
 
 	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
@@ -794,7 +794,7 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_non_zero_target_time)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), t = Variable::Make("t");
 
 	sys.AddFunction( pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 
@@ -859,8 +859,8 @@ BOOST_AUTO_TEST_CASE(full_run_cycle_num_2)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction( pow(x-1,2)*(1-t) + (pow(x,2)-1)*t);
 
@@ -927,7 +927,7 @@ BOOST_AUTO_TEST_CASE(full_run_multiple_variables)
 
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
 	VariableGroup vars{x,y};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
@@ -1017,7 +1017,7 @@ BOOST_AUTO_TEST_CASE(griewank_osborne)
 	DefaultPrecision(ambient_precision);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
 	VariableGroup vars{x,y};
 	sys.AddVariableGroup(vars); 
 	sys.AddPathVariable(t);
@@ -1114,9 +1114,9 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	using namespace bertini::tracking;
 	DefaultPrecision(ambient_precision);
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -1141,7 +1141,7 @@ BOOST_AUTO_TEST_CASE(total_degree_start_system)
 	BOOST_CHECK(TD.IsHomogeneous());
 	BOOST_CHECK(TD.IsPatched());
 
-	//auto gamma = bertini::MakeRational(bertini::node::Rational::Rand());
+	//auto gamma = bertini::Rational::Make(bertini::node::Rational::Rand());
 	//gamma*
 	
 	auto final_system = (1-t)*sys + t*TD;
@@ -1233,8 +1233,8 @@ BOOST_AUTO_TEST_CASE(parabola)
 	using namespace bertini::tracking;
 	DefaultPrecision(ambient_precision);
 
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -1301,8 +1301,8 @@ BOOST_AUTO_TEST_CASE(pseg_full_run_nonzero_target_time)
 	DefaultPrecision(ambient_precision);
 
 	System sys;
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t"); 
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t"); 
 
 	sys.AddFunction(pow(x-1,3)*(1-t) + (pow(x,3)+1)*t);
 

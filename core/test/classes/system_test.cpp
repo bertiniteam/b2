@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(system_parse_around_the_unit_circle_alt)
 */
 BOOST_AUTO_TEST_CASE(system_differentiate_x)
 {
-	Var x = MakeVariable("x");
+	Var x = Variable::Make("x");
 	auto f1 = pow(x,2);
 	auto f2 = x-1;
 
@@ -202,8 +202,8 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x)
 */
 BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
 	auto f1 = pow(x,2)*y/2;
 	auto f2 = x-y;
 
@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_y)
 */
 BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 {
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
 	auto f1 = (1-t)*x + t*(1-x);
 	auto f2 = x-t;
 
@@ -256,11 +256,11 @@ BOOST_AUTO_TEST_CASE(system_differentiate_x_and_t)
 */
 BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 {
-	Var x1 = MakeVariable("x1");
-	Var x2 = MakeVariable("x2");
+	Var x1 = Variable::Make("x1");
+	Var x2 = Variable::Make("x2");
 
-	Var y1 = MakeVariable("y1");
-	Var y2 = MakeVariable("y2");
+	Var y1 = Variable::Make("y1");
+	Var y2 = Variable::Make("y2");
 
 
 	bertini::VariableGroup v1{x1, x2};
@@ -294,11 +294,11 @@ BOOST_AUTO_TEST_CASE(system_homogenize_multiple_variable_groups)
 */
 BOOST_AUTO_TEST_CASE(system_reorder_by_degree_decreasing)
 {
-	Var x1 = MakeVariable("x1");
-	Var x2 = MakeVariable("x2");
+	Var x1 = Variable::Make("x1");
+	Var x2 = Variable::Make("x2");
 
-	Var y1 = MakeVariable("y1");
-	Var y2 = MakeVariable("y2");
+	Var y1 = Variable::Make("y1");
+	Var y2 = Variable::Make("y2");
 
 
 	bertini::VariableGroup v1{x1, x2};
@@ -337,11 +337,11 @@ BOOST_AUTO_TEST_CASE(system_reorder_by_degree_decreasing)
 */
 BOOST_AUTO_TEST_CASE(system_reorder_by_degree_increasing)
 {
-	Var x1 = MakeVariable("x1");
-	Var x2 = MakeVariable("x2");
+	Var x1 = Variable::Make("x1");
+	Var x2 = Variable::Make("x2");
 
-	Var y1 = MakeVariable("y1");
-	Var y2 = MakeVariable("y2");
+	Var y1 = Variable::Make("y1");
+	Var y2 = Variable::Make("y2");
 
 
 	bertini::VariableGroup v1{x1, x2};
@@ -441,9 +441,9 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 
 BOOST_AUTO_TEST_CASE(system_jacobian)
 {
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-	auto z = MakeVariable("z");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto z = Variable::Make("z");
 
 	System sys;
 
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(system_jacobian)
 BOOST_AUTO_TEST_CASE(add_two_systems)
 {
 	bertini::System sys1, sys2;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
 
 	VariableGroup vars;
 	vars.push_back(x); vars.push_back(y);
@@ -534,8 +534,8 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 */
 BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 {
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
 	auto f1 = (1-t)*x + t*(1-x);
 	auto f2 = x-t;
 
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(system_differentiate_wrt_time_linear)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
 	VariableGroup vars{x, y};
 	sys.AddVariableGroup(vars);
 
@@ -592,8 +592,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
-	Var z = MakeVariable("z"), w = MakeVariable("w");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	Var z = Variable::Make("z"), w = Variable::Make("w");
 	VariableGroup vars{x, y};
 	VariableGroup vars2{z, w};
 	sys.AddVariableGroup(vars);
@@ -626,9 +626,9 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
-	Var z = MakeVariable("z"), w = MakeVariable("w");
-	Var h1 = MakeVariable("h1"), h2 = MakeVariable("h2");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	Var z = Variable::Make("z"), w = Variable::Make("w");
+	Var h1 = Variable::Make("h1"), h2 = Variable::Make("h2");
 	VariableGroup vars{x, y};
 	VariableGroup vars2{h1,h2};
 	VariableGroup vars3{z, w};
@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_two_aff_groups_one_hom_group)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
 	VariableGroup vars{x, y};
 	sys.AddHomVariableGroup(vars);
 
@@ -692,8 +692,8 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
-	Var z = MakeVariable("z"), w = MakeVariable("w");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	Var z = Variable::Make("z"), w = Variable::Make("w");
 	VariableGroup vars{x, y};
 
 	sys.AddHomVariableGroup(vars);
@@ -722,10 +722,10 @@ BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_hom_group_two_ungrouped_vars)
 BOOST_AUTO_TEST_CASE(system_dehomogenize_FIFO_one_aff_group_two_ungrouped_vars_another_aff_grp_hom_grp)
 {
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y");
-	Var z = MakeVariable("z"), w = MakeVariable("w");
-	Var h1 = MakeVariable("h1"), h2 = MakeVariable("h2");
-	Var u1 = MakeVariable("u1"), u2 = MakeVariable("u2");
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+	Var z = Variable::Make("z"), w = Variable::Make("w");
+	Var h1 = Variable::Make("h1"), h2 = Variable::Make("h2");
+	Var u1 = Variable::Make("u1"), u2 = Variable::Make("u2");
 
 	VariableGroup vars{x,y};
 	VariableGroup vars2{z,w};
@@ -780,8 +780,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_linear)
 {
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
 
 	bertini::System S;
 	S.AddUngroupedVariable(x);
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_quartic)
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_coeff_bound_homogenized_quartic)
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -854,8 +854,8 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_linear)
 {
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
 
 	bertini::System S;
 	S.AddUngroupedVariable(x);
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE(system_estimate_degree_bound_quartic)
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -902,7 +902,7 @@ BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 
 	bertini::System sys1, sys2;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 	sys2.AddFunction(pow(x,3)+x*y+bertini::node::E());
 	sys2.AddFunction(pow(x,2)*pow(y,2)+x*y*z*z - 1);
 
-	Var t = MakeVariable("t");
+	Var t = Variable::Make("t");
 
 	auto sys_copy1 = t*sys1;
 	auto sys_copy2 = (1-t)*sys2;
@@ -933,7 +933,7 @@ BOOST_AUTO_TEST_CASE(system_multiply_by_node)
 BOOST_AUTO_TEST_CASE(concatenate_two_systems)
 {
 	bertini::System sys1, sys2;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -992,8 +992,8 @@ BOOST_AUTO_TEST_CASE(parsed_system_evaluates_correctly)
 
 BOOST_AUTO_TEST_CASE(variable_group_sizes_and_degrees_homvargrp)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
 
 	System sys;
 
@@ -1016,8 +1016,8 @@ BOOST_AUTO_TEST_CASE(variable_group_sizes_and_degrees_homvargrp)
 
 BOOST_AUTO_TEST_CASE(variable_group_sizes_and_degrees_affvargrp)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
 
 	System sys;
 

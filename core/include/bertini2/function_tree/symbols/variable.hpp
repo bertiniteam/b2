@@ -43,7 +43,6 @@
 
 #include "bertini2/function_tree/symbols/symbol.hpp"
 #include "bertini2/function_tree/symbols/differential.hpp"
-#include "bertini2/function_tree/factory.hpp"
 
 
 namespace  bertini {
