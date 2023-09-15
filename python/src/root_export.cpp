@@ -27,7 +27,7 @@
 //
 //  silviana amethyst
 //  UWEC
-//  Spring 2018
+//  Spring 2018, Fall 2023
 //
 //
 //
@@ -44,15 +44,27 @@ namespace bertini{
 	namespace python{
 		
 		
+
+		template<typename NodeBaseT>
+		template<class PyClass>
+		void HandleVisitor<NodeBaseT>::visit(PyClass& cl) const
+		{
+			cl
+			.def("root", &Handle::EntryNode,return_value_policy<reference_existing_object>())
+			.def("root", &Handle::SetRoot)
+			.def("ensure_not_empy", &Handle::EnsureNotEmpty)
+			;
+		}
+
+
+
+
 		
 		template<typename NodeBaseT>
 		template<class PyClass>
 		void FunctionVisitor<NodeBaseT>::visit(PyClass& cl) const
 		{
 			cl
-			.def("root", &Function::entry_node,return_value_policy<reference_existing_object>())
-			.def("root", &Function::SetRoot)
-			.def("ensure_not_empy", &Function::EnsureNotEmpty)
 			;
 		}
 
@@ -79,17 +91,26 @@ namespace bertini{
 
 			scope new_submodule_scope = new_submodule;
 
+
+			// TrigOperator class
+			class_<Handle, boost::noncopyable, bases<NamedSymbol>, std::shared_ptr<Handle> >("Handle", no_init)
+			.def(HandleVisitor<Handle>())
+			;
+
+
 			// Function class
-			class_<Function, bases<NamedSymbol>, std::shared_ptr<Function> >("Function", init<std::string>())
-			.def(init<const Nodeptr&>() )
+			class_<Function, bases<Handle>, std::shared_ptr<Function> >("Function", no_init)
+			.def("__init__",make_constructor(&Function::template Make<std::string const&>))
+			.def("__init__",make_constructor(&Function::template Make<const std::shared_ptr<Node> &> ))
 			
 			.def(FunctionVisitor<Function>())
+			
 			;
 
 			
 			// Jacobian class
-			class_<Jacobian, bases<Function>, std::shared_ptr<Jacobian> >("Jacobian", init<const Nodeptr&>())
-			
+			class_<Jacobian, bases<Handle>, std::shared_ptr<Jacobian> >("Jacobian", no_init)
+			.def("__init__",make_constructor(&Jacobian::template Make<const Nodeptr&>))
 			.def(JacobianVisitor<Jacobian>())
 			;
 			

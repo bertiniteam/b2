@@ -31,12 +31,12 @@ namespace node{
 
 	std::shared_ptr<Node> Pi()
 	{
-		return std::make_shared<special_number::Pi>();
+		return special_number::Pi::Make();
 	}
 
 	std::shared_ptr<Node> E()
 	{
-		return std::make_shared<special_number::E>();
+		return special_number::E::Make();
 	}
 
 	std::shared_ptr<Node> I()

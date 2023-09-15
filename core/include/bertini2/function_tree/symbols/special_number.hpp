@@ -68,12 +68,20 @@ namespace node{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 
+			virtual ~Pi() = default;
+
+			template<typename... Ts> 
+			static 
+			std::shared_ptr<Pi> Make(Ts&& ...ts){ 
+				return std::shared_ptr<Pi>( new Pi(ts...) );
+			}
+
+
+		private:
+
 			Pi() : NamedSymbol("pi")
 			{}
 
-			virtual ~Pi() = default;
-
-		private:
 			// Return value of constant
 			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 			
@@ -106,14 +114,24 @@ namespace node{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
-			E() : NamedSymbol("e")
-			{}
+
 
 			virtual ~E() = default;
 
 
+			template<typename... Ts> 
+			static 
+			std::shared_ptr<E> Make(Ts&& ...ts){ 
+				return std::shared_ptr<E>( new E(ts...) );
+			}
+
 
 		private:
+
+			E() : NamedSymbol("e")
+			{}
+
+			
 			// Return value of constant
 			dbl FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const override;
 			

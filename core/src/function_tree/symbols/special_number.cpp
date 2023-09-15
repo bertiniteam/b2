@@ -81,14 +81,16 @@ void E::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> c
 	evaluation_value = mpfr_complex(mpfr_float(exp(mpfr_float(1))));
 }
 			}// special number namespace
+
+
 std::shared_ptr<Node> Pi()
 {
-	return std::make_shared<special_number::Pi>();
+	return special_number::Pi::Make();
 }
 
 std::shared_ptr<Node> E()
 {
-	return std::make_shared<special_number::E>();
+	return special_number::E::Make();
 }
 
 std::shared_ptr<Node> I()
