@@ -26,8 +26,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([Makefile])
 
 
-#find the flags for C++14
-AX_CXX_COMPILE_STDCXX_14
+
+AX_CXX_COMPILE_STDCXX(17)
 
 
 #enable the creation of shared libraries
