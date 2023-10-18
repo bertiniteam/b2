@@ -59,8 +59,8 @@ pyexec_LTLIBRARIES += _pybertini.la
 # so this is explicitly NOT lib_LTLIBRARIES
 
 _pybertini_ladir = $(DESTDIR)/$(bindir)
-_pybertini_la_HEADERS =
-_pybertini_la_SOURCES = $(bertini_python_header_files) $(bertini_python_source_files)
+_pybertini_la_HEADERS = $(bertini_python_header_files)
+_pybertini_la_SOURCES = $(bertini_python_source_files)
 
 
 # removed this variable -- $(PYTHON_EXTRA_LIBS) 
