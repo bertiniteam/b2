@@ -2,25 +2,25 @@
 
 
 bertini_python_header_files = \
-				$(includedir)/bertini_python.hpp \
-				$(includedir)/eigenpy_interaction.hpp \
-				$(includedir)/function_tree_export.hpp \
-				$(includedir)/mpfr_export.hpp \
-				$(includedir)/random_export.hpp \
-				$(includedir)/node_export.hpp \
-				$(includedir)/symbol_export.hpp \
-				$(includedir)/operator_export.hpp \
-				$(includedir)/root_export.hpp \
-				$(includedir)/system_export.hpp \
-				$(includedir)/tracker_export.hpp \
-				$(includedir)/endgame_export.hpp \
-				$(includedir)/parser_export.hpp \
-				$(includedir)/generic_observer.hpp \
-				$(includedir)/generic_observable.hpp \
-				$(includedir)/tracker_observers.hpp \
-				$(includedir)/endgame_observers.hpp \
-				$(includedir)/detail.hpp
-				$(includedir)/logging.hpp
+				include/bertini_python.hpp \
+				include/eigenpy_interaction.hpp \
+				include/function_tree_export.hpp \
+				include/mpfr_export.hpp \
+				include/random_export.hpp \
+				include/node_export.hpp \
+				include/symbol_export.hpp \
+				include/operator_export.hpp \
+				include/root_export.hpp \
+				include/system_export.hpp \
+				include/tracker_export.hpp \
+				include/endgame_export.hpp \
+				include/parser_export.hpp \
+				include/generic_observer.hpp \
+				include/generic_observable.hpp \
+				include/tracker_observers.hpp \
+				include/endgame_observers.hpp \
+				include/detail.hpp \
+				include/logging.hpp
 
 
 # as a reminder, these are compiled from top down, yo.
