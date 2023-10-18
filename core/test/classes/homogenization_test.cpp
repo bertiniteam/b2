@@ -45,14 +45,14 @@ using dbl = bertini::dbl;
 using mpfr = bertini::mpfr_complex;
 
 
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 using bertini::MakeFloat;
 
 
 BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 {
-	Var x = MakeVariable("x");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var h = Variable::Make("h");
 
 	auto f1 = x;
 	
@@ -79,9 +79,9 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 {
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+	Var h = Variable::Make("h");
 
 	auto f1 = x-1;
 	
@@ -108,13 +108,13 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_1)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 {
-	std::shared_ptr<bertini::node::Variable> x = MakeVariable("x");
-	std::shared_ptr<bertini::node::Variable> t = MakeVariable("t");
+	std::shared_ptr<bertini::node::Variable> x = Variable::Make("x");
+	std::shared_ptr<bertini::node::Variable> t = Variable::Make("t");
 	auto f1 = (1-t)*x + t*(1-x);
 
 	BOOST_CHECK(!f1->IsHomogeneous());
 
-	Var h = MakeVariable("h");
+	Var h = Variable::Make("h");
 	VariableGroup vars;
 	vars.push_back(x);
 
@@ -136,9 +136,9 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_1_minus_t_x_plus_t_1_minus_x)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 {
-	Var x = MakeVariable("x");
-	Var t = MakeVariable("t");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var t = Variable::Make("t");
+	Var h = Variable::Make("h");
 
 	auto f1 = x-t;
 	
@@ -165,10 +165,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_x_minus_t)
 
 BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+	Var h = Variable::Make("h");
 
 	auto f1 = x-y*t;
 	
@@ -199,10 +199,10 @@ BOOST_AUTO_TEST_CASE(no_homogenization_needed_x_minus_y_t)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var z = MakeVariable("z");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+	Var h = Variable::Make("h");
 
 	auto f1 = pow(x,2) + pow(y,2) + pow(z,2)-1;
 	
@@ -234,10 +234,10 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_sphere)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var z = MakeVariable("z");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var z = Variable::Make("z");
+	Var h = Variable::Make("h");
 
 	auto f1 = x*y+x*z+y*z-1;
 	BOOST_CHECK(!f1->IsHomogeneous());
@@ -269,8 +269,8 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadric)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 {
-	Var x = MakeVariable("x");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var h = Variable::Make("h");
 	
 
 	auto f1 = pow(x,2) + x + 1;
@@ -297,8 +297,8 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 {
-	Var x = MakeVariable("x");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var h = Variable::Make("h");
 	
 
 	auto f1 = pow(x,2) + x;
@@ -325,9 +325,9 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant)
 
 BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var h = MakeVariable("h");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var h = Variable::Make("h");
 	
 
 	auto f1 = pow(x,2) + x;
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(homogenization_needed_quadratic_no_constant_wrt_y)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_sin_x)
 {
-	Var x = MakeVariable("x");
+	Var x = Variable::Make("x");
 
 	auto f1 = sin(x);
 	
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_sin_x)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_cos_x)
 {
-	Var x = MakeVariable("x");
+	Var x = Variable::Make("x");
 
 	auto f1 = cos(x);
 	
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_cos_x)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_tan_x)
 {
-	Var x = MakeVariable("x");
+	Var x = Variable::Make("x");
 
 	auto f1 = tan(x);
 	
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_tan_x)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_exp_x)
 {
-	Var x = MakeVariable("x");
+	Var x = Variable::Make("x");
 
 	auto f1 = exp(x);
 	
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(nothomogeneous_exp_x)
 
 BOOST_AUTO_TEST_CASE(nothomogeneous_sqrt_x)
 {
-	Var x = MakeVariable("x");
+	Var x = Variable::Make("x");
 
 	auto f1 = sqrt(x);
 	
@@ -455,8 +455,8 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_sin_1_plus_1)
 
 BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
 
 	auto a = pow(x,3) / 2;
 	auto b = pow(x,2) * mpfr_float("4.12331") * pow(x,1);
@@ -474,8 +474,8 @@ BOOST_AUTO_TEST_CASE(is_homogeneous_summands_homogeneous)
 
 BOOST_AUTO_TEST_CASE(not_homogeneous_summands_inhomogeneous)
 {
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
 
 	auto a = pow(x,3) / 2;
 	auto b = pow(x,2) * mpfr_float("4.12331");
@@ -496,10 +496,10 @@ BOOST_AUTO_TEST_CASE(linprod_ishom)
 	using bertini::VariableGroup;
 	using namespace bertini::node;
 	
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-	auto z = MakeVariable("z");
-	auto w = MakeVariable("w");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto z = Variable::Make("z");
+	auto w = Variable::Make("w");
 	
 	
 	
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(linprod_ishom)
 	VariableGroup hom{x,w,z};
 	
 	std::shared_ptr<Node> linprod_node = (2 + 3*x + 2*w) * (4 - 2*x - 6*w)*(4+8*y);
-	std::shared_ptr<Node> linprod = std::make_shared<LinearProduct>(v1,2)*std::make_shared<LinearProduct>(v2,1);
+	std::shared_ptr<Node> linprod = LinearProduct::Make(v1,2)*LinearProduct::Make(v2,1);
 	
 	BOOST_CHECK_EQUAL(linprod->IsHomogeneous(v1), linprod_node->IsHomogeneous(v1));
 	BOOST_CHECK_EQUAL(linprod->IsHomogeneous(v2), linprod_node->IsHomogeneous(v2));
@@ -527,15 +527,15 @@ BOOST_AUTO_TEST_CASE(linprod_ishom)
 	BOOST_CHECK_EQUAL(linprod->IsHomogeneous(y), linprod_node->IsHomogeneous(y));
 	BOOST_CHECK_EQUAL(linprod->IsHomogeneous(badgp), linprod_node->IsHomogeneous(badgp));
 	
-    linprod = std::make_shared<LinearProduct>(v1,2)*std::make_shared<LinearProduct>(v2,1);
+    linprod = LinearProduct::Make(v1,2)*LinearProduct::Make(v2,1);
     BOOST_CHECK_THROW(linprod->Homogenize(badgp,y), std::exception);
 	
 	linprod_node = (2 + 3*x + 2*w) * (4 - 2*x - 6*w)*(4+8*y);
-	linprod = std::make_shared<LinearProduct>(v1,2)*std::make_shared<LinearProduct>(v2,1);
+	linprod = LinearProduct::Make(v1,2)*LinearProduct::Make(v2,1);
 	
 	BOOST_CHECK_THROW(linprod->Homogenize(badgp,y), std::exception);
 	
-	linprod = std::make_shared<LinearProduct>(v1,2)*std::make_shared<LinearProduct>(v2,1);
+	linprod = LinearProduct::Make(v1,2)*LinearProduct::Make(v2,1);
 	
 	linprod_node->Homogenize(hom, z);
 	linprod->Homogenize(hom,z);
@@ -557,11 +557,11 @@ BOOST_AUTO_TEST_CASE(linprod_hom_eval)
 	using bertini::VariableGroup;
 	using namespace bertini::node;
 	
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-	auto h0 = MakeVariable("HOM0");
-	auto h1 = MakeVariable("HOM1");
-	auto z = MakeVariable("z");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto h0 = Variable::Make("HOM0");
+	auto h1 = Variable::Make("HOM1");
+	auto z = Variable::Make("z");
 	
 	
 	
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(linprod_hom_eval)
 		}
 	}
 	
-	std::shared_ptr<bertini::node::Node>linprod1 = bertini::MakeLinearProduct(v0, coeff_mpfr);
+	std::shared_ptr<bertini::node::Node>linprod1 = bertini::LinearProduct::Make(v0, coeff_mpfr);
 	
 	coeff_dbl = Mat<dbl>(1,2);
 	coeff_mpfr = Mat<mpfr>(1,2);
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(linprod_hom_eval)
 		}
 	}
 	
-	std::shared_ptr<bertini::node::Node> linprod2 = bertini::MakeLinearProduct(v1, coeff_mpfr);
+	std::shared_ptr<bertini::node::Node> linprod2 = bertini::LinearProduct::Make(v1, coeff_mpfr);
 	
 	std::shared_ptr<bertini::node::Node> linprod_node = (mpfr(1,1)*x + mpfr(1,2)*z + mpfr(1,3)) * (mpfr(2,1)*x + mpfr(2,2)*z+ mpfr(2,3))* (mpfr(3,3)*y + mpfr(3,4));
 	std::shared_ptr<bertini::node::Node> linprod = linprod1*linprod2;
@@ -656,11 +656,11 @@ BOOST_AUTO_TEST_CASE(linprod_hom_eval_homvars)
 	using bertini::VariableGroup;
 	using namespace bertini::node;
 	
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-	auto h0 = MakeVariable("HOM0");
-	auto h1 = MakeVariable("HOM1");
-	auto z = MakeVariable("z");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto h0 = Variable::Make("HOM0");
+	auto h1 = Variable::Make("HOM1");
+	auto z = Variable::Make("z");
 	
 	
 	
@@ -678,7 +678,7 @@ BOOST_AUTO_TEST_CASE(linprod_hom_eval_homvars)
 		}
 	}
 	
-	std::shared_ptr<bertini::node::Node>linprod1 = bertini::MakeLinearProduct(v0, coeff_mpfr, true);
+	std::shared_ptr<bertini::node::Node>linprod1 = bertini::LinearProduct::Make(v0, coeff_mpfr, true);
 	
 	coeff_dbl = Mat<dbl>(1,2);
 	coeff_mpfr = Mat<mpfr>(1,2);
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(linprod_hom_eval_homvars)
 		}
 	}
 	
-	std::shared_ptr<bertini::node::Node> linprod2 = bertini::MakeLinearProduct(v1, coeff_mpfr, true);
+	std::shared_ptr<bertini::node::Node> linprod2 = bertini::LinearProduct::Make(v1, coeff_mpfr, true);
 	
 	std::shared_ptr<bertini::node::Node> linprod_node = (mpfr(1,1)*x + mpfr(1,2)*z) * (mpfr(2,1)*x + mpfr(2,2)*z)* (mpfr(3,3)*y);
 	std::shared_ptr<bertini::node::Node> linprod = linprod1*linprod2;
@@ -757,12 +757,12 @@ BOOST_AUTO_TEST_CASE(linprod_hom_diff_eval)
     using bertini::VariableGroup;
     using namespace bertini::node;
     
-    auto x = MakeVariable("x");
-    auto y = MakeVariable("y");
-    auto h0 = MakeVariable("HOM0");
-    auto h1 = MakeVariable("HOM1");
-    auto z = MakeVariable("z");
-    auto w = MakeVariable("w");
+    auto x = Variable::Make("x");
+    auto y = Variable::Make("y");
+    auto h0 = Variable::Make("HOM0");
+    auto h1 = Variable::Make("HOM1");
+    auto z = Variable::Make("z");
+    auto w = Variable::Make("w");
     
     
     
@@ -782,7 +782,7 @@ BOOST_AUTO_TEST_CASE(linprod_hom_diff_eval)
         }
     }
     
-    std::shared_ptr<bertini::node::Node> linprod1 = bertini::MakeLinearProduct(v0, coeff_mpfr);
+    std::shared_ptr<bertini::node::Node> linprod1 = bertini::LinearProduct::Make(v0, coeff_mpfr);
     
     num_factors = 1;
     num_variables = v1.size();
@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(linprod_hom_diff_eval)
     }
     
     
-    std::shared_ptr<bertini::node::Node> linprod2 = bertini::MakeLinearProduct(v1, coeff_mpfr);
+    std::shared_ptr<bertini::node::Node> linprod2 = bertini::LinearProduct::Make(v1, coeff_mpfr);
     
     std::shared_ptr<bertini::node::Node> linprod1_node = (mpfr(1,1)*x + mpfr(1,2)*z + mpfr(1,3)*y+ mpfr(1,4)) * (mpfr(2,1)*x + mpfr(2,2)*z + mpfr(2,3)*y+ mpfr(2,4))*(mpfr(3,1)*x + mpfr(3,2)*z + mpfr(3,3)*y+ mpfr(3,4));
     std::shared_ptr<bertini::node::Node> linprod2_node = (mpfr(3,3)*w + mpfr(3,4));
@@ -843,8 +843,8 @@ BOOST_AUTO_TEST_CASE(linprod_hom_diff_eval)
     linprod->Homogenize(v1,h1);
     
     
-    auto J_node = bertini::MakeJacobian(linprod_node->Differentiate());
-    auto J = bertini::MakeJacobian(linprod->Differentiate());
+    auto J_node = bertini::Jacobian::Make(linprod_node->Differentiate());
+    auto J = bertini::Jacobian::Make(linprod->Differentiate());
     
     
     dbl evalx_d = J->EvalJ<dbl>(x);

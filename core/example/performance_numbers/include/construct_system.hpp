@@ -19,14 +19,14 @@ namespace demo{
 
 	auto ConstructSystem1()
 	{
-		using bertini::MakeVariable;
-        using bertini::MakeInteger;
+		using bertini::Variable::Make;
+        using bertini::Integer::Make;
         using bertini::MakeFloat;
 
-	    auto x1 = MakeVariable("x1");
-	    auto x2 = MakeVariable("x2");
-	    auto x3 = MakeVariable("x3");
-	    auto x4 = MakeVariable("x4");
+	    auto x1 = Variable::Make("x1");
+	    auto x2 = Variable::Make("x2");
+	    auto x3 = Variable::Make("x3");
+	    auto x4 = Variable::Make("x4");
         
         auto p1 = MakeFloat("3.2");
         auto p2 = MakeFloat("-2.8");

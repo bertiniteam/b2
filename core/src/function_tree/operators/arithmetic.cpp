@@ -66,7 +66,7 @@ unsigned SumOperator::EliminateZeros()
 
 		if (new_children.empty())
 		{
-			new_children.push_back(MakeInteger(0));
+			new_children.push_back(Integer::Make(0));
 			new_ops.push_back(true);
 			--num_eliminated;
 		}
@@ -205,7 +205,7 @@ std::shared_ptr<Node> SumOperator::Differentiate(std::shared_ptr<Variable> const
 		
 		counter++;
 		if (counter==1)
-			ret_sum = std::make_shared<SumOperator>(temp_node,signs_[ii]);
+			ret_sum = SumOperator::Make(temp_node,signs_[ii]);
 		else
 			std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddOperand(temp_node,signs_[ii]);
 		
@@ -298,12 +298,12 @@ void SumOperator::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable
 			// hold the operand temporarily.
 			if (degree_deficiency==1)
 			{
-				std::shared_ptr<Node> M = std::make_shared<MultOperator>(homvar,std::dynamic_pointer_cast<Node>(*iter));
+				std::shared_ptr<Node> M = MultOperator::Make(homvar,std::dynamic_pointer_cast<Node>(*iter));
 				swap(*iter,M);
 			}
 			else{
-				std::shared_ptr<Node> P = std::make_shared<IntegerPowerOperator>(std::dynamic_pointer_cast<Node>(homvar),degree_deficiency);
-				std::shared_ptr<Node> M = std::make_shared<MultOperator>(P,std::dynamic_pointer_cast<Node>(*iter));
+				std::shared_ptr<Node> P = IntegerPowerOperator::Make(std::dynamic_pointer_cast<Node>(homvar),degree_deficiency);
+				std::shared_ptr<Node> M = MultOperator::Make(P,std::dynamic_pointer_cast<Node>(*iter));
 				swap(*iter,M);
 			}
 			
@@ -473,7 +473,7 @@ void NegateOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> NegateOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return std::make_shared<NegateOperator>(operand_->Differentiate(v));
+	return NegateOperator::Make(operand_->Differentiate(v));
 }
 
 dbl NegateOperator::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
@@ -548,7 +548,7 @@ unsigned MultOperator::EliminateZeros()
 	{
 		unsigned num_eliminated = operands_.size()-1;
 		operands_.clear(); mult_or_div_.clear();
-		AddOperand(MakeInteger(0), true);
+		AddOperand(Integer::Make(0), true);
 		return num_eliminated;
 	}
 
@@ -732,7 +732,7 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
 		// no, the term's derivative is not 0.  
 		
 		// create the product of the remaining terms
-		auto term_ii = std::make_shared<MultOperator>(local_derivative);
+		auto term_ii = MultOperator::Make(local_derivative);
 		for (int jj = 0; jj < operands_.size(); ++jj)
 		{
 			if(jj != ii)
@@ -752,7 +752,7 @@ std::shared_ptr<Node> MultOperator::Differentiate(std::shared_ptr<Variable> cons
 		
 		term_counter++;
 		if (term_counter==1)
-			ret_sum = std::make_shared<SumOperator>(term_ii,mult_or_div_[ii]);
+			ret_sum = SumOperator::Make(term_ii,mult_or_div_[ii]);
 		else
 			std::dynamic_pointer_cast<SumOperator>(ret_sum)->AddOperand(term_ii,mult_or_div_[ii]);
 	} // re: for ii
@@ -955,9 +955,9 @@ std::shared_ptr<Node> PowerOperator::Differentiate(std::shared_ptr<Variable> con
 {
 	
 	auto exp_minus_one = exponent_-1;
-	auto ret_mult = std::make_shared<MultOperator>(base_->Differentiate(v));
+	auto ret_mult = MultOperator::Make(base_->Differentiate(v));
 	ret_mult->AddOperand(exponent_);
-	ret_mult->AddOperand(std::make_shared<PowerOperator>(base_, exp_minus_one));
+	ret_mult->AddOperand(PowerOperator::Make(base_, exp_minus_one));
 	return ret_mult;
 }
 
@@ -1146,17 +1146,17 @@ void IntegerPowerOperator::print(std::ostream & target) const
 std::shared_ptr<Node> IntegerPowerOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
 	if (exponent_==0)
-		return MakeInteger(0);
+		return Integer::Make(0);
 	else if (exponent_==1)
 		return operand_->Differentiate(v);
 	else if (exponent_==2){
-		auto M = std::make_shared<MultOperator>(MakeInteger(2), operand_);
+		auto M = MultOperator::Make(Integer::Make(2), operand_);
 		M->AddOperand(operand_->Differentiate(v));
 		return M;
 	}
 	else{
-		auto M = std::make_shared<MultOperator>(MakeInteger(exponent_),
-												std::make_shared<IntegerPowerOperator>(operand_, exponent_-1) );
+		auto M = MultOperator::Make(Integer::Make(exponent_),
+												IntegerPowerOperator::Make(operand_, exponent_-1) );
 		M->AddOperand(operand_->Differentiate(v));
 		return M;
 	}
@@ -1210,9 +1210,9 @@ void SqrtOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> SqrtOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	auto ret_mult = std::make_shared<MultOperator>(std::make_shared<PowerOperator>(operand_, MakeRational(mpq_rational(-1,2),0)));
+	auto ret_mult = MultOperator::Make(PowerOperator::Make(operand_, Rational::Make(mpq_rational(-1,2),0)));
 	ret_mult->AddOperand(operand_->Differentiate(v));
-	ret_mult->AddOperand(MakeRational(mpq_rational(1,2),0));
+	ret_mult->AddOperand(Rational::Make(mpq_rational(1,2),0));
 	return ret_mult;
 }
 
@@ -1368,7 +1368,7 @@ void LogOperator::print(std::ostream & target) const
 
 std::shared_ptr<Node> LogOperator::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return std::make_shared<MultOperator>(operand_,false,operand_->Differentiate(v),true);
+	return MultOperator::Make(operand_,false,operand_->Differentiate(v),true);
 }
 
 

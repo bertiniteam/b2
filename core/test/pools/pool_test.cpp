@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(make_nonpointer_system_and_add_to_pool)
 	SystemPool sp;
 
 	System sys;
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-	auto z = MakeVariable("z");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto z = Variable::Make("z");
 	
 	sys.AddVariableGroup(VariableGroup({x,y,z}));  
 	sys.AddFunction(x);
@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(make_new_sys_from_pool)
 	SystemPool sp;
 	std::shared_ptr<System> sys = sp.NewObj();
 
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-	auto z = MakeVariable("z");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto z = Variable::Make("z");
 	
 	sys->AddVariableGroup(VariableGroup({x,y,z}));  
 	sys->AddFunction(x);
@@ -94,9 +94,9 @@ BOOST_AUTO_TEST_CASE(add_ptr_sys_to_pool)
 	SystemPool sp;
 	std::shared_ptr<System> sys = std::make_shared<System>();
 
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-	auto z = MakeVariable("z");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto z = Variable::Make("z");
 	
 	sys->AddVariableGroup(VariableGroup({x,y,z}));  
 	sys->AddFunction(x);

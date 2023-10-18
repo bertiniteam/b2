@@ -11,6 +11,7 @@ basics_headers = \
 	include/bertini2/num_traits.hpp \
 	include/bertini2/classic.hpp \
 	include/bertini2/eigen_extensions.hpp \
+	include/bertini2/eigen_serialization_addon.hpp \
 	include/bertini2/logging.hpp \
 	include/bertini2/config.h
 

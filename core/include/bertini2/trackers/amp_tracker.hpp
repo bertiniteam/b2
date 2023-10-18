@@ -286,9 +286,9 @@ namespace bertini{
 		using namespace bertini::tracking;
 
 		// 1. Create the system
-		Var x = MakeVariable("x");
-		Var y = MakeVariable("y");
-		Var t = MakeVariable("t");
+		Var x = Variable::Make("x");
+		Var y = Variable::Make("y");
+		Var t = Variable::Make("t");
 
 		System sys;
 

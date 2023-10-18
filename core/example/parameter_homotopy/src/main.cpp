@@ -29,7 +29,7 @@ int main()
         std::cout << iter << '\n' << '\n';
 
 
-    auto t = bertini::MakeVariable("t");
+    auto t = bertini::Variable::Make("t");
     auto step2_stuff = demo::MakeStep2Parameters(step1_params, t);
     auto homotopy_sys_step2 = demo::ConstructSystem(std::get<0>(step2_stuff));
     homotopy_sys_step2.AddPathVariable(t);

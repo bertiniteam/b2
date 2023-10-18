@@ -32,7 +32,8 @@ BOOST_CLASS_EXPORT(bertini::start_system::MHomogeneous);
 
 namespace bertini 
 {
-
+	using namespace bertini::node;
+	
 	namespace start_system 
 	{
 
@@ -62,14 +63,14 @@ namespace bertini
 			std::shared_ptr<node::Node> func;
 			for (int ii = 0; ii < degree_matrix_.rows(); ++ii)
 			{
-				func = bertini::MakeInteger(1);
+				func = Integer::Make(1);
 				
 				for (int jj = 0; jj < s.NumHomVariableGroups(); ++jj)
 				{
 					if(degree_matrix_(ii,jj) != 0)
 					{
 						// Fill the linear product matrix
-						linprod_matrix_(ii,jj) = std::make_shared<node::LinearProduct>(var_groups_[jj], degree_matrix_(ii,jj), true);
+						linprod_matrix_(ii,jj) = LinearProduct::Make(var_groups_[jj], degree_matrix_(ii,jj), true);
 						
 						func *= linprod_matrix_(ii,jj);
 					}
@@ -79,7 +80,7 @@ namespace bertini
 					if(degree_matrix_(ii,jj) != 0)
 					{
 						// Fill the linear product matrix
-						linprod_matrix_(ii,jj) = std::make_shared<node::LinearProduct>(var_groups_[jj], degree_matrix_(ii,jj));
+						linprod_matrix_(ii,jj) = LinearProduct::Make(var_groups_[jj], degree_matrix_(ii,jj));
 						
 						func *= linprod_matrix_(ii,jj);
 					}
@@ -146,7 +147,7 @@ namespace bertini
 		*/
 		void MHomogeneous::CreateDegreeMatrix(System const& target_system)
 		{
-			degree_matrix_ = Mat<int>::Zero(target_system.NumFunctions(),target_system.NumTotalVariableGroups());
+			degree_matrix_ = Mat<int>::Zero(target_system.NumNaturalFunctions(),target_system.NumTotalVariableGroups());
 
 			var_groups_ = target_system.HomVariableGroups();
 			auto affine_var_groups = target_system.VariableGroups();
@@ -221,7 +222,7 @@ namespace bertini
 			int row = 0;
 			int old_current_part_row = -1;
 			int bad_choice = 0;
-			Vec<int> current_partition = -1*Vec<int>::Ones(target_system.NumFunctions());
+			Vec<int> current_partition = -1*Vec<int>::Ones(target_system.NumNaturalFunctions());
 			Vec<int> variable_group_counter = Vec<int>::Zero(target_system.NumTotalVariableGroups());
 
 			auto size_of_each_var_gp = target_system.VariableGroupSizes(); //K
@@ -254,12 +255,12 @@ namespace bertini
 			    else  //found a good choice of column for this row!
 			    {
 			      	row = row + 1;  //move on to next row!
-			      	if (row < target_system.NumFunctions())
+			      	if (row < target_system.NumNaturalFunctions())
 			        	current_partition[row] = -1; //This allows us to consider all possible columns from left to right.
 			        	//since we are starting a new row, we start with the left-most entry (ChooseColumnInRow() first increments col)
 			    }
 			     
-			    if((row == target_system.NumFunctions()) && (!bad_choice))
+			    if((row == target_system.NumNaturalFunctions()) && (!bad_choice))
 			    {
 			    	// std::cout << "Good partition!!!!" << std::endl;
 			    	// std::cout << current_partition << std::endl;

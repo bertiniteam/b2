@@ -45,7 +45,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 
 using dbl = std::complex<double>;
 using mpfr = bertini::mpfr_complex;
@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(double_tracker_track_linear)
 	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(multiple_100_tracker_track_linear)
 	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 

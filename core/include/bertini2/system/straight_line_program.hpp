@@ -45,6 +45,8 @@
 #include "bertini2/function_tree/forward_declares.hpp"
 #include "bertini2/detail/visitor.hpp"
 
+#include <boost/serialization/utility.hpp>
+
 // code copied from Bertini1's file include/bertini.h
 
 
@@ -147,18 +149,20 @@ namespace bertini {
 		Exp=      1 << 5,
 		Log=      1 << 6,
 		Negate=   1 << 7,
-		Sin=      1 << 8,
-		Cos=      1 << 9,
-		Tan=      1 << 10,
-		Asin=     1 << 11,
-		Acos=     1 << 12,
-		Atan=     1 << 13,
-		Assign=   1 << 14,
+		Sqrt=     1 << 8,
+		Sin=      1 << 9,
+		Cos=      1 << 10,
+		Tan=      1 << 11,
+		Asin=     1 << 12,
+		Acos=     1 << 13,
+		Atan=     1 << 14,
+		Assign=   1 << 15,
+		IntPower= 1 << 16,
 	};
 
-	const int BinaryOperations = Add|Subtract | Multiply|Divide | Power;
+	const int BinaryOperations = Add|Subtract | Multiply|Divide | Power | IntPower;
 	const int TrigOperations   = Sin|Cos|Tan | Asin|Acos|Atan;
-	const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations;
+	const int UnaryOperations  = Exp|Log | Negate | Assign | TrigOperations | Sqrt;
 
 	constexpr bool IsUnary(Operation op)
 	{
@@ -169,6 +173,8 @@ namespace bertini {
 	{
 		return op & BinaryOperations;
 	}
+
+	std::string OpcodeToString(Operation op);
 
 	/**
 	 \class StraightLineProgram
@@ -203,9 +209,18 @@ namespace bertini {
 		 */
 		struct OutputLocations{
 			size_t Functions{0};
-			size_t Variables{0};
 			size_t Jacobian{0};
 			size_t TimeDeriv{0};
+
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & Functions;
+				ar & Jacobian;
+				ar & TimeDeriv;
+			}
+
 		};
 
 		/**
@@ -216,6 +231,14 @@ namespace bertini {
 		struct InputLocations{
 			size_t Variables{0};
 			size_t Time{0};
+
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & Variables;
+				ar & Time;
+			}
 		};
 
 		/**
@@ -228,6 +251,16 @@ namespace bertini {
 			size_t Variables{0};
 			size_t Jacobian{0};
 			size_t TimeDeriv{0};
+
+			friend class boost::serialization::access;
+
+			template <typename Archive>
+			void serialize(Archive& ar, const unsigned version) {
+				ar & Functions;
+				ar & Variables;
+				ar & Jacobian;
+				ar & TimeDeriv;
+			}
 		};
 
 		/**
@@ -242,7 +275,7 @@ namespace bertini {
 		{
 
 			using NumT = typename Derived::Scalar;
-			CopyVariableValues(variable_values);
+			SetVariableValues(variable_values);
 
 			Eval<NumT>();
 
@@ -268,8 +301,8 @@ namespace bertini {
 			static_assert(std::is_same<NumT, ComplexT>::value, "scalar types must be the same");
 
 			// 1. copy variable values into memory locations they're supposed to go in
-			CopyVariableValues(variable_values);
-			CopyPathVariable(time);
+			SetVariableValues(variable_values);
+			SetPathVariable(time);
 			Eval<NumT>();
 		}
 
@@ -280,91 +313,34 @@ namespace bertini {
 		\tparam NumT numeric type
 
 		uses a switch to find different operations from memory to make sure its performing the correct evaluations
-
+	
+		todo: implement a compile-time version of this using Boost.Hana
 		 */
 		template<typename NumT>
-		void Eval() const{
-			auto& memory =  std::get<std::vector<NumT>>(memory_);
-			for (int ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
-				//in the unary case the loop will increment by 3
-				//binary: by 4
-
-				switch (instructions_[ii]) {
-
-					case Add:
-						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] + memory[instructions_[ii+2]];
-						break;
-
-					case Subtract:
-						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] - memory[instructions_[ii+2]];
-						break;
-
-					case Multiply:
-						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] * memory[instructions_[ii+2]];
-						break;
-
-					case Divide:
-						memory[this->instructions_[ii+3]] = memory[instructions_[ii+1]] / memory[instructions_[ii+2]];
-						break;
-
-					case Power:
-						memory[this->instructions_[ii+3]] = pow(memory[instructions_[ii+1]], memory[instructions_[ii+2]]);
-						break;
-
-					case Assign:
-						memory[this->instructions_[ii+2]] = memory[instructions_[ii+1]];
-						break;
-
-					case Negate:
-						memory[this->instructions_[ii+2]] = -(memory[instructions_[ii+1]]);
-						break;
-
-					case Log:
-						memory[this->instructions_[ii+2]] = log(memory[instructions_[ii+1]]);
-						break;
-
-					case Exp:
-						memory[this->instructions_[ii+2]] = exp(memory[instructions_[ii+1]]);
-						break;
-
-					case Sin:
-						memory[this->instructions_[ii+2]] = sin(memory[instructions_[ii+1]]);
-						break;
-
-					case Cos:
-						memory[this->instructions_[ii+2]] = cos(memory[instructions_[ii+1]]);
-						break;
-
-					case Tan:
-						memory[this->instructions_[ii+2]] = tan(memory[instructions_[ii+1]]);
-						break;
-
-					case Asin:
-						memory[this->instructions_[ii+2]] = asin(memory[instructions_[ii+1]]);
-						break;
-
-					case Acos:
-						memory[this->instructions_[ii+2]] = acos(memory[instructions_[ii+1]]);
-						break;
-
-					case Atan:
-						memory[this->instructions_[ii+2]] = atan(memory[instructions_[ii+1]]);
-						break;
-
-				}
+		void Eval() const;  // this definition is in cpp, along with the lines that instantiate the needed versions.
 
 
-				if (IsUnary(static_cast<Operation>(instructions_[ii]))) {
-					ii = ii+3;
 
-				}
-				//in the binary case the loop will increment by 4
-				else {
-					ii = ii+4;
-				}
-			}
+		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+		template <typename T>
+		void EvalFunctions() const{
+			this->Eval<T>();
 		}
 
+
+
+		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+		template <typename T>
+		void EvalJacobian() const{
+			this->Eval<T>();
+		}
+
+
+		// a placeholder function that needs to be written.  now just calls eval, since the eval functionality is both functions and jacobian wrapped together -- we don't keep arrays of their locations separately yet, so that would be the starting point.
+		template <typename T>
+		void EvalTimeDeriv() const{
+			this->Eval<T>();
+		}
 
 
 		/**
@@ -374,15 +350,17 @@ namespace bertini {
 
 		\param result The vector you're going to store the values into
 
-		the function will automatically resize your vector for you to be the correct size
+		the function will NOT automatically resize your vector for you to be the correct size
 
 		 */
 		template<typename NumT>
-		void GetFuncVals(Vec<NumT> & result) const{
+		void GetFuncValsInPlace(Vec<NumT> & result) const{
+			if (!is_evaluated_)
+				this->EvalFunctions<NumT>();
+
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
-			// 1. make container, size correctly.
-			result.resize(number_of_.Functions);
-			// 2. copy content
+
+			// copy content
 			for (int ii = 0; ii < number_of_.Functions; ++ii) {
 				result(ii) = memory[ii + output_locations_.Functions];
 			}
@@ -395,16 +373,18 @@ namespace bertini {
 
 		\param result The vector you're going to store the values into
 
-		the function will automatically resize your vector for you to be the correct size
+		the function will NOT automatically resize your vector for you to be the correct size
 
 		 */
 
 		template<typename NumT>
-		void GetJacobian(Mat<NumT> & result) const{
+		void GetJacobianInPlace(Mat<NumT> & result) const{
+			if (!is_evaluated_)
+				this->EvalJacobian<NumT>();
+
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
-			// 1. make container, size correctly.
-			result.resize(number_of_.Functions, number_of_.Variables);
-			// 2. copy content
+		
+			// copy content
 			for (int jj =0; jj < number_of_.Variables; ++jj) {
 				for (int ii = 0; ii < number_of_.Functions; ++ii) {
 					result(ii, jj) = memory[ii+jj*number_of_.Functions + output_locations_.Jacobian];
@@ -424,10 +404,12 @@ namespace bertini {
 		 */
 
 		template<typename NumT>
-		void GetTimeDeriv(Vec<NumT> & result) const{
+		void GetTimeDerivInPlace(Vec<NumT> & result) const{
+			if (!is_evaluated_)
+				this->EvalTimeDeriv<NumT>();
+
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			// 1. make container, size correctly.
-			result.resize(number_of_.Functions);
 			// 2. copy content
 			for (int ii = 0; ii < number_of_.Functions; ++ii) {
 				result(ii) = memory[ii + output_locations_.TimeDeriv];
@@ -442,8 +424,8 @@ namespace bertini {
 		 */
 		template<typename NumT>
 		Vec<NumT> GetFuncVals() const{
-			Vec<NumT> return_me;
-			GetFuncVals(return_me);
+			Vec<NumT> return_me(this->NumFunctions());
+			GetFuncValsInPlace(return_me);
 			return return_me;
 		}
 		/**
@@ -454,8 +436,8 @@ namespace bertini {
 		 */
 		template<typename NumT>
 		Mat<NumT> GetJacobian() const{
-			Mat<NumT> return_me;
-			GetJacobian(return_me);
+			Mat<NumT> return_me(this->NumFunctions(), this->NumVariables());
+			GetJacobianInPlace(return_me);
 			return return_me;
 		}
 		/**
@@ -466,8 +448,8 @@ namespace bertini {
 		 */
 		template<typename NumT>
 		Vec<NumT> GetTimeDeriv() const{
-			Vec<NumT> return_me;
-			GetTimeDeriv(return_me);
+			Vec<NumT> return_me(this->NumFunctions());
+			GetTimeDerivInPlace(return_me);
 			return return_me;
 		}
 
@@ -503,8 +485,7 @@ namespace bertini {
 		 \return Well, does it?
 		 */
 		bool HavePathVariable() const {
-			throw std::runtime_error("calling unimplemented function HavePathVariable");
-			return false;
+			return this->has_path_variable_;
 		}
 
 		/**
@@ -513,7 +494,7 @@ namespace bertini {
 		friend std::ostream& operator <<(std::ostream& out, const StraightLineProgram & s);
 
 
-	private:
+
 
 		/**
 		 \brief Copy the values of the variables from the passed in vector to memory
@@ -521,14 +502,25 @@ namespace bertini {
 		 \param variable_values The vector of current variable values.
 		 */
 		template<typename Derived>
-		void CopyVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
+		void SetVariableValues(Eigen::MatrixBase<Derived> const& variable_values) const{
+			using NumT = typename Derived::Scalar;
+
+#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+			if (!std::is_same<NumT,dbl_complex>::value && Precision(variable_values)!=this->precision_){
+				std::stringstream err_msg;
+				err_msg << "variable_values and SLP must be of same precision.  respective precisions: " << Precision(variable_values) << " " << this->precision_ << std::endl;
+				throw std::runtime_error(err_msg.str());
+			}
+#endif
+
 			using NumT = typename Derived::Scalar;
 			auto& memory =  std::get<std::vector<NumT>>(memory_); // unpack for local reference
 
 			for (int ii = 0; ii < number_of_.Variables; ++ii) {
 				//assign  to memory
-				memory[ii + output_locations_.Variables] = variable_values(ii);
+				memory[ii + input_locations_.Variables] = variable_values(ii);
 			}
+			is_evaluated_ = false;
 		}
 
 		/**
@@ -540,11 +532,34 @@ namespace bertini {
 		 If the SLP doesn't have a path variable, then this will throw.
 		 */
 		template<typename ComplexT>
-		void CopyPathVariable(ComplexT const& time) const{
+		void SetPathVariable(ComplexT const& time) const{
+
+#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+			if (Precision(time)!= DoublePrecision() && Precision(time)!=this->precision_){
+				std::stringstream err_msg;
+				err_msg << "time value and SLP must be of same precision.  respective precisions: " << Precision(time) << " " << this->precision_ << std::endl;
+				throw std::runtime_error(err_msg.str());
+			}
+#endif
+
 			if (!this->HavePathVariable())
-				throw std::runtime_error("calling Eval with path variable, but system doesn't have one.");
+				throw std::runtime_error("calling Eval with path variable, but this StraightLineProgram doesn't have one.");
 			// then actually copy the path variable into where it goes in memory
+
+			auto& memory =  std::get<std::vector<ComplexT>>(memory_); // unpack for local reference
+
+			memory[input_locations_.Time] = time;
+			is_evaluated_ = false;
 		}
+
+
+
+
+
+
+		using IntT = int;  // this needs to co-vary on the stored type inside the node.  node should stop using mpz, it's slow.
+
+		private:
 
 		/**
 		 \brief Add an instruction to memory.  This one's for binary operations
@@ -581,7 +596,7 @@ namespace bertini {
 		void CopyNumbersIntoMemory() const;
 
 
-		unsigned precision_ = 0; //< The current working number of digits
+		mutable unsigned precision_ = 16; //< The current working number of digits
 		bool has_path_variable_ = false; //< Does this SLP have a path variable?
 
 		NumberOf number_of_;  //< Quantities of things
@@ -589,13 +604,45 @@ namespace bertini {
 		InputLocations input_locations_; //< Where to find inputs, like variables and time
 
 		mutable std::tuple< std::vector<dbl_complex>, std::vector<mpfr_complex> > memory_; //< The memory of the object.  Numbers and variables, plus temp results and output locations.  It's all one block.  That's why it's called a SLP!
+		std::vector<IntT> integers_;
 
 		std::vector<size_t> instructions_; //< The instructions.  The opcodes are  stored as size_t's, as well as the locations of operands and results.
 		std::vector< std::pair<Nd,size_t> > true_values_of_numbers_; //< the size_t is where in memory to downsample to.
+
+		mutable bool is_evaluated_ = false;
+
+
+
+		friend class boost::serialization::access;
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+
+			ar & precision_;
+			ar & has_path_variable_;
+
+			ar & number_of_;
+			ar & output_locations_;
+			ar & input_locations_;
+
+			ar & std::get<std::vector<dbl_complex>>(memory_);
+			ar & std::get<std::vector<mpfr_complex>>(memory_);
+			ar & integers_;
+			
+			ar & instructions_;
+			ar & true_values_of_numbers_;
+
+			ar & is_evaluated_;
+		}
+
 	};
 
 
 	class SLPCompiler : public VisitorBase,
+
+			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
+
+
 			// symbols and roots
 			public Visitor<node::Variable>,
 			public Visitor<node::Integer>,
@@ -612,6 +659,8 @@ namespace bertini {
 			public Visitor<node::PowerOperator>,
 			public Visitor<node::ExpOperator>,
 			public Visitor<node::LogOperator>,
+			public Visitor<node::NegateOperator>,
+			public Visitor<node::SqrtOperator>,
 
 			// the trig operators
 			public Visitor<node::SinOperator>,
@@ -619,8 +668,10 @@ namespace bertini {
 			public Visitor<node::CosOperator>,
 			public Visitor<node::ArcCosOperator>,
 			public Visitor<node::TanOperator>,
-			public Visitor<node::ArcTanOperator>
+			public Visitor<node::ArcTanOperator>,
 
+			public Visitor<node::special_number::Pi>,
+			public Visitor<node::special_number::E>
 
 			// also missing -- linears and difflinears.
 
@@ -640,6 +691,9 @@ namespace bertini {
 
 			SLP Compile(System const& sys);
 
+
+			// IF YOU ADD A THING HERE, YOU MUST ADD IT ABOVE AND IN THE CPP SOURCE
+
 			// symbols and roots
 			virtual void Visit(node::Variable const& n);
 			virtual void Visit(node::Integer const& n);
@@ -656,6 +710,9 @@ namespace bertini {
 			virtual void Visit(node::PowerOperator const& n);
 			virtual void Visit(node::ExpOperator const& n);
 			virtual void Visit(node::LogOperator const& n);
+			virtual void Visit(node::NegateOperator const& n);
+			virtual void Visit(node::SqrtOperator const& n); 
+
 
 			// the trig operators
 			virtual void Visit(node::SinOperator const& n);
@@ -665,6 +722,8 @@ namespace bertini {
 			virtual void Visit(node::TanOperator const& n);
 			virtual void Visit(node::ArcTanOperator const& n);
 
+			virtual void Visit(node::special_number::Pi const& n);
+			virtual void Visit(node::special_number::E const& n);
 			// missing -- linear and difflinear
 		private:
 
@@ -675,8 +734,8 @@ namespace bertini {
 			template<typename NodeT>
 			void DealWithNumber(NodeT const& n){
 						auto nd=n.shared_from_this(); // make a shared pointer to the node, so that it survives, and we get polymorphism
-						this->slp_under_construction_.AddNumber(nd, next_available_mem_); // register the number with the SLP
-						this->locations_encountered_symbols_[nd] = next_available_mem_++; // add to found symbols in the compiler, increment counter.
+						this->slp_under_construction_.AddNumber(nd, next_available_complex_); // register the number with the SLP
+						this->locations_encountered_nodes_[nd] = next_available_complex_++; // add to found symbols in the compiler, increment counter.
 			}
 
 			/**
@@ -684,8 +743,15 @@ namespace bertini {
 			 */
 			void Clear();
 
-			size_t next_available_mem_ = 0; //< Where should the next thing in memory go?
-			std::map<Nd, size_t> locations_encountered_symbols_; //< A registry of pointers-to-nodes and location in memory on where to find *their results*
+			size_t next_available_complex_ = 0; //< Where should the next complex number go in memory?
+			size_t next_available_int_ = 0; //< Where should the next integer go?
+
+			using IntT = int;  // this needs to co-vary on the stored type inside the node.  node should stop using mpz, it's slow.
+
+			std::map<Nd, size_t> locations_encountered_nodes_; //< A registry of pointers-to-nodes and location in memory on where to find *their results*
+			std::map<IntT, size_t> locations_integers_;
+			std::map<Nd, size_t> locations_top_level_functions_and_derivatives_;
+
 			SLP slp_under_construction_; //< the under-construction SLP.  will be returned at end of `compile`
 	};
 

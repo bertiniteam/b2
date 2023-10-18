@@ -2,25 +2,25 @@
 
 
 bertini_python_header_files = \
-				$(includedir)/bertini_python.hpp \
-				$(includedir)/eigenpy_interaction.hpp \
-				$(includedir)/function_tree_export.hpp \
-				$(includedir)/mpfr_export.hpp \
-				$(includedir)/random_export.hpp \
-				$(includedir)/node_export.hpp \
-				$(includedir)/symbol_export.hpp \
-				$(includedir)/operator_export.hpp \
-				$(includedir)/root_export.hpp \
-				$(includedir)/system_export.hpp \
-				$(includedir)/tracker_export.hpp \
-				$(includedir)/endgame_export.hpp \
-				$(includedir)/parser_export.hpp \
-				$(includedir)/generic_observer.hpp \
-				$(includedir)/generic_observable.hpp \
-				$(includedir)/tracker_observers.hpp \
-				$(includedir)/endgame_observers.hpp \
-				$(includedir)/detail.hpp
-				$(includedir)/logging.hpp
+				include/bertini_python.hpp \
+				include/eigenpy_interaction.hpp \
+				include/function_tree_export.hpp \
+				include/mpfr_export.hpp \
+				include/random_export.hpp \
+				include/node_export.hpp \
+				include/symbol_export.hpp \
+				include/operator_export.hpp \
+				include/root_export.hpp \
+				include/system_export.hpp \
+				include/tracker_export.hpp \
+				include/endgame_export.hpp \
+				include/parser_export.hpp \
+				include/generic_observer.hpp \
+				include/generic_observable.hpp \
+				include/tracker_observers.hpp \
+				include/endgame_observers.hpp \
+				include/detail.hpp \
+				include/logging.hpp
 
 
 # as a reminder, these are compiled from top down, yo.
@@ -59,8 +59,8 @@ pyexec_LTLIBRARIES += _pybertini.la
 # so this is explicitly NOT lib_LTLIBRARIES
 
 _pybertini_ladir = $(DESTDIR)/$(bindir)
-_pybertini_la_HEADERS =
-_pybertini_la_SOURCES = $(bertini_python_header_files) $(bertini_python_source_files)
+_pybertini_la_HEADERS = $(bertini_python_header_files)
+_pybertini_la_SOURCES = $(bertini_python_source_files)
 
 
 # removed this variable -- $(PYTHON_EXTRA_LIBS) 
@@ -71,4 +71,23 @@ _pybertini_la_LDFLAGS = -module -avoid-version -shared
 
 _pybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS) $(EIGEN_CPPFLAGS) $(NUMPY_CPPFLAGS) $(BERTINI_CPPFLAGS) $(EIGENPY_CPPFLAGS)
 
-
+pkgpython_PYTHON = pybertini/algorithms/__init__.py \
+                pybertini/algorithms/zerodim.py \
+                pybertini/container/__init__.py \
+                pybertini/endgame/config/__init__.py \
+                pybertini/endgame/__init__.py \
+                pybertini/function_tree/root/__init__.py \
+                pybertini/function_tree/symbol/__init__.py \
+                pybertini/logging/__init__.py \
+                pybertini/multiprec/__init__.py \
+                pybertini/nag_algorithm/__init__.py \
+                pybertini/parse/__init__.py \
+                pybertini/random/__init__.py \
+                pybertini/system/start_system/__init__.py \
+                pybertini/system/__init__.py \
+                pybertini/tracking/config/__init__.py \
+                pybertini/tracking/observers/__init__.py \
+                pybertini/tracking/__init__.py \
+                pybertini/__init__.py \
+                pybertini/_version.py \
+                setup.py

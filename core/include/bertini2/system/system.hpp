@@ -51,6 +51,7 @@
 #include "bertini2/function_tree.hpp"
 #include "bertini2/system/patch.hpp"
 
+#include "bertini2/system/straight_line_program.hpp"
 
 #include <boost/archive/binary_oarchive.hpp>
 	#include <boost/archive/binary_iarchive.hpp>
@@ -61,17 +62,27 @@
 namespace bertini {
 
 	
-	enum class JacobianEvalMethod
+	enum class EvalMethod
 	{
-		JacobianNode,
-		Derivatives
-		//StraightLineProgram not yet....
+		FunctionTree, // using virtual methods and recursion
+		SLP // using straight line programs
+		    // now!  20230714, Eindhoven, Netherlands
 	};
+
+	enum class DerivMethod
+	{
+		JacobianNode, // using Jacobian nodes, which are either 1 or 0 when evaluated based on the variable of differentiation
+		Derivatives // classic differentiation, using more space in memory but not requiring a variable of differentation when evaluatiing
+	};
+
 
 	/**
 	\brief Gets the default evaluation method for Jacobians.  One might be faster...
 	*/
-	JacobianEvalMethod DefaultJacobianEvalMethod();
+	EvalMethod DefaultEvalMethod();
+
+	DerivMethod DefaultDerivMethod();
+
 
 	/**
 	\brief Get the default value for whether a system should autosimplify.
@@ -162,8 +173,16 @@ namespace bertini {
 		void ResetFunctions() const
 		{
 			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			for (const auto& iter : functions_) 
-				iter->Reset();
+			switch (eval_method_){
+			case EvalMethod::FunctionTree:
+				for (const auto& iter : functions_) 
+					iter->Reset();
+				break;
+			case EvalMethod::SLP:
+				// nothing
+				break;
+			}	
+			
 		}
 
 		/**
@@ -171,39 +190,65 @@ namespace bertini {
 		*/
 		void ResetJacobian() const
 		{
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
-				{
-					for (const auto& iter : jacobian_) 
-						iter->Reset();
+				case EvalMethod::FunctionTree:{
+
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:
+						{
+							for (const auto& iter : jacobian_) 
+								iter->Reset();
+							break;
+						}
+						case DerivMethod::Derivatives:
+						{
+							for (const auto& iter : space_derivatives_) 
+								iter->Reset();
+							break;
+						}
+					}
+
 					break;
 				}
-				case JacobianEvalMethod::Derivatives:
+				case EvalMethod::SLP:
 				{
-					for (const auto& iter : space_derivatives_) 
-						iter->Reset();
-					break;
+					// nothing to do, it's not a resetting kind of thing.
+					break;					
 				}
+
 			}
 		}
 
 		void ResetTimeDerivatives() const
 		{
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
-				{
-					for (const auto& iter : jacobian_) 
-						iter->Reset();
+				case EvalMethod::FunctionTree:{
+					
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:
+						{
+							for (const auto& iter : jacobian_) 
+								iter->Reset();
+							break;
+						}
+						case DerivMethod::Derivatives:
+						{
+							for (const auto& iter : time_derivatives_) 
+								iter->Reset();
+							break;
+						}
+					}
+
 					break;
 				}
-				case JacobianEvalMethod::Derivatives:
+				case EvalMethod::SLP:
 				{
-					for (const auto& iter : time_derivatives_) 
-						iter->Reset();
-					break;
+					// nothing to do, it's not a resetting kind of thing.
+					break;					
 				}
+
 			}
 		}
 
@@ -223,27 +268,37 @@ namespace bertini {
 
 		\return The function values of the system
 		*/ 
-		template<typename Derived>
-		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values) const
+		template<typename T>
+		void EvalInPlace(Vec<T> & function_values) const
 		{
-			typedef typename Derived::Scalar T;
-
-			if(function_values.size() < NumFunctions())
+			
+			if (function_values.size() != NumTotalFunctions()) 
 			{
 				std::stringstream ss;
-				ss << "trying to evaluate system in place, but number of input functions (" << function_values.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
+				ss << "trying to evaluate system in-place, but number length of vector into which to write the values (" << function_values.size() << ") doesn't match number of system user-defined functions plus patches ( " << NumNaturalFunctions() << "+" << NumPatches() << ") = " << NumTotalFunctions() << ").  Use System.NumTotalFunctions() to make the container for in-place evaluation";
 				throw std::runtime_error(ss.str());
 			}
 
-			unsigned counter(0);
-			for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
-				(*iter)->EvalInPlace<T>(function_values(counter));
+			switch (eval_method_){
+				case EvalMethod::FunctionTree:
+				{
+					unsigned counter(0);
+					for (auto iter=functions_.begin(); iter!=functions_.end(); iter++, counter++) {
+						(*iter)->EvalInPlace<T>(function_values(counter));
+					}
+				}
+
+				case EvalMethod::SLP:
+					{
+						slp_.GetFuncValsInPlace<T>(function_values);
+					}
 			}
+
 
 			if (IsPatched())
 				patch_.EvalInPlace(function_values,
-									std::get<Vec<T> >(current_variable_values_));
-									// .segment(NumFunctions(),NumTotalVariableGroups())
+									std::get<Vec<T> >(current_variable_values_)); // does a patch not have a caching mechanism?
+									// .segment(NumNaturalFunctions(),NumTotalVariableGroups())
 			
 		}
 		
@@ -280,10 +335,10 @@ namespace bertini {
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
-		template<typename Derived, typename OtherDerived>
-		void EvalInPlace(Eigen::MatrixBase<Derived>& function_values, const Eigen::MatrixBase<OtherDerived>& variable_values) const
+		template<typename T, typename Derived>
+		void EvalInPlace(Vec<T>& function_values, const Eigen::MatrixBase<Derived>& variable_values) const
 		{
-			static_assert(std::is_same<typename Derived::Scalar,typename OtherDerived::Scalar>::value,"scalar types must match");
+			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
 
 			if (variable_values.size()!=NumVariables())
 			{
@@ -346,11 +401,10 @@ namespace bertini {
 
 		 \todo The Eval() function for systems has the unfortunate side effect of resetting constant functions.  Modify the System class so that only certain parts of the tree get reset.
 		 */
-		template<typename Derived, typename OtherDerived, typename T>
-		void EvalInPlace(Eigen::MatrixBase<Derived> & function_values, const Eigen::MatrixBase<OtherDerived>& variable_values, const T & path_variable_value) const
+		template<typename Derived, typename T>
+		void EvalInPlace(Vec<T> & function_values, const Eigen::MatrixBase<Derived>& variable_values, const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
@@ -360,7 +414,7 @@ namespace bertini {
 			SetVariables(variable_values.eval());//TODO: remove this eval
 			SetPathVariable(path_variable_value);
 
-			ResetFunctions();
+			ResetFunctions(); // todo, elimiante this.  i feel like setting the variables or path variable should be enough to set the flag/ take the action
 
 			EvalInPlace(function_values);
 		}
@@ -407,11 +461,15 @@ namespace bertini {
 		 \brief Evaluate the Jacobian matrix of the system, using the previous space and time values, in place.
 
 		\tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
+
+		This is analogous to J = sys.JacobianInPlace();
+
+		The input matrix must have the correct size already
 		*/
-		template<typename Derived>
-		void JacobianInPlace(Eigen::MatrixBase<Derived> & J) const
+		template <typename T>
+		void JacobianInPlace(Mat<T> & J) const
 		{
-			typedef typename Derived::Scalar T;
+		
 
 			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
 			{
@@ -423,21 +481,32 @@ namespace bertini {
 			if (!is_differentiated_)
 				Differentiate();
 
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
+				case EvalMethod::FunctionTree:
 				{
-					for (int ii = 0; ii < NumFunctions(); ++ii)
-						for (int jj = 0; jj < NumVariables(); ++jj)
-							jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:{
+							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
+								for (int jj = 0; jj < NumVariables(); ++jj)
+									jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
+							break;
+						}
+						case DerivMethod::Derivatives:
+						{
+							for (int jj = 0; jj < NumVariables(); ++jj)
+								for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
+									space_derivatives_[ii+jj*NumNaturalFunctions()]->EvalInPlace<T>(J(ii,jj));
+							break;
+						}
+					}
 					break;
-				}
-				case JacobianEvalMethod::Derivatives:
+				} // function tree branch
+
+				case EvalMethod::SLP:
 				{
-					for (int jj = 0; jj < NumVariables(); ++jj)
-						for (int ii = 0; ii < NumFunctions(); ++ii)
-							space_derivatives_[ii+jj*NumFunctions()]->EvalInPlace<T>(J(ii,jj));
-					break;
+					this->slp_.GetJacobianInPlace<T>(J); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
+					break;					
 				}
 			}
 			
@@ -479,10 +548,9 @@ namespace bertini {
 		 
 		 \param variable_values The values of the variables, for the evaluation.
 		 */
-		template<typename Derived, typename T>
-		void JacobianInPlace(Eigen::MatrixBase<Derived> & J, const Vec<T> &  variable_values) const
+		template<typename T>
+		void JacobianInPlace(Mat<T> & J, const Vec<T> &  variable_values) const
 		{
-			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must match");
 
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
@@ -490,8 +558,8 @@ namespace bertini {
 			if (HavePathVariable())
 				throw std::runtime_error("not using a time value for computation of jacobian, but a path variable is defined.");
 			
-			SetVariables(variable_values);
-			ResetJacobian();
+			SetAndReset(variable_values);
+			
 			JacobianInPlace(J);
 		}
 
@@ -536,11 +604,10 @@ namespace bertini {
 
 		 \tparam T the number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		 */
-		template<typename Derived, typename OtherDerived, typename T>
-		void JacobianInPlace(Eigen::MatrixBase<Derived> & J, const Eigen::MatrixBase<OtherDerived> & variable_values, const T & path_variable_value) const
+		template<typename Derived, typename T>
+		void JacobianInPlace(Mat<T> & J, const Eigen::MatrixBase<Derived> & variable_values, const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			if (variable_values.size()!=NumVariables())
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
@@ -609,13 +676,12 @@ namespace bertini {
 		\tparam T The number-type for return.  Probably dbl=std::complex<double>, or mpfr_complex=bertini::mpfr_complex.
 		\throws std::runtime error if the system does not have a path variable defined.
 		*/
-		template<typename Derived, typename OtherDerived, typename T>
-		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
-							const Eigen::MatrixBase<OtherDerived> & variable_values, 
+		template<typename Derived, typename T>
+		void TimeDerivativeInPlace(Vec<T> & ds_dt, 
+							const Eigen::MatrixBase<Derived> & variable_values, 
 							const T & path_variable_value) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			SetPathVariable(path_variable_value);
@@ -653,12 +719,11 @@ namespace bertini {
 
 
 
-		template<typename Derived, typename OtherDerived, typename T>
-		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt, 
-							const Eigen::MatrixBase<OtherDerived> & variable_values) const
+		template<typename Derived, typename T>
+		void TimeDerivativeInPlace(Vec<T> & ds_dt, 
+							const Eigen::MatrixBase<Derived> & variable_values) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
-			static_assert(std::is_same<typename OtherDerived::Scalar, T>::value, "scalar types must be the same");
 
 			SetVariables(variable_values.eval()); //TODO: remove this eval()
 			ResetTimeDerivatives();
@@ -689,15 +754,14 @@ namespace bertini {
 		}
 
 
-		template<typename Derived>
-		void TimeDerivativeInPlace(Eigen::MatrixBase<Derived> & ds_dt) const
+		template<typename T>
+		void TimeDerivativeInPlace(Vec<T> & ds_dt) const
 		{
-			using T = typename Derived::Scalar;
 
-			if(ds_dt.size() < NumFunctions())
+			if(ds_dt.size() < NumNaturalFunctions())
 			{
 				std::stringstream ss;
-				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumFunctions() << ").";
+				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumNaturalFunctions() << ").";
 				throw std::runtime_error(ss.str());
 			}
 
@@ -708,26 +772,37 @@ namespace bertini {
 			if (!is_differentiated_)
 				Differentiate();
 
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
+				case EvalMethod::FunctionTree:{
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:
+						{
+							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
+								jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
+							break;
+						}
+						case DerivMethod::Derivatives:
+						{
+							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
+								time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
+							break;
+						}
+					}
+				break;
+				} // function tree branch
+
+				case EvalMethod::SLP:
 				{
-					for (int ii = 0; ii < NumFunctions(); ++ii)
-						jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
-					break;
-				}
-				case JacobianEvalMethod::Derivatives:
-				{
-					for (int ii = 0; ii < NumFunctions(); ++ii)
-						time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
-					break;
+					this->slp_.GetTimeDerivInPlace(ds_dt); // the variable values should have been copied into place elsewhere.  that's not this function's responsibility.
+					break;					
 				}
 			}
 
 			// the patch doesn't move with time.  derivatives 0.
 			if (IsPatched())
 				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
-					ds_dt(ii+NumFunctions()) = T(0);
+					ds_dt(ii+NumNaturalFunctions()) = T(0);
 			
 		}
 
@@ -789,7 +864,7 @@ namespace bertini {
 		/**
 		 Get the number of functions in this system, excluding patches.
 		 */
-		size_t NumFunctions() const;
+		size_t NumNaturalFunctions() const;
 
 		/**
 		Get the number of patches in this system.
@@ -901,13 +976,29 @@ namespace bertini {
 					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");
 			#endif
 
-			auto counter = 0;
+			if (!is_differentiated_)
+				Differentiate();
 
-			for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
-				(*iter)->set_current_value(new_values(counter));
-			}
 
-			std::get<Vec<T> >(current_variable_values_) = new_values;
+			switch (eval_method_){
+				case EvalMethod::FunctionTree:{
+					auto counter = 0;
+
+					for (auto iter=vars.begin(); iter!=vars.end(); iter++, counter++) {
+						(*iter)->set_current_value(new_values(counter));
+					}
+
+					std::get<Vec<T> >(current_variable_values_) = new_values;
+					break;
+				}
+				case EvalMethod::SLP:{
+					std::get<Vec<T> >(current_variable_values_) = new_values; // if this isn't here, then patch evaluation breaks.
+					slp_.SetVariableValues(new_values);
+					break;
+				}
+			} // switch
+
+			
 		}
 
 
@@ -926,7 +1017,19 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to set the value of the path variable, but one is not defined for this system");
 
-			path_variable_->set_current_value(new_value);
+			if (!is_differentiated_)
+				Differentiate();
+
+			switch (eval_method_){
+				case EvalMethod::FunctionTree:{
+					path_variable_->set_current_value(new_value);
+					break;
+				}
+				case EvalMethod::SLP:{
+					path_variable_->set_current_value(new_value);
+					slp_.SetPathVariable(new_value);
+				}
+			}
 		}
 
 
@@ -1215,7 +1318,7 @@ namespace bertini {
 		/**
 		 \brief Get the functions.  
 		*/
-		auto GetFunctions() const
+		auto GetNaturalFunctions() const
 		{
 			return functions_;
 		}
@@ -1474,6 +1577,42 @@ namespace bertini {
 		void Simplify();
 
 
+		/**  
+		 \brief Set  method being used for evaluation
+		 * */
+		void SetEvalMethod(EvalMethod method)
+		{
+			eval_method_ = method;
+		}
+
+		/**  
+		 \brief Query the current method used for evaluation
+		 * */
+		EvalMethod  GetEvalMethod() const
+		{
+			return eval_method_;
+		}
+
+
+
+
+		/**  
+		 \brief Set  method being used for differentiation
+		 * */
+		void SetDerivMethod(DerivMethod method)
+		{
+			deriv_method_ = method;
+		}
+
+		/**  
+		 \brief Query the current method used for differentiation
+		 * */
+		DerivMethod  GetDerivMethod() const
+		{
+			return deriv_method_;
+		}
+
+
 		/**
 		\brief Add two systems together.
 
@@ -1629,6 +1768,7 @@ namespace bertini {
 
 		mutable bool is_differentiated_ = false; ///< indicator for whether the jacobian tree has been populated.
 
+		mutable StraightLineProgram slp_; ///< The straight line program.  Is mutable since  it's a has-a, not is-a relationship.
 
 		std::vector< VariableGroupType > time_order_of_variable_groups_;
 
@@ -1641,27 +1781,29 @@ namespace bertini {
 
 		bool assume_uniform_precision_ = false; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
 
-		JacobianEvalMethod jacobian_eval_method_ = DefaultJacobianEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
+		EvalMethod eval_method_ = DefaultEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
+		DerivMethod deriv_method_ = DefaultDerivMethod(); ///< an enum class value, indicating which method of evaluation should be used.
 
 		bool auto_simplify_ = DefaultAutoSimplify();
 
+
+
+
+
+
 		friend class boost::serialization::access;
 
-		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
-
+		/*definition of serialize function*/
+		template<class Archive>
+		void serialize(Archive & ar, const unsigned int version){
 			ar & ungrouped_variables_;
 			ar & variable_groups_;
 			ar & hom_variable_groups_;
-			ar & homogenizing_variables_;
 
-			ar & time_order_of_variable_groups_;
+			ar & homogenizing_variables_;
 
 			ar & have_path_variable_;
 			ar & path_variable_;			
-
-			ar & variable_ordering_;
-			ar & have_ordering_;
 
 			ar & implicit_parameters_;
 			ar & explicit_parameters_;
@@ -1670,25 +1812,63 @@ namespace bertini {
 			ar & subfunctions_;
 			ar & functions_;
 
-			ar & is_differentiated_;
-			ar & jacobian_;
 
-			ar & space_derivatives_;
-			ar & time_derivatives_;
-			
-			ar & precision_;
-			ar & is_patched_;
 			ar & patch_;
+			ar & is_patched_;
+
 
 			ar & assume_uniform_precision_;
-			ar & jacobian_eval_method_;
+
+			ar & eval_method_;
+			ar & deriv_method_;
+
+			ar & auto_simplify_;
+
+			// now for the cached / mutable things
+			ar & precision_;
+
+
+			// if (Archive::is_loading::value == true){
+			// 	is_differentiated_ = false;}
+			// // else
+			// // {
+				ar & is_differentiated_;
+				ar & jacobian_;
+				ar & space_derivatives_;
+				ar & time_derivatives_;
+			// }
+
+
+			ar & slp_; // does this need to be re-constructed after de-serialization?
+
+			ar & time_order_of_variable_groups_;
+
+			// if (Archive::is_loading::value == true){
+				// have_ordering_ = false;}
+			// else
+			// {
+				ar & have_ordering_;
+				ar & variable_ordering_;
+			// }
+
+
+			// if (Archive::is_loading::value == true){
+        	// 	std::get<Vec<dbl>>(current_variable_values_).resize(NumVariables());
+        	// 	std::get<Vec<mpfr_complex>>(current_variable_values_).resize(NumVariables());
+			// }
+			// // next two lines no matter what
+			// ar & std::get<Vec<dbl>>(current_variable_values_);
+			// ar & std::get<Vec<mpfr_complex>>(current_variable_values_);
+
 		}
 
+
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
 
 	/**
-	\brief Contcatenate two compatible systems.
+	\brief Concatenate two compatible systems.
 
 	Two systems are compatible for concatenation if they have the same variable structure, and if they have the same patch (if patched).
 

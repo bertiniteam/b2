@@ -64,7 +64,7 @@ namespace bertini
 		class User : public StartSystem
 		{
 		public:
-			User() = default;
+			User() = delete; // deleted because requires a reference to a System to construct
 			virtual ~User() = default;
 
 			/**

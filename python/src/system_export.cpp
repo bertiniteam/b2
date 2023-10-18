@@ -85,7 +85,7 @@ namespace bertini{
 			.def("is_homogeneous", &SystemBaseT::IsHomogeneous, "Determines whether all polynomials in the system have the same degree.  Non-polynomial functions are not homogeneous.")
 			.def("is_polynomial", &SystemBaseT::IsPolynomial, "Determines whether all polynomials are polynomial.  Transcendental functions, e.g., are non-polynomial.  Returns a bool.")
 			
-			.def("num_functions", &SystemBaseT::NumFunctions,"The total number of functions in the system.  Does not include patches.")
+			.def("num_functions", &SystemBaseT::NumTotalFunctions,"The total number of functions in the system.  Does not include patches.")
 			.def("num_variables", &SystemBaseT::NumVariables,"the *total* number of variables in the system.  Includes homogenizing variables")
 			.def("num_hom_variables", &SystemBaseT::NumHomVariables, "The number of homogenizing variables defined in the system.  Should be equal to the number of homvargroups")
 			.def("num_variable_groups", &SystemBaseT::NumVariableGroups,"The number of affine variable groups.  This should probably be renamed to num_affine_variable_groups")

@@ -54,62 +54,60 @@
 namespace bertini {
 namespace node{
 	
-	/**
-	\brief Formal entry point into an expression tree.
 
-	This class defines a function.  It stores the entry node for a particular functions tree.
-	 */
-	class Function : public virtual NamedSymbol, public std::enable_shared_from_this<Function>
+
+	class Handle : public virtual NamedSymbol
 	{
-	public:
 		BERTINI_DEFAULT_VISITABLE()
-		
-		Function(std::string const& new_name);
+
+
+	public:
+
+		/**
+		 overridden function for piping the tree to an output stream.
+		 */
+		void print(std::ostream & target) const override;
+
+
+		Handle(std::string const& new_name);
 		
 		
 		/**
 		 Constructor defines entry node at construct time.
 		 */
-		Function(const std::shared_ptr<Node> & entry, std::string const& name = "unnamed_function");
-		
-		
-		
-		/**
-		 Get the pointer to the entry node for this function.
-		 */
-		const std::shared_ptr<Node>& entry_node() const;
-		
-		
-		/**
-		 overridden function for piping the tree to an output stream.
-		 */
-		void print(std::ostream & target) const override;
-		
-		
-		virtual ~Function() = default;
-		
-		
-		
-		
-		
-		/**
-		 The function which flips the fresh eval bit back to fresh.
-		 */
-		void Reset() const override;
-		
-		
+		Handle(const std::shared_ptr<Node> & entry, std::string const& name = "unnamed_function");
+
+
+	protected:
+
+		Handle() = default;
+
+	public:
 		/**
 		 Add a child onto the container for this operator
 		 */
 		void SetRoot(std::shared_ptr<Node> const& entry);
-		
-		
+
+
 		/**
 		 throws a runtime error if the root node is nullptr
 		 */
 		void EnsureNotEmpty() const;
-		
-		
+
+
+		/**
+		 The function which flips the fresh eval bit back to fresh.
+		 */
+		void Reset() const override;
+
+
+
+		/**
+		 Get the pointer to the entry node for this function.
+		 */
+		const std::shared_ptr<Node>& EntryNode() const;
+
+
 		/** 
 		 Calls Differentiate on the entry node and returns differentiated entry node.
 		 */
@@ -147,7 +145,9 @@ namespace node{
 		 \param prec the number of digits to change precision to.
 		 */
 		void precision(unsigned int prec) const override;
+
 		
+
 	protected:
 		
 		/**
@@ -172,18 +172,97 @@ namespace node{
 		void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override;
 
 
-		
-		
-		std::shared_ptr<Node> entry_node_ = nullptr; ///< The top node for the function.
-		
-		Function() = default;
+		std::shared_ptr<Node> entry_node_ = nullptr;
+
 	private:
+
+
+
 		friend class boost::serialization::access;
-		
+
 		template <typename Archive>
 		void serialize(Archive& ar, const unsigned version) {
 			ar & boost::serialization::base_object<NamedSymbol>(*this);
 			ar & entry_node_;
+		}
+
+	}; // class Function
+
+
+
+
+}} // namespaces
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+namespace bertini {
+namespace node{
+
+	/**
+	\brief Formal entry point into an expression tree.
+
+	This class defines a function.  It stores the entry node for a particular functions tree.
+	 */
+	class Function : public virtual Handle, public virtual EnableSharedFromThisVirtual<Function>
+	{
+	public:
+		BERTINI_DEFAULT_VISITABLE()
+		
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<Function> Make(Ts&& ...ts){ 
+			return std::shared_ptr<Function>( new Function(ts...) );
+		}
+
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<Function> MakeInPlace(Function* ptr, Ts&& ...ts){ 
+			return std::shared_ptr<Function>( new(ptr) Function(ts...) );
+		}
+
+	private:
+
+		Function(std::string const& new_name);
+		
+		
+		/**
+		 Constructor defines entry node at construct time.
+		 */
+		Function(const std::shared_ptr<Node> & entry, std::string const& name = "unnamed_function");
+		
+	public:
+
+		
+		
+		virtual ~Function() = default;
+		
+		
+		
+	protected:
+		
+		
+		Function() = default;
+
+
+	private:
+		friend class boost::serialization::access;
+		// template<class Archive> friend void boost::serialization::load_construct_data(Archive & ar, Function * t, const unsigned int file_version);
+		// template<class Archive> friend void boost::serialization::save_construct_data(Archive & ar, const Function * t, const unsigned int file_version);
+
+		template <typename Archive>
+		void serialize(Archive& ar, const unsigned version) {
+			ar & boost::serialization::base_object<Handle>(*this);
 		}
 	};
 	

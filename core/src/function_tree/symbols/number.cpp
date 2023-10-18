@@ -49,7 +49,7 @@ void Number::precision(unsigned int prec) const
 
 std::shared_ptr<Node> Number::Differentiate(std::shared_ptr<Variable> const& v) const
 {
-	return MakeInteger(0);
+	return Integer::Make(0);
 }
 
 ///////////////////

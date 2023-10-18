@@ -32,7 +32,7 @@
 namespace bertini{
 	namespace node{
 
-Jacobian::Jacobian(const std::shared_ptr<Node> & entry) : Function(entry)
+Jacobian::Jacobian(const std::shared_ptr<Node> & entry) : Handle(entry)
 {
 }
 
@@ -82,13 +82,7 @@ template void Jacobian::EvalJInPlace( dbl&, std::shared_ptr<Variable> const& dif
 template void Jacobian::EvalJInPlace( mpfr_complex&, std::shared_ptr<Variable> const& diff_variable) const;
 
 
-void Jacobian::Reset() const
-{
-	EnsureNotEmpty();
-	
-	Node::ResetStoredValues();
-	entry_node_->Reset();
-}
+
 
 
 

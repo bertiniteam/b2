@@ -78,3 +78,7 @@ python/pybertini_*.log
 python/autom4te.cache
 *.bak
 python/temp.py
+core/serialization_basic
+core/test/classes/serialization_basic
+python/conftest.cpp
+*.tar.gz

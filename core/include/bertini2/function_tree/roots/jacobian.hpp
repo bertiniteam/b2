@@ -61,18 +61,27 @@ namespace node{
 
 		 This class defines a Jacobian tree.  It stores the entry node for a particular functions tree.
 		 */
-		class Jacobian : public virtual Function, public std::enable_shared_from_this<Jacobian>
+		class Jacobian : public virtual Handle, public virtual EnableSharedFromThisVirtual<Jacobian>
 		{
 			friend detail::FreshEvalSelector<dbl>;
 			friend detail::FreshEvalSelector<mpfr_complex>;
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
+
+			template<typename... Ts> 
+			static 
+			std::shared_ptr<Jacobian> Make(Ts&& ...ts){ 
+				return std::shared_ptr<Jacobian>( new Jacobian(ts...) );
+			}
+
+		private:
 			/**
 			 */
 			Jacobian(const std::shared_ptr<Node> & entry);
 			
-			
+		public:
+
 			/**
 			 Jacobians must be evaluated with EvalJ, so that when current_diff_variable changes
 			 the Jacobian is reevaluated.
@@ -93,11 +102,6 @@ namespace node{
 			void EvalJInPlace(T& eval_value, std::shared_ptr<Variable> const& diff_variable) const;
 
 
-			/**
-			 The function which flips the fresh eval bit back to fresh.
-			 */
-			void Reset() const override;
-
 			
 			virtual ~Jacobian() = default;
 			
@@ -115,7 +119,7 @@ namespace node{
 	
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned version) {
-					ar & boost::serialization::base_object<Function>(*this);
+				ar & boost::serialization::base_object<Handle>(*this);
 			}
 		};
 		

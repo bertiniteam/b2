@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_SUITE(newton_correct_tracking_basics)
 
 using System = bertini::System;
 using Variable = bertini::node::Variable;
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 	
 	
 	bertini::System sys;
-	Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 	
 	VariableGroup vars{x,y};
 	
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -637,7 +637,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -696,7 +696,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
@@ -752,7 +752,7 @@ BOOST_AUTO_TEST_CASE(circle_line_one_corrector_step_double)
 		current_time += delta_t;
 		
 		bertini::System sys;
-		Var x = MakeVariable("x"), y = MakeVariable("y"), t = MakeVariable("t");
+		Var x = Variable::Make("x"), y = Variable::Make("y"), t = Variable::Make("t");
 		
 		VariableGroup vars{x,y};
 		
