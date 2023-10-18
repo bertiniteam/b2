@@ -102,7 +102,7 @@ AX_BERTINI2
 
 
 
-AM_CONFIG_HEADER(config.h)
+AM_CONFIG_HEADER(include/config.h)
 
 
 #wrap it up.
