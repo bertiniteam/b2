@@ -33,6 +33,14 @@
 
 __author__ = 'ofloveandhate'
 
+
+
+if __name__ == '__main__':
+    run_tests = True
+else:
+    run_tests = False
+
+
 from pybertini import *
 from pybertini.function_tree.symbol import *
 from pybertini.function_tree.root import *
@@ -117,7 +125,7 @@ class EndgameTest(unittest.TestCase):
             final_system.precision(self.ambient_precision);
             start_point = td.start_point_mp(i);
 
-            bdry_pt = np.empty(dtype=mpfr_complex, shape=(3,));
+            bdry_pt = np.empty(dtype=mpfr_complex, shape=(3));
             track_success_code = tracker.track_path(bdry_pt,t_start, t_endgame_boundary, start_point);
             bdry_points[i] = bdry_pt;
 
@@ -129,15 +137,23 @@ class EndgameTest(unittest.TestCase):
         my_endgame = AMPCauchyEG(tracker);
 
 
+
         final_homogenized_solutions = [np.empty(dtype=mpfr_complex, shape=(3,)) for i in range(n)]
         for i in range(n):
             default_precision(bdry_points[i][0].precision());
             final_system.precision(bdry_points[i][0].precision());
+
+            print(dir(bdry_points[i]))
             track_success_code = my_endgame.run(mpfr_complex(t_endgame_boundary),bdry_points[i]);
+            print('qwfp')
+            
+
             final_homogenized_solutions[i] = my_endgame.final_approximation();
             print(final_system.dehomogenize_point(final_homogenized_solutions[i]));
             self.assertEqual(track_success_code, SuccessCode.Success)
 
 
-if __name__ == '__main__':
-    unittest.main();
+if run_tests:
+
+    pgnm = 'this_argument_is_ignored_but_necessary'
+    unittest.main(argv=[pgnm], exit=False)
