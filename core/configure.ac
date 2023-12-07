@@ -119,7 +119,7 @@ AX_EIGEN
 
 
 
-AX_BOOST_BASE([1.71],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.71 but it was not found in your system])])
+AX_BOOST_BASE([1.83],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.83 but it was not found in your system])])
 
 AX_BOOST_MULTIPRECISION
 
