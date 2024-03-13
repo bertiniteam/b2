@@ -113,50 +113,55 @@ namespace bertini{
 			;
 			
 			// Float class
-			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", init< mpfr_float, mpfr_float >())
-			.def(init<mpfr_complex>())
-			.def(init< std::string>())
-			.def(init< std::string, std::string >())
+			class_<Float, bases<Number>, std::shared_ptr<Float> >("Float", no_init)
+			.def("__init__", make_constructor(&Float::template Make<mpfr_float const&, mpfr_float const&>))
+			.def("__init__", make_constructor(&Float::template Make<std::string const&>))
+			.def("__init__", make_constructor(&Float::template Make<std::string const&, std::string const&>))
+			.def("__init__", make_constructor(&Float::template Make<mpfr_complex const&>))
 			;
 			
 			
 			// Pi class
-			class_<special_number::Pi, bases<NamedSymbol>, std::shared_ptr<special_number::Pi> >("Pi", init<>())
+			class_<special_number::Pi, bases<NamedSymbol>, std::shared_ptr<special_number::Pi> >("Pi", no_init)
+			.def("__init__", make_constructor(&special_number::Pi::template Make<>))
 			;
 
 
 			// E class
-			class_<special_number::E, bases<NamedSymbol>, std::shared_ptr<special_number::E> >("E", init<>())
+			class_<special_number::E, bases<NamedSymbol>, std::shared_ptr<special_number::E> >("E", no_init)
+			.def("__init__", make_constructor(&special_number::E::template Make<>))
 			;
 
 			
 			// Integer class
-			class_<Integer, bases<Number>, std::shared_ptr<Integer> >("Integer", init< int >())
-			.def(init<mpz_int>())
-			.def(init<std::string const&>())
+			class_<Integer, bases<Number>, std::shared_ptr<Integer> >("Integer",no_init)
+			.def("__init__", make_constructor(&Integer::template Make<int const&>))
+			.def("__init__", make_constructor(&Integer::template Make<mpz_int const&>))
+			.def("__init__", make_constructor(&Integer::template Make<std::string const&>))
 			;
 
 			
 			// Rational class
-			class_<Rational, bases<Number>, std::shared_ptr<Rational> >("Rational", init< int >())
-			.def(init<int, int, int, int>())
-			.def(init<std::string>())
-			.def(init<std::string, std::string>())
-			.def(init<mpq_rational const&, mpq_rational const&>())
-			
+			class_<Rational, bases<Number>, std::shared_ptr<Rational> >("Rational", no_init)
+			.def("__init__", make_constructor(&Rational::template Make<int const&>))
+			.def("__init__", make_constructor(&Rational::template Make<int const&, int const&, int const&, int const&>))
+			.def("__init__", make_constructor(&Rational::template Make<std::string const&>))
+			.def("__init__", make_constructor(&Rational::template Make<std::string const&, std::string const&>))
+			.def("__init__", make_constructor(&Rational::template Make<mpq_rational const&, mpq_rational const&>))
 			.def(RationalVisitor<Rational>())
 			;
 
 			
 			// Variable class
-			class_<Variable, bases<NamedSymbol>, std::shared_ptr<Variable> >("Variable", init< std::string >())
+			class_<Variable, bases<NamedSymbol>, std::shared_ptr<Variable> >("Variable", no_init)
+			.def("__init__", make_constructor(&Variable::template Make< std::string const& >))
 			.def(VariableVisitor<Variable>())
 			;
 			
 			
 			// Differential class
-			class_<Differential, bases<NamedSymbol>,std::shared_ptr<node::Differential> >("Differential", init<std::shared_ptr<Variable>,std::string>())
-			
+			class_<Differential, bases<NamedSymbol>,std::shared_ptr<node::Differential> >("Differential", no_init)
+			.def("__init__", make_constructor(Differential::template Make<std::shared_ptr<Variable> const&,std::string const&>))
 			.def(DifferentialVisitor<Differential>())
 			;
 			

@@ -59,6 +59,12 @@ namespace bertini {
 		class PowerOperator;
 		class ExpOperator;
 		class LogOperator;
+		class NegateOperator;
+		class SqrtOperator;
+
+		class LinearProduct;
+		class DiffLinear;
+
 	}
 
 	namespace node{
@@ -71,4 +77,52 @@ namespace bertini {
 		class TanOperator;
 		class ArcTanOperator;
 	}
+
+	namespace node{
+		namespace special_number{
+			class Pi;
+			class E;
+		}
+	}
+
+
+	namespace node{
+		template <typename Archive>
+		void register_derived_node_types(Archive& ar)
+		{
+			ar.template register_type<bertini::node::Variable>();
+			ar.template register_type<bertini::node::Integer>();
+			ar.template register_type<bertini::node::Float>();
+			ar.template register_type<bertini::node::Rational>();
+			ar.template register_type<bertini::node::Function>();
+			ar.template register_type<bertini::node::Jacobian>();
+			ar.template register_type<bertini::node::Differential>();
+			// ar.template register_type<bertini::node::Operator>(); // abstract type
+			// ar.template register_type<bertini::node::UnaryOperator>(); // abstract type
+			// ar.template register_type<bertini::node::NaryOperator>(); // abstract type
+			ar.template register_type<bertini::node::SumOperator>();
+			ar.template register_type<bertini::node::MultOperator>();
+			ar.template register_type<bertini::node::IntegerPowerOperator>();
+			ar.template register_type<bertini::node::PowerOperator>();
+			ar.template register_type<bertini::node::ExpOperator>();
+			ar.template register_type<bertini::node::LogOperator>();
+			ar.template register_type<bertini::node::NegateOperator>();
+			ar.template register_type<bertini::node::SqrtOperator>();
+			ar.template register_type<bertini::node::LinearProduct>();
+			// ar.template register_type<bertini::node::TrigOperator>(); // abstract type
+			ar.template register_type<bertini::node::SinOperator>();
+			ar.template register_type<bertini::node::ArcSinOperator>();
+			ar.template register_type<bertini::node::CosOperator>();
+			ar.template register_type<bertini::node::ArcCosOperator>();
+			ar.template register_type<bertini::node::TanOperator>();
+			ar.template register_type<bertini::node::ArcTanOperator>();
+			ar.template register_type<bertini::node::special_number::Pi>();
+			ar.template register_type<bertini::node::special_number::E>();
+		}
+	}
 }// namespace bertini
+
+
+
+
+

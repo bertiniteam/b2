@@ -36,9 +36,16 @@ BOOST_CLASS_EXPORT(bertini::System)
 namespace bertini 
 {
 
-	JacobianEvalMethod DefaultJacobianEvalMethod()
+	using namespace bertini::node;
+	
+	EvalMethod DefaultEvalMethod()
 	{
-		return JacobianEvalMethod::Derivatives;
+		return EvalMethod::SLP;
+	}
+
+	DerivMethod DefaultDerivMethod()
+	{
+		return DerivMethod::Derivatives;
 	}
 
 	bool DefaultAutoSimplify()
@@ -77,7 +84,7 @@ namespace bertini
 		swap(a.time_derivatives_,b.time_derivatives_);
 
 		swap(a.assume_uniform_precision_,b.assume_uniform_precision_);
-		swap(a.jacobian_eval_method_,b.jacobian_eval_method_);
+		swap(a.eval_method_,b.eval_method_);
 
 		swap(a.precision_,b.precision_);
 		swap(a.is_patched_,b.is_patched_);
@@ -105,7 +112,7 @@ namespace bertini
 		is_differentiated_ = other.is_differentiated_;
 
 		assume_uniform_precision_ = other.assume_uniform_precision_;
-		jacobian_eval_method_ = other.jacobian_eval_method_;
+		eval_method_ = other.eval_method_;
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
 
@@ -116,22 +123,28 @@ namespace bertini
 
 		precision_ = other.precision_;
 
-		// now to do the members which are not simply copied
-		constant_subfunctions_.resize(other.constant_subfunctions_.size());
-		for (unsigned ii = 0; ii < constant_subfunctions_.size(); ++ii)
-			constant_subfunctions_[ii] = MakeFunction(other.constant_subfunctions_[ii]->entry_node());
 
-		subfunctions_.resize(other.subfunctions_.size());
-		for (unsigned ii = 0; ii < subfunctions_.size(); ++ii)
-			subfunctions_[ii] = MakeFunction(other.subfunctions_[ii]->entry_node());
+		constant_subfunctions_ = other.constant_subfunctions_;
+		subfunctions_ = other .subfunctions_;
+		functions_ = other .functions_;
+		explicit_parameters_  = other .explicit_parameters_;
 
-		functions_.resize(other.functions_.size());
-		for (unsigned ii = 0; ii < functions_.size(); ++ii)
-			functions_[ii] = MakeFunction(other.functions_[ii]->entry_node());
+		// // now to do the members which are not simply copied
+		// constant_subfunctions_.resize(other.constant_subfunctions_.size());
+		// for (unsigned ii = 0; ii < constant_subfunctions_.size(); ++ii)
+		// 	constant_subfunctions_[ii] = Function::Make(other.constant_subfunctions_[ii]->EntryNode());
 
-		explicit_parameters_.resize(other.explicit_parameters_.size());
-		for (unsigned ii = 0; ii < explicit_parameters_.size(); ++ii)
-			explicit_parameters_[ii] = MakeFunction(other.explicit_parameters_[ii]->entry_node());
+		// subfunctions_.resize(other.subfunctions_.size());
+		// for (unsigned ii = 0; ii < subfunctions_.size(); ++ii)
+		// 	subfunctions_[ii] = Function::Make(other.subfunctions_[ii]->EntryNode());
+
+		// functions_.resize(other.functions_.size());
+		// for (unsigned ii = 0; ii < functions_.size(); ++ii)
+		// 	functions_[ii] = Function::Make(other.functions_[ii]->EntryNode());
+
+		// explicit_parameters_.resize(other.explicit_parameters_.size());
+		// for (unsigned ii = 0; ii < explicit_parameters_.size(); ++ii)
+		// 	explicit_parameters_[ii] = Function::Make(other.explicit_parameters_[ii]->EntryNode());
 	}
 
 	// the assignment operator
@@ -149,7 +162,7 @@ namespace bertini
 	/////////////////
 
 
-	size_t System::NumFunctions() const
+	size_t System::NumNaturalFunctions() const
 	{
 		return functions_.size();
 	}
@@ -218,7 +231,7 @@ namespace bertini
 
 	size_t System::NumTotalFunctions() const
 	{
-		return NumFunctions() + NumPatches();
+		return NumNaturalFunctions() + NumPatches();
 	}
 
 
@@ -250,19 +263,31 @@ namespace bertini
 
 		if (is_differentiated_)
 		{
-			switch (jacobian_eval_method_)
+			switch (eval_method_)
 			{
-				case JacobianEvalMethod::JacobianNode:
-					for (const auto& iter : jacobian_)
-						iter->precision(new_precision);
+				case EvalMethod::FunctionTree:{
+
+					switch (deriv_method_){
+						case DerivMethod::JacobianNode:{
+							for (const auto& iter : jacobian_)
+								iter->precision(new_precision);
+							break;
+						}
+						case DerivMethod::Derivatives:{
+							for (const auto& iter : space_derivatives_)
+								iter->precision(new_precision);
+							for (const auto& iter : time_derivatives_)
+								iter->precision(new_precision);
+							break;
+						}
+					}
 					break;
-				case JacobianEvalMethod::Derivatives:
-					for (const auto& iter : space_derivatives_)
-						iter->precision(new_precision);
-					for (const auto& iter : time_derivatives_)
-						iter->precision(new_precision);
-					break;
-				// later, case for straight line program?
+				}
+				case EvalMethod::SLP:
+				{
+					this->slp_.precision(new_precision);
+					break;					
+				}
 			}
 			
 		}
@@ -297,31 +322,47 @@ namespace bertini
 
 	void System::Differentiate() const
 	{
-		switch (jacobian_eval_method_)
-		{
-			case JacobianEvalMethod::JacobianNode:
+		switch (deriv_method_){
+			case DerivMethod::JacobianNode:
 			{
 				DifferentiateUsingJacobianNode();
 				break;
 			}
-			case JacobianEvalMethod::Derivatives:
+			case DerivMethod::Derivatives:
 			{
 				DifferentiateUsingDerivatives();
 				break;
 			}
 		}
-		
+
+
 		if (auto_simplify_)
 			this->SimplifyDerivatives();
+
+
+		switch (eval_method_)
+		{
+			case EvalMethod::FunctionTree:{
+				break;
+			}
+			case EvalMethod::SLP:
+			{	
+				SLPCompiler compiler;
+				this->slp_ = compiler.Compile(*this);
+				break;
+			}
+		}
+		
+
 
 	}
 
 	void System::DifferentiateUsingJacobianNode() const
 	{
-		auto num_functions = NumFunctions();
+		auto num_functions = NumNaturalFunctions();
 		jacobian_.resize(num_functions);
 		for (int ii = 0; ii < num_functions; ++ii)
-			jacobian_[ii] = MakeJacobian(functions_[ii]->Differentiate());
+			jacobian_[ii] = Jacobian::Make(functions_[ii]->Differentiate());
 
 		is_differentiated_ = true;
 	}
@@ -330,20 +371,20 @@ namespace bertini
 	{
 		const auto& vars = this->Variables();
 		const auto num_vars = NumVariables();
-		const auto num_functions = NumFunctions();
+		const auto num_functions = NumNaturalFunctions();
 
 		space_derivatives_.resize(num_functions*num_vars);
 		// again, computing these in column major, so staying with one variable at a time.
 		for (int jj = 0; jj < num_vars; ++jj)
 			for (int ii = 0; ii < num_functions; ++ii)
-				space_derivatives_[ii+jj*num_functions] = MakeFunction(functions_[ii]->Differentiate(vars[jj]));
+				space_derivatives_[ii+jj*num_functions] = Function::Make(functions_[ii]->Differentiate(vars[jj]));
 
 		if (HavePathVariable())
 		{
 			const auto& t = path_variable_;
 			time_derivatives_.resize(num_functions);
 				for (int ii = 0; ii < num_functions; ++ii)
-					time_derivatives_[ii] = MakeFunction(functions_[ii]->Differentiate(t));
+					time_derivatives_[ii] = Function::Make(functions_[ii]->Differentiate(t));
 		}
 
 		is_differentiated_ = true;
@@ -351,7 +392,7 @@ namespace bertini
 
 	std::vector< Nd > System::GetSpaceDerivatives() const
 	{
-		if ( (jacobian_eval_method_==JacobianEvalMethod::JacobianNode) || (!is_differentiated_) )
+		if ( (deriv_method_==DerivMethod::JacobianNode) || (!is_differentiated_) )
 			DifferentiateUsingDerivatives();
 
 		return space_derivatives_;
@@ -359,7 +400,7 @@ namespace bertini
 
 	std::vector< Nd > System::GetTimeDerivatives() const
 	{
-		if ( (jacobian_eval_method_==JacobianEvalMethod::JacobianNode) || (!is_differentiated_) )
+		if ( (deriv_method_==DerivMethod::JacobianNode) || (!is_differentiated_) )
 			DifferentiateUsingDerivatives();
 		
 		return time_derivatives_;
@@ -427,7 +468,7 @@ namespace bertini
 			}
 			else
 			{
-				Var hom_var = MakeVariable(converter.str());
+				Var hom_var = Variable::Make(converter.str());
 				homogenizing_variables_[group_counter] = hom_var;
 				for (const auto& curr_function : functions_)
 					curr_function->Homogenize(*curr_var_gp, hom_var);
@@ -660,7 +701,7 @@ namespace bertini
 
 	void System::AddFunction(Nd const& N, std::string const& name)
 	{
-		functions_.push_back(MakeFunction(N, name));
+		functions_.push_back(Function::Make(N, name));
 		is_differentiated_ = false;
 	}
 
@@ -773,7 +814,12 @@ namespace bertini
 		}
 		
 		#ifndef BERTINI_DISABLE_ASSERTS
-		assert(constructed_ordering.size()==NumVariables() && "resulting constructed ordering has differing size from the number of variables in the problem.");
+		if (constructed_ordering.size()!=NumVariables()){
+			std::stringstream err_msg;
+			err_msg << "resulting constructed ordering has differing size (" << constructed_ordering.size() << ") from the number of variables in the problem (" << NumVariables() << ").";
+			throw std::runtime_error(err_msg.str());
+		}
+
 		#endif
 
 		return constructed_ordering;	
@@ -1057,20 +1103,22 @@ namespace bertini
 			n->Reset();
 
 
-		switch (jacobian_eval_method_)
-		{
-			case JacobianEvalMethod::JacobianNode:
+
+		switch (deriv_method_){
+			case DerivMethod::JacobianNode:{
 				for (auto& iter : this->jacobian_)
 					Simplify(iter);
 				break;
-			case JacobianEvalMethod::Derivatives:
+			}
+			case DerivMethod::Derivatives:{
 				for (auto& iter : this->space_derivatives_)
 					Simplify(iter);
 				for (auto& iter : this->time_derivatives_)
 					Simplify(iter);
 				break;
-
+			}
 		}
+
 		
 		for (unsigned ii=0; ii<num_vars; ++ii)
 			vars[ii]->set_current_value<dbl>(old_vals[ii]);
@@ -1127,14 +1175,21 @@ namespace bertini
 			out << "\n";
 			counter++;
 		}
+		out << "\n";
 
 		out << s.NumHomVariables() << " homogenizing variables:\n";
 		for (const auto& iter : s.homogenizing_variables_)
 			out << (*iter) << " ";
-		out << "\n";
+		out << "\n\n";
 
 
-		out << s.NumFunctions() << " functions:\n";
+		out << s.ungrouped_variables_.size() << " ungrouped variables:\n";
+		for (const auto& v :s.ungrouped_variables_)
+			out << (*v) << " ";
+		out << "\n\n";
+
+
+		out << s.NumNaturalFunctions() << " functions:\n";
 		for (const auto& iter : s.functions_) 
 			out << (iter)->name() << " = " << *iter << "\n";
 		out << "\n";
@@ -1163,28 +1218,44 @@ namespace bertini
 		if (s.is_differentiated_)
 		{
 			out << "system is differentiated; jacobian:\n";
-			switch (s.jacobian_eval_method_)
-			{
-			case JacobianEvalMethod::JacobianNode:
-				for (const auto& iter : s.jacobian_)
-					out << (iter)->name() << " = " << *iter << "\n";
-				break;
-			case JacobianEvalMethod::Derivatives:
-				for (int jj = 0; jj < s.NumVariables(); ++jj)
-					for (int ii = 0; ii < s.NumFunctions(); ++ii)
-					{
-						const auto& d = s.space_derivatives_[ii+jj*s.NumFunctions()];
-						out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+
+				switch (s.deriv_method_){
+					case DerivMethod::JacobianNode:{
+						out << "using the JacobianNode method of differentiation:" << std::endl;
+
+						for (const auto& iter : s.jacobian_)
+							out << (iter)->name() << " = " << *iter << "\n";
+						break;
 					}
 
-				if (s.HavePathVariable())
-					for (int ii = 0; ii < s.NumFunctions(); ++ii)
-					{
-						const auto& d = s.time_derivatives_[ii];
-						out << "jac_time_der(" << ii << ") = " << d << "\n";
+					case DerivMethod::Derivatives:{
+						out << "using the Derivatives method of differentiation:" << std::endl;
+
+						for (int jj = 0; jj < s.NumVariables(); ++jj)
+							for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
+							{
+								const auto& d = s.space_derivatives_[ii+jj*s.NumNaturalFunctions()];
+								out << "jac_space_der(" << ii << "," << jj << ") = " << d << "\n";
+							}
+
+						if (s.HavePathVariable())
+							for (int ii = 0; ii < s.NumNaturalFunctions(); ++ii)
+							{
+								const auto& d = s.time_derivatives_[ii];
+								out << "jac_time_der(" << ii << ") = " << d << "\n";
+							}
+						break;
 					}
-				break;
-			}
+				} // switch on deriv method
+
+
+
+				if (s.eval_method_ == EvalMethod::SLP)
+				{
+					out << "since using SLP for evaluation, here's the SLP:" << std::endl;
+					out << s.slp_;				
+				}
+
 			out << "\n";
 		}
 		else{
@@ -1198,6 +1269,10 @@ namespace bertini
 		else{
 			out << "system not patched\n";
 		}
+
+		out << "\ncurrent variable values:\n";
+		out << std::get< Vec<dbl> > (s.current_variable_values_) << "\n";
+		out << std::get< Vec<mpfr_complex> > (s.current_variable_values_) << "\n";
 
 		return out;
 	}
@@ -1219,7 +1294,7 @@ namespace bertini
 
 	System& System::operator+=(System const& rhs)
 	{
-		if (this->NumFunctions()!=rhs.NumFunctions())
+		if (this->NumTotalFunctions()!=rhs.NumTotalFunctions())
 			throw std::runtime_error("cannot add two Systems with differing numbers of functions");
 
 		if (this->NumVariables()!=rhs.NumVariables())
@@ -1245,7 +1320,7 @@ namespace bertini
 				throw std::runtime_error("System+=System cannot combine two patched systems whose patches differ.");
 
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
-			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->entry_node() + (*iter)->entry_node());
+			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode());
 
 		return *this;
 	}
@@ -1260,7 +1335,7 @@ namespace bertini
 	{
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
 		{
-			(*iter)->SetRoot( N * (*iter)->entry_node());
+			(*iter)->SetRoot( N * (*iter)->EntryNode());
 		}
 		return *this;
 	}
@@ -1296,7 +1371,7 @@ namespace bertini
 			sys1.CopyPatches(sys1);
 		// the other cases are automatically covered.  sys1 already patched, or neither patched.
 
-		for (unsigned ii(0); ii<sys2.NumFunctions(); ++ii)
+		for (unsigned ii(0); ii<sys2.NumNaturalFunctions(); ++ii)
 			sys1.AddFunction(sys2.Function(ii));
 
 		return sys1;
@@ -1370,6 +1445,7 @@ namespace bertini
 
 		return sys_clone;
 	}
+
 
 	void Simplify(System & sys)
 	{

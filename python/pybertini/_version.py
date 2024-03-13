@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with python/pybertini/_version.py.  If not, see <http://www.gnu.org/licenses/>.
 # 
-#  Copyright(C) 2018 by Bertini2 Development Team
+#  Copyright(C) 2018-2023 by Bertini2 Development Team
 # 
 #  See <http://www.gnu.org/licenses/> for a copy of the license, 
 #  as well as COPYING.  Bertini2 is provided with permitted 
@@ -23,11 +23,11 @@
 # 
 #  silviana amethyst
 #  UWEC
-#  Spring 2018
+#  Spring 2018-2023
 # 
 
 
 
 
-__version__ = '1.0.4'
+__version__ = '1.0.5'
 __version_info__ = tuple(map(int, __version__.split('.')))

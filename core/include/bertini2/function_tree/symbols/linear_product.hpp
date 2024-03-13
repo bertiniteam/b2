@@ -41,7 +41,7 @@
 #define BERTINI_FUNCTION_TREE_LINPRODUCT_HPP
 
 #include "bertini2/function_tree.hpp"
-#include "bertini2/function_tree/factory.hpp"
+
 #include "bertini2/eigen_extensions.hpp"
 
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -56,7 +56,7 @@ namespace  bertini {
 		 
 		 When differentiated, produces a differential referring to it.
 		 */
-		class LinearProduct : public virtual Symbol, public std::enable_shared_from_this<LinearProduct>
+		class LinearProduct : public virtual Symbol, public virtual EnableSharedFromThisVirtual<LinearProduct>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
@@ -64,7 +64,14 @@ namespace  bertini {
 			virtual ~LinearProduct() = default;
 			
 			
-			
+			template<typename... Ts> 
+			static 
+			std::shared_ptr<LinearProduct> Make(Ts&& ...ts){ 
+				return std::shared_ptr<LinearProduct>( new LinearProduct(ts...) );
+			}
+
+
+		private:
 			/**
 			 /brief Constructor for a linear product node that generates random coefficients automatically.
 			 
@@ -115,7 +122,7 @@ namespace  bertini {
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
-					hom_variable_ = MakeInteger(0);
+					hom_variable_ = Integer::Make(0);
 					for(int ii = 0; ii < coeffs_mpfr_ref.rows(); ++ii)
 					{
 						coeffs_rat_real_(ii,num_variables_) = mpq_rational(0);
@@ -159,7 +166,7 @@ namespace  bertini {
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
-					hom_variable_ = MakeInteger(0);
+					hom_variable_ = Integer::Make(0);
 					for(int ii = 0; ii < coeffs_mpfr_ref.rows(); ++ii)
 					{
 						coeffs_mpfr_ref(ii,num_variables_) = mpfr_complex(0);
@@ -181,7 +188,9 @@ namespace  bertini {
 				
 			}
 			
-			
+		
+
+		public:
 			
 			
 			
@@ -626,7 +635,7 @@ namespace  bertini {
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
-					hom_variable_ = MakeInteger(0);
+					hom_variable_ = Integer::Make(0);
 				}
 
 			}
@@ -665,7 +674,7 @@ namespace  bertini {
 				if(is_hom_vars)
 				{
 					is_homogenized_ = true;
-					hom_variable_ = MakeInteger(0);
+					hom_variable_ = Integer::Make(0);
 				}
 
 			}
@@ -709,7 +718,7 @@ namespace  bertini {
 				temp_var_mp_.resize(num_variables_ + 1);
 				temp_var_mp_[num_variables_] = mpfr_complex(1);
 				
-				hom_variable_ = MakeInteger(1);
+				hom_variable_ = Integer::Make(1);
 			}
 
 			
@@ -719,7 +728,7 @@ namespace  bertini {
 			
 			template <typename Archive>
 			void serialize(Archive& ar, const unsigned version) {
-				ar & boost::serialization::base_object<NaryOperator>(*this);
+				ar & boost::serialization::base_object<Symbol>(*this);
 			}
 			
 			
@@ -767,13 +776,20 @@ namespace  bertini {
 		 This class represents a linear of differentials.  This is the result of differentiating a single linear node.
 		 
 		 */
-		class DiffLinear : public virtual Symbol, public std::enable_shared_from_this<DiffLinear>
+		class DiffLinear : public virtual Symbol, public virtual EnableSharedFromThisVirtual<DiffLinear>
 		{
 		public:
 			BERTINI_DEFAULT_VISITABLE()
 			
 			virtual ~DiffLinear() = default;
 			
+			template<typename... Ts> 
+			static 
+			std::shared_ptr<DiffLinear> Make(Ts&& ...ts){ 
+				return std::shared_ptr<DiffLinear>( new DiffLinear(ts...) );
+			}
+
+		private:
 			
 			/**
 			 \brief Create a linear differential node. Only a linear, not a product.
@@ -783,7 +799,7 @@ namespace  bertini {
 			 */
 			DiffLinear(std::shared_ptr<LinearProduct> const& linear);
 			
-			
+		public:
 			
 			
 			
@@ -818,7 +834,7 @@ namespace  bertini {
 			 */
 			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override
 			{
-				return MakeInteger(0);
+				return Integer::Make(0);
 			}
 			
 			

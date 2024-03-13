@@ -32,7 +32,7 @@ using Variable = bertini::node::Variable;
 using Var = std::shared_ptr<Variable>;
 
 using VariableGroup = bertini::VariableGroup;
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 using mpq_rational = bertini::mpq_rational;
 using mpfr_float = bertini::mpfr_float;
 using mpz_int = bertini::mpz_int;
@@ -66,8 +66,8 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_small_example)
 		num start points is 1*2 + 1*2 = 4.			   
 
 	*/
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
 
 	System sys;
 
@@ -118,9 +118,9 @@ BOOST_AUTO_TEST_CASE(m_hom_system_preliminary_construction_larger_example)
 		
 		num start points is 1*2*3 + 1*2*3 = 12.	
 	*/
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
-	auto z = MakeVariable("z");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
+	auto z = Variable::Make("z");
 
 
 	System sys;
@@ -179,10 +179,10 @@ BOOST_AUTO_TEST_CASE(Two_var_groups_4_vars_4_fctns_example)
 	//		[0 2]
 	//		[0 2]
 	//		Number of paths: 16
- 	auto x1 = MakeVariable("x1");
-	auto x2 = MakeVariable("x2");
-	auto x3 = MakeVariable("x3");
-	auto x4 = MakeVariable("x4");
+ 	auto x1 = Variable::Make("x1");
+	auto x2 = Variable::Make("x2");
+	auto x3 = Variable::Make("x3");
+	auto x4 = Variable::Make("x4");
 
 
 	System sys;
@@ -228,10 +228,10 @@ BOOST_AUTO_TEST_CASE(four_var_groups_4_vars_4_fctns_example)
 	//		[0 0 0 2]
 	//		[0 0 2 0]
 	//		Number of paths: 8
-	auto x1 = MakeVariable("x1");
-	auto x2 = MakeVariable("x2");
-	auto x3 = MakeVariable("x3");
-	auto x4 = MakeVariable("x4");
+	auto x1 = Variable::Make("x1");
+	auto x2 = Variable::Make("x2");
+	auto x3 = Variable::Make("x3");
+	auto x4 = Variable::Make("x4");
 
 
 	System sys;
@@ -291,10 +291,10 @@ BOOST_AUTO_TEST_CASE(one_var_group_4_vars_4_fctns_example)
 	//		[2]
 	//		[2]
 	//		Number of paths: 24
-	auto x1 = MakeVariable("x1");
-	auto x2 = MakeVariable("x2");
-	auto x3 = MakeVariable("x3");
-	auto x4 = MakeVariable("x4");
+	auto x1 = Variable::Make("x1");
+	auto x2 = Variable::Make("x2");
+	auto x3 = Variable::Make("x3");
+	auto x4 = Variable::Make("x4");
 
 
 	System sys;
@@ -333,9 +333,9 @@ BOOST_AUTO_TEST_CASE(zero_column_in_degree_matrix)
 	//		[1 0]
 	//		[1 0]
 	//		Should throw for having a zero column.
-	auto x1 = MakeVariable("x1");
-	auto x2 = MakeVariable("x2");
-	auto x3 = MakeVariable("x3");
+	auto x1 = Variable::Make("x1");
+	auto x2 = Variable::Make("x2");
+	auto x3 = Variable::Make("x3");
 
 
 
@@ -369,9 +369,9 @@ BOOST_AUTO_TEST_CASE(diagonal_degree_matrix)
 	//		[0 2 0]
 	//		[0 0 2]
 	//		Number of paths: 8
-	auto x1 = MakeVariable("x1");
-	auto x2 = MakeVariable("x2");
-	auto x3 = MakeVariable("x3");
+	auto x1 = Variable::Make("x1");
+	auto x2 = Variable::Make("x2");
+	auto x3 = Variable::Make("x3");
 
 	System sys;
 
@@ -418,8 +418,8 @@ BOOST_AUTO_TEST_CASE(zero_row_in_degree_matrix)
 	//  	[2 2]
 	//		[0 0]
 	//		Should throw for having a zero row.
-	auto x1 = MakeVariable("x1");
-	auto x2 = MakeVariable("x2");
+	auto x1 = Variable::Make("x1");
+	auto x2 = Variable::Make("x2");
 
 	System sys;
 
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(zero_row_in_degree_matrix)
 	sys.AddVariableGroup(v2);
 
 	sys.AddFunction(pow(x1,2) + pow(x2,2));
-	sys.AddFunction(bertini::MakeInteger(1));
+	sys.AddFunction(bertini::Integer::Make(1));
 
 	BOOST_CHECK_THROW(auto mhom_start_system = bertini::start_system::MHomogeneous(sys), std::runtime_error);
 
@@ -445,7 +445,7 @@ BOOST_AUTO_TEST_CASE(non_square_target_system_for_mhom)
 	// 		f1 = x^2
 	//  	f2 = x^2 - 1
 	// Will throw for not being square
-	auto x = MakeVariable("x");
+	auto x = Variable::Make("x");
 
 
 	System sys;
@@ -470,8 +470,8 @@ BOOST_AUTO_TEST_CASE(empty_variable_group)
 	// 		f1 = x^2
 	//  	f2 = y^2 - 1
 	// Should throw for having an empty variable group. 
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
 
 	System sys;
 
@@ -497,8 +497,8 @@ BOOST_AUTO_TEST_CASE(ungrouped_variable_for_target_system_in_mhom_construction)
 	// 		f1 = x^2
 	//  	f2 = y^2 - 1
 	// Should throw for having an ungrouped variable.
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
 
 	System sys;
 
@@ -521,8 +521,8 @@ BOOST_AUTO_TEST_CASE(variable_in_many_variable_groups_in_mhom_construction)
 	// 		f1 = x^2
 	//  	f2 = y^2 - 1
 	// Should throw for having the variable y in many variable groups. 
-	auto x = MakeVariable("x");
-	auto y = MakeVariable("y");
+	auto x = Variable::Make("x");
+	auto y = Variable::Make("y");
 
 	System sys;
 

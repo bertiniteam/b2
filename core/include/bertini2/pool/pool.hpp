@@ -36,68 +36,82 @@ namespace bertini {
 	namespace detail {
 	
 
-	template<typename T>
+	template<typename ObjT>
 	struct SharedPointerPolicy
 	{
-		using PointerType = std::shared_ptr<T>;
+		using PointerType = std::shared_ptr<ObjT>;
 
 		static
-		PointerType FromObj(T d)
+		PointerType FromObj(ObjT d)
 		{
-			return std::make_shared<T>(std::move(d));
+			return std::make_shared<ObjT>(std::move(d));
 		}
 
 		static
 		PointerType DefaultConstructed()
 		{
-			return std::make_shared<T>();
+			return std::make_shared<ObjT>();
 		}
 
 	};
 
 
-	template<typename T>
-	using DefaultPointerPolicy = SharedPointerPolicy<T>;
+	template<typename ObjT>
+	using DefaultPointerPolicy = SharedPointerPolicy<ObjT>;
 
 
 
-	template<typename T, class PointerPolicy = DefaultPointerPolicy<T> >
+	template<typename ObjT, class PointerPolicy = DefaultPointerPolicy<ObjT> >
 	class Pool
 	{
-		using HeldType = typename PointerPolicy::PointerType;
 
-		using PoolHolderType = std::vector< HeldType >;
 
-		PoolHolderType held_data_;
+
 
 	public:
 
+		using HeldType = typename PointerPolicy::PointerType;
+		using PoolHolderType = std::vector< HeldType >;
 
-		HeldType NonPtrAdd(T d)
+		static
+		HeldType NonPtrAdd(ObjT d)
 		{
+			// held_data_.push_back(PointerPolicy::FromObj(d));
 			held_data_.push_back(PointerPolicy::FromObj(d));
 			return held_data_.back();
 		}
 
+		static
 		HeldType PtrAdd(HeldType d)
 		{
 			held_data_.push_back(d);
 			return held_data_.back();
 		}
 
-		HeldType NewObj()
+		template<typename ... Ts>
+		static
+		HeldType Make(Ts&& ...ts )
 		{
-			held_data_.push_back(PointerPolicy::DefaultConstructed());
+			ObjT* obj = new ObjT(ts...);
+
+			// held_data_.push_back(PointerPolicy::DefaultConstructed());
+			auto thing = std::shared_ptr<ObjT>(new ObjT(ts...));
+			held_data_.push_back(thing);
 			return held_data_.back();
 		}
 
+		static
 		void PurgeCache()
 		{
 			std::remove_if(held_data_.begin(), held_data_.end(), [](HeldType const& h){return h.use_count()==1;});
 		}
 
+	private:
+		static
+		PoolHolderType held_data_;
 	};
 
+	template<typename ObjT, class Policy> typename Pool<ObjT,Policy>::PoolHolderType Pool<ObjT,Policy>::held_data_;
 	} // re: detail
 } // re: bertini
 

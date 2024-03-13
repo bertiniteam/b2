@@ -58,7 +58,7 @@ using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexType; Complex 
 
 // 1. Define the polynomial system that we wish to solve. 
 System target_sys;
-Var x = MakeVariable("x"), t = MakeVariable("t"), y = MakeVariable("y");
+Var x = Variable::Make("x"), t = Variable::Make("t"), y = Variable::Make("y");
 
 VariableGroup vars{x,y};
 target_sys.AddVariableGroup(vars); 
@@ -386,7 +386,14 @@ public:
 		{
 			const Vec<CT>& current_sample = circle_samples.back();
 			const CT& current_time = circle_times.back();
-			assert(Precision(current_time)==Precision(current_sample) && "current time and sample for circle track must be of same precision");
+
+#ifndef BERTINI_DISABLE_PRECISION_CHECKS
+			if (Precision(current_time)!=Precision(current_sample)){
+				std::stringstream err_msg;
+				err_msg << "current time and sample for circle track must be of same precision.  respective precisions: " << Precision(current_time) << " " << Precision(current_sample) << std::endl;
+				throw std::runtime_error(err_msg.str());
+			}
+#endif
 
 			//set up the time value for the next sample. 
 			using std::polar;

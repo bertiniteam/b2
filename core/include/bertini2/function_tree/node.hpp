@@ -52,12 +52,16 @@
 
 #include "bertini2/num_traits.hpp"
 #include "bertini2/detail/visitable.hpp"
+#include "bertini2/function_tree/forward_declares.hpp"
 
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/tracking.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/nvp.hpp>
 
 
 
@@ -70,6 +74,8 @@ namespace bertini {
 	}
 
 using VariableGroup = std::vector< std::shared_ptr<node::Variable> >;
+
+
 
 enum class VariableGroupType
 {
@@ -132,7 +138,7 @@ An interface for all nodes in a function tree, and for a function object as well
 
  \brief Abstract base class for the Bertini hybrid-precision (double-multiple) expression tree. 
  */
-class Node : public virtual VisitableBase<>
+class Node : public virtual VisitableBase<>, public std::enable_shared_from_this<Node>
 {
 	friend detail::FreshEvalSelector<dbl>;
 	friend detail::FreshEvalSelector<mpfr_complex>;
@@ -371,6 +377,7 @@ private:
 
 	template <typename Archive>
 	void serialize(Archive& ar, const unsigned version) {
+		register_derived_node_types(ar);
 	}
 
 }; // re: class node
@@ -390,12 +397,47 @@ private:
 		return out;
 	}
 
+
+
+	// inherit from this to get a nice method of producing shared pointers to specific type, solving the diamond problem
+	//
+	// T is a derived type
+	//
+	// I adapted from:
+	// https://stackoverflow.com/questions/16082785/use-of-enable-shared-from-this-with-multiple-inheritance
+	//
+	template<typename T>
+	struct EnableSharedFromThisVirtual: public virtual Node
+	{
+
+	public:
+
+	    std::shared_ptr<T> shared_from_this() {
+	       return std::dynamic_pointer_cast<T>(Node::shared_from_this());
+	    }
+
+	    std::shared_ptr<const T> shared_from_this() const{
+	       return std::dynamic_pointer_cast<const T>(Node::shared_from_this());
+	    }
+
+
+
+		template <class ThisT>
+		std::shared_ptr<ThisT> downcast_shared_from_this(){
+			return std::dynamic_pointer_cast<ThisT>(Node::shared_from_this());
+		}
+
+		template <class ThisT>
+		std::shared_ptr<const ThisT> downcast_shared_from_this() const{
+			return std::dynamic_pointer_cast<const ThisT>(Node::shared_from_this());
+		}
+
+	};
+
+
+
 	} // re: namespace node
 } // re: namespace bertini
-
-
-
-
 
 
 

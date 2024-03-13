@@ -49,7 +49,18 @@ namespace bertini{
 		
 		void ExportRoots();
 		
-		
+		/**
+		 Function class
+		 */
+		template<typename NodeBaseT>
+		class HandleVisitor: public def_visitor<HandleVisitor<NodeBaseT> >
+		{
+		public:
+			template<class PyClass>
+			void visit(PyClass& cl) const;
+		};
+
+
 		/**
 		 Function class
 		 */

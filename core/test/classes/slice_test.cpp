@@ -45,7 +45,7 @@ using bertini::DefaultPrecision;
 
 BOOST_AUTO_TEST_CASE(slice_basic_complex)
 {
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(slice_basic_complex)
 
 BOOST_AUTO_TEST_CASE(slice_basic_crazy_overslice)
 {
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(slice_basic_crazy_overslice)
 
 BOOST_AUTO_TEST_CASE(slice_basic_real)
 {
-	Var x = MakeVariable("x"), y = MakeVariable("y"), z = MakeVariable("z");
+	Var x = Variable::Make("x"), y = Variable::Make("y"), z = Variable::Make("z");
 
 	VariableGroup vars{x,y,z};
 

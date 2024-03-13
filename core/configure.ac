@@ -26,12 +26,11 @@ AC_LANG([C++])
 #another directive to use the m4 folder
 AC_CONFIG_MACRO_DIR([m4])
 
-#the only produced file will be a single Makefile.
-AC_CONFIG_FILES([Makefile])
+
 
 
 #find the flags for C++14
-AX_CXX_COMPILE_STDCXX_14
+AX_CXX_COMPILE_STDCXX(17)
 
 
 #enable the creation of shared libraries
@@ -119,7 +118,7 @@ AX_EIGEN
 
 
 
-AX_BOOST_BASE([1.71],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.71 but it was not found in your system])])
+AX_BOOST_BASE([1.83],, [AC_MSG_ERROR([Bertini2 needs Boost at least 1.83 but it was not found in your system])])
 
 AX_BOOST_MULTIPRECISION
 
@@ -138,8 +137,11 @@ AX_BOOST_THREAD
 
 
 
-AM_CONFIG_HEADER(include/bertini2/config.h)
+AC_CONFIG_HEADERS(include/bertini2/config.h)
 
+
+#the only produced file will be a single Makefile.
+AC_CONFIG_FILES([Makefile])
 
 #wrap it up.
 AC_OUTPUT

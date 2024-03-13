@@ -13,7 +13,7 @@
 //You should have received a copy of the GNU General Public License
 //along with include/bertini2/function_tree/symbols/variable.hpp.  If not, see <http://www.gnu.org/licenses/>.
 //
-// Copyright(C) 2015 - 2021 by Bertini2 Development Team
+// Copyright(C) 2015 - 2023 by Bertini2 Development Team
 //
 // See <http://www.gnu.org/licenses/> for a copy of the license, 
 // as well as COPYING.  Bertini2 is provided with permitted 
@@ -43,7 +43,6 @@
 
 #include "bertini2/function_tree/symbols/symbol.hpp"
 #include "bertini2/function_tree/symbols/differential.hpp"
-#include "bertini2/function_tree/factory.hpp"
 
 
 namespace  bertini {
@@ -56,14 +55,22 @@ namespace node{
 
 	When differentiated, produces a differential referring to it.
 	*/
-	class Variable : public virtual NamedSymbol, public std::enable_shared_from_this<Variable>
+	class Variable : public virtual NamedSymbol, public virtual EnableSharedFromThisVirtual<Variable>
 	{
 	public:
 		BERTINI_DEFAULT_VISITABLE()
 		
+
+		template<typename... Ts> 
+		static 
+		std::shared_ptr<Variable> Make(Ts&& ...ts){ 
+			return std::shared_ptr<Variable>( new Variable(ts...) );
+		}
+
+	private:
 		Variable(std::string new_name);
 		
-		
+	public:
 		
 		
 		virtual ~Variable() = default;

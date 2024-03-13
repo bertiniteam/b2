@@ -81,35 +81,37 @@ void E::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> c
 	evaluation_value = mpfr_complex(mpfr_float(exp(mpfr_float(1))));
 }
 			}// special number namespace
+
+
 std::shared_ptr<Node> Pi()
 {
-	return std::make_shared<special_number::Pi>();
+	return special_number::Pi::Make();
 }
 
 std::shared_ptr<Node> E()
 {
-	return std::make_shared<special_number::E>();
+	return special_number::E::Make();
 }
 
 std::shared_ptr<Node> I()
 {
-	return MakeFloat(0,1);
+	return Float::Make(0,1);
 }
 
 
 std::shared_ptr<Node> Two()
 {
-	return MakeInteger(2);
+	return Integer::Make(2);
 }
 
 std::shared_ptr<Node> One()
 {
-	return MakeInteger(1);
+	return Integer::Make(1);
 }
 
 std::shared_ptr<Node> Zero()
 {
-	return MakeInteger(0);
+	return Integer::Make(0);
 }
 	} // re: namespace node
 } // re: namespace bertini

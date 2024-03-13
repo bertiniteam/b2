@@ -50,7 +50,7 @@ using VariableGroup = bertini::VariableGroup;
 using dbl = std::complex<double>;
 using mpfr = bertini::mpfr_complex;
 using mpfr_float = bertini::mpfr_float;
-using bertini::MakeVariable;
+using bertini::Variable::Make;
 
 template<typename NumType> using Vec = bertini::Vec<NumType>;
 template<typename NumType> using Mat = bertini::Mat<NumType>;
@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_linear)
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -142,8 +142,8 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_quadratic)
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -192,8 +192,8 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_decic)
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -244,9 +244,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_track_square_root)
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -341,9 +341,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_doesnt_start_from_singular_start_point)
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -395,9 +395,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_tracking_DOES_SOMETHING_PREDICTABLE_from_near_t
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -461,9 +461,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	DefaultPrecision(16);
 	using namespace bertini::tracking;
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -517,9 +517,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -583,9 +583,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -640,9 +640,9 @@ BOOST_AUTO_TEST_CASE(AMP_simple_nonhomogeneous_system_trackable_initialprecision
 	DefaultPrecision(100);
 	using namespace bertini::tracking;
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -715,9 +715,9 @@ BOOST_AUTO_TEST_CASE(AMP_tracker_fails_with_singularity_on_path)
 	DefaultPrecision(30);
 	using namespace bertini::tracking;
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	auto s = -1*(1-t) + 1*t;
 
@@ -780,9 +780,9 @@ BOOST_AUTO_TEST_CASE(AMP_track_total_degree_start_system)
 	using namespace bertini::tracking;
 	DefaultPrecision(30);
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
@@ -881,9 +881,9 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 	using namespace bertini::tracking;
 	DefaultPrecision(30);
 
-	Var x = MakeVariable("x");
-	Var y = MakeVariable("y");
-	Var t = MakeVariable("t");
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
 
 	System sys;
 
