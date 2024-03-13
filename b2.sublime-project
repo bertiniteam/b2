@@ -27,7 +27,6 @@
 										"endgames_test",
 										"pool_test",
 										"generating_test",
-										"config.log",
 										"config.status",
 										"configure",
 										"*.trs",
