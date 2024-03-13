@@ -15,3 +15,26 @@ setup(name='pybertini',
 
 # dependencies to add
 # sphinxcontrib-bibtex
+
+
+# from setuptools.command.egg_info import egg_info
+
+# class EggInfoCommand(egg_info):
+
+#     def run(self):
+#         if "build" in self.distribution.command_obj:
+#             build_command = self.distribution.command_obj["build"]
+
+#             self.egg_base = build_command.build_base
+
+#             self.egg_info = os.path.join(self.egg_base, os.path.basename(self.egg_info))
+
+#         egg_info.run(self)
+
+# setup(
+#     # ...
+#     cmdclass={
+#         "egg_info": EggInfoCommand,
+#     },
+#     #...
+# )
