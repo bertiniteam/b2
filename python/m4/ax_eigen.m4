@@ -63,7 +63,7 @@ if test "x$want_eigen" = "xyes"; then
         fi
 
     else 
-        for ac_eigen_path_tmp in /usr /usr/local /opt /opt/local ; do
+        for ac_eigen_path_tmp in /usr /usr/local /opt /opt/local /opt/homebrew; do
             if test -d "$ac_eigen_path_tmp/include/eigen3/Eigen"; then
                 EIGEN_CPPFLAGS="-I$ac_eigen_path_tmp/include/eigen3"
                 found_eigen_dir=yes;
