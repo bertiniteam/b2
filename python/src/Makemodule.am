@@ -71,23 +71,23 @@ _pybertini_la_LDFLAGS = -module -avoid-version -shared
 
 _pybertini_la_CXXFLAGS =  $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS) $(EIGEN_CPPFLAGS) $(NUMPY_CPPFLAGS) $(BERTINI_CPPFLAGS) $(EIGENPY_CPPFLAGS)
 
-pkgpython_PYTHON = pybertini/algorithms/__init__.py \
-                pybertini/algorithms/zerodim.py \
-                pybertini/container/__init__.py \
-                pybertini/endgame/config/__init__.py \
-                pybertini/endgame/__init__.py \
-                pybertini/function_tree/root/__init__.py \
-                pybertini/function_tree/symbol/__init__.py \
-                pybertini/logging/__init__.py \
-                pybertini/multiprec/__init__.py \
-                pybertini/nag_algorithm/__init__.py \
-                pybertini/parse/__init__.py \
-                pybertini/random/__init__.py \
-                pybertini/system/start_system/__init__.py \
-                pybertini/system/__init__.py \
-                pybertini/tracking/config/__init__.py \
-                pybertini/tracking/observers/__init__.py \
-                pybertini/tracking/__init__.py \
-                pybertini/__init__.py \
-                pybertini/_version.py \
-                setup.py
+# pkgpython_PYTHON = pybertini/algorithms/__init__.py \
+#                 pybertini/algorithms/zerodim.py \
+#                 pybertini/container/__init__.py \
+#                 pybertini/endgame/config/__init__.py \
+#                 pybertini/endgame/__init__.py \
+#                 pybertini/function_tree/root/__init__.py \
+#                 pybertini/function_tree/symbol/__init__.py \
+#                 pybertini/logging/__init__.py \
+#                 pybertini/multiprec/__init__.py \
+#                 pybertini/nag_algorithm/__init__.py \
+#                 pybertini/parse/__init__.py \
+#                 pybertini/random/__init__.py \
+#                 pybertini/system/start_system/__init__.py \
+#                 pybertini/system/__init__.py \
+#                 pybertini/tracking/config/__init__.py \
+#                 pybertini/tracking/observers/__init__.py \
+#                 pybertini/tracking/__init__.py \
+#                 pybertini/__init__.py \
+#                 pybertini/_version.py \
+#                 setup.py
