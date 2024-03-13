@@ -26,8 +26,7 @@ AC_LANG([C++])
 #another directive to use the m4 folder
 AC_CONFIG_MACRO_DIR([m4])
 
-#the only produced file will be a single Makefile.
-AC_CONFIG_FILES([Makefile])
+
 
 
 #find the flags for C++14
@@ -138,8 +137,11 @@ AX_BOOST_THREAD
 
 
 
-AM_CONFIG_HEADER(include/bertini2/config.h)
+AC_CONFIG_HEADERS(include/bertini2/config.h)
 
+
+#the only produced file will be a single Makefile.
+AC_CONFIG_FILES([Makefile])
 
 #wrap it up.
 AC_OUTPUT
