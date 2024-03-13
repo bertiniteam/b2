@@ -49,15 +49,14 @@ if test "x$want_boost_multiprecision" = "xyes"; then
     if test "$ac_boost_multiprecision_path" != ""; then
 
         
-        AC_MSG_CHECKING([for Boost.Multiprecision at the path you specified: $ac_boost_multiprecision_path])
+        AC_MSG_CHECKING([for Boost.Multiprecision at the path you specified: $ac_boost_multiprecision_path, by looking for $ac_boost_multiprecision_path/boost/multiprecision/mpc.hpp])
         if test -f "$ac_boost_multiprecision_path/boost/multiprecision/mpc.hpp"; then
-            
-            BOOST_MULTIPRECISION_CPPFLAGS="-I$ac_boost_multiprecision_path"
+            BOOST_MULTIPRECISION_CPPFLAGS="-I$ac_boost_multiprecision_path";
             found_bmp_dir=yes;
         else
-            AC_MSG_CHECKING([for Boost.Multiprecision at the path you specified, adding /include to it: $ac_boost_multiprecision_path/include])
+            AC_MSG_CHECKING([for Boost.Multiprecision at the path you specified, by looking for $ac_boost_multiprecision_path/include/boost/multiprecision/mpc.hpp])
             if test -f "$ac_boost_multiprecision_path/include/boost/multiprecision/mpc.hpp"; then
-                BOOST_MULTIPRECISION_CPPFLAGS="-I$ac_boost_multiprecision_path/include"
+                BOOST_MULTIPRECISION_CPPFLAGS="-I$ac_boost_multiprecision_path/include";
                 found_bmp_dir=yes;
             fi
         fi
@@ -85,9 +84,12 @@ if test "x$want_boost_multiprecision" = "xyes"; then
         AC_MSG_ERROR([unable to find Boost Multiprecision.  See `config.log`.])
     fi
 
+    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+    export CPPFLAGS
     AC_CHECK_HEADERS([boost/multiprecision/mpc.hpp],
         [
         succeeded=yes;
+        CPPFLAGS="$CPPFLAGS_SAVED";
         export CPPFLAGS;
         ],
         [
