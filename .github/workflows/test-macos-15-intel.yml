@@ -62,7 +62,10 @@ jobs:
             cmake .. -DCMAKE_PREFIX_PATH="/tmp/deps-py;/usr/local" -DCMAKE_INSTALL_PREFIX=/tmp/deps-py -DPython3_EXECUTABLE=$(which python) -DPython3_NumPy_INCLUDE_DIR=$(python -c "import numpy; print(numpy.get_include())") -DBUILD_TESTING=OFF &&
             make -j$(sysctl -n hw.ncpu) install
           # Intel macOS Homebrew lives under /usr/local, not /opt/homebrew.
-          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=14.0 CMAKE_PREFIX_PATH=/tmp/deps-py:/usr/local DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/usr/local/lib"
+          # Bump deployment target to 15.0: Homebrew bottles on the macos-15-intel
+          # runner (gmp/mpfr/mpc) are built with min target 15.0, and delocate-wheel
+          # refuses to bundle dylibs with a higher min target than the wheel itself.
+          CIBW_ENVIRONMENT_MACOS: "MACOSX_DEPLOYMENT_TARGET=15.0 CMAKE_PREFIX_PATH=/tmp/deps-py:/usr/local DYLD_FALLBACK_LIBRARY_PATH=/tmp/deps-py/lib:/usr/local/lib"
 
       - uses: actions/upload-artifact@v4
         with:
