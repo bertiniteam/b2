@@ -137,6 +137,13 @@ using bmp::backends::mpc_complex_backend;
 	{
 		mpfr_float::default_precision(prec);
 		mpfr_complex::default_precision(prec);
+		// Boost.Multiprecision >= 1.87 reads thread_default_precision when
+		// default-constructing mpfr temporaries (including those created by
+		// boost::python const& extractors). If left at 0, mpfr_init2 aborts.
+		// Set both so that calls to default_precision() align thread-local
+		// with the static default. See commit 3111255b for original context.
+		mpfr_float::thread_default_precision(prec);
+		mpfr_complex::thread_default_precision(prec);
 	}
 
 

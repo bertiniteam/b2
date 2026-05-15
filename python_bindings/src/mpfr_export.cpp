@@ -299,6 +299,11 @@ namespace bertini{
 			unsigned (*def_prec1)() = &bertini::DefaultPrecision;
 			void (*def_prec2)(unsigned) = &bertini::DefaultPrecision;
 
+			// Seed thread_default_precision on the interpreter thread so that
+			// boost::python const& extractors don't construct mpfr temporaries
+			// at precision 0 on Boost >= 1.87 (which aborts inside mpfr_init2).
+			bertini::DefaultPrecision(bertini::DefaultPrecision());
+
 			def("default_precision", def_prec1, "get the default precision for variable-precision numbers.  is digits, not bits.");
 			def("default_precision", def_prec2, "set the default precision for variable-precision numbers.  should be a positive number.  is digits, not bits.");
 		}
