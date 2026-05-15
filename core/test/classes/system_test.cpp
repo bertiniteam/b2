@@ -494,11 +494,11 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 	VariableGroup vars;
 	vars.push_back(x); vars.push_back(y);
 
-	sys1.AddVariableGroup(vars);  
+	sys1.AddVariableGroup(vars);
 	sys1.AddFunction(y+1);
 	sys1.AddFunction(x*y);
 
-	sys2.AddVariableGroup(vars);  
+	sys2.AddVariableGroup(vars);
 	sys2.AddFunction(-y-1);
 	sys2.AddFunction(-x*y);
 
@@ -524,6 +524,43 @@ BOOST_AUTO_TEST_CASE(add_two_systems)
 	}
 
 
+}
+
+
+/**
+\class bertini::System
+\test \b add_two_systems_evaluated_in_mpfr Sibling of add_two_systems, but
+exercises the Vec<mpfr> evaluation path. This is the C++ analog of the
+Python test_add_systems that surfaced the macos-15-intel SIGABRT — the C++
+suite previously only covered the Vec<dbl> path.
+*/
+BOOST_AUTO_TEST_CASE(add_two_systems_evaluated_in_mpfr)
+{
+	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+
+	bertini::System sys1, sys2;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+
+	VariableGroup vars;
+	vars.push_back(x); vars.push_back(y);
+
+	sys1.AddVariableGroup(vars);
+	sys1.AddFunction(y+1);
+	sys1.AddFunction(x*y);
+
+	sys2.AddVariableGroup(vars);
+	sys2.AddFunction(-y-1);
+	sys2.AddFunction(-x*y);
+
+	sys1+=sys2;
+
+	Vec<mpfr> values(2);
+	values << mpfr(2), mpfr(3);
+
+	auto v = sys1.Eval(values);
+
+	BOOST_CHECK_EQUAL(v(0), mpfr(0));
+	BOOST_CHECK_EQUAL(v(1), mpfr(0));
 }
 
 

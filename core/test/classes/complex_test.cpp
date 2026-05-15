@@ -1025,6 +1025,72 @@ BOOST_AUTO_TEST_CASE(precision_equality_default_differs)
 }
 
 
+// Regression coverage for the macos-15-intel SIGABRT inside System.eval.
+// Boost.Multiprecision >= 1.87 default-constructs mpfr temporaries at
+// thread_default_precision; if that thread-local is 0, mpfr_init2 aborts.
+// These tests pin down our contract: bertini::DefaultPrecision keeps
+// the static and thread-local defaults aligned, and default construction
+// yields useful precision (not 0).
+
+BOOST_AUTO_TEST_CASE(default_precision_aligns_thread_local_with_static)
+{
+	using namespace bertini;
+	DefaultPrecision(57);
+	BOOST_CHECK_EQUAL(mpfr_float::default_precision(),         57u);
+	BOOST_CHECK_EQUAL(mpfr_complex::default_precision(),       57u);
+	BOOST_CHECK_EQUAL(mpfr_float::thread_default_precision(),  57u);
+	BOOST_CHECK_EQUAL(mpfr_complex::thread_default_precision(),57u);
+
+	// restore so subsequent tests aren't surprised
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
+
+BOOST_AUTO_TEST_CASE(default_constructed_mpfr_float_inherits_default_precision)
+{
+	using namespace bertini;
+	DefaultPrecision(63);
+	mpfr_float f;                            // no explicit precision
+	BOOST_CHECK_EQUAL(f.precision(), 63u);   // must not be 0
+
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
+
+BOOST_AUTO_TEST_CASE(default_constructed_mpfr_complex_inherits_default_precision)
+{
+	using namespace bertini;
+	DefaultPrecision(71);
+	mpfr_complex z;                          // no explicit precision
+	BOOST_CHECK_EQUAL(z.precision(), 71u);   // must not be 0
+
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
+
+BOOST_AUTO_TEST_CASE(default_precision_recovers_thread_local_from_zero)
+{
+	using namespace bertini;
+	// Simulate a freshly-spawned thread on Boost 1.87: thread_default is 0.
+	mpfr_float::thread_default_precision(0);
+	mpfr_complex::thread_default_precision(0);
+
+	// The fix: DefaultPrecision must repair both, not just the static side.
+	// Without this, the next default-constructed mpfr temporary aborts inside
+	// mpfr_init2 (this is what surfaced on macos-15-intel via boost::python).
+	DefaultPrecision(50);
+	BOOST_CHECK_EQUAL(mpfr_float::thread_default_precision(),  50u);
+	BOOST_CHECK_EQUAL(mpfr_complex::thread_default_precision(),50u);
+
+	mpfr_float  f;
+	mpfr_complex z;
+	BOOST_CHECK_EQUAL(f.precision(), 50u);
+	BOOST_CHECK_EQUAL(z.precision(), 50u);
+
+	DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 
