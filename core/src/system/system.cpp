@@ -1322,6 +1322,7 @@ namespace bertini
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
 			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode());
 
+		is_differentiated_ = false;
 		return *this;
 	}
 
@@ -1337,6 +1338,7 @@ namespace bertini
 		{
 			(*iter)->SetRoot( N * (*iter)->EntryNode());
 		}
+		is_differentiated_ = false;
 		return *this;
 	}
 

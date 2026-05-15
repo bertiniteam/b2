@@ -600,18 +600,13 @@ BOOST_AUTO_TEST_CASE(add_system_to_self_doubles_under_function_tree_eval)
 
 /**
 \class bertini::System
-\test \b operator_plus_equals_invalidates_slp_cache Discovered bug:
-System::operator+= mutates each Function's entry_node_ but does NOT set
-is_differentiated_ = false, so a previously-built SLP keeps the pre-mutation
-representation. Any Eval after operator+= reads the stale SLP and returns
-the wrong values. The existing add_two_systems test passes accidentally —
-it only Evals after operator+=, so the SLP is built fresh.
-
-Expected failures should drop to 0 once System::operator+= invalidates the
-cache (e.g. is_differentiated_ = false; and any other dependent state).
+\test \b operator_plus_equals_invalidates_slp_cache System::operator+=
+mutates each Function's entry_node_ via SetRoot. The cached
+StraightLineProgram (the default eval method) is built lazily on first
+Differentiate(); if we don't invalidate is_differentiated_ here, a
+subsequent Eval reads stale values. Pin this so it doesn't regress.
 */
-BOOST_AUTO_TEST_CASE(operator_plus_equals_invalidates_slp_cache,
-                     *utf::expected_failures(2))
+BOOST_AUTO_TEST_CASE(operator_plus_equals_invalidates_slp_cache)
 {
 	bertini::System sys;
 	Var x = Variable::Make("x"), y = Variable::Make("y");
@@ -637,11 +632,11 @@ BOOST_AUTO_TEST_CASE(operator_plus_equals_invalidates_slp_cache,
 
 /**
 \class bertini::System
-\test \b operator_mult_equals_invalidates_slp_cache Sibling discovery:
-System::operator*= has the same stale-SLP problem as operator+=.
+\test \b operator_mult_equals_invalidates_slp_cache Sibling of the
+operator+= cache-invalidation test. operator*= multiplies each function
+by a Node and must also invalidate is_differentiated_.
 */
-BOOST_AUTO_TEST_CASE(operator_mult_equals_invalidates_slp_cache,
-                     *utf::expected_failures(1))
+BOOST_AUTO_TEST_CASE(operator_mult_equals_invalidates_slp_cache)
 {
 	using bertini::node::Float;
 
