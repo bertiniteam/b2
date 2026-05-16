@@ -84,10 +84,10 @@ namespace bertini{
 					Precision(std::get< Vec<mpfr_complex> >(f_temp_), new_precision);
 					Precision(std::get< Vec<mpfr_complex> >(step_temp_), new_precision);
 					Precision(std::get< Mat<mpfr_complex> >(J_temp_), new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(rand_temp_), new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(solve_temp_), new_precision);
 
-					std::get< Eigen::PartialPivLU<Mat<mpfr_complex>> >(LU_) = Eigen::PartialPivLU<Mat<mpfr_complex>>(numTotalFunctions_);
-
-					current_precision_ = new_precision;				
+					current_precision_ = new_precision;
 				}
 
 
@@ -112,6 +112,10 @@ namespace bertini{
 					std::get< Vec<mpfr_complex> >(f_temp_).resize(numTotalFunctions_);
 					std::get< Vec<dbl> >(step_temp_).resize(numTotalFunctions_);
 					std::get< Vec<mpfr_complex> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<dbl> >(rand_temp_) = RandomOfUnits<dbl>(numVariables_);
+					std::get< Vec<mpfr_complex> >(rand_temp_) = RandomOfUnits<mpfr_complex>(numVariables_);
+					std::get< Vec<dbl> >(solve_temp_).resize(numVariables_);
+					std::get< Vec<mpfr_complex> >(solve_temp_).resize(numVariables_);
 				}
 
 				
@@ -226,7 +230,10 @@ namespace bertini{
 						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 						
-						NumErrorT norm_J_inverse(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
+						Vec<ComplexType> const& rand_ref = std::get< Vec<ComplexType> >(rand_temp_);
+						Vec<ComplexType>& solve_ref = std::get< Vec<ComplexType> >(solve_temp_);
+						solve_ref = LU_ref.solve(rand_ref);
+						NumErrorT norm_J_inverse(solve_ref.norm());
 
 						if (!amp::CriterionB<ComplexType>(NumErrorT(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, NumErrorT(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
@@ -301,7 +308,13 @@ namespace bertini{
 						
 						norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
 						norm_J = NumErrorT(J_temp_ref.norm());
-						norm_J_inverse = NumErrorT(LU_ref.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm());
+						{
+							Vec<ComplexType>& rand_ref = std::get< Vec<ComplexType> >(rand_temp_);
+							for (int ri = 0; ri < (int)rand_ref.size(); ++ri) rand_ref(ri) = RandomUnit<ComplexType>();
+							Vec<ComplexType>& solve_ref = std::get< Vec<ComplexType> >(solve_temp_);
+							solve_ref = LU_ref.solve(rand_ref);
+							norm_J_inverse = NumErrorT(solve_ref.norm());
+						}
 						condition_number_estimate = NumErrorT(norm_J*norm_J_inverse);
 												
 						if ( (norm_delta_z < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
@@ -350,7 +363,7 @@ namespace bertini{
 					S.SetAndReset<ComplexType>(current_space, current_time);
 					S.EvalInPlace(f_temp_ref);
 					S.JacobianInPlace(J_temp_ref);
-					LU_ref = J_temp_ref.lu();
+					LU_ref.compute(J_temp_ref);
 					
 					if (LUPartialPivotDecompositionSuccessful(LU_ref.matrixLU())!=MatrixSuccessCode::Success)
 						return SuccessCode::MatrixSolveFailure;
@@ -372,11 +385,13 @@ namespace bertini{
 				unsigned numTotalFunctions_; // Number of total functions for the current system
 				unsigned numVariables_;  // Number of variables for the current system
 				
-				std::tuple< Vec<dbl>, Vec<mpfr_complex> > f_temp_; // Variable to hold temporary evaluation of the system
-				std::tuple< Vec<dbl>, Vec<mpfr_complex> > step_temp_; // Variable to hold temporary evaluation of the newton step
-				std::tuple< Mat<dbl>, Mat<mpfr_complex> > J_temp_; // Variable to hold temporary evaluation of the Jacobian
-				
-				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_; // The LU factorization from the Newton iterates
+				std::tuple< Vec<dbl>, Vec<mpfr_complex> > f_temp_;
+				std::tuple< Vec<dbl>, Vec<mpfr_complex> > step_temp_;
+				std::tuple< Mat<dbl>, Mat<mpfr_complex> > J_temp_;
+				std::tuple< Vec<dbl>, Vec<mpfr_complex> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
+				std::tuple< Vec<dbl>, Vec<mpfr_complex> > solve_temp_; // reused scratch: LU solve result
+
+				std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_;
 				
 				unsigned current_precision_;
 
