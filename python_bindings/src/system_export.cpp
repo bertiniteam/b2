@@ -62,12 +62,16 @@ namespace bertini{
 			.def("precision", set_prec_, (arg("self"), arg("precision")),"Set / change the precision of the system.  Feed in a positive number, representing the digits (not bits) of the precision.  Double precision is 16, but that only effects the multi-precision precision...  you can eval in double precision without changing the precision to 16.")
 			.def("differentiate", &SystemBaseT::Differentiate, (arg("self")), "differentiate the system with respect to the declared variable groups")
 
-			.def("eval", return_Eval0_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision, using already-set variable values.")
+			// Register mpfr overloads first so dbl overloads have highest priority
+			// (boost::python resolves in LIFO order). Without this, a numpy int64
+			// array causes eigenpy to probe Vec<mpfr> construction first; with
+			// thread_default_precision=0 on Boost>=1.87 that aborts in mpfr_init2.
 			.def("eval", return_Eval0_ptr<mpfr>(), (arg("self")) ,"Evaluate the system in multiple precision, using already-set variable values.")
-			.def("eval", return_Eval1_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision, using space variable values passed into this function.")
+			.def("eval", return_Eval0_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision, using already-set variable values.")
 			.def("eval", return_Eval1_ptr<mpfr>(), (arg("self")) ,"Evaluate the system in multiple precision, using space variable values passed into this function.")
-			.def("eval", return_Eval2_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision using space and time values passed into this function.  Throws if doesn't use a time variable")
+			.def("eval", return_Eval1_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision, using space variable values passed into this function.")
 			.def("eval", return_Eval2_ptr<mpfr>(), (arg("self")) ,"Evaluate the system in multiple precision using space and time values passed into this function.  Throws if doesn't use a time variable")
+			.def("eval", return_Eval2_ptr<dbl>(), (arg("self")) ,"Evaluate the system in double precision using space and time values passed into this function.  Throws if doesn't use a time variable")
 			
 			// these two commented out because i don't need in-place Eigen::Ref wrapping here. 
 			// but if you did, you'd use two lines like this, ha.
