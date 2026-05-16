@@ -82,6 +82,27 @@ jobs:
           pip install numpy
           pip install --no-index --find-links wheelhouse/ bertini
 
+      - name: Diagnostic - isolate crash location
+        run: |
+          python -c "print('step 1: importing bertini'); import bertini; print('step 2: bertini imported, default_precision =', bertini.default_precision())"
+          python -c "
+          import bertini, numpy as np
+          from bertini import System
+          from bertini.function_tree.symbol import Variable
+          from bertini.function_tree.root import VariableGroup
+          print('step 3: constructing system')
+          x = Variable('x'); y = Variable('y')
+          s1 = System(); s2 = System()
+          vg = VariableGroup(); vg.append(x); vg.append(y)
+          s1.add_variable_group(vg); s1.add_function(y+1); s1.add_function(x*y)
+          s2.add_variable_group(vg); s2.add_function(-y-1); s2.add_function(-x*y)
+          print('step 4: s1 += s2')
+          s1 += s2
+          print('step 5: calling eval with int array')
+          v = s1.eval(np.array((2,3)))
+          print('step 6: eval result =', v)
+          "
+
       - name: Run Python tests
         run: |
           pip install pytest
