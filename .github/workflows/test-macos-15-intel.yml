@@ -42,7 +42,7 @@ jobs:
           CIBW_BEFORE_ALL_MACOS: >
             brew install gmp mpfr libmpc eigen@3 &&
             cd /tmp &&
-            { [ -f boost_1_87_0.tar.bz2 ] || curl -fsSL -o boost_1_87_0.tar.bz2 https://archives.boost.io/release/1.87.0/source/boost_1_87_0.tar.bz2 ; } &&
+            { [ -f boost_1_90_0.tar.bz2 ] || curl -fsSL -o boost_1_90_0.tar.bz2 https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2 ; } &&
             { [ -f eigenpy-3.11.0.tar.gz ] || curl -fsSL -o eigenpy-3.11.0.tar.gz https://github.com/stack-of-tasks/eigenpy/releases/download/v3.11.0/eigenpy-3.11.0.tar.gz ; }
           CIBW_BEFORE_BUILD_MACOS: >
             pip install scikit-build-core numpy scipy &&
@@ -51,8 +51,8 @@ jobs:
             PY_INC=$(python -c "import sysconfig; print(sysconfig.get_path('include'))") &&
             PY_LIB=$(python -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR') or '')") &&
             cd /tmp &&
-            rm -rf boost_1_87_0 && tar xjf boost_1_87_0.tar.bz2 &&
-            cd boost_1_87_0 &&
+            rm -rf boost_1_90_0 && tar xjf boost_1_90_0.tar.bz2 &&
+            cd boost_1_90_0 &&
             ./bootstrap.sh --with-python=$(which python) --prefix=/tmp/deps-py &&
             printf 'using python : %s : %s : %s : %s ;\n' "$PY_VER" "$(which python)" "$PY_INC" "$PY_LIB" > user-config.jam &&
             ./b2 install -j$(sysctl -n hw.ncpu) --user-config=user-config.jam python=$PY_VER hardcode-dll-paths=true dll-path=/tmp/deps-py/lib &&
