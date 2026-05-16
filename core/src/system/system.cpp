@@ -1007,6 +1007,7 @@ namespace bertini
 		}
 
 		swap(functions_, re_ordered_functions);
+		is_differentiated_ = false;
 	}
 
 
@@ -1021,7 +1022,7 @@ namespace bertini
 		//http://www.cplusplus.com/doc/tutorial/typecasting/
 		std::iota(begin(indices), end(indices), static_cast<size_t>(0));
 		std::sort( begin(indices), end(indices), [&](size_t a, size_t b) { return degs[a] < degs[b]; } );
-		
+
 
 
 		// finally, we re-order the functions based on the indices we just computed
@@ -1034,6 +1035,7 @@ namespace bertini
 		}
 
 		swap(functions_, re_ordered_functions);
+		is_differentiated_ = false;
 	}
 
 
@@ -1061,6 +1063,9 @@ namespace bertini
 
 		path_variable_.reset();
 		have_path_variable_ = false;
+
+		is_differentiated_ = false;
+		have_ordering_ = false;
 	}
 
 
@@ -1070,6 +1075,8 @@ namespace bertini
 		using bertini::Simplify;
 		for (auto& iter : this->functions_)
 			Simplify(iter);
+
+		is_differentiated_ = false;
 	}
 
 

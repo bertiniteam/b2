@@ -662,6 +662,67 @@ BOOST_AUTO_TEST_CASE(operator_mult_equals_invalidates_slp_cache)
 
 /**
 \class bertini::System
+\test \b reorder_functions_decreasing_invalidates_slp_cache The function
+ordering inside the SLP corresponds to the order of functions_ at SLP
+build time. ReorderFunctionsByDegreeDecreasing swaps entries in functions_
+and must invalidate is_differentiated_ so the SLP is rebuilt to match.
+*/
+BOOST_AUTO_TEST_CASE(reorder_functions_decreasing_invalidates_slp_cache)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+
+	VariableGroup vars;
+	vars.push_back(x); vars.push_back(y);
+	sys.AddVariableGroup(vars);
+
+	sys.AddFunction(x+y);             // degree 1, initially at position 0
+	sys.AddFunction(x*y);             // degree 2, initially at position 1
+
+	Vec<dbl> values(2);
+	values << dbl(2.0), dbl(3.0);
+	(void) sys.Eval(values);          // primes SLP with the [degree1, degree2] order
+
+	sys.ReorderFunctionsByDegreeDecreasing();   // now [degree2, degree1] = [x*y, x+y]
+
+	auto after = sys.Eval(values);
+	BOOST_CHECK_EQUAL(after(0), dbl(6.0));      // x*y at position 0
+	BOOST_CHECK_EQUAL(after(1), dbl(5.0));      // x+y at position 1
+}
+
+
+/**
+\class bertini::System
+\test \b reorder_functions_increasing_invalidates_slp_cache Sibling of the
+decreasing test. Reorders an already-cached system into ascending degree
+order and verifies the SLP follows.
+*/
+BOOST_AUTO_TEST_CASE(reorder_functions_increasing_invalidates_slp_cache)
+{
+	bertini::System sys;
+	Var x = Variable::Make("x"), y = Variable::Make("y");
+
+	VariableGroup vars;
+	vars.push_back(x); vars.push_back(y);
+	sys.AddVariableGroup(vars);
+
+	sys.AddFunction(x*y);             // degree 2, initially at position 0
+	sys.AddFunction(x+y);             // degree 1, initially at position 1
+
+	Vec<dbl> values(2);
+	values << dbl(2.0), dbl(3.0);
+	(void) sys.Eval(values);          // primes SLP with the [degree2, degree1] order
+
+	sys.ReorderFunctionsByDegreeIncreasing();   // now [degree1, degree2] = [x+y, x*y]
+
+	auto after = sys.Eval(values);
+	BOOST_CHECK_EQUAL(after(0), dbl(5.0));      // x+y at position 0
+	BOOST_CHECK_EQUAL(after(1), dbl(6.0));      // x*y at position 1
+}
+
+
+/**
+\class bertini::System
 \test \b eval_wrong_size_input_throws Verifies that passing a variable
 vector of the wrong size to System::Eval throws std::runtime_error rather
 than reading past the end or producing garbage.
