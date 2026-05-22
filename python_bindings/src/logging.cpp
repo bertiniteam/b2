@@ -68,7 +68,7 @@ void ExportLogging()
 
 	def("add_file", &bertini::logging::Logging::AddFile, 
 		((boost::python::arg("pattern")), boost::python::arg("format"), boost::python::arg("rotation_size")), 
-		"Add a file-name pattern to be written to, with a given formatting, and a threshold rotation size.  See Boost.Log for more information on these strings.  This part of PyBertini is a direct shunt to Boost.Log.");
+		"Add a file-name pattern to be written to, with a given formatting, and a threshold rotation size.  See Boost.Log for more information on these strings.  This part of Bertini is a direct shunt to Boost.Log.");
 	
 
 

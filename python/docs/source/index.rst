@@ -1,9 +1,9 @@
-.. PyBertini documentation master file, created by
+.. bertini2 documentation main file, created by
    sphinx-quickstart on Wed Oct  4 23:28:46 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-PyBertini -- the Python bindings for Bertini
+The Python bindings for Bertini 2
 *************************************************
 
 

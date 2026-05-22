@@ -5,7 +5,7 @@
 
    import bertini
 
-PyBertini works by setting up systems, setting up algorithms to use those systems, and doing something with the output.
+Bertini works by setting up systems, setting up algorithms to use those systems, and doing something with the output.
 
 Forming a system
 =================
@@ -84,7 +84,7 @@ We can indeed do homotopy continuation with a non-algebraic systems.  What we ca
 Forming a start system
 =========================
 
-To solve our algebraic system ``sys``, we need a corresponding start system -- one with related structure, but that is actually solvable without too much trouble.  Bertini2 has several implemented options.  The most basic (easiest to form and solve) start system is the Total Degree (TD) start system.  It is implemented as a first-class object in Bertini and PyBertini.  It takes in a polynomial system as its argument, and self-forms.
+To solve our algebraic system ``sys``, we need a corresponding start system -- one with related structure, but that is actually solvable without too much trouble.  Bertini2 has several implemented options.  The most basic (easiest to form and solve) start system is the Total Degree (TD) start system.  It is implemented as a first-class object in Bertini.  It takes in a polynomial system as its argument, and self-forms.
 
 
 Above, we formed a target system, ``sys``.  Now, let's make a start system ``td``.  Later, we will couple it to ``sys``.
@@ -133,7 +133,7 @@ as well as a few other incidentals which will be implicitly used, such as a path
 Tracking a single path
 ======================
 
-There are three basic trackers available in PyBertini:
+There are three basic trackers available in Bertini 2:
 
 
 #. Fixed double precision: :class:`~bertini.tracking.DoublePrecisionTracker`

@@ -63,7 +63,7 @@ void ExportContainers()
 	current_scope.attr("container") = new_submodule;
 
 	scope new_submodule_scope = new_submodule;
-	new_submodule_scope.attr("__doc__") = "Various container types for PyBertini";
+	new_submodule_scope.attr("__doc__") = "Various container types";
  
 
 	boost::python::converter::registry::push_back(&pylist_converter<bertini::VariableGroup>::convertible

@@ -143,109 +143,12 @@ jobs:
           files: |
             dist/*.*
 
-  build_docs:
-    name: Build docs
+  build_and_deploy_docs:
+    name: Build and deploy docs
     if: needs.check_version.outputs.is_prerelease == 'false'
     needs: [check_version, build_and_test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          # gitpython (used by python/docs/source/conf.py to derive version)
-          # needs the full history; the default depth=1 leaves it unable to
-          # resolve HEAD's commit object on some refs.
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Compute build metadata
-        id: meta
-        run: |
-          SHA=$(git rev-parse HEAD)
-          SHORT=$(git rev-parse --short HEAD)
-          DATE=$(date -u +'%Y-%m-%d %H:%M UTC')
-          echo "sha=$SHA"          >> "$GITHUB_OUTPUT"
-          echo "short=$SHORT"      >> "$GITHUB_OUTPUT"
-          echo "date=$DATE"        >> "$GITHUB_OUTPUT"
-          echo "Build metadata: $SHORT ($SHA) at $DATE"
-
-      - name: Install system dependencies (Doxygen)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y doxygen graphviz
-
-      - name: Fetch doxygen-awesome-css
-        run: |
-          curl -sSL https://github.com/jothepro/doxygen-awesome-css/archive/refs/tags/v2.3.4.tar.gz | tar -xz
-          mv doxygen-awesome-css-2.3.4 doxygen-awesome-css
-
-      - name: Build C++ docs (Doxygen)
-        env:
-          PROJECT_NUMBER: "${{ steps.meta.outputs.short }} (${{ steps.meta.outputs.date }})"
-        run: |
-          mkdir -p build/docs/cpp site
-          # Append PROJECT_NUMBER override via stdin; Doxygen reads stdin
-          # config when invoked with `-` and merges with the file.
-          (cat Doxyfile; echo "PROJECT_NUMBER = $PROJECT_NUMBER") | doxygen -
-          mv build/docs/cpp site/cpp
-
-      - name: Install Python deps for Sphinx
-        run: |
-          python -m pip install --upgrade pip
-          pip install \
-            sphinx sphinx-rtd-theme sphinxcontrib-bibtex gitpython \
-            scikit-build-core build numpy eigenpy==3.11.0
-
-      - name: Download built wheel
-        uses: actions/download-artifact@v5
-        with:
-          name: wheels-ubuntu-latest-3.11
-          path: dist/
-
-      - name: Install bertini from built wheel
-        run: pip install --no-index --find-links dist/ bertini2
-
-      - name: Build Python docs (Sphinx)
-        working-directory: python/docs
-        env:
-          BERTINI_GIT_SHA: ${{ steps.meta.outputs.sha }}
-          BERTINI_BUILD_DATE: ${{ steps.meta.outputs.date }}
-        run: |
-          sphinx-build -b html -W --keep-going source ../../site/python
-
-      - name: Add landing page
-        env:
-          COMMIT_SHA: ${{ steps.meta.outputs.sha }}
-          COMMIT_SHORT: ${{ steps.meta.outputs.short }}
-          BUILD_DATE: ${{ steps.meta.outputs.date }}
-        run: |
-          sed \
-            -e "s|__COMMIT_SHA__|${COMMIT_SHA}|g" \
-            -e "s|__COMMIT_SHORT__|${COMMIT_SHORT}|g" \
-            -e "s|__BUILD_DATE__|${BUILD_DATE}|g" \
-            doc_resources/landing/index.html > site/index.html
-          cp doc_resources/landing/style.css site/style.css
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
-  deploy_docs:
-    name: Deploy to GitHub Pages
-    needs:
-      - build_docs
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/build_docs.yml
     permissions:
+      contents: read
       pages: write
       id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4

@@ -1,7 +1,7 @@
-👋 Welcome to PyBertini
+👋 Welcome to Bertini 2
 ====================================
 
-Bertini is software for numerically solving systems of polynomials.  PyBertini is the Python provided for running Bertini.
+Bertini 2 is software for numerically solving systems of polynomials. 
 
 🗺 Mathematical overview
 ----------------------------------
@@ -17,7 +17,7 @@ The main algorithm for numerical algebraic geometry implemented in Bertini is ho
 
    Predictor-corrector methods with optional adaptive precision track paths from 1 to 0, solving :math:`f`.
 
-The definitive resource for Bertini 1 is the book :cite:`bertinibook`.  While the way we interact with Bertini changes from version 1 to version 2, particularly when using PyBertini, the algorithms remain fundamentally the same.  So do most of the ways to change settings for the path trackers, etc.  We believe that embracing the flexibility of Python3 with PyBertini allows for much greater flexibility.  It also will relieve the user from the burden of input and output file writing and parsing.  Instead, computed results are returned directly to the user.  
+The definitive resource for Bertini 1 is the book :cite:`bertinibook`.  While the way we interact with Bertini changes from version 1 to version 2, particularly when using the Python library, the algorithms remain fundamentally the same.  So do most of the ways to change settings for the path trackers, etc.  We believe that embracing the flexibility of Python allows for much greater flexibility.  It also will relieve the user from the burden of input and output file writing and parsing.  Instead, computed results are returned directly to the user.  
 
 Consider checking out the :ref:`🔦 Tutorials <tutorials>`.
 

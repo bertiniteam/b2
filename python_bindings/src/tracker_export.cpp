@@ -162,7 +162,7 @@ namespace bertini{
 			current_scope.attr("tracking") = new_submodule;
 
 			scope new_submodule_scope = new_submodule;
-			new_submodule_scope.attr("__doc__") = "Tracking things for PyBertini.  Includes the three fundamental trackers, and utility functions.";
+			new_submodule_scope.attr("__doc__") = "Tracking things.  Includes the three fundamental trackers, and utility functions.";
 
 			ExportConfigSettings();
 			ExportAMPTracker();

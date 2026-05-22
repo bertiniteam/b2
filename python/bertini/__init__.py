@@ -33,7 +33,7 @@
 
 
 """
-PyBertini -- Python bindings for Bertini2.
+bertini -- Python bindings for Bertini 2.
 
 This code is licensed under the GNU Public License, Version 3, with
 additional clauses under section 7 as permitted, to protect the 

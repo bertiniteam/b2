@@ -12,7 +12,7 @@ So, if we can't track to a singular solution, but we still want to track to comp
 
 Endgames represent a way to finish a tracking of a path, when the endpoint is possibly singular.  Rather than track all the way to the endtime, you instead run an endgame that uses mathematical theory to compute the root.
 
-Endgames in PyBertini
+Endgames in Bertini 2
 ==========================
 
 An endgame is a computational tool that one does in the final stage of a path track to a possibly singular root.  There are two implemented endgames in Bertini:

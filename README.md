@@ -57,10 +57,10 @@ pip install bertini2
 
 Once it's installed, you `import bertini`
 
-* Linux: Python 3.9-3.13
-* MacOS (Apple Silicon): Python 3.9-3.13
+* Linux: Python 3.9-3.14
+* MacOS (Apple Silicon): Python 3.9-3.14
 * MacOS (Intel): not supported
-* Windows: Python 3.9-3.11
+* Windows: Python 3.9-3.14
 
 
 ## Building from source

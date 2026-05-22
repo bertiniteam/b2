@@ -3,7 +3,7 @@ on:
   push
 jobs:
   sync:
-    if: github.repository == 'bertiniteam/b2'
+    if: github.repository == 'bertiniteam/b2' #only on official 
     runs-on: ubuntu-latest
     steps:
     - name: Sync to GitLab
@@ -19,4 +19,4 @@ jobs:
         gitlab_pat: ${{ secrets.GITLAB_PAT }}
         # Whether to force push to GitLab. Defaults to false.
         
-        #force_push: # optional, default is false
+        force_push: true # optional, default is false

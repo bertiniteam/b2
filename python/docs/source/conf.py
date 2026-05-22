@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# PyBertini documentation build configuration file, created by
+# Bertini 2 documentation build configuration file, created by
 # sphinx-quickstart on Wed Oct  4 23:28:46 2017.
 #
 # This file is execfile()d with the current directory set to its

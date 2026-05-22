@@ -4,7 +4,7 @@
 Notes
 --------
 
-Logging is enabled for PyBertini through Bertini2's core logging facilities, in turn powered by Boost.Log.  
+Logging is enabled for through Bertini2's core logging facilities, in turn powered by Boost.Log.  
 
 They currently aren't fancy, but you have a few things you can do.
 
