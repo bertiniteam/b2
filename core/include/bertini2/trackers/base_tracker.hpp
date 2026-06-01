@@ -596,7 +596,6 @@ namespace bertini{
 
 			mutable unsigned num_steps_since_last_condition_number_computation_; ///< How many steps have passed since the most recent condition number estimate.
 			mutable unsigned num_successful_steps_since_stepsize_increase_; ///< How many successful steps have been taken since increased stepsize.
-			mutable unsigned num_successful_steps_since_precision_decrease_; ///< The number of successful steps since decreased precision.
 
 			using TupOfVec = typename NeededTypes::ToTupleOfVec;
 			using TupOfReal = typename NeededTypes::ToTupleOfReal;

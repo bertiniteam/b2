@@ -205,11 +205,13 @@ namespace bertini{
 			double min_stepsize_lowprec = static_cast<double>(min_stepsize);
 			double max_stepsize_lowprec = static_cast<double>(max_stepsize);
 
-			auto minimizer_routine = 
-				[&min_cost, &minimizing_precision, digits_B, num_newton_iterations, predictor_order, max_stepsize_lowprec](unsigned p)
+			auto minimizer_routine =
+				[&min_cost, &minimizing_precision, digits_B, num_newton_iterations, predictor_order, min_stepsize_lowprec, max_stepsize_lowprec](unsigned p)
 				{
-					double candidate_stepsize = min(StepsizeSatisfyingCriterionB<double>(p, digits_B, num_newton_iterations, predictor_order),
-					                              max_stepsize_lowprec);
+					double criterion_b_stepsize = StepsizeSatisfyingCriterionB<double>(p, digits_B, num_newton_iterations, predictor_order);
+					if (criterion_b_stepsize < min_stepsize_lowprec)
+						return; // precision too low to satisfy min_stepsize constraint
+					double candidate_stepsize = min(criterion_b_stepsize, max_stepsize_lowprec);
 					using std::abs;
 					double current_cost = ArithmeticCost(p) / abs(candidate_stepsize);
 
@@ -246,9 +248,12 @@ namespace bertini{
 
 			new_precision = minimizing_precision; // copy the computed value
 			// next, because the above computed the new stepsize in double precision, which may be lowprec, we compute in full precision
-			new_stepsize = min(
-				               StepsizeSatisfyingCriterionB<RealT>(new_precision, digits_B, num_newton_iterations, predictor_order),
-					           max_stepsize
+			new_stepsize = max(
+				               min(
+				               		StepsizeSatisfyingCriterionB<RealT>(new_precision, digits_B, num_newton_iterations, predictor_order),
+					           		max_stepsize
+					           	),
+					           min_stepsize
 					           );
 		}
 
