@@ -93,15 +93,24 @@ namespace bertini{
 		/**
 		 \brief Compute the cost function for arithmetic versus precision.
 
-		 From \cite AMP2, \f$C(P)\f$.  As currently implemented, this is 
-		 \f$ 10.35 + 0.13 P \f$, where P is the precision.  These numbers are stale, and need to be recomputed.  Badly.  Please do this.
-		
-		 This function tells you the relative cost of arithmetic at a given precision. 
+		 From \cite AMP2, \f$C(P)\f$.  As currently implemented, this is
+		 \f$ 101.47 + 1.59 P \f$, where P is the precision in decimal digits.
 
-		 \todo Recompute this cost function for boost::multiprecision::mpfr_float
+		 This function tells you the relative cost of arithmetic at a given precision,
+		 relative to \c std::complex<double> (the double-precision tracker's scalar type).
 
-		 \param precision An integral number of digits -- then this gives the cost for arithmetic
-		 \return A double indicating how expensive arithmetic at a given precision is.  1 is the base-line for double-precision.  
+		 Calibrated by benchmarking three operations representative of path tracking
+		 (dot product / SLP evaluation, dense matvec, LU factorization+solve) using
+		 GNU MPC (\c mpfr_complex) vs \c std::complex<double> on modern hardware.
+		 See \c benchmarks/arithmetic_cost.cpp for the methodology and compile instructions.
+
+		 The paper \cite AMP2 reports \f$C(P) = 10.35 + 0.04 P_\mathrm{bits}\f$ (measured on
+		 a 2009 Opteron 250).  Converting to decimal digits gives \f$10.35 + 0.13 P\f$, which
+		 was the previous value here.  The ~12x increase in the intercept on modern hardware
+		 reflects AVX2 vectorization of double-precision arithmetic that MPC cannot exploit.
+
+		 \param precision An integral number of decimal digits
+		 \return A double indicating how expensive arithmetic at a given precision is.  1 is the base-line for double-precision.
 		*/
 		inline
 		double ArithmeticCost(unsigned precision)
@@ -109,7 +118,7 @@ namespace bertini{
 			if (precision==DoublePrecision())
 				return 1;
 			else
-				return 10.35 + 0.13 * precision;
+				return 101.47 + 1.59 * precision;
 		}
 
 
