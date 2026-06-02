@@ -150,31 +150,6 @@ namespace bertini{
 			}
 			
 			
-			namespace {
-				template<typename T>
-				struct LUSelector
-				{};
-
-				template<>
-				struct LUSelector<dbl>
-				{
-					template<typename N>
-					static Eigen::PartialPivLU<Mat<dbl>>& Run(N & n)
-					{
-						return n.GetLU_d();
-					}
-				};
-
-				template<>
-				struct LUSelector<mpfr_complex>
-				{
-					template<typename N>
-					static Eigen::PartialPivLU<Mat<mpfr_complex>>& Run(N & n)
-					{
-						return n.GetLU_mp();
-					}
-				};
-			}
 			
 			/**
 			 \class ExplicitRKPredictor
@@ -200,8 +175,6 @@ namespace bertini{
 			 */
 			class ExplicitRKPredictor
 			{
-				friend LUSelector<dbl>;
-				friend LUSelector<mpfr_complex>;
 			public:
 				
 				/**
@@ -365,6 +338,12 @@ namespace bertini{
 					std::get< Mat<mpfr_complex> >(dh_dx_temp_).resize(numTotalFunctions_, numVariables_);
 					std::get< Vec<dbl> >(dh_dt_temp_).resize(numTotalFunctions_);
 					std::get< Vec<mpfr_complex> >(dh_dt_temp_).resize(numTotalFunctions_);
+					std::get< Vec<dbl> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<mpfr_complex> >(step_temp_).resize(numTotalFunctions_);
+					std::get< Vec<dbl> >(rand_temp_) = RandomOfUnits<dbl>(numVariables_);
+					std::get< Vec<mpfr_complex> >(rand_temp_) = RandomOfUnits<mpfr_complex>(numVariables_);
+					std::get< Vec<dbl> >(solve_temp_).resize(numVariables_);
+					std::get< Vec<mpfr_complex> >(solve_temp_).resize(numVariables_);
 
 					ResizeK();
 				}
@@ -398,6 +377,9 @@ namespace bertini{
 					Precision(std::get< Vec<mpfr_complex> >(dh_dt_temp_),new_precision);
 					Precision(std::get< Mat<mpfr_complex> >(dh_dx_0_),new_precision);
 					Precision(std::get< Mat<mpfr_complex> >(dh_dx_temp_),new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(step_temp_),new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(rand_temp_),new_precision);
+					Precision(std::get< Vec<mpfr_complex> >(solve_temp_),new_precision);
 
 					Precision(std::get< Mat<mpfr_float> >(a_),new_precision);
 					Precision(std::get< Vec<mpfr_float> >(b_),new_precision);
@@ -651,23 +633,7 @@ namespace bertini{
 				//
 				////////////////////
 				
-				template <typename T>
-				Eigen::PartialPivLU<Mat<T>>& GetLU()
-				{
-					return LUSelector<T>::Run(*this);
-				}
 
-
-				Eigen::PartialPivLU<Mat<dbl>>& GetLU_d()
-				{
-					return LU_d_;
-				}
-
-				Eigen::PartialPivLU<Mat<mpfr_complex>>& GetLU_mp()
-				{
-					assert(current_precision_==DefaultPrecision());
-					return LU_mp_[current_precision_];
-				}
 
 				/**
 				 \brief Performs a full prediction step from current_time to current_time + delta_t
@@ -702,7 +668,7 @@ namespace bertini{
 					Vec<RealType>& bref = std::get< Vec<RealType> >(b_);
 					Vec<RealType>& cref = std::get< Vec<RealType> >(c_);
 					Kref.fill(ComplexType(0));
-					Vec<ComplexType> temp(S.NumTotalFunctions());
+					Vec<ComplexType>& temp = std::get< Vec<ComplexType> >(step_temp_);
 					
 					if(EvalRHS(S, current_space, current_time, Kref, 0) != SuccessCode::Success)
 					{
@@ -735,15 +701,15 @@ namespace bertini{
 				void SetNormsCond(NumErrorT & norm_J, NumErrorT & norm_J_inverse, NumErrorT & condition_number_estimate, unsigned num_steps_since_last_condition_number_computation, unsigned frequency_of_CN_estimation)
 				{
 					// Calculate condition number and update if needed
-					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
+					Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_);
 					Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
 
-					// TODO this random vector should not be made fresh every time.  especiallyif the numeric type is mpfr_complex!
-					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(numVariables_);
-					Vec<ComplexType> temp_soln = LUref.solve(randy);
-					
+					Vec<ComplexType> const& randy = std::get< Vec<ComplexType> >(rand_temp_);
+					Vec<ComplexType>& solve_ref = std::get< Vec<ComplexType> >(solve_temp_);
+					solve_ref = LUref.solve(randy);
+
 					norm_J = NumErrorT(dhdxref.norm());
-					norm_J_inverse = NumErrorT(temp_soln.norm());
+					norm_J_inverse = NumErrorT(solve_ref.norm());
 					
 					if (num_steps_since_last_condition_number_computation >= frequency_of_CN_estimation)
 					{
@@ -850,7 +816,7 @@ namespace bertini{
 
 					if(stage == 0)
 					{
-						Eigen::PartialPivLU<Mat<ComplexType>>& LUref = GetLU<ComplexType>();
+						Eigen::PartialPivLU<Mat<ComplexType>>& LUref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_);
 						Mat<ComplexType>& dhdxref = std::get< Mat<ComplexType> >(dh_dx_0_);
 
 						if (!std::is_same<ComplexType,dbl>::value)
@@ -864,7 +830,7 @@ namespace bertini{
 						}
 						S.SetAndReset<ComplexType>(space, time);
 						S.JacobianInPlace(dhdxref);
-						LUref = dhdxref.lu();
+						LUref.compute(dhdxref);
 						if (!std::is_same<ComplexType,dbl>::value)
 						{
 							assert(Precision(dhdxref)==current_precision_);
@@ -887,14 +853,15 @@ namespace bertini{
 
 						Mat<ComplexType>& dhdxtempref = std::get< Mat<ComplexType> >(dh_dx_temp_);
 						S.JacobianInPlace(dhdxtempref);
-						auto LU = dhdxtempref.lu();
-						
-						if (LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=MatrixSuccessCode::Success)
+						Eigen::PartialPivLU<Mat<ComplexType>>& LU_temp = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(LU_);
+						LU_temp.compute(dhdxtempref);
+
+						if (LUPartialPivotDecompositionSuccessful(LU_temp.matrixLU())!=MatrixSuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
-						
+
 						Vec<ComplexType>& dhdtref = std::get< Vec<ComplexType> >(dh_dt_temp_);
 						S.TimeDerivativeInPlace(dhdtref);
-						K.col(stage) = LU.solve(-dhdtref);
+						K.col(stage) = LU_temp.solve(-dhdtref);
 						
 						return SuccessCode::Success;
 					}
@@ -1034,8 +1001,11 @@ namespace bertini{
 				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > dh_dt_temp_;  // Temporary time derivative used for all stages
 				// std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_0_;  // LU from the intial stage used for AMP testing
 
-				mutable Eigen::PartialPivLU<Mat<dbl>> LU_d_;
-				mutable std::map<unsigned,Eigen::PartialPivLU<Mat<mpfr_complex>>> LU_mp_;
+				mutable std::tuple< Eigen::PartialPivLU<Mat<dbl>>, Eigen::PartialPivLU<Mat<mpfr_complex>> > LU_;
+
+				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > step_temp_;  // reused scratch for FullStep stage accumulation
+				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > rand_temp_;  // reused scratch: random RHS for norm_J_inverse
+				mutable std::tuple< Vec<dbl>, Vec<mpfr_complex> > solve_temp_; // reused scratch: LU solve result
 				
 				
 				// Butcher Table (notation from https://en.wikipedia.org/wiki/List_of_Runge%E2%80%93Kutta_methods )
