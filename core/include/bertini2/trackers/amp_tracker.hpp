@@ -35,8 +35,9 @@
 #define BERTINI_AMP_TRACKER_HPP
 
 #include <assert.h>
+#include <optional>
 
-#pragma once 
+#pragma once
 
 #include "bertini2/trackers/base_tracker.hpp"
 
@@ -410,7 +411,21 @@ namespace bertini{
 				preserve_precision_ = should_preseve_precision;
 			}
 
-			
+			/**
+			\brief Override the precision at which tracking starts.
+
+			Pass a value to start tracking at that precision regardless of the start point's precision.
+			Pass std::nullopt (or call with no argument) to use the start point's precision (default).
+
+			\throws std::runtime_error if preserve_precision is on and the override is lower than
+			        the start point's precision, since that would silently downgrade the output.
+			*/
+			void SetStartPrecision(std::optional<unsigned> p = std::nullopt)
+			{
+				override_start_precision_ = p;
+			}
+
+
 			virtual ~AMPTracker() = default;
 
 
@@ -447,18 +462,26 @@ namespace bertini{
 			                               mpfr_complex const& end_time,
 										   Vec<mpfr_complex> const& start_point) const override
 			{
+				initial_precision_ = override_start_precision_.value_or(Precision(start_point(0)));
+
+				if (preserve_precision_ && override_start_precision_.has_value()
+				    && override_start_precision_.value() < Precision(start_point(0)))
+					throw std::runtime_error(
+						"SetStartPrecision override is lower than the start point's precision "
+						"while preserve_precision is on: the output point would be silently "
+						"downgraded.  Either raise the override, disable preserve_precision, "
+						"or clear the override.");
+
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(
-				        (!preserve_precision_ 
-				         || 
-				         -log10(tracking_tolerance_) <= start_point(0).precision())
+				        (!preserve_precision_
+				         ||
+				         -log10(tracking_tolerance_) <= initial_precision_)
 				         && "when tracking a path, either preservation of precision must be turned off (so precision can be higher at the end of tracking), or the initial precision must be high enough to support the resulting points to the desired tolerance"
 				         );
 				#endif
 
 				NotifyObservers(Initializing<AMPTracker,mpfr_complex>(*this,start_time, end_time, start_point));
-
-				initial_precision_ = Precision(start_point(0));
 				DefaultPrecision(initial_precision_);
 				// set up the master current time and the current step size
 				
@@ -486,11 +509,8 @@ namespace bertini{
 					MultipleToMultiple(initial_precision_, start_point);
 				
 				ChangePrecision<upsample_refine_off>(initial_precision_);
-				
+
 				ResetCounters();
-
-				ChangePrecision<upsample_refine_off>(start_point(0).precision());
-
 
 				auto initial_refinement_code = InitialRefinement();
 
@@ -1637,6 +1657,7 @@ namespace bertini{
 			// state variables
 			/////////////
 			bool preserve_precision_ = false; ///< Whether the tracker should change back to the initial precision after tracking paths.
+			std::optional<unsigned> override_start_precision_; ///< If set, tracking starts at this precision instead of the start point's precision.
 
 			mutable unsigned previous_precision_; ///< The previous precision of the tracker.
 			mutable unsigned current_precision_; ///< The current precision of the tracker, the system, and all temporaries.
