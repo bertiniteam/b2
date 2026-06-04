@@ -51,6 +51,7 @@ from bertini.multiprec import Complex as mpfr_complex
 
 class SystemTest(unittest.TestCase):
     def setUp(self):
+        default_precision(30);
         self.toldbl = 1e-15;
         self.x = Variable("x");
         self.y = Variable("y");
