@@ -142,7 +142,8 @@ namespace bertini{
 										unsigned num_newton_iterations,
 										unsigned predictor_order = 0)
 		{
-			return pow(RealT(10), -( digits_B - precision )*num_newton_iterations/(predictor_order+1.0));
+			return pow(RealT(10), -(static_cast<int>(digits_B) - static_cast<int>(precision))
+			                       * static_cast<int>(num_newton_iterations) / (predictor_order+1.0));
 		}
 		
 
@@ -425,9 +426,6 @@ namespace bertini{
 
 			Pass a value to start tracking at that precision regardless of the start point's precision.
 			Pass std::nullopt (or call with no argument) to use the start point's precision (default).
-
-			\throws std::runtime_error if preserve_precision is on and the override is lower than
-			        the start point's precision, since that would silently downgrade the output.
 			*/
 			void SetStartPrecision(std::optional<unsigned> p = std::nullopt)
 			{
@@ -472,14 +470,6 @@ namespace bertini{
 										   Vec<mpfr_complex> const& start_point) const override
 			{
 				initial_precision_ = override_start_precision_.value_or(Precision(start_point(0)));
-
-				if (preserve_precision_ && override_start_precision_.has_value()
-				    && override_start_precision_.value() < Precision(start_point(0)))
-					throw std::runtime_error(
-						"SetStartPrecision override is lower than the start point's precision "
-						"while preserve_precision is on: the output point would be silently "
-						"downgraded.  Either raise the override, disable preserve_precision, "
-						"or clear the override.");
 
 				#ifndef BERTINI_DISABLE_ASSERTS
 				assert(
