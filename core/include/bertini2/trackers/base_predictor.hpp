@@ -171,18 +171,18 @@ namespace bertini{
 				 \param tracking_tolerance How tightly to track the path.
 				 */
 
-				template<typename ComplexType, typename RealType>
-				SuccessCode Predict(Vec<ComplexType> & next_space,
+				template<typename ComplexT, typename RealT>
+				SuccessCode Predict(Vec<ComplexT> & next_space,
 										 System const& S,
-										 Vec<ComplexType> const& current_space, ComplexType current_time,
-										 ComplexType const& delta_t,
-										 RealType & condition_number_estimate,
+										 Vec<ComplexT> const& current_space, ComplexT current_time,
+										 ComplexT const& delta_t,
+										 RealT & condition_number_estimate,
 										 unsigned & num_steps_since_last_condition_number_computation,
 										 unsigned frequency_of_CN_estimation,
-										 RealType const& tracking_tolerance)
+										 RealT const& tracking_tolerance)
 				{
 					
-					return FullStep<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t);
+					return FullStep<ComplexT, RealT>(next_space, S, current_space, current_time, delta_t);
 					
 					
 				}
@@ -209,23 +209,23 @@ namespace bertini{
 				 \param AMP_config The settings for adaptive multiple precision.
 				 */
 				
-				template<typename ComplexType, typename RealType>
-				SuccessCode Predict(Vec<ComplexType> & next_space,
-									RealType & size_proportion,
-									RealType & norm_J,
-									RealType & norm_J_inverse,
+				template<typename ComplexT, typename RealT>
+				SuccessCode Predict(Vec<ComplexT> & next_space,
+									RealT & size_proportion,
+									RealT & norm_J,
+									RealT & norm_J_inverse,
 									System const& S,
-									Vec<ComplexType> const& current_space, ComplexType current_time,
-									ComplexType const& delta_t,
-									RealType & condition_number_estimate,
+									Vec<ComplexT> const& current_space, ComplexT current_time,
+									ComplexT const& delta_t,
+									RealT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
-									RealType const& tracking_tolerance,
+									RealT const& tracking_tolerance,
 											AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					
 					
-					auto success_code = Predict<ComplexType, RealType>(next_space, S, current_space, current_time, delta_t,
+					auto success_code = Predict<ComplexT, RealT>(next_space, S, current_space, current_time, delta_t,
 												condition_number_estimate, num_steps_since_last_condition_number_computation,
 												frequency_of_CN_estimation, tracking_tolerance);
 					
@@ -233,11 +233,11 @@ namespace bertini{
 						return success_code;
 					
 					// Calculate condition number and updated if needed
-					Eigen::PartialPivLU<Mat<ComplexType>>& dhdxref = std::get< Eigen::PartialPivLU<Mat<ComplexType>> >(dh_dx_);
-					Mat<ComplexType>& LUref = std::get< Mat<ComplexType> >(LU_);
+					Eigen::PartialPivLU<Mat<ComplexT>>& dhdxref = std::get< Eigen::PartialPivLU<Mat<ComplexT>> >(dh_dx_);
+					Mat<ComplexT>& LUref = std::get< Mat<ComplexT> >(LU_);
 
-					Vec<ComplexType> randy = RandomOfUnits<ComplexType>(S.NumVariables());
-					Vec<ComplexType> temp_soln = LUref.solve(randy);
+					Vec<ComplexT> randy = RandomOfUnits<ComplexT>(S.NumVariables());
+					Vec<ComplexT> temp_soln = LUref.solve(randy);
 					
 					norm_J = dhdxref.norm();
 					norm_J_inverse = temp_soln.norm();
@@ -252,7 +252,7 @@ namespace bertini{
 					
 					
 					// Set size_proportion
-					SetSizeProportion<ComplexType,RealType>(size_proportion, delta_t);
+					SetSizeProportion<ComplexT,RealT>(size_proportion, delta_t);
 					
 					
 					
@@ -288,19 +288,19 @@ namespace bertini{
 				 \param AMP_config The settings for adaptive multiple precision.
 				 */
 				
-				template<typename ComplexType, typename RealType>
-				SuccessCode Predict(Vec<ComplexType> & next_space,
-									RealType & error_estimate,
-									RealType & size_proportion,
-									RealType & norm_J,
-									RealType & norm_J_inverse,
+				template<typename ComplexT, typename RealT>
+				SuccessCode Predict(Vec<ComplexT> & next_space,
+									RealT & error_estimate,
+									RealT & size_proportion,
+									RealT & norm_J,
+									RealT & norm_J_inverse,
 									System const& S,
-									Vec<ComplexType> const& current_space, ComplexType current_time,
-									ComplexType const& delta_t,
-									RealType & condition_number_estimate,
+									Vec<ComplexT> const& current_space, ComplexT current_time,
+									ComplexT const& delta_t,
+									RealT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
-									RealType const& tracking_tolerance,
+									RealT const& tracking_tolerance,
 									AdaptiveMultiplePrecisionConfig const& AMP_config)
 				{
 					// If this is a method without an error estimator, then can't calculate size proportion and should throw an error
@@ -313,7 +313,7 @@ namespace bertini{
 					
 					
 					
-					auto success_code = Predict<ComplexType,RealType>(next_space, size_proportion, norm_J, norm_J_inverse,
+					auto success_code = Predict<ComplexT,RealT>(next_space, size_proportion, norm_J, norm_J_inverse,
 												S, current_space, current_time, delta_t,
 												condition_number_estimate, num_steps_since_last_condition_number_computation,
 												frequency_of_CN_estimation, tracking_tolerance, AMP_config);
@@ -321,7 +321,7 @@ namespace bertini{
 					if(success_code != SuccessCode::Success)
 						return success_code;
 					
-					SetErrorEstimate<ComplexType,RealType>(error_estimate, delta_t);
+					SetErrorEstimate<ComplexT,RealT>(error_estimate, delta_t);
 					
 					
 					return success_code;
@@ -385,11 +385,11 @@ namespace bertini{
 				 \return SuccessCode determining result of the computation
 				 */
 				
-				template<typename ComplexType, typename RealType>
-				virtual SuccessCode FullStep(Vec<ComplexType> & next_space,
+				template<typename ComplexT, typename RealT>
+				virtual SuccessCode FullStep(Vec<ComplexT> & next_space,
 											 System const& S,
-											 Vec<ComplexType> const& current_space, ComplexType current_time,
-											 ComplexType const& delta_t) = 0;
+											 Vec<ComplexT> const& current_space, ComplexT current_time,
+											 ComplexT const& delta_t) = 0;
 				
 				
 				/**
@@ -402,8 +402,8 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename ComplexType, typename RealType>
-				virtual SuccessCode SetErrorEstimate(RealType & error_estimate, ComplexType const& delta_t) = 0;
+				template<typename ComplexT, typename RealT>
+				virtual SuccessCode SetErrorEstimate(RealT & error_estimate, ComplexT const& delta_t) = 0;
 
 				
 				
@@ -417,8 +417,8 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename ComplexType, typename RealType>
-				virtual SuccessCode SetSizeProportion(RealType & size_proportion, ComplexType const& delta_t) = 0;
+				template<typename ComplexT, typename RealT>
+				virtual SuccessCode SetSizeProportion(RealT & size_proportion, ComplexT const& delta_t) = 0;
 
 				
 				
@@ -434,9 +434,9 @@ namespace bertini{
 				 \return Success code of this computation
 				 */
 				
-				template<typename ComplexType>
+				template<typename ComplexT>
 				virtual SuccessCode EvalRHS(System const& S,
-									Vec<ComplexType> const& space, ComplexType time, Mat<ComplexType> & K, int stage) = 0;
+									Vec<ComplexT> const& space, ComplexT time, Mat<ComplexT> & K, int stage) = 0;
 
 
 				

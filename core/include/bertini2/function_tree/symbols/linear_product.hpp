@@ -44,7 +44,7 @@
 
 #include "bertini2/eigen_extensions.hpp"
 
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 namespace  bertini {
 	namespace node{

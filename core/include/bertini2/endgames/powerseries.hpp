@@ -59,8 +59,8 @@ The pattern is as described above: create an instance of the class, feeding it t
 
 \code{.cpp}
 using namespace bertini::tracking;
-using RealT = tracking::TrackerTraits<TrackerType>::BaseRealType; // Real types
-using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexType; Complex types
+using RealT = tracking::TrackerTraits<TrackerType>::BaseRealT; // Real types
+using ComplexT = tracking::TrackerTraits<TrackerType>::BaseComplexT; Complex types
 
 // 1. Define the polynomial system that we wish to solve. 
 System target_sys;
@@ -175,8 +175,8 @@ public:
 	using FinalEGT = PowerSeriesEndgame<PrecT>;
 	using TrackerType = typename BaseEGT::TrackerType;
 
-	using BaseComplexType = typename BaseEGT::BaseComplexType;
-	using BaseRealType = typename BaseEGT::BaseRealType;
+	using BaseComplexT = typename BaseEGT::BaseComplexT;
+	using BaseRealT = typename BaseEGT::BaseRealT;
 
 	using EmitterType = PowerSeriesEndgame<PrecT>;
 
@@ -187,8 +187,8 @@ protected:
 	using TupleOfTimes = typename BaseEGT::TupleOfTimes;
 	using TupleOfSamps = typename BaseEGT::TupleOfSamps;
 
-	using BCT = BaseComplexType;
-	using BRT = BaseRealType;
+	using BCT = BaseComplexT;
+	using BRT = BaseRealT;
 
 	using Configs = typename AlgoTraits<FinalEGT>::NeededConfigs;
 	using ConfigsAsTuple = typename Configs::ToTuple;
@@ -218,21 +218,21 @@ protected:
 	*/
 	mutable Vec<BCT> rand_vector_;
 
-	template<typename CT>
+	template<typename ComplexT>
 	void AssertSizesTimeSpace() const
 	{
 		const auto num_sample_points = this->EndgameSettings().num_sample_points;
-		assert(std::get<SampCont<CT> >(samples_).size()==std::get<TimeCont<CT> >(times_).size() && "must have same number of samples in times and spaces");
-		assert(std::get<SampCont<CT> >(samples_).size()>=num_sample_points && "must have sufficient number of samples");
+		assert(std::get<SampCont<ComplexT> >(samples_).size()==std::get<TimeCont<ComplexT> >(times_).size() && "must have same number of samples in times and spaces");
+		assert(std::get<SampCont<ComplexT> >(samples_).size()>=num_sample_points && "must have sufficient number of samples");
 	}
 
-	template<typename CT>
+	template<typename ComplexT>
 	void AssertSizesTimeSpaceDeriv() const
 	{
 		const auto num_sample_points = this->EndgameSettings().num_sample_points;
-		assert(std::get<SampCont<CT> >(samples_).size()==std::get<TimeCont<CT> >(times_).size() && "must have same number of samples in times and spaces");
-		assert(std::get<SampCont<CT> >(samples_).size()==std::get<SampCont<CT> >(derivatives_).size() && "must have same number of samples in derivatives and spaces");
-		assert(std::get<SampCont<CT> >(samples_).size()>=num_sample_points && "must have sufficient number of samples");
+		assert(std::get<SampCont<ComplexT> >(samples_).size()==std::get<TimeCont<ComplexT> >(times_).size() && "must have same number of samples in times and spaces");
+		assert(std::get<SampCont<ComplexT> >(samples_).size()==std::get<SampCont<ComplexT> >(derivatives_).size() && "must have same number of samples in derivatives and spaces");
+		assert(std::get<SampCont<ComplexT> >(samples_).size()>=num_sample_points && "must have sufficient number of samples");
 	}
 
 public:
@@ -243,24 +243,24 @@ public:
 	/**
 	\brief Function that clears all samples and times from data members for the Power Series endgame
 	*/	
-	template<typename CT>
+	template<typename ComplexT>
 	void ClearTimesAndSamples()
 	{
-		std::get<TimeCont<CT> >(times_).clear(); 
-		std::get<SampCont<CT> >(samples_).clear();
+		std::get<TimeCont<ComplexT> >(times_).clear(); 
+		std::get<SampCont<ComplexT> >(samples_).clear();
 	}
 
 	/**
 	\brief Function to set the times used for the Power Series endgame.
 	*/	
-	template<typename CT>
-	void SetTimes(TimeCont<CT> const& times_to_set) { std::get<TimeCont<CT> >(times_) = times_to_set;}
+	template<typename ComplexT>
+	void SetTimes(TimeCont<ComplexT> const& times_to_set) { std::get<TimeCont<ComplexT> >(times_) = times_to_set;}
 
 	/**
 	\brief Function to get the times used for the Power Series endgame.
 	*/	
-	template<typename CT>
-	const auto& GetTimes() const {return std::get<TimeCont<CT> >(times_);}
+	template<typename ComplexT>
+	const auto& GetTimes() const {return std::get<TimeCont<ComplexT> >(times_);}
 
 
 	const BCT& LatestTimeImpl() const
@@ -271,20 +271,20 @@ public:
 	/**
 	\brief Function to set the space values used for the Power Series endgame.
 	*/	
-	template<typename CT>
-	void SetSamples(SampCont<CT> const& samples_to_set) { std::get<SampCont<CT> >(samples_) = samples_to_set;}
+	template<typename ComplexT>
+	void SetSamples(SampCont<ComplexT> const& samples_to_set) { std::get<SampCont<ComplexT> >(samples_) = samples_to_set;}
 
 	/**
 	\brief Function to get the space values used for the Power Series endgame.
 	*/	
-	template<typename CT>
-	const auto& GetSamples() const {return std::get<SampCont<CT> >(samples_);}
+	template<typename ComplexT>
+	const auto& GetSamples() const {return std::get<SampCont<ComplexT> >(samples_);}
 
 	/**
 	\brief Function to set the times used for the Power Series endgame.
 	*/	
-	template<typename CT>
-	void SetRandVec(int size) {rand_vector_ = Vec<CT>::Random(size);}
+	template<typename ComplexT>
+	void SetRandVec(int size) {rand_vector_ = Vec<ComplexT>::Random(size);}
 
 
 
@@ -312,27 +312,27 @@ public:
 			upper_bound_on_cycle_number_: Used for an exhaustive search for the best cycle number for approimating the path to t = 0.
 
 	##Details:
-			\tparam CT The complex number type.
+			\tparam ComplexT The complex number type.
 	*/
-	template<typename CT>
+	template<typename ComplexT>
 	unsigned ComputeBoundOnCycleNumber()
 	{ 
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		using std::log; using std::abs;
 
-		const auto& samples = std::get<SampCont<CT> >(samples_);
+		const auto& samples = std::get<SampCont<ComplexT> >(samples_);
 		
-		AssertSizesTimeSpace<CT>();
+		AssertSizesTimeSpace<ComplexT>();
 
 		auto num_samples = samples.size();
-		const Vec<CT> & sample0 = samples[num_samples-3];
-		const Vec<CT> & sample1 = samples[num_samples-2];
-		const Vec<CT> & sample2 = samples[num_samples-1]; // most recent sample.  oldest samples at front of the container
+		const Vec<ComplexT> & sample0 = samples[num_samples-3];
+		const Vec<ComplexT> & sample1 = samples[num_samples-2];
+		const Vec<ComplexT> & sample2 = samples[num_samples-1]; // most recent sample.  oldest samples at front of the container
 
 
 // should this only be if the system is homogenized?
-		CT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector_).sum();
-		CT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector_).sum();
+		ComplexT rand_sum1 = ((sample1 - sample0).transpose()*rand_vector_).sum();
+		ComplexT rand_sum2 = ((sample2 - sample1).transpose()*rand_vector_).sum();
 
 		if ( abs(rand_sum1)==0 || abs(rand_sum2)==0) // avoid division by 0
 		{
@@ -340,7 +340,7 @@ public:
 			return upper_bound_on_cycle_number_;
 		}
 
-		RT estimate = log(static_cast<RT>(this->EndgameSettings().sample_factor))/log(abs(rand_sum2/rand_sum1));
+		RealT estimate = log(static_cast<RealT>(this->EndgameSettings().sample_factor))/log(abs(rand_sum2/rand_sum1));
 
 		if (estimate < 1) // would be nan if sample points are same as each other
 		  	upper_bound_on_cycle_number_ = 1;
@@ -367,27 +367,27 @@ public:
 				cycle_number_: Used to create a hermite interpolation to t = 0. 
 
 		##Details:
-				\tparam CT The complex number type.
+				\tparam ComplexT The complex number type.
 			This is done by an exhaustive search from 1 to upper_bound_on_cycle_number. There is a conversion to the s-space from t-space in this function. 
 	As a by-product the derivatives at each of the samples is returned for further use. 
 	*/
 
-	template<typename CT>
-	unsigned ComputeCycleNumber(CT const& t0)
+	template<typename ComplexT>
+	unsigned ComputeCycleNumber(ComplexT const& t0)
 	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
-		const auto& samples = std::get<SampCont<CT> >(samples_);
-		const auto& times   = std::get<TimeCont<CT> >(times_);
-		const auto& derivatives = std::get<SampCont<CT> >(derivatives_);
+		const auto& samples = std::get<SampCont<ComplexT> >(samples_);
+		const auto& times   = std::get<TimeCont<ComplexT> >(times_);
+		const auto& derivatives = std::get<SampCont<ComplexT> >(derivatives_);
 
-		AssertSizesTimeSpaceDeriv<CT>();
+		AssertSizesTimeSpaceDeriv<ComplexT>();
 		
-		const Vec<CT> &most_recent_sample = samples.back();  
-		const CT& most_recent_time = times.back();
+		const Vec<ComplexT> &most_recent_sample = samples.back();  
+		const ComplexT& most_recent_time = times.back();
 
 		//Compute upper bound for cycle number.
-		ComputeBoundOnCycleNumber<CT>();
+		ComputeBoundOnCycleNumber<ComplexT>();
 
 
 		unsigned num_pts;
@@ -397,10 +397,10 @@ public:
 			num_pts = this->EndgameSettings().num_sample_points-1;
 
 
-		auto min_found_difference = Eigen::NumTraits<RT>::highest();
+		auto min_found_difference = Eigen::NumTraits<RealT>::highest();
 
-		TimeCont<CT> s_times(num_pts);
-		SampCont<CT> s_derivatives(num_pts);
+		TimeCont<ComplexT> s_times(num_pts);
+		SampCont<ComplexT> s_derivatives(num_pts);
 
 		auto offset = samples.size() - num_pts - 1; // -1 here to shift away from the back of the container
 		for(unsigned int candidate = 1; candidate <= upper_bound_on_cycle_number_; ++candidate)
@@ -408,8 +408,8 @@ public:
 			using std::pow;
 
 			std::tie(s_times, s_derivatives) = TransformToSPlane(candidate, t0, num_pts, ContStart::Front);
-			RT cand_power{1/static_cast<RT>(candidate)};
-			RT curr_diff = (HermiteInterpolateAndSolve<CT>(
+			RealT cand_power{1/static_cast<RealT>(candidate)};
+			RealT curr_diff = (HermiteInterpolateAndSolve<ComplexT>(
 								  pow((most_recent_time-t0)/(times[0]-t0),cand_power), // the target time
 			                      num_pts,s_times,samples,s_derivatives, ContStart::Front) // the input data
 			                 - 
@@ -438,14 +438,14 @@ public:
 				None: Derivatives are members of this class.
 
 		##Details:
-				\tparam CT The complex number type.
+				\tparam ComplexT The complex number type.
 	*/
-	template<typename CT>
+	template<typename ComplexT>
 	void ComputeAllDerivatives()
 	{
-		auto& samples = std::get<SampCont<CT> >(samples_);
-		auto& times   = std::get<TimeCont<CT> >(times_);
-		auto& derivatives = std::get<SampCont<CT> >(derivatives_);
+		auto& samples = std::get<SampCont<ComplexT> >(samples_);
+		auto& times   = std::get<TimeCont<ComplexT> >(times_);
+		auto& derivatives = std::get<SampCont<ComplexT> >(derivatives_);
 
 		assert((samples.size() == times.size()) && "must have same number of times and samples");
 
@@ -471,21 +471,21 @@ public:
 
 	this function also transforms them into the interval [0 1]
 	*/
-	template <typename CT>
-	std::tuple<TimeCont<CT>, SampCont<CT>> TransformToSPlane(int cycle_num, CT const& t0, unsigned num_pts, ContStart shift_from)
+	template <typename ComplexT>
+	std::tuple<TimeCont<ComplexT>, SampCont<ComplexT>> TransformToSPlane(int cycle_num, ComplexT const& t0, unsigned num_pts, ContStart shift_from)
 	{
 		if (cycle_num==0)
 			throw std::runtime_error("cannot transform to s plane with cycle number 0");
-		AssertSizesTimeSpaceDeriv<CT>();
+		AssertSizesTimeSpaceDeriv<ComplexT>();
 
 
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
-		const auto& times   = std::get<TimeCont<CT> >(times_);
-		const auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		const auto& times   = std::get<TimeCont<ComplexT> >(times_);
+		const auto& derivatives  = std::get<SampCont<ComplexT> >(derivatives_);
 
-		RT c = static_cast<RT>(cycle_num);
-		RT one_over_c = 1/c;
+		RealT c = static_cast<RealT>(cycle_num);
+		RealT one_over_c = 1/c;
 
 		unsigned offset_t, offset_d;
 		if (shift_from == ContStart::Back)
@@ -497,10 +497,10 @@ public:
 			offset_t = offset_d = 0;
 
 
-		TimeCont<CT> s_times(num_pts);
-		SampCont<CT> s_derivatives(num_pts);
+		TimeCont<ComplexT> s_times(num_pts);
+		SampCont<ComplexT> s_derivatives(num_pts);
 
-		CT time_shift = times[offset_t] - t0;
+		ComplexT time_shift = times[offset_t] - t0;
 
 		for(unsigned ii = 0; ii < num_pts; ++ii){
 			s_times[ii] = pow((times[ii+offset_t]-t0)/time_shift, one_over_c); 
@@ -523,26 +523,26 @@ public:
 				SuccessCode: This reports back if we were successful in making an approximation.
 
 		##Details:
-	\tparam CT The complex number type.
+	\tparam ComplexT The complex number type.
 				This function handles computing an approximation at the origin. 
 				We compute the cycle number best for the approximation, and convert derivatives and times to the s-plane where s = t^(1/c).
 				We use the converted times and derivatives along with the samples to do a Hermite interpolation.
 	*/
-	template<typename CT>
-	SuccessCode ComputeApproximationOfXAtT0(Vec<CT>& result, const CT & t0)
+	template<typename ComplexT>
+	SuccessCode ComputeApproximationOfXAtT0(Vec<ComplexT>& result, const ComplexT & t0)
 	{	
-		const auto c = ComputeCycleNumber<CT>(t0);
+		const auto c = ComputeCycleNumber<ComplexT>(t0);
 
 		auto num_pts = this->EndgameSettings().num_sample_points;
 
-		TimeCont<CT> s_times;
-		SampCont<CT> s_derivatives;
+		TimeCont<ComplexT> s_times;
+		SampCont<ComplexT> s_derivatives;
 
 		std::tie(s_times, s_derivatives) = TransformToSPlane(c, t0, num_pts, ContStart::Back);
 		// the data was transformed to be on the interval [0 1] so we can hard-code the time-to-solve as 0 here.
 
 		Precision(result, Precision(s_derivatives.back()));
-		result = HermiteInterpolateAndSolve(CT(0), num_pts, s_times, std::get<SampCont<CT> >(samples_), s_derivatives, ContStart::Back);
+		result = HermiteInterpolateAndSolve(ComplexT(0), num_pts, s_times, std::get<SampCont<ComplexT> >(samples_), s_derivatives, ContStart::Back);
 		return SuccessCode::Success;
 	}//end ComputeApproximationOfXAtT0
 
@@ -558,24 +558,24 @@ public:
 				SuccessCode: This reports back if we were successful in advancing time. 
 
 		##Details:
-				\tparam CT The complex number type.
+				\tparam ComplexT The complex number type.
 				This function computes the next time value for the power series endgame. After computing this time value, 
 				it will track to it and compute the derivative at this time value for further appoximations to be made during the
 				endgame.
 	*/
-	template<typename CT>
-	SuccessCode AdvanceTime(const CT & target_time)
+	template<typename ComplexT>
+	SuccessCode AdvanceTime(const ComplexT & target_time)
 	{
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		
-		auto& samples = std::get<SampCont<CT> >(samples_);
-		auto& times   = std::get<TimeCont<CT> >(times_);
-		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
+		auto& samples = std::get<SampCont<ComplexT> >(samples_);
+		auto& times   = std::get<TimeCont<ComplexT> >(times_);
+		auto& derivatives  = std::get<SampCont<ComplexT> >(derivatives_);
 
-		AssertSizesTimeSpaceDeriv<CT>();
+		AssertSizesTimeSpaceDeriv<ComplexT>();
 
-		Vec<CT> next_sample;
-		CT next_time = (times.back() + target_time) * static_cast<RT>(this->EndgameSettings().sample_factor); //setting up next time value using the midpoint formula, sample_factor will give us some 
+		Vec<ComplexT> next_sample;
+		ComplexT next_time = (times.back() + target_time) * static_cast<RealT>(this->EndgameSettings().sample_factor); //setting up next time value using the midpoint formula, sample_factor will give us some 
 
   		if (abs(next_time - target_time) < this->EndgameSettings().min_track_time) // generalized for target_time not equal to 0.
   		{
@@ -634,12 +634,12 @@ public:
 				SuccessCode: This reports back if we were successful in advancing time. 
 
 		##Details:
-	\tparam CT The complex number type.
+	\tparam ComplexT The complex number type.
 				Tracking forward with the number of sample points, this function will make approximations using Hermite interpolation. This process will continue until two consecutive
 				approximations are withing final tolerance of each other. 
 	*/		
-	template<typename CT>
-	SuccessCode RunImpl(const CT & start_time, const Vec<CT> & start_point, CT const& target_time)
+	template<typename ComplexT>
+	SuccessCode RunImpl(const ComplexT & start_time, const Vec<ComplexT> & start_point, ComplexT const& target_time)
 	{
 		if (start_point.size()!=this->GetSystem().NumVariables())
 		{
@@ -650,20 +650,20 @@ public:
 
 		DefaultPrecision(Precision(start_point));
 
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		//Set up for the endgame.
-		ClearTimesAndSamples<CT>();
+		ClearTimesAndSamples<ComplexT>();
 
 
 		// unpack some references for easy use
-		auto& samples = std::get<SampCont<CT> >(samples_);
-		auto& times   = std::get<TimeCont<CT> >(times_);
-		auto& derivatives  = std::get<SampCont<CT> >(derivatives_);
-		Vec<CT>& latest_approx = this->final_approximation_;
-		Vec<CT>& prev_approx = this->previous_approximation_;
+		auto& samples = std::get<SampCont<ComplexT> >(samples_);
+		auto& times   = std::get<TimeCont<ComplexT> >(times_);
+		auto& derivatives  = std::get<SampCont<ComplexT> >(derivatives_);
+		Vec<ComplexT>& latest_approx = this->final_approximation_;
+		Vec<ComplexT>& prev_approx = this->previous_approximation_;
 
 		// this is for estimating a ... norm?
-		SetRandVec<CT>(start_point.size());	 	
+		SetRandVec<ComplexT>(start_point.size());	 	
 		
 		
 		auto initial_sample_success = this->ComputeInitialSamples(start_time, target_time, start_point, times, samples);
@@ -674,8 +674,8 @@ public:
 			return initial_sample_success;
 		}
 
-		this->template RefineAllSamples<CT>(samples, times);
-		ComputeAllDerivatives<CT>();
+		this->template RefineAllSamples<ComplexT>(samples, times);
+		ComputeAllDerivatives<ComplexT>();
 
 
 
@@ -685,8 +685,8 @@ public:
 	 	if (extrapolation_code != SuccessCode::Success)
 	 		return extrapolation_code;
 
-	 	RT norm_of_dehom_of_latest_approx;
-	 	RT norm_of_dehom_of_prev_approx;
+	 	RealT norm_of_dehom_of_latest_approx;
+	 	RealT norm_of_dehom_of_prev_approx;
 	 	if (this->SecuritySettings().level <= 0)
 	 	 	norm_of_dehom_of_prev_approx = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();
 
@@ -696,7 +696,7 @@ public:
 
 		while (approx_error > this->FinalTolerance())
 		{
-	  		auto advance_code = AdvanceTime<CT>(target_time);
+	  		auto advance_code = AdvanceTime<ComplexT>(target_time);
 	  		if (advance_code!=SuccessCode::Success)
 	 		{
 	 			NotifyObservers(EndgameFailure<EmitterType>(*this));
@@ -704,8 +704,8 @@ public:
 	 		}
 
 	 		// this code is what bertini1 does... it refines all samples, like, all the time.
-	 		this->template RefineAllSamples<CT>(samples, times);
-	 		ComputeAllDerivatives<CT>();
+	 		this->template RefineAllSamples<ComplexT>(samples, times);
+	 		ComputeAllDerivatives<ComplexT>();
 
 	 		extrapolation_code = ComputeApproximationOfXAtT0(latest_approx, target_time);
 	 		if (extrapolation_code!=SuccessCode::Success)

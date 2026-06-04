@@ -69,13 +69,13 @@ template<typename TrackerType, typename EndgameType,
 			template<typename,typename> class SystemManagementP>
 struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType, SystemManagementP>>
 {
-	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
-	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
+	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
 
 	using NeededConfigs = detail::TypeList<
 								TolerancesConfig,
 								PostProcessingConfig,
-								ZeroDimConfig<BaseComplexType>,
+								ZeroDimConfig<BaseComplexT>,
 								AutoRetrackConfig
 								>;
 };
@@ -106,10 +106,10 @@ struct AlgorithmMetaData
 };
 
 
-template<typename ComplexType>
+template<typename ComplexT>
 struct SolutionMetaData
 {
-	using SolnIndT = typename SolnCont<ComplexType>::size_type;
+	using SolnIndT = typename SolnCont<ComplexT>::size_type;
 
 	// only vaguely metadata.  artifacts of randomness or ordering
 	SolnIndT path_index;     		// path number of the solution
@@ -117,7 +117,7 @@ struct SolutionMetaData
 
 	///// things computed across all of the solve
 	bool precision_changed = false;
-	ComplexType time_of_first_prec_increase;    // time value of the first increase in precision
+	ComplexT time_of_first_prec_increase;    // time value of the first increase in precision
 	decltype(DefaultPrecision()) max_precision_used = 0;
 
 	///// things computed in pre-endgame only
@@ -127,7 +127,7 @@ struct SolutionMetaData
 	///// things computed in endgame only
 	NumErrorT condition_number; 				// the latest estimate on the condition number
 	NumErrorT newton_residual; 				// the latest newton residual
-	ComplexType final_time_used;   			// the final value of time tracked to
+	ComplexT final_time_used;   			// the final value of time tracked to
 	NumErrorT accuracy_estimate; 			// accuracy estimate between extrapolations
 	NumErrorT accuracy_estimate_user_coords;	// accuracy estimate between extrapolations, in natural coordinates
 	unsigned cycle_num;    						// cycle number used in extrapolations
@@ -142,7 +142,7 @@ struct SolutionMetaData
 	bool is_finite;     		// finite flag: -1 - no finite/infinite distinction, 0 - infinite, 1 - finite
 	bool is_singular;       		// singular flag: 0 - non-sigular, 1 - singular
 
-	bool operator==(const SolutionMetaData<ComplexType> & other){ 
+	bool operator==(const SolutionMetaData<ComplexT> & other){ 
 		bool result = 
 			this->path_index == other.path_index
 			 && this->solution_index == other.solution_index
@@ -198,22 +198,22 @@ std::ostream& operator<<(std::ostream & out, const SolutionMetaData<NumT> & meta
 }
 
 
-template<typename ComplexType>
+template<typename ComplexT>
 struct EGBoundaryMetaData
 {	
-	using RealType = typename NumTraits<ComplexType>::Real;
+	using RealT = typename NumTraits<ComplexT>::Real;
 
-	Vec<ComplexType> path_point;
+	Vec<ComplexT> path_point;
 	SuccessCode success_code = SuccessCode::NeverStarted;
-	RealType last_used_stepsize;
+	RealT last_used_stepsize;
 
 	EGBoundaryMetaData() = default;
 	EGBoundaryMetaData(EGBoundaryMetaData const&) = default;
-	EGBoundaryMetaData(Vec<ComplexType> const& pt, SuccessCode const& code, RealType const& ss) :
+	EGBoundaryMetaData(Vec<ComplexT> const& pt, SuccessCode const& code, RealT const& ss) :
 		path_point(pt), success_code(code), last_used_stepsize(ss)
 	{}
 	
-	bool operator==(const EGBoundaryMetaData<ComplexType> & other){
+	bool operator==(const EGBoundaryMetaData<ComplexT> & other){
 		bool result = 
 			this->path_point == other.path_point
 			&& this->success_code == other.success_code
@@ -256,12 +256,12 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 
 /// a bunch of using statements to reduce typing.
-			using BaseComplexType 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
-			using BaseRealType    	= typename tracking::TrackerTraits<TrackerType>::BaseRealType;
+			using BaseComplexT 	= typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
+			using BaseRealT    	= typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 
 			using PrecisionConfig 	= typename tracking::TrackerTraits<TrackerType>::PrecisionConfig;
 
-			using SolnIndT 			= typename SolnCont<BaseComplexType>::size_type;
+			using SolnIndT 			= typename SolnCont<BaseComplexT>::size_type;
 
 			using SystemManagementPolicy = SystemManagementP<SystemType, StartSystemType>;
 
@@ -276,17 +276,17 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 			using Tolerances = TolerancesConfig;
 			using PostProcessing = PostProcessingConfig;
-			using ZeroDimConf = ZeroDimConfig<BaseComplexType>;
+			using ZeroDimConf = ZeroDimConfig<BaseComplexT>;
 			using AutoRetrack = AutoRetrackConfig;
 
 
-			using EGBoundaryMetaDataT = EGBoundaryMetaData<BaseComplexType>;
-			using SolutionMetaDataT = SolutionMetaData<BaseComplexType>;
+			using EGBoundaryMetaDataT = EGBoundaryMetaData<BaseComplexT>;
+			using SolutionMetaDataT = SolutionMetaData<BaseComplexT>;
 
 
 // a few more using statements
 
-			using MidpathType = MidpathChecker<BaseRealType, BaseComplexType, EGBoundaryMetaData<BaseComplexType>>;
+			using MidpathType = MidpathChecker<BaseRealT, BaseComplexT, EGBoundaryMetaData<BaseComplexT>>;
 
 			using SystemManagementPolicy::TargetSystem;
 			using SystemManagementPolicy::StartSystem;
@@ -625,9 +625,9 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				DefaultPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
 				auto t_start = this->template Get<ZeroDimConf>().start_time;
 				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
-				auto start_point = StartSystem().template StartPoint<BaseComplexType>(soln_ind);
+				auto start_point = StartSystem().template StartPoint<BaseComplexT>(soln_ind);
 
-				Vec<BaseComplexType> result;
+				Vec<BaseComplexT> result;
 				auto tracking_success = GetTracker().TrackPath(result, t_start, t_endgame_boundary, start_point);
 
 				solutions_at_endgame_boundary_[soln_ind] = EGBoundaryMetaDataT({ result, tracking_success, GetTracker().CurrentStepsize() });
@@ -731,14 +731,14 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 				DefaultPrecision(start_prec);
 
-				BaseComplexType t_end = this->template Get<ZeroDimConf>().target_time;
+				BaseComplexT t_end = this->template Get<ZeroDimConf>().target_time;
 
-				BaseComplexType t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
+				BaseComplexT t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
 				Precision(t_endgame_boundary,start_prec);
 
 				auto eg_success = GetEndgame().Run(t_endgame_boundary, bdry_point, t_end);
 
-				solutions_post_endgame_[soln_ind] = GetEndgame().template FinalApproximation<BaseComplexType>();
+				solutions_post_endgame_[soln_ind] = GetEndgame().template FinalApproximation<BaseComplexT>();
 
 
 					// finally, store the metadata as necessary
@@ -762,7 +762,7 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 					}
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
-						assert(Precision(solutions_post_endgame_[soln_ind])==Precision(GetEndgame().template FinalApproximation<BaseComplexType>()));
+						assert(Precision(solutions_post_endgame_[soln_ind])==Precision(GetEndgame().template FinalApproximation<BaseComplexT>()));
 						DefaultPrecision(Precision(solutions_post_endgame_[soln_ind]));
 						TargetSystem().precision(Precision(solutions_post_endgame_[soln_ind]));
 					}
@@ -774,7 +774,7 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 					smd.accuracy_estimate = GetEndgame().ApproximateError();
 					smd.accuracy_estimate_user_coords =
 						static_cast<NumErrorT>( (TargetSystem().DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
-						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexType>())).template lpNorm<Eigen::Infinity>() );
+						TargetSystem().DehomogenizePoint(GetEndgame().template PreviousApproximation<BaseComplexT>())).template lpNorm<Eigen::Infinity>() );
 					smd.cycle_num = GetEndgame().CycleNumber();
 					// end metadata gathering
 			}
@@ -847,8 +847,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 
 			/// computed data
-			SolnCont< EGBoundaryMetaDataT > solutions_at_endgame_boundary_; // the BaseRealType is the last used stepsize
-			SolnCont<Vec<BaseComplexType> > solutions_post_endgame_;
+			SolnCont< EGBoundaryMetaDataT > solutions_at_endgame_boundary_; // the BaseRealT is the last used stepsize
+			SolnCont<Vec<BaseComplexT> > solutions_post_endgame_;
 			SolnCont<SolutionMetaDataT> solution_final_metadata_;
 
 

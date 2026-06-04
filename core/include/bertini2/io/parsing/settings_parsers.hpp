@@ -50,7 +50,7 @@ namespace bertini {
 			 \param config_str The comment-stripped configuration string from a Bertini classic input file.
 			 
 			 \tparam ConfigT The config ConfigT type
-			 \tparam RT Real number type
+			 \tparam RealT Real number type
 			 
 			 \returns The config struct filled with data from the input file.
 			 */
@@ -77,7 +77,7 @@ namespace bertini {
 
 			A specialization for a typelist of configs appears below.
 
-			\tparam RT Real number type
+			\tparam RealT Real number type
 			\tparam Ts Configuration structures to be filled by the parser
 			*/
 			template<typename ...Ts>
@@ -107,7 +107,7 @@ namespace bertini {
 			\brief Specialization of ConfigParser for a single config struct
 
 			\tparam ConfigT The config ConfigT type
-			\tparam RT Real number type
+			\tparam RealT Real number type
 			*/
 			template<typename ConfigT>
 			struct ConfigParser <ConfigT>
@@ -132,7 +132,7 @@ namespace bertini {
 			\brief Specialization of ConfigParser for a typelist, returning a thing passed down from the base variadic case.
 
 			\tparam ConfigT The config ConfigT type
-			\tparam RT Real number type
+			\tparam RealT Real number type
 			*/
 			template<typename ...Ts>
 			struct ConfigParser<detail::TypeList<Ts...>>

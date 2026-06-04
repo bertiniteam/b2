@@ -97,7 +97,7 @@ public:
 		using bertini::Precision;
 		assert(Precision(current_time)==Precision(current_sample) && "precision of sample and time to be refined in AMP endgame must match");
 
-		using RT = mpfr_float;
+		using RealT = mpfr_float;
 		using std::max;
 		auto& TR = this->GetTracker();
 		TR.ChangePrecision(Precision(current_time));

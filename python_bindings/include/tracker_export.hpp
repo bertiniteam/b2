@@ -60,8 +60,8 @@ namespace bertini{
 			
 		private:
 
-			using CT = typename TrackerTraits<TrackerT>::BaseComplexType;
-			using RT = typename TrackerTraits<TrackerT>::BaseRealType;
+			using ComplexT = typename TrackerTraits<TrackerT>::BaseComplexT;
+			using RealT = typename TrackerTraits<TrackerT>::BaseRealT;
 
 
 			// resolve overloads for getting and setting predictor method.
@@ -69,9 +69,9 @@ namespace bertini{
 			Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::GetPredictor;
 			
 			static
-			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<CT>> result, CT const& start_time, CT const& end_time, Vec<CT> const& start_point)
+			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<ComplexT>> result, ComplexT const& start_time, ComplexT const& end_time, Vec<ComplexT> const& start_point)
 			{
-				Vec<CT> temp_result(self.GetSystem().NumVariables());
+				Vec<ComplexT> temp_result(self.GetSystem().NumVariables());
 				auto code = self.TrackPath(temp_result, start_time, end_time, start_point);
 				result = temp_result;
 				return code;

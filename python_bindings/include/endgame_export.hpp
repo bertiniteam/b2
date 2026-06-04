@@ -53,8 +53,8 @@ namespace bertini{
 
 		private:
 
-			using BCT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseComplexType;
-			using BRT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseRealType;
+			using BCT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseComplexT;
+			using BRT = typename TrackerTraits<typename EndgameT::TrackerType>::BaseRealT;
 			using BaseEGT = typename EndgameT::BaseEGT;
 
 			static
@@ -99,8 +99,8 @@ namespace bertini{
 
 		private:
 
-			using BCT = typename TrackerTraits<typename PowerSeriesT::TrackerType>::BaseComplexType;
-			using BRT = typename TrackerTraits<typename PowerSeriesT::TrackerType>::BaseRealType;
+			using BCT = typename TrackerTraits<typename PowerSeriesT::TrackerType>::BaseComplexT;
+			using BRT = typename TrackerTraits<typename PowerSeriesT::TrackerType>::BaseRealT;
 
 
 		};// CauchyVisitor class
@@ -122,8 +122,8 @@ namespace bertini{
 
 		private:
 
-			using BCT = typename TrackerTraits<typename CauchyT::TrackerType>::BaseComplexType;
-			using BRT = typename TrackerTraits<typename CauchyT::TrackerType>::BaseRealType;
+			using BCT = typename TrackerTraits<typename CauchyT::TrackerType>::BaseComplexT;
+			using BRT = typename TrackerTraits<typename CauchyT::TrackerType>::BaseRealT;
 
 
 		};// CauchyVisitor class

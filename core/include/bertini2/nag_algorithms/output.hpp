@@ -229,7 +229,7 @@ struct NonsingularSolutions
 	static
 	auto Extract(AlgoT const& alg)
 	{
-		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
+		using BCT = typename AlgoTraits<AlgoT>::BaseComplexT;
 
 		const auto& sys = alg.TargetSystem();
 
@@ -261,7 +261,7 @@ struct AllSolutions
 	static
 	auto Extract(AlgoT const& alg)
 	{
-		using BCT = typename AlgoTraits<AlgoT>::BaseComplexType;
+		using BCT = typename AlgoTraits<AlgoT>::BaseComplexT;
 
 		const auto& sys = alg.TargetSystem();
 

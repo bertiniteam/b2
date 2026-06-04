@@ -60,11 +60,11 @@ namespace bertini{
 		{	
 		public:
 
-			using BaseComplexType = typename TrackerTraits<DerivedT>::BaseComplexType;
-			using BaseRealType = typename TrackerTraits<DerivedT>::BaseRealType;
+			using BaseComplexT = typename TrackerTraits<DerivedT>::BaseComplexT;
+			using BaseRealT = typename TrackerTraits<DerivedT>::BaseRealT;
 
-			using CT = BaseComplexType;
-			using RT = BaseRealType;
+			using ComplexT = BaseComplexT;
+			using RealT = BaseRealT;
 
 			virtual ~FixedPrecisionTracker() = default;
 
@@ -85,9 +85,9 @@ namespace bertini{
 			{ }
 
 
-			Vec<CT> CurrentPoint() const override
+			Vec<ComplexT> CurrentPoint() const override
 			{
-				return std::get<Vec<CT>>(this->current_space_);
+				return std::get<Vec<ComplexT>>(this->current_space_);
 			}
 
 
@@ -138,7 +138,7 @@ namespace bertini{
 
 			\param[out] solution_at_endtime The solution at the end time
 			*/
-			void CopyFinalSolution(Vec<CT> & solution_at_endtime) const override
+			void CopyFinalSolution(Vec<ComplexT> & solution_at_endtime) const override
 			{
 
 				// the current precision is the precision of the output solution point.
@@ -147,7 +147,7 @@ namespace bertini{
 				solution_at_endtime.resize(num_vars);
 				for (unsigned ii=0; ii<num_vars; ii++)
 				{
-					solution_at_endtime(ii) = std::get<Vec<CT> >(this->current_space_)(ii);
+					solution_at_endtime(ii) = std::get<Vec<ComplexT> >(this->current_space_)(ii);
 				}
 
 			}
@@ -164,16 +164,16 @@ namespace bertini{
 			*/
 			SuccessCode TrackerIteration() const override
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RT>::Real, 
-			              				typename Eigen::NumTraits<CT>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealT>::Real, 
+			              				typename Eigen::NumTraits<ComplexT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
 				this->NotifyObservers(NewStep<EmitterType >(*this));
 
-				Vec<CT>& predicted_space = std::get<Vec<CT> >(this->temporary_space_); // this will be populated in the Predict step
-				Vec<CT>& current_space = std::get<Vec<CT> >(this->current_space_); // the thing we ultimately wish to update
-				CT current_time = CT(this->current_time_);
-				CT delta_t = CT(this->delta_t_);
+				Vec<ComplexT>& predicted_space = std::get<Vec<ComplexT> >(this->temporary_space_); // this will be populated in the Predict step
+				Vec<ComplexT>& current_space = std::get<Vec<ComplexT> >(this->current_space_); // the thing we ultimately wish to update
+				ComplexT current_time = ComplexT(this->current_time_);
+				ComplexT delta_t = ComplexT(this->delta_t_);
 
 				SuccessCode predictor_code = Predict(predicted_space, current_space, current_time, delta_t);
 
@@ -181,18 +181,18 @@ namespace bertini{
 				{
 					this->NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType >(*this));
 
-					this->next_stepsize_ = RT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
+					this->next_stepsize_ = RealT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
 
 					UpdateStepsize();
 
 					return predictor_code;
 				}
 
-				this->NotifyObservers(SuccessfulPredict<EmitterType , CT>(*this, predicted_space));
+				this->NotifyObservers(SuccessfulPredict<EmitterType , ComplexT>(*this, predicted_space));
 
-				Vec<CT>& tentative_next_space = std::get<Vec<CT> >(this->tentative_space_); // this will be populated in the Correct step
+				Vec<ComplexT>& tentative_next_space = std::get<Vec<ComplexT> >(this->tentative_space_); // this will be populated in the Correct step
 
-				CT tentative_next_time = current_time + delta_t;
+				ComplexT tentative_next_time = current_time + delta_t;
 
 				SuccessCode corrector_code = Correct(tentative_next_space,
 													 predicted_space,
@@ -207,14 +207,14 @@ namespace bertini{
 				{
 					this->NotifyObservers(CorrectorMatrixSolveFailure<EmitterType >(*this));
 
-					this->next_stepsize_ = RT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
+					this->next_stepsize_ = RealT(Get<Stepping>().step_size_fail_factor)*this->current_stepsize_;
 					UpdateStepsize();
 
 					return corrector_code;
 				}
 
 				
-				this->NotifyObservers(SuccessfulCorrect<EmitterType , CT>(*this, tentative_next_space));
+				this->NotifyObservers(SuccessfulCorrect<EmitterType , ComplexT>(*this, tentative_next_space));
 
 				// copy the tentative vector into the current space vector;
 				current_space = tentative_next_space;
@@ -227,7 +227,7 @@ namespace bertini{
 			*/
 			SuccessCode CheckGoingToInfinity() const override
 			{
-				return Base::template CheckGoingToInfinity<CT>();
+				return Base::template CheckGoingToInfinity<ComplexT>();
 			}
 
 			
@@ -296,9 +296,9 @@ namespace bertini{
 			\param current_time The current time value.
 			\param delta_t The time differential for this step.  Allowed to be complex.
 			*/
-			SuccessCode Predict(Vec<CT> & predicted_space, 
-								Vec<CT> const& current_space, 
-								CT const& current_time, CT const& delta_t) const
+			SuccessCode Predict(Vec<ComplexT> & predicted_space, 
+								Vec<ComplexT> const& current_space, 
+								ComplexT const& current_time, ComplexT const& delta_t) const
 			{
 
 				return this->predictor_->Predict(
@@ -325,9 +325,9 @@ namespace bertini{
 
 			\return A SuccessCode indicating whether the loop was successful in converging in the max number of allowable newton steps, to the current path tolerance.
 			*/
-			SuccessCode Correct(Vec<CT> & corrected_space, 
-								Vec<CT> const& current_space, 
-								CT const& current_time) const
+			SuccessCode Correct(Vec<ComplexT> & corrected_space, 
+								Vec<ComplexT> const& current_space, 
+								ComplexT const& current_time) const
 			{
 				return this->corrector_->Correct(corrected_space,
 												this->tracked_system_,
@@ -352,8 +352,8 @@ namespace bertini{
 
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
-			SuccessCode RefineImpl(Vec<CT> & new_space,
-								Vec<CT> const& start_point, CT const& current_time) const
+			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
+								Vec<ComplexT> const& start_point, ComplexT const& current_time) const
 			{
 				return this->corrector_->Correct(new_space,
 							   this->tracked_system_,
@@ -383,8 +383,8 @@ namespace bertini{
 
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
-			SuccessCode RefineImpl(Vec<CT> & new_space,
-								Vec<CT> const& start_point, CT const& current_time,
+			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
+								Vec<ComplexT> const& start_point, ComplexT const& current_time,
 								NumErrorT const& tolerance, unsigned max_iterations) const
 			{
 				return this->corrector_->Correct(new_space,
@@ -415,8 +415,8 @@ namespace bertini{
 		class DoublePrecisionTracker : public FixedPrecisionTracker<DoublePrecisionTracker>
 		{
 		public:
-			using BaseComplexType = dbl;
-			using BaseRealType = double;
+			using BaseComplexT = dbl;
+			using BaseRealT = double;
 
 			using EmitterType = typename TrackerTraits<DoublePrecisionTracker>::EventEmitterType;
 
@@ -448,18 +448,18 @@ namespace bertini{
 			\param end_time The time to which to track.
 			\param start_point The space values from which to start tracking.
 			*/
-			SuccessCode TrackerLoopInitialization(BaseComplexType const& start_time,
-			                               BaseComplexType const& end_time,
-										   Vec<BaseComplexType> const& start_point) const override
+			SuccessCode TrackerLoopInitialization(BaseComplexT const& start_time,
+			                               BaseComplexT const& end_time,
+										   Vec<BaseComplexT> const& start_point) const override
 			{
-				this->NotifyObservers(Initializing<EmitterType,BaseComplexType>(*this,start_time, end_time, start_point));
+				this->NotifyObservers(Initializing<EmitterType,BaseComplexT>(*this,start_time, end_time, start_point));
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;
 				this->endtime_ = end_time;
-				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
+				std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
-					this->SetStepSize(min(BaseRealType(Get<Stepping>().initial_step_size),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
+					this->SetStepSize(min(BaseRealT(Get<Stepping>().initial_step_size),abs(start_time-end_time)/Get<Stepping>().min_num_steps));
 
 				ResetCounters();
 
@@ -475,8 +475,8 @@ namespace bertini{
 		class MultiplePrecisionTracker : public FixedPrecisionTracker<MultiplePrecisionTracker>
 		{
 		public:
-			using BaseComplexType = mpfr_complex;
-			using BaseRealType = mpfr_float;
+			using BaseComplexT = mpfr_complex;
+			using BaseRealT = mpfr_float;
 
 			using EmitterType = FixedPrecisionTracker<MultiplePrecisionTracker>;
 
@@ -510,9 +510,9 @@ namespace bertini{
 			\param end_time The time to which to track.
 			\param start_point The space values from which to start tracking.
 			*/
-			SuccessCode TrackerLoopInitialization(BaseComplexType const& start_time,
-			                               BaseComplexType const& end_time,
-										   Vec<BaseComplexType> const& start_point) const override
+			SuccessCode TrackerLoopInitialization(BaseComplexT const& start_time,
+			                               BaseComplexT const& end_time,
+										   Vec<BaseComplexT> const& start_point) const override
 			{
 
 				if (start_point(0).precision()!=DefaultPrecision())
@@ -537,12 +537,12 @@ namespace bertini{
 				}
 
 
-				this->NotifyObservers(Initializing<EmitterType,BaseComplexType>(*this,start_time, end_time, start_point));
+				this->NotifyObservers(Initializing<EmitterType,BaseComplexT>(*this,start_time, end_time, start_point));
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;
 				this->endtime_ = end_time;
-				std::get<Vec<BaseComplexType> >(this->current_space_) = start_point;
+				std::get<Vec<BaseComplexT> >(this->current_space_) = start_point;
 				if (this->reinitialize_stepsize_)
 					this->SetStepSize(min(mpfr_float(Get<Stepping>().initial_step_size),mpfr_float(abs(start_time-end_time)/Get<Stepping>().min_num_steps)));
 

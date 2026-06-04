@@ -128,7 +128,7 @@ namespace bertini{
 				 
 				 \return The SuccessCode indicating what happened.
 				 
-				 \tparam ComplexType The complex type for arithmetic
+				 \tparam ComplexT The complex type for arithmetic
 				 
 				 \param[out] next_space The computed next space point.
 				 \param S The system we are tracking on.
@@ -141,11 +141,11 @@ namespace bertini{
 				 
 				 */
 				
-				template <typename ComplexType>
-				SuccessCode Correct(Vec<ComplexType> & next_space,
+				template <typename ComplexT>
+				SuccessCode Correct(Vec<ComplexT> & next_space,
 									   System const& S,
-									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-									   ComplexType const& current_time,
+									   Vec<ComplexT> const& current_space, // pass by value to get a copy of it
+									   ComplexT const& current_time,
 									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations)
@@ -154,7 +154,7 @@ namespace bertini{
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
 					#endif
 					
-					Vec<ComplexType>& step_ref = std::get< Vec<ComplexType> >(step_temp_);
+					Vec<ComplexT>& step_ref = std::get< Vec<ComplexT> >(step_temp_);
 					
 					next_space = current_space;
 					for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
@@ -186,7 +186,7 @@ namespace bertini{
 				 
 				 Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
 				 
-				 \tparam ComplexType The complex type for arithmetic
+				 \tparam ComplexT The complex type for arithmetic
 				 
 				 \param[out] next_space The computed next space point.
 				 \param S The system we are tracking on.
@@ -198,11 +198,11 @@ namespace bertini{
 				 \param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
 				 \param AMP_config Adaptive multiple precision settings.  Using this argument is how Bertini2 knows you want to use adaptive precision.
 				 */
-				template <typename ComplexType>
-				SuccessCode Correct(Vec<ComplexType> & next_space,
+				template <typename ComplexT>
+				SuccessCode Correct(Vec<ComplexT> & next_space,
 									   System const& S,
-									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-									   ComplexType const& current_time,
+									   Vec<ComplexT> const& current_space, // pass by value to get a copy of it
+									   ComplexT const& current_time,
 									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
@@ -212,7 +212,7 @@ namespace bertini{
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
 					#endif
 
-					Vec<ComplexType>& step_ref = std::get< Vec<ComplexType> >(step_temp_);
+					Vec<ComplexT>& step_ref = std::get< Vec<ComplexT> >(step_temp_);
 					
 					next_space = current_space;
 					for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
@@ -224,21 +224,21 @@ namespace bertini{
 						
 						next_space += step_ref;
 						
-						Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
-						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
+						Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
+						Eigen::PartialPivLU< Mat<ComplexT> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexT> > >(LU_);
 						
 						if ( (step_ref.template lpNorm<Eigen::Infinity>() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 						
-						Vec<ComplexType> const& rand_ref = std::get< Vec<ComplexType> >(rand_temp_);
-						Vec<ComplexType>& solve_ref = std::get< Vec<ComplexType> >(solve_temp_);
+						Vec<ComplexT> const& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
+						Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
 						solve_ref = LU_ref.solve(rand_ref);
 						NumErrorT norm_J_inverse(solve_ref.norm());
 
-						if (!amp::CriterionB<ComplexType>(NumErrorT(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, NumErrorT(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
+						if (!amp::CriterionB<ComplexT>(NumErrorT(J_temp_ref.norm()), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, NumErrorT(step_ref.template lpNorm<Eigen::Infinity>()), AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 						
-						if (!amp::CriterionC<ComplexType>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
+						if (!amp::CriterionC<ComplexT>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 					}
 					
@@ -255,8 +255,8 @@ namespace bertini{
 				 
 				 Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
 				 
-				 \tparam ComplexType The complex type for arithmetic
-				 \tparam RealType The underlying real number type, used for comparitors.
+				 \tparam ComplexT The complex type for arithmetic
+				 \tparam RealT The underlying real number type, used for comparitors.
 				 
 				 \param[out] next_space The computed next space point.
 				 \param[out] norm_delta_z The norm of the last step size.
@@ -272,15 +272,15 @@ namespace bertini{
 				 \param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
 				 \param AMP_config Adaptive multiple precision settings.  Using this argument is how Bertini2 knows you want to use adaptive precision.
 				 */
-				template <typename ComplexType>
-				SuccessCode Correct(Vec<ComplexType> & next_space,
+				template <typename ComplexT>
+				SuccessCode Correct(Vec<ComplexT> & next_space,
 									   NumErrorT & norm_delta_z,
 									   NumErrorT & norm_J,
 									   NumErrorT & norm_J_inverse,
 									   NumErrorT & condition_number_estimate,
 									   System const& S,
-									   Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-									   ComplexType const& current_time,
+									   Vec<ComplexT> const& current_space, // pass by value to get a copy of it
+									   ComplexT const& current_time,
 									   NumErrorT const& tracking_tolerance,
 									   unsigned min_num_newton_iterations,
 									   unsigned max_num_newton_iterations,
@@ -290,7 +290,7 @@ namespace bertini{
 					assert(max_num_newton_iterations >= min_num_newton_iterations && "max number newton iterations must be at least the min.");
 					#endif
 					
-					Vec<ComplexType>& step_ref = std::get< Vec<ComplexType> >(step_temp_);
+					Vec<ComplexT>& step_ref = std::get< Vec<ComplexT> >(step_temp_);
 					
 					next_space = current_space;
 					for (unsigned ii = 0; ii < max_num_newton_iterations; ++ii)
@@ -302,16 +302,16 @@ namespace bertini{
 						
 						next_space += step_ref;
 						
-						Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
-						Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
+						Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
+						Eigen::PartialPivLU< Mat<ComplexT> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexT> > >(LU_);
 						
 						
 						norm_delta_z = NumErrorT(step_ref.template lpNorm<Eigen::Infinity>());
 						norm_J = NumErrorT(J_temp_ref.norm());
 						{
-							Vec<ComplexType>& rand_ref = std::get< Vec<ComplexType> >(rand_temp_);
-							for (int ri = 0; ri < (int)rand_ref.size(); ++ri) rand_ref(ri) = RandomUnit<ComplexType>();
-							Vec<ComplexType>& solve_ref = std::get< Vec<ComplexType> >(solve_temp_);
+							Vec<ComplexT>& rand_ref = std::get< Vec<ComplexT> >(rand_temp_);
+							for (int ri = 0; ri < (int)rand_ref.size(); ++ri) rand_ref(ri) = RandomUnit<ComplexT>();
+							Vec<ComplexT>& solve_ref = std::get< Vec<ComplexT> >(solve_temp_);
 							solve_ref = LU_ref.solve(rand_ref);
 							norm_J_inverse = NumErrorT(solve_ref.norm());
 						}
@@ -320,10 +320,10 @@ namespace bertini{
 						if ( (norm_delta_z < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 							return SuccessCode::Success;
 						
-						if (!amp::CriterionB<ComplexType>(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
+						if (!amp::CriterionB<ComplexT>(norm_J, norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, norm_delta_z, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 						
-						if (!amp::CriterionC<ComplexType>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
+						if (!amp::CriterionC<ComplexT>(norm_J_inverse, next_space, tracking_tolerance, AMP_config))
 							return SuccessCode::HigherPrecisionNecessary;
 					}
 					
@@ -350,17 +350,17 @@ namespace bertini{
 				 
 				 */
 				
-				template<typename ComplexType, typename Derived>
-				SuccessCode EvalIterationStep(Vec<ComplexType> & newton_step,
+				template<typename ComplexT, typename Derived>
+				SuccessCode EvalIterationStep(Vec<ComplexT> & newton_step,
 											  const System& S,
-											  const Eigen::MatrixBase<Derived>& current_space, const ComplexType& current_time)
+											  const Eigen::MatrixBase<Derived>& current_space, const ComplexT& current_time)
 				{
-					Vec<ComplexType>& f_temp_ref = std::get< Vec<ComplexType> >(f_temp_);
-					Mat<ComplexType>& J_temp_ref = std::get< Mat<ComplexType> >(J_temp_);
+					Vec<ComplexT>& f_temp_ref = std::get< Vec<ComplexT> >(f_temp_);
+					Mat<ComplexT>& J_temp_ref = std::get< Mat<ComplexT> >(J_temp_);
 					
-					Eigen::PartialPivLU< Mat<ComplexType> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexType> > >(LU_);
+					Eigen::PartialPivLU< Mat<ComplexT> >& LU_ref = std::get< Eigen::PartialPivLU< Mat<ComplexT> > >(LU_);
 
-					S.SetAndReset<ComplexType>(current_space, current_time);
+					S.SetAndReset<ComplexT>(current_space, current_time);
 					S.EvalInPlace(f_temp_ref);
 					S.JacobianInPlace(J_temp_ref);
 					LU_ref.compute(J_temp_ref);

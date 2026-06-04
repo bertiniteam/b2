@@ -57,10 +57,10 @@ Details:
 \param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 \param samples a deque that will hold all the samples corresponding to the time values in times. 
 
-\tparam CT The complex number type.
+\tparam ComplexT The complex number type.
 */			
-template<typename CT>		
-	Vec<CT> HermiteInterpolateAndSolve(CT const& target_time, const unsigned int num_sample_points, const TimeCont<CT> & times, const SampCont<CT> & samples, const SampCont<CT> & derivatives, ContStart shift_from = ContStart::Back)
+template<typename ComplexT>		
+	Vec<ComplexT> HermiteInterpolateAndSolve(ComplexT const& target_time, const unsigned int num_sample_points, const TimeCont<ComplexT> & times, const SampCont<ComplexT> & samples, const SampCont<ComplexT> & derivatives, ContStart shift_from = ContStart::Back)
 {
 	assert((times.size() >= num_sample_points) && "must have sufficient number of sample times");
 	assert((samples.size() >= num_sample_points) && "must have sufficient number of sample points");
@@ -79,8 +79,8 @@ template<typename CT>
 		num_t = num_s = num_d = num_sample_points-1;
 	}
 
-	Mat< Vec<CT> > space_differences(2*num_sample_points,2*num_sample_points);
-	Vec<CT> time_differences(2*num_sample_points);
+	Mat< Vec<ComplexT> > space_differences(2*num_sample_points,2*num_sample_points);
+	Vec<ComplexT> time_differences(2*num_sample_points);
 
 
 	for(unsigned int ii=0; ii<num_sample_points; ++ii)
@@ -113,7 +113,7 @@ template<typename CT>
 
 	//Start of Result from Hermite polynomial, this is using the diagonal of the 
 	//finite difference matrix.
-	Vec<CT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
+	Vec<ComplexT> Result = space_differences(2*num_sample_points - 1,2*num_sample_points - 1); 
 
 
 	//This builds the hermite polynomial from the highest term down. 

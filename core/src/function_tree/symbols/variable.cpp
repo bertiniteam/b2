@@ -49,13 +49,13 @@ Variable::Variable() : NamedSymbol("unnamed_variable_be_scared")
 template <typename T>
 void Variable::set_current_value(T const& val)
 {
-	using CT = typename NumTraits<T>::Complex;
+	using ComplexT = typename NumTraits<T>::Complex;
 	static_assert(!Eigen::NumTraits<T>::IsInteger,"type must be floating point in nature, with a real-complex pair defined in NumTraits");
 
-	assert(Precision(std::get< std::pair<CT,bool> >(current_value_).first)==Precision(val) && "precision of value setting into variable doesn't match precision of variable.  is default precision correct?");
+	assert(Precision(std::get< std::pair<ComplexT,bool> >(current_value_).first)==Precision(val) && "precision of value setting into variable doesn't match precision of variable.  is default precision correct?");
 	
-	std::get< std::pair<CT,bool> >(current_value_).first = static_cast<CT>(val);
-	std::get< std::pair<CT,bool> >(current_value_).second = false;
+	std::get< std::pair<ComplexT,bool> >(current_value_).first = static_cast<ComplexT>(val);
+	std::get< std::pair<ComplexT,bool> >(current_value_).second = false;
 }
 
 template void Variable::set_current_value<double>(double const&);

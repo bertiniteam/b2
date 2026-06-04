@@ -53,7 +53,7 @@ namespace bertini {
 	\code
 		template <typename T>
 		const 
-		typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, T>::type
+		typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, T>::type
 		& Get() const
 		{
 			return Config::template Get<T>();
@@ -61,7 +61,7 @@ namespace bertini {
 
 		template <typename T>
 		const 
-		typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, T>::type
+		typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, T>::type
 		& Get() const
 		{
 			return EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Get<T>();
@@ -69,14 +69,14 @@ namespace bertini {
 
 
 		template <typename T>
-		typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, void>::type
+		typename std::enable_if<detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, void>::type
 		Set(T const& t)
 		{
 			Config::template Set(t);
 		}
 
 		template <typename T>
-		typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealType>>::value, void>::type
+		typename std::enable_if<not detail::IsTemplateParameter<T, config::Cauchy<typename TrackerTraits<TrackerType>::BaseRealT>>::value, void>::type
 		Set(T const& t)
 		{
 			EndgameBase<TrackerType, FinalEGT, UsedNumTs...>::template Set(t);

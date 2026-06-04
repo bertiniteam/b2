@@ -51,8 +51,8 @@ namespace bertini{
 	
 			\return The SuccessCode indicating what happened.
 
-			\tparam ComplexType The complex type for arithmetic
-			\tparam RealType The underlying real number type, used for comparitors.
+			\tparam ComplexT The complex type for arithmetic
+			\tparam RealT The underlying real number type, used for comparitors.
 
 			\param[out] next_space The computed next space point.
 			\param S The system we are tracking on.
@@ -64,12 +64,12 @@ namespace bertini{
 			\param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
 
 			*/
-			template <typename ComplexType, typename RealType>
-			SuccessCode NewtonLoop(Vec<ComplexType> & next_space,
+			template <typename ComplexT, typename RealT>
+			SuccessCode NewtonLoop(Vec<ComplexT> & next_space,
 					               System const& S,
-					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-					               ComplexType const& current_time, 
-					               RealType const& tracking_tolerance,
+					               Vec<ComplexT> const& current_space, // pass by value to get a copy of it
+					               ComplexT const& current_time, 
+					               RealT const& tracking_tolerance,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations)
 			{
@@ -106,8 +106,8 @@ namespace bertini{
 
 			Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
 
-			\tparam ComplexType The complex type for arithmetic
-			\tparam RealType The underlying real number type, used for comparitors.
+			\tparam ComplexT The complex type for arithmetic
+			\tparam RealT The underlying real number type, used for comparitors.
 
 			\param[out] next_space The computed next space point.
 			\param S The system we are tracking on.
@@ -119,12 +119,12 @@ namespace bertini{
 			\param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
 			\param AMP_config Adaptive multiple precision settings.  Using this argument is how Bertini2 knows you want to use adaptive precision.
 			*/
-			template <typename ComplexType, typename RealType>
-			SuccessCode NewtonLoop(Vec<ComplexType> & next_space,
+			template <typename ComplexT, typename RealT>
+			SuccessCode NewtonLoop(Vec<ComplexT> & next_space,
 					               System const& S,
-					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-					               ComplexType const& current_time, 
-					               RealType const& tracking_tolerance,
+					               Vec<ComplexT> const& current_space, // pass by value to get a copy of it
+					               ComplexT const& current_time, 
+					               RealT const& tracking_tolerance,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
 					               AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -152,7 +152,7 @@ namespace bertini{
 					if ( (delta_z.norm() < tracking_tolerance) && (ii >= (min_num_newton_iterations-1)) )
 						return SuccessCode::Success;
 
-					auto norm_J_inverse = LU.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
+					auto norm_J_inverse = LU.solve(RandomOfUnits<ComplexT>(S.NumVariables())).norm();
 					if (!amp::CriterionB(J.norm(), norm_J_inverse, max_num_newton_iterations - ii, tracking_tolerance, delta_z.norm(), AMP_config))
 						return SuccessCode::HigherPrecisionNecessary;
 
@@ -174,8 +174,8 @@ namespace bertini{
 
 			Run Newton's method until it converges (\f$\Delta z\f$ < tol), an AMP criterion (B or C) is violated, or the next point's norm exceeds the path truncation threshold.
 
-			\tparam ComplexType The complex type for arithmetic
-			\tparam RealType The underlying real number type, used for comparitors.
+			\tparam ComplexT The complex type for arithmetic
+			\tparam RealT The underlying real number type, used for comparitors.
 
 			\param[out] next_space The computed next space point.
 			\param[out] norm_delta_z The norm of the last step size.
@@ -191,16 +191,16 @@ namespace bertini{
 			\param max_num_newton_iterations The maximum number of iterations to run Newton's method for.
 			\param AMP_config Adaptive multiple precision settings.  Using this argument is how Bertini2 knows you want to use adaptive precision.
 			*/
-			template <typename ComplexType, typename RealType>
-			SuccessCode NewtonLoop(Vec<ComplexType> & next_space,
-			                       RealType & norm_delta_z,
-			                       RealType & norm_J,
-			                       RealType & norm_J_inverse,
-			                       RealType & condition_number_estimate,
+			template <typename ComplexT, typename RealT>
+			SuccessCode NewtonLoop(Vec<ComplexT> & next_space,
+			                       RealT & norm_delta_z,
+			                       RealT & norm_J,
+			                       RealT & norm_J_inverse,
+			                       RealT & condition_number_estimate,
 					               System const& S,
-					               Vec<ComplexType> const& current_space, // pass by value to get a copy of it
-					               ComplexType const& current_time, 
-					               RealType const& tracking_tolerance,
+					               Vec<ComplexT> const& current_space, // pass by value to get a copy of it
+					               ComplexT const& current_time, 
+					               RealT const& tracking_tolerance,
 					               unsigned min_num_newton_iterations,
 					               unsigned max_num_newton_iterations,
 					               AdaptiveMultiplePrecisionConfig const& AMP_config)
@@ -229,7 +229,7 @@ namespace bertini{
 
 					norm_delta_z = delta_z.norm();
 					norm_J = J.norm();
-					norm_J_inverse = LU.solve(RandomOfUnits<ComplexType>(S.NumVariables())).norm();
+					norm_J_inverse = LU.solve(RandomOfUnits<ComplexT>(S.NumVariables())).norm();
 					condition_number_estimate = norm_J*norm_J_inverse;
 
 

@@ -42,7 +42,7 @@ namespace bertini{
 	namespace algorithm{
 
 		
-		template<typename RealType, typename ComplexType, typename MetaDataType>
+		template<typename RealT, typename ComplexT, typename MetaDataType>
 		struct MidpathChecker : public detail::Configured<MidPathConfig>
 		{
 			using MidPathConfT = MidPathConfig;
@@ -139,16 +139,16 @@ namespace bertini{
 					if ( boundary_data[ii].success_code != SuccessCode::Success)
 							continue;
 
-					const Vec<ComplexType>& solution_ii = boundary_data[ii].path_point;
-					const auto start_ii = start_system.template StartPoint<ComplexType>(ii);
+					const Vec<ComplexT>& solution_ii = boundary_data[ii].path_point;
+					const auto start_ii = start_system.template StartPoint<ComplexT>(ii);
 
 					for (PathIndT jj = ii+1; jj < boundary_data.size(); ++jj)
 					{
 						if ( boundary_data[jj].success_code != SuccessCode::Success)
 							continue;
 
-						const Vec<ComplexType>& solution_jj = boundary_data[jj].path_point;
-						const Vec<ComplexType> diff_sol = solution_ii - solution_jj;
+						const Vec<ComplexT>& solution_jj = boundary_data[jj].path_point;
+						const Vec<ComplexT> diff_sol = solution_ii - solution_jj;
 						
 						if ((diff_sol.template lpNorm<Eigen::Infinity>()/solution_ii.template lpNorm<Eigen::Infinity>()) < SamePointTol())
 						{
@@ -156,7 +156,7 @@ namespace bertini{
 							bool j_already_stored = false;
 							// Check if start points are the same
 							
-							const auto start_jj = start_system.template StartPoint<ComplexType>(jj);
+							const auto start_jj = start_system.template StartPoint<ComplexT>(jj);
 							auto diff_start = start_ii - start_jj;
 							bool same_start = (diff_start.template lpNorm<Eigen::Infinity>() > SamePointTol());
 							

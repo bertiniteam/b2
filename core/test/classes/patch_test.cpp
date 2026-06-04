@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_SUITE(patch_class)
 
 using bertini::DefaultPrecision;
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 using Patch = bertini::Patch;
 
 using dbl = bertini::dbl;

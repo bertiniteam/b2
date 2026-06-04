@@ -267,8 +267,8 @@ namespace Eigen {
 
 namespace bertini {
 
-	template<typename NumType> using Vec = Eigen::Matrix<NumType, Eigen::Dynamic, 1>;
-	template<typename NumType> using Mat = Eigen::Matrix<NumType, Eigen::Dynamic, Eigen::Dynamic>;
+	template<typename NumT> using Vec = Eigen::Matrix<NumT, Eigen::Dynamic, 1>;
+	template<typename NumT> using Mat = Eigen::Matrix<NumT, Eigen::Dynamic, Eigen::Dynamic>;
 
 
 	/**

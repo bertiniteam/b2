@@ -25,8 +25,8 @@
 
 #include "bertini2/system/system.hpp"
 
-template<typename NumType> using Vec = bertini::Vec<NumType>;
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Vec = bertini::Vec<NumT>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 using Nd = std::shared_ptr<bertini::node::Node>;
 
 BOOST_CLASS_EXPORT(bertini::System)
@@ -934,21 +934,21 @@ namespace bertini
 	{
 		static_assert(Eigen::NumTraits<NumT>::IsComplex,"NumT must be a complex type");
 		
-		using RT = typename Eigen::NumTraits<NumT>::Real;
-		using CT = NumT;
+		using RealT = typename Eigen::NumTraits<NumT>::Real;
+		using ComplexT = NumT;
 
-		RT bound(0);
+		RealT bound(0);
 
 		for (unsigned ii=0; ii < num_evaluations; ii++)
 		{	
-			Vec<CT> randy = RandomOfUnits<CT>(NumVariables());
-			Vec<CT> f_vals;
+			Vec<ComplexT> randy = RandomOfUnits<ComplexT>(NumVariables());
+			Vec<ComplexT> f_vals;
 			if (HavePathVariable())
-				f_vals = Eval(randy, RandomUnit<CT>());
+				f_vals = Eval(randy, RandomUnit<ComplexT>());
 			else
 				f_vals = Eval(randy);
 			
-			Mat<CT> dh_dx = Jacobian<CT>();
+			Mat<ComplexT> dh_dx = Jacobian<ComplexT>();
 			
 			bound = max(f_vals.array().abs().maxCoeff(),
 						 dh_dx.array().abs().maxCoeff(), bound);

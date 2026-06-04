@@ -54,7 +54,7 @@ using mpfr = bertini::mpfr_complex;
 
 
 
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 using namespace bertini;
 

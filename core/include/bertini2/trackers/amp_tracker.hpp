@@ -652,31 +652,31 @@ namespace bertini{
 			\brief Run an iteration of AMP tracking.
 
 			\return SuccessCode indicating whether the iteration was successful.
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
+			\tparam ComplexT The complex number type.
+			\tparam RealT The real number type.
 			*/
-			template <typename ComplexType>
+			template <typename ComplexT>
 			SuccessCode TrackerIteration() const // not an override, because it is templated
 			{	
 
-				using RealType = typename Eigen::NumTraits<ComplexType>::Real;
+				using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck<ComplexType>() && "precision sanity check failed.  some internal variable is not in correct precision");
+				assert(PrecisionSanityCheck<ComplexT>() && "precision sanity check failed.  some internal variable is not in correct precision");
 				#endif
 
 				NotifyObservers(NewStep<EmitterType>(*this));
 
-				Vec<ComplexType>& predicted_space = std::get<Vec<ComplexType> >(temporary_space_); // this will be populated in the Predict step
-				Vec<ComplexType>& current_space = std::get<Vec<ComplexType> >(current_space_); // the thing we ultimately wish to update
-				ComplexType current_time = ComplexType(current_time_);
-				ComplexType delta_t = ComplexType(delta_t_);
+				Vec<ComplexT>& predicted_space = std::get<Vec<ComplexT> >(temporary_space_); // this will be populated in the Predict step
+				Vec<ComplexT>& current_space = std::get<Vec<ComplexT> >(current_space_); // the thing we ultimately wish to update
+				ComplexT current_time = ComplexT(current_time_);
+				ComplexT delta_t = ComplexT(delta_t_);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				PrecisionSanityCheck<ComplexType>();
+				PrecisionSanityCheck<ComplexT>();
 				#endif
 
-				SuccessCode predictor_code = Predict<ComplexType, RealType>(predicted_space, current_space, current_time, delta_t);
+				SuccessCode predictor_code = Predict<ComplexT, RealT>(predicted_space, current_space, current_time, delta_t);
 				if (predictor_code==SuccessCode::MatrixSolveFailureFirstPartOfPrediction)
 				{
 					NotifyObservers(FirstStepPredictorMatrixSolveFailure<EmitterType>(*this));
@@ -692,23 +692,23 @@ namespace bertini{
 				else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
 					NotifyObservers(PredictorHigherPrecisionNecessary<EmitterType>(*this));
-					AMPCriterionError<ComplexType>();
+					AMPCriterionError<ComplexT>();
 					return predictor_code;
 				}
 
 
-				NotifyObservers(SuccessfulPredict<AMPTracker, ComplexType>(*this, predicted_space));
+				NotifyObservers(SuccessfulPredict<AMPTracker, ComplexT>(*this, predicted_space));
 
-				Vec<ComplexType>& tentative_next_space = std::get<Vec<ComplexType> >(tentative_space_); // this will be populated in the Correct step
+				Vec<ComplexT>& tentative_next_space = std::get<Vec<ComplexT> >(tentative_space_); // this will be populated in the Correct step
 
-				ComplexType tentative_next_time = current_time + delta_t;
+				ComplexT tentative_next_time = current_time + delta_t;
 
-				SuccessCode corrector_code = Correct<ComplexType, RealType>(tentative_next_space,
+				SuccessCode corrector_code = Correct<ComplexT, RealT>(tentative_next_space,
 													 predicted_space,
 													 tentative_next_time);
 
 				#ifndef BERTINI_DISABLE_ASSERTS
-				assert(PrecisionSanityCheck<ComplexType>() && "precision sanity check failed.  some internal variable is not in correct precision");
+				assert(PrecisionSanityCheck<ComplexT>() && "precision sanity check failed.  some internal variable is not in correct precision");
 				#endif
 
 				if (corrector_code==SuccessCode::MatrixSolveFailure || corrector_code==SuccessCode::FailedToConverge)
@@ -720,7 +720,7 @@ namespace bertini{
 				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
 				{
 					NotifyObservers(CorrectorHigherPrecisionNecessary<EmitterType>(*this));
-					AMPCriterionError<ComplexType>();
+					AMPCriterionError<ComplexT>();
 					return corrector_code;
 				}
 				else if (corrector_code == SuccessCode::GoingToInfinity)
@@ -729,11 +729,11 @@ namespace bertini{
 					return corrector_code;
 				}
 
-				NotifyObservers(SuccessfulCorrect<AMPTracker, ComplexType>(*this, tentative_next_space));
+				NotifyObservers(SuccessfulCorrect<AMPTracker, ComplexT>(*this, tentative_next_space));
 
 				// copy the tentative vector into the current space vector;
 				current_space = tentative_next_space;
-				return AdjustAMPStepSuccess<ComplexType>();
+				return AdjustAMPStepSuccess<ComplexT>();
 			}
 
 
@@ -771,14 +771,14 @@ namespace bertini{
 			/**
 			\brief Increase stepsize or decrease precision, because of consecutive successful steps.
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
+			\tparam ComplexT The complex number type.
+			\tparam RealT The real number type.
 
 			If the most recent step was successful, maybe adjust down precision and up stepsize.  
 
 			The number of consecutive successful steps is recorded as state in this class, and if this number exceeds a user-determine threshold, the precision or stepsize are allowed to favorably change.  If not, then precision can only go up or remain the same.  Stepsize can only decrease.  These changes depend on the AMP criteria and current tracking tolerance.
 			*/
-			template <typename ComplexType>
+			template <typename ComplexT>
 			SuccessCode AdjustAMPStepSuccess() const
 			{
 				// TODO: think about why we consider reducing the stepsize?  this is despite documentation stating that it can only increase
@@ -786,7 +786,7 @@ namespace bertini{
 				mpfr_float max_stepsize = min( current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_success_factor, current_precision_),  NumTraits<mpfr_float>::FromRational(Get<Stepping>().max_step_size, current_precision_));
 
 
-				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexType>();
+				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexT>();
 				unsigned max_precision = max(min_precision,current_precision_);
 
 				if (num_successful_steps_since_stepsize_increase_ < Get<Stepping>().consecutive_successful_steps_before_stepsize_increase)
@@ -802,7 +802,7 @@ namespace bertini{
 				MinimizeTrackingCost(next_precision_, next_stepsize_, 
 							min_precision, min_stepsize,
 							max_precision, max_stepsize,
-							DigitsB<ComplexType>(),
+							DigitsB<ComplexT>(),
 							Get<NewtonConfig>().max_num_newton_iterations,
 							predictor_order_);
 
@@ -878,12 +878,12 @@ namespace bertini{
 			
 			Precision is REQUIRED to increase at least one increment.  Stepsize is REQUIRED to decrease.
 
-			\tparam ComplexType The complex number type.
+			\tparam ComplexT The complex number type.
 			*/
-			template<typename ComplexType>
+			template<typename ComplexT>
 			void AMPCriterionError() const
 			{	
-				using RealT = typename Eigen::NumTraits<ComplexType>::Real;
+				using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
 				unsigned min_next_precision; // sure, i could use a trigraph here, but it'd be terrible
 				if (current_precision_==DoublePrecision())
@@ -904,11 +904,11 @@ namespace bertini{
 				}
 				else
 				{
-					unsigned digits_B = DigitsB<ComplexType>();
+					unsigned digits_B = DigitsB<ComplexT>();
 
 					unsigned min_precision = max(min_next_precision,
 					                             digits_B,
-					                             DigitsC<ComplexType>(),
+					                             DigitsC<ComplexT>(),
 					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)),
 					                             digits_final_
 					                             );
@@ -935,7 +935,7 @@ namespace bertini{
 			/**
 			\brief Get the raw right-hand side of Criterion B based on current state.
 			*/
-			template<typename ComplexType>
+			template<typename ComplexT>
 			NumErrorT B_RHS() const
 			{	
 				return max(amp::CriterionBRHS(this->norm_J_, 
@@ -964,10 +964,10 @@ namespace bertini{
 			* the AMP configuration.
 
 			*/
-			template<typename ComplexType>
+			template<typename ComplexT>
 			unsigned DigitsB() const
 			{	
-				return unsigned(B_RHS<ComplexType>());
+				return unsigned(B_RHS<ComplexT>());
 			}
 
 
@@ -977,11 +977,11 @@ namespace bertini{
 			/**
 			\brief Get the raw right-hand side of Criterion B based on current state.
 			*/
-			template<typename ComplexType>
+			template<typename ComplexT>
 			NumErrorT C_RHS() const
 			{	
 				return max(amp::CriterionCRHS(this->norm_J_inverse_, 
-				                              NumErrorT(std::get<Vec<ComplexType> > (current_space_).norm()), 
+				                              NumErrorT(std::get<Vec<ComplexT> > (current_space_).norm()), 
 				                              tracking_tolerance_, 
 				                              Get<PrecConf>()), NumErrorT(0));
 			}
@@ -1001,10 +1001,10 @@ namespace bertini{
 			* the AMP configuration.
 
 			*/
-			template<typename ComplexType>
+			template<typename ComplexT>
 			unsigned DigitsC() const
 			{	
-				return unsigned(C_RHS<ComplexType>());
+				return unsigned(C_RHS<ComplexT>());
 			}
 
 
@@ -1028,14 +1028,14 @@ namespace bertini{
 			* Criterion C, and 
 			* the digits required by the tracking tolerance.
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
+			\tparam ComplexT The complex number type.
+			\tparam RealT The real number type.
 			*/
-			template <typename ComplexType>
+			template <typename ComplexT>
 			unsigned MinRequiredPrecision_BCTol() const
 			{
-				return max(DigitsB<ComplexType>(), 
-				           DigitsC<ComplexType>(), 
+				return max(DigitsB<ComplexT>(), 
+				           DigitsC<ComplexT>(), 
 				           digits_tracking_tolerance_, 
 				           DoublePrecision()); 
 			}
@@ -1102,20 +1102,20 @@ namespace bertini{
 			\param current_time The current time value.
 			\param delta_t The time differential for this step.  Allowed to be complex.
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
+			\tparam ComplexT The complex number type.
+			\tparam RealT The real number type.
 			*/
-			template<typename ComplexType, typename RealType>
-			SuccessCode Predict(Vec<ComplexType> & predicted_space, 
-								const Vec<ComplexType>& current_space,
-								ComplexType const& current_time, ComplexType const& delta_t) const
+			template<typename ComplexT, typename RealT>
+			SuccessCode Predict(Vec<ComplexT> & predicted_space, 
+								const Vec<ComplexT>& current_space,
+								ComplexT const& current_time, ComplexT const& delta_t) const
 			{
 				
 								
 				
 				
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealT>::Real, 
+			              				typename Eigen::NumTraits<ComplexT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
 
@@ -1155,8 +1155,8 @@ namespace bertini{
 
 			Wrapper function for calling Correct and getting the error estimates etc directly into the tracker object.
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
+			\tparam ComplexT The complex number type.
+			\tparam RealT The real number type.
 
 			\param corrected_space[out] The spatial result of the correction loop.
 			\param current_space The start point in space for running the corrector loop.
@@ -1164,13 +1164,13 @@ namespace bertini{
 
 			\return A SuccessCode indicating whether the loop was successful in converging in the max number of allowable newton steps, to the current path tolerance.
 			*/
-			template<typename ComplexType, typename RealType>
-			SuccessCode Correct(Vec<ComplexType> & corrected_space, 
-								Vec<ComplexType> const& current_space, 
-								ComplexType const& current_time) const
+			template<typename ComplexT, typename RealT>
+			SuccessCode Correct(Vec<ComplexT> & corrected_space, 
+								Vec<ComplexT> const& current_space, 
+								ComplexT const& current_time) const
 			{
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealT>::Real, 
+			              				typename Eigen::NumTraits<ComplexT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
 
@@ -1224,8 +1224,8 @@ namespace bertini{
 
 			Returns new space point by reference, as new_space.  Operates at current precision.  The tolerance is the tracking tolerance specified during Setup(...).
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
+			\tparam ComplexT The complex number type.
+			\tparam RealT The real number type.
 
 			\param[out] new_space The result of running the refinement.
 			\param start_point The base point for running Newton's method.
@@ -1233,14 +1233,14 @@ namespace bertini{
 
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
-			template <typename ComplexType>
-			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
-								Vec<ComplexType> const& start_point, ComplexType const& current_time) const
+			template <typename ComplexT>
+			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
+								Vec<ComplexT> const& start_point, ComplexT const& current_time) const
 			{
-				using RealType = typename Eigen::NumTraits<ComplexType>::Real;
+				using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 				
-				static_assert(std::is_same<	typename Eigen::NumTraits<RealType>::Real, 
-			              				typename Eigen::NumTraits<ComplexType>::Real>::value,
+				static_assert(std::is_same<	typename Eigen::NumTraits<RealT>::Real, 
+			              				typename Eigen::NumTraits<ComplexT>::Real>::value,
 			              				"underlying complex type and the type for comparisons must match");
 
 				auto target_precision = Precision(current_time);
@@ -1275,8 +1275,8 @@ namespace bertini{
 
 			Returns new space point by reference, as new_space.  Operates at current precision.
 
-			\tparam ComplexType The complex number type.
-			\tparam RealType The real number type.
+			\tparam ComplexT The complex number type.
+			\tparam RealT The real number type.
 
 			\param[out] new_space The result of running the refinement.
 			\param start_point The base point for running Newton's method.
@@ -1285,9 +1285,9 @@ namespace bertini{
 			\param max_iterations The maximum allowable number of iterations to perform.
 			\return Code indicating whether was successful or not.  Regardless, the value of new_space is overwritten with the correction result.
 			*/
-			template <typename ComplexType>
-			SuccessCode RefineImpl(Vec<ComplexType> & new_space,
-								Vec<ComplexType> const& start_point, ComplexType const& current_time,
+			template <typename ComplexT>
+			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
+								Vec<ComplexT> const& start_point, ComplexT const& current_time,
 								NumErrorT const& tolerance, unsigned max_iterations) const
 			{
 				auto target_precision = Precision(current_time);
@@ -1611,15 +1611,15 @@ namespace bertini{
 
 			\return True if all internal state variables are in the same precision as current_precision_, will fail on assertion otherwise.
 			*/
-			template<typename ComplexType>
+			template<typename ComplexT>
 			bool PrecisionSanityCheck() const
 			{	
 
-				if constexpr (std::is_same<ComplexType, dbl>::value){
+				if constexpr (std::is_same<ComplexT, dbl>::value){
 					return true;
 				}
 
-				if constexpr (std::is_same<ComplexType, mpfr_complex>::value){
+				if constexpr (std::is_same<ComplexT, mpfr_complex>::value){
 					assert(DefaultPrecision()==current_precision_ && "current precision differs from the default precision");
 					assert(GetSystem().precision() == current_precision_ && "tracked system is out of precision");
 					

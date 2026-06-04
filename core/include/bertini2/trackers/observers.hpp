@@ -92,7 +92,7 @@ namespace bertini {
 				return precision_increased_;
 			}
 
-			typename TrackerTraits<TrackerT>::BaseComplexType TimeOfIncrease() const
+			typename TrackerTraits<TrackerT>::BaseComplexT TimeOfIncrease() const
 			{
 				return time_of_first_increase_;
 			}
@@ -104,7 +104,7 @@ namespace bertini {
 			unsigned starting_precision_;
 			unsigned next_precision_;
 			bool precision_increased_;
-			typename TrackerTraits<TrackerT>::BaseComplexType time_of_first_increase_;
+			typename TrackerTraits<TrackerT>::BaseComplexT time_of_first_increase_;
 		};
 
 

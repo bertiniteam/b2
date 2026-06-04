@@ -140,11 +140,11 @@ namespace bertini{
 					>
 		{
 			using NeededTypes = typename TrackerTraits< D >::NeededTypes;
-			using BaseComplexType = typename TrackerTraits<D>::BaseComplexType;
-			using BaseRealType = typename TrackerTraits<D>::BaseRealType;
+			using BaseComplexT = typename TrackerTraits<D>::BaseComplexT;
+			using BaseRealT = typename TrackerTraits<D>::BaseRealT;
 
-			using CT = BaseComplexType;
-			using RT = BaseRealType;
+			using ComplexT = BaseComplexT;
+			using RealT = BaseRealT;
 
 
 		public:
@@ -184,7 +184,7 @@ namespace bertini{
 				this->template Set<SteppingConfig>(stepping);
 				this->template Set<NewtonConfig>(newton);
 
-				current_stepsize_ = BaseRealType(stepping.initial_step_size);
+				current_stepsize_ = BaseRealT(stepping.initial_step_size);
 			}
 
 
@@ -229,9 +229,9 @@ namespace bertini{
 
 			The is the fundamental method for the tracker.  First, you create and set up the tracker, telling it what system you will solve, and the settings to use.  Then, you actually do the tracking.
 			*/
-			SuccessCode TrackPath(Vec<CT> & solution_at_endtime,
-									CT const& start_time, CT const& endtime,
-									Vec<CT> const& start_point
+			SuccessCode TrackPath(Vec<ComplexT> & solution_at_endtime,
+									ComplexT const& start_time, ComplexT const& endtime,
+									Vec<ComplexT> const& start_point
 									) const
 			{
 				if (start_point.size()!=GetSystem().NumVariables())
@@ -247,7 +247,7 @@ namespace bertini{
 				}
 
 				// as precondition to this while loop, the correct container, either dbl or mpfr, must have the correct data.
-				while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<CT>::epsilon()))
+				while (!IsSymmRelDiffSmall(current_time_,endtime_, Eigen::NumTraits<ComplexT>::epsilon()))
 				{
 					SuccessCode pre_iteration_code = PreIterationCheck();
 					if (pre_iteration_code!=SuccessCode::Success)
@@ -390,7 +390,7 @@ namespace bertini{
 
 			\param new_stepsize The new value.
 			*/
-			void SetStepSize(RT const& new_stepsize) const
+			void SetStepSize(RealT const& new_stepsize) const
 			{
 				current_stepsize_ = new_stepsize;
 			}
@@ -434,7 +434,7 @@ namespace bertini{
 			\param start_point The point from which to start tracking.
 			*/
 			virtual
-			SuccessCode TrackerLoopInitialization(CT const& start_time, CT const& end_time, Vec<CT> const& start_point) const = 0;
+			SuccessCode TrackerLoopInitialization(ComplexT const& start_time, ComplexT const& end_time, Vec<ComplexT> const& start_point) const = 0;
 
 
 			/**
@@ -459,7 +459,7 @@ namespace bertini{
 			\param solution_at_endtime The output variable into which to copy the final solution.
 			*/
 			virtual
-			void CopyFinalSolution(Vec<CT> & solution_at_endtime) const = 0;
+			void CopyFinalSolution(Vec<ComplexT> & solution_at_endtime) const = 0;
 
 			// virtual
 			// void CopyFinalSolution(Vec<dbl> & solution_at_endtime) const = 0;
@@ -471,10 +471,10 @@ namespace bertini{
 
 
 
-			template <typename ComplexType>
+			template <typename ComplexT>
 			SuccessCode CheckGoingToInfinity() const
 			{
-				if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexType> >(current_space_)).norm() > path_truncation_threshold_)
+				if (GetSystem().DehomogenizePoint(std::get<Vec<ComplexT> >(current_space_)).norm() > path_truncation_threshold_)
 					return SuccessCode::GoingToInfinity;
 				else
 					return SuccessCode::Success;
@@ -582,14 +582,14 @@ namespace bertini{
 			NumErrorT tracking_tolerance_ = 1e-5; ///< The tracking tolerance.
 			NumErrorT path_truncation_threshold_ = 1e5; ///< The threshold for path truncation.
 
-			mutable CT endtime_; ///< The time we are tracking to.
-			mutable CT current_time_; ///< The current time.
-			mutable CT delta_t_; ///< The current delta_t.
-			mutable RT current_stepsize_; ///< The current stepsize.
+			mutable ComplexT endtime_; ///< The time we are tracking to.
+			mutable ComplexT current_time_; ///< The current time.
+			mutable ComplexT delta_t_; ///< The current delta_t.
+			mutable RealT current_stepsize_; ///< The current stepsize.
 
 
 			// permanent temporaries
-			mutable RT next_stepsize_; /// The next stepsize
+			mutable RealT next_stepsize_; /// The next stepsize
 			mutable SuccessCode step_success_code_; ///< The code for step success.
 
 
@@ -666,7 +666,7 @@ namespace bertini{
 			}
 
 
-			virtual Vec<CT> CurrentPoint() const = 0;
+			virtual Vec<ComplexT> CurrentPoint() const = 0;
 
 
 			virtual unsigned CurrentPrecision() const = 0;

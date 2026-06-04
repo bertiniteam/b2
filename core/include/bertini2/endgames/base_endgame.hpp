@@ -96,15 +96,15 @@ class EndgameBase :
 public:
 	using TrackerType = typename PrecT::TrackerType;
 
-	using BaseComplexType = typename tracking::TrackerTraits<TrackerType>::BaseComplexType;
-	using BaseRealType = typename tracking::TrackerTraits<TrackerType>::BaseRealType;
+	using BaseComplexT = typename tracking::TrackerTraits<TrackerType>::BaseComplexT;
+	using BaseRealT = typename tracking::TrackerTraits<TrackerType>::BaseRealT;
 
 	using EmitterType = FlavorT;
 
 protected:
 
-	using BCT = BaseComplexType;
-	using BRT = BaseRealType;
+	using BCT = BaseComplexT;
+	using BRT = BaseRealT;
 
 
 	using Configured = detail::Configured< typename AlgoTraits<FlavorT>::NeededConfigs >;
@@ -169,8 +169,8 @@ public:
 	}
 
 
-	template<typename CT>
-	SuccessCode RefineAllSamples(SampCont<CT> & samples, TimeCont<CT> & times)
+	template<typename ComplexT>
+	SuccessCode RefineAllSamples(SampCont<ComplexT> & samples, TimeCont<ComplexT> & times)
 	{
 		for (size_t ii=0; ii<samples.size(); ++ii)
 		{
@@ -266,9 +266,9 @@ public:
 	/**
 	\brief Get the most-recent approximation
 	*/
-	template<typename CT>
+	template<typename ComplexT>
 	inline
-	const Vec<CT>& FinalApproximation() const 
+	const Vec<ComplexT>& FinalApproximation() const 
 	{
 		return final_approximation_;
 	}
@@ -276,9 +276,9 @@ public:
 	/**
 	\brief Get the second-most-recent approximation
 	*/
-	template<typename CT>
+	template<typename ComplexT>
 	inline
-	const Vec<CT>& PreviousApproximation() const 
+	const Vec<ComplexT>& PreviousApproximation() const 
 	{
 		return previous_approximation_;
 	}
@@ -319,8 +319,8 @@ public:
 
 	  		start_time: is the time when we start the endgame process usually this is .1
 			x_endgame_start: is the space value at start_time
-			times: a deque of time values. These values will be templated to be CT 
-			samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of CT. 
+			times: a deque of time values. These values will be templated to be ComplexT 
+			samples: a deque of sample values that are in correspondence with the values in times. These values will be vectors with entries of ComplexT. 
 
 	## Output
 
@@ -340,12 +340,12 @@ public:
 	\param times A deque that will hold all the time values of the samples we are going to use to start the endgame. 
 	\param samples a deque that will hold all the samples corresponding to the time values in times. 
 
-	\tparam CT The complex number type.
+	\tparam ComplexT The complex number type.
 	*/	
-	template<typename CT>
-	SuccessCode ComputeInitialSamples(const CT & start_time,const CT & target_time, const Vec<CT> & x_endgame_start, TimeCont<CT> & times, SampCont<CT> & samples) // passed by reference to allow times to be filled as well.
+	template<typename ComplexT>
+	SuccessCode ComputeInitialSamples(const ComplexT & start_time,const ComplexT & target_time, const Vec<ComplexT> & x_endgame_start, TimeCont<ComplexT> & times, SampCont<ComplexT> & samples) // passed by reference to allow times to be filled as well.
 	{	
-		using RT = typename Eigen::NumTraits<CT>::Real;
+		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		assert(this->template Get<EndgameConfig>().num_sample_points>0 && "number of sample points must be positive");
 
 		if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
@@ -363,8 +363,8 @@ public:
 		//start at 1, because the input point is the 0th element.
 		for(int ii=1; ii < this->template Get<EndgameConfig>().num_sample_points; ++ii)
 		{ 
-			times.emplace_back((times[ii-1] + target_time) * RT(this->template Get<EndgameConfig>().sample_factor)); // next time is a point between the previous time and target time.
-			samples.emplace_back(Vec<CT>(num_vars));											   // sample_factor gives us some point between the two, usually the midpoint.		
+			times.emplace_back((times[ii-1] + target_time) * RealT(this->template Get<EndgameConfig>().sample_factor)); // next time is a point between the previous time and target time.
+			samples.emplace_back(Vec<ComplexT>(num_vars));											   // sample_factor gives us some point between the two, usually the midpoint.		
 
 			auto tracking_success = this->GetTracker().TrackPath(samples[ii],times[ii-1],times[ii],samples[ii-1]);
 			this->EnsureAtPrecision(times[ii],Precision(samples[ii]));

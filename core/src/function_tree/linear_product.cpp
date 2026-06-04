@@ -45,7 +45,7 @@
 #include "bertini2/function_tree/symbols/linear_product.hpp"
 
 
-template<typename NumType> using Mat = bertini::Mat<NumType>;
+template<typename NumT> using Mat = bertini::Mat<NumT>;
 
 namespace  bertini {
 	namespace node{
