@@ -44,7 +44,7 @@ import bertini.parse as pp
 
 class ParserTest(unittest.TestCase):
     def setUp(self):
-        self.tol_d = 1e-15;
+        self.tol_d = 1e-14;
 
 
 

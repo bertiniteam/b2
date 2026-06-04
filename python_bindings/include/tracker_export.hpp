@@ -68,8 +68,15 @@ namespace bertini{
 			void (TrackerT::*set_predictor_)(Predictor)= &TrackerT::SetPredictor;
 			Predictor (TrackerT::*get_predictor_)(void) const = &TrackerT::GetPredictor;
 			
+			// start_time and end_time are intentionally taken by value, not by const&.
+			// eigenpy's from-python converter for the writable Eigen::Ref<Vec<ComplexT>>
+			// 'result' argument corrupts the boost.python converter storage of an adjacent
+			// scalar mpc_complex const& argument, leaving start_time/end_time as garbage
+			// (invalid mpfr limb pointers -> MPFR set_prec assertion on first use).
+			// Passing the scalars by value forces an independent copy that side-steps the
+			// clobbered converter storage. See git history for the full diagnosis.
 			static
-			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<ComplexT>> result, ComplexT const& start_time, ComplexT const& end_time, Vec<ComplexT> const& start_point)
+			SuccessCode track_path_wrap(TrackerT const& self, Eigen::Ref<Vec<ComplexT>> result, ComplexT start_time, ComplexT end_time, Vec<ComplexT> const& start_point)
 			{
 				Vec<ComplexT> temp_result(self.GetSystem().NumVariables());
 				auto code = self.TrackPath(temp_result, start_time, end_time, start_point);
