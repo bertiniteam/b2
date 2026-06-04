@@ -76,6 +76,44 @@ class SystemTest(unittest.TestCase):
         s.add_function(self.f)
 
 
+    def test_gather_variables_alphabetical(self):
+        # declared out of order, x used twice; expect distinct, sorted by name
+        f1 = Function(pow(self.z,2) + self.y*self.x)
+        f2 = Function(self.x - self.y)
+        found = gather_variables([f1, f2])
+        self.assertEqual([str(v) for v in found], ['x', 'y', 'z'])
+
+
+    def test_system_from_functions(self):
+        f1 = Function(self.x*self.y*self.z)
+        f2 = Function(self.x + self.y + self.z)
+        s = System([f1, f2])
+        self.assertEqual(s.num_functions(), 2)
+        self.assertEqual(s.num_variable_groups(), 1)
+        self.assertEqual(s.num_variables(), 3)
+        self.assertEqual(str(s.variable_groups()[0]), '[x,y,z]')
+
+
+    def test_set_variable_groups(self):
+        s = System([Function(self.x*self.y*self.z)])
+        self.assertEqual(s.num_variable_groups(), 1)
+        s.set_variable_groups([pb.VariableGroup([self.x]), pb.VariableGroup([self.y, self.z])])
+        self.assertEqual(s.num_variable_groups(), 2)
+        self.assertEqual(s.num_variables(), 3)
+
+
+    def test_fix_variable(self):
+        s = System([Function(self.x + self.y)])
+        self.assertEqual(s.num_variables(), 2)
+        self.assertTrue(s.fix_variable(self.y, complex(3.0)))
+        self.assertEqual(s.num_variables(), 1)
+        # x + y, with y pinned to 3, at x = 2  ->  5
+        e = s.eval(np.array([complex(2.0)]))
+        self.assertEqual(e[0], complex(5.0))
+        # fixing a variable not in the system returns False
+        self.assertFalse(s.fix_variable(Variable("w"), complex(1.0)))
+
+
     def test_system_eval(self):
         exact_real = (-32.841085, -150.5480559)
         exact_imag = (-26.66705, -258.97936865)

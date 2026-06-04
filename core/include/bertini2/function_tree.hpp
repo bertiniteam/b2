@@ -52,6 +52,7 @@
 
 #include "bertini2/function_tree/simplify.hpp"
 
+#include "bertini2/function_tree/gather.hpp"
 
 
 

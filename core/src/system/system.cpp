@@ -91,6 +91,13 @@ namespace bertini
 		swap(a.patch_,b.patch_);
 	}
 
+	// construct from a list of functions, auto-discovering the variables
+	System::System(std::vector<Fn> const& functions) : System()
+	{
+		AddFunctions(functions);
+		AddVariableGroup( node::GatherVariables(functions) );
+	}
+
 	// the copy constructor
 	System::System(System const& other) : System()
 	{
@@ -594,6 +601,28 @@ namespace bertini
 
 
 
+	void System::SetVariableGroups(std::vector<VariableGroup> const& groups)
+	{
+		// clear the existing variable structure, but preserve the path variable.
+		ungrouped_variables_.clear();
+		variable_groups_.clear();
+		hom_variable_groups_.clear();
+		homogenizing_variables_.clear();
+		time_order_of_variable_groups_.clear();
+
+		// install the supplied groups as affine variable groups.  AddVariableGroup
+		// takes care of the FIFO time-ordering entries and resets the relevant flags.
+		for (auto const& g : groups)
+			AddVariableGroup(g);
+
+		is_differentiated_ = false;
+		have_ordering_ = false;
+		is_patched_ = false;
+	}
+
+
+
+
 	void System::AddHomVariableGroup(VariableGroup const& v)
 	{
 		hom_variable_groups_.push_back(v);
@@ -1066,6 +1095,88 @@ namespace bertini
 
 		is_differentiated_ = false;
 		have_ordering_ = false;
+	}
+
+
+
+	bool System::RemoveVariable(Var const& v)
+	{
+		// remove the n-th time-ordering entry of the given group type, keeping the
+		// FIFO ordering consistent with the variable-group containers.
+		auto remove_nth_time_order = [this](VariableGroupType t, size_t n)
+		{
+			size_t count = 0;
+			for (auto it = time_order_of_variable_groups_.begin(); it != time_order_of_variable_groups_.end(); ++it)
+			{
+				if (*it == t)
+				{
+					if (count == n)
+					{
+						time_order_of_variable_groups_.erase(it);
+						return;
+					}
+					++count;
+				}
+			}
+		};
+
+		auto did_remove = [this]()
+		{
+			is_differentiated_ = false;
+			have_ordering_ = false;
+			is_patched_ = false;
+		};
+
+		// search the affine variable groups
+		for (size_t gi = 0; gi < variable_groups_.size(); ++gi)
+		{
+			auto& group = variable_groups_[gi];
+			auto it = std::find(group.begin(), group.end(), v);
+			if (it != group.end())
+			{
+				group.erase(it);
+				if (group.empty())
+				{
+					variable_groups_.erase(variable_groups_.begin() + gi);
+					remove_nth_time_order(VariableGroupType::Affine, gi);
+				}
+				did_remove();
+				return true;
+			}
+		}
+
+		// search the homogeneous / projective variable groups
+		for (size_t gi = 0; gi < hom_variable_groups_.size(); ++gi)
+		{
+			auto& group = hom_variable_groups_[gi];
+			auto it = std::find(group.begin(), group.end(), v);
+			if (it != group.end())
+			{
+				group.erase(it);
+				if (group.empty())
+				{
+					hom_variable_groups_.erase(hom_variable_groups_.begin() + gi);
+					remove_nth_time_order(VariableGroupType::Homogeneous, gi);
+				}
+				did_remove();
+				return true;
+			}
+		}
+
+		// search the ungrouped variables (each is its own ungrouped time-order entry)
+		{
+			auto it = std::find(ungrouped_variables_.begin(), ungrouped_variables_.end(), v);
+			if (it != ungrouped_variables_.end())
+			{
+				size_t idx = static_cast<size_t>(std::distance(ungrouped_variables_.begin(), it));
+				ungrouped_variables_.erase(it);
+				remove_nth_time_order(VariableGroupType::Ungrouped, idx);
+				did_remove();
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 

@@ -131,6 +131,7 @@ set(detail_headers
 set(function_tree_headers
     include/bertini2/function_tree.hpp
     include/bertini2/function_tree/node.hpp
+    include/bertini2/function_tree/gather.hpp
     include/bertini2/function_tree/forward_declares.hpp
     include/bertini2/function_tree/simplify.hpp
     include/bertini2/function_tree/operators/operator.hpp
@@ -156,6 +157,7 @@ set(settings_headers
 
 set(functiontreeinclude_HEADERS
 	include/bertini2/function_tree/node.hpp
+	include/bertini2/function_tree/gather.hpp
 	include/bertini2/function_tree/factory.hpp
 	include/bertini2/function_tree/forward_declares.hpp
 	include/bertini2/function_tree/simplify.hpp
@@ -324,6 +326,7 @@ set(basics_sources
 
 set(function_tree_sources
     src/function_tree/node.cpp
+    src/function_tree/gather.cpp
     src/function_tree/simplify.cpp
     src/function_tree/operators/arithmetic.cpp
     src/function_tree/operators/trig.cpp

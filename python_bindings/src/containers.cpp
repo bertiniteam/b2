@@ -70,6 +70,20 @@ void ExportContainers()
 	    , &pylist_converter<bertini::VariableGroup>::construct
 	    , boost::python::type_id<bertini::VariableGroup>());
 
+	// allow a Python list of Functions to convert to std::vector<Function ptr>
+	// (used by System([f0,f1,...]) and add_functions)
+	using VecFn = std::vector<std::shared_ptr<bertini::node::Function>>;
+	boost::python::converter::registry::push_back(&pylist_converter<VecFn>::convertible
+	    , &pylist_converter<VecFn>::construct
+	    , boost::python::type_id<VecFn>());
+
+	// allow a Python list of VariableGroups to convert to std::vector<VariableGroup>
+	// (used by System::set_variable_groups)
+	using VecVarGroup = std::vector<bertini::VariableGroup>;
+	boost::python::converter::registry::push_back(&pylist_converter<VecVarGroup>::convertible
+	    , &pylist_converter<VecVarGroup>::construct
+	    , boost::python::type_id<VecVarGroup>());
+
 
 
 	// std::vector of Rational Node ptrs

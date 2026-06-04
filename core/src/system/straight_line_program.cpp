@@ -342,7 +342,14 @@ namespace bertini{
 
 
 	void SLPCompiler::Visit(node::Variable const& n){
-
+		// System variables (those in the variable ordering) are pre-registered with
+		// memory locations before the function trees are compiled, so this Visit is
+		// only ever reached for a Variable that is NOT one of the system's variables
+		// -- i.e. a "fixed" variable that has been turned into a constant.  Bake its
+		// current value into memory exactly as we do for a number node.  (This also
+		// keeps SLP evaluation consistent with the function-tree evaluator, which
+		// returns a variable's current value when it is not a system variable.)
+		this->DealWithNumber(n);
 	}
 
 

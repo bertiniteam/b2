@@ -84,6 +84,13 @@ namespace bertini
 				ExportSymbols();
 				ExportOperators();
 				ExportRoots();
+
+				// discover the distinct variables appearing in a list of functions,
+				// alphabetically by name.  This is what System([f0,f1,...]) uses.
+				boost::python::def("gather_variables",
+					static_cast<bertini::VariableGroup(*)(std::vector<std::shared_ptr<bertini::node::Function>> const&)>(&bertini::node::GatherVariables),
+					(boost::python::arg("functions")),
+					"Return the distinct variables appearing in a list of functions, ordered alphabetically by name.");
 			}
 
 			ExportAllSystems();

@@ -111,7 +111,21 @@ namespace bertini {
 		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(DefaultPrecision()), is_patched_(false)
 		{}
 
-		/** 
+		/**
+		\brief Construct a system from a list of functions.
+
+		The functions are added to the system, the variables appearing in them are
+		automatically discovered (see node::GatherVariables), and those variables are
+		placed into a single affine variable group (ordered alphabetically by name).
+		This is a convenience for programmatically building a system without having to
+		assemble the variable group by hand.
+
+		\param functions The functions which define the system.
+		*/
+		explicit
+		System(std::vector<Fn> const& functions);
+
+		/**
 		\brief The copy operator, creates a system from a string using the Bertini parser for Bertini classic syntax.
 		*/
 		explicit
@@ -1092,8 +1106,21 @@ namespace bertini {
 
 
 		/**
+		 \brief Replace the entire variable-group structure of the system.
+
+		 Clears all existing affine, homogeneous, and ungrouped variables (and any
+		 homogenizing variables introduced by a prior Homogenize), then installs the
+		 supplied groups as the system's affine variable groups, in order.  The path
+		 variable, if any, is preserved.
+
+		 \param groups The affine variable groups to install.
+		 */
+		void SetVariableGroups(std::vector<VariableGroup> const& groups);
+
+
+		/**
 		 Add a homogeneous (projective) variable group to the system.  The system must be homogeneous with respect to this group, though this is not verified at the time of this call.
-		 
+
 		 \param v The variable group to add.
 		 */
 		void AddHomVariableGroup(VariableGroup const& v);
@@ -1490,6 +1517,44 @@ namespace bertini {
 		 \brief Clear the entire structure of variables in a system.  Reconstructing it is up to you.
 		*/
 		void ClearVariables();
+
+
+		/**
+		 \brief Remove a variable from the system's variable structure.
+
+		 Erases the variable from whichever affine/homogeneous group it belongs to, or
+		 from the ungrouped variables.  If removing it empties an affine or homogeneous
+		 group, that group (and its place in the variable ordering) is removed as well.
+		 The variable node itself is left intact and is still referenced by any
+		 functions which use it; after this call it is simply no longer one of the
+		 system's variables (so it is not solved for, and the system does not
+		 differentiate with respect to it).
+
+		 \param v The variable to remove.
+		 \return true if the variable was found and removed, false otherwise.
+		*/
+		bool RemoveVariable(Var const& v);
+
+
+		/**
+		 \brief Turn a variable into a constant with a fixed value.
+
+		 Removes the variable from the system's variable structure (see RemoveVariable)
+		 and pins its value, so that the functions which use it evaluate as if it were a
+		 constant equal to \p value.
+
+		 \tparam T The numeric type of the value (dbl or mpfr_complex).
+		 \param v The variable to fix.
+		 \param value The constant value to assign to it.
+		 \return true if the variable was found and fixed, false otherwise.
+		*/
+		template<typename T>
+		bool FixVariable(Var const& v, T const& value)
+		{
+			bool removed = this->RemoveVariable(v);
+			v->set_current_value(value);
+			return removed;
+		}
 
 
 		/**
