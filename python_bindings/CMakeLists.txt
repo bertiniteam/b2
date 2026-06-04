@@ -160,6 +160,7 @@ set(PYBERTINI_SOURCES
     src/tracker_observers.cpp
     src/endgame_observers.cpp
     src/zero_dim_export.cpp
+    src/numerical_irreducible_decomposition_export.cpp
     src/bertini_python.cpp
     src/info.cpp
 )

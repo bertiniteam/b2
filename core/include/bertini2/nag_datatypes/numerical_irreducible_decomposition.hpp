@@ -31,6 +31,9 @@
 
 #include "bertini2/nag_datatypes/witness_set.hpp"
 
+#include <algorithm>
+#include <vector>
+
 namespace bertini {
 
 	namespace nag_datatype {
@@ -41,20 +44,49 @@ namespace bertini {
 
 		*/
 		template<typename ComplexT, typename SystemT = System, template<typename> class ObjManagementP = policy::Copy >
-		class NumericalIrreducibleDecomposition 
+		class NumericalIrreducibleDecomposition
 		{
+		public:
 			using WS = WitnessSet<ComplexT, SystemT, ObjManagementP>;
 			using WSCont = std::vector<WS>;
 
+		private:
 			WSCont finished_witness_sets_;
 
 		public:
+			/**
+			\brief The distinct codimensions which contain at least one component.
+			*/
 			std::vector<int> NonEmptyCodimensions() const
-			{}
+			{
+				std::vector<int> codims;
+				for (const auto& w : finished_witness_sets_)
+					if (std::find(codims.begin(), codims.end(), w.Dimension()) == codims.end())
+						codims.push_back(w.Dimension());
+
+				return codims;
+			}
 
 			const WSCont& GetWitnessSets() const
 			{
 				return finished_witness_sets_;
+			}
+
+			/**
+			\brief The number of witness sets stored.  Convenience accessor for languages
+			(e.g. Python) which do not have the std::vector<WitnessSet> container bound.
+			*/
+			typename WSCont::size_type NumWitnessSets() const
+			{
+				return finished_witness_sets_.size();
+			}
+
+			/**
+			\brief Get (a const reference to) the i-th witness set.
+			*/
+			const WS& GetWitnessSet(typename WSCont::size_type i) const
+			{
+				return finished_witness_sets_.at(i);
 			}
 
 			WSCont WitnessSetsOfDim(int dim)
@@ -65,7 +97,7 @@ namespace bertini {
 						w_correct_dim.push_back(w);
 
 				return w_correct_dim;
-			} 
+			}
 
 		};
 

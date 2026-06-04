@@ -100,6 +100,8 @@ namespace bertini
 			
 			ExportZeroDim();
 
+			ExportNID();
+
 			ExportInfo();
 		}
 	
