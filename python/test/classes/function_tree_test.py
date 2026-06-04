@@ -100,6 +100,29 @@ class SymbolTest(unittest.TestCase):
         x = Variable("x");
 
 
+    def test_variables_count(self):
+        v = variables('x', 3)
+        self.assertEqual(len(v), 3)
+        self.assertEqual([str(z) for z in v], ['x0', 'x1', 'x2'])
+
+
+    def test_variables_iterable_indices(self):
+        self.assertEqual([str(z) for z in variables('x', range(2, 5))], ['x2', 'x3', 'x4'])
+        self.assertEqual([str(z) for z in variables('y', [0, 2])], ['y0', 'y2'])
+
+
+    def test_variables_custom_format(self):
+        self.assertEqual([str(z) for z in variables('x', 2, fmt='{base}_{index}')], ['x_0', 'x_1'])
+
+
+    def test_variables_compose(self):
+        v = variables('x', 2)
+        g = VariableGroup(v)
+        self.assertEqual(len(g), 2)
+        # generated entries are real Variable nodes usable in expressions
+        self.assertEqual((v[0]**2).degree(), 2)
+
+
     def test_Variable_eval(self):
         x_d = self.x_d; y_d = self.y_d; z_d = self.z_d; p_d = self.p_d; tol_d = self.tol_d;
         x_mp = self.x_mp; y_mp = self.y_mp; z_mp = self.z_mp; p_mp = self.p_mp; tol_mp = self.tol_mp;

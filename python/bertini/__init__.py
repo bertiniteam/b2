@@ -79,6 +79,7 @@ import bertini.multiprec as multiprec
 
 # some convenience assignments
 Variable = function_tree.symbol.Variable
+variables = function_tree.variables
 VariableGroup = function_tree.VariableGroup
 System = system.System
 default_precision = multiprec.default_precision
@@ -87,7 +88,7 @@ default_precision = multiprec.default_precision
 
 # https://stackoverflow.com/questions/44834/what-does-all-mean-in-python
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
-__all__ = ['Variable','VariableGroup','system','System',
+__all__ = ['Variable','variables','VariableGroup','system','System',
            'nag_algorithm','container','default_precision',
            'tracking','endgame','logging','function_tree','parse','multiprec','random']
 
