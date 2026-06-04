@@ -95,3 +95,13 @@ _skbuild/
 build/
 bld/
 build_mine/
+
+# Wheel / sdist output
+dist/
+
+# Local Claude Code config and personal working notes
+.claude/
+z_notes/
+
+# Compiled benchmark binaries (keep the .cpp sources)
+/benchmarks/arithmetic_cost
