@@ -1235,8 +1235,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_lnum1_pow_num2l){
 
 	BOOST_CHECK(N->IsPolynomial());
 
-	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+	// Relative tolerance: this result has magnitude ~130, so an absolute 1e-14
+	// bound is finer than one ULP and depends on libm pow last-bit rounding.
+	BOOST_CHECK(fabs(N->Eval<dbl>().real() / exact_dbl.real() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(N->Eval<dbl>().imag() / exact_dbl.imag() - 1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
 }
@@ -1262,8 +1264,10 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
 
 	BOOST_CHECK(! N->IsPolynomial());
 
-	BOOST_CHECK(fabs(N->Eval<dbl>().real() - exact_dbl.real() ) < threshold_clearance_d);
-	BOOST_CHECK(fabs(N->Eval<dbl>().imag() - exact_dbl.imag() ) < threshold_clearance_d);
+	// Relative tolerance: this result has magnitude ~120, so an absolute 1e-14
+	// bound is finer than one ULP and depends on libm pow last-bit rounding.
+	BOOST_CHECK(fabs(N->Eval<dbl>().real() / exact_dbl.real() - 1) < threshold_clearance_d);
+	BOOST_CHECK(fabs(N->Eval<dbl>().imag() / exact_dbl.imag() - 1) < threshold_clearance_d);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().real() - exact_mpfr.real() ) < threshold_clearance_mp);
 	BOOST_CHECK(fabs(N->Eval<mpfr>().imag() - exact_mpfr.imag() ) < threshold_clearance_mp);
 }
