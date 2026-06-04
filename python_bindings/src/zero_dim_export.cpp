@@ -29,6 +29,7 @@
 //  python/zero_dim_export.cpp:  source file for exposing the zero dim algorithm to python.
 
 #include "zero_dim_export.hpp"
+#include "configured_visitor.hpp"
 
 
 
@@ -40,6 +41,7 @@ template<class PyClass>
 void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 {
 	cl
+	.def(ConfiguredVisitor<AlgoT>())
 	.def("solve", &AlgoT::Solve, "run the zero dim algorithm with currently stored settings")
 	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
 	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")

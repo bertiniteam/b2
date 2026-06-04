@@ -28,10 +28,11 @@
 
 import tracking.amptracking_test as amptracking_test
 import tracking.endgame_test as endgame_test
+import tracking.config_test as config_test
 import unittest
 
 
-mods = (amptracking_test,endgame_test)
+mods = (amptracking_test,endgame_test,config_test)
 suite = unittest.TestSuite();
 for tests in mods:
     thissuite = unittest.TestLoader().loadTestsFromModule(tests);

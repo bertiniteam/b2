@@ -35,5 +35,8 @@ Tracking-specific configs
 import bertini._pybertini.tracking.config
 from bertini._pybertini.tracking.config import *
 
+from bertini.config import enhance_all
+enhance_all(bertini._pybertini.tracking.config)
+
 __all__ = dir(bertini._pybertini.tracking.config)
 

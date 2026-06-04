@@ -29,6 +29,7 @@
 //  python/tracker_export.cpp:  source file for exposing trackers to python.
 
 #include "tracker_export.hpp"
+#include "configured_visitor.hpp"
 
 namespace bertini{
 	namespace python{
@@ -71,6 +72,10 @@ namespace bertini{
 			.def("current_point", &TrackerT::CurrentPoint, (arg("self")), "what is the current point?")
 			.def("current_time", &TrackerT::CurrentTime, (arg("self")), "what is the current time?")
 			.def("current_precision", &TrackerT::CurrentPrecision, (arg("self")), "what is the current working precision?")
+
+			// generic, type-list-driven config interface (get_config/set_config/config_types).
+			// the get_stepping/set_stepping/get_newton/set_newton above remain as convenience aliases.
+			.def(ConfiguredVisitor<TrackerT>())
 
 			.def(ObservableVisitor<TrackerT>());
 			;

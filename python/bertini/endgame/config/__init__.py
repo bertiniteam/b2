@@ -38,4 +38,7 @@ import bertini._pybertini.endgame.config
 
 from bertini._pybertini.endgame.config import *
 
+from bertini.config import enhance_all
+enhance_all(bertini._pybertini.endgame.config)
+
 __all__ = dir(bertini._pybertini.endgame.config)

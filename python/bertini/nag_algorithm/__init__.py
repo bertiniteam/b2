@@ -38,6 +38,11 @@ nag_algorithms
 import bertini._pybertini.nag_algorithms
 from bertini._pybertini.nag_algorithms import *
 
+# config structs gain update()/repr/to_dict/...; algorithm classes gain configure().
+from bertini.config import enhance_all, enhance_owners
+enhance_all(bertini._pybertini.nag_algorithms)
+enhance_owners(bertini._pybertini.nag_algorithms)
+
 __all__ = dir(bertini._pybertini.nag_algorithms)
 
 
