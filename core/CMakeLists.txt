@@ -392,6 +392,13 @@ add_library(bertini2 ${BERTINI2_LIBRARY_SOURCES}
                             ${BERTINI2_LIBRARY_HEADERS})
 add_library(bertini2::bertini2 ALIAS bertini2)
 
+# The (static) library is linked into the shared _pybertini Python module, so
+# its objects must be position-independent. Previously this requirement was
+# accidentally satisfied because every consumer recompiled the library sources
+# itself (with -fPIC); now that the library is compiled once and linked, mark
+# it PIC explicitly.
+set_target_properties(bertini2 PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 target_include_directories(bertini2
   SYSTEM PUBLIC
     ${GMP_INCLUDES}
@@ -404,13 +411,6 @@ target_include_directories(bertini2 PUBLIC
     $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>  # <prefix>/include
     )
-
-
-# All library files
-target_sources(bertini2 PUBLIC
-    ${BERTINI2_LIBRARY_SOURCES}
-    ${BERTINI2_LIBRARY_HEADERS}
-)
 
 if(WIN32)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
