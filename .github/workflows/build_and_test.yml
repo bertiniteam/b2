@@ -181,6 +181,7 @@ jobs:
             -DCMAKE_PREFIX_PATH="$env:CONDA_PREFIX\Library" `
             -DBUILD_PYTHON_BINDINGS=OFF `
             -DENABLE_UNIT_TESTING=ON `
+            -DUSE_CCACHE=OFF `
             -DINSTALL_DOCUMENTATION=OFF `
             -DCMAKE_DISABLE_FIND_PACKAGE_Doxygen=ON `
             -DCMAKE_BUILD_TYPE=Release
@@ -215,7 +216,7 @@ jobs:
             /tmp/boost_1_90_0.tar.bz2
             /tmp/eigen-3.4.0.tar.gz
             /tmp/eigenpy-3.12.0.tar.gz
-          key: ${{ runner.os }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml') }}
+          key: ${{ runner.os }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml', 'python_bindings/include/tracker_export.hpp', 'python_bindings/include/endgame_export.hpp') }}
           restore-keys: |
             ${{ runner.os }}-cibw-${{ matrix.python-version }}-
             ${{ runner.os }}-cibw-

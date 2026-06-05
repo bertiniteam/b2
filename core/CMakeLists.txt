@@ -29,8 +29,6 @@ if (WIN32)
     add_compile_options(/bigobj)
     add_compile_options(/EHsc)
     set(CMAKE_BUILD_TYPE Release)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    set(BUILD_SHARED_LIBS TRUE)
 else ()
     # add_compile_definitions(-DBMP_EXPRESSION_TEMPLATES=1)
     add_compile_options(
@@ -416,8 +414,6 @@ target_include_directories(bertini2 PUBLIC
     )
 
 if(WIN32)
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  set(BUILD_SHARED_LIBS TRUE)
   target_compile_options(bertini2
                          PRIVATE $<$<CXX_COMPILER_ID:MSVC>:-bigobj -MP>)
   target_compile_definitions(bertini2 PUBLIC "HAVE_SNPRINTF")
@@ -768,3 +764,16 @@ if (ENABLE_UNIT_TESTING)
 	enable_testing()
 
 endif (ENABLE_UNIT_TESTING)
+
+# lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj,
+# which holds all ExplicitRKPredictor Butcher-tableau statics) unless every object in
+# the archive is forced in. /WHOLEARCHIVE does exactly that.
+if(MSVC AND ENABLE_UNIT_TESTING)
+  foreach(_t test_classes test_blackbox test_classic test_endgames test_generating
+              test_nag_algorithms test_nag_datatypes test_pool test_settings
+              test_tracking_basics)
+    if(TARGET ${_t})
+      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2>)
+    endif()
+  endforeach()
+endif()
