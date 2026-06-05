@@ -55,14 +55,12 @@ AMBIENT_PRECISION = 50
 
 
 @pytest.mark.xfail(
-    reason="KNOWN FAILURE (post-migration TODO): the random gamma below can hit "
-           "'MinimizeTrackingCost failed to find a suitable stepsize and precision' "
-           "-- a real, order-/state-dependent AMP bug the pytest migration unmasked "
-           "(the old TextTestRunner aggregators hid it). Deterministically fails in the "
-           "full suite (config_test runs first, pushing AMP state into the bad regime); "
-           "flaky in isolation. strict=False so an isolated xpass doesn't turn the suite "
-           "red. Remove this marker once the code path is fixed. "
-           "Repro + analysis: z_notes/20260604_pytest_migration_bad_randoms.md",
+    reason="Pre-existing precision mismatch: CauchyEG receives bdry_time at one precision "
+           "and bdry_points at another (50!=16). The MinimizeTrackingCost bug is fixed; "
+           "tracking now succeeds and exposes this deeper issue in the endgame setup. "
+           "Root cause: mpfr_complex(t_endgame_boundary) copies source precision rather "
+           "than using current default_precision after the tracking loop resets state. "
+           "Fix requires matching bdry_time precision to bdry_points explicitly.",
     strict=False,
 )
 def test_using_total_degree_ss():

@@ -946,6 +946,53 @@ BOOST_AUTO_TEST_CASE(AMP_track_TD_functionalized)
 }
 
 
+BOOST_AUTO_TEST_CASE(AMP_tracker_track_circle_line_RKF45)
+{
+	// Regression test: RKF45 + AMPTracker used to throw MinimizeTrackingCost
+	// because AdjustAMPStepSuccess capped max_precision at current_precision_,
+	// collapsing the scan window to a single value that failed criterion B.
+	DefaultPrecision(30);
+	using namespace bertini::tracking;
+
+	Var x = Variable::Make("x");
+	Var y = Variable::Make("y");
+	Var t = Variable::Make("t");
+
+	System sys;
+	VariableGroup v{x, y};
+	sys.AddVariableGroup(v);
+	sys.AddPathVariable(t);
+	sys.AddFunction(t * (pow(x, 2) - 1) + (1 - t) * (pow(x, 2) + pow(y, 2) - 4));
+	sys.AddFunction(t * (y - 1) + (1 - t) * (2 * x + 5 * y));
+
+	auto AMP = bertini::tracking::AMPConfigFrom(sys);
+
+	bertini::tracking::AMPTracker tracker(sys);
+	SteppingConfig stepping_preferences;
+	NewtonConfig newton_preferences;
+
+	tracker.Setup(Predictor::RKF45,
+	              1e-5,
+	              1e5,
+	              stepping_preferences,
+	              newton_preferences);
+	tracker.PrecisionSetup(AMP);
+
+	mpfr t_start(1);
+	mpfr t_end(0);
+
+	Vec<mpfr> start_point(2);
+	start_point << mpfr(1), mpfr(1);
+
+	Vec<mpfr> end_point;
+	bertini::SuccessCode tracking_success;
+	tracking_success = tracker.TrackPath(end_point, t_start, t_end, start_point);
+
+	BOOST_CHECK(tracking_success == bertini::SuccessCode::Success);
+	BOOST_CHECK_EQUAL(end_point.size(), 2);
+}
+
+
 BOOST_AUTO_TEST_CASE(arithmetic_cost_double_precision_is_one)
 {
 	using namespace bertini::tracking;

@@ -47,24 +47,20 @@ import bertini.multiprec as mp
 from bertini.multiprec import Complex as mpfr_complex
 
 
-# Embedded predictors supported by AMPTracker (Euler is a special case that
-# works; RK4 and RKF45 can trigger MinimizeTrackingCost failures with AMP on
-# this system; Heun and RKNorsett34 are in the enum but not implemented).
 AMP_PREDICTORS = [
     Predictor.Euler,
     Predictor.HeunEuler,
     Predictor.RKCashKarp45,
     Predictor.RKDormandPrince56,
     Predictor.RKVerner67,
+    Predictor.RKF45,
 ]
 
 AMP_PREDICTOR_IDS = [p.name for p in AMP_PREDICTORS]
 
-# Predictors that work with the fixed-precision tracker but not AMPTracker on
-# this homotopy.
+# RK4 works with the fixed-precision tracker but not AMPTracker on this homotopy.
 DOUBLE_ONLY_PREDICTORS = [
     Predictor.RK4,
-    Predictor.RKF45,
 ]
 
 

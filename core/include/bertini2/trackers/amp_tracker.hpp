@@ -692,7 +692,9 @@ namespace bertini{
 				else if (predictor_code==SuccessCode::HigherPrecisionNecessary)
 				{	
 					NotifyObservers(PredictorHigherPrecisionNecessary<EmitterType>(*this));
-					AMPCriterionError<ComplexT>();
+					auto adj_code = AMPCriterionError<ComplexT>();
+					if (adj_code != SuccessCode::Success)
+						return adj_code;
 					return predictor_code;
 				}
 
@@ -720,7 +722,9 @@ namespace bertini{
 				else if (corrector_code == SuccessCode::HigherPrecisionNecessary)
 				{
 					NotifyObservers(CorrectorHigherPrecisionNecessary<EmitterType>(*this));
-					AMPCriterionError<ComplexT>();
+					auto adj_code = AMPCriterionError<ComplexT>();
+					if (adj_code != SuccessCode::Success)
+						return adj_code;
 					return corrector_code;
 				}
 				else if (corrector_code == SuccessCode::GoingToInfinity)
@@ -774,9 +778,33 @@ namespace bertini{
 			\tparam ComplexT The complex number type.
 			\tparam RealT The real number type.
 
-			If the most recent step was successful, maybe adjust down precision and up stepsize.  
+			If the most recent step was successful, maybe adjust down precision and up stepsize.
 
-			The number of consecutive successful steps is recorded as state in this class, and if this number exceeds a user-determine threshold, the precision or stepsize are allowed to favorably change.  If not, then precision can only go up or remain the same.  Stepsize can only decrease.  These changes depend on the AMP criteria and current tracking tolerance.
+			The number of consecutive successful steps is recorded as state in this class, and if this number exceeds a user-determined threshold, the precision or stepsize are allowed to favorably change.  If not, then precision can only go up or remain the same.  Stepsize can only decrease.  These changes depend on the AMP criteria and current tracking tolerance.
+
+			\par Implementation note on the precision scan window
+
+			The upper bound passed to MinimizeTrackingCost is \c maximum_precision (from
+			AdaptiveMultiplePrecisionConfig), not \c current_precision_.  This is intentional
+			and faithful to the paper (Bates, Hauenstein, Sommese, Wampler 2009, p. 8).
+
+			MinimizeTrackingCost is a cost minimiser: it always returns the cheapest valid
+			\f$(p, h)\f$ pair.  For well-conditioned paths it still selects double precision
+			with a large stepsize, so widening the ceiling has no effect on the common case.
+
+			The ceiling matters only when the path enters a harder region immediately after a
+			successful step — for example, a condition-number spike at the new point pushes
+			\c digits_B above \c current_precision_.  In that situation the minimum required
+			precision for the <em>next</em> step genuinely exceeds the precision that was
+			sufficient for the <em>last</em> step, and a ceiling of \c current_precision_
+			would collapse the scan to a single candidate that fails criterion B, causing
+			MinimizeTrackingCost to throw even though valid pairs exist at higher precision.
+
+			The throw inside MinimizeTrackingCost remains semantically correct: it fires only
+			when no valid pair exists anywhere in \f$[p_{\min}, p_{\max}]\f$, indicating that
+			the path has entered a region that cannot be tracked at any supported precision.
+			That is a genuine path failure, and is reported via
+			SuccessCode::FailedToSelectPrecisionAndStepsize.
 			*/
 			template <typename ComplexT>
 			SuccessCode AdjustAMPStepSuccess() const
@@ -787,24 +815,28 @@ namespace bertini{
 
 
 				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexT>();
-				unsigned max_precision = max(min_precision,current_precision_);
+				unsigned max_precision = Get<PrecConf>().maximum_precision;
 
 				if (num_successful_steps_since_stepsize_increase_ < Get<Stepping>().consecutive_successful_steps_before_stepsize_increase)
-					max_stepsize = current_stepsize_; // disallow stepsize changing 
+					max_stepsize = current_stepsize_; // disallow stepsize changing
 
 
 				if ( (num_successful_steps_since_precision_decrease_ < Get<PrecConf>().consecutive_successful_steps_before_precision_decrease)
 				    ||
 				    (num_precision_decreases_ >= Get<PrecConf>().max_num_precision_decreases))
-					min_precision = max(min_precision, current_precision_); // disallow precision changing 
+					min_precision = max(min_precision, current_precision_); // disallow precision changing
 
 
-				MinimizeTrackingCost(next_precision_, next_stepsize_, 
-							min_precision, min_stepsize,
-							max_precision, max_stepsize,
-							DigitsB<ComplexT>(),
-							Get<NewtonConfig>().max_num_newton_iterations,
-							predictor_order_);
+				try {
+					MinimizeTrackingCost(next_precision_, next_stepsize_,
+								min_precision, min_stepsize,
+								max_precision, max_stepsize,
+								DigitsB<ComplexT>(),
+								Get<NewtonConfig>().max_num_newton_iterations,
+								predictor_order_);
+				} catch (std::runtime_error const&) {
+					return SuccessCode::FailedToSelectPrecisionAndStepsize;
+				}
 
 
 				if ( (next_stepsize_ > current_stepsize_) || (next_precision_ < current_precision_) )
@@ -881,8 +913,8 @@ namespace bertini{
 			\tparam ComplexT The complex number type.
 			*/
 			template<typename ComplexT>
-			void AMPCriterionError() const
-			{	
+			SuccessCode AMPCriterionError() const
+			{
 				using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
 				unsigned min_next_precision; // sure, i could use a trigraph here, but it'd be terrible
@@ -912,20 +944,25 @@ namespace bertini{
 					                             MinDigitsForStepsizeInterval(min_stepsize, max_stepsize, abs(current_time_ - endtime_)),
 					                             digits_final_
 					                             );
-					
+
 						unsigned a = ceil(digits_B - (predictor_order_+1)* -log10(max_stepsize)/Get<NewtonConfig>().max_num_newton_iterations).convert_to<unsigned>();
 
 					unsigned max_precision = max(min_precision, a);
 
-					MinimizeTrackingCost(next_precision_, next_stepsize_, 
-							min_precision, min_stepsize,
-							Get<PrecConf>().maximum_precision, max_stepsize,
-							digits_B,
-							Get<NewtonConfig>().max_num_newton_iterations,
-							predictor_order_);
+					try {
+						MinimizeTrackingCost(next_precision_, next_stepsize_,
+								min_precision, min_stepsize,
+								Get<PrecConf>().maximum_precision, max_stepsize,
+								digits_B,
+								Get<NewtonConfig>().max_num_newton_iterations,
+								predictor_order_);
+					} catch (std::runtime_error const&) {
+						return SuccessCode::FailedToSelectPrecisionAndStepsize;
+					}
 				}
 
 				UpdatePrecisionAndStepsize();
+				return SuccessCode::Success;
 			}
 
 

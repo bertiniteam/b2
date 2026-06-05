@@ -241,6 +241,7 @@ namespace bertini{
 				.value("MinTrackTimeReached", SuccessCode::MinTrackTimeReached)
 				.value("SecurityMaxNormReached", SuccessCode::SecurityMaxNormReached)
 				.value("CycleNumTooHigh", SuccessCode::CycleNumTooHigh)
+				.value("FailedToSelectPrecisionAndStepsize", SuccessCode::FailedToSelectPrecisionAndStepsize)
 				;
 			
 			{ // enter a scope for config types
