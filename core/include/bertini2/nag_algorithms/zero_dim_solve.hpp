@@ -731,12 +731,10 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 				DefaultPrecision(start_prec);
 
-				BaseComplexT t_end = this->template Get<ZeroDimConf>().target_time;
+				GetEndgame().SetBoundaryTime(this->template Get<ZeroDimConf>().endgame_boundary);
+				GetEndgame().SetTargetTime  (this->template Get<ZeroDimConf>().target_time);
 
-				BaseComplexT t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
-				Precision(t_endgame_boundary,start_prec);
-
-				auto eg_success = GetEndgame().Run(t_endgame_boundary, bdry_point, t_end);
+				auto eg_success = GetEndgame().Run(bdry_point);
 
 				solutions_post_endgame_[soln_ind] = GetEndgame().template FinalApproximation<BaseComplexT>();
 

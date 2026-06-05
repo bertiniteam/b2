@@ -104,11 +104,11 @@ def test_fixed_double_cauchy_cycle_num_1(linear_homotopy):
     tracker = DoublePrecisionTracker(s)
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())
 
-    eg = FixedDoubleCauchyEG(tracker)
+    eg = FixedDoubleCauchyEG(tracker, complex(0.1, 0))
     # Pre-computed from C++ test at t=0.1
     sample = np.array([complex(7.999999999999999e-01, 2.168404344971009e-19)])
 
-    code = eg.run(complex(0.1, 0), sample)
+    code = eg.run(sample)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -130,11 +130,11 @@ def test_fixed_double_cauchy_cycle_num_2(quadratic_homotopy):
     nc.min_num_newton_iterations = 1
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), nc)
 
-    eg = FixedDoubleCauchyEG(tracker)
+    eg = FixedDoubleCauchyEG(tracker, complex(0.1, 0))
     # Pre-computed from C++ test at t=0.1
     sample = np.array([complex(9.000000000000001e-01, 4.358898943540673e-01)])
 
-    code = eg.run(complex(0.1, 0), sample)
+    code = eg.run(sample)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -158,8 +158,8 @@ def test_fixed_double_cauchy_track_to_boundary(cubic_homotopy):
     code = tracker.track_path(bdry, complex(1, 0), complex(0.1, 0), start)
     assert code == SuccessCode.Success
 
-    eg = FixedDoubleCauchyEG(tracker)
-    code = eg.run(complex(0.1, 0), bdry)
+    eg = FixedDoubleCauchyEG(tracker, complex(0.1, 0))
+    code = eg.run(bdry)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -182,11 +182,11 @@ def test_fixed_multiple_cauchy_cycle_num_1(linear_homotopy, precision):
     tracker = MultiplePrecisionTracker(s)
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())
 
-    eg = FixedMultipleCauchyEG(tracker)
+    eg = FixedMultipleCauchyEG(tracker, mpfr_complex("0.1"))
     # Pre-computed sample (converted to mpfr_complex at the current precision)
     sample = np.array([mpfr_complex("7.999999999999999e-01")])
 
-    code = eg.run(mpfr_complex("0.1"), sample)
+    code = eg.run(sample)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -209,10 +209,10 @@ def test_fixed_multiple_cauchy_cycle_num_2(quadratic_homotopy, precision):
     nc.min_num_newton_iterations = 1
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), nc)
 
-    eg = FixedMultipleCauchyEG(tracker)
+    eg = FixedMultipleCauchyEG(tracker, mpfr_complex("0.1"))
     sample = np.array([mpfr_complex("9.000000000000001e-01", "4.358898943540673e-01")])
 
-    code = eg.run(mpfr_complex("0.1"), sample)
+    code = eg.run(sample)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -237,10 +237,10 @@ def test_amp_cauchy_cycle_num_1(linear_homotopy, precision):
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), NewtonConfig())
     tracker.precision_setup(ampconfig)
 
-    eg = AMPCauchyEG(tracker)
+    eg = AMPCauchyEG(tracker, mpfr_complex("0.1"))
     sample = np.array([mpfr_complex("7.999999999999999e-01")])
 
-    code = eg.run(mpfr_complex("0.1"), sample)
+    code = eg.run(sample)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -264,10 +264,10 @@ def test_amp_cauchy_cycle_num_2(quadratic_homotopy, precision):
     tracker.setup(Predictor.HeunEuler, 1e-5, 1e5, SteppingConfig(), nc)
     tracker.precision_setup(ampconfig)
 
-    eg = AMPCauchyEG(tracker)
+    eg = AMPCauchyEG(tracker, mpfr_complex("0.1"))
     sample = np.array([mpfr_complex("9.000000000000001e-01", "4.358898943540673e-01")])
 
-    code = eg.run(mpfr_complex("0.1"), sample)
+    code = eg.run(sample)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success

@@ -121,10 +121,13 @@ protected:
 
 
 	// universal endgame state variables
-	mutable Vec<BCT> final_approximation_; 
-	mutable Vec<BCT> previous_approximation_; 
-	mutable unsigned int cycle_number_ = 0; 
+	mutable Vec<BCT> final_approximation_;
+	mutable Vec<BCT> previous_approximation_;
+	mutable unsigned int cycle_number_ = 0;
 	mutable NumErrorT approximate_error_;
+
+	BCT start_time_{};   // endgame boundary; set via SetBoundaryTime()
+	BCT target_time_{};  // final target (default 0); set via SetTargetTime()
 
 
 
@@ -150,22 +153,26 @@ protected:
 
 public:
 
-	/**
-	\brief The main function for running an endgame, from time to time, from a given point to a possibly singular solution.
-	*/
-	SuccessCode Run(const BCT & start_time, const Vec<BCT> & start_point, BCT const& target_time)
-	{
-		return this->AsFlavor().RunImpl(start_time, start_point, target_time);
-	}
+	void SetBoundaryTime(BCT const& t) { start_time_ = t; }
+	void SetTargetTime  (BCT const& t) { target_time_ = t; }
+	BCT const& BoundaryTime() const { return start_time_; }
+	BCT const& TargetTime()   const { return target_time_; }
 
 	/**
-	\brief Run the endgame, shooting for default time of t=0.
+	\brief Run the endgame from the stored boundary time to the stored target time.
 
-	\see Run
+	Re-precisions the stored times to match start_point before dispatching to RunImpl,
+	so the caller never needs to worry about precision alignment.
+
+	Call SetBoundaryTime() before invoking Run().
 	*/
-	SuccessCode Run(BCT const& start_time, Vec<BCT> const& start_point)
+	SuccessCode Run(Vec<BCT> const& start_point)
 	{
-		return Run(start_time, start_point, static_cast<BCT>(0));
+		using bertini::Precision;
+		auto prec = Precision(start_point);
+		BCT t  = start_time_;   Precision(t,  prec);
+		BCT t0 = target_time_;  Precision(t0, prec);
+		return this->AsFlavor().RunImpl(t, start_point, t0);
 	}
 
 

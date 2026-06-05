@@ -59,12 +59,23 @@ namespace bertini{
 			// .def("final_approximation", &EndgameT::template FinalApproximation<BCT>, return_internal_reference<>(),)
 			.def("final_approximation", &return_final_approximation<BCT>,arg("self"),"Get the current approximation of the root, in the ambient numeric type for the tracker being used")
 
-			.def("run", &EndgameBaseVisitor::WrapRunDefaultTime,
-				 (arg("self"),boost::python::arg("start_time"), "start_point"), 
-				 "Run the endgame, from start point and start time, to t=0.  Expects complex numeric type matching that of the tracker being used.")
-			.def("run", &EndgameBaseVisitor::WrapRunCustomTime,
-				 (arg("self"),boost::python::arg("start_time"), "start_point", "target_time"),
-				 "Run the endgame, from start point and start time, to your choice of target time t.  Expects complex numeric type matching that of the tracker being used.")
+			.def("run", &EndgameBaseVisitor::WrapRun,
+				 (arg("self"), "start_point"),
+				 "Run the endgame from the stored boundary time to the stored target time. "
+				 "Call set_boundary_time() before running.")
+
+			.def("set_boundary_time", &EndgameT::SetBoundaryTime,
+				 (arg("self"), arg("t")),
+				 "Set the time at which the endgame begins (authoritative, stored at the given precision).")
+			.def("set_target_time", &EndgameT::SetTargetTime,
+				 (arg("self"), arg("t")),
+				 "Set the time the endgame tracks toward (default 0).")
+			.def("boundary_time", &EndgameT::BoundaryTime,
+				 return_value_policy<copy_const_reference>(), arg("self"),
+				 "Get the stored endgame boundary time.")
+			.def("target_time", &EndgameT::TargetTime,
+				 return_value_policy<copy_const_reference>(), arg("self"),
+				 "Get the stored target time.")
 
 			.def(ObservableVisitor<EndgameT>())
 			;

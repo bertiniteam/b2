@@ -94,13 +94,13 @@ def test_fixed_double_pseg_full_run(cubic_homotopy):
     tracker = DoublePrecisionTracker(s)
     tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, SteppingConfig(), NewtonConfig())
 
-    eg = FixedDoublePSEG(tracker)
-
     current_time = complex(0.1, 0)
+    eg = FixedDoublePSEG(tracker, current_time)
+
     # Pre-computed boundary point from the C++ test
     current_space = np.array([complex(5.000000000000001e-01, 9.084258952712920e-17)])
 
-    code = eg.run(current_time, current_space)
+    code = eg.run(current_space)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -124,8 +124,8 @@ def test_fixed_double_pseg_full_run_track_to_boundary(cubic_homotopy):
     code = tracker.track_path(bdry, complex(1, 0), complex(0.1, 0), start)
     assert code == SuccessCode.Success
 
-    eg = FixedDoublePSEG(tracker)
-    code = eg.run(complex(0.1, 0), bdry)
+    eg = FixedDoublePSEG(tracker, complex(0.1, 0))
+    code = eg.run(bdry)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -148,8 +148,8 @@ def test_fixed_double_pseg_cycle_num_1(quadratic_homotopy):
     code = tracker.track_path(bdry, complex(1, 0), complex(0.1, 0), start)
     assert code == SuccessCode.Success
 
-    eg = FixedDoublePSEG(tracker)
-    code = eg.run(complex(0.1, 0), bdry)
+    eg = FixedDoublePSEG(tracker, complex(0.1, 0))
+    code = eg.run(bdry)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -179,8 +179,8 @@ def test_fixed_double_pseg_multiple_variables():
     code = tracker.track_path(bdry, complex(1, 0), complex(0.1, 0), start)
     assert code == SuccessCode.Success
 
-    eg = FixedDoublePSEG(tracker)
-    code = eg.run(complex(0.1, 0), bdry)
+    eg = FixedDoublePSEG(tracker, complex(0.1, 0))
+    code = eg.run(bdry)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -209,8 +209,8 @@ def test_fixed_multiple_pseg_full_run(cubic_homotopy, precision):
     code = tracker.track_path(bdry, mpfr_complex(1), mpfr_complex("0.1"), start)
     assert code == SuccessCode.Success
 
-    eg = FixedMultiplePSEG(tracker)
-    code = eg.run(mpfr_complex("0.1"), bdry)
+    eg = FixedMultiplePSEG(tracker, mpfr_complex("0.1"))
+    code = eg.run(bdry)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success
@@ -241,8 +241,8 @@ def test_amp_pseg_full_run(cubic_homotopy, precision):
     code = tracker.track_path(bdry, mpfr_complex(1), mpfr_complex("0.1"), start)
     assert code == SuccessCode.Success
 
-    eg = AMPPSEG(tracker)
-    code = eg.run(mpfr_complex("0.1"), bdry)
+    eg = AMPPSEG(tracker, mpfr_complex("0.1"))
+    code = eg.run(bdry)
 
     fa = eg.final_approximation()
     assert code == SuccessCode.Success

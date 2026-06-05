@@ -54,15 +54,6 @@ from bertini.multiprec import Complex as mpfr_complex
 AMBIENT_PRECISION = 50
 
 
-@pytest.mark.xfail(
-    reason="Pre-existing precision mismatch: CauchyEG receives bdry_time at one precision "
-           "and bdry_points at another (50!=16). The MinimizeTrackingCost bug is fixed; "
-           "tracking now succeeds and exposes this deeper issue in the endgame setup. "
-           "Root cause: mpfr_complex(t_endgame_boundary) copies source precision rather "
-           "than using current default_precision after the tracking loop resets state. "
-           "Fix requires matching bdry_time precision to bdry_points explicitly.",
-    strict=False,
-)
 def test_using_total_degree_ss():
     default_precision(AMBIENT_PRECISION)
 
@@ -129,17 +120,14 @@ def test_using_total_degree_ss():
         assert track_success_code == SuccessCode.Success
 
     tracker.setup(Predictor.HeunEuler, 1e-6, 1e5, stepping_pref, newton_pref)
-    my_endgame = AMPCauchyEG(tracker)
+    my_endgame = AMPCauchyEG(tracker, t_endgame_boundary)
 
     final_homogenized_solutions = [np.empty(dtype=mpfr_complex, shape=(3,)) for i in range(n)]
 
     for i in range(n):
-        default_precision(bdry_points[i][0].precision)
         final_system.precision(bdry_points[i][0].precision)
 
-        bdry_time = mpfr_complex(t_endgame_boundary)
-
-        track_success_code = my_endgame.run(bdry_time, bdry_points[i])
+        track_success_code = my_endgame.run(bdry_points[i])
 
         final_homogenized_solutions[i] = my_endgame.final_approximation()
 
