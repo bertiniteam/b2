@@ -258,6 +258,129 @@ def test_add_systems(variables):
     assert deg[1] == 2
 
 
+def test_homogenize_multiple_variable_groups():
+    """Homogenizing a two-group system inserts one hom. variable per group.
+
+    Mirrors system_class/system_homogenize_multiple_variable_groups.
+    """
+    x, y = Variable("x"), Variable("y")
+    s = System()
+    g1 = pb.VariableGroup(); g1.append(x)
+    g2 = pb.VariableGroup(); g2.append(y)
+    s.add_variable_group(g1)
+    s.add_variable_group(g2)
+    s.add_function(x + y - 1)
+    s.add_function(x * y)
+    assert not s.is_homogeneous()
+    s.homogenize()
+    assert s.is_homogeneous()
+    # Each affine group gains a hom. variable → 2 original + 2 hom. = 4 variables.
+    assert s.num_variables() == 4
+
+
+def test_reorder_by_degree_decreasing(variables):
+    """Reorder functions by decreasing degree.
+
+    Mirrors system_class/system_reorder_by_degree_decreasing.
+    """
+    x, y, z = variables
+    s = System()
+    vg = pb.VariableGroup(); vg.append(x); vg.append(y)
+    s.add_variable_group(vg)
+    s.add_function(x + y)          # degree 1
+    s.add_function(x**3 + y**3)    # degree 3
+    s.add_function(x**2 - y)       # degree 2
+
+    s.reorder_functions_by_degree_decreasing()
+    degs = list(s.degrees())
+    assert degs == sorted(degs, reverse=True), f"Not decreasing: {degs}"
+
+
+def test_reorder_by_degree_increasing(variables):
+    """Reorder functions by increasing degree.
+
+    Mirrors system_class/system_reorder_by_degree_increasing.
+    """
+    x, y, z = variables
+    s = System()
+    vg = pb.VariableGroup(); vg.append(x); vg.append(y)
+    s.add_variable_group(vg)
+    s.add_function(x**3 + y**3)    # degree 3
+    s.add_function(x + y)          # degree 1
+    s.add_function(x**2 - y)       # degree 2
+
+    s.reorder_functions_by_degree_increasing()
+    degs = list(s.degrees())
+    assert degs == sorted(degs), f"Not increasing: {degs}"
+
+
+def test_eval_wrong_size_input_throws(variables):
+    """Feeding the wrong number of variables raises RuntimeError.
+
+    Mirrors system_class/eval_wrong_size_input_throws.
+    """
+    x, y, z = variables
+    s = System()
+    vg = pb.VariableGroup(); vg.append(x); vg.append(y)
+    s.add_variable_group(vg)
+    s.add_function(x + y)
+
+    with pytest.raises(RuntimeError):
+        s.eval(np.array([complex(1, 0)]))  # 1 value, need 2
+
+
+def test_dehomogenize_one_affine_group():
+    """Dehomogenizing a single-group homogenized system divides out the hom. var.
+
+    Mirrors system_class/system_dehomogenize_FIFO_one_aff_group.
+    After Homogenize(), the hom. variable is PREPENDED (FIFO), so the point
+    vector is ordered [h, x, y, ...].  DehomogenizePoint returns [x/h, y/h, ...].
+    """
+    x, y = Variable("x"), Variable("y")
+    s = System()
+    vg = pb.VariableGroup(); vg.append(x); vg.append(y)
+    s.add_variable_group(vg)
+    s.add_function(x**2 + y - 1)
+    s.homogenize()
+    # Variable order after hom: [h, x, y]
+    # v = [2+3i, 3+4i, 4+5i] → dehom = [v[1]/v[0], v[2]/v[0]]
+    v = np.array([complex(2, 3), complex(3, 4), complex(4, 5)])
+    dehom = s.dehomogenize_point(v)
+    assert dehom.shape == (2,)
+    assert abs(dehom[0] - v[1] / v[0]) < 1e-14
+    assert abs(dehom[1] - v[2] / v[0]) < 1e-14
+
+
+def test_dehomogenize_two_affine_groups():
+    """Dehomogenizing a two-group system divides each group by its own hom. var.
+
+    Mirrors system_class/system_dehomogenize_FIFO_two_aff_groups.
+    After Homogenize(), each group gets its hom. var. prepended.
+    Variable order: [h1, x, y, h2, z, w] for groups {x,y} and {z,w}.
+    """
+    x, y = Variable("x"), Variable("y")
+    z, w = Variable("z"), Variable("w")
+    s = System()
+    g1 = pb.VariableGroup(); g1.append(x); g1.append(y)
+    g2 = pb.VariableGroup(); g2.append(z); g2.append(w)
+    s.add_variable_group(g1)
+    s.add_variable_group(g2)
+    s.add_function(x + y)
+    s.add_function(z * w)
+    s.add_function(x - z)
+    s.add_function(y - w)
+    s.homogenize()
+    # Variable order: [h1, x, y, h2, z, w]
+    v = np.array([complex(2,3), complex(3,4), complex(4,5),
+                  complex(5,6), complex(6,7), complex(7,8)])
+    dehom = s.dehomogenize_point(v)
+    assert dehom.shape == (4,)
+    assert abs(dehom[0] - v[1] / v[0]) < 1e-14
+    assert abs(dehom[1] - v[2] / v[0]) < 1e-14
+    assert abs(dehom[2] - v[4] / v[3]) < 1e-14
+    assert abs(dehom[3] - v[5] / v[3]) < 1e-14
+
+
 def test_mult_system_node():
     tol_d = TOLDBL
     sys = pb.parse.system('function f1, f2; variable_group x,y,z; f1 = x+2; f2 = y*y;')

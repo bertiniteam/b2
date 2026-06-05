@@ -485,6 +485,92 @@ def test_Homogenize(op):
     assert f.is_homogeneous(vars)
 
 
+# ---------------------------------------------------------------------------- homogenization
+
+def test_variable_is_homogeneous():
+    """A single Variable node is degree-1 homogeneous.
+
+    Mirrors homogenization_test.cpp/no_homogenization_needed_x.
+    """
+    x = Variable("x")
+    assert x.is_homogeneous()
+
+
+def test_constant_is_homogeneous():
+    """A constant node (degree 0) is homogeneous.
+
+    Mirrors homogenization_test.cpp/is_homogeneous_* cases.
+    """
+    assert Integer(0).is_homogeneous()
+    assert Integer(1).is_homogeneous()
+    # sin(0) = 0 is a constant
+    assert sin(Integer(0)).is_homogeneous()
+    assert cos(Integer(1) - Integer(1)).is_homogeneous()
+
+
+def test_x_minus_1_is_not_homogeneous():
+    """x - 1 has mixed degrees (degree 1 and degree 0), so not homogeneous.
+
+    Mirrors homogenization_test.cpp/homogenization_needed_x_minus_1.
+    """
+    x = Variable("x")
+    assert not (x - Integer(1)).is_homogeneous()
+
+
+def test_transcendentals_are_not_homogeneous():
+    """sin(x), cos(x), exp(x) are not homogeneous (non-polynomial).
+
+    Mirrors homogenization_test.cpp/nothomogeneous_sin_x etc.
+    """
+    x = Variable("x")
+    assert not sin(x).is_homogeneous()
+    assert not cos(x).is_homogeneous()
+    assert not tan(x).is_homogeneous()
+    assert not exp(x).is_homogeneous()
+    assert not log(x).is_homogeneous()
+    assert not asin(x).is_homogeneous()
+    assert not acos(x).is_homogeneous()
+    assert not atan(x).is_homogeneous()
+
+
+def test_homogenize_x_minus_1():
+    """Homogenizing x - 1 with variable group [x] and hom var h gives x - h.
+
+    Mirrors homogenization_test.cpp/homogenization_needed_x_minus_1.
+    """
+    x = Variable("x"); h = Variable("h")
+    vg = VariableGroup(); vg.append(x)
+
+    f = x - Integer(1)
+    assert not f.is_homogeneous()
+    f.homogenize(vg, h)
+    assert f.is_homogeneous()
+
+    # Evaluate: at (x=2, h=1) → x - h = 2 - 1 = 1
+    x.set_current_value(complex(2, 0))
+    h.set_current_value(complex(1, 0))
+    assert abs(f.eval_d() - complex(1, 0)) < 1e-14
+
+    # At (x=3, h=2) → 3 - 2 = 1
+    x.set_current_value(complex(3, 0))
+    h.set_current_value(complex(2, 0))
+    assert abs(f.eval_d() - complex(1, 0)) < 1e-14
+
+
+def test_homogenize_leaves_already_homogeneous_unchanged():
+    """Homogenizing a degree-1 expression should leave it homogeneous.
+
+    Mirrors homogenization_test.cpp/no_homogenization_needed_x.
+    """
+    x = Variable("x"); h = Variable("h")
+    vg = VariableGroup(); vg.append(x)
+
+    f = x  # degree 1, already homogeneous
+    assert f.is_homogeneous()
+    f.homogenize(vg, h)
+    assert f.is_homogeneous()
+
+
 def test_forbid_doubles(op):
     """
     make sure that we're correctly forbidding mixing in doubles to making symbolic expressions
