@@ -63,6 +63,7 @@ if sys.platform == "win32":
 # put stuff in the bertini namespace
 
 import bertini.function_tree as function_tree
+from bertini.function_tree import sin, cos, tan, asin, acos, atan, exp, log, sqrt
 
 import bertini.system as system
 import bertini.tracking as tracking
@@ -91,7 +92,8 @@ default_precision = multiprec.default_precision
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
 __all__ = ['Variable','variables','gather_variables','VariableGroup','system','System',
            'nag_algorithm','container','default_precision',
-           'tracking','endgame','logging','function_tree','parse','multiprec','random']
+           'tracking','endgame','logging','function_tree','parse','multiprec','random',
+           'sin','cos','tan','asin','acos','atan','exp','log','sqrt']
 
 
 

@@ -36,6 +36,12 @@ from bertini._pybertini.container import VariableGroup
 
 from bertini._pybertini.function_tree import *
 
+from bertini._pybertini.function_tree.operator import Sqrt as _Sqrt
+
+def sqrt(x):
+    """Symbolic square-root operator."""
+    return _Sqrt(x)
+
 
 VariableGroup.__str__ = lambda vg: '[{}]'.format( ','.join([str(v) for v in vg]) )
 
@@ -57,5 +63,5 @@ def variables(base, indices, fmt='{base}{index}'):
     return [Variable(fmt.format(base=base, index=i)) for i in indices]
 
 
-__all__ = dir(bertini._pybertini.function_tree) + ['variables']
+__all__ = dir(bertini._pybertini.function_tree) + ['variables', 'sqrt']
 
