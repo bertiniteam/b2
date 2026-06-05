@@ -371,6 +371,7 @@ set(BERTINI2_EXE_SOURCES
     src/blackbox/bertini.cpp
     src/blackbox/main_mode_switch.cpp
     src/blackbox/argc_argv.cpp
+    src/blackbox/algorithm_builder.cpp
 )
 
 set(BERTINI2_EXE_HEADERS

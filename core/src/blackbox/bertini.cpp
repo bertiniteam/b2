@@ -4,19 +4,15 @@ int main(int argument_count, char** arguments)
 {	
 	using namespace bertini;
 
-	ParseArgcArgv(argument_count, arguments);
+	auto parsed = ParseArgcArgv(argument_count, arguments);
 
 	serial::Initialize();
 	parallel::Initialize();
 
-
-
-	MainModeSwitch();
-
-
+	int result = MainModeSwitch(parsed);
 
 	parallel::Finalize();
 	serial::Finalize();
 
-	return 0;
+	return result;
 }

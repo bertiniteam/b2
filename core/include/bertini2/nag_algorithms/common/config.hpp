@@ -37,6 +37,17 @@ using SolnCont = std::vector<T>;
 
 namespace classic{
 
+enum class EndgameChoice
+{
+	PowerSeries = 1,
+	Cauchy = 2
+};
+
+struct EndgameChoiceConfig
+{
+	EndgameChoice endgame = EndgameChoice::Cauchy;
+};
+
 enum class AlgoChoice
 {
 	EvalFunctions = -4,

@@ -83,6 +83,9 @@ struct AlgoTraits <ZeroDim<TrackerType, EndgameType, SystemType, StartSystemType
 
 struct AnyZeroDim : public virtual AnyAlgorithm
 {
+	virtual void WriteMainData(std::ostream& out) const = 0;
+	virtual void WriteRawData(std::ostream& out)  const = 0;
+	virtual void ApplyParsedConfigs(std::string const& config_str) = 0;
 	virtual ~AnyZeroDim() = default;
 };
 
@@ -315,7 +318,15 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			\brief Main Run() function provided for calling from the blackbox mode
 			*/
 			void Run() override
-			{}
+			{
+				Solve();
+			}
+
+			// Definitions are out-of-line at the bottom of this file, after
+			// output.hpp is included (avoiding a circular-include chicken-and-egg).
+			void WriteMainData(std::ostream& out) const override;
+			void WriteRawData(std::ostream& out)  const override;
+			void ApplyParsedConfigs(std::string const& config_str) override;
 
 			virtual ~ZeroDim() = default;
 /// setup functions
@@ -854,4 +865,93 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 	} // ns algo
 
+} // ns bertini
+
+// Include output formatters after ZeroDim is fully defined.
+// output.hpp includes zero_dim_solve.hpp, so #pragma once prevents re-inclusion
+// and the circular dependency is resolved.  Any TU that gets zero_dim_solve.hpp
+// therefore also gets output.hpp, making WriteMainData/WriteRawData instantiable.
+#include "bertini2/nag_algorithms/output.hpp"
+
+namespace bertini {
+namespace algorithm {
+
+template<typename TrackerType, typename EndgameType,
+         typename SystemType, typename StartSystemType,
+         template<typename,typename> class SystemManagementP>
+inline void
+ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteMainData(std::ostream& out) const
+{
+	output::Classic<ZeroDim>::MainData(out, *this);
+}
+
+template<typename TrackerType, typename EndgameType,
+         typename SystemType, typename StartSystemType,
+         template<typename,typename> class SystemManagementP>
+inline void
+ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>::WriteRawData(std::ostream& out) const
+{
+	output::Classic<ZeroDim>::RawData(out, *this);
+}
+
+} // ns algorithm
+} // ns bertini
+
+// Include config parsers after ZeroDim is fully defined, then provide the
+// out-of-line definition of ApplyParsedConfigs.  Parsing headers do not include
+// zero_dim_solve.hpp, so there is no circular dependency here.
+#include "bertini2/io/parsing/settings_parsers.hpp"
+
+namespace bertini {
+namespace algorithm {
+
+// Injects every element of a std::tuple<Ts...> into `target` via Set<T>.
+// Works for any Configured<>-derived target whose typelist contains all Ts.
+template<typename Target, typename... Ts>
+void InjectParsedTuple(Target& target, std::tuple<Ts...> const& t) {
+	(target.template Set<Ts>(std::get<Ts>(t)), ...);
+}
+
+template<typename TrackerType, typename EndgameType,
+         typename SystemType, typename StartSystemType,
+         template<typename,typename> class SystemManagementP>
+void
+ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>
+    ::ApplyParsedConfigs(std::string const& config_str)
+{
+	using namespace parsing::classic;
+
+	// 1. ZeroDim-owned configs (Tolerances, PostProcessing, ZeroDimConf, AutoRetrack)
+	using ZDConfs = typename Config::UsedConfigs;
+	auto zd = ConfigParser<ZDConfs>::Parse(config_str);
+	InjectParsedTuple(*this, zd);
+	DefaultSystemSetup(); // path variable name comes from ZeroDimConf; re-run after update
+
+	// 2. Tracker — uses positional Setup() rather than Set<T>, so handle explicitly.
+	using TkConfs = detail::TypeList<
+	    tracking::SteppingConfig,
+	    tracking::NewtonConfig,
+	    tracking::Predictor>;
+	auto tk = ConfigParser<TkConfs>::Parse(config_str);
+	tracker_.Setup(
+	    std::get<tracking::Predictor>(tk),
+	    this->template Get<Tolerances>().newton_before_endgame,
+	    this->template Get<Tolerances>().path_truncation_threshold,
+	    std::get<tracking::SteppingConfig>(tk),
+	    std::get<tracking::NewtonConfig>(tk));
+	tracker_.PrecisionSetup(PrecisionConfig(Homotopy()));
+	endgame_.SetTracker(tracker_); // keep endgame's tracker ref consistent after reconfigure
+
+	// 3. Endgame-owned configs — endgame_ is the concrete EndgameType deriving from
+	//    Configured<its_configs>, so Set<T> is available directly.
+	//    AlgoTraits<EndgameType>::NeededConfigs is public (unlike EndgameType::Configs).
+	using EGConfs = typename endgame::AlgoTraits<EndgameType>::NeededConfigs;
+	auto eg = ConfigParser<EGConfs>::Parse(config_str);
+	InjectParsedTuple(endgame_, eg);
+
+	// 4. Midpath config
+	SetMidpath(ConfigParser<MidPathConfig>::Parse(config_str));
+}
+
+} // ns algorithm
 } // ns bertini

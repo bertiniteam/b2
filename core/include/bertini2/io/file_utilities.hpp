@@ -31,6 +31,7 @@
 #pragma once
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <boost/filesystem.hpp>
 
 namespace bertini{

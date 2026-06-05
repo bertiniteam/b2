@@ -85,7 +85,7 @@ namespace bertini {
 					using boost::spirit::ascii::no_case;
 					
 					precisiontype_.add("0", PrecisionType::Fixed);
-					precisiontype_.add("1", PrecisionType::Adaptive);
+					precisiontype_.add("1", PrecisionType::FixedMultiple);
 					precisiontype_.add("2", PrecisionType::Adaptive);
 					
 					

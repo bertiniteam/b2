@@ -26,29 +26,77 @@
 \brief Provides the methods for building algorithms from files or streamable sources.
 */
 
-namespace bertini{
+#include "bertini2/blackbox/algorithm_builder.hpp"
+#include "bertini2/blackbox/global_configs.hpp"
+#include "bertini2/blackbox/switches_zerodim.hpp"
+#include "bertini2/io/parsing/settings_parsers.hpp"
+#include "bertini2/io/parsing/system_parsers.hpp"
+#include "bertini2/trackers/config.hpp"
+#include "bertini2/endgames/config.hpp"
+#include "bertini2/nag_algorithms/zero_dim_solve.hpp"
 
+#include <iostream>
+
+namespace bertini{
 namespace blackbox{
 
-int AlgoBuilder::ClassicBuild(boost::filesystem::path const& input_file)
+int AlgoBuilder::ClassicBuild(std::string const& config_str, std::string const& input_str)
 {
-	std::string config, input;
-	std::tie(config, input) = SplitIntoConfigAndInput(input_file);
+	// Parse the polynomial system from the INPUT section
+	System sys;
+	try {
+		sys = System{input_str};
+	} catch (std::exception const& e) {
+		std::cerr << "error: failed to parse system from input section: " << e.what() << "\n";
+		return 1;
+	}
 
+	// Parse all configuration structs (double precision versions suffice for
+	// choosing algorithm types; mpfr versions would be used for mp-specific defaults)
+	using AllConfsD = config::Configs::All<dbl>::type;
+	auto cfgs_d = parsing::classic::ConfigParser<AllConfsD>::Parse(config_str);
 
-	template<typename T>
-	using AllConfs = blackbox::config::Configs::All<T>::type;
-	auto results_double = bertini::parsing::classic::GetConfigSettings<double, AllConfs<double>>(config);
-	auto results_mp = bertini::parsing::classic::GetConfigSettings<mpfr_float, AllConfs<mpfr_float>>(config);
-	// now we have all the settings needed for any algorithm, huzzah
+	// Select tracker type from PrecisionType (mptype in Bertini1 syntax):
+	//   Fixed         (mptype: 0) -> FixedDouble
+	//   FixedMultiple (mptype: 1) -> FixedMultiple (fixed-precision multi)
+	//   Adaptive      (mptype: 2, default) -> Adaptive (AMP)
+	auto prec_type = std::get<tracking::PrecisionType>(cfgs_d);
+	type::Tracker tracker_type;
+	switch (prec_type) {
+		case tracking::PrecisionType::Fixed:          tracker_type = type::Tracker::FixedDouble;   break;
+		case tracking::PrecisionType::FixedMultiple:  tracker_type = type::Tracker::FixedMultiple; break;
+		default:                                      tracker_type = type::Tracker::Adaptive;       break;
+	}
 
+	// Select endgame type from endgamenum (Bertini1 syntax):
+	//   1 -> PowerSeries (PSEG), 2 -> Cauchy (default)
+	using algorithm::classic::EndgameChoiceConfig;
+	using algorithm::classic::EndgameChoice;
+	auto eg_choice = std::get<EndgameChoiceConfig>(cfgs_d).endgame;
+	type::Endgame endgame_type = (eg_choice == EndgameChoice::PowerSeries)
+	                              ? type::Endgame::PowerSeries
+	                              : type::Endgame::Cauchy;
 
+	// Default to total-degree start system.
+	// TODO: user homotopy and MHom start require additional input-file fields.
+	type::Start start_type = type::Start::TotalDegree;
+
+	ZeroDimRT rt{start_type, tracker_type, endgame_type};
+
+	std::unique_ptr<algorithm::AnyZeroDim> zd_alg;
+	try {
+		zd_alg = MakeZeroDim(rt, sys);
+	} catch (std::exception const& e) {
+		std::cerr << "error: failed to instantiate zero-dim algorithm: " << e.what() << "\n";
+		return 1;
+	}
+
+	zd_alg->ApplyParsedConfigs(config_str);
+	alg_ = std::move(zd_alg);
 
 	return 0;
 }
 
-
-
-} // blackbox
-} // bertini
+} // namespace blackbox
+} // namespace bertini
 
