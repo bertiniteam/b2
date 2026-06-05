@@ -63,9 +63,23 @@ ctest --test-dir build/core
 
 ### Python Tests
 
+`pytest` is the single way to run the Python tests (the suites are plain pytest
+functions + fixtures; the old `unittest` `TextTestRunner` aggregator scripts are gone):
+
 ```bash
 pytest python/test/
 ```
+
+The multiprecision default precision is **global mutable state**
+(`bertini.default_precision(n)`). An **autouse fixture in `python/test/conftest.py`**
+(`_reset_precision`) resets it to a known baseline (`DEFAULT_TEST_PRECISION = 30`) before
+every test and restores it afterward, so no test can inherit a neighbor's precision — do
+**not** re-introduce per-test `default_precision(...)` setup. To override the precision for
+a specific test, use the `precision` fixture (parametrize it indirectly, e.g.
+`@pytest.mark.parametrize("precision", [30, 50, 80], indirect=True)` with a
+precision-derived tolerance). When adding or debugging precision-sensitive tests, run the
+file on its own (`pytest python/test/classes/<file>.py`) to confirm it does not depend on
+cross-test state.
 
 ## Architecture
 

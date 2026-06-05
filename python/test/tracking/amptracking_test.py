@@ -31,7 +31,6 @@
 #
 
 
-
 __author__ = 'James Collins'
 
 from bertini import *
@@ -41,205 +40,181 @@ from bertini.function_tree import *
 from bertini.tracking import *
 from bertini.tracking.config import *
 
-import unittest
 import numpy as np
-import pdb
+import pytest
 
 import bertini.multiprec as mp
 from bertini.multiprec import Float as mpfr_float
 from bertini.multiprec import Complex as mpfr_complex
 
 
-class AMPTrackingTest(unittest.TestCase):
-    def setUp(self):
-        self.toldbl = 1e-15;
-        self.x = Variable("x");
-        self.y = Variable("y");
-        self.z = Variable("z");
-        self.t = Variable("t");
-        self.a = Float("4.897", "1.23")
-        #
-        self.f = Function(self.x*self.y);
-        self.g = Function(pow(self.x,2)*self.y - self.a*self.z*self.x);
+# global default precision is reset to 30 before every test by the autouse
+# _reset_precision fixture in python/test/conftest.py.
 
 
+@pytest.fixture
+def xyzt():
+    return Variable("x"), Variable("y"), Variable("z"), Variable("t")
 
-    def test_tracker_linear(self):
-        default_precision(30);
-        x = self.x;  y = self.y; t = self.t;
-        s = System();
 
-        vars = VariableGroup();
-        vars.append(y);
-        s.add_function(y-t);
-        s.add_path_variable(t);
-        s.add_variable_group(vars);
+def test_tracker_linear(xyzt):
+    x, y, z, t = xyzt
+    s = System()
 
-        ampconfig = amp_config_from(s);
+    vars = VariableGroup()
+    vars.append(y)
+    s.add_function(y-t)
+    s.add_path_variable(t)
+    s.add_variable_group(vars)
 
-        tracker = AMPTracker(s);
+    ampconfig = amp_config_from(s)
 
-        stepping_pref = SteppingConfig();
-        newton_pref = NewtonConfig();
+    tracker = AMPTracker(s)
 
-        tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref);
-        tracker.precision_setup(ampconfig);
+    stepping_pref = SteppingConfig()
+    newton_pref = NewtonConfig()
 
-        t_start = mpfr_complex(1)
-        t_end = mpfr_complex(0)
+    tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref)
+    tracker.precision_setup(ampconfig)
 
-        y_start = np.array([mpfr_complex(1)]);
+    t_start = mpfr_complex(1)
+    t_end = mpfr_complex(0)
 
-        y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64),dtype=mpfr_complex);
+    y_start = np.array([mpfr_complex(1)])
 
-        tracker.track_path(y_end, t_start, t_end, y_start);
+    y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64), dtype=mpfr_complex)
 
-        self.assertEqual(y_end.shape, (s.num_variables(),))
-        self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
+    tracker.track_path(y_end, t_start, t_end, y_start)
 
+    assert y_end.shape == (s.num_variables(),)
+    assert mp.abs(y_end[0]-mpfr_complex(0)) <= 1e-5
 
 
+def test_tracker_quad(xyzt):
+    x, y, z, t = xyzt
+    s = System()
 
-    def test_tracker_quad(self):
-        default_precision(30);
-        y = self.y; t = self.t;
-        s = System();
+    vars = VariableGroup()
+    vars.append(y)
+    s.add_function(y-t**2)
+    s.add_path_variable(t)
+    s.add_variable_group(vars)
 
-        vars = VariableGroup();
-        vars.append(y);
-        s.add_function(y-t**2);
-        s.add_path_variable(t);
-        s.add_variable_group(vars);
+    s.precision(30)
 
-        s.precision(30);
+    ampconfig = amp_config_from(s)
 
-        ampconfig = amp_config_from(s);
+    tracker = AMPTracker(s)
 
-        tracker = AMPTracker(s);
+    stepping_pref = SteppingConfig()
+    newton_pref = NewtonConfig()
 
-        stepping_pref = SteppingConfig();
-        newton_pref = NewtonConfig();
+    tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref)
+    tracker.precision_setup(ampconfig)
 
-        tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref);
-        tracker.precision_setup(ampconfig);
+    t_start = mpfr_complex(1)
+    t_end = mpfr_complex(-1)
 
-        t_start = mpfr_complex(1)
-        t_end = mpfr_complex(-1)
+    y_start = np.array([mpfr_complex(1)])
 
-        y_start = np.array([mpfr_complex(1)]);
+    y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64), dtype=mpfr_complex)
 
-        y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64),dtype=mpfr_complex);
+    tracker.track_path(y_end, t_start, t_end, y_start)
 
-        tracker.track_path(y_end, t_start, t_end, y_start);
+    assert y_end.shape == (s.num_variables(),)
+    assert mp.abs(y_end[0]-mpfr_complex(1)) <= 1e-5
 
-        self.assertEqual(y_end.shape, (s.num_variables(),))
-        self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(1)), 1e-5)
 
+def test_tracker_sqrt(xyzt):
+    x, y, z, t = xyzt
+    s = System()
 
+    vars = VariableGroup()
+    vars.append(y); vars.append(x)
+    s.add_function(x-t)
+    s.add_function(y**2 - x)
+    s.add_path_variable(t)
+    s.add_variable_group(vars)
+    s.precision(30)
+    ampconfig = amp_config_from(s)
 
-    def test_tracker_sqrt(self):
-        default_precision(30);
-        x = self.x;  y = self.y; t = self.t;
-        s = System();
+    tracker = AMPTracker(s)
 
-        vars = VariableGroup();
-        vars.append(y); vars.append(x);
-        s.add_function(x-t);
-        s.add_function(y**2 - x)
-        s.add_path_variable(t);
-        s.add_variable_group(vars);
-        s.precision(30);
-        ampconfig = amp_config_from(s);
+    stepping_pref = SteppingConfig()
+    newton_pref = NewtonConfig()
 
-        tracker = AMPTracker(s);
+    tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref)
+    tracker.precision_setup(ampconfig)
 
-        stepping_pref = SteppingConfig();
-        newton_pref = NewtonConfig();
+    t_start = mpfr_complex(1)
+    t_end = mpfr_complex(0)
 
-        tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref);
-        tracker.precision_setup(ampconfig);
+    y_start = np.array([mpfr_complex(1), mpfr_complex(1)])
 
-        t_start = mpfr_complex(1)
-        t_end = mpfr_complex(0)
+    y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64), dtype=mpfr_complex)
 
-        y_start = np.array([mpfr_complex(1), mpfr_complex(1)]);
+    track_success = tracker.track_path(y_end, t_start, t_end, y_start)
 
-        y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64),dtype=mpfr_complex);
+    assert track_success == SuccessCode.Success
+    assert y_end.shape == (s.num_variables(),)
+    assert mp.abs(y_end[0]-mpfr_complex(0)) <= 1e-5
+    assert mp.abs(y_end[1]-mpfr_complex(0)) <= 1e-5
 
-        track_success = tracker.track_path(y_end, t_start, t_end, y_start);
+    y_start = np.array([mpfr_complex(1), mpfr_complex(-1)])
 
-        self.assertTrue(track_success == SuccessCode.Success)
-        self.assertEqual(y_end.shape, (s.num_variables(),))
-        self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
-        self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
+    tracker.track_path(y_end, t_start, t_end, y_start)
 
-        y_start = np.array([mpfr_complex(1), mpfr_complex(-1)]);
+    assert y_end.shape == (s.num_variables(),)
+    assert mp.abs(y_end[0]-mpfr_complex(0)) <= 1e-5
+    assert mp.abs(y_end[1]-mpfr_complex(0)) <= 1e-5
 
-        tracker.track_path(y_end, t_start, t_end, y_start);
+    y_start = np.array([mpfr_complex(-1), mpfr_complex(-1)])
 
-        self.assertEqual(y_end.shape, (s.num_variables(),))
-        self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
-        self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
+    tracker.track_path(y_end, t_start, t_end, y_start)
 
+    assert y_end.shape == (s.num_variables(),)
+    assert mp.abs(y_end[0]-mpfr_complex(0)) <= 1e-5
+    assert mp.abs(y_end[1]-mpfr_complex(0)) <= 1e-5
 
-        y_start = np.array([mpfr_complex(-1), mpfr_complex(-1)]);
+    y_start = np.array([mpfr_complex(-1), mpfr_complex(0, 1)])
 
-        tracker.track_path(y_end, t_start, t_end, y_start);
+    track_success = tracker.track_path(y_end, t_start, t_end, y_start)
 
-        self.assertEqual(y_end.shape, (s.num_variables(),))
-        self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
-        self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
+    assert track_success == SuccessCode.Success
+    assert y_end.shape == (s.num_variables(),)
+    assert mp.abs(y_end[0]-mpfr_complex(0)) <= 1e-5
+    assert mp.abs(y_end[1]-mpfr_complex(0)) <= 1e-5
 
 
-        y_start = np.array([mpfr_complex(-1), mpfr_complex(0,1)]);
+def test_tracker_singular_start(xyzt):
+    x, y, z, t = xyzt
+    s = System()
 
-        track_success = tracker.track_path(y_end, t_start, t_end, y_start);
+    vars = VariableGroup()
+    vars.append(y); vars.append(x)
+    s.add_function(x**2 + (1-t)*x)
+    s.add_function(y**2 + (1-t)*y)
+    s.add_path_variable(t)
+    s.add_variable_group(vars)
+    s.precision(30)
+    ampconfig = amp_config_from(s)
 
+    tracker = AMPTracker(s)
 
-        self.assertTrue(track_success == SuccessCode.Success)
-        self.assertEqual(y_end.shape, (s.num_variables(),))
-        self.assertLessEqual(mp.abs(y_end[0]-mpfr_complex(0)), 1e-5)
-        self.assertLessEqual(mp.abs(y_end[1]-mpfr_complex(0)), 1e-5)
+    stepping_pref = SteppingConfig()
+    newton_pref = NewtonConfig()
 
+    tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref)
+    tracker.precision_setup(ampconfig)
 
-    def test_tracker_singular_start(self):
-        default_precision(30);
-        x = self.x;  y = self.y; t = self.t;
-        s = System();
+    t_start = mpfr_complex(1)
+    t_end = mpfr_complex(0)
 
-        vars = VariableGroup();
-        vars.append(y); vars.append(x);
-        s.add_function(x**2 + (1-t)*x);
-        s.add_function(y**2 + (1-t)*y)
-        s.add_path_variable(t);
-        s.add_variable_group(vars);
-        s.precision(30);
-        ampconfig = amp_config_from(s);
+    y_start = np.array([mpfr_complex(0), mpfr_complex(0)])
 
-        tracker = AMPTracker(s);
+    y_end = np.empty(shape=(s.num_variables(),), dtype=mpfr_complex)
 
-        stepping_pref = SteppingConfig();
-        newton_pref = NewtonConfig();
+    track_success = tracker.track_path(y_end, t_start, t_end, y_start)
 
-        tracker.setup(Predictor.Euler, 1e-5, 1e5, stepping_pref, newton_pref);
-        tracker.precision_setup(ampconfig);
-
-        t_start = mpfr_complex(1)
-        t_end = mpfr_complex(0)
-
-        y_start = np.array([mpfr_complex(0), mpfr_complex(0)]);
-
-
-        y_end = np.empty(shape=(s.num_variables(),),dtype=mpfr_complex);
-
-        track_success = tracker.track_path(y_end, t_start, t_end, y_start);
-
-        self.assertTrue(track_success == SuccessCode.SingularStartPoint)
-        self.assertEqual(y_end.shape, (s.num_variables(),))
-
-
-
-if __name__ == '__main__':
-    unittest.main();
-
-
+    assert track_success == SuccessCode.SingularStartPoint
+    assert y_end.shape == (s.num_variables(),)

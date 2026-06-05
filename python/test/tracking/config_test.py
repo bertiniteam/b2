@@ -29,7 +29,7 @@
 nag_algorithms: update()/repr/to_dict/from_dict/eq on configs, and
 config_types()/get_config()/set_config()/configure() on owners."""
 
-import unittest
+import pytest
 
 import bertini as pb
 from bertini.tracking import AMPTracker
@@ -46,81 +46,89 @@ def _square_system():
     return s
 
 
-class ConfigStructTest(unittest.TestCase):
-    """The pure config-struct conveniences, independent of any owner."""
+# ---------------------------------------------- pure config-struct conveniences
 
-    def test_update_is_chainable_and_sets_fields(self):
-        c = SteppingConfig().update(min_num_steps=3, max_num_steps=999)
-        self.assertIsInstance(c, SteppingConfig)
-        self.assertEqual(c.min_num_steps, 3)
-        self.assertEqual(c.max_num_steps, 999)
-
-    def test_update_rejects_unknown_field(self):
-        with self.assertRaises(AttributeError):
-            SteppingConfig().update(not_a_real_field=5)
-
-    def test_repr_shows_class_and_fields(self):
-        text = repr(SteppingConfig().update(min_num_steps=7))
-        self.assertTrue(text.startswith("SteppingConfig("))
-        self.assertIn("min_num_steps=7", text)
-
-    def test_to_dict_and_from_dict_roundtrip(self):
-        c = NewtonConfig().update(max_num_newton_iterations=4, min_num_newton_iterations=2)
-        d = c.to_dict()
-        self.assertEqual(d['max_num_newton_iterations'], 4)
-        self.assertEqual(NewtonConfig.from_dict(d), c)
-
-    def test_equality_by_value(self):
-        a = SteppingConfig().update(min_num_steps=5)
-        b = SteppingConfig().update(min_num_steps=5)
-        c = SteppingConfig().update(min_num_steps=6)
-        self.assertEqual(a, b)
-        self.assertNotEqual(a, c)
+def test_update_is_chainable_and_sets_fields():
+    c = SteppingConfig().update(min_num_steps=3, max_num_steps=999)
+    assert isinstance(c, SteppingConfig)
+    assert c.min_num_steps == 3
+    assert c.max_num_steps == 999
 
 
-class TrackerConfigTest(unittest.TestCase):
-    def setUp(self):
-        self.tracker = AMPTracker(_square_system())
-
-    def test_config_names_lists_the_typelist(self):
-        names = self.tracker.config_names()
-        self.assertIn('stepping', names)
-        self.assertIn('newton', names)
-        # the AMP tracker's precision config is AdaptiveMultiplePrecisionConfig (AMPConfig)
-        self.assertIn('amp', names)
-
-    def test_set_config_then_get_config_roundtrips(self):
-        self.tracker.set_config(NewtonConfig().update(max_num_newton_iterations=9))
-        self.assertEqual(self.tracker.get_config(NewtonConfig).max_num_newton_iterations, 9)
-
-    def test_configure_one_call_many_subconfigs(self):
-        self.tracker.configure(stepping={'min_num_steps': 11},
-                               newton={'max_num_newton_iterations': 6})
-        self.assertEqual(self.tracker.get_config(SteppingConfig).min_num_steps, 11)
-        self.assertEqual(self.tracker.get_config(NewtonConfig).max_num_newton_iterations, 6)
-
-    def test_get_stepping_internal_ref_updates_in_place(self):
-        # the legacy mutable accessor + update() edits the live config
-        self.tracker.get_stepping().update(min_num_steps=21)
-        self.assertEqual(self.tracker.get_config(SteppingConfig).min_num_steps, 21)
+def test_update_rejects_unknown_field():
+    with pytest.raises(AttributeError):
+        SteppingConfig().update(not_a_real_field=5)
 
 
-class AlgorithmConfigTest(unittest.TestCase):
-    """Previously there was no way to touch an algorithm's configs from Python."""
-
-    def setUp(self):
-        self.solver = ZeroDimCauchyAdaptivePrecisionTotalDegree(_square_system())
-
-    def test_algorithm_exposes_its_configs(self):
-        names = self.solver.config_names()
-        self.assertIn('tolerances', names)
-        self.assertIn('post_processing', names)
-
-    def test_set_and_get_algorithm_config(self):
-        tol = self.solver.get_config(TolerancesConfig).update(final_tolerance=1e-11)
-        self.solver.set_config(tol)
-        self.assertEqual(self.solver.get_config(TolerancesConfig), tol)
+def test_repr_shows_class_and_fields():
+    text = repr(SteppingConfig().update(min_num_steps=7))
+    assert text.startswith("SteppingConfig(")
+    assert "min_num_steps=7" in text
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_to_dict_and_from_dict_roundtrip():
+    c = NewtonConfig().update(max_num_newton_iterations=4, min_num_newton_iterations=2)
+    d = c.to_dict()
+    assert d['max_num_newton_iterations'] == 4
+    assert NewtonConfig.from_dict(d) == c
+
+
+def test_equality_by_value():
+    a = SteppingConfig().update(min_num_steps=5)
+    b = SteppingConfig().update(min_num_steps=5)
+    c = SteppingConfig().update(min_num_steps=6)
+    assert a == b
+    assert a != c
+
+
+# -------------------------------------------------------------- tracker configs
+
+@pytest.fixture
+def tracker():
+    return AMPTracker(_square_system())
+
+
+def test_config_names_lists_the_typelist(tracker):
+    names = tracker.config_names()
+    assert 'stepping' in names
+    assert 'newton' in names
+    # the AMP tracker's precision config is AdaptiveMultiplePrecisionConfig (AMPConfig)
+    assert 'amp' in names
+
+
+def test_set_config_then_get_config_roundtrips(tracker):
+    tracker.set_config(NewtonConfig().update(max_num_newton_iterations=9))
+    assert tracker.get_config(NewtonConfig).max_num_newton_iterations == 9
+
+
+def test_configure_one_call_many_subconfigs(tracker):
+    tracker.configure(stepping={'min_num_steps': 11},
+                      newton={'max_num_newton_iterations': 6})
+    assert tracker.get_config(SteppingConfig).min_num_steps == 11
+    assert tracker.get_config(NewtonConfig).max_num_newton_iterations == 6
+
+
+def test_get_stepping_internal_ref_updates_in_place(tracker):
+    # the legacy mutable accessor + update() edits the live config
+    tracker.get_stepping().update(min_num_steps=21)
+    assert tracker.get_config(SteppingConfig).min_num_steps == 21
+
+
+# ------------------------------------------------------------ algorithm configs
+# Previously there was no way to touch an algorithm's configs from Python.
+
+@pytest.fixture
+def solver():
+    return ZeroDimCauchyAdaptivePrecisionTotalDegree(_square_system())
+
+
+def test_algorithm_exposes_its_configs(solver):
+    names = solver.config_names()
+    assert 'tolerances' in names
+    assert 'post_processing' in names
+
+
+def test_set_and_get_algorithm_config(solver):
+    tol = solver.get_config(TolerancesConfig).update(final_tolerance=1e-11)
+    solver.set_config(tol)
+    assert solver.get_config(TolerancesConfig) == tol
