@@ -47,10 +47,15 @@ Making a new `System` is the starting point you want, probably some of these thi
 
 """
 
-import bertini._pybertini.system
+from bertini._pybertini import system as _pybsys
 
-from bertini._pybertini.system import * # brings the type System
-from bertini._pybertini.system import start_system
+from bertini._pybertini.system import *
 
-__all__ = dir(bertini._pybertini.system)
+# Override C++ submodule reference with the Python wrapper (which has AbstractStartSystem removed).
+# Can't use 'from . import start_system': the star import already set that name to the C++ submodule.
+import importlib as _importlib
+start_system = _importlib.import_module('bertini.system.start_system')
+del _importlib
+
+__all__ = dir(_pybsys)
 __all__.extend(['start_system'])

@@ -28,13 +28,20 @@
 
 
 
-import bertini._pybertini
-import bertini._pybertini.function_tree
-
-# from bertini._pybertini import function_tree
+from bertini._pybertini import function_tree as _pybft
 from bertini._pybertini.container import VariableGroup
 
 from bertini._pybertini.function_tree import *
+
+del AbstractNode
+
+# Override C++ submodule references with their Python wrappers (which have abstracts removed).
+# Can't use 'from . import symbol, root' here: the star import already put the C++ submodules
+# under those names, and Python skips the subpackage import when the name is already defined.
+import importlib as _importlib
+symbol = _importlib.import_module('bertini.function_tree.symbol')
+root = _importlib.import_module('bertini.function_tree.root')
+del _importlib
 
 from bertini._pybertini.function_tree.operator import Sqrt as _Sqrt
 
@@ -63,5 +70,6 @@ def variables(base, indices, fmt='{base}{index}'):
     return [Variable(fmt.format(base=base, index=i)) for i in indices]
 
 
-__all__ = dir(bertini._pybertini.function_tree) + ['variables', 'sqrt']
+_ABSTRACT = {'AbstractNode'}
+__all__ = [n for n in dir(_pybft) if n not in _ABSTRACT] + ['variables', 'sqrt']
 

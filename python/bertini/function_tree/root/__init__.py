@@ -28,10 +28,11 @@
 
 
 
-import bertini._pybertini
-import bertini._pybertini.function_tree.root
-
+from bertini._pybertini.function_tree import root as _pybroot
 from bertini._pybertini.function_tree.root import *
 
-__all__ = dir(bertini._pybertini.function_tree.root)
+del Handle
+
+_ABSTRACT = {'Handle'}
+__all__ = [n for n in dir(_pybroot) if n not in _ABSTRACT]
 
