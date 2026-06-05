@@ -1,4 +1,4 @@
-import bertini._pybertini.random
+from bertini._pybertini import random as _pybrand
 from bertini._pybertini.random import *
 
-__all__ = dir(bertini._pybertini.random)
+__all__ = dir(_pybrand)

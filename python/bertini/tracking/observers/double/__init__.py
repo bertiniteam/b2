@@ -32,8 +32,8 @@
 """
 Observers built to watch a pure-double precision tracker
 """
-import bertini._pybertini.tracking.observers.double
+from bertini._pybertini.tracking.observers import double as _pybdouble
 from bertini._pybertini.tracking.observers.double import *
 
-__all__ = dir(bertini._pybertini.tracking.observers.double)
+__all__ = dir(_pybdouble)
 

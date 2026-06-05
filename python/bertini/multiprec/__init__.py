@@ -43,7 +43,7 @@ Numeric types exposed are
 This namespace also includes the mathematical operators, like `cos`, etc.
 """
 
-import bertini._pybertini.multiprec
+from bertini._pybertini import multiprec as _pybmp
 import numpy as np
 
 from bertini._pybertini.multiprec import *
@@ -54,6 +54,6 @@ def Vector(n=0):
 	"""
 	return np.zeros((n,), dtype = Complex)
 
-__all__ = dir(bertini._pybertini.multiprec)
+__all__ = dir(_pybmp)
 
 
