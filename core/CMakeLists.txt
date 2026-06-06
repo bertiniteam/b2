@@ -452,6 +452,7 @@ endif(SUFFIX_SO_VERSION)
 add_executable(bertini2_exe)
 target_sources(bertini2_exe PUBLIC ${BERTINI2_EXE_SOURCES} ${BERTINI2_EXE_HEADERS})
 target_link_libraries(bertini2_exe ${Boost_LIBRARIES} bertini2)
+set_target_properties(bertini2_exe PROPERTIES OUTPUT_NAME bertini2)
 
 # todo: this should be made a devmode thing
 #target_compile_options(bertini2 PRIVATE -Wall -Wextra)

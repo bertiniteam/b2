@@ -27,6 +27,7 @@
 */
 
 #include "bertini2/blackbox/argc_argv.hpp"
+#include "bertini2/io/splash.hpp"
 #include <iostream>
 #include <string>
 
@@ -43,17 +44,30 @@ ParsedArgs ParseArgcArgv(int argc, char** argv)
 		if (arg == "--help" || arg == "-h")
 		{
 			std::cout <<
-				"Usage: bertini [options] [input_file]\n"
+				"Usage: bertini2 [options] [input_file]\n"
 				"\n"
 				"  input_file          path to Bertini classic input file (default: \"input\")\n"
 				"  -f <file>           specify input file explicitly\n"
 				"  --help, -h          print this message and exit\n"
-				"  --version           print version and exit\n";
+				"  --version           print version and exit\n"
+				"\n"
+				"Parallelism:\n"
+#ifdef BERTINI2_HAVE_MPI
+				"  MPI ranks:    mpirun --bind-to none -n N bertini2 [input_file]\n"
+				"  Threads/rank: OMP_NUM_THREADS=T mpirun --bind-to none -n N bertini2 [input_file]\n"
+				"    Total capacity = N ranks x T threads. OMP_NUM_THREADS defaults to 1.\n"
+#else
+				"  This build was compiled without MPI. Rebuild with MPI present for\n"
+				"  multi-rank parallelism (it is auto-detected at configure time).\n"
+				"  Thread count: set OMP_NUM_THREADS (default: 1).\n"
+#endif
+				;
 			std::exit(0);
 		}
 		else if (arg == "--version")
 		{
-			std::cout << "Bertini2\n";
+			std::cout << "Bertini2 " << bertini::Version() << "\n";
+			std::cout << bertini::DependencyVersions();
 			std::exit(0);
 		}
 		else if (arg == "-f" && i + 1 < argc)

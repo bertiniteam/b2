@@ -210,8 +210,6 @@ endif(WIN32)
 
 #target_link_boost_python(${PROJECT_NAME} PUBLIC)
 
-#set_property(TARGET bertini2_exe PROPERTY OUTPUT_NAME bertini2)
-
 add_subdirectory(core)
 
 
