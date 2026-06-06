@@ -143,7 +143,52 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, bertini::endgame::EndgameConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::EndgameConfig(), Skipper>
 			{
 				using T = double;
-				using R = mpfr_float;
+				using R = mpq_rational; // exact decimal-to-rational, no floating-point precision to go stale
+
+				// Convert a decimal string (e.g. "0.647", "8e-3") to exact mpq_rational.
+				// Avoids double's limited precision for non-dyadic values like 0.647.
+				static mpq_rational decimal_str_to_rational(std::string const& str) {
+					std::string s = str;
+					bool negative = false;
+					if (!s.empty() && s[0] == '-') { negative = true; s = s.substr(1); }
+					else if (!s.empty() && s[0] == '+') { s = s.substr(1); }
+
+					int exp_shift = 0;
+					auto e_pos = s.find_first_of("eE");
+					if (e_pos != std::string::npos) {
+						exp_shift = std::stoi(s.substr(e_pos + 1));
+						s = s.substr(0, e_pos);
+					}
+
+					auto dot_pos = s.find('.');
+					int decimal_places = 0;
+					if (dot_pos != std::string::npos) {
+						decimal_places = static_cast<int>(s.size()) - static_cast<int>(dot_pos) - 1;
+						s.erase(dot_pos, 1);
+					}
+
+					// strip leading zeros so GMP doesn't misinterpret as octal
+					if (s.empty() || s.find_first_not_of('0') == std::string::npos) {
+						s = "0";
+					} else {
+						s = s.substr(s.find_first_not_of('0'));
+					}
+					mpz_int numer(s);
+					if (negative) numer = -numer;
+
+					int net_exp = decimal_places - exp_shift;
+					if (net_exp > 0) {
+						mpz_int denom = 1;
+						for (int i = 0; i < net_exp; ++i) denom *= 10;
+						return mpq_rational(numer, denom);
+					} else if (net_exp < 0) {
+						mpz_int mult = 1;
+						for (int i = 0; i < -net_exp; ++i) mult *= 10;
+						return mpq_rational(numer * mult, 1);
+					} else {
+						return mpq_rational(numer, 1);
+					}
+				}
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "EndgameConfig")
 				{
@@ -160,16 +205,16 @@ namespace bertini {
 					using boost::spirit::lexeme;
 					using boost::spirit::as_string;
 					using boost::spirit::ascii::no_case;
-					
-					
-					
+
+
+
 					std::string samplefactor_name = "samplefactor";
 					std::string numpoints_name = "numsamplepoints";
 					std::string mintrack_name = "nbhdradius";
-					
-					
+
+
 					root_rule_.name("config::Endgame");
-					
+
 					root_rule_ = ((sample_factor_[phx::bind( [this](bertini::endgame::EndgameConfig & S, R num)
 															{
 																S.sample_factor = num;
@@ -182,18 +227,18 @@ namespace bertini {
 															  {
 																  S.num_sample_points = num;
 															  }, _val, _1 )])
-								  
+
 								  >> -no_setting_)
 					| no_setting_;
-					
-					
+
+
 					all_names_ = (no_case[samplefactor_name] >> ':') | (no_case[numpoints_name] >> ':')| (no_case[mintrack_name] >> ':');
-					
+
 					sample_factor_.name("sample_factor_");
 					sample_factor_ = *(char_ - all_names_) >> (no_case[samplefactor_name] >> ':')
-					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string str)
+					>> mpfr_rules.rational[phx::bind( [](R & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<mpfr_float>::FromString(str);
+															   num = decimal_str_to_rational(str);
 														   }, _val, _1 )] >> ';';
 					
 					min_track_.name("min_track_");
