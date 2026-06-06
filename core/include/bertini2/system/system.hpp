@@ -1568,33 +1568,11 @@ namespace bertini {
 		*/ 
 		void CopyVariableStructure(System const& other);
 		
-		/**
-		\brief One of a family of functions indicating whether we can assume the system will always have uniform precision.
-
-		\see PleaseAssumeUniformPrecision AssumeUniformPrecision IsAssumingUniformPrecision
-		*/
-		void DontAssumeUniformPrecision()
-		{
-			AssumeUniformPrecision(false);
-		}
-
-		void PleaseAssumeUniformPrecision()
-		{
-			AssumeUniformPrecision(true);
-		}
-
-		void AssumeUniformPrecision(bool val)
-		{
-			assume_uniform_precision_ = false;
-		}
-
-		/** 
-		\brief yon getter for the obvious thing it gets
-		*/
-		auto IsAssumingUniformPrecision() const
-		{
-			return assume_uniform_precision_;
-		}
+		// The Please/Dont AssumeUniformPrecision family was removed: the setter had
+		// ignored its argument (always storing false) for ages, so the early-out in
+		// System::precision() it was meant to enable was dead code, and skipping the
+		// propagation is unsound anyway (e.g. the SLP can be at a different precision
+		// than precision_ claims).  precision() now always propagates.
 
 		inline
 		void PleaseAutoSimplify()
@@ -1846,7 +1824,6 @@ namespace bertini {
 
 		mutable unsigned precision_; ///< the current working precision of the system 
 
-		bool assume_uniform_precision_ = false; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
 
 		EvalMethod eval_method_ = DefaultEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
 		DerivMethod deriv_method_ = DefaultDerivMethod(); ///< an enum class value, indicating which method of evaluation should be used.
@@ -1882,9 +1859,6 @@ namespace bertini {
 
 			ar & patch_;
 			ar & is_patched_;
-
-
-			ar & assume_uniform_precision_;
 
 			ar & eval_method_;
 			ar & deriv_method_;

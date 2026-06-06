@@ -45,6 +45,7 @@
 #include "bertini2/nag_algorithms/common/policies.hpp"
 #include "bertini2/parallel.hpp"
 #include <chrono>
+#include <mutex>
 
 
 namespace bertini {
@@ -394,32 +395,118 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				}
 				else
 				{
-					// ---- Phase 1 worker ----
-					parallel::RunWorkerLoop<SolnIndT, BeforeResult>(comm,
-						[this](SolnIndT const& idx)
-						{
-							TrackSinglePathBeforeEG(idx);
-						},
-						[this](SolnIndT const& idx) -> BeforeResult
-						{
-							return PackBeforeEGResult(idx);
-						});
+					const int n_threads = parallel::WorkerThreadCount();
 
-					// ---- Phase 2 worker ----
-					parallel::RunWorkerLoop<Phase2T, DuringResult>(comm,
-						[this](Phase2T const& task)
+					// ---- Phase 1 worker ----
+					if (n_threads <= 1)
+					{
+						parallel::RunWorkerLoop<SolnIndT, BeforeResult>(comm,
+							[this](SolnIndT const& idx)
+							{
+								TrackSinglePathBeforeEG(idx);
+							},
+							[this](SolnIndT const& idx) -> BeforeResult
+							{
+								return PackBeforeEGResult(idx);
+							});
+					}
+					else
+					{
+						// Thread-safe Phase 1: each thread owns a System copy, a Tracker
+						// copy pointed at that System, and its own pair of precision
+						// observers (so observer-derived metadata matches serial runs).
+						// The state is heap-allocated (unique_ptr) so the System address
+						// is stable after the factory returns — the tracker's
+						// reference_wrapper never dangles.
+						auto state_factory = [this]() -> std::unique_ptr<Phase1ThreadState>
+						{
+							// Clone(), not the copy constructor: System copies are SHALLOW
+							// (shared_ptr expression-tree nodes), and node value caches are
+							// mutated on every Eval.  Clone() deep-copies the whole tree, so
+							// each thread evaluates its own.
+							//
+							// Trackers have no default constructor (require a System at
+							// construction), so aggregate-initialize via new rather than
+							// make_unique.
+							std::unique_ptr<Phase1ThreadState> s(
+								new Phase1ThreadState{ Clone(GetTracker().GetSystem()), GetTracker(), {}, {} });
+							// Tracker copies are fully independent (value-semantic predictor,
+							// corrector, and an empty observer list); just repoint the copy
+							// at its own System clone.
+							s->tracker.SetSystem(s->sys);
+							// Same precision the serial flow sets via DefaultPrecision()
+							// in TrackBeforeEG — but thread-local, from the config (the
+							// global default is not reliable on worker ranks).
+							SetThreadPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
+							return s;
+						};
+
+						auto track_fn = [this](std::unique_ptr<Phase1ThreadState>& state, SolnIndT const& idx) -> BeforeResult
+						{
+							TrackSinglePathBeforeEGWith(*state, idx);
+							return PackBeforeEGResult(idx);
+						};
+
+						parallel::RunWorkerLoopThreaded<SolnIndT, BeforeResult>(
+							comm, state_factory, track_fn, n_threads);
+					}
+
+					// ---- Phase 2 worker (endgame) ----
+					if (n_threads <= 1)
+					{
+						// Serial flow sets this before its endgame loop (TrackDuringEG);
+						// mirror it here so worker tolerances match serial runs.
+						GetTracker().SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
+
+						parallel::RunWorkerLoop<Phase2T, DuringResult>(comm,
+							[this](Phase2T const& task)
+							{
+								auto idx = static_cast<SolnIndT>(task.path_index);
+								// Install boundary data so TrackSinglePathDuringEG can read it.
+								solutions_at_endgame_boundary_[idx].path_point         = task.boundary_point;
+								solutions_at_endgame_boundary_[idx].last_used_stepsize = task.boundary_stepsize;
+								solutions_at_endgame_boundary_[idx].success_code       = SuccessCode::Success;
+								TrackSinglePathDuringEG(idx);
+							},
+							[this](Phase2T const& task) -> DuringResult
+							{
+								return PackDuringEGResult(static_cast<SolnIndT>(task.path_index));
+							});
+					}
+					else
+					{
+						// Thread-safe Phase 2: each thread owns copies of the homotopy
+						// (for its tracker), the target system (for residual evaluation,
+						// which mutates System precision state), the tracker, the endgame
+						// (rebound to the thread's tracker), and precision observers.
+						auto state_factory = [this]() -> std::unique_ptr<Phase2ThreadState>
+						{
+							// Clone(), not copy: see the Phase 1 factory above.
+							std::unique_ptr<Phase2ThreadState> s(
+								new Phase2ThreadState{ Clone(GetTracker().GetSystem()), Clone(TargetSystem()),
+								                       GetTracker(), GetEndgame(), {}, {} });
+							s->tracker.SetSystem(s->sys);
+							s->tracker.SetTrackingTolerance(this->template Get<Tolerances>().newton_during_endgame);
+							s->endgame.SetTracker(s->tracker);
+							SetThreadPrecision(this->template Get<ZeroDimConf>().initial_ambient_precision);
+							return s;
+						};
+
+						auto track_fn = [this](std::unique_ptr<Phase2ThreadState>& state, Phase2T const& task) -> DuringResult
 						{
 							auto idx = static_cast<SolnIndT>(task.path_index);
-							// Install boundary data so TrackSinglePathDuringEG can read it.
+							// Each idx is assigned to exactly one thread — element-wise
+							// writes into these pre-sized vectors race with nobody.
 							solutions_at_endgame_boundary_[idx].path_point         = task.boundary_point;
 							solutions_at_endgame_boundary_[idx].last_used_stepsize = task.boundary_stepsize;
 							solutions_at_endgame_boundary_[idx].success_code       = SuccessCode::Success;
-							TrackSinglePathDuringEG(idx);
-						},
-						[this](Phase2T const& task) -> DuringResult
-						{
-							return PackDuringEGResult(static_cast<SolnIndT>(task.path_index));
-						});
+							TrackSinglePathDuringEGWith(*state, idx);
+							return PackDuringEGResult(idx);
+						};
+
+						parallel::RunWorkerLoopThreaded<Phase2T, DuringResult>(
+							comm, state_factory, track_fn, n_threads);
+					}
 				}
 			}
 #endif // BERTINI2_HAVE_MPI
@@ -766,6 +853,186 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 			}
 
+#ifdef BERTINI2_HAVE_MPI
+			/**
+			Self-contained per-thread tracking state for Phase 1 (before-EG) work on a
+			threaded MPI worker rank.  Each std::thread owns one of these: a System copy,
+			a Tracker copy repointed at that System, and its own precision observers so
+			observer-derived metadata is collected exactly as in serial runs.
+			*/
+			struct Phase1ThreadState
+			{
+				System          sys;
+				TrackerType     tracker;
+				tracking::FirstPrecisionRecorder<TrackerType>  first_prec_rec;
+				tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec;
+			};
+
+			/**
+			Per-thread state for Phase 2 (endgame).  Additionally owns a target-system
+			copy (residual evaluation mutates System precision state) and an Endgame copy
+			rebound to the thread's tracker.
+			*/
+			struct Phase2ThreadState
+			{
+				System          sys;         // homotopy, tracked by `tracker`
+				System          target_sys;  // for function residuals / dehomogenization
+				TrackerType     tracker;
+				EndgameT        endgame;
+				tracking::FirstPrecisionRecorder<TrackerType>  first_prec_rec;
+				tracking::MinMaxPrecisionRecorder<TrackerType> min_max_prec;
+			};
+
+			/**
+			\brief Track one path to the endgame boundary using thread-owned state.
+
+			Like TrackSinglePathBeforeEG but uses the caller's tracker and observers
+			(from a Phase1ThreadState) instead of the shared members.  Intended for use
+			from std::thread workers.  Precision changes are thread-local only.
+			*/
+			void TrackSinglePathBeforeEGWith(
+				Phase1ThreadState& state,
+				SolnIndT soln_ind)
+			{
+					// if you can think of a way to replace this `if` with something meta, please do so.
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						state.tracker.AddObserver(state.first_prec_rec);
+						state.tracker.AddObserver(state.min_max_prec);
+					}
+
+				auto& smd = solution_final_metadata_[soln_ind];
+				smd.path_index    = soln_ind;
+				smd.solution_index = soln_ind;
+
+				auto initial_prec = this->template Get<ZeroDimConf>().initial_ambient_precision;
+				// SetThreadPrecision: writes thread-local only, safe from concurrent threads.
+				SetThreadPrecision(initial_prec);
+
+				auto t_start           = this->template Get<ZeroDimConf>().start_time;
+				auto t_endgame_boundary = this->template Get<ZeroDimConf>().endgame_boundary;
+
+				// The start system is SHARED among threads, and StartPoint() evaluates
+				// expression-tree nodes (mutating their value caches), so generation is
+				// serialized.  It is trivial arithmetic compared to tracking, so the
+				// mutex costs nothing measurable.  Generated AFTER SetThreadPrecision
+				// so the point has the same precision a serial run would give it.
+				Vec<BaseComplexT> start_point;
+				{
+					static std::mutex start_point_mutex;
+					std::lock_guard<std::mutex> lock(start_point_mutex);
+					start_point = StartSystem().template StartPoint<BaseComplexT>(soln_ind);
+				}
+
+				Vec<BaseComplexT> result;
+				auto tracking_success = state.tracker.TrackPath(result, t_start, t_endgame_boundary, start_point);
+
+				// Each soln_ind is unique per thread — no locking needed.
+				solutions_at_endgame_boundary_[soln_ind] =
+					EGBoundaryMetaDataT({ result, tracking_success, state.tracker.CurrentStepsize() });
+				smd.pre_endgame_success = tracking_success;
+
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						if (state.first_prec_rec.DidPrecisionIncrease())
+						{
+							smd.precision_changed = true;
+							smd.time_of_first_prec_increase = state.first_prec_rec.TimeOfIncrease();
+						}
+						else
+						state.tracker.RemoveObserver(state.first_prec_rec);
+						state.tracker.RemoveObserver(state.min_max_prec);
+						using std::max;
+						smd.max_precision_used =
+							max(smd.max_precision_used, state.min_max_prec.MaxPrecision());
+					}
+			}
+
+			/**
+			\brief Run the endgame on one path using thread-owned state.
+
+			Like TrackSinglePathDuringEG but uses the caller's tracker, endgame, target
+			system, and observers (from a Phase2ThreadState) instead of the shared
+			members.  Precision changes are thread-local only.
+			*/
+			void TrackSinglePathDuringEGWith(Phase2ThreadState& state, SolnIndT soln_ind)
+			{
+					auto& smd = solution_final_metadata_[soln_ind];
+					// if you can think of a way to replace this `if` with something meta, please do so.
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						if (!smd.precision_changed)
+							state.tracker.AddObserver(state.first_prec_rec);
+						state.tracker.AddObserver(state.min_max_prec);
+					}
+
+				const auto& bdry_point = solutions_at_endgame_boundary_[soln_ind].path_point;
+
+				state.tracker.SetStepSize(solutions_at_endgame_boundary_[soln_ind].last_used_stepsize);
+				state.tracker.ReinitializeInitialStepSize(false);
+
+				auto start_prec = Precision(bdry_point);
+
+				SetThreadPrecision(start_prec);
+
+				state.endgame.SetBoundaryTime(this->template Get<ZeroDimConf>().endgame_boundary);
+				state.endgame.SetTargetTime  (this->template Get<ZeroDimConf>().target_time);
+
+				auto eg_success = state.endgame.Run(bdry_point);
+
+				solutions_post_endgame_[soln_ind] = state.endgame.template FinalApproximation<BaseComplexT>();
+
+					// finally, store the metadata as necessary
+					smd.endgame_success = eg_success;
+
+					// an unsuccessful endgame has no final approximation, so the
+					// final-point-dependent metadata cannot be computed.
+					if (eg_success != SuccessCode::Success)
+					{
+						if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+						{
+							state.tracker.RemoveObserver(state.first_prec_rec);
+							state.tracker.RemoveObserver(state.min_max_prec);
+						}
+						return;
+					}
+						// if you can think of a way to replace this `if` with something meta, please do so.
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						if (!smd.precision_changed)
+						{
+							if (state.first_prec_rec.DidPrecisionIncrease())
+							{
+								smd.precision_changed = true;
+								smd.time_of_first_prec_increase = state.first_prec_rec.TimeOfIncrease();
+							}
+							state.tracker.RemoveObserver(state.first_prec_rec);
+						}
+						state.tracker.RemoveObserver(state.min_max_prec);
+						using std::max;
+						smd.max_precision_used =
+							max(smd.max_precision_used, state.min_max_prec.MaxPrecision());
+					}
+					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
+					{
+						assert(Precision(solutions_post_endgame_[soln_ind])==Precision(state.endgame.template FinalApproximation<BaseComplexT>()));
+						SetThreadPrecision(Precision(solutions_post_endgame_[soln_ind]));
+						state.target_sys.precision(Precision(solutions_post_endgame_[soln_ind]));
+					}
+					smd.function_residual = static_cast<NumErrorT>(state.target_sys.Eval(solutions_post_endgame_[soln_ind]).template lpNorm<Eigen::Infinity>());
+					smd.final_time_used = state.endgame.LatestTime();
+					smd.condition_number = state.tracker.LatestConditionNumber();
+					smd.newton_residual = state.tracker.LatestNormOfStep();
+
+					smd.accuracy_estimate = state.endgame.ApproximateError();
+					smd.accuracy_estimate_user_coords =
+						static_cast<NumErrorT>( (state.target_sys.DehomogenizePoint(solutions_post_endgame_[soln_ind]) -
+						state.target_sys.DehomogenizePoint(state.endgame.template PreviousApproximation<BaseComplexT>())).template lpNorm<Eigen::Infinity>() );
+					smd.cycle_num = state.endgame.CycleNumber();
+					// end metadata gathering
+			}
+#endif // BERTINI2_HAVE_MPI
+
 			void EGBoundaryAction()
 			{
 				auto midcheckpassed = midpath_.Check(solutions_at_endgame_boundary_, StartSystem());
@@ -871,6 +1138,10 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 						smd.max_precision_used =
 							max(smd.max_precision_used, min_max_prec_.MaxPrecision());
 					}
+					// an unsuccessful endgame has no final approximation, so the
+					// final-point-dependent metadata cannot be computed.
+					if (eg_success != SuccessCode::Success)
+						return;
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
 						assert(Precision(solutions_post_endgame_[soln_ind])==Precision(GetEndgame().template FinalApproximation<BaseComplexT>()));
@@ -1104,7 +1375,16 @@ ZeroDim<TrackerType,EndgameType,SystemType,StartSystemType,SystemManagementP>
 	using ZDConfs = typename Config::UsedConfigs;
 	auto zd = ConfigParser<ZDConfs>::Parse(config_str);
 	InjectParsedTuple(*this, zd);
-	DefaultSystemSetup(); // path variable name comes from ZeroDimConf; re-run after update
+	// The path variable name comes from ZeroDimConf, so the homotopy must be
+	// re-formed if the parsed name differs from the one used at construction.
+	// Only re-run setup in that case: re-running unconditionally re-randomizes
+	// gamma and the start system for no reason, and (before Homogenize() was made
+	// idempotent) re-corrupted the prepared target system.
+	if (!Homotopy().HavePathVariable()
+	    || Homotopy().GetPathVariable()->name() != this->template Get<ZeroDimConf>().path_variable_name)
+	{
+		DefaultSystemSetup();
+	}
 
 	// 2. Tracker — uses positional Setup() rather than Set<T>, so handle explicitly.
 	using TkConfs = detail::TypeList<

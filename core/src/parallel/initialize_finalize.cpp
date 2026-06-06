@@ -50,7 +50,12 @@ namespace bertini{
 			int already_initialized = 0;
 			MPI_Initialized(&already_initialized);
 			if (!already_initialized)
-				MPI_Init(nullptr, nullptr);
+			{
+				// MPI_THREAD_FUNNELED: all MPI calls occur on the main thread only.
+				// Worker threads communicate via local queues; they never call MPI.
+				int provided = 0;
+				MPI_Init_thread(nullptr, nullptr, MPI_THREAD_FUNNELED, &provided);
+			}
 #endif
 		}
 

@@ -200,8 +200,9 @@ namespace bertini
 	{
 		using std::abs;
 		using std::sqrt;
-		static std::default_random_engine generator;
-		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		// thread_local: called during tracking, possibly from std::thread workers
+		static thread_local std::default_random_engine generator;
+		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
 		dbl_complex returnme(distribution(generator), distribution(generator));
 		return returnme / sqrt( abs(returnme));
 	}
@@ -209,8 +210,8 @@ namespace bertini
 	template <> inline
 	dbl_complex RandomUnit<dbl_complex >()
 	{
-		static std::default_random_engine generator;
-		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		static thread_local std::default_random_engine generator;
+		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
 		dbl_complex returnme(distribution(generator), distribution(generator));
 		return returnme / abs(returnme);
 	}
@@ -242,12 +243,12 @@ namespace bertini {
 	{
 		inline static unsigned NumDigits()
 		{
-			return DefaultPrecision();
+			return ThreadPrecision();
 		}
 
 		inline static unsigned NumFuzzyDigits()
 		{
-			return DefaultPrecision()-3;
+			return ThreadPrecision()-3;
 		}
 
 		inline
@@ -279,7 +280,7 @@ namespace bertini {
 	{
 		inline static unsigned NumDigits()
 		{
-			return DefaultPrecision();
+			return ThreadPrecision();
 		}
 
 		inline static 

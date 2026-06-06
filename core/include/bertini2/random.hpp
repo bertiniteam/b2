@@ -48,8 +48,11 @@ namespace bertini
 	mpz_int RandomInt()
 	{
 		using namespace boost::random;
-   		static mt19937 mt;
-	    static uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
+		// thread_local: random generation happens during tracking (e.g. condition
+		// number estimation in the Newton corrector), which may run concurrently
+		// on std::thread workers.  Each thread gets its own engine.
+   		static thread_local mt19937 mt;
+	    static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
 	    return ui(mt);
 	}
 	
@@ -61,8 +64,8 @@ namespace bertini
 	mpq_rational RandomRat()
 	{
    		using namespace boost::random;
-   		static mt19937 mt;
-	    static uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
+   		static thread_local mt19937 mt;
+	    static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
 	    return mpq_rational(ui(mt),ui(mt));
 	}
 
@@ -79,8 +82,8 @@ namespace bertini
 		using namespace boost::multiprecision;
    		using namespace boost::random;
 
-   		static uniform_real_distribution<number<mpfr_float_backend<length_in_digits>, et_on> > distribution(0,1);
-   		static independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> bit_generator;
+   		static thread_local uniform_real_distribution<number<mpfr_float_backend<length_in_digits>, et_on> > distribution(0,1);
+   		static thread_local independent_bits_engine<mt19937, length_in_digits*1000L/301L, mpz_int> bit_generator;
 
 		mpfr_float a{distribution(bit_generator)};
 		return a;
@@ -167,11 +170,11 @@ using bertini::RandomMp;
 	inline 
 	void RandomRealAssign(complex & a, unsigned num_digits)
 	{
-		auto cached = DefaultPrecision();
-		DefaultPrecision(num_digits);
+		auto cached = ThreadPrecision();
+		SetThreadPrecision(num_digits);
 		complex temp(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits)); // ,0
 		a.swap(temp);
-		DefaultPrecision(cached);
+		SetThreadPrecision(cached);
 	}
 
 	/**
@@ -187,10 +190,10 @@ using bertini::RandomMp;
 	 */
 	inline complex RandomReal(unsigned num_digits)
 	{
-		auto cached = DefaultPrecision();
-		DefaultPrecision(num_digits);
+		auto cached = ThreadPrecision();
+		SetThreadPrecision(num_digits);
 		auto result = complex(RandomMp(mpfr_float(-1),mpfr_float(1),num_digits));// ,0
-		DefaultPrecision(cached);
+		SetThreadPrecision(cached);
 		return result;
 	}
 
@@ -226,12 +229,12 @@ using bertini::RandomMp;
 	inline 
 	void rand_assign(complex & a, unsigned num_digits)
 	{
-		auto cached = DefaultPrecision();
-		DefaultPrecision(num_digits);
+		auto cached = ThreadPrecision();
+		SetThreadPrecision(num_digits);
 		
 		mpfr_complex temp( RandomMp(num_digits), RandomMp(num_digits) );
 		a = std::move(temp);
-		DefaultPrecision(cached);
+		SetThreadPrecision(cached);
 	}
 
 	inline 
@@ -251,13 +254,13 @@ using bertini::RandomMp;
 	inline 
 	void RandomUnitAssign(complex & a, unsigned num_digits)
 	{
-		auto cached = DefaultPrecision();
-		DefaultPrecision(num_digits);
+		auto cached = ThreadPrecision();
+		SetThreadPrecision(num_digits);
 		a.precision(num_digits);
 		
 		complex temp(RandomMp(num_digits),RandomMp(num_digits));
 		a = std::move(temp/sqrt(abs(temp)));
-		DefaultPrecision(cached);
+		SetThreadPrecision(cached);
 	}
 
 	inline 

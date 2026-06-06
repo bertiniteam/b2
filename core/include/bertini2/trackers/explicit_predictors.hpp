@@ -395,7 +395,9 @@ namespace bertini{
 				
 				void PrecisionSanityCheck() const
 				{
-					assert(current_precision_==DefaultPrecision());
+					// ThreadPrecision: correct when running on a std::thread worker,
+					// where precision is set via SetThreadPrecision (thread-local only).
+					assert(current_precision_==ThreadPrecision());
 
 					Vec<mpfr_complex>& dhdttemp = std::get< Vec<mpfr_complex> >(dh_dt_temp_);
 					Mat<mpfr_complex>& dhdx0 = std::get< Mat<mpfr_complex> >(dh_dx_0_); 
@@ -821,7 +823,7 @@ namespace bertini{
 
 						if (!std::is_same<ComplexT,dbl>::value)
 						{
-							assert(DefaultPrecision()==current_precision_);
+							assert(ThreadPrecision()==current_precision_);
 
 							assert(Precision(space)==current_precision_);
 							assert(Precision(time)==current_precision_);

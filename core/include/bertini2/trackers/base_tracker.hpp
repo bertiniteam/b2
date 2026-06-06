@@ -153,10 +153,10 @@ namespace bertini{
 			using Newton = NewtonConfig;
 			using PrecConf = typename TrackerTraits< D >::PrecisionConfig;
 
-			Tracker(System const& sys) : tracked_system_(std::ref(sys))
+			Tracker(System const& sys) : tracked_system_(std::ref(sys)),
+				predictor_(predict::DefaultPredictor(), sys),
+				corrector_(sys)
 			{
-				predictor_ = std::make_shared< predict::ExplicitRKPredictor >(predict::DefaultPredictor(), tracked_system_);
-				corrector_ = std::make_shared< correct::NewtonCorrector >(tracked_system_);
 				SetPredictor(predict::DefaultPredictor());
 			}
 
@@ -175,7 +175,7 @@ namespace bertini{
 						NewtonConfig const& newton)
 			{
 				SetPredictor(new_predictor_choice);
-				corrector_->Settings(newton);
+				corrector_.Settings(newton);
 
 				SetTrackingTolerance(tracking_tolerance);
 
@@ -343,8 +343,8 @@ namespace bertini{
 			*/
 			void SetPredictor(Predictor new_predictor_choice)
 			{
-				predictor_->PredictorMethod(new_predictor_choice);
-				predictor_order_ = predictor_->Order();
+				predictor_.PredictorMethod(new_predictor_choice);
+				predictor_order_ = predictor_.Order();
 			}
 
 
@@ -353,7 +353,7 @@ namespace bertini{
 			*/
 			Predictor GetPredictor() const
 			{
-				return predictor_->PredictorMethod();
+				return predictor_.PredictorMethod();
 			}
 
 
@@ -363,8 +363,8 @@ namespace bertini{
 			void SetSystem(const System & new_sys)
 			{
 				tracked_system_ = std::ref(new_sys);
-				predictor_->ChangeSystem(tracked_system_);
-				corrector_->ChangeSystem(tracked_system_);
+				predictor_.ChangeSystem(tracked_system_);
+				corrector_.ChangeSystem(tracked_system_);
 			}
 
 			/**
@@ -570,10 +570,18 @@ namespace bertini{
 
 
 			// configuration for tracking
-			std::shared_ptr<predict::ExplicitRKPredictor > predictor_; // The predictor to use while tracking
+			//
+			// predictor and corrector are held BY VALUE so that copying a tracker
+			// deep-copies them.  (They were previously shared_ptr, which made every
+			// tracker copy share one predictor/corrector with its source — unusable
+			// from multiple threads.)  Both hold only work buffers and settings; they
+			// store no reference to the System, so plain memberwise copy is correct.
+			// They are mutable for the same reason as the state members above: they
+			// hold scratch space mutated during the logically-const TrackPath.
+			mutable predict::ExplicitRKPredictor predictor_; // The predictor to use while tracking
 			unsigned predictor_order_; ///< The order of the predictor -- one less than the error estimate order.
 
-			std::shared_ptr<correct::NewtonCorrector> corrector_;
+			mutable correct::NewtonCorrector corrector_;
 
 
 

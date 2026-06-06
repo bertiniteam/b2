@@ -83,7 +83,6 @@ namespace bertini
 		swap(a.space_derivatives_,b.space_derivatives_);
 		swap(a.time_derivatives_,b.time_derivatives_);
 
-		swap(a.assume_uniform_precision_,b.assume_uniform_precision_);
 		swap(a.eval_method_,b.eval_method_);
 
 		swap(a.precision_,b.precision_);
@@ -118,7 +117,6 @@ namespace bertini
 
 		is_differentiated_ = other.is_differentiated_;
 
-		assume_uniform_precision_ = other.assume_uniform_precision_;
 		eval_method_ = other.eval_method_;
 
 		time_order_of_variable_groups_ = other.time_order_of_variable_groups_;
@@ -244,9 +242,6 @@ namespace bertini
 
 	void System::precision(unsigned new_precision) const
 	{
-		if (this->assume_uniform_precision_ && new_precision == this->precision_)
-			return;
-
 		for (const auto& iter : functions_) {
 			iter->precision(new_precision);
 		}
@@ -268,12 +263,12 @@ namespace bertini
 			iter->precision(new_precision);
 		}
 
-		if (is_differentiated_)
+		switch (eval_method_)
 		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
+			case EvalMethod::FunctionTree:{
 
+				if (is_differentiated_)
+				{
 					switch (deriv_method_){
 						case DerivMethod::JacobianNode:{
 							for (const auto& iter : jacobian_)
@@ -288,15 +283,19 @@ namespace bertini
 							break;
 						}
 					}
-					break;
 				}
-				case EvalMethod::SLP:
-				{
-					this->slp_.precision(new_precision);
-					break;					
-				}
+				break;
 			}
-			
+			case EvalMethod::SLP:
+			{
+				// the SLP exists (and is used for plain Eval) regardless of whether
+				// the system has been differentiated, so its precision must be kept
+				// in sync unconditionally.  previously this was gated behind
+				// is_differentiated_, leaving a never-differentiated system's SLP at
+				// its compile-time precision forever.
+				this->slp_.precision(new_precision);
+				break;
+			}
 		}
 
 		if (have_path_variable_)
@@ -437,9 +436,16 @@ namespace bertini
 			throw std::runtime_error("trying to homogenize a non-polynomial system.");
 
 		bool already_had_homvars = NumHomVariables()!=0;
-		
+
 		if (already_had_homvars && NumHomVariables()!=NumVariableGroups())
 			throw std::runtime_error("size mismatch on number of homogenizing variables and number of variable groups");
+
+		// idempotency: homogenizing an already-homogenized system must be a no-op.
+		// without this, a second call re-homogenizes each function with respect to
+		// the group INCLUDING its homogenizing variable, inflating degrees (observed
+		// 2026-06-06: degrees (2,1) -> (3,2), turning a 2-path TD into a 6-path one).
+		if (already_had_homvars && IsHomogeneous())
+			return;
 
 		if (!already_had_homvars)
 		{
@@ -1437,8 +1443,16 @@ namespace bertini
 			if (this->patch_ != rhs.patch_)
 				throw std::runtime_error("System+=System cannot combine two patched systems whose patches differ.");
 
+		// make NEW Function wrappers rather than calling SetRoot on the existing
+		// ones: the existing Function nodes are shared_ptrs, SHARED with whatever
+		// system this one was (shallowly) copied from.  mutating them in place
+		// rewrites that system's functions too — e.g. forming the homotopy
+		// (1-t)*target + gamma*t*start used to corrupt both the target and the
+		// start system (observed 2026-06-06).
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
-			(*iter)->SetRoot( (*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode());
+			*iter = node::Function::Make(
+				(*(rhs.functions_.begin()+(iter-functions_.begin())))->EntryNode() + (*iter)->EntryNode(),
+				(*iter)->name());
 
 		is_differentiated_ = false;
 		return *this;
@@ -1452,9 +1466,10 @@ namespace bertini
 
 	System& System::operator*=(std::shared_ptr<node::Node> const& N)
 	{
+		// new wrappers, not SetRoot — see comment in operator+= above.
 		for (auto iter=functions_.begin(); iter!=functions_.end(); iter++)
 		{
-			(*iter)->SetRoot( N * (*iter)->EntryNode());
+			*iter = node::Function::Make( N * (*iter)->EntryNode(), (*iter)->name());
 		}
 		is_differentiated_ = false;
 		return *this;
@@ -1562,6 +1577,21 @@ namespace bertini
 			boost::archive::text_iarchive ia(ss);
 			ia >> sys_clone;
 		}
+
+		// Rebuild evaluation machinery from the deserialized expression tree rather
+		// than trusting the archived copy: the serialized SLP does not survive the
+		// round trip faithfully (its time-derivative outputs read stale memory,
+		// observed 2026-06-06; root cause in SLP serialization not yet identified).
+		// Differentiate() re-derives the derivative trees and recompiles the SLP
+		// from the clone's own (verified-exact) tree.
+		if (sys_clone.GetEvalMethod() == EvalMethod::SLP)
+			sys_clone.Differentiate();
+
+		// Normalize precision across all parts of the clone.  The source system can
+		// carry internally-inconsistent precision state (e.g. precision_ says 30 but
+		// the SLP is still at its compile-time precision); precision() propagates to
+		// every node, derivative, and the SLP.
+		sys_clone.precision(sys_clone.precision());
 
 		return sys_clone;
 	}

@@ -114,9 +114,11 @@ public:
 
 			using bertini::Precision;
 
-			auto prev_precision = DefaultPrecision();
+			// thread-local precision: endgames may run on std::thread workers, so
+			// neither read nor write the global default precision.
+			auto prev_precision = ThreadPrecision();
 			auto higher_precision = max(prev_precision,LowestMultiplePrecision())+ PrecisionIncrement();
-			DefaultPrecision(higher_precision);
+			SetThreadPrecision(higher_precision);
 			this->GetTracker().ChangePrecision(higher_precision);
 
 			NotifyObservers(PrecisionChanged<EmitterType>(*this, prev_precision, higher_precision));
@@ -129,7 +131,7 @@ public:
 			auto time_higher_precision = current_time;
 			Precision(time_higher_precision,higher_precision);
 
-			assert(time_higher_precision.precision()==DefaultPrecision());
+			assert(time_higher_precision.precision()==ThreadPrecision());
 			refinement_success = this->GetTracker().Refine(result_higher_prec,
 			                                               next_sample_higher_prec,
 			                                               time_higher_precision,
@@ -139,7 +141,7 @@ public:
 			Precision(result, higher_precision);
 			result = result_higher_prec;
 			
-			assert(Precision(result)==DefaultPrecision());
+			assert(Precision(result)==ThreadPrecision());
 		}
 		return refinement_success;
 	}

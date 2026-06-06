@@ -648,7 +648,8 @@ public:
 			throw std::runtime_error(err_msg.str());
 		}
 
-		DefaultPrecision(Precision(start_point));
+		// thread-local only: the endgame may run on a std::thread worker.
+		SetThreadPrecision(Precision(start_point));
 
 		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		//Set up for the endgame.

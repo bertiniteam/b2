@@ -481,7 +481,7 @@ namespace bertini{
 				#endif
 
 				NotifyObservers(Initializing<AMPTracker,mpfr_complex>(*this,start_time, end_time, start_point));
-				DefaultPrecision(initial_precision_);
+				SetThreadPrecision(initial_precision_);
 				// set up the master current time and the current step size
 				
 				current_time_ = start_time;
@@ -1156,8 +1156,8 @@ namespace bertini{
 			              				"underlying complex type and the type for comparisons must match");
 
 
-				if (predictor_->HasErrorEstimate())
-					return predictor_->Predict(predicted_space,
+				if (predictor_.HasErrorEstimate())
+					return predictor_.Predict(predicted_space,
 									this->error_estimate_,
 									this->size_proportion_,
 									this->norm_J_,
@@ -1171,7 +1171,7 @@ namespace bertini{
 									tracking_tolerance_,
 									Get<PrecConf>());
 				else
-					return predictor_->Predict(predicted_space,
+					return predictor_.Predict(predicted_space,
 									this->size_proportion_,
 									this->norm_J_,
 									this->norm_J_inverse_,
@@ -1213,7 +1213,7 @@ namespace bertini{
 
 
 
-				return corrector_->Correct(corrected_space,
+				return corrector_.Correct(corrected_space,
 									this->norm_delta_z_,
 									this->norm_J_,
 									this->norm_J_inverse_,
@@ -1288,7 +1288,7 @@ namespace bertini{
 
 
 
-				return corrector_->Correct(new_space,
+				return corrector_.Correct(new_space,
 										   this->norm_delta_z_,
 										   this->norm_J_,
 										   this->norm_J_inverse_,
@@ -1332,7 +1332,7 @@ namespace bertini{
 				ChangePrecision(target_precision);
 				Precision(new_space,target_precision);
 
-				return corrector_->Correct(new_space,
+				return corrector_.Correct(new_space,
 										this->norm_delta_z_,
 										this->norm_J_,
 										this->norm_J_inverse_,
@@ -1434,7 +1434,7 @@ namespace bertini{
 				#endif
 
 				current_precision_ = DoublePrecision();
-				DefaultPrecision(DoublePrecision());
+				SetThreadPrecision(DoublePrecision());
 
 				GetSystem().precision(16);
 
@@ -1584,7 +1584,7 @@ namespace bertini{
 			{
 				previous_precision_ = current_precision_;
 				current_precision_ = new_precision;
-				DefaultPrecision(new_precision);
+				SetThreadPrecision(new_precision);
 			}
 
 			
@@ -1608,8 +1608,8 @@ namespace bertini{
 			void AdjustInternalsPrecision(unsigned new_precision) const
 			{
 				GetSystem().precision(new_precision);
-				predictor_->ChangePrecision(new_precision);
-				corrector_->ChangePrecision(new_precision);
+				predictor_.ChangePrecision(new_precision);
+				corrector_.ChangePrecision(new_precision);
 
 				endtime_ = endtime_highest_precision_;
 
@@ -1657,7 +1657,7 @@ namespace bertini{
 				}
 
 				if constexpr (std::is_same<ComplexT, mpfr_complex>::value){
-					assert(DefaultPrecision()==current_precision_ && "current precision differs from the default precision");
+					assert(ThreadPrecision()==current_precision_ && "current precision differs from the thread-local default precision");
 					assert(GetSystem().precision() == current_precision_ && "tracked system is out of precision");
 					
 					assert(std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == current_precision_ && "current space out of precision");
@@ -1668,7 +1668,7 @@ namespace bertini{
 					assert(Precision(endtime_) == current_precision_ && "endtime_ out of precision");
 					assert(Precision(current_time_) == current_precision_ && "current_time_ out of precision");
 					assert(current_precision_ <= MaxPrecisionAllowed() && "current_precision_ exceeds max precision");
-					assert(predictor_->precision() == current_precision_ && "predictor_ out of precision");
+					assert(predictor_.precision() == current_precision_ && "predictor_ out of precision");
 					return  true;
 				}
 

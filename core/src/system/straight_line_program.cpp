@@ -746,7 +746,11 @@ namespace bertini{
 	SLP SLPCompiler::Compile(System const& sys){
 		this->Clear();
 
-		this->slp_under_construction_.precision_ = DefaultPrecision();
+		// ThreadPrecision (thread-local), not DefaultPrecision (global): SLPs are
+		// (re)compiled lazily during Eval, which may run on a std::thread worker
+		// whose precision was set via SetThreadPrecision.  The global can be stale
+		// (e.g. still at the boost default) on MPI worker ranks.
+		this->slp_under_construction_.precision_ = ThreadPrecision();
 
 		// deal with variables
 		

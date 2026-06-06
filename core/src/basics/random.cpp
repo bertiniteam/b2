@@ -34,7 +34,10 @@ namespace bertini {
 
 	mpfr_float RandomMp()
 	{
-		return RandomMp(bertini::DefaultPrecision());
+		// ThreadPrecision (thread-local) rather than DefaultPrecision (global):
+		// random numbers are generated during tracking, which may run on a
+		// std::thread worker whose precision differs from the global default.
+		return RandomMp(bertini::ThreadPrecision());
 	}
 
 	mpfr_float RandomMp(unsigned num_digits)
@@ -94,7 +97,8 @@ namespace bertini {
 
 	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
 	{
-		return RandomMp(a,b,bertini::DefaultPrecision());
+		// see RandomMp() above for why ThreadPrecision rather than DefaultPrecision
+		return RandomMp(a,b,bertini::ThreadPrecision());
 	}
 
 	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b, unsigned num_digits)

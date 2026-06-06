@@ -49,6 +49,7 @@ namespace parallel {
 
 constexpr int TAG_WORK_ITEM = 1;
 constexpr int TAG_RESULT    = 2;
+constexpr int TAG_CAPACITY  = 3;  // worker -> manager: int, max tasks in flight on that rank
 
 
 /**
