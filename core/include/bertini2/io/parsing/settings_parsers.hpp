@@ -35,6 +35,7 @@
 #include "bertini2/io/parsing/settings_parsers/tracking.hpp"
 #include "bertini2/io/parsing/settings_parsers/endgames.hpp"
 #include "bertini2/io/parsing/settings_parsers/algorithm.hpp"
+#include "bertini2/io/parsing/settings_parsers/random.hpp"
 
 
 

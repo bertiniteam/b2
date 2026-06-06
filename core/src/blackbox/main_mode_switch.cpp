@@ -34,9 +34,14 @@
 #include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
 #include "bertini2/parallel.hpp"
+#include "bertini2/random.hpp"
 
 #include <fstream>
 #include <iostream>
+
+#ifdef BERTINI2_HAVE_MPI
+#include <mpi.h>
+#endif
 
 
 namespace bertini{
@@ -45,6 +50,24 @@ namespace {
 
 int RunZeroDim(std::string const& config_str, std::string const& input_str)
 {
+	// Parse and apply the RNG seed before any setup draws (gamma, TD-constants, patch).
+	auto rand_cfg = parsing::classic::FillConfigStruct<algorithm::RandomConfig>(config_str);
+
+#ifdef BERTINI2_HAVE_MPI
+	// Manager sets the seed (possibly from entropy), then broadcasts the effective
+	// (non-zero) seed to workers so all ranks share identical per-path streams.
+	if (parallel::IsManager())
+		SetGlobalSeed(rand_cfg.random_seed);
+	unsigned long effective_seed = GetGlobalSeed();
+	MPI_Bcast(&effective_seed, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+	if (!parallel::IsManager())
+		SetGlobalSeed(effective_seed);
+#else
+	SetGlobalSeed(rand_cfg.random_seed);
+#endif
+
+	std::cout << "bertini: random seed = " << GetGlobalSeed() << "\n";
+
 	blackbox::AlgoBuilder builder;
 	if (builder.ClassicBuild(config_str, input_str) != 0)
 	{

@@ -76,6 +76,9 @@ maxnewtonits: 1;)";
 
 	auto results_double = bertini::parsing::classic::ConfigParser<AllConfsD>::Parse(config);
 	auto results_mp = bertini::parsing::classic::ConfigParser<AllConfsMP>::Parse(config);
+
+	BOOST_CHECK_EQUAL(std::get<algorithm::RandomConfig>(results_double).random_seed, 72ul);
+	BOOST_CHECK_EQUAL(std::get<algorithm::RandomConfig>(results_mp).random_seed, 72ul);
 }
 
 

@@ -200,19 +200,16 @@ namespace bertini
 	{
 		using std::abs;
 		using std::sqrt;
-		// thread_local: called during tracking, possibly from std::thread workers
-		static thread_local std::default_random_engine generator;
 		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		dbl_complex returnme(distribution(generator), distribution(generator));
+		dbl_complex returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
 		return returnme / sqrt( abs(returnme));
 	}
 
 	template <> inline
 	dbl_complex RandomUnit<dbl_complex >()
 	{
-		static thread_local std::default_random_engine generator;
 		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		dbl_complex returnme(distribution(generator), distribution(generator));
+		dbl_complex returnme(distribution(ThreadEngine()), distribution(ThreadEngine()));
 		return returnme / abs(returnme);
 	}
 

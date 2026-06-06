@@ -51,14 +51,14 @@ namespace {
 
 struct Configs
 {
-	
+
 
 	using Tracking = detail::TypeList<SteppingConfig, NewtonConfig, FixedPrecisionConfig, AdaptiveMultiplePrecisionConfig, tracking::PrecisionType, Predictor>;
 
 	using Endgame = detail::TypeList<SecurityConfig, EndgameConfig, PowerSeriesConfig, CauchyConfig, TrackBackConfig>;
 
 	template<typename T>
-	using Algorithm = detail::TypeList<TolerancesConfig, MidPathConfig, AutoRetrackConfig, SharpeningConfig, RegenerationConfig, PostProcessingConfig, ZeroDimConfig<T>, classic::AlgoChoice, classic::EndgameChoiceConfig>;
+	using Algorithm = detail::TypeList<TolerancesConfig, MidPathConfig, AutoRetrackConfig, SharpeningConfig, RegenerationConfig, PostProcessingConfig, ZeroDimConfig<T>, classic::AlgoChoice, classic::EndgameChoiceConfig, RandomConfig>;
 
 	template<typename T>
 	using All = detail::ListCat<Tracking, Endgame, Algorithm<T>>;

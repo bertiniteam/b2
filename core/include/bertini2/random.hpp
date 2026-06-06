@@ -36,10 +36,42 @@
 
 #include "bertini2/mpfr_complex.hpp"
 #include <boost/random.hpp>
+#include <random>
+#include <cstdint>
 
 
 namespace bertini
 {
+
+	/**
+	Returns this thread's canonical mt19937 engine.  All tracking-phase random
+	draws route through here so that ReseedThisThread() controls them uniformly.
+	*/
+	std::mt19937& ThreadEngine();
+
+	/**
+	Set the global RNG seed.  seed == 0 draws from std::random_device and stores
+	the effective (non-zero) seed so it can be retrieved and reproduced later.
+	Must be called before system construction (gamma, patch, TD-constants) to make
+	those setup draws deterministic.
+	*/
+	void SetGlobalSeed(unsigned long seed);
+
+	/**
+	Returns the effective global seed.  If SetGlobalSeed has never been called, draws
+	from entropy on first call and caches the result.
+	*/
+	unsigned long GetGlobalSeed();
+
+	/**
+	Reseed this thread's engine deterministically from the global seed mixed with
+	stream_key.  Call at the top of each TrackSinglePath* with soln_ind as the key
+	so per-step random draws (condition-number probe, PSEG rand-vector) are
+	path-indexed and mode-independent.
+	*/
+	void ReseedThisThread(uint64_t stream_key);
+
+
 	/**
 	Generate a random integer number between -10^digits and 10^digits
 	*/
@@ -48,25 +80,20 @@ namespace bertini
 	mpz_int RandomInt()
 	{
 		using namespace boost::random;
-		// thread_local: random generation happens during tracking (e.g. condition
-		// number estimation in the Newton corrector), which may run concurrently
-		// on std::thread workers.  Each thread gets its own engine.
-   		static thread_local mt19937 mt;
-	    static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
-	    return ui(mt);
+		static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
+		return ui(ThreadEngine());
 	}
-	
-	
+
+
 	/**
 	Generate a random rational number with numerator and denomenator between -10^digits and 10^digits
 	*/
 	template <unsigned long digits = 50>
 	mpq_rational RandomRat()
 	{
-   		using namespace boost::random;
-   		static thread_local mt19937 mt;
-	    static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
-	    return mpq_rational(ui(mt),ui(mt));
+		using namespace boost::random;
+		static thread_local uniform_int_distribution<mpz_int> ui(-(mpz_int(1) << digits*1000L/301L), mpz_int(1) << digits*1000L/301L);
+		return mpq_rational(ui(ThreadEngine()), ui(ThreadEngine()));
 	}
 
 

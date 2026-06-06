@@ -810,6 +810,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			*/
 			void TrackSinglePathBeforeEG(SolnIndT soln_ind)
 			{
+				ReseedThisThread(static_cast<uint64_t>(soln_ind));
+
 					// if you can think of a way to replace this `if` with something meta, please do so.
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
@@ -894,6 +896,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				Phase1ThreadState& state,
 				SolnIndT soln_ind)
 			{
+				ReseedThisThread(static_cast<uint64_t>(soln_ind));
+
 					// if you can think of a way to replace this `if` with something meta, please do so.
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
 					{
@@ -957,6 +961,8 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			*/
 			void TrackSinglePathDuringEGWith(Phase2ThreadState& state, SolnIndT soln_ind)
 			{
+				ReseedThisThread(static_cast<uint64_t>(soln_ind) + static_cast<uint64_t>(num_start_points_));
+
 					auto& smd = solution_final_metadata_[soln_ind];
 					// if you can think of a way to replace this `if` with something meta, please do so.
 					if (tracking::TrackerTraits<TrackerType>::IsAdaptivePrec)
@@ -1091,6 +1097,7 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 
 			void TrackSinglePathDuringEG(SolnIndT soln_ind)
 			{
+				ReseedThisThread(static_cast<uint64_t>(soln_ind) + static_cast<uint64_t>(num_start_points_));
 
 					auto& smd = solution_final_metadata_[soln_ind];
 					// if you can think of a way to replace this `if` with something meta, please do so.
