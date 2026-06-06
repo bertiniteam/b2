@@ -50,6 +50,11 @@ namespace bertini {
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
 
+			std::vector<std::type_index> SubscribedEventTypes() const override
+			{
+				return { typeid(TrackingStarted<EmitterT>), typeid(PrecisionChanged<EmitterT>) };
+			}
+
 			virtual void Observe(AnyEvent const& e) override
 			{
 				if(auto p = dynamic_cast<const TrackingStarted<EmitterT>*>(&e))
@@ -113,6 +118,11 @@ namespace bertini {
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
+			std::vector<std::type_index> SubscribedEventTypes() const override
+			{
+				return { typeid(TrackingStarted<EmitterT>), typeid(PrecisionChanged<EmitterT>) };
+			}
 
 			virtual void Observe(AnyEvent const& e) override
 			{
@@ -198,6 +208,11 @@ namespace bertini {
 		{ BOOST_TYPE_INDEX_REGISTER_CLASS
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
+			std::vector<std::type_index> SubscribedEventTypes() const override
+			{
+				return { typeid(EventT<EmitterT>) };
+			}
 
 			virtual void Observe(AnyEvent const& e) override
 			{
@@ -344,6 +359,11 @@ namespace bertini {
 		public:
 
 			using EmitterT = typename TrackerTraits<TrackerT>::EventEmitterType;
+
+			std::vector<std::type_index> SubscribedEventTypes() const override
+			{
+				return { typeid(FailedStep<EmitterT>) };
+			}
 
 			virtual void Observe(AnyEvent const& e) override
 			{
