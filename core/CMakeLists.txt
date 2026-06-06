@@ -789,18 +789,23 @@ endif (ENABLE_UNIT_TESTING)
 # which holds all ExplicitRKPredictor Butcher-tableau statics) unless every object in
 # the archive is forced in. /WHOLEARCHIVE does exactly that.
 #
-# /FORCE:MULTIPLE is required alongside /WHOLEARCHIVE: Boost.Serialization instantiates
-# oserializer/singleton templates in every TU that includes a serialization header, so
-# the same symbol can appear in multiple object files. Normal link-time deduplication
-# silently picks one; /WHOLEARCHIVE forces ALL of them in, causing lld-link to reject
-# the duplicates. /FORCE:MULTIPLE restores the "pick the first, ignore the rest"
-# behavior for these identical instantiations.
+# The archive must appear ONLY via /WHOLEARCHIVE — having it in the normal link list
+# too (from target_link_libraries above) produces hundreds of duplicate
+# Boost.Serialization symbols that lld-link rejects. We therefore strip the normal
+# "bertini2" entry and re-add only its INTERFACE deps (gmp, mpfr, boost, MPI, etc.)
+# so the test executables still see all transitive link dependencies.
 if(MSVC AND ENABLE_UNIT_TESTING)
   foreach(_t test_classes test_blackbox test_classic test_endgames test_generating
               test_nag_algorithms test_nag_datatypes test_pool test_settings
               test_tracking_basics)
     if(TARGET ${_t})
-      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2> /FORCE:MULTIPLE)
+      get_target_property(_ll ${_t} LINK_LIBRARIES)
+      if(_ll)
+        list(REMOVE_ITEM _ll bertini2)
+        set_target_properties(${_t} PROPERTIES LINK_LIBRARIES "${_ll}")
+      endif()
+      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2>)
+      target_link_libraries(${_t} PRIVATE $<TARGET_PROPERTY:bertini2,INTERFACE_LINK_LIBRARIES>)
     endif()
   endforeach()
 endif()
