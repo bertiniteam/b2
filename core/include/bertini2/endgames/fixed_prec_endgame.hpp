@@ -76,15 +76,11 @@ public:
 
 	SuccessCode RefineSampleImpl(Vec<BCT> & result, Vec<BCT> const& current_sample, BCT const& current_time, double tol, unsigned max_iterations) const
 	{
-		using RealT = mpfr_float;
-		using std::max;
-		auto& TR = this->GetTracker();
-
 		auto refinement_success = this->GetTracker().Refine(result,current_sample,current_time,
 		                          	tol,
 		                          	max_iterations);
 
-		return SuccessCode::Success;
+		return refinement_success;
 	}
 
 	explicit

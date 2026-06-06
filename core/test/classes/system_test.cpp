@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(system_evaluate_double)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 
 	bertini::System sys;
-	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	Vec<dbl> values(2);
 
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(system_evaluate_mpfr)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 
 	bertini::System sys;
-	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	Vec<mpfr> values(2);
 
@@ -1265,7 +1265,7 @@ BOOST_AUTO_TEST_CASE(parsed_system_evaluates_correctly)
 	std::string str = "function f; variable_group x1, x2; y = x1*x2; f = y*y;";
 	
 	bertini::System sys;
-	bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool s = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 	
 	Vec<dbl> values(2);
 	

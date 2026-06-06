@@ -143,12 +143,12 @@ std::vector<int> Variable::MultiDegree(VariableGroup const& vars) const
 }
 
 
-void Variable::Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar)
+void Variable::Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/)
 {
 	
 }
 
-bool Variable::IsHomogeneous(std::shared_ptr<Variable> const& v) const
+bool Variable::IsHomogeneous(std::shared_ptr<Variable> const& /*v*/) const
 {
 	return true;
 }
@@ -156,7 +156,7 @@ bool Variable::IsHomogeneous(std::shared_ptr<Variable> const& v) const
 /**
 Check for homogeneity, with respect to a variable group.
 */
-bool Variable::IsHomogeneous(VariableGroup const& vars) const
+bool Variable::IsHomogeneous(VariableGroup const& /*vars*/) const
 {
 	return true;
 }
@@ -175,23 +175,23 @@ void Variable::precision(unsigned int prec) const
 
 
 // Return current value of the variable.
-dbl Variable::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
+dbl Variable::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
 	return std::get< std::pair<dbl,bool> >(current_value_).first;
 }
 
-void Variable::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Variable::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
 	evaluation_value = std::get< std::pair<dbl,bool> >(current_value_).first;
 }
 
 
-mpfr_complex Variable::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Variable::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
 	return std::get< std::pair<mpfr_complex,bool> >(current_value_).first;
 }
 
-void Variable::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Variable::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
 	evaluation_value = std::get< std::pair<mpfr_complex,bool> >(current_value_).first;
 }

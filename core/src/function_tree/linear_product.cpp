@@ -57,14 +57,14 @@ namespace  bertini {
 		//
 		////////////////////////////////////////
 		
-		std::shared_ptr<Node> LinearProduct::Differentiate(std::shared_ptr<Variable> const& v) const
+		std::shared_ptr<Node> LinearProduct::Differentiate(std::shared_ptr<Variable> const& /*v*/) const
 		{
 			std::shared_ptr<SumOperator> ret_sum;
 			std::vector<size_t> indices;  //Those factors that are not differentiated in one particular term of the differentiated result.
             
 			// First term of product rule
 			std::shared_ptr<MultOperator> temp_mult = MultOperator::Make(DiffLinear::Make(GetLinears(0)));
-			for(int ii = 1; ii < num_factors_; ++ii)
+			for(size_t ii = 1; ii < num_factors_; ++ii)
 			{
 				indices.push_back(ii);  // Indices 1 to num_factors-1
 			}
@@ -74,11 +74,11 @@ namespace  bertini {
 			
 			
 			// Rest of the factors
-			for(int ii = 1; ii < num_factors_; ++ii)
+			for(size_t ii = 1; ii < num_factors_; ++ii)
 			{
 				temp_mult = MultOperator::Make(DiffLinear::Make(GetLinears(ii)));
 				indices.clear();
-				for(int jj = 0; jj < num_factors_ ; ++jj)
+				for(size_t jj = 0; jj < num_factors_ ; ++jj)
 				{
                     if(ii != jj)
                         indices.push_back(jj);
@@ -106,7 +106,7 @@ namespace  bertini {
 			// If v is part of the linear product
 			if(std::find(variables_.begin(), variables_.end(), v) != std::end(variables_))
 			{
-				deg = num_factors_;
+				deg = static_cast<int>(num_factors_);
 			}
 			
 			return deg;
@@ -125,7 +125,7 @@ namespace  bertini {
 				// if v is a part of the linear product
 				if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
 				{
-					deg = num_factors_;
+					deg = static_cast<int>(num_factors_);
 					break;
 				}
 			}
@@ -145,7 +145,7 @@ namespace  bertini {
 				// If v is part of the linear product
 				if(std::find(variables_.begin(), variables_.end(), *v) != std::end(variables_))
 				{
-					*(degs.begin()+(v-vars.begin())) = num_factors_;
+					*(degs.begin()+(v-vars.begin())) = static_cast<int>(num_factors_);
 				}
 			}
 			
@@ -193,7 +193,7 @@ namespace  bertini {
 			}
 			
 			// Is vars the same as variables_?
-			for (auto const v : larger_group)
+			for (auto const& v : larger_group)
 			{
 				// If v is in vars?
 				if(std::find(smaller_group.begin(), smaller_group.end(), v) != std::end(smaller_group))
@@ -263,7 +263,7 @@ namespace  bertini {
 			// Check if vars is the variable group for this linear product
 			bool is_vargroup_same = true; // Check if vars and variables_ are the same
 			bool is_v_in_vars = false; // Check if at least one v in variables_ is in vars
-			for (auto const v : variables_)
+			for (auto const& v : variables_)
 			{
 				
 				// If v is in vars?
@@ -323,7 +323,7 @@ namespace  bertini {
 			{
 				Mat<mpq_rational> temp_real(1,num_variables_+1);
 				Mat<mpq_rational> temp_imag(1,num_variables_+1);
-				for(int jj = 0; jj < num_variables_+1; ++jj)
+				for(size_t jj = 0; jj < num_variables_+1; ++jj)
 				{
 					temp_real(0,jj) = coeffs_rat_real_(index,jj);
 					temp_imag(0,jj) = coeffs_rat_imag_(index,jj);
@@ -336,7 +336,7 @@ namespace  bertini {
 			{
 				Mat<mpfr_complex> temp_mpfr(1,num_variables_+1);
 				auto& coeffs_mp_ref = std::get<Mat<mpfr_complex>>(coeffs_);
-				for(int jj = 0; jj < num_variables_+1; ++jj)
+				for(size_t jj = 0; jj < num_variables_+1; ++jj)
 				{
 					temp_mpfr(0,jj) = coeffs_mp_ref(index,jj);
 				}
@@ -356,9 +356,9 @@ namespace  bertini {
 			{
 				Mat<mpq_rational> temp_real(indices.size(),num_variables_+1);
 				Mat<mpq_rational> temp_imag(indices.size(),num_variables_+1);
-				for(int ii = 0; ii < indices.size(); ++ii)
+				for(size_t ii = 0; ii < indices.size(); ++ii)
 				{
-					for(int jj = 0; jj < num_variables_+1; ++jj)
+					for(size_t jj = 0; jj < num_variables_+1; ++jj)
 					{
 						temp_real(ii,jj) = coeffs_rat_real_(indices[ii],jj);
 						temp_imag(ii,jj) = coeffs_rat_imag_(indices[ii],jj);
@@ -372,9 +372,9 @@ namespace  bertini {
 			{
 				Mat<mpfr_complex> temp_mpfr(indices.size(),num_variables_+1);
 				auto& coeffs_mp_ref = std::get<Mat<mpfr_complex>>(coeffs_);
-				for(int ii = 0; ii < indices.size(); ++ii)
+				for(size_t ii = 0; ii < indices.size(); ++ii)
 				{
-					for(int jj = 0; jj < num_variables_+1; ++jj)
+					for(size_t jj = 0; jj < num_variables_+1; ++jj)
 					{
 						temp_mpfr(ii,jj) = coeffs_mp_ref(indices[ii],jj);
 					}
@@ -392,11 +392,11 @@ namespace  bertini {
 		{
 			auto& coeff_ref = std::get<Mat<dbl>>(coeffs_);
 			
-			for(int ii = 0; ii < num_factors_; ++ii)
+			for(size_t ii = 0; ii < num_factors_; ++ii)
 			{
 				target << "(" << coeff_ref(ii,0) << "*";
 				variables_[0]->print(target);
-				for(int jj = 1; jj < num_variables_; ++jj)
+				for(size_t jj = 1; jj < num_variables_; ++jj)
 				{
 					target << " + " << coeff_ref(ii,jj) << "*";
 					variables_[jj]->print(target);
@@ -454,7 +454,7 @@ namespace  bertini {
 				coeffs_rat_real_.resize(1, num_variables_+1);
 				coeffs_rat_real_.resize(1, num_variables_+1);
 				linear->GetRatCoeffs(coeffs_rat_real_, coeffs_rat_imag_);
-				for(int jj = 0; jj < num_variables_+1; ++jj)
+				for(size_t jj = 0; jj < num_variables_+1; ++jj)
 				{
 					coeffs_dbl_ref(0,jj).real( static_cast<double>(coeffs_rat_real_(0,jj)) );
 					coeffs_dbl_ref(0,jj).imag( static_cast<double>(coeffs_rat_imag_(0,jj)) );
@@ -466,7 +466,7 @@ namespace  bertini {
 			{
 				linear->GetMPFRCoeffs(coeffs_mpfr_ref);
 				
-				for(int jj = 0; jj < num_variables_+1; ++jj)
+				for(size_t jj = 0; jj < num_variables_+1; ++jj)
 				{
 					coeffs_dbl_ref(jj) = static_cast<dbl>(coeffs_mpfr_ref(jj));
 				}
@@ -485,7 +485,7 @@ namespace  bertini {
 			
 			target << "(" << coeff_ref(0,0) << "*d";
 			variables_[0]->print(target);
-			for(int jj = 1; jj < num_variables_; ++jj)
+			for(size_t jj = 1; jj < num_variables_; ++jj)
 			{
 				target << " + " << coeff_ref(0,jj) << "*d";
 				variables_[jj]->print(target);

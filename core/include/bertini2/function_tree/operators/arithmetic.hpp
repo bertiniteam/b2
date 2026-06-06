@@ -241,7 +241,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<NaryOperator>(*this);
 			ar & signs_;
 		}
@@ -341,7 +341,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 	};
@@ -507,7 +507,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<NaryOperator>(*this);
 			ar & mult_or_div_;
 		}
@@ -657,7 +657,7 @@ namespace node{
 		
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<Operator>(*this);
 			ar & base_;
 			ar & exponent_;
@@ -757,7 +757,7 @@ namespace node{
 		/**
 		 Constructor, passing in the Node you want as the base, and the integer you want for the power.
 		 */
-		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p) : exponent_(p), UnaryOperator(N)
+		IntegerPowerOperator(const std::shared_ptr<Node> & N, int p) : UnaryOperator(N), exponent_(p)
 		{}
 
 		
@@ -799,7 +799,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 			ar & exponent_;
 		}
@@ -886,7 +886,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 	};
@@ -962,7 +962,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 	};
@@ -1028,7 +1028,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 	};

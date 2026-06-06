@@ -60,8 +60,8 @@ namespace bertini{
 												auto asdf = max(prev_prec,LowestMultiplePrecision());
 												auto digits = max(P.size(),static_cast<decltype(P.size())>(asdf));
 
-												B.precision(digits);
-												B = mpfr_float(P,digits);
+												B.precision(static_cast<unsigned>(digits));
+												B = mpfr_float(P,static_cast<unsigned>(digits));
 											},
 											_val,_1
 										)
@@ -103,7 +103,6 @@ namespace bertini{
 								[]
 								(mpfr_complex & B, mpfr_float const& P, mpfr_float const& Q)
 								{
-									auto prev_prec = DefaultPrecision();
 									auto digits = max(P.precision(),Q.precision());
 									
 									B.precision(digits);

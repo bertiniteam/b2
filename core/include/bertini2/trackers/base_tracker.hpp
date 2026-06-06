@@ -234,7 +234,7 @@ namespace bertini{
 									Vec<ComplexT> const& start_point
 									) const
 			{
-				if (start_point.size()!=GetSystem().NumVariables())
+				if (start_point.size()!=static_cast<Eigen::Index>(GetSystem().NumVariables()))
 					throw std::runtime_error("start point size must match the number of variables in the system to be tracked");
 
 
@@ -647,7 +647,7 @@ namespace bertini{
 
 			unsigned NumVariables() const
 			{
-				return GetSystem().NumVariables();
+				return static_cast<unsigned>(GetSystem().NumVariables());
 			}
 
 			auto CurrentTime() const

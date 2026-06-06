@@ -89,8 +89,8 @@ using bertini::KahanMatrix;
 		
 		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A = KahanMatrix(size, 0.285), B(size,size), C;
 		
-		for (int ii=0; ii<size; ii++)
-			for (int jj=0; jj<size; jj++)
+		for (unsigned int ii=0; ii<size; ii++)
+			for (unsigned int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) /  RAND_MAX : B(ii,jj) = 0;
 		
 		C = A.lu().solve(B);
@@ -112,8 +112,8 @@ using bertini::KahanMatrix;
 			KahanMatrix(size, bertini::mpfr_float(0.285)), B(size,size), C;
 		
 		
-		for (int ii=0; ii<size; ii++)
-			for (int jj=0; jj<size; jj++)
+		for (unsigned int ii=0; ii<size; ii++)
+			for (unsigned int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = -bertini::mpfr_float(1)/(ii+1) + bertini::mpfr_float(rand()) /  bertini::mpfr_float(RAND_MAX) : B(ii,jj) = 0;
 
 		C = A.lu().solve(B);
@@ -134,8 +134,8 @@ using bertini::KahanMatrix;
 		
 		mpfr_matrix A = KahanMatrix(size, mpfr(0.285)), B(size,size), C;
 		
-		for (int ii=0; ii<size; ii++){
-			for (int jj=0; jj<size; jj++){
+		for (unsigned int ii=0; ii<size; ii++){
+			for (unsigned int jj=0; jj<size; jj++){
 				(jj!=ii) ? B(ii,jj) = -mpfr(1)/(ii+1) + mpfr(rand()) /  mpfr(RAND_MAX) : B(ii,jj) = mpfr(0.0);
 			}
 		}
@@ -156,8 +156,8 @@ using bertini::KahanMatrix;
 		Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> A =
 		KahanMatrix(size, std::complex<double>(0.285)), B(size,size), C;
 		
-		for (int ii=0; ii<size; ii++)
-			for (int jj=0; jj<size; jj++)
+		for (unsigned int ii=0; ii<size; ii++)
+			for (unsigned int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = -1.0/(ii+1) + double(rand()) / double(RAND_MAX) : B(ii,jj) = 0;
 		
 		
@@ -176,8 +176,8 @@ using bertini::KahanMatrix;
 		Eigen::Matrix<bertini::mpfr_complex, Eigen::Dynamic, Eigen::Dynamic> A =
 		KahanMatrix(size, bertini::mpfr_complex("0.285","0.0")), B(size,size), C;
 		
-		for (int ii=0; ii<size; ii++)
-			for (int jj=0; jj<size; jj++)
+		for (unsigned int ii=0; ii<size; ii++)
+			for (unsigned int jj=0; jj<size; jj++)
 				jj!=ii? B(ii,jj) = bertini::mpfr_complex( bertini::mpfr_complex(-1)/bertini::mpfr_complex(ii+1) + bertini::mpfr_complex(rand()) / bertini::mpfr_complex(RAND_MAX)) : B(ii,jj) = bertini::mpfr_complex(0);
 		
 		C = A.lu().solve(B);
@@ -209,7 +209,7 @@ using bertini::KahanMatrix;
 		auto LU = A.lu();
 
 
-		auto C = LU.solve(B);
+		[[maybe_unused]] auto C = LU.solve(B);
 
 	}
 
@@ -224,7 +224,7 @@ using bertini::KahanMatrix;
 		B << 0.5, 1;
 
 		auto LU = A.lu();
-		auto C = LU.solve(B);
+		[[maybe_unused]] auto C = LU.solve(B);
 
 		BOOST_CHECK(bertini::LUPartialPivotDecompositionSuccessful(LU.matrixLU())!=bertini::MatrixSuccessCode::Success);
 
@@ -312,7 +312,7 @@ using bertini::KahanMatrix;
 	{
 		Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> A(1,3);
 		A << 1, 2, 3;
-		double n = A.norm();
+		[[maybe_unused]] double n = A.norm();
 	}
 
 	BOOST_AUTO_TEST_CASE(dot_product_with_mpfr_type)

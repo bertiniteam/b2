@@ -195,7 +195,7 @@ namespace bertini {
 		*/
 		unsigned NumVariables() const
 		{
-			return sliced_vars_.size();
+			return static_cast<unsigned>(sliced_vars_.size());
 		}
 
 
@@ -206,12 +206,12 @@ namespace bertini {
 		Make an empty linear slice. 
 		*/
 		LinearSlice() : 
-			sliced_vars_(), 
-			precision_(DefaultPrecision()), 
-			num_dims_sliced_(0), 
 			coefficients_highest_precision_(0, 0), 
-			is_homogeneous_(false), 
-			constants_highest_precision_(static_cast<unsigned>(0))
+			constants_highest_precision_(static_cast<unsigned>(0)), 
+			sliced_vars_(), 
+			num_dims_sliced_(0), 
+			precision_(DefaultPrecision()), 
+			is_homogeneous_(false)
 		{ 
 			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
 			std::get<Mat<mpfr_complex> >(coefficients_working_).resize(Dimension(), NumVariables());
@@ -223,7 +223,7 @@ namespace bertini {
 		/**
 		\brief the constructor for linear slices.
 		*/
-		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : sliced_vars_(v), precision_(DefaultPrecision()), num_dims_sliced_(dim), coefficients_highest_precision_(dim, v.size()), is_homogeneous_(homogeneous), constants_highest_precision_(dim)
+		LinearSlice(VariableGroup const& v, unsigned dim, bool homogeneous) : coefficients_highest_precision_(dim, v.size()), constants_highest_precision_(dim), sliced_vars_(v), num_dims_sliced_(dim), precision_(DefaultPrecision()), is_homogeneous_(homogeneous)
 		{ 
 			std::get<Mat<dbl> > (coefficients_working_).resize(Dimension(), NumVariables());
 			std::get<Mat<mpfr_complex> >(coefficients_working_).resize(Dimension(), NumVariables());
@@ -318,7 +318,7 @@ namespace bertini {
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & precision_;
 
 			ar & coefficients_highest_precision_;

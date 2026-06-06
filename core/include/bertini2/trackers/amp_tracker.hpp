@@ -405,7 +405,7 @@ namespace bertini{
 			}
 
 
-			const unsigned GetCurrentPrecision() const
+			unsigned GetCurrentPrecision() const
 			{
 				return current_precision_;
 			}
@@ -612,14 +612,14 @@ namespace bertini{
 				// the current precision is the precision of the output solution point.
 				if (current_precision_==DoublePrecision())
 				{
-					unsigned num_vars = GetSystem().NumVariables();
+					unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
 						solution_at_endtime(ii) = mpfr_complex(std::get<Vec<dbl> >(current_space_)(ii));
 				}
 				else
 				{
-					unsigned num_vars = GetSystem().NumVariables();
+					unsigned num_vars = static_cast<unsigned>(GetSystem().NumVariables());
 					solution_at_endtime.resize(num_vars);
 					for (unsigned ii=0; ii<num_vars; ii++)
 					{
@@ -915,7 +915,6 @@ namespace bertini{
 			template<typename ComplexT>
 			SuccessCode AMPCriterionError() const
 			{
-				using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 
 				unsigned min_next_precision; // sure, i could use a trigraph here, but it'd be terrible
 				if (current_precision_==DoublePrecision())
@@ -945,9 +944,8 @@ namespace bertini{
 					                             digits_final_
 					                             );
 
-						unsigned a = ceil(digits_B - (predictor_order_+1)* -log10(max_stepsize)/Get<NewtonConfig>().max_num_newton_iterations).convert_to<unsigned>();
-
-					unsigned max_precision = max(min_precision, a);
+					// NOTE: a previously-computed local `max_precision = max(min_precision, ceil(digits_B - (predictor_order_+1)*-log10(max_stepsize)/max_newton_its))`
+					// was never used; the maximum precision passed below comes from the precision config.
 
 					try {
 						MinimizeTrackingCost(next_precision_, next_stepsize_,

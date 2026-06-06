@@ -65,7 +65,7 @@ namespace bertini
 			{
 				func = Integer::Make(1);
 				
-				for (int jj = 0; jj < s.NumHomVariableGroups(); ++jj)
+				for (size_t jj = 0; jj < s.NumHomVariableGroups(); ++jj)
 				{
 					if(degree_matrix_(ii,jj) != 0)
 					{
@@ -75,7 +75,7 @@ namespace bertini
 						func *= linprod_matrix_(ii,jj);
 					}
 				}
-				for (int jj = s.NumHomVariableGroups(); jj < degree_matrix_.cols(); ++jj)
+				for (size_t jj = s.NumHomVariableGroups(); jj < static_cast<size_t>(degree_matrix_.cols()); ++jj)
 				{
 					if(degree_matrix_(ii,jj) != 0)
 					{
@@ -101,7 +101,7 @@ namespace bertini
 		
 		MHomogeneous& MHomogeneous::operator*=(Nd const& n)
 		{
-			*this *= n;
+			System::operator*=(n);
 			return *this;
 		}
 		
@@ -122,7 +122,7 @@ namespace bertini
 		unsigned long long MHomogeneous::NumStartPoints() const
 		{
 			unsigned long long num_start_points = 0;
-			for(int ii = 0; ii < valid_partitions_.size(); ii++)
+			for(size_t ii = 0; ii < valid_partitions_.size(); ii++)
 			{ 
     			num_start_points += NumStartPointsForPartition(valid_partitions_[ii]);
 			}
@@ -165,7 +165,7 @@ namespace bertini
   				std::vector<int> degs = target_system.Degrees(*it);
 				
 				std::vector<size_t> temp_v;
-				for(int ii = 0; ii < (*it).size(); ++ii)
+				for(size_t ii = 0; ii < (*it).size(); ++ii)
 				{
 					temp_v.push_back(var_count);
 					var_count++;
@@ -178,7 +178,7 @@ namespace bertini
   					throw std::runtime_error("zero column in degree matrix for m-homogeneous start system!");
   				}
 
-  				for(int ii = 0; ii <= degs.size() - 1; ++ii)
+  				for(size_t ii = 0; ii < degs.size(); ++ii)
   				{
   					degree_matrix_(ii,col_count) = degs[ii];
   				}
@@ -220,7 +220,6 @@ namespace bertini
 		void MHomogeneous::GenerateValidPartitions(System const& target_system)
 		{
 			int row = 0;
-			int old_current_part_row = -1;
 			int bad_choice = 0;
 			Vec<int> current_partition = -1*Vec<int>::Ones(target_system.NumNaturalFunctions());
 			Vec<int> variable_group_counter = Vec<int>::Zero(target_system.NumTotalVariableGroups());
@@ -231,7 +230,7 @@ namespace bertini
 
 
 
-			for(int ii = 0; ii < target_system.NumTotalVariableGroups(); ++ii)
+			for(size_t ii = 0; ii < target_system.NumTotalVariableGroups(); ++ii)
 			{
 				variable_group_counter[ii] = size_of_each_var_gp[ii];
 			}			    
@@ -241,13 +240,12 @@ namespace bertini
 			  {
 //			  	 std::cout << "current_partition before is " << std::endl;
 //			  	 std::cout <<  current_partition << std::endl;
-			    old_current_part_row = current_partition[row];  //Hang on to previous choice of column for this row, in case we are done with this row.
 			    current_partition[row] = ChooseColumnInRow(target_system,variable_group_counter,row,current_partition[row]);  //Pick next column (var gp) for the current row (func)
 //				  std::cout << "current_partition after is " << std::endl;
 //				  std::cout <<  current_partition << std::endl;
 
 			    //ChooseColumnInRow() will make this happen if it runs into col being equal to system.NumVariables()!
-			    if (current_partition[row] == target_system.NumTotalVariableGroups()) // means we have exhausted all good columns for the current row, so we go back up a row
+			    if (current_partition[row] == static_cast<int>(target_system.NumTotalVariableGroups())) // means we have exhausted all good columns for the current row, so we go back up a row
 			    { //no choices for current row
 			      row = row - 1;  //go back up a row
 			      bad_choice = 1;
@@ -255,12 +253,12 @@ namespace bertini
 			    else  //found a good choice of column for this row!
 			    {
 			      	row = row + 1;  //move on to next row!
-			      	if (row < target_system.NumNaturalFunctions())
+			      	if (row < static_cast<int>(target_system.NumNaturalFunctions()))
 			        	current_partition[row] = -1; //This allows us to consider all possible columns from left to right.
 			        	//since we are starting a new row, we start with the left-most entry (ChooseColumnInRow() first increments col)
 			    }
 			     
-			    if((row == target_system.NumNaturalFunctions()) && (!bad_choice))
+			    if((row == static_cast<int>(target_system.NumNaturalFunctions())) && (!bad_choice))
 			    {
 			    	// std::cout << "Good partition!!!!" << std::endl;
 			    	// std::cout << current_partition << std::endl;
@@ -309,7 +307,7 @@ namespace bertini
 				/*We have reached the end of the degree matrix. 
 				Return and (current_partition[row] == target_system.NumTotalVariableGroups()) in GenerateValidPartitions() gets executed.
 			    */
-			    if (col == target_system.NumTotalVariableGroups())
+			    if (col == static_cast<int>(target_system.NumTotalVariableGroups()))
 			    {
 			    	done = 1; //got to the right end of the degree matrix!
 			    } 
@@ -349,15 +347,15 @@ namespace bertini
 			
 			
 			// First, determine which partition we are looking through
-			int counter = 0;
+			unsigned long long counter = 0;
 			int partition_ii = -1;
-			for (int ii = 0; ii < valid_partitions_.size(); ++ii)
+			for (size_t ii = 0; ii < valid_partitions_.size(); ++ii)
 			{
 				counter += NumStartPointsForPartition(valid_partitions_[ii]);
 				
 				if(index < counter)
 				{
-					partition_ii = ii;
+					partition_ii = static_cast<int>(ii);
 					counter -= NumStartPointsForPartition(valid_partitions_[ii]);
 					index -= counter;
 					break;
@@ -394,7 +392,7 @@ namespace bertini
 				v.setZero();
 				std::vector<size_t> cols = variable_cols_[partition[ii]];
 				auto coeff = linprod_matrix_(ii,partition[ii])->GetCoeffs<T>(subscript[ii]);
-				for(int jj = 0; jj < cols.size(); ++jj)
+				for(size_t jj = 0; jj < cols.size(); ++jj)
 				{
 					v(cols[jj]) = coeff[jj];
 				}

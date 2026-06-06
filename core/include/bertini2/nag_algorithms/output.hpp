@@ -76,7 +76,6 @@ struct Classic <ZeroDim<A,B,C,D,E>>
 		Variables(out, zd,"\n\n");
 
 		const auto& s = zd.FinalSolutions();
-		const auto& m = zd.FinalSolutionMetadata();
 		const auto n = s.size();
 		for (decltype(s.size()) ii{0}; ii<n; ++ii)
 		{

@@ -114,7 +114,7 @@ namespace tracking{
 		\brief Construct a ready-to-go set of fixed precision settings from a system.
 		*/
 		explicit
-		FixedPrecisionConfig(System const& sys) 
+		FixedPrecisionConfig(System const& /*sys*/) 
 		{ }
 
 		FixedPrecisionConfig() = default;
@@ -122,7 +122,7 @@ namespace tracking{
 
 
 	inline
-	std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig const& fpc)
+	std::ostream& operator<<(std::ostream & out, FixedPrecisionConfig const& /*fpc*/)
 	{
 		return out;
 	}

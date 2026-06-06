@@ -74,7 +74,7 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<UnaryOperator>(*this);
 		}
 
@@ -106,7 +106,7 @@ namespace node{
 		}
 
 	private:
-		SinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		SinOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
 		{};
 		
 	public:
@@ -142,7 +142,7 @@ namespace node{
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -169,7 +169,7 @@ namespace node{
 		}
 
 	private:
-		ArcSinOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		ArcSinOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
 		{};
 
 	public:
@@ -203,7 +203,7 @@ namespace node{
 		
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -236,7 +236,7 @@ namespace node{
 		}
 
 	private:
-		CosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		CosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
 		{};
 		
 	public:
@@ -275,7 +275,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -302,7 +302,7 @@ namespace node{
 		}
 
 	private:
-		ArcCosOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		ArcCosOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
 		{};
 	public:
 		
@@ -339,7 +339,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -374,7 +374,7 @@ namespace node{
 		}
 
 	private:
-		TanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		TanOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
 		{};
 	public:
 		
@@ -410,7 +410,7 @@ namespace node{
 		
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};
@@ -437,7 +437,7 @@ namespace node{
 		}
 
 	private:
-		ArcTanOperator(const std::shared_ptr<Node> & N) : TrigOperator(N), UnaryOperator(N)
+		ArcTanOperator(const std::shared_ptr<Node> & N) : UnaryOperator(N), TrigOperator(N)
 		{};
 	public:
 		
@@ -471,7 +471,7 @@ namespace node{
 		friend class boost::serialization::access;
 		
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & boost::serialization::base_object<TrigOperator>(*this);
 		}
 	};

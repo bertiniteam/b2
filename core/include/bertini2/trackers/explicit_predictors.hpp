@@ -182,7 +182,7 @@ namespace bertini{
 
 				\param S the system the predictor will be predicting on.
 				*/
-				ExplicitRKPredictor(const System& S) : current_precision_(DefaultPrecision()), s_(0)
+				ExplicitRKPredictor(const System& S) : s_(0), current_precision_(DefaultPrecision())
 				{
 					ChangeSystem(S);
 					PredictorMethod(DefaultPredictor());
@@ -194,7 +194,7 @@ namespace bertini{
 				 \param method The predictor method to be implemented.
 				 \param S the system to be predicting on.
 				 */
-				ExplicitRKPredictor(Predictor method, const System& S) : current_precision_(DefaultPrecision()), s_(0)
+				ExplicitRKPredictor(Predictor method, const System& S) : s_(0), current_precision_(DefaultPrecision())
 				{
 					ChangeSystem(S);
 					PredictorMethod(method);
@@ -329,8 +329,8 @@ namespace bertini{
 				 */
 				void ChangeSystem(const System& S)
 				{
-					numTotalFunctions_ = S.NumTotalFunctions();
-					numVariables_ = S.NumVariables();
+					numTotalFunctions_ = static_cast<unsigned>(S.NumTotalFunctions());
+					numVariables_ = static_cast<unsigned>(S.NumVariables());
 					// you cannot set K_ here, because s_ may not have been set
 					std::get< Mat<dbl> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
 					std::get< Mat<mpfr_complex> >(dh_dx_0_).resize(numTotalFunctions_, numVariables_);
@@ -395,6 +395,7 @@ namespace bertini{
 				
 				void PrecisionSanityCheck() const
 				{
+#ifndef NDEBUG
 					assert(current_precision_==DefaultPrecision());
 
 					Vec<mpfr_complex>& dhdttemp = std::get< Vec<mpfr_complex> >(dh_dt_temp_);
@@ -417,6 +418,7 @@ namespace bertini{
 					if (uses_embedded_)
 						assert(Precision(bstar)==current_precision_);
 					assert(Precision(c)==current_precision_);
+#endif
 				}
 				
 				
@@ -446,7 +448,7 @@ namespace bertini{
 									NumErrorT & condition_number_estimate,
 									unsigned & num_steps_since_last_condition_number_computation,
 									unsigned frequency_of_CN_estimation,
-									NumErrorT const& tracking_tolerance)
+									NumErrorT const& /*tracking_tolerance*/)
 				{
 
 					auto step_success = FullStep(next_space, S, current_space, current_time, delta_t);
@@ -675,10 +677,10 @@ namespace bertini{
 						return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
 					}
 					
-					for(int ii = 1; ii < s_; ++ii)
+					for(unsigned ii = 1; ii < s_; ++ii)
 					{
 						temp.setZero(); // see https://github.com/bertiniteam/b2/issues/198
-						for(int jj = 0; jj < ii; ++jj)
+						for(unsigned jj = 0; jj < ii; ++jj)
 							temp += aref(ii,jj)*Kref.col(jj);
 
 						// Vec<ComplexT> wfp = 
@@ -688,7 +690,7 @@ namespace bertini{
 					
 					
 					temp.setZero();
-					for(int ii = 0; ii < s_; ++ii)
+					for(unsigned ii = 0; ii < s_; ++ii)
 						temp += bref(ii)*Kref.col(ii);
 										
 					next_space = current_space + delta_t*temp;
@@ -743,7 +745,7 @@ namespace bertini{
 					Vec<ComplexT> err(numFuncs);
 					
 					err.setZero();
-					for(int ii = 0; ii < s_; ++ii)
+					for(unsigned ii = 0; ii < s_; ++ii)
 					{
 						err += (b_minus_bstar_ref(ii))*Kref.col(ii);
 					}
@@ -904,7 +906,7 @@ namespace bertini{
 					aref.resize(stages, stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						for(int jj = 0; jj < s_; ++jj)
+						for(unsigned jj = 0; jj < s_; ++jj)
 						{
 							aref(ii,jj) = static_cast<RealT>(a(ii,jj));
 						}
@@ -957,7 +959,7 @@ namespace bertini{
 					aref.resize(stages, stages);
 					for(int ii = 0; ii < stages; ++ii)
 					{
-						for(int jj = 0; jj < s_; ++jj)
+						for(unsigned jj = 0; jj < s_; ++jj)
 						{
 							aref(ii,jj) = static_cast<RealT>(a(ii,jj));
 						}

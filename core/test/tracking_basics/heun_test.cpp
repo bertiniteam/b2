@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(circle_line_heun_double)
 		double predicted_error = 0.00544428757292458409463632380167773;
 		
 		Vec<dbl> heun_prediction_result;
-		double next_time;
+		[[maybe_unused]] double next_time;
 		
 		double tracking_tolerance(1e-5);
 		double condition_number_estimate;

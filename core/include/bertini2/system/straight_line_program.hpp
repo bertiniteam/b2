@@ -215,7 +215,7 @@ namespace bertini {
 			friend class boost::serialization::access;
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & Functions;
 				ar & Jacobian;
 				ar & TimeDeriv;
@@ -235,7 +235,7 @@ namespace bertini {
 			friend class boost::serialization::access;
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & Variables;
 				ar & Time;
 			}
@@ -255,7 +255,7 @@ namespace bertini {
 			friend class boost::serialization::access;
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & Functions;
 				ar & Variables;
 				ar & Jacobian;
@@ -361,7 +361,7 @@ namespace bertini {
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
 
 			// copy content
-			for (int ii = 0; ii < number_of_.Functions; ++ii) {
+			for (size_t ii = 0; ii < number_of_.Functions; ++ii) {
 				result(ii) = memory[ii + output_locations_.Functions];
 			}
 		}
@@ -385,8 +385,8 @@ namespace bertini {
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
 
 			// copy content
-			for (int jj =0; jj < number_of_.Variables; ++jj) {
-				for (int ii = 0; ii < number_of_.Functions; ++ii) {
+			for (size_t jj =0; jj < number_of_.Variables; ++jj) {
+				for (size_t ii = 0; ii < number_of_.Functions; ++ii) {
 					result(ii, jj) = memory[ii+jj*number_of_.Functions + output_locations_.Jacobian];
 				}
 			}
@@ -411,7 +411,7 @@ namespace bertini {
 			auto& memory =  std::get<std::vector<NumT>>(memory_);
 			// 1. make container, size correctly.
 			// 2. copy content
-			for (int ii = 0; ii < number_of_.Functions; ++ii) {
+			for (size_t ii = 0; ii < number_of_.Functions; ++ii) {
 				result(ii) = memory[ii + output_locations_.TimeDeriv];
 			}
 		}
@@ -454,9 +454,9 @@ namespace bertini {
 		}
 
 
-		inline unsigned NumFunctions() const{ return number_of_.Functions;}
+		inline unsigned NumFunctions() const{ return static_cast<unsigned>(number_of_.Functions);}
 
-		inline unsigned NumVariables() const{ return number_of_.Variables;}
+		inline unsigned NumVariables() const{ return static_cast<unsigned>(number_of_.Variables);}
 
 
 		/**
@@ -517,7 +517,7 @@ namespace bertini {
 			using NumT = typename Derived::Scalar;
 			auto& memory =  std::get<std::vector<NumT>>(memory_); // unpack for local reference
 
-			for (int ii = 0; ii < number_of_.Variables; ++ii) {
+			for (size_t ii = 0; ii < number_of_.Variables; ++ii) {
 				//assign  to memory
 				memory[ii + input_locations_.Variables] = variable_values(ii);
 			}
@@ -618,7 +618,7 @@ namespace bertini {
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 
 			ar & precision_;
 			ar & has_path_variable_;

@@ -28,7 +28,7 @@
 
 namespace bertini{
 
-void ParseArgcArgv(int argc, char** argv){
+void ParseArgcArgv(int /*argc*/, char** /*argv*/){
 
 } 
 

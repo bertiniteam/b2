@@ -376,7 +376,7 @@ private:
 	friend class boost::serialization::access;
 
 	template <typename Archive>
-	void serialize(Archive& ar, const unsigned version) {
+	void serialize(Archive& ar, const unsigned /*version*/) {
 		register_derived_node_types(ar);
 	}
 

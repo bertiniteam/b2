@@ -177,7 +177,6 @@ BOOST_AUTO_TEST_CASE(read_security)
 {
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	using T = double;
 	
 	double tol = 1e-16;
 	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n   SecurityLevel: 1;\n SecurityMaxNorm: -2.34; % the predictor type\n NeWTon: 1; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
@@ -276,11 +275,10 @@ BOOST_AUTO_TEST_CASE(read_tolerances)
 {
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	using T = double;
 	bertini::DefaultPrecision(30);
 	
 	
-	double tol = 1e-15;
+	[[maybe_unused]] double tol = 1e-15;
 	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n   FinalTol   : -.845e-7   ;\n TrackTolDuringEG   : 234e-4   ; % the predictor type\n TrackTolBeforeEG         : 7.32e3; \n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
@@ -313,10 +311,9 @@ BOOST_AUTO_TEST_CASE(read_stepping)
 
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	using T = double;
 	
 	
-	double tol = 1e-15;
+	[[maybe_unused]] double tol = 1e-15;
 	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n StepSuccessFactor  : 4.2;  FinalTol: 1.845e-7;\n MaxNumberSteps: 234; % the predictor type\nMaxStepSize: 1e-2; StepsForIncrease: 7;\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
@@ -362,14 +359,13 @@ BOOST_AUTO_TEST_CASE(read_newton)
 {
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	using T = double;
 	
 	
-	double tol = 1e-15;
+	[[maybe_unused]] double tol = 1e-15;
 	SplitInputFile inputfile = ParseInputFile("Config \n MaxNewtonIts  : 5; \n heLlo: 9 \n StepSuccessFactor: 4.2;   end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
-	std::string configStr = inputfile.Config();
+	[[maybe_unused]] std::string configStr = inputfile.Config();
 	
 	
 	std::string::const_iterator iter = configStr.begin();
@@ -410,11 +406,10 @@ BOOST_AUTO_TEST_CASE(read_endgame)
 {
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	using T = double;
 	bertini::DefaultPrecision(30);
 	
 	
-	double tol = 1e-15;
+	[[maybe_unused]] double tol = 1e-15;
 	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n   NumSamplePoints: 34;\n TrackTolDuringEG: 234e-4; % the predictor type\n NbhdRadius: 4.3e-7; \n SampleFactor   : 8e-3;\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
@@ -446,10 +441,9 @@ BOOST_AUTO_TEST_CASE(read_powerseries)
 {
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	using T = double;
 	
 	
-	double tol = 1e-15;
+	[[maybe_unused]] double tol = 1e-15;
 	SplitInputFile inputfile = ParseInputFile("Config \n MaxNewtonIts: 5; \n heLlo: 9 \n MaxCycleNum : 4; StepSuccessFactor: 4.2;   end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
@@ -492,10 +486,9 @@ BOOST_AUTO_TEST_CASE(read_cauchy)
 {
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	using T = double;
 	
 	
-	double tol = 1e-15;
+	[[maybe_unused]] double tol = 1e-15;
 	SplitInputFile inputfile = ParseInputFile("Config \n heLlo: 9 \n StepSuccessFactor: 4.2;  CycleTimeCutoff: 5.76e2  ;\n MaxNumberSteps: 234; % the predictor type \n RAtioTimeCutoff: 1e-12; StepsForIncrease: 7;\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	
 	
@@ -568,7 +561,7 @@ BOOST_AUTO_TEST_CASE(all_config_settings)
 {
 	using namespace bertini::parsing::classic;
 	using namespace bertini::tracking;
-	double tol = 1e-15;
+	[[maybe_unused]] double tol = 1e-15;
 	
 	SplitInputFile inputfile = ParseInputFile("Config \n ODEPredictor: 7; \n MPType: 0; \n MaxNewtonIts: 7;  FinalTol: 1.845e-7;\n SampleFactor: 0.647; \n NumSamplePoints: 7;\n\n end;  \n iNpUt % \n  \n variable x; \n ENd;");
 	

@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(accumulate_single_path_square_root)
 	tracker.AddObserver(precision_accumulator);
 
 	start_point << mpfr(1), mpfr(1);
-	bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
+	[[maybe_unused]] bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);	
 }
 
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(some_other_thing_square_root)
 	Vec<mpfr> start_point(2);
 	Vec<mpfr> end_point;
 
-	bertini::SuccessCode tracking_success;
+	[[maybe_unused]] bertini::SuccessCode tracking_success;
 
 	GoryDetailLogger<AMPTracker> tons_of_detail;
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(union_of_observers)
 	tracker.AddObserver(agglomeration);
 
 	
-	bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
+	[[maybe_unused]] bertini::SuccessCode tracking_success = tracker.TrackPath(end_point,
 	                  t_start, t_end, start_point);
 
 }

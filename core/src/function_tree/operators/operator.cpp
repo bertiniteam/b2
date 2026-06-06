@@ -184,7 +184,7 @@ void NaryOperator::precision(unsigned int prec) const
 }
 
 
-void NaryOperator::PrecisionChangeSpecific(unsigned prec) const
+void NaryOperator::PrecisionChangeSpecific(unsigned /*prec*/) const
 {}
 
 

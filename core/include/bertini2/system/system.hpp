@@ -108,7 +108,7 @@ namespace bertini {
 		/**
 		\brief The default constructor for a system.
 		*/
-		System() : is_differentiated_(false), have_path_variable_(false), have_ordering_(false), precision_(DefaultPrecision()), is_patched_(false)
+		System() : have_path_variable_(false), is_patched_(false), is_differentiated_(false), have_ordering_(false), precision_(DefaultPrecision())
 		{}
 
 		/**
@@ -286,7 +286,7 @@ namespace bertini {
 		void EvalInPlace(Vec<T> & function_values) const
 		{
 			
-			if (function_values.size() != NumTotalFunctions()) 
+			if (function_values.size() != static_cast<Eigen::Index>(NumTotalFunctions())) 
 			{
 				std::stringstream ss;
 				ss << "trying to evaluate system in-place, but number length of vector into which to write the values (" << function_values.size() << ") doesn't match number of system user-defined functions plus patches ( " << NumNaturalFunctions() << "+" << NumPatches() << ") = " << NumTotalFunctions() << ").  Use System.NumTotalFunctions() to make the container for in-place evaluation";
@@ -356,7 +356,7 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
 
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 			{
 				std::stringstream ss;
 				ss << "trying to evaluate system, but number of input variables (" << variable_values.size() << ") doesn't match number of system variables (" << NumVariables() << ").";
@@ -422,7 +422,7 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate system, but number of variables doesn't match.");
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
@@ -487,7 +487,7 @@ namespace bertini {
 		{
 		
 
-			if(J.rows() != NumTotalFunctions() || J.cols() != NumVariables())
+			if(J.rows() != static_cast<Eigen::Index>(NumTotalFunctions()) || J.cols() != static_cast<Eigen::Index>(NumVariables()))
 			{
 				throw std::runtime_error("trying to evaluate jacobian of system in place, but input J doesn't have right number of columns or rows");
 			}
@@ -503,15 +503,15 @@ namespace bertini {
 				{
 					switch (deriv_method_){
 						case DerivMethod::JacobianNode:{
-							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
-								for (int jj = 0; jj < NumVariables(); ++jj)
+							for (size_t ii = 0; ii < NumNaturalFunctions(); ++ii)
+								for (size_t jj = 0; jj < NumVariables(); ++jj)
 									jacobian_[ii]->EvalJInPlace<T>(J(ii,jj),vars[jj]);
 							break;
 						}
 						case DerivMethod::Derivatives:
 						{
-							for (int jj = 0; jj < NumVariables(); ++jj)
-								for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
+							for (size_t jj = 0; jj < NumVariables(); ++jj)
+								for (size_t ii = 0; ii < NumNaturalFunctions(); ++ii)
 									space_derivatives_[ii+jj*NumNaturalFunctions()]->EvalInPlace<T>(J(ii,jj));
 							break;
 						}
@@ -568,7 +568,7 @@ namespace bertini {
 		void JacobianInPlace(Mat<T> & J, const Vec<T> &  variable_values) const
 		{
 
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 			
 			if (HavePathVariable())
@@ -595,7 +595,7 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values) const
 		{
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (HavePathVariable())
@@ -625,7 +625,7 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 			
 			if (!HavePathVariable())
@@ -672,7 +672,7 @@ namespace bertini {
 		template<typename T>
 		Mat<T> Jacobian(const Vec<T> & variable_values, const T & path_variable_value) const
 		{
-			if (variable_values.size()!=NumVariables())
+			if (variable_values.size()!=static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("trying to evaluate jacobian, but number of variables doesn't match.");
 
 			if (!HavePathVariable())
@@ -774,7 +774,7 @@ namespace bertini {
 		void TimeDerivativeInPlace(Vec<T> & ds_dt) const
 		{
 
-			if(ds_dt.size() < NumNaturalFunctions())
+			if(ds_dt.size() < static_cast<Eigen::Index>(NumNaturalFunctions()))
 			{
 				std::stringstream ss;
 				ss << "trying to evaluate system in place, but number of input functions (" << ds_dt.size() << ") doesn't match number of system functions (" << NumNaturalFunctions() << ").";
@@ -794,13 +794,13 @@ namespace bertini {
 					switch (deriv_method_){
 						case DerivMethod::JacobianNode:
 						{
-							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
+							for (size_t ii = 0; ii < NumNaturalFunctions(); ++ii)
 								jacobian_[ii]->EvalJInPlace<T>(ds_dt(ii), path_variable_);
 							break;
 						}
 						case DerivMethod::Derivatives:
 						{
-							for (int ii = 0; ii < NumNaturalFunctions(); ++ii)
+							for (size_t ii = 0; ii < NumNaturalFunctions(); ++ii)
 								time_derivatives_[ii]->EvalInPlace<T>(ds_dt(ii));
 							break;
 						}
@@ -817,7 +817,7 @@ namespace bertini {
 
 			// the patch doesn't move with time.  derivatives 0.
 			if (IsPatched())
-				for (int ii = 0; ii < NumTotalVariableGroups(); ++ii)
+				for (size_t ii = 0; ii < NumTotalVariableGroups(); ++ii)
 					ds_dt(ii+NumNaturalFunctions()) = T(0);
 			
 		}
@@ -979,7 +979,7 @@ namespace bertini {
 		template<typename T>
 		void SetVariables(const Vec<T> & new_values) const
 		{
-			if (new_values.size()!= NumVariables())
+			if (new_values.size()!= static_cast<Eigen::Index>(NumVariables()))
 				throw std::runtime_error("variable vector of different length from system-owned variables in SetVariables");
 
 			const auto& vars = Variables();
@@ -1315,7 +1315,7 @@ namespace bertini {
 		Vec<T> DehomogenizePoint(Vec<T> const& x) const
 			{
 
-				if (x.size()!=NumVariables()){
+				if (x.size()!=static_cast<Eigen::Index>(NumVariables())){
 					std::stringstream message;
 					message << "dehomogenizing point with incorrect number of coordinates. input has ";
 					message << x.size();
@@ -1585,7 +1585,7 @@ namespace bertini {
 
 		void AssumeUniformPrecision(bool val)
 		{
-			assume_uniform_precision_ = false;
+			assume_uniform_precision_ = val;
 		}
 
 		/** 
@@ -1862,7 +1862,7 @@ namespace bertini {
 
 		/*definition of serialize function*/
 		template<class Archive>
-		void serialize(Archive & ar, const unsigned int version){
+		void serialize(Archive & ar, const unsigned int /*version*/){
 			ar & ungrouped_variables_;
 			ar & variable_groups_;
 			ar & hom_variable_groups_;

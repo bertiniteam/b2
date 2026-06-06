@@ -66,7 +66,7 @@ namespace bertini
 		inline
 		static unsigned TolToDigits(double tol)
 		{
-			return ceil(-log10(tol));
+			return static_cast<unsigned>(ceil(-log10(tol)));
 		}
 
 		inline static 

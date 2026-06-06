@@ -79,9 +79,9 @@ namespace bertini {
 			{
 				
 				
-				SystemParser() :	function_parser_(&encountered_symbols_),
-				/*initialize here with address of encountered_symbols*/
-				SystemParser::base_type(root_rule_)
+				SystemParser() :	SystemParser::base_type(root_rule_),
+				/*initialize function_parser_ here with address of encountered_symbols*/
+				function_parser_(&encountered_symbols_)
 				{
 					namespace phx = boost::phoenix;
 					using qi::_1;

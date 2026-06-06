@@ -35,23 +35,23 @@ namespace bertini{
 using ::pow;
 
 // Return value of constant
-dbl Pi::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const
+dbl Pi::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
 	return acos(-1.0);
 }
 
-void Pi::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Pi::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
 	evaluation_value = acos(-1.0);
 }
 
 
-mpfr_complex Pi::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const
+mpfr_complex Pi::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
 	return mpfr_complex(mpfr_float(acos(mpfr_float(-1))));
 }
 
-void Pi::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const
+void Pi::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
 	evaluation_value = mpfr_complex(mpfr_float(acos(mpfr_float(-1))));
 }
@@ -60,23 +60,23 @@ void Pi::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> 
 
 
 // Return value of constant
-dbl E::FreshEval_d(std::shared_ptr<Variable> const& diff_variable) const 
+dbl E::FreshEval_d(std::shared_ptr<Variable> const& /*diff_variable*/) const 
 {
 	return dbl(exp(1.0),0.0);
 }
 
-void E::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const 
+void E::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const 
 {
 	evaluation_value = dbl(exp(1.0),0.0);
 }
 
 
-mpfr_complex E::FreshEval_mp(std::shared_ptr<Variable> const& diff_variable) const 
+mpfr_complex E::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const 
 {
 	return mpfr_complex(mpfr_float(exp(mpfr_float(1))));
 }
 
-void E::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const 
+void E::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const 
 {
 	evaluation_value = mpfr_complex(mpfr_float(exp(mpfr_float(1))));
 }

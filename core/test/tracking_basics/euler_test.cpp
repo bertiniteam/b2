@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
+		[[maybe_unused]] auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		AMP.coefficient_bound = 5;
 		
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		sys.AddFunction( t*(pow(x,2)-1) + (1-t)*(pow(x,2) + pow(y,2) - 4) );
 		sys.AddFunction( t*(y-1) + (1-t)*(2*x - 5*y) );
 		
-		auto AMP = bertini::tracking::AMPConfigFrom(sys);
+		[[maybe_unused]] auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
 		AMP.coefficient_bound = 5;
 		
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		double norm_J, norm_J_inverse, size_proportion, error_est;
+		[[maybe_unused]] double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_1 = 100;
@@ -547,7 +547,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		double norm_J, norm_J_inverse, size_proportion, error_est;
+		[[maybe_unused]] double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_1 = 100;
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		double norm_J, norm_J_inverse, size_proportion, error_est;
+		[[maybe_unused]] double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_2 = 100;
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(circle_line_euler_double)
 		
 		auto AMP = bertini::tracking::AMPConfigFrom(sys);
 		
-		double norm_J, norm_J_inverse, size_proportion, error_est;
+		[[maybe_unused]] double norm_J, norm_J_inverse, size_proportion, error_est;
 		
 		AMP.coefficient_bound = 5;
 		AMP.safety_digits_2 = 100;

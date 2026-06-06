@@ -94,6 +94,7 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyEndgame(ZeroDimRT const& rt
 			return ZeroDimSpecifyShouldClone<StartType, TrackerType, 
 					typename endgame::EndgameSelector<TrackerType>::Cauchy>(typename StorageSelector<StartType>::ShouldClone(), ts...);
 	}
+	throw std::runtime_error("unrecognized endgame type in ZeroDimSpecifyEndgame");
 }
 
 template <typename StartType, typename ... ConstTs>
@@ -108,6 +109,7 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyTracker(ZeroDimRT const& rt
 		case type::Tracker::Adaptive:
 			return ZeroDimSpecifyEndgame<StartType, tracking::AMPTracker>(rt, ts...);
 	}
+	throw std::runtime_error("unrecognized tracker type in ZeroDimSpecifyTracker");
 }
 
 template <typename ... ConstTs>
@@ -122,6 +124,7 @@ std::unique_ptr<algorithm::AnyZeroDim> ZeroDimSpecifyStart(ZeroDimRT const& rt, 
 		case type::Start::User:
 			throw std::runtime_error("trying to use generic zero dim with user homotopy.  use the specific UserBlaBla instead");
 	}
+	throw std::runtime_error("unrecognized start system type in ZeroDimSpecifyStart");
 }
 
 template <typename ... ConstTs>

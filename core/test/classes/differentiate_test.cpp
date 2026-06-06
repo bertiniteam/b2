@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(diff_constant){
 	std::vector<dbl> exact_dbl = {0.0, 0.0, 0.0};
 	std::vector<mpfr> exact_mpfr = {mpfr("0.0"),mpfr("0.0"),mpfr("0.0")};
 
-	for(int ii = 0; ii < vars.size(); ++ii)
+	for(size_t ii = 0; ii < vars.size(); ++ii)
 	{
 		BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[ii]).real() - exact_dbl[ii].real() ) < threshold_clearance_d);
 		BOOST_CHECK(fabs(JFunc->EvalJ<dbl>(vars[ii]).imag() - exact_dbl[ii].imag()) < threshold_clearance_d);
@@ -1246,8 +1246,8 @@ BOOST_AUTO_TEST_CASE(linprod_diff_eval)
 	dbl xval_d = dbl(.5,1);
 	dbl yval_d = dbl(.6,1);
 	dbl zval_d = dbl(.7,1);
-	dbl h0val_d = dbl(.34, -2.1);
-	dbl h1val_d = dbl(-1.2, .0043);
+	[[maybe_unused]] dbl h0val_d = dbl(.34, -2.1);
+	[[maybe_unused]] dbl h1val_d = dbl(-1.2, .0043);
 	mpfr xval_mp = mpfr(".5", "1");
 	mpfr yval_mp = mpfr(".6", "1");
 	mpfr zval_mp = mpfr(".7", "1");

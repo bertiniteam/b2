@@ -55,6 +55,7 @@ namespace bertini{
 		case Assign: return "Assign";
 		case IntPower: return "IntPower";
 		}
+		throw std::runtime_error("unrecognized operation in OpcodeToString");
 	}
 
 
@@ -153,11 +154,17 @@ namespace bertini{
 		for (size_t ii(0); ii<s.instructions_.size(); /*it's in the loop at access time*/){
 			auto op = static_cast<Operation>(s.instructions_[ii++]);
 			out << OpcodeToString(op) << "(";
-			if (IsUnary(op))
-				out << s.instructions_[ii++] << ") --> " << s.instructions_[ii++] << std::endl;
-
-			else
-				out << s.instructions_[ii++] << "," << s.instructions_[ii++] << ") --> " << s.instructions_[ii++] << std::endl;
+			if (IsUnary(op)){
+				auto operand = s.instructions_[ii++];
+				auto result = s.instructions_[ii++];
+				out << operand << ") --> " << result << std::endl;
+			}
+			else{
+				auto operand1 = s.instructions_[ii++];
+				auto operand2 = s.instructions_[ii++];
+				auto result = s.instructions_[ii++];
+				out << operand1 << "," << operand2 << ") --> " << result << std::endl;
+			}
 		}
 
 
@@ -219,7 +226,7 @@ namespace bertini{
 		if (is_evaluated_)
 			return;
 
-		for (int ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
+		for (size_t ii = 0; ii<instructions_.size();/*the increment is done at end of loop depending on arity */) {
 			//in the unary case the loop will increment by 3
 			//binary: by 4
 
@@ -388,13 +395,13 @@ namespace bertini{
 	}
 
 
-	void SLPCompiler::Visit(node::Jacobian const& n){
+	void SLPCompiler::Visit(node::Jacobian const& /*n*/){
 		throw std::runtime_error("unimplemented visit to node of type Jacobian");
 
 
 	}
 
-	void SLPCompiler::Visit(node::Differential const& n){
+	void SLPCompiler::Visit(node::Differential const& /*n*/){
 		throw std::runtime_error("unimplemented visit to node of type Differential");
 	}
 
@@ -786,7 +793,7 @@ namespace bertini{
 						try{
 							f->shared_from_this();
 						}
-						catch (std::exception){
+						catch (std::exception const&){
 							throw std::runtime_error("top level function is not a function");
 						}
 			#endif

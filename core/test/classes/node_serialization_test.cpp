@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(system_clone)
 	BOOST_CHECK_EQUAL(variables1.size(), variables2.size());
 
 
-	for (int ii=0; ii<variables2.size(); ++ii)
+	for (size_t ii=0; ii<variables2.size(); ++ii)
 	{
 		BOOST_CHECK(variables1[ii].get() != variables2[ii].get());
 	}

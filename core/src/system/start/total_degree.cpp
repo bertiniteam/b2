@@ -39,7 +39,7 @@ namespace bertini {
 			SanityChecks(s);
 			CopyDegrees(s);
 			CopyVariableStructure(s);
-			SeedRandomValues(s.NumNaturalFunctions());
+			SeedRandomValues(static_cast<int>(s.NumNaturalFunctions()));
 			GenerateFunctions();
 
 			if (s.IsHomogeneous())
@@ -52,7 +52,7 @@ namespace bertini {
 		
 		TotalDegree& TotalDegree::operator*=(Nd const& n)
 		{
-			*this *= n;
+			System::operator*=(n);
 			return *this;
 		}
 		
@@ -156,14 +156,14 @@ namespace bertini {
 		{
 			auto deg = s.Degrees();
 			for (const auto& d : deg)
-				degrees_.push_back(static_cast<const size_t>(d));
+				degrees_.push_back(static_cast<size_t>(d));
 		}
 
 
 		void TotalDegree::SeedRandomValues(int num_functions)
 		{
 			random_values_.resize(num_functions);
-			for (unsigned ii = 0; ii < num_functions; ++ii)
+			for (int ii = 0; ii < num_functions; ++ii)
 				random_values_[ii] = Rational::Make(node::Rational::Rand());
 		}
 

@@ -335,7 +335,7 @@ public:
 
 	explicit CauchyEndgame(TrackerType const& tr,
                             const ConfigsAsTuple& settings )
-      : BaseEGT(tr, settings), EndgamePrecPolicyBase<TrackerType>(tr)
+      : EndgamePrecPolicyBase<TrackerType>(tr), BaseEGT(tr, settings)
    	{ }
 
     template< typename... Ts >
@@ -623,7 +623,6 @@ public:
 	template<typename ComplexT>
 	bool CheckClosedLoop()
 	{
-		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		auto& times = std::get<TimeCont<ComplexT> >(cauchy_times_);
 		auto& samples = std::get<SampCont<ComplexT> >(cauchy_samples_);
 
@@ -930,7 +929,6 @@ public:
 	template<typename ComplexT>
 	SuccessCode ComputeCauchyApproximationOfXAtT0(Vec<ComplexT>& result)
 	{
-		using RealT = typename Eigen::NumTraits<ComplexT>::Real;
 		auto& cau_times = std::get<TimeCont<ComplexT> >(cauchy_times_);
 		auto& cau_samples = std::get<SampCont<ComplexT> >(cauchy_samples_);
 
@@ -1075,7 +1073,7 @@ public:
 	template<typename ComplexT>
 	SuccessCode RunImpl(ComplexT const& start_time, Vec<ComplexT> const& start_point, ComplexT const& target_time)
 	{
-		if (start_point.size()!=this->GetSystem().NumVariables())
+		if (start_point.size()!=static_cast<Eigen::Index>(this->GetSystem().NumVariables()))
 		{
 			std::stringstream err_msg;
 			err_msg << "number of variables in start point for CauchyEG, " << start_point.size() << ", must match the number of variables in the system, " << this->GetSystem().NumVariables();
@@ -1109,7 +1107,10 @@ public:
 			return cauchy_loop_success;
 
 
-		RealT norm_of_dehom_prev, norm_of_dehom_latest;
+		// initialized to 0 so the security check below never reads indeterminate values.
+		// NOTE: the guard on the assignment (level <= 0) and the guard on the check in the loop (level != 0)
+		// appear inconsistent with each other and with the PowerSeries endgame, which uses (level <= 0) for both.
+		RealT norm_of_dehom_prev(0), norm_of_dehom_latest(0);
 
 		if(this->SecuritySettings().level <= 0)
 			norm_of_dehom_prev = this->GetSystem().DehomogenizePoint(prev_approx).template lpNorm<Eigen::Infinity>();

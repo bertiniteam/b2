@@ -69,13 +69,13 @@ unsigned MaxPrecision(TimeCont<mpfr_complex> const& times)
 
 //does not a thing, because cannot.
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<dbl> const & times, SampCont<dbl> const & derivatives)
+unsigned EnsureAtUniformPrecision(TimeCont<dbl> const & /*times*/, SampCont<dbl> const & /*derivatives*/)
 {
 	return DoublePrecision();
 }
 
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<dbl> const & times, SampCont<dbl> const & samples, SampCont<dbl> const & derivatives)
+unsigned EnsureAtUniformPrecision(TimeCont<dbl> const & /*times*/, SampCont<dbl> const & /*samples*/, SampCont<dbl> const & /*derivatives*/)
 {
 	return DoublePrecision(); 
 }
@@ -83,7 +83,7 @@ unsigned EnsureAtUniformPrecision(TimeCont<dbl> const & times, SampCont<dbl> con
 
 //changes precision of mpfr_complex to highest needed precision for the samples.
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> const & times, SampCont<mpfr_complex> const & samples)
+unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> const & /*times*/, SampCont<mpfr_complex> const & samples)
 {
 	return MaxPrecision(samples);
 }
@@ -91,7 +91,7 @@ unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> const & times, SampCont
 
 //returns max precision of all samples.
 inline
-unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> const & times, SampCont<mpfr_complex> const & samples, SampCont<mpfr_complex> const & derivatives)
+unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> const & /*times*/, SampCont<mpfr_complex> const & samples, SampCont<mpfr_complex> const & derivatives)
 {
 	return max(MaxPrecision(samples),
 	           MaxPrecision(derivatives)); 

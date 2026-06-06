@@ -105,7 +105,7 @@ namespace bertini
 			template<class Archive> friend void boost::serialization::save_construct_data(Archive & ar, const User * t, const unsigned int file_version);
 
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<StartSystem>(*this);
 			}
 
@@ -119,7 +119,7 @@ namespace bertini
 namespace boost { namespace serialization {
 template<class Archive>
 inline void save_construct_data(
-    Archive & ar, const bertini::start_system::User * t, const unsigned int file_version
+    Archive & ar, const bertini::start_system::User * t, const unsigned int /*file_version*/
 ){
     // save data required to construct instance
     ar << t->user_system_;
@@ -132,7 +132,7 @@ inline void save_construct_data(
 
 template<class Archive>
 inline void load_construct_data(
-    Archive & ar, bertini::start_system::User * t, const unsigned int file_version
+    Archive & ar, bertini::start_system::User * t, const unsigned int /*file_version*/
 ){
     // retrieve data from archive required to construct new instance
     bertini::System sys;

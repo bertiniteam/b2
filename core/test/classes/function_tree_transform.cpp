@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_SUITE(transform)
 //      | (_)         (_)           | |                              
 //   ___| |_ _ __ ___  _ _ __   __ _| |_ ___   _______ _ __ ___  ___ 
 //  / _ \ | | '_ ` _ \| | '_ \ / _` | __/ _ \ |_  / _ \ '__/ _ \/ __|
-// |  __/ | | | | | | | | | | | (_| | ||  __/  / /  __/ | | (_) \__ \
+// |  __/ | | | | | | | | | | | (_| | ||  __/  / /  __/ | | (_) \__ \.
 //  \___|_|_|_| |_| |_|_|_| |_|\__,_|\__\___| /___\___|_|  \___/|___/
                                                                   
                                                                   
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_SUITE(eliminate_zeros)
     
 // ______ 
 // \  ___)
-//  \ \
+//  \ \.
 //   > >  
 //  / /__ 
 // /_____)
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(level_two_variable_set_to_zero_eliminated)
 
 	x->set_current_value(dbl(0));
 
-	auto num_eliminated = n->EliminateZeros();
+	[[maybe_unused]] auto num_eliminated = n->EliminateZeros();
 
 	x->set_current_value(dbl(2.0));
 
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_SUITE_END() // eliminate ones
 //               __.....__    \  ___ `'.             .' .'      '.\     __.....__      
 //           .-''         '.   ' |--.\  \           / .'            .-''         '.    
 // .-,.--.  /     .-''"'-.  `. | |    \  '         . '             /     .-''"'-.  `.  
-// |  .-. |/     /________\   \| |     |  '        | |            /     /________\   \
+// |  .-. |/     /________\   \| |     |  '        | |            /     /________\   \.
 // | |  | ||                  || |     |  | _    _ | |            |                  | 
 // | |  | |\    .-------------'| |     ' .'| '  / |. '            \    .-------------' 
 // | |  '-  \    '-.____...---.| |___.' /'.' | .' | \ '.          .\    '-.____...---. 
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_SUITE(reduce_depth)
 //                   _                                                            
 //                  ( )                                                           
 //  _ __    __     _| | _   _    ___    __      ______      ___  _   _   ___ ___  
-// ( '__) /'__`\ /'_` |( ) ( ) /'___) /'__`\   (______)   /',__)( ) ( )/' _ ` _ `\
+// ( '__) /'__`\ /'_` |( ) ( ) /'___) /'__`\   (______)   /',__)( ) ( )/' _ ` _ `\.
 // | |   (  ___/( (_| || (_) |( (___ (  ___/              \__, \| (_) || ( ) ( ) |
 // (_)   `\____)`\__,_)`\___/'`\____)`\____)              (____/`\___/'(_) (_) (_)
 
@@ -868,14 +868,14 @@ BOOST_AUTO_TEST_CASE(complicated4)
 	auto t = Variable::Make("t");
 
 	auto a = x->Eval<dbl>();
-	auto b = y->Eval<dbl>();
+	[[maybe_unused]] auto b = y->Eval<dbl>();
 	auto h = HOM_VAR_0->Eval<dbl>();
 	auto T = t->Eval<dbl>();
 
 	auto f = ((zero*(pow((x-(HOM_VAR_0*one)),3)))+((3*(pow((x-(HOM_VAR_0*one)),2))*(-((one*one)+(zero*HOM_VAR_0))))*(one-t)));
 
 	auto f_val_init = f->Eval<dbl>();
-	auto actual_val = 3.*pow((h - a),2)*(T - 1.);
+	[[maybe_unused]] auto actual_val = 3.*pow((h - a),2)*(T - 1.);
 
 	bertini::Simplify(f);
 

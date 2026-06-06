@@ -20,7 +20,7 @@ bertini::System SingleVariableTestSystem(){
 	std::string str = "function f; variable_group x; f = x+1;";
 
 	bertini::System sys;
-	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	return sys;
 }
@@ -30,7 +30,7 @@ bertini::System TwoVariableTestSystem(){
 	std::string str = "function f,g; variable_group x,y; f = x^2+y^2-1; g = x-y;";
 
 	bertini::System sys;
-	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	return sys;
 }
@@ -42,7 +42,7 @@ bertini::System ThreeVariableTestSystem(){
 
 
 	bertini::System sys;
-	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 
 	return sys;
 }
@@ -55,7 +55,7 @@ bertini::System HomotopyTotalDegreeTestSystem(){
 
 
 	bertini::System sys;
-	bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
+	[[maybe_unused]] bool success = bertini::parsing::classic::parse(str.begin(), str.end(), sys);
 	sys.Homogenize();
 	sys.AutoPatch();
 

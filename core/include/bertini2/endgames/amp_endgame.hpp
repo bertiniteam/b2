@@ -62,14 +62,14 @@ public:
 	}
 
 	static
-	void EnsureAtPrecision(double & obj, unsigned prec)
+	void EnsureAtPrecision(double & /*obj*/, unsigned prec)
 	{
 		if (prec!=DoublePrecision())
 			throw std::runtime_error("attempting to adjust precision of double to non-double precision");
 	}
 
 	static
-	void EnsureAtPrecision(std::complex<double> & obj, unsigned prec)
+	void EnsureAtPrecision(std::complex<double> & /*obj*/, unsigned prec)
 	{
 		if (prec!=DoublePrecision())
 			throw std::runtime_error("attempting to adjust precision of std::complex<double> to non-double precision");
@@ -97,7 +97,6 @@ public:
 		using bertini::Precision;
 		assert(Precision(current_time)==Precision(current_sample) && "precision of sample and time to be refined in AMP endgame must match");
 
-		using RealT = mpfr_float;
 		using std::max;
 		auto& TR = this->GetTracker();
 		TR.ChangePrecision(Precision(current_time));

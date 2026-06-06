@@ -70,9 +70,9 @@ template<typename ComplexT>
 	unsigned num_t, num_s, num_d;
 	if (shift_from == ContStart::Back)
 	{
-		num_t = times.size()-1;
-		num_s = samples.size()-1;
-		num_d = derivatives.size()-1;
+		num_t = static_cast<unsigned>(times.size()-1);
+		num_s = static_cast<unsigned>(samples.size()-1);
+		num_d = static_cast<unsigned>(derivatives.size()-1);
 	}
 	else
 	{

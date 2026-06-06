@@ -100,9 +100,9 @@ namespace  bertini {
 				coeffs_rat_imag_.resize(num_factors_, num_variables_+1);
 				
 				
-				for (int ii = 0; ii < num_factors_; ++ii)
+				for (size_t ii = 0; ii < num_factors_; ++ii)
 				{
-					for (int jj = 0; jj < num_variables_+1; ++jj)
+					for (size_t jj = 0; jj < num_variables_+1; ++jj)
 					{
 						// Generate random constants as mpq_rationals.  Then downsample to mpfr_complex and dbl.
 						// TODO: RandomRat() does not generate random numbers.  Same each run.
@@ -149,7 +149,7 @@ namespace  bertini {
 			LinearProduct(VariableGroup const& variables, Mat<mpfr_complex> const& coeffs_mpfr, bool is_hom_vars = false)
 			: variables_(variables), num_factors_(coeffs_mpfr.rows()), is_hom_vars_(is_hom_vars)
 			{
-				if(variables.size()+1 != coeffs_mpfr.cols())
+				if(static_cast<Eigen::Index>(variables.size()+1) != coeffs_mpfr.cols())
 					throw std::runtime_error("attempting to construct a linear product manually, not enough columns for the number of variables in the variable group");
 				
 				
@@ -175,7 +175,7 @@ namespace  bertini {
 				
 				// Set the coefficient matrices with input matrices.
 				
-				for(int ii = 0; ii < num_factors_; ++ii)
+				for(size_t ii = 0; ii < num_factors_; ++ii)
 				{
 					for(int jj = 0; jj < coeffs_mpfr.cols(); ++jj)
 					{
@@ -413,7 +413,7 @@ namespace  bertini {
 				Vec<CType> coeff_ret(num_variables_ + 1);
 				Mat<CType>& coeff_ref = std::get<Mat<CType>>(coeffs_);
 				
-				for(int jj = 0; jj < num_variables_ + 1; ++jj)
+				for(size_t jj = 0; jj < num_variables_ + 1; ++jj)
 				{
 					coeff_ret(jj) = coeff_ref(index,jj);
 				}
@@ -463,7 +463,7 @@ namespace  bertini {
 				
 				
 				// Evaluate all afine variables and store
-				for (int jj = 0; jj < num_variables_; ++jj)
+				for (size_t jj = 0; jj < num_variables_; ++jj)
 				{
 					variables_[jj]->EvalInPlace<dbl>(temp_var_d_[jj], diff_variable);
 				}
@@ -476,11 +476,11 @@ namespace  bertini {
 				
 				
 				// Evaluate the linear product
-				for (int ii = 0; ii < num_factors_; ++ii)
+				for (size_t ii = 0; ii < num_factors_; ++ii)
 				{
 					// Add all terms in one linear factor and store in temp_sum_d_
 					temp_sum_d_ = dbl(0);
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
+					for (size_t jj = 0; jj < num_variables_ + 1; ++jj)
 					{
 						temp_sum_d_ += coeffs_ref(ii,jj)*temp_var_d_[jj];
 					}// re: loop through variables
@@ -518,7 +518,7 @@ namespace  bertini {
 				const Mat<mpfr_complex>& coeffs_ref = std::get< Mat<mpfr_complex> >(coeffs_);
 				
 				// Evaluate all afine variables and store
-				for (int jj = 0; jj < num_variables_; ++jj)
+				for (size_t jj = 0; jj < num_variables_; ++jj)
 				{
 					variables_[jj]->EvalInPlace<mpfr_complex>(temp_var_mp_[jj], diff_variable);
 				}
@@ -528,11 +528,11 @@ namespace  bertini {
 				
 				
 				
-				for (int ii = 0; ii < num_factors_; ++ii)
+				for (size_t ii = 0; ii < num_factors_; ++ii)
 				{
 					// Add all terms in one linear factor and store in temp_sum_d_
 					temp_sum_mp_ = mpfr_complex(0);
-					for (int jj = 0; jj < num_variables_ + 1; ++jj)
+					for (size_t jj = 0; jj < num_variables_ + 1; ++jj)
 					{
 						temp_sum_mp_ += coeffs_ref(ii,jj)*temp_var_mp_[jj];
 					}
@@ -599,7 +599,7 @@ namespace  bertini {
 			
 			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var,
 						  Mat<mpq_rational> const& coeffs_real, Mat<mpq_rational> const& coeffs_imag, bool is_hom_vars) :
-				variables_(variables), num_factors_(coeffs_real.rows()), hom_variable_(hom_var), is_hom_vars_(is_hom_vars)
+				variables_(variables), hom_variable_(hom_var), num_factors_(coeffs_real.rows()), is_hom_vars_(is_hom_vars)
 			{
 				num_variables_ = variables.size();
 				
@@ -619,9 +619,9 @@ namespace  bertini {
 				coeffs_rat_real_ = coeffs_real;
 				coeffs_rat_imag_ = coeffs_imag;
 				
-				for (int ii = 0; ii < num_factors_; ++ii)
+				for (size_t ii = 0; ii < num_factors_; ++ii)
 				{
-					for (int jj = 0; jj < num_variables_+1; ++jj)
+					for (size_t jj = 0; jj < num_variables_+1; ++jj)
 					{
 						coeffs_dbl_ref(ii,jj).real( static_cast<double>(coeffs_rat_real_(ii,jj)) );
 						coeffs_dbl_ref(ii,jj).imag( static_cast<double>(coeffs_rat_imag_(ii,jj)) );
@@ -643,7 +643,7 @@ namespace  bertini {
 			
 			
 			LinearProduct(VariableGroup const& variables, std::shared_ptr<Node> const& hom_var, Mat<mpfr_complex> const& coeffs, bool is_hom_vars) :
-			variables_(variables), num_factors_(coeffs.rows()), hom_variable_(hom_var), is_hom_vars_(is_hom_vars)
+			variables_(variables), hom_variable_(hom_var), num_factors_(coeffs.rows()), is_hom_vars_(is_hom_vars)
 			{
 				num_variables_ = variables.size();
 				
@@ -661,9 +661,9 @@ namespace  bertini {
 				
 				coeffs_mpfr_ref = coeffs;
 				
-				for (int ii = 0; ii < num_factors_; ++ii)
+				for (size_t ii = 0; ii < num_factors_; ++ii)
 				{
-					for (int jj = 0; jj < num_variables_+1; ++jj)
+					for (size_t jj = 0; jj < num_variables_+1; ++jj)
 					{
 						coeffs_dbl_ref(ii,jj) = static_cast<dbl>(coeffs_mpfr_ref(ii,jj));
 					}
@@ -702,7 +702,7 @@ namespace  bertini {
 
 			
 			
-			void SetupVariables(size_t num_factors, VariableGroup const& variables)
+			void SetupVariables(size_t /*num_factors*/, VariableGroup const& variables)
 			{
 				num_variables_ = variables.size();
 				
@@ -727,7 +727,7 @@ namespace  bertini {
 			friend class boost::serialization::access;
 			
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<Symbol>(*this);
 			}
 			
@@ -832,7 +832,7 @@ namespace  bertini {
 			/**
 			 Return SumOperator whose children are derivatives of children_
 			 */
-			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& v = nullptr) const override
+			std::shared_ptr<Node> Differentiate(std::shared_ptr<Variable> const& /*v*/ = nullptr) const override
 			{
 				return Integer::Make(0);
 			}
@@ -844,7 +844,7 @@ namespace  bertini {
 			 \param v The variable we are determining the degree with respect to.
 			 \return Degree of polynomial with respect to variable v.
 			 */
-			int Degree(std::shared_ptr<Variable> const& v = nullptr) const override
+			int Degree(std::shared_ptr<Variable> const& /*v*/ = nullptr) const override
 			{
 				return 0;
 			};
@@ -860,7 +860,7 @@ namespace  bertini {
 			 \return Degree of polynomial with respect to variable group.
 			 */
 			
-			int Degree(VariableGroup const& vars) const override
+			int Degree(VariableGroup const& /*vars*/) const override
 			{
 				return 0;
 			};
@@ -886,12 +886,12 @@ namespace  bertini {
 			 \param vars Variable group to homogenize with respect to.
 			 \param homvar Homogenization variable.
 			 */
-			void Homogenize(VariableGroup const& vars, std::shared_ptr<Variable> const& homvar) override
+			void Homogenize(VariableGroup const& /*vars*/, std::shared_ptr<Variable> const& /*homvar*/) override
 			{
 			};
 			
 			
-			bool IsHomogeneous(std::shared_ptr<Variable> const& v = nullptr) const override
+			bool IsHomogeneous(std::shared_ptr<Variable> const& /*v*/ = nullptr) const override
 			{
 				return true;
 			}
@@ -903,7 +903,7 @@ namespace  bertini {
 			 
 				\return boolean.
 			 */
-			bool IsHomogeneous(VariableGroup const& vars) const override
+			bool IsHomogeneous(VariableGroup const& /*vars*/) const override
 			{
 				return true;
 			};
@@ -971,7 +971,7 @@ namespace  bertini {
 			 */
 			void FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				for(int ii = 0; ii < variables_.size(); ++ii)
+				for(size_t ii = 0; ii < variables_.size(); ++ii)
 				{
 					if(diff_variable == variables_[ii])
 					{
@@ -1018,7 +1018,7 @@ namespace  bertini {
 			 */
 			void FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& diff_variable) const override
 			{
-				for(int ii = 0; ii < variables_.size(); ++ii)
+				for(size_t ii = 0; ii < variables_.size(); ++ii)
 				{
 					if(diff_variable == variables_[ii])
 					{
@@ -1094,7 +1094,7 @@ namespace  bertini {
 			friend class boost::serialization::access;
 			
 			template <typename Archive>
-			void serialize(Archive& ar, const unsigned version) {
+			void serialize(Archive& ar, const unsigned /*version*/) {
 				ar & boost::serialization::base_object<NaryOperator>(*this);
 			}
 			

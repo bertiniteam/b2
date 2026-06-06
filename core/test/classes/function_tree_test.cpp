@@ -61,7 +61,6 @@ using namespace bertini;
 /////////// Basic Operations Alone ///////////////////
 
 BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
-	using mpfr_float = bertini::mpfr_float;
 	
 	
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
@@ -87,7 +86,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_num_squared){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -120,7 +118,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_squared){
 BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_nan){
 	
 
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -132,7 +129,6 @@ BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_nan){
 }
 
 BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_zero){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -143,7 +139,6 @@ BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_zero){
 
 
 BOOST_AUTO_TEST_CASE(default_constructed_variable_is_not_one){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -183,7 +178,6 @@ BOOST_AUTO_TEST_CASE(rational_node_eval_sane_precision_one_half){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -209,7 +203,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_x){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -298,7 +291,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_y_plus_number){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -391,7 +383,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_minus_y_minus_number){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_times_number){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -480,7 +471,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_times_number){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -526,7 +516,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_divide_y){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -559,7 +548,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -601,7 +589,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_y_plus_num1l_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_minus_y_minus_num1l_pow_num2){
-	using mpfr_float = bertini::mpfr_float;
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
 	std::shared_ptr<Variable> y = Variable::Make("y");
@@ -631,7 +618,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_minus_y_minus_num1l_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
@@ -683,7 +669,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_times_y_times_num1l_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_over_yl_pow_num2){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -724,7 +709,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_over_yl_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lnegative_xl_pow_num2){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -751,7 +735,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lnegative_xl_pow_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_plus_y_plus_num1){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	
@@ -792,7 +775,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_plus_y_plus_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_minus_y_minus_num1){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -834,7 +816,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_minus_y_minus_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_times_y_times_num1){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -896,7 +877,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_times_y_times_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_over_y){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -951,7 +931,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_over_y){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_negate_x_pow_num2){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -985,7 +964,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_negate_x_pow_num2){
 /////////// Order of Operations ///////////////////
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_over_num){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1037,7 +1015,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_y_over_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_times_ly_plus_num2l){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1069,7 +1046,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_times_ly_plus_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_times_y_plus_num2){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1100,7 +1076,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_times_y_plus_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_over_ly_plus_num2l){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1131,7 +1106,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_plus_num1l_over_ly_plus_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_over_y_plus_num2){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1162,7 +1136,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_num1_over_y_plus_num2){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_plus_num1){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1189,7 +1162,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_plus_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_plus_lnum1_pow_num2l){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1216,7 +1188,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_plus_lnum1_pow_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_times_lnum1_pow_num2l){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1245,7 +1216,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_times_lnum1_pow_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1274,7 +1244,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_times_num1){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_lx_pow_num2l_over_num1){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1338,7 +1307,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_pow_lsqrt_xl_num)
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_over_lnum1_pow_num2l){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1365,7 +1333,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_over_lnum1_pow_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1392,7 +1359,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_plus_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_times_num2l){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1424,7 +1390,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_times_num2l){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_over_num2l){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1460,7 +1425,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_x_pow_lnum1_over_num2l){
 
 ///////////// Special Functions ///////////////////
 BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = Float::Make(astr_real, astr_imag);
@@ -1493,7 +1457,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_cos_num){
-	using mpfr_float = bertini::mpfr_float;
 	
 	std::shared_ptr<Float> a = Float::Make(astr_real, astr_imag);
 	
@@ -1514,7 +1477,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_cos_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_tan_num){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = Float::Make(astr_real, astr_imag);
@@ -1536,7 +1498,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = Float::Make(astr_real, astr_imag);
@@ -1569,7 +1530,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_num){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = Float::Make(astr_real, astr_imag);
@@ -1591,7 +1551,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_sqrt_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1618,7 +1577,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_sin_of_lx_plus_numl){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_cos_of_lx_times_numl){
-	using mpfr_float = bertini::mpfr_float;
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
 	std::shared_ptr<Float> a = Float::Make(astr_real, astr_imag);
@@ -1643,7 +1601,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_cos_of_lx_times_numl){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_tan_of_lx_over_numl){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1669,7 +1626,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_tan_of_lx_over_numl){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_exp_of_negative_num){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Float> a = Float::Make(astr_real, astr_imag);
@@ -1690,7 +1646,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_exp_of_negative_num){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_sqrt_of_lx_pow_numl){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	std::shared_ptr<Variable> x = Variable::Make("x");
@@ -1849,7 +1804,6 @@ BOOST_AUTO_TEST_CASE(manual_construction_e){
 
 
 BOOST_AUTO_TEST_CASE(manual_construction_i){
-	using mpfr_float = bertini::mpfr_float;
 	bertini::DefaultPrecision(CLASS_TEST_MPFR_DEFAULT_DIGITS);
 	
 	dbl exact_dbl(0.0,1.0);

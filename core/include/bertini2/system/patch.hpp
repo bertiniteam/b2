@@ -134,6 +134,12 @@ namespace bertini {
 			}
 		}
 
+		/**
+		Copy assignment.  Explicitly defaulted (memberwise), matching the previously-implicit behavior.
+		Note this differs from the custom copy constructor, which re-downsamples at current default precision.
+		*/
+		Patch& operator=(Patch const& other) = default;
+
 
 		/**
 		\brief Constructor making a random complex patch on a space whose structure is described by the input argument.
@@ -144,7 +150,7 @@ namespace bertini {
 
 		\param sizes The sizes of the variable groups, including homogenizing variables if present.
 		*/
-		Patch(std::vector<unsigned> const& sizes) : variable_group_sizes_(sizes), coefficients_highest_precision_(sizes.size()), precision_(DefaultPrecision())
+		Patch(std::vector<unsigned> const& sizes) : coefficients_highest_precision_(sizes.size()), variable_group_sizes_(sizes), precision_(DefaultPrecision())
 		{
 			using bertini::Precision;
 			using bertini::multiprecision::RandomComplex;
@@ -313,7 +319,7 @@ namespace bertini {
 			// unpack from the tuple of working coefficients
 			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
 
-			unsigned offset(function_values.size() - NumVariableGroups()); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
+			unsigned offset(static_cast<unsigned>(function_values.size() - NumVariableGroups())); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
 			unsigned counter(0);
 			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
 			{
@@ -355,6 +361,7 @@ namespace bertini {
 		void JacobianInPlace(Eigen::MatrixBase<Derived> & jacobian, Vec<T> const& x) const
 		{
 			static_assert(std::is_same<typename Derived::Scalar,T>::value,"scalar types must match");
+			(void)x; // only used in asserts; the jacobian of a patch is constant
 
 
 			#ifndef BERTINI_DISABLE_ASSERTS
@@ -368,7 +375,7 @@ namespace bertini {
 			
 			const std::vector<Vec<T> >& coefficients = std::get<std::vector<Vec<T> > >(coefficients_working_);
 
-			unsigned offset(jacobian.rows() - NumVariableGroups()); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
+			unsigned offset(static_cast<unsigned>(jacobian.rows() - NumVariableGroups())); // by precondition this number is at least 0.  the precondition is ensured by the public wrapper
 			unsigned counter(0);
 			for (unsigned ii = 0; ii < NumVariableGroups(); ++ii)
 				for (unsigned jj=0; jj<variable_group_sizes_[ii]; ++jj)
@@ -443,7 +450,7 @@ namespace bertini {
 		*/
 		unsigned NumVariableGroups() const
 		{
-			return variable_group_sizes_.size();
+			return static_cast<unsigned>(variable_group_sizes_.size());
 		}
 
 
@@ -523,7 +530,7 @@ namespace bertini {
 		friend class boost::serialization::access;
 
 		template <typename Archive>
-		void serialize(Archive& ar, const unsigned version) {
+		void serialize(Archive& ar, const unsigned /*version*/) {
 			ar & precision_;
 
 			ar & coefficients_highest_precision_;
