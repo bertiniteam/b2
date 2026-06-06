@@ -37,6 +37,8 @@ namespace bertini{
 
 void ExportObserver()
 {
+	class_<AnyEvent, boost::noncopyable>("AnyEvent", no_init);
+
 	class_<ObserverWrapper<AnyObserver>, boost::noncopyable>("AnyAbstractObserver",  init< >())
 	;
 }
