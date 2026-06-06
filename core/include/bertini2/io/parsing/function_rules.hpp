@@ -245,22 +245,10 @@ namespace bertini {
 					
 					
 					
-					using qi::on_error;
-					using boost::phoenix::val;
-					using boost::phoenix::construct;
-					
-					
-					on_error<qi::fail>
-					(
-					 root_rule_
-					 , std::cout
-					 << val("Function parser error:  expecting ")
-					 << _4
-					 << val(" here: \"")
-					 << construct<std::string>(_3, _2)
-					 << val("\"")
-					 << std::endl
-					 );
+										qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("FunctionParser"))
+					);
 					
 					
 					

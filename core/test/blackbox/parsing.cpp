@@ -26,8 +26,8 @@
 
 #include "bertini2/system/precon.hpp"
 #include "bertini2/blackbox/global_configs.hpp"
-
 #include "bertini2/io/parsing.hpp"
+#include "bertini2/io/parsing/system_parsers.hpp"
 
 
 BOOST_AUTO_TEST_SUITE(blackbox_test)
@@ -81,5 +81,32 @@ maxnewtonits: 1;)";
 
 
 BOOST_AUTO_TEST_SUITE_END() // end the parsing sub-suite
+
+
+
+BOOST_AUTO_TEST_SUITE(parser_errors)
+
+BOOST_AUTO_TEST_CASE(system_missing_semicolon)
+{
+	// "variable_group x, y" is missing a semicolon — expectation operator fires
+	std::string bad = "variable_group x, y\nfunction f;\nf = x+y;";
+	BOOST_CHECK_THROW(bertini::System{bad}, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(system_syntax_error_in_expression)
+{
+	std::string bad = "variable_group x, y;\nfunction f;\nf = x + * y;";
+	BOOST_CHECK_THROW(bertini::System{bad}, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(system_garbage_input)
+{
+	// Completely nonsensical input — parser cannot make progress
+	BOOST_CHECK_THROW(bertini::System{"@#$% not bertini at all"}, std::runtime_error);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // end parser_errors suite
+
+
 
 BOOST_AUTO_TEST_SUITE_END() // end the blackbox suite

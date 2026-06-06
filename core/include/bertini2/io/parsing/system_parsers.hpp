@@ -84,7 +84,14 @@ namespace bertini {
 		
 		if (!s || iter!=end)
 		{
-			throw std::runtime_error("unable to correctly parse string in construction of system");
+			std::string remaining(iter, end);
+			if (remaining.size() > 60)
+				remaining = remaining.substr(0, 60) + "...";
+			if (remaining.empty())
+				remaining = "<end of input>";
+			throw std::runtime_error(
+				"[SystemParser] parser did not consume entire input; "
+				"unparsed remainder: \"" + remaining + "\"");
 		}
 		
 		using std::swap;

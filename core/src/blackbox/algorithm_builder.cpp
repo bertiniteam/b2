@@ -54,7 +54,13 @@ int AlgoBuilder::ClassicBuild(std::string const& config_str, std::string const& 
 	// Parse all configuration structs (double precision versions suffice for
 	// choosing algorithm types; mpfr versions would be used for mp-specific defaults)
 	using AllConfsD = config::Configs::All<dbl>::type;
-	auto cfgs_d = parsing::classic::ConfigParser<AllConfsD>::Parse(config_str);
+	decltype(parsing::classic::ConfigParser<AllConfsD>::Parse(config_str)) cfgs_d;
+	try {
+		cfgs_d = parsing::classic::ConfigParser<AllConfsD>::Parse(config_str);
+	} catch (std::exception const& e) {
+		std::cerr << "error: failed to parse configuration: " << e.what() << "\n";
+		return 1;
+	}
 
 	// Select tracker type from PrecisionType (mptype in Bertini1 syntax):
 	//   Fixed         (mptype: 0) -> FixedDouble
