@@ -231,7 +231,7 @@ endif()
 # lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj)
 # from the static bertini2 archive unless every object is forced in.
 if(MSVC AND NOT PROJECT_IS_TOP_LEVEL)
-  target_link_options(_pybertini PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2>)
+  target_link_options(_pybertini PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2> /FORCE:MULTIPLE)
 endif()
 
 cmake_print_variables(SKBUILD)

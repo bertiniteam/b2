@@ -788,12 +788,19 @@ endif (ENABLE_UNIT_TESTING)
 # lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj,
 # which holds all ExplicitRKPredictor Butcher-tableau statics) unless every object in
 # the archive is forced in. /WHOLEARCHIVE does exactly that.
+#
+# /FORCE:MULTIPLE is required alongside /WHOLEARCHIVE: Boost.Serialization instantiates
+# oserializer/singleton templates in every TU that includes a serialization header, so
+# the same symbol can appear in multiple object files. Normal link-time deduplication
+# silently picks one; /WHOLEARCHIVE forces ALL of them in, causing lld-link to reject
+# the duplicates. /FORCE:MULTIPLE restores the "pick the first, ignore the rest"
+# behavior for these identical instantiations.
 if(MSVC AND ENABLE_UNIT_TESTING)
   foreach(_t test_classes test_blackbox test_classic test_endgames test_generating
               test_nag_algorithms test_nag_datatypes test_pool test_settings
               test_tracking_basics)
     if(TARGET ${_t})
-      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2>)
+      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2> /FORCE:MULTIPLE)
     endif()
   endforeach()
 endif()
