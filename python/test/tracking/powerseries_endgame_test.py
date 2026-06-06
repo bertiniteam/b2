@@ -44,7 +44,7 @@ from bertini.tracking import (
     AMPTracker, DoublePrecisionTracker, MultiplePrecisionTracker,
     Predictor, SuccessCode,
 )
-from bertini.tracking.config import SteppingConfig, NewtonConfig, amp_config_from
+from bertini.tracking import SteppingConfig, NewtonConfig, amp_config_from
 from bertini.endgame import AMPPSEG, FixedDoublePSEG, FixedMultiplePSEG
 
 import bertini.multiprec as mp

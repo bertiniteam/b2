@@ -33,7 +33,7 @@ import pytest
 
 import bertini as pb
 from bertini.tracking import AMPTracker
-from bertini.tracking.config import SteppingConfig, NewtonConfig
+from bertini.tracking import SteppingConfig, NewtonConfig
 from bertini.nag_algorithm import ZeroDimCauchyAdaptivePrecisionTotalDegree, TolerancesConfig
 
 

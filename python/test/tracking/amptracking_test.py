@@ -38,7 +38,6 @@ from bertini.function_tree.symbol import *
 from bertini.function_tree.root import *
 from bertini.function_tree import *
 from bertini.tracking import *
-from bertini.tracking.config import *
 
 import numpy as np
 import pytest

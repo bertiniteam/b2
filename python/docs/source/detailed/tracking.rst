@@ -28,12 +28,6 @@ Auto-generated docs
 .. automodule:: bertini.tracking
 
 
-🛤 bertini.tracking.config
-=====================================
-
-.. automodule:: bertini.tracking.config
-
-
 🛤 bertini.tracking.observers
 ===================================
 

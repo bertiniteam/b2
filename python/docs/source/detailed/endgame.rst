@@ -13,11 +13,3 @@ Auto-generated docs
 	:noindex:
 
 
-
-🎮 bertini.endgame.config
-=====================================
-
-.. automodule:: bertini.endgame.config
-	:noindex:
-
-

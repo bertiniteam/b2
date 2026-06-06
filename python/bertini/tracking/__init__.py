@@ -36,9 +36,11 @@ Tracking-specific things -- trackers, configs
 from bertini._pybertini import tracking as _pybtracking
 from bertini._pybertini.tracking import *
 
-# trackers gain configure()/config_names() built on their type-list config interface.
-from ..config import enhance_owners
+# trackers gain configure()/config_names() built on their type-list config interface;
+# configs gain update()/to_dict()/from_dict()/repr/eq.
+from ..config import enhance_owners, enhance_all
 enhance_owners(_pybtracking)
+enhance_all(_pybtracking)
 
 __all__ = dir(_pybtracking)
 
