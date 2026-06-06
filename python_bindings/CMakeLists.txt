@@ -228,6 +228,12 @@ if(NOT WIN32)
   target_compile_options(_pybertini PRIVATE "-Wno-conversion")
 endif()
 
+# lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj)
+# from the static bertini2 archive unless every object is forced in.
+if(MSVC AND NOT PROJECT_IS_TOP_LEVEL)
+  target_link_options(_pybertini PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2>)
+endif()
+
 cmake_print_variables(SKBUILD)
 if(${SKBUILD})
     # see https://stackoverflow.com/questions/1242904/finding-python-site-packages-directory-with-cmake
