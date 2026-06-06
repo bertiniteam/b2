@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bertini 2 &mdash; Command-line executable</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Bertini 2 &mdash; CLI</h1>
+      <p class="subtitle">The <code>bertini2</code> command-line executable.</p>
+    </header>
+
+    <nav class="breadcrumb"><a href="../">&larr; Documentation home</a></nav>
+
+    <section class="prose">
+      <h2>Basic usage</h2>
+      <p>
+        <code>bertini2</code> reads the classic Bertini input-file format and solves
+        zero-dimensional polynomial systems.
+      </p>
+      <pre><code>bertini2 [options] [input_file]   # input_file defaults to "input"
+bertini2 --help                   # full usage
+bertini2 --version                # library and dependency versions</code></pre>
+
+      <h2>Parallelism</h2>
+      <p>
+        Two orthogonal parallelism layers are available when the library is built with MPI.
+        MPI is auto-detected at configure time and enabled by default when found.
+      </p>
+
+      <h3>MPI ranks</h3>
+      <p>
+        Paths are distributed across multiple processes. Pass <code>--bind-to none</code>
+        so each rank can use all its assigned cores.
+      </p>
+      <pre><code>mpirun --bind-to none -n N bertini2 input</code></pre>
+
+      <h3>Threads per rank</h3>
+      <p>
+        Each MPI rank tracks multiple paths concurrently using
+        <strong>std::thread</strong> &mdash; there is no OpenMP dependency.
+        The thread count is controlled by the environment variable
+        <code>OMP_NUM_THREADS</code>.
+      </p>
+      <p>
+        Despite the name, <code>OMP_NUM_THREADS</code> here has nothing to do with OpenMP.
+        It was chosen because HPC schedulers such as SLURM set it automatically from
+        <code>--cpus-per-task</code>, so jobs running under a scheduler require no extra
+        configuration. When running outside a scheduler, set it manually:
+      </p>
+      <pre><code>OMP_NUM_THREADS=T mpirun --bind-to none -n N bertini2 input</code></pre>
+      <p>
+        Total parallel capacity = N&nbsp;ranks &times; T&nbsp;threads/rank.
+        <code>OMP_NUM_THREADS</code> defaults to&nbsp;1 when unset.
+      </p>
+
+      <h3>Serial build</h3>
+      <p>
+        If the library was built without MPI (e.g. on a workstation where MPI was not
+        found at configure time), only single-process execution is available. Thread count
+        is still controlled by <code>OMP_NUM_THREADS</code>.
+        Rebuild with MPI present to unlock multi-rank parallelism.
+      </p>
+    </section>
+
+    <footer>
+      <p>
+        <a href="https://github.com/bertiniteam/b2">GitHub repository</a> &middot;
+        <a href="https://pypi.org/project/bertini2/">PyPI package</a> &middot;
+        Licensed under GPLv3 with additional terms.
+      </p>
+      <p class="build-info">
+        Built from
+        <a href="https://github.com/bertiniteam/b2/commit/__COMMIT_SHA__"><code>__COMMIT_SHORT__</code></a>
+        on __BUILD_DATE__.
+      </p>
+    </footer>
+  </main>
+</body>
+</html>
