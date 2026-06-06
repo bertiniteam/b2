@@ -212,6 +212,14 @@ endif(WIN32)
 
 #set_property(TARGET bertini2_exe PROPERTY OUTPUT_NAME bertini2)
 
+# Auto-enable MPI in the core library when MPI is available on this machine.
+# This keeps core and bindings in sync: if the bindings find MPI, the core must
+# also compile its MPI symbols (WorldComm, etc.) or the link will fail.
+find_package(MPI COMPONENTS CXX QUIET)
+if(MPI_CXX_FOUND)
+    set(ENABLE_MPI ON CACHE BOOL "Enable MPI parallelism" FORCE)
+endif()
+
 add_subdirectory(core)
 
 

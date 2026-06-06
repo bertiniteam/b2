@@ -34,6 +34,7 @@
 
 
 #include "bertini_python.hpp"
+#include "parallel_export.hpp"
 
 
 namespace bertini
@@ -104,7 +105,8 @@ namespace bertini
 			ExportEndgameObservers();
 
 			ExportLogging();
-			
+
+			ExportParallel();
 			ExportZeroDim();
 
 			ExportNID();

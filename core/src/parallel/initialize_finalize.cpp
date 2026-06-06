@@ -67,6 +67,9 @@ namespace bertini{
 		int Rank()
 		{
 #ifdef BERTINI2_HAVE_MPI
+			int initialized = 0;
+			MPI_Initialized(&initialized);
+			if (!initialized) return 0;
 			int r = 0;
 			MPI_Comm_rank(MPI_COMM_WORLD, &r);
 			return r;
@@ -78,6 +81,9 @@ namespace bertini{
 		int Size()
 		{
 #ifdef BERTINI2_HAVE_MPI
+			int initialized = 0;
+			MPI_Initialized(&initialized);
+			if (!initialized) return 1;
 			int s = 1;
 			MPI_Comm_size(MPI_COMM_WORLD, &s);
 			return s;

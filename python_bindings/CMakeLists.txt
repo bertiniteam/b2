@@ -80,7 +80,10 @@ find_package(Python REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 
 find_package(Eigen3 REQUIRED NO_MODULE)
 
-
+find_package(MPI COMPONENTS CXX)
+if(MPI_CXX_FOUND)
+    message(STATUS "MPI found: ${MPI_CXX_COMPILER}")
+endif()
 
 if (PROJECT_IS_TOP_LEVEL)
     find_package(bertini2 REQUIRED)
@@ -138,6 +141,7 @@ set(PYBERTINI_HEADERS
     include/detail.hpp
     include/logging.hpp
     include/info.hpp
+    include/parallel_export.hpp
 )
 
 set(PYBERTINI_SOURCES
@@ -163,6 +167,7 @@ set(PYBERTINI_SOURCES
     src/numerical_irreducible_decomposition_export.cpp
     src/bertini_python.cpp
     src/info.cpp
+    src/parallel_export.cpp
 )
 
 
@@ -213,6 +218,11 @@ target_link_libraries(_pybertini PUBLIC Eigen3::Eigen)
 target_link_libraries(_pybertini PUBLIC eigenpy::eigenpy)
 target_link_libraries(_pybertini PUBLIC ${Boost_LIBRARIES})
 target_link_boost_python(_pybertini PUBLIC)
+
+if(MPI_CXX_FOUND)
+    target_link_libraries(_pybertini PUBLIC MPI::MPI_CXX)
+    target_compile_definitions(_pybertini PUBLIC BERTINI2_HAVE_MPI)
+endif()
 
 if(NOT WIN32)
   target_compile_options(_pybertini PRIVATE "-Wno-conversion")

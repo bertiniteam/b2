@@ -31,6 +31,10 @@
 #include "zero_dim_export.hpp"
 #include "configured_visitor.hpp"
 
+#ifdef BERTINI2_HAVE_MPI
+#include <mpi.h>
+#endif
+
 
 
 namespace bertini{
@@ -42,7 +46,21 @@ void ZDVisitor<AlgoT>::visit(PyClass& cl) const
 {
 	cl
 	.def(ConfiguredVisitor<AlgoT>())
-	.def("solve", &AlgoT::Solve, "run the zero dim algorithm with currently stored settings")
+	.def("solve",
+		+[](AlgoT& self, boost::python::object comm) -> void {
+#ifdef BERTINI2_HAVE_MPI
+			if (comm.is_none()) {
+				self.Run();
+			} else {
+				MPI_Fint f = boost::python::extract<MPI_Fint>(comm.attr("py2f")());
+				self.RunParallel(MPI_Comm_f2c(f));
+			}
+#else
+			self.Solve();
+#endif
+		},
+		(boost::python::arg("communicator") = boost::python::object()),
+		"Run the zero-dim algorithm. Pass an mpi4py communicator for parallel execution.")
 	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
 	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
 	.def("solutions", &AlgoT::FinalSolutions, return_internal_reference<>(), "get the solutions at the target time")

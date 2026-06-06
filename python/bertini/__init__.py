@@ -73,6 +73,7 @@ from . import container
 from . import logging
 from . import nag_algorithm
 from . import random
+from . import parallel
 
 from ._pybertini import info
 
@@ -92,7 +93,7 @@ default_precision = multiprec.default_precision
 # "a list of strings defining what symbols in a module will be exported when from <module> import * is used on the module"
 __all__ = ['Variable','variables','gather_variables','VariableGroup','system','System',
            'nag_algorithm','container','default_precision',
-           'tracking','endgame','logging','function_tree','parse','multiprec','random',
+           'tracking','endgame','logging','function_tree','parse','multiprec','random','parallel',
            'sin','cos','tan','asin','acos','atan','exp','log','sqrt']
 
 
