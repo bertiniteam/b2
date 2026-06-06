@@ -6,8 +6,8 @@ int main(int argument_count, char** arguments)
 
 	auto parsed = ParseArgcArgv(argument_count, arguments);
 
-	serial::Initialize();
-	parallel::Initialize();
+	parallel::Initialize();  // MPI_Init first so rank is known
+	serial::Initialize();    // splash on rank 0 only
 
 	int result = MainModeSwitch(parsed);
 

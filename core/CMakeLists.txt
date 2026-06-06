@@ -15,6 +15,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #file(GLOB SOURCES src/*.cpp)
 
 option(ENABLE_UNIT_TESTING "Turn on building and running of unit tests while compiling" OFF)
+option(ENABLE_MPI "Enable MPI parallelism (requires OpenMPI or MPICH; no Boost.MPI needed)" OFF)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -68,6 +69,11 @@ set(_BOOST_REQUIRED_COMPONENTS
     log_setup
     thread
 )
+
+if(ENABLE_MPI)
+    find_package(MPI REQUIRED)
+    message(STATUS "MPI enabled: ${MPI_CXX_COMPILER}")
+endif()
 
 find_package(Boost REQUIRED COMPONENTS ${_BOOST_REQUIRED_COMPONENTS})
 
@@ -234,6 +240,9 @@ set(nag_datatypes_common_headers
 
 set(parallel_headers
     include/bertini2/parallel/initialize_finalize.hpp
+    include/bertini2/parallel/path_result.hpp
+    include/bertini2/parallel/manager.hpp
+    include/bertini2/parallel/worker.hpp
 )
 
 set(parallel_rootinclude_HEADERS
@@ -425,6 +434,12 @@ target_link_libraries(bertini2 PUBLIC ${MPFR_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC ${MPC_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC Eigen3::Eigen)
 target_link_libraries(bertini2 PUBLIC ${Boost_LIBRARIES})
+
+if(ENABLE_MPI)
+    target_compile_definitions(bertini2 PUBLIC BERTINI2_HAVE_MPI)
+    target_link_libraries(bertini2 PUBLIC MPI::MPI_CXX)
+    message(STATUS "bertini2 built with plain C MPI support (no Boost.MPI)")
+endif()
 
 
 if(SUFFIX_SO_VERSION)

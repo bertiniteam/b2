@@ -43,6 +43,7 @@
 #include "bertini2/nag_algorithms/common/algorithm_base.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/nag_algorithms/common/policies.hpp"
+#include "bertini2/parallel.hpp"
 #include <chrono>
 
 
@@ -319,8 +320,109 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 			*/
 			void Run() override
 			{
+				// TODO(Phase 2 Python): AnyZeroDim lacks GetSolutions() -- solutions are only
+				// accessible via the concrete type's member arrays or WriteMainData().
+				// Resolve when designing Python bindings; the right approach depends on whether
+				// Python holds AnyZeroDim or the concrete ZeroDim<...> type directly.
+#ifdef BERTINI2_HAVE_MPI
+				if (parallel::Size() > 1)
+				{
+					RunParallel(parallel::WorldComm());
+					return;
+				}
+#endif
 				Solve();
 			}
+
+#ifdef BERTINI2_HAVE_MPI
+			/**
+			\brief Manager-worker parallel solve using plain C MPI.
+
+			All ranks must have already constructed an identical ZeroDim from the same input.
+			Rank 0 acts as manager; ranks 1..P-1 are workers.
+
+			Phase 1: workers track paths to the endgame boundary.
+			         Manager gathers results, runs EGBoundaryAction (midpath check).
+			Phase 2: manager distributes successful paths (with boundary data) to workers.
+			         Workers run the endgame, send final solutions back.
+			Manager runs PostEGAction (multiplicities, same-point detection).
+			*/
+			void RunParallel(MPI_Comm comm)
+			{
+				using BeforeResult = parallel::PathBeforeEGResult<BaseComplexT>;
+				using Phase2T      = parallel::Phase2Task<BaseComplexT>;
+				using DuringResult = parallel::PathDuringEGResult<BaseComplexT>;
+
+				PreSolveChecks();
+				PreSolveSetup();
+
+				if (parallel::IsManager())
+				{
+					// ---- Phase 1: before endgame ----
+					std::queue<SolnIndT> phase1_queue;
+					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+						phase1_queue.push(static_cast<SolnIndT>(ii));
+
+					parallel::RunManagerLoop<SolnIndT, BeforeResult>(comm, phase1_queue,
+						[this](BeforeResult const& r){ StoreBeforeEGResult(r); });
+
+					// Midpath check + possible re-tracks run locally on rank 0.
+					// Workers are idle here. This is acceptable for Phase 1 since
+					// midpath crossings are rare; a future optimization could
+					// redistribute re-track work.
+					EGBoundaryAction();
+
+					// ---- Phase 2: during endgame (successful paths only) ----
+					std::queue<Phase2T> phase2_queue;
+					for (decltype(num_start_points_) ii{0}; ii < num_start_points_; ++ii)
+					{
+						if (solution_final_metadata_[ii].pre_endgame_success == SuccessCode::Success)
+						{
+							auto idx = static_cast<SolnIndT>(ii);
+							Phase2T task;
+							task.path_index        = idx;
+							task.boundary_point    = solutions_at_endgame_boundary_[idx].path_point;
+							task.boundary_stepsize = solutions_at_endgame_boundary_[idx].last_used_stepsize;
+							phase2_queue.push(std::move(task));
+						}
+					}
+
+					parallel::RunManagerLoop<Phase2T, DuringResult>(comm, phase2_queue,
+						[this](DuringResult const& r){ StoreDuringEGResult(r); });
+
+					PostEGAction();
+				}
+				else
+				{
+					// ---- Phase 1 worker ----
+					parallel::RunWorkerLoop<SolnIndT, BeforeResult>(comm,
+						[this](SolnIndT const& idx)
+						{
+							TrackSinglePathBeforeEG(idx);
+						},
+						[this](SolnIndT const& idx) -> BeforeResult
+						{
+							return PackBeforeEGResult(idx);
+						});
+
+					// ---- Phase 2 worker ----
+					parallel::RunWorkerLoop<Phase2T, DuringResult>(comm,
+						[this](Phase2T const& task)
+						{
+							auto idx = static_cast<SolnIndT>(task.path_index);
+							// Install boundary data so TrackSinglePathDuringEG can read it.
+							solutions_at_endgame_boundary_[idx].path_point         = task.boundary_point;
+							solutions_at_endgame_boundary_[idx].last_used_stepsize = task.boundary_stepsize;
+							solutions_at_endgame_boundary_[idx].success_code       = SuccessCode::Success;
+							TrackSinglePathDuringEG(idx);
+						},
+						[this](Phase2T const& task) -> DuringResult
+						{
+							return PackDuringEGResult(static_cast<SolnIndT>(task.path_index));
+						});
+				}
+			}
+#endif // BERTINI2_HAVE_MPI
 
 			// Definitions are out-of-line at the bottom of this file, after
 			// output.hpp is included (avoiding a circular-include chicken-and-egg).
@@ -832,6 +934,83 @@ std::ostream& operator<<(std::ostream & out, const EGBoundaryMetaData<NumT> & me
 				}
 			}
 
+
+
+		///////
+		//	MPI pack/store helpers (only compiled when BERTINI2_HAVE_MPI is defined)
+		///////
+
+#ifdef BERTINI2_HAVE_MPI
+			parallel::PathBeforeEGResult<BaseComplexT> PackBeforeEGResult(SolnIndT idx) const
+			{
+				parallel::PathBeforeEGResult<BaseComplexT> r;
+				r.path_index           = idx;
+				r.pre_endgame_success  = solutions_at_endgame_boundary_[idx].success_code;
+				r.boundary_point       = solutions_at_endgame_boundary_[idx].path_point;
+				r.boundary_stepsize    = solutions_at_endgame_boundary_[idx].last_used_stepsize;
+				r.precision_changed    = solution_final_metadata_[idx].precision_changed;
+				r.time_of_first_prec_increase = solution_final_metadata_[idx].time_of_first_prec_increase;
+				r.max_precision_used   = solution_final_metadata_[idx].max_precision_used;
+				return r;
+			}
+
+			void StoreBeforeEGResult(parallel::PathBeforeEGResult<BaseComplexT> const& r)
+			{
+				auto idx = static_cast<SolnIndT>(r.path_index);
+				solutions_at_endgame_boundary_[idx] =
+					EGBoundaryMetaDataT{r.boundary_point, r.pre_endgame_success, r.boundary_stepsize};
+				auto& smd = solution_final_metadata_[idx];
+				smd.path_index             = idx;
+				smd.solution_index         = idx;
+				smd.pre_endgame_success    = r.pre_endgame_success;
+				smd.precision_changed      = r.precision_changed;
+				smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
+				smd.max_precision_used     = r.max_precision_used;
+			}
+
+			parallel::PathDuringEGResult<BaseComplexT> PackDuringEGResult(SolnIndT idx) const
+			{
+				parallel::PathDuringEGResult<BaseComplexT> r;
+				r.path_index        = idx;
+				r.final_solution    = solutions_post_endgame_[idx];
+				auto const& smd     = solution_final_metadata_[idx];
+				r.endgame_success   = smd.endgame_success;
+				r.function_residual = smd.function_residual;
+				r.condition_number  = smd.condition_number;
+				r.newton_residual   = smd.newton_residual;
+				r.final_time_used   = smd.final_time_used;
+				r.accuracy_estimate = smd.accuracy_estimate;
+				r.accuracy_estimate_user_coords = smd.accuracy_estimate_user_coords;
+				r.cycle_num         = smd.cycle_num;
+				r.precision_changed = smd.precision_changed;
+				r.time_of_first_prec_increase = smd.time_of_first_prec_increase;
+				r.max_precision_used = smd.max_precision_used;
+				return r;
+			}
+
+			void StoreDuringEGResult(parallel::PathDuringEGResult<BaseComplexT> const& r)
+			{
+				auto idx = static_cast<SolnIndT>(r.path_index);
+				solutions_post_endgame_[idx] = r.final_solution;
+				auto& smd = solution_final_metadata_[idx];
+				smd.endgame_success   = r.endgame_success;
+				smd.function_residual = r.function_residual;
+				smd.condition_number  = r.condition_number;
+				smd.newton_residual   = r.newton_residual;
+				smd.final_time_used   = r.final_time_used;
+				smd.accuracy_estimate = r.accuracy_estimate;
+				smd.accuracy_estimate_user_coords = r.accuracy_estimate_user_coords;
+				smd.cycle_num         = r.cycle_num;
+				// Phase 2 may have further increased precision; take the maximum.
+				if (r.precision_changed && !smd.precision_changed)
+				{
+					smd.precision_changed = true;
+					smd.time_of_first_prec_increase = r.time_of_first_prec_increase;
+				}
+				using std::max;
+				smd.max_precision_used = max(smd.max_precision_used, r.max_precision_used);
+			}
+#endif // BERTINI2_HAVE_MPI
 
 
 		///////

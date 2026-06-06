@@ -33,9 +33,11 @@
 #include "bertini2/io/parsing/settings_parsers.hpp"
 #include "bertini2/nag_algorithms/common/config.hpp"
 #include "bertini2/nag_algorithms/zero_dim_solve.hpp"
+#include "bertini2/parallel.hpp"
 
 #include <fstream>
 #include <iostream>
+
 
 namespace bertini{
 
@@ -59,17 +61,18 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
 
 	alg->Run();
 
-	// TODO(MPI): file writes belong on rank 0 only
+	if (parallel::IsManager())
 	{
-		std::ofstream main_data{"main_data"};
-		alg->WriteMainData(main_data);
+		{
+			std::ofstream main_data{"main_data"};
+			alg->WriteMainData(main_data);
+		}
+		{
+			std::ofstream raw_data{"raw_data"};
+			alg->WriteRawData(raw_data);
+		}
+		std::cout << "bertini: wrote main_data and raw_data\n";
 	}
-	{
-		std::ofstream raw_data{"raw_data"};
-		alg->WriteRawData(raw_data);
-	}
-
-	std::cout << "bertini: wrote main_data and raw_data\n";
 	return 0;
 }
 
@@ -78,16 +81,35 @@ int RunZeroDim(std::string const& config_str, std::string const& input_str)
 
 int MainModeSwitch(ParsedArgs const& args)
 {
-	// TODO(MPI): file reading belongs on rank 0 only; broadcast config_str and
-	// input_str to all ranks before ClassicBuild so every rank builds an
-	// identical algorithm object.
 	std::string config_str, input_str;
+
+#ifdef BERTINI2_HAVE_MPI
+	// Rank 0 reads the input file, then broadcasts both strings to all ranks so
+	// every rank builds an identical algorithm object from the same source text.
+	if (parallel::IsManager())
+	{
+		try {
+			std::tie(config_str, input_str) = parsing::classic::SplitIntoConfigAndInput(args.input_file);
+		} catch (std::exception const& e) {
+			std::cerr << "error reading input file '" << args.input_file.string() << "': " << e.what() << "\n";
+			// Broadcast empty strings so workers don't hang waiting for broadcast.
+			parallel::mpi_broadcast_string(parallel::WorldComm(), config_str, 0);
+			parallel::mpi_broadcast_string(parallel::WorldComm(), input_str,  0);
+			return 1;
+		}
+	}
+	parallel::mpi_broadcast_string(parallel::WorldComm(), config_str, 0);
+	parallel::mpi_broadcast_string(parallel::WorldComm(), input_str,  0);
+	if (config_str.empty() && input_str.empty())
+		return 1;  // rank 0 failed to read; workers bail out cleanly
+#else
 	try {
 		std::tie(config_str, input_str) = parsing::classic::SplitIntoConfigAndInput(args.input_file);
 	} catch (std::exception const& e) {
 		std::cerr << "error reading input file '" << args.input_file.string() << "': " << e.what() << "\n";
 		return 1;
 	}
+#endif
 
 	using AlgoChoice = algorithm::classic::AlgoChoice;
 	auto choice = parsing::classic::FillConfigStruct<AlgoChoice>(config_str);
