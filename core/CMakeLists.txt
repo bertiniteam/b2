@@ -15,7 +15,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #file(GLOB SOURCES src/*.cpp)
 
 option(ENABLE_UNIT_TESTING "Turn on building and running of unit tests while compiling" OFF)
-option(ENABLE_MPI "Enable MPI parallelism (requires OpenMPI or MPICH; no Boost.MPI needed)" OFF)
+find_package(MPI)
+option(ENABLE_MPI "Enable MPI parallelism (requires OpenMPI or MPICH; no Boost.MPI needed)" ${MPI_FOUND})
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -70,8 +71,10 @@ set(_BOOST_REQUIRED_COMPONENTS
     thread
 )
 
+if(ENABLE_MPI AND NOT MPI_FOUND)
+    message(FATAL_ERROR "ENABLE_MPI=ON but no MPI installation was found.")
+endif()
 if(ENABLE_MPI)
-    find_package(MPI REQUIRED)
     message(STATUS "MPI enabled: ${MPI_CXX_COMPILER}")
 endif()
 
