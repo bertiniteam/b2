@@ -427,7 +427,7 @@ namespace bertini {
 			if (!have_path_variable_)
 				throw std::runtime_error("trying to use a time value for evaluation of system, but no path variable defined.");
 
-			SetVariables(variable_values.eval());//TODO: remove this eval
+			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
 
 			ResetFunctions(); // todo, elimiante this.  i feel like setting the variables or path variable should be enough to set the flag/ take the action
@@ -631,7 +631,7 @@ namespace bertini {
 			if (!HavePathVariable())
 				throw std::runtime_error("trying to use a time value for computation of jacobian, but no path variable defined.");
 			
-			SetVariables(variable_values.eval()); // TODO: remove this eval
+			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
 			ResetJacobian();
 			JacobianInPlace(J);
@@ -699,7 +699,7 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
-			SetVariables(variable_values.eval()); //TODO: remove this eval()
+			SetVariables(variable_values.eval());
 			SetPathVariable(path_variable_value);
 			ResetTimeDerivatives();
 			TimeDerivativeInPlace(ds_dt);
@@ -741,7 +741,7 @@ namespace bertini {
 		{
 			static_assert(std::is_same<typename Derived::Scalar, T>::value, "scalar types must be the same");
 
-			SetVariables(variable_values.eval()); //TODO: remove this eval()
+			SetVariables(variable_values.eval());
 			ResetTimeDerivatives();
 			TimeDerivativeInPlace(ds_dt);
 		}
@@ -985,8 +985,10 @@ namespace bertini {
 			const auto& vars = Variables();
 
 			#ifndef BERTINI_DISABLE_PRECISION_CHECKS
-				if (!std::is_same<T,dbl>::value && (Precision(new_values) != this->precision()))
-					throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
+				if constexpr (!std::is_same<T,dbl>::value) {
+					if (Precision(new_values) != this->precision())
+						throw std::runtime_error("precision of input point in SetVariables (" + std::to_string(Precision(new_values)) + ") must match the precision of the system (" + std::to_string(this->precision()) + ").");
+				}
 
 				if (!std::is_same<T,dbl>::value && (vars[0]->node::NamedSymbol::precision() != this->precision()) )
 					throw std::runtime_error("internally, precision of variables (" + std::to_string(vars[0]->node::NamedSymbol::precision()) + ") in SetVariables must match the precision of the system (" + std::to_string(this->precision()) + ").");

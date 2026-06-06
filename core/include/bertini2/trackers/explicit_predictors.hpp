@@ -671,7 +671,7 @@ namespace bertini{
 					Vec<RealT>& cref = std::get< Vec<RealT> >(c_);
 					Kref.fill(ComplexT(0));
 					Vec<ComplexT>& temp = std::get< Vec<ComplexT> >(step_temp_);
-					
+
 					if(EvalRHS(S, current_space, current_time, Kref, 0) != SuccessCode::Success)
 					{
 						return SuccessCode::MatrixSolveFailureFirstPartOfPrediction;
@@ -683,7 +683,6 @@ namespace bertini{
 						for(unsigned jj = 0; jj < ii; ++jj)
 							temp += aref(ii,jj)*Kref.col(jj);
 
-						// Vec<ComplexT> wfp = 
 						if(EvalRHS<ComplexT>(S, current_space + delta_t*temp, current_time + cref(ii)*delta_t, Kref, ii) != SuccessCode::Success)
 							return SuccessCode::MatrixSolveFailure;
 					}
@@ -812,6 +811,7 @@ namespace bertini{
 				SuccessCode EvalRHS(System const& S,
 									const Vec<ComplexT>& space, const ComplexT& time, Mat<ComplexT> & K, unsigned stage)
 				{
+
 
 					if (std::is_same<ComplexT, mpfr_complex>::value)
 						PrecisionSanityCheck();

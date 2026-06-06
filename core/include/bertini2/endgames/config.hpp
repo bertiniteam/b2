@@ -107,7 +107,7 @@ namespace bertini{ namespace endgame{
 		unsigned num_sample_points = 3; //NumSamplePoints default = 2
 		T min_track_time = T(1e-100); //nbrh radius in Bertini book. NbhdRadius
 
-		mpfr_float sample_factor = mpfr_float(1)/2; //SampleFactor
+		double sample_factor = 0.5; //SampleFactor — double avoids stale-precision from DefaultConstruct<EndgameConfig>::value
 		
 		unsigned max_num_newton_iterations = 15; // the maximum number allowable iterations during endgames, for points used to approximate the final solution.
 

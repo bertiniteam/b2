@@ -1185,22 +1185,22 @@ namespace node{
 		return SumOperator::Make(lhs,true,rhs,false);
 	}
 	
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_float rhs)
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Float::Make(rhs), false);
 	}
-	
-	inline std::shared_ptr<Node> operator-(mpfr_float lhs,  std::shared_ptr<Node> rhs)
+
+	inline std::shared_ptr<Node> operator-(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Float::Make(lhs), true, rhs, false);
 	}
 
-	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_complex rhs)
+	inline std::shared_ptr<Node> operator-(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
 		return SumOperator::Make(lhs, true, Float::Make(rhs), false);
 	}
-	
-	inline std::shared_ptr<Node> operator-(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
+
+	inline std::shared_ptr<Node> operator-(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return SumOperator::Make(Float::Make(lhs), true, rhs, false);
 	}
@@ -1247,22 +1247,22 @@ namespace node{
 	}
 	
 	
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_float rhs)
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_float const& rhs)
 	{
 		return MultOperator::Make(lhs,Float::Make(rhs));
 	}
 
-	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_complex rhs)
+	inline std::shared_ptr<Node> operator*(std::shared_ptr<Node> lhs, mpfr_complex const& rhs)
 	{
 		return MultOperator::Make(lhs,Float::Make(rhs));
 	}
 	
-	inline std::shared_ptr<Node> operator*(mpfr_float lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator*(mpfr_float const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Float::Make(lhs), rhs);
 	}
 
-	inline std::shared_ptr<Node> operator*(mpfr_complex lhs,  std::shared_ptr<Node> rhs)
+	inline std::shared_ptr<Node> operator*(mpfr_complex const& lhs,  std::shared_ptr<Node> rhs)
 	{
 		return MultOperator::Make(Float::Make(lhs), rhs);
 	}

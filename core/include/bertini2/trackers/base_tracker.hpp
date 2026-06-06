@@ -265,7 +265,6 @@ namespace bertini{
 					else
 						delta_t_ = current_stepsize_ * (endtime_ - current_time_)/abs(endtime_ - current_time_);
 
-
 					step_success_code_ = TrackerIteration();
 
 					if (infinite_path_truncation_ && (CheckGoingToInfinity()==SuccessCode::GoingToInfinity))

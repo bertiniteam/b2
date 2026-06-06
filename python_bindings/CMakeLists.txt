@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_PHOENIX_STL_TUPLE_H_")
 
 
 option(ENABLE_UNIT_TESTING "Turn on building and running of unit tests while compiling" OFF)
+option(BMP_EXPRESSION_TEMPLATES "Enable Boost.Multiprecision expression templates for mpfr_float, mpfr_complex, mpz_int, mpq_rational" ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -22,13 +23,19 @@ message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 include(CMakePrintHelpers) # so we can print cmake variable values
 
+if(BMP_EXPRESSION_TEMPLATES)
+    add_compile_definitions(BMP_EXPRESSION_TEMPLATES=1)
+    message(STATUS "BMP expression templates: ON")
+else()
+    message(STATUS "BMP expression templates: OFF")
+endif()
+
 if (WIN32)
     add_compile_options(/bigobj)
     add_compile_options(/EHsc)
     set(CMAKE_BUILD_TYPE "Release")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 else ()
-    # add_compile_definitions(-DBMP_EXPRESSION_TEMPLATES=1)
     add_compile_options(
         # put things for debug compile here
         $<$<CONFIG:Debug>:-g>

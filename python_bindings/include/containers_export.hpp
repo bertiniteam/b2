@@ -101,7 +101,7 @@ private:
 	static std::string __str__(const object& obj)
 	{
 		std::ostringstream oss;
-		const ContT& self=extract<ContT>(obj)();
+		ContT self=extract<ContT>(obj)();
 		std::stringstream ss;
 		ss << "[";
 		for (int ii = 0; ii < self.size(); ++ii)

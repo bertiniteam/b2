@@ -514,7 +514,6 @@ namespace bertini{
 			                               BaseComplexT const& end_time,
 										   Vec<BaseComplexT> const& start_point) const override
 			{
-
 				if (start_point(0).precision()!=DefaultPrecision())
 				{
 					std::stringstream err_msg;
@@ -538,6 +537,20 @@ namespace bertini{
 
 
 				this->NotifyObservers(Initializing<EmitterType,BaseComplexT>(*this,start_time, end_time, start_point));
+
+				// Reset precision of all persistent members before assignment so that
+				// BMP preserve_related_precision doesn't propagate stale high precision
+				// from a previous TrackPath call into the new one.
+				this->current_time_.precision(precision_);
+				this->endtime_.precision(precision_);
+				this->delta_t_.precision(precision_);
+				this->current_stepsize_.precision(precision_);
+				this->next_stepsize_.precision(precision_);
+				Precision(std::get<Vec<BaseComplexT>>(this->current_space_), precision_);
+				Precision(std::get<Vec<BaseComplexT>>(this->temporary_space_), precision_);
+				Precision(std::get<Vec<BaseComplexT>>(this->tentative_space_), precision_);
+				this->predictor_->ChangePrecision(precision_);
+				this->corrector_->ChangePrecision(precision_);
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;

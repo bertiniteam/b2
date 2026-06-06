@@ -267,7 +267,7 @@ namespace bertini{
 			def("polar",pooolar, "construct from polar form");
 			// def("norm",&T::norm);
 
-			T (*conjjj)(const T&) = &boost::multiprecision::conj;
+			T (*conjjj)(const T&) = +[](const T& x) -> T { return boost::multiprecision::conj(x); };
 			def("conj",conjjj, "complex conjugate");
 
 			mpfr_float (*aaaarg)(const T&) = &boost::multiprecision::arg;

@@ -141,7 +141,7 @@ namespace bertini{
 
 			// Subtraction operators
 			Nodeptr(*subNodeNode)(Nodeptr, const Nodeptr&) = &(operator-);
-			Nodeptr(*subNodeMpfr)(Nodeptr, mpfr_complex) = &(operator-);
+			Nodeptr(*subNodeMpfr)(Nodeptr, const mpfr_complex&) = &(operator-);
 			Nodeptr(*subNodeInt)(Nodeptr, int) = &(operator-);
 			static Nodeptr isubNodeNode(Nodeptr  lhs, const Nodeptr & rhs)
 			{
@@ -176,7 +176,7 @@ namespace bertini{
 
 			// Multiplication operators
 			Nodeptr(*multNodeNode)(Nodeptr, const Nodeptr&) = &(operator*);
-			Nodeptr(*multNodeMpfr)(Nodeptr, mpfr_complex) = &(operator*);
+			Nodeptr(*multNodeMpfr)(Nodeptr, const mpfr_complex&) = &(operator*);
 			Nodeptr(*multNodeRat)(Nodeptr, const mpq_rational&) = &(operator*);
 			Nodeptr(*multNodeInt)(Nodeptr, int) = &(operator*);
 			static Nodeptr imultNodeNode(Nodeptr  lhs, const Nodeptr & rhs)

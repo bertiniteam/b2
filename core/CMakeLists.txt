@@ -15,6 +15,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #file(GLOB SOURCES src/*.cpp)
 
 option(ENABLE_UNIT_TESTING "Turn on building and running of unit tests while compiling" OFF)
+option(BMP_EXPRESSION_TEMPLATES "Enable Boost.Multiprecision expression templates for mpfr_float, mpfr_complex, mpz_int, mpq_rational" ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
@@ -25,12 +26,18 @@ endif(NOT CMAKE_BUILD_TYPE)
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "ENABLE_UNIT_TESTING: ${ENABLE_UNIT_TESTING}")
 
+if(BMP_EXPRESSION_TEMPLATES)
+    add_compile_definitions(BMP_EXPRESSION_TEMPLATES=1)
+    message(STATUS "BMP expression templates: ON")
+else()
+    message(STATUS "BMP expression templates: OFF")
+endif()
+
 if (WIN32)
     add_compile_options(/bigobj)
     add_compile_options(/EHsc)
     set(CMAKE_BUILD_TYPE Release)
 else ()
-    # add_compile_definitions(-DBMP_EXPRESSION_TEMPLATES=1)
     add_compile_options(
         # put things for debug compile here
         $<$<CONFIG:Debug>:-g>
