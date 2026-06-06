@@ -29,6 +29,41 @@
       </a>
     </section>
 
+    <section class="prose">
+      <h2>Command-line executable</h2>
+      <p>
+        Bertini 2 ships a standalone executable, <code>bertini2</code>, that reads the classic
+        Bertini input-file format and solves zero-dimensional polynomial systems.
+      </p>
+      <pre><code>bertini2 [options] [input_file]   # input_file defaults to "input"
+bertini2 --help                   # full usage
+bertini2 --version                # library and dependency versions</code></pre>
+
+      <h3>Parallelism</h3>
+      <p>
+        Two orthogonal parallelism layers are available when the library is built with MPI
+        (MPI is auto-detected at configure time and enabled by default when found):
+      </p>
+      <dl>
+        <dt>MPI ranks</dt>
+        <dd>
+          Distribute paths across multiple processes. Pass <code>--bind-to none</code> so each
+          rank can use all its cores.
+          <pre><code>mpirun --bind-to none -n N bertini2 input</code></pre>
+        </dd>
+        <dt>Threads per rank</dt>
+        <dd>
+          Each MPI rank tracks multiple paths concurrently using <strong>std::thread</strong>
+          (not OpenMP). The thread count is read from the environment variable
+          <code>OMP_NUM_THREADS</code>, which HPC schedulers such as SLURM set automatically
+          from <code>--cpus-per-task</code>. Set it manually if running outside a scheduler:
+          <pre><code>OMP_NUM_THREADS=T mpirun --bind-to none -n N bertini2 input</code></pre>
+          Total parallel capacity = N&nbsp;ranks &times; T&nbsp;threads/rank.
+          <code>OMP_NUM_THREADS</code> defaults to&nbsp;1 when unset.
+        </dd>
+      </dl>
+    </section>
+
     <footer>
       <p>
         <a href="https://github.com/bertiniteam/b2">GitHub repository</a> &middot;
