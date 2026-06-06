@@ -143,7 +143,7 @@ namespace bertini {
 			struct ConfigSettingParser<Iterator, bertini::endgame::EndgameConfig, Skipper> : qi::grammar<Iterator, bertini::endgame::EndgameConfig(), Skipper>
 			{
 				using T = double;
-				using R = mpq_rational;
+				using R = mpfr_float;
 
 				ConfigSettingParser() : ConfigSettingParser::base_type(root_rule_, "EndgameConfig")
 				{
@@ -193,7 +193,7 @@ namespace bertini {
 					sample_factor_ = *(char_ - all_names_) >> (no_case[samplefactor_name] >> ':')
 					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string str)
 														   {
-															   num = bertini::NumTraits<double>::FromString(str);
+															   num = bertini::NumTraits<mpfr_float>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					min_track_.name("min_track_");

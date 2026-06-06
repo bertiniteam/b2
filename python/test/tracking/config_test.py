@@ -81,6 +81,35 @@ def test_equality_by_value():
     assert a != c
 
 
+def test_update_accepts_string_for_mpfr_field():
+    # strings are the blessed noise-free input for numeric settings
+    c = SteppingConfig().update(max_step_size="0.05")
+    assert c.max_step_size == pb.multiprec.Float("0.05")
+
+
+def test_update_accepts_mpfr_float_for_mpfr_field():
+    c = SteppingConfig().update(max_step_size=pb.multiprec.Float("0.25"))
+    assert c.max_step_size == pb.multiprec.Float("0.25")
+
+
+def test_update_rejects_python_float_for_mpfr_field():
+    # floats stay rejected by policy: 0.05 the double is not 1/20
+    with pytest.raises(TypeError):
+        SteppingConfig().update(max_step_size=0.05)
+
+
+def test_update_rejects_garbage_string():
+    with pytest.raises(Exception):
+        SteppingConfig().update(max_step_size="not a number")
+
+
+def test_string_value_roundtrips_through_to_dict():
+    c = SteppingConfig().update(max_step_size="0.125")
+    d = c.to_dict()
+    assert d['max_step_size'] == pb.multiprec.Float("0.125")
+    assert SteppingConfig.from_dict(d) == c
+
+
 # -------------------------------------------------------------- tracker configs
 
 @pytest.fixture

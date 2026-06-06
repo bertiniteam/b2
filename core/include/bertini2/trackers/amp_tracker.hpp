@@ -498,7 +498,7 @@ namespace bertini{
 				if (reinitialize_stepsize_)
 				{
 					mpfr_float segment_length = abs(start_time-end_time)/Get<Stepping>().min_num_steps;
-					SetStepSize(min(NumTraits<mpfr_float>::FromRational(Get<Stepping>().initial_step_size, current_precision_),segment_length));
+					SetStepSize(min(mpfr_float(Get<Stepping>().initial_step_size, current_precision_),segment_length));
 				}
 
 				// populate the current space value with the start point, in appropriate precision
@@ -810,8 +810,8 @@ namespace bertini{
 			SuccessCode AdjustAMPStepSuccess() const
 			{
 				// TODO: think about why we consider reducing the stepsize?  this is despite documentation stating that it can only increase
-				mpfr_float min_stepsize = current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor, current_precision_);
-				mpfr_float max_stepsize = min( current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_success_factor, current_precision_),  NumTraits<mpfr_float>::FromRational(Get<Stepping>().max_step_size, current_precision_));
+				mpfr_float min_stepsize = current_stepsize_ * mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_);
+				mpfr_float max_stepsize = min( current_stepsize_ * mpfr_float(Get<Stepping>().step_size_success_factor, current_precision_),  mpfr_float(Get<Stepping>().max_step_size, current_precision_));
 
 
 				unsigned min_precision = MinRequiredPrecision_BCTol<ComplexT>();
@@ -924,14 +924,14 @@ namespace bertini{
 
 
 				mpfr_float min_stepsize = MinStepSizeForPrecision(current_precision_, abs(current_time_ - endtime_));
-				mpfr_float max_stepsize = current_stepsize_ * NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor,current_precision_);  // Stepsize decreases.
+				mpfr_float max_stepsize = current_stepsize_ * mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_);  // Stepsize decreases.
 
 				if (min_stepsize > max_stepsize)
 				{
 					// stepsizes are incompatible, must increase precision
 					next_precision_ = min_next_precision;
 					// decrease stepsize somewhat less than the fail factor
-					next_stepsize_ = max(current_stepsize_ * (1+NumTraits<mpfr_float>::FromRational(Get<Stepping>().step_size_fail_factor,current_precision_))/2, min_stepsize);
+					next_stepsize_ = max(current_stepsize_ * (1+mpfr_float(Get<Stepping>().step_size_fail_factor, current_precision_))/2, min_stepsize);
 				}
 				else
 				{

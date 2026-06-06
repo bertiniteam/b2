@@ -247,8 +247,8 @@ namespace bertini {
 			{
 
 			private:
-					using T = double;
-					using R = mpq_rational;
+					using T = mpfr_float;
+					using R = mpfr_float;
 
 			public:
 				
@@ -319,14 +319,14 @@ namespace bertini {
 					stepsize_success_ = *(char_ - all_names_) >> (no_case[stepsuccess_name] >> ':')
 					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string const& str)
 														   {
-															num = bertini::NumTraits<double>::FromString(str);
+															num = bertini::NumTraits<mpfr_float>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					stepsize_fail_.name("stepsize_fail_");
 					stepsize_fail_ = *(char_ - all_names_) >> (no_case[stepfail_name] >> ':')
 					>> mpfr_rules.rational[phx::bind( [this](R & num, std::string const& str)
 														   {
-															   num = bertini::NumTraits<double>::FromString(str);
+															   num = bertini::NumTraits<mpfr_float>::FromString(str);
 														   }, _val, _1 )] >> ';';
 					
 					steps_increase_.name("steps_increase_");

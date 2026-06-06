@@ -401,6 +401,10 @@ namespace bertini{
 			.def(GreatLessVisitor<T,int>())
 			.def(GreatLessVisitor<T,double>())
 
+			.def(EqualitySelfVisitor<T>())
+			.def(EqualityVisitor<T, int>())
+			.def(EqualityVisitor<T, mpz_int>())
+
 			.def(RealFreeVisitor<T>())
 			;
 
@@ -482,6 +486,10 @@ namespace bertini{
 			.def(TranscendentalVisitor<T>())
 
 			.def(PrecisionVisitor<T>())
+
+			.def(EqualitySelfVisitor<T>())
+			.def(EqualityVisitor<T, mpfr_float>())
+			.def(EqualityVisitor<T, int>())
 			;
 
 
