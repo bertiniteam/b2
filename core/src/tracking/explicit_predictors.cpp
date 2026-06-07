@@ -297,6 +297,68 @@ const Eigen::Matrix<mpq_rational,10,1> ExplicitRKPredictor::cRKV67_(cRKV67Ptr_);
 
 
 			
+		// Explicit instantiation definitions for the two concrete numeric types.
+		// These pair with the extern template declarations in explicit_predictors.hpp
+		// and prevent each including TU from emitting its own copy.
+
+		template SuccessCode ExplicitRKPredictor::Predict<dbl>(
+		    Vec<dbl>&, System const&, Vec<dbl> const&, dbl, dbl const&,
+		    double&, unsigned&, unsigned, double const&);
+		template SuccessCode ExplicitRKPredictor::Predict<mpfr_complex>(
+		    Vec<mpfr_complex>&, System const&, Vec<mpfr_complex> const&, mpfr_complex, mpfr_complex const&,
+		    double&, unsigned&, unsigned, double const&);
+
+		template SuccessCode ExplicitRKPredictor::Predict<dbl>(
+		    Vec<dbl>&, double&, double&, double&,
+		    System const&, Vec<dbl> const&, dbl, dbl const&,
+		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
+		template SuccessCode ExplicitRKPredictor::Predict<mpfr_complex>(
+		    Vec<mpfr_complex>&, double&, double&, double&,
+		    System const&, Vec<mpfr_complex> const&, mpfr_complex, mpfr_complex const&,
+		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
+
+		template SuccessCode ExplicitRKPredictor::Predict<dbl>(
+		    Vec<dbl>&, double&, double&, double&, double&,
+		    System const&, Vec<dbl> const&, dbl, dbl const&,
+		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
+		template SuccessCode ExplicitRKPredictor::Predict<mpfr_complex>(
+		    Vec<mpfr_complex>&, double&, double&, double&, double&,
+		    System const&, Vec<mpfr_complex> const&, mpfr_complex, mpfr_complex const&,
+		    double&, unsigned&, unsigned, double const&, AdaptiveMultiplePrecisionConfig const&);
+
+		template SuccessCode ExplicitRKPredictor::FullStep<dbl>(
+		    Vec<dbl>&, System const&, Vec<dbl> const&, dbl const&, dbl const&);
+		template SuccessCode ExplicitRKPredictor::FullStep<mpfr_complex>(
+		    Vec<mpfr_complex>&, System const&, Vec<mpfr_complex> const&, mpfr_complex const&, mpfr_complex const&);
+
+		template void ExplicitRKPredictor::SetNormsCond<dbl>(
+		    double&, double&, double&, unsigned, unsigned);
+		template void ExplicitRKPredictor::SetNormsCond<mpfr_complex>(
+		    double&, double&, double&, unsigned, unsigned);
+
+		template SuccessCode ExplicitRKPredictor::SetErrorEstimate<dbl>(double&, dbl const&);
+		template SuccessCode ExplicitRKPredictor::SetErrorEstimate<mpfr_complex>(double&, mpfr_complex const&);
+
+		template SuccessCode ExplicitRKPredictor::SetSizeProportion<dbl>(double&, dbl const&);
+		template SuccessCode ExplicitRKPredictor::SetSizeProportion<mpfr_complex>(double&, mpfr_complex const&);
+
+		template SuccessCode ExplicitRKPredictor::EvalRHS<dbl>(
+		    System const&, Vec<dbl> const&, dbl const&, Mat<dbl>&, unsigned);
+		template SuccessCode ExplicitRKPredictor::EvalRHS<mpfr_complex>(
+		    System const&, Vec<mpfr_complex> const&, mpfr_complex const&, Mat<mpfr_complex>&, unsigned);
+
+		template void ExplicitRKPredictor::FillButcherTable<double>(
+		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
+		    Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+		template void ExplicitRKPredictor::FillButcherTable<mpfr_float>(
+		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&,
+		    Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+
+		template void ExplicitRKPredictor::FillButcherTable<double>(
+		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+		template void ExplicitRKPredictor::FillButcherTable<mpfr_float>(
+		    int, Mat<mpq_rational> const&, Mat<mpq_rational> const&, Mat<mpq_rational> const&);
+
 		} // re: predict
 	}// re: tracking
 }// re: bertini
