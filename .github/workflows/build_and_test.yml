@@ -239,7 +239,7 @@ jobs:
           # so each wheel bundles a matching libboost_python3X.
           CIBW_BUILD: ${{ env.CIBW_BUILD }}
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_39
           # Install system deps + download (but DO NOT build) Boost & eigenpy sources
           # once per container. Boost.Python is ABI-locked to a single CPython version,
           # so it must be rebuilt per target Python in BEFORE_BUILD — building it here
