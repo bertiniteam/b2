@@ -149,8 +149,15 @@ set(PYBERTINI_SOURCES
     src/logging.cpp
     src/detail.cpp
     src/containers.cpp
+    # tracker: coordinator + config split into separate TU for build-time parallelism
     src/tracker_export.cpp
+    src/tracker_config_export.cpp
+    # endgame: coordinator + per-tracker-family split
     src/endgame_export.cpp
+    src/endgame_config_export.cpp
+    src/endgame_double_export.cpp
+    src/endgame_mp_export.cpp
+    src/endgame_amp_export.cpp
     src/random_export.cpp
     src/mpfr_export.cpp
     src/node_export.cpp
@@ -163,8 +170,18 @@ set(PYBERTINI_SOURCES
     src/generic_observer.cpp
     src/tracker_observers.cpp
     src/endgame_observers.cpp
+    # zero_dim: coordinator + configs + per-tracker-family split
     src/zero_dim_export.cpp
+    src/zero_dim_configs_export.cpp
+    src/zero_dim_double_export.cpp
+    src/zero_dim_mp_export.cpp
+    src/zero_dim_amp_export.cpp
+    # NID: coordinator + datatypes + per-tracker-family split
     src/numerical_irreducible_decomposition_export.cpp
+    src/nid_datatypes_export.cpp
+    src/nid_double_export.cpp
+    src/nid_mp_export.cpp
+    src/nid_amp_export.cpp
     src/bertini_python.cpp
     src/info.cpp
     src/parallel_export.cpp
