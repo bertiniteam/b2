@@ -75,21 +75,25 @@ namespace Eigen {
 			return -highest();
 		}
 
+		// ThreadPrecision (thread-local), not DefaultPrecision (global): these
+		// tolerances are consumed inside tracking (LU solves, norms, convergence
+		// checks), which may run on std::thread workers whose precision is set
+		// thread-locally.  On the main thread the two agree.
 		inline static Real dummy_precision()
 		{
-			using bertini::DefaultPrecision;
-			return pow( mpfr_real(10),-int(DefaultPrecision()-3));
+			using bertini::ThreadPrecision;
+			return pow( mpfr_real(10),-int(ThreadPrecision()-3));
 		}
 
 		inline static Real epsilon()
 		{
-			using bertini::DefaultPrecision;
-			return pow(mpfr_real(10),-int(DefaultPrecision()));
+			using bertini::ThreadPrecision;
+			return pow(mpfr_real(10),-int(ThreadPrecision()));
 		}
 
 		static inline int digits10()
 		{
-			return bertini::DefaultPrecision();
+			return bertini::ThreadPrecision();
 			// return internal::default_digits10_impl<T>::run();
 		}
 		//http://www.manpagez.com/info/mpfr/mpfr-2.3.2/mpfr_31.php

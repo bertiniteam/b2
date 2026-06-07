@@ -38,3 +38,5 @@ build-type = "Release"
 [tool.pytest.ini_options]
 testpaths = ["python/test"]
 pythonpath = ["python/test"]
+# Exclude MPI tests from default pytest run (run with mpirun -n N explicitly)
+norecursedirs = ["python/test/parallel"]

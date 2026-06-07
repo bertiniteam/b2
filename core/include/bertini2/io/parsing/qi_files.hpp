@@ -51,3 +51,55 @@
 #include <boost/fusion/include/adapt_adt.hpp>
 
 #include <boost/spirit/include/support_istream_iterator.hpp>
+
+#include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+
+namespace bertini {
+namespace parsing {
+namespace classic {
+
+inline std::string FormatParseError(
+    std::string::const_iterator begin,
+    std::string::const_iterator end,
+    std::string::const_iterator err_pos,
+    boost::spirit::info const& what,
+    std::string const& parser_name)
+{
+    int line = 1 + (int)std::count(begin, err_pos, '\n');
+    auto rev = std::find(std::make_reverse_iterator(err_pos),
+                         std::make_reverse_iterator(begin), '\n');
+    int col = 1 + (int)std::distance(rev.base(), err_pos);
+
+    std::string remaining(err_pos, end);
+    if (remaining.size() > 60)
+        remaining = remaining.substr(0, 60) + "...";
+    if (remaining.empty())
+        remaining = "<end of input>";
+
+    std::ostringstream oss;
+    oss << "[" << parser_name << "] parse error at line " << line
+        << ", col " << col << ":\n"
+        << "  expected: " << what << "\n"
+        << "  found:    \"" << remaining << "\"\n";
+    return oss.str();
+}
+
+inline void ReportParseError(
+    std::string::const_iterator begin,
+    std::string::const_iterator end,
+    std::string::const_iterator err_pos,
+    boost::spirit::info const& what,
+    std::string const& parser_name)
+{
+    auto msg = FormatParseError(begin, end, err_pos, what, parser_name);
+    std::cerr << msg;
+    throw std::runtime_error(msg);
+}
+
+} // namespace classic
+} // namespace parsing
+} // namespace bertini

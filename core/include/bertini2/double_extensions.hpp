@@ -39,6 +39,10 @@
 
 namespace bertini{
 
+// Forward declaration — full definition in random.hpp / random.cpp.
+// Avoids pulling mpfr_complex.hpp into the Boost.Multiprecision include chain.
+std::mt19937& ThreadEngine();
+
 	using dbl = std::complex<double>;
 	using dbl_complex = std::complex<double>;
 
@@ -69,9 +73,8 @@ namespace bertini{
 	inline
 	double RandReal()
 	{
-		static std::default_random_engine generator;
-		static std::uniform_real_distribution<double> distribution(-1.0,1.0);
-		return distribution(generator);
+		static thread_local std::uniform_real_distribution<double> distribution(-1.0,1.0);
+		return distribution(ThreadEngine());
 	}
 
 	namespace{

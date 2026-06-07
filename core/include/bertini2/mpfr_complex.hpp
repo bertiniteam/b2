@@ -163,6 +163,19 @@ using bmp::backends::mpc_complex_backend;
 #endif
 	}
 
+	// Sets thread-local precision only — does NOT write the global default_precision.
+	// Safe to call concurrently from multiple std::thread workers tracking at different
+	// precisions. Use instead of DefaultPrecision() inside per-thread tracking loops.
+	inline void SetThreadPrecision(unsigned prec)
+	{
+		mpfr_float::thread_default_precision(prec);
+		mpfr_complex::thread_default_precision(prec);
+	}
+
+	inline unsigned ThreadPrecision()
+	{
+		return static_cast<unsigned>(mpfr_float::thread_default_precision());
+	}
 
 }
 

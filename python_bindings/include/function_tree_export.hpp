@@ -81,7 +81,6 @@ namespace bertini{
 			
 			implicitly_convertible<std::shared_ptr<Function>, Nodeptr>();
 			implicitly_convertible<std::shared_ptr<Jacobian>, Nodeptr>();
-			
 		}
 		
 		

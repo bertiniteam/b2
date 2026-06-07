@@ -48,6 +48,7 @@ namespace tracking{
 	enum class PrecisionType //E.2.1
 	{
 		Fixed,
+		FixedMultiple,
 		Adaptive
 	};
 	

@@ -184,97 +184,19 @@ namespace bertini {
 		/**
 		\brief Force re-evaluation of the system next eval of functions. If something has changed in the system, call this.
 		*/
-		void ResetFunctions() const
-		{
-			// TODO: it has the unfortunate side effect of resetting constant functions, too.
-			switch (eval_method_){
-			case EvalMethod::FunctionTree:
-				for (const auto& iter : functions_) 
-					iter->Reset();
-				break;
-			case EvalMethod::SLP:
-				// nothing
-				break;
-			}	
-			
-		}
+		void ResetFunctions() const;
 
 		/**
 		\brief Force re-evaluation of the system next eval of Jacobians. If something has changed in the system, call this.
 		*/
-		void ResetJacobian() const
-		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
+		void ResetJacobian() const;
 
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:
-						{
-							for (const auto& iter : jacobian_) 
-								iter->Reset();
-							break;
-						}
-						case DerivMethod::Derivatives:
-						{
-							for (const auto& iter : space_derivatives_) 
-								iter->Reset();
-							break;
-						}
-					}
-
-					break;
-				}
-				case EvalMethod::SLP:
-				{
-					// nothing to do, it's not a resetting kind of thing.
-					break;					
-				}
-
-			}
-		}
-
-		void ResetTimeDerivatives() const
-		{
-			switch (eval_method_)
-			{
-				case EvalMethod::FunctionTree:{
-					
-					switch (deriv_method_){
-						case DerivMethod::JacobianNode:
-						{
-							for (const auto& iter : jacobian_) 
-								iter->Reset();
-							break;
-						}
-						case DerivMethod::Derivatives:
-						{
-							for (const auto& iter : time_derivatives_) 
-								iter->Reset();
-							break;
-						}
-					}
-
-					break;
-				}
-				case EvalMethod::SLP:
-				{
-					// nothing to do, it's not a resetting kind of thing.
-					break;					
-				}
-
-			}
-		}
+		void ResetTimeDerivatives() const;
 
 		/**
 		\brief A complete reset of the system, so that all of functions, space derivatives, and time derivatives will all be re-evaluated.
 		*/
-		void Reset() const
-		{
-			ResetFunctions();
-			ResetJacobian();
-			ResetTimeDerivatives();
-		}
+		void Reset() const;
 		/**
 		 \brief Evaluate the system using the previously set variable (and time) values, in place.
 
@@ -1261,12 +1183,7 @@ namespace bertini {
 		*/
 		bool HavePathVariable() const;
 
-		auto& GetPathVariable() const{
-			if (this->HavePathVariable())
-				return this->path_variable_;
-			else
-				throw std::runtime_error("trying to get path variable for a system which doesn't have a path variable defined");
-		}
+		const Var& GetPathVariable() const;
 
 		/**
 		 Order the variables, by the order in which the groups were added.
@@ -1570,33 +1487,11 @@ namespace bertini {
 		*/ 
 		void CopyVariableStructure(System const& other);
 		
-		/**
-		\brief One of a family of functions indicating whether we can assume the system will always have uniform precision.
-
-		\see PleaseAssumeUniformPrecision AssumeUniformPrecision IsAssumingUniformPrecision
-		*/
-		void DontAssumeUniformPrecision()
-		{
-			AssumeUniformPrecision(false);
-		}
-
-		void PleaseAssumeUniformPrecision()
-		{
-			AssumeUniformPrecision(true);
-		}
-
-		void AssumeUniformPrecision(bool val)
-		{
-			assume_uniform_precision_ = val;
-		}
-
-		/** 
-		\brief yon getter for the obvious thing it gets
-		*/
-		auto IsAssumingUniformPrecision() const
-		{
-			return assume_uniform_precision_;
-		}
+		// The Please/Dont AssumeUniformPrecision family was removed: the setter had
+		// ignored its argument (always storing false) for ages, so the early-out in
+		// System::precision() it was meant to enable was dead code, and skipping the
+		// propagation is unsound anyway (e.g. the SLP can be at a different precision
+		// than precision_ claims).  precision() now always propagates.
 
 		inline
 		void PleaseAutoSimplify()
@@ -1848,7 +1743,6 @@ namespace bertini {
 
 		mutable unsigned precision_; ///< the current working precision of the system 
 
-		bool assume_uniform_precision_ = false; ///< a bit, setting whether we can assume the system is in uniform precision.  if you are doing things that will allow pieces of the system to drift in terms of precision, then you should not assume this.  \see AssumeUniformPrecision
 
 		EvalMethod eval_method_ = DefaultEvalMethod(); ///< an enum class value, indicating which method of evaluation should be used.
 		DerivMethod deriv_method_ = DefaultDerivMethod(); ///< an enum class value, indicating which method of evaluation should be used.
@@ -1884,9 +1778,6 @@ namespace bertini {
 
 			ar & patch_;
 			ar & is_patched_;
-
-
-			ar & assume_uniform_precision_;
 
 			ar & eval_method_;
 			ar & deriv_method_;
@@ -1962,6 +1853,48 @@ namespace bertini {
 	\brief Free form function for simplifying systems.
 	*/
 	void Simplify(System & sys);
+
+	// Explicit instantiation declarations for the two concrete numeric types.
+	// Definitions live in core/src/system/system.cpp.
+	// Suppresses re-instantiation of the heavy Eval/Jacobian/Set template bodies
+	// (with their eval_method_/deriv_method_ switch trees) in every including TU.
+
+	extern template void System::EvalInPlace<dbl>(Vec<dbl>&) const;
+	extern template void System::EvalInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+
+	extern template Vec<dbl> System::Eval<dbl>() const;
+	extern template Vec<mpfr_complex> System::Eval<mpfr_complex>() const;
+
+	extern template void System::JacobianInPlace<dbl>(Mat<dbl>&) const;
+	extern template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&) const;
+
+	extern template Mat<dbl> System::Jacobian<dbl>() const;
+	extern template Mat<mpfr_complex> System::Jacobian<mpfr_complex>() const;
+
+	extern template Mat<dbl> System::Jacobian<dbl>(const Vec<dbl>&) const;
+	extern template Mat<mpfr_complex> System::Jacobian<mpfr_complex>(const Vec<mpfr_complex>&) const;
+
+	extern template void System::JacobianInPlace<dbl>(Mat<dbl>&, const Vec<dbl>&) const;
+	extern template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&, const Vec<mpfr_complex>&) const;
+
+	extern template void System::TimeDerivativeInPlace<dbl>(Vec<dbl>&) const;
+	extern template void System::TimeDerivativeInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+
+	extern template Vec<dbl> System::TimeDerivative<dbl>() const;
+	extern template Vec<mpfr_complex> System::TimeDerivative<mpfr_complex>() const;
+
+	extern template void System::SetVariables<dbl>(const Vec<dbl>&) const;
+	extern template void System::SetVariables<mpfr_complex>(const Vec<mpfr_complex>&) const;
+
+	extern template void System::SetPathVariable<dbl>(dbl const&) const;
+	extern template void System::SetPathVariable<mpfr_complex>(mpfr_complex const&) const;
+
+	extern template void System::SetAndReset<dbl>(Vec<dbl> const&, dbl const&) const;
+	extern template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&, mpfr_complex const&) const;
+
+	extern template void System::SetAndReset<dbl>(Vec<dbl> const&) const;
+	extern template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&) const;
+
 }
 
 

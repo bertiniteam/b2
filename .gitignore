@@ -102,6 +102,24 @@ dist/
 # Local Claude Code config and personal working notes
 .claude/
 z_notes/
+.mcp.json
+
+# C++ test runner logs (ctest/Boost.Test output at repo root)
+bertini2_tests_*.log
+
+# Serialization test output files (Boost.Serialization archives)
+/serialization_test_*
+
+# Classic Bertini CLI output files (written by bertini2_exe when run from repo root)
+/main_data
+/raw_data
+/raw_solutions
+/real_finite_solutions
+/midpath_data
+/finite_solutions
+/nonfinite_solutions
+/start
+/failed_paths
 
 # Compiled benchmark binaries (keep the .cpp sources)
 /benchmarks/arithmetic_cost

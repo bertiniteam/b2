@@ -375,7 +375,7 @@ using bertini::KahanMatrix;
 		data_type q(1);
 		int a(1);
 
-		auto b = a*q;
+		[[maybe_unused]] auto b = a*q;
 
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
@@ -396,7 +396,7 @@ using bertini::KahanMatrix;
 		data_type q(1);
 		long a(1);
 
-		auto b = a*q;
+		[[maybe_unused]] auto b = a*q;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
@@ -416,7 +416,7 @@ using bertini::KahanMatrix;
 		data_type q(1);
 		bertini::mpz_int a(1);
 
-		auto b = a*q;
+		[[maybe_unused]] auto b = a*q;
 		
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);
@@ -470,7 +470,7 @@ using bertini::KahanMatrix;
 		data_type q(1);
 		int a(1);
 
-		auto b = a*q;
+		[[maybe_unused]] auto b = a*q;
 
 		Eigen::Matrix<data_type, Eigen::Dynamic, Eigen::Dynamic> A(2,2);
 		A << data_type(2), data_type(1), data_type(1), data_type(2);

@@ -35,6 +35,7 @@
 #pragma once
 
 #include "python_common.hpp"
+#include "configured_visitor.hpp"
 
 #include <bertini2/endgames.hpp>
 #include <bertini2/nag_algorithms/numerical_irreducible_decomposition.hpp>
@@ -52,19 +53,16 @@ namespace bertini{
 
 void ExportNID();
 
-
-
-// some sub-functions to help
-void ExportNIDAlgorithms();
+// sub-functions (defined in nid_{datatypes,double,mp,amp}_export.cpp)
 void ExportNIDDataTypes();
+void ExportNIDDouble();
+void ExportNIDMP();
+void ExportNIDAMP();
 
 
 template<typename AlgoT>
 class NIDVisitor: public def_visitor<NIDVisitor<AlgoT> >
 {
-
-
-
 	friend class ::boost::python::def_visitor_access;
 
 	public:
@@ -79,14 +77,37 @@ class NIDVisitor: public def_visitor<NIDVisitor<AlgoT> >
 			return &AlgoT::GetTracker;
 		};
 
-
 		using MutableEndgameGetter = typename AlgoT::EndgameT& (AlgoT::*)();
 		static MutableEndgameGetter GetEndgameMutable()
 		{
 			return &AlgoT::GetEndgame;
 		};
-
 };
+
+
+// Visitor body — template member function must be in header so each split TU can instantiate it.
+template<typename AlgoT>
+template<class PyClass>
+void NIDVisitor<AlgoT>::visit(PyClass& cl) const
+{
+	cl
+	.def(ConfiguredVisitor<AlgoT>())
+	.def("solve", &AlgoT::Solve, "run the numerical irreducible decomposition with the currently stored settings (not yet implemented)")
+	.def("get_tracker", GetTrackerMutable(), return_internal_reference<>(), "get a mutable reference to the Tracker being used")
+	.def("get_endgame", GetEndgameMutable(), return_internal_reference<>(), "get a mutable reference to the Endgame being used")
+	.def("decomposition", &AlgoT::GetDecomposition, return_internal_reference<>(), "get the most recently computed numerical irreducible decomposition")
+	;
+}
+
+
+// Helper template — defined here so all split TUs can use it.
+template<typename TrackerT, typename EndgameT>
+void ExportNIDSpecific(std::string const& class_name){
+	using NIDT = algorithm::NumericalIrreducibleDecomposition<TrackerT, EndgameT, bertini::System>;
+	class_<NIDT, std::shared_ptr<NIDT> >(class_name.c_str(), init<bertini::System>())
+	.def(NIDVisitor<NIDT>())
+	;
+}
 
 
 

@@ -281,18 +281,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+										qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("SplitInputFileParser"))
+					);
 				}
 				
 			private:
@@ -355,18 +347,10 @@ namespace bertini {
 					
 					
 					
-					using phx::val;
-					using phx::construct;
-					using namespace qi::labels;
-					qi::on_error<qi::fail>
-					( root_rule_ ,
-					 std::cout<<
-					 val("config/input split parser could not complete parsing. Expecting ")<<
-					 _4<<
-					 val(" here: ")<<
-					 construct<std::string>(_3,_2)<<
-					 std::endl
-					 );
+										qi::on_error<qi::fail>(
+						root_rule_,
+						phx::bind(&ReportParseError, _1, _2, _3, _4, std::string("CommentStripper"))
+					);
 				}
 				
 			private:

@@ -17,6 +17,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(ENABLE_UNIT_TESTING "Turn on building and running of unit tests while compiling" OFF)
 option(BMP_EXPRESSION_TEMPLATES "Enable Boost.Multiprecision expression templates for mpfr_float, mpfr_complex, mpz_int, mpq_rational" ON)
 
+find_package(MPI)
+option(ENABLE_MPI "Enable MPI parallelism (requires OpenMPI or MPICH; no Boost.MPI needed)" ${MPI_FOUND})
+
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
   message(STATUS "Build type set to Release by default, since it was not specified.")
@@ -75,6 +78,13 @@ set(_BOOST_REQUIRED_COMPONENTS
     log_setup
     thread
 )
+
+if(ENABLE_MPI AND NOT MPI_FOUND)
+    message(FATAL_ERROR "ENABLE_MPI=ON but no MPI installation was found.")
+endif()
+if(ENABLE_MPI)
+    message(STATUS "MPI enabled: ${MPI_CXX_COMPILER}")
+endif()
 
 find_package(Boost REQUIRED COMPONENTS ${_BOOST_REQUIRED_COMPONENTS})
 
@@ -241,6 +251,9 @@ set(nag_datatypes_common_headers
 
 set(parallel_headers
     include/bertini2/parallel/initialize_finalize.hpp
+    include/bertini2/parallel/path_result.hpp
+    include/bertini2/parallel/manager.hpp
+    include/bertini2/parallel/worker.hpp
 )
 
 set(parallel_rootinclude_HEADERS
@@ -378,6 +391,7 @@ set(BERTINI2_EXE_SOURCES
     src/blackbox/bertini.cpp
     src/blackbox/main_mode_switch.cpp
     src/blackbox/argc_argv.cpp
+    src/blackbox/algorithm_builder.cpp
 )
 
 set(BERTINI2_EXE_HEADERS
@@ -432,6 +446,12 @@ target_link_libraries(bertini2 PUBLIC ${MPC_LIBRARIES})
 target_link_libraries(bertini2 PUBLIC Eigen3::Eigen)
 target_link_libraries(bertini2 PUBLIC ${Boost_LIBRARIES})
 
+if(ENABLE_MPI)
+    target_compile_definitions(bertini2 PUBLIC BERTINI2_HAVE_MPI)
+    target_link_libraries(bertini2 PUBLIC MPI::MPI_CXX)
+    message(STATUS "bertini2 built with plain C MPI support (no Boost.MPI)")
+endif()
+
 
 if(SUFFIX_SO_VERSION)
   set_target_properties(bertini2 PROPERTIES SOVERSION ${PROJECT_VERSION})
@@ -440,6 +460,24 @@ endif(SUFFIX_SO_VERSION)
 add_executable(bertini2_exe)
 target_sources(bertini2_exe PUBLIC ${BERTINI2_EXE_SOURCES} ${BERTINI2_EXE_HEADERS})
 target_link_libraries(bertini2_exe ${Boost_LIBRARIES} bertini2)
+set_target_properties(bertini2_exe PROPERTIES OUTPUT_NAME bertini2)
+# On MSVC/lld-link, linking an executable with OUTPUT_NAME matching the static library
+# (bertini2) causes lld-link to write bertini2.lib as an import library, overwriting
+# the static archive. /NOIMPLIB suppresses the import library entirely.
+if(MSVC)
+  target_link_options(bertini2_exe PRIVATE /NOIMPLIB)
+endif()
+
+# Precompile the four blackbox headers that collectively cover all exe source files.
+# algorithm_builder.hpp is the heaviest (pulls in full tracking + NAG algorithm
+# machinery); the others are lighter but still include significant Bertini subsystems.
+target_precompile_headers(bertini2_exe PRIVATE
+    <bertini2/eigen_extensions.hpp>
+    <bertini2/blackbox/argc_argv.hpp>
+    <bertini2/blackbox/main_mode_switch.hpp>
+    <bertini2/blackbox/algorithm_builder.hpp>
+    <bertini2/parallel.hpp>
+)
 
 # todo: this should be made a devmode thing
 #target_compile_options(bertini2 PRIVATE -Wall -Wextra)
@@ -775,13 +813,27 @@ endif (ENABLE_UNIT_TESTING)
 
 # lld-link (Windows) won't pull data-only object files (e.g. explicit_predictors.obj,
 # which holds all ExplicitRKPredictor Butcher-tableau statics) unless every object in
-# the archive is forced in. /WHOLEARCHIVE does exactly that.
+# the archive is forced in. CMake 3.24+ LINK_LIBRARY:WHOLE_ARCHIVE places the archive
+# in the linker's input list (not just options) with the appropriate /WHOLEARCHIVE: flag.
+#
+# We strip the normal "bertini2" link entry first to avoid having the archive appear
+# twice. $<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2> re-adds it and propagates transitive
+# interface deps (gmp, mpfr, boost, MPI, etc.) automatically.
+# /FORCE:MULTIPLE: Boost.Serialization void_cast_register and oserializer templates are
+# instantiated in multiple TUs within bertini2 itself; /WHOLEARCHIVE exposes all copies
+# and /FORCE:MULTIPLE picks the first (same as weak/COMDAT on Linux/macOS).
 if(MSVC AND ENABLE_UNIT_TESTING)
   foreach(_t test_classes test_blackbox test_classic test_endgames test_generating
               test_nag_algorithms test_nag_datatypes test_pool test_settings
               test_tracking_basics)
     if(TARGET ${_t})
-      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2>)
+      get_target_property(_ll ${_t} LINK_LIBRARIES)
+      if(_ll)
+        list(REMOVE_ITEM _ll bertini2)
+        set_target_properties(${_t} PROPERTIES LINK_LIBRARIES "${_ll}")
+      endif()
+      target_link_options(${_t} PRIVATE /FORCE:MULTIPLE)
+      target_link_libraries(${_t} "$<LINK_LIBRARY:WHOLE_ARCHIVE,bertini2>")
     endif()
   endforeach()
 endif()

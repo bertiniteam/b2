@@ -94,7 +94,7 @@ namespace bertini {
 
 		Vec<mpfr_complex> TotalDegree::GenerateStartPoint(mpfr_complex,unsigned long long index) const
 		{
-			using bertini::DefaultPrecision;
+			using bertini::ThreadPrecision;
 
 			Vec<mpfr_complex> start_point(NumVariables()); // make the value we're returning
 			auto indices = IndexToSubscript(index, degrees_); // get the position of it -- used in the angle of the coordinates of the produced point.
@@ -102,7 +102,7 @@ namespace bertini {
 			unsigned offset = 0;
 			if (IsPatched())
 			{
-				start_point(0) = mpfr_complex(1,0,DefaultPrecision());
+				start_point(0) = mpfr_complex(1,0,ThreadPrecision());
 				offset = 1;
 			}
 
@@ -115,8 +115,8 @@ namespace bertini {
 				mpfr_complex a = exp( (two_i_pi * indices[ii]) / degrees_[ii]);
 				mpfr_complex b = pow(random_values_[ii]->Eval<mpfr_complex>(), one / degrees_[ii]);
 
-				Precision(a,DefaultPrecision());
-				Precision(b,DefaultPrecision());
+				Precision(a,ThreadPrecision());
+				Precision(b,ThreadPrecision());
 
 				start_point(ii+offset) = a*b;
 			}

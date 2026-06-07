@@ -301,7 +301,7 @@ namespace bertini{
 								ComplexT const& current_time, ComplexT const& delta_t) const
 			{
 
-				return this->predictor_->Predict(
+				return this->predictor_.Predict(
 			                predicted_space,
 							this->tracked_system_,
 							current_space, current_time,
@@ -329,7 +329,7 @@ namespace bertini{
 								Vec<ComplexT> const& current_space, 
 								ComplexT const& current_time) const
 			{
-				return this->corrector_->Correct(corrected_space,
+				return this->corrector_.Correct(corrected_space,
 												this->tracked_system_,
 												current_space,
 												current_time, 
@@ -355,7 +355,7 @@ namespace bertini{
 			SuccessCode RefineImpl(Vec<ComplexT> & new_space,
 								Vec<ComplexT> const& start_point, ComplexT const& current_time) const
 			{
-				return this->corrector_->Correct(new_space,
+				return this->corrector_.Correct(new_space,
 							   this->tracked_system_,
 							   start_point,
 							   current_time, 
@@ -387,7 +387,7 @@ namespace bertini{
 								Vec<ComplexT> const& start_point, ComplexT const& current_time,
 								NumErrorT const& tolerance, unsigned max_iterations) const
 			{
-				return this->corrector_->Correct(new_space,
+				return this->corrector_.Correct(new_space,
 							   this->tracked_system_,
 							   start_point,
 							   current_time, 
@@ -514,10 +514,13 @@ namespace bertini{
 			                               BaseComplexT const& end_time,
 										   Vec<BaseComplexT> const& start_point) const override
 			{
-				if (start_point(0).precision()!=DefaultPrecision())
+
+				// ThreadPrecision: thread-local read, correct both on the main thread
+				// (where it equals the global) and on std::thread workers.
+				if (start_point(0).precision()!=ThreadPrecision())
 				{
 					std::stringstream err_msg;
-					err_msg << "start point for fixed multiple precision tracker has differing precision from default (" << start_point(0).precision() << "!=" << DefaultPrecision() << "), tracking cannot start";
+					err_msg << "start point for fixed multiple precision tracker has differing precision from default (" << start_point(0).precision() << "!=" << ThreadPrecision() << "), tracking cannot start";
 					throw std::runtime_error(err_msg.str());
 				}
 
@@ -528,10 +531,10 @@ namespace bertini{
 					throw std::runtime_error(err_msg.str());
 				}
 
-				if (DefaultPrecision()!=this->CurrentPrecision())
+				if (ThreadPrecision()!=this->CurrentPrecision())
 				{
 					std::stringstream err_msg;
-					err_msg << "current default precision differs from tracker's precision (" << DefaultPrecision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
+					err_msg << "current default precision differs from tracker's precision (" << ThreadPrecision() << "!=" << this->CurrentPrecision() << "), tracking cannot start";
 					throw std::runtime_error(err_msg.str());
 				}
 
@@ -549,8 +552,8 @@ namespace bertini{
 				Precision(std::get<Vec<BaseComplexT>>(this->current_space_), precision_);
 				Precision(std::get<Vec<BaseComplexT>>(this->temporary_space_), precision_);
 				Precision(std::get<Vec<BaseComplexT>>(this->tentative_space_), precision_);
-				this->predictor_->ChangePrecision(precision_);
-				this->corrector_->ChangePrecision(precision_);
+				this->predictor_.ChangePrecision(precision_);
+				this->corrector_.ChangePrecision(precision_);
 
 				// set up the master current time and the current step size
 				this->current_time_ = start_time;
@@ -567,7 +570,7 @@ namespace bertini{
 			bool PrecisionSanityCheck() const
 			{	
 				return GetSystem().precision() == precision_ &&
-						DefaultPrecision()==precision_ && 
+						ThreadPrecision()==precision_ &&
 						std::get<Vec<mpfr_complex> >(current_space_)(0).precision() == precision_ &&
 						std::get<Vec<mpfr_complex> >(tentative_space_)(0).precision() == precision_ &&
 						std::get<Vec<mpfr_complex> >(temporary_space_)(0).precision() == precision_ &&

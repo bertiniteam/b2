@@ -27,3 +27,9 @@
 */
 
 #include "bertini2/parallel/initialize_finalize.hpp"
+#include "bertini2/parallel/path_result.hpp"
+
+#ifdef BERTINI2_HAVE_MPI
+#include "bertini2/parallel/manager.hpp"
+#include "bertini2/parallel/worker.hpp"
+#endif

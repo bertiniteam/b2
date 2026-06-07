@@ -115,8 +115,44 @@ The project has three layers, built in order:
 
 ## CI/CD
 
-- `.github/workflows/build-and-publish-to-pypi.yml` -- Builds wheels on Ubuntu/macOS/Windows, publishes to TestPyPI on `develop` push, PyPI on version tags (`v*.*.*`).
-- Pushes to `develop` trigger TestPyPI publish; tagged releases go to PyPI with Sigstore signing and GitHub Releases.
+- `.github/workflows/build_and_test.yml` -- Builds wheels on Ubuntu/macOS/Windows and runs tests. Triggered by pull requests and pushes to `develop`/`main`.
+- `.github/workflows/publish.yml` -- Publishes to TestPyPI on `develop` push, PyPI on version tags (`v*.*.*`) with Sigstore signing and GitHub Releases.
+
+### Linux wheel test coverage
+
+Linux wheels are built inside a `manylinux_2_28` container (AlmaLinux 8). That container ships **MPFR 3.1.6**, which is incompatible with the `mpfr_complex` numpy dtype: freshly `malloc`'d array slots may have garbage non-null `_mpfr_d` pointers, causing `MPFR_ASSERTN` → SIGABRT/SIGSEGV in multiple test files. The full pytest suite therefore runs only on **macOS and Windows host runners**. Linux CI uses a basic import smoke test only:
+
+```yaml
+CIBW_TEST_COMMAND_LINUX: "python -c 'import bertini; print(bertini.__version__)'"
+```
+
+See `docs/adr/0003-manylinux-no-full-pytest.md` for the full diagnosis and the recipe to restore full Linux testing once the `setitem` specialization in `python_bindings/include/eigenpy_interaction.hpp` is implemented.
+
+## Python Bindings — Known Pitfalls
+
+### eigenpy writable Ref + adjacent scalar (ADR-0001)
+
+Never place a writable `Eigen::Ref<Vec<mpc_complex>>` argument **adjacent** to a `mpc_complex const&` scalar argument in a Boost.Python binding. eigenpy's from-Python converter for the writable Ref writes into a static rvalue-converter slot that overlaps with the storage for adjacent `const&` scalars, corrupting them. The corrupted `mpc_complex` then triggers `MPFR_ASSERTN` → SIGABRT.
+
+**Rule:** If a binding takes a writable `Eigen::Ref<Vec<ComplexT>>` and also needs scalar `ComplexT` args, pass the scalars **by value**:
+
+```cpp
+// WRONG — start_time/end_time get corrupted
+SuccessCode wrap(Eigen::Ref<Vec<ComplexT>> result,
+                 ComplexT const& start_time,   // ← adjacent const& scalar
+                 ComplexT const& end_time);
+
+// CORRECT — by-value copy is taken before the Ref converter runs
+SuccessCode wrap(Eigen::Ref<Vec<ComplexT>> result,
+                 ComplexT start_time,           // ← by value
+                 ComplexT end_time);
+```
+
+Single-argument bindings and read-only `Vec<T> const&` bindings are unaffected. See `docs/adr/0001-eigenpy-writable-ref-scalar-by-value.md`.
+
+## Architecture Decision Records
+
+`docs/adr/` contains ADRs for load-bearing design decisions — where the *why* would not be obvious from reading the code. Check there before undoing anything that looks strange.
 
 ## Conventions
 

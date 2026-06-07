@@ -30,11 +30,70 @@
 
 #include "bertini2/random.hpp"
 
+#include <random>
+#include <atomic>
+#include <cstdint>
+
 namespace bertini {
+
+namespace {
+
+inline uint64_t splitmix64(uint64_t x)
+{
+	x += 0x9e3779b97f4a7c15ULL;
+	x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+	x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+	return x ^ (x >> 31);
+}
+
+std::atomic<unsigned long> g_global_seed{0};
+
+} // anon namespace
+
+// one mt19937 per thread — seeded from entropy on first use
+thread_local std::mt19937 g_thread_engine{std::random_device{}()};
+
+std::mt19937& ThreadEngine() { return g_thread_engine; }
+
+unsigned long GetGlobalSeed()
+{
+	unsigned long s = g_global_seed.load(std::memory_order_relaxed);
+	if (s == 0) {
+		std::random_device rd;
+		s = static_cast<unsigned long>(rd());
+		if (s == 0) s = 1;
+		unsigned long expected = 0;
+		if (!g_global_seed.compare_exchange_strong(expected, s, std::memory_order_relaxed))
+			s = g_global_seed.load(std::memory_order_relaxed);
+	}
+	return s;
+}
+
+void SetGlobalSeed(unsigned long seed)
+{
+	if (seed == 0) {
+		std::random_device rd;
+		seed = static_cast<unsigned long>(rd());
+		if (seed == 0) seed = 1;
+	}
+	g_global_seed.store(seed, std::memory_order_relaxed);
+	g_thread_engine.seed(static_cast<uint32_t>(splitmix64(static_cast<uint64_t>(seed))));
+}
+
+void ReseedThisThread(uint64_t stream_key)
+{
+	uint64_t mixed = splitmix64(static_cast<uint64_t>(GetGlobalSeed()) ^ stream_key);
+	g_thread_engine.seed(static_cast<uint32_t>(mixed));
+}
+
+
 
 	mpfr_float RandomMp()
 	{
-		return RandomMp(bertini::DefaultPrecision());
+		// ThreadPrecision (thread-local) rather than DefaultPrecision (global):
+		// random numbers are generated during tracking, which may run on a
+		// std::thread worker whose precision differs from the global default.
+		return RandomMp(bertini::ThreadPrecision());
 	}
 
 	mpfr_float RandomMp(unsigned num_digits)
@@ -94,7 +153,8 @@ namespace bertini {
 
 	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b)
 	{
-		return RandomMp(a,b,bertini::DefaultPrecision());
+		// see RandomMp() above for why ThreadPrecision rather than DefaultPrecision
+		return RandomMp(a,b,bertini::ThreadPrecision());
 	}
 
 	mpfr_float RandomMp(const mpfr_float & a, const mpfr_float & b, unsigned num_digits)

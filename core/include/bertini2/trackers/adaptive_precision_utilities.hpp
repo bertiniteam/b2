@@ -128,14 +128,14 @@ unsigned EnsureAtUniformPrecision(TimeCont<dbl> & /*times*/, SampCont<dbl> & /*s
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> & times, SampCont<mpfr_complex> & samples)
 {
-	auto def_prec = DefaultPrecision();
+	auto def_prec = ThreadPrecision();
 	if (std::any_of(begin(times),end(times),[=](auto const& p){return Precision(p)!=def_prec;}) 
 		||
 		std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}))
 	{
 		auto max_precision = max(MaxPrecision(samples), MaxPrecision(times));
 
-		DefaultPrecision(max_precision);
+		SetThreadPrecision(max_precision);
 		SetPrecision(times, max_precision);
 		SetPrecision(samples, max_precision);
 		return max_precision;
@@ -159,14 +159,14 @@ This function does NOT do any refinement, it merely changes the precision of def
 inline
 unsigned EnsureAtUniformPrecision(TimeCont<mpfr_complex> & times, SampCont<mpfr_complex> & samples, SampCont<mpfr_complex> & derivatives)
 {
-	auto def_prec = DefaultPrecision();
+	auto def_prec = ThreadPrecision();
 	if (std::any_of(begin(samples),end(samples),[=](auto const& p){return Precision(p)!=def_prec;}) 
 	    || 
 	    std::any_of(begin(derivatives),end(derivatives),[=](auto const& p){return Precision(p)!=def_prec;}))
 	{
 		auto max_precision = max(MaxPrecision(samples),MaxPrecision(times),MaxPrecision(derivatives));
 
-		DefaultPrecision(max_precision);
+		SetThreadPrecision(max_precision);
 		
 		SetPrecision(times, max_precision);
 		SetPrecision(samples, max_precision);

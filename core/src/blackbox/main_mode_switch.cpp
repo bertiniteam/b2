@@ -27,10 +27,130 @@
 */
 
 
+#include "bertini2/blackbox/main_mode_switch.hpp"
+#include "bertini2/blackbox/algorithm_builder.hpp"
+#include "bertini2/io/parsing/classic_utilities.hpp"
+#include "bertini2/io/parsing/settings_parsers.hpp"
+#include "bertini2/nag_algorithms/common/config.hpp"
+#include "bertini2/nag_algorithms/zero_dim_solve.hpp"
+#include "bertini2/parallel.hpp"
+#include "bertini2/random.hpp"
+
+#include <fstream>
+#include <iostream>
+
+#ifdef BERTINI2_HAVE_MPI
+#include <mpi.h>
+#endif
+
+
 namespace bertini{
 
-	void MainModeSwitch()
+namespace {
+
+int RunZeroDim(std::string const& config_str, std::string const& input_str)
+{
+	// Parse and apply the RNG seed before any setup draws (gamma, TD-constants, patch).
+	auto rand_cfg = parsing::classic::FillConfigStruct<algorithm::RandomConfig>(config_str);
+
+#ifdef BERTINI2_HAVE_MPI
+	// Manager sets the seed (possibly from entropy), then broadcasts the effective
+	// (non-zero) seed to workers so all ranks share identical per-path streams.
+	if (parallel::IsManager())
+		SetGlobalSeed(rand_cfg.random_seed);
+	unsigned long effective_seed = GetGlobalSeed();
+	MPI_Bcast(&effective_seed, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD);
+	if (!parallel::IsManager())
+		SetGlobalSeed(effective_seed);
+#else
+	SetGlobalSeed(rand_cfg.random_seed);
+#endif
+
+	std::cout << "bertini: random seed = " << GetGlobalSeed() << "\n";
+
+	blackbox::AlgoBuilder builder;
+	if (builder.ClassicBuild(config_str, input_str) != 0)
 	{
-		
+		std::cerr << "error: failed to build zero-dim algorithm from input\n";
+		return 1;
+	}
+
+	auto* alg = dynamic_cast<algorithm::AnyZeroDim*>(builder.GetAlg());
+	if (!alg)
+	{
+		std::cerr << "error: algorithm builder returned wrong type\n";
+		return 1;
+	}
+
+	alg->Run();
+
+	if (parallel::IsManager())
+	{
+		{
+			std::ofstream main_data{"main_data"};
+			alg->WriteMainData(main_data);
+		}
+		{
+			std::ofstream raw_data{"raw_data"};
+			alg->WriteRawData(raw_data);
+		}
+		std::cout << "bertini: wrote main_data and raw_data\n";
+	}
+	return 0;
+}
+
+} // anonymous namespace
+
+
+int MainModeSwitch(ParsedArgs const& args)
+{
+	std::string config_str, input_str;
+
+#ifdef BERTINI2_HAVE_MPI
+	// Rank 0 reads the input file, then broadcasts both strings to all ranks so
+	// every rank builds an identical algorithm object from the same source text.
+	if (parallel::IsManager())
+	{
+		try {
+			std::tie(config_str, input_str) = parsing::classic::SplitIntoConfigAndInput(args.input_file);
+		} catch (std::exception const& e) {
+			std::cerr << "error reading input file '" << args.input_file.string() << "': " << e.what() << "\n";
+			// Broadcast empty strings so workers don't hang waiting for broadcast.
+			parallel::mpi_broadcast_string(parallel::WorldComm(), config_str, 0);
+			parallel::mpi_broadcast_string(parallel::WorldComm(), input_str,  0);
+			return 1;
+		}
+	}
+	parallel::mpi_broadcast_string(parallel::WorldComm(), config_str, 0);
+	parallel::mpi_broadcast_string(parallel::WorldComm(), input_str,  0);
+	if (config_str.empty() && input_str.empty())
+		return 1;  // rank 0 failed to read; workers bail out cleanly
+#else
+	try {
+		std::tie(config_str, input_str) = parsing::classic::SplitIntoConfigAndInput(args.input_file);
+	} catch (std::exception const& e) {
+		std::cerr << "error reading input file '" << args.input_file.string() << "': " << e.what() << "\n";
+		return 1;
+	}
+#endif
+
+	using AlgoChoice = algorithm::classic::AlgoChoice;
+	auto choice = parsing::classic::FillConfigStruct<AlgoChoice>(config_str);
+
+	switch (choice)
+	{
+		case AlgoChoice::ZeroDim:
+			return RunZeroDim(config_str, input_str);
+
+		case AlgoChoice::NID:
+			std::cerr << "error: tracktype 1 (NID) is not yet implemented in Bertini2\n";
+			return 1;
+
+		default:
+			std::cerr << "error: tracktype " << static_cast<int>(choice)
+			          << " is not yet implemented in Bertini2\n";
+			return 1;
 	}
 }
+
+} // namespace bertini

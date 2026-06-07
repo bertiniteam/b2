@@ -34,12 +34,27 @@
 #include "bertini2/logging.hpp"
 #include "bertini2/io/splash.hpp"
 
+#ifdef BERTINI2_HAVE_MPI
+#include <mpi.h>
+#endif
+
 namespace bertini{
 
 	namespace parallel{
 
 	void Finalize();
-	void Initialize();	
+	void Initialize();
+
+#ifdef BERTINI2_HAVE_MPI
+	MPI_Comm WorldComm();
+#endif
+
+	// These work in both serial and parallel builds.
+	// In serial builds (no MPI) they return constants matching a single-rank world.
+	int  Rank();
+	int  Size();
+	bool IsManager();   // true iff Rank() == 0
+	bool IsWorker();    // true iff Rank() != 0
 
 	}
 

@@ -35,6 +35,7 @@
 #include "bertini2/io/parsing/settings_parsers/tracking.hpp"
 #include "bertini2/io/parsing/settings_parsers/endgames.hpp"
 #include "bertini2/io/parsing/settings_parsers/algorithm.hpp"
+#include "bertini2/io/parsing/settings_parsers/random.hpp"
 
 
 
@@ -64,7 +65,16 @@ namespace bertini {
 				ConfigSettingParser<std::string::const_iterator, ConfigT> parser;
 				auto parse_success = phrase_parse(iter, end, parser,boost::spirit::ascii::space, settings);
 				if (!parse_success || iter!=end)
-					throw std::runtime_error("failed to parse into config struct from file");
+				{
+					std::string remaining(iter, end);
+					if (remaining.size() > 60)
+						remaining = remaining.substr(0, 60) + "...";
+					if (remaining.empty())
+						remaining = "<end of input>";
+					throw std::runtime_error(
+						std::string("[config] parser did not consume entire input; "
+						"unparsed remainder: \"") + remaining + "\"");
+				}
 
 				return settings;
 			}

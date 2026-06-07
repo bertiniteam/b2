@@ -78,12 +78,12 @@ void Integer::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const
 
 mpfr_complex Integer::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	return mpfr_complex(true_value_,0,DefaultPrecision());
+	return mpfr_complex(true_value_,0,ThreadPrecision());
 }
 
 void Integer::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	evaluation_value = mpfr_complex(true_value_,0,DefaultPrecision());
+	evaluation_value = mpfr_complex(true_value_,0,ThreadPrecision());
 }
 
 
@@ -113,12 +113,12 @@ void Float::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> const& 
 
 mpfr_complex Float::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	return mpfr_complex(highest_precision_value_,DefaultPrecision());
+	return mpfr_complex(highest_precision_value_,ThreadPrecision());
 }
 
 void Float::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	evaluation_value = mpfr_complex(highest_precision_value_,DefaultPrecision());
+	evaluation_value = mpfr_complex(highest_precision_value_,ThreadPrecision());
 }
 
 
@@ -147,12 +147,12 @@ void Rational::FreshEval_d(dbl& evaluation_value, std::shared_ptr<Variable> cons
 
 mpfr_complex Rational::FreshEval_mp(std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	return mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_,DefaultPrecision()),boost::multiprecision::mpfr_float(true_value_imag_,DefaultPrecision()));
+	return mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_,ThreadPrecision()),boost::multiprecision::mpfr_float(true_value_imag_,ThreadPrecision()));
 }
 
 void Rational::FreshEval_mp(mpfr_complex& evaluation_value, std::shared_ptr<Variable> const& /*diff_variable*/) const
 {
-	evaluation_value = mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_,DefaultPrecision()),boost::multiprecision::mpfr_float(true_value_imag_,DefaultPrecision()));
+	evaluation_value = mpfr_complex(boost::multiprecision::mpfr_float(true_value_real_,ThreadPrecision()),boost::multiprecision::mpfr_float(true_value_imag_,ThreadPrecision()));
 }
 
 

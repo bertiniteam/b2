@@ -48,10 +48,21 @@ namespace bertini{
 	Some known observable types are Tracker and Endgame.
 	*/
 	class Observable
-	{	
+	{
 	public:
 
 		virtual ~Observable() = default;
+
+		Observable() = default;
+
+		/**
+		Copies do NOT inherit the watcher list: observers subscribed to the source
+		object, not to the copy.  This makes copies safe to use on other threads —
+		a fresh copy notifies nobody until observers are explicitly added to it.
+		Copy-assignment likewise leaves the target's own watchers untouched.
+		*/
+		Observable(Observable const&) : typed_watchers_(), untyped_watchers_() {}
+		Observable& operator=(Observable const&) { return *this; }
 
 
 		/**

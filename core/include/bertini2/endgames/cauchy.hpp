@@ -500,7 +500,9 @@ public:
 		const Vec<ComplexT> & sample1 = pseg_samples[1];
 		const Vec<ComplexT> & sample2 = pseg_samples[2];
 
-		Vec<ComplexT> rand_vector = Vec<ComplexT>::Random(sample0.size()); //should be a row vector for ease in multiplying.
+		Vec<ComplexT> rand_vector(sample0.size());
+		for (int ii = 0; ii < (int)sample0.size(); ++ii)
+			rand_vector(ii) = RandomUnit<ComplexT>();
 
 
 		// //DO NOT USE Eigen .dot() it will do conjugate transpose which is not what we want.
