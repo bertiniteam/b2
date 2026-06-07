@@ -82,6 +82,7 @@ namespace bertini{
 	{
 		num.precision(prec);
 	}
+
 }
 
 

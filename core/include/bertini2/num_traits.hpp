@@ -304,14 +304,62 @@ namespace bertini {
 		using Complex = mpfr_complex;
 	};
 
-	template <> struct NumTraits<mpq_rational> 
+	template <> struct NumTraits<mpq_rational>
 	{
-		inline static 
-		mpq_rational FromString(std::string const& s)
+		/**
+		\brief Parse a decimal string to an exact mpq_rational.
+
+		Handles optional sign, decimal point, and scientific notation (e/E).
+		Unlike the mpq_rational(string) constructor (which expects "p/q" or integer
+		format), this accepts decimal strings like "0.647" → 647/1000 exactly.
+
+		GMP treats a leading '0' as an octal prefix when base=0, so leading zeros
+		are stripped before mpz_int construction.  "0.8" → digits "08" → "8".
+		*/
+		inline static
+		mpq_rational FromString(std::string const& str)
 		{
-			return mpq_rational(s);
+			std::string s = str;
+			bool negative = false;
+			if (!s.empty() && s[0] == '-') { negative = true; s = s.substr(1); }
+			else if (!s.empty() && s[0] == '+') { s = s.substr(1); }
+
+			int exp_shift = 0;
+			auto e_pos = s.find_first_of("eE");
+			if (e_pos != std::string::npos) {
+				exp_shift = std::stoi(s.substr(e_pos + 1));
+				s = s.substr(0, e_pos);
+			}
+
+			auto dot_pos = s.find('.');
+			int decimal_places = 0;
+			if (dot_pos != std::string::npos) {
+				decimal_places = static_cast<int>(s.size()) - static_cast<int>(dot_pos) - 1;
+				s.erase(dot_pos, 1);
+			}
+
+			if (s.empty() || s.find_first_not_of('0') == std::string::npos) {
+				s = "0";
+			} else {
+				s = s.substr(s.find_first_not_of('0'));
+			}
+			mpz_int numer(s);
+			if (negative) numer = -numer;
+
+			int net_exp = decimal_places - exp_shift;
+			if (net_exp > 0) {
+				mpz_int denom = 1;
+				for (int i = 0; i < net_exp; ++i) denom *= 10;
+				return mpq_rational(numer, denom);
+			} else if (net_exp < 0) {
+				mpz_int mult = 1;
+				for (int i = 0; i < -net_exp; ++i) mult *= 10;
+				return mpq_rational(numer * mult, 1);
+			} else {
+				return mpq_rational(numer, 1);
+			}
 		}
-	};	
+	};
 
 }
 

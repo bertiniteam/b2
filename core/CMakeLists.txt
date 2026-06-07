@@ -631,6 +631,7 @@ if (ENABLE_UNIT_TESTING)
 	set(B2_CLASS_TEST_SOURCES
 		test/classes/boost_multiprecision_test.cpp
 		test/classes/fundamentals_test.cpp
+		test/classes/precision_propagation_test.cpp
 		test/classes/eigen_test.cpp
 		test/classes/complex_test.cpp
 		test/classes/function_tree_test.cpp
