@@ -143,12 +143,28 @@ namespace bertini{
 		template<class PyClass>
 		void SteppingVisitor<T>::visit(PyClass& cl) const
 		{
-			cl
-			.def_readwrite("initial_step_size", &tracking::SteppingConfig::initial_step_size,"The initial stepsize when tracking is started.  See also tracking.AMPTracker.reinitialize_initial_step_size")
-			.def_readwrite("max_step_size", &tracking::SteppingConfig::max_step_size,"The maximum allowed stepsize during tracking.  See also min_num_steps")
+			// initial_step_size, max_step_size, step_size_success_factor, step_size_fail_factor are
+		// stored as mpq_rational (no MPFR precision state) but exposed to Python as mpfr_float
+		// so the existing string/Float setter API is unchanged.  The round-trip is exact:
+		// every mpfr_float has an exact rational representation, and converting back recovers it.
+		cl
+			.add_property("initial_step_size",
+				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.initial_step_size); },
+				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.initial_step_size = mpq_rational(v); },
+				"The initial stepsize when tracking is started.  See also tracking.AMPTracker.reinitialize_initial_step_size")
+			.add_property("max_step_size",
+				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.max_step_size); },
+				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.max_step_size = mpq_rational(v); },
+				"The maximum allowed stepsize during tracking.  See also min_num_steps")
 			.def_readwrite("min_step_size", &tracking::SteppingConfig::min_step_size,"The minimum stepsize the tracker is allowed to take.  See also max_step_size")
-			.def_readwrite("step_size_success_factor", &tracking::SteppingConfig::step_size_success_factor,"The scale factor for stepsize, after some consecutive steps.  See also consecutive_successful_steps_before_stepsize_increase")
-			.def_readwrite("step_size_fail_factor", &tracking::SteppingConfig::step_size_fail_factor, "The scale factor for stepsize, after a fail happens.  See also step_size_success_factor")
+			.add_property("step_size_success_factor",
+				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.step_size_success_factor); },
+				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.step_size_success_factor = mpq_rational(v); },
+				"The scale factor for stepsize, after some consecutive steps.  See also consecutive_successful_steps_before_stepsize_increase")
+			.add_property("step_size_fail_factor",
+				+[](tracking::SteppingConfig const& c) -> mpfr_float { return mpfr_float(c.step_size_fail_factor); },
+				+[](tracking::SteppingConfig& c, mpfr_float const& v) { c.step_size_fail_factor = mpq_rational(v); },
+				"The scale factor for stepsize, after a fail happens.  See also step_size_success_factor")
 			.def_readwrite("consecutive_successful_steps_before_stepsize_increase", &tracking::SteppingConfig::consecutive_successful_steps_before_stepsize_increase,"This number of successful steps have to taken consecutively, and then the stepsize is permitted to increase")
 			.def_readwrite("min_num_steps", &tracking::SteppingConfig::min_num_steps, "The minimum number of steps the tracker can take between now and then.  This is useful if you are tracking closely between times, and want to guarantee some number of steps are taken.  Then again, this could be wasteful, too.")
 			.def_readwrite("max_num_steps", &tracking::SteppingConfig::max_num_steps, "The maximum number of steps.  Tracking will die if it tries to take more than this number, sad day.")
