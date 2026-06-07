@@ -464,6 +464,7 @@ endif()
 # algorithm_builder.hpp is the heaviest (pulls in full tracking + NAG algorithm
 # machinery); the others are lighter but still include significant Bertini subsystems.
 target_precompile_headers(bertini2_exe PRIVATE
+    <bertini2/eigen_extensions.hpp>
     <bertini2/blackbox/argc_argv.hpp>
     <bertini2/blackbox/main_mode_switch.hpp>
     <bertini2/blackbox/algorithm_builder.hpp>
