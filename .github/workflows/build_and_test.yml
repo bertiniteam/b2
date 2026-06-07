@@ -216,6 +216,7 @@ jobs:
             /tmp/boost_1_90_0.tar.bz2
             /tmp/eigen-3.4.0.tar.gz
             /tmp/eigenpy-3.12.0.tar.gz
+            /tmp/mpfr-4.2.1.tar.xz
           key: ${{ runner.os }}-cibw-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'python/pyproject.toml', 'CMakeLists.txt', 'core/CMakeLists.txt', '.github/workflows/build_and_test.yml', 'python_bindings/include/tracker_export.hpp', 'python_bindings/include/endgame_export.hpp') }}
           restore-keys: |
             ${{ runner.os }}-cibw-${{ matrix.python-version }}-
@@ -239,14 +240,23 @@ jobs:
           # so each wheel bundles a matching libboost_python3X.
           CIBW_BUILD: ${{ env.CIBW_BUILD }}
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_39
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_34
           # Install system deps + download (but DO NOT build) Boost & eigenpy sources
           # once per container. Boost.Python is ABI-locked to a single CPython version,
           # so it must be rebuilt per target Python in BEFORE_BUILD — building it here
           # against the manylinux2014 system python3 produces a libboost_python39 that
           # all five wheels would then bundle, breaking import on cp310/311/312/313.
+          #
+          # MPFR: manylinux_2_34 (AlmaLinux 9) ships MPFR 4.1.0, which is still
+          # incompatible with Boost.Multiprecision 1.90 expression templates +
+          # preserve_related_precision at runtime.  Build MPFR 4.2.1 from source
+          # into /usr/local so auditwheel bundles it instead of the system 4.1.
           CIBW_BEFORE_ALL_LINUX: >
-            yum install -y wget gmp-devel mpfr-devel libmpc-devel libtool &&
+            yum install -y wget gmp-devel libmpc-devel libtool &&
+            cd /tmp &&
+            { [ -f mpfr-4.2.1.tar.xz ] || wget -q https://mpfr.org/mpfr-current/mpfr-4.2.1.tar.xz ; } &&
+            tar xf mpfr-4.2.1.tar.xz &&
+            cd mpfr-4.2.1 && ./configure --prefix=/usr/local --enable-shared --disable-static && make -j$(nproc) && make install && ldconfig &&
             cd /tmp &&
             { [ -f eigen-3.4.0.tar.gz ] || wget -q https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.gz ; } &&
             rm -rf eigen-3.4.0 && tar xzf eigen-3.4.0.tar.gz &&
