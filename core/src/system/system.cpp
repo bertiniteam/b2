@@ -1602,4 +1602,115 @@ namespace bertini
 		sys.Simplify();
 	}
 
+
+	void System::ResetFunctions() const
+	{
+		// TODO: it has the unfortunate side effect of resetting constant functions, too.
+		switch (eval_method_){
+		case EvalMethod::FunctionTree:
+			for (const auto& iter : functions_)
+				iter->Reset();
+			break;
+		case EvalMethod::SLP:
+			break;
+		}
+	}
+
+	void System::ResetJacobian() const
+	{
+		switch (eval_method_)
+		{
+			case EvalMethod::FunctionTree:{
+				switch (deriv_method_){
+					case DerivMethod::JacobianNode:
+						for (const auto& iter : jacobian_)
+							iter->Reset();
+						break;
+					case DerivMethod::Derivatives:
+						for (const auto& iter : space_derivatives_)
+							iter->Reset();
+						break;
+				}
+				break;
+			}
+			case EvalMethod::SLP:
+				break;
+		}
+	}
+
+	void System::ResetTimeDerivatives() const
+	{
+		switch (eval_method_)
+		{
+			case EvalMethod::FunctionTree:{
+				switch (deriv_method_){
+					case DerivMethod::JacobianNode:
+						for (const auto& iter : jacobian_)
+							iter->Reset();
+						break;
+					case DerivMethod::Derivatives:
+						for (const auto& iter : time_derivatives_)
+							iter->Reset();
+						break;
+				}
+				break;
+			}
+			case EvalMethod::SLP:
+				break;
+		}
+	}
+
+	void System::Reset() const
+	{
+		ResetFunctions();
+		ResetJacobian();
+		ResetTimeDerivatives();
+	}
+
+	const System::Var& System::GetPathVariable() const
+	{
+		if (this->HavePathVariable())
+			return this->path_variable_;
+		throw std::runtime_error("trying to get path variable for a system which doesn't have a path variable defined");
+	}
+
+
+	// Explicit instantiation definitions — paired with extern template declarations in system.hpp.
+
+	template void System::EvalInPlace<dbl>(Vec<dbl>&) const;
+	template void System::EvalInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+
+	template Vec<dbl> System::Eval<dbl>() const;
+	template Vec<mpfr_complex> System::Eval<mpfr_complex>() const;
+
+	template void System::JacobianInPlace<dbl>(Mat<dbl>&) const;
+	template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&) const;
+
+	template Mat<dbl> System::Jacobian<dbl>() const;
+	template Mat<mpfr_complex> System::Jacobian<mpfr_complex>() const;
+
+	template Mat<dbl> System::Jacobian<dbl>(const Vec<dbl>&) const;
+	template Mat<mpfr_complex> System::Jacobian<mpfr_complex>(const Vec<mpfr_complex>&) const;
+
+	template void System::JacobianInPlace<dbl>(Mat<dbl>&, const Vec<dbl>&) const;
+	template void System::JacobianInPlace<mpfr_complex>(Mat<mpfr_complex>&, const Vec<mpfr_complex>&) const;
+
+	template void System::TimeDerivativeInPlace<dbl>(Vec<dbl>&) const;
+	template void System::TimeDerivativeInPlace<mpfr_complex>(Vec<mpfr_complex>&) const;
+
+	template Vec<dbl> System::TimeDerivative<dbl>() const;
+	template Vec<mpfr_complex> System::TimeDerivative<mpfr_complex>() const;
+
+	template void System::SetVariables<dbl>(const Vec<dbl>&) const;
+	template void System::SetVariables<mpfr_complex>(const Vec<mpfr_complex>&) const;
+
+	template void System::SetPathVariable<dbl>(dbl const&) const;
+	template void System::SetPathVariable<mpfr_complex>(mpfr_complex const&) const;
+
+	template void System::SetAndReset<dbl>(Vec<dbl> const&, dbl const&) const;
+	template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&, mpfr_complex const&) const;
+
+	template void System::SetAndReset<dbl>(Vec<dbl> const&) const;
+	template void System::SetAndReset<mpfr_complex>(Vec<mpfr_complex> const&) const;
+
 }
