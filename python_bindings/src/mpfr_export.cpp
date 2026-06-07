@@ -410,7 +410,10 @@ namespace bertini{
 
 
 			eigenpy::registerNewType<T>();
-			eigenpy::registerCommonUfunc<T>();
+			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
+			// guarded loops (real type — orderings included); eigenpy's registerCommonUfunc
+			// loops read input slots unguarded and crash on never-written np.zeros/np.empty slots.
+			eigenpy::registerGuardedUfunct<T, true>();
 
 			// you can convert from integer types with no fear
 			eigenpy::registerCast<long,T>(true);
@@ -494,6 +497,7 @@ namespace bertini{
 
 
 			eigenpy::registerNewType<T>();
+			eigenpy::HardenSetitem<T>(); // zero slots before assignment — see eigenpy_interaction.hpp & ADR-0003
 			eigenpy::registerUfunct_without_comparitors<T>();
 
 

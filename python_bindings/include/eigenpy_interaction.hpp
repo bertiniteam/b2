@@ -7,6 +7,8 @@
 
 #include "python_common.hpp"
 
+#include <cstring>
+
 #include <eigenpy/eigenpy.hpp>
 #include <eigenpy/user-type.hpp>
 #include <eigenpy/ufunc.hpp>
@@ -15,10 +17,64 @@
 // https://github.com/stack-of-tasks/eigenpy/issues/365
 // where I asked about using custom types, and @jcarpent responded with a discussion
 // of an application of this in Pinnochio, a library for rigid body dynamics.
+//
+// ---------------------------------------------------------------------------
+// On uninitialized array slots (the cause of intermittent SIGABRT/SIGSEGV):
+//
+// numpy zero-fills freshly allocated buffers for these dtypes (eigenpy sets
+// NPY_NEEDS_INIT when registering, since eigenpy 2.6.4).  An all-zero
+// mpfr_t/mpc_t is NOT a valid value — it is Boost.Multiprecision's
+// "uninitialized" sentinel (_mpfr_d == 0).  BMP's own assignment operators
+// check the sentinel and initialize first, so WRITES into fresh slots are
+// safe.  But anything that READS a never-written slot and hands it straight
+// to mpfr/mpc crashes inside libmpfr/libmpc.  Three defenses live here:
+//
+//   1. getitem specializations heal a zeroed slot in place on read.
+//   2. zeroinit_setitem/HardenSetitem zero the slot before delegating, so
+//      malloc-dirty memory (seen in manylinux, ADR-0003) cannot defeat BMP's
+//      null check on the write path.
+//   3. guarded ufunc loops and cast specializations substitute an exact zero
+//      on the read side (value_or_zero), replacing eigenpy's unguarded loops
+//      which segfault on np.zeros/np.empty slots that were never written.
+// ---------------------------------------------------------------------------
 namespace eigenpy
 {
 	namespace internal
 	{
+
+		// trait: detect Boost.Multiprecision's "uninitialized" sentinel in a
+		// zero-filled numpy slot.
+		template <typename T>
+		struct mpfr_slot
+		{
+			static bool uninitialized(T const&) { return false; }
+		};
+
+		template <>
+		struct mpfr_slot<bertini::mpfr_float>
+		{
+			static bool uninitialized(bertini::mpfr_float const& x)
+			{
+				return x.backend().data()[0]._mpfr_d == 0;
+			}
+		};
+
+		template <>
+		struct mpfr_slot<bertini::mpfr_complex>
+		{
+			static bool uninitialized(bertini::mpfr_complex const& x)
+			{
+				return x.backend().data()[0].re->_mpfr_d == 0;
+			}
+		};
+
+		// read-side guard: yield `zero` for an uninitialized slot, the slot's value otherwise.
+		template <typename T>
+		inline T const& value_or_zero(T const& x, T const& zero)
+		{
+			return mpfr_slot<T>::uninitialized(x) ? zero : x;
+		}
+
 
 		// template specialization for real numbers
 		template <>
@@ -29,9 +85,8 @@ namespace eigenpy
 			static PyObject *run(void *data, void * /* arr */)
 			{
 				NumT &mpfr_scalar = *static_cast<NumT *>(data);
-				auto &backend = mpfr_scalar.backend();
 
-				if (backend.data()[0]._mpfr_d == 0) // If the mpfr_scalar is not initialized, we have to init it.
+				if (mpfr_slot<NumT>::uninitialized(mpfr_scalar)) // heal a never-written slot in place
 				{
 					mpfr_scalar = NumT(0);
 				}
@@ -50,9 +105,8 @@ namespace eigenpy
 			static PyObject *run(void *data, void * /* arr */)
 			{
 				NumT &mpfr_scalar = *static_cast<NumT *>(data);
-				auto &backend = mpfr_scalar.backend();
 
-				if (backend.data()[0].re->_mpfr_d == 0) // If the mpfr_scalar is not initialized, we have to init it.
+				if (mpfr_slot<NumT>::uninitialized(mpfr_scalar)) // heal a never-written slot in place
 				{
 					mpfr_scalar = NumT(0);
 				}
@@ -62,41 +116,267 @@ namespace eigenpy
 			}
 		};
 
-		// Custom ufunc loop for sqrt — eigenpy's EIGENPY_REGISTER_UNARY_OPERATOR macro
-		// only supports prefix operators (res = op x), so function-call ufuncs like sqrt
-		// need a hand-written loop.
-		template <typename T, typename R>
-		void unary_op_sqrt(
+		// Zero-initialization guard for numpy's setitem on MPFR-backed dtypes.
+		//
+		// eigenpy's SpecialMethods<T>::setitem copy-assigns into the raw numpy slot:
+		//     T& dest = *static_cast<T*>(dest_ptr);
+		//     dest = src;
+		// Boost.Multiprecision's operator= decides whether the destination needs
+		// mpfr/mpc initialization by testing _mpfr_d == nullptr (see
+		// mpc_complex_imp::operator= in boost/multiprecision/mpc.hpp).  numpy is
+		// supposed to hand us zeroed memory — eigenpy registers the dtype with
+		// NPY_NEEDS_INIT — but the manylinux containers have been observed to
+		// deliver malloc-dirty slots (ADR-0003): garbage non-null _mpfr_d defeats
+		// the null check, mpc_set runs on garbage, and MPFR_ASSERTN aborts.
+		//
+		// Zeroing the slot before delegating forces operator= onto its
+		// init-before-set path regardless of what the allocator delivered.  If the
+		// slot held a previously initialized value, its mpfr allocation leaks; numpy
+		// never destructs user-dtype elements anyway (every discarded array of this
+		// dtype already leaks its elements), so this converts a crash on dirty
+		// memory into a small, bounded leak on element overwrite.
+		//
+		// This is a wrapper installed post-registration (see HardenSetitem below)
+		// rather than a template specialization because, unlike getitem,
+		// eigenpy provides no customization point for setitem.
+		template <typename NumT>
+		struct zeroinit_setitem
+		{
+			static inline PyArray_SetItemFunc *original = nullptr;
+
+			static int run(PyObject *src_obj, void *dest_ptr, void *array)
+			{
+				std::memset(dest_ptr, 0, sizeof(NumT));
+				return original(src_obj, dest_ptr, array);
+			}
+		};
+
+
+		// ----- guarded ufunc loops ------------------------------------------------
+		// These replace eigenpy's EIGENPY_REGISTER_{BINARY,UNARY}_UFUNC loop bodies
+		// (and its gufunc_matrix_multiply), which read input slots unguarded and
+		// segfault inside libmpfr/libmpc on never-written np.zeros/np.empty slots.
+		// Writes into the output slot go through BMP operator=, which initializes
+		// a zeroed destination itself.
+
+		struct op_add           { template <typename T> static T    apply(T const& x, T const& y) { return T(x + y); } };
+		struct op_subtract      { template <typename T> static T    apply(T const& x, T const& y) { return T(x - y); } };
+		struct op_multiply      { template <typename T> static T    apply(T const& x, T const& y) { return T(x * y); } };
+		struct op_divide        { template <typename T> static T    apply(T const& x, T const& y) { return T(x / y); } };
+		struct op_equal         { template <typename T> static bool apply(T const& x, T const& y) { return x == y; } };
+		struct op_not_equal     { template <typename T> static bool apply(T const& x, T const& y) { return x != y; } };
+		struct op_greater       { template <typename T> static bool apply(T const& x, T const& y) { return x > y; } };
+		struct op_less          { template <typename T> static bool apply(T const& x, T const& y) { return x < y; } };
+		struct op_greater_equal { template <typename T> static bool apply(T const& x, T const& y) { return x >= y; } };
+		struct op_less_equal    { template <typename T> static bool apply(T const& x, T const& y) { return x <= y; } };
+
+		struct op_negative { template <typename T> static T apply(T const& x) { return T(-x); } };
+		struct op_square   { template <typename T> static T apply(T const& x) { return T(x * x); } };
+		struct op_sqrt
+		{
+			template <typename T> static T apply(T const& x)
+			{
+				using boost::multiprecision::sqrt;
+				using std::sqrt;
+				return T(sqrt(x));
+			}
+		};
+
+		template <typename T, typename Op>
+		void guarded_binary_op(
+				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
+				EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *steps, void * /*data*/)
+		{
+			npy_intp is0 = steps[0], is1 = steps[1], os = steps[2], n = *dimensions;
+			char *i0 = args[0], *i1 = args[1], *o = args[2];
+			const T zero(0);
+			for (npy_intp k = 0; k < n; ++k)
+			{
+				T const& x = value_or_zero(*reinterpret_cast<T const*>(i0), zero);
+				T const& y = value_or_zero(*reinterpret_cast<T const*>(i1), zero);
+				T& res = *reinterpret_cast<T*>(o);
+				res = Op::apply(x, y);
+				i0 += is0;
+				i1 += is1;
+				o += os;
+			}
+		}
+
+		template <typename T, typename Op>
+		void guarded_compare_op(
+				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
+				EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *steps, void * /*data*/)
+		{
+			npy_intp is0 = steps[0], is1 = steps[1], os = steps[2], n = *dimensions;
+			char *i0 = args[0], *i1 = args[1], *o = args[2];
+			const T zero(0);
+			for (npy_intp k = 0; k < n; ++k)
+			{
+				T const& x = value_or_zero(*reinterpret_cast<T const*>(i0), zero);
+				T const& y = value_or_zero(*reinterpret_cast<T const*>(i1), zero);
+				bool& res = *reinterpret_cast<bool*>(o);
+				res = Op::apply(x, y);
+				i0 += is0;
+				i1 += is1;
+				o += os;
+			}
+		}
+
+		template <typename T, typename Op>
+		void guarded_unary_op(
 				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
 				EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *steps, void * /*data*/)
 		{
 			npy_intp is = steps[0], os = steps[1], n = *dimensions;
 			char *i = args[0], *o = args[1];
-			for (npy_intp k = 0; k < n; k++)
+			const T zero(0);
+			for (npy_intp k = 0; k < n; ++k)
 			{
-				T &x = *static_cast<T *>(static_cast<void *>(i));
-				R &res = *static_cast<R *>(static_cast<void *>(o));
-				using boost::multiprecision::sqrt;
-				using std::sqrt;
-				res = sqrt(x);
+				T const& x = value_or_zero(*reinterpret_cast<T const*>(i), zero);
+				T& res = *reinterpret_cast<T*>(o);
+				res = Op::apply(x);
 				i += is;
 				o += os;
 			}
 		}
 
+		// guarded matmul: mirrors eigenpy::internal::{matrix_multiply,gufunc_matrix_multiply}
+		// stride logic, with the inner dot product reading through value_or_zero.
 		template <typename T>
-		void unary_op_sqrt(
-				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
-				EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *steps, void *data)
+		void guarded_matrix_multiply(char **args, npy_intp const *dimensions,
+		                             npy_intp const *steps)
 		{
-			unary_op_sqrt<T, T>(args, dimensions, steps, data);
+			char *ip1 = args[0], *ip2 = args[1], *op = args[2];
+			npy_intp dm = dimensions[0], dn = dimensions[1], dp = dimensions[2];
+			npy_intp is1_m = steps[0], is1_n = steps[1], is2_n = steps[2],
+			         is2_p = steps[3], os_m = steps[4], os_p = steps[5];
+
+			const T zero(0);
+			for (npy_intp m = 0; m < dm; ++m)
+			{
+				for (npy_intp p = 0; p < dp; ++p)
+				{
+					T sum(0);
+					char *a = ip1, *b = ip2;
+					for (npy_intp k = 0; k < dn; ++k)
+					{
+						T const& x = value_or_zero(*reinterpret_cast<T const*>(a), zero);
+						T const& y = value_or_zero(*reinterpret_cast<T const*>(b), zero);
+						sum += x * y;
+						a += is1_n;
+						b += is2_n;
+					}
+					T& res = *reinterpret_cast<T*>(op);
+					res = sum;
+					ip2 += is2_p;
+					op += os_p;
+				}
+				ip2 -= is2_p * dp;
+				op -= os_p * dp;
+				ip1 += is1_m;
+				op += os_m;
+			}
+		}
+
+		template <typename T>
+		void guarded_gufunc_matrix_multiply(
+				char **args, EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *dimensions,
+				EIGENPY_NPY_CONST_UFUNC_ARG npy_intp *steps, void * /*func*/)
+		{
+			npy_intp dN = dimensions[0];
+			npy_intp s0 = steps[0], s1 = steps[1], s2 = steps[2];
+			char *args_local[3] = {args[0], args[1], args[2]};
+			for (npy_intp N_ = 0; N_ < dN; ++N_)
+			{
+				guarded_matrix_multiply<T>(args_local, dimensions + 1, steps + 3);
+				args_local[0] += s0;
+				args_local[1] += s1;
+				args_local[2] += s2;
+			}
 		}
 
 	} // namespace internal
 
-	// i lifted this from EigenPy and adapted it, basically removing the calls for the comparitors.
-	template <typename Scalar>
-	void registerUfunct_without_comparitors()
+
+	// Guard the registered numpy cast loops too: eigenpy's internal::cast does
+	// `to[i] = eigenpy::cast<From,To>::run(from[i])`, reading From slots
+	// unguarded.  The primary template is documented as specializable.
+	template <typename To>
+	struct cast<bertini::mpfr_float, To>
+	{
+		static To run(bertini::mpfr_float const& from)
+		{
+			if (internal::mpfr_slot<bertini::mpfr_float>::uninitialized(from))
+				return To(0);
+			return static_cast<To>(from);
+		}
+	};
+
+	template <typename To>
+	struct cast<bertini::mpfr_complex, To>
+	{
+		static To run(bertini::mpfr_complex const& from)
+		{
+			if (internal::mpfr_slot<bertini::mpfr_complex>::uninitialized(from))
+				return To(0);
+			return static_cast<To>(from);
+		}
+	};
+
+
+	// Install the zero-initialization setitem guard for an MPFR-backed dtype.
+	// Call immediately after eigenpy::registerNewType<NumT>(), before any arrays
+	// of this dtype can exist.  See internal::zeroinit_setitem for the rationale.
+	template <typename NumT>
+	void HardenSetitem()
+	{
+		PyArray_Descr *descr = Register::getPyArrayDescr<NumT>();
+		PyArray_ArrFuncs *funcs = PyDataType_GetArrFuncs(descr);
+		internal::zeroinit_setitem<NumT>::original = funcs->setitem;
+		funcs->setitem = &internal::zeroinit_setitem<NumT>::run;
+	}
+
+	// register a single guarded loop on the named numpy ufunc, mirroring the
+	// error handling of eigenpy's EIGENPY_REGISTER_*_UFUNC macros.
+	inline void registerGuardedLoop(PyObject *numpy, char const *ufunc_name,
+	                                int type_code, PyUFuncGenericFunction loop,
+	                                int *types, int expected_nargs)
+	{
+		PyUFuncObject *ufunc =
+				(PyUFuncObject *)PyObject_GetAttrString(numpy, ufunc_name);
+		if (!ufunc)
+		{
+			std::stringstream ss;
+			ss << "Impossible to define \"" << ufunc_name << "\" for type code "
+				 << type_code << std::endl;
+			eigenpy::Exception(ss.str());
+			return;
+		}
+		if (expected_nargs != ufunc->nargs)
+		{
+			PyErr_Format(PyExc_AssertionError,
+			             "ufunc %s takes %d arguments, our loop takes %d",
+			             ufunc_name, ufunc->nargs, expected_nargs);
+			Py_DECREF(ufunc);
+			return;
+		}
+		if (PyUFunc_RegisterLoopForType(ufunc, type_code, loop, types, 0) < 0)
+		{
+			std::stringstream ss;
+			ss << "Impossible to register \"" << ufunc_name << "\" for type code "
+				 << type_code << std::endl;
+			eigenpy::Exception(ss.str());
+		}
+		Py_DECREF(ufunc);
+	}
+
+	// i lifted this from EigenPy and adapted it: all loops are the guarded
+	// versions from internal:: above (eigenpy's read input slots unguarded —
+	// see the header comment), and the ordering comparitors are a compile-time
+	// option because they are NOT defined for complex types (instantiating
+	// them for mpfr_complex would be a hard error).
+	template <typename Scalar, bool WithOrderingComparitors>
+	void registerGuardedUfunct()
 	{
 		const int type_code = Register::getTypeCode<Scalar>();
 
@@ -115,54 +395,64 @@ namespace eigenpy
 		// Matrix multiply
 		{
 			int types[3] = {type_code, type_code, type_code};
-
-			std::stringstream ss;
-			ss << "return result of multiplying two matrices of ";
-			ss << bp::type_info(typeid(Scalar)).name();
-			PyUFuncObject *ufunc =
-					(PyUFuncObject *)PyObject_GetAttrString(numpy, "matmul");
-			if (!ufunc)
-			{
-				std::stringstream ss;
-				ss << "Impossible to define matrix_multiply for given type "
-					 << bp::type_info(typeid(Scalar)).name() << std::endl;
-				eigenpy::Exception(ss.str());
-			}
-			if (PyUFunc_RegisterLoopForType((PyUFuncObject *)ufunc, type_code,
-																			&internal::gufunc_matrix_multiply<Scalar>,
-																			types, 0) < 0)
-			{
-				std::stringstream ss;
-				ss << "Impossible to register matrix_multiply for given type "
-					 << bp::type_info(typeid(Scalar)).name() << std::endl;
-				eigenpy::Exception(ss.str());
-			}
-
-			Py_DECREF(ufunc);
+			registerGuardedLoop(numpy, "matmul", type_code,
+			                    &internal::guarded_gufunc_matrix_multiply<Scalar>,
+			                    types, 3);
 		}
 
 		// Binary operators
-		EIGENPY_REGISTER_BINARY_UFUNC(add, type_code, Scalar, Scalar, Scalar);
-		EIGENPY_REGISTER_BINARY_UFUNC(subtract, type_code, Scalar, Scalar, Scalar);
-		EIGENPY_REGISTER_BINARY_UFUNC(multiply, type_code, Scalar, Scalar, Scalar);
-		EIGENPY_REGISTER_BINARY_UFUNC(divide, type_code, Scalar, Scalar, Scalar);
+		{
+			int types[3] = {type_code, type_code, type_code};
+			registerGuardedLoop(numpy, "add", type_code,
+			                    &internal::guarded_binary_op<Scalar, internal::op_add>, types, 3);
+			registerGuardedLoop(numpy, "subtract", type_code,
+			                    &internal::guarded_binary_op<Scalar, internal::op_subtract>, types, 3);
+			registerGuardedLoop(numpy, "multiply", type_code,
+			                    &internal::guarded_binary_op<Scalar, internal::op_multiply>, types, 3);
+			registerGuardedLoop(numpy, "divide", type_code,
+			                    &internal::guarded_binary_op<Scalar, internal::op_divide>, types, 3);
+		}
 
 		// Comparison operators
-		EIGENPY_REGISTER_BINARY_UFUNC(equal, type_code, Scalar, Scalar, bool);
-		EIGENPY_REGISTER_BINARY_UFUNC(not_equal, type_code, Scalar, Scalar, bool);
+		{
+			int types[3] = {type_code, type_code, Register::getTypeCode<bool>()};
+			registerGuardedLoop(numpy, "equal", type_code,
+			                    &internal::guarded_compare_op<Scalar, internal::op_equal>, types, 3);
+			registerGuardedLoop(numpy, "not_equal", type_code,
+			                    &internal::guarded_compare_op<Scalar, internal::op_not_equal>, types, 3);
 
-		// these are commented out because the comparisons are NOT defined for complex types!!
-		//  EIGENPY_REGISTER_BINARY_UFUNC(greater, type_code, Scalar, Scalar, bool);
-		//  EIGENPY_REGISTER_BINARY_UFUNC(less, type_code, Scalar, Scalar, bool);
-		//  EIGENPY_REGISTER_BINARY_UFUNC(greater_equal, type_code, Scalar, Scalar, bool);
-		//  EIGENPY_REGISTER_BINARY_UFUNC(less_equal, type_code, Scalar, Scalar, bool);
+			if constexpr (WithOrderingComparitors) // NOT defined for complex types
+			{
+				registerGuardedLoop(numpy, "greater", type_code,
+				                    &internal::guarded_compare_op<Scalar, internal::op_greater>, types, 3);
+				registerGuardedLoop(numpy, "less", type_code,
+				                    &internal::guarded_compare_op<Scalar, internal::op_less>, types, 3);
+				registerGuardedLoop(numpy, "greater_equal", type_code,
+				                    &internal::guarded_compare_op<Scalar, internal::op_greater_equal>, types, 3);
+				registerGuardedLoop(numpy, "less_equal", type_code,
+				                    &internal::guarded_compare_op<Scalar, internal::op_less_equal>, types, 3);
+			}
+		}
 
 		// Unary operators
-		EIGENPY_REGISTER_UNARY_UFUNC(negative, type_code, Scalar, Scalar);
-		EIGENPY_REGISTER_UNARY_UFUNC(square, type_code, Scalar, Scalar);
-		EIGENPY_REGISTER_UNARY_UFUNC(sqrt, type_code, Scalar, Scalar);
+		{
+			int types[2] = {type_code, type_code};
+			registerGuardedLoop(numpy, "negative", type_code,
+			                    &internal::guarded_unary_op<Scalar, internal::op_negative>, types, 2);
+			registerGuardedLoop(numpy, "square", type_code,
+			                    &internal::guarded_unary_op<Scalar, internal::op_square>, types, 2);
+			registerGuardedLoop(numpy, "sqrt", type_code,
+			                    &internal::guarded_unary_op<Scalar, internal::op_sqrt>, types, 2);
+		}
 
 		Py_DECREF(numpy);
+	}
+
+	// kept for call-site compatibility: complex types get no ordering comparitors.
+	template <typename Scalar>
+	void registerUfunct_without_comparitors()
+	{
+		registerGuardedUfunct<Scalar, false>();
 	}
 
 } // namespace eigenpy

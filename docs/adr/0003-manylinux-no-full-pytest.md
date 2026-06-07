@@ -54,20 +54,55 @@ The manylinux wheel bundles the code; users bring their own MPFR at runtime.
 1. Skipping `amptracking_test.py` — the next file (`cauchy_endgame_test.py`) crashed.
 2. Skipping both — the scope of affected files was unknown and growing.
 
-### The proper fix (not yet implemented)
+### The proper fix (implemented 2026-06-07)
 
-Add a `setitem` specialization in `python_bindings/include/eigenpy_interaction.hpp`
-for `mpfr_complex` that zero-initializes the destination slot before copy-assigning:
+Three defenses now live in `python_bindings/include/eigenpy_interaction.hpp`
+(see the header comment there for the full picture). The root insight: numpy
+zero-fills fresh buffers for these dtypes (NPY_NEEDS_INIT), but an all-zero
+mpfr_t/mpc_t is Boost.Multiprecision's *uninitialized sentinel*, not a valid
+value. BMP's own assignment operators check the sentinel and initialize first,
+so writes are safe — but anything that **reads** a never-written slot and hands
+it straight to libmpfr/libmpc crashes.
 
-```cpp
-std::memset(dest_ptr, 0, sizeof(NumT));
-// Now _mpfr_d == nullptr, so operator= will call mpc_init2 before mpc_set.
-dest = src;
-```
+1. **getitem** (pre-existing): heals a zeroed slot in place on read.
+2. **setitem** — `internal::zeroinit_setitem<NumT>` zero-initializes the
+   destination slot before delegating to eigenpy's original setitem:
 
-This mirrors the existing `getitem` specialization which already handles uninitialized
-slots via lazy-init. The cost is a potential memory leak for slots that were previously
-initialized (old mpfr allocation not freed before memset), which is acceptable in tests.
+   ```cpp
+   std::memset(dest_ptr, 0, sizeof(NumT));
+   // Now _mpfr_d == nullptr, so operator= will call mpc_init2 before mpc_set.
+   return original(src_obj, dest_ptr, array);
+   ```
+
+   Unlike `getitem`, eigenpy provides no template customization point for
+   `setitem`, so the guard is installed by patching the registered dtype's
+   `PyArray_ArrFuncs::setitem` immediately after `registerNewType<T>()` — see
+   `eigenpy::HardenSetitem<T>()`, called from `mpfr_export.cpp` for both
+   `mpfr_float` and `mpfr_complex`. The cost is a leak when overwriting an
+   initialized slot; numpy never destructs user-dtype elements anyway, so this
+   converts a crash on dirty memory into a bounded leak on element overwrite.
+3. **Guarded ufunc loops and casts** — `eigenpy::registerGuardedUfunct` replaces
+   eigenpy's stock loops (add/subtract/…/matmul/equal/…) with versions that
+   substitute an exact zero when reading an uninitialized slot
+   (`internal::value_or_zero`), and `eigenpy::cast<mpfr_*, To>` specializations
+   guard the registered numpy cast loops the same way. These read paths were
+   reproducibly crashing **locally** (`np.zeros(n, dtype=mpfr_complex) + ...`
+   segfaulted before the guards).
+
+Regression tests: `python/test/classes/numpy_uninitialized_slots_test.py`
+(24 tests over both dtypes; the arithmetic/equality/matmul ones crashed the
+interpreter outright before the guards).
+
+Note: no eigenpy release fixes this upstream. eigenpy has set `NPY_NEEDS_INIT`
+(requesting zeroed allocation from numpy) since at least v3.1.0, its `setitem`
+has always relied on that guarantee, and its ufunc/cast loops have never guarded
+the read side. Upgrading eigenpy does not help.
+
+**CI restoration is still pending**: the fix is verified locally (numpy 2.4.6,
+dirty-heap stress probe over 20 allocation paths, full pytest suite, setitem
+semantics including overwrite and high-precision round-trips, virgin-slot
+read-path checks), but the restore-full-Linux-testing recipe below must be
+validated in an actual manylinux CI run before this ADR's decision is reversed.
 
 ## Decision
 
