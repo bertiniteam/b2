@@ -45,7 +45,7 @@ on:
         default: false
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
