@@ -82,7 +82,7 @@ def test_tracker_linear(xyzt):
 
     y_start = np.array([mpfr_complex(1)])
 
-    y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64), dtype=mpfr_complex)
+    y_end = np.array([mpfr_complex(0)] * s.num_variables())
 
     tracker.track_path(y_end, t_start, t_end, y_start)
 
@@ -117,7 +117,7 @@ def test_tracker_quad(xyzt):
 
     y_start = np.array([mpfr_complex(1)])
 
-    y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64), dtype=mpfr_complex)
+    y_end = np.array([mpfr_complex(0)] * s.num_variables())
 
     tracker.track_path(y_end, t_start, t_end, y_start)
 
@@ -151,7 +151,7 @@ def test_tracker_sqrt(xyzt):
 
     y_start = np.array([mpfr_complex(1), mpfr_complex(1)])
 
-    y_end = np.array(np.zeros(shape=(s.num_variables()), dtype=np.int64), dtype=mpfr_complex)
+    y_end = np.array([mpfr_complex(0)] * s.num_variables())
 
     track_success = tracker.track_path(y_end, t_start, t_end, y_start)
 
@@ -210,7 +210,7 @@ def test_tracker_decic(xyzt):
     t_end = mpfr_complex(-2)
 
     y_start = np.array([mpfr_complex(1)])
-    y_end = np.array(np.zeros(shape=(s.num_variables(),), dtype=np.int64), dtype=mpfr_complex)
+    y_end = np.array([mpfr_complex(0)] * s.num_variables())
 
     code = tracker.track_path(y_end, t_start, t_end, y_start)
 
@@ -249,7 +249,7 @@ def test_tracker_nonhomogeneous_prec16():
     t_end = mpfr_complex(0)
 
     start = np.array([mpfr_complex(1), mpfr_complex("1.41421356237309504880168872421")])
-    end = np.array(np.zeros(s.num_variables(), dtype=np.int64), dtype=mpfr_complex)
+    end = np.array([mpfr_complex(0)] * s.num_variables())
 
     code = tracker.track_path(end, t_start, t_end, start)
 
@@ -287,7 +287,7 @@ def test_tracker_nonhomogeneous_prec30():
     t_end = mpfr_complex(0)
 
     start = np.array([mpfr_complex(1), mpfr_complex("1.414")])
-    end = np.array(np.zeros(s.num_variables(), dtype=np.int64), dtype=mpfr_complex)
+    end = np.array([mpfr_complex(0)] * s.num_variables())
 
     code = tracker.track_path(end, t_start, t_end, start)
 
@@ -326,7 +326,7 @@ def test_tracker_nonhomogeneous_prec100():
     t_end = mpfr_complex(0)
 
     start = np.array([mpfr_complex(1), mpfr_complex("1.41421356237309504880168872421")])
-    end = np.array(np.zeros(s.num_variables(), dtype=np.int64), dtype=mpfr_complex)
+    end = np.array([mpfr_complex(0)] * s.num_variables())
 
     code = tracker.track_path(end, t_start, t_end, start)
 
@@ -365,7 +365,7 @@ def test_tracker_fails_singularity_on_path(xyzt):
     t_end = mpfr_complex(0)
 
     start = np.array([mpfr_complex(1), mpfr_complex(1)])
-    end = np.empty(s.num_variables(), dtype=mpfr_complex)
+    end = np.array([mpfr_complex(0)] * s.num_variables())
 
     code = tracker.track_path(end, t_start, t_end, start)
 
@@ -399,7 +399,7 @@ def test_tracker_singular_start(xyzt):
 
     y_start = np.array([mpfr_complex(0), mpfr_complex(0)])
 
-    y_end = np.empty(shape=(s.num_variables(),), dtype=mpfr_complex)
+    y_end = np.array([mpfr_complex(0)] * s.num_variables())
 
     track_success = tracker.track_path(y_end, t_start, t_end, y_start)
 
