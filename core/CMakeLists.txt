@@ -804,7 +804,12 @@ if(MSVC AND ENABLE_UNIT_TESTING)
         list(REMOVE_ITEM _ll bertini2)
         set_target_properties(${_t} PROPERTIES LINK_LIBRARIES "${_ll}")
       endif()
-      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2>)
+      # /FORCE:MULTIPLE: Boost.Serialization void_cast_register and oserializer
+      # templates are instantiated in multiple TUs within bertini2 itself.
+      # /WHOLEARCHIVE exposes all copies; /FORCE:MULTIPLE picks the first and
+      # discards the rest (same as what a normal link would silently do via
+      # weak/COMDAT symbols on Linux/macOS).
+      target_link_options(${_t} PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2> /FORCE:MULTIPLE)
       target_link_libraries(${_t} $<TARGET_PROPERTY:bertini2,INTERFACE_LINK_LIBRARIES>)
     endif()
   endforeach()

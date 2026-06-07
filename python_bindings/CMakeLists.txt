@@ -238,7 +238,7 @@ if(MSVC AND NOT PROJECT_IS_TOP_LEVEL)
     list(REMOVE_ITEM _ll bertini2)
     set_target_properties(_pybertini PROPERTIES LINK_LIBRARIES "${_ll}")
   endif()
-  target_link_options(_pybertini PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2>)
+  target_link_options(_pybertini PRIVATE /WHOLEARCHIVE:$<TARGET_FILE:bertini2> /FORCE:MULTIPLE)
   target_link_libraries(_pybertini PRIVATE $<TARGET_PROPERTY:bertini2,INTERFACE_LINK_LIBRARIES>)
 endif()
 
